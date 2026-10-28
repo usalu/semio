@@ -9,11 +9,12 @@
 package launcher
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 )
 
-const languageFixture = "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🧪️tests/🔣️.json"
+const languageFixture = "🧰️framework/🔨️modules/⚙️runtime/🗣️language/🧪️tests/🔣️.json"
 
 // 🗣️Every resolution row of the shared fixture resolves, or is refused, the same way.
 func TestLanguageResolutionFixture(t *testing.T) {
@@ -37,7 +38,7 @@ func TestLanguageResolutionFixture(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, row := range fixture.Resolve {
-		got, refusal := protocol.ResolveLanguage(fixture.Languages, row.Args, environment(row.Environment), func() []string { return row.Os })
+		got, refusal := protocol.ResolveLanguage(fixture.Languages, row.Args, environment(row.Environment), func(OsLocale) []string { return row.Os })
 		if row.Expected != nil {
 			if refusal != nil || got.Language != row.Expected.Language || got.Source != row.Expected.Source {
 				t.Fatalf("%s: %+v %v", row.Name, got, refusal)
@@ -47,7 +48,7 @@ func TestLanguageResolutionFixture(t *testing.T) {
 		if refusal == nil {
 			t.Fatalf("%s: expected a refusal", row.Name)
 		}
-		text := strings.Split(registry.Refusal(refusal), "\n")
+		text := strings.Split(protocol.Refuse(registry.Languages, refusal), "\n")
 		if len(text) != len(registry.Languages) {
 			t.Fatalf("%s: one line per language, got %d", row.Name, len(text))
 		}
@@ -70,14 +71,34 @@ func TestLanguageResolutionFixture(t *testing.T) {
 
 // 🗣️The flag reader stops at the separator and keeps the last value.
 func TestLanguageFlag(t *testing.T) {
-	if value, given := LanguageFlag([]string{"a", "--lang", "de", "--", "--lang=en"}); !given || value != "de" {
+	protocol, err := LoadLanguageProtocol(testRoot(t), loadRegistry(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if value, given := protocol.LanguageFlag([]string{"a", "--lang", "de", "--", "--lang=en"}); !given || value != "de" {
 		t.Fatal(value)
 	}
-	if value, _ := LanguageFlag([]string{"--lang=en", "--lang=de"}); value != "de" {
+	if value, _ := protocol.LanguageFlag([]string{"--lang=en", "--lang=de"}); value != "de" {
 		t.Fatal(value)
 	}
-	if _, given := LanguageFlag(nil); given {
+	if _, given := protocol.LanguageFlag(nil); given {
 		t.Fatal("no flag")
+	}
+}
+
+// 🍎️The macOS command output is parsed by the pattern of the protocol.
+func TestLanguageSystemPattern(t *testing.T) {
+	protocol, err := LoadLanguageProtocol(testRoot(t), loadRegistry(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	pattern := regexp.MustCompile(protocol.OsLocale.Darwin.Pattern)
+	var tags []string
+	for _, match := range pattern.FindAllStringSubmatch("(\n    \"en-US\",\n    \"de-CH\",\n    \"zh-Hans-CN\"\n)", -1) {
+		tags = append(tags, match[1])
+	}
+	if strings.Join(tags, " ") != "en-US de-CH zh-Hans-CN" {
+		t.Fatal(tags)
 	}
 }
 

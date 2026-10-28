@@ -1,0 +1,31 @@
+{
+  "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
+  "systemVariables": [
+    "LC_ALL",
+    "LC_MESSAGES",
+    "LANG"
+  ],
+  "choices": [
+    {
+      "language": "en",
+      "name": "English"
+    },
+    {
+      "language": "de",
+      "name": "Deutsch"
+    }
+  ],
+  "prompt": [
+    "Choose language / Sprache wählen",
+    "1 English    2 Deutsch",
+    "↑ ↓ / Tab: select / auswählen    Enter: confirm / bestätigen    Esc: cancel / abbrechen"
+  ],
+  "messages": {
+    "saving": "Saving language / Sprache wird gespeichert…",
+    "saveFailed": "Could not save / Speichern fehlgeschlagen",
+    "disconnected": "Language event worker disconnected / Sprachereignis-Verbindung getrennt",
+    "terminalUnavailable": "Terminal unavailable / Terminal nicht verfügbar",
+    "required": "Choose --language en|de or open the dashboard / --language en|de wählen oder Dashboard öffnen",
+    "cancelled": "Language selection cancelled / Sprachauswahl abgebrochen"
+  }
+}

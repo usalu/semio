@@ -1,0 +1,47 @@
+{
+ "files": {
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts": [
+   {
+    "old": "import {readIssuedResourceControlCapabilitiesV1,requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupDescendantV1,requireAcceptedPhysicalCleanupControlV1,checkAcceptedPhysicalCleanupV1,noteAcceptedPhysicalCleanupProgressV1,readAcceptedPhysicalCleanupV1,requireIssuedResourceControlRefinementV1,requireIssuedResourceControlDescendantV1,withAcceptedPhysicalCleanupOperationV1,closeAcceptedPhysicalCleanupChildrenV1} from \"../🧭️routing/📥️invocation/🏃️process/🟦️.ts\";",
+    "new": "import {readIssuedResourceControlCapabilitiesV1,requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupDescendantV1,requireAcceptedPhysicalCleanupControlV1,checkAcceptedPhysicalCleanupV1,noteAcceptedPhysicalCleanupProgressV1,readAcceptedPhysicalCleanupV1,requireIssuedResourceControlRefinementV1,requireIssuedResourceControlDescendantV1,withAcceptedPhysicalCleanupOperationV1,closeAcceptedPhysicalCleanupChildrenV1} from \"./🦥️routing/🟦️.ts\";"
+   }
+  ],
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🟦️.ts": [
+   {
+    "old": "import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from\"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts\";",
+    "new": "import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from\"../🦥️routing/🟦️.ts\";"
+   }
+  ],
+  "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts": [
+   {
+    "old": "export { listSessionSandboxesV1, reclaimAgentSessionSandboxesV1, testSandboxParentV1 } from \"../../../🧪️testing/🏖️sandbox/🟦️.ts\";\n",
+    "new": ""
+   }
+  ],
+  "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🏖️sandbox/🟦️.ts": [
+   {
+    "old": "export { requireArtifactOutsideManagedParentV1, safeTemporaryDirectoryV1 }",
+    "new": "export { listSessionSandboxesV1, reclaimAgentSessionSandboxesV1, requireArtifactOutsideManagedParentV1, safeTemporaryDirectoryV1, testSandboxParentV1 }"
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️agent-sessions/🟦️.ts": [
+   {
+    "old": "import {agentSessionRegistryRootV1,agentSessionStoreV1,adoptAgentSessionV1,collectAgentSessionsIfDueV1,reclaimAgentSessionSandboxesV1,type",
+    "new": "import {reclaimAgentSessionSandboxesV1} from \"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🏖️sandbox/🟦️.ts\";\nimport {agentSessionRegistryRootV1,agentSessionStoreV1,adoptAgentSessionV1,collectAgentSessionsIfDueV1,type"
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️agent-sessions/⌨️command/🟦️.ts": [
+   {
+    "old": "listAgentSessionsV1,listSessionSandboxesV1,renderAgentSessionListV1,renderAgentSessionStatusV1,testSandboxParentV1,AGENT_SESSION_POLICY_V1",
+    "new": "listAgentSessionsV1,renderAgentSessionListV1,renderAgentSessionStatusV1,AGENT_SESSION_POLICY_V1"
+   },
+   {
+    "old": "import {AgentSessionErrorV1,",
+    "new": "import {listSessionSandboxesV1,testSandboxParentV1} from \"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🏖️sandbox/🟦️.ts\";\nimport {AgentSessionErrorV1,"
+   }
+  ]
+ },
+ "new": {
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🦥️routing/🟦️.ts": "lazy-routing.ts"
+ }
+}

@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts": {
+  "file": "f00",
+  "base": "1b906df96fb6502fd30275e2c7bcc977f8540a82d5d4fe701381a07126489f9c",
+  "new": "3ae28d8f4bc34c1f27c87af27947dbfe9228375c3640f62a1605f181e0f464fb"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🔣️.json": {
+  "file": "f01",
+  "base": "290e7795aa9bcdefe6a3b7ba33f6735cec1b32754a94ca93010162dc427ac7a0",
+  "new": "ea9dfc56fee8007778e951ac2aff267f9c2f66ad372889a851dac86ef57d7bc4"
+ }
+}

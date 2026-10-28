@@ -1,0 +1,340 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.framework.process.execution-budget/v1",
+  "$defs": {
+    "Milliseconds": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "Budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "build",
+        "command",
+        "orchestrator",
+        "daemon"
+      ],
+      "properties": {
+        "build": {
+          "$ref": "#/$defs/Milliseconds"
+        },
+        "command": {
+          "$ref": "#/$defs/Milliseconds"
+        },
+        "orchestrator": {
+          "$ref": "#/$defs/Milliseconds"
+        },
+        "daemon": {
+          "$ref": "#/$defs/Milliseconds"
+        }
+      }
+    },
+    "BuildPreparationDefault": {
+      "const": 21600000
+    },
+    "BuildPreparationMilliseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "TimerMaximumMilliseconds": {
+      "const": 2147483647
+    },
+    "TimerCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "budget",
+        "checks",
+        "expectedDelays",
+        "expectedExpirations"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "budget": {
+          "$ref": "#/$defs/Milliseconds"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Milliseconds"
+          }
+        },
+        "cancelBeforeCheck": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectedDelays": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "expectedExpirations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "TimerInputCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "budget",
+        "callback",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "budget": {
+          "type": [
+            "number",
+            "string",
+            "null"
+          ]
+        },
+        "callback": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ProgressDeadlineKind": {
+      "description": "Closed classes of long native work whose deadline is an idle window renewed by observable progress; each class declares its idle window and the generous maximum derived from the declared cost of the action.",
+      "enum": [
+        "native-child",
+        "native-observation"
+      ]
+    },
+    "ProgressDeadlinePolicy": {
+      "description": "A deadline of a long native action is NOT a fixed wall clock that a loaded host cannot meet: it expires after `idleMilliseconds` without observable progress, and never later than `maximumMilliseconds`, which is the nonrenewable ceiling `baseMilliseconds + perUnitMilliseconds * declared units` capped by `ceilingMilliseconds`. Renewal signals: child CPU time (sampled every `sampleMilliseconds`), child output, declared lease/queue/capacity waits and finished observation steps. A heartbeat the waiting process writes itself is not progress. Only the idle window is overridable by the named environment variable (natural milliseconds >= minimumIdleMilliseconds, four times the CPU sampling cadence so that a busy child is always sampled inside its window); the maximum is never renewable or overridable upwards.",
+      "const": {
+        "version": 1,
+        "idleEnvironment": "SEMIO_PROGRESS_DEADLINE_IDLE_MS",
+        "minimumIdleMilliseconds": 60000,
+        "ceilingMilliseconds": 86400000,
+        "sampleMilliseconds": 15000,
+        "phaseGapMilliseconds": 60000,
+        "classes": {
+          "native-child": {
+            "idleMilliseconds": 3600000,
+            "baseMilliseconds": 14400000,
+            "perUnitMilliseconds": 600000
+          },
+          "native-observation": {
+            "idleMilliseconds": 600000,
+            "baseMilliseconds": 3600000,
+            "perUnitMilliseconds": 1800000
+          }
+        },
+        "signals": [
+          "child-cpu",
+          "child-output",
+          "declared-wait",
+          "observation-step"
+        ],
+        "traceEnvironment": "SEMIO_PROGRESS_DEADLINE_TRACE"
+      }
+    },
+    "ProgressDeadlineNotice": {
+      "description": "Both expiry notices and the refusals of invalid budgets and deadline inputs are written in every selected language (both while none is chosen); the idle notice names what renews the window. The two trace lines are written only when the trace environment variable is `1`: they show when a renewable deadline is created and every time the sampler saw child CPU work renew it.",
+      "const": {
+        "idle": {
+          "en": "{label} stopped: no progress for {minutes} min (idle window {window} min). Child CPU time, child output, declared waits and finished observation steps renew the window.",
+          "de": "{label} gestoppt: seit {minutes} min kein Fortschritt (Leerlauffenster {window} min). Kind-CPU-Zeit, Kind-Ausgabe, deklarierte Wartezeiten und abgeschlossene Beobachtungsschritte erneuern das Fenster."
+        },
+        "maximum": {
+          "en": "{label} stopped: the maximum duration of {minutes} min derived from its declared cost ({units} unit(s)) is reached.",
+          "de": "{label} gestoppt: die aus den deklarierten Kosten ({units} Einheit(en)) abgeleitete Höchstdauer von {minutes} min ist erreicht."
+        },
+        "traceCreated": {
+          "en": "[progress-deadline] {label}: idle window {window} min, maximum {minutes} min for {units} declared unit(s)",
+          "de": "[progress-deadline] {label}: Leerlauffenster {window} min, Höchstdauer {minutes} min für {units} deklarierte Einheit(en)"
+        },
+        "traceWork": {
+          "en": "[progress-deadline] child CPU time moved ({children} process(es), {cpu} ms): idle windows renewed",
+          "de": "[progress-deadline] Kind-CPU-Zeit hat sich bewegt ({children} Prozess(e), {cpu} ms): Leerlauffenster erneuert"
+        },
+        "invalidBudget": {
+          "en": "Invalid process budget {name}",
+          "de": "Ungültiges Prozessbudget {name}"
+        },
+        "unknownDeadlineClass": {
+          "en": "Unknown progress deadline class {kind}",
+          "de": "Unbekannte Fortschrittsfrist-Klasse {kind}"
+        },
+        "deadlineUnitsInvalid": {
+          "en": "The declared progress deadline units must be a nonnegative safe integer",
+          "de": "Die deklarierten Einheiten der Fortschrittsfrist müssen eine nichtnegative sichere Ganzzahl sein"
+        },
+        "deadlineIdleWindowInvalid": {
+          "en": "Invalid progress deadline idle window ({minimum}..{ceiling} ms, {environment})",
+          "de": "Ungültiges Leerlauffenster der Fortschrittsfrist ({minimum}..{ceiling} ms, {environment})"
+        },
+        "deadlineMaximumInvalid": {
+          "en": "Invalid progress deadline maximum",
+          "de": "Ungültiges Maximum der Fortschrittsfrist"
+        },
+        "deadlinePolicyNotFinite": {
+          "en": "A finite positive progress deadline policy is required",
+          "de": "Eine endliche positive Fortschrittsfrist-Richtlinie ist erforderlich"
+        },
+        "deadlineCallbackRequired": {
+          "en": "A progress deadline callback is required",
+          "de": "Ein Rückruf für die Fortschrittsfrist ist erforderlich"
+        }
+      }
+    },
+    "ProgressDeadlineCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "idleMilliseconds",
+        "maximumMilliseconds",
+        "progress",
+        "waits",
+        "checks",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "idleMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400000
+        },
+        "maximumMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400000
+        },
+        "progress": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "waits": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "checks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "expected": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "remaining",
+              "expiry"
+            ],
+            "properties": {
+              "remaining": {
+                "type": "integer"
+              },
+              "expiry": {
+                "enum": [
+                  "idle",
+                  "maximum",
+                  null
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "ProgressDeadlineDerivationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "units",
+        "environment",
+        "expected"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/ProgressDeadlineKind"
+        },
+        "units": {
+          "type": "integer"
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "expected": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "idleMilliseconds",
+                "maximumMilliseconds"
+              ],
+              "properties": {
+                "idleMilliseconds": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "maximumMilliseconds": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "$ref": "#/$defs/Milliseconds"
+}

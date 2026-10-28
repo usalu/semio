@@ -1,0 +1,26 @@
+pass 410 fail 25
+FAIL  :: (unnamed)
+FAIL  :: Bazel actual implementation closes every local import and module-owned schema under original controls
+FAIL  :: Bazel captured implementation executes its original schema and Source URLs after late edits
+FAIL  :: Bazel component contracts have one canonical owner with unchanged normalized constraints
+FAIL  :: Bazel component contracts resolve canonical nested references with portable wire vectors
+FAIL  :: Bazel control drains owner command budgets under actual finite phases
+FAIL  :: Bazel control framing preserves Unicode across actual TCP byte boundaries
+FAIL  :: Bazel dependency planner matches installed Nx: Dependency Missing Configuration Uses Default
+FAIL  :: Bazel dependency planner matches installed Nx: Dependency Project Cycle Omits Self Edge
+FAIL  :: Bazel dependency planner matches installed Nx: Direct Self Dependency Is Ignored
+FAIL  :: Bazel dependency planner matches installed Nx: Nearest Target Stops Traversal
+FAIL  :: Bazel dependency planner matches installed Nx: Requested Configuration Survives Dependency Fallback
+FAIL  :: Bazel dependency planner matches installed Nx: Requested Missing Configuration Uses Default
+FAIL  :: Bazel dependency planner matches installed Nx: Root Default Becomes Inherited Configuration
+FAIL  :: Bazel dependency planner matches installed Nx: Selected Dependencies Retain Ordering
+FAIL  :: Bazel dependency planner matches installed Nx: Selected Dependency Project Retains Ordering
+FAIL  :: Bazel dependency planner matches installed Nx: Targetless Dependency Bridge
+FAIL  :: Bazel dependency planner matches installed Nx: Targetless Dependency Diamond
+FAIL  :: Bazel dependency planner matches installed Nx: Unselected Dependencies Are Excluded
+FAIL  :: Bazel exec materialization preserves literal callback tokens through both backends
+FAIL  :: Bazel implementation identity changes for an imported schema without changing the entry
+FAIL  :: Bazel per-command forwarding executes the same literal argv as Nx and SQLite
+FAIL  :: Bazel permanent dispatcher publishes its canonical workspace before purpose birth
+FAIL  :: Bazel public output styles and default bail reach actual owned build and service ports
+FAIL  :: scope executor-command: everything the runtime trace of each of its classes opened is inside its closure

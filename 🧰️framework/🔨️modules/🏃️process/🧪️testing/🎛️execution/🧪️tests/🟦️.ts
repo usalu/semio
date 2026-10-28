@@ -4,16 +4,20 @@ import { readFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { resolve, join, basename } from "node:path";
 import { spawnSync } from "node:child_process";
 import { existsSync, realpathSync } from "node:fs";
+import { tmpdir } from "node:os";
+
+/** 🗂️ The suite's artifact directory, or the system temporary directory in a bare run. */
+const artifactParent = process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir();
 
 test("test commands require explicit budgets and preserve failure and cancellation", async () => {
   const owner = resolve(import.meta.dir, ".."), source = join(owner, "🟦️.ts"), require = createRequire(import.meta.url);
   const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   const api = await import(source);
-  const output = process.env.SEMIO_TEST_ARTIFACT_DIR!; expect(output).toBeTruthy(); mkdirSync(output, { recursive: true });
+  const output = artifactParent; mkdirSync(output, { recursive: true });
   const temporary = mkdtempSync(join(output, "test-command-")), module = join(temporary, "execution.mjs");
   try {
     const bundle = await require("esbuild").build({ entryPoints: [source], outfile: module, bundle: true, platform: "node", format: "esm", metafile: true });
-    expect(Object.keys(bundle.metafile.inputs).every(path => path.startsWith("🧰️framework/🔨️modules/🏃️process/")||path.startsWith("🧰️framework/🔨️modules/⚙️runtime/")||path.startsWith("🧰️framework/🔨️modules/🧬️schema/✅️validator/"))).toBe(true);
+    expect(Object.keys(bundle.metafile.inputs).every(path => path.startsWith("🧰️framework/🔨️modules/🏃️process/")||path.startsWith("🧰️framework/🔨️modules/⚙️runtime/")||path.startsWith("🧰️framework/🔨️modules/🧬️schema/✅️validator/")||path.startsWith("🧰️framework/📦️packages/🟦️typescript/⚙️runtime/"))).toBe(true);
     for (const row of fixture.cases) {
       if (!row.throwOnFailure) continue;
       const cancellation = new AbortController(), timer = row.abortMs === null ? undefined : setTimeout(() => cancellation.abort(), row.abortMs);
@@ -32,7 +36,7 @@ test("test commands require explicit budgets and preserve failure and cancellati
     const oracle = spawnSync("node", ["-e", fixture.cases[1].program], { cwd: temporary, encoding: "utf8" }); expect(oracle.status).toBe(fixture.cases[1].exitCode);
     await expect(api.runBudgetedTestCommand("node", ["-e", ""], { cwd: temporary, budgetMs: -1, throwOnFailure: true })).rejects.toThrow("Invalid test command budget");
   } finally { rmSync(temporary, { recursive: true, force: true }); }
-});
+}, 60000);
 
 const system = (program: string, args: readonly string[]) => spawnSync(program, [...args], { encoding: "utf8" });
 const imageRows = (name: string): string[] => system("/usr/bin/hdiutil", ["info"]).stdout.split("\n").filter(line => line.startsWith("image-path") && line.includes(name));
@@ -46,7 +50,7 @@ const attachImage = (parent: string, name: string, size = "8m"): string => {
 
 test.skipIf(process.platform !== "darwin")("a scratch root detaches nested disk images before removal and the system tool agrees", async () => {
   const api = await import(join(resolve(import.meta.dir, ".."), "🟦️.ts"));
-  const root = api.createTestScratchRootV1(process.env.SEMIO_TEST_ARTIFACT_DIR!, "scratch-dispose-"), real = realpathSync(root), name = basename(root);
+  const root = api.createTestScratchRootV1(artifactParent, "scratch-dispose-"), real = realpathSync(root), name = basename(root);
   try {
     attachImage(attachImage(root, "outer", "48m"), "inner");
     expect(imageRows(name)).toHaveLength(2);
@@ -58,7 +62,7 @@ test.skipIf(process.platform !== "darwin")("a scratch root detaches nested disk 
 }, 60000);
 
 test.skipIf(process.platform !== "darwin")("a process that dies holding a scratch root still releases its disk images on exit", async () => {
-  const source = join(resolve(import.meta.dir, ".."), "🟦️.ts"), parent = process.env.SEMIO_TEST_ARTIFACT_DIR!;
+  const source = join(resolve(import.meta.dir, ".."), "🟦️.ts"), parent = artifactParent;
   const program = `const api=await import(process.argv[1]);const {spawnSync}=require("node:child_process");const root=api.createTestScratchRootV1(process.argv[2],"scratch-exit-");const {mkdirSync}=require("node:fs");const image=root+"/e.dmg",mount=root+"/e";spawnSync("/usr/bin/hdiutil",["create","-size","8m","-fs","APFS","-volname","e","-nospotlight","-quiet",image]);mkdirSync(mount);const attached=spawnSync("/usr/bin/hdiutil",["attach","-nobrowse","-noautoopen","-owners","on","-mountpoint",mount,image]);console.log(JSON.stringify({root,status:attached.status}));throw Error("simulated test crash");`;
   const child = spawnSync(process.execPath, ["-e", program, source, parent], { encoding: "utf8", timeout: 50000 });
   const reported = JSON.parse(child.stdout.trim().split("\n")[0]!) as { root: string; status: number };

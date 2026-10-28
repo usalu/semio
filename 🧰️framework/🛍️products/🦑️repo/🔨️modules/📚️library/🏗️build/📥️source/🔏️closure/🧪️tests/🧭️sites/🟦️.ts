@@ -8,7 +8,8 @@ import{tmpdir}from"node:os";
 import{dirname,join}from"node:path";
 import{buildSourceClosureIdentityV1,buildSourceClosureStreamLoaderV1}from"../../🟦️.ts";
 import{captureNxAuthorizerSourcesV1,nxAuthorizerCapturedBytesV1,nxAuthorizerCapturedImportsV1}from"../../../../../⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
-import{closureRefusalMessagesV1}from"../../../../../⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧭️sites/🟦️.ts";
+import{closureRefusalCatalogPathV1,closureRefusalMessagesV1}from"../../../../../⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧭️sites/🟦️.ts";
+import sitesCatalog from"../../../../../⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧭️sites/🧬️schema/🔣️.json";
 import{buildSourceClosureNodeArgumentsV1}from"../../🟢️node/🟨️.mjs";
 import policyContract from"../../🧬️schema/🔣️.json";
 import fixture from"./🔣️.json";
@@ -26,7 +27,7 @@ async function runLoaderV1(workspace:string,text:string,sha:string,language:stri
 /** 🧪️ Every derived site class resolves, and every undeclared one is refused with a named English and German text. */
 test("the real loader serves derived packages and roots and refuses everything else with named texts",async()=>{
  expect(new Ajv({strict:false,allowUnionTypes:true}).validate(fixtureSchema,fixture)).toBe(true);
- const area=mkdtempSync(join(realpathSync(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir()),"cs-")),put=(path:string,text:string)=>{mkdirSync(dirname(join(area,path)),{recursive:true});writeFileSync(join(area,path),text);};
+ const area=mkdtempSync(join(realpathSync(tmpdir()),"cs-")),put=(path:string,text:string)=>{mkdirSync(dirname(join(area,path)),{recursive:true});writeFileSync(join(area,path),text);};
  try{
   for(const[path,text]of Object.entries(fixture.files))put(path,text);
   const entry=`import{createRequire}from"node:module";import{readFileSync}from"node:fs";import{join}from"node:path";import helper from"./helper.ts";import fakeStatic from"fake-pkg";
@@ -35,8 +36,8 @@ export async function runCapturedBuildSourceV1(){const out:Record<string,unknown
 ${fixture.cases.map(row=>` await t(${JSON.stringify(row.name)},async()=>(${row.expression}));`).join("\n")}
  console.log("RESULT "+JSON.stringify(out));}`;
   put(fixture.entry,entry);
-  const source=await captureNxAuthorizerSourcesV1(area,fixture.entry,new AbortController().signal,{installed:true,roots:new Map(Object.entries(fixture.roots))}),bytes=nxAuthorizerCapturedBytesV1(source),imports=nxAuthorizerCapturedImportsV1(area,source);
-  const files=[...bytes].sort(([a],[b])=>Buffer.compare(Buffer.from(a),Buffer.from(b))).map(([path,value])=>({path,sha256:createHash("sha256").update(value).digest("hex"),base64:Buffer.from(value).toString("base64"),imports:imports.get(path)!})),snapshot={version:1 as const,root:area,entry:fixture.entry,files},text=JSON.stringify(snapshot),sha=buildSourceClosureIdentityV1(snapshot);
+  const source=await captureNxAuthorizerSourcesV1(area,fixture.entry,new AbortController().signal,{installed:true,roots:new Map(Object.entries(fixture.roots))}),bytes=new Map(nxAuthorizerCapturedBytesV1(source)),imports=new Map(nxAuthorizerCapturedImportsV1(area,source));bytes.set(closureRefusalCatalogPathV1,Buffer.from(JSON.stringify(sitesCatalog)));imports.set(closureRefusalCatalogPathV1,{});
+  const files=[...bytes].sort(([a],[b])=>Buffer.compare(Buffer.from(a),Buffer.from(b))).map(([path,value])=>({path,sha256:createHash("sha256").update(value).digest("hex"),base64:Buffer.from(value).toString("base64"),imports:imports.get(path)!})),snapshot={version:1 as const,root:area,entry:fixture.entry,files},text=JSON.stringify(snapshot),sha=buildSourceClosureIdentityV1(snapshot),bare={...snapshot,files:files.filter(file=>file.path!==closureRefusalCatalogPathV1)},bareText=JSON.stringify(bare),bareSha=buildSourceClosureIdentityV1(bare);
   expect(imports.get(fixture.entry)!["fake-pkg"]).toBe("installed:fake-pkg@1.2.3");expect(imports.get(fixture.entry)!["@scoped/lib/main.js"]).toBe("installed:@scoped/lib@0.0.1");expect(imports.get(fixture.entry)!["semio-root:computed/a.mjs"]).toBe("computed/a.mjs");expect(files.map(file=>file.path)).not.toContain("computed/b.mjs");
   for(const[path,value]of Object.entries(fixture.late))put(path,value);
   const native=createRequire(join(area,fixture.entry));expect(native("fake-pkg").value).toBe("fake-1.2.3");
@@ -46,6 +47,8 @@ ${fixture.cases.map(row=>` await t(${JSON.stringify(row.name)},async()=>(${row.e
     if(row.outcome==="ok"){expect(actual,row.name).toEqual({status:"ok",value:row.value});}
     else{expect(actual.status,row.name).toBe("refused");const message=(actual as{message:string}).message;expect(message,row.name).toContain(prefix(row.code!,language));expect(message,row.name).not.toContain(prefix(row.code!,language==="en"?"de":"en"));expect(message,row.name).toContain("Fix:".replace("Fix:",language==="en"?"Fix:":"Behebung:"));}}
   }
+  const bareResult=await runLoaderV1(area,bareText,bareSha,"en");expect(typeof bareResult,String(bareResult)).toBe("object");
+  for(const row of fixture.cases)if(row.outcome==="refused"){const message=((bareResult as Record<string,Outcome>)[row.name] as{message:string}).message;expect(message,row.name).toStartWith(row.code+": {");expect(message,row.name).not.toContain("Fix:");}
   put(fixture.drift.file,fixture.drift.text);
   const drifted=await runLoaderV1(area,text,sha,"en");expect(typeof drifted).toBe("string");expect(drifted as string).toContain(prefix(fixture.drift.code,"en"));expect(drifted as string).toContain("fake-pkg@1.2.3 -> 9.9.9");
  }finally{rmSync(area,{recursive:true,force:true});}
@@ -63,4 +66,10 @@ test("the Node loader serves installed package targets",async()=>{
   const child=spawn(node,[...launch.argv],{cwd:area,stdio:["pipe","pipe","pipe"]});let out="",err="";child.stdout.on("data",data=>out+=data);child.stderr.on("data",data=>err+=data);child.stdin.end(launch.bootstrap);await new Promise(resolve=>child.on("close",resolve));
   expect(out.split("\n").find(line=>line.startsWith("NODE ")),err).toBe('NODE {"fake":"fake-1.2.3"}');
  }finally{rmSync(area,{recursive:true,force:true});}
+},60000);
+
+/** 🪪️ A loader started without the digest of its snapshot refuses before anything is authenticated, by the machine token of the refusal and no catalog text. */
+test("the real loader names a refusal raised before authentication by its code",async()=>{
+ const child=spawn(process.execPath,["--eval",buildSourceClosureStreamLoaderV1,"--"],{stdio:["ignore","pipe","pipe","pipe"]});let err="";child.stderr!.on("data",data=>err+=data);(child.stdio[3] as NodeJS.WritableStream).end("");
+ await new Promise(resolve=>child.on("close",resolve));expect(err).toContain("digest-required: {}");expect(err).not.toContain("Fix:");
 },60000);

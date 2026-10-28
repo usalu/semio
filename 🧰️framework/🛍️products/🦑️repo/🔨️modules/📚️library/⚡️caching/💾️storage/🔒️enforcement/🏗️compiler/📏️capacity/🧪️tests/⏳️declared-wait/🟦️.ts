@@ -8,6 +8,8 @@ import{withCompilerSharedHeadroomV1}from"../../🟦️.ts";
 import{acquireQueuedResourceLease}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{resolve}from"node:path";
 import schema from"../../🧬️schema/🔣️.json"with{type:"json"};
+import{declareLibraryBuildTestEnvelopeV1}from"../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"storage-compiler"});
 
 test("the compiler headroom wait polls until the headroom appears and honours cancellation",()=>withBuildTestInvocationV1(async original=>{
  const directory=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"dw-")),control=scriptCompilerAdmissionControlV1(original,"test:headroom-declared-wait",60000);

@@ -1,0 +1,16 @@
+    } else if ("router" in read) {
+      const source = normalize(read.router.source), classes = normalize(read.router.classes ?? read.router.source), registrations = host.readText(source) ?? fail(`Router source missing: ${read.router.source}`), text = host.readText(classes) ?? fail(`Router class source missing: ${classes}`);
+      const inner = innerCommandWordsV1(identity.command ?? "") ?? fail(`Router read needs a script command: ${identity.project}:${identity.target}`), word = inner[0] ?? fail(`Router read needs a command word: ${identity.project}:${identity.target}`);
+      const className = routerClassNameV1(registrations, word) ?? fail(`Router source registers no command ${word}: ${read.router.source}`), classBody = routerClassBodyV1(text, className) ?? fail(`Router class ${className} not found in ${classes}`);
+      const branch = inner[1] === undefined ? undefined : routerBranchV1(classBody, inner[1]), body = `${branch ?? classBody}${routerConstantsV1(text, branch ?? classBody)}`, facts = literalFactsV1(body), index = crateIndexV1(host);
+      const named = unique([...facts.crates, ...[...body.matchAll(/"([^"\\\n]+)"/gu)].map((match) => match[1]!).filter((literal) => index.has(literal))]);
+      const bases = unique([source.split("/").slice(0, -1).join("/"), classes.split("/").slice(0, -1).join("/"), ...(read.router.bases ?? [])]), resolutions = bases.map((base) => resolveLiteralsV1(facts.paths, host, base)), found = unique(resolutions.flatMap((row) => row.resolved));
+      const crateDirs = found.filter((path) => host.exists(`${path}/Cargo.toml`)), directories = found.filter((path) => !crateDirs.includes(path) && !/\.[a-z0-9]+$/u.test(path)), entries = found.filter((path) => SOURCE.test(path) && host.exists(path));
+      if (!named.length && !crateDirs.length && /\b(?:testCargo|captureCargo|runCargo|runRepositoryCargoTests)\b/u.test(body)) fail(`Router command ${word} runs Cargo without a literal package: ${identity.project}:${identity.target}`);
+      if (!named.length && !found.length) fail(`Router command ${word} names no package or path: ${identity.project}:${identity.target}`);
+      const crates = named.length ? cratePatternsV1(named, host) : {patterns: [], files: [], markers: []}, roots = crateDirs.length ? crateDirectoryPatternsV1(crateDirs, host) : {patterns: [], files: [], markers: []};
+      patterns.push(...crates.patterns, ...roots.patterns, ...directories.map((path) => `${WORKSPACE}${path}/**/*`));
+      markers.push(...crates.markers, ...roots.markers);
+      files.push(...crates.files, ...roots.files, ...found.filter((path) => !SOURCE.test(path) && !directories.includes(path) && !crateDirs.includes(path)), ...(entries.length ? await host.importClosure(entries) : []));
+      unresolved.push(...unique(resolutions.flatMap((row) => row.unresolved)).filter((path) => resolutions.every((row) => row.unresolved.includes(path))));
+      name = `router:${inner.slice(0, 2).join(" ")}`;

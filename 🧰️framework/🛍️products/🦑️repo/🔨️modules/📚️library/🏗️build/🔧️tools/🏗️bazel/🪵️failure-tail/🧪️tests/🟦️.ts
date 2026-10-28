@@ -37,7 +37,7 @@ test("A failed task's tail is persisted, read back and rendered in English and G
   for(const row of rows){expect(row.bytes).toBeLessThanOrEqual(8);expect(row.droppedBytes).toBeGreaterThan(0);expect(row.file.startsWith(directory)).toBe(true);}
   expect(readdirSync(directory).every(name=>name.endsWith(BAZEL_FAILURE_TAIL_POLICY_V1.fileSuffix)&&!name.includes("/")&&!name.includes("\\"))).toBe(true);
   const printed:string[]=[];expect(await reportBazelFailureTailsV1(directory,"de",text=>printed.push(text))).toBe(3);
-  expect(printed.every(text=>text.startsWith("[bazel] Aufgabe "))).toBe(true);
+  expect(printed.every(text=>text.startsWith("[bazel] Task "))).toBe(true);
   await clearBazelFailureTailsV1(directory);
   expect(await readBazelFailureTailsV1(directory)).toEqual([]);
  }finally{rmSync(directory,{recursive:true,force:true});}

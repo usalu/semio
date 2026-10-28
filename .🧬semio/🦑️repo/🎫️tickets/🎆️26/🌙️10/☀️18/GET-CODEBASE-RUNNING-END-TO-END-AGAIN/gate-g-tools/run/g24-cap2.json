@@ -1,0 +1,12 @@
+{
+ "label": "g24-cap2",
+ "target": "@teaching/architecture-course:build",
+ "started": "07:19:32",
+ "wall_s": 20.1,
+ "peak_tree_mb": 2323,
+ "peak_processes": 4,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

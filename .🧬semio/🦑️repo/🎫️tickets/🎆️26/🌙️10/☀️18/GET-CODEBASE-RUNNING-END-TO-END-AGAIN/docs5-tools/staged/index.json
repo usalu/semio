@@ -1,0 +1,85 @@
+{
+ "batches": [
+  {
+   "name": "test-run",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "85cf39438347e94d0607db0d27d9bfa75e2bc58d1ebaf0e11e9a08515016bc74",
+   "code": "td-misc + td-graph findings (live): the root bunfig, the a1 recipe, what a bare red means",
+   "order": 1,
+   "edits": 6,
+   "summary": "How to run one test file correctly: from the checkout root, why, how to read a bare red, and the troubleshooting row for the missing process invocation."
+  },
+  {
+   "name": "test-envelope",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "85cf39438347e94d0607db0d27d9bfa75e2bc58d1ebaf0e11e9a08515016bc74",
+   "code": "td-leases envelope + td-capacity + td-graph + td-misc requirement tables",
+   "order": 2,
+   "edits": 2,
+   "summary": "How a test file declares the process birth its suite grants so that a bare run gives the truth; what cannot be declared yet."
+  },
+  {
+   "name": "test-scratch",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "85cf39438347e94d0607db0d27d9bfa75e2bc58d1ebaf0e11e9a08515016bc74",
+   "code": "td-ucache scratch + td-graph scratch + td-misc artdir findings",
+   "order": 3,
+   "edits": 2,
+   "summary": "Where scratch and artifact directories must live and why: Cargo ancestors, observation ancestry, the 256-unit bound, sockets, images."
+  },
+  {
+   "name": "providers",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "85cf39438347e94d0607db0d27d9bfa75e2bc58d1ebaf0e11e9a08515016bc74",
+   "code": "peeredit2 providers + tools (live since G44); consumers batch pending",
+   "order": 4,
+   "edits": 4,
+   "summary": "Script providers: what a command-closure edit re-infers, how to read a refresh, how a consumer expands a provider reference."
+  },
+  {
+   "name": "farm-memo",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "85cf39438347e94d0607db0d27d9bfa75e2bc58d1ebaf0e11e9a08515016bc74",
+   "code": "farmid captured (live since G44), farmid authority + gatefast scopedcut (pending)",
+   "order": 5,
+   "edits": 2,
+   "summary": "The graph farm and its lines, why it is refused today, and the scoped verification of a slice with its derived-results line."
+  },
+  {
+   "name": "capacity-lines",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "85cf39438347e94d0607db0d27d9bfa75e2bc58d1ebaf0e11e9a08515016bc74",
+   "code": "agents16 allrun + behind (pending); the live capacity messages",
+   "order": 6,
+   "edits": 4,
+   "summary": "How to read a capacity line: the reasons, the admission and growth lines, the blocker part; what the agents16 batches change for three agents on 16 GB."
+  },
+  {
+   "name": "promote",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "85cf39438347e94d0607db0d27d9bfa75e2bc58d1ebaf0e11e9a08515016bc74",
+   "code": "sealflip standing rule (live opt-in; default flip pending)",
+   "order": 7,
+   "edits": 2,
+   "summary": "The promote rule in sealed mode: who promotes, when, what an exit 1 means, what to expect afterwards."
+  },
+  {
+   "name": "verdict",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "85cf39438347e94d0607db0d27d9bfa75e2bc58d1ebaf0e11e9a08515016bc74",
+   "code": "gatefast group verdict recipe (ticket tools); scopedcut pending",
+   "order": 8,
+   "edits": 2,
+   "summary": "The group verdict recipe of the gate: stages, outputs, what the numbers say, expected minutes."
+  },
+  {
+   "name": "readme-tests",
+   "doc": "🧰️framework/🛍️products/🦑️repo/README.md",
+   "baseSha256": "dcdb9c9237c4b86d0a74f0801280f654e82e5b52fa73145dfc893aa9bc76f072",
+   "code": "td-misc + td-leases + td-ucache + td-graph findings; envelope and scratch helpers live since 10-27",
+   "order": 9,
+   "edits": 2,
+   "summary": "README, Test sandbox: running a single file from the root, declaring the birth, placing scratch (EN and DE), pointing at the operator guide."
+  }
+ ]
+}

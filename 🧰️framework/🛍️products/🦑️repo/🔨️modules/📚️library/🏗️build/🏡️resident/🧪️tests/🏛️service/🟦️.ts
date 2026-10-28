@@ -14,10 +14,10 @@ import coreSchema from "../../../📥️caller/🛰️service/🧬️schema/🔣
 import {createFilterV1} from "../../🗃️state/🟨️.mjs";
 import {residentGraphSeamsV1} from "../../🕰️graph-hooks/🔌️host/🟨️.mjs";
 import {taskClosureV1} from "../../🔌️ports/🗺️graph/🟨️.mjs";
-import {WATCHER,cleanup,haveBinary,pick,rng,shortTempDirectory,sleep,snapshot,tempRoot,waitFor,writeTree} from "../🟦️.ts";
+import {NATIVE,cleanup,haveBinary,pick,residentWatcherV1,rng,shortTempDirectory,sleep,snapshot,tempRoot,waitFor,writeTree} from "../🟦️.ts";
 import {agentSessionAddressV1,agentSessionRegistryRootV1,agentSessionStoreV1,agentSessionWorktreeKeyV1,readAgentSessionTokenV1,readAgentSessionV1,listAgentSessionsV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 
-const native=haveBinary(WATCHER);
+const WATCHER=await residentWatcherV1(),native=haveBinary(WATCHER);
 const cleanups:(()=>Promise<void>|void)[]=[];
 afterAll(async()=>{for(const fn of cleanups.reverse())await fn();});
 
@@ -28,6 +28,8 @@ const owners=[
  {name:"d",root:"pkgs/d",deps:[],tasks:[{name:"build",command:["b","d"],outputs:[".out/d"]}]},
  ...["e","f","g","h"].map(name=>({name,root:"pkgs/"+name,deps:[] as string[],tasks:[{name:"build",command:["b",name],outputs:[".out/"+name]}]})),
 ];
+/** 🌐 The ambient process environment without the keys the resident service binds to its own start, so a build run never makes the test service refuse its clients. */
+const ambientV1=Object.fromEntries(Object.entries(process.env).filter(([key])=>!["SEMIO_BUILD_TOOL","SEMIO_BUILD_MODE","SEMIO_BUILD_WORKERS","SEMIO_BUILD_GRAPH_POLICY"].includes(key)));
 const graph={generation:3,owners,env:{paths:["package.json"],prefixes:[]}};
 const closureOf=(name:string)=>{const seen=new Set([name]),order=[name];for(let i=0;i<order.length;i++)for(const dep of owners.find(o=>o.name===order[i])!.deps)if(!seen.has(dep)){seen.add(dep);order.push(dep);}return order;};
 
@@ -54,7 +56,7 @@ async function startService(options:Options={}){
  const custodyEvents:string[]=[];
  let currentOwners=options.graphOwners??owners;
  const ports={graph:{load:async()=>({...graph,owners:currentOwners}),environmentDigest:async()=>"salt",listing},execution,custody:options.custody??{acquire:async()=>{custodyEvents.push("acquire");},release:async()=>{custodyEvents.push("release");}}};
- const service=createResidentServiceV1({root,runtime,ports,implementation:"1".repeat(64),implementationPaths:options.implementationPaths??[],backend:options.backend??(native?"auto":"none"),watcherBinary:options.binary===undefined&&native?WATCHER:options.binary,exclude:{rooted:[".git"],names:["node_modules"]},fenceDirectory:".semio-fence",policy:{...POLICY_V1,fenceTimeoutMilliseconds:800,...(options.policy??{})},requireCapability:options.requireCapability??true,log:()=>{}});
+ const service=createResidentServiceV1({environment:ambientV1,root,runtime,ports,implementation:"1".repeat(64),implementationPaths:options.implementationPaths??[],backend:options.backend??(native?"auto":"none"),watcherBinary:options.binary===undefined&&native?WATCHER:options.binary,exclude:{rooted:[".git"],names:["node_modules"]},fenceDirectory:".semio-fence",policy:{...POLICY_V1,fenceTimeoutMilliseconds:800,...(options.policy??{})},requireCapability:options.requireCapability??true,log:()=>{}});
  const started=await service.start();
  cleanups.push(()=>service.stop("test"));
  const run=(command:string,args:string[],extra:Record<string,unknown>={})=>{
@@ -419,19 +421,19 @@ describe("cancellation, deadlines, governance",()=>{
 describe("lifecycle",()=>{
  test("one instance per worktree; a stale socket from a crashed instance is replaced; an untrusted directory is refused",async()=>{
   const s=await startService();
-  const second=createResidentServiceV1({root:s.root,runtime:s.runtime,ports:s.ports,implementation:"1".repeat(64),backend:"none",exclude:{rooted:[],names:[]},fenceDirectory:".semio-fence",policy:POLICY_V1});
+  const second=createResidentServiceV1({environment:ambientV1,root:s.root,runtime:s.runtime,ports:s.ports,implementation:"1".repeat(64),backend:"none",exclude:{rooted:[],names:[]},fenceDirectory:".semio-fence",policy:POLICY_V1});
   await expect(second.start()).rejects.toBeInstanceOf(ServiceRunningErrorV1);
   await s.service.stop("test");
   expect(existsSync(s.runtime.endpoint)).toBe(false);expect(existsSync(s.runtime.descriptor)).toBe(false);
   const dead=createServer();await new Promise<void>(r=>dead.listen(s.runtime.endpoint,()=>r()));
   (dead as any)._handle?.close?.();dead.close();
   writeFileSync(s.runtime.endpoint+".marker","x");
-  const again=createResidentServiceV1({root:s.root,runtime:s.runtime,ports:s.ports,implementation:"1".repeat(64),backend:"none",exclude:{rooted:[],names:[]},fenceDirectory:".semio-fence",policy:POLICY_V1});
+  const again=createResidentServiceV1({environment:ambientV1,root:s.root,runtime:s.runtime,ports:s.ports,implementation:"1".repeat(64),backend:"none",exclude:{rooted:[],names:[]},fenceDirectory:".semio-fence",policy:POLICY_V1});
   await again.start();expect((await forwardCommandV1({root:s.root,command:"ping",args:[],cwd:s.root,languages:["en"],environment:{XDG_RUNTIME_DIR:s.base,SEMIO_AGENT_SESSION_DIRECTORY:process.env.SEMIO_AGENT_SESSION_DIRECTORY!},stdout:{write(){}},stderr:{write(){}}})).handled).toBe(true);
   await again.stop("test");
   if(process.platform!=="win32"){
    chmodSync(s.runtime.directory,0o755);
-   const bad=createResidentServiceV1({root:s.root,runtime:s.runtime,ports:s.ports,implementation:"1".repeat(64),backend:"none",exclude:{rooted:[],names:[]},fenceDirectory:".semio-fence",policy:POLICY_V1});
+   const bad=createResidentServiceV1({environment:ambientV1,root:s.root,runtime:s.runtime,ports:s.ports,implementation:"1".repeat(64),backend:"none",exclude:{rooted:[],names:[]},fenceDirectory:".semio-fence",policy:POLICY_V1});
    await expect(bad.start()).rejects.toThrow(/private directory/u);
    expect((await forwardCommandV1({root:s.root,command:"ping",args:[],cwd:s.root,languages:["en"],environment:{XDG_RUNTIME_DIR:s.base,SEMIO_AGENT_SESSION_DIRECTORY:process.env.SEMIO_AGENT_SESSION_DIRECTORY!},stdout:{write(){}},stderr:{write(){}}})).handled).toBe(false);
   }
@@ -467,9 +469,10 @@ describe("lifecycle",()=>{
 
 describe("degraded trust stays correct",()=>{
  for(const backend of["none","poll"])test(`backend ${backend}: silent edits are found by stat proof`,async()=>{
-  const s=await startService({backend,binary:undefined});
+  const s=await startService({backend,binary:undefined}),cursor=JSON.parse((await s.run("cursor",[])).out);
   await s.run("run",["c:build"]);expect((await s.run("run",["c:build"])).served).toBe("memo");
   await sleep(30);writeFileSync(s.root+"/pkgs/b/src/x.ts","changed silently and longer");
+  expect(JSON.parse((await s.run("dirty",["--since",cursor.instance+":"+cursor.seq])).out)).toMatchObject({complete:false,reason:"trust"});
   s.executed.length=0;const r=await s.run("run",["c:build"]);expect(r.served).toBe("executed");expect([...s.executed].sort()).toEqual(["b:build","c:build"]);
   rmSync(s.root+"/.out/c",{recursive:true});s.executed.length=0;await s.run("run",["c:build"]);expect(s.executed).toEqual(["c:build"]);
  },20000);
@@ -485,7 +488,7 @@ describe("degraded trust stays correct",()=>{
  },30000);
 });
 
-describe.skipIf(!native)("process level crash safety",()=>{
+describe.skipIf(!native||!NATIVE)("process level crash safety",()=>{
  test("kill -9 of the service process leaves no watcher behind, clients fall back at once, a new service takes over",async()=>{
   const root=tempRoot("svc-crash-");cleanups.push(()=>cleanup(root));
   writeTree(root,{"package.json":"{}","tsconfig.base.json":"{}","bun.lock":"l","pkgs/a/src/x.ts":"a"});

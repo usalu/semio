@@ -91,6 +91,14 @@ func ResolveRoot(start string) (string, error) {
 	return "", RootNotFoundError{Start: start}
 }
 
+// 🪟️FinalPathSpelling turns a Windows final path into the name a shell uses, exactly as libuv's `realpath` does: `\\?\UNC\server\share` becomes `\\server\share`, `\\?\C:\x` becomes `C:\x`, anything else stays. See https://learn.microsoft.com/windows/win32/fileio/naming-a-file#win32-file-namespaces
+func FinalPathSpelling(final string) string {
+	if rest, found := strings.CutPrefix(final, `\\?\UNC\`); found {
+		return `\\` + rest
+	}
+	return strings.TrimPrefix(final, `\\?\`)
+}
+
 // 🧱️IsRootNotFound reports whether err is a missing root.
 func IsRootNotFound(err error) bool {
 	var missing RootNotFoundError

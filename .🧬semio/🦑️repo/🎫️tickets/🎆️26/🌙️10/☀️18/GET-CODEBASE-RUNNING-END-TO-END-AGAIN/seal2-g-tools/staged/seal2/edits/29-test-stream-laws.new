@@ -1,0 +1,104 @@
+
+ }catch(error){failed=true;primary=error;}finally{db.close();try{await rm(area,{recursive:true,force:true});}catch(error){if(!failed){failed=true;primary=error;}}}if(failed)throw primary;
+})),90000);
+
+import{admitCapturedImagesV1,redirectCapturedBuiltinReadsV1,splitCapturedSnapshotV1}from"../../🍞️bun/🟦️.ts";
+import{closeSync as closeFileV1,mkdtempSync as makeTemporaryV1,openSync as openFileV1,readFileSync as readFileSyncV1,readdirSync as listDirectoryV1,rmSync as removeTreeV1,truncateSync as truncateFileV1,writeFileSync as writeFileSyncV1}from"node:fs";
+import{spawn as spawnV1}from"node:child_process";
+import{tmpdir as temporaryDirectoryV1}from"node:os";
+
+const builtinTargetsV1=new Map([["node:fs","./.semio-captured-fs"],["fs","./.semio-captured-fs"],["node:fs/promises","./.semio-captured-fs-promises"],["fs/promises","./.semio-captured-fs-promises"],["node:module","./.semio-captured-module"],["module","./.semio-captured-module"]]);
+/** 🕰️ The tokenizer the loader had before the seam was made lazy, kept verbatim as the oracle of the redirect. */
+const legacyRedirectV1=(source:string,commonJs=false)=>{const parser=new Bun.Transpiler({loader:'js',target:'bun'}),targets=builtinTargetsV1,expected=parser.scan(source).imports.filter(row=>targets.has(row.path)).length,changes:{start:number;end:number;value:string}[]=[];let previous='',prior='';const token=(value:string)=>{prior=previous;previous=value;};for(let at=0;at<source.length;){const char=source[at]!;if(/\s/.test(char)){at++;continue;}if(char==='/'&&source[at+1]==='/'){at=source.indexOf('\n',at+2);if(at<0)break;continue;}if(char==='/'&&source[at+1]==='*'){const end=source.indexOf('*/',at+2);if(end<0)throw Error('Closed compiler comment required');at=end+2;continue;}if(char===String.fromCharCode(96)){at++;while(at<source.length){if(source[at]==='\\'){at+=2;continue;}if(source[at++]===String.fromCharCode(96))break;}token('literal');continue;}if(char==='"'||char==="'"){const start=at++,quote=char;while(at<source.length){if(source[at]==='\\'){at+=2;continue;}if(source[at++]===quote)break;}const raw=source.slice(start,at),value=raw.slice(1,-1);if(targets.has(value)&&(previous==='from'||previous==='import'||previous==='('&&(prior==='import'||!commonJs&&['require','__require'].includes(prior))))changes.push({start,end:at,value:JSON.stringify(targets.get(value))});token('literal');continue;}if(/[A-Za-z_$]/.test(char)){const start=at++;while(/[A-Za-z0-9_$]/.test(source[at]??''))at++;token(source.slice(start,at));continue;}token(char);at++;}if(changes.length!==expected)throw Error('Closed compiler builtin-read import coverage refused');let result=source;for(const change of changes.reverse())result=result.slice(0,change.start)+change.value+result.slice(change.end);if(parser.scan(result).imports.some(row=>targets.has(row.path)))throw Error('Mutable compiler builtin read remained');return result;};
+/** 🌳️ The module specifiers of a built-in read that the TypeScript syntax tree finds: static imports and re-exports, `import()` and (outside CommonJS) `require()` with a string literal. */
+const syntaxTreeSpecifiersV1=(text:string,commonJs:boolean)=>{const found:string[]=[],file=ts.createSourceFile("x.js",text,ts.ScriptTarget.ESNext,true,ts.ScriptKind.JS),visit=(node:ts.Node)=>{if((ts.isImportDeclaration(node)||ts.isExportDeclaration(node))&&node.moduleSpecifier&&ts.isStringLiteral(node.moduleSpecifier))found.push(node.moduleSpecifier.text);else if(ts.isCallExpression(node)&&node.arguments.length===1&&ts.isStringLiteral(node.arguments[0]!)&&(node.expression.kind===ts.SyntaxKind.ImportKeyword||!commonJs&&ts.isIdentifier(node.expression)&&["require","__require"].includes(node.expression.text)))found.push((node.arguments[0] as ts.StringLiteral).text);ts.forEachChild(node,visit);};visit(file);return found.filter(name=>builtinTargetsV1.has(name));};
+const redirectCasesV1=[
+ 'import fs from"node:fs";import{readFileSync}from\'fs\';export*from"fs/promises";import"node:module";const a=await import("node:fs");const r=require("fs");const q=require ( \'module\' );',
+ '// import x from "fs"\n/* import y from \'node:fs\' */import z from "fs";\nconst text=`import x from "fs"`;const s="import q from \'fs\'";x.from("fs");',
+ 'import { a as b } from "node:fs/promises";\nexport { b } from "fs";\nconst t = { from: "fs", import: "module" };',
+ 'const re=/import x from "fs"/;const d=import\n("node:module");',
+ 'import fsx from"./notfs.ts";import m from"module-x";const p=require("fs-extra");',
+ "import x from 'f\\u0073';",
+ 'export default function f(){return "fs"}',
+];
+test("the built-in read redirect gives the tokenizer's result on every library file, finds what the TypeScript syntax tree finds, and refuses what it cannot count",()=>{
+ const parser=new Bun.Transpiler({loader:"js",target:"bun"}),base=fileURLToPath(new URL("../../../../",import.meta.url)),files:string[]=[];
+ const walk=(directory:string)=>{for(const entry of listDirectoryV1(directory,{withFileTypes:true})){if(entry.name==="node_modules"||entry.name===".cache")continue;const path=join(directory,entry.name);if(entry.isDirectory())walk(path);else if(/\.(?:ts|mjs|js|cjs)$/u.test(entry.name))files.push(path);}};
+ walk(base);
+ const texts=files.map(path=>new Bun.Transpiler({loader:/\.ts$/u.test(path)?"ts":"js",target:"bun"}).transformSync(readFileSyncV1(path,"utf8"))).concat(redirectCasesV1.map(source=>{try{return new Bun.Transpiler({loader:"js",target:"bun"}).transformSync(source);}catch{return source;}}));
+ expect(texts.length).toBeGreaterThan(600);let changed=0,agreed=0,onlyNew=0;
+ for(const text of texts)for(const commonJs of[false,true]){
+  let old:string|undefined,now:string|undefined;try{old=legacyRedirectV1(text,commonJs);}catch{}try{now=redirectCapturedBuiltinReadsV1(text,commonJs,parser,builtinTargetsV1);}catch{}
+  if(old!==undefined){expect(now).toBe(old);agreed++;}
+  if(now!==undefined){
+   if(old===undefined)onlyNew++;
+   expect(parser.scan(now).imports.some(row=>builtinTargetsV1.has(row.path))).toBe(false);
+   const marker=/"\.\/\.semio-captured-(?:fs|fs-promises|module)"/gu,written=(now.match(marker)??[]).length-(text.match(marker)??[]).length;
+   if(now!==text)changed++;
+   expect(written,"the changed literals are the specifiers the syntax tree finds").toBe(syntaxTreeSpecifiersV1(text,commonJs).length);
+  }
+ }
+ expect(changed).toBeGreaterThan(100);expect(agreed).toBeGreaterThan(300);expect(onlyNew).toBeLessThan(40);
+ expect(()=>redirectCapturedBuiltinReadsV1('/* never closed\nimport x from "fs"',false,parser,builtinTargetsV1)).toThrow();
+ expect(redirectCapturedBuiltinReadsV1('const answer=42;',false,parser,builtinTargetsV1)).toBe('const answer=42;');
+});
+
+const snapshotRowsV1=()=>{
+ const rows=[["entry.ts","export const a=1;",{"./h.ts":"h.ts","base64":"installed:base64@1.0.0","path":"h.ts"}],["h.ts","export const h=\"α🙂\";",{}],["🧪️dir/emoji🙂.ts","export const e=2;",{}],['we"ird,base64.ts',"export const w=3;",{}],["empty.txt","",{}],["bytes.bin",Buffer.from(Array.from({length:256},(_,at)=>at)),{}]] as const;
+ return rows.map(([path,body,imports])=>{const bytes=typeof body==="string"?Buffer.from(body):body;return{path,sha256:createHash("sha256").update(bytes).digest("hex"),base64:bytes.toString("base64"),imports:imports as Record<string,string>};});
+};
+const limitsV1={maximumFileBytes:4194304,maximumSourceBytes:16777216},joinerV1={join:(...parts:string[])=>parts.join("/").replace(/\/+/gu,"/"),isAbsolute:(value:string)=>value.startsWith("/")};
+const admitV1=(files:{path:string;sha256:string;base64:string;imports:Record<string,string>}[],lazy:boolean,raw?:string)=>{
+ const text=raw??JSON.stringify({version:1,root:"/r",entry:"entry.ts",files}),encoded=Buffer.from(text),split=lazy?splitCapturedSnapshotV1(encoded):undefined,value=JSON.parse(split?split.text:text);
+ return{split,table:admitCapturedImagesV1(value,encoded,split?.spans,limitsV1,bytes=>createHash("sha256").update(bytes).digest("hex"),joinerV1,()=>{}),value,text};
+};
+test("a canonical snapshot is split without decoding a payload, its lazy table equals the eager one and the decoded files equal what the independent engines decode, and a bad payload is refused when it is first asked for",()=>{
+ const files=snapshotRowsV1(),eager=admitV1(files,false),lazy=admitV1(files,true),db=new Database(":memory:");
+ try{
+  expect(lazy.split).toBeDefined();expect(lazy.split!.spans.length).toBe(files.length);
+  expect((db.query("select count(*) n from json_each(?1,'$.files')").get(lazy.text)as{n:number}).n).toBe(files.length);
+  for(const[index,row]of files.entries()){const[start,end]=lazy.split!.spans[index]!;expect(Buffer.from(lazy.text).toString("latin1",start,end)).toBe(row.base64);expect((db.query("select json_extract(?1,'$.files['||?2||'].sha256') h").get(lazy.text,index)as{h:string}).h).toBe(row.sha256);}
+  expect(lazy.value.files.every((row:{base64:string})=>row.base64==="")).toBe(true);
+  expect([...lazy.table.images.keys()]).toEqual([...eager.table.images.keys()]);expect([...lazy.table.images]).toEqual([]);
+  for(const name of eager.table.images.keys()){expect(lazy.table.images.has(name)).toBe(true);const bytes=lazy.table.images.get(name)!;expect(Buffer.compare(bytes,eager.table.images.get(name)!)).toBe(0);expect(lazy.table.images.get(name)).toBe(bytes);}
+  expect([...lazy.table.images].length).toBe(files.length);expect(lazy.table.images.has("/r/missing.ts")).toBe(false);expect(lazy.table.images.get("/r/missing.ts")).toBeUndefined();
+  expect([...lazy.table.resolutions.entries()]).toEqual([...eager.table.resolutions.entries()]);
+  const bad=snapshotRowsV1();bad[1]!.sha256="0".repeat(64);
+  expect(()=>admitV1(bad,false)).toThrow("Immutable implementation image changed");
+  const late=admitV1(bad,true);expect(late.table.images.get("/r/entry.ts")).toBeDefined();expect(()=>late.table.images.get("/r/h.ts")).toThrow("Immutable implementation image changed");
+  const crooked=snapshotRowsV1();crooked[0]!.base64+="=";expect(()=>admitV1(crooked,true)).toThrow();expect(()=>admitV1(crooked,false)).toThrow();
+  const twice=snapshotRowsV1();twice.push({...twice[0]!});expect(()=>admitV1(twice,true)).toThrow("Immutable implementation image changed");expect(()=>admitV1(twice,false)).toThrow("Immutable implementation image changed");
+  const reordered=JSON.stringify({version:1,root:"/r",entry:"entry.ts",files:files.map(row=>({sha256:row.sha256,path:row.path,imports:row.imports,base64:row.base64}))});
+  expect(splitCapturedSnapshotV1(Buffer.from(reordered))).toBeUndefined();
+  const odd=admitV1(files,true,reordered);expect(odd.split).toBeUndefined();expect([...odd.table.images.keys()]).toEqual([...eager.table.images.keys()]);
+  expect(splitCapturedSnapshotV1(Buffer.from("{}"))).toBeUndefined();
+ }finally{db.close();}
+});
+
+test("the aux loader reads the snapshot from a pipe or from an inherited file descriptor with the same result, and refuses a file that is not the digest it was told",async()=>{
+ const area=makeTemporaryV1(join(temporaryDirectoryV1(),"lazy-")),files=[{path:"entry.ts",body:'import{h}from"./h.ts";export async function runCapturedBuildSourceV1(args,proof){console.log(JSON.stringify({args,h,sha:proof.sha256.length}));}'},{path:"h.ts",body:'export const h="α🙂";'}].map(row=>({path:row.path,sha256:createHash("sha256").update(row.body).digest("hex"),base64:Buffer.from(row.body).toString("base64"),imports:row.path==="entry.ts"?{"./h.ts":"h.ts"}:{}})),snapshot:BuildSourceClosureV1={version:1,root:area,entry:"entry.ts",files},text=JSON.stringify(snapshot),digest=buildSourceClosureIdentityV1(snapshot);
+ const run=(content:Buffer,transport:"pipe"|"file",expected=digest)=>new Promise<{status:number|null;out:string;err:string}>(accept=>{
+  const path=join(area,"snapshot-"+Math.random().toString(16).slice(2)+".json"),descriptor=transport==="file"?(writeFileSyncV1(path,content),openFileV1(path,"r")):"pipe",child=spawnV1(process.execPath,["--eval",buildSourceClosureStreamLoaderV1,"--",expected,"x","y"],{stdio:["ignore","pipe","pipe",descriptor,"pipe"],env:{...process.env,BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"}});
+  let out="",err="";child.stdout!.on("data",data=>out+=data);child.stderr!.on("data",data=>err+=data);
+  if(typeof descriptor==="number")closeFileV1(descriptor);else{child.stdio[3]!.on("error",()=>{});(child.stdio[3] as NodeJS.WritableStream).end(content);}
+  child.on("close",status=>accept({status,out,err}));
+ });
+ try{
+  const viaFile=await run(Buffer.from(text),"file"),viaPipe=await run(Buffer.from(text),"pipe");
+  for(const result of[viaFile,viaPipe]){expect(result.err).toBe("");expect(result.status).toBe(0);expect(JSON.parse(result.out)).toEqual({args:["x","y"],h:"α🙂",sha:64});}
+  const longer=await run(Buffer.from(text+" "),"file");expect(longer.status).not.toBe(0);expect(longer.err).toContain("snapshot");
+  expect((await run(Buffer.from(text.slice(0,-2)),"file")).status).not.toBe(0);
+  const wrong=await run(Buffer.from(text),"file","0".repeat(64));expect(wrong.status).not.toBe(0);expect(wrong.err).toContain("Immutable implementation snapshot changed");
+  const huge=join(area,"huge.json");writeFileSyncV1(huge,"");truncateFileV1(huge,schema.definitions.Policy.const.maximumSnapshotBytes+1);
+  const refused=await run(readFileSyncV1(huge),"file");expect(refused.status).not.toBe(0);expect(refused.err).toContain("Bounded immutable implementation snapshot required");
+ }finally{removeTreeV1(area,{recursive:true,force:true});}
+},90000);
+
+test("the laws of the lazy table and of the redirect have teeth: a table that skips the payload hash accepts a bad payload, a redirect that skips the count rewrites text inside a string",()=>{
+ const skipHash=(0,eval)("("+admitCapturedImagesV1.toString().replace(/hash\(bytes\)\s*!==\s*row\.sha256/gu,"false")+")") as typeof admitCapturedImagesV1,bad=snapshotRowsV1();bad[1]!.sha256="0".repeat(64);
+ const encoded=Buffer.from(JSON.stringify({version:1,root:"/r",entry:"entry.ts",files:bad})),split=splitCapturedSnapshotV1(encoded)!,table=skipHash(JSON.parse(split.text),encoded,split.spans,limitsV1,bytes=>createHash("sha256").update(bytes).digest("hex"),joinerV1,()=>{});
+ expect(()=>table.images.get("/r/h.ts")).not.toThrow();
+ const skipCount=(0,eval)("("+redirectCapturedBuiltinReadsV1.toString().replace(/count\s*===\s*expected\s*&&/u,"")+")") as typeof redirectCapturedBuiltinReadsV1,parser=new Bun.Transpiler({loader:"js",target:"bun"}),text='import a from"fs";const s=\'x from "fs"\';';
+ expect(redirectCapturedBuiltinReadsV1(text,false,parser,builtinTargetsV1)).toBe('import a from"./.semio-captured-fs";const s=\'x from "fs"\';');
+ expect(skipCount(text,false,parser,builtinTargetsV1)).not.toBe(redirectCapturedBuiltinReadsV1(text,false,parser,builtinTargetsV1));
+});

@@ -1,0 +1,23 @@
+{
+ "name": "bench2",
+ "code": "none (measurement only, the host-total patch is already live)",
+ "lane": "bench2-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "not-met",
+   "lang": "en",
+   "kind": "replace",
+   "old": "- Not met or not shown: a hot Bazel no-op under 10 s (not measurable on this host: 45 min in the capacity queue; planner skip and quiet grant are in the tree to fix the two causes, the measurement repeats after batch 4b); graph builder under 2 GB (index views 1.7 GB, native discovery; the index-chunk batch reaches 2.9 GB peak, pending gate); graph generation under 2 min after a larger peer edit.",
+   "new": "- Not met or not shown (first honest baseline, bench2-g, 10-26 18:54-19:36, quiet window, 32 GB / 10-core Mac, Bazel, before the evening batches): a hot course no-op takes 60 / 77 / 83 s (target 10 s) and none of it is Bazel (0.4-0.5 s, 0 actions re-executed): graph freshness 9-27 s, tool-setup (Bazel slot, planner, implementation capture) 32-48 s, dependency verification 5-6 s, admission 3-7 s, capacity wait 0-19 s (every hot run asked for 7168 MB, 10x its measured footprint of 0.67-0.73 GiB; RSS 2.1-2.25 GiB). A one-line course edit takes 506 s instead of 60 s (graph 307 s for one re-inferred project, tool-setup 85 s, execution 60 s: 1 action executed, 6 cache hits) and peaks at a footprint of 3.0 GiB (RSS 5.1 GiB). The dashboard prime failed after 909 s with `Refusing to wait` behind the lease of a human's running dashboard. Not measured: peer edits, the revert of an edit, print, the 3-agent scenario. Also not met: graph builder under 2 GB (index views 1.7 GB, native discovery; the index-chunk batch reaches 2.9 GB peak, pending gate) and graph generation under 2 min after a larger peer edit. Re-measure with `repo bench compare` on reports of the same host class."
+  },
+  {
+   "id": "not-met",
+   "lang": "de",
+   "kind": "replace",
+   "old": "- Nicht erreicht oder nicht gezeigt: ein heißer Bazel-No-op unter 10 s (auf diesem Rechner nicht messbar: 45 min in der Kapazitäts-Warteschlange; Planer-Überspringen und ruhige Zusage sind im Baum und beheben die beiden Ursachen, die Messung wird nach Paket 4b wiederholt); Graph-Erbauer unter 2 GB (Index-Sichten 1,7 GB, native Entdeckung; das Index-Chunk-Paket erreicht 2,9 GB Spitze, wartet auf das Tor); Graph-Generation unter 2 min nach einer größeren Peer-Änderung.",
+   "new": "- Nicht erreicht oder nicht gezeigt (erste ehrliche Basislinie, bench2-g, 26.10. 18:54-19:36, ruhiges Fenster, Mac mit 32 GB / 10 Kernen, Bazel, vor den Abend-Paketen): ein heißer Kurs-No-op braucht 60 / 77 / 83 s (Ziel 10 s) und nichts davon ist Bazel (0,4-0,5 s, 0 Aktionen neu ausgeführt): Aktualität des Graphen 9-27 s, Tool-Setup (Bazel-Slot, Planer, Erfassung der Implementierung) 32-48 s, Prüfung der Abhängigkeiten 5-6 s, Zulassung 3-7 s, Kapazitätswartezeit 0-19 s (jeder heiße Lauf forderte 7168 MB an, das 10-fache seines gemessenen Fußabdrucks von 0,67-0,73 GiB; RSS 2,1-2,25 GiB). Eine Ein-Zeilen-Änderung am Kurs braucht 506 s statt 60 s (Graph 307 s für ein neu abgeleitetes Projekt, Tool-Setup 85 s, Ausführung 60 s: 1 Aktion ausgeführt, 6 Cache-Treffer) und erreicht einen Fußabdruck von 3,0 GiB (RSS 5,1 GiB). Der Dashboard-Prime scheiterte nach 909 s mit `Refusing to wait` hinter dem Lease des laufenden Dashboards eines Menschen. Nicht gemessen: Peer-Änderungen, das Zurücknehmen einer Änderung, Print, das 3-Agenten-Szenario. Ebenfalls nicht erreicht: Graph-Erbauer unter 2 GB (Index-Sichten 1,7 GB, native Entdeckung; das Index-Chunk-Paket erreicht 2,9 GB Spitze, wartet auf das Tor) und Graph-Generation unter 2 min nach einer größeren Peer-Änderung. Neu messen mit `repo bench compare` auf Berichten derselben Rechnerklasse."
+  }
+ ]
+}

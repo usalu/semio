@@ -1,0 +1,372 @@
+{
+  "version": 1,
+  "labels": {
+    "en": {
+      "template": "{command} · {phase}: {done} of {total} {units}",
+      "running": "{command} · {phase}: {done} of {total} {units} · {count} running, longest {seconds} s: {names}",
+      "phases": {
+        "inference": {
+          "label": "Inferring projects",
+          "units": "projects"
+        },
+        "verification": {
+          "label": "Verifying input closures",
+          "units": "closures"
+        },
+        "expansion": {
+          "label": "Expanding input closures",
+          "units": "closures"
+        },
+        "facts": {
+          "label": "Verifying graph facts",
+          "units": "facts"
+        },
+        "assembly": {
+          "label": "Assembling the graph",
+          "units": "projects"
+        },
+        "prefetch": {
+          "label": "Preparing stale projects",
+          "units": "projects"
+        }
+      }
+    },
+    "de": {
+      "template": "{command} · {phase}: {done} von {total} {units}",
+      "running": "{command} · {phase}: {done} von {total} {units} · {count} laufen, längstes {seconds} s: {names}",
+      "phases": {
+        "inference": {
+          "label": "Projekte ableiten",
+          "units": "Projekte"
+        },
+        "verification": {
+          "label": "Eingabeabschlüsse prüfen",
+          "units": "Abschlüsse"
+        },
+        "expansion": {
+          "label": "Eingabeabschlüsse auflösen",
+          "units": "Abschlüsse"
+        },
+        "facts": {
+          "label": "Graph-Fakten prüfen",
+          "units": "Fakten"
+        },
+        "assembly": {
+          "label": "Graph zusammensetzen",
+          "units": "Projekte"
+        },
+        "prefetch": {
+          "label": "Veraltete Projekte vorbereiten",
+          "units": "Projekte"
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "en-inference-120-of-3656",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:120:3656",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Inferring projects: 120 of 3656 projects"
+    },
+    {
+      "name": "en-verification-0-of-17713",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:verification:0:17713",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Verifying input closures: 0 of 17713 closures"
+    },
+    {
+      "name": "en-expansion-14232-of-14232",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:expansion:14232:14232",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Expanding input closures: 14232 of 14232 closures"
+    },
+    {
+      "name": "de-inference-120-of-3656",
+      "environment": {
+        "LANG": "de_DE.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:120:3656",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Projekte ableiten: 120 von 3656 Projekte"
+    },
+    {
+      "name": "de-verification-0-of-17713",
+      "environment": {
+        "LANG": "de_DE.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:verification:0:17713",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Eingabeabschlüsse prüfen: 0 von 17713 Abschlüsse"
+    },
+    {
+      "name": "de-expansion-14232-of-14232",
+      "environment": {
+        "LANG": "de_DE.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:expansion:14232:14232",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Eingabeabschlüsse auflösen: 14232 von 14232 Abschlüsse"
+    },
+    {
+      "name": "en-facts-2048-of-182951",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:facts:2048:182951",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Verifying graph facts: 2048 of 182951 facts"
+    },
+    {
+      "name": "de-assembly-3656-of-3656",
+      "environment": {
+        "LANG": "de_DE.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:assembly:3656:3656",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Graph zusammensetzen: 3656 von 3656 Projekte"
+    },
+    {
+      "name": "en-inference-running-one-project",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:474:566:1:540:%40semio-tech%2Fs-dev-composition",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Inferring projects: 474 of 566 projects · 1 running, longest 540 s: @semio-tech/s-dev-composition"
+    },
+    {
+      "name": "de-inference-running-three-projects",
+      "environment": {
+        "LANG": "de_DE.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:12:566:5:15:alpha%2Fa,beta%2Fb,gamma",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Projekte ableiten: 12 von 566 Projekte · 5 laufen, längstes 15 s: alpha/a, beta/b, gamma"
+    },
+    {
+      "name": "en-assembly-running-zero-seconds",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:assembly:0:10:2:0:a%3Ab,c%2Cd",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build:projects · Assembling the graph: 0 of 10 projects · 2 running, longest 0 s: a:b, c,d"
+    },
+    {
+      "name": "prefetch en",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "repository:command",
+      "resource": "build:graph-phase:prefetch:3:7",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Preparing stale projects: 3 of 7 projects"
+    },
+    {
+      "name": "prefetch de",
+      "environment": {
+        "LANG": "de_CH.UTF-8"
+      },
+      "command": "repository:command",
+      "resource": "build:graph-phase:prefetch:3:7",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Veraltete Projekte vorbereiten: 3 von 7 Projekte"
+    }
+  ],
+  "rejected": [
+    {
+      "name": "done-above-total",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:5:4",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "unknown-phase",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:publishing:1:2",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "missing-total",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "extra-part",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1:2:3",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "leading-zero",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:01:2",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "non-zero-elapsed",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1:2",
+      "mode": "shared",
+      "elapsedMs": 5
+    },
+    {
+      "name": "exclusive-mode",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1:2",
+      "mode": "exclusive",
+      "elapsedMs": 0
+    },
+    {
+      "name": "overflowing-count",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1:99999999999999999999",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "running-without-names",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1:5:1:0:",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "running-more-names-than-count",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1:5:1:0:a,b",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "running-more-names-than-declared-maximum",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1:5:9:0:a,b,c,d",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "running-zero-count",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1:5:0:0:a",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "running-bad-escape",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1:5:1:0:%E0%A4%A",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "running-control-character",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1:5:1:0:a%0Ab",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "running-non-numeric-seconds",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1:5:1:x:a",
+      "mode": "shared",
+      "elapsedMs": 0
+    },
+    {
+      "name": "four-parts",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "command": "build:projects",
+      "resource": "build:graph-phase:inference:1:5:1",
+      "mode": "shared",
+      "elapsedMs": 0
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+version: 2
+updates:
+  - package-ecosystem: "bun"
+    directories:
+      - "/"
+      - "/♻️mit-bestand"
+      - "/✏️s"
+      - "/🌎️hub"
+      - "/🎓️teaching"
+      - "/🏢️semio-tech"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "cargo"
+    directories:
+      - "/"
+      - "/✏️s"
+      - "/🌎️hub"
+      - "/🎓️teaching"
+      - "/✏️s/🔌️plugins/*/🏭️bridge"
+      - "/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🏭️bridge"
+      - "/🧰️framework/🛍️products/💻️os/🎚️config/🏭️bridge"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "gomod"
+    directories:
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🪪️identity/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🗂️codebase/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧑️contributors/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📝️todos/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚀️bin"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go/📦️main"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "uv"
+    directories:
+      - "/"
+      - "/✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python"
+      - "/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "nuget"
+    directories:
+      - "/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "github-actions"
+    directories:
+      - "/"
+      - "/.github/actions/repo-launcher"
+      - "/.github/actions/devcontainer-repo"
+      - "/.github/actions/devcontainer-suites"
+      - "/.github/actions/cache-proof"
+      - "/.github/actions/tool-cache"
+    schedule:
+      interval: "weekly"
+

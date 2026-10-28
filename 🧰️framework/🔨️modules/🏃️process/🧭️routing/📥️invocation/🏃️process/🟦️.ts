@@ -1,9 +1,11 @@
+import {LANGUAGE_PROTOCOL_V1,noticeLanguagesV1} from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import{AsyncLocalStorage}from"node:async_hooks";
 import { createRequire } from "node:module";
 
 /** 📖️ The refusal texts load when a refusal happens, never at startup: every entry that takes a lease stays inside its module budget. */
 const refuseProcessV1 = (...input: Parameters<typeof import("../../../📖️texts/🟦️.ts").refuseProcessV1>): ReturnType<typeof import("../../../📖️texts/🟦️.ts").refuseProcessV1> => (createRequire(import.meta.url)("../../../📖️texts/🟦️.ts") as typeof import("../../../📖️texts/🟦️.ts")).refuseProcessV1(...input);
 import{withLeaseTaskV1}from"../../../🔒️leases/🧭️order/🟦️.ts";
+import{noteLeaseProgressV1,registerLeaseRootAbortV1}from"../../../🔒️leases/📈️standing/🟦️.ts";
 import type{ResourceLeaseControl}from"../../../🔒️leases/🎛️control/🟦️.ts";
 import requestSchema from"./📥️issuance/🧬️schema/📥️request.json" with{type:"json"};
 import cleanupSchema from"./🧬️schema/🧹️cleanup.json" with{type:"json"};
@@ -26,10 +28,7 @@ import{handleRestartableFailureV1}from"../../../../📁️filesystem/🧾️obse
 export type ScriptProcessEnvelope = Readonly<{ version: 1; policy: ScriptPolicy; deadlineEpochMilliseconds: number | null; capabilities: object }>;
 export const SCRIPT_PROCESS_INVOCATION_ENV = "SEMIO_SCRIPT_PROCESS_INVOCATION";
 
-function progressLanguage(environment:Readonly<Record<string,string|undefined>>):"en"|"de"{
- const declaration=progressSchema.const.sourceAdmission;
- return (declaration.systemVariables.map(name=>environment[name]?.split(/[_.@-]/u)[0]?.toLowerCase()).find(value=>value!==undefined&&Object.hasOwn(declaration.labels,value))??declaration.fallback[0])as"en"|"de";
-}
+function progressLanguage(environment:Readonly<Record<string,string|undefined>>):"en"|"de"{return noticeLanguagesV1(["en","de"] as const,environment)[0]!;}
 
 function sourceProviderCounterV1(progress:ScriptProgress):number|null{
  const policy=progressSchema.const.sourceProvider,activity=progress.activity;
@@ -66,11 +65,14 @@ function selectionStageSlotV1(progress:ScriptProgress):number|null{
  const policy=progressSchema.const.selectionStages;if(Object.keys(progress).sort().join(",")!=="command,owner,stage"||progress.owner!==policy.owner||progress.stage!==policy.stage)return null;const slot=policy.commands.indexOf(progress.command);return slot<0?null:slot;
 }
 /** 📉️ Coalesces typed presentation while retaining Original callbacks and bounded final observations. */
-function createScriptProcessProgressWriterV1(write:(line:string)=>void,environment:Readonly<Record<string,string|undefined>>,now:()=>number=()=>performance.now()){
+/** 🧾️ Whether the typed machine rows `[script] {json}` are written next to the sentences: a pipe or a log (a machine reader) gets them, a person at a terminal reads the sentences only; `SEMIO_SCRIPT_PROGRESS=machine|human` decides explicitly. */
+export function scriptProcessMachineRowsV1(environment:Readonly<Record<string,string|undefined>>,terminal:boolean):boolean{const rows=progressSchema.const.rows,choice=environment[rows.variable];return choice===rows.values[0]?true:choice===rows.values[1]?false:!terminal;}
+function createScriptProcessProgressWriterV1(write:(line:string)=>void,environment:Readonly<Record<string,string|undefined>>,now:()=>number=()=>performance.now(),machine:boolean=true){
  type Row={raw:string;message:string|null};type Pending=Row&{rank:number};
  const policy=progressSchema.const.dependencyWork,workPending:(Pending|undefined)[]=policy.slots.map(()=>undefined),counts:(number|undefined)[]=policy.families.map(()=>undefined),elapsed:(number|undefined)[]=policy.families.map(()=>undefined);
+ const phaseAt=new Map<string,number>();
  let pending:Row|undefined,key:string|undefined,lastAt:number|undefined,lastClock:number|undefined,lastCount:number|undefined,lastElapsed:number|undefined,frame:string|undefined,workAt:number|undefined,workClock:number|undefined,workState:"unopened"|"paced"|"unclocked"="unopened";
- const emit=(row:Row)=>{write(row.raw);if(row.message!==null)write("[script] "+row.message+"\n");};
+ const emit=(row:Row)=>{if(machine)write(row.raw);if(row.message!==null)for(const line of row.message.split("\n"))write("[script] "+line+"\n");};
  const stagePolicy=progressSchema.const.selectionStages,stageSeen=stagePolicy.commands.map(()=>false);let stageOpen=false,stageAt:number|undefined,stageClock:number|undefined,stageLast:number|undefined,stageLatest:(Row&{slot:number})|undefined;
  const flushStage=()=>{const latest=stageLatest,last=stageLast;stageLatest=undefined;stageLast=undefined;stageOpen=false;stageAt=undefined;stageClock=undefined;stageSeen.fill(false);if(latest&&latest.slot!==last)emit(latest);};
  const ordered=(family?:number,rows=workPending)=>rows.flatMap((row,slot)=>row&&(family===undefined||policy.families.indexOf(policy.slots[slot]!.family)===family)?[{row,slot}]:[]).sort((a,b)=>a.row.rank-b.row.rank||a.slot-b.slot);
@@ -88,6 +90,7 @@ function createScriptProcessProgressWriterV1(write:(line:string)=>void,environme
    stageLatest={...row,slot:stageSlot};if(current-stageAt>=stagePolicy.heartbeatMilliseconds){stageAt=current;stageLast=stageSlot;stageLatest=undefined;emit(row);}return;
   }
   flushStage();
+  if(row.message!==null&&progress.activity===undefined){const current=now(),previous=phaseAt.get(progress.command);if(Number.isFinite(current)&&(previous===undefined||current<previous||current-previous>=progressSchema.const.stagePhases.heartbeatMilliseconds))phaseAt.set(progress.command,current);else if(Number.isFinite(current))row.message=null;}
   if(identity!==undefined&&identity!==frame){flush();frame=identity;workAt=undefined;workClock=undefined;workState="unopened";counts.fill(undefined);elapsed.fill(undefined);}
   const work=dependencyWorkActivityV1(progress);
   if(work!==null){
@@ -112,7 +115,8 @@ function createScriptProcessProgressWriterV1(write:(line:string)=>void,environme
 
 /** 📈️ Describes long resource activity without inferring whether work or contention caused it. */
 export function formatScriptProcessActivityV1(progress:ScriptProgress,environment:Readonly<Record<string,string|undefined>>=process.env):string|null{
- const activity=progress.activity;if(!activity)return null;const declaration=progressSchema.const.sourceAdmission;
+ const languages=noticeLanguagesV1(["en","de"] as const,environment);if(languages.length>1){const lines=languages.map(language=>formatScriptProcessActivityV1(progress,{...environment,[LANGUAGE_PROTOCOL_V1.explicitVariable]:language}));return lines.includes(null)?null:lines.join("\n");}
+ const activity=progress.activity;if(!activity){const phases=progressSchema.const.stagePhases,labels=phases.labels[progressLanguage(environment)];return Object.keys(progress).sort().join(",")==="command,owner,stage"&&progress.owner===phases.owner&&progress.stage===phases.stage&&Object.hasOwn(labels.phases,progress.command)?labels.template.replace(/\{([A-Za-z]+)\}/gu,(_token,key:string)=>key==="command"?progress.command:labels.phases[progress.command as keyof typeof labels.phases]):null;}const declaration=progressSchema.const.sourceAdmission;
  const tooling=progressSchema.const.tooling;if(tooling.resources.includes(activity.resource)||activity.resource.startsWith(tooling.namespacePrefix)){const key=toolingActivityV1(progress);return key===null?null:tooling.labels[progressLanguage(environment)][key].replace("{command}",progress.command);}
  const provider=progressSchema.const.sourceProvider;
  if(activity.resource.startsWith(provider.resourcePrefix)){const count=sourceProviderCounterV1(progress);return count===null?null:provider.labels[progressLanguage(environment)].replace("{command}",progress.command).replace("{completed}",String(count));}
@@ -130,19 +134,27 @@ export function formatScriptProcessActivityV1(progress:ScriptProgress,environmen
  const phase=progressSchema.const.graphPhase;
  if(activity.resource.startsWith(phase.resourcePrefix)){
   if(activity.elapsedMs!==0||activity.mode!=="shared"||activity.resource.length>phase.maximumResourceCharacters||progress.command.length>phase.maximumCommandCharacters||!new RegExp(phase.commandPattern,"u").test(progress.command))return null;
-  const parts=activity.resource.slice(phase.resourcePrefix.length).split(":"),name=parts[0]??"";if(parts.length!==3||!Object.hasOwn(phase.labels.en.phases,name)||!parts.slice(1).every(part=>new RegExp(phase.countPattern,"u").test(part)))return null;
+  const parts=activity.resource.slice(phase.resourcePrefix.length).split(":"),name=parts[0]??"";if(parts.length!==3&&parts.length!==6||!Object.hasOwn(phase.labels.en.phases,name)||!parts.slice(1,parts.length===3?3:5).every(part=>new RegExp(phase.countPattern,"u").test(part)))return null;
   const done=Number(parts[1]),total=Number(parts[2]);if(!Number.isSafeInteger(done)||!Number.isSafeInteger(total)||done>total)return null;
   const labels=phase.labels[progressLanguage(environment)],row=labels.phases[name as keyof typeof labels.phases],fields:Record<string,string>={command:progress.command,phase:row.label,units:row.units,done:String(done),total:String(total)};
-  return labels.template.replace(/\{([A-Za-z]+)\}/gu,(_token,key:string)=>fields[key]!);
+  if(parts.length===3)return labels.template.replace(/\{([A-Za-z]+)\}/gu,(_token,key:string)=>fields[key]!);
+  const count=Number(parts[3]),seconds=Number(parts[4]),encoded=(parts[5]??"").split(",");if(!Number.isSafeInteger(count)||count<1||!Number.isSafeInteger(seconds)||encoded.length<1||encoded.length>phase.maximumNames||encoded.length>count)return null;
+  const names:string[]=[];for(const text of encoded){let decoded:string;try{decoded=decodeURIComponent(text);}catch{return null;}if(decoded===""||/[\u0000-\u001f\u007f]/u.test(decoded))return null;names.push(decoded);}
+  fields.count=String(count);fields.seconds=String(seconds);fields.names=names.join(", ");
+  return labels.running.replace(/\{([A-Za-z]+)\}/gu,(_token,key:string)=>fields[key]!);
  }
  const queue=progressSchema.const.queueWait;
  if(activity.resource.startsWith(queue.resourcePrefix)){
   if(activity.elapsedMs!==0||activity.resource.length>queue.maximumResourceCharacters||progress.command.length>queue.maximumCommandCharacters||!new RegExp(queue.commandPattern,"u").test(progress.command))return null;
   let value:unknown;try{value=JSON.parse(activity.resource.slice(queue.resourcePrefix.length));}catch{return null;}
   if(validateJsonSchemaSubset(progressSchema.definitions.QueueWait,value).length)return null;
-  const row=value as {position:number;queued:number;holderMode:"shared"|"exclusive";holderPid:number;holderSeconds:number;resource:string};if(row.position>row.queued)return null;
+  const row=value as {position:number;queued:number;holderMode:"shared"|"exclusive";holderPid:number;holderSeconds:number;resource:string;holderState?:"progressing"|"silent"|"stuck"|"stale"|"unknown";holderPhase?:string;holderDone?:number;holderTotal?:number;holderEtaMinutes?:number};if(row.position>row.queued||(row.holderDone===undefined)!==(row.holderTotal===undefined))return null;
   const labels=queue.labels[progressLanguage(environment)],fields:Record<string,string>={command:progress.command,resource:row.resource,mode:labels.modes[activity.mode],position:String(row.position),queued:String(row.queued),holderPid:String(row.holderPid),holderMode:labels.modes[row.holderMode],holderSeconds:String(row.holderSeconds)};
-  return labels.template.replace(/\{([A-Za-z]+)\}/gu,(_token,key:string)=>fields[key]!);
+  const fill=(template:string,values:Record<string,string>):string=>template.replace(/\{([A-Za-z]+)\}/gu,(_token,key:string)=>values[key]!);
+  const message=fill(labels.template,fields);
+  if(row.holderState===undefined)return message;
+  const progressText=row.holderPhase===undefined?"":row.holderDone===undefined?fill(labels.holderPhase,{phase:row.holderPhase}):fill(labels.holderProgress,{phase:row.holderPhase,done:String(row.holderDone),total:String(row.holderTotal)}),etaText=row.holderEtaMinutes===undefined?"":fill(labels.holderEta,{minutes:String(row.holderEtaMinutes)});
+  return message+fill(labels.holder,{state:labels.states[row.holderState],progress:progressText,eta:etaText});
  }
  if(activity.resource.startsWith(declaration.resourcePrefix)){
   if(activity.elapsedMs!==0||activity.mode!=="shared"||activity.resource.length>declaration.maximumResourceCharacters||progress.command.length>declaration.maximumCommandCharacters||!/^[A-Za-z0-9:_/.-]+$/u.test(progress.command))return null;
@@ -153,7 +165,8 @@ export function formatScriptProcessActivityV1(progress:ScriptProgress,environmen
   return labels.template.replace(/\{([A-Za-z]+)\}/gu,(_token,key:string)=>fields[key]!);
  }
  if(!(activity.elapsedMs>=progressSchema.const.minimumElapsedMilliseconds))return null;
- return `${progress.command} remains active on ${activity.resource} (${activity.mode}, ${Math.round(activity.elapsedMs/1000)} s)`;
+ const long=progressSchema.const.longActivity.labels[progressLanguage(environment)],longFields:Record<string,string>={command:progress.command,resource:activity.resource,mode:long.modes[activity.mode],seconds:String(Math.round(activity.elapsedMs/1000))};
+ return long.template.replace(/\{([A-Za-z]+)\}/gu,(_token,key:string)=>longFields[key]!);
 }
 
 /** 🔎️ Validates the authored process envelope and its remaining original authority. */
@@ -190,8 +203,7 @@ const scope=(parent?:Scope):Scope=>({live:true,accepting:true,pending:new Set(),
 export class OriginalAdmissionClosedV1 extends Error{constructor(message:string,options?:ErrorOptions){super(message,options);this.name="OriginalAdmissionClosed";}}
 /** 📕️ A refusal by a closed owner that names the failure which closed it, so the consequence never hides its cause. */
 function closedV1(owner:Scope,text:string):OriginalAdmissionClosedV1{const first=owner.failures[0];return first===undefined?new OriginalAdmissionClosedV1(text):new OriginalAdmissionClosedV1(text+" - first failure: "+String(first instanceof Error?first.message:first).split("\n",1)[0]!.slice(0,progressSchema.const.firstFailure.maximumReasonCharacters),{cause:first});}
-/** 🥇️ Names the languages one failure notice is written in: the one the environment selects, otherwise every declared language, none assumed. */
-export function firstFailureLanguagesV1(environment:Readonly<Record<string,string|undefined>>):readonly("en"|"de")[]{const declared=Object.keys(progressSchema.const.firstFailure.labels) as ("en"|"de")[],selected=progressSchema.const.firstFailure.systemVariables.map(name=>environment[name]?.split(/[_.@-]/u)[0]?.toLowerCase()).find(value=>value!==undefined&&declared.includes(value as "en"|"de"));return selected===undefined?declared:[selected as "en"|"de"];}
+export function firstFailureLanguagesV1(environment:Readonly<Record<string,string|undefined>>):readonly("en"|"de")[]{return noticeLanguagesV1(Object.keys(progressSchema.const.firstFailure.labels) as ("en"|"de")[],environment);}
 /** ⏮️ Writes the first failure of an owner in every selected language, so a later refusal of that closed owner never masks it. */
 export function renderFirstFailureV1(first:unknown,masked:unknown,environment:Readonly<Record<string,string|undefined>>):string{const reason=(value:unknown):string=>String(value instanceof Error?value.message:value).split("\n",1)[0]!.slice(0,progressSchema.const.firstFailure.maximumReasonCharacters);return firstFailureLanguagesV1(environment).map(language=>progressSchema.const.firstFailure.labels[language].replace("{first}",reason(first)).replace("{masked}",reason(masked))).join("\n")+"\n";}
 function firstFailureV1(owner:Scope,failure:unknown):unknown{if(!(failure instanceof OriginalAdmissionClosedV1)||!owner.failures.length||owner.failures[0]===failure)return failure;try{process.stderr.write(renderFirstFailureV1(owner.failures[0],failure,process.env));}catch{}return owner.failures[0];}
@@ -219,12 +231,12 @@ export function requireIssuedScriptInvocationV1(invocation:ScriptInvocation):ass
 export function withScriptProcessEnvelope<T>(envelope:ScriptProcessEnvelope,run:(invocation:IssuedScriptInvocationV1)=>Promise<T>):Promise<T>{
  try{const admitted=readScriptProcessEnvelope(envelope,Date.now()),incoming=context.getStore();
  if(incoming){const birth=admit(incoming);if(JSON.stringify(admitted)!==JSON.stringify(birth.envelope))throw Error("Nested Original process envelope must preserve its actual parent");return track(birth,()=>run(incoming as IssuedScriptInvocationV1));}
- const started=performance.now(),deadline=admitted.deadlineEpochMilliseconds,initial=deadline===null?null:deadline-Date.now(),controller=new AbortController(),endProcess=createScriptTerminationGuardV1({exit:code=>process.exit(code),notice:text=>{process.stderr.write(text);},languages:()=>firstFailureLanguagesV1(process.env)}),interrupt=()=>{controller.abort(Error("Original Script process interrupted"));endProcess("SIGINT",130);},terminate=()=>{controller.abort(Error("Original Script process terminated"));endProcess("SIGTERM",143);};observeScriptProcessOutputV1();const stopWatchdog=startScriptProcessWatchdogV1({onStall:(idle,decision,children,treeIdle)=>{try{if(decision==="tree-stalled")for(const child of children)terminateOwnedProcessTree(child);process.stderr.write(scriptProcessWatchdogNoticeV1(decision==="stalled"?"stalled":"treeStalled",{owner:admitted.policy.owner,minutes:Math.round(idle/60000),children:children.length,treeMinutes:Math.round(treeIdle/60000)},firstFailureLanguagesV1(process.env)));}catch{}process.exit(124);}}),stopSampler=startScriptProcessActivitySamplerV1(progressDeadlineTraceEnabledV1(process.env)?{sample:createScriptProcessActivitySamplerV1({trace:(children,cpu)=>{process.stderr.write(progressDeadlineTraceV1("traceWork",{children:children??"?",cpu:cpu??"?"},firstFailureLanguagesV1(process.env)));}})}:{});
+ let ended:{signal:string;code:number}|undefined;const started=performance.now(),deadline=admitted.deadlineEpochMilliseconds,initial=deadline===null?null:deadline-Date.now(),controller=new AbortController(),endProcess=createScriptTerminationGuardV1({exit:code=>process.exit(code),notice:text=>{process.stderr.write(text);},languages:()=>firstFailureLanguagesV1(process.env)}),interrupt=()=>{ended??={signal:"SIGINT",code:130};controller.abort(Error("Original Script process interrupted"));endProcess("SIGINT",130);},terminate=()=>{ended??={signal:"SIGTERM",code:143};controller.abort(Error("Original Script process terminated"));endProcess("SIGTERM",143);};observeScriptProcessOutputV1();const stopWatchdog=startScriptProcessWatchdogV1({onStall:(idle,decision,children,treeIdle)=>{try{if(decision==="tree-stalled")for(const child of children)terminateOwnedProcessTree(child);process.stderr.write(scriptProcessWatchdogNoticeV1(decision==="stalled"?"stalled":"treeStalled",{owner:admitted.policy.owner,minutes:Math.round(idle/60000),children:children.length,treeMinutes:Math.round(treeIdle/60000)},firstFailureLanguagesV1(process.env)));}catch{}process.exit(124);}}),stopSampler=startScriptProcessActivitySamplerV1(progressDeadlineTraceEnabledV1(process.env)?{sample:createScriptProcessActivitySamplerV1({trace:(children,cpu)=>{process.stderr.write(progressDeadlineTraceV1("traceWork",{children:children??"?",cpu:cpu??"?"},firstFailureLanguagesV1(process.env)));}})}:{});
  const stopTimeout=initial===null?undefined:startProcessDeadlineV1(()=>creditedDeadlineRemainingV1(Math.min(deadline!-Date.now(),initial-(performance.now()-started)),admissionWaitedMillisecondsV1()),()=>controller.abort(Error("Original Script process deadline exhausted")),true);process.once("SIGINT",interrupt);process.once("SIGTERM",terminate);
- const presentation=createScriptProcessProgressWriterV1(line=>{process.stderr.write(line);},process.env);
- const invocation:ScriptInvocation=Object.freeze({policy:admitted.policy,capabilities:admitted.capabilities,control:Object.freeze({signal:controller.signal,remainingMilliseconds:()=>deadline===null||initial===null?null:Math.max(0,Math.floor(creditedDeadlineRemainingV1(Math.min(deadline-Date.now(),initial-(performance.now()-started)),admissionWaitedMillisecondsV1()))),publish:(line:ScriptProgress)=>{noteProgressV1();return presentation.publish(line);},yieldContinuation:()=>{noteProgressV1();return new Promise<void>(done=>setImmediate(done));}})});
- const birth:Birth={...scope(),invocation:invocation as IssuedScriptInvocationV1,envelope:admitted};invocations.set(invocation,birth);
- return observe(context.run(invocation,()=>settle(birth,async()=>{requireIssuedScriptInvocationV1(invocation);return await run(invocation);}).then(value=>{presentation.flush();checkScriptInvocation(invocation);return value;},error=>{try{presentation.flush();}catch{}throw error;}).finally(()=>{stopWatchdog();stopSampler();stopTimeout?.();process.removeListener("SIGINT",interrupt);process.removeListener("SIGTERM",terminate);})));
+ const presentation=createScriptProcessProgressWriterV1(line=>{process.stderr.write(line);},process.env,undefined,scriptProcessMachineRowsV1(process.env,process.stderr.isTTY===true));
+ const invocation:ScriptInvocation=Object.freeze({policy:admitted.policy,capabilities:admitted.capabilities,control:Object.freeze({signal:controller.signal,remainingMilliseconds:()=>deadline===null||initial===null?null:Math.max(0,Math.floor(creditedDeadlineRemainingV1(Math.min(deadline-Date.now(),initial-(performance.now()-started)),admissionWaitedMillisecondsV1()))),publish:(line:ScriptProgress)=>{noteProgressV1();noteLeaseProgressV1(line);return presentation.publish(line);},yieldContinuation:()=>{noteProgressV1();return new Promise<void>(done=>setImmediate(done));}})});
+ const birth:Birth={...scope(),invocation:invocation as IssuedScriptInvocationV1,envelope:admitted};invocations.set(invocation,birth);registerLeaseRootAbortV1(reason=>controller.abort(reason));
+ return observe(context.run(invocation,()=>settle(birth,async()=>{requireIssuedScriptInvocationV1(invocation);return await run(invocation);}).then(value=>{presentation.flush();checkScriptInvocation(invocation);return value;},error=>{try{presentation.flush();}catch{}if(ended!==undefined){const code=ended.code,quit=(reason:unknown)=>{if(reason!==error)throw reason;process.exit(code);};try{process.stderr.write(scriptProcessWatchdogNoticeV1("cancelled",{signal:ended.signal},firstFailureLanguagesV1(process.env)));}catch{}process.once("uncaughtException",quit);process.once("unhandledRejection",quit);}throw error;}).finally(()=>{stopWatchdog();stopSampler();stopTimeout?.();process.removeListener("SIGINT",interrupt);process.removeListener("SIGTERM",terminate);})));
  }catch(error){return observe(Promise.reject(error));}
 }
 const implementationPinKeyV1=Symbol.for("semio.implementationPin.context.v1");
@@ -362,3 +374,6 @@ export function requireAcceptedPhysicalCleanupControlV1(token:AcceptedPhysicalCl
 
 /** 🎯️ Requires exact issued control ancestry independently of equivalent inherited restrictions. */
 export function requireIssuedResourceControlDescendantV1(ancestor:ResourceLeaseControl,control:ResourceLeaseControl):void{requireIssuedResourceControlV1(ancestor);requireIssuedResourceControlV1(control);const expected=controls.get(ancestor)!,policy=schema.definitions.ControlDescendant.const;if(!policy.includeSelf||!policy.liveIssuance||policy.restrictionEquivalence)throw Error("Closed actual control lineage policy required");for(let row:ControlScope|undefined=controls.get(control);row;row=row.parentControl)if(row===expected)return;throw Error("Exact issued resource control descendant required");}
+
+/** 📣️ Publishes the members the lazy lease bridge calls under a process-wide key, so a lease module that a test runner loaded through its own module graph reaches the routing instance that issued the controls and not a second copy with an empty issuance table. */
+(globalThis as unknown as Record<symbol,unknown>)[Symbol.for("semio.issuedRouting.v1")]=Object.freeze({readIssuedResourceControlCapabilitiesV1,requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupDescendantV1,requireAcceptedPhysicalCleanupControlV1,checkAcceptedPhysicalCleanupV1,noteAcceptedPhysicalCleanupProgressV1,readAcceptedPhysicalCleanupV1,requireIssuedResourceControlRefinementV1,requireIssuedResourceControlDescendantV1,withAcceptedPhysicalCleanupOperationV1,closeAcceptedPhysicalCleanupChildrenV1,withRequestedIssuedResourceControlV1});

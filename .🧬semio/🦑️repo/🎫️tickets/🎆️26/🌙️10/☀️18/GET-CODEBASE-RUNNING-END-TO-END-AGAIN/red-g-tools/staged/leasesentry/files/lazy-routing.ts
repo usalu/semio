@@ -1,0 +1,22 @@
+import {createRequire} from "node:module";
+
+type RoutingV1=typeof import("../../🧭️routing/📥️invocation/🏃️process/🟦️.ts");
+const registryV1=Symbol.for("semio.issuedRouting.v1");
+let loaded:RoutingV1|undefined;
+
+/** 🦥️ Loads the issued-process routing module on the first call that needs it, so a command that only reads leases (status, listing) stays inside its startup module budget and never loads the routing group; every lease operation that takes or checks a lease pays the load once. The instance that issued the controls wins: its module registers itself under a process-wide key ({@link routingV1} asks the key first), so a runner that loads the lease module through its own module graph never reaches a second copy whose issuance table is empty. */
+const routingV1=():RoutingV1=>(globalThis as unknown as Record<symbol,RoutingV1|undefined>)[registryV1]??(loaded??=createRequire(import.meta.url)("../../🧭️routing/📥️invocation/🏃️process/🟦️.ts") as RoutingV1);
+const lazyV1=<Name extends keyof RoutingV1>(name:Name):RoutingV1[Name]=>((...argumentsV1:unknown[])=>(routingV1()[name] as (...rest:unknown[])=>unknown)(...argumentsV1)) as RoutingV1[Name];
+
+export const readIssuedResourceControlCapabilitiesV1=lazyV1("readIssuedResourceControlCapabilitiesV1");
+export const requireIssuedResourceControlV1=lazyV1("requireIssuedResourceControlV1");
+export const requireAcceptedPhysicalCleanupDescendantV1=lazyV1("requireAcceptedPhysicalCleanupDescendantV1");
+export const requireAcceptedPhysicalCleanupControlV1=lazyV1("requireAcceptedPhysicalCleanupControlV1");
+export const checkAcceptedPhysicalCleanupV1=lazyV1("checkAcceptedPhysicalCleanupV1");
+export const noteAcceptedPhysicalCleanupProgressV1=lazyV1("noteAcceptedPhysicalCleanupProgressV1");
+export const readAcceptedPhysicalCleanupV1=lazyV1("readAcceptedPhysicalCleanupV1");
+export const requireIssuedResourceControlRefinementV1=lazyV1("requireIssuedResourceControlRefinementV1");
+export const requireIssuedResourceControlDescendantV1=lazyV1("requireIssuedResourceControlDescendantV1");
+export const withAcceptedPhysicalCleanupOperationV1=lazyV1("withAcceptedPhysicalCleanupOperationV1");
+export const closeAcceptedPhysicalCleanupChildrenV1=lazyV1("closeAcceptedPhysicalCleanupChildrenV1");
+export const withRequestedIssuedResourceControlV1=lazyV1("withRequestedIssuedResourceControlV1");

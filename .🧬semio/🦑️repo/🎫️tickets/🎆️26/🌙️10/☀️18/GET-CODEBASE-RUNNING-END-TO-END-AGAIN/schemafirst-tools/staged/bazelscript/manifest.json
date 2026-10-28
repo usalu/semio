@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json": {
+  "file": "00.json",
+  "base": "a29899dd9e9a3b5a95c3abad88a7721b60315c7c820b856e499abc7258c49f6d",
+  "new": "458ab333adf45847d5effbb094e9283e30f3fb32301944fdd5817326c05f2310"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "01.ts",
+  "base": "79c489b7a81b4b3faab6c69132746cf24e0ba3c4b54207b9369feefc94647040",
+  "new": "6ab9ae04759d8634bd563332bae3f245216763db4872597f493c8ee5ad4c539b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/📜️bazel-script/🔣️.json": {
+  "file": "02.json",
+  "base": null,
+  "new": "0a8e91d471dac67e01dd68154b67722b87ad5c9b70101f1675320675e63d96de"
+ }
+}

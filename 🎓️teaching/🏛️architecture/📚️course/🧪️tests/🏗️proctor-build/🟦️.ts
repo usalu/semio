@@ -9,7 +9,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { expect, it } from "vitest";
 import schema from "../../../../🛂️proctor/🏗️bootstrap/🧬️schema/🔣️.json" with { type: "json" };
 import fixtures from "../../../../🛂️proctor/🏗️bootstrap/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
-import { buildProctor, proctorBuildMode, proctorBuildPlan, proctorSourceRoots, TEACHING_WORKSPACE, type ProctorArtifact, type ProctorExecutable } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
+import { buildProctor, proctorBuildMode, proctorBuildPlan, proctorSourceRoots, PROCTOR_PACKAGE, TEACHING_WORKSPACE, type ProctorArtifact, type ProctorExecutable } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 import { pinExecutableArtifact } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts";
 import { withResourceLeases, checkResourceLeaseControl } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { createScriptProcessEnvelope, withScriptProcessEnvelope, createIssuedResourceControlV1, createRequestedIssuedResourceControlV1, requireIssuedScriptInvocationV1, requireIssuedResourceControlInvocationV1, requireIssuedResourceControlRefinementV1, scriptInvocationEnvironment, withRequestedIssuedResourceControlV1, type ScriptInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -89,6 +89,8 @@ it("carries the current compiler phase through capture and drains children and b
           try { return await body({ root, buildDirectory: join(root, "b"), captureDirectory: join(root, "c"), environment: {}, storage, sourceBoundary: {} }, actual); }
           finally { live = false; retired = true; }
         }),
+        PROCTOR_PACKAGE,
+        withRepositoryCompilerStoreLaneV1: (store: unknown, control: typeof storePhase, request: { crates: string[] }, body: Function) => { expect(request).toEqual({ crates: [PROCTOR_PACKAGE] }); requireIssuedResourceControlRefinementV1(storePhase, control); return body(store, control); },
         randomUUID: () => "g", repositoryCargoPreparationStorageV1: () => ({}),
         cargoWorkspacePreparationInvocationV1: () => ({ command: "prepare", args: [], cwd: root, environment: {} }),
         captureOwnedCommandV1: async (_command: string, _args: unknown, _cwd: string, options: { control: typeof storePhase }) => { expect(options.control).toBe(storePhase); phases.push("preparation"); },

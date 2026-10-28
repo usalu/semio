@@ -1,0 +1,22 @@
+{
+ "version": 1,
+ "backend": "mirror",
+ "strength": "output-equivalence",
+ "allowed": 3077,
+ "learned": [],
+ "rounds": [
+  {
+   "exit": 0,
+   "tail": "bun test v1.4.2 (744846f84)\n\n 31 pass\n 0 fail\n 424 expect() calls\nRan 31 tests across 3 files. [1.79s]\n",
+   "seconds": 1.8,
+   "denied": [],
+   "notes": [
+    "copied:3727"
+   ],
+   "round": 0,
+   "backend": "mirror"
+  }
+ ],
+ "passed": true,
+ "clean": true
+}

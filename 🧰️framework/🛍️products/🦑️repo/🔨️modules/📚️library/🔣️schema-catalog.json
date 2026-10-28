@@ -349,7 +349,7 @@
       }
     },
     "app.block.3d.world-window.transient.mutation.set-brush-preview": {
-      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient/🧬️schema/🧬️mutations/👁️set-brush-preview/🧬️schema",
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient/🧬️schema/🧬️mutations/👁️brush-preview/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -951,7 +951,7 @@
       }
     },
     "app.gis.gisterrain.window.config.mutation.set-camera": {
-      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema/🧬️mutations/🎥️camera/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -1166,7 +1166,7 @@
       }
     },
     "app.mathematical.equation.graph-window.config.mutation.set-camera": {
-      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema",
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config/🧬️schema/🧬️mutations/🎥️camera/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -2918,7 +2918,7 @@
       }
     },
     "app.reasoning.wires.canvas-window.config.mutation.set-camera": {
-      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema",
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🎚️config/🧬️schema/🧬️mutations/🎥️camera/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -5396,7 +5396,7 @@
       }
     },
     "app.trinity.jack.results-window.transient.mutation.replace-query-result": {
-      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧬️schema/🧬️mutations/📊️replace-query-result/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧬️schema/🧬️mutations/📊️query-result/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -5836,7 +5836,7 @@
       }
     },
     "app.writer.writer.window.main.transient.mutation.set-lint-generation": {
-      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧬️schema/🧬️mutations/🔍️set-lint-generation/🧬️schema",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧬️schema/🧬️mutations/🔍️lint-gen/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34509,7 +34509,7 @@
       }
     },
     "s.energy.model.mutation.change-humidistat-dehumidifying-setpoint-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️humidistat/🏝️change-dehumidifying-setpoint-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️humidistat/🏝️dehumidify-setpoint-schedule/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -40966,7 +40966,7 @@
       }
     },
     "s.fem.results-window.transient.mutation.set-playback-clock": {
-      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧬️schema/🧬️mutations/⏱️set-playback-clock/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧬️schema/🧬️mutations/⏱️playback-clock/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -99941,7 +99941,7 @@
       }
     },
     "window.gis.map.config.mutation.set-layer-stroke-scale": {
-      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧬️schema/🧬️mutations/📏️set-layer-stroke-scale/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧬️schema/🧬️mutations/📏️stroke-scale/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -99959,7 +99959,7 @@
       }
     },
     "window.gis.map.config.mutation.set-layer-visibility": {
-      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧬️schema/🧬️mutations/👁️set-layer-visibility/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧬️schema/🧬️mutations/👁️layer-visibility/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {

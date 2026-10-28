@@ -1,0 +1,40 @@
+{
+ "name": "readme-bazel",
+ "code": "racy-tools + jobskey + ignoredenv + dashplan + planfp 1-2 + actenv v3 + envleak (all live)",
+ "lane": "docs4",
+ "guide": "🧰️framework/🛍️products/🦑️repo/README.md",
+ "baseSha256": "be08003eff0fead453c9d957576c6e31ef6a1292e8b65e26d56998667e743af5",
+ "needs": [],
+ "edits": [
+  {
+   "id": "bazel-bullets",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- **Execution requirements.** Every task and launcher action is tagged `no-remote-exec` (the `repo_noop` marker writes a file and runs no process). Actions that carry `host_state` are also tagged `no-sandbox`; today that is every task and launcher action, only the `repo_noop` marker is sandboxable (`STARLARK_RULES` in `🏗️build/🔧️tools/🏗️bazel/📜️script.ts`; `Actions.kinds` in `🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json`). The two reasons the schema records (`ActionPolicy.kinds`): a *task* action runs the task process in the real checkout, with its working directory, declared source-tree and shared-store writes, the loopback control socket and the out-of-tree runtime channel, which a sandbox would hide or block; a *launcher* action binds exact execroot output paths and obtains authority over the invocation's control socket, which a sandbox execroot would change. Consequence: results are keyed by the declared inputs and fingerprint, not by what a sandbox observed, so a missing input declaration shows up as a stale hit, not as a failure. The repository `.bazelrc` sets no `--spawn_strategy`, `--sandbox_*` or `--strategy` flag today (the test \"the repository .bazelrc carries exactly the authored static cache policy and no host paths\" in `🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests` pins its cache lines and rejects host paths, but nothing forbids a sandbox flag), so any action that is ever declared without `host_state` runs in Bazel's default sandbox.",
+   "where": "after",
+   "block": "- **Plan reuse.** A repeated selection in a session slot does not start the planner when the key of everything the plan is a function of is unchanged and its traced witness of the world still holds (`📚️library/🏗️build/🔭️witness`: stat, directory, file, git, environment and command-output observations, checked against the change journal when there is one); the earlier publication is returned and the run prints `[bazel] plan reused: N observations …`, else `[bazel] planning again: <reason>`. The planner records only the existence and kind of a declared source; the publishing parent copies changed files into the snapshot and rewrites the `<label>.input` fingerprints after every plan, fresh or reused, so a byte edit does not end a plan. The key leaves out the granted job count, per-run handover variables, ambient host, agent and session variables and diagnostic switches (`SEMIO_REPO_PROFILE`). The record lives in the package of the slot, so a slot holds the plan of its last selection only and the slot choice prefers the slot whose last selection it is. `SEMIO_REPO_PLAN_REUSE=off|verify`. The operator view (reasons, what keeps and what ends a plan) is in [📓️build-guide.md](📓️build-guide.md).\n- **Action environment.** An action process gets an allowlist, not the shell: `runtime.json` of the generated workspace (outside every action key) carries the names of the classes of the schema `🌿️environment/🏃️action` plus every name the task graph declares (`env` input rows, `valueEnv`, `env` maps; collected at plan time into `declared-environment.json`), minus credential-like names unless declared. A task that needs a variable declares it; the value of a declared variable is part of its action key. Input rows of kind `runtime` key by the standard output of their command only, run without diagnostic switches."
+  },
+  {
+   "id": "bazel-bullets",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- **Ausführungsanforderungen.** Jede Task- und Launcher-Action trägt `no-remote-exec` (der `repo_noop`-Marker schreibt nur eine Datei und startet keinen Prozess); Actions mit `host_state` zusätzlich `no-sandbox`, heute ist das jede Task- und Launcher-Action, nur der `repo_noop`-Marker ist sandboxfähig (`STARLARK_RULES` in `🏗️build/🔧️tools/🏗️bazel/📜️script.ts`; `Actions.kinds` in `🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json`). Gründe laut Schema (`ActionPolicy.kinds`): Eine *Task*-Action führt den Task-Prozess im echten Checkout aus, mit Arbeitsverzeichnis, deklarierten Schreibzugriffen auf Quellbaum und gemeinsamen Store, dem Loopback-Steuersocket und dem Laufzeitkanal außerhalb des Baums, was eine Sandbox verbergen oder blockieren würde; eine *Launcher*-Action bindet exakte Execroot-Output-Pfade und erhält Autorität über den Steuersocket der Invokation, was ein Sandbox-Execroot ändern würde. Folge: Ergebnisse sind durch deklarierte Inputs und Fingerabdruck bestimmt, nicht durch das, was eine Sandbox beobachtet hat; eine fehlende Input-Deklaration zeigt sich als veralteter Treffer, nicht als Fehler. Die `.bazelrc` des Repositorys setzt heute kein `--spawn_strategy`, `--sandbox_*` oder `--strategy` (der Test „the repository .bazelrc carries exactly the authored static cache policy and no host paths“ in `🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests` legt ihre Cache-Zeilen fest und lehnt Host-Pfade ab, verbietet aber kein Sandbox-Flag); jede Action, die je ohne `host_state` deklariert wird, läuft also in Bazels Standard-Sandbox.",
+   "where": "after",
+   "block": "- **Plan-Wiederverwendung.** Eine wiederholte Auswahl in einem Sitzungs-Slot startet den Planer nicht, wenn der Schlüssel von allem, wovon der Plan eine Funktion ist, unverändert ist und sein verfolgter Zeuge der Welt noch gilt (`📚️library/🏗️build/🔭️witness`: Beobachtungen von Stat, Verzeichnis, Datei, git, Umgebung und Befehlsausgabe, gegen das Änderungsjournal geprüft, wenn es eines gibt); die frühere Veröffentlichung wird zurückgegeben und der Lauf gibt `[bazel] plan reused: N observations …` aus, sonst `[bazel] planning again: <Grund>`. Der Planer notiert von einer deklarierten Quelle nur Existenz und Art; der veröffentlichende Elternprozess kopiert geänderte Dateien in den Schnappschuss und schreibt die Fingerabdrücke `<label>.input` nach jedem Plan neu, frisch oder wiederverwendet, sodass eine Byte-Änderung keinen Plan beendet. Der Schlüssel lässt die zugeteilte Job-Zahl, Übergabevariablen je Lauf, Variablen von Host, Agent und Sitzung und Diagnoseschalter (`SEMIO_REPO_PROFILE`) weg. Der Eintrag liegt im Paket des Slots, ein Slot hält also nur den Plan seiner letzten Auswahl, und die Slot-Wahl bevorzugt den Slot, dessen letzte Auswahl es ist. `SEMIO_REPO_PLAN_REUSE=off|verify`. Die Sicht des Betreibers (Gründe, was einen Plan hält und was ihn beendet) steht in [📓️build-guide.md](📓️build-guide.md).\n- **Umgebung der Aktionen.** Ein Aktionsprozess bekommt eine Allowlist, nicht die Shell: `runtime.json` des erzeugten Arbeitsbereichs (außerhalb jedes Aktionsschlüssels) trägt die Namen der Klassen des Schemas `🌿️environment/🏃️action` plus jeden Namen, den der Task-Graph deklariert (`env`-Eingabezeilen, `valueEnv`, `env`-Maps; beim Planen in `declared-environment.json` gesammelt), abzüglich der Namen, die nach Zugangsdaten aussehen, sofern nicht deklariert. Eine Task, die eine Variable braucht, deklariert sie; der Wert einer deklarierten Variable gehört zu ihrem Aktionsschlüssel. Eingabezeilen der Art `runtime` schlüsseln nur nach der Standardausgabe ihres Befehls, ausgeführt ohne Diagnoseschalter."
+  },
+  {
+   "id": "guide-pointer",
+   "lang": "en",
+   "kind": "replace",
+   "old": "Rust lanes, test routing, troubleshooting; English and German)",
+   "new": "Rust lanes, test routing, measuring a build, troubleshooting; English and German)"
+  },
+  {
+   "id": "guide-pointer",
+   "lang": "de",
+   "kind": "replace",
+   "old": "Rust-Lanes, Test-Routing, Fehlersuche; Englisch und Deutsch)",
+   "new": "Rust-Lanes, Test-Routing, Messen eines Builds, Fehlersuche; Englisch und Deutsch)"
+  }
+ ]
+}

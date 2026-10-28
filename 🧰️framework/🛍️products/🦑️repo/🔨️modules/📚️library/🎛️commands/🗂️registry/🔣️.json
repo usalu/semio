@@ -255,7 +255,7 @@
       "synopsis": "verify <lane> [arguments]",
       "summary": {
         "en": "Runs the repository verification lanes and gates.",
-        "de": "Führt die Verifikationsbahnen und Gates des Repositorys aus."
+        "de": "Führt die Verifikations-Lanes und Gates des Repositorys aus."
       }
     },
     {
@@ -400,7 +400,7 @@
       },
       "summary": {
         "en": "Writes micro-commit templates from the staged index.",
-        "de": "Schreibt Mikro-Commit-Vorlagen aus dem bereitgestellten Index."
+        "de": "Schreibt Micro-Commit-Vorlagen aus dem bereitgestellten Index."
       }
     },
     {
@@ -414,7 +414,7 @@
       },
       "summary": {
         "en": "Bundles micro-commits into a signed squash commit.",
-        "de": "Bündelt Mikro-Commits zu einem signierten Squash-Commit."
+        "de": "Bündelt Micro-Commits zu einem signierten Squash-Commit."
       }
     }
   ]

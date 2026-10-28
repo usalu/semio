@@ -76,7 +76,47 @@
     },
     "nx.daemon-slots-taken-running-without": {
       "en": "[nx] Every Nx daemon slot is taken; running without a daemon",
-      "de": "[nx] Alle Nx-Daemon-Plätze sind belegt; der Lauf geschieht ohne Daemon"
+      "de": "[nx] Alle Nx-Daemon-Slots sind belegt; der Lauf geschieht ohne Daemon"
+    },
+    "dashboard.installation-current": {
+      "en": "[dashboard] {mode} is current: its {files} source files and the {compiled} files its executable was compiled from are unchanged since its build, so nothing is built",
+      "de": "[dashboard] {mode} ist aktuell: seine {files} Quelldateien und die {compiled} Dateien, aus denen sein Programm gebaut wurde, sind seit seinem Build unverändert, es wird nichts gebaut"
+    },
+    "dashboard.artifact-required": {
+      "en": "[dashboard] there is no {mode} build to install: run repo run @semio-tech/repo-dashboard-rs:build first",
+      "de": "[dashboard] es gibt keinen {mode}-Build zum Installieren: zuerst repo run @semio-tech/repo-dashboard-rs:build ausführen"
+    },
+    "dashboard.artifact-sources-moved": {
+      "en": "[dashboard] {path} changed while the {mode} build compiled it, so this build is not kept: run repo run @semio-tech/repo-dashboard-rs:build again",
+      "de": "[dashboard] {path} hat sich geändert, während der {mode}-Build es kompilierte, daher wird dieser Build nicht behalten: repo run @semio-tech/repo-dashboard-rs:build erneut ausführen"
+    },
+    "dashboard.artifact-behind-sources": {
+      "en": "[dashboard] the {mode} build is behind its compiled source {path}: run repo run @semio-tech/repo-dashboard-rs:build --skip-cache",
+      "de": "[dashboard] der {mode}-Build ist hinter seiner kompilierten Quelle {path} zurück: repo run @semio-tech/repo-dashboard-rs:build --skip-cache ausführen"
+    },
+    "dashboard.sources-record-required": {
+      "en": "Dashboard executable sources record required",
+      "de": "Der Quellenbeleg der Dashboard-Programmdatei ist erforderlich"
+    },
+    "tools.cohort-required": {
+      "en": "Closed current immutable tooling cohort required",
+      "de": "Eine geschlossene, aktuelle, unveränderliche Werkzeuggruppe ist erforderlich"
+    },
+    "dashboard.artifact-changed": {
+      "en": "Dashboard artifact changed during installation",
+      "de": "Das Dashboard-Artefakt hat sich während der Installation geändert"
+    },
+    "tools.authorizer-ancestry-changed": {
+      "en": "A directory above an authorizer source changed while it was captured; run the command again",
+      "de": "Ein Verzeichnis über einer Autorisierer-Quelle hat sich während der Erfassung geändert; führe den Befehl erneut aus"
+    },
+    "tools.authorizer-directory-linked": {
+      "en": "An authorizer directory must be a real directory, not a symbolic link: {path}",
+      "de": "Ein Autorisierer-Verzeichnis muss ein echtes Verzeichnis sein, kein symbolischer Link: {path}"
+    },
+    "tools.selection-bounded": {
+      "en": "Select at most {maximum} distinct tooling generations by their 64-digit identity",
+      "de": "Wähle höchstens {maximum} verschiedene Werkzeuggenerationen über ihre 64-stellige Identität"
     }
   }
 }

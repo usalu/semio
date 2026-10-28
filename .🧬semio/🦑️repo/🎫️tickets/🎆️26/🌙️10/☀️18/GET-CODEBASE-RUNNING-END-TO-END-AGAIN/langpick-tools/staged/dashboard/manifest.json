@@ -1,0 +1,82 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md": {
+  "file": "000.md",
+  "base": "c4d18149cc0dd7a5e3287a9ec75aa8be9fca0f27fdd99c2fcbdf4cee5e0b241f",
+  "new": "48f7c988fa95b240f69627b6fa18107b8b1e7e8565b4b6a95df44eb674449ac8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⚙️preferences/🌐️language/🔣️.json": {
+  "file": "001.json",
+  "base": "a509838225ce37c88bdd71719e0b56c7d7f6c974747b33b5c4356081ffb2d62b",
+  "new": "d3aa0ee0c31239090ea3b053ee3ed035b4e7dd6ccd3921f2dcea513c8951dc67"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⚙️preferences/🌐️language/🦀️.rs": {
+  "file": "002.rs",
+  "base": "346c4c98b0640826962c366855c0ce28d9f6c73cd8e4bc5d0f6f199012edc087",
+  "new": "8287330918c6061cc57b0a05b18ce93dcfb584b412e5909944df45bb55786a18"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⚙️preferences/🌐️language/🧪️tests/🔬️unit/🦀️.rs": {
+  "file": "003.rs",
+  "base": "a60b761d858b9a014455f7954b6acedcecba90a7efc1cf5d73967bc142f70171",
+  "new": "337e4a61d462a41905701907aa1b2f84cdfb0c2d00cd6052849620eddbe27695"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⚙️preferences/🦀️.rs": {
+  "file": "004.rs",
+  "base": "fd1c22101bd7c6f14450750f687b3835f93c6c5ad1def03c673403fc77c3ae99",
+  "new": "82ea1cb7630cb63693868a533919ba8581408b99d943e09cb1b6747a3af2d640"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⚙️preferences/🧪️tests/🔬️unit/🦀️.rs": {
+  "file": "005.rs",
+  "base": "7c97e2931cc59d13ad73009fa837d486e3fd157a3e8696df4fddc3545f3249d0",
+  "new": "cb1814aff56057498da15f0425a39a522857ab9a42529ff931958cb39a5409e0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🛤️task-routes/🟦️.ts": {
+  "file": "006.ts",
+  "base": "dc4d877147affe8a8a949fcc7d10975443bf5f3b68ae02d0cff583645d4ae739",
+  "new": "ca3d37bfccda9b903b982a562ab01fe262c6395e352768de5b6942a9704d6722"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🌐️language/🟦️.ts": {
+  "file": "007.ts",
+  "base": "6ae9c5b1d0cc8944d0521dfca53085a275f51ca507abfde3d71aaf4ca2174291",
+  "new": "38cca50fbcfe3db69a49851520bdd5fbdb028478066f9b51abb2b5c3469b3d66"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎮️registry/🟦️.ts": {
+  "file": "008.ts",
+  "base": "cdaae7c11475c49e4adfcb9897d3f912f438f59cd9e0fd421da03236a677035d",
+  "new": "88d7ac0972c7a06f0805efc05cb2a5f6aba161ddfc112a3efc63db967715619b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧫️fixtures/🌐️language/🔣️.json": {
+  "file": "009.json",
+  "base": "82390e993b7c7aca425d192e409979bb61994e36f76d5f748ff557e0926448b0",
+  "new": "65156eff62a8b934423a0ba3b0cff0cceb3d55d8c39f55763dc16fe760333a14"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️cli/🟦️.ts": {
+  "file": "010.ts",
+  "base": "d018b9d2acb3bdc410c86a36e43208e43c39f0003268b3b20c063e4c34832774",
+  "new": "baba35e90c6209d8f3c6ea33aa9e24c624122e913284061180ee6d23ef2f6bd0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🏗️workspace/🦀️.rs": {
+  "file": "011.rs",
+  "base": "d5e1fe8198c115ed9330b18b56a1fc8e0ee296459fb3415c05073d88e1b578ce",
+  "new": "a5d2b8c9231754224353a448a27e3d58fb9186d73292fbcb51d11f0cff2f76dd"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/💨️smoke/🟦️.ts": {
+  "file": "012.ts",
+  "base": "91dfbc41f47d6a3a9331f94be57a1baf81c42d41c4e8f2b8e9580bb53d932e88",
+  "new": "c2aa42320bbc3d0dd3903bdbefdf7d7e4b6f0d87c2318856b5ea91bada35c1f1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🦀️.rs": {
+  "file": "013.rs",
+  "base": "cfae697196b1d2a2e4c33c990ffafb5aaa83034fc34bdecdd95efb1e991b189f",
+  "new": "fca054f3ecd71d3ec0b078441363c54303ea51c14941f2ee1b041c90f67e4f1d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🧰️support/🟦️.ts": {
+  "file": "014.ts",
+  "base": "e1825087824db2f7c3682935396b1cda2ec96244b2b112afbbcacf12fe4fb989",
+  "new": "bd93db88abfc76a5548bf28b2ecdc5f2049e0537f711fb358181fc943027f4f0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/⚙️preferences/🌐️language/🔣️.json": {
+  "file": "015.json",
+  "base": "a5930bbfbfeec2b7a3507633149ef6b819dbd563665f32026a86c2ddaaa09b54",
+  "new": "b0b426c1019c0e4ac38df0206fdf62fa4b8128331a9eed190a943c7e57c50c5d"
+ }
+}

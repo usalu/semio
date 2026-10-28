@@ -53,17 +53,18 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
          }
          catch (e) {
              if (config.allowPartialGraph && e instanceof error_types_1.ProjectGraphError) {
-@@ -792,6 +828,9 @@
+@@ -792,6 +828,10 @@
          return (await this.probeServer()).available;
      }
      async startDaemonIfNecessary() {
++        if (this._daemonStatus == DaemonStatus.CONNECTED) return;
 +        const frozen = await require('../../utils/workspace-context').loadSemioGraphAuthorizersV1();
 +        if (!frozen || typeof frozen.authorizers.withNxDaemonStartupV1 !== 'function') throw Error('Original immutable daemon startup owner required');
 +        return frozen.authorizers.withNxDaemonStartupV1(require('../../utils/cache-directory').workspaceDataDirectory, frozen.toolingIdentity, process.env, async (control, semioBirthEnvironment) => {
          if (this._daemonStatus == DaemonStatus.CONNECTED) {
              return;
          }
-@@ -814,7 +853,7 @@
+@@ -814,7 +854,7 @@
              }
              if (!probe.available) {
                  // Carried as a value so no other caller's probe can substitute for it.
@@ -72,7 +73,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
              }
              this.setUpConnection();
              this._daemonStatus = DaemonStatus.CONNECTED;
-@@ -829,6 +868,7 @@
+@@ -829,6 +869,7 @@
              // Fire-and-forget - don't block daemon connection by waiting for metrics registration
              this.registerDaemonProcessWithMetricsService(daemonPid);
          }
@@ -80,7 +81,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
      }
      async sendToDaemonViaQueue(messageToDaemon, parser) {
          return this.queue.sendToQueue(async () => {
-@@ -951,6 +991,8 @@
+@@ -951,6 +992,8 @@
       * Used for reconnection - throws VersionMismatchError if daemon version differs.
       */
      async waitForServerToBeAvailable(options) {
@@ -89,7 +90,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
          logger_1.clientLogger.log(`[Client] Waiting for server (max: ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts, ${WAIT_FOR_SERVER_CONFIG.delayMs}ms interval)`);
          // Poll-scoped, not instance state: reconnect paths have their own flags, so
          // several attempts can be in flight and a shared slot would let one report
-@@ -958,6 +1000,7 @@
+@@ -958,6 +1001,7 @@
          let stoppedOnRefusal = false;
          let refusal;
          const socket = await (0, wait_for_socket_connection_1.waitForSocketConnection)(() => {
@@ -97,7 +98,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
              try {
                  return this.getSocketPath();
              }
-@@ -973,6 +1016,7 @@
+@@ -973,6 +1017,7 @@
          }, {
              maxAttempts: WAIT_FOR_SERVER_CONFIG.maxAttempts,
              delayMs: WAIT_FOR_SERVER_CONFIG.delayMs,
@@ -105,7 +106,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
              onConnectError: (error, socketPath) => {
                  refusal = { error, socketPath };
                  // A refusal is not expected to become an acceptance, so polling the
-@@ -984,6 +1028,7 @@
+@@ -984,6 +1029,7 @@
                  return (stoppedOnRefusal = (0, permission_errors_1.isPermissionDenied)(error));
              },
          });
@@ -113,7 +114,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
          if (socket) {
              socket.destroy();
              logger_1.clientLogger.log(`[Client] Server available`);
-@@ -998,6 +1043,7 @@
+@@ -998,6 +1044,7 @@
          return { available: false, refusal };
      }
      async sendMessageToDaemon(message, force) {
@@ -121,7 +122,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
          // the first message sent to the daemon includes an env prop
          // that updates the process.env values on the daemon.
          if (!this.envReflectionSent && !global.NX_PLUGIN_WORKER) {
-@@ -1082,7 +1128,9 @@
+@@ -1082,7 +1129,9 @@
       *        when a daemon refuses us and then exits — the poll cannot reproduce it
       *        once the process json is gone. `nx daemon --start` passes nothing.
       */
@@ -132,12 +133,12 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
          if (global.NX_PLUGIN_WORKER) {
              throw new Error('Fatal Error: Something unexpected has occurred. Plugin Workers should not start a new daemon process. Please report this issue.');
          }
-@@ -1089,3 +1137,3 @@
+@@ -1089,3 +1138,3 @@
 -        (0, node_fs_1.mkdirSync)(tmp_dir_1.DAEMON_DIR_FOR_CURRENT_WORKSPACE, { recursive: true });
 +        (0, node_fs_1.mkdirSync)((0, path_1.dirname)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE), { recursive: true });
          if (!(0, node_fs_1.existsSync)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE)) {
              (0, node_fs_1.writeFileSync)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE, '');
-@@ -1104,11 +1152,11 @@
+@@ -1104,11 +1153,11 @@
              (0, path_1.join)(__dirname, `../server/start.js`),
          ], {
              cwd: workspace_root_1.workspaceRoot,
@@ -151,7 +152,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
          });
          // The child now owns dup'd copies of the descriptors, so release ours.
          (0, node_fs_1.closeSync)(outFd);
-@@ -1119,8 +1167,20 @@
+@@ -1119,8 +1168,20 @@
          // EPERM/EACCES, which is the only way that errno reaches this process.
          // Attached before `unref` so the listener is registered before the child can
          // exit; `unref` only stops the child holding the event loop open.
@@ -172,7 +173,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
              daemonRefusedSocket = code === socket_refused_exit_code_1.SOCKET_REFUSED_EXIT_CODE;
          });
          // if this process is the process that spawned the daemon,
-@@ -1130,9 +1190,12 @@
+@@ -1130,9 +1191,12 @@
          /**
           * Ensure the server is actually available to connect to via IPC before resolving
           */
@@ -186,7 +187,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
              return backgroundProcess.pid;
          }
          else {
-@@ -1159,22 +1222,33 @@
+@@ -1159,22 +1223,33 @@
                      ? (0, sandbox_socket_hint_1.sandboxSocketHint)({ certain: daemonRefusedSocket })
                      : []),
              ].join('\n'));
@@ -237,7 +238,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
 +            this.reset();
 +        });
 +    }
-@@ -1235,7 +1309,18 @@
+@@ -1235,7 +1310,18 @@
      // which is exactly when the daemon is most likely to fail to start.
      let body = message;
      try {

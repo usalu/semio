@@ -1,0 +1,17 @@
+{
+ "label": "g50p-edit",
+ "target": "@semio-tech/print-rs:test",
+ "started": "02:09:42",
+ "wall_s": 374.7,
+ "peak_tree_mb": 2590,
+ "peak_processes": 5,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "2",
+   "6 action cache hit, 1 internal, 1 local"
+  ]
+ }
+}

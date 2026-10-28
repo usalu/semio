@@ -45,7 +45,7 @@ const workspace = resolve(import.meta.dirname, "../../../../..");
 const owning = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../🎮️session/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
 const fixture = owning.integration as Fixture;
 const projection = readGeneratedCatalogProjection(join(workspace, owning.publication.catalogPath));
-const scratchBase = process.env.SEMIO_SESSION_OUTPUT_TEST_ROOT ? resolve(workspace, process.env.SEMIO_SESSION_OUTPUT_TEST_ROOT) : join(workspace, ".🧬semio/🦑️repo/⚡️cache/🧪️plugin-registry/playground-session-output");
+const scratchBase = process.env.SEMIO_SESSION_OUTPUT_TEST_ROOT ? resolve(workspace, process.env.SEMIO_SESSION_OUTPUT_TEST_ROOT) : join(workspace, ".🧬semio/🦑️repo/⚡️cache/🧪️tests/plugin-registry-session-output");
 let scratch = "";
 const absolute = (path: string): string => join(workspace, path);
 const sha256 = (bytes: string | Uint8Array): string => createHash("sha256").update(bytes).digest("hex");

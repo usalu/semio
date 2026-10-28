@@ -7,6 +7,13 @@
       "typecheck": "none",
       "files": [
         "💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
       ]
     },
     {
@@ -15,6 +22,13 @@
       "typecheck": "none",
       "files": [
         "🧹️pruning/🏪️budget/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "posix-process-control"
       ]
     },
     {
@@ -23,6 +37,11 @@
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -31,6 +50,11 @@
       "typecheck": "none",
       "files": [
         "💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -39,6 +63,11 @@
       "typecheck": "none",
       "files": [
         "💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🤝️shared/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -47,6 +76,11 @@
       "typecheck": "none",
       "files": [
         "../🏃️process/🦀️cargo/🚪️launcher/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -55,6 +89,11 @@
       "typecheck": "none",
       "files": [
         "../🔍️discovery/🕸️runtime/🔎️verification/💾️storage/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -63,6 +102,11 @@
       "typecheck": "none",
       "files": [
         "💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🏪️scope/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -71,6 +115,13 @@
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink"
       ]
     },
     {
@@ -79,6 +130,14 @@
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/📏️paths/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink",
+        "permission-bits"
       ]
     },
     {
@@ -87,6 +146,13 @@
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🚧️fence/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink"
       ]
     },
     {
@@ -95,6 +161,13 @@
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink"
       ]
     },
     {
@@ -103,6 +176,11 @@
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -111,6 +189,14 @@
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink",
+        "permission-bits"
       ]
     },
     {
@@ -119,6 +205,13 @@
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/📦️dependencies/🪞️adopt/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
       ]
     },
     {
@@ -127,6 +220,13 @@
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/📦️dependencies/🚦️concurrent/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink"
       ]
     },
     {
@@ -135,6 +235,14 @@
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink",
+        "permission-bits"
       ]
     },
     {
@@ -143,6 +251,13 @@
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🚪️ingress/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink"
       ]
     },
     {
@@ -151,14 +266,13 @@
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🛡️followup/🟦️.ts"
-      ]
-    },
-    {
-      "id": "lease-bootstrap",
-      "budgetMs": 300000,
-      "typecheck": "none",
-      "files": [
-        "../../../../../🔨️modules/🏃️process/🔒️leases/📦️bounded/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink"
       ]
     },
     {
@@ -167,6 +281,11 @@
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/🛠️tools/🔏️authorizers/📥️loading/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -175,6 +294,13 @@
       "typecheck": "none",
       "files": [
         "💾️storage/🔒️enforcement/📦️budget/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
       ]
     },
     {
@@ -183,14 +309,11 @@
       "typecheck": "none",
       "files": [
         "💾️storage/🔒️enforcement/📦️budget/🕸️graph/🧪️tests/🟦️.ts"
-      ]
-    },
-    {
-      "id": "bazel-storage",
-      "budgetMs": 300000,
-      "typecheck": "none",
-      "files": [
-        "../🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -199,6 +322,11 @@
       "typecheck": "none",
       "files": [
         "../🏃️process/🦀️cargo/🎯️exact/🧪️tests/🍎️image/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -207,6 +335,11 @@
       "typecheck": "none",
       "files": [
         "📦️artifacts/🔒️bounded/🧪️tests/🍎️image/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -218,7 +351,12 @@
       ],
       "fileLaunchers": {
         "📦️artifacts/🔒️bounded/🧪️tests/🟦️.ts": "setup-sdk"
-      }
+      },
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
     },
     {
       "id": "rust-units",
@@ -226,6 +364,11 @@
       "typecheck": "none",
       "files": [
         "🦀️cargo/📦️units/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -234,6 +377,11 @@
       "typecheck": "none",
       "files": [
         "🧪️tests/🌍️caller-environment/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -242,6 +390,13 @@
       "typecheck": "none",
       "files": [
         "💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
       ]
     },
     {
@@ -250,6 +405,11 @@
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/🛠️tools/🧹️retention/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -258,6 +418,13 @@
       "typecheck": "none",
       "files": [
         "🕸️graph/📤️publication/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink"
       ]
     },
     {
@@ -266,6 +433,11 @@
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📬️task-child/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -274,22 +446,11 @@
       "typecheck": "none",
       "files": [
         "🚀️bootstrap/🛠️tools/📥️use/🧪️tests/🟦️.ts"
-      ]
-    },
-    {
-      "id": "project-admission",
-      "budgetMs": 300000,
-      "typecheck": "none",
-      "files": [
-        "../🏗️build/👁️observation/🧪️tests/📦️projects/🟦️.ts"
-      ]
-    },
-    {
-      "id": "inference-observation",
-      "budgetMs": 300000,
-      "typecheck": "none",
-      "files": [
-        "../🏗️build/👁️observation/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -298,6 +459,11 @@
       "typecheck": "strict",
       "files": [
         "🧪️tests/🎮️playground-preparation/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -306,6 +472,11 @@
       "typecheck": "strict",
       "files": [
         "🚀️bootstrap/📥️invocation/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -319,6 +490,13 @@
       ],
       "typecheckFiles": [
         "🧹️pruning/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink"
       ]
     },
     {
@@ -332,6 +510,13 @@
       ],
       "typecheckFiles": [
         "🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink"
       ]
     },
     {
@@ -343,6 +528,11 @@
       ],
       "typecheckFiles": [
         "🕸️graph/🔏️seal/📥️membership/📥️journal/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -358,7 +548,12 @@
         "🚀️bootstrap/🛠️tools/🔏️authorizers/📤️receipt/🟦️.ts",
         "🚀️bootstrap/🛠️tools/🟦️.ts"
       ],
-      "scratch": "checkout"
+      "scratch": "checkout",
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
     },
     {
       "id": "graph-cache-waiter",
@@ -366,6 +561,11 @@
       "typecheck": "none",
       "files": [
         "🕸️graph/🏇️waiter/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -374,6 +574,11 @@
       "typecheck": "none",
       "files": [
         "🕸️graph/🔏️seal/🎯️selection/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -382,6 +587,11 @@
       "typecheck": "none",
       "files": [
         "🕸️graph/🔏️seal/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -390,6 +600,11 @@
       "typecheck": "none",
       "files": [
         "🧪️tests/🗿️artifact-source/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -398,6 +613,11 @@
       "typecheck": "none",
       "files": [
         "🧪️tests/🧱️command-source/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -406,6 +626,11 @@
       "typecheck": "none",
       "files": [
         "🧪️tests/🧾️cargo-provenance/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -414,6 +639,11 @@
       "typecheck": "none",
       "files": [
         "../🧪️tests/⚡️production-cache-input-boundary/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -440,6 +670,11 @@
         "🧹️pruning/⏱️recency/🧪️tests/🟦️.ts",
         "🧹️pruning/🌐️workspace/🧪️tests/🧮️projection/🟦️.ts",
         "🧹️pruning/🧪️tests/🧮️plan/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -449,6 +684,11 @@
       "files": [
         "🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🧪️tests/🧮️fetch/🟦️.ts",
         "🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🧪️tests/🧮️restore/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -459,6 +699,11 @@
         "🚀️bootstrap/🛠️tools/🧪️tests/📦️install-images/🟦️.ts",
         "🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🎟️capacity/🧪️tests/🟦️.ts",
         "🦀️cargo/🗃️unit-cache/💾️store/🧪️tests/📦️contract/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -467,6 +712,11 @@
       "typecheck": "none",
       "trees": [
         "🧪️tests/🔗️import-edges"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -475,6 +725,11 @@
       "typecheck": "none",
       "trees": [
         "🌐️vite"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -484,6 +739,11 @@
       "files": [
         "🌐️vite/💾️storage/🧪️tests/🟦️.ts",
         "🌐️vite/📥️environment/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -492,6 +752,11 @@
       "typecheck": "none",
       "trees": [
         "💾️storage/🔒️enforcement/🏗️compiler"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -505,7 +770,13 @@
         "💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🔒️exclusive-writer/🟦️.ts",
         "💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🟦️.ts",
         "💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts",
-        "💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts"
+        "💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts",
+        "💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -514,6 +785,11 @@
       "typecheck": "none",
       "trees": [
         "💾️storage/🔒️enforcement/📦️budget/📥️opening"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -532,6 +808,14 @@
         "💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🧵️prepared-worker/🟦️.ts",
         "💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/📐️layout/🍎️physical/🟦️.ts",
         "💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🧹️stamp/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command",
+        "symlink"
       ]
     },
     {
@@ -540,6 +824,11 @@
       "typecheck": "none",
       "trees": [
         "💾️storage/🔒️enforcement/📦️budget/🕸️graph"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -560,6 +849,14 @@
         "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📤️packet/🟦️.ts",
         "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔢️batch/🟦️.ts",
         "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command",
+        "symlink"
       ]
     },
     {
@@ -571,6 +868,15 @@
       ],
       "trees": [
         "💾️storage/🔒️enforcement/📦️budget"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink",
+        "permission-bits",
+        "posix-process-control"
       ]
     },
     {
@@ -579,6 +885,11 @@
       "typecheck": "none",
       "trees": [
         "💾️storage/🔒️enforcement/🔌️nx"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -593,6 +904,13 @@
         "💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🔓️pool-order/🟦️.ts",
         "💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
         "💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🤝️yield/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink"
       ]
     },
     {
@@ -602,6 +920,13 @@
       "trees": [
         "💾️storage/🔒️enforcement/🧵️session",
         "💾️storage/🧾️ledger"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
       ]
     },
     {
@@ -610,7 +935,13 @@
       "typecheck": "none",
       "files": [
         "💾️storage/🔒️enforcement/🧵️session/🏊️pool/🧪️tests/🟦️.ts",
-        "💾️storage/🧾️ledger/🧪️tests/⚖️law/🟦️.ts"
+        "💾️storage/🧾️ledger/🧪️tests/⚖️law/🟦️.ts",
+        "💾️storage/🧾️ledger/🎚️machine/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -619,6 +950,13 @@
       "typecheck": "none",
       "trees": [
         "🚀️bootstrap/🛠️tools/📦️sdk"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "posix-process-control"
       ]
     },
     {
@@ -631,6 +969,11 @@
         "🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/🟦️.ts",
         "🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📤️copy/🧪️tests/🟦️.ts",
         "🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -639,6 +982,13 @@
       "typecheck": "none",
       "trees": [
         "🚀️bootstrap/🛠️tools/🔏️authorizers"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink"
       ]
     },
     {
@@ -650,6 +1000,13 @@
         "🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📦️compiler-init/🟦️.ts",
         "🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🧭️closure-law/🟦️.ts",
         "🚀️bootstrap/🛠️tools/🔏️authorizers/🧭️sites/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
       ]
     },
     {
@@ -658,6 +1015,13 @@
       "typecheck": "none",
       "trees": [
         "🚀️bootstrap/🛠️tools/🧹️retention"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink"
       ]
     },
     {
@@ -668,6 +1032,14 @@
         "🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/🟦️.ts",
         "🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
         "🚀️bootstrap/🛠️tools/🧹️retention/📦️generation/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink",
+        "permission-bits"
       ]
     },
     {
@@ -676,6 +1048,11 @@
       "typecheck": "none",
       "trees": [
         "🚀️bootstrap/🛠️tools"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -689,6 +1066,15 @@
         "🚀️bootstrap/🛠️tools/👷️workers/🧪️tests/🟦️.ts",
         "🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts",
         "🚀️bootstrap/🛠️tools/🧰️native/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "posix-shell-script",
+        "symlink",
+        "permission-bits"
       ]
     },
     {
@@ -697,6 +1083,11 @@
       "typecheck": "none",
       "trees": [
         "🚀️bootstrap/📦️dependencies"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -708,6 +1099,14 @@
         "🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🧪️tests/🟦️.ts",
         "🚀️bootstrap/📦️dependencies/🔒️lock-sync/🧪️tests/🟦️.ts",
         "🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink",
+        "permission-bits"
       ]
     },
     {
@@ -716,6 +1115,13 @@
       "typecheck": "none",
       "trees": [
         "🚀️bootstrap"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
       ]
     },
     {
@@ -725,7 +1131,13 @@
       "files": [
         "🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
         "🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts",
-        "🚀️bootstrap/🔌️nx-plugin/🧪️tests/🦀️native-dependency-closures/🟦️.ts"
+        "🚀️bootstrap/🔌️nx-plugin/🧪️tests/🦀️native-dependency-closures/🟦️.ts",
+        "🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -734,6 +1146,11 @@
       "typecheck": "none",
       "trees": [
         "🦀️cargo/📦️units"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -764,6 +1181,14 @@
         "🦀️cargo/📦️units/🧪️tests/📐️profile/♻️preparation/🟦️.ts",
         "🦀️cargo/📦️units/🧪️tests/📥️source/🟦️.ts",
         "🦀️cargo/📦️units/🧭️context/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command",
+        "symlink"
       ]
     },
     {
@@ -779,6 +1204,11 @@
       ],
       "trees": [
         "🦀️cargo/🗃️unit-cache"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -787,6 +1217,11 @@
       "typecheck": "none",
       "trees": [
         "🕸️graph"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -801,6 +1236,11 @@
         "🕸️graph/🔏️seal/🎯️selection/📥️scope/🧪️tests/🟦️.ts",
         "🕸️graph/🔏️seal/📌️generation/🧪️tests/🟦️.ts",
         "🕸️graph/🔏️seal/📦️facts/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -809,6 +1249,13 @@
       "typecheck": "none",
       "trees": [
         "📦️artifacts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "posix-process-control"
       ]
     },
     {
@@ -823,6 +1270,13 @@
         "📦️artifacts/📋️native-orchestration/🧪️tests/🗺️owner-test-manifests/🟦️.ts",
         "📦️artifacts/🟦️typescript/🧪️tests/🧭️bundle-runtime/🟦️.ts",
         "📦️artifacts/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
       ]
     },
     {
@@ -831,6 +1285,11 @@
       "typecheck": "none",
       "trees": [
         "📦️bundle"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -839,6 +1298,11 @@
       "typecheck": "none",
       "trees": [
         "📖️texts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -847,6 +1311,11 @@
       "typecheck": "none",
       "trees": [
         "📥️inference"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -855,6 +1324,11 @@
       "typecheck": "none",
       "files": [
         "📥️inference/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -863,6 +1337,11 @@
       "typecheck": "none",
       "trees": [
         "🗃️records"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -871,6 +1350,11 @@
       "typecheck": "none",
       "files": [
         "🗃️records/🧪️tests/🔌️descriptor-limit/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -879,6 +1363,11 @@
       "typecheck": "none",
       "trees": [
         "🧹️pruning"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -892,6 +1381,13 @@
         "🧹️pruning/🏪️budget/📜️history/🧪️tests/🟦️.ts",
         "🧹️pruning/📉️pressure/🧪️tests/🟦️.ts",
         "🧹️pruning/📦️metadata/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "symlink"
       ]
     },
     {
@@ -904,6 +1400,11 @@
       },
       "files": [
         "🧹️pruning/🧪️tests/⏱️recency/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -912,6 +1413,11 @@
       "typecheck": "none",
       "trees": [
         "🧪️tests"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -921,6 +1427,11 @@
       "files": [
         "🧪️tests/📐️phases/🟦️.ts",
         "🧪️tests/📚️library-search-path/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -932,6 +1443,11 @@
       ],
       "trees": [
         "🗂️suites"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -943,7 +1459,122 @@
         "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔏️admission/🧪️admitted-worker-harness/🟦️.ts",
         "📦️artifacts/🏗️native-build/📥️published/🧪️tests/🟦️.ts"
       ],
-      "scratch": "checkout"
+      "scratch": "checkout",
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "laws-library-texts",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🕸️dependencies/📖️texts/🧪️tests/🟦️.ts",
+        "../🕸️dependencies/🧭️direction/📖️texts/🧪️tests/🟦️.ts",
+        "../🎛️commands/✅️verify/📖️texts/🧪️tests/🟦️.ts",
+        "../🎛️commands/📝️commit/📖️texts/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "laws-library-commit-hooks",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🎛️commands/📝️commit/🪝️hooks/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "laws-library-direction-observation",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🕸️dependencies/🧭️direction/🧪️tests/🔁️observation/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "laws-library-workspace-exports-memo",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🧪️testing/📦️workspace-exports/🧠️memo/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "laws-library-process",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🏃️process/📋️context/🔣️policy/🧪️tests/🟦️.ts",
+        "../🏃️process/🧭️routing/🚪️entrypoint/🧪️tests/🟦️.ts",
+        "../🏃️process/🦀️cargo/🎟️admission/🧪️tests/🟦️.ts",
+        "../🏃️process/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "laws-builder-admission",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../../🖥️server/🎛️coordinator/🏗️builder/🎟️admission/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "laws-dashboard-control-plane",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../../🎛️dashboard/🧪️tests/🌀️control-plane/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "laws-plugin-initialization-retirement",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../../../../💻️os/🔨️modules/🔌️plugin/🌱️initialization/♻️retirement/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
     }
   ],
   "codeSuites": [

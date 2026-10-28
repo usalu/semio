@@ -1,0 +1,52 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json": {
+  "file": "00-🔣️.json",
+  "base": "8984970edc9663ac44d1a846787a5d0b09d604bb3ca95dada5daf472b865c3cc",
+  "new": "bd3ee38742d1b9c32bd5edbe12d17c3b8d2fd0dae4cb84a4ea51cb7988ed793a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧬️schema/🚪️entrypoint/🔣️.json": {
+  "file": "01-🔣️.json",
+  "base": "7305d4e48960ce73678fedf05f9e4ffa87ea8bb96978205c09ed4dfeffe40348",
+  "new": "ea1c24470575f9d58883e3c07b190cc8ddda2e28d1316c03067b284796c118af"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🖼️assets/🏗️build-surface.json": {
+  "file": "02-🏗️build-surface.json",
+  "base": "64e0680c9c8c565243aeb017ac8a9c6fd5780b708ca38a823f3ac10cff978fb1",
+  "new": "161c52bedd681a6551c542c261909eb277f638949dba136f092cc9834f17522d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🧪️tests/🔬️unit/🐹️.go": {
+  "file": "03-🐹️.go",
+  "base": "b787c71e61d9966061763588491279025029ad86d37eb51f0fab3855b8b6be98",
+  "new": "ca85e3e9f6dcfb7fd908cb1a905885f1102bc0e787dbd7f45f4dfd19dbb9e008"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🧪️tests/🩹️autofix/🐹️.go": {
+  "file": "04-🐹️.go",
+  "base": "85cd2fb32963ef2b1c8d10f05bbc02fc730eab4f99bd12058b625cbdfdd66c3e",
+  "new": "37b37e1b04842dfe5e1ada50c79c418dc2be635923f3e226c35f4774845d72d1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🧪️tests/🛠️fix-mutation/🐹️.go": {
+  "file": "05-🐹️.go",
+  "base": "ed3ef1d36d6088a7708675d5ca3d45c0474d1c30b7115ff7ec386e2d3ee23b69",
+  "new": "e311da70fe88843dbcc28619fa7fac148e7b0f65f36066fca30c1b5f20ac00c6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder/🧪️file-fixable/🟦️.tsx": {
+  "file": "06-🟦️.tsx",
+  "base": "ea60d866745642457c7b3764dc7097ebf0456b1004be180656dbf7df9ec8bdfa",
+  "new": "ae5823331ca9fa31f2b41d4205bbed121f224f3f035c8f1952926d0603123c18"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧰️harness/🐹️.go": {
+  "file": "07-🐹️.go",
+  "base": "83419982dff22ce6abb0b88d959d0a1f3ae1b3c69d54083115e71af7722558fa",
+  "new": "831423c4f3267e7cd52da2fe2af483f34f8710b22d9660b7efa22a66d925662a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🔖️version-contract/🐹️.go": {
+  "file": "08-🐹️.go",
+  "base": "03c3ace06dfdcce5d2791e96e4df4698881fa80be539c74d5825e2d5aa982406",
+  "new": "90a4f291d3609cb140644f3e56f7aff7527191bcddb900d5fa2896b859449142"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🕳️empty-workspace/🐹️.go": {
+  "file": "09-🐹️.go",
+  "base": null,
+  "new": "eac25132b0e84ea6f7fa51066d0a88630f28f48b32ef8b60e6b4082bfac12160"
+ }
+}

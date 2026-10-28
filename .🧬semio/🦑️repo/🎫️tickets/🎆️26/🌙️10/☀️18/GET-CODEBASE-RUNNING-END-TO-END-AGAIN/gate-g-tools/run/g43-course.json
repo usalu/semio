@@ -1,0 +1,31 @@
+{
+ "label": "g43-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "14:38:23",
+ "wall_s": 171.4,
+ "peak_tree_mb": 5928,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "7"
+  ],
+  "inferring": [
+   "7"
+  ],
+  "published": [
+   "658",
+   "7",
+   "64"
+  ],
+  "processes": [
+   "7",
+   "1 action cache hit, 1 disk cache hit, 1 internal, 5 worker"
+  ],
+  "actions": [
+   "7"
+  ]
+ }
+}

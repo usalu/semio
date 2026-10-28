@@ -2,7 +2,7 @@ import {createHash} from "node:crypto";
 import {existsSync, readFileSync} from "node:fs";
 import {delimiter, join} from "node:path";
 import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {resolveLanguageV1} from "../🗣️language/🟦️.ts";
+import {resolveLanguageV1} from "../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type: "json"};
 import document from "./🔣️.json" with {type: "json"};
 

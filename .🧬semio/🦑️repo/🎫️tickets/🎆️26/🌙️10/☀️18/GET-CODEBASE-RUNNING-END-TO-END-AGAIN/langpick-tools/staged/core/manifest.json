@@ -1,0 +1,137 @@
+{
+ "nx.json": {
+  "file": "000.json",
+  "base": "44ddec4c06698ef1d60154525833928eea3ec7f519dfc46ac8bd375a89f29abc",
+  "new": "64580aee9965eb347cd00be10e7578966140e2151cf091b5b9bef8dd4b619629"
+ },
+ "🧰️framework/📦️packages/🟦️typescript/package.json": {
+  "file": "001.json",
+  "base": "2cc84544f279c4a38b71b93ad5e8813cf5cc1019782030bd9925d116fdb39c34",
+  "new": "05815c91c6893c64132390f11f2d105f1cd12b04aea611c484049c53d7b1dff9"
+ },
+ "🧰️framework/📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts": {
+  "file": "002.ts",
+  "base": null,
+  "new": "f8edc3276c947aebbfaa232bbfbc324699299486c1e51fc0c145d617bc5c63c3"
+ },
+ "🧰️framework/🔨️modules/⚙️runtime/🗣️language/🔣️.json": {
+  "file": "003.json",
+  "base": null,
+  "new": "8ce4fd74346ebe286caba57811f3852a222d0939b89136e306e80d6daa9052e5"
+ },
+ "🧰️framework/🔨️modules/⚙️runtime/🗣️language/🟦️.ts": {
+  "file": "004.ts",
+  "base": null,
+  "new": "49d0980d2489ff83446dd1bb710e50351b489f7ef3316d61b77d3b1a32f84a43"
+ },
+ "🧰️framework/🔨️modules/⚙️runtime/🗣️language/🧪️tests/🐍️.py": {
+  "file": "005.py",
+  "base": null,
+  "new": "f9931645d47f90db378f2d05cb50ae751adc37d3e6ee91216329489438b6d36f"
+ },
+ "🧰️framework/🔨️modules/⚙️runtime/🗣️language/🧪️tests/🔣️.json": {
+  "file": "006.json",
+  "base": null,
+  "new": "f83cd0cc72fb0b0afff2e14c22d1096bb325687160a0a8769fb44f8d81327f86"
+ },
+ "🧰️framework/🔨️modules/⚙️runtime/🗣️language/🧪️tests/🟦️.ts": {
+  "file": "007.ts",
+  "base": null,
+  "new": "db43e0ff2bf8a53e803b96461db5a60cc72dce7c35c8925d664aaae4dc2e9973"
+ },
+ "🧰️framework/🔨️modules/⚙️runtime/🗣️language/🧬️schema/🔣️.json": {
+  "file": "008.json",
+  "base": null,
+  "new": "9b1bed5c1333e6c56cc23213c8a11a61a8d3a10d43bb6aad5808f4d43a37c275"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts": {
+  "file": "009.ts",
+  "base": "77473f24d5d7278c80c28b8e15695e7b4f6ebc16f1eb59890f2fdab08e78428d",
+  "new": "5bbe004d1718b84c9e0fcbdafee1e7845551d375e8dd4ed9e03f40ac6c12e113"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/📣️progress/🟦️.ts": {
+  "file": "010.ts",
+  "base": "9303933b44f868e3cbaa0c811fcec06addbccf1b987343adb99fb5d8e2ff5672",
+  "new": "f492783109b800f869a935063fb95010d662012a518546d75ea2bc474ce5519e"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🔣️.json": {
+  "file": "011.json",
+  "base": "b0dd557d40dfcba377295c94eb770953636cccb70a6bd0deb09a2b6011fc9f08",
+  "new": null
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🟦️.ts": {
+  "file": "012.ts",
+  "base": "b5a28526171812eceabdcfe1fff3ec5afc2a892680ea798845d140e3b7451256",
+  "new": null
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🧪️tests/🔣️.json": {
+  "file": "013.json",
+  "base": "bdf505d98a2dc1dc9edac117aba3b813e9b6ce888c1d6721ea66e16e4fc3aa58",
+  "new": null
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🧪️tests/🟦️.ts": {
+  "file": "014.ts",
+  "base": "c7cc774a008426a5987926895fd6d11e798b17dae29d9f2a4a7c74c1db8bc7e7",
+  "new": null
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🧬️schema/🔣️.json": {
+  "file": "015.json",
+  "base": "6ce1c5cc9297b914def3619b94653efb17614e202b80d6767b1046fd3cc380ad",
+  "new": null
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🟦️.ts": {
+  "file": "016.ts",
+  "base": "e8bd41efcd75d37cdf2461685495a15568c46a51aae53c78fe5f8a0a41caf167",
+  "new": "8798c1fc3137872cdf78846d05c70cbe78eebcbc9d3a52c2e3dc6188e5fa564c"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts": {
+  "file": "017.ts",
+  "base": "75088515c9aa481733dad605db59b89aef7a92b90f5932e2e5ba88540ba6f2e3",
+  "new": "538781f2af9cbf4eeeedbf4608a22da150cffefd0829ec1ce70c3120ebd6151d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json": {
+  "file": "018.json",
+  "base": "1b9c8b51917281a51b858d9ccdd8168bc4479f109267f2d3cdff511ac2069d6e",
+  "new": "f809a22fb8898f34c7474f8a360d29cce39d39a6ff26a0f7fd271a9250513da0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔏️admission/🧫️.json": {
+  "file": "019.json",
+  "base": "74973d237d1ac35e439350e027dd8684d1897d8c01bc62a0dfd71f84ff3992b1",
+  "new": "0babb307605726033907c7d3a81c09a73ea0b9e79f86bece1f44b973da2a0651"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🔣️.json": {
+  "file": "020.json",
+  "base": "ccad64fd106cfcd38922ec820be459daa13466dee951ab3d11f3db8c36835766",
+  "new": "7eaacaa21a790e41c85561e2f18e501d50573c5816d7aa589af3ca2b670bb9a7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🔣️.json": {
+  "file": "021.json",
+  "base": "2cf28546b993c39fa273653f93061295e723eadc5d2089566668d6087839fc31",
+  "new": "580a8c75697d10e87f7cf8d0bd8cd89b6d165e403a495213052852bc43f96679"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🗓️scheduling/🔣️.json": {
+  "file": "022.json",
+  "base": "3890d2afc77f06456631cf0886a1c48ece4e6b14b68e26a8cd4e435fb97473bf",
+  "new": "35f4c9263c6dc7b0fd3a79777b3b7617a71b676fb8f2f8b549224eb9b57efbab"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json": {
+  "file": "023.json",
+  "base": "3029ad7a3ec4d61b065f2b8bac6714308acfb2c7b459dbc465328ac0477e44ad",
+  "new": "00705ab3aa8e69e47e5d2999e20b4d4cfa58b232e6feab199e3690da19ea145d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🎬️scopes/🔣️.json": {
+  "file": "024.json",
+  "base": "533247c4a2734a5c6735b9ccaeeca6a868495c220e58fc62b8b3d414d4ae908b",
+  "new": "5e638963160c0cd2745b2eb11565c05c59647c001183c6ebe5d3c69a44db9908"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json": {
+  "file": "025.json",
+  "base": "1fb3c7d5074b630311cc995af26bf8630e79c58380f2e05a58b3029c90b785c7",
+  "new": "f61566f56d3d6c323ad797435e205a596d93080eee119ec9c810725fcb24b293"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗣️language-contract/🐹️.go": {
+  "file": "026.go",
+  "base": "306da821555cd2f9cb9bb9db74c5ee37bc1ff7d22ce0392dc83df67d142e319d",
+  "new": "49207b1eaaf17dfd9d16e8f234fc77b8685b64ce4f4d6e56cb2ed92623e0532b"
+ }
+}

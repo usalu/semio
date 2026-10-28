@@ -110,7 +110,7 @@
       "reason": "Rust test names a constant directory below temp_dir(): collision-free across agents only while the runner points TMPDIR at the per-run sandbox; two tests of one binary may still share the name (make it unique per test, then drop this row)"
     },
     {
-      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/🎯️root-selection_test.go",
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🧪️tests/🧭️root-selection/🐹️.go",
       "rule": "go-unsandboxed-writer",
       "count": 1,
       "reason": "allocates fixture directories inside the caller's SEMIO_TEST_ARTIFACT_DIR with bounded owned names; not yet on the shared Go sandbox helper"
@@ -124,7 +124,7 @@
     {
       "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🧪️tests/🟦️.ts",
       "rule": "real-graph-image",
-      "count": 1,
+      "count": 2,
       "reason": "opens the graph (or another persistent) partition of the real checkout through its workspace argument, so the call leases the real `.cache/b/g` image (shared for readers, exclusive for writers); needs a sandbox workspace named sandboxWorkspace. A probe of a sandbox graph workspace runs its body in 15 s but the build-test invocation teardown then spins, so the conversion waits for that owner"
     },
     {

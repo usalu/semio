@@ -67,7 +67,7 @@ test("every schema pattern accepts and refuses the fixture strings like Python's
   for(const value of row.accepted)expect(()=>requireRemoteCacheShapeV1(row.definition as keyof typeof schema.definitions,value,"x"),row.definition).not.toThrow();
   for(const value of row.refused)expect(()=>requireRemoteCacheShapeV1(row.definition as keyof typeof schema.definitions,value,"x"),row.definition).toThrow();
  }
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I","-c","import json,re,sys\nrows=json.loads(sys.stdin.read())\nprint(json.dumps([[re.fullmatch(r['pattern'],v) is not None for v in r['accepted']+r['refused']] for r in rows]))"],{stdin:new TextEncoder().encode(JSON.stringify(rows)),stdout:"pipe",stderr:"pipe"});
  expect(result.exitCode,result.stderr.toString()).toBe(0);
  const expected=rows.map(row=>[...row.accepted.map(()=>true),...row.refused.map(()=>false)]),actual=JSON.parse(result.stdout.toString()) as boolean[][];
@@ -86,8 +86,7 @@ test("Bazel renders the neutral contract into exactly the fixture flags, environ
  }
 });
 
-test("the generated credential helper answers Bazel's get request with a valid bearer header and never contains the token",()=>{
- if(process.platform==="win32")return;
+test.skipIf(process.platform==="win32")("the generated credential helper answers Bazel's get request with a valid bearer header and never contains the token",()=>{
  const row=fixture.bazel.find(candidate=>candidate.helper&&candidate.platform==="linux")!,contract=resolveRemoteCacheContractV1(row.environment)!,folder=directory("helper"),rendering=bazelRemoteCacheV1(contract,row.environment,{helperDirectory:folder,platform:"linux"}),helper=rendering.helper!;
  writeFileSync(helper.path,helper.content,{mode:helper.mode});
  expect(helper.content).not.toContain("tok-123");

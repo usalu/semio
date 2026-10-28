@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "👓️ Walk views corpus: a tiny workspace with keyed, scheduling and native-build modules, and cumulative edits whose verdict per view (whole walk, scheduling view, native view) is stated",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "entry",
+    "files",
+    "mutations"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "entry": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "files": {
+      "$ref": "#/definitions/Files"
+    },
+    "mutations": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "edit",
+          "changed"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z]+(-[a-z]+)*$"
+          },
+          "edit": {
+            "$ref": "#/definitions/Files"
+          },
+          "changed": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "whole",
+              "scheduling",
+              "native"
+            ],
+            "properties": {
+              "whole": {
+                "type": "boolean"
+              },
+              "scheduling": {
+                "type": "boolean"
+              },
+              "native": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Files": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 48,
+      "propertyNames": {
+        "maxLength": 160
+      },
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 1024
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts": {
+  "file": "f000",
+  "base": "a10b8302c21b81fb6593ee9e88f7925b2d57ad3b7d1f0ddf3a04fb7278cc189d",
+  "new": "b8cecc1b024b4d3aa03c1f90c4088496ebc4f178a14411765a5445e633e25918"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🔼️upgrade/🟦️.ts": {
+  "file": "f001",
+  "base": "287f1fb5632b8d1a49538be0b4c842296520c7d083ea414b862acc104c02bacc",
+  "new": "912b41ea9044c540e1d3bd26ce159c9dedc534a6c9834716f8e768fbc816b96c"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🌱️grow/🐍️oracle/🐍️.py": {
+  "file": "f002",
+  "base": "0ce781b934b8b2bdbe9d70d44062c1cb2151cdc0d28494f47c468ea66b92b5ef",
+  "new": "5eaa8138708221488628628103c7686f1dcba284ce4586c3ed2d72c30da713a6"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🌱️grow/🟦️.ts": {
+  "file": "f003",
+  "base": "743ddbde4bf3e4350a903b12021a6aa9077d6de5f0a826b38ebf8295695ebece",
+  "new": "4d5b4cd7f219799c46c529218e29a1050ca400a2452ac04a78f9a91abe351e06"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🌱️grow/🧫️fixtures/🔣️.json": {
+  "file": "f004",
+  "base": "97b5c87d5cdd2e61bd0f895d99f11a6ab31bebbd90d0a4c00ce6befcbb91e7ce",
+  "new": "6413467df08e9a2349a15093f839fe432918031f049dde698c8c4ee690b93aae"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🐍️oracle/🐍️.py": {
+  "file": "f005",
+  "base": "d0243bbc80983eadeacb674455ce940a43681870553d82c2e74186af9d7b5f0c",
+  "new": "cb41f7448dde0fe5402f676d953921289dcdf8d3653d6545406ede7670c5fa4a"
+ }
+}

@@ -17,7 +17,7 @@ for(const graph of fixture.graphs)test(`wait-for graph ${graph.id}: queue edges 
 });
 
 test("registry entries carry the task ancestry, so the nodes built from other processes link a waiting child to its holding ancestor",()=>{
- const directory="/w/d",entry={version:1 as const,pid:4242,startedAtMs:1,updatedAtMs:2,command:"x",directory,holds:[{resource:"a",mode:"shared" as const,sinceMs:1,task:1}],waits:[{resource:"b",mode:"exclusive" as const,sinceMs:2,task:2,queued:true}],ancestry:{"2":[1]}};
+ const directory="/w/d",entry={version:1 as const,pid:4242,startedAtMs:1,updatedAtMs:2,command:"x",directory,standing:{version:1 as const,priority:"agent" as const,implementation:{digest:"0123456789abcdef",loadedAtMs:1,components:{}},progressAtMs:2},holds:[{resource:"a",mode:"shared" as const,sinceMs:1,task:1}],waits:[{resource:"b",mode:"exclusive" as const,sinceMs:2,task:2,queued:true}],ancestry:{"2":[1]}};
  const nodes=registryNodesV1([entry],{holds:[],waits:[],ancestry:{}},directory,1);
  expect(nodes.find(node=>node.id==="4242/2")?.ancestors).toEqual(["4242/1"]);expect(nodes.find(node=>node.id==="4242/1")?.ancestors).toBeUndefined();
 });

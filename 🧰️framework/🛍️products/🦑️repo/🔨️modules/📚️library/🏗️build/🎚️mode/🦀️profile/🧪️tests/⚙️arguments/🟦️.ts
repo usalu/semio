@@ -13,9 +13,11 @@ import{scriptInvocationEnvironment}from"../../../../../../../../../🔨️module
 import{readBuildMode}from"@semio-tech/process/build-mode";
 import corpus from"./🔣️.json"with{type:"json"};
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
+import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 registerBuildTestLawV1("pinned Cargo exposes actual emitted profile flags and tiny library artifacts","profile-oracle",original=>{
- const workspace=process.cwd(),control=scriptCompilerAdmissionControlV1(original,"build-mode:compiler-profile-arguments",120000),mode=readBuildMode(process.env.SEMIO_BUILD_MODE);expect(new Ajv({strict:true}).compile(schema)(corpus)).toBe(true);
+ const workspace=repository.root,control=scriptCompilerAdmissionControlV1(original,"build-mode:compiler-profile-arguments",120000),mode=readBuildMode(process.env.SEMIO_BUILD_MODE);expect(new Ajv({strict:true}).compile(schema)(corpus)).toBe(true);
  return withRepositoryCompilerStoreV1(workspace,mode,control,scriptInvocationEnvironment(original,process.env),(store,control)=>withCompilerWorkspaceWriteV1(store.storage,join(workspace,".cache/b/l/m/data"),control,async()=>{
   const temporary=store.environment.TMPDIR;if(!temporary)throw Error("Actual funded compiler temporary root required");const directory=await mkdtemp(join(temporary,"pa-")),recorded:unknown[]=[];try{for(const[index,row]of corpus.cases.filter(row=>process.env.SEMIO_PROFILE_LOCAL_ONLY!=="1"||row.name==="prototype-local"||row.name==="release-local").entries())for(const context of corpus.contexts){
    const fixture=join(directory,index+"-"+context),manifest=join(fixture,"Cargo.toml"),source=createCargoProfileFixtureV1(row,context);for(const file of source.files){const path=join(fixture,file.path);await mkdir(dirname(path),{recursive:true});await writeFile(path,file.content,{flag:"wx"});}const independent=parseToml(await readFile(manifest,"utf8"))as{profile:Record<string,unknown>};expect(independent.profile[row.profile]).toEqual({...row.settings,...(row.profile==="prototype"?{inherits:"dev"}:{})});expect((parseToml(await readFile(join(fixture,".cargo/config.toml"),"utf8"))as{profile:Record<string,unknown>}).profile[row.profile]).toEqual(row.settings);

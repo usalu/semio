@@ -9,7 +9,6 @@ import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import corpus from"./🔣️.json"with{type:"json"};
 import constraints from"../📋️constraints/🔣️.json"with{type:"json"};
-
 const compile=(name:keyof typeof schema.definitions)=>new Ajv({strict:true}).compile({...schema,$ref:"#/definitions/"+name});
 function browserPackages():string[]{const directory="🧰️framework/🔨️modules/🖱️ui/🖌️render/🏗️build/🕸️browser",data=JSON.parse(readFileSync(join(process.cwd(),directory,"🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(join(process.cwd(),directory,"🧬️schema/🔣️.json"),"utf8"));if(!new Ajv({strict:true}).validate<{hotPackages:string[]}>(schema,data))throw Error("Authored closed browser package constraints required");return data.hotPackages;}
 
@@ -70,6 +69,6 @@ test("neutral local LTO fixtures retain false as distinct from disabled LTO",asy
  for(const row of rows)for(const context of argumentCases.contexts){const fixture=createCargoProfileFixtureV1(row,context),files=new Map(fixture.files.map(file=>[file.path,file.content])),manifest=TOML.parse(files.get("Cargo.toml")!)as{profile:Record<string,{lto:unknown;"codegen-units":unknown}>};expect(manifest.profile[row.profile]?.lto).toBe(false);expect(manifest.profile[row.profile]?.["codegen-units"]).toBe(row.settings["codegen-units"]);expect(Bun.TOML.parse(files.get("Cargo.toml")!)).toEqual(TOML.parse(files.get("Cargo.toml")!));expect(Object.isFrozen(fixture.files)).toBe(true);}
 });
 
-import"./⚙️arguments/📐️context/🧪️tests/🟦️.ts";
 
-import"./📥️consumption/🟦️.ts";
+
+

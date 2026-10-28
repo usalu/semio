@@ -1,0 +1,12 @@
+{
+ "target": "test-history-progress",
+ "crates": [
+  "semio-framework-kernel-history"
+ ],
+ "closureCrates": 26,
+ "depInfoUnits": 45,
+ "workspaceFilesRead": 217,
+ "declared": 442,
+ "undeclared": [],
+ "closureWithoutUnits": []
+}

@@ -1,0 +1,44 @@
+FAIL  :: Cargo execution preserves exact owner policy and separates compilation from assertions
+FAIL  :: Cargo keeps capture and output controls on Nextest execution with independent CLI authorities
+FAIL  :: Cargo lease cancellation and process timeout release exact ownership
+FAIL  :: Cargo refuses an empty selected snapshot suite with the independent Nextest status
+FAIL  :: Cargo retains failed build stdout without admitting invalid metadata
+FAIL  :: Cargo tests hold the shared compiler lease through list and assertion termination
+FAIL  :: Kernel package executes neutral target selections through its exact bounded Cargo driver
+FAIL  :: a batch the free storage cannot cover above the hard reserve is refused before Cargo starts
+FAIL  :: a component Cargo did not link fails every stage and job that waits for it, and a failed job fails the release
+FAIL  :: a finalizer runs once its stages settled, also after one failed, and the failure still fails the release
+FAIL  :: a lane job runs inside its profile's Cargo lane before that lane's passes, and an idle stage widens onto free slots
+FAIL  :: a real build over wasm32-wasip2 components: both profiles, admitted units, streamed stages, timeline, report and recorded telemetry
+FAIL  :: actual Cargo admission phase: lint-after-run
+FAIL  :: actual Cargo admission phase: lint-after-store
+FAIL  :: actual Cargo admission phase: lint-cancelled
+FAIL  :: actual Cargo admission phase: lint-copied
+FAIL  :: actual Cargo admission phase: lint-expired
+FAIL  :: actual Cargo admission phase: lint-foreign
+FAIL  :: actual Cargo admission phase: lint-issued-phase
+FAIL  :: actual Cargo admission phase: lint-policy-cap
+FAIL  :: actual Cargo admission phase: tests-after-run
+FAIL  :: actual Cargo admission phase: tests-after-store
+FAIL  :: actual Cargo admission phase: tests-cancelled
+FAIL  :: actual Cargo admission phase: tests-copied
+FAIL  :: actual Cargo admission phase: tests-expired
+FAIL  :: actual Cargo admission phase: tests-foreign
+FAIL  :: actual Cargo admission phase: tests-issued-phase
+FAIL  :: actual Cargo admission phase: tests-policy-cap
+FAIL  :: an unlinked component fails the native build without deleting unowned checkout bytes and still writes the report
+FAIL  :: cancellation stops every Cargo tree, and the stall watchdog stops a pass in which nothing starts or finishes
+FAIL  :: exclusive compiler jobs and stages hold the whole pool without deadlocking concurrent requests
+FAIL  :: generated budget child callbacks pass their actual received Original to the first phase boundary
+FAIL  :: generic Cargo test command requires its exact actual owner phase without receiving or renewing
+FAIL  :: jobs start as soon as their completions happen, post-link stages stream per component, and a job waits for a whole component stage
+FAIL  :: neutral Cargo input operation isolates accepted failure and drains descendants
+FAIL  :: neutral missing and fabricated compiler admission cannot create captures or execute a producer
+FAIL  :: pending stages and finalizers retain original numeric authority and settle without aborting its signal
+FAIL  :: queued exclusive compiler cancellation drains rejected work and permits a successor
+FAIL  :: repository compiler callers consume complete command continuations under the actual phase
+FAIL  :: reserved nested compiler processes receive held worker slots and release them before the next compiler
+FAIL  :: the driver streams each component the moment Cargo links it, runs profiles in parallel lanes and workspaces of one profile in sequence, unde
+FAIL  :: the original finite caller budget stops running metadata and returns admission
+FAIL  :: unit graph compilation cancellation stops its metadata child and releases admission
+FAIL  :: unlaned same-profile Cargo jobs reserve tokens before mutable state

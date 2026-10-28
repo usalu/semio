@@ -1,0 +1,75 @@
+"""🚦 harness3: the quiet-host gate shared by the acceptance harnesses (peer-g scenario.py, agents3.py).
+
+`waiting()` reads the header of `bun repo leases status` ("N held, M waiting, ..."); `official_runs(own)` lists product builds
+started by someone else (command lines `repo ... run @pkg:target`, minus the process trees of `own` pids); `wait_quiet()` blocks
+until neither exists twice in a row. `HARNESS_NOGATE=1` (or `--nogate`) skips the wait when the coordinator knows the host is idle.
+"""
+import os, re, subprocess, sys, time
+
+RUN = re.compile(r"\brepo\b.*\brun @[\w./-]+:[\w./-]+")
+EXCLUDE = re.compile(r"harness3-tools|agents3\.py|scenario\.py|measure\.py|\bleases\b|\bgrep\b")
+
+
+def waiting(root, environment=None):
+    """Number of lease waiters, None when the status command failed."""
+    try:
+        out = subprocess.run(["bun", "repo", "leases", "status"], cwd=root, capture_output=True, text=True, timeout=240, env=environment).stdout
+    except Exception:
+        return None
+    header = re.search(r"(\d+) waiting", out)
+    if header:
+        return int(header.group(1))
+    return sum(1 for line in out.splitlines() if line.startswith("WAITING")) if "held" in out else None
+
+
+def process_rows():
+    out = subprocess.run(["ps", "-A", "-o", "pid=,ppid=,command="], capture_output=True, text=True).stdout
+    rows = {}
+    for line in out.splitlines():
+        cells = line.split(None, 2)
+        if len(cells) == 3 and cells[0].isdigit() and cells[1].isdigit():
+            rows[int(cells[0])] = (int(cells[1]), cells[2])
+    return rows
+
+
+def descendants(rows, roots):
+    found, grown = set(roots), True
+    while grown:
+        grown = False
+        for pid, (parent, _) in rows.items():
+            if pid not in found and parent in found:
+                found.add(pid)
+                grown = True
+    return found
+
+
+def official_runs(own=()):
+    """(pid, command) of product builds that are not ours: the harness itself, its children and this very process are excluded."""
+    rows = process_rows()
+    mine = descendants(rows, set(own) | {os.getpid()})
+    return [(pid, cmd[:160]) for pid, (parent, cmd) in sorted(rows.items()) if pid not in mine and RUN.search(cmd) and not EXCLUDE.search(cmd)]
+
+
+def wait_quiet(root, limit=4, polls=2000, own=(), say=print, environment=None):
+    """Blocks until `official_runs` is empty and fewer than `limit` leases wait, twice in a row 15 s apart; exits when it never happens."""
+    if os.environ.get("HARNESS_NOGATE") == "1":
+        return
+    quiet = 0
+    for poll in range(polls):
+        runs, queued = official_runs(own), waiting(root, environment)
+        if not runs and (queued or 0) < limit:
+            quiet += 1
+            if quiet >= 2:
+                return
+            time.sleep(15)
+            continue
+        if quiet or poll % 10 == 0:
+            say("gate: %d foreign product run(s), %s lease waiter(s): %s" % (len(runs), queued, [cmd for _pid, cmd in runs][:2]))
+        quiet = 0
+        time.sleep(30)
+    raise SystemExit("gate never quiet")
+
+
+if __name__ == "__main__":
+    root = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
+    print({"waiting": waiting(root), "foreignRuns": official_runs()})

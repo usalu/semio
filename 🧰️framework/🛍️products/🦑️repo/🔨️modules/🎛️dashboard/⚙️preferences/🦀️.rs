@@ -230,7 +230,7 @@ pub fn apply_arguments(preferences: &mut Preferences, parsed: &dashboard_core::a
 /// 🔧️ The environment overrides of the preferences, each strict because the developer typed them just now.
 fn environment_change(lookup: language::Lookup<'_>) -> io::Result<Option<Change>> {
     let mut map = serde_json::Map::new();
-    for (key, variable) in [("language", "SEMIO_LOCALE"), ("appearance", "SEMIO_APPEARANCE"), ("terminology", "SEMIO_LOCKED_TERMINOLOGY"), ("renderer", "SEMIO_DASHBOARD_RENDERER"), ("layout", "SEMIO_DASHBOARD_LAYOUT"), ("prefix", "SEMIO_DASHBOARD_PREFIX")] {
+    for (key, variable) in [("language", language::protocol().explicit_variable()), ("appearance", "SEMIO_APPEARANCE"), ("terminology", "SEMIO_LOCKED_TERMINOLOGY"), ("renderer", "SEMIO_DASHBOARD_RENDERER"), ("layout", "SEMIO_DASHBOARD_LAYOUT"), ("prefix", "SEMIO_DASHBOARD_PREFIX")] {
         if let Some(value) = lookup(variable) { map.insert(key.into(), serde_json::Value::String(value)); }
     }
     if map.is_empty() { Ok(None) } else { Change::parse(&serde_json::Value::Object(map).to_string()).map(Some) }

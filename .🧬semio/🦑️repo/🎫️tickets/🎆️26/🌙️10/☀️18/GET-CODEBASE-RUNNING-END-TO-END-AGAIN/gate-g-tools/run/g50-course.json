@@ -1,0 +1,31 @@
+{
+ "label": "g50-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "00:54:56",
+ "wall_s": 1858.8,
+ "peak_tree_mb": 9997,
+ "peak_processes": 9,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 40.3,
+ "graph": {
+  "refreshing": [
+   "141"
+  ],
+  "inferring": [
+   "141"
+  ],
+  "published": [
+   "701",
+   "141",
+   "343"
+  ],
+  "processes": [
+   "8",
+   "1 disk cache hit, 1 internal, 6 worker"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

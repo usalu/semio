@@ -1,0 +1,46 @@
+import{test,expect}from"bun:test";
+import{spawnSync}from"node:child_process";
+import{mkdtempSync,rmSync,writeFileSync,readFileSync}from"node:fs";
+import{tmpdir}from"node:os";
+import{join}from"node:path";
+import{ADMISSION_KEYED_FIELDS_V1,ADMISSION_VOLATILE_ENVIRONMENT_V1,admissionMemoKeyV1,unitAdmissionMemoV1}from"../../🟦️.ts";
+import fixture from"./🔣️.json"with{type:"json"};
+
+/** 🔑️ The admission memo key names exactly the unit facts that decide an admission: two plans of the same workspace that differ only in run-specific facts (ids, dependency edges, planning digests, the invoking process's PATH) share one key, and every fact that can change the admitted closure changes it; an independent Python hash of the same canonical text gives the same keys. */
+const python=Bun.which("python3")??Bun.which("python");
+const clone=<T>(value:T):T=>structuredClone(value);
+function mutate(unit:Record<string,any>,set:Record<string,unknown>){const copy=clone(unit);for(const[path,value]of Object.entries(set)){const parts=path.split(".");let at:any=copy;for(const part of parts.slice(0,-1))at=at[part]??={};if(value===undefined)delete at[parts.at(-1)!];else at[parts.at(-1)!]=value;}return copy;}
+const variants=[...fixture.same.map(row=>({...row,expect:"same"})),...fixture.different.map(row=>({...row,expect:"different"}))];
+
+test("the keyed fields and the volatile environment come from the fixture",()=>{
+ expect([...ADMISSION_KEYED_FIELDS_V1]).toEqual(fixture.keyedFields);
+ expect([...ADMISSION_VOLATILE_ENVIRONMENT_V1]).toEqual(fixture.volatileEnvironment);
+});
+
+test("run-specific facts leave the key alone, deciding facts change it, and Python computes the same keys",()=>{
+ const base=admissionMemoKeyV1(fixture.unit,fixture.policy,fixture.toolchain),keys=variants.map(row=>admissionMemoKeyV1(mutate(fixture.unit,row.set),fixture.policy,(row as{toolchain?:string}).toolchain??fixture.toolchain));
+ variants.forEach((row,index)=>{if(row.expect==="same")expect(keys[index],row.name).toBe(base);else expect(keys[index],row.name).not.toBe(base);});
+ expect(python,"an independent Python is required").toBeTruthy();
+ const unitFile=join(mkdtempSync(join(tmpdir(),"rf-key-")),"fixture.json");writeFileSync(unitFile,JSON.stringify(fixture));
+ const out=spawnSync(python!,["-I",join(import.meta.dir,"🐍️.py"),unitFile],{encoding:"utf8"});rmSync(join(unitFile,".."),{recursive:true,force:true});
+ expect(out.status,out.stderr).toBe(0);
+ expect(JSON.parse(out.stdout)).toEqual({base,keys});
+});
+
+test("the memo port recalls under a changed PATH with the current volatile values, and a unit mutated by its own admission is found again",()=>{
+ const root=mkdtempSync(join(tmpdir(),"rf-memo-")),source=join(root,"lib.rs");writeFileSync(source,"pub fn a(){}\n");
+ try{
+  const port=unitAdmissionMemoV1(root,fixture.toolchain),first=clone(fixture.unit) as Record<string,any>;
+  expect(port.recall(first,fixture.policy)).toBeUndefined();
+  first.sourceInputs=[{path:source,digest:"d",bytes:1}];first.compilerCfg=["unix"];first.compilerEnvironment={...first.compilerEnvironment,EXTRA_REFERENCE:"1"};
+  port.remember(first,fixture.policy,{inputs:first.sourceInputs,cfg:["unix"],environment:first.compilerEnvironment,probed:[source],startedMs:Date.now()+3_600_000});
+  const next=mutate(fixture.unit,{"compilerEnvironment.PATH":"/another/bin","planningDigest":"unstable","dependencies":[]}),hit=port.recall(next,fixture.policy);
+  expect(hit?.cfg).toEqual(["unix"]);expect(hit?.environment?.PATH).toBe("/another/bin");expect(hit?.environment?.EXTRA_REFERENCE).toBe("1");
+  writeFileSync(source,"pub fn b(){}\n");expect(port.recall(clone(fixture.unit),fixture.policy)).toBeUndefined();
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("every volatile name is one the plan copies from the invoking process",()=>{
+ const capture=readFileSync(join(import.meta.dir,"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts"),"utf8");
+ for(const name of ADMISSION_VOLATILE_ENVIRONMENT_V1)expect(capture.includes('"'+name+'"'),name).toBe(true);
+});

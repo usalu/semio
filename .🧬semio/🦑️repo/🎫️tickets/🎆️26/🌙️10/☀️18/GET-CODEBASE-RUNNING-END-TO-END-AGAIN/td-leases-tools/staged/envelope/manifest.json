@@ -1,0 +1,47 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts": {
+  "file": "f000",
+  "base": "93c0bd5353d9d9ad03a8a8aac2651f8396cc5e7f5dfe2ff958209912ddcd499d",
+  "new": "ff021c47e026b7587c3f003a5484d5363ccf14b1e4fdbd41bf3295570cc10ab1"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🧪️tests/🟦️.ts": {
+  "file": "f001",
+  "base": "8019ba30958e5623094260706de8e360c6dfc8543761fd7206772282cb184e4e",
+  "new": "d5eb4702fc20b7a9e68d8de028bc8c20714b99289a0791b17b0abc4920bb0aee"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🧪️tests/🧫️declared/🟦️.ts": {
+  "file": "f002",
+  "base": null,
+  "new": "ffaa37f83431e6e54134d6299827d7b13091f04c0d9afc0e9fa72b3ad723fde2"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json": {
+  "file": "f003",
+  "base": "d869da2eea84bdda63e85962a18a892e9f347ae7f7d193d16d20044a66c5c840",
+  "new": "99ee31b97f8f6a21dd61fe3ea903153a026021ef7e114bd90c68b58518222ae6"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧪️tests/📋️claims/🟦️.ts": {
+  "file": "f004",
+  "base": "7b30ff3329f6fc4fc2f1c96a4b36ee068a20b041a6a32c37ef31402b2e95b68f",
+  "new": "33003ed46b39e6c6091901ac23d64225dfcdbc2b66f8f63568963f53861791cf"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧪️tests/📋️frontier/🟦️.ts": {
+  "file": "f005",
+  "base": "645d271b22df3a62d71a93c4e7af1c55af81a04648c6b97273b9ea5398b43ba1",
+  "new": "a1001622276371d53350fe00791f5fad414801f3d67d33f9806762c953b089b3"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧪️tests/📋️inventory/🟦️.ts": {
+  "file": "f006",
+  "base": "f5bf3d049b61f36a44ce87f0c90b4906acf653764772e56f243b0ff2b28d3ee7",
+  "new": "a4aabe078a817a7b4dbe98acd72ccb666a4e87dd4c2069c9283a897d3895b8c0"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧹️sweep/🧪️tests/🟦️.ts": {
+  "file": "f007",
+  "base": "97dbba111c7ebfc0fe4e911e7035045486a69ec09404e129ece38cef7de82851",
+  "new": "de2ef9eb06f4a00e3e472e1173cf550c299f923df86df4a295f2cd3d75b37b1e"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧪️tests/🎟️writer/🟦️.ts": {
+  "file": "f008",
+  "base": "e98ba2c0548b377400e6e4308a298fc8613762475a6e1846cbea998aae5a602d",
+  "new": "6f71d22f3842dba81154e456ac84fd85c018e22800eda279d473f18e440e2c06"
+ }
+}

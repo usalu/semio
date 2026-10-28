@@ -512,26 +512,195 @@
         "document"
       ]
     },
-    "PurgeReport": {
-      "description": "🧹️ What an artifact purge removed. Only direct ticket 🗑️generated output is eligible: files above 5 MiB and subfolders above 10 MiB go. Authored inputs, scripts, configs and reports outside that output root are retained regardless of size.",
+    "PurgePolicy": {
+      "description": "🧹️ The one purge law of ticket generated output, identical in Go, Rust and TypeScript: only the direct child folder `generatedDirectory` of a CLOSED ticket is eligible. Selection `oversized` removes files above `oversizedFileBytes` and folders above `oversizedFolderBytes` (the ticket close and `repo ticket purge-artifacts`), selection `generated` removes everything below it (`repo clean`). A file the git index tracks is never removed, a folder holding one is kept, a ticket with any file younger than `liveWriterSeconds` is skipped whole (a live lease only ever refreshes such a file), and an unanswerable tracking query fails closed. Authored inputs, scripts, configs and reports outside that folder are retained regardless of size, and a purge without `apply` only returns the plan.",
+      "const": {
+        "generatedDirectory": "🗑️generated",
+        "oversizedFileBytes": 5242880,
+        "oversizedFolderBytes": 10485760,
+        "liveWriterSeconds": 600
+      }
+    },
+    "PurgeSelection": {
+      "description": "🎚️ Which part of an eligible generated folder is removed.",
+      "enum": [
+        "oversized",
+        "generated"
+      ]
+    },
+    "PurgeRemoval": {
+      "description": "🗑️ One planned removal: a ticket-relative path below the dated tickets folder, a file or a whole folder, and the bytes it frees.",
       "type": "object",
       "properties": {
-        "removedDirectories": {
+        "path": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory"
+          ]
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "path",
+        "kind",
+        "bytes"
+      ]
+    },
+    "PurgeSkip": {
+      "description": "⏭️ Why a whole ticket is left alone.",
+      "type": "object",
+      "properties": {
+        "ticket": {
+          "type": "string"
+        },
+        "reason": {
+          "enum": [
+            "not-closed",
+            "live-writer",
+            "symlink-root",
+            "not-directory",
+            "tracked-unknown"
+          ]
+        }
+      },
+      "required": [
+        "ticket",
+        "reason"
+      ]
+    },
+    "PurgePlan": {
+      "description": "🧹️ What a purge removes (applied) or would remove (dry run), sorted by path and ticket.",
+      "type": "object",
+      "properties": {
+        "removals": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/PurgeRemoval"
           }
         },
-        "removedFiles": {
+        "skips": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/PurgeSkip"
           }
         }
       },
       "required": [
-        "removedDirectories",
-        "removedFiles"
+        "removals",
+        "skips"
+      ]
+    },
+    "PurgeCase": {
+      "description": "🧪️ One frozen purge case: declared facts of a throwaway repository (tickets with a manifest state, files with size, age and tracked flag, links) and the plan every implementation must reproduce from real files.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "git": {
+          "type": "boolean"
+        },
+        "request": {
+          "type": "object",
+          "properties": {
+            "scope": {
+              "enum": [
+                "closed",
+                "ticket"
+              ]
+            },
+            "ticket": {
+              "type": "string"
+            },
+            "selection": {
+              "$ref": "#/$defs/PurgeSelection"
+            }
+          },
+          "required": [
+            "scope",
+            "selection"
+          ]
+        },
+        "tickets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "manifest": {
+                "enum": [
+                  "open",
+                  "closed",
+                  "closing",
+                  "invalid",
+                  "missing"
+                ]
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "enum": [
+                        "file",
+                        "directory",
+                        "symlink"
+                      ]
+                    },
+                    "bytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "ageSeconds": {
+                      "type": "integer"
+                    },
+                    "tracked": {
+                      "type": "boolean"
+                    },
+                    "target": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "kind"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "manifest",
+              "entries"
+            ]
+          }
+        },
+        "expect": {
+          "$ref": "#/$defs/PurgePlan"
+        }
+      },
+      "required": [
+        "id",
+        "description",
+        "git",
+        "request",
+        "tickets",
+        "expect"
       ]
     },
     "DiffLines": {

@@ -210,6 +210,17 @@
     ".lake",
     "pkg"
   ],
+  "ownerViews": [
+    {
+      "owner": "🧰️framework",
+      "private": [
+        "🛍️products"
+      ]
+    }
+  ],
+  "runtimeStateDirectories": [
+    "🧰️framework/🤖️generated/process"
+  ],
   "toolchains": {
     "javascript": {
       "files": [
@@ -366,6 +377,18 @@
       ],
       "commands": [
         "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts\" fingerprint"
+      ]
+    },
+    "tex": {
+      "files": [
+        "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🔣️.json",
+        "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/🔒️dependencies.json"
+      ],
+      "environment": [],
+      "commands": [],
+      "activatedBy": [
+        "deps-tectonic",
+        "deps-tex"
       ]
     }
   },
@@ -603,7 +626,7 @@
     },
     "guardAgeMs": 172800000,
     "cargo": {
-      "budgetBytes": 19326304256,
+      "budgetBytes": 18252562432,
       "unusedAgeMs": 604800000,
       "incremental": {
         "budgetBytes": 6442450944,

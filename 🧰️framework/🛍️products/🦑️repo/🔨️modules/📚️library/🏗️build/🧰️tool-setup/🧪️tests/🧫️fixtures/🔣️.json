@@ -9,7 +9,8 @@
     "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🔣️.json": "{\"version\": \"0.0.1\"}",
     "rust-toolchain.toml": "[toolchain]\nprofile = \"minimal\"\nchannel = \"nightly-2030-01-02\"\ncomponents = [\"rust-src\"]\n",
     "Cargo.lock": "[[package]]\nname = \"wasm-bindgen-macro\"\nversion = \"0.1.1\"\n\n[[package]]\nname = \"wasm-bindgen\"\nversion = \"0.9.9\"\n\n[[package]]\nname = \"wasm-bindgen-shared\"\nversion = \"0.1.1\"\n",
-    "node_modules/.bun/playwright-core@4.0.0/node_modules/playwright-core/browsers.json": "{\"browsers\": [{\"name\": \"firefox\", \"revision\": \"1\"}, {\"name\": \"chromium\", \"revision\": \"4242\"}]}"
+    "node_modules/.bun/playwright-core@4.0.0/node_modules/playwright-core/browsers.json": "{\"browsers\": [{\"name\": \"firefox\", \"revision\": \"1\"}, {\"name\": \"chromium\", \"revision\": \"4242\"}]}",
+    "🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🧬️schema/🔣️.json": "{\"definitions\": {\"Protocol\": {\"const\": {\"version\": 7}}}}"
   },
   "packages": {
     "playwright-core": "node_modules/.bun/playwright-core@4.0.0/node_modules/playwright-core"
@@ -25,6 +26,7 @@
     "go": "9.9.9",
     "ninja": "3.3.3",
     "node": "11.1.1",
+    "node-native-core": "7",
     "python-main": "7.7",
     "python-oracle": "6.6",
     "rust": "nightly-2030-01-02",

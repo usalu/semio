@@ -1,0 +1,90 @@
+{
+ "name": "g34",
+ "code": "planfp staged3 + hotpath2 rowid, jdir, memolist (live since 10:35, gate verdict g34)",
+ "lane": "docs4",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "7b768aa704cb715daea331a3c60713677f3d915c4269d1fd9a93231de873fa50",
+ "needs": [],
+ "edits": [
+  {
+   "id": "g34-memo",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "3. **Nested pin**: a `repo run` started inside an orchestrated Bazel or semio action reads the generation of its parent (`SEMIO_BUILD_GENERATION_PIN`) and inherits its capacity grant, so it never waits for the graph or the machine behind itself.",
+   "where": "before",
+   "block": "   - **Graph memo, unread siblings** (live since the gate group G34): per directory the slice only lists, the memo keeps the entry stamp (mtime, inode) the graph recorded. A row that adds, removes or renames a name directly inside such a directory is relevant; a row that only says `modified` is settled by one `lstat` against the stamp. An in-place edit of a sibling the slice does not read (append, truncate and write, `touch`) leaves the stamp alone and the memo is still served (`rechecked` counts one more fact per touched directory); a creation, deletion, rename, atomic save (temporary file and rename) or lock file moves the stamp and refuses with `changed: <path>`. Directories that a resolution or a derived fact names, and directories without a usable stamp (not in the frontier, or touched within 2 s of the capture), keep the strict rule: any row directly inside refuses. The first run after the landing misses once (the sealed format changed) and the two runs after it seal again."
+  },
+  {
+   "id": "g34-memo",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "3. **Verschachtelte Pins**: ein `repo run`, den eine orchestrierte Bazel- oder semio-Aktion startet, liest die Generation seines Elternteils (`SEMIO_BUILD_GENERATION_PIN`) und erbt dessen Kapazitätszusage; er wartet nie hinter sich selbst auf Graph oder Rechner.",
+   "where": "before",
+   "block": "   - **Graph-Memo, ungelesene Geschwister** (live seit der Tor-Gruppe G34): je Verzeichnis, das der Ausschnitt nur listet, behält das Memo den Eintragsstempel (mtime, Inode), den der Graph festhielt. Eine Zeile, die direkt darin einen Namen hinzufügt, entfernt oder umbenennt, ist relevant; eine Zeile, die nur `modified` sagt, wird mit einem einzigen `lstat` gegen den Stempel entschieden. Eine Änderung an Ort und Stelle an einem Geschwister, das der Ausschnitt nicht liest (Anhängen, Kürzen und Schreiben, `touch`), lässt den Stempel unberührt, und das Memo wird weiter geliefert (`rechecked` zählt je berührtem Verzeichnis einen Fakt mehr); ein Anlegen, Löschen, Umbenennen, atomares Speichern (temporäre Datei und Umbenennen) oder eine Lock-Datei bewegt den Stempel und lehnt mit `changed: <Pfad>` ab. Verzeichnisse, die eine Auflösung oder ein abgeleiteter Fakt nennt, und Verzeichnisse ohne brauchbaren Stempel (nicht im Frontier oder innerhalb von 2 s vor der Erfassung berührt) behalten die strenge Regel: jede Zeile direkt darin lehnt ab. Der erste Lauf nach der Landung verfehlt einmal (das versiegelte Format änderte sich), die beiden Läufe danach versiegeln erneut."
+  },
+  {
+   "id": "g34-journal",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- **Change journal service** (`SEMIO_REPO_CHANGES=on|off`, default on; native watcher `semio-repo-watch`, `SEMIO_REPO_WATCH_BINARY` names another): one detached service per checkout and user writes the append-only log of file changes that the plan-reuse check and the dependency verification ask; it ends after 2 h idle. Its memory cap is 128 MiB: with the former 50 MiB a burst of a few thousand rows (20 agents editing) ended it with reason `memory` within seconds on the live tree, so no consumer ever got a journal (a fresh service is 33-37 MB, one million rows peak at 62-68 MB). It stops itself, with its journal, when its workspace (`root-gone`) or its journal directory (`directory-gone`) vanished, and a watcher stop that never returns cannot keep it alive (stop wait 3 s, exit 9 s after SIGTERM). Leaked `bun` + `semio-repo-watch` pairs with parent 1 under `/var/folders/…/T/reuse-*` come from older code: they idle out after 2 h, or stop the `bun` pid with SIGTERM (never `pkill`).",
+   "where": "after",
+   "block": "- **Where the journal lives** (live since G34): per user and checkout in the user's cache directory (macOS `~/Library/Caches/semio/repo/<id>/journal`, Linux `$XDG_RUNTIME_DIR/semio-repo-<uid>/<id>/journal` or `~/.cache/semio/repo/<id>/journal`, Windows `%LOCALAPPDATA%\\semio\\repo\\<id>\\journal`), no longer below `TMPDIR`. Bazel gives its actions a `TMPDIR` of their own, so a nested `repo` run used to start a second journal service with its own watcher, graph memo and vouch cursors; now parent and nested run share one. The first run after the move misses once; services under the former temporary directory idle out after 2 h (stop their `bun` pid with SIGTERM, never `pkill`)."
+  },
+  {
+   "id": "g34-journal",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- **Änderungsjournal-Dienst** (`SEMIO_REPO_CHANGES=on|off`, Standard an; nativer Beobachter `semio-repo-watch`, `SEMIO_REPO_WATCH_BINARY` nennt einen anderen): ein losgelöster Dienst je Checkout und Nutzer schreibt das nur anhängende Protokoll der Dateiänderungen, das die Plan-Wiederverwendung und die Prüfung der Abhängigkeiten befragen; er endet nach 2 h Leerlauf. Seine Speichergrenze ist 128 MiB: mit den früheren 50 MiB beendete ihn ein Stoß von wenigen tausend Zeilen (20 Agenten, die bearbeiten) auf dem lebenden Baum binnen Sekunden mit dem Grund `memory`, sodass nie ein Verbraucher ein Journal bekam (ein frischer Dienst belegt 33-37 MB, eine Million Zeilen erreichen 62-68 MB). Er beendet sich samt Journal selbst, wenn sein Workspace (`root-gone`) oder sein Journal-Verzeichnis (`directory-gone`) verschwunden ist, und ein Stopp des Beobachters, der nie zurückkehrt, hält ihn nicht am Leben (Stoppwartezeit 3 s, Ende 9 s nach SIGTERM). Verwaiste Paare aus `bun` + `semio-repo-watch` mit Elternprozess 1 unter `/var/folders/…/T/reuse-*` stammen aus älterem Code: sie enden nach 2 h Leerlauf, oder die `bun`-pid mit SIGTERM beenden (nie `pkill`).",
+   "where": "after",
+   "block": "- **Wo das Journal liegt** (live seit G34): je Nutzer und Checkout im Cache-Verzeichnis des Nutzers (macOS `~/Library/Caches/semio/repo/<id>/journal`, Linux `$XDG_RUNTIME_DIR/semio-repo-<uid>/<id>/journal` oder `~/.cache/semio/repo/<id>/journal`, Windows `%LOCALAPPDATA%\\semio\\repo\\<id>\\journal`), nicht mehr unterhalb von `TMPDIR`. Bazel gibt seinen Aktionen ein eigenes `TMPDIR`, deshalb startete ein verschachtelter `repo`-Lauf früher einen zweiten Journal-Dienst mit eigenem Beobachter, Graph-Memo und eigenen Bürgschafts-Cursors; jetzt teilen Elternlauf und verschachtelter Lauf einen. Der erste Lauf nach dem Umzug verfehlt einmal; Dienste unter dem früheren Temp-Verzeichnis enden nach 2 h Leerlauf (ihre `bun`-pid mit SIGTERM beenden, nie `pkill`)."
+  },
+  {
+   "id": "g34-rows",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "   - **Compilers**: rustc front-end threads follow the admitted cores (`SEMIO_COMPILER_PARALLELISM`).",
+   "where": "before",
+   "block": "   - **Runtime rows without a child** (live since G34): a recorded `runtime` row whose output is a pure function of the executable (`node --version`, `node -p \"process.platform.concat(process.arch)\"`, `bun --version`; `rustc -vV` and `cargo --version` are not listed because rustup proxies depend on `rust-toolchain.toml`) carries an identity in its witness subject: resolved path, real path, size, times, inode and mode of the program and of the script it runs. The reuse check compares the identity in the process (0.5 ms for all rows) and starts no child; a changed identity, an unlisted row or an older receipt runs the command and compares the digest as before. A hot run starts three processes fewer (about 180 MB at the peak)."
+  },
+  {
+   "id": "g34-rows",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "   - **Compiler**: die Frontend-Threads von rustc folgen den zugelassenen Kernen (`SEMIO_COMPILER_PARALLELISM`).",
+   "where": "before",
+   "block": "   - **Laufzeit-Zeilen ohne Kind** (live seit G34): eine aufgezeichnete `runtime`-Zeile, deren Ausgabe eine reine Funktion der ausführbaren Datei ist (`node --version`, `node -p \"process.platform.concat(process.arch)\"`, `bun --version`; `rustc -vV` und `cargo --version` stehen nicht darin, weil rustup-Proxys von `rust-toolchain.toml` abhängen), trägt in ihrem Zeugen-Subjekt eine Identität: aufgelöster Pfad, echter Pfad, Größe, Zeiten, Inode und Modus des Programms und des Skripts, das es ausführt. Die Wiederverwendungsprüfung vergleicht die Identität im Prozess (0,5 ms für alle Zeilen) und startet kein Kind; eine geänderte Identität, eine nicht gelistete Zeile oder ein älterer Beleg führt den Befehl aus und vergleicht wie bisher den Digest. Ein heißer Lauf startet drei Prozesse weniger (rund 180 MB am Gipfel)."
+  },
+  {
+   "id": "g34-walk",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "   - **Compilers**: rustc front-end threads follow the admitted cores (`SEMIO_COMPILER_PARALLELISM`).",
+   "where": "before",
+   "block": "   - **Plan walk and ignored directories** (live since G34): the planner's walk of the directories below a plan's roots no longer enters a directory that git ignores as a whole (one `git ls-files --others --ignored --exclude-standard --directory` over the walked roots, 0.05 s, an allowed spawn). That is sound because git never lists an untracked file below an ignored directory, the ignore rules themselves are observed (`i` rows and every `.gitignore` on the way) and a directory appearing or vanishing changes the listing of its parent. The architecture course's own build output `.🧾️store/build.json` therefore no longer ends its plan (before, the first run after a build and the revert of an edit replanned, 45-50 s); a build that writes into a directory git does not ignore still does."
+  },
+  {
+   "id": "g34-walk",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "   - **Compiler**: die Frontend-Threads von rustc folgen den zugelassenen Kernen (`SEMIO_COMPILER_PARALLELISM`).",
+   "where": "before",
+   "block": "   - **Plan-Lauf und ignorierte Verzeichnisse** (live seit G34): der Lauf des Planers durch die Verzeichnisse unterhalb der Wurzeln eines Plans betritt kein Verzeichnis mehr, das Git als Ganzes ignoriert (ein `git ls-files --others --ignored --exclude-standard --directory` über die durchlaufenen Wurzeln, 0,05 s, ein erlaubter Start). Das ist korrekt, weil Git unterhalb eines ignorierten Verzeichnisses nie eine unverfolgte Datei listet, die Ignore-Regeln selbst beobachtet werden (`i`-Zeilen und jede `.gitignore` auf dem Weg) und ein Verzeichnis, das erscheint oder verschwindet, die Liste seines Elternverzeichnisses ändert. Die eigene Build-Ausgabe des Architektur-Kurses `.🧾️store/build.json` beendet seinen Plan deshalb nicht mehr (vorher planten der erste Lauf nach einem Build und das Zurücksetzen einer Änderung neu, 45-50 s); ein Build, der in ein Verzeichnis schreibt, das Git nicht ignoriert, tut es weiter."
+  },
+  {
+   "id": "g34-status",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- Met: dashboard rebuild after a one-line edit under 2 min and under 3 GB; no-wait admission of at least 4 runs on 16 GB with learned sizes; queue time 2.3x lower in the replay; graph-free `cache status` tree 580 MB (was 2363 MB), Bazel worker 98 MB (was 1770 MB), a waiting run 35-75 MB; graph builder flat at 3.7-5.0 GB (was 15-29 GB); one-project graph change 34 s; environment move 144-159 s to 43-52 s; test-owner rediscovery 69 s to 3-5 s.",
+   "where": "after",
+   "block": "- The G34 group (plan walk, memo stamps, journal place, runtime rows without a child) is live since 10:35; the verdict of gate run g34 is pending, so the first hot runs after it are not measured yet."
+  },
+  {
+   "id": "g34-status",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- Erreicht: Dashboard-Neubau nach Ein-Zeilen-Änderung unter 2 min und unter 3 GB; Zulassung von mindestens 4 Läufen ohne Warten bei 16 GB mit gelernten Größen; Wartezeit im Replay 2,3x niedriger; `cache status` ohne Graph 580 MB Prozessbaum (vorher 2363 MB), Bazel-Worker 98 MB (vorher 1770 MB), ein wartender Lauf 35-75 MB; Graph-Erbauer flach bei 3,7-5,0 GB (vorher 15-29 GB); Ein-Projekt-Änderung am Graphen 34 s; Umgebungs-Verschiebung 144-159 s auf 43-52 s; Neu-Entdeckung der Test-Eigner 69 s auf 3-5 s.",
+   "where": "after",
+   "block": "- Die G34-Gruppe (Plan-Lauf, Memo-Stempel, Ort des Journals, Laufzeit-Zeilen ohne Kind) ist seit 10:35 live; das Urteil des Tor-Laufs g34 steht aus, die ersten heißen Läufe danach sind also noch nicht gemessen."
+  }
+ ]
+}

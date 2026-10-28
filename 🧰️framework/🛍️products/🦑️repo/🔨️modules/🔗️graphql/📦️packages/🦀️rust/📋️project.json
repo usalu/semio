@@ -91,7 +91,7 @@
           "dashboard": {
             "title": {
               "en": "Generate GraphQL Types",
-              "de": "GraphQL-Typen Erzeugen"
+              "de": "GraphQL-Typen erzeugen"
             },
             "description": {
               "en": "Use canonical GraphQL documents and the served schema independently of editor integrations.",
@@ -129,7 +129,7 @@
           "dashboard": {
             "title": {
               "en": "Check GraphQL Types",
-              "de": "GraphQL-Typen Prüfen"
+              "de": "GraphQL-Typen prüfen"
             },
             "description": {
               "en": "Use canonical GraphQL documents and the served schema independently of editor integrations.",
@@ -159,7 +159,7 @@
           "dashboard": {
             "title": {
               "en": "Preview GraphQL Types",
-              "de": "GraphQL-Typen Vorschauen"
+              "de": "GraphQL-Typen vorschauen"
             },
             "description": {
               "en": "Use canonical GraphQL documents and the served schema independently of editor integrations.",
@@ -204,7 +204,7 @@
           "dashboard": {
             "title": {
               "en": "Test GraphQL Types",
-              "de": "GraphQL-Typen Testen"
+              "de": "GraphQL-Typen testen"
             },
             "description": {
               "en": "Use canonical GraphQL documents and the served schema independently of editor integrations.",

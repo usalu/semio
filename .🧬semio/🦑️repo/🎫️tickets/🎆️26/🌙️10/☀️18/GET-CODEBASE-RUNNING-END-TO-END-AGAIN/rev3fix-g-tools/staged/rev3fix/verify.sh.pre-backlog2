@@ -1,0 +1,28 @@
+#!/bin/sh
+# FOR gate-g (REBASED 19:16 onto the live tree: rev3-g win-withheld + upgrade-before-custody are LANDED): from the repo root
+# `python3 -I C/rev3fix-g-tools/batch.py C/rev3fix-g-tools/staged/rev3fix check .` (exit 3 = a touched file moved since staging, see bases.json), then `... apply .`,
+# then `sh C/rev3fix-g-tools/staged/rev3fix/verify.sh` (VERIFY_ROOT=<overlay> runs the same list on a short-root mirror: `sh C/rev3fix-g-tools/compose2.sh <short-root> mine-only|mine-last`, never the live tree).
+# Prints one `pass/fail` line per file; every file must show `0 fail` (timing bound laws, e.g. host-capacity gate, can flake once under load ~30: rerun that file alone).
+# KNOWN CONFLICT: with gram2-g/index-chunks applied `🕰️generations/🟨️.mjs` exceeds the 65536 byte graph-consumer capture cap of `💾️storage/🔧️custody/🟨️.mjs` (index-chunks alone 65887 bytes) and both planner laws below fail; this batch alone is 62823 bytes.
+ROOT="${VERIFY_ROOT:-.}"
+cd "$ROOT" || exit 1
+B="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build"
+L="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
+P="🧰️framework/🔨️modules/🏃️process"
+G="$B/🕸️graph/🕰️generations/🧪️tests"
+U="$L/⚡️caching/🦀️cargo/🗃️unit-cache"
+H="$P/🏗️build/🌡️host-capacity/🧪️tests"
+run() { printf '%s  ' "$1"; ( cd "$(dirname "$1")" && nice -n 10 bun test "./$(basename "$1")" --timeout 300000 2>&1 | grep -E "^ *[0-9]+ (pass|fail)$" | tr '\n' ' ' ); echo; }
+for f in \
+ "$G/🌊️patch-drift/🟦️.ts" "$G/🌱️patch-growth/🟦️.ts" "$G/♻️refine/🟦️.ts" "$G/🧮️fact-index/🟦️.ts" "$G/🚧️unfounded-withheld/🟦️.ts" "$G/🚧️unfounded-withheld/🪟️windows/🟦️.ts" "$G/🧱️index-chunks/🟦️.ts" \
+ "$B/🕸️graph/🧪️tests/🎟️prefetch-booking/🟦️.ts" "$B/🕸️graph/🧪️tests/🔼️upgrade-before-custody/🟦️.ts" "$B/🕸️graph/🧪️tests/🕰️generation-protocol/🟦️.ts" \
+ "$B/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🔒️farm-close/🟦️.ts" "$B/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🟦️.ts" \
+ "$H/⚓️boot-anchor/🟦️.ts" "$H/🚪️gate/🟦️.ts" "$H/🤝️handover/🟦️.ts" "$H/🔼️upgrade/🟦️.ts" "$H/🪜️phases/🟦️.ts" \
+ "$B/🌡️host-capacity/🧪️tests/🪜️phases/🟦️.ts" "$B/🌡️host-capacity/🧪️tests/🔼️upgrade/🟦️.ts" \
+ "$P/🔒️leases/📁️physical/🧪️tests/🔁️lock-attempts/🟦️.ts" "$P/🔒️leases/📁️physical/🧪️tests/🪟️windows/🟦️.ts" \
+ "$U/🧵️lane/📤️retention/🧪️tests/🪢️link-less/🟦️.ts" "$U/🧵️lane/📤️retention/🧪️tests/🪦️dead-holder/🟦️.ts" "$U/🧵️lane/📤️retention/🧪️tests/🔐️retention-io/🟦️.ts" \
+ "$U/🧵️lane/📤️retention/🧪️tests/📤️retention-model/🟦️.ts" "$U/🧵️lane/📤️retention/🧪️tests/🔀️retention-interleaving/🟦️.ts" "$U/🧵️lane/📤️retention/🧪️tests/🛣️consumer-lanes/🟦️.ts" \
+ "$U/🧵️lane/🏊️pool/🧪️tests/🏊️pool-model/🟦️.ts" "$U/🧵️lane/🏊️pool/🧪️tests/🔐️pool-claims/🟦️.ts" "$U/🧹️gc/🧪️tests/🟦️.ts"
+do run "$f"; done
+printf '%s  ' "planner skip (repo root cwd)"
+for f in "$B/🔧️tools/🏗️bazel/♻️plan-reuse/🧪️tests/🙈️excluded-directory/🟦️.ts" "$B/🔧️tools/🏗️bazel/♻️plan-reuse/🧪️tests/🟦️.ts"; do nice -n 10 bun test "./$f" --timeout 300000 2>&1 | grep -E "^ *[0-9]+ (pass|fail)$" | tr '\n' ' '; done; echo

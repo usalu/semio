@@ -1,0 +1,12 @@
+{
+ "label": "g23-hot2",
+ "target": "@teaching/architecture-course:build",
+ "started": "07:02:13",
+ "wall_s": 46.2,
+ "peak_tree_mb": 2387,
+ "peak_processes": 6,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

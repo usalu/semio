@@ -1,0 +1,653 @@
+{
+ "version": 1,
+ "about": "Inputs of the agents16 simulation. Run timelines are the recorded gate runs of 10-27 (gate-g-tools/run/g4x-*.json for wall and peak RSS, the live footprint store estimates-1450.json for the footprint peak and its time): fp = tree footprint in MB at the end of the segment (macOS phys_footprint, what the governor observes and learns), rss = product.py tree RSS in MB (reference only; 2.5-3x the footprint). A segment's footprint ramps linearly from the previous level to fp over peakAt seconds (default: the whole segment) and then holds. Segment kinds: door (process chain start), served (graph from the memo), plan (graph planned by a child), refresh (graph rebuilt: needs the single builder custody; a cold builder asks the project farm for workers after farmAfter seconds), bazel (needs a Bazel session slot; the slot server is part of fp and stays as idle foreign memory afterwards). cpu = cores the segment keeps busy.",
+ "hosts": {
+  "h32d-fleet": {
+   "about": "the gate's real run: this 32 GB Mac declared 16 GB/8 cores, fleet holding ~16 GB (14:45 sample: 13169 MB available on 32 GB, load 50)",
+   "realMegabytes": 32768,
+   "declaredMegabytes": 16384,
+   "declaredCores": 8,
+   "foreignMegabytes": 16000,
+   "foreignLoad": 24
+  },
+  "h32d-quiet": {
+   "about": "the gate's real run in a quiet window (no other lane building): ~9 GB foreign",
+   "realMegabytes": 32768,
+   "declaredMegabytes": 16384,
+   "declaredCores": 8,
+   "foreignMegabytes": 9000,
+   "foreignLoad": 4
+  },
+  "h16": {
+   "about": "a real 16 GB / 8-core laptop: macOS, three agent CLIs, journal + repo services, editor = 4.5 GB",
+   "realMegabytes": 16384,
+   "declaredMegabytes": 16384,
+   "declaredCores": 8,
+   "foreignMegabytes": 4608,
+   "foreignLoad": 2
+  }
+ },
+ "bazel": {
+  "idleServerMegabytes": 350
+ },
+ "doorUpgradeDelaySeconds": 1,
+ "farm": {
+  "preferredJobs": 9,
+  "refuseSeconds": 2,
+  "about": "every refreshing gate run g11-g43 refused its farm workers (identity differs, result-buildmem): the workers start and are refused within ~2 s of the host grant"
+ },
+ "runs": {
+  "course-edit": {
+   "source": "g42c-edit 50.5 s, fp 3409 MB at 30 s, rss 5179",
+   "target": "@teaching/architecture-course:build",
+   "lineage": [
+    "run",
+    "run:build",
+    "run:build:@teaching/architecture-course:build"
+   ],
+   "kinds": [
+    "build"
+   ],
+   "segments": [
+    {
+     "kind": "door",
+     "seconds": 2,
+     "fp": 300,
+     "rss": 600,
+     "cpu": 1
+    },
+    {
+     "kind": "plan",
+     "seconds": 18,
+     "fp": 1500,
+     "rss": 3000,
+     "cpu": 2
+    },
+    {
+     "kind": "bazel",
+     "seconds": 30,
+     "fp": 3409,
+     "rss": 5179,
+     "peakAt": 10,
+     "cpu": 2
+    }
+   ]
+  },
+  "course-noop": {
+   "source": "g42-hot2 10.1 s, fp 544 MB, rss 1074",
+   "target": "@teaching/architecture-course:build",
+   "lineage": [
+    "run",
+    "run:build",
+    "run:build:@teaching/architecture-course:build"
+   ],
+   "kinds": [
+    "build"
+   ],
+   "segments": [
+    {
+     "kind": "door",
+     "seconds": 2,
+     "fp": 300,
+     "rss": 600,
+     "cpu": 1
+    },
+    {
+     "kind": "served",
+     "seconds": 5,
+     "fp": 450,
+     "rss": 900,
+     "cpu": 1
+    },
+    {
+     "kind": "bazel",
+     "seconds": 3,
+     "fp": 544,
+     "rss": 1074,
+     "cpu": 1
+    }
+   ]
+  },
+  "course-cold": {
+   "source": "g43-course 171 s, fp 2156 MB at 30 s (of the refresh), rss 5928; worst g41-course 452 s fp 2683",
+   "target": "@teaching/architecture-course:build",
+   "lineage": [
+    "run",
+    "run:build",
+    "run:build:@teaching/architecture-course:build"
+   ],
+   "kinds": [
+    "build"
+   ],
+   "segments": [
+    {
+     "kind": "door",
+     "seconds": 2,
+     "fp": 300,
+     "rss": 600,
+     "cpu": 1
+    },
+    {
+     "kind": "refresh",
+     "seconds": 120,
+     "fp": 2156,
+     "rss": 5928,
+     "peakAt": 30,
+     "cpu": 8,
+     "farmAfter": 20
+    },
+    {
+     "kind": "bazel",
+     "seconds": 49,
+     "fp": 1500,
+     "rss": 3000,
+     "cpu": 4
+    }
+   ]
+  },
+  "print-edit": {
+   "source": "g42p-edit 85.5 s (served from the memo, cargo 71.5 s), fp 1418 MB at 15 s, rss 1929",
+   "target": "@semio-tech/print-rs:test",
+   "lineage": [
+    "run",
+    "run:test",
+    "run:test:@semio-tech/print-rs:test"
+   ],
+   "kinds": [
+    "test"
+   ],
+   "segments": [
+    {
+     "kind": "door",
+     "seconds": 2,
+     "fp": 300,
+     "rss": 600,
+     "cpu": 1
+    },
+    {
+     "kind": "served",
+     "seconds": 8,
+     "fp": 900,
+     "rss": 1700,
+     "cpu": 1
+    },
+    {
+     "kind": "bazel",
+     "seconds": 75,
+     "fp": 1418,
+     "rss": 1929,
+     "peakAt": 5,
+     "cpu": 8
+    }
+   ]
+  },
+  "print-edit-first": {
+   "source": "g43p-edit 282.9 s (first edit after a library landing), fp 2260 MB at 271 s, rss 6490",
+   "target": "@semio-tech/print-rs:test",
+   "lineage": [
+    "run",
+    "run:test",
+    "run:test:@semio-tech/print-rs:test"
+   ],
+   "kinds": [
+    "test"
+   ],
+   "segments": [
+    {
+     "kind": "door",
+     "seconds": 2,
+     "fp": 300,
+     "rss": 600,
+     "cpu": 1
+    },
+    {
+     "kind": "served",
+     "seconds": 8,
+     "fp": 900,
+     "rss": 1700,
+     "cpu": 1
+    },
+    {
+     "kind": "bazel",
+     "seconds": 273,
+     "fp": 2260,
+     "rss": 6490,
+     "peakAt": 261,
+     "cpu": 8
+    }
+   ]
+  },
+  "print-cold": {
+   "source": "g41-print1 487 s, fp 2920 MB at 270 s, rss 9567 (g42-print1 599 s fp 4097; g43-print1 971 s fp 2556)",
+   "target": "@semio-tech/print-rs:test",
+   "lineage": [
+    "run",
+    "run:test",
+    "run:test:@semio-tech/print-rs:test"
+   ],
+   "kinds": [
+    "test"
+   ],
+   "segments": [
+    {
+     "kind": "door",
+     "seconds": 2,
+     "fp": 300,
+     "rss": 600,
+     "cpu": 1
+    },
+    {
+     "kind": "refresh",
+     "seconds": 268,
+     "fp": 2920,
+     "rss": 9567,
+     "peakAt": 268,
+     "cpu": 8,
+     "farmAfter": 20
+    },
+    {
+     "kind": "bazel",
+     "seconds": 217,
+     "fp": 1600,
+     "rss": 3500,
+     "cpu": 8
+    }
+   ]
+  },
+  "dash-noop": {
+   "source": "g41-dash3 10.0 s, fp 511 MB, rss 1147",
+   "target": "@semio-tech/repo-dashboard-rs:build",
+   "lineage": [
+    "run",
+    "run:build",
+    "run:build:@semio-tech/repo-dashboard-rs:build"
+   ],
+   "kinds": [
+    "build"
+   ],
+   "segments": [
+    {
+     "kind": "door",
+     "seconds": 2,
+     "fp": 300,
+     "rss": 600,
+     "cpu": 1
+    },
+    {
+     "kind": "served",
+     "seconds": 5,
+     "fp": 420,
+     "rss": 900,
+     "cpu": 1
+    },
+    {
+     "kind": "bazel",
+     "seconds": 3,
+     "fp": 511,
+     "rss": 1147,
+     "cpu": 1
+    }
+   ]
+  },
+  "dash-peer": {
+   "source": "g42-dash2 20.2 s (graph planned by a child after a foreign file changed), fp 500 MB at 15 s, rss 1331",
+   "target": "@semio-tech/repo-dashboard-rs:build",
+   "lineage": [
+    "run",
+    "run:build",
+    "run:build:@semio-tech/repo-dashboard-rs:build"
+   ],
+   "kinds": [
+    "build"
+   ],
+   "segments": [
+    {
+     "kind": "door",
+     "seconds": 2,
+     "fp": 300,
+     "rss": 600,
+     "cpu": 1
+    },
+    {
+     "kind": "plan",
+     "seconds": 15,
+     "fp": 500,
+     "rss": 1331,
+     "cpu": 2
+    },
+    {
+     "kind": "bazel",
+     "seconds": 3,
+     "fp": 500,
+     "rss": 1100,
+     "cpu": 1
+    }
+   ]
+  },
+  "dash-cold": {
+   "source": "g41-dash1 472 s, fp 2019 MB at 135 s, rss 8495 (g42-dash1 95 s fp 1587)",
+   "target": "@semio-tech/repo-dashboard-rs:build",
+   "lineage": [
+    "run",
+    "run:build",
+    "run:build:@semio-tech/repo-dashboard-rs:build"
+   ],
+   "kinds": [
+    "build"
+   ],
+   "segments": [
+    {
+     "kind": "door",
+     "seconds": 2,
+     "fp": 300,
+     "rss": 600,
+     "cpu": 1
+    },
+    {
+     "kind": "refresh",
+     "seconds": 300,
+     "fp": 2019,
+     "rss": 8495,
+     "peakAt": 133,
+     "cpu": 8,
+     "farmAfter": 20
+    },
+    {
+     "kind": "bazel",
+     "seconds": 170,
+     "fp": 1500,
+     "rss": 3000,
+     "cpu": 6
+    }
+   ]
+  },
+  "print-noop": {
+   "source": "g42-print3 15.1 s (550 projects served from the memo, plan reused), fp 304 MB, rss 1615",
+   "target": "@semio-tech/print-rs:test",
+   "lineage": [
+    "run",
+    "run:test",
+    "run:test:@semio-tech/print-rs:test"
+   ],
+   "kinds": [
+    "test"
+   ],
+   "segments": [
+    {
+     "kind": "door",
+     "seconds": 2,
+     "fp": 300,
+     "rss": 600,
+     "cpu": 1
+    },
+    {
+     "kind": "served",
+     "seconds": 10,
+     "fp": 300,
+     "rss": 1400,
+     "cpu": 1
+    },
+    {
+     "kind": "bazel",
+     "seconds": 3,
+     "fp": 304,
+     "rss": 1615,
+     "cpu": 1
+    }
+   ]
+  }
+ },
+ "scenarios": {
+  "hot": {
+   "about": "agents3.py as the gate runs it: prime.sh (course, print, dash, course hot x2, warm), the peer scenario in between (gapSeconds), then A course one-line edit (en), B print one-line edit (de), C dashboard no-op / peer no-op / no-op (en), stagger 3 s",
+   "stagger": 3,
+   "agents": [
+    {
+     "name": "A",
+     "language": "en",
+     "steps": [
+      "course-edit"
+     ]
+    },
+    {
+     "name": "B",
+     "language": "de",
+     "steps": [
+      "print-edit"
+     ]
+    },
+    {
+     "name": "C",
+     "language": "en",
+     "steps": [
+      "dash-noop",
+      "dash-peer",
+      "dash-noop"
+     ]
+    }
+   ],
+   "prime": [
+    "course-noop",
+    "print-noop",
+    "dash-noop",
+    "course-noop",
+    "course-noop"
+   ],
+   "gapSeconds": 900
+  },
+  "hot-firstedit": {
+   "about": "as hot, but B's edit is the first one after a library landing (g43p-edit shape, 283 s)",
+   "stagger": 3,
+   "agents": [
+    {
+     "name": "A",
+     "language": "en",
+     "steps": [
+      "course-edit"
+     ]
+    },
+    {
+     "name": "B",
+     "language": "de",
+     "steps": [
+      "print-edit-first"
+     ]
+    },
+    {
+     "name": "C",
+     "language": "en",
+     "steps": [
+      "dash-noop",
+      "dash-peer",
+      "dash-noop"
+     ]
+    }
+   ],
+   "prime": [
+    "course-noop",
+    "print-noop",
+    "dash-noop",
+    "course-noop",
+    "course-noop"
+   ],
+   "gapSeconds": 900
+  },
+  "cold": {
+   "about": "a landing invalidated the graph and the last runs are older than the follow-up window: A course, B print, C dashboard all need a refresh; the builder custody serialises the refreshes (upper bound: each refresh as long as alone)",
+   "stagger": 3,
+   "agents": [
+    {
+     "name": "A",
+     "language": "en",
+     "steps": [
+      "course-cold"
+     ]
+    },
+    {
+     "name": "B",
+     "language": "de",
+     "steps": [
+      "print-cold"
+     ]
+    },
+    {
+     "name": "C",
+     "language": "en",
+     "steps": [
+      "dash-cold",
+      "dash-peer",
+      "dash-noop"
+     ]
+    }
+   ],
+   "prime": [],
+   "gapSeconds": 2400
+  },
+  "cold-followup": {
+   "about": "as cold, but the three classes ran 10-12 min earlier (quiet follow-up forecasts that upgrade at once)",
+   "stagger": 3,
+   "agents": [
+    {
+     "name": "A",
+     "language": "en",
+     "steps": [
+      "course-cold"
+     ]
+    },
+    {
+     "name": "B",
+     "language": "de",
+     "steps": [
+      "print-cold"
+     ]
+    },
+    {
+     "name": "C",
+     "language": "en",
+     "steps": [
+      "dash-cold",
+      "dash-peer",
+      "dash-noop"
+     ]
+    }
+   ],
+   "prime": [
+    "course-noop",
+    "print-noop",
+    "dash-noop"
+   ],
+   "gapSeconds": 600
+  },
+  "hot-late": {
+   "about": "as hot, but the peer scenario took longer than the follow-up window (35 min): no quiet forecast, full learned requests",
+   "prime": [
+    "course-noop",
+    "print-noop",
+    "dash-noop",
+    "course-noop",
+    "course-noop"
+   ],
+   "gapSeconds": 2100,
+   "stagger": 3,
+   "agents": [
+    {
+     "name": "A",
+     "language": "en",
+     "steps": [
+      "course-edit"
+     ]
+    },
+    {
+     "name": "B",
+     "language": "de",
+     "steps": [
+      "print-edit"
+     ]
+    },
+    {
+     "name": "C",
+     "language": "en",
+     "steps": [
+      "dash-noop",
+      "dash-peer",
+      "dash-noop"
+     ]
+    }
+   ]
+  },
+  "mixed": {
+   "about": "one agent refreshes the graph after a landing (A course, its project farm asks the host for workers 20 s in), the other two arrive a minute later with work that the memo serves (B print one-line edit, de; C dashboard no-ops): do they run beside the refresh or queue behind its farm request?",
+   "prime": [
+    "course-noop",
+    "print-noop",
+    "dash-noop"
+   ],
+   "gapSeconds": 600,
+   "stagger": 3,
+   "agents": [
+    {
+     "name": "A",
+     "language": "en",
+     "steps": [
+      "course-cold"
+     ]
+    },
+    {
+     "name": "B",
+     "language": "de",
+     "steps": [
+      "print-edit"
+     ],
+     "delay": 60
+    },
+    {
+     "name": "C",
+     "language": "en",
+     "steps": [
+      "dash-noop",
+      "dash-peer",
+      "dash-noop"
+     ],
+     "delay": 63
+    }
+   ]
+  },
+  "mixed-long": {
+   "about": "as mixed, but the refreshing agent is the long one (A print:test after a landing, 487 s alone); B course one-line edit (de) and C dashboard no-ops arrive a minute later and are served by the memo",
+   "prime": [
+    "course-noop",
+    "print-noop",
+    "dash-noop"
+   ],
+   "gapSeconds": 600,
+   "stagger": 3,
+   "agents": [
+    {
+     "name": "A",
+     "language": "en",
+     "steps": [
+      "print-cold"
+     ]
+    },
+    {
+     "name": "B",
+     "language": "de",
+     "steps": [
+      "course-edit"
+     ],
+     "delay": 60
+    },
+    {
+     "name": "C",
+     "language": "en",
+     "steps": [
+      "dash-noop",
+      "dash-peer",
+      "dash-noop"
+     ],
+     "delay": 63
+    }
+   ]
+  }
+ }
+}

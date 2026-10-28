@@ -97,6 +97,17 @@ describe("build surface oracle", () => {
     expect(policy.tools.map(toolName).sort()).toEqual(golden.tools);
   });
 
+  it("declares a lease priority per entry point: fan-out tools are background, every valid golden vector carries exactly the declared class, nothing is interactive", () => {
+    const declared = new Map<string, string>(policy.tools.filter((row: any) => row.priority !== undefined).map((row: any) => [toolName(row), row.priority]));
+    expect(policy.priority.variable).toBe("SEMIO_LEASE_PRIORITY");
+    expect([...declared.keys()].sort()).toEqual(["affected", "bench_run", "concurrency_run", "conformance_run", "incremental_run", "run_many", "test", "units_run"]);
+    for (const value of declared.values()) expect(value).toBe("background");
+    const vectors = golden.vectors.filter((vector: any) => vector.environment !== null && vector.environment !== undefined);
+    expect(vectors.length).toBeGreaterThan(10);
+    for (const vector of vectors) expect([vector.id, vector.environment[policy.priority.variable]]).toEqual([vector.id, declared.get(vector.tool)]);
+    expect(declared.size).toBeLessThan(policy.tools.length);
+  });
+
   it("leaves no catalogue row neither exposed nor excluded", () => {
     expect(uncovered()).toEqual([]);
     for (const row of policy.excluded) {

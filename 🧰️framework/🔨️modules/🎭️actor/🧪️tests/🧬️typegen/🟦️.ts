@@ -42,8 +42,7 @@ describe("actor typegen ownership", () => {
     }
   });
 
-  test("publication refuses a linked output root before any write or prune", () => {
-    if (process.platform === "win32") return;
+  test.skipIf(process.platform==="win32")("publication refuses a linked output root before any write or prune", () => {
     const root = mkdtempSync(join(artifacts, "semio-actor-typegen-link-"));
     try {
       const target = actorTypegenTarget(root);

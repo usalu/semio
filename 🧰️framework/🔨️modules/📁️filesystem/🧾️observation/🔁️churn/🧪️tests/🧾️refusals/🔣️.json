@@ -12,6 +12,10 @@
   {"id": "exhausted-de", "text": "/w/a.txt änderte sich in allen 4 Versuchen (seine Bytes änderten sich): ein anderer Prozess bearbeitet es laufend. Den Befehl erneut ausführen, sobald die Änderungen aufgehört haben.", "class": "retries-exhausted", "disposition": "reobserve"},
   {"id": "own-custody", "text": "Error: Actual compilation destination changed", "class": "own-output-or-store-custody", "disposition": "fatal"},
   {"id": "ordinary-compile-error", "text": "error TS2322: Type 'string' is not assignable to type 'number'.", "class": null, "disposition": null},
-  {"id": "retry-announcement-is-not-a-refusal", "text": "Another process edited /w/a.txt while it was read (its bytes changed). Taking a new snapshot, attempt 2 of 6, in 10 ms.", "class": null, "disposition": null}
+  {"id": "retry-announcement-is-not-a-refusal", "text": "Another process edited /w/a.txt while it was read (its bytes changed). Taking a new snapshot, attempt 2 of 6, in 10 ms.", "class": null, "disposition": null},
+  {"id": "edit-restart-en", "text": "Another process kept editing /w/a.tex while this command read it (its bytes changed). Waiting 250 ms, then starting the command again with a new snapshot (1 of 6).", "class": "escaped-concurrent-edit", "disposition": "reexec"},
+  {"id": "edit-restart-de", "text": "Ein anderer Prozess bearbeitete /w/a.tex laufend, während dieser Befehl es las (seine Bytes änderten sich). Warte 250 ms, dann startet der Befehl mit einem neuen Schnappschuss erneut (1 von 6).", "class": "escaped-concurrent-edit", "disposition": "reexec"},
+  {"id": "load-restart-en", "text": "A source file was edited by another process while this command loaded it (Export named 'x' not found in module '/w/y.ts'). Waiting 250 ms, then restarting (1 of 6).", "class": "half-edited-module", "disposition": "reexec"},
+  {"id": "load-restart-de", "text": "Eine Quelldatei wurde von einem anderen Prozess bearbeitet, während dieser Befehl sie lud (Export named 'x' not found in module '/w/y.ts'). Warte 250 ms, dann Neustart (1 von 6).", "class": "half-edited-module", "disposition": "reexec"}
  ]
 }

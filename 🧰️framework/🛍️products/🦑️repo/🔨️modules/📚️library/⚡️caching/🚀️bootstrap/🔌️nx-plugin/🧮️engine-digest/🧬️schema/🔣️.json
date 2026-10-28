@@ -1,0 +1,128 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "semio:build:nx-engine-unkeyed-domains:v1",
+ "title": "Nx Engine Unkeyed Domains",
+ "description": "The code of the private Nx engine closure that never computes the bytes of an Nx task, as workspace-relative directory prefixes grouped in named domains. The build scheduling domains are added to them. A file under any such prefix stays out of the engine digest that keys every Nx task; everything no domain names stays keyed (fail closed). The digest records the prefixes themselves, so moving a prefix re-keys.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "domains"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "spawnOnly": {
+   "description": "File references a module only uses to START a program (a maintenance child), not to load its code: the engine closure does not follow them, so the program and everything only it reaches stay out of every Nx task key. Each names the referencing module and the reference exactly as written.",
+   "type": "array",
+   "maxItems": 32,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "owner",
+     "reference",
+     "contract"
+    ],
+    "properties": {
+     "owner": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+     },
+     "reference": {
+      "type": "string",
+      "pattern": "^\\.",
+      "minLength": 2,
+      "maxLength": 200
+     },
+     "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "en",
+       "de"
+      ],
+      "properties": {
+       "en": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+       },
+       "de": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+       }
+      }
+     }
+    }
+   }
+  },
+  "domains": {
+   "type": "array",
+   "minItems": 1,
+   "maxItems": 32,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "id",
+     "contract",
+     "prefixes"
+    ],
+    "properties": {
+     "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "minLength": 1,
+      "maxLength": 40
+     },
+     "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "en",
+       "de"
+      ],
+      "properties": {
+       "en": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+       },
+       "de": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+       }
+      }
+     },
+     "prefixes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+       "type": "string",
+       "pattern": "^[^/].*/$",
+       "minLength": 2,
+       "maxLength": 200
+      }
+     },
+     "keyedFor": {
+      "description": "Engine families in which this domain stays keyed: its code runs inside the executor of those families (`native`: the owner-command executor of targets that compile Rust), so an edit changes the bytes they write. Every family not named leaves the domain out of its digest.",
+      "type": "array",
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": {
+       "enum": [
+        "native"
+       ]
+      }
+     }
+    }
+   }
+  }
+ }
+}

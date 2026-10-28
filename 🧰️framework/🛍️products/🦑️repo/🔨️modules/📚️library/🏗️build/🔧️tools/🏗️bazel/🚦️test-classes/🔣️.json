@@ -37,11 +37,20 @@
     "shards": 1,
     "flaky": false
   },
-  "rules": [],
+  "rules": [
+    {
+      "id": "course-test-shards",
+      "evidence": "declared",
+      "reason": "The course suite (17 files, 716 tests) needs 50 to 260 s of wall time on a quiet host and five times that at load 40 to 70; three shards keep each far inside its budget (Vitest assigns 6, 6 and 5 files).",
+      "targets": ["test"],
+      "projects": ["@teaching/architecture-course"],
+      "shards": 3
+    }
+  ],
   "messages": {
     "shardNotHonoured": {
       "en": "No command of ${label} honoured shard ${index}/${total}; this shard ran the whole task.",
-      "de": "Kein Befehl von ${label} hat den Shard ${index}/${total} beachtet; dieser Shard hat die ganze Aufgabe ausgeführt."
+      "de": "Kein Befehl von ${label} hat den Shard ${index}/${total} beachtet; dieser Shard hat die ganze Task ausgeführt."
     }
   }
 }

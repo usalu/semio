@@ -48,7 +48,7 @@ test("the image and signing tools are named in exactly one storage module each, 
  const find=(pattern:RegExp)=>files.filter(path=>pattern.test(withoutSpecifiers(readFileSync(join(processRoot,path),"utf8")))).sort();
  const prefix="📦️artifacts/🏗️native-build/💾️storage/";
  expect(find(/["'`]\/usr\/bin\/hdiutil["'`]/u)).toEqual([...fixture.hdiutilLiteralsOutsideStorage,prefix+"🍎️image/🛠️hdiutil/🟦️.ts"].sort());
- expect(find(/["'`]codesign["'`]/u)).toEqual([prefix+"🔌️backends/🍎️mounted-image/✍️sealing/🟦️.ts"]);
+ expect(find(/["'`]\/usr\/bin\/codesign["'`]/u)).toEqual([prefix+"🔌️backends/🍎️mounted-image/✍️sealing/🟦️.ts"]);
  const mentions=find(/hdiutil/u).filter(path=>path.startsWith(prefix)&&ownerOf(path.slice(prefix.length))!=="mounted-image");
  expect(mentions).toEqual([]);
 });

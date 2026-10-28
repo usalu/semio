@@ -1,0 +1,23 @@
+{
+ "label": "g45-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "17:15:05",
+ "wall_s": 904.3,
+ "peak_tree_mb": 4986,
+ "peak_processes": 8,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 55.7,
+ "graph": {
+  "inferring": [
+   "20"
+  ],
+  "processes": [
+   "8",
+   "1 internal, 7 worker"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

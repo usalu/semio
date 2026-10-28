@@ -29,7 +29,7 @@ test("a record names its closure; the closure moves without staling it unless th
   write(root,step.edit);if(step.forget)scriptInputs.resetClosureEntriesV1();
   const scripts=createScriptInputCache({workspaceRoot:root,lateClosures:true}),api=scriptInputs.closureApiV1(scripts,root),before=observation.projectInferenceCountsV1().project??0;
   const value=await observation.observeInferenceSnapshotV1(()=>observation.observeProjectInferenceV1({cachePath,key:"project",owner:"project"},async()=>{
-   const list=await api.closureOf([entry],[]),answer=await api.some(list,fixture.question);
+   const list=await api.closureOf([entry],[],"test-discovery"),answer=await api.some(list,fixture.question);
    return{inputs:[...list],answer,...api.table([...list].map((item:any)=>item.closureRef))};
   }));
   computations=observation.projectInferenceCountsV1().project??0;
@@ -49,7 +49,7 @@ test("a record names its closure; the closure moves without staling it unless th
 test("groups made from different recipes with the same files are merged and numbered as the direct inference numbers them",async()=>{
  const root=mkdtempSync(join(realpathSync(tmpdir()),"late-groups-"));roots.push(root);write(root,fixture.files);
  const scripts=createScriptInputCache({workspaceRoot:root,lateClosures:true}),api=scriptInputs.closureApiV1(scripts,root),entry=join(root,fixture.entry);
- const first=await api.closureOf([entry],[]),second=await api.closureOf([entry,join(root,"tools/a.mjs")],[]),third=await api.closureOf([join(root,"tools/c.mjs")],[]);
+ const first=await api.closureOf([entry],[],"test-discovery"),second=await api.closureOf([entry,join(root,"tools/a.mjs")],[],"test-discovery"),third=await api.closureOf([join(root,"tools/c.mjs")],[],"test-discovery");
  const marker=(list:any)=>scriptInputs.closureHandleOfV1(list);
  expect(marker(first).key).not.toBe(marker(second).key);
  const recipes=Object.fromEntries([first,second,third].map(list=>[marker(list).key,marker(list).recipe]));

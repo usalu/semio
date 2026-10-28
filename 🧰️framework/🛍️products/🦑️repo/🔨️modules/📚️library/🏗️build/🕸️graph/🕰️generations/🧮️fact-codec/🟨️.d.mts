@@ -8,3 +8,6 @@ export function canonicalJsonV1(value:unknown):string;
 export function encodeFactIndexV1(index:FactCodecIndexV1,options:{maximumBytes:number}):Buffer;
 export function decodeFactIndexV1(bytes:Uint8Array,options?:{maximumBytes?:number;share?:(text:string)=>string;build?:true}):FactCodecIndexV1;
 export function decodeFactIndexV1(bytes:Uint8Array,options:{maximumBytes?:number;share?:(text:string)=>string;build:false}):{strings:string[]};
+/** 🪶️ A fact index opened for verification: `rows` materialises a row when it is read, `rowKindOf` answers the kind of a row without reading it. */
+export interface FactCodecOpenIndexV1 extends FactCodecIndexV1{readonly rowKindOf:(id:number)=>string;readonly rowsRead:()=>number}
+export function openFactIndexV1(bytes:Uint8Array,options?:{maximumBytes?:number;share?:(text:string)=>string}):FactCodecOpenIndexV1;

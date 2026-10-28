@@ -4,22 +4,22 @@
     {
       "id": "missing",
       "fault": "missing",
-      "outcome": "refuse"
+      "outcome": "recompute"
     },
     {
       "id": "packed",
       "fault": "packed",
-      "outcome": "refuse"
+      "outcome": "recompute"
     },
     {
       "id": "hash",
       "fault": "hash",
-      "outcome": "refuse"
+      "outcome": "recompute"
     },
     {
       "id": "contract",
       "fault": "contract",
-      "outcome": "refuse"
+      "outcome": "recompute"
     },
     {
       "id": "symlink",
@@ -210,7 +210,7 @@
     "version": 1,
     "states": [
       "warm",
-      "typed-missing-refusal",
+      "missing-block-recomputed",
       "group-absent",
       "recomputed"
     ]

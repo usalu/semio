@@ -1,0 +1,12 @@
+import {join} from "node:path";
+import {bazelCacheLayoutV1,bazelCacheFlagsV1} from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🟦️.ts";
+import {bazelSessionStartupV1,bazelSessionCommandV1,bazelSessionResourcesV1,planBazelServersV1,bazelRepositoryContentsV1} from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🟦️.ts";
+import {bazelPlatformProfileV1,bazelPathClosureV1} from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌐️platform/🟦️.ts";
+const root=process.argv[2]!,slot=process.argv[3]!,heap=Number(process.argv[4]??2048);
+const layout=bazelCacheLayoutV1({tools:"/Users/ueli/Documents/semio/.cache/b/t/m",dependencies:"/Users/ueli/Documents/semio/.cache/b/d/m",products:root});
+const cache=bazelCacheFlagsV1(layout,slot,{environment:{}});
+const profile=bazelPlatformProfileV1({platform:process.platform,arch:process.arch,container:false,outputBase:cache.startup.find(flag=>flag.startsWith("--output_base="))!.slice(14),bun:process.execPath,longPaths:"unprobed",closure:bazelPathClosureV1([],[])});
+const plan=planBazelServersV1({cores:10,memoryMegabytes:16384},{floorBasisPoints:2000,floorMinimumMegabytes:4096,floorMaximumMegabytes:8192});
+const startup=[...bazelSessionStartupV1({...plan,heapMegabytes:heap},120),"--install_base=/Users/ueli/Documents/semio/.cache/b/t/m/bazel/install/8.4.2/darwin-arm64","--nosystem_rc","--nohome_rc","--bazelrc=/Users/ueli/Documents/semio/.bazelrc",...cache.startup,...profile.startup];
+const command=["--lockfile_mode=off","--incompatible_strict_action_env",...cache.command,...bazelSessionResourcesV1(plan),...bazelSessionCommandV1(bazelRepositoryContentsV1(layout.outputs)),...profile.command,"--incompatible_autoload_externally=","--repository_cache=/Users/ueli/Documents/semio/.cache/b/d/m/bazel/modules/e2f6a7b87423dbb0/repositories","--repository_disable_download"];
+console.log(JSON.stringify({layout,startup,command,environment:profile.environment}));

@@ -354,11 +354,20 @@ export function floorSpot(question: { readonly parts: string; readonly controls:
   return { x: spots.reduce((best, x) => (Math.abs(x - middle) < Math.abs(best - middle) ? x : best)), top };
 }
 
-/** 🤲️ Picks up the pet whose body is `body` at its middle and carries it to `to` along a straight line, a frame per step, then holds it still there for ten frames, so that its last samples say it does not move; the button stays down. */
+/** 🤲️ Picks up the pet whose body is `body` at its middle (looked up again on every try, for at most {@link ANSWER_MS} of the pets' time: a pet that walked on while the harness was busy is followed) and carries it to `to` along a straight line, a frame per step, then holds it still there for ten frames, so that its last samples say it does not move; the button stays down. */
 export async function carry(page: Page, body: Body, to: { readonly x: number; readonly y: number }): Promise<void> {
-  const from = middleOf(body);
-  await page.mouse.move(from.x, from.y);
-  await expect(page.locator("html")).toHaveAttribute(CURSOR, "grab", { timeout: ANSWER_MS });
+  let from = middleOf(body);
+  await eventually(
+    page,
+    async () => {
+      const now = (await bodies(page)).find((candidate) => candidate.id === body.id);
+      if (now !== undefined) from = middleOf(now);
+      await page.mouse.move(from.x, from.y);
+      return page.locator("html").getAttribute(CURSOR);
+    },
+    (cursor) => cursor === "grab",
+    { stageMs: ANSWER_MS, message: `${body.id} can be picked up where the hand is` },
+  );
   await page.mouse.down();
   for (let step = 1; step <= 24; step++) {
     await page.mouse.move(from.x + ((to.x - from.x) * step) / 24, from.y + ((to.y - from.y) * step) / 24);
@@ -389,12 +398,12 @@ export function stagePasses(wait: { readonly milliseconds: number; readonly attr
   });
 }
 
-/** 👀️ Looks until `done` accepts what `probe` sees, for at most `stageMs` milliseconds of the pets' time ({@link stagePasses}), not of the wall clock: the budget is what an idle host spends in the same wall time, and a loaded host does not shorten it. A wait for something a pet does is declared this way; nothing sleeps. */
-export async function eventually<T>(page: Page, probe: () => Promise<T>, done: (seen: T) => boolean, wait: { readonly stageMs: number; readonly message: string }): Promise<T> {
+/** 👀️ Looks until `done` accepts what `probe` sees, for at most `stageMs` milliseconds of the pets' time ({@link stagePasses}), not of the wall clock: the budget is what an idle host spends in the same wall time, and a loaded host does not shorten it. A wait for something a pet does is declared this way; nothing sleeps. `lookMs` is the pets' time between two looks (default {@link STAGE_LOOK_MS}); a wait for a pet that passes a place for a moment looks every frame. */
+export async function eventually<T>(page: Page, probe: () => Promise<T>, done: (seen: T) => boolean, wait: { readonly stageMs: number; readonly message: string; readonly lookMs?: number }): Promise<T> {
   let seen = await probe();
   for (let ran = 0; !done(seen); ) {
     expect(ran, `${wait.message} (last seen: ${JSON.stringify(seen)})`).toBeLessThan(wait.stageMs);
-    ran += await page.evaluate(stagePasses, { milliseconds: STAGE_LOOK_MS, attribute: TEMPO });
+    ran += await page.evaluate(stagePasses, { milliseconds: wait.lookMs ?? STAGE_LOOK_MS, attribute: TEMPO });
     seen = await probe();
   }
   return seen;

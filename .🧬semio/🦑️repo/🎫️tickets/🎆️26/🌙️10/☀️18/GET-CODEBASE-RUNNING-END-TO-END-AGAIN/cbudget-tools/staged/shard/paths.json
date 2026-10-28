@@ -1,0 +1,19 @@
+{
+ "new": {
+  "00.ts": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧪️tests/🎓️course/🟦️.ts",
+   "src/test.ts"
+  ],
+  "01.json": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧪️tests/🎓️course/🧫️fixtures/🔣️.json",
+   "src/fixture.json"
+  ],
+  "02.py": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧪️tests/🎓️course/🐍️oracle/🐍️.py",
+   "src/oracle.py"
+  ]
+ },
+ "modified": {
+  "03.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🔣️.json"
+ }
+}

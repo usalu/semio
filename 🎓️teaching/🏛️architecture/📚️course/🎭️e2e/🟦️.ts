@@ -15,9 +15,18 @@
  * The compiler and its output stay in bounded repository storage. The rehearsal retains an immutable artifact reader
  * through the complete browser journey, closes its static listener, and then releases that reader.
  *
+ * The specs are sharded (`./🔒️sessions/🔣️.json`): the `shared` shard's projects share one proctor and run on several Playwright
+ * workers, the `exclusive` shard's projects take the proctor away or count who is online and run on one worker of a proctor
+ * of their own. The dev topology therefore boots two stacks at once (one dev site and proctor per shard); the rehearsal
+ * stack, whose release build bakes its proctor origin in, runs its shards one after the other. Every stack first runs the
+ * `boot` spec once, so a cold dev server has transformed everything before a wave starts, and the stacks boot one after the
+ * other, so the second dev server finds the optimized dependencies of the first. How many stacks and workers run at once
+ * comes from the worker policy of the admitted memory and cores (`SEMIO_E2E_STACKS`, `SEMIO_PLAYWRIGHT_WORKERS`).
+ *
  * `test-e2e [--topology <both|dev|rehearsal>] [--serial] [--keep] [--proctor <executable>] [-- <Playwright arguments…>]`: no topology means
  * both, at once unless `--serial`; `--proctor` runs that executable (a release build, say) instead of building the
- * proctor; words after `--` go unchanged to `playwright test` (`--grep`, `--project`, `--headed`, `--workers`, …).
+ * proctor; words after `--` go to `playwright test` (`--grep`, `--headed`, …); `--project` selects projects of every shard
+ * and `--workers` sets the workers of the shared shard.
  * @see ./🎚️config/🟦️.ts — the Playwright projects
  * @see ./🚶️learner/🟦️.ts — the learner the specs drive
  * @see ../🧱️stack/🟦️.ts — the parts the stacks are booted from
@@ -44,8 +53,9 @@ import { acquireProctor } from "../../../🛂️proctor/🏗️bootstrap/🧾️
 import { siteArtifactProblems } from "../🚀️deploy/🌐️site/🟦️.ts";
 import { SITE_FIRST_ANSWER_MS, awaitReady, httpAnswers, launchOwned, serveStaticSite } from "../🧱️stack/🟦️.ts";
 import {courseOriginalBuildModeV1} from "../🏗️builder/🎚️mode/🟦️.ts";
-import { runTopologySessionsV1 } from "./🔒️sessions/🟦️.ts";
+import { SHARD_TABLE, allocateWorkersV1, runTopologySessionsV1, scheduleStacksV1, splitProjectArgumentsV1, splitWorkerArgumentsV1, waveArgumentsV1, workerBudgetV1, type StackPlanV1 } from "./🔒️sessions/🟦️.ts";
 import { startToolV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { plannedTestWorkersV1, withPlannedTestWorkersV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/👷️workers/🟦️.ts";
 
 //#region 🗺️Topologies
 /** 🗺️ The topologies the gate boots, in the order they are named. */
@@ -75,8 +85,11 @@ export function rehearsalBuildEnvironment(proctor: string, environment: Readonly
 export function rehearsalBuildPlan(bundleRoot: string, proctor: string, environment: Readonly<Record<string, string | undefined>> = process.env): { root: string; config: string; mode: "release"; owner: string; environment: Record<string, string | undefined> } {
   return { root: bundleRoot, config: resolve(bundleRoot, "../../🏗️builder/🌐️vite/🟦️.ts"), mode: "release", owner: "architecture-course:rehearsal", environment: rehearsalBuildEnvironment(proctor, environment) };
 }
-/** 👷️ One worker per concurrent topology; multi-user scenarios open their own learner contexts. */
-export const SHARED_WORKERS = 1;
+/** 👷️ The class the worker policy learns the sizes of this gate's stacks and Playwright workers under: the stacks that run at once come from the `e2e-stacks` runner, the Playwright workers of the shared shard from the `playwright` runner of the share that is left after them; multi-user scenarios open their own learner contexts. */
+export const COURSE_E2E_CLASS = "architecture-course";
+
+/** 👥️ How many Playwright workers in all the gate asks the worker policy for (the policy still bounds them by the admitted memory and cores and by its maximum, and `SEMIO_PLAYWRIGHT_WORKERS` overrides them). */
+const PLAYWRIGHT_WORKERS_WANTED = 4;
 
 const PLAYWRIGHT_CLI = ["node_modules", "playwright", "cli.js"] as const;
 const PLAYWRIGHT_CONFIG = ["🎓️teaching", "🏛️architecture", "📚️course", "🎭️e2e", "🎚️config", "🟦️.ts"] as const;
@@ -136,11 +149,21 @@ interface Run {
   readonly work: string;
   readonly proctor: string | ProctorArtifact;
   readonly signal: AbortSignal;
+  readonly browsers: string;
+  readonly report: string;
+}
+
+/** 🍰️ One stack to boot: what it hosts and the Playwright workers of every wave it runs. */
+interface Slot {
+  readonly plan: StackPlanV1;
+  readonly workers: readonly number[];
 }
 
 /** 🧱️ A booted stack: its origins, its control endpoint and the way to stop it. */
 interface Stack {
   readonly topology: CourseTopology;
+  readonly label: string;
+  readonly slot: Slot;
   readonly site: string;
   readonly proctor: string;
   readonly control: string;
@@ -231,12 +254,14 @@ function holdSiteArtifact(run: Run): Promise<{ readonly path: string; release():
   });
 }
 
-/** 🥞️ Retains one ready topology and its artifact reader through the learner journeys, then stops every owned part. */
-async function withStack(topology: CourseTopology, run: Run, consume: (stack: Stack) => Promise<void>): Promise<void> {
+/** 🥞️ Retains one ready stack of a topology and its artifact reader through the learner journeys, then stops every owned part; the stack has run the warm-up spec before `consume` starts. */
+async function withStack(slot: Slot, run: Run, consume: (stack: Stack) => Promise<void>): Promise<void> {
+  const topology = slot.plan.topology as CourseTopology;
+  const label = slot.plan.label;
   const ports = await endToEndPorts(run.signal);
   const taken = (await Promise.all([ports.site, ports.proctor].map(async (port) => ((await portFree(port, run.signal)) ? [] : [port])))).flat();
-  if (taken.length > 0) throw new Error(`the ${topology} stack needs port ${taken.join(" and ")}, which something else listens on (another run of this gate?)`);
-  const directory = join(run.work, topology);
+  if (taken.length > 0) throw new Error(`the ${label} stack needs port ${taken.join(" and ")}, which something else listens on (another run of this gate?)`);
+  const directory = join(run.work, label);
   const site = `http://127.0.0.1:${ports.site}`;
   const proctor = `http://127.0.0.1:${ports.proctor}`;
   mkdirSync(join(directory, "proctor-data"), { recursive: true });
@@ -244,8 +269,8 @@ async function withStack(topology: CourseTopology, run: Run, consume: (stack: St
   const closing: (() => Promise<unknown>)[] = [];
   const close = async (): Promise<void> => {
     const failures: unknown[] = [];
-    for (const end of closing.splice(0).reverse()) await end().catch((error: unknown) => { failures.push(error); say(`${topology}: ${error instanceof Error ? error.message : String(error)}`); });
-    if (failures.length) throw new AggregateError(failures, `The ${topology} stack did not stop cleanly`);
+    for (const end of closing.splice(0).reverse()) await end().catch((error: unknown) => { failures.push(error); say(`${label}: ${error instanceof Error ? error.message : String(error)}`); });
+    if (failures.length) throw new AggregateError(failures, `The ${label} stack did not stop cleanly`);
   };
   try {
     let running: ProctorProcess | undefined;
@@ -253,7 +278,7 @@ async function withStack(topology: CourseTopology, run: Run, consume: (stack: St
       if (running !== undefined) return;
       const launched = typeof run.proctor === "string" ? launchProctor(run.proctor, run.repoRoot, ["serve"], env, join(directory, "proctor.log")) : run.proctor.launch(["serve"], env, join(directory, "proctor.log"));
       running = launched;
-      await awaitReady({ label: `the ${topology} proctor at ${proctor}`, probe: () => proctorReady(proctor), exited: launched.exited, signal: run.signal, say });
+      await awaitReady({ label: `the ${label} proctor at ${proctor}`, probe: () => proctorReady(proctor), exited: launched.exited, signal: run.signal, say });
     };
     const stop = async (): Promise<void> => {
       const ending = running;
@@ -262,19 +287,20 @@ async function withStack(topology: CourseTopology, run: Run, consume: (stack: St
     };
     closing.push(stop);
     await start();
-    say(`${topology}: proctor ready at ${proctor} (${env.PROCTOR_MODE})`);
+    say(`${label}: proctor ready at ${proctor} (${env.PROCTOR_MODE})`);
     const control = await serveControl({ stop, start });
     closing.push(() => control.close());
-    const stack = { topology, site, proctor, control: control.url };
+    const stack: Stack = { topology, label, slot, site, proctor, control: control.url };
     if (topology === "dev") {
       const server = launchOwned(process.execPath, [run.script, "dev-site"], run.bundleRoot, scriptInvocationEnvironment(run.invocation, { ...process.env, [run.portEnv]: String(ports.site), PROCTOR_PORT: String(ports.proctor), TEACHING_ARCHITECTURE_COURSE_WATCH: "off" }), join(directory, "site.log"));
       closing.push(() => server.stop());
-      await awaitReady({ label: `the dev site at ${site}`, probe: () => httpAnswers(site, SITE_FIRST_ANSWER_MS), exited: server.exited, signal: run.signal, say });
-      say(`dev: site ready at ${site}, proxying to ${proctor}`);
+      await awaitReady({ label: `the ${label} site at ${site}`, probe: () => httpAnswers(site, SITE_FIRST_ANSWER_MS), exited: server.exited, signal: run.signal, say });
+      say(`${label}: site ready at ${site}, proxying to ${proctor}`);
+      await warmUp(stack, run);
       await consume(stack);
     } else {
       courseOriginalBuildModeV1(run.invocation, "release");
-      say(`rehearsal: building the release site for ${proctor}`);
+      say(`${label}: building the release site for ${proctor}`);
       await buildViteArtifact({ ...rehearsalBuildPlan(run.bundleRoot, proctor), workspace: run.repoRoot, invocation: run.invocation, control: scriptCompilerAdmissionControlV1(run.invocation, "vite:rehearsal-build", 0), signal: run.signal });
       const held = await holdSiteArtifact(run);
       closing.push(() => held.release());
@@ -283,7 +309,8 @@ async function withStack(topology: CourseTopology, run: Run, consume: (stack: St
       if (problems.length > 0) throw new Error(`the release build is not a site artifact:\n- ${problems.join("\n- ")}`);
       const served = await serveStaticSite(artifact, ports.site);
       closing.push(() => served.close());
-      say(`rehearsal: static site at ${served.origin}, calling ${proctor} cross-origin`);
+      say(`${label}: static site at ${served.origin}, calling ${proctor} cross-origin`);
+      await warmUp(stack, run);
       await consume(stack);
     }
   } finally {
@@ -306,32 +333,44 @@ async function ensureBrowser(invocation: ScriptInvocation, repoRoot: string, bro
   await runOwnedCommand(invocation, process.execPath, [join(repoRoot, ...PLAYWRIGHT_CLI), "install", "chromium"], repoRoot, "architecture-course:test-e2e browser", { version: 1, maximumElapsedMilliseconds: scriptInvocationBudget(invocation, 600_000), output: readNativeCallerAuthorityV1(invocation.capabilities).transport }, { env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: browsers } });
 }
 
-/** 🎬️ Runs the specs against one stack, every output line prefixed with its topology; resolves with the exit status. */
-function runSpecs(stack: Stack, run: Run, browsers: string, output: string, forwarded: readonly string[]): Promise<number> {
+/** 🎬️ Runs `playwright test` against one stack, every output line prefixed with the stack's label; resolves with the exit status and whether Playwright found no test to run. */
+function runSpecs(stack: Stack, run: Run, output: string, forwarded: readonly string[]): Promise<{ readonly code: number; readonly empty: boolean }> {
   run.signal.throwIfAborted();
-  const env = { ...process.env, PLAYWRIGHT_BROWSERS_PATH: browsers, PLAYWRIGHT_BASE_URL: stack.site, [COURSE_E2E_ENVIRONMENT.topology]: stack.topology, [COURSE_E2E_ENVIRONMENT.proctor]: stack.proctor, [COURSE_E2E_ENVIRONMENT.control]: stack.control };
-  const child = startToolV1("node", [join(run.repoRoot, ...PLAYWRIGHT_CLI), "test", "--config", join(run.repoRoot, ...PLAYWRIGHT_CONFIG), "--output", join(output, stack.topology), ...forwarded], { cwd: run.repoRoot, env, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
+  const env = { ...process.env, PLAYWRIGHT_BROWSERS_PATH: run.browsers, PLAYWRIGHT_BASE_URL: stack.site, [COURSE_E2E_ENVIRONMENT.topology]: stack.topology, [COURSE_E2E_ENVIRONMENT.proctor]: stack.proctor, [COURSE_E2E_ENVIRONMENT.control]: stack.control };
+  const child = startToolV1("node", [join(run.repoRoot, ...PLAYWRIGHT_CLI), "test", "--config", join(run.repoRoot, ...PLAYWRIGHT_CONFIG), "--output", output, ...forwarded], { cwd: run.repoRoot, env, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
   const cancel = (): void => terminateOwnedChildTree(child);
   run.signal.addEventListener("abort", cancel, { once: true });
+  let empty = false;
   for (const stream of [child.stdout!, child.stderr!]) {
     let rest = "";
+    const show = (line: string): void => {
+      empty ||= /No tests found/u.test(line);
+      console.log(`[${stack.label}] ${line}`);
+    };
     stream.setEncoding("utf8").on("data", (chunk: string) => {
       const lines = `${rest}${chunk}`.split(/\r?\n/u);
       rest = lines.pop() ?? "";
-      for (const line of lines) console.log(`[${stack.topology}] ${line}`);
+      lines.forEach(show);
     });
-    stream.on("end", () => rest !== "" && console.log(`[${stack.topology}] ${rest}`));
+    stream.on("end", () => rest !== "" && show(rest));
   }
   return new Promise((accept) => {
     child.once("error", (error) => {
-      say(`${stack.topology}: ${error.message}`);
-      accept(1);
+      say(`${stack.label}: ${error.message}`);
+      accept({ code: 1, empty: false });
     });
     child.once("close", (code) => {
       run.signal.removeEventListener("abort", cancel);
-      accept(code ?? 1);
+      accept({ code: code ?? 1, empty: empty && code !== 0 });
     });
   });
+}
+
+/** 🔥️ Runs the warm-up project (the `boot` spec) once against a stack that is up, so its dev server has transformed and optimized everything before a wave starts and the next dev server to boot finds the optimized dependencies. */
+async function warmUp(stack: Stack, run: Run): Promise<void> {
+  say(`${stack.label}: warming up with the ${SHARD_TABLE.warmup} spec`);
+  const { code } = await runSpecs(stack, run, join(run.report, `${stack.label}-${SHARD_TABLE.warmup}`), ["--project", SHARD_TABLE.warmup, "--workers", "1"]);
+  if (code !== 0) throw new Error(`the ${stack.label} stack did not pass its ${SHARD_TABLE.warmup} spec (${code})`);
 }
 
 /** 🏁️ `test-e2e` — builds the proctor once, boots the topologies of `segments`, runs the specs against each, and stops
@@ -359,17 +398,30 @@ export async function runCourseEndToEnd(invocation: ScriptInvocation, repoRoot: 
     const given = plan.proctor === undefined ? undefined : endToEndProctorPath(repoRoot, plan.proctor);
     say(given === undefined ? "building the proctor (a first build takes minutes)" : `running the proctor ${given} as it is`);
     if (given === undefined) artifact = await acquireProctor(repoRoot, invocation, process.env, signal);
-    const run: Run = { invocation, repoRoot, bundleRoot, script, portEnv, work, proctor: given ?? artifact!, signal };
+    const run: Run = { invocation, repoRoot, bundleRoot, script, portEnv, work, proctor: given ?? artifact!, signal, browsers, report: join(work, "report") };
     const statuses: number[] = [];
-    const sharing = !plan.serial && plan.topologies.length > 1 && !plan.playwright.some((argument) => /^(?:--workers|-j)(?:=|$)/u.test(argument));
-    const forwarded = sharing ? [...plan.playwright, "--workers", String(SHARED_WORKERS)] : plan.playwright;
+    const ran: boolean[] = [];
+    const { projects: requested, rest } = splitProjectArgumentsV1(plan.playwright);
+    const explicit = splitWorkerArgumentsV1(rest).workers;
+    const order = bootOrder(plan.topologies);
+    const wanted = plan.serial ? 1 : scheduleStacksV1(SHARD_TABLE, order, requested, Number.MAX_SAFE_INTEGER, false).stacks.length;
     const play = async (stack: Stack): Promise<void> => {
-      say(`${stack.topology}: running the specs against ${stack.site}`);
-      const status = await runSpecs(stack, run, browsers, join(work, "report"), forwarded);
-      say(`${stack.topology}: specs ${status === 0 ? "passed" : `failed (${status})`}`);
-      statuses.push(status);
+      say(`${stack.label}: running ${stack.slot.plan.waves.map((wave) => `${wave.shard} (${wave.projects.join(", ")})`).join(", then ") || "nothing but the warm-up"} against ${stack.site}`);
+      for (const [index, wave] of stack.slot.plan.waves.entries()) {
+        const { code, empty } = await runSpecs(stack, run, join(run.report, `${stack.label}-${wave.shard}`), waveArgumentsV1(plan.playwright, wave, stack.slot.workers[index]!, explicit));
+        say(`${stack.label}: ${wave.shard} ${code === 0 ? "passed" : empty ? "found no test to run" : `failed (${code})`}`);
+        statuses.push(empty ? 0 : code);
+        ran.push(!empty);
+      }
     };
-    await runTopologySessionsV1(bootOrder(plan.topologies), plan.serial, (topology, consume) => withStack(topology, run, consume), play);
+    await withPlannedTestWorkersV1("e2e-stacks", process.env, COURSE_E2E_CLASS, (stacks) => {
+      const schedule = scheduleStacksV1(SHARD_TABLE, order, requested, stacks.workers, plan.serial);
+      const workers = allocateWorkersV1(schedule.stacks, workerBudgetV1(plannedTestWorkersV1("playwright", process.env, COURSE_E2E_CLASS, PLAYWRIGHT_WORKERS_WANTED, say), stacks.workerMegabytes * (schedule.concurrent ? schedule.stacks.length : 1)), schedule.concurrent);
+      say(`${schedule.stacks.length} stack(s)${schedule.concurrent ? " at once" : " one after the other"}: ${schedule.stacks.map((stack, index) => `${stack.label} [${stack.waves.map((wave, position) => `${wave.shard} x${workers[index]![position]}`).join(" > ")}]`).join(", ")}`);
+      const slots: readonly Slot[] = schedule.stacks.map((stack, index) => ({ plan: stack, workers: workers[index]! }));
+      return runTopologySessionsV1(slots, !schedule.concurrent, (slot, consume) => withStack(slot, run, consume), play);
+    }, wanted, say);
+    if (ran.length > 0 && !ran.some(Boolean)) throw new Error("Playwright found no test to run in any shard");
     failure = interrupted !== undefined ? `stopped by ${interrupted}` : statuses.every((status) => status === 0) ? undefined : "specs failed";
   } catch (error) {
     failure = interrupted !== undefined ? `stopped by ${interrupted}` : error instanceof Error ? error.message : String(error);

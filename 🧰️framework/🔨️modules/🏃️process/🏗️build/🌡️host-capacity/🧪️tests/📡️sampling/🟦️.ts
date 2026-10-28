@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {freemem,totalmem} from "node:os";
 import {formatHostCapacityErrorV1,readHostCapacityPolicyV1,resolveHostCapacityLanguageV1,type HostCommandRunnerV1} from "../../🟦️.ts";
-import {observeTreeMegabytesV1,parseDarwinCountersV1,parseLinuxCountersV1,parseProcessTableV1,readHostCountersV1,readHostSampleV1,reduceHostSampleV1,treeMegabytesV1} from "../../📡️sampling/🟦️.ts";
+import {observeTreeMegabytesV1,parseDarwinCountersV1,parseLinuxCountersV1,parseProcessTableV1,parseWindowsCountersV1,readHostCountersV1,WINDOWS_COUNTERS_COMMAND,readHostSampleV1,reduceHostSampleV1,simulatedHostTotalV1,treeMegabytesV1} from "../../📡️sampling/🟦️.ts";
 import decisionFixture from "../🧫️fixtures/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 
@@ -10,6 +10,13 @@ const policy=readHostCapacityPolicyV1(decisionFixture.policy);
 
 test("macOS counters parse from vm_stat, vm.swapusage and the pressure level exactly",()=>{
  for(const item of fixture.darwin)expect(parseDarwinCountersV1(item.vmStat,item.swapUsage,item.pressureLevel,item.filesTable,item.imageInfo),item.name).toEqual(item.expect as never);
+});
+
+test("Windows counters parse from the one PowerShell command and read through an injected port",async()=>{
+ for(const item of fixture.windows)expect(parseWindowsCountersV1(item.json),item.name).toEqual(item.expect as never);
+ const calls:string[]=[];
+ expect(await readHostCountersV1({platform:"win32",run:async(command,args)=>{calls.push([command,...args].join(" "));return fixture.windows[0]!.json;},read:async()=>null})).toEqual(fixture.windows[0]!.expect as never);
+ expect(calls).toEqual(["powershell.exe -NoProfile -NonInteractive -Command "+WINDOWS_COUNTERS_COMMAND]);
 });
 
 test("Linux counters parse from meminfo, vmstat, PSI and the cgroup v2 limit files exactly",()=>{
@@ -34,7 +41,7 @@ test("Every platform reads through injected ports, so Linux and Windows parse on
  expect(await readHostCountersV1({platform:"darwin",run,read:async()=>null})).toEqual(fixture.darwin[0]!.expect as never);
  expect(calls.sort()).toEqual(["/usr/bin/hdiutil info","sysctl -n kern.memorystatus_vm_pressure_level","sysctl -n vm.swapusage","sysctl kern.num_files kern.maxfiles","vm_stat"]);
  expect(await observeTreeMegabytesV1(102,async()=>fixture.tree.table,"darwin")).toBe(22);
- expect(await observeTreeMegabytesV1(102,async()=>{throw Error("no command expected");},"win32")).toBeNull();
+ expect(await observeTreeMegabytesV1(102,async()=>{throw Error("no powershell");},"win32",undefined,()=>undefined)).toBeNull();
 });
 
 test("The optional open file table and image count fall back to unknown when their probes fail, and never fail the sample",async()=>{
@@ -42,7 +49,7 @@ test("The optional open file table and image count fall back to unknown when the
  expect(await readHostCountersV1({platform:"darwin",run,read:async()=>null})).toMatchObject({openFiles:null,openFilesMaximum:null,attachedImages:null,availableBytes:fixture.darwin[0]!.expect.availableBytes});
  const only=new Map<string,string>([["/proc/meminfo",fixture.linux[0]!.meminfo],["/proc/vmstat",fixture.linux[0]!.vmstat]]);
  expect(await readHostCountersV1({platform:"linux",run:async()=>"",read:async path=>only.get(path)??null})).toMatchObject({openFiles:null,openFilesMaximum:null,attachedImages:null});
- expect(await readHostCountersV1({platform:"win32",run:async()=>"",read:async()=>null})).toMatchObject({openFiles:null,openFilesMaximum:null,attachedImages:null});
+ expect(await readHostCountersV1({platform:"win32",run:async()=>{throw Error("no powershell");},read:async()=>null,notify:()=>undefined})).toMatchObject({openFiles:null,openFilesMaximum:null,attachedImages:null,swapUsedBytes:null});
 });
 
 test("A missing Linux counter file fails closed",async()=>{
@@ -66,4 +73,15 @@ test.skipIf(process.platform!=="darwin")("macOS live sample is conservative agai
  const plist=spawnSync("/usr/bin/hdiutil",["info","-plist"],{encoding:"utf8"}).stdout,independent=Number(spawnSync("plutil",["-extract","images","raw","-o","-","-"],{input:plist,encoding:"utf8"}).stdout.trim());
  expect(Number.isFinite(independent)).toBe(true);
  expect(Math.abs(host.attachedImages!-independent),"attached images agree with plutil's count of hdiutil's plist").toBeLessThanOrEqual(1);
+});
+
+test("A simulated host total shrinks the host: total is the smaller size, the available memory is capped at it, malformed values mean the real host",async()=>{
+ const key="SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES";
+ for(const [text,expected] of [["16384",16384],["1000",1000],["999",null],["016384",null],["16 GB",null],["-1",null],["",null],[undefined,null]] as const)expect(simulatedHostTotalV1({[key]:text}),String(text)).toBe(expected);
+ const item=fixture.linux[0]!,probe={platform:"linux" as const,run:async()=>"",read:async(path:string)=>path==="/proc/meminfo"?item.meminfo:path==="/proc/vmstat"?item.vmstat:path==="/proc/pressure/memory"?item.pressure:path==="/proc/sys/fs/file-nr"?item.fileNr:null};
+ const real=Math.floor(totalmem()/1048576),limit=Math.floor(real/2),plain=(await readHostSampleV1(policy,probe,undefined,()=>0,{})).host,small=(await readHostSampleV1(policy,probe,undefined,()=>0,{[key]:String(limit)})).host,larger=(await readHostSampleV1(policy,probe,undefined,()=>0,{[key]:String(real*2)})).host;
+ expect(small.totalMegabytes).toBe(limit);
+ expect(small.availableMegabytes).toBe(Math.min(limit,plain.availableMegabytes));
+ expect(larger.totalMegabytes,"a simulated total never grows the host").toBe(plain.totalMegabytes);
+ expect(larger.availableMegabytes).toBe(plain.availableMegabytes);
 });

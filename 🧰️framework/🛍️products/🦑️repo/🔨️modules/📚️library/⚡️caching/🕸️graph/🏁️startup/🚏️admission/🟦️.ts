@@ -1,7 +1,9 @@
 import {createHash} from "node:crypto";
 import {refuseCachingV1} from "../../../📖️texts/🟦️.ts";
 import {totalmem} from "node:os";
-import {resolve} from "node:path";
+import {join,resolve} from "node:path";
+import {mkdir,readdir,readFile,rename,rm,writeFile} from "node:fs/promises";
+import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {acquireResourceLease,type ResourceLease} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {repositoryLeaseDirectoryV1} from "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
@@ -12,22 +14,23 @@ const policy=schema.definitions.Policy.const;
 /** 🚏️ The two daemon families that are counted separately: finite run daemons and dev watch daemons. */
 export type NxDaemonKindV1="finite"|"watch";
 /** 🖥️ The limits of this host and environment. */
-export type NxDaemonLimitsV1=Readonly<{finite:number;watch:number;idleMilliseconds:number;checkMilliseconds:number;drainMilliseconds:number;yieldCheckMilliseconds:number}>;
+export type NxDaemonLimitsV1=Readonly<{finite:number;watch:number;idleMilliseconds:number;checkMilliseconds:number;drainMilliseconds:number;yieldCheckMilliseconds:number;residentBytes:number}>;
 /** ▶️ The answer to "may this run use a daemon". */
 export type NxDaemonDecisionV1=Readonly<{enabled:boolean;reason:"explicit"|"reuse"|"admitted"|"saturated"|"disabled"|"refused"}>;
 
 const natural=(value:string|undefined):number|undefined=>value!==undefined&&/^\d{1,9}$/u.test(value)?Number(value):undefined;
 
-/** 📏️ Daemon limits: the authored maxima, the finite one reduced to the memory share (a quarter of the host memory divided by 2 GiB per daemon), overridable by `SEMIO_NX_DAEMONS=<finite>[,<watch>]` (0 turns the family off), `SEMIO_NX_DAEMON_IDLE_MS` and `SEMIO_NX_DAEMON_DRAIN_MS` (the longest a draining daemon may take to end before it exits). */
+/** 📏️ Daemon limits: the authored maxima, the finite one reduced to the memory share (a quarter of the host memory divided by 2 GiB per daemon), on a lean host (at most 24 GiB) a shorter idle period and a lower resident budget, overridable by `SEMIO_NX_DAEMONS=<finite>[,<watch>]` (0 turns the family off), `SEMIO_NX_DAEMON_IDLE_MS`, `SEMIO_NX_DAEMON_RESIDENT_MB` (0 turns the budget off) and `SEMIO_NX_DAEMON_DRAIN_MS` (the longest a draining daemon may take to end before it exits). */
 export function nxDaemonLimitsV1(environment:Readonly<Record<string,string|undefined>>,totalMemoryBytes:number=totalmem()):NxDaemonLimitsV1{
- const budget=Math.floor(totalMemoryBytes/1048576/policy.memoryShareDenominator/policy.megabytesPerDaemon),[finiteText,watchText]=(environment.SEMIO_NX_DAEMONS??"").split(","),finiteOverride=natural(finiteText),watchOverride=natural(watchText);
+ const budget=Math.floor(totalMemoryBytes/1048576/policy.memoryShareDenominator/policy.megabytesPerDaemon),[finiteText,watchText]=(environment.SEMIO_NX_DAEMONS??"").split(","),finiteOverride=natural(finiteText),watchOverride=natural(watchText),lean=totalMemoryBytes<=policy.lean.hostBytes;
  return Object.freeze({
   finite:Math.min(policy.maximumSlots,finiteOverride??Math.min(policy.finite,budget)),
   watch:Math.min(policy.maximumSlots,watchOverride??policy.watch),
-  idleMilliseconds:natural(environment.SEMIO_NX_DAEMON_IDLE_MS)??policy.idleMilliseconds,
+  idleMilliseconds:natural(environment.SEMIO_NX_DAEMON_IDLE_MS)??(lean?policy.lean.idleMilliseconds:policy.idleMilliseconds),
   checkMilliseconds:policy.checkMilliseconds,
   drainMilliseconds:natural(environment.SEMIO_NX_DAEMON_DRAIN_MS)??policy.drainMilliseconds,
-  yieldCheckMilliseconds:policy.yieldCheckMilliseconds
+  yieldCheckMilliseconds:policy.yieldCheckMilliseconds,
+  residentBytes:(natural(environment.SEMIO_NX_DAEMON_RESIDENT_MB)??(lean?policy.lean.residentMegabytes:policy.residentMegabytes))*1048576
  });
 }
 
@@ -42,6 +45,11 @@ export function decideNxDaemonV1(input:Readonly<{explicit:string|undefined;names
 /** 🕰️ True when a finite daemon has had no request open and none started for the idle period; watch daemons never idle out. */
 export function nxDaemonIdleV1(state:Readonly<{kind:NxDaemonKindV1;openRequests:number;lastActivity:number;now:number;idleMilliseconds:number}>):boolean{
  return state.kind==="finite"&&state.openRequests===0&&state.idleMilliseconds>0&&state.now-state.lastActivity>=state.idleMilliseconds;
+}
+
+/** 🪙️ True when a finite daemon with no open request holds more resident memory than its budget (0 turns the budget off): it retires at once instead of waiting for the idle period, so a grown daemon never outlives the work that grew it; watch daemons serve a developer and stay. */
+export function nxDaemonRetireV1(state:Readonly<{kind:NxDaemonKindV1;openRequests:number;residentBytes:number;limitBytes:number}>):boolean{
+ return state.kind==="finite"&&state.openRequests===0&&state.limitBytes>0&&state.residentBytes>state.limitBytes;
 }
 
 /** 🤝️ True when a finite daemon with no open request must drain because an eviction asks for its namespace; watch daemons serve a developer and never yield. */
@@ -87,4 +95,34 @@ export async function nxDaemonAdmissionV1(root:string,environment:Readonly<Recor
  if(environment.NX_DAEMON!==undefined)return decideNxDaemonV1({explicit:environment.NX_DAEMON,namespaceLive:false,live:0,limit:limits.finite});
  const namespaceLive=namespace!==undefined&&await nxDaemonResourceHeldV1(directory,nxDaemonNamespaceResourceV1(namespace),signal);
  return decideNxDaemonV1({explicit:undefined,namespaceLive,live:namespaceLive?0:await countNxDaemonSlotsV1(directory,root,"finite",signal),limit:limits.finite});
+}
+
+/** 📊️ What a daemon publishes about its own memory, validated by `./🧬️schema/🔣️.json`. */
+export type NxDaemonResidentV1=Readonly<{version:1;pid:number;kind:NxDaemonKindV1;rssBytes:number;atMs:number}>;
+
+/** 📂️ The directory in the lease directory of a checkout that holds one resident-memory record per live daemon. */
+export function nxDaemonResidentDirectoryV1(leaseDirectory:string):string{return join(leaseDirectory,policy.residentDirectory);}
+
+/** ✍️ Publishes (atomically, by rename) the resident memory of one daemon and removes the records of daemons that died without leaving. */
+export async function writeNxDaemonResidentV1(leaseDirectory:string,record:NxDaemonResidentV1,alive:(pid:number)=>boolean=processAliveV1):Promise<void>{
+ const directory=nxDaemonResidentDirectoryV1(leaseDirectory);await mkdir(directory,{recursive:true});
+ const target=join(directory,record.pid+".json"),temporary=target+"."+process.pid+".tmp";await writeFile(temporary,JSON.stringify(record));await rename(temporary,target);
+ for(const name of await readdir(directory).catch(()=>[] as string[])){const pid=/^(\d+)\.json$/u.exec(name)?.[1];if(pid!==undefined&&Number(pid)!==record.pid&&!alive(Number(pid)))await rm(join(directory,name),{force:true});}
+}
+
+/** 🧹️ Withdraws the record of one daemon when it ends. */
+export async function removeNxDaemonResidentV1(leaseDirectory:string,pid:number):Promise<void>{await rm(join(nxDaemonResidentDirectoryV1(leaseDirectory),pid+".json"),{force:true});}
+
+/** 🫀️ True while a process with this id exists (a process of another user counts as alive). */
+export function processAliveV1(pid:number):boolean{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}}
+
+/** 🧮️ The resident memory of all live daemons of a checkout, for the host capacity governor: records that are not closed by the schema, that are older than the stale period or whose process is gone are not counted. */
+export async function readNxDaemonResidentV1(leaseDirectory:string,now:number,alive:(pid:number)=>boolean=processAliveV1):Promise<Readonly<{daemons:readonly NxDaemonResidentV1[];totalBytes:number}>>{
+ const directory=nxDaemonResidentDirectoryV1(leaseDirectory),daemons:NxDaemonResidentV1[]=[];
+ for(const name of await readdir(directory).catch(()=>[] as string[])){
+  if(!/^\d+\.json$/u.test(name))continue;let value:unknown;try{value=JSON.parse(await readFile(join(directory,name),"utf8"));}catch{continue;}
+  if(validateJsonSchemaSubset(schema.definitions.Resident,value,schema).length)continue;const row=value as NxDaemonResidentV1;
+  if(name!==row.pid+".json"||now-row.atMs>policy.residentStaleMilliseconds||!alive(row.pid))continue;daemons.push(Object.freeze(row));
+ }
+ daemons.sort((left,right)=>left.pid-right.pid);return Object.freeze({daemons:Object.freeze(daemons),totalBytes:daemons.reduce((sum,row)=>sum+row.rssBytes,0)});
 }

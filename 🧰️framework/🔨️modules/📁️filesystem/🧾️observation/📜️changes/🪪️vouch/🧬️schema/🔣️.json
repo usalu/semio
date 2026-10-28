@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "🪪️ The record a verification seals beside the change journal: the cursor at which the world last matched what was verified, tied to the identity (`key`) of what was verified. Texts of the refusals are those of the change journal itself.",
+  "definitions": {
+    "Cursor": {"type": "string", "pattern": "^[0-9a-f]{16}:[0-9]{1,15}$"},
+    "Record": {
+      "type": "object", "additionalProperties": false, "required": ["version", "consumer", "key", "cursor", "linked"],
+      "properties": {
+        "version": {"const": 1},
+        "consumer": {"type": "string", "minLength": 1, "maxLength": 512},
+        "key": {"type": "string", "minLength": 1, "maxLength": 128},
+        "cursor": {"$ref": "#/definitions/Cursor"},
+        "linked": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 4096}, "maxItems": 100000, "$comment": "the workspace-relative directories above the verified paths that are symbolic links: a change made through a link is reported at its target, so nothing below one is vouched by path"}
+      }
+    },
+    "Mode": {"enum": ["journal", "cursor", "walk"], "$comment": "journal: proves against the cursor sealed by an earlier verification; cursor: only the point a verification in progress starts from; walk: no journal answer, nothing is proven."},
+    "Policy": {"const": {"version": 1, "directory": "vouch", "fileSuffix": ".json", "maximumRecordBytes": 4194304}}
+  }
+}

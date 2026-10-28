@@ -1,0 +1,2 @@
+const redirectCapturedBuiltinReadsV1=(${redirectCapturedBuiltinReadsV1.toString()}),splitCapturedSnapshotV1=(${splitCapturedSnapshotV1.toString()}),admitCapturedImagesV1=(${admitCapturedImagesV1.toString()});
+const split=${auxiliary?'splitCapturedSnapshotV1(encoded)':'undefined'},value=JSON.parse(split?split.text:encoded.toString('utf8')),spans=split&&Array.isArray(value?.files)&&split.spans.length===value.files.length?split.spans:undefined;${overlay?overlaySource(overlay):''}

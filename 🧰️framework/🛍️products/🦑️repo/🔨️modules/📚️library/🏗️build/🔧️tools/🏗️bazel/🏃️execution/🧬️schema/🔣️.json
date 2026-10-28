@@ -665,6 +665,33 @@
             "maxLength": 4096
           }
         },
+        "service": {
+          "description": "The persistent service a worker hosts for this action: the module it imports, the environment variable that carries the service address to the action's commands and the idle time after which the worker releases the engine. A service action declares no outputs.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "module",
+            "environment",
+            "idleMilliseconds"
+          ],
+          "properties": {
+            "module": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "environment": {
+              "type": "string",
+              "pattern": "^SEMIO_HERMETIC_[A-Z0-9_]+$",
+              "maxLength": 64
+            },
+            "idleMilliseconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3600000
+            }
+          }
+        },
         "inputEnv": {
           "type": "object",
           "additionalProperties": {

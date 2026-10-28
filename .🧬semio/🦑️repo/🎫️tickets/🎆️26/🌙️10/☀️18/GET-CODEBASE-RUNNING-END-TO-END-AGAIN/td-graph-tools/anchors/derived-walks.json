@@ -1,0 +1,22 @@
+[
+{
+"old": "}from\"bun:test\";\nimport{mkdirSync,mkdtempSync,re",
+"new": "}from\"bun:test\";\nimport{existsSync,mkdirSync,mkdtempSync,re"
+},
+{
+"old": "ot,fixture.entry));\n }\n});\n\ntest(\"a caller that ",
+"new": "ot,fixture.entry));\n }\n},120000);\n\ntest(\"a caller that "
+},
+{
+"old": "e).toBe(step.same);\n }\n});\n\ntest(\"a derived ques",
+"new": "e).toBe(step.same);\n }\n},120000);\n\ntest(\"a derived ques"
+},
+{
+"old": "irst.derived.filter((fact:any)=>JSON.parse(fact.row.path).program===1);\n expect(programs).toHaveLength(1);\n const derived=programs[0];\n expect(derived.support.length).toBeGreaterThan(64);expect(derived.row.fact).toMatch(/^[a-f0-9]{64}$/u);\n expect(first.rows.every((row:any)=>!derived.support.includes(row))).toBe(true);\n const baseline=derived.row.fact as string,independent=()=>{const ts=createRequire(import.meta.url)(\"typescript\"),config=ts.readConfigFile(join(root,\"proj/tsconfig.json\"),ts.sys.readFile),parsed=ts.parseJsonConfigFileContent(c",
+"new": "irst.derived.filter((fact:any)=>JSON.parse(fact.row.path).program===1);\n expect(programs).toHaveLength(1);\n const derived=programs[0];\n expect(derived.support.length).toBeGreaterThan(64);expect(derived.row.fact).toMatch(/^[a-f0-9]{64}$/u);\n const nearest=(directory:string):string[]=>directory.startsWith(root+\"/\")?existsSync(join(directory,\"tsconfig.json\"))?[join(directory,\"tsconfig.json\")]:nearest(dirname(directory)):[];\n expect(first.rows.filter((row:any)=>derived.support.includes(row)).map((row:any)=>[row.kind,row.path])).toEqual(nearest(dirname(join(root,fixture.program.projectRoot,\"📜️script.ts\"))).map(path=>[\"typescriptText\",path]));\n const baseline=derived.row.fact as string,independent=()=>{const ts=createRequire(import.meta.url)(\"typescript\"),config=ts.readConfigFile(join(root,\"proj/tsconfig.json\"),ts.sys.readFile),parsed=ts.parseJsonConfigFileContent(c"
+},
+{
+"old": "s\").toBe(step.same);\n}\n});\n",
+"new": "s\").toBe(step.same);\n}\n},120000);\n"
+}
+]

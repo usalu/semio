@@ -24,7 +24,7 @@
     },
     "verify.parity-lock-mismatch": {
       "en": "[verify dependencies parity js] {count} package manifest / {lock} workspace snapshot mismatch(es) in {scopes} scope(s); \"repo dependencies lock --scope <scope>\" regenerates a lock.",
-      "de": "[verify dependencies parity js] {count} Abweichung(en) zwischen Paket-Manifest und {lock}-Workspace-Abbild in {scopes} Bereich(en); \"repo dependencies lock --scope <scope>\" erzeugt einen Lock neu."
+      "de": "[verify dependencies parity js] {count} Abweichung(en) zwischen Paket-Manifest und {lock}-Workspace-Image in {scopes} Bereich(en); \"repo dependencies lock --scope <scope>\" erzeugt einen Lock neu."
     },
     "verify.parity-unowned-rows": {
       "en": "[verify dependencies parity js] {count} direct external row(s) have no owned-scope evidence.",

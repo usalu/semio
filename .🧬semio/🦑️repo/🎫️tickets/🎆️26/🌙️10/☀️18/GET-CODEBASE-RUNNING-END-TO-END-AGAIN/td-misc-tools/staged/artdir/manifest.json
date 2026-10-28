@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts": {
+  "file": "00.ts",
+  "base": "43a74700e837584b6aab5e42c9e13424ea69a7021c6a346d96e0f3a0a7045dfe",
+  "new": "77fe4ec99fcbc1ddaf8fb965e3d132514f859e8b21ba184617f1e897aa41acd5"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🧪️tests/🟦️.ts": {
+  "file": "01.ts",
+  "base": "3dd06fb4fea2f7f674b29f7816d6a49dbc65e7dd78b96a85bec118b401f115a7",
+  "new": "3d6f949fc78c11fc32abaa1d10cea066f236f072c97de1050ea92eec629a029a"
+ }
+}

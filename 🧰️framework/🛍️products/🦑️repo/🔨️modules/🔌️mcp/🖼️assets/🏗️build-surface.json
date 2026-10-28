@@ -9,13 +9,14 @@
     "pattern": "^[A-Za-z0-9._-]{1,64}$",
     "description": {
       "en": "Agent that owns this call. Leases, capacity grants, cache lanes and compiler sessions of the run are attributed to it. Default: the agent of this MCP connection. Pass your own name when several agents share one connection.",
-      "de": "Agent, dem dieser Aufruf gehört. Leases, Kapazitätszusagen, Cache-Bahnen und Compiler-Sitzungen des Laufs werden ihm zugeordnet. Standard: der Agent dieser MCP-Verbindung. Eigenen Namen angeben, wenn mehrere Agenten eine Verbindung teilen."
+      "de": "Agent, dem dieser Aufruf gehört. Leases, Kapazitätszusagen, Cache-Lanes und Compiler-Sitzungen des Laufs werden ihm zugeordnet. Standard: der Agent dieser MCP-Verbindung. Eigenen Namen angeben, wenn mehrere Agenten eine Verbindung teilen."
     },
     "environment": { "session": "SEMIO_AGENT_SESSION" }
   },
+  "priority": { "variable": "SEMIO_LEASE_PRIORITY" },
   "globals": [
-    { "flag": "--tool", "input": "tool", "environment": "SEMIO_BUILD_TOOL", "description": { "en": "Build implementation for this call (an id of the build backend registry, for example nx or bazel); otherwise the default of the build policy. Reaches the child as SEMIO_BUILD_TOOL, so nested tasks inherit it.", "de": "Build-Implementierung für diesen Aufruf (eine Kennung der Backend-Registry, zum Beispiel nx oder bazel); sonst der Standard der Build-Policy. Erreicht das Kind als SEMIO_BUILD_TOOL, verschachtelte Tasks erben sie." } },
-    { "flag": "--workers", "input": "workers", "environment": "SEMIO_BUILD_WORKERS", "description": { "en": "Run actions in persistent workers (on) or one process each (off); otherwise the worker policy. Reaches the child as SEMIO_BUILD_WORKERS.", "de": "Aktionen in persistenten Workern (on) oder je in einem Prozess (off) ausführen; sonst die Worker-Policy. Erreicht das Kind als SEMIO_BUILD_WORKERS." } },
+    { "flag": "--tool", "input": "tool", "environment": "SEMIO_BUILD_TOOL", "description": { "en": "Build implementation for this call (an id of the build backend registry, for example nx or bazel); otherwise the default of the build policy. Reaches the child as SEMIO_BUILD_TOOL, so nested tasks inherit it.", "de": "Build-Implementierung für diesen Aufruf (eine Kennung der Backend-Registry, zum Beispiel nx oder bazel); sonst der Standard der Build-Richtlinie. Erreicht das Kind als SEMIO_BUILD_TOOL, verschachtelte Tasks erben sie." } },
+    { "flag": "--workers", "input": "workers", "environment": "SEMIO_BUILD_WORKERS", "description": { "en": "Run actions in persistent workers (on) or one process each (off); otherwise the worker policy. Reaches the child as SEMIO_BUILD_WORKERS.", "de": "Aktionen in persistenten Workern (on) oder je in einem Prozess (off) ausführen; sonst die Worker-Richtlinie. Erreicht das Kind als SEMIO_BUILD_WORKERS." } },
     { "flag": "--lang", "input": "language", "environment": "SEMIO_LANGUAGE", "description": { "en": "Language of the texts the child prints (en or de). No language is assumed: without it the child resolves SEMIO_LANGUAGE, then the locale, and refuses when none resolves.", "de": "Sprache der Texte, die das Kind ausgibt (en oder de). Es wird keine Sprache angenommen: ohne Angabe bestimmt das Kind SEMIO_LANGUAGE, dann die Locale, und verweigert sich, wenn keine bestimmt werden kann." } }
   ],
   "omittedFlags": [
@@ -96,17 +97,18 @@
       "name": "test",
       "operation": "run",
       "kind": "execute",
+      "priority": "background",
       "summary": { "en": "Run the test task of one project (the same as run with <project>:test).", "de": "Führt die Test-Task eines Projekts aus (dasselbe wie run mit <Projekt>:test)." },
       "positional": [{ "name": "project", "suffix": ":test", "pattern": "^[^\\s:-][^\\s:]*$", "description": { "en": "Project name, for example @semio-tech/repo-client.", "de": "Projektname, zum Beispiel @semio-tech/repo-client." } }],
       "environment": ["test_level"]
     },
-    { "operation": "run-many", "kind": "execute", "required": ["--targets"], "environment": ["test_level"] },
-    { "operation": "affected", "kind": "execute", "required": ["--targets"], "environment": ["test_level"] },
+    { "operation": "run-many", "kind": "execute", "priority": "background", "required": ["--targets"], "environment": ["test_level"] },
+    { "operation": "affected", "kind": "execute", "priority": "background", "required": ["--targets"], "environment": ["test_level"] },
     {
       "operation": "exec",
       "kind": "execute",
       "required": ["--projects"],
-      "positional": [{ "name": "command", "argv": true, "description": { "en": "Command and arguments as an array; run once per selected project in the project root, without a shell.", "de": "Befehl und Argumente als Array; wird einmal je gewähltem Projekt im Projektstamm ohne Shell ausgeführt." } }],
+      "positional": [{ "name": "command", "argv": true, "description": { "en": "Command and arguments as an array; run once per selected project in the project root, without a shell.", "de": "Befehl und Argumente als Array; wird einmal je gewähltem Projekt in der Projektwurzel ohne Shell ausgeführt." } }],
       "annotations": { "destructiveHint": true, "idempotentHint": false, "openWorldHint": true }
     },
     {
@@ -125,11 +127,11 @@
       "positional": [{ "name": "command", "argv": true, "description": { "en": "Command and arguments as an array, run without a shell once the machine grants the capacity.", "de": "Befehl und Argumente als Array, ohne Shell ausgeführt, sobald der Rechner die Kapazität zusagt." } }],
       "annotations": { "destructiveHint": true, "idempotentHint": false, "openWorldHint": true }
     },
-    { "operation": "incremental", "subcommand": "run", "kind": "execute" },
-    { "operation": "conformance", "subcommand": "run", "kind": "execute", "flags": ["--scenario", "--implementations", "--keep", "--json"], "bind": { "--json": true } },
-    { "operation": "units", "subcommand": "run", "kind": "execute", "flags": ["--for", "--only", "--concurrency", "--json"], "required": ["--for"], "bind": { "--json": true } },
-    { "operation": "bench", "subcommand": "run", "kind": "execute", "flags": ["--slo", "--runs", "--max-load", "--prepare", "--implementations", "--json"], "bind": { "--json": true } },
-    { "operation": "concurrency", "subcommand": "run", "kind": "execute", "flags": ["--workloads", "--sessions", "--criteria", "--implementations", "--root", "--file", "--json"] },
+    { "operation": "incremental", "subcommand": "run", "kind": "execute", "priority": "background" },
+    { "operation": "conformance", "subcommand": "run", "kind": "execute", "priority": "background", "flags": ["--scenario", "--implementations", "--keep", "--json"], "bind": { "--json": true } },
+    { "operation": "units", "subcommand": "run", "kind": "execute", "priority": "background", "flags": ["--for", "--only", "--concurrency", "--json"], "required": ["--for"], "bind": { "--json": true } },
+    { "operation": "bench", "subcommand": "run", "kind": "execute", "priority": "background", "flags": ["--slo", "--runs", "--max-load", "--prepare", "--implementations", "--json"], "bind": { "--json": true } },
+    { "operation": "concurrency", "subcommand": "run", "kind": "execute", "priority": "background", "flags": ["--workloads", "--sessions", "--criteria", "--implementations", "--root", "--file", "--json"] },
     { "operation": "show", "subcommand": "projects", "kind": "query", "bind": { "--json": true }, "defaults": { "--graph-policy": "current" } },
     {
       "operation": "show",
@@ -149,6 +151,7 @@
     { "operation": "preflight", "kind": "query" },
     { "operation": "leases", "subcommand": "status", "kind": "query", "bind": { "--json": true } },
     { "operation": "capacity", "subcommand": "status", "kind": "query", "bind": { "--json": true } },
+    { "operation": "fleet", "subcommand": "status", "kind": "query", "bind": { "--json": true } },
     { "operation": "cache", "subcommand": "status", "kind": "query", "bind": { "--json": true } },
     { "operation": "cache", "subcommand": "verify", "kind": "query", "bind": { "--json": true } },
     { "operation": "remote-cache", "subcommand": "status", "kind": "query", "flags": [] },
@@ -195,6 +198,8 @@
     { "operation": "reset", "reason": { "en": "Discards the graph and the local tool state; a human decision.", "de": "Verwirft den Graphen und den lokalen Werkzeugzustand; eine menschliche Entscheidung." } },
     { "operation": "cache", "subcommand": "gc", "reason": { "en": "Deletes shared cache content; a human decision.", "de": "Löscht gemeinsamen Cache-Inhalt; eine menschliche Entscheidung." } },
     { "operation": "cache", "subcommand": "clear", "reason": { "en": "Empties the shared task cache that other agents use; a human decision.", "de": "Leert den gemeinsamen Task-Cache, den andere Agenten nutzen; eine menschliche Entscheidung." } },
+    { "operation": "cache", "subcommand": "dedupe", "reason": { "en": "Replaces files of the shared caches that other agents use by clones of one canonical file; a human decision.", "de": "Ersetzt Dateien der gemeinsamen Caches, die andere Agenten nutzen, durch Klone einer kanonischen Datei; eine menschliche Entscheidung." } },
+    { "operation": "bench", "subcommand": "acceptance", "reason": { "en": "Runs every acceptance scenario of the course, print and the dashboard for many minutes and, with --in-place, edits tracked files of this checkout; a human or CI decision.", "de": "Führt alle Abnahmeszenarien von Kurs, Druck und Dashboard über viele Minuten aus und ändert mit --in-place versionierte Dateien dieses Checkouts; eine Entscheidung von Mensch oder CI." } },
     { "operation": "remote-cache", "subcommand": "serve", "reason": { "en": "Starts a long-running server, not an operation.", "de": "Startet einen dauerhaften Server, keine Operation." } },
     { "operation": "remote-cache", "subcommand": "gc", "reason": { "en": "Deletes shared remote cache content; a human decision.", "de": "Löscht gemeinsamen Remote-Cache-Inhalt; eine menschliche Entscheidung." } },
     { "operation": "remote-execution", "subcommand": "serve", "reason": { "en": "Starts a long-running cluster, not an operation.", "de": "Startet einen dauerhaften Cluster, keine Operation." } },

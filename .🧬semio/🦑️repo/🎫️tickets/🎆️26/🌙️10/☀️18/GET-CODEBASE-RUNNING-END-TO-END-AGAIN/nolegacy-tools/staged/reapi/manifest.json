@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/👷️worker/🟦️.ts": {
+  "file": "001.ts",
+  "base": "f63af2f1b46176c3f513cb21de8d57d6b871531ab4caa25e574ef24d6d9fe665",
+  "new": "4d2dbf0f7c9060f99dad8e07202469e502c25e0a6f1d46f873d5faea120eaee5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🖥️server/🟦️.ts": {
+  "file": "002.ts",
+  "base": "6402468d1d08b937053c505b2f9784a54e2258e6a43b04421a339ed839a2a67c",
+  "new": "ac4e34caae58a03e4c15a033bab21756d3de713d1370040da3353af0a5f3d280"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🧪️tests/🟦️.ts": {
+  "file": "003.ts",
+  "base": "d5c1ea9ef95fb3482058751e67264931b2c4f4f8a0a1e897d97a06f02448f808",
+  "new": "cb97754c37b472a9bfd8ca225a8a7b3176eb0becf0e55a40b64e5518acb550b8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🧪️tests/📜️scenarios/🧫️fixtures/🔣️.json": {
+  "file": "004.json",
+  "base": "ea21ed32a5544d391286a0c245a416b4d000d08b35fa27e0be87488f71a552ef",
+  "new": "79191156bdac4a2207a5f3c66520ffec55b98598b3e5284e3bd9478352c7daba"
+ }
+}

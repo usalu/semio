@@ -1,0 +1,27 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.mjs": {
+  "file": "00.mjs",
+  "base": "582b61eac91227363416dda4c93c696d769ed1a61141e05682544e6aaf9e650a",
+  "new": "5fe543b362df3618fce805f8a83b66eaa8ec868d0f5dc74978cd83777fdb1b41"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧬️schema/🔣️.json": {
+  "file": "01.json",
+  "base": "1ec7cdb347f3653fefd8e4cba322d07b8ed593abe8c1b4fc9ee14199fda042c5",
+  "new": "82eb87c1313bf092fc1554888701ae268401e48436e3b4a586399a277d71d7b1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧪️tests/🖥️session/🟦️.ts": {
+  "file": "02.ts",
+  "base": null,
+  "new": "173599c3317d6ea30774f93379a3701efd4fdd9709c4e70545209dda55122636"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧪️tests/🖥️session/🐍️oracle/🐍️.py": {
+  "file": "03.py",
+  "base": null,
+  "new": "51a91ff1ca195911888b8d2fce5c1a06525d59c00387345a243f58a72b3319aa"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧪️tests/🖥️session/🧫️fixtures/🔣️.json": {
+  "file": "04.json",
+  "base": null,
+  "new": "af1f75c7bd192207eaabfe6d18cc2066e8d44863e9e3f835e65436143a7f9c65"
+ }
+}

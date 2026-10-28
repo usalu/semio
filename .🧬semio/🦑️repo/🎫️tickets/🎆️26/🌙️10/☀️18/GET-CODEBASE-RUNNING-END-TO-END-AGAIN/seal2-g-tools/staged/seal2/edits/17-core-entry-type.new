@@ -1,0 +1,1 @@
+readonly blocked:string;readonly checked:string;readonly lock:string;

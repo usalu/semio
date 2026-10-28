@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "checkout": "/c",
+  "cwd": "/c/pkg",
+  "cases": [
+    {"operand": "./a/b.ts", "kind": "path"},
+    {"operand": "../a/b.ts", "kind": "path"},
+    {"operand": ".\\a\\b.ts", "kind": "path"},
+    {"operand": "/c/pkg/a/b.ts", "kind": "path"},
+    {"operand": "C:\\c\\a\\b.ts", "kind": "path"},
+    {"operand": "a/b.ts", "kind": "bare"},
+    {"operand": "b.ts", "kind": "bare"},
+    {"operand": "🧰️framework/x/🟦️.ts", "kind": "bare"},
+    {"operand": "pkg", "kind": "bare"},
+    {"operand": ".hidden/x.ts", "kind": "bare"},
+    {"operand": "..", "kind": "whole"},
+    {"operand": "../", "kind": "whole"},
+    {"operand": "/c", "kind": "whole"},
+    {"operand": "/", "kind": "whole"},
+    {"operand": "../pkg/..", "kind": "whole"},
+    {"operand": ".", "kind": "path"},
+    {"operand": "./", "kind": "path"}
+  ]
+}

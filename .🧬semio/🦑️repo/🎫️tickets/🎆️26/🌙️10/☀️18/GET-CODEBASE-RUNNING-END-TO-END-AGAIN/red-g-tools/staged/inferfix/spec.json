@@ -1,0 +1,30 @@
+{
+ "files": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": [
+   {
+    "old": " return {closure:closure&&withoutSchedulingV1(closure),fallback,",
+    "new": " const kept=closure&&withoutSchedulingV1(closure);\n if(kept&&kept!==closure){const compiled=scripts.compiledNames.get(closure);if(compiled){const present=new Set(kept);scripts.compiledNames.set(kept,new Set([...compiled].filter(name=>present.has(name))));}}\n return {closure:kept,fallback,"
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/📐️declared-inputs/🟦️.ts": [
+   {
+    "old": "test(\"a declared TypeScript project joins exactly",
+    "new": "test(\"the closure a target reports still answers the command modules it compiled, so no dependency edge of its command sources is lost to the scheduling split\",()=>withFixture(async root=>{\n const cache=createScriptInputCache(),got=await cacheInternals.targetScriptSources({metadata:corpus.modules.metadata,options:{cwd:corpus.projectRoot,command:corpus.command}},root,cache,corpus.projectRoot),compiled=cache.compiledNames.get(got.closure);\n expect(compiled,\"compiled names of the reported closure\").toBeDefined();\n for(const entry of corpus.modules.oracleEntries)for(const path of (await esbuildOracle(root,entry)).filter(name=>/\\.(?:[cm]?[jt]s)$/u.test(name)))expect(compiled!.has(\"{workspaceRoot}/\"+path),path).toBe(true);\n expect([...compiled!].every((name:string)=>got.closure.includes(name))).toBe(true);\n}));\n\ntest(\"a declared TypeScript project joins exactly"
+   },
+   {
+    "old": "toEqual([\"app/src/a.ts\",\"app/📜️script.ts\"])",
+    "new": "toEqual([\"app/src/a.ts\",\"app/tsconfig.json\",\"app/📜️script.ts\",\"tsconfig.base.json\"])"
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/📐️declared-inputs/🔣️.json": [
+   {
+    "old": "      \"app/test/one.test.ts\",\n      \"app/📜️script.ts\"\n",
+    "new": "      \"app/test/one.test.ts\",\n      \"app/tsconfig.json\",\n      \"app/📜️script.ts\",\n      \"tsconfig.base.json\"\n"
+   },
+   {
+    "old": "        \"app/test/second.test.ts\",\n        \"app/📜️script.ts\"\n",
+    "new": "        \"app/test/second.test.ts\",\n        \"app/tsconfig.json\",\n        \"app/📜️script.ts\",\n        \"tsconfig.base.json\"\n"
+   }
+  ]
+ }
+}

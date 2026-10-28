@@ -1,0 +1,27 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧬️schema/🔣️.json": {
+  "file": "00.json",
+  "base": "239cd71d99066341bca56ba92198d53aa9ed3e95e295f6d5e52fc2f7d01259a5",
+  "new": "dca867e636efed93983912c74390c8ffd19a18c4e98fcdd4a8e950d117a67043"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🟦️.ts": {
+  "file": "01.ts",
+  "base": "3d4a15720063aee5b05e18f4f8274177f8877b44f6f23c87d84e3e07ee9d169c",
+  "new": "71eacfd5424bb47062b4fb9ae1b31f6b128cb899d7758ed2bc53a9d0b1ce88f5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🚪️command/🟦️.ts": {
+  "file": "02.ts",
+  "base": "33dda5a90aff693befdec4abbc130491937f0e883784c6bff534262942ba53dd",
+  "new": "7e53c01475bab4d6b28e6fa56613e95ada0af4b88b056b9aec3adbe7f76d169d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/📤️relevance/🟦️.ts": {
+  "file": "03.ts",
+  "base": "8fcd63d6c4254fbf8c53af5210269d4b1b206f3fd724a399d0e6975c48f3e9c9",
+  "new": "4fcb3ddefae25c0d7baebfaf7a2a5ead575e34cbba980b07360c94f6a358e4e4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧪️tests/🕰️verified/🟦️.ts": {
+  "file": "law.ts",
+  "base": null,
+  "new": "ad9362428dbe1fcddcb93a4270cc69da278c5a83bb4ff78163d2262da8a4b1d6"
+ }
+}

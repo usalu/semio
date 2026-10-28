@@ -1,0 +1,37 @@
+{
+ "$schema": "./🧬️schema/🔣️.json",
+ "description": "The Cargo exporters whose keys the input precision rules bound: each reads its named crates with their test targets (the exporter is a test by location) and the library closure of their path dependencies, nothing of the TypeScript, CSS and other-product trees.",
+ "cases": [
+  {
+   "rule": "actor-typegen",
+   "project": "@semio-tech/framework-actor-rs",
+   "target": "typegen",
+   "directories": [
+    "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust"
+   ],
+   "exporter": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧬️typegen/🦀️.rs",
+   "output": "🧰️framework/🔨️modules/🎭️actor/🤖️generated"
+  },
+  {
+   "rule": "framework-generate",
+   "project": "@semio-tech/framework-rs",
+   "target": "generate",
+   "directories": [
+    "🧰️framework/📦️packages/🦀️rust"
+   ],
+   "exporter": "🧰️framework/🔨️modules/🧬️schema/📽️projection/🧪️tests/🦀️.rs",
+   "output": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🪪️manifest"
+  },
+  {
+   "rule": "ui-contract-generate",
+   "project": "@semio-tech/ui-contract-rs",
+   "target": "generate",
+   "directories": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧬️schema/🟦️projection/📦️packages/🦀️rust"
+   ],
+   "exporter": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧬️schema/🟦️projection/🧪️tests/🦀️.rs",
+   "output": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/📜️ui-contract"
+  }
+ ]
+}

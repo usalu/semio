@@ -1,0 +1,7332 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "progress": {
+        "owner": "process-progress-fixture",
+        "command": "compiler",
+        "stage": "running"
+      },
+      "expected": null
+    },
+    {
+      "progress": {
+        "owner": "process-progress-fixture",
+        "command": "compiler",
+        "stage": "running",
+        "activity": {
+          "resource": "ordinary-work",
+          "mode": "shared",
+          "elapsedMs": 14999
+        }
+      },
+      "expected": null
+    },
+    {
+      "progress": {
+        "owner": "process-progress-fixture",
+        "command": "compiler",
+        "stage": "running",
+        "activity": {
+          "resource": "ordinary-work",
+          "mode": "shared",
+          "elapsedMs": 15000
+        }
+      },
+      "expected": "compiler remains active on ordinary-work (shared, 15 s)"
+    },
+    {
+      "progress": {
+        "owner": "process-progress-fixture",
+        "command": "dependency-sync",
+        "stage": "running",
+        "activity": {
+          "resource": "retire-obsolete:256",
+          "mode": "exclusive",
+          "elapsedMs": 15499
+        }
+      },
+      "expected": "dependency-sync remains active on retire-obsolete:256 (exclusive, 15 s)"
+    },
+    {
+      "progress": {
+        "owner": "process-progress-fixture",
+        "command": "dependency-sync",
+        "stage": "running",
+        "activity": {
+          "resource": "retire-obsolete:512",
+          "mode": "exclusive",
+          "elapsedMs": 15500
+        }
+      },
+      "expected": "dependency-sync remains active on retire-obsolete:512 (exclusive, 16 s)"
+    },
+    {
+      "progress": {
+        "owner": "process-progress-fixture",
+        "command": "registry",
+        "stage": "running",
+        "activity": {
+          "resource": "shared-volume",
+          "mode": "shared",
+          "elapsedMs": 60001
+        }
+      },
+      "expected": "registry remains active on shared-volume (shared, 60 s)"
+    }
+  ],
+  "sourceCases": [
+    {
+      "name": "configuration-before-work",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
+      "expected": "compiler · Checking source configuration: 1/4 semio-core · 0 reads · 0 files · 0 bytes"
+    },
+    {
+      "name": "german-read-checkpoint",
+      "environment": {
+        "SEMIO_LANGUAGE": "de"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"read\",\"unit\":2,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":16,\"files\":8,\"bytes\":4096}",
+      "expected": "compiler · Quellen lesen: 2/4 semio-core · 16 Lesevorgänge · 8 Dateien · 4096 Bytes"
+    },
+    {
+      "name": "german-system-selection",
+      "environment": {
+        "LC_ALL": "de_DE.UTF-8",
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"complete\",\"unit\":4,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":16,\"files\":8,\"bytes\":4096}",
+      "expected": "compiler · Quellen zugelassen: 4/4 semio-core · 16 Lesevorgänge · 8 Dateien · 4096 Bytes"
+    },
+    {
+      "name": "data-authored-fallback",
+      "environment": {
+        "LANG": "C",
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"complete\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
+      "expected": "compiler · Source admitted: 1/4 semio-core · 0 reads · 0 files · 0 bytes"
+    },
+    {
+      "name": "unsupported-override-continues-chain",
+      "environment": {
+        "LC_MESSAGES": "de-AT"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
+      "expected": "compiler · Quellkonfiguration prüfen: 1/4 semio-core · 0 Lesevorgänge · 0 Dateien · 0 Bytes"
+    },
+    {
+      "name": "impossible-unit-total",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":5,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
+      "expected": null
+    },
+    {
+      "name": "impossible-file-total",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":3,\"files\":4,\"bytes\":0}",
+      "expected": null
+    },
+    {
+      "name": "negative-byte-total",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":-1}",
+      "expected": null
+    },
+    {
+      "name": "unsafe-total",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":9007199254740992}",
+      "expected": null
+    },
+    {
+      "name": "unknown-phase",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"waiting\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
+      "expected": null
+    },
+    {
+      "name": "unknown-field",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0,\"unowned\":true}",
+      "expected": null
+    },
+    {
+      "name": "terminal-control-package",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio\\u001b[31m\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
+      "expected": null
+    },
+    {
+      "name": "oversized-payload",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
+      "expected": null
+    },
+    {
+      "name": "malformed-json",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "cargo:source-admission:{broken",
+      "expected": null
+    }
+  ],
+  "providerClockCases": [
+    {
+      "name": "burst-flushes-latest",
+      "steps": [
+        {
+          "at": 0,
+          "count": 0,
+          "kind": "provider"
+        },
+        {
+          "at": 10,
+          "count": 1,
+          "kind": "provider"
+        },
+        {
+          "at": 249,
+          "count": 2,
+          "kind": "provider"
+        }
+      ],
+      "expected": [
+        "provider:0",
+        "provider:2"
+      ]
+    },
+    {
+      "name": "exact-monotonic-boundary",
+      "steps": [
+        {
+          "at": 0,
+          "count": 1,
+          "kind": "provider"
+        },
+        {
+          "at": 249,
+          "count": 2,
+          "kind": "provider"
+        },
+        {
+          "at": 250,
+          "count": 3,
+          "kind": "provider"
+        },
+        {
+          "at": 300,
+          "count": 4,
+          "kind": "provider"
+        }
+      ],
+      "expected": [
+        "provider:1",
+        "provider:3",
+        "provider:4"
+      ]
+    },
+    {
+      "name": "resource-change-flush",
+      "steps": [
+        {
+          "at": 0,
+          "count": 1,
+          "kind": "provider"
+        },
+        {
+          "at": 1,
+          "count": 2,
+          "kind": "provider"
+        },
+        {
+          "at": 2,
+          "count": 0,
+          "kind": "other"
+        }
+      ],
+      "expected": [
+        "provider:1",
+        "provider:2",
+        "other"
+      ]
+    },
+    {
+      "name": "completion-flush",
+      "steps": [
+        {
+          "at": 0,
+          "count": 1,
+          "kind": "provider"
+        },
+        {
+          "at": 1,
+          "count": 2,
+          "kind": "provider"
+        },
+        {
+          "at": 2,
+          "count": 0,
+          "kind": "complete"
+        }
+      ],
+      "expected": [
+        "provider:1",
+        "provider:2",
+        "complete"
+      ]
+    },
+    {
+      "name": "new-candidate-counter-reset",
+      "steps": [
+        {
+          "at": 0,
+          "count": 5,
+          "kind": "provider"
+        },
+        {
+          "at": 1,
+          "count": 6,
+          "kind": "provider"
+        },
+        {
+          "at": 2,
+          "count": 1,
+          "kind": "provider"
+        }
+      ],
+      "expected": [
+        "provider:5",
+        "provider:6",
+        "provider:1"
+      ]
+    },
+    {
+      "name": "clock-rollback-never-hides-progress",
+      "steps": [
+        {
+          "at": 100,
+          "count": 1,
+          "kind": "provider"
+        },
+        {
+          "at": 90,
+          "count": 2,
+          "kind": "provider"
+        }
+      ],
+      "expected": [
+        "provider:1",
+        "provider:2"
+      ]
+    },
+    {
+      "name": "elapsed-phase-reset-flushes-prior-counter",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 0,
+          "count": 1,
+          "kind": "provider"
+        },
+        {
+          "at": 10,
+          "elapsed": 10,
+          "count": 2,
+          "kind": "provider"
+        },
+        {
+          "at": 20,
+          "elapsed": 0,
+          "count": 2,
+          "kind": "provider"
+        }
+      ],
+      "expected": [
+        "provider:1",
+        "provider:2",
+        "provider:2"
+      ]
+    }
+  ],
+  "providerCases": [
+    {
+      "name": "english-provider",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "javascript-source-provider:64",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 12,
+      "expected": "repository:command · Checking declared package providers: 64 edges"
+    },
+    {
+      "name": "german-provider",
+      "environment": {
+        "LANG": "de_DE.UTF-8"
+      },
+      "resource": "javascript-source-provider:0",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Deklarierte Paketanbieter prüfen: 0 Kanten"
+    },
+    {
+      "name": "malformed-provider",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "javascript-source-provider:064",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    }
+  ],
+  "parserCases": [
+    {
+      "name": "english-frontier",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "build:parser-source:frontier:448",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Rechecking source evidence: 448 operations"
+    },
+    {
+      "name": "german-frontier",
+      "environment": {
+        "LANG": "de_DE.UTF-8"
+      },
+      "resource": "build:parser-source:frontier:512",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Quellnachweise erneut prüfen: 512 Vorgänge"
+    },
+    {
+      "name": "english-state",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "build:parser-source:state:64",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Inspecting source metadata: 64 operations"
+    },
+    {
+      "name": "english-list",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "build:parser-source:list:128",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Listing source entries: 128 operations"
+    },
+    {
+      "name": "english-readText",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "build:parser-source:readText:192",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Reading source text: 192 operations"
+    },
+    {
+      "name": "english-membership",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "build:parser-source:membership:256",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Checking source membership: 256 operations"
+    },
+    {
+      "name": "english-selection",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "build:parser-source:selection:320",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Checking source selection: 320 operations"
+    },
+    {
+      "name": "english-publication",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "build:parser-source:publication:384",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Verifying source publication: 384 operations"
+    },
+    {
+      "name": "german-system-list",
+      "environment": {
+        "LC_ALL": "de_DE.UTF-8"
+      },
+      "resource": "build:parser-source:list:128",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Quelleinträge auflisten: 128 Vorgänge"
+    },
+    {
+      "name": "german-override-read",
+      "environment": {
+        "LANG": "en_US.UTF-8",
+        "SEMIO_LANGUAGE": "de"
+      },
+      "resource": "build:parser-source:readText:256",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Quelltext lesen: 256 Vorgänge"
+    },
+    {
+      "name": "unsupported-override-continues-chain",
+      "environment": {
+        "LC_MESSAGES": "de-AT"
+      },
+      "resource": "build:parser-source:selection:64",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Quellauswahl prüfen: 64 Vorgänge"
+    },
+    {
+      "name": "safe-maximum",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:state:9007199254740991",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Inspecting source metadata: 9007199254740991 operations"
+    },
+    {
+      "name": "zero",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:list:0",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "negative",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:list:-1",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "leading-zero",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:list:064",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "fraction",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:list:1.5",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "scientific",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:list:1e3",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "unsafe",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:list:9007199254740992",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "unknown-operation",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:walk:64",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "wrong-case",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:readtext:64",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "extra-field",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:list:64:unowned",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "terminal-control",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:list:64\u001b[31m",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "missing-count",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:list:",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "exclusive-refused",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:list:64",
+      "command": "repository:command",
+      "mode": "exclusive",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "nonzero-elapsed-refused",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:list:64",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 1,
+      "expected": null
+    },
+    {
+      "name": "negative-elapsed-refused",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:list:64",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": -1,
+      "expected": null
+    },
+    {
+      "name": "command-control-refused",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:list:64",
+      "command": "repository\ncommand",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "empty-command-refused",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:list:64",
+      "command": "",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "oversized-command",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:list:64",
+      "command": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "oversized-resource",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:list:111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "hostile-operation",
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "build:parser-source:state\u001b[31m:64",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    }
+  ],
+  "queueCases": [
+    {
+      "name": "english-behind-exclusive",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":15,\"holderMode\":\"exclusive\",\"holderPid\":12528,\"holderSeconds\":8040,\"resource\":\"native-fixed-image:/repo/.cache/b/d\"}",
+      "command": "bun:dependency-storage",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "bun:dependency-storage · Waiting for access to native-fixed-image:/repo/.cache/b/d (shared): position 3 of 15, behind the request of process 12528 (exclusive, queued 8040 s ago)"
+    },
+    {
+      "name": "german-behind-shared",
+      "environment": {
+        "SEMIO_LANGUAGE": "de"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":2,\"queued\":2,\"holderMode\":\"shared\",\"holderPid\":4620,\"holderSeconds\":0,\"resource\":\"native-fixed-image:/repo/.cache/b/d\"}",
+      "command": "repository:command",
+      "mode": "exclusive",
+      "elapsedMs": 0,
+      "expected": "repository:command · Wartet auf Zugriff auf native-fixed-image:/repo/.cache/b/d (exklusiv): Position 2 von 2, hinter der Anfrage von Prozess 4620 (geteilt, seit 0 s eingereiht)"
+    },
+    {
+      "name": "fallback-language-is-english",
+      "environment": {
+        "LANG": "C",
+        "SEMIO_LANGUAGE": "en"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":15,\"holderMode\":\"exclusive\",\"holderPid\":12528,\"holderSeconds\":8040,\"resource\":\"native-fixed-image:/repo/.cache/b/d\"}",
+      "command": "compiler",
+      "mode": "exclusive",
+      "elapsedMs": 0,
+      "expected": "compiler · Waiting for access to native-fixed-image:/repo/.cache/b/d (exclusive): position 3 of 15, behind the request of process 12528 (exclusive, queued 8040 s ago)"
+    },
+    {
+      "name": "position-one-is-not-a-queue-wait",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":1,\"queued\":15,\"holderMode\":\"exclusive\",\"holderPid\":12528,\"holderSeconds\":8040,\"resource\":\"native-fixed-image:/repo/.cache/b/d\"}",
+      "command": "compiler",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "position-beyond-queue-refused",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":16,\"queued\":15,\"holderMode\":\"exclusive\",\"holderPid\":12528,\"holderSeconds\":8040,\"resource\":\"native-fixed-image:/repo/.cache/b/d\"}",
+      "command": "compiler",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "unknown-field-refused",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":15,\"holderMode\":\"exclusive\",\"holderPid\":12528,\"holderSeconds\":8040,\"resource\":\"native-fixed-image:/repo/.cache/b/d\",\"extra\":true}",
+      "command": "compiler",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "elapsed-must-be-zero",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":15,\"holderMode\":\"exclusive\",\"holderPid\":12528,\"holderSeconds\":8040,\"resource\":\"native-fixed-image:/repo/.cache/b/d\"}",
+      "command": "compiler",
+      "mode": "shared",
+      "elapsedMs": 1,
+      "expected": null
+    },
+    {
+      "name": "command-outside-pattern-refused",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":15,\"holderMode\":\"exclusive\",\"holderPid\":12528,\"holderSeconds\":8040,\"resource\":\"native-fixed-image:/repo/.cache/b/d\"}",
+      "command": "bad command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    }
+  ],
+  "cacheClockCases": [
+    {
+      "name": "cache-burst-last-received",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 15000,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        },
+        {
+          "at": 10,
+          "elapsed": 15010,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        },
+        {
+          "at": 249,
+          "elapsed": 15249,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        }
+      ],
+      "expected": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "cache-exact-boundary",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 0,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        },
+        {
+          "at": 249,
+          "elapsed": 249,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        },
+        {
+          "at": 250,
+          "elapsed": 250,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        },
+        {
+          "at": 300,
+          "elapsed": 300,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        }
+      ],
+      "expected": [
+        0,
+        2,
+        3
+      ]
+    },
+    {
+      "name": "cache-path-change",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 0,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        },
+        {
+          "at": 1,
+          "elapsed": 1,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        },
+        {
+          "at": 2,
+          "elapsed": 2,
+          "path": "/repo/.cache/b/rust/fixed/m/t/p",
+          "kind": "cache"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "cache-recensus-reset",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 100,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        },
+        {
+          "at": 10,
+          "elapsed": 101,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        },
+        {
+          "at": 20,
+          "elapsed": 0,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "cache-clock-reset",
+      "steps": [
+        {
+          "at": 100,
+          "elapsed": 0,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        },
+        {
+          "at": 90,
+          "elapsed": 1,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        }
+      ],
+      "expected": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "cache-completion",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 0,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        },
+        {
+          "at": 1,
+          "elapsed": 1,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        },
+        {
+          "at": 2,
+          "elapsed": 2,
+          "path": "",
+          "kind": "complete"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "cache-provider-transition",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 0,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        },
+        {
+          "at": 1,
+          "elapsed": 1,
+          "path": "/repo/.cache/b/rust/fixed/m/b/p",
+          "kind": "cache"
+        },
+        {
+          "at": 2,
+          "elapsed": 2,
+          "path": "",
+          "kind": "provider"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "cache-relative-path-not-coalesced",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 0,
+          "path": "relative",
+          "kind": "cache"
+        },
+        {
+          "at": 1,
+          "elapsed": 1,
+          "path": "relative",
+          "kind": "cache"
+        }
+      ],
+      "expected": [
+        0,
+        1
+      ]
+    }
+  ],
+  "cacheCases": [
+    {
+      "name": "cache-posix-en",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "cache-scan:/repo/🦀/b/p",
+      "command": "compiler",
+      "mode": "shared",
+      "elapsedMs": 15499,
+      "expected": "compiler · Scanning compiler cache: /repo/🦀/b/p (15 s)"
+    },
+    {
+      "name": "cache-windows-de",
+      "environment": {
+        "LANG": "de"
+      },
+      "resource": "cache-scan:C:\\repo\\cache\\b\\p",
+      "command": "compiler",
+      "mode": "shared",
+      "elapsedMs": 15500,
+      "expected": "compiler · Compiler-Cache prüfen: C:\\repo\\cache\\b\\p (16 s)"
+    },
+    {
+      "name": "cache-relative-refusal",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "cache-scan:relative",
+      "command": "compiler",
+      "mode": "shared",
+      "elapsedMs": 15000,
+      "expected": null
+    },
+    {
+      "name": "cache-terminal-refusal",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "cache-scan:/repo/\u001b[31m",
+      "command": "compiler",
+      "mode": "shared",
+      "elapsedMs": 15000,
+      "expected": null
+    },
+    {
+      "name": "cache-exclusive-refusal",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "cache-scan:/repo/cache",
+      "command": "compiler",
+      "mode": "exclusive",
+      "elapsedMs": 15000,
+      "expected": null
+    },
+    {
+      "name": "cache-negative-refusal",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "cache-scan:/repo/cache",
+      "command": "compiler",
+      "mode": "shared",
+      "elapsedMs": -1,
+      "expected": null
+    },
+    {
+      "name": "cache-path-capacity-refusal",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "cache-scan:/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "command": "compiler",
+      "mode": "shared",
+      "elapsedMs": 15000,
+      "expected": null
+    }
+  ],
+  "deleteClockCases": [
+    {
+      "name": "unit-resets-remain-one-work-stream",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 0,
+          "path": "/compiler/build",
+          "kind": "delete"
+        },
+        {
+          "at": 1,
+          "elapsed": 13,
+          "path": "/compiler/build",
+          "kind": "delete"
+        },
+        {
+          "at": 2,
+          "elapsed": 0,
+          "path": "/compiler/build",
+          "kind": "delete"
+        },
+        {
+          "at": 249,
+          "elapsed": 7,
+          "path": "/compiler/build",
+          "kind": "delete"
+        },
+        {
+          "at": 250,
+          "elapsed": 0,
+          "path": "/compiler/build",
+          "kind": "delete"
+        },
+        {
+          "at": 251,
+          "elapsed": 3,
+          "path": "/compiler/build",
+          "kind": "delete"
+        },
+        {
+          "at": 252,
+          "elapsed": 0,
+          "path": "",
+          "kind": "complete"
+        }
+      ],
+      "expected": [
+        0,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "name": "path-change-flushes-final-observation",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 5,
+          "path": "/compiler/a",
+          "kind": "delete"
+        },
+        {
+          "at": 1,
+          "elapsed": 1,
+          "path": "/compiler/a",
+          "kind": "delete"
+        },
+        {
+          "at": 2,
+          "elapsed": 0,
+          "path": "/compiler/b",
+          "kind": "delete"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "backward-clock-still-flushes",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 5,
+          "path": "/compiler/a",
+          "kind": "delete"
+        },
+        {
+          "at": 2,
+          "elapsed": 4,
+          "path": "/compiler/a",
+          "kind": "delete"
+        },
+        {
+          "at": 1,
+          "elapsed": 0,
+          "path": "/compiler/a",
+          "kind": "delete"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2
+      ]
+    }
+  ],
+  "deleteCases": [
+    {
+      "name": "english-unit-work-without-invented-total-seconds",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "cache-delete:/compiler/build",
+      "command": "repository:command",
+      "mode": "exclusive",
+      "elapsedMs": 0,
+      "expected": "repository:command · Removing inactive compiler cache: /compiler/build"
+    },
+    {
+      "name": "german-unit-work",
+      "environment": {
+        "LANG": "de"
+      },
+      "resource": "cache-delete:/compiler/build",
+      "command": "repository:command",
+      "mode": "exclusive",
+      "elapsedMs": 20,
+      "expected": "repository:command · Inaktiven Compiler-Cache entfernen: /compiler/build"
+    },
+    {
+      "name": "wrong-custody-mode-refused",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "cache-delete:/compiler/build",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 20,
+      "expected": null
+    },
+    {
+      "name": "relative-work-path-refused",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "cache-delete:compiler/build",
+      "command": "repository:command",
+      "mode": "exclusive",
+      "elapsedMs": 20,
+      "expected": null
+    },
+    {
+      "name": "negative-unit-elapsed-refused",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "cache-delete:/compiler/build",
+      "command": "repository:command",
+      "mode": "exclusive",
+      "elapsedMs": -1,
+      "expected": null
+    }
+  ],
+  "toolingClockCases": [
+    {
+      "name": "repeated-verification-publishes-first-newest-and-settlement",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 0,
+          "resource": "nx:source-verification",
+          "kind": "tooling"
+        },
+        {
+          "at": 1,
+          "elapsed": 5,
+          "resource": "nx:source-verification",
+          "kind": "tooling"
+        },
+        {
+          "at": 249,
+          "elapsed": 0,
+          "resource": "nx:source-verification",
+          "kind": "tooling"
+        },
+        {
+          "at": 250,
+          "elapsed": 0,
+          "resource": "nx:source-verification",
+          "kind": "tooling"
+        },
+        {
+          "at": 251,
+          "elapsed": 0,
+          "resource": "nx:source-verification",
+          "kind": "tooling"
+        },
+        {
+          "at": 252,
+          "elapsed": 0,
+          "resource": "",
+          "kind": "complete"
+        }
+      ],
+      "expected": [
+        0,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "name": "resource-change-flushes-pending",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 0,
+          "resource": "nx:source-verification",
+          "kind": "tooling"
+        },
+        {
+          "at": 1,
+          "elapsed": 0,
+          "resource": "nx:source-verification",
+          "kind": "tooling"
+        },
+        {
+          "at": 2,
+          "elapsed": 0,
+          "resource": "nx:source-index",
+          "kind": "tooling"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "backward-clock-preserves-last-observation",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 0,
+          "resource": "nx:source-verification",
+          "kind": "tooling"
+        },
+        {
+          "at": 2,
+          "elapsed": 0,
+          "resource": "nx:source-verification",
+          "kind": "tooling"
+        },
+        {
+          "at": 1,
+          "elapsed": 0,
+          "resource": "nx:source-verification",
+          "kind": "tooling"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "bounded-posix-namespace-coalesces",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 0,
+          "resource": "nx-sdk-derived-namespace:/repo/.cache/b/t/m/nx/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "tooling"
+        },
+        {
+          "at": 1,
+          "elapsed": 0,
+          "resource": "nx-sdk-derived-namespace:/repo/.cache/b/t/m/nx/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "tooling"
+        },
+        {
+          "at": 2,
+          "elapsed": 0,
+          "resource": "nx-sdk-derived-namespace:/repo/.cache/b/t/m/nx/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "tooling"
+        }
+      ],
+      "expected": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "bounded-windows-namespace-coalesces",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 0,
+          "resource": "nx-sdk-derived-namespace:C:\\repo\\.cache\\b\\t\\w\\nx\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "kind": "tooling"
+        },
+        {
+          "at": 1,
+          "elapsed": 0,
+          "resource": "nx-sdk-derived-namespace:C:\\repo\\.cache\\b\\t\\w\\nx\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "kind": "tooling"
+        },
+        {
+          "at": 2,
+          "elapsed": 0,
+          "resource": "nx-sdk-derived-namespace:C:\\repo\\.cache\\b\\t\\w\\nx\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "kind": "tooling"
+        }
+      ],
+      "expected": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "unrecognized-namespace-remains-lossless",
+      "steps": [
+        {
+          "at": 0,
+          "elapsed": 0,
+          "resource": "nx-sdk-derived-namespace:relative",
+          "kind": "tooling"
+        },
+        {
+          "at": 1,
+          "elapsed": 0,
+          "resource": "nx-sdk-derived-namespace:relative",
+          "kind": "tooling"
+        }
+      ],
+      "expected": [
+        0,
+        1
+      ]
+    }
+  ],
+  "toolingCases": [
+    {
+      "name": "declared-tooling-0",
+      "environment": {
+        "LANG": "en"
+      },
+      "command": "build",
+      "resource": "nx:source-verification",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build · Verifying build tools"
+    },
+    {
+      "name": "declared-tooling-1",
+      "environment": {
+        "LANG": "en"
+      },
+      "command": "build",
+      "resource": "nx:storage-planning",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build · Planning build tool storage"
+    },
+    {
+      "name": "declared-tooling-2",
+      "environment": {
+        "LANG": "en"
+      },
+      "command": "build",
+      "resource": "nx:sdk-derivative-recheck",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build · Verifying build tool integrity"
+    },
+    {
+      "name": "declared-tooling-3",
+      "environment": {
+        "LANG": "en"
+      },
+      "command": "build",
+      "resource": "nx:source-index",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build · Reading build tool index"
+    },
+    {
+      "name": "german-source-verification",
+      "environment": {
+        "LANG": "de"
+      },
+      "command": "build",
+      "resource": "nx:source-verification",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build · Build-Werkzeuge prüfen"
+    },
+    {
+      "name": "posix-namespace",
+      "environment": {
+        "LANG": "en"
+      },
+      "command": "build",
+      "resource": "nx-sdk-derived-namespace:/repo/.cache/b/t/m/nx/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build · Preparing build tools"
+    },
+    {
+      "name": "windows-namespace",
+      "environment": {
+        "LANG": "de"
+      },
+      "command": "build",
+      "resource": "nx-sdk-derived-namespace:C:\\repo\\.cache\\b\\t\\w\\nx\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build · Build-Werkzeuge vorbereiten"
+    },
+    {
+      "name": "relative-namespace-refused",
+      "environment": {
+        "LANG": "en"
+      },
+      "command": "build",
+      "resource": "nx-sdk-derived-namespace:relative",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "unknown-tooling-refused",
+      "environment": {
+        "LANG": "en"
+      },
+      "command": "build",
+      "resource": "nx:unknown",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "exclusive-tooling-refused",
+      "environment": {
+        "LANG": "en"
+      },
+      "command": "build",
+      "resource": "nx:source-verification",
+      "mode": "exclusive",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "control-character-refused",
+      "environment": {
+        "LANG": "en"
+      },
+      "command": "build",
+      "resource": "nx-sdk-derived-namespace:/repo/\n/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "oversized-namespace-refused",
+      "environment": {
+        "LANG": "en"
+      },
+      "command": "build",
+      "resource": "nx-sdk-derived-namespace:/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "exact-namespace-path-boundary",
+      "environment": {
+        "LANG": "en"
+      },
+      "command": "build",
+      "resource": "nx-sdk-derived-namespace:/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "build · Preparing build tools"
+    },
+    {
+      "name": "non-hex-generation-refused",
+      "environment": {
+        "LANG": "en"
+      },
+      "command": "build",
+      "resource": "nx-sdk-derived-namespace:/repo/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    }
+  ],
+  "dependencyWorkCases": [
+    {
+      "name": "due-slot-replaces-older-observation",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 4999,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:256",
+              "mode": "exclusive",
+              "elapsedMs": 20256
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5000,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:320",
+              "mode": "exclusive",
+              "elapsedMs": 20320
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        3,
+        4
+      ],
+      "human": [
+        0,
+        3,
+        4
+      ],
+      "after": [
+        1,
+        1,
+        1,
+        1,
+        3,
+        3,
+        3
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": true
+    },
+    {
+      "name": "dense-eleven-slots-share-one-window",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:readText:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:membership:256",
+              "mode": "exclusive",
+              "elapsedMs": 20256
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 4,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:frontier:320",
+              "mode": "exclusive",
+              "elapsedMs": 20320
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:selection:384",
+              "mode": "exclusive",
+              "elapsedMs": 20384
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 6,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:publication:448",
+              "mode": "exclusive",
+              "elapsedMs": 20448
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 7,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 8,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:1",
+              "mode": "shared",
+              "elapsedMs": 20001
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 9,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:ledger:1",
+              "mode": "shared",
+              "elapsedMs": 20001
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 10,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-preserving-source:1",
+              "mode": "exclusive",
+              "elapsedMs": 20001
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 11,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:512",
+              "mode": "exclusive",
+              "elapsedMs": 20512
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 4999,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5000,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:ledger:2",
+              "mode": "shared",
+              "elapsedMs": 20002
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        8,
+        10,
+        11,
+        12,
+        13
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        8,
+        10,
+        11,
+        13
+      ],
+      "after": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        12,
+        12
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": true
+    },
+    {
+      "name": "unknown-row-drains-without-window-renewal",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1000,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "ordinary-progress",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 4999,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5000,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "human": [
+        0,
+        1,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        5,
+        5
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": true
+    },
+    {
+      "name": "interleaved-provider-retains-existing-scheduler",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-source-provider:0",
+              "mode": "shared",
+              "elapsedMs": 1
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-source-provider:1",
+              "mode": "shared",
+              "elapsedMs": 3
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 4,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 251,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-source-provider:2",
+              "mode": "shared",
+              "elapsedMs": 251
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 4999,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5000,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:256",
+              "mode": "exclusive",
+              "elapsedMs": 20256
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6,
+        7
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        7
+      ],
+      "after": [
+        1,
+        2,
+        2,
+        2,
+        2,
+        5,
+        5,
+        7,
+        7
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "interleaved-cache-retains-existing-scheduler",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "cache-scan:/repo/cache",
+              "mode": "shared",
+              "elapsedMs": 1
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "cache-scan:/repo/cache",
+              "mode": "shared",
+              "elapsedMs": 3
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 4,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 251,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "cache-scan:/repo/cache",
+              "mode": "shared",
+              "elapsedMs": 251
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 4999,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5000,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:256",
+              "mode": "exclusive",
+              "elapsedMs": 20256
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6,
+        7
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        7
+      ],
+      "after": [
+        1,
+        2,
+        2,
+        2,
+        2,
+        5,
+        5,
+        7,
+        7
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "interleaved-tooling-retains-existing-scheduler",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "nx:source-verification",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "nx:source-verification",
+              "mode": "shared",
+              "elapsedMs": 1
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 4,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 251,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "nx:source-verification",
+              "mode": "shared",
+              "elapsedMs": 2
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 4999,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5000,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:256",
+              "mode": "exclusive",
+              "elapsedMs": 20256
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6,
+        7
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        7
+      ],
+      "after": [
+        1,
+        2,
+        2,
+        2,
+        2,
+        5,
+        5,
+        7,
+        7
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "family-reset-retains-unrelated-latest-rows",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:4",
+              "mode": "shared",
+              "elapsedMs": 20004
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 4,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:32",
+              "mode": "exclusive",
+              "elapsedMs": 20032
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-preserving-source:4",
+              "mode": "exclusive",
+              "elapsedMs": 20004
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 6,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:ledger:100",
+              "mode": "shared",
+              "elapsedMs": 20100
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 7,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:3",
+              "mode": "shared",
+              "elapsedMs": 20003
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        3,
+        4,
+        2,
+        7,
+        1,
+        5,
+        6
+      ],
+      "human": [
+        0,
+        3,
+        4,
+        2,
+        7,
+        5,
+        6
+      ],
+      "after": [
+        1,
+        1,
+        1,
+        1,
+        3,
+        3,
+        3,
+        5,
+        8
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": true
+    },
+    {
+      "name": "scan-ledger-and-unit-counters-are-independent",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:100",
+              "mode": "shared",
+              "elapsedMs": 20100
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:ledger:1",
+              "mode": "shared",
+              "elapsedMs": 20001
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-preserving-source:2",
+              "mode": "exclusive",
+              "elapsedMs": 20002
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 4,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:101",
+              "mode": "shared",
+              "elapsedMs": 20101
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:ledger:2",
+              "mode": "shared",
+              "elapsedMs": 20002
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 6,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-preserving-source:2",
+              "mode": "exclusive",
+              "elapsedMs": 20006
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 7,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        4,
+        5,
+        6,
+        7
+      ],
+      "human": [
+        0,
+        4,
+        5,
+        6
+      ],
+      "after": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        5
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": true
+    },
+    {
+      "name": "owner-command-and-script-stage-boundaries",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "other-owner",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "other-owner",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 4,
+          "progress": {
+            "owner": "other-owner",
+            "command": "build:other",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5,
+          "progress": {
+            "owner": "other-owner",
+            "command": "build:other",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-preserving-source:1",
+              "mode": "exclusive",
+              "elapsedMs": 20001
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 6,
+          "progress": {
+            "owner": "other-owner",
+            "command": "build:other",
+            "stage": "complete"
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 7,
+          "progress": {
+            "owner": "other-owner",
+            "command": "build:other",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        7
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        5,
+        5,
+        7,
+        8,
+        8
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": true
+    },
+    {
+      "name": "backward-finite-clock-rebases",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 100,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 101,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 99,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 100,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5099,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:256",
+              "mode": "exclusive",
+              "elapsedMs": 20256
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        4
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        5,
+        5
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": true
+    },
+    {
+      "name": "nonfinite-clocks-await-finite-open",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": "NaN",
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": "Infinity",
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-preserving-source:1",
+              "mode": "exclusive",
+              "elapsedMs": 20001
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:1",
+              "mode": "shared",
+              "elapsedMs": 20001
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:ledger:1",
+              "mode": "shared",
+              "elapsedMs": 20001
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": "-Infinity",
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 4,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:256",
+              "mode": "exclusive",
+              "elapsedMs": 20256
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5003,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:320",
+              "mode": "exclusive",
+              "elapsedMs": 20320
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5004,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:384",
+              "mode": "exclusive",
+              "elapsedMs": 20384
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9
+      ],
+      "human": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        4,
+        5,
+        5,
+        7,
+        8,
+        8,
+        9,
+        9
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": true
+    },
+    {
+      "name": "raw-refusal-leading-zero",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:0128",
+              "mode": "exclusive",
+              "elapsedMs": 20000
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        4
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "raw-refusal-unsafe-counter",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:9007199254740992",
+              "mode": "exclusive",
+              "elapsedMs": 20000
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        4
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "raw-refusal-unknown-operation",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:unknown:128",
+              "mode": "exclusive",
+              "elapsedMs": 20000
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        4
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "raw-refusal-wrong-mode",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "shared",
+              "elapsedMs": 20000
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        4
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "raw-refusal-negative-elapsed",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": -1
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "human": [
+        0,
+        1,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        4
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "raw-refusal-oversized-elapsed",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 9007199254740992
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        4
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "raw-refusal-outer-extra-key",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            },
+            "extra": true
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        4
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "raw-refusal-activity-extra-key",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128,
+              "extra": true
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        4
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "raw-refusal-empty-owner",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        4
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "raw-refusal-invalid-command",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        4
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "raw-refusal-oversized-resource",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+              "mode": "exclusive",
+              "elapsedMs": 20000
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        4
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "raw-refusal-replay-nonzero-elapsed",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 1
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "human": [
+        0,
+        1,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        4
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "safe-counter-maximum-is-admitted",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:9007199254740990",
+              "mode": "exclusive",
+              "elapsedMs": 9007199254740991
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:9007199254740991",
+              "mode": "exclusive",
+              "elapsedMs": 9007199254740991
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1
+      ],
+      "human": [
+        0,
+        1
+      ],
+      "after": [
+        1,
+        1,
+        2
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "raw-sink-failure-dequeues-only-attempted-row",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:1",
+              "mode": "shared",
+              "elapsedMs": 20001
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-preserving-source:1",
+              "mode": "exclusive",
+              "elapsedMs": 20001
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        },
+        {
+          "kind": "flush"
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "human": [
+        0,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        1,
+        1,
+        2,
+        4,
+        4
+      ],
+      "throws": [
+        4
+      ],
+      "failWrite": 3,
+      "oracle": false
+    },
+    {
+      "name": "human-sink-failure-never-replays-ambiguous-pair",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:1",
+              "mode": "shared",
+              "elapsedMs": 20001
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-preserving-source:1",
+              "mode": "exclusive",
+              "elapsedMs": 20001
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        },
+        {
+          "kind": "flush"
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        1,
+        1,
+        2,
+        4,
+        4
+      ],
+      "throws": [
+        4
+      ],
+      "failWrite": 4,
+      "oracle": false
+    },
+    {
+      "name": "due-failure-retains-replacement-and-untouched-slots",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:1",
+              "mode": "shared",
+              "elapsedMs": 20001
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5000,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "human": [
+        0,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        1,
+        2,
+        4,
+        4
+      ],
+      "throws": [
+        3
+      ],
+      "failWrite": 3,
+      "oracle": false
+    },
+    {
+      "name": "rank-compressed-repeated-eleven-slot-sweep",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 2,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:readText:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 3,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:membership:256",
+              "mode": "exclusive",
+              "elapsedMs": 20256
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 4,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:frontier:320",
+              "mode": "exclusive",
+              "elapsedMs": 20320
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:selection:384",
+              "mode": "exclusive",
+              "elapsedMs": 20384
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 6,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:publication:448",
+              "mode": "exclusive",
+              "elapsedMs": 20448
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 7,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 8,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:8",
+              "mode": "shared",
+              "elapsedMs": 20008
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 9,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:ledger:9",
+              "mode": "shared",
+              "elapsedMs": 20009
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 10,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-preserving-source:10",
+              "mode": "exclusive",
+              "elapsedMs": 20010
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 11,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:768",
+              "mode": "exclusive",
+              "elapsedMs": 20768
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 12,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:832",
+              "mode": "exclusive",
+              "elapsedMs": 20832
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 13,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:readText:896",
+              "mode": "exclusive",
+              "elapsedMs": 20896
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 14,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:membership:960",
+              "mode": "exclusive",
+              "elapsedMs": 20960
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 15,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:frontier:1024",
+              "mode": "exclusive",
+              "elapsedMs": 21024
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 16,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:selection:1088",
+              "mode": "exclusive",
+              "elapsedMs": 21088
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 17,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:publication:1152",
+              "mode": "exclusive",
+              "elapsedMs": 21152
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 18,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 19,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:19",
+              "mode": "shared",
+              "elapsedMs": 20019
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 20,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:ledger:20",
+              "mode": "shared",
+              "elapsedMs": 20020
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 21,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-preserving-source:21",
+              "mode": "exclusive",
+              "elapsedMs": 20021
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 22,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:1472",
+              "mode": "exclusive",
+              "elapsedMs": 21472
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 23,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:1536",
+              "mode": "exclusive",
+              "elapsedMs": 21536
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 24,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:readText:1600",
+              "mode": "exclusive",
+              "elapsedMs": 21600
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 25,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:membership:1664",
+              "mode": "exclusive",
+              "elapsedMs": 21664
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 26,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:frontier:1728",
+              "mode": "exclusive",
+              "elapsedMs": 21728
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 27,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:selection:1792",
+              "mode": "exclusive",
+              "elapsedMs": 21792
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 28,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:publication:1856",
+              "mode": "exclusive",
+              "elapsedMs": 21856
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 29,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 30,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:30",
+              "mode": "shared",
+              "elapsedMs": 20030
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 31,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:ledger:31",
+              "mode": "shared",
+              "elapsedMs": 20031
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 32,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-preserving-source:32",
+              "mode": "exclusive",
+              "elapsedMs": 20032
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 33,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:2176",
+              "mode": "exclusive",
+              "elapsedMs": 22176
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 34,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:2240",
+              "mode": "exclusive",
+              "elapsedMs": 22240
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 35,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:readText:2304",
+              "mode": "exclusive",
+              "elapsedMs": 22304
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 36,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:membership:2368",
+              "mode": "exclusive",
+              "elapsedMs": 22368
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 37,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:frontier:2432",
+              "mode": "exclusive",
+              "elapsedMs": 22432
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 38,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:selection:2496",
+              "mode": "exclusive",
+              "elapsedMs": 22496
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 39,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:publication:2560",
+              "mode": "exclusive",
+              "elapsedMs": 22560
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 40,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 41,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:41",
+              "mode": "shared",
+              "elapsedMs": 20041
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 42,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:ledger:42",
+              "mode": "shared",
+              "elapsedMs": 20042
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 43,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-preserving-source:43",
+              "mode": "exclusive",
+              "elapsedMs": 20043
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 44,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:2880",
+              "mode": "exclusive",
+              "elapsedMs": 22880
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 45,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:2944",
+              "mode": "exclusive",
+              "elapsedMs": 22944
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 46,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:readText:3008",
+              "mode": "exclusive",
+              "elapsedMs": 23008
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 47,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:membership:3072",
+              "mode": "exclusive",
+              "elapsedMs": 23072
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 48,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:frontier:3136",
+              "mode": "exclusive",
+              "elapsedMs": 23136
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 49,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:selection:3200",
+              "mode": "exclusive",
+              "elapsedMs": 23200
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 50,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:publication:3264",
+              "mode": "exclusive",
+              "elapsedMs": 23264
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 51,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 52,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:52",
+              "mode": "shared",
+              "elapsedMs": 20052
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 53,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-installed-paths:ledger:53",
+              "mode": "shared",
+              "elapsedMs": 20053
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 54,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "javascript-preserving-source:54",
+              "mode": "exclusive",
+              "elapsedMs": 20054
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54
+      ],
+      "human": [
+        0,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        52,
+        53,
+        54
+      ],
+      "after": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        12,
+        12
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": true
+    },
+    {
+      "name": "malformed-frame-oversized-owner-keeps-window",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1000,
+          "progress": {
+            "owner": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:frontier:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1001,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:256",
+              "mode": "exclusive",
+              "elapsedMs": 20256
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5000,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        5,
+        5
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "malformed-frame-oversized-command-keeps-window",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1000,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:frontier:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1001,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:256",
+              "mode": "exclusive",
+              "elapsedMs": 20256
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5000,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        5,
+        5
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "malformed-frame-unknown-stage-keeps-window",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1000,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "unknown-stage",
+            "activity": {
+              "resource": "dependencies:store-ownership:frontier:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1001,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:256",
+              "mode": "exclusive",
+              "elapsedMs": 20256
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5000,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        5,
+        5
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    },
+    {
+      "name": "malformed-frame-invalid-command-keeps-window",
+      "steps": [
+        {
+          "kind": "publish",
+          "at": 0,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:64",
+              "mode": "exclusive",
+              "elapsedMs": 20064
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:list:128",
+              "mode": "exclusive",
+              "elapsedMs": 20128
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1000,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:frontier:192",
+              "mode": "exclusive",
+              "elapsedMs": 20192
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 1001,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-ownership:state:256",
+              "mode": "exclusive",
+              "elapsedMs": 20256
+            }
+          }
+        },
+        {
+          "kind": "publish",
+          "at": 5000,
+          "progress": {
+            "owner": "dependency-fixture",
+            "command": "build:dependencies",
+            "stage": "running",
+            "activity": {
+              "resource": "dependencies:store-input-replay",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "kind": "flush"
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "human": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "after": [
+        1,
+        1,
+        3,
+        3,
+        5,
+        5
+      ],
+      "throws": [],
+      "failWrite": null,
+      "oracle": false
+    }
+  ],
+  "selectionStageClockCases": [
+    {
+      "name": "five-rotating-stages",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 10,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 20,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 30,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 40,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 50,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 250,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 260,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 300,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:projects",
+            "stage": "complete"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        7,
+        8
+      ]
+    },
+    {
+      "name": "same-slot-uses-latest",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 250,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0
+      ]
+    },
+    {
+      "name": "outside-frame-flushes",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:other",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "name": "rollback-drains-and-rebases",
+      "steps": [
+        {
+          "at": 100,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 110,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 90,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 100,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "name": "nonfinite-clock-is-not-a-default",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 10,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": null,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 20,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "name": "foreign-owner-remains-raw",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2,
+          "progress": {
+            "owner": "another-owner",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "name": "extra-fields-remain-raw",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running",
+            "extra": true
+          }
+        },
+        {
+          "at": 3,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "name": "activity-remains-existing-scheduler",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running",
+            "activity": {
+              "resource": "unrecognized",
+              "mode": "shared",
+              "elapsedMs": 0
+            }
+          }
+        },
+        {
+          "at": 3,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "name": "every-observed-build-slot-remains-finite-and-latest",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 4,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 5,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:projects",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 6,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:modules",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 7,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-normalization",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 8,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-preparation",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 9,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-source-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 10,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-source-inputs",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 11,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-imports",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 12,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:command-source-imports",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 13,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:project-assembly",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 200,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:project-assembly",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 250,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-source-inputs",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        15
+      ]
+    },
+    {
+      "name": "slow-rotation-does-not-republish-known-stages",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 300,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 600,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 900,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1200,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1500,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1800,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2100,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2400,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2700,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3000,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3300,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3600,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3900,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 4200,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 4500,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 4800,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 5100,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 5400,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 5700,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 6000,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 6300,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 6600,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 6900,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 7200,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 7500,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 7800,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 8100,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 8400,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 8700,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 9000,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 9300,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 9600,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 9900,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 10200,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 10500,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 10800,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 11100,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 11400,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 11700,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "heartbeat-publishes-only-latest",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 10000,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 14999,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 15001,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 15002,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 15003,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 30001,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 30002,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 30003,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        6,
+        9
+      ]
+    },
+    {
+      "name": "fourteen-first-observations-one-heartbeat",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 4,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 5,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:projects",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 6,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:modules",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 7,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-normalization",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 8,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-preparation",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 9,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-source-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 10,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-source-inputs",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 11,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-compile-imports",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 12,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:command-source-imports",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 13,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:project-assembly",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 100,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 200,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 15013,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 15014,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 15015,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        16,
+        18
+      ]
+    },
+    {
+      "name": "terminal-flushes-only-different-latest",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "name": "property-order-does-not-defeat-deduplication",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 250,
+          "progress": {
+            "stage": "running",
+            "owner": "repository:build",
+            "command": "build:selected-declaration"
+          }
+        },
+        {
+          "at": 1000,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0
+      ]
+    },
+    {
+      "name": "nonfinite-clock-flushes-only-latest",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 1,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 2,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-command-sources",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 3,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 4,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-catalog-targets",
+            "stage": "running"
+          }
+        },
+        {
+          "at": null,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-native-closure",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 6,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "name": "identical-stage-heartbeat",
+      "steps": [
+        {
+          "at": 0,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 15000,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 15001,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        },
+        {
+          "at": 30000,
+          "progress": {
+            "owner": "repository:build",
+            "command": "build:selected-declaration",
+            "stage": "running"
+          }
+        }
+      ],
+      "expected": [
+        0,
+        1,
+        3
+      ]
+    }
+  ],
+  "queueHolderCases": [
+    {
+      "name": "english-holder-counter-and-eta",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":9,\"holderMode\":\"exclusive\",\"holderPid\":69857,\"holderSeconds\":6300,\"resource\":\"repository-graph-facts:/repo:shard:7\",\"holderState\":\"progressing\",\"holderPhase\":\"inference\",\"holderDone\":120,\"holderTotal\":566,\"holderEtaMinutes\":34}",
+      "command": "repository:command",
+      "mode": "exclusive",
+      "elapsedMs": 0,
+      "expected": "repository:command · Waiting for access to repository-graph-facts:/repo:shard:7 (exclusive): position 3 of 9, behind the request of process 69857 (exclusive, queued 6300 s ago) · holder: progressing, inference 120 of 566, about 34 min left"
+    },
+    {
+      "name": "german-holder-stale",
+      "environment": {
+        "SEMIO_LANGUAGE": "de"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":9,\"holderMode\":\"exclusive\",\"holderPid\":69857,\"holderSeconds\":6300,\"resource\":\"repository-graph-facts:/repo:shard:7\",\"holderState\":\"stale\"}",
+      "command": "repository:command",
+      "mode": "exclusive",
+      "elapsedMs": 0,
+      "expected": "repository:command · Wartet auf Zugriff auf repository-graph-facts:/repo:shard:7 (exklusiv): Position 3 von 9, hinter der Anfrage von Prozess 69857 (exklusiv, seit 6300 s eingereiht) · Halter: VERALTET (älterer Code)"
+    },
+    {
+      "name": "english-holder-phase-only-stuck",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":9,\"holderMode\":\"exclusive\",\"holderPid\":69857,\"holderSeconds\":6300,\"resource\":\"repository-graph-facts:/repo:shard:7\",\"holderState\":\"stuck\",\"holderPhase\":\"dependencies:store-ownership:state\"}",
+      "command": "bun:dependency-storage",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "bun:dependency-storage · Waiting for access to repository-graph-facts:/repo:shard:7 (shared): position 3 of 9, behind the request of process 69857 (exclusive, queued 6300 s ago) · holder: STUCK, dependencies:store-ownership:state"
+    },
+    {
+      "name": "german-holder-unknown",
+      "environment": {
+        "LANG": "de_DE.UTF-8"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":9,\"holderMode\":\"exclusive\",\"holderPid\":69857,\"holderSeconds\":6300,\"resource\":\"repository-graph-facts:/repo:shard:7\",\"holderState\":\"unknown\"}",
+      "command": "bun:dependency-storage",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "bun:dependency-storage · Wartet auf Zugriff auf repository-graph-facts:/repo:shard:7 (geteilt): Position 3 von 9, hinter der Anfrage von Prozess 69857 (exklusiv, seit 6300 s eingereiht) · Halter: unbekannt (kein lebender Registereintrag)"
+    },
+    {
+      "name": "holder-counter-without-total-refused",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":9,\"holderMode\":\"exclusive\",\"holderPid\":69857,\"holderSeconds\":6300,\"resource\":\"repository-graph-facts:/repo:shard:7\",\"holderState\":\"progressing\",\"holderDone\":3}",
+      "command": "repository:command",
+      "mode": "exclusive",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "holder-unknown-state-refused",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":9,\"holderMode\":\"exclusive\",\"holderPid\":69857,\"holderSeconds\":6300,\"resource\":\"repository-graph-facts:/repo:shard:7\",\"holderState\":\"dead\"}",
+      "command": "repository:command",
+      "mode": "exclusive",
+      "elapsedMs": 0,
+      "expected": null
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import{sayBuildV1}from"../../../📖️texts/🟦️.ts";
 import {join} from "node:path";
 import {profilePhaseV1} from "../../../⏱️profile/🟨️.mjs";
 import {readBuildMode} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
@@ -44,7 +45,7 @@ export const backend:BuildBackendV1=Object.freeze({
         }else console.log(JSON.stringify(plan,null,2));
         return;
       }
-      if(untouched){console.log("[bazel] no affected tasks");return;}
+      if(untouched){sayBuildV1("bazel.noAffected");return;}
       {const {ensureBuildClosureScopesV1}=await import("../../../🚀️bootstrap/🟦️.ts");await ensureBuildClosureScopesV1(root,invocation,artifactPhase,()=>Object.values(adapter.planBazelTasksV1(graph,request).tasks).map(task=>task.root),process.env);}
       if(resolved.watch){
         const controller=new AbortController(),{withRequestedIssuedResourceControlV1}=await import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),{readOwnedBuildInvocationV1}=await import("../../../📥️caller/🟦️.ts"),{runOwnedBuildChildInvocationV1}=await import("../../../📥️caller/📤️child/🟦️.ts");

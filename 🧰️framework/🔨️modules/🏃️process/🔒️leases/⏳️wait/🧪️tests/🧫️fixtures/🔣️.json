@@ -73,5 +73,31 @@
       "halt": "reject",
       "waiterAcquired": false
     }
+  ],
+  "drainCases": [
+    {
+      "id": "cancel-continuation-settles-inside-the-bound",
+      "halt": "cancel",
+      "settleAfterMilliseconds": 100,
+      "drained": true
+    },
+    {
+      "id": "timeout-continuation-settles-inside-the-bound",
+      "halt": "timeout",
+      "settleAfterMilliseconds": 100,
+      "drained": true
+    },
+    {
+      "id": "cancel-continuation-never-settles",
+      "halt": "cancel",
+      "settleAfterMilliseconds": null,
+      "drained": false
+    },
+    {
+      "id": "timeout-continuation-never-settles",
+      "halt": "timeout",
+      "settleAfterMilliseconds": null,
+      "drained": false
+    }
   ]
 }

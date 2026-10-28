@@ -41,8 +41,8 @@ test("no caching test file imports another test file, so each file receives its 
 });
 
 test("every suite has a project target and every route target names a declared suite",()=>{
- const declared=readCachingTestTableV1(),known=new Set([...declared.suites.map(suite=>suite.id),...declared.codeSuites]),targets=(JSON.parse(readFileSync(project,"utf8"))as{targets:Record<string,{options?:{command?:string}}>}).targets,pattern=/📜️script\.ts test(?: (\S+))?(?: \S+)*$/u,routed=new Map<string,string[]>();
- for(const[name,target]of Object.entries(targets)){const match=pattern.exec(target.options?.command??"");if(match&&match[1]!==undefined)routed.set(match[1],[...(routed.get(match[1])??[]),name]);}
+ const declared=readCachingTestTableV1(),known=new Set([...declared.suites.map(suite=>suite.id),...declared.codeSuites]),targets=(JSON.parse(readFileSync(project,"utf8"))as{targets:Record<string,{options?:{command?:string;cwd?:string}}>}).targets,pattern=/📜️script\.ts test(?: (\S+))?(?: \S+)*$/u,routed=new Map<string,string[]>();
+ for(const[name,target]of Object.entries(targets)){const command=target.options?.command??"",match=pattern.exec(command);if(match&&match[1]!==undefined&&(target.options?.cwd===undefined||target.options.cwd==="{projectRoot}"||target.options.cwd.endsWith("⚡️caching")||command.includes("⚡️caching/📜️script.ts")))routed.set(match[1],[...(routed.get(match[1])??[]),name]);}
  expect(sorted([...known].filter(id=>!routed.has(id)))).toEqual([]);
  expect(sorted([...routed.keys()].filter(id=>!known.has(id)))).toEqual([]);
 });

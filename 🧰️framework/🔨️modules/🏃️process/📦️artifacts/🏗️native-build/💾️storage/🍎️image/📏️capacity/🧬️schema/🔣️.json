@@ -5,9 +5,9 @@
       "const": {
         "version": 1,
         "containerFixedBytes": 40960,
-        "largeContainerThresholdBytes": 2147483648,
-        "largeContainerReserveBytes": 209715200,
         "metadataFixedBytes": 1048576,
+        "metadataLargeThresholdBytes": 2147483648,
+        "metadataLargeExtraBytes": 1048576,
         "metadataDivisor": 256
       }
     },

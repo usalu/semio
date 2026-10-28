@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "entry": "proj/📜️script.ts",
+  "files": {
+    "lib/chain/c0.ts": "import \"./c1.ts\";\nexport const c0 = 0;\n",
+    "lib/chain/c1.ts": "import \"./c2.ts\";\nexport const c1 = 1;\n",
+    "lib/chain/c10.ts": "import \"./c11.ts\";\nexport const c10 = 10;\n",
+    "lib/chain/c11.ts": "import \"./c12.ts\";\nexport const c11 = 11;\n",
+    "lib/chain/c12.ts": "import \"./c13.ts\";\nexport const c12 = 12;\n",
+    "lib/chain/c13.ts": "import \"./c14.ts\";\nexport const c13 = 13;\n",
+    "lib/chain/c14.ts": "import \"./c15.ts\";\nexport const c14 = 14;\n",
+    "lib/chain/c15.ts": "import \"./c16.ts\";\nexport const c15 = 15;\n",
+    "lib/chain/c16.ts": "import \"./c17.ts\";\nexport const c16 = 16;\n",
+    "lib/chain/c17.ts": "import \"./c18.ts\";\nexport const c17 = 17;\n",
+    "lib/chain/c18.ts": "import \"./c19.ts\";\nexport const c18 = 18;\n",
+    "lib/chain/c19.ts": "import \"./c20.ts\";\nexport const c19 = 19;\n",
+    "lib/chain/c2.ts": "import \"./c3.ts\";\nexport const c2 = 2;\n",
+    "lib/chain/c20.ts": "import \"./c21.ts\";\nexport const c20 = 20;\n",
+    "lib/chain/c21.ts": "import \"./c22.ts\";\nexport const c21 = 21;\n",
+    "lib/chain/c22.ts": "import \"./c23.ts\";\nexport const c22 = 22;\n",
+    "lib/chain/c23.ts": "export const c23 = 23;\n",
+    "lib/chain/c3.ts": "import \"./c4.ts\";\nexport const c3 = 3;\n",
+    "lib/chain/c4.ts": "import \"./c5.ts\";\nexport const c4 = 4;\n",
+    "lib/chain/c5.ts": "import \"./c6.ts\";\nexport const c5 = 5;\n",
+    "lib/chain/c6.ts": "import \"./c7.ts\";\nexport const c6 = 6;\n",
+    "lib/chain/c7.ts": "import \"./c8.ts\";\nexport const c7 = 7;\n",
+    "lib/chain/c8.ts": "import \"./c9.ts\";\nexport const c8 = 8;\n",
+    "lib/chain/c9.ts": "import \"./c10.ts\";\nexport const c9 = 9;\n",
+    "lib/extra.ts": "export const extra = 1;\n",
+    "lib/keyed.ts": "import \"./chain/c0.ts\";\nexport const keyed = 1;\n",
+    "proj/📜️script.ts": "import { keyed } from \"../lib/keyed.ts\";\nimport { lease } from \"../🧰️framework/🔨️modules/🏃️process/🔒️leases/lease.ts\";\nexport const script = keyed + lease;\n",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/lease.ts": "import { queue } from \"./queue.ts\";\nexport const lease = queue;\n",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/queue.ts": "export const queue = 1;\n"
+  },
+  "mutations": [
+    {
+      "name": "comment-in-scheduling",
+      "edit": {
+        "🧰️framework/🔨️modules/🏃️process/🔒️leases/lease.ts": "import { queue } from \"./queue.ts\";\n// waits in arrival order\nexport const lease = queue;\n"
+      },
+      "changed": {
+        "whole": false,
+        "scheduling": false,
+        "native": false
+      }
+    },
+    {
+      "name": "scheduling-imports-new-scheduling",
+      "edit": {
+        "🧰️framework/🔨️modules/🏃️process/🔒️leases/wait.ts": "export const wait = 1;\n",
+        "🧰️framework/🔨️modules/🏃️process/🔒️leases/lease.ts": "import { queue } from \"./queue.ts\";\nimport { wait } from \"./wait.ts\";\n// waits in arrival order\nexport const lease = queue + wait;\n"
+      },
+      "changed": {
+        "whole": true,
+        "scheduling": false,
+        "native": false
+      }
+    },
+    {
+      "name": "keyed-imports-new-scheduling",
+      "edit": {
+        "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/slot.ts": "export const slot = 1;\n",
+        "lib/keyed.ts": "import \"./chain/c0.ts\";\nimport { slot } from \"../🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/slot.ts\";\nexport const keyed = slot;\n"
+      },
+      "changed": {
+        "whole": true,
+        "scheduling": false,
+        "native": false
+      }
+    },
+    {
+      "name": "scheduling-imports-new-native-build",
+      "edit": {
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/args.ts": "export const args = [\"--locked\"];\n",
+        "🧰️framework/🔨️modules/🏃️process/🔒️leases/wait.ts": "import { args } from \"../📦️artifacts/🏗️native-build/args.ts\";\nexport const wait = args.length;\n"
+      },
+      "changed": {
+        "whole": true,
+        "scheduling": false,
+        "native": true
+      }
+    },
+    {
+      "name": "scheduling-imports-new-keyed",
+      "edit": {
+        "🧰️framework/🔨️modules/🏃️process/🔒️leases/queue.ts": "import { extra } from \"../../../../lib/extra.ts\";\nexport const queue = extra;\n"
+      },
+      "changed": {
+        "whole": true,
+        "scheduling": true,
+        "native": true
+      }
+    },
+    {
+      "name": "scheduling-imports-reached-keyed",
+      "edit": {
+        "🧰️framework/🔨️modules/🏃️process/🔒️leases/lease.ts": "import { queue } from \"./queue.ts\";\nimport { wait } from \"./wait.ts\";\nimport { extra } from \"../../../../lib/extra.ts\";\n// waits in arrival order\nexport const lease = queue + wait + extra;\n"
+      },
+      "changed": {
+        "whole": false,
+        "scheduling": false,
+        "native": false
+      }
+    },
+    {
+      "name": "keyed-drops-scheduling",
+      "edit": {
+        "lib/keyed.ts": "import \"./chain/c0.ts\";\nexport const keyed = 2;\n"
+      },
+      "changed": {
+        "whole": true,
+        "scheduling": false,
+        "native": false
+      }
+    },
+    {
+      "name": "script-drops-scheduling-that-reaches-keyed",
+      "edit": {
+        "proj/📜️script.ts": "import { keyed } from \"../lib/keyed.ts\";\nexport const script = keyed;\n"
+      },
+      "changed": {
+        "whole": true,
+        "scheduling": true,
+        "native": true
+      }
+    }
+  ]
+}

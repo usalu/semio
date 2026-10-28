@@ -4,16 +4,21 @@
   "description": "Schema-first contract of the concurrent Bazel sessions: a bounded set of numbered slots, each slot one persistent Bazel server with its own short output base and its own generated packages, all sharing one content-addressed cache (disk cache, repository cache, repository contents cache, optional remote cache). A session claims exactly one slot for the duration of one invocation, so concurrent invocations never meet in one Bazel server lock.",
   "definitions": {
     "Policy": {
-      "description": "Authored numbers. `servers`: the bound on concurrently existing Bazel servers is derived from the host (memory above the host capacity floor times `memoryShareBasisPoints`, divided by `residentMegabytes`; cores divided by `coresPerServer`), never below `minimum` and never above `maximum`; `serviceMaximum` bounds the service slots of a host; `nestedExtra` slots are added for a session that starts inside a Bazel action (a nested invocation must never wait for the slot its own parent holds); `heapMegabytes` is the JVM heap of one server and `residentMegabytes` its estimated resident size (heap plus metaspace, threads and the client). `waiting`: a session that finds every slot claimed polls every `pollMilliseconds` behind the fair picker and reports every `progressMilliseconds`. `retention`: how many generated packages one slot keeps, how old they may get, and how long an unused output base may sit idle before it is garbage. `stop`: a server exits a few seconds after its pid file is removed, the collector waits at most `timeoutMilliseconds` for it. `leases`: names of the resources inside the repository lease directory; `restoreMaximumResources` bounds the hierarchical restore locks of one snapshot before it falls back to the exclusive root lock.",
+      "description": "Authored numbers. `servers`: the bound on concurrently existing Bazel servers is derived from the host (memory above the host capacity floor times `memoryShareBasisPoints`, divided by `residentMegabytes`; cores divided by `coresPerServer`), never below `minimum` and never above `maximum`; `serviceMaximum` bounds the service slots of a host; `nestedExtra` slots are added for a session that starts inside a Bazel action (a nested invocation must never wait for the slot its own parent holds); `heapMegabytes` is the JVM heap of one server and `residentMegabytes` its estimated resident size (heap plus metaspace, threads and the client); `jvmArguments` make an idle server give its heap back to the operating system (periodic collection, bounded free ratios), so the idle time costs little memory on every platform, not only where the system compresses idle pages. `waiting`: a session that finds every slot claimed polls every `pollMilliseconds` behind the fair picker and reports every `progressMilliseconds`. `retention`: how many generated packages one slot keeps, how old they may get, and how long an unused output base may sit idle before it is garbage. `stop`: a server exits a few seconds after its pid file is removed, the collector waits at most `timeoutMilliseconds` for it. `leases`: names of the resources inside the repository lease directory; `restoreMaximumResources` bounds the hierarchical restore locks of one snapshot before it falls back to the exclusive root lock.",
       "const": {
         "version": 1,
         "servers": {
           "minimum": 1,
           "maximum": 6,
-          "memoryShareBasisPoints": 3000,
-          "heapMegabytes": 2048,
+          "memoryShareBasisPoints": 4000,
+          "heapMegabytes": 1536,
           "minimumHeapMegabytes": 768,
-          "residentMegabytes": 2560,
+          "residentMegabytes": 2048,
+          "jvmArguments": [
+            "-XX:G1PeriodicGCInterval=10000",
+            "-XX:MinHeapFreeRatio=10",
+            "-XX:MaxHeapFreeRatio=30"
+          ],
           "coresPerServer": 2,
           "nestedExtra": 4,
           "serviceMaximum": 4,
@@ -38,6 +43,7 @@
         "names": {
           "slotPattern": "^[sd][0-9]{1,2}$",
           "keyPattern": "^[0-9a-f]{16}$",
+          "stablePackage": "0000000000000000",
           "stateSuffix": ".session.json"
         },
         "leases": {
@@ -61,6 +67,11 @@
           "minimumBytes": 16777216,
           "directory": "launchers",
           "stamp": ".deduped"
+        },
+        "limits": {
+          "minimumMemoryPerServerMegabytes": 256,
+          "pathUnits": 256,
+          "spareSampleMilliseconds": 5000
         }
       }
     },
@@ -171,7 +182,7 @@
       "pattern": "^[0-9a-f]{16}$"
     },
     "SlotState": {
-      "description": "What a slot remembers between sessions, written beside its output base while the session holds the claim: the key of the last selection (a warm server and package are reused for it), the keys of the packages it still keeps, newest first, and the time of the last use in epoch milliseconds.",
+      "description": "What a slot remembers between sessions, written beside its output base while the session holds the claim: the key of the last selection (a warm server and package are reused for it), the keys of the selections it served before, newest first (a record only: its package holds the last selection alone), and the time of the last use in epoch milliseconds.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -384,12 +395,14 @@
           "waiting-service": "[bazel] all {slots} Bazel service slots are in use; waiting for one ({seconds} s)",
           "claimed": "[bazel] session slot {slot}: {mode}",
           "warm": "warm server and package for this selection",
-          "switch": "the server restarts for a different selection",
+          "switch": "the package of the slot is replaced in place for a different selection, the server stays",
           "fresh": "fresh server",
           "status-held": "in use",
           "status-free": "free",
           "status-header": "slot  state   last selection    last used",
           "stopped": "[bazel] stopped the server of slot {slot}",
+          "reaped": "[bazel] stopped the idle Bazel server of slot {slot}: {live} servers would run and this host affords {budget}",
+          "reap-failed": "[bazel] the idle server of slot {slot} did not stop ({reason}); its idle exit will end it",
           "grown": "[bazel] every base Bazel server slot is in use and {spare} MB of memory are idle: opening the extra slot {slot}",
           "pressure": "[bazel] the products image has {free} MB free (soft threshold {soft} MB): collecting down to {target} MB",
           "removed-package": "[bazel] removed the package {key} of slot {slot} ({reason})",
@@ -409,12 +422,14 @@
           "waiting-service": "[bazel] alle {slots} Bazel-Dienst-Slots sind belegt; warte auf einen freien Slot ({seconds} s)",
           "claimed": "[bazel] Sitzungs-Slot {slot}: {mode}",
           "warm": "warmer Server und warmes Paket für diese Auswahl",
-          "switch": "der Server startet für eine andere Auswahl neu",
+          "switch": "das Paket des Slots wird für eine andere Auswahl an Ort und Stelle ersetzt, der Server bleibt",
           "fresh": "frischer Server",
           "status-held": "belegt",
           "status-free": "frei",
           "status-header": "Slot  Status  letzte Auswahl    zuletzt benutzt",
           "stopped": "[bazel] Server von Slot {slot} gestoppt",
+          "reaped": "[bazel] den untätigen Bazel-Server von Slot {slot} gestoppt: {live} Server würden laufen und dieser Rechner trägt {budget}",
+          "reap-failed": "[bazel] der untätige Server von Slot {slot} wurde nicht gestoppt ({reason}); sein Leerlauf-Ende beendet ihn",
           "grown": "[bazel] Alle Basis-Bazel-Server-Slots sind belegt und {spare} MB Speicher sind frei: öffne den zusätzlichen Slot {slot}",
           "pressure": "[bazel] das Produkt-Image hat {free} MB frei (weiche Schwelle {soft} MB): sammle bis {target} MB",
           "removed-package": "[bazel] Paket {key} von Slot {slot} entfernt ({reason})",
@@ -422,12 +437,42 @@
           "freed": "[bazel] Sitzungs-Aufräumen hat etwa {freed} MB freigegeben",
           "summary": "[bazel] {packages} Pakete, {bases} Output-Bases und {temporaries} übrig gebliebene Erfassungsordner der Bazel-Sitzungen entfernt",
           "summary-dry": "[bazel] würde {packages} Pakete, {bases} Output-Bases und {temporaries} übrig gebliebene Erfassungsordner der Bazel-Sitzungen entfernen",
-          "collector-busy": "[bazel] ein anderer Bazel-Sitzungs-Collector läuft; hier ist nichts zu tun",
+          "collector-busy": "[bazel] ein anderer Bazel-Sitzungssammler läuft; hier ist nichts zu tun",
           "collected-before": "[bazel] die Bazel-Sitzungen wurden soeben von diesem Befehl aufgeräumt",
           "pool-removed": "[bazel] {entries} Einträge des Inhalts-Pools entfernt ({megabytes} MB)",
           "pool-would-remove": "[bazel] würde {entries} Einträge des Inhalts-Pools entfernen ({megabytes} MB)",
           "growth-image": "[bazel] Alle Basis-Bazel-Server-Slots sind belegt, aber das Produkt-Image hat nur {free} MB frei (ein weiterer Arbeitsbereich braucht {need} MB): öffne {slot} nicht",
           "deduped": "[bazel] die identischen Launcher-Kopien des Slots {slot} teilen sich jetzt ihre Blöcke ({files} Dateien, {megabytes} MB)"
+        }
+      }
+    },
+    "PolicyDescriptions": {
+      "const": {
+        "en": {
+          "version": "The version of the policy.",
+          "servers": "How many Bazel servers run at once and what each is given: memory share, heap, resident size, cores and growth.",
+          "waiting": "How often a command that waits for a slot polls and reports progress.",
+          "retention": "How many packages a slot keeps and how old a package or an output base may be.",
+          "stop": "How a server is stopped: its pid file and the timeout and polling of the stop.",
+          "names": "The patterns and names of slots, keys, stable packages and state files.",
+          "leases": "The resource names of the slot leases and the most resources one restore holds.",
+          "pressure": "The thresholds of the collection under disk pressure: protected packages, grace, idle time and measuring concurrency.",
+          "pool": "The age after which a pooled package is removed.",
+          "dedupe": "The smallest launcher that is deduplicated and where the stamp of the deduplication lives.",
+          "limits": "The floor of the memory one server is planned with, the longest storage path and how long a sampled spare memory is reused."
+        },
+        "de": {
+          "version": "Die Version der Richtlinie.",
+          "servers": "Wie viele Bazel-Server gleichzeitig laufen und was jeder bekommt: Speicheranteil, Heap, residente Größe, Kerne und Wachstum.",
+          "waiting": "Wie oft ein Befehl, der auf einen Platz wartet, abfragt und Fortschritt meldet.",
+          "retention": "Wie viele Pakete ein Platz behält und wie alt ein Paket oder eine Ausgabebasis sein darf.",
+          "stop": "Wie ein Server gestoppt wird: seine Pid-Datei sowie Zeitlimit und Abfrage des Stoppens.",
+          "names": "Die Muster und Namen von Plätzen, Schlüsseln, stabilen Paketen und Zustandsdateien.",
+          "leases": "Die Ressourcennamen der Platz-Leases und die meisten Ressourcen, die eine Wiederherstellung hält.",
+          "pressure": "Die Schwellen der Sammlung unter Plattendruck: geschützte Pakete, Gnadenfrist, Leerlaufzeit und Messparallelität.",
+          "pool": "Das Alter, nach dem ein gepooltes Paket entfernt wird.",
+          "dedupe": "Der kleinste Launcher, der dedupliziert wird, und wo der Stempel der Deduplizierung liegt.",
+          "limits": "Die Untergrenze des Speichers, mit dem ein Server geplant wird, der längste Speicherpfad und wie lange ein gemessener freier Speicher wiederverwendet wird."
         }
       }
     }

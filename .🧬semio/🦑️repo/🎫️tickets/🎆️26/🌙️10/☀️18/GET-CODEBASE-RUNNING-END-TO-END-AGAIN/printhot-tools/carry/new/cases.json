@@ -1,0 +1,1573 @@
+{
+ "$comment": "🧳️ Authored corpus of the graph-memo carry rule: two manifests (generation-wide digests + owner rows), the owners a slice covers and the expected answer (`same`, `shared:<name>`, `owner:<name>`). Read by the law and by the independent Python model 🐍️.py.",
+ "cases": [
+  {
+   "name": "identical manifests",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "covered": [
+    "a",
+    "b"
+   ],
+   "expected": "same"
+  },
+  {
+   "name": "only the generation-local digests moved (membership, frontier, fact index)",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s2",
+    "frontier": "f2",
+    "factIndex": "x2",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "covered": [
+    "a",
+    "b",
+    "c"
+   ],
+   "expected": "same"
+  },
+  {
+   "name": "an owner outside the slice was re-inferred",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc2",
+      "bytes": 4,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "covered": [
+    "a",
+    "b"
+   ],
+   "expected": "same"
+  },
+  {
+   "name": "an owner outside the slice disappeared",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     }
+    }
+   },
+   "covered": [
+    "a"
+   ],
+   "expected": "same"
+  },
+  {
+   "name": "a new owner appeared outside the slice",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     },
+     "d": {
+      "root": "pkg/d",
+      "kind": "project",
+      "fragment": "fd",
+      "bytes": 1,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "covered": [
+    "b",
+    "a"
+   ],
+   "expected": "same"
+  },
+  {
+   "name": "a covered owner has another fragment",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb2",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "covered": [
+    "a",
+    "b"
+   ],
+   "expected": "owner:b"
+  },
+  {
+   "name": "a covered owner has other targets",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "lint"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "covered": [
+    "a"
+   ],
+   "expected": "owner:a"
+  },
+  {
+   "name": "a covered owner gained an optional field",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ],
+      "config": "pkg/b/project.json"
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "covered": [
+    "b"
+   ],
+   "expected": "owner:b"
+  },
+  {
+   "name": "a covered owner was computed against another environment",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e2",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "covered": [
+    "a"
+   ],
+   "expected": "owner:a"
+  },
+  {
+   "name": "a covered owner disappeared",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "covered": [
+    "a",
+    "b"
+   ],
+   "expected": "owner:b"
+  },
+  {
+   "name": "the first difference in code point order is named",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 99,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 98,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "covered": [
+    "b",
+    "a"
+   ],
+   "expected": "owner:a"
+  },
+  {
+   "name": "the environment digest moved",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e2",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "covered": [
+    "a"
+   ],
+   "expected": "shared:env"
+  },
+  {
+   "name": "the global fragment moved",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e1",
+    "global": "g2",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "covered": [
+    "c"
+   ],
+   "expected": "shared:global"
+  },
+  {
+   "name": "the inference identity moved",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i2",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "covered": [
+    "a"
+   ],
+   "expected": "shared:identity"
+  },
+  {
+   "name": "the implementation moved",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m2",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "covered": [
+    "a"
+   ],
+   "expected": "shared:implementation"
+  },
+  {
+   "name": "shared digests are checked before owners",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e2",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "x",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "covered": [
+    "a"
+   ],
+   "expected": "shared:env"
+  },
+  {
+   "name": "an empty slice depends only on the shared digests",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {}
+   },
+   "covered": [],
+   "expected": "same"
+  },
+  {
+   "name": "key order inside an owner row does not matter",
+   "from": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "root": "pkg/a",
+      "kind": "project",
+      "fragment": "fa",
+      "bytes": 10,
+      "edgesEnv": "e1",
+      "targets": [
+       "build"
+      ],
+      "config": "pkg/a/project.json"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "to": {
+    "env": "e1",
+    "global": "g1",
+    "identity": "i1",
+    "implementation": "m1",
+    "membership": "s1",
+    "frontier": "f1",
+    "factIndex": "x1",
+    "owners": {
+     "a": {
+      "config": "pkg/a/project.json",
+      "targets": [
+       "build"
+      ],
+      "edgesEnv": "e1",
+      "bytes": 10,
+      "fragment": "fa",
+      "kind": "project",
+      "root": "pkg/a"
+     },
+     "b": {
+      "root": "pkg/b",
+      "kind": "project",
+      "fragment": "fb",
+      "bytes": 11,
+      "edgesEnv": "e1",
+      "targets": [
+       "build",
+       "test"
+      ]
+     },
+     "c": {
+      "root": "pkg/c",
+      "kind": "unavailable",
+      "fragment": "fc",
+      "bytes": 3,
+      "edgesEnv": "e1",
+      "targets": []
+     }
+    }
+   },
+   "covered": [
+    "a"
+   ],
+   "expected": "same"
+  }
+ ]
+}

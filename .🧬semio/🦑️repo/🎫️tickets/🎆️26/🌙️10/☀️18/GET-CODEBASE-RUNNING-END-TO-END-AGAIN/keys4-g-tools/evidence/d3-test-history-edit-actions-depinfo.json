@@ -1,0 +1,21 @@
+{
+ "target": "test-history-edit-actions",
+ "crates": [
+  "semio-framework-time-travel-actions"
+ ],
+ "closureCrates": 144,
+ "depInfoUnits": 171,
+ "workspaceFilesRead": 896,
+ "declared": 2103,
+ "undeclared": [
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/✂️span/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🚚️apply/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🦀️.rs"
+ ],
+ "closureWithoutUnits": []
+}

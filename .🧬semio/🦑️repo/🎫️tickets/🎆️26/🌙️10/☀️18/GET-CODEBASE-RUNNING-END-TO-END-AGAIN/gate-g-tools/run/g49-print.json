@@ -1,0 +1,12 @@
+{
+ "label": "g49-print",
+ "target": "@semio-tech/print-rs:test",
+ "started": "23:01:05",
+ "wall_s": 1.5,
+ "peak_tree_mb": 6,
+ "peak_processes": 1,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

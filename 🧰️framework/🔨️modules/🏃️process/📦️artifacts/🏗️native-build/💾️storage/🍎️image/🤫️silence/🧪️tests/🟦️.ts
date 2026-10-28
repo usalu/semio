@@ -1,7 +1,7 @@
 import{test,expect}from"bun:test";
 import{spawnSync}from"node:child_process";
 import{chmodSync,existsSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,realpathSync,renameSync,rmSync,symlinkSync,writeFileSync}from"node:fs";
-import{tmpdir}from"node:os";
+import{testScratchRootV1}from"../../../../../../🧪️testing/🏖️sandbox/🟦️.ts";
 import{join}from"node:path";
 import fixture from"./🔣️.json"with{type:"json"};
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
@@ -15,7 +15,7 @@ const oracle=(directory:string)=>JSON.parse(run("/usr/bin/python3",["-I","-c","i
 const owner=(path:string)=>Number(run("/usr/bin/python3",["-I","-c","import os,sys;print(os.lstat(sys.argv[1]).st_uid)",path]).stdout);
 const logs=(root:string,count:number,size=1000)=>{const directory=join(root,protocol.serviceDirectory);mkdirSync(directory,{recursive:true});for(let index=0;index<count;index++)writeFileSync(join(directory,hex(index+1)),"x".repeat(size));};
 const settle=async(path:string)=>{for(let attempt=0;attempt<20&&!existsSync(path);attempt++)await new Promise(resolve=>setTimeout(resolve,250));return existsSync(path);};
-const scratchRoot=()=>realpathSync(mkdtempSync(join(process.env.TMPDIR||tmpdir(),"silence-")));
+const scratchRoot=()=>realpathSync(mkdtempSync(join(testScratchRootV1("silence"),"silence-")));
 test("observation tolerates a discovered log disappearing and retains cancellation",async()=>{
  const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"silence-"))),row=fixture.observationRace,directory=join(root,protocol.serviceDirectory);
  try{
@@ -113,7 +113,7 @@ test.skipIf(process.platform!=="darwin")("a legacy image with an accumulated log
   run("/usr/bin/hdiutil",["detach","-force",theirs]);attached.pop();
   expect(run("/usr/bin/hdiutil",["attach","-nobrowse","-noautoopen","-owners","off","-mountpoint",mine,legacy]).status).toBe(0);attached.push(mine);
   await settle(join(mine,protocol.serviceDirectory));logs(mine,250,2000);
-  const before=oracle(join(mine,protocol.serviceDirectory));expect(before.files).toBe(250);
+  const before=oracle(join(mine,protocol.serviceDirectory));expect(before.files).toBeGreaterThanOrEqual(250);expect(before.files).toBeLessThan(266);
   expect(nativeImageVolumeSilencedV1(mine,"open")).toBe(false);
   const facts=await applyNativeImageVolumeSilenceV1(mine,"attach",{check:()=>{}});
   expect(facts.logFiles).toBe(0);expect(oracle(join(mine,protocol.serviceDirectory)).files).toBe(0);

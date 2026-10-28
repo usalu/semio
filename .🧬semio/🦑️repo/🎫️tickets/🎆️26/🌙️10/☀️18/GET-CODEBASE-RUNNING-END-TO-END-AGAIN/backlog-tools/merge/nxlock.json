@@ -1,0 +1,65 @@
+{
+ "id": "nxlock",
+ "files": [
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🔣️policy.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxlock-g-tools/staged/nxlock/files/f00",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxlock/f000"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxlock-g-tools/staged/nxlock/files/f01",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxlock/f001"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxlock-g-tools/staged/nxlock/files/f02",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxlock/f002"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/📋️contract/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxlock-g-tools/staged/nxlock/files/f03",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxlock/f003"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧬️schema/🔣️.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxlock-g-tools/staged/nxlock/files/f04",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxlock/f004"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/🧩️component-driver/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxlock-g-tools/staged/nxlock/files/f05",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxlock/f005"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxlock-g-tools/staged/nxlock/files/f06",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxlock/f006"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxlock-g-tools/staged/nxlock/files/f07",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxlock/f007"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/📥️phase/🧪️tests/🧫️fixtures/🔣️.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxlock-g-tools/staged/nxlock/files/f08",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxlock/f008"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🧪️tests/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxlock-g-tools/staged/nxlock/files/f09",
+   "base": null
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🧪️tests/🧫️fixtures/🔣️.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxlock-g-tools/staged/nxlock/files/f10",
+   "base": null
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🧪️tests/🐍️.py",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxlock-g-tools/staged/nxlock/files/f11",
+   "base": null
+  }
+ ]
+}

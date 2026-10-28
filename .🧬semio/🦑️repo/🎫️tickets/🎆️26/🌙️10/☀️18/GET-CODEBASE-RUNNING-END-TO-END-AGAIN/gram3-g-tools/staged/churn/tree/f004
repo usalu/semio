@@ -1,0 +1,98 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Record key law fixture / Gesetzesdaten des Datensatzschluessels",
+ "description": "EN: Namespaces with text or byte parts (JSON escapes keep lone surrogates) and a seeded generated run; the record key of each must equal an independent Python derivation and the original chained digest. DE: Namensraeume mit Text- oder Byteteilen (JSON-Escapes erhalten einzelne Surrogate) und ein erzeugter Lauf; der Datensatzschluessel jedes Falls muss einer unabhaengigen Python-Ableitung und der urspruenglichen verketteten Pruefsumme entsprechen.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "cases",
+  "generated"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "cases": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "namespace",
+     "inputs"
+    ],
+    "properties": {
+     "name": {
+      "type": "string",
+      "minLength": 1
+     },
+     "namespace": {
+      "type": "string"
+     },
+     "inputs": {
+      "type": "array",
+      "items": {
+       "oneOf": [
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "text"
+         ],
+         "properties": {
+          "text": {
+           "type": "string"
+          }
+         }
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "hex"
+         ],
+         "properties": {
+          "hex": {
+           "type": "string",
+           "pattern": "^([0-9a-f]{2})*$"
+          }
+         }
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  "generated": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "seed",
+    "cases",
+    "maximumParts",
+    "maximumLength"
+   ],
+   "properties": {
+    "seed": {
+     "type": "integer"
+    },
+    "cases": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "maximumParts": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "maximumLength": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  }
+ }
+}

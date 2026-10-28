@@ -1,6 +1,7 @@
 #!/bin/bash
-# Ticket input script: a focused course e2e run that is restarted when the run ends before the specs finished (churn faults of live peer edits, owned by churn-d).
+# Ticket input script: a focused course e2e run that is restarted when the run ends before a wave of specs finished (churn faults of live peer edits, owned by churn-d).
 #   focus.sh <stamp> <topology|-> [playwright args...]     e.g. focus.sh d3 dev --grep "with 200% text"
+# A finished wave (see ../e2e-f-tools/specs-finished.pattern) is a verdict: the loop ends with the exit code of the run.
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ticket="$(cd "$here/.." && pwd)"
 stamp="$1"; topology="$2"; shift 2
@@ -15,7 +16,7 @@ while [ "$attempt" -lt 6 ]; do
   code=$?
   log="$gen/e2e-course-$stamp-$attempt-test-e2e.log"
   [ "$code" = 0 ] && exit 0
-  if ! /usr/bin/grep -qE '\] dev: specs (passed|failed)|\] rehearsal: specs (passed|failed)' "$log" 2>/dev/null; then echo "[focus] attempt $attempt ended before the specs finished (a peer's live edit or a build fault); retrying"; sleep 20; continue; fi
+  if ! /usr/bin/grep -a -q -E -f "$ticket/e2e-f-tools/specs-finished.pattern" "$log" 2>/dev/null; then echo "[focus] attempt $attempt ended before the specs finished (a peer's live edit or a build fault); retrying"; sleep "${RETRY_PAUSE:-20}"; continue; fi
   exit "$code"
 done
 exit 75

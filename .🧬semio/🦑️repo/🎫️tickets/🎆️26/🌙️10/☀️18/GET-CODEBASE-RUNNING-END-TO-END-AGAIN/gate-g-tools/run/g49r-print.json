@@ -1,0 +1,23 @@
+{
+ "label": "g49r-print",
+ "target": "@semio-tech/print-rs:test",
+ "started": "00:13:16",
+ "wall_s": 1733.5,
+ "peak_tree_mb": 6186,
+ "peak_processes": 10,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 236.8,
+ "graph": {
+  "inferring": [
+   "70"
+  ],
+  "processes": [
+   "7",
+   "2 action cache hit, 2 internal, 3 local, 2 worker"
+  ],
+  "actions": [
+   "7"
+  ]
+ }
+}

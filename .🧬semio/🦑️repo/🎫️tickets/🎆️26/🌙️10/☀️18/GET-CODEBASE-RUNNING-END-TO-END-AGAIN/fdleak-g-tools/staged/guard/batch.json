@@ -1,0 +1,124 @@
+{
+ "files": [
+  {
+   "file": "bunfig.toml",
+   "baseSha256": "283282f5df1ca7d528cf48ff662c1a5329c7cebe3cfc57e887d9709b75408461",
+   "afterSha256": "483c11662b3d7de187e0f55735aba41a0ca1d7ad68cff4be8d277fe21bb4cb2b",
+   "edits": [
+    {
+     "old": "[test]\npreload = [\"./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/📜️script.ts\"]\n\n",
+     "new": "[test]\npreload = [\"./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/📜️script.ts\", \"./🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/📜️script.ts\"]\n\n"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🛡️guard/🍞️bun/🔌️preload/🟦️.ts",
+   "baseSha256": "336ab3c2873b802de23053761b59887d984d51dc0b36552f4b7ca6caa89f1a46",
+   "afterSha256": "f6f0a9074293f93e7900b7a07b4c6a9c6124eb08bc25710523c813acbf841fa0",
+   "edits": [
+    {
+     "old": "import { readTestSandboxProtocolV1 } from \"../../../📐️layout/🟦️.ts\";\n\n",
+     "new": "import { readTestSandboxProtocolV1 } from \"../../../📐️layout/🟦️.ts\";\nimport \"../../../../🟨️bun/🪦️orphans/📜️script.ts\";\n\n"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts",
+   "baseSha256": "9b5965ddb64c5c396c3df6306bddb8635d0ccb0c01d688eb029e76166019ea94",
+   "afterSha256": "894382e97ecef85e1d7260a55420cc0f7590bce849df922c20b099b7a6e8460a",
+   "edits": [
+    {
+     "old": "import { terminateOwnedChildTree } from \"../../🪓️termination/🟦️.ts\";\nimport { settleOwnedChildV1 } from \"../../🎛️owned-execution/🏁️settlement/🟦️.ts\";\n",
+     "new": "import { terminateOwnedChildTree } from \"../../🪓️termination/🟦️.ts\";\nimport { requireExplicitBunTestOperandsV1 } from \"../../🧪️testing/🟨️bun/🚧️operands/🟦️.ts\";\nimport { testCheckoutRootV1 } from \"../../🧪️testing/🏖️sandbox/🛡️guard/🟦️.ts\";\nimport { settleOwnedChildV1 } from \"../../🎛️owned-execution/🏁️settlement/🟦️.ts\";\n"
+    },
+    {
+     "old": "  const { entry, registry, language, resolution, environment, cwd } = prepare(toolId, options);\n  const result = spawnSync(resolution.command!, [...resolution.prefix, ...args], {\n",
+     "new": "  const { entry, registry, language, resolution, environment, cwd } = prepare(toolId, options);\n  requireExplicitBunTestOperandsV1(resolution.command!, [...resolution.prefix, ...args], cwd, environment, testCheckoutRootV1(cwd, environment as NodeJS.ProcessEnv) ?? cwd);\n  const result = spawnSync(resolution.command!, [...resolution.prefix, ...args], {\n"
+    },
+    {
+     "old": "  const { resolution, environment, cwd } = prepare(toolId, options);\n  return spawn(resolution.command!, [...resolution.prefix, ...args], {\n",
+     "new": "  const { resolution, environment, cwd } = prepare(toolId, options);\n  requireExplicitBunTestOperandsV1(resolution.command!, [...resolution.prefix, ...args], cwd, environment, testCheckoutRootV1(cwd, environment as NodeJS.ProcessEnv) ?? cwd);\n  return spawn(resolution.command!, [...resolution.prefix, ...args], {\n"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🧯️ceiling/🟦️.ts",
+   "baseSha256": "ec417cdc156e950937bd12d691c51f62bbc6ff1e5644a69bc76098b92c76343f",
+   "afterSha256": "3bf31a8998fa3b00a670397dc87dfd125c3aa5eca6e13be3e690e74c98aaebb6",
+   "edits": [
+    {
+     "old": "import{readTestWorkerPolicyV1}from\"../../👷️workers/🟦️.ts\";\nimport schema from\"./🧬️schema/🔣️.json\"with{type:\"json\"};\n",
+     "new": "import{readTestWorkerPolicyV1}from\"../../👷️workers/🟦️.ts\";\nimport{createTestProcessWatchV1,testOrphansProtocolV1}from\"../🪦️orphans/🟦️.ts\";\nimport{requireExplicitBunTestOperandsV1,splitBunTestArgumentsV1}from\"../🚧️operands/🟦️.ts\";\n\nexport{splitBunTestArgumentsV1};\nimport schema from\"./🧬️schema/🔣️.json\"with{type:\"json\"};\n"
+    },
+    {
+     "old": "\nconst protocol=schema.definitions.Protocol.const,VALUE_FLAGS=new Set([\"--timeout\",\"--rerun-each\",\"--test-name-pattern\",\"-t\",\"--preload\",\"-r\",\"--reporter\",\"--reporter-outfile\",\"--coverage-reporter\",\"--coverage-dir\",\"--max-concurrency\"]);\n\n",
+     "new": "\nconst protocol=schema.definitions.Protocol.const,processWatch=createTestProcessWatchV1();\n\n"
+    },
+    {
+     "old": "/** 🧯️ Holds a spawned `bun test` process to its ceiling: answers the function that lets go of it; above the ceiling `terminate` is called once with the words that name the files, the peak and the ceiling. */\nexport type BunTestCeilingV1=(pid:number,terminate:(reason:string)=>void)=>()=>void;\n\n/** ✂️ Splits the arguments of a `bun test` command (without the word `test`) into the file operands and the flags with their values. */\nexport function splitBunTestArgumentsV1(args:readonly string[]):Readonly<{operands:readonly string[];flags:readonly string[]}>{\n const operands:string[]=[],flags:string[]=[];\n for(let index=0;index<args.length;index++){\n  const arg=args[index]!;\n  if(!arg.startsWith(\"-\"))operands.push(arg);\n  else{flags.push(arg);if(VALUE_FLAGS.has(arg)&&index+1<args.length)flags.push(args[++index]!);}\n }\n return Object.freeze({operands,flags});\n}\n\n/** 🎚️ The limits one `bun test` process is held to: the biggest declared budget and the highest ceiling of its file operands (a process keeps what all its files load, so it never gets less than its biggest file); a process without a file operand has the limits of an undeclared file. */\n",
+     "new": "/** 🧯️ Holds a spawned `bun test` process to its ceiling: answers the function that lets go of it; above the ceiling `terminate` is called once with the words that name the files, the peak and the ceiling. */\nexport type BunTestCeilingV1=(pid:number,terminate:(reason:string)=>void)=>()=>void;\n\n/** 🎚️ The limits one `bun test` process is held to: the biggest declared budget and the highest ceiling of its file operands (a process keeps what all its files load, so it never gets less than its biggest file); a process without a file operand has the limits of an undeclared file. */\n"
+    },
+    {
+     "old": "\n/** 🧯️ The ceiling of a command when it is a `bun test` run of the hosting runtime (every other command has none): its file operands are looked up in the test file budgets relative to the checkout of the command, an undeclared file is held to the runaway guard, `SEMIO_TEST_FILE_CEILING=off` lifts it. The owned command runners ask it before a spawn and hand it the pid after. */\nexport function bunTestCeilingV1(command:string,args:readonly string[],cwd:string,environment:Readonly<Record<string,string|undefined>>=process.env,options:Readonly<{budgets?:TestFileBudgetsV1;checkout?:string;rows?:()=>Promise<TestFileProcessRowsV1>;intervalMilliseconds?:number}>={}):BunTestCeilingV1|undefined{\n if(args[0]!==\"test\"||!isHostRuntimeCommandV1(command))return undefined;\n",
+     "new": "\n/** 🧯️ The ceiling of a command when it is a `bun test` run of the hosting runtime (every other command has none): its file operands are looked up in the test file budgets relative to the checkout of the command, an undeclared file is held to the runaway guard, `SEMIO_TEST_FILE_CEILING=off` lifts every ceiling; the same hook stops the process tree above its open files ceiling and, when the run ends, stops and names what it left running (`SEMIO_TEST_ORPHAN_GUARD=off` lifts those two). The owned command runners ask it before a spawn and hand it the pid after. */\nexport function bunTestCeilingV1(command:string,args:readonly string[],cwd:string,environment:Readonly<Record<string,string|undefined>>=process.env,options:Readonly<{budgets?:TestFileBudgetsV1;checkout?:string;rows?:()=>Promise<TestFileProcessRowsV1>;intervalMilliseconds?:number;processes?:Pick<ReturnType<typeof createTestProcessWatchV1>,\"watch\">;report?:(text:string)=>void;openFilesCeiling?:number}>={}):BunTestCeilingV1|undefined{\n if(args[0]!==\"test\"||!isHostRuntimeCommandV1(command))return undefined;\n"
+    },
+    {
+     "old": " if(args[0]!==\"test\"||!isHostRuntimeCommandV1(command))return undefined;\n const checkout=options.checkout??testCheckoutRootV1(cwd,environment as NodeJS.ProcessEnv)??cwd,defaultMegabytes=readTestWorkerPolicyV1().runners.find(row=>row.id===\"bun-test\")!.workerMegabytes,{operands}=splitBunTestArgumentsV1(args.slice(1));\n const memory=createTestFileMemoryV1({budgets:options.budgets??readBunTestBudgetsV1(environment),checkout,defaultMegabytes,shareMegabytes:defaultMegabytes,environment,...(options.rows?{rows:options.rows}:{}),...(options.intervalMilliseconds?{intervalMilliseconds:options.intervalMilliseconds}:{})});\n",
+     "new": " if(args[0]!==\"test\"||!isHostRuntimeCommandV1(command))return undefined;\n const checkout=options.checkout??testCheckoutRootV1(cwd,environment as NodeJS.ProcessEnv)??cwd;\n requireExplicitBunTestOperandsV1(command,args,cwd,environment,checkout);\n const defaultMegabytes=readTestWorkerPolicyV1().runners.find(row=>row.id===\"bun-test\")!.workerMegabytes,{operands}=splitBunTestArgumentsV1(args.slice(1));\n const memory=createTestFileMemoryV1({budgets:options.budgets??readBunTestBudgetsV1(environment),checkout,defaultMegabytes,shareMegabytes:defaultMegabytes,environment,...(options.rows?{rows:options.rows}:{}),...(options.intervalMilliseconds?{intervalMilliseconds:options.intervalMilliseconds}:{})});\n"
+    },
+    {
+     "old": " if(limits.ceilingMegabytes===Number.MAX_SAFE_INTEGER)return undefined;\n const files=(operands.length?operands:[cwd]).map(operand=>relative(checkout,resolve(cwd,operand)).split(sep).join(\"/\")||\".\").join(\", \");\n",
+     "new": " if(limits.ceilingMegabytes===Number.MAX_SAFE_INTEGER)return undefined;\n const processesHeld=environment[testOrphansProtocolV1.guardSwitch]!==\"off\";\n const files=(operands.length?operands:[cwd]).map(operand=>relative(checkout,resolve(cwd,operand)).split(sep).join(\"/\")||\".\").join(\", \");\n"
+    },
+    {
+     "old": " return(pid,terminate)=>{\n  const done=memory.watch.watch(pid,limits.ceilingMegabytes,megabytes=>terminate(describeTestFileExceededV1(files,megabytes,limits,environment)));\n  return()=>{done();};\n };\n",
+     "new": " return(pid,terminate)=>{\n  const done=memory.watch.watch(pid,limits.ceilingMegabytes,megabytes=>terminate(describeTestFileExceededV1(files,megabytes,limits,environment))),ended=processesHeld?(options.processes??processWatch).watch(pid,{file:files,terminate,...(options.openFilesCeiling?{ceiling:options.openFilesCeiling}:{}),...(options.report?{report:options.report}:{})}):undefined;\n  return()=>{done();void ended?.();};\n };\n"
+    }
+   ],
+   "prereq": "census2-g"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🧯️ceiling/🧪️tests/🟦️.ts",
+   "baseSha256": "363bc0bbe28fa67732d6aacdc7649de5113094677b07cdd3dfbf46f0984c5e5c",
+   "afterSha256": "8cf9cf2d33ddbf363eff4807703917d4919c4bafdec409caafc6066065db40cd",
+   "edits": [
+    {
+     "old": " for(const[command,args]of[[process.execPath,[\"run\",\"a.ts\"]],[\"git\",[\"test\",\"a.ts\"]],[process.execPath,[]]]as const)expect(bunTestCeilingV1(command,args,\"/w\",{},{budgets,checkout:\"/w\"}),command+\" \"+args.join(\" \")).toBeUndefined();\n expect(bunTestCeilingV1(process.execPath,[\"test\",\"a.ts\"],\"/w\",{SEMIO_TEST_FILE_CEILING:\"off\"},{budgets,checkout:\"/w\"}),\"lifted\").toBeUndefined();\n let megabytes=10;const rows=async()=>[{pid:1,parent:0,rssKilobytes:1024},{pid:7,parent:1,rssKilobytes:megabytes*1024},{pid:8,parent:7,rssKilobytes:megabytes*1024}],terminated:string[]=[];\n",
+     "new": " for(const[command,args]of[[process.execPath,[\"run\",\"a.ts\"]],[\"git\",[\"test\",\"a.ts\"]],[process.execPath,[]]]as const)expect(bunTestCeilingV1(command,args,\"/w\",{},{budgets,checkout:\"/w\"}),command+\" \"+args.join(\" \")).toBeUndefined();\n expect(bunTestCeilingV1(process.execPath,[\"test\",\"./a.ts\"],\"/w\",{SEMIO_TEST_FILE_CEILING:\"off\"},{budgets,checkout:\"/w\"}),\"lifted\").toBeUndefined();\n let megabytes=10;const rows=async()=>[{pid:1,parent:0,rssKilobytes:1024},{pid:7,parent:1,rssKilobytes:megabytes*1024},{pid:8,parent:7,rssKilobytes:megabytes*1024}],terminated:string[]=[];\n"
+    },
+    {
+     "old": " let megabytes=10;const rows=async()=>[{pid:1,parent:0,rssKilobytes:1024},{pid:7,parent:1,rssKilobytes:megabytes*1024},{pid:8,parent:7,rssKilobytes:megabytes*1024}],terminated:string[]=[];\n const hook=bunTestCeilingV1(process.execPath,[\"test\",\"--timeout\",\"5\",\"a.ts\"],\"/w\",{LANG:\"en_US.UTF-8\"},{budgets,checkout:\"/w\",rows,intervalMilliseconds:5})!;\n const release=hook(7,reason=>terminated.push(reason));\n",
+     "new": " let megabytes=10;const rows=async()=>[{pid:1,parent:0,rssKilobytes:1024},{pid:7,parent:1,rssKilobytes:megabytes*1024},{pid:8,parent:7,rssKilobytes:megabytes*1024}],terminated:string[]=[];\n const hook=bunTestCeilingV1(process.execPath,[\"test\",\"--timeout\",\"5\",\"./a.ts\"],\"/w\",{LANG:\"en_US.UTF-8\"},{budgets,checkout:\"/w\",rows,intervalMilliseconds:5})!;\n const release=hook(7,reason=>terminated.push(reason));\n"
+    }
+   ],
+   "prereq": "census2-g"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "census2-g version",
+   "afterSha256": "anchored",
+   "edits": [
+    {
+     "old": "   - **Test runners** start the workers one job of their grant carries",
+     "new": "   - **Test processes** are guarded three ways (`🧪️testing/🟨️bun`): a `bun test` operand without a leading `./` is refused (bun reads it as a filter and scans the whole checkout, holding every directory open: 122,880 files and 2 GB in one measured case); the preload `🪦️orphans` caps the open files of every `bun test` process (8192, `SEMIO_TEST_OPEN_FILES_CEILING`) and ends the process and everything it started when its runner is gone; the owned runners stop a tree at 90 % of the cap by name and stop and name every process a test file left running. `SEMIO_TEST_OPERAND_GUARD=off` and `SEMIO_TEST_ORPHAN_GUARD=off` lift them.\n   - **Test runners** start the workers one job of their grant carries"
+    },
+    {
+     "old": "   - **Testläufer** starten so viele Worker, wie ein Job ihrer Zusage trägt",
+     "new": "   - **Testprozesse** werden dreifach bewacht (`🧪️testing/🟨️bun`): ein `bun test`-Operand ohne führendes `./` wird abgelehnt (bun liest ihn als Filter und durchsucht den ganzen Checkout, jedes Verzeichnis bleibt offen: 122.880 Dateien und 2 GB in einem gemessenen Fall); der Preload `🪦️orphans` begrenzt die offenen Dateien jedes `bun test`-Prozesses (8192, `SEMIO_TEST_OPEN_FILES_CEILING`) und beendet den Prozess samt allem, was er gestartet hat, sobald sein Läufer weg ist; die eigenen Läufer halten einen Baum bei 90 % der Grenze namentlich an und beenden und nennen jeden Prozess, den eine Testdatei zurückgelassen hat. `SEMIO_TEST_OPERAND_GUARD=off` und `SEMIO_TEST_ORPHAN_GUARD=off` heben sie auf.\n   - **Testläufer** starten so viele Worker, wie ein Job ihrer Zusage trägt"
+    }
+   ],
+   "anchoredOnly": true
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📌️runtime-pin-contract/🟦️.ts",
+   "baseSha256": "4d8cbddc349bb5a40eb45fd929efcb4b4fb14291a5156292b012adde121d9608",
+   "afterSha256": "1bd58b0d5e2b2384ed43522abb2a7faa015f50e79388955e83b65f9054e8ef47",
+   "edits": [
+    {
+     "old": "expect(parsed.test.preload).toEqual([guard]);",
+     "new": "expect(parsed.test.preload).toEqual([guard,\"./🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/📜️script.ts\"]);"
+    }
+   ]
+  }
+ ]
+}

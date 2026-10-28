@@ -1,0 +1,2362 @@
+{
+ "version": 1,
+ "yieldCases": [
+  {
+   "id": "stale-accepted",
+   "request": {
+    "version": 1,
+    "holderPid": 4242,
+    "holderStartedAtMs": 1700000000000,
+    "requesterPid": 9999,
+    "requesterStartedAtMs": 1700000500000,
+    "resource": "repository-graph-facts:/w:shard:7",
+    "reason": "stale",
+    "atMs": 1700000100000,
+    "requesterComponents": {
+     "graph.generation": "bbbbbbbbbbbb"
+    }
+   },
+   "pid": 4242,
+   "startedAtMs": 1700000000000,
+   "nowMs": 1700000200000,
+   "holdsExclusive": true,
+   "holdSinceMs": 1700000000000,
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000190000
+   },
+   "bound": [
+    "graph.generation"
+   ],
+   "expected": {
+    "accept": true,
+    "ids": [
+     "graph.generation"
+    ]
+   },
+   "moved": [
+    "graph.generation"
+   ]
+  },
+  {
+   "id": "wrong-pid",
+   "request": {
+    "version": 1,
+    "holderPid": 1,
+    "holderStartedAtMs": 1700000000000,
+    "requesterPid": 9999,
+    "requesterStartedAtMs": 1700000500000,
+    "resource": "repository-graph-facts:/w:shard:7",
+    "reason": "stale",
+    "atMs": 1700000100000,
+    "requesterComponents": {
+     "graph.generation": "bbbbbbbbbbbb"
+    }
+   },
+   "pid": 4242,
+   "startedAtMs": 1700000000000,
+   "nowMs": 1700000200000,
+   "holdsExclusive": true,
+   "holdSinceMs": 1700000000000,
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000190000
+   },
+   "bound": [
+    "graph.generation"
+   ],
+   "expected": {
+    "accept": false,
+    "refusal": "target"
+   },
+   "moved": [
+    "graph.generation"
+   ]
+  },
+  {
+   "id": "wrong-start-time",
+   "request": {
+    "version": 1,
+    "holderPid": 4242,
+    "holderStartedAtMs": 1700000000001,
+    "requesterPid": 9999,
+    "requesterStartedAtMs": 1700000500000,
+    "resource": "repository-graph-facts:/w:shard:7",
+    "reason": "stale",
+    "atMs": 1700000100000,
+    "requesterComponents": {
+     "graph.generation": "bbbbbbbbbbbb"
+    }
+   },
+   "pid": 4242,
+   "startedAtMs": 1700000000000,
+   "nowMs": 1700000200000,
+   "holdsExclusive": true,
+   "holdSinceMs": 1700000000000,
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000190000
+   },
+   "bound": [
+    "graph.generation"
+   ],
+   "expected": {
+    "accept": false,
+    "refusal": "target"
+   },
+   "moved": [
+    "graph.generation"
+   ]
+  },
+  {
+   "id": "expired",
+   "request": {
+    "version": 1,
+    "holderPid": 4242,
+    "holderStartedAtMs": 1700000000000,
+    "requesterPid": 9999,
+    "requesterStartedAtMs": 1700000500000,
+    "resource": "repository-graph-facts:/w:shard:7",
+    "reason": "stale",
+    "atMs": 1699999300000,
+    "requesterComponents": {
+     "graph.generation": "bbbbbbbbbbbb"
+    }
+   },
+   "pid": 4242,
+   "startedAtMs": 1700000000000,
+   "nowMs": 1700000200000,
+   "holdsExclusive": true,
+   "holdSinceMs": 1700000000000,
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000190000
+   },
+   "bound": [
+    "graph.generation"
+   ],
+   "expected": {
+    "accept": false,
+    "refusal": "expired"
+   },
+   "moved": [
+    "graph.generation"
+   ]
+  },
+  {
+   "id": "not-held-exclusively",
+   "request": {
+    "version": 1,
+    "holderPid": 4242,
+    "holderStartedAtMs": 1700000000000,
+    "requesterPid": 9999,
+    "requesterStartedAtMs": 1700000500000,
+    "resource": "repository-graph-facts:/w:shard:7",
+    "reason": "stale",
+    "atMs": 1700000100000,
+    "requesterComponents": {
+     "graph.generation": "bbbbbbbbbbbb"
+    }
+   },
+   "pid": 4242,
+   "startedAtMs": 1700000000000,
+   "nowMs": 1700000200000,
+   "holdsExclusive": false,
+   "holdSinceMs": 1700000000000,
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000190000
+   },
+   "bound": [
+    "graph.generation"
+   ],
+   "expected": {
+    "accept": false,
+    "refusal": "not-held"
+   },
+   "moved": [
+    "graph.generation"
+   ]
+  },
+  {
+   "id": "same-component-value",
+   "request": {
+    "version": 1,
+    "holderPid": 4242,
+    "holderStartedAtMs": 1700000000000,
+    "requesterPid": 9999,
+    "requesterStartedAtMs": 1700000500000,
+    "resource": "repository-graph-facts:/w:shard:7",
+    "reason": "stale",
+    "atMs": 1700000100000,
+    "requesterComponents": {
+     "graph.generation": "aaaaaaaaaaaa"
+    }
+   },
+   "pid": 4242,
+   "startedAtMs": 1700000000000,
+   "nowMs": 1700000200000,
+   "holdsExclusive": true,
+   "holdSinceMs": 1700000000000,
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000190000
+   },
+   "bound": [
+    "graph.generation"
+   ],
+   "expected": {
+    "accept": false,
+    "refusal": "not-stale"
+   },
+   "moved": []
+  },
+  {
+   "id": "component-not-bound",
+   "request": {
+    "version": 1,
+    "holderPid": 4242,
+    "holderStartedAtMs": 1700000000000,
+    "requesterPid": 9999,
+    "requesterStartedAtMs": 1700000500000,
+    "resource": "repository-graph-facts:/w:shard:7",
+    "reason": "stale",
+    "atMs": 1700000100000,
+    "requesterComponents": {
+     "graph.generation": "bbbbbbbbbbbb"
+    }
+   },
+   "pid": 4242,
+   "startedAtMs": 1700000000000,
+   "nowMs": 1700000200000,
+   "holdsExclusive": true,
+   "holdSinceMs": 1700000000000,
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000190000
+   },
+   "bound": [],
+   "expected": {
+    "accept": false,
+    "refusal": "not-stale"
+   },
+   "moved": []
+  },
+  {
+   "id": "requester-older-than-holder",
+   "request": {
+    "version": 1,
+    "holderPid": 4242,
+    "holderStartedAtMs": 1700000000000,
+    "requesterPid": 9999,
+    "requesterStartedAtMs": 1699999999999,
+    "resource": "repository-graph-facts:/w:shard:7",
+    "reason": "stale",
+    "atMs": 1700000100000,
+    "requesterComponents": {
+     "graph.generation": "bbbbbbbbbbbb"
+    }
+   },
+   "pid": 4242,
+   "startedAtMs": 1700000000000,
+   "nowMs": 1700000200000,
+   "holdsExclusive": true,
+   "holdSinceMs": 1700000000000,
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000190000
+   },
+   "bound": [
+    "graph.generation"
+   ],
+   "expected": {
+    "accept": false,
+    "refusal": "not-stale"
+   },
+   "moved": [
+    "graph.generation"
+   ]
+  },
+  {
+   "id": "stuck-accepted",
+   "request": {
+    "version": 1,
+    "holderPid": 4242,
+    "holderStartedAtMs": 1700000000000,
+    "requesterPid": 9999,
+    "requesterStartedAtMs": 1700000500000,
+    "resource": "repository-graph-facts:/w:shard:7",
+    "reason": "stuck",
+    "atMs": 1700002900000,
+    "requesterComponents": {
+     "graph.generation": "bbbbbbbbbbbb"
+    }
+   },
+   "pid": 4242,
+   "startedAtMs": 1700000000000,
+   "nowMs": 1700003000000,
+   "holdsExclusive": true,
+   "holdSinceMs": 1700000000000,
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000010000
+   },
+   "bound": [
+    "graph.generation"
+   ],
+   "expected": {
+    "accept": true
+   },
+   "moved": [
+    "graph.generation"
+   ]
+  },
+  {
+   "id": "stuck-claim-but-holder-progressing",
+   "request": {
+    "version": 1,
+    "holderPid": 4242,
+    "holderStartedAtMs": 1700000000000,
+    "requesterPid": 9999,
+    "requesterStartedAtMs": 1700000500000,
+    "resource": "repository-graph-facts:/w:shard:7",
+    "reason": "stuck",
+    "atMs": 1700000100000,
+    "requesterComponents": {
+     "graph.generation": "bbbbbbbbbbbb"
+    }
+   },
+   "pid": 4242,
+   "startedAtMs": 1700000000000,
+   "nowMs": 1700000200000,
+   "holdsExclusive": true,
+   "holdSinceMs": 1700000000000,
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000190000
+   },
+   "bound": [
+    "graph.generation"
+   ],
+   "expected": {
+    "accept": false,
+    "refusal": "not-stuck"
+   },
+   "moved": [
+    "graph.generation"
+   ]
+  },
+  {
+   "id": "stale-claim-differs-but-disk-equals-the-holder",
+   "request": {
+    "version": 1,
+    "holderPid": 4242,
+    "holderStartedAtMs": 1700000000000,
+    "requesterPid": 9999,
+    "requesterStartedAtMs": 1700000500000,
+    "resource": "repository-graph-facts:/w:shard:7",
+    "reason": "stale",
+    "atMs": 1700000100000,
+    "requesterComponents": {
+     "graph.generation": "bbbbbbbbbbbb"
+    }
+   },
+   "pid": 4242,
+   "startedAtMs": 1700000000000,
+   "nowMs": 1700000200000,
+   "holdsExclusive": true,
+   "holdSinceMs": 1700000000000,
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000190000
+   },
+   "bound": [
+    "graph.generation"
+   ],
+   "expected": {
+    "accept": false,
+    "refusal": "not-stale"
+   },
+   "moved": []
+  },
+  {
+   "id": "stale-claim-and-disk-moved-on-another-component-only",
+   "request": {
+    "version": 1,
+    "holderPid": 4242,
+    "holderStartedAtMs": 1700000000000,
+    "requesterPid": 9999,
+    "requesterStartedAtMs": 1700000500000,
+    "resource": "repository-graph-facts:/w:shard:7",
+    "reason": "stale",
+    "atMs": 1700000100000,
+    "requesterComponents": {
+     "graph.generation": "bbbbbbbbbbbb"
+    }
+   },
+   "pid": 4242,
+   "startedAtMs": 1700000000000,
+   "nowMs": 1700000200000,
+   "holdsExclusive": true,
+   "holdSinceMs": 1700000000000,
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000190000
+   },
+   "bound": [
+    "graph.generation"
+   ],
+   "expected": {
+    "accept": false,
+    "refusal": "not-stale"
+   },
+   "moved": [
+    "other.component"
+   ]
+  }
+ ],
+ "terminateCases": [
+  {
+   "id": "stuck-after-grace-and-identity",
+   "input": {
+    "mode": "terminate",
+    "state": "stuck",
+    "nowMs": 1700009000000,
+    "requestAtMs": 1700008000000,
+    "progressAtMs": 1700000001000,
+    "registeredStartedAtMs": 1700000000000,
+    "osStartedAtMs": 1700000000500,
+    "ticketArrivalMs": 1700000000100,
+    "signalable": true,
+    "self": false,
+    "holdSinceMs": 1700000000100
+   },
+   "expected": {
+    "terminate": true
+   }
+  },
+  {
+   "id": "report-mode-never",
+   "input": {
+    "mode": "report",
+    "state": "stuck",
+    "nowMs": 1700009000000,
+    "requestAtMs": 1700008000000,
+    "progressAtMs": 1700000001000,
+    "registeredStartedAtMs": 1700000000000,
+    "osStartedAtMs": 1700000000500,
+    "ticketArrivalMs": 1700000000100,
+    "signalable": true,
+    "self": false,
+    "holdSinceMs": 1700000000100
+   },
+   "expected": {
+    "terminate": false
+   }
+  },
+  {
+   "id": "request-mode-never",
+   "input": {
+    "mode": "request",
+    "state": "stuck",
+    "nowMs": 1700009000000,
+    "requestAtMs": 1700008000000,
+    "progressAtMs": 1700000001000,
+    "registeredStartedAtMs": 1700000000000,
+    "osStartedAtMs": 1700000000500,
+    "ticketArrivalMs": 1700000000100,
+    "signalable": true,
+    "self": false,
+    "holdSinceMs": 1700000000100
+   },
+   "expected": {
+    "terminate": false
+   }
+  },
+  {
+   "id": "progressing-never",
+   "input": {
+    "mode": "terminate",
+    "state": "progressing",
+    "nowMs": 1700009000000,
+    "requestAtMs": 1700008000000,
+    "progressAtMs": 1700000001000,
+    "registeredStartedAtMs": 1700000000000,
+    "osStartedAtMs": 1700000000500,
+    "ticketArrivalMs": 1700000000100,
+    "signalable": true,
+    "self": false,
+    "holdSinceMs": 1700000000100
+   },
+   "expected": {
+    "terminate": false
+   }
+  },
+  {
+   "id": "stale-is-not-stuck",
+   "input": {
+    "mode": "terminate",
+    "state": "stale",
+    "nowMs": 1700009000000,
+    "requestAtMs": 1700008000000,
+    "progressAtMs": 1700000001000,
+    "registeredStartedAtMs": 1700000000000,
+    "osStartedAtMs": 1700000000500,
+    "ticketArrivalMs": 1700000000100,
+    "signalable": true,
+    "self": false,
+    "holdSinceMs": 1700000000100
+   },
+   "expected": {
+    "terminate": false
+   }
+  },
+  {
+   "id": "inside-grace",
+   "input": {
+    "mode": "terminate",
+    "state": "stuck",
+    "nowMs": 1700009000000,
+    "requestAtMs": 1700008990000,
+    "progressAtMs": 1700000001000,
+    "registeredStartedAtMs": 1700000000000,
+    "osStartedAtMs": 1700000000500,
+    "ticketArrivalMs": 1700000000100,
+    "signalable": true,
+    "self": false,
+    "holdSinceMs": 1700000000100
+   },
+   "expected": {
+    "terminate": false,
+    "refusal": "grace"
+   }
+  },
+  {
+   "id": "no-request-yet",
+   "input": {
+    "mode": "terminate",
+    "state": "stuck",
+    "nowMs": 1700009000000,
+    "progressAtMs": 1700000001000,
+    "registeredStartedAtMs": 1700000000000,
+    "osStartedAtMs": 1700000000500,
+    "ticketArrivalMs": 1700000000100,
+    "signalable": true,
+    "self": false,
+    "holdSinceMs": 1700000000100
+   },
+   "expected": {
+    "terminate": false,
+    "refusal": "grace"
+   }
+  },
+  {
+   "id": "progressed-since-request",
+   "input": {
+    "mode": "terminate",
+    "state": "stuck",
+    "nowMs": 1700009000000,
+    "requestAtMs": 1700008000000,
+    "progressAtMs": 1700008500000,
+    "registeredStartedAtMs": 1700000000000,
+    "osStartedAtMs": 1700000000500,
+    "ticketArrivalMs": 1700000000100,
+    "signalable": true,
+    "self": false,
+    "holdSinceMs": 1700000000100
+   },
+   "expected": {
+    "terminate": false,
+    "refusal": "progressed"
+   }
+  },
+  {
+   "id": "start-time-unknown",
+   "input": {
+    "mode": "terminate",
+    "state": "stuck",
+    "nowMs": 1700009000000,
+    "requestAtMs": 1700008000000,
+    "progressAtMs": 1700000001000,
+    "registeredStartedAtMs": 1700000000000,
+    "ticketArrivalMs": 1700000000100,
+    "signalable": true,
+    "self": false,
+    "holdSinceMs": 1700000000100
+   },
+   "expected": {
+    "terminate": false,
+    "refusal": "unknown"
+   }
+  },
+  {
+   "id": "pid-reused-identity-differs",
+   "input": {
+    "mode": "terminate",
+    "state": "stuck",
+    "nowMs": 1700009000000,
+    "requestAtMs": 1700008000000,
+    "progressAtMs": 1700000001000,
+    "registeredStartedAtMs": 1700000000000,
+    "osStartedAtMs": 1700000060000,
+    "ticketArrivalMs": 1700000000100,
+    "signalable": true,
+    "self": false,
+    "holdSinceMs": 1700000000100
+   },
+   "expected": {
+    "terminate": false,
+    "refusal": "identity"
+   }
+  },
+  {
+   "id": "another-user",
+   "input": {
+    "mode": "terminate",
+    "state": "stuck",
+    "nowMs": 1700009000000,
+    "requestAtMs": 1700008000000,
+    "progressAtMs": 1700000001000,
+    "registeredStartedAtMs": 1700000000000,
+    "osStartedAtMs": 1700000000500,
+    "ticketArrivalMs": 1700000000100,
+    "signalable": false,
+    "self": false,
+    "holdSinceMs": 1700000000100
+   },
+   "expected": {
+    "terminate": false,
+    "refusal": "owner"
+   }
+  },
+  {
+   "id": "never-itself",
+   "input": {
+    "mode": "terminate",
+    "state": "stuck",
+    "nowMs": 1700009000000,
+    "requestAtMs": 1700008000000,
+    "progressAtMs": 1700000001000,
+    "registeredStartedAtMs": 1700000000000,
+    "osStartedAtMs": 1700000000500,
+    "ticketArrivalMs": 1700000000100,
+    "signalable": true,
+    "self": true,
+    "holdSinceMs": 1700000000100
+   },
+   "expected": {
+    "terminate": false
+   }
+  },
+  {
+   "id": "legacy-too-young",
+   "input": {
+    "mode": "terminate",
+    "state": "legacy",
+    "nowMs": 1700004399100,
+    "progressAtMs": 1699990001000,
+    "osStartedAtMs": 1699990000000,
+    "ticketArrivalMs": 1699990000100,
+    "holdSinceMs": 1699990000100,
+    "signalable": true,
+    "self": false
+   },
+   "expected": {
+    "terminate": false
+   }
+  },
+  {
+   "id": "legacy-queue-wait-is-not-hold-age",
+   "input": {
+    "mode": "terminate",
+    "state": "legacy",
+    "nowMs": 1700005000100,
+    "progressAtMs": 1699990001000,
+    "osStartedAtMs": 1699990000000,
+    "ticketArrivalMs": 1699990000100,
+    "holdSinceMs": 1700004400100,
+    "signalable": true,
+    "self": false
+   },
+   "expected": {
+    "terminate": false
+   }
+  },
+  {
+   "id": "legacy-held-longer-than-the-limit-and-older-than-ticket",
+   "input": {
+    "mode": "terminate",
+    "state": "legacy",
+    "nowMs": 1700004460100,
+    "progressAtMs": 1699990001000,
+    "osStartedAtMs": 1699990000000,
+    "ticketArrivalMs": 1699990000100,
+    "holdSinceMs": 1699990000100,
+    "signalable": true,
+    "self": false
+   },
+   "expected": {
+    "terminate": true
+   }
+  },
+  {
+   "id": "legacy-process-started-after-ticket",
+   "input": {
+    "mode": "terminate",
+    "state": "legacy",
+    "nowMs": 1700004460100,
+    "progressAtMs": 1699990001000,
+    "osStartedAtMs": 1699990900000,
+    "ticketArrivalMs": 1699990000100,
+    "holdSinceMs": 1699990000100,
+    "signalable": true,
+    "self": false
+   },
+   "expected": {
+    "terminate": false,
+    "refusal": "identity"
+   }
+  }
+ ],
+ "progressCases": [
+  {
+   "id": "graph-phase",
+   "resource": "build:graph-phase:inference:120:566",
+   "expected": {
+    "phase": "inference",
+    "done": 120,
+    "total": 566
+   }
+  },
+  {
+   "id": "graph-phase-with-detail",
+   "resource": "build:graph-phase:assembly:3:9:x,y",
+   "expected": {
+    "phase": "assembly",
+    "done": 3,
+    "total": 9
+   }
+  },
+  {
+   "id": "trailing-counter",
+   "resource": "dependencies:store-ownership:state:1234",
+   "expected": {
+    "phase": "dependencies:store-ownership:state",
+    "done": 1234
+   }
+  },
+  {
+   "id": "queue-notice-ignored",
+   "resource": "lease-queue:{\"version\":1}",
+   "expected": null
+  },
+  {
+   "id": "sweep-ignored",
+   "resource": "lease-sweep:claims",
+   "expected": null
+  },
+  {
+   "id": "plain-name",
+   "resource": "cargo:registry",
+   "expected": {
+    "phase": "cargo:registry"
+   }
+  },
+  {
+   "id": "counter-without-digits",
+   "resource": "phase:x",
+   "expected": {
+    "phase": "phase:x"
+   }
+  }
+ ],
+ "priorityCases": [
+  {
+   "id": "explicit-background",
+   "environment": {
+    "SEMIO_LEASE_PRIORITY": "background"
+   },
+   "agentSession": true,
+   "interactiveTerminal": false,
+   "expected": "background"
+  },
+  {
+   "id": "explicit-interactive-beats-agent-session",
+   "environment": {
+    "SEMIO_LEASE_PRIORITY": "interactive"
+   },
+   "agentSession": true,
+   "interactiveTerminal": false,
+   "expected": "interactive"
+  },
+  {
+   "id": "terminal-person",
+   "environment": {},
+   "agentSession": false,
+   "interactiveTerminal": true,
+   "expected": "interactive"
+  },
+  {
+   "id": "terminal-inside-agent-session",
+   "environment": {},
+   "agentSession": true,
+   "interactiveTerminal": true,
+   "expected": "agent"
+  },
+  {
+   "id": "headless",
+   "environment": {},
+   "agentSession": false,
+   "interactiveTerminal": false,
+   "expected": "agent"
+  },
+  {
+   "id": "unknown-value-ignored",
+   "environment": {
+    "SEMIO_LEASE_PRIORITY": "urgent"
+   },
+   "agentSession": false,
+   "interactiveTerminal": false,
+   "expected": "agent"
+  }
+ ],
+ "simulations": [
+  {
+   "id": "tonight-0",
+   "source": "queue notices of the shard-7 graph builder lease, 10-25 19:00 to 10-26 07:30 (arrival = first notice, service = difference of consecutive acquisitions)",
+   "resource": "repository-graph-facts:<root>:shard:7",
+   "spanSeconds": 24820,
+   "jobs": [
+    {
+     "id": "nx-f#0",
+     "class": "agent",
+     "arrival": 0,
+     "service": 547,
+     "lane": "nx-f",
+     "observedWait": 240
+    },
+    {
+     "id": "e2e-course-e2e-1025f-2-c#1",
+     "class": "agent",
+     "arrival": 100,
+     "service": 5075,
+     "lane": "e2e-course-e2e-1025f-2-course-test-e2e.log",
+     "observedWait": 1500
+    },
+    {
+     "id": "nx-f#2",
+     "class": "agent",
+     "arrival": 568,
+     "service": 16,
+     "lane": "nx-f",
+     "observedWait": 8310
+    },
+    {
+     "id": "cache-f#3",
+     "class": "background",
+     "arrival": 592,
+     "service": 311,
+     "lane": "cache-f",
+     "observedWait": 195
+    },
+    {
+     "id": "docfix-f#4",
+     "class": "background",
+     "arrival": 858,
+     "service": 502,
+     "lane": "docfix-f",
+     "observedWait": 240
+    },
+    {
+     "id": "crate-f#5",
+     "class": "background",
+     "arrival": 1498,
+     "service": 2760,
+     "lane": "crate-f",
+     "observedWait": 7965
+    },
+    {
+     "id": "print-f#6",
+     "class": "agent",
+     "arrival": 1559,
+     "service": 419,
+     "lane": "print-f",
+     "observedWait": 7335
+    },
+    {
+     "id": "course-f#7",
+     "class": "agent",
+     "arrival": 2338,
+     "service": 150,
+     "lane": "course-f",
+     "observedWait": 6975
+    },
+    {
+     "id": "alloc-f#8",
+     "class": "background",
+     "arrival": 2398,
+     "service": 745,
+     "lane": "alloc-f",
+     "observedWait": 9885
+    },
+    {
+     "id": "e2e-course-e2e-1025f-d1-#9",
+     "class": "agent",
+     "arrival": 3165,
+     "service": 118,
+     "lane": "e2e-course-e2e-1025f-d1-course-test-e2e.log",
+     "observedWait": 5595
+    },
+    {
+     "id": "dash-f#10",
+     "class": "agent",
+     "arrival": 3223,
+     "service": 60,
+     "lane": "dash-f",
+     "observedWait": 9000
+    },
+    {
+     "id": "cache-f#11",
+     "class": "background",
+     "arrival": 4290,
+     "service": 1121,
+     "lane": "cache-f",
+     "observedWait": 2385
+    },
+    {
+     "id": "purity-f#12",
+     "class": "background",
+     "arrival": 7331,
+     "service": 964,
+     "lane": "purity-f",
+     "observedWait": 465
+    },
+    {
+     "id": "e2e-course-e2e-1025f-e1-#13",
+     "class": "agent",
+     "arrival": 9073,
+     "service": 120,
+     "lane": "e2e-course-e2e-1025f-e1-course-test-e2e.log",
+     "observedWait": 13485
+    },
+    {
+     "id": "nx-f#14",
+     "class": "agent",
+     "arrival": 9464,
+     "service": 1591,
+     "lane": "nx-f",
+     "observedWait": 13665
+    },
+    {
+     "id": "print-f#15",
+     "class": "agent",
+     "arrival": 11228,
+     "service": 305,
+     "lane": "print-f",
+     "observedWait": 1800
+    },
+    {
+     "id": "course-f#16",
+     "class": "agent",
+     "arrival": 12238,
+     "service": 282,
+     "lane": "course-f",
+     "observedWait": 1095
+    },
+    {
+     "id": "crate-f#17",
+     "class": "background",
+     "arrival": 12280,
+     "service": 2828,
+     "lane": "crate-f",
+     "observedWait": 1335
+    },
+    {
+     "id": "dash-f#18",
+     "class": "agent",
+     "arrival": 15703,
+     "service": 315,
+     "lane": "dash-f",
+     "observedWait": 6975
+    },
+    {
+     "id": "ext-f#19",
+     "class": "background",
+     "arrival": 15873,
+     "service": 5574,
+     "lane": "ext-f",
+     "observedWait": 570
+    },
+    {
+     "id": "print-f#20",
+     "class": "agent",
+     "arrival": 16935,
+     "service": 40,
+     "lane": "print-f",
+     "observedWait": 7785
+    },
+    {
+     "id": "course-f#21",
+     "class": "agent",
+     "arrival": 18175,
+     "service": 818,
+     "lane": "course-f",
+     "observedWait": 8580
+    },
+    {
+     "id": "ver-f#22",
+     "class": "background",
+     "arrival": 20020,
+     "service": 1320,
+     "lane": "ver-f",
+     "observedWait": 5415
+    },
+    {
+     "id": "exec-f#23",
+     "class": "agent",
+     "arrival": 21134,
+     "service": 15,
+     "lane": "exec-f",
+     "observedWait": 3870
+    },
+    {
+     "id": "dash-f#24",
+     "class": "agent",
+     "arrival": 21153,
+     "service": 315,
+     "lane": "dash-f",
+     "observedWait": 6420
+    },
+    {
+     "id": "ext-f#25",
+     "class": "background",
+     "arrival": 21642,
+     "service": 541,
+     "lane": "ext-f",
+     "observedWait": 375
+    },
+    {
+     "id": "dash-f#26",
+     "class": "agent",
+     "arrival": 21778,
+     "service": 136,
+     "lane": "dash-f",
+     "observedWait": 1215
+    },
+    {
+     "id": "exec-f#27",
+     "class": "agent",
+     "arrival": 24282,
+     "service": 142,
+     "lane": "exec-f",
+     "observedWait": 735
+    },
+    {
+     "id": "print-f#28",
+     "class": "agent",
+     "arrival": 24520,
+     "service": 244,
+     "lane": "print-f",
+     "observedWait": 240
+    },
+    {
+     "id": "nx-f#29",
+     "class": "agent",
+     "arrival": 24544,
+     "service": 276,
+     "lane": "nx-f",
+     "observedWait": 615
+    }
+   ]
+  },
+  {
+   "id": "tonight-1",
+   "source": "queue notices of the shard-7 graph builder lease, 10-25 19:00 to 10-26 07:30 (arrival = first notice, service = difference of consecutive acquisitions)",
+   "resource": "repository-graph-facts:<root>:shard:7",
+   "spanSeconds": 4944,
+   "jobs": [
+    {
+     "id": "e2e-course-1025f-g1-1-te#0",
+     "class": "agent",
+     "arrival": 0,
+     "service": 30,
+     "lane": "e2e-course-1025f-g1-1-test-e2e.log",
+     "observedWait": 4560
+    },
+    {
+     "id": "e2e-f#1",
+     "class": "agent",
+     "arrival": 0,
+     "service": 15,
+     "lane": "e2e-f",
+     "observedWait": 4590
+    },
+    {
+     "id": "ver-f#2",
+     "class": "background",
+     "arrival": 489,
+     "service": 30,
+     "lane": "ver-f",
+     "observedWait": 4485
+    },
+    {
+     "id": "e2e-course-1025f-g2-1-te#3",
+     "class": "agent",
+     "arrival": 4560,
+     "service": 384,
+     "lane": "e2e-course-1025f-g2-1-test-e2e.log",
+     "observedWait": 30
+    }
+   ]
+  },
+  {
+   "id": "tonight-2",
+   "source": "queue notices of the shard-7 graph builder lease, 10-25 19:00 to 10-26 07:30 (arrival = first notice, service = difference of consecutive acquisitions)",
+   "resource": "repository-graph-facts:<root>:shard:7",
+   "spanSeconds": 405,
+   "jobs": [
+    {
+     "id": "nx-f#0",
+     "class": "agent",
+     "arrival": 0,
+     "service": 200,
+     "lane": "nx-f",
+     "observedWait": 480
+    },
+    {
+     "id": "course-f#1",
+     "class": "agent",
+     "arrival": 35,
+     "service": 67,
+     "lane": "course-f",
+     "observedWait": 45
+    },
+    {
+     "id": "ver-f#2",
+     "class": "background",
+     "arrival": 72,
+     "service": 333,
+     "lane": "ver-f",
+     "observedWait": 75
+    }
+   ]
+  },
+  {
+   "id": "tonight-0-with-dev",
+   "source": "tonight-0 plus six interactive rebuilds of 300 s, one per hour",
+   "resource": "repository-graph-facts:<root>:shard:7",
+   "spanSeconds": 24820,
+   "jobs": [
+    {
+     "id": "nx-f#0",
+     "class": "agent",
+     "arrival": 0,
+     "service": 547,
+     "lane": "nx-f",
+     "observedWait": 240
+    },
+    {
+     "id": "e2e-course-e2e-1025f-2-c#1",
+     "class": "agent",
+     "arrival": 100,
+     "service": 5075,
+     "lane": "e2e-course-e2e-1025f-2-course-test-e2e.log",
+     "observedWait": 1500
+    },
+    {
+     "id": "nx-f#2",
+     "class": "agent",
+     "arrival": 568,
+     "service": 16,
+     "lane": "nx-f",
+     "observedWait": 8310
+    },
+    {
+     "id": "cache-f#3",
+     "class": "background",
+     "arrival": 592,
+     "service": 311,
+     "lane": "cache-f",
+     "observedWait": 195
+    },
+    {
+     "id": "docfix-f#4",
+     "class": "background",
+     "arrival": 858,
+     "service": 502,
+     "lane": "docfix-f",
+     "observedWait": 240
+    },
+    {
+     "id": "crate-f#5",
+     "class": "background",
+     "arrival": 1498,
+     "service": 2760,
+     "lane": "crate-f",
+     "observedWait": 7965
+    },
+    {
+     "id": "print-f#6",
+     "class": "agent",
+     "arrival": 1559,
+     "service": 419,
+     "lane": "print-f",
+     "observedWait": 7335
+    },
+    {
+     "id": "course-f#7",
+     "class": "agent",
+     "arrival": 2338,
+     "service": 150,
+     "lane": "course-f",
+     "observedWait": 6975
+    },
+    {
+     "id": "alloc-f#8",
+     "class": "background",
+     "arrival": 2398,
+     "service": 745,
+     "lane": "alloc-f",
+     "observedWait": 9885
+    },
+    {
+     "id": "e2e-course-e2e-1025f-d1-#9",
+     "class": "agent",
+     "arrival": 3165,
+     "service": 118,
+     "lane": "e2e-course-e2e-1025f-d1-course-test-e2e.log",
+     "observedWait": 5595
+    },
+    {
+     "id": "dash-f#10",
+     "class": "agent",
+     "arrival": 3223,
+     "service": 60,
+     "lane": "dash-f",
+     "observedWait": 9000
+    },
+    {
+     "id": "cache-f#11",
+     "class": "background",
+     "arrival": 4290,
+     "service": 1121,
+     "lane": "cache-f",
+     "observedWait": 2385
+    },
+    {
+     "id": "purity-f#12",
+     "class": "background",
+     "arrival": 7331,
+     "service": 964,
+     "lane": "purity-f",
+     "observedWait": 465
+    },
+    {
+     "id": "e2e-course-e2e-1025f-e1-#13",
+     "class": "agent",
+     "arrival": 9073,
+     "service": 120,
+     "lane": "e2e-course-e2e-1025f-e1-course-test-e2e.log",
+     "observedWait": 13485
+    },
+    {
+     "id": "nx-f#14",
+     "class": "agent",
+     "arrival": 9464,
+     "service": 1591,
+     "lane": "nx-f",
+     "observedWait": 13665
+    },
+    {
+     "id": "print-f#15",
+     "class": "agent",
+     "arrival": 11228,
+     "service": 305,
+     "lane": "print-f",
+     "observedWait": 1800
+    },
+    {
+     "id": "course-f#16",
+     "class": "agent",
+     "arrival": 12238,
+     "service": 282,
+     "lane": "course-f",
+     "observedWait": 1095
+    },
+    {
+     "id": "crate-f#17",
+     "class": "background",
+     "arrival": 12280,
+     "service": 2828,
+     "lane": "crate-f",
+     "observedWait": 1335
+    },
+    {
+     "id": "dash-f#18",
+     "class": "agent",
+     "arrival": 15703,
+     "service": 315,
+     "lane": "dash-f",
+     "observedWait": 6975
+    },
+    {
+     "id": "ext-f#19",
+     "class": "background",
+     "arrival": 15873,
+     "service": 5574,
+     "lane": "ext-f",
+     "observedWait": 570
+    },
+    {
+     "id": "print-f#20",
+     "class": "agent",
+     "arrival": 16935,
+     "service": 40,
+     "lane": "print-f",
+     "observedWait": 7785
+    },
+    {
+     "id": "course-f#21",
+     "class": "agent",
+     "arrival": 18175,
+     "service": 818,
+     "lane": "course-f",
+     "observedWait": 8580
+    },
+    {
+     "id": "ver-f#22",
+     "class": "background",
+     "arrival": 20020,
+     "service": 1320,
+     "lane": "ver-f",
+     "observedWait": 5415
+    },
+    {
+     "id": "exec-f#23",
+     "class": "agent",
+     "arrival": 21134,
+     "service": 15,
+     "lane": "exec-f",
+     "observedWait": 3870
+    },
+    {
+     "id": "dash-f#24",
+     "class": "agent",
+     "arrival": 21153,
+     "service": 315,
+     "lane": "dash-f",
+     "observedWait": 6420
+    },
+    {
+     "id": "ext-f#25",
+     "class": "background",
+     "arrival": 21642,
+     "service": 541,
+     "lane": "ext-f",
+     "observedWait": 375
+    },
+    {
+     "id": "dash-f#26",
+     "class": "agent",
+     "arrival": 21778,
+     "service": 136,
+     "lane": "dash-f",
+     "observedWait": 1215
+    },
+    {
+     "id": "exec-f#27",
+     "class": "agent",
+     "arrival": 24282,
+     "service": 142,
+     "lane": "exec-f",
+     "observedWait": 735
+    },
+    {
+     "id": "print-f#28",
+     "class": "agent",
+     "arrival": 24520,
+     "service": 244,
+     "lane": "print-f",
+     "observedWait": 240
+    },
+    {
+     "id": "nx-f#29",
+     "class": "agent",
+     "arrival": 24544,
+     "service": 276,
+     "lane": "nx-f",
+     "observedWait": 615
+    },
+    {
+     "id": "dev0",
+     "class": "interactive",
+     "arrival": 3600,
+     "service": 300
+    },
+    {
+     "id": "dev1",
+     "class": "interactive",
+     "arrival": 7200,
+     "service": 300
+    },
+    {
+     "id": "dev2",
+     "class": "interactive",
+     "arrival": 10800,
+     "service": 300
+    },
+    {
+     "id": "dev3",
+     "class": "interactive",
+     "arrival": 14400,
+     "service": 300
+    },
+    {
+     "id": "dev4",
+     "class": "interactive",
+     "arrival": 18000,
+     "service": 300
+    },
+    {
+     "id": "dev5",
+     "class": "interactive",
+     "arrival": 21600,
+     "service": 300
+    }
+   ]
+  },
+  {
+   "id": "background-under-interactive-stream",
+   "source": "a background request followed by an interactive request every 10 min, 40 min each",
+   "resource": "synthetic",
+   "jobs": [
+    {
+     "id": "holder",
+     "class": "agent",
+     "arrival": 0,
+     "service": 3000
+    },
+    {
+     "id": "background",
+     "class": "background",
+     "arrival": 60,
+     "service": 600
+    },
+    {
+     "id": "ui00",
+     "class": "interactive",
+     "arrival": 120,
+     "service": 2400
+    },
+    {
+     "id": "ui01",
+     "class": "interactive",
+     "arrival": 720,
+     "service": 2400
+    },
+    {
+     "id": "ui02",
+     "class": "interactive",
+     "arrival": 1320,
+     "service": 2400
+    },
+    {
+     "id": "ui03",
+     "class": "interactive",
+     "arrival": 1920,
+     "service": 2400
+    },
+    {
+     "id": "ui04",
+     "class": "interactive",
+     "arrival": 2520,
+     "service": 2400
+    },
+    {
+     "id": "ui05",
+     "class": "interactive",
+     "arrival": 3120,
+     "service": 2400
+    },
+    {
+     "id": "ui06",
+     "class": "interactive",
+     "arrival": 3720,
+     "service": 2400
+    },
+    {
+     "id": "ui07",
+     "class": "interactive",
+     "arrival": 4320,
+     "service": 2400
+    },
+    {
+     "id": "ui08",
+     "class": "interactive",
+     "arrival": 4920,
+     "service": 2400
+    },
+    {
+     "id": "ui09",
+     "class": "interactive",
+     "arrival": 5520,
+     "service": 2400
+    },
+    {
+     "id": "ui10",
+     "class": "interactive",
+     "arrival": 6120,
+     "service": 2400
+    },
+    {
+     "id": "ui11",
+     "class": "interactive",
+     "arrival": 6720,
+     "service": 2400
+    },
+    {
+     "id": "ui12",
+     "class": "interactive",
+     "arrival": 7320,
+     "service": 2400
+    },
+    {
+     "id": "ui13",
+     "class": "interactive",
+     "arrival": 7920,
+     "service": 2400
+    },
+    {
+     "id": "ui14",
+     "class": "interactive",
+     "arrival": 8520,
+     "service": 2400
+    },
+    {
+     "id": "ui15",
+     "class": "interactive",
+     "arrival": 9120,
+     "service": 2400
+    },
+    {
+     "id": "ui16",
+     "class": "interactive",
+     "arrival": 9720,
+     "service": 2400
+    },
+    {
+     "id": "ui17",
+     "class": "interactive",
+     "arrival": 10320,
+     "service": 2400
+    },
+    {
+     "id": "ui18",
+     "class": "interactive",
+     "arrival": 10920,
+     "service": 2400
+    },
+    {
+     "id": "ui19",
+     "class": "interactive",
+     "arrival": 11520,
+     "service": 2400
+    },
+    {
+     "id": "ui20",
+     "class": "interactive",
+     "arrival": 12120,
+     "service": 2400
+    },
+    {
+     "id": "ui21",
+     "class": "interactive",
+     "arrival": 12720,
+     "service": 2400
+    },
+    {
+     "id": "ui22",
+     "class": "interactive",
+     "arrival": 13320,
+     "service": 2400
+    },
+    {
+     "id": "ui23",
+     "class": "interactive",
+     "arrival": 13920,
+     "service": 2400
+    },
+    {
+     "id": "ui24",
+     "class": "interactive",
+     "arrival": 14520,
+     "service": 2400
+    },
+    {
+     "id": "ui25",
+     "class": "interactive",
+     "arrival": 15120,
+     "service": 2400
+    },
+    {
+     "id": "ui26",
+     "class": "interactive",
+     "arrival": 15720,
+     "service": 2400
+    },
+    {
+     "id": "ui27",
+     "class": "interactive",
+     "arrival": 16320,
+     "service": 2400
+    },
+    {
+     "id": "ui28",
+     "class": "interactive",
+     "arrival": 16920,
+     "service": 2400
+    },
+    {
+     "id": "ui29",
+     "class": "interactive",
+     "arrival": 17520,
+     "service": 2400
+    },
+    {
+     "id": "ui30",
+     "class": "interactive",
+     "arrival": 18120,
+     "service": 2400
+    },
+    {
+     "id": "ui31",
+     "class": "interactive",
+     "arrival": 18720,
+     "service": 2400
+    },
+    {
+     "id": "ui32",
+     "class": "interactive",
+     "arrival": 19320,
+     "service": 2400
+    },
+    {
+     "id": "ui33",
+     "class": "interactive",
+     "arrival": 19920,
+     "service": 2400
+    },
+    {
+     "id": "ui34",
+     "class": "interactive",
+     "arrival": 20520,
+     "service": 2400
+    },
+    {
+     "id": "ui35",
+     "class": "interactive",
+     "arrival": 21120,
+     "service": 2400
+    },
+    {
+     "id": "ui36",
+     "class": "interactive",
+     "arrival": 21720,
+     "service": 2400
+    },
+    {
+     "id": "ui37",
+     "class": "interactive",
+     "arrival": 22320,
+     "service": 2400
+    },
+    {
+     "id": "ui38",
+     "class": "interactive",
+     "arrival": 22920,
+     "service": 2400
+    },
+    {
+     "id": "ui39",
+     "class": "interactive",
+     "arrival": 23520,
+     "service": 2400
+    }
+   ]
+  },
+  {
+   "id": "equal-class-fifo",
+   "source": "same class keeps arrival order",
+   "resource": "synthetic",
+   "jobs": [
+    {
+     "id": "a0",
+     "class": "agent",
+     "arrival": 0,
+     "service": 100
+    },
+    {
+     "id": "a1",
+     "class": "agent",
+     "arrival": 7,
+     "service": 100
+    },
+    {
+     "id": "a2",
+     "class": "agent",
+     "arrival": 14,
+     "service": 100
+    },
+    {
+     "id": "a3",
+     "class": "agent",
+     "arrival": 21,
+     "service": 100
+    },
+    {
+     "id": "a4",
+     "class": "agent",
+     "arrival": 28,
+     "service": 100
+    },
+    {
+     "id": "a5",
+     "class": "agent",
+     "arrival": 35,
+     "service": 100
+    },
+    {
+     "id": "a6",
+     "class": "agent",
+     "arrival": 42,
+     "service": 100
+    },
+    {
+     "id": "a7",
+     "class": "agent",
+     "arrival": 49,
+     "service": 100
+    },
+    {
+     "id": "a8",
+     "class": "agent",
+     "arrival": 56,
+     "service": 100
+    },
+    {
+     "id": "a9",
+     "class": "agent",
+     "arrival": 63,
+     "service": 100
+    },
+    {
+     "id": "a10",
+     "class": "agent",
+     "arrival": 70,
+     "service": 100
+    },
+    {
+     "id": "a11",
+     "class": "agent",
+     "arrival": 77,
+     "service": 100
+    }
+   ]
+  }
+ ],
+ "stateCases": [
+  {
+   "id": "legacy",
+   "nowMs": 1700001000000,
+   "holdSinceMs": 1700000000000,
+   "resource": "repository-graph-facts:/w:shard:7",
+   "expected": {
+    "state": "legacy"
+   }
+  },
+  {
+   "id": "progressing",
+   "nowMs": 1700001000000,
+   "holdSinceMs": 1700000000000,
+   "resource": "repository-graph-facts:/w:shard:7",
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000999000
+   },
+   "expected": {
+    "state": "progressing"
+   }
+  },
+  {
+   "id": "silent",
+   "nowMs": 1700001000000,
+   "holdSinceMs": 1700000000000,
+   "resource": "repository-graph-facts:/w:shard:7",
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000880000
+   },
+   "expected": {
+    "state": "silent"
+   }
+  },
+  {
+   "id": "stuck-graph",
+   "nowMs": 1700003000000,
+   "holdSinceMs": 1700000000000,
+   "resource": "repository-graph-facts:/w:shard:7",
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700001700000
+   },
+   "expected": {
+    "state": "stuck"
+   }
+  },
+  {
+   "id": "silent-not-stuck-other-resource",
+   "nowMs": 1700003000000,
+   "holdSinceMs": 1700000000000,
+   "resource": "native-fixed-image:/w/.cache/b/g",
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700001700000
+   },
+   "expected": {
+    "state": "silent"
+   }
+  },
+  {
+   "id": "stuck-other-after-one-hour",
+   "nowMs": 1700005000000,
+   "holdSinceMs": 1700000000000,
+   "resource": "native-fixed-image:/w/.cache/b/g",
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700001000000
+   },
+   "expected": {
+    "state": "stuck"
+   }
+  },
+  {
+   "id": "hold-newer-than-progress",
+   "nowMs": 1700003000000,
+   "holdSinceMs": 1700002990000,
+   "resource": "repository-graph-facts:/w:shard:7",
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000010000
+   },
+   "expected": {
+    "state": "progressing"
+   }
+  },
+  {
+   "id": "stale-newer-waiter",
+   "nowMs": 1700002000000,
+   "holdSinceMs": 1700000000000,
+   "resource": "repository-graph-facts:/w:shard:7",
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700001999000
+   },
+   "waiter": {
+    "digest": "0123456789abcdef",
+    "loadedAtMs": 1700000500000,
+    "components": {
+     "graph.generation": "bbbbbbbbbbbb"
+    }
+   },
+   "bound": [
+    "graph.generation"
+   ],
+   "expected": {
+    "state": "stale",
+    "staleIds": [
+     "graph.generation"
+    ]
+   }
+  },
+  {
+   "id": "not-stale-older-waiter",
+   "nowMs": 1700002000000,
+   "holdSinceMs": 1700000000000,
+   "resource": "repository-graph-facts:/w:shard:7",
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000600000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700001999000
+   },
+   "waiter": {
+    "digest": "0123456789abcdef",
+    "loadedAtMs": 1700000500000,
+    "components": {
+     "graph.generation": "bbbbbbbbbbbb"
+    }
+   },
+   "bound": [
+    "graph.generation"
+   ],
+   "expected": {
+    "state": "progressing"
+   }
+  },
+  {
+   "id": "not-stale-unbound-component",
+   "nowMs": 1700002000000,
+   "holdSinceMs": 1700000000000,
+   "resource": "repository-graph-facts:/w:shard:7",
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700001999000
+   },
+   "waiter": {
+    "digest": "0123456789abcdef",
+    "loadedAtMs": 1700000500000,
+    "components": {
+     "graph.generation": "bbbbbbbbbbbb"
+    }
+   },
+   "bound": [],
+   "expected": {
+    "state": "progressing"
+   }
+  },
+  {
+   "id": "not-stale-same-value",
+   "nowMs": 1700002000000,
+   "holdSinceMs": 1700000000000,
+   "resource": "repository-graph-facts:/w:shard:7",
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700001999000
+   },
+   "waiter": {
+    "digest": "0123456789abcdef",
+    "loadedAtMs": 1700000500000,
+    "components": {
+     "graph.generation": "aaaaaaaaaaaa"
+    }
+   },
+   "bound": [
+    "graph.generation"
+   ],
+   "expected": {
+    "state": "progressing"
+   }
+  },
+  {
+   "id": "stale-wins-over-stuck",
+   "nowMs": 1700009000000,
+   "holdSinceMs": 1700000000000,
+   "resource": "repository-graph-facts:/w:shard:7",
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000010000
+   },
+   "waiter": {
+    "digest": "0123456789abcdef",
+    "loadedAtMs": 1700008000000,
+    "components": {
+     "graph.generation": "bbbbbbbbbbbb",
+     "graph.record": "cccccccccccc"
+    }
+   },
+   "bound": [
+    "graph.generation",
+    "graph.record"
+   ],
+   "expected": {
+    "state": "stale",
+    "staleIds": [
+     "graph.generation"
+    ]
+   }
+  }
+ ],
+ "etaCases": [
+  {
+   "id": "linear-from-counter",
+   "elapsedMs": 900000,
+   "phaseElapsedMs": 600000,
+   "done": 100,
+   "total": 400,
+   "historyMs": [],
+   "expected": {
+    "seconds": 1800,
+    "source": "progress",
+    "overdue": false
+   }
+  },
+  {
+   "id": "history-median-odd",
+   "elapsedMs": 600000,
+   "phaseElapsedMs": 0,
+   "historyMs": [
+    3600000,
+    4200000,
+    3000000
+   ],
+   "expected": {
+    "seconds": 3000,
+    "source": "history",
+    "overdue": false
+   }
+  },
+  {
+   "id": "history-median-even",
+   "elapsedMs": 1000000,
+   "phaseElapsedMs": 0,
+   "historyMs": [
+    1000000,
+    3000000
+   ],
+   "expected": {
+    "seconds": 1000,
+    "source": "history",
+    "overdue": false
+   }
+  },
+  {
+   "id": "past-median-not-overdue-yet",
+   "elapsedMs": 2200000,
+   "phaseElapsedMs": 0,
+   "historyMs": [
+    1000000,
+    3000000
+   ],
+   "expected": {
+    "seconds": 0,
+    "source": "history",
+    "overdue": true
+   }
+  },
+  {
+   "id": "overdue",
+   "elapsedMs": 9000000,
+   "phaseElapsedMs": 0,
+   "historyMs": [
+    1000000,
+    3000000
+   ],
+   "expected": {
+    "seconds": 0,
+    "source": "history",
+    "overdue": true
+   }
+  },
+  {
+   "id": "too-few-samples",
+   "elapsedMs": 1000,
+   "phaseElapsedMs": 0,
+   "historyMs": [
+    1000000
+   ],
+   "expected": null
+  },
+  {
+   "id": "counter-below-minimum-fraction-uses-history",
+   "elapsedMs": 1000000,
+   "phaseElapsedMs": 50000,
+   "done": 1,
+   "total": 1000,
+   "historyMs": [
+    2000000,
+    2000000
+   ],
+   "expected": {
+    "seconds": 1000,
+    "source": "history",
+    "overdue": false
+   }
+  },
+  {
+   "id": "counter-complete",
+   "elapsedMs": 1000000,
+   "phaseElapsedMs": 50000,
+   "done": 10,
+   "total": 10,
+   "historyMs": [],
+   "expected": {
+    "seconds": 0,
+    "source": "progress",
+    "overdue": false
+   }
+  },
+  {
+   "id": "no-data",
+   "elapsedMs": 1000,
+   "phaseElapsedMs": 0,
+   "historyMs": [],
+   "expected": null
+  }
+ ],
+ "activityCases": [
+  {
+   "id": "first-probe-sees-a-busy-tree",
+   "nowMs": 1700030000000,
+   "progressAtMs": 1700022800000,
+   "sample": {
+    "treeActive": true,
+    "cpuDeltaMilliseconds": 0
+   },
+   "expected": {
+    "sampled": true,
+    "progressAtMs": 1700030000000
+   }
+  },
+  {
+   "id": "busy-own-cpu-counts",
+   "nowMs": 1700030000000,
+   "progressAtMs": 1700022800000,
+   "sample": {
+    "treeActive": false,
+    "cpuDeltaMilliseconds": 200
+   },
+   "expected": {
+    "sampled": true,
+    "progressAtMs": 1700030000000
+   },
+   "lastProbeAtMs": 1700029970000
+  },
+  {
+   "id": "below-the-cpu-floor-is-idle",
+   "nowMs": 1700030000000,
+   "progressAtMs": 1700022800000,
+   "sample": {
+    "treeActive": false,
+    "cpuDeltaMilliseconds": 199
+   },
+   "expected": {
+    "sampled": true,
+    "progressAtMs": 1700022800000
+   },
+   "lastProbeAtMs": 1700029970000
+  },
+  {
+   "id": "idle-tree-and-idle-process-is-not-progress",
+   "nowMs": 1700030000000,
+   "progressAtMs": 1700022800000,
+   "sample": {
+    "treeActive": false,
+    "cpuDeltaMilliseconds": 0
+   },
+   "expected": {
+    "sampled": true,
+    "progressAtMs": 1700022800000
+   }
+  },
+  {
+   "id": "not-due-keeps-the-clock",
+   "nowMs": 1700030000000,
+   "progressAtMs": 1700022800000,
+   "sample": {
+    "treeActive": true,
+    "cpuDeltaMilliseconds": 9999
+   },
+   "expected": {
+    "sampled": false,
+    "progressAtMs": 1700022800000
+   },
+   "lastProbeAtMs": 1700029970001
+  },
+  {
+   "id": "newer-progress-is-kept",
+   "nowMs": 1700030000000,
+   "progressAtMs": 1700030000000,
+   "sample": {
+    "treeActive": false,
+    "cpuDeltaMilliseconds": 0
+   },
+   "expected": {
+    "sampled": true,
+    "progressAtMs": 1700030000000
+   },
+   "lastProbeAtMs": 1700029940000
+  }
+ ]
+}

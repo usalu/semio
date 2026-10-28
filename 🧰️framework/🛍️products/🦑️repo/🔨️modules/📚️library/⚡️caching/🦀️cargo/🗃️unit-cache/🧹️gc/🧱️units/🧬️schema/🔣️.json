@@ -170,7 +170,7 @@
         },
         "busyProfile": {
           "en": "[repo cache] profile {profile} of {directory} is held by running compilers: only superseded units idle for {hours} h go",
-          "de": "[repo cache] Profil {profile} von {directory} wird von laufenden Compilern gehalten: nur abgelöste, seit {hours} Std. ungenutzte Einheiten gehen"
+          "de": "[repo cache] Profil {profile} von {directory} wird von laufenden Compilern gehalten: nur abgelöste, seit {hours} h ungenutzte Einheiten gehen"
         },
         "summaryPlan": {
           "en": "[repo cache] build units: would remove {count} of {total} ({bytes}); {held} held by running compilers, {kept} kept",
@@ -182,7 +182,7 @@
         },
         "reason.superseded": {
           "en": "idle for {hours} h and superseded by newer variants of its crate",
-          "de": "seit {hours} Std. ungenutzt und durch neuere Varianten seines Crates abgelöst"
+          "de": "seit {hours} h ungenutzt und durch neuere Varianten seines Crates abgelöst"
         },
         "reason.pressure": {
           "en": "image below its free-space floor",

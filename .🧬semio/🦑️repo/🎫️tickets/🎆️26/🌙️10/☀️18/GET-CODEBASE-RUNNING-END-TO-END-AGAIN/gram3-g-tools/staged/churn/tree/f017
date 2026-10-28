@@ -1,0 +1,69 @@
+{
+ "version": 1,
+ "literals": [
+  {
+   "file": "📥️inputs/🦀️resolution/🟦️.ts",
+   "literal": "/^!?\\{(?:workspaceRoot|projectRoot)\\}\\//u"
+  },
+  {
+   "file": "📥️inputs/🦀️resolution/🟦️.ts",
+   "literal": "/^(?:\\.\\/)+/u"
+  },
+  {
+   "file": "📥️inputs/🎯️precision/🟦️.ts",
+   "literal": "/^!?\\{(?:workspaceRoot|projectRoot)\\}\\//u"
+  },
+  {
+   "file": "📥️inputs/🎯️precision/🟦️.ts",
+   "literal": "/^\\s*\\[([^\\]]+)\\]\\s*$/u"
+  },
+  {
+   "file": "📥️inputs/🎯️precision/🟦️.ts",
+   "literal": "/^(\\s*)if \\(segments\\[0\\] === \"([^\"]+)\"(?: && segments\\[1\\] === \"([^\"]+)\")?/u"
+  },
+  {
+   "file": "📥️inputs/🟨️.mjs",
+   "literal": "/[!*?{}[\\]]/u"
+  },
+  {
+   "file": "📥️inputs/🟨️.mjs",
+   "literal": "/[\\^$.*+?()[\\]{}|]/g"
+  },
+  {
+   "file": "🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+   "literal": "/[\\\\%*?#[\\]{}]/u"
+  },
+  {
+   "file": "🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "literal": "/\\.[cm]?[jt]sx?$/u"
+  },
+  {
+   "file": "🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+   "literal": "/^\\{workspaceRoot\\}\\//u"
+  },
+  {
+   "file": "📤️arguments/🟨️.mjs",
+   "literal": "/\\s/u"
+  },
+  {
+   "file": "📤️arguments/🟨️.mjs",
+   "literal": "/[;&|<>`$\"']/u"
+  },
+  {
+   "file": "🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs",
+   "literal": "/(?:b|c)?r(#+)?\"/y"
+  },
+  {
+   "file": "🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs",
+   "literal": "/(?:r#)?[\\p{ID_Start}_][\\p{ID_Continue}]*/uy"
+  },
+  {
+   "file": "🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs",
+   "literal": "/^r#/"
+  },
+  {
+   "file": "👁️observation/🟨️.mjs",
+   "literal": "/^[a-f0-9]{64}$/u"
+  }
+ ]
+}

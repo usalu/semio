@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Settlement repeat law fixture / Gesetz der Wiederholung bei der Abrechnung",
-  "description": "EN: One settlement round runs the whole inference. A round that returns and observed one consistent snapshot is accepted. A failure is rethrown at once when it demands a restart (code BUILD_AUTHORITY_CHANGED) or repeats unchanged (same code and message) in the next round; a consistent failure over unchanged facts older than the round start is genuine; every other failure and every conflict repeats the round until `limit`. DE: Eine Runde fuehrt die gesamte Inferenz aus. Ein Fehler wird sofort weitergereicht, wenn er einen Neustart verlangt oder in der naechsten Runde unveraendert wiederkehrt; jeder andere Fehler und jeder Konflikt wiederholt die Runde bis `limit`.",
+  "description": "EN: One settlement round runs the whole inference. A round that returns and observed one consistent snapshot is accepted. A failure is rethrown at once when it demands a restart (code BUILD_AUTHORITY_CHANGED) or repeats unchanged (same code and message) in the next round; a consistent failure over unchanged facts older than the round start is genuine; every other failure and every conflict repeats the round until `limit`. DE: Eine Runde führt die gesamte Inferenz aus. Ein Fehler wird sofort weitergereicht, wenn er einen Neustart verlangt oder in der nächsten Runde unverändert wiederkehrt; jeder andere Fehler und jeder Konflikt wiederholt die Runde bis `limit`.",
   "type": "object",
   "additionalProperties": false,
   "required": ["version", "limit", "scenarios"],

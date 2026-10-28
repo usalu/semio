@@ -1,0 +1,253 @@
+"""🧾 harness3: markdown verdicts of the two acceptance scenarios.
+
+`render.py peer <dir> [--write] [--json]`      stage records of peer-g `scenario.py` -> table + PASS/FAIL/INCONCLUSIVE per stage and overall
+`render.py agents3 <dir> [--write] [--json]`   results.json + meta.json + timeline.jsonl of `agents3.py run` -> run table, host table, criteria
+Thresholds come from `criteria.json` and `peer-g-tools/scenarios.json` (`expect`). Streams the timeline (low RAM). `--write` stores `summary.md` next to the records.
+"""
+import glob, json, os, re, sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+CRITERIA = json.load(open(os.path.join(HERE, "criteria.json"), encoding="utf8"))
+SCENARIOS = json.load(open(os.path.join(HERE, "..", "peer-g-tools", "scenarios.json"), encoding="utf8"))["scenarios"]
+MB = 1048576.0
+
+
+def bazel(record):
+    return (record.get("actions") or {}).get("bazel") or {}
+
+
+def executed(record):
+    return bazel(record).get("executed")
+
+
+def cell(value, suffix=""):
+    return "n/a" if value is None else "%s%s" % (value, suffix)
+
+
+def worst(statuses):
+    for status in ("FAIL", "INCONCLUSIVE", "WARN"):
+        if status in statuses:
+            return status
+    return "PASS"
+
+
+def peer_records(directory):
+    rows = []
+    for path in sorted(glob.glob(os.path.join(directory, "[0-9][0-9]-*.json"))):
+        record = json.load(open(path, encoding="utf8"))
+        if "stage" in record:
+            rows.append(record)
+    return rows
+
+
+def judge_peer(records):
+    """One verdict per record: control = green exit; peer = green exit, executed within the scenario's bound, byte-exact restore, a hot baseline before and a hot follow-up after."""
+    out = []
+    for i, r in enumerate(records):
+        kind, _, rest = r["stage"].partition(":")
+        notes, status = [], "PASS"
+        sig = r.get("signals") or {}
+        exe = executed(r)
+        if r["exit"] != 0:
+            status, notes = "FAIL", notes + ["exit %s%s" % (r["exit"], " (yield 75 not recovered)" if r["exit"] == 75 else "")]
+        if r.get("retried75"):
+            notes.append("exit 75 retried %dx" % sum(1 for a in r["attempts"] if a.get("yielded75")))
+            status = worst([status, "WARN"])
+        if kind == "peer":
+            ident = rest.split(":")[0]
+            expect = SCENARIOS[ident]["expect"]
+            state = r["peerState"]
+            if not state["edited"]:
+                status, notes = worst([status, "INCONCLUSIVE"]), notes + ["trigger never fired, nothing edited"]
+            if state["restored"] is not True and state["edited"]:
+                merged = isinstance(state["restored"], dict) and all(v in ("exact", "merged") for v in state["restored"].values())
+                status, notes = worst([status, "WARN"]) if merged else "FAIL", notes + ["restore not byte-exact: %s" % (state["restored"] if not merged else "another writer changed a file during the hold, our line removed " + json.dumps(state["restored"], ensure_ascii=False))]
+            if exe is None:
+                status, notes = worst([status, "INCONCLUSIVE"]), notes + ["no Bazel action line in the log"]
+            elif exe > expect["maxExecuted"]:
+                status, notes = "FAIL", notes + ["%d re-execution(s), bound %d" % (exe, expect["maxExecuted"])]
+            before = records[i - 1] if i > 0 and records[i - 1]["stage"].startswith("control") else None
+            after = records[i + 1] if i + 1 < len(records) and records[i + 1]["stage"].startswith("control") else None
+            if before is None or executed(before) is None or executed(before) > CRITERIA["peer"]["baselineMaxExecuted"] or before["exit"] != 0:
+                status, notes = worst([status, "INCONCLUSIVE"]), notes + ["baseline not hot (previous control executed %s)" % (cell(executed(before)) if before else "n/a: none")]
+            if after is None:
+                status, notes = worst([status, "INCONCLUSIVE"]), notes + ["no follow-up control"]
+            elif after["exit"] != 0 or (executed(after) or 0) > expect["followupMaxExecuted"]:
+                status, notes = "FAIL", notes + ["follow-up control exit %s executed %s, bound %d" % (after["exit"], cell(executed(after)), expect["followupMaxExecuted"])]
+            names = [os.path.basename(f) for f in state["edits"]] + state["edits"]
+            reasons = (sig.get("graph") or {}).get("refusedReasons", []) + (sig.get("plan") or {}).get("againReasons", [])
+            leaks = [x for x in reasons if any(n and n in x for n in names)]
+            if leaks and expect["kind"] != "closure":
+                status, notes = worst([status, "WARN"]), notes + ["the peer file invalidated memo/plan: %s" % leaks[0][:120]]
+            if (sig.get("restarts") or {}).get("count"):
+                status, notes = worst([status, "WARN"]), notes + ["%d self-restart(s): %s" % (sig["restarts"]["count"], "; ".join(sig["restarts"]["lines"][:1])[:120])]
+            if not state.get("editDuringRun"):
+                notes.append("edit landed after the run exited (between-runs case)")
+        if sig.get("errors") and r["exit"] == 0:
+            status, notes = worst([status, "WARN"]), notes + ["log error row: %s" % sig["errors"][0][:100]]
+        elif sig.get("errors"):
+            notes.append("first error row: %s" % sig["errors"][0][:140])
+        if r.get("peerFilesDuringRun"):
+            notes.append("noise: %d other file(s) changed during the run" % len(r["peerFilesDuringRun"]))
+        out.append((status, notes))
+    return out
+
+
+def peer_markdown(directory):
+    records = peer_records(directory)
+    verdicts = judge_peer(records)
+    lines = ["## Peer edits (%s)" % os.path.basename(directory.rstrip("/")), "", "| # | stage | when | exit | wall s | executed | Bazel | graph | plan | restarts | edit during run | verdict | notes |", "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    for r, (status, notes) in zip(records, verdicts):
+        sig = r.get("signals") or {}
+        state = r.get("peerState") or {}
+        lines.append("| %s | %s | %s | %s | %.1f | %s | %s | %s | %s | %s | %s | **%s** | %s |" % (
+            r["label"][:2], r["stage"], state.get("when") or "", r["exit"], r["wallMs"] / 1000, cell(executed(r)), (bazel(r).get("line") or "n/a").replace("INFO: ", "").replace("|", "/")[:60],
+            (sig.get("graph") or {}).get("outcome") or "n/a", (sig.get("plan") or {}).get("outcome") or "n/a", (sig.get("restarts") or {}).get("count", 0),
+            "yes" if state.get("editDuringRun") else ("no" if state.get("edited") else "-"), status, "; ".join(notes).replace("|", "/")))
+    peer_status = [s for (s, _), r in zip(verdicts, records) if r["stage"].startswith("peer")]
+    during = sum(1 for r in records if (r.get("peerState") or {}).get("editDuringRun"))
+    overall = worst([s for s, _ in verdicts]) if records else "INCONCLUSIVE"
+    if records and during < CRITERIA["peer"]["needDuringRunStages"] and overall == "PASS":
+        overall = "INCONCLUSIVE"
+        lines.append("\nno edit landed while a run was still executing (%d stage(s)): the during-run claim is unproven." % during)
+    lines += ["", "**ACCEPTANCE peer edits: %s** (%d stage(s), %d peer stage(s) %s, %d with the edit during the run)" % (overall, len(records), len(peer_status), dict((s, peer_status.count(s)) for s in set(peer_status)), during)]
+    return "\n".join(lines), overall, records, verdicts
+
+
+def timeline_stats(path):
+    stats = {"samples": 0, "swapMax": 0.0, "swapFirst": None, "compressorMax": 0.0, "freeMin": None, "loadMax": 0.0, "footSumMax": 0, "footSumAt": None, "footPeaks": {}}
+    first = last = None
+    with open(path, encoding="utf8") as handle:
+        for line in handle:
+            row = json.loads(line)
+            stats["samples"] += 1
+            first = first or row
+            last = row
+            if row.get("swapMb") is not None:
+                stats["swapFirst"] = row["swapMb"] if stats["swapFirst"] is None else stats["swapFirst"]
+                stats["swapMax"] = max(stats["swapMax"], row["swapMb"])
+            stats["compressorMax"] = max(stats["compressorMax"], row.get("compressorMb") or 0)
+            stats["loadMax"] = max(stats["loadMax"], row.get("load1") or 0)
+            if row.get("freePct") is not None:
+                stats["freeMin"] = row["freePct"] if stats["freeMin"] is None else min(stats["freeMin"], row["freePct"])
+            total = sum((a.get("foot") or 0) for a in row["agents"].values()) + (row.get("servers") or 0)
+            if total > stats["footSumMax"]:
+                stats["footSumMax"], stats["footSumAt"] = total, row["at"]
+    stats["first"], stats["last"] = first, last
+    return stats
+
+
+def agents3_markdown(directory):
+    meta = json.load(open(os.path.join(directory, "meta.json"), encoding="utf8"))
+    results = json.load(open(os.path.join(directory, "results.json"), encoding="utf8"))
+    crit = CRITERIA["agents3"]
+    stats = timeline_stats(os.path.join(directory, "timeline.jsonl"))
+    peaks = meta.get("peaks", {})
+    lines = ["## Three agents on a declared %s MB / %s cores machine (%s, %s-%s, makespan %.0f s)" % (json.loads(json.dumps(meta["env"])).get("SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES", "?"), meta["env"].get("SEMIO_HOST_CAPACITY_CORES", "?"), meta["tag"], meta["startedClock"], meta.get("endClock", "?"), meta.get("makespanMs", 0) / 1000.0), "",
+             "| agent | lang | run | exit | queue s | run s | wall s | phases (s) | Bazel | reserved / grown MB | waits (max s, rows) | peak footprint MiB | peak RSS MiB |", "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    runs = []
+    for name in "ABC":
+        mine = results.get(name, [])
+        peak = peaks.get(name, {})
+        for r in mine:
+            sig = r.get("signals") or {}
+            cap = sig.get("capacity") or {}
+            adm, grown = cap.get("admitted") or {}, cap.get("grown") or {}
+            act = bazel(r)
+            phases = ", ".join("%s %.0f" % (k, v / 1000) for k, v in r["phases"].items())
+            lines.append("| %s %s | %s | %s/a%s | %s | %.0f | %.0f | %.0f | %s | %s | %s | %s | %.0f | %.0f |" % (
+                name, r["target"].split(":")[0].split("/")[-1], r["language"], r["label"], r["id"][-1], r["exit"], r["queueMs"] / 1000, r["runMs"] / 1000, r["wallMs"] / 1000, phases,
+                ("%s exec / %s cached" % (act.get("executed"), act.get("cached"))) if act else "n/a",
+                "%s -> %s%s" % (cell(adm.get("reservedMb")), cell(grown.get("toMb")), " (of %s asked)" % grown["askedMb"] if grown.get("askedMb") else ""),
+                "%s s, %s rows" % (max(cap.get("maxWaitS", 0), cap.get("maxGrowWaitS", 0)), cap.get("waitRows", 0)), peak.get("foot", 0) / MB, peak.get("rss", 0) / MB))
+            runs.append((name, r))
+    swap_growth = max(0.0, stats["swapMax"] - (stats["swapFirst"] or 0.0))
+    page = meta.get("pageBytes") or 16384
+    swapouts = (stats["last"]["swapouts"] - meta["vm0"]["swapouts"]) * page if stats["last"] else 0
+    total = float(json.loads(json.dumps(meta["env"])).get("SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES", crit["declaredTotalMegabytes"]))
+    floors = [((r.get("signals") or {}).get("capacity") or {}).get("admitted", {}) or {} for _, r in runs]
+    floor = next((f["floorMb"] for f in floors if f.get("floorMb")), round(total * 0.125))
+    limit = total - floor if crit["footprintMaxOfDeclaredMinusFloor"] else total
+    lines += ["", "| host measure | value |", "|---|---|",
+              "| samples (2 s) | %d |" % stats["samples"],
+              "| swap used MiB: first / max / end (growth) | %s / %.0f / %s (%.0f) |" % (cell(stats["swapFirst"]), stats["swapMax"], cell(meta.get("swapEndMb")), swap_growth),
+              "| swapouts during the run | %.0f MiB (%d pages of %d B) |" % (swapouts / MB, swapouts // page, page),
+              "| compressor max MiB | %.0f |" % stats["compressorMax"],
+              "| free memory %% min | %s |" % cell(stats["freeMin"]),
+              "| load1 max (start) | %.1f (%s) |" % (stats["loadMax"], cell(meta.get("load1Start"))),
+              "| sum of the three trees + Bazel servers/actions, peak footprint | %.0f MiB at %s (declared %.0f MiB, floor %d MiB, limit %.0f MiB) |" % (stats["footSumMax"] / MB, stats["footSumAt"], total, floor, limit),
+              "| Bazel servers peak footprint / RSS | %.0f / %.0f MiB |" % (peaks.get("servers", {}).get("foot", 0) / MB, peaks.get("servers", {}).get("rss", 0) / MB)]
+    verdicts = []
+
+    def check(name, status, value, rule):
+        verdicts.append((name, status, value, rule))
+
+    final_bad = []
+    for name in "ABC":
+        groups = {}
+        for r in results.get(name, []):
+            groups[r["label"]] = r
+        final_bad += [(name, r["id"], r["exit"]) for r in groups.values() if r["exit"] != 0]
+    n75 = [r["id"] for _, r in runs if r["exit"] == 75]
+    check("scenario not aborted", "FAIL" if meta.get("aborted") else "PASS", meta.get("aborted") or "completed", "no timeout, no footprint guard trip")
+    check("no failed run", "FAIL" if final_bad else "PASS", "%d failed final attempt(s) %s; exit 75 attempts %s" % (len(final_bad), final_bad[:3], n75 or "none"), "every command ends with exit 0 after at most %d retries of exit 75" % crit["retries75Max"])
+    restored = meta.get("restoredExact")
+    check("files restored byte-exact", "PASS" if restored and all(restored.values()) else "FAIL" if restored else "INCONCLUSIVE", restored or "not recorded", "sha256 of the three edited files equals the original after the run")
+    off = [(n, r["label"]) for n, r in runs if ((r.get("signals") or {}).get("capacity") or {}).get("switchedOff")]
+    check("capacity governor active", "FAIL" if off else "PASS" if any(((r.get("signals") or {}).get("capacity") or {}).get("admitted") for _, r in runs) else "INCONCLUSIVE", "switched off in %s" % off if off else "admission rows present", "the declared machine is enforced by the governor (no `switched off` row, admitted rows exist)")
+    over = [(n, r["label"], a["availableMb"]) for n, r in runs for a in [((r.get("signals") or {}).get("capacity") or {}).get("admitted") or {}] if a.get("availableMb") and a["availableMb"] > total]
+    check("declaration took effect", "FAIL" if over else "PASS" if any(((r.get("signals") or {}).get("capacity") or {}).get("admitted") for _, r in runs) else "INCONCLUSIVE", "available above the declared total in %s" % over[:2] if over else "admitted rows never report more than the declared %.0f MB available" % total, "available <= declared total (a larger value means the declaration was ignored)")
+    check("no swap storm: swap growth", "PASS" if swap_growth <= crit["swapGrowthMegabytesMax"] else "FAIL", "%.0f MiB" % swap_growth, "<= %d MiB" % crit["swapGrowthMegabytesMax"])
+    check("no swap storm: swapouts", "PASS" if swapouts <= crit["swapoutBytesMax"] else "FAIL", "%.0f MiB" % (swapouts / MB), "<= %d MiB" % (crit["swapoutBytesMax"] / MB))
+    check("no swap storm: free memory", "INCONCLUSIVE" if stats["freeMin"] is None else "PASS" if stats["freeMin"] >= crit["freePercentMin"] else "FAIL", cell(stats["freeMin"], " %"), ">= %d %%" % crit["freePercentMin"])
+    check("memory stays inside the declared machine", "PASS" if stats["footSumMax"] / MB <= limit else "FAIL", "%.0f MiB" % (stats["footSumMax"] / MB), "<= %.0f MiB (declared %.0f - floor %d)" % (limit, total, floor))
+    starved = []
+    for name, r in runs:
+        cap = (r.get("signals") or {}).get("capacity") or {}
+        if cap.get("starvedRows"):
+            starved.append("%s %s: %d wait row(s) >= %d s with nothing else of ours running" % (name, r["label"], cap["starvedRows"], crit["starvedWaitSeconds"]))
+        others = [o for k in "ABC" if k != name for o in results.get(k, []) if o["queueMs"] < o["wallMs"]]
+        if r["queueMs"] > crit["queueToRunRatioMax"] * max(r["runMs"], 1000) and r["queueMs"] / 1000 >= crit["queueMinimumSeconds"] and others:
+            starved.append("%s %s: queue %.0f s vs run %.0f s" % (name, r["label"], r["queueMs"] / 1000, r["runMs"] / 1000))
+    check("no starvation", "FAIL" if starved else "PASS", starved or "none", "no wait >= %d s with nothing else running; queue <= %.1fx own run (above %d s)" % (crit["starvedWaitSeconds"], crit["queueToRunRatioMax"], crit["queueMinimumSeconds"]))
+    queued = [(n, r) for n, r in runs if r["queueMs"] >= 30000]
+    silent = [(n, r["label"], r["signals"]["maxSilenceMs"]) for n, r in runs if r.get("signals") and r["signals"]["maxSilenceMs"] > crit["silenceMillisecondsMax"]]
+    gaps = [(n, r["label"], r["signals"]["capacity"]["maxWaitRowGapMs"]) for n, r in queued if r.get("signals") and (r["signals"]["capacity"]["maxWaitRowGapMs"] or 0) > crit["waitRowGapMillisecondsMax"]]
+    invisible = [(n, r["label"]) for n, r in queued if r.get("signals") and not r["signals"]["capacity"]["waitRows"] and not r["signals"]["graph"]["kinds"].get("peerBuilds") and not r["capacityWaits"]]
+    check("progress visible to waiters", "FAIL" if silent or gaps or invisible else "PASS" if queued else "INCONCLUSIVE", "silent %s, wait-row gaps %s, queued without a row %s; %d queued run(s)" % (silent[:2], gaps[:2], invisible[:2], len(queued)), "output never silent > %d s; a queued run prints wait rows at least every %d s" % (crit["silenceMillisecondsMax"] / 1000, crit["waitRowGapMillisecondsMax"] / 1000))
+    wrong = [(n, r["label"], r["signals"]["wrongLanguageRows"]) for n, r in runs if r.get("signals") and r["signals"]["wrongLanguageRows"]]
+    langs = {r["language"] for _, r in runs}
+    seen = {(n, r["language"]): r["signals"]["languages"] for n, r in runs if r.get("signals")}
+    rows_per_lang = {lang: sum(v[lang] for (_, l), v in seen.items() if l == lang) for lang in ("en", "de")}
+    check("EN + DE rows", "FAIL" if wrong else "PASS" if rows_per_lang["en"] and rows_per_lang["de"] else "INCONCLUSIVE", "wrong-language rows %s; localized rows en %d (EN agents) / de %d (DE agent)" % (wrong[:3], rows_per_lang["en"], rows_per_lang["de"]), "every localized capacity/graph/plan/restart row is in the agent's language, and both languages were exercised")
+    lines += ["", "| criterion | verdict | value | rule |", "|---|---|---|---|"]
+    for name, status, value, rule in verdicts:
+        lines.append("| %s | **%s** | %s | %s |" % (name, status, str(value).replace("|", "/"), rule))
+    overall = worst([s for _, s, _, _ in verdicts])
+    lines += ["", "**ACCEPTANCE three agents on 16 GB: %s**" % overall, ""]
+    for name, r in runs:
+        cap = (r.get("signals") or {}).get("capacity") or {}
+        lines.append("- %s %s capacity rows: %s" % (name, r["label"], [x for x in (cap.get("samples") or [])][:2] or "no wait rows"))
+    return "\n".join(lines), overall, verdicts
+
+
+def main():
+    if len(sys.argv) < 3 or sys.argv[1] not in ("peer", "agents3"):
+        raise SystemExit(__doc__)
+    directory = sys.argv[2]
+    if sys.argv[1] == "peer":
+        text, overall, records, verdicts = peer_markdown(directory)
+        data = {"overall": overall, "stages": [{"label": r["label"], "stage": r["stage"], "verdict": v[0], "notes": v[1]} for r, v in zip(records, verdicts)]}
+    else:
+        text, overall, verdicts = agents3_markdown(directory)
+        data = {"overall": overall, "criteria": [{"name": n, "verdict": s, "value": str(v), "rule": r} for n, s, v, r in verdicts]}
+    print(text)
+    if "--write" in sys.argv:
+        open(os.path.join(directory, "summary.md"), "w", encoding="utf8").write(text + "\n")
+        json.dump(data, open(os.path.join(directory, "verdict.json"), "w", encoding="utf8"), indent=1, ensure_ascii=False)
+    if "--json" in sys.argv:
+        print(json.dumps(data, ensure_ascii=False, indent=1))
+
+
+if __name__ == "__main__":
+    main()

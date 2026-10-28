@@ -1,0 +1,41 @@
+{
+ "name": "probes",
+ "code": "toolsetup-g-tools/staged/probes (or probes-after-conv when conv-g landed first)",
+ "lane": "toolsetup-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "probes-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "   - **Nx**: at most 2 finite daemons; on hosts up to 24 GiB they idle out after 2 min and retire above 1280 MB resident.",
+   "where": "after",
+   "block": "   - **Planner skip and host probes**: the traced witness that decides plan reuse was tainted by four read-only host probes of the planner child (`sysctl -n kern.bootsessionuuid` and `-n kern.boottime`, `hdiutil info -plist`, `mount`, and `ps` with any arguments), so no run since the planner skip landed ever printed `plan reused` and every hot no-op planned the same 198 projects again (about 29 of 50 s inside the run child, `tool-setup` 32-48 s). A closed table `hostProbes` of exactly those program and argument vectors (the program a bare name or in `/bin /sbin /usr/bin /usr/sbin`; on Linux the boot identity files `/proc/stat`, `/proc/1/stat`, `/proc/sys/kernel/random/boot_id`) is now exempt; `sysctl -w`, `hdiutil attach`, a `ps` from another directory or any other spawn still taints, and the taint line names the command line. Expected: `tool-setup` of a hot no-op from 32-48 s to about 3-6 s. Not measured yet: the first hot pair after landing must print no `cannot be reused later` line and then `[bazel] plan reused: …`. A Windows planner stays unreusable until its `powershell Get-CimInstance Win32_Process` child listing is in the table."
+  },
+  {
+   "id": "probes-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "   - **Nx**: höchstens 2 endliche Daemons; auf Rechnern bis 24 GiB enden sie nach 2 min Leerlauf und treten über 1280 MB resident ab.",
+   "where": "after",
+   "block": "   - **Planer-Überspringen und Host-Sonden**: der verfolgte Zeuge, der über die Wiederverwendung eines Plans entscheidet, wurde von vier lesenden Host-Sonden des Planer-Kindes verunreinigt (`sysctl -n kern.bootsessionuuid` und `-n kern.boottime`, `hdiutil info -plist`, `mount` und `ps` mit beliebigen Argumenten); deshalb gab seit dem Planer-Überspringen nie ein Lauf `plan reused` aus, und jeder heiße No-op plante dieselben 198 Projekte erneut (rund 29 von 50 s im Lauf-Kind, `tool-setup` 32-48 s). Eine geschlossene Tabelle `hostProbes` genau dieser Programm- und Argumentvektoren (das Programm ein bloßer Name oder in `/bin /sbin /usr/bin /usr/sbin`; unter Linux die Boot-Identitätsdateien `/proc/stat`, `/proc/1/stat`, `/proc/sys/kernel/random/boot_id`) ist jetzt ausgenommen; `sysctl -w`, `hdiutil attach`, ein `ps` aus einem anderen Verzeichnis oder jeder andere Start verunreinigt weiterhin, und die Zeile nennt die Befehlszeile. Erwartet: `tool-setup` eines heißen No-op von 32-48 s auf rund 3-6 s. Noch nicht gemessen: das erste heiße Paar nach dem Einspielen darf keine Zeile `cannot be reused later` ausgeben und muss dann `[bazel] plan reused: …` zeigen. Ein Windows-Planer bleibt unwiederverwendbar, bis seine Kindauflistung `powershell Get-CimInstance Win32_Process` in der Tabelle steht."
+  },
+  {
+   "id": "probes-row",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "| `The runtime registry declares contract N, this launcher implements contract M. Rebuild and reinstall the launcher with: …` | the installed Go launcher is older than the registry; run the printed installer once (`🚀️launcher/📥️install`); there is one install location. |",
+   "where": "after",
+   "block": "| `[bazel] this plan cannot be reused later: the planner read something that cannot be checked: spawned <program> <arguments>` | the planner skip is off for this run: the planner child started a program that is not one of the known read-only host probes, so the next run plans again (slower, correct, no `plan reused` line). The line names the full command line: a read-only host probe of the build tool itself belongs in the closed table `hostProbes` of the witness policy (`🏗️build/🔭️witness`), any other spawn is an input the planner has to declare. |"
+  },
+  {
+   "id": "probes-row",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "| `Die Laufzeitregistratur deklariert Vertrag N, dieser Launcher setzt Vertrag M um. Baue den Launcher neu und installiere ihn mit: …` | der installierte Go-Launcher ist älter als die Registratur; den ausgegebenen Installer einmal ausführen (`🚀️launcher/📥️install`); es gibt genau einen Installationsort. |",
+   "where": "after",
+   "block": "| `[bazel] this plan cannot be reused later: the planner read something that cannot be checked: spawned <Programm> <Argumente>` | das Planer-Überspringen ist für diesen Lauf aus: das Planer-Kind hat ein Programm gestartet, das keine der bekannten lesenden Host-Sonden ist, deshalb plant der nächste Lauf erneut (langsamer, richtig, keine Zeile `plan reused`). Die Zeile nennt die ganze Befehlszeile: eine lesende Host-Sonde des Build-Werkzeugs selbst gehört in die geschlossene Tabelle `hostProbes` der Zeugen-Policy (`🏗️build/🔭️witness`), jeder andere Start ist eine Eingabe, die der Planer deklarieren muss. |"
+  }
+ ]
+}

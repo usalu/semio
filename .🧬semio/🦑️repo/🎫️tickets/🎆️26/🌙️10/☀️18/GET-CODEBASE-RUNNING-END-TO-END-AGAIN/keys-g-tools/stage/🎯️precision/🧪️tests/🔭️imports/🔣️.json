@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "tree": {
+    "pkg/a/🟦️.ts": "import { b } from \"../b/🟦️.ts\";\nexport const a = b;",
+    "pkg/a/🧪️tests/🟦️.ts": "import { a } from \"../🟦️.ts\";\nimport data from \"../../data/🔣️.json\";\nexport const t = [a, data];",
+    "pkg/b/🟦️.ts": "import { c } from \"./c/🟦️.ts\";\nexport const b = c;",
+    "pkg/b/c/🟦️.ts": "export const c = 1;",
+    "pkg/b/c/🧪️tests/🟦️.ts": "export const ct = 1;",
+    "pkg/data/🔣️.json": "{}",
+    "pkg/unrelated/🟦️.ts": "export const u = 2;",
+    "pkg/a/node_modules/x/🟦️.ts": "export const n = 3;",
+    "pkg/a/readme.md": "# a"
+  },
+  "cases": [
+    { "id": "single-glob", "entries": ["{workspaceRoot}/pkg/a/🧪️tests/**/*.ts"], "selected": ["pkg/a/🧪️tests/🟦️.ts"], "closure": ["pkg/a/🟦️.ts", "pkg/a/🧪️tests/🟦️.ts", "pkg/b/c/🟦️.ts", "pkg/b/🟦️.ts", "pkg/data/🔣️.json"] },
+    { "id": "whole-package", "entries": ["{workspaceRoot}/pkg/a/**/*.ts"], "selected": ["pkg/a/🟦️.ts", "pkg/a/🧪️tests/🟦️.ts"], "closure": ["pkg/a/🟦️.ts", "pkg/a/🧪️tests/🟦️.ts", "pkg/b/c/🟦️.ts", "pkg/b/🟦️.ts", "pkg/data/🔣️.json"] },
+    { "id": "negation-removes-tests", "entries": ["{workspaceRoot}/pkg/**/*.ts", "!{workspaceRoot}/pkg/**/🧪️tests/**/*"], "selected": ["pkg/a/🟦️.ts", "pkg/b/c/🟦️.ts", "pkg/b/🟦️.ts", "pkg/unrelated/🟦️.ts"], "closure": ["pkg/a/🟦️.ts", "pkg/b/c/🟦️.ts", "pkg/b/🟦️.ts", "pkg/unrelated/🟦️.ts"] },
+    { "id": "exact-file", "entries": ["{workspaceRoot}/pkg/b/🟦️.ts"], "selected": ["pkg/b/🟦️.ts"], "closure": ["pkg/b/c/🟦️.ts", "pkg/b/🟦️.ts"] },
+    { "id": "vendored-trees-are-skipped", "entries": ["{workspaceRoot}/pkg/a/**/*.ts"], "selected": ["pkg/a/🟦️.ts", "pkg/a/🧪️tests/🟦️.ts"], "closure": ["pkg/a/🟦️.ts", "pkg/a/🧪️tests/🟦️.ts", "pkg/b/c/🟦️.ts", "pkg/b/🟦️.ts", "pkg/data/🔣️.json"] }
+  ],
+  "refused": [
+    { "id": "no-module-selected", "entries": ["{workspaceRoot}/pkg/a/**/*.rs"] }
+  ]
+}

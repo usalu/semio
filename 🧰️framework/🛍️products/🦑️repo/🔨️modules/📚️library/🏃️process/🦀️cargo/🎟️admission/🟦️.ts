@@ -1,8 +1,9 @@
 import{appendCargoProfileSelectorsV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
+import{withPlannedTestWorkersV1}from"../../../🏗️build/🌡️host-capacity/🧪️workers/🟦️.ts";
 import{withCompilerWorkspaceSharedWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {resolve,relative,basename} from "node:path";
 import {getWorkspaceRoot} from "../../../🗂️workspaces/🟦️.ts";
-import {cargoRepositoryPackageSelections,cargoWorkspaceForManifest,prepareCargoWorkspaceInvocation} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import {cargoPackageSelectionsNearV1,cargoWorkspaceForManifest,prepareCargoWorkspaceInvocation} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import {repositoryCargoTestPolicyV1} from "../🔣️policy/🟦️.ts";
 import {packageTestBudgetMs} from "../⏱️budget/🟦️.ts";
@@ -12,20 +13,21 @@ import {withRepositoryCargoInputsV1,repositoryCargoNetworkV1} from "../📥️de
 import {buildPreparationBudgetMs,progressDeadlinePolicyV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {OwnedCommandFailure} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import {launchRepositoryCargoV1,readRepositoryCargoLaunchV1} from "../🚪️launcher/🟦️.ts";
+import {launchRepositoryCargoV1,readRepositoryCargoLaunchV1,repositoryCargoPlanningPortV1,repositoryCargoSourceMemoV1} from "../🚪️launcher/🟦️.ts";
 import {join} from "node:path";
 import {runCargoTestsV1,runCargoLintV1,cargoTestCompilerArgumentsV1,cargoLintPlanV1,type CargoTestPolicyV1,type CargoTestRequestV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {withRepositoryCompilerStoreV1} from "./../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {withRepositoryCompilerLaneV1} from "./../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {repositoryCargoConfigurationStepArgumentsV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts";
 
 async function execute(request:CargoTestRequestV1,policy:CargoTestPolicyV1,workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,lint:boolean):Promise<void>{
  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);
  const control=createRequestedIssuedResourceControlV1(phaseControl,policy.buildBudgetMs),network=repositoryCargoNetworkV1(invocation,workspace);
- await withRepositoryCompilerStoreV1(workspace,policy.mode,control,request.environment??process.env,async (store,actualPhase)=>{
+ await withRepositoryCompilerLaneV1(workspace,policy.mode,control,request.environment??process.env,{crates:request.packages,unitCache:!lint&&!policy.coveragePath},async (store,actualPhase)=>{
   requireIssuedResourceControlInvocationV1(actualPhase,invocation);requireIssuedResourceControlRefinementV1(control,actualPhase);checkResourceLeaseControl(actualPhase);
   const bounded={...policy,targetDirectory:store.environment.CARGO_TARGET_DIR!,buildDirectory:store.buildDirectory,artifactDirectory:store.captureDirectory,...(policy.coveragePath?{coveragePath:join(store.captureDirectory,basename(policy.coveragePath))}: {})};
-  await(lint?runCargoLintV1:runCargoTestsV1)({...request,environment:store.environment},bounded,{workspaceRoot:workspace,control:actualPhase,storage:store.storage,sourceBoundary:store.sourceBoundary,withCargoInputs:(compiler,body)=>withRepositoryCargoInputsV1({invocation,consumption:{kind:"compiler",producer:"artifact",operation:lint?"clippy":"test"},workspace,cwd:compiler.cwd,manifest:compiler.manifest,args:compiler.arguments,network,control:compiler.control,storage:store.storage,environment:compiler.environment},input=>withCompilerWorkspaceSharedWriteV1(store.storage,join(workspace,".cache/b/l/m/data"),input.control,()=>body({arguments:input.selections[0]!.arguments,environment:input.environment,control:input.control})))});
+  await(lint?runCargoLintV1:runCargoTestsV1)({...request,environment:store.environment},bounded,{workspaceRoot:workspace,control:actualPhase,storage:store.storage,sourceBoundary:store.sourceBoundary,planningPort:repositoryCargoPlanningPortV1(store),sourceMemo:repositoryCargoSourceMemoV1(store),...(lint?{}:{assertion:run=>withPlannedTestWorkersV1("cargo-test",request.environment??process.env,relative(workspace,policy.manifestPath),()=>run(),policy.assertionThreads,()=>{})}),withCargoInputs:(compiler,body)=>withRepositoryCargoInputsV1({invocation,consumption:{kind:"compiler",producer:"artifact",operation:lint?"clippy":"test"},workspace,cwd:compiler.cwd,manifest:compiler.manifest,args:compiler.arguments,network,control:compiler.control,storage:store.storage,environment:compiler.environment},input=>body({arguments:input.selections[0]!.arguments,environment:input.environment,control:input.control,writer:(control,run)=>withCompilerWorkspaceSharedWriteV1(store.storage,join(workspace,".cache/b/l/m/data"),control,run),admit:args=>repositoryCargoConfigurationStepArgumentsV1(input.selections[0]!.configuration,args)}))});
   checkResourceLeaseControl(actualPhase);
  });checkResourceLeaseControl(control);
 }
@@ -44,7 +46,7 @@ export async function runRepositoryCargoCommandV1(invocation:ScriptInvocation,ph
 /** ▶️ Composes selected repository workspace preparation with explicit neutral Cargo execution. */
 export async function runRepositoryCargoTests(packages:string[],cwd:string,invocation:ScriptInvocation,extraArgs:string[]=[],env:Readonly<Record<string,string|undefined>>=process.env):Promise<void>{
   const phaseControl=createIssuedResourceControlV1(invocation,"cargo:repository-tests",0);checkResourceLeaseControl(phaseControl);
-  const repository=getWorkspaceRoot(), rows=cargoRepositoryPackageSelections(repository,packages);
+  const repository=getWorkspaceRoot(), rows=cargoPackageSelectionsNearV1(repository,join(cwd,"Cargo.toml"),packages);
   const manifests=rows.length?[...new Set(rows.map(row=>row.manifest))]:[relative(repository,join(cwd,"Cargo.toml"))];
   const scopes=new Map<string,string[]>();
   for(const manifest of manifests){const scope=cargoWorkspaceForManifest(repository,manifest).directory;scopes.set(scope,[...(scopes.get(scope)??[]),manifest]);}

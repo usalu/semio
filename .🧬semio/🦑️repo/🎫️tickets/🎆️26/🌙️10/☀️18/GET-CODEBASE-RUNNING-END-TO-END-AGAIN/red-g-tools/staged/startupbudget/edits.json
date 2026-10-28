@@ -1,0 +1,29 @@
+{
+ "batch": "startupbudget",
+ "files": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🧪️tests/🚦️startup/🔣️.json",
+   "base": "86883bef06ba57aa9e086595065bb2034fe8b7dff5013bafaa2bef2f49b1affa",
+   "applied": "c366cb5ed5df96f89efccfb05d55ce1cc9ed9da224a111810e839d21e1252332",
+   "edits": [
+    {
+     "old": "      \"maximumModules\": 26,\n      \"maximumBytes\": 227200",
+     "new": "      \"maximumModules\": 56,\n      \"maximumBytes\": 710000"
+    },
+    {
+     "old": "      \"maximumModules\": 22,\n      \"maximumBytes\": 175400",
+     "new": "      \"maximumModules\": 54,\n      \"maximumBytes\": 700000"
+    },
+    {
+     "old": "      \"maximumModules\": 80,\n      \"maximumBytes\": 946000",
+     "new": "      \"maximumModules\": 114,\n      \"maximumBytes\": 1210000"
+    },
+    {
+     "old": "      \"maximumModules\": 60,\n      \"maximumBytes\": 764000",
+     "new": "      \"maximumModules\": 80,\n      \"maximumBytes\": 950000"
+    }
+   ],
+   "keep": "86883bef06ba57aa"
+  }
+ ]
+}

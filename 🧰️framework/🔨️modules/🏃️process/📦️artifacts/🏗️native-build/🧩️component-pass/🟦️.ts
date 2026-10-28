@@ -310,9 +310,9 @@ export type NativeBuildDriverOptionsV1 = Readonly<{
   log?: (line: string) => void;
 }>;
 
-/** 📥️ Admits each actual Cargo request while its exact configuration view remains live. */
+/** 📥️ Admits each actual Cargo request while its exact configuration view remains live, inside the writer custody the input port offers (the pass leases are taken before this scope). */
 async function withNativeBuildCargoInputsV1<T>(options:NativeBuildDriverOptionsV1,request:CargoCompilerInputsRequestV1,body:(inputs:CargoCompilerInputsViewV1)=>Promise<T>):Promise<T>{
- return withCargoCompilerInputsV1(request,options.withCargoInputs,async inputs=>{checkResourceLeaseControl(inputs.control);await admitCargoSelectionV1({workspaceRoot:options.cwd,cwd:request.cwd,args:inputs.arguments,environment:inputs.environment,sourceBoundary:options.sourceBoundary,storage:options.storage},inputs.control);checkResourceLeaseControl(inputs.control);await options.storage.recheck();checkResourceLeaseControl(inputs.control);const result=await body(inputs);checkResourceLeaseControl(inputs.control);return result;});
+ return withCargoCompilerInputsV1(request,options.withCargoInputs,inputs=>inputs.withWriter(async()=>{checkResourceLeaseControl(inputs.control);await admitCargoSelectionV1({workspaceRoot:options.cwd,cwd:request.cwd,args:inputs.arguments,environment:inputs.environment,sourceBoundary:options.sourceBoundary,storage:options.storage},inputs.control);checkResourceLeaseControl(inputs.control);await options.storage.recheck();checkResourceLeaseControl(inputs.control);const result=await body(inputs);checkResourceLeaseControl(inputs.control);return result;}));
 }
 
 /** 🪵️ An append-only log file that stops growing at its byte cap. */

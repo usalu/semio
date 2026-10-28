@@ -8,13 +8,14 @@
     "mode",
     "path",
     "sources",
+    "compiled",
     "digest",
     "bytes",
     "permissions"
   ],
   "properties": {
     "version": {
-      "const": 3
+      "const": 5
     },
     "platform": {
       "enum": [
@@ -64,6 +65,39 @@
         }
       }
     },
+    "compiled": {
+      "description": "🧾️ What the executable was compiled from: the files of its own Cargo dep-info plus every crate manifest, the workspace manifests and lock, the toolchain files and the package declaration (relative to the installation root), when that build started, and the sha256 each file held then (empty when it was already touched after the start). A file is changed when it is missing, or touched at or after `builtAtMs` and no longer holds those bytes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "builtAtMs",
+        "sources",
+        "digests"
+      ],
+      "properties": {
+        "builtAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "digests": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^(?:[a-f0-9]{64})?$"
+          }
+        }
+      }
+    },
     "digest": {
       "type": "string",
       "pattern": "^[a-f0-9]{64}$"
@@ -83,7 +117,9 @@
       "const": {
         "rootFiles": [
           "rust-toolchain.toml",
-          ".cargo/config.toml"
+          ".cargo/config.toml",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/📋️constraints/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧬️schema/🔣️.json"
         ],
         "selectedWorkspaceLock": "Cargo.lock",
         "dependencyWorkspaceLocks": false
@@ -101,12 +137,33 @@
         "contentReads": 0
       }
     },
+    "ExecutableRetentionProtocol": {
+      "const": {
+        "keepNewest": 2
+      }
+    },
     "PackageOwner": {
       "const": {
         "project": "@semio-tech/repo-dashboard-rs",
         "workspaceRelative": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
         "installationRelative": "../../../../../🎛️dashboard/📦️packages/🦀️rust"
       }
+    },
+    "CompiledSourceProtocol": {
+      "const": {
+        "record": "semio.sources.json",
+        "changedAt": [
+          "mtimeMs",
+          "ctimeMs"
+        ]
+      }
+    },
+    "ArtifactProtocol": {
+      "const": {
+        "directory": "artifact",
+        "record": "artifact.json"
+      }
     }
-  }
+  },
+  "description": "🏺️ One native dashboard executable record: the artifact a `build` leaves at `ArtifactProtocol` (its `path` names the executable inside the artifact directory, relative to the installation root) and the installation that pins it (its `path` names the immutable tools copy, relative to the workspace) share it; an installation copies the artifact record and only changes `path`."
 }

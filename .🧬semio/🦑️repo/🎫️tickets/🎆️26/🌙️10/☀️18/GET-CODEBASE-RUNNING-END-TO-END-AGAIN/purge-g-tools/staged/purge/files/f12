@@ -1,0 +1,278 @@
+{
+ "version": 1,
+ "nodes": [
+  {
+   "path": ".🧬semio/old-repo/x.txt",
+   "kind": "file",
+   "text": "old"
+  },
+  {
+   "path": ".generation3d-foo-link/data",
+   "kind": "file",
+   "text": "12345"
+  },
+  {
+   "path": "pkg/target/CACHEDIR.TAG",
+   "kind": "file",
+   "text": "sig"
+  },
+  {
+   "path": "pkg/target/debug/a.o",
+   "kind": "file",
+   "text": "obj"
+  },
+  {
+   "path": "src/main.ts",
+   "kind": "file",
+   "text": "keep"
+  },
+  {
+   "path": "src/dist/keep.js",
+   "kind": "file",
+   "text": "keep"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/🎫️ticket.json",
+   "kind": "file",
+   "text": "{\"status\":\"closed\"}"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/🗑️generated/g.txt",
+   "kind": "file",
+   "text": "gen"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/fat.bin",
+   "kind": "file",
+   "size": 6291456
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/keep.md",
+   "kind": "file",
+   "text": "keep"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/🎫️ticket.json",
+   "kind": "file",
+   "text": "{\"status\":\"open\"}"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/🗑️generated/o.txt",
+   "kind": "file",
+   "text": "open-gen"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/notes.md",
+   "kind": "file",
+   "text": "keep"
+  },
+  {
+   "path": "bad:name.txt",
+   "kind": "file",
+   "text": "illegal"
+  },
+  {
+   "path": "trail./inner",
+   "kind": "file",
+   "text": "illegal-dir"
+  },
+  {
+   "path": ".cache/b/t/x",
+   "kind": "file",
+   "text": "managed"
+  },
+  {
+   "path": "imgs/vm/image.json",
+   "kind": "file",
+   "text": "{}"
+  },
+  {
+   "path": "imgs/vm/fixed.dmg",
+   "kind": "file",
+   "text": "img"
+  },
+  {
+   "path": "scratch/plain/a.txt",
+   "kind": "file",
+   "text": "p"
+  },
+  {
+   "path": "scratch/plain2/a.txt",
+   "kind": "file",
+   "text": "p"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/📥️inputs/big.bin",
+   "kind": "file",
+   "size": 11534336
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/fat.bin",
+   "kind": "file",
+   "size": 6291456
+  }
+ ],
+ "dryRun": {
+  "removals": [
+   {
+    "kind": "root-transient",
+    "path": ".generation3d-foo-link"
+   },
+   {
+    "kind": "misplaced",
+    "path": ".🧬semio/old-repo"
+   },
+   {
+    "kind": "ticket-generated",
+    "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/🗑️generated"
+   },
+   {
+    "kind": "windows-illegal",
+    "path": "bad:name.txt"
+   },
+   {
+    "kind": "build-artifact",
+    "path": "pkg/target"
+   },
+   {
+    "kind": "windows-illegal",
+    "path": "trail."
+   }
+  ],
+  "survivors": [
+   "src/main.ts",
+   "src/dist/keep.js",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/🎫️ticket.json",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/keep.md",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/🎫️ticket.json",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/🗑️generated/o.txt",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/notes.md",
+   ".cache/b/t/x",
+   "imgs/vm/image.json",
+   "imgs/vm/fixed.dmg",
+   "pkg/target",
+   ".generation3d-foo-link",
+   ".🧬semio/old-repo",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/🗑️generated",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/fat.bin",
+   "bad:name.txt",
+   "trail.",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/📥️inputs/big.bin",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/fat.bin"
+  ]
+ },
+ "applied": {
+  "gone": [
+   "pkg/target",
+   ".generation3d-foo-link",
+   ".🧬semio/old-repo",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/🗑️generated",
+   "bad:name.txt",
+   "trail."
+  ],
+  "survivors": [
+   "src/main.ts",
+   "src/dist/keep.js",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/🎫️ticket.json",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/keep.md",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/🎫️ticket.json",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/🗑️generated/o.txt",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/notes.md",
+   ".cache/b/t/x",
+   "imgs/vm/image.json",
+   "imgs/vm/fixed.dmg",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/fat.bin",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/📥️inputs/big.bin",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/fat.bin"
+  ]
+ },
+ "removePath": [
+  {
+   "name": "an ordinary directory is removed",
+   "path": "scratch/plain",
+   "dry": false,
+   "illegal": false,
+   "cargo": false,
+   "expected": true,
+   "exists": false
+  },
+  {
+   "name": "a dry run reports success and keeps the directory",
+   "path": "scratch/plain2",
+   "dry": true,
+   "illegal": false,
+   "cargo": false,
+   "expected": true,
+   "exists": true
+  },
+  {
+   "name": "a missing path is refused",
+   "path": "scratch/missing",
+   "dry": false,
+   "illegal": false,
+   "cargo": false,
+   "expected": false,
+   "exists": false
+  },
+  {
+   "name": "a managed storage directory is refused",
+   "path": ".cache/b/t/x",
+   "dry": false,
+   "illegal": false,
+   "cargo": false,
+   "expected": false,
+   "exists": true
+  },
+  {
+   "name": "a native image directory is refused",
+   "path": "imgs/vm",
+   "dry": false,
+   "illegal": false,
+   "cargo": false,
+   "expected": false,
+   "exists": true
+  },
+  {
+   "name": "the generated output of an open ticket is refused",
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/🗑️generated",
+   "dry": false,
+   "illegal": false,
+   "cargo": false,
+   "expected": false,
+   "exists": true
+  },
+  {
+   "name": "an open ticket folder is refused",
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN",
+   "dry": false,
+   "illegal": false,
+   "cargo": false,
+   "expected": false,
+   "exists": true
+  },
+  {
+   "name": "a path outside any cargo output root is refused for incremental removal",
+   "path": "scratch/plain",
+   "dry": false,
+   "illegal": false,
+   "cargo": true,
+   "expected": false,
+   "exists": true
+  },
+  {
+   "name": "the generated output of a closed ticket is removed",
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/🗑️generated",
+   "dry": false,
+   "illegal": false,
+   "cargo": false,
+   "expected": true,
+   "exists": false
+  }
+ ],
+ "skipped": {
+  "contains": [
+   ".cache/b/t"
+  ],
+  "protectedRows": []
+ }
+}

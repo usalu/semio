@@ -1,0 +1,80 @@
+{
+ "overall": "FAIL",
+ "stages": [
+  {
+   "label": "00-course-control",
+   "stage": "control:course",
+   "verdict": "PASS",
+   "notes": []
+  },
+  {
+   "label": "01-course-control",
+   "stage": "control:course",
+   "verdict": "PASS",
+   "notes": []
+  },
+  {
+   "label": "02-course-p1-graph",
+   "stage": "peer:p1:course:graph",
+   "verdict": "FAIL",
+   "notes": [
+    "7 re-execution(s), bound 0",
+    "noise: 60 other file(s) changed during the run"
+   ]
+  },
+  {
+   "label": "03-course-control",
+   "stage": "control:course",
+   "verdict": "PASS",
+   "notes": []
+  },
+  {
+   "label": "04-course-p1-bazel",
+   "stage": "peer:p1:course:bazel",
+   "verdict": "PASS",
+   "notes": []
+  },
+  {
+   "label": "05-course-control",
+   "stage": "control:course",
+   "verdict": "PASS",
+   "notes": []
+  },
+  {
+   "label": "06-course-p3-graph",
+   "stage": "peer:p3:course:graph",
+   "verdict": "PASS",
+   "notes": []
+  },
+  {
+   "label": "07-course-control",
+   "stage": "control:course",
+   "verdict": "PASS",
+   "notes": []
+  },
+  {
+   "label": "08-course-p3-bazel",
+   "stage": "peer:p3:course:bazel",
+   "verdict": "PASS",
+   "notes": []
+  },
+  {
+   "label": "09-course-control",
+   "stage": "control:course",
+   "verdict": "PASS",
+   "notes": []
+  },
+  {
+   "label": "10-course-p2-graph",
+   "stage": "peer:p2:course:graph",
+   "verdict": "PASS",
+   "notes": []
+  },
+  {
+   "label": "11-course-control",
+   "stage": "control:course",
+   "verdict": "PASS",
+   "notes": []
+  }
+ ]
+}

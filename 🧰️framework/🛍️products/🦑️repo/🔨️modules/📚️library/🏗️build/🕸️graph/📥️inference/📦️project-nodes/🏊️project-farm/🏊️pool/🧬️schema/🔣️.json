@@ -8,8 +8,10 @@
       "const": {
         "version": 2,
         "languages": ["en", "de"],
-        "languageEnvironment": ["SEMIO_LANGUAGE", "SEMIO_DASHBOARD_LOCALE", "LC_ALL", "LC_MESSAGES", "LANG"],
         "workersEnvironment": "SEMIO_GRAPH_WORKERS",
+        "planEnvironment": "SEMIO_HOST_CAPACITY_PLAN",
+        "ownWorkers": 1,
+        "minimumGrantedWorkers": 1,
         "phasesEnvironment": "SEMIO_GRAPH_PHASES",
         "minimumProjects": 24,
         "missBasisPoints": 2500,
@@ -19,9 +21,19 @@
         "maximumRestarts": 8,
         "maximumAttempts": 2,
         "loopsPerWorker": 2,
+        "recycleMemoryRatio": 0.6,
+        "recycleAfterProjects": 96,
         "initTimeoutMilliseconds": 180000,
         "jobTimeoutMilliseconds": 1800000,
         "shutdownGraceMilliseconds": 3000,
+        "temporaryDirectories": {
+          "prefixes": {
+            "staging": "semio-graph-farm-",
+            "image": "semio-graph-farm-image-",
+            "session": "semio-farm-session-"
+          },
+          "pattern": "^semio-(?:graph-farm|graph-farm-image|farm-session)-(?<pid>[1-9][0-9]{0,9})-[A-Za-z0-9]{6}$"
+        },
         "runtime": {
           "bun": { "ramFactor": 0.75, "heap": { "variable": "BUN_JSC_forceRAMSize", "unit": "bytes" }, "environment": { "BUN_JSC_numberOfGCMarkers": "1", "BUN_JSC_useConcurrentGC": "0" } },
           "node": { "ramFactor": 1, "heap": { "variable": "NODE_OPTIONS", "prefix": "--max-old-space-size=", "unit": "megabytes" }, "environment": {} }
@@ -33,6 +45,7 @@
         "en": {
           "waiting": "graph: asking the host for up to {workers} worker processes for {projects} projects; projects are inferred in this process meanwhile",
           "starting": "graph: inferring projects with {workers} worker processes ({megabytes} MB each)",
+          "own": "graph: {workers} worker process inside the capacity grant of this process ({megabytes} MB) infers projects now, the host is asked for more",
           "serial": "graph: inferring {projects} projects in this process ({reason})",
           "refused": "graph: worker processes were not used because they differ from this process ({reason}); projects are inferred in this process",
           "lost": "graph: a worker process was lost ({reason}); its project is inferred again",
@@ -43,16 +56,17 @@
           "finished": "graph: {adopted} of {projects} projects inferred by {workers} worker processes in {seconds} s ({failed} failed, {lost} lost, {recycled} restarts)"
         },
         "de": {
-          "waiting": "Graph: beim Host werden bis zu {workers} Arbeitsprozesse für {projects} Projekte angefragt; die Projekte werden unterdessen in diesem Prozess abgeleitet",
-          "starting": "Graph: Projekte werden mit {workers} Arbeitsprozessen abgeleitet ({megabytes} MB je Prozess)",
+          "waiting": "Graph: beim Rechner werden bis zu {workers} Worker-Prozesse für {projects} Projekte angefragt; die Projekte werden unterdessen in diesem Prozess abgeleitet",
+          "starting": "Graph: Projekte werden mit {workers} Worker-Prozessen abgeleitet ({megabytes} MB je Prozess)",
+          "own": "Graph: {workers} Worker-Prozess innerhalb der Kapazitätszusage dieses Prozesses ({megabytes} MB) leitet jetzt Projekte ab, beim Rechner werden weitere angefragt",
           "serial": "Graph: {projects} Projekte werden in diesem Prozess abgeleitet ({reason})",
-          "refused": "Graph: Arbeitsprozesse wurden nicht verwendet, weil sie von diesem Prozess abweichen ({reason}); Projekte werden in diesem Prozess abgeleitet",
-          "lost": "Graph: ein Arbeitsprozess ging verloren ({reason}); sein Projekt wird erneut abgeleitet",
-          "degraded": "Graph: keine Arbeitsprozesse mehr ({reason}); die übrigen Projekte werden in diesem Prozess abgeleitet",
-          "failed": "Graph: ein Arbeitsprozess konnte Projekt {project} nicht ableiten ({reason}); es wird in diesem Prozess abgeleitet",
+          "refused": "Graph: Worker-Prozesse wurden nicht verwendet, weil sie von diesem Prozess abweichen ({reason}); Projekte werden in diesem Prozess abgeleitet",
+          "lost": "Graph: ein Worker-Prozess ging verloren ({reason}); sein Projekt wird erneut abgeleitet",
+          "degraded": "Graph: keine Worker-Prozesse mehr ({reason}); die übrigen Projekte werden in diesem Prozess abgeleitet",
+          "failed": "Graph: ein Worker-Prozess konnte Projekt {project} nicht ableiten ({reason}); es wird in diesem Prozess abgeleitet",
           "declined": "Graph: der Graph-Cache hat die Blätter von Projekt {project} abgelehnt; es wird in diesem Prozess abgeleitet",
-          "recycled": "Graph: Arbeitsprozess {worker} nach {megabytes} MB neu gestartet",
-          "finished": "Graph: {adopted} von {projects} Projekten von {workers} Arbeitsprozessen in {seconds} s abgeleitet ({failed} fehlgeschlagen, {lost} verloren, {recycled} Neustarts)"
+          "recycled": "Graph: Worker-Prozess {worker} nach {megabytes} MB neu gestartet",
+          "finished": "Graph: {adopted} von {projects} Projekten von {workers} Worker-Prozessen in {seconds} s abgeleitet ({failed} fehlgeschlagen, {lost} verloren, {recycled} Neustarts)"
         }
       }
     },

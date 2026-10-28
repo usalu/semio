@@ -1,0 +1,47 @@
+🧪️tests/🎯️source-roster/🟦️.ts	LANDED 10:21	fixture dispatch owners follow task-routes + suite tables (json), schema pattern ts|json, runtimeLiterals reads tables
+🛠️cmake/🧪️tests/🟦️.ts	LANDED 10:21	real defect: root CMakeLists.txt restored from HEAD^ (digest equals schema pin)
+📖️texts/🧪️tests/🟦️.ts	LANDED 10:23	law scans caching engine-digest owner
+🔧️tools/🏗️bazel/🧪️tests/📥️coverage/🟦️.ts	LANDED 10:26	bazelStarlarkRulesV1 + repo_inputs_witness
+🔧️tools/🏗️bazel/🧪️tests/📋️contract/🟦️.ts	LANDED 10:28	corpus digests re-baselined (5 definitions), StorageLayout pool
+🔧️tools/🏗️bazel/🧪️tests/📤️arguments/🟦️.ts	LANDED 10:28	runTask now in 🎬️executor, new free names
+🔧️tools/🏗️bazel/🧪️tests/📥️environment/🟦️.ts	LANDED 10:29	import.meta.dirname
+🔧️tools/🏗️bazel/🧪️tests/📥️purpose/🧪️tests/🌱️birth/🟦️.ts	LANDED 10:29	import.meta.dirname
+🔧️tools/🏗️bazel/🧪️tests/🟦️.ts	STAGED	restore leases per output root (held-snapshot), build label expr, free names
+🔧️tools/🏗️bazel/💾️storage/🧪️tests/🟦️.ts	STAGED	guard excludes plan-child (BUILD_GRAPH_PLAN_OUT_V1)
+🔧️tools/🏗️bazel/🦀️cargo/🧪️tests/🟦️.ts	STAGED	corpus commands launcher repo (policy nativeCommand regex)
+🧾️store-receipt/🧪️tests/🟦️.ts	STAGED	law follows relative static+dynamic imports one level; quoted script path; stageAdmittedArtifactTreesV1 publisher
+🚀️bootstrap/🧪️tests/🟦️.ts	STAGED	import edge may be a public facade that explicitly re-exports the declared module
+🕸️graph/🦀️rust/🔒️lifetime/🧪️tests/🟦️.ts	STAGED	withSelectedRustBuildGraphV1 caller moved to ⌨️command/⚙️runtime
+🕸️graph/🦀️rust/📥️source/🧪️tests/🟦️.ts	STAGED	test artifact dir instead of ticket dir; observation fixture declarationExports +12 (staged)
+👁️observation/🧪️tests/🧫️fixtures/🔣️.json	STAGED	declarationExports +12 new API names (shared with observation root test)
+🕸️graph/🦀️rust/🧩️assembly/🧪️tests/🟦️.ts	STAGED	stale-epoch law runs under routing.withoutImplementationPinV1 (invocations are pinned by design)
+🧪️tests/🟦️.ts	STAGED	root build is a noop aggregate (law asserts it); value-module retirement-support law uses Ajv2020 (LANDED, not frozen)
+🔧️tools/💾️storage/🧪️tests/🟦️.ts	STAGED	graph artifact model: real encodeGraphRecordsV1/policy/schema, readdir/ledger ports; call order reads the runtime module (main flow, backend execute)
+📥️inputs/💾️storage/🧪️tests/🎛️phase/🟦️.ts	STAGED	writer model: new free names (nativeStatfs, writer resource, schema, consumer guard), leases partition open call; artifact model with real record encoder
+📥️inputs/💾️storage/🧪️tests/🚪️admission/🟦️.ts	STAGED	consumer guard binding + cache-gc launcher import stub
+📥️inputs/💾️storage/🧪️tests/🔒️lifetime/🟦️.ts	STAGED	cache-gc launcher import stub in extracted writer
+📥️inputs/💾️storage/🧪️tests/🛑️primary/🟦️.ts	STAGED	maintenance writer moved to 🔧️custody; helper searches both modules
+📥️inputs/💾️storage/🧪️tests/🪪️identity/🟦️.ts	STAGED	store variables: original + read-only current.store
+📥️inputs/💾️storage/🧪️tests/🔏️closure/🟦️.ts	STAGED	(+🧫️cases.json worker graph path) revision rows port names (ignoredSections, relative)
+📥️inputs/💾️storage/🧪️tests/🎟️custody/🟦️.ts	DEFERRED	optional headroom now delegates deletion to retireBuildGraphOptionalGroupsHeadroomV1 (groups tests cover it); test model needs rewrite to the groups port
+📥️inputs/💾️storage/🧪️tests/📒️ledger/🟦️.ts	PARTIAL-STAGED	image dirs from testScratchRootV1 (nested-image law); still red: line 44 expects 17 got 1 + flaky capture under load
+⌨️command/🩺️preflight/🟦️.ts	STAGED-PRODUCT	help is answered before the granted-selection check (real defect: help must not need a selection); verify with ⚙️operations/🧪️tests after apply
+lib:⚡️caching/…/📡️session/🟦️.ts + lib:🏗️build/📥️source/🔏️closure/🚪️command/🟦️.ts	STAGED-PRODUCT	stale-loaded refusals let a pinned invocation finish (generation-protocol law; also kills the ⌨️command churn flake)
+🕸️graph/📥️inference/🧪️tests/🧷️closure-facts/🔣️.json	STAGED	law: raw reads banned (readFileSync); the single sanctioned read inside the memoized per-file computation required (independent python oracle agrees)
+🏡️resident/🧪️tests/🏛️service/🟦️.ts	PARTIAL-STAGED	service environment hermetic (the bound SEMIO_BUILD_* keys of a build run made every client refuse); 29 red -> 3 red (dirty/journal queries; watcher backend)
+📥️caller/🧪️tests/📥️birth/📜️script.ts	STAGED	(reclassified from GATE: refusals are keys now) child selection refusal asserts its key; verify 📥️birth/🟦️.ts after apply
+🚀️bootstrap/⌨️cli/🧬️schema/🔣️.json	STAGED-PRODUCT	(reclassified from GATE) owner project.json bound 64 KiB -> 256 KiB: ⚡️caching/📋️project.json is 99 KiB; verify the two bootstrap/⌨️cli tests after apply
+📊️reporting/🧪️tests/🟦️.ts	STAGED	(reclassified from GATE) callback failure closes the shared Original: isolated declared-rejection test (registerIsolatedBuildTestV1)
+🎚️mode/🦀️profile/🧪️tests/📥️consumption/🟦️.ts + 🔣️.json	STAGED	re-baselined Cargo profile corpus (framework 51 wasm, root 52 wasm = 81 rows), selection owner is the Once function
+🗂️suites/🔣️.json	STAGED	suite build-graph-rust scratch=checkout (its bounded Source roster needs an in-checkout fixture directory; the sandbox default lives outside)
+🧪️tests/🕸️graph/🎯️source-demand/📋️scope/🧫️cases.json + lib:📦️packages/🟦️typescript/📋️project.json	STAGED-PRODUCT	test-build-caller-birth closure resources declare the door script the birth test executes (cache key was blind to it); verify scope test after apply
+🗂️suites/🔣️.json	STAGED	+ fileLaunchers build-inputs-selected: 📥️inputs/🎯️selected/🧪️tests/🟦️.ts under genuine birth setup-sdk (probe: passes)
+📥️inputs/🧊️stable-file/🧪️tests/🔣️.json	STAGED	size refusal text split from the changed-file refusal
+📥️inputs/🧊️stable-file/🧪️tests/🟦️.ts + 🔣️.json + 🧬️schema/🔣️.json	STAGED	(supersedes the earlier line) stable-file now re-captures a file edited mid-read (churn read layer): append/touch/truncate cases assert the re-capture, budget reset to the start admission, and its checkpoint counts
+🕸️graph/📥️inference/🧪️tests/🎓️course-inputs/🟦️.ts	PARTIAL-STAGED	oracle bundler loads the public .json facades (TS modules) as TS; the law then reports a REAL cache gap: the course test target reads 🖱️ui/🧱️elements/🥞️LayeredOverview/📋️types/🟦️.ts without declaring or inferring it (FOR course owner: declare the ui element sources in the test target inputs)
+🗂️suites/🔣️.json	STAGED	+ fileLaunchers build-targets-selection: 🧭️selection/📥️closure/🧪️tests/🟦️.ts under setup-sdk (probe: passes)
+📥️inputs/🧪️tests/📏️windows/🟦️.ts	PARTIAL-STAGED	reader law inspects observeOnce behind the retry wrapper; the FD-operations child test still red (error/undefined cases: same/completed false under the retry design)
+🧪️tests/🕸️graph/📐️portable-model/🟦️.ts	PARTIAL-STAGED	Nx projection now carries cache:false (expectation updated); the test also needs the Nx namespace birth (open, see FFI finding)
+📥️inputs/🧮️digest/🧪️tests/🟦️.ts	STAGED	(reclassified from GATE) two tests each birthed their own Original in one process: both use the shared build-test Original
+🧭️selection/👁️watch/🧪️tests/🧪️tests/🔬️script-commands/🟦️.ts	STAGED-UNVERIFIED	child script compares the null-prototype envelope policy with strict deepEqual against JSON: compare a plain copy; verify 🧭️selection/👁️watch/🧪️tests after apply
+🏛️sealed/🧪️tests/🚦️trampoline/🟦️.ts	STAGED	child env clears LANG/LC_*: bilingual output expected when no language is chosen (a LANG=en shell made 3 laws red)

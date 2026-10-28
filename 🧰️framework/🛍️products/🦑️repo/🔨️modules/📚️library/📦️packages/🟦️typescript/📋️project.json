@@ -190,7 +190,7 @@
           "dashboard": {
             "title": {
               "en": "Verify Cargo Workspace Ownership",
-              "de": "Cargo-Arbeitsbereichszuordnung Prüfen"
+              "de": "Cargo-Arbeitsbereichszuordnung prüfen"
             },
             "description": {
               "en": "Verify nested workspace members exclude foreign-owned packages without changing package ownership.",
@@ -216,7 +216,8 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/♻️recovery/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts"
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts"
       ],
       "outputs": [],
       "options": {
@@ -232,7 +233,7 @@
           "dashboard": {
             "title": {
               "en": "Verify Build Caller Birth",
-              "de": "Build-Aufruferstart Prüfen"
+              "de": "Build-Aufruferstart prüfen"
             },
             "description": {
               "en": "Verify original process limits, compiler preparation and child deadline custody.",

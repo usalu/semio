@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:unit-lock-model-corpus:v1",
+  "title": "Unit Lock Model Corpus",
+  "description": "Language-agnostic scenarios of Cargo fine-grain unit locking under the admission regimes of a build directory (free, directory custody, lanes, unit custody) with the verdict every implementation of the model must reach, and the counts of the exhaustive sweep over every pair of process shapes on three units.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "sweep"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "regime",
+          "processes",
+          "deadlock",
+          "overlap",
+          "note"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "regime": {
+            "enum": [
+              "free",
+              "directory",
+              "lanes",
+              "units"
+            ]
+          },
+          "processes": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "graph",
+                "dirty"
+              ],
+              "properties": {
+                "graph": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "dirty": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "mightDirty": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          },
+          "deadlock": {
+            "type": "boolean"
+          },
+          "overlap": {
+            "type": "boolean"
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "sweep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "free",
+        "directory",
+        "lanes",
+        "units",
+        "units-under"
+      ],
+      "patternProperties": {
+        "^(free|directory|lanes|units|units-under)$": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pairs",
+            "deadlocks",
+            "overlaps"
+          ],
+          "properties": {
+            "pairs": {
+              "type": "integer"
+            },
+            "deadlocks": {
+              "type": "integer"
+            },
+            "overlaps": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    }
+  }
+}

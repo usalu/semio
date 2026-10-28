@@ -1,0 +1,5 @@
+{
+ "test-original-factory-admission-source": {
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📦️packages/🦀️rust/📋️project.json": "pathmod-g rust-mounts replaced the crate-directory fallback `retained/📦️packages/🦀️rust/**/*` by the exact rustc source set (Cargo.toml, 🦀️.rs and the mounted retained tree); a project.json is not a rustc input (rustc dep-info leg and the bun read oracle are clean)"
+ }
+}

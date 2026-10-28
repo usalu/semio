@@ -24,5 +24,29 @@
         ]
       }
     }
+  },
+  "definitions": {
+    "Limits": {
+      "description": "EN: The ages, budgets and descriptor limit of the record store. DE: Die Alter, Budgets und die Deskriptorgrenze des Record-Stores.",
+      "const": {
+        "orphanMilliseconds": 3600000,
+        "pendingFlushBytes": 67108864,
+        "descriptorLimit": 32
+      }
+    },
+    "LimitsDescriptions": {
+      "const": {
+        "en": {
+          "orphanMilliseconds": "How old an unreferenced pack or temporary file must be before the store may remove it (1 hour).",
+          "pendingFlushBytes": "The pending bytes at which the store writes a pack (64 MiB).",
+          "descriptorLimit": "How many read descriptors packs keep open across every store of the process."
+        },
+        "de": {
+          "orphanMilliseconds": "Wie alt ein unreferenziertes Pack oder eine temporäre Datei sein muss, bevor der Store sie entfernen darf (1 Stunde).",
+          "pendingFlushBytes": "Die ausstehenden Bytes, ab denen der Store ein Pack schreibt (64 MiB).",
+          "descriptorLimit": "Wie viele Lesedeskriptoren Packs über alle Stores des Prozesses offen halten."
+        }
+      }
+    }
   }
 }

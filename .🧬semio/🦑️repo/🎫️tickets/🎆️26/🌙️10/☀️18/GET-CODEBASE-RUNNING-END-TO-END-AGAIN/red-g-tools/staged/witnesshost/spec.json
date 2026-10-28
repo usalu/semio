@@ -1,0 +1,48 @@
+{
+ "files": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.mjs": [
+   {
+    "old": "import schema from \"./🧬️schema/🔣️.json\" with {type: \"json\"};\n",
+    "new": "import schema from \"./🧬️schema/🔣️.json\" with {type: \"json\"};\nimport {readFileSync} from \"node:fs\";\nimport {runtimeAdapterNameV1} from \"../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts\";\n",
+    "count": 1
+   },
+   {
+    "old": " if (typeof Bun !== \"undefined\") {\n  for (const name of [\"spawn\", \"spawnSync\"]) patch(Bun, name, spawned(\"Bun.\" + name));\n  patch(Bun, \"$\", spawned(\"Bun.$\"));\n  for (const name of [\"which\", \"resolve\", \"resolveSync\", \"build\", \"write\"]) patch(Bun, name, function_ => function (...args) { if (name === \"write\") markWrite(typeof args[0] === \"string\" || args[0] instanceof URL ? args[0] : undefined); else taint(\"unobserved Bun.\" + name); return function_.apply(this, args); });\n  patch(Bun, \"file\", function_ => function (...args) { if (typeof args[0] === \"string\" || args[0] instanceof URL) observeBefore(\"f\", args[0]); else if (args[0] !== 1 && args[0] !== 2) taint(\"unobserved Bun.file of \" + (args[0] === null ? \"null\" : typeof args[0] === \"object\" ? (args[0].constructor && args[0].constructor.name) : typeof args[0] + \" \" + String(args[0]))); return function_.apply(this, args); });\n  try { const glob = Bun.Glob; if (glob !== undefined && glob.prototype !== undefined) for (const name of [\"scan\", \"scanSync\"]) patch(glob.prototype, name, function_ => function (...args) { taint(\"unobserved Bun.Glob.\" + name); return function_.apply(this, args); }); } catch { taint(\"cannot observe Bun.Glob\"); }\n }",
+    "new": " const hostBinding = config.host, hostRuntime = hostBinding === undefined ? undefined : globalThis[hostBinding.namespace];\n if (hostRuntime !== undefined) {\n  const label = hostBinding.namespace;\n  for (const name of hostBinding.spawn) patch(hostRuntime, name, spawned(label + \".\" + name));\n  for (const name of hostBinding.unobserved) patch(hostRuntime, name, function_ => function (...args) { if (name === hostBinding.write) markWrite(typeof args[0] === \"string\" || args[0] instanceof URL ? args[0] : undefined); else taint(\"unobserved \" + label + \".\" + name); return function_.apply(this, args); });\n  patch(hostRuntime, hostBinding.fileReader, function_ => function (...args) { if (typeof args[0] === \"string\" || args[0] instanceof URL) observeBefore(\"f\", args[0]); else if (args[0] !== 1 && args[0] !== 2) taint(\"unobserved \" + label + \".\" + hostBinding.fileReader + \" of \" + (args[0] === null ? \"null\" : typeof args[0] === \"object\" ? (args[0].constructor && args[0].constructor.name) : typeof args[0] + \" \" + String(args[0]))); return function_.apply(this, args); });\n  try { const glob = hostRuntime[hostBinding.glob]; if (glob !== undefined && glob.prototype !== undefined) for (const name of [\"scan\", \"scanSync\"]) patch(glob.prototype, name, function_ => function (...args) { taint(\"unobserved \" + label + \".\" + hostBinding.glob + \".\" + name); return function_.apply(this, args); }); } catch { taint(\"cannot observe \" + label + \".\" + hostBinding.glob); }\n }",
+    "count": 1
+   },
+   {
+    "old": "  const sqlite = load(\"bun:sqlite\");\n",
+    "new": "  const sqlite = hostBinding === undefined || hostBinding.sqlite === undefined ? undefined : load(hostBinding.sqlite);\n",
+    "count": 1
+   },
+   {
+    "old": " return {[policy.config]: JSON.stringify(config)};\n}",
+    "new": " config.host = worldWitnessHostBindingV1();\n return {[policy.config]: JSON.stringify(config)};\n}",
+    "count": 1
+   },
+   {
+    "old": "/** 🧾️ The environment a child needs to run under the witness;",
+    "new": "/** 🍞️ The members of the hosting runtime that the witness must observe, read from the table in the adapter directory of that runtime next to this module (`🍞️bun/🔣️.json` for Bun), so this file names no runtime; undefined when the runtime has no adapter directory and nothing of its own to observe. */\nexport function worldWitnessHostBindingV1() {\n try { return JSON.parse(readFileSync(new URL(`./${runtimeAdapterNameV1()}/🔣️.json`, import.meta.url), \"utf8\")); } catch { return undefined; }\n}\n\n/** 🧾️ The environment a child needs to run under the witness;",
+    "count": 1
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.d.mts": [
+   {
+    "old": "export function worldWitnessEnvironmentV1(",
+    "new": "export function worldWitnessHostBindingV1(): Readonly<{ namespace: string; spawn: readonly string[]; unobserved: readonly string[]; write: string; fileReader: string; glob: string; sqlite?: string }> | undefined;\nexport function worldWitnessEnvironmentV1(",
+    "count": 1
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧬️schema/🔣️.json": [
+   {
+    "old": "  \"definitions\": {\n    \"Policy\": {",
+    "new": "  \"definitions\": {\n    \"HostBinding\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\"namespace\", \"spawn\", \"unobserved\", \"write\", \"fileReader\", \"glob\"],\n      \"properties\": {\n        \"namespace\": {\"type\": \"string\", \"minLength\": 1},\n        \"spawn\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"minLength\": 1}, \"minItems\": 1},\n        \"unobserved\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"minLength\": 1}},\n        \"write\": {\"type\": \"string\", \"minLength\": 1},\n        \"fileReader\": {\"type\": \"string\", \"minLength\": 1},\n        \"glob\": {\"type\": \"string\", \"minLength\": 1},\n        \"sqlite\": {\"type\": \"string\", \"minLength\": 1}\n      }\n    },\n    \"Policy\": {",
+    "count": 1
+   }
+  ]
+ },
+ "new": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🍞️bun/🔣️.json": "host-binding.json"
+ }
+}

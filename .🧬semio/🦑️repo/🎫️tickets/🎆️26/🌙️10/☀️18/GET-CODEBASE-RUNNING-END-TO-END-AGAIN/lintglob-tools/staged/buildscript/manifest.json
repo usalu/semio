@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🟨️.mjs": {
+  "file": "f01.mjs",
+  "base": "58e5d7786a207d4eb5f177af7ed89134b772f370d5b0d2927e99d84e7cbd480e",
+  "new": "c7766e6a96856e3e115d08b14b35263de6d1bf805b5bb43f64fabea4a727eb03"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🦀️mounted-sources/🔣️.json": {
+  "file": "f02.json",
+  "base": "926a890770725075d7394b1d7d9eaf3ada2e48485c3d7967b13cde24dfd6597e",
+  "new": "de973449bbb13b687a8242a0f3342b1bd6ba468712f3ad772cae20d63d9d75b1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🦀️mounted-sources/🟦️.ts": {
+  "file": "f03.ts",
+  "base": "398f798612ce556f1326412b58e317e8e1ad7a7ca00cf17e37e5da08088162be",
+  "new": "a41e2ec04f2d75448e8a6fe87249ec7b8cfe08ee9378201577e97f5710b9ed81"
+ }
+}

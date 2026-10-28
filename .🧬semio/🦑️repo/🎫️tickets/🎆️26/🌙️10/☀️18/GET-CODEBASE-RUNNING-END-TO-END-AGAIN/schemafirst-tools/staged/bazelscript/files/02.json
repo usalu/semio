@@ -1,0 +1,19 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+ "definitions": [
+  "Limits"
+ ],
+ "sources": [
+  "🏗️build/🔧️tools/🏗️bazel/📜️script.ts"
+ ],
+ "minimumNumber": 200,
+ "allow": [
+  {
+   "source": "🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "value": 256,
+   "reason": "The octal file mode 0o400 (read-only) is numerically 256; it is a permission, not the classification batch."
+  }
+ ]
+}

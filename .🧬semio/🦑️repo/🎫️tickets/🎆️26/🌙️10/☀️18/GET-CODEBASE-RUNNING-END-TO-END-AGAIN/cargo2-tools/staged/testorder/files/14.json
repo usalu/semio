@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "profile": {"version": 1, "mode": "prototype", "target": "aarch64-apple-darwin", "producer": "artifact", "operation": "test"},
+  "context": {"version": 1, "compilerConfiguration": "/owner/.cargo/config.toml", "buildDirectory": "/owner/build", "targetDirectory": "/owner/target"},
+  "metadata": "/owner/results/binaries-metadata.json",
+  "foreign": [
+    {"id": "another-configuration", "append": ["--config", "build.jobs=1"], "expect": "refused"},
+    {"id": "foreign-target-directory", "append": ["--target-dir", "/elsewhere"], "expect": "refused"}
+  ]
+}

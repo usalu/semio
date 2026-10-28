@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hostShareBasisPoints": 5000,
+  "runners": [
+    { "id": "bun-test", "override": "SEMIO_BUN_TEST_WORKERS", "baseMegabytes": 128, "workerMegabytes": 1024, "wanted": 1, "maximum": 8, "oversubscription": 1 },
+    { "id": "vitest", "override": "SEMIO_VITEST_WORKERS", "baseMegabytes": 1200, "workerMegabytes": 100, "wanted": 4, "maximum": 8, "oversubscription": 4 },
+    { "id": "cargo-test", "override": "SEMIO_CARGO_TEST_THREADS", "baseMegabytes": 256, "workerMegabytes": 192, "wanted": "cores", "maximum": 32, "oversubscription": 4 },
+    { "id": "playwright", "override": "SEMIO_PLAYWRIGHT_WORKERS", "baseMegabytes": 256, "workerMegabytes": 1200, "wanted": 4, "maximum": 6, "oversubscription": 1 },
+    { "id": "e2e-stacks", "override": "SEMIO_E2E_STACKS", "baseMegabytes": 256, "workerMegabytes": 1500, "wanted": 3, "maximum": 4, "oversubscription": 1 }
+  ]
+}

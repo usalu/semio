@@ -30,3 +30,18 @@ export function readInferenceSourceV1(name: string): string {
 export function readInferenceGraphSourceV1(): string {
   return inferenceSourceFilesV1().map((row) => readFileSync(row.path, "utf8")).join("\n");
 }
+
+/** 🔌️ The live bindings one named Source file of the build inference module imports, keyed by their local names, so a law that evaluates extracted declarations of that file supplies its real dependencies and stubs only the ports it observes. */
+export async function inferenceImportPortsV1(name: string): Promise<Readonly<Record<string, unknown>>> {
+  const file = inferenceSourceFilesV1().find((row) => row.name === name);
+  if (!file) throw Error(`Unknown build inference Source ${name}`);
+  const ts = (await import("typescript")).default, tree = ts.createSourceFile(file.path, readFileSync(file.path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.JS), ports: Record<string, unknown> = {};
+  for (const node of tree.statements) {
+    if (!ts.isImportDeclaration(node) || !node.importClause || node.importClause.isTypeOnly || !ts.isStringLiteral(node.moduleSpecifier)) continue;
+    const specifier = node.moduleSpecifier.text, json = specifier.endsWith(".json"), module = await import(specifier.startsWith(".") ? join(file.path, "..", specifier) : specifier, json ? { with: { type: "json" } } : undefined), bindings = node.importClause.namedBindings;
+    if (node.importClause.name) ports[node.importClause.name.text] = module.default;
+    if (bindings && ts.isNamespaceImport(bindings)) ports[bindings.name.text] = module;
+    if (bindings && ts.isNamedImports(bindings)) for (const element of bindings.elements) if (!element.isTypeOnly) ports[element.name.text] = module[(element.propertyName ?? element.name).text];
+  }
+  return Object.freeze(ports);
+}

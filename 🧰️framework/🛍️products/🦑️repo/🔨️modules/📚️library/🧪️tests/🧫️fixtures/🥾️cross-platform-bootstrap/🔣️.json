@@ -6,48 +6,148 @@
     "componentMax": 255
   },
   "scriptEncoding": {
-    "bomExtensions": [".ps1", ".psm1", ".psd1"],
-    "lfExtensions": [".sh"],
-    "excludedPrefixes": [".🧬semio/🦑️repo/🎫️tickets"]
+    "bomExtensions": [
+      ".ps1",
+      ".psm1",
+      ".psd1"
+    ],
+    "lfExtensions": [
+      ".sh"
+    ],
+    "excludedPrefixes": [
+      ".🧬semio/🦑️repo/🎫️tickets"
+    ]
   },
   "cargoLinker": {
     "config": ".cargo/config.toml",
     "linuxTable": "cfg(all(target_os = \"linux\", target_env = \"gnu\"))",
-    "linuxRustflags": ["-Z", "threads=0", "-C", "linker-features=+lld", "-C", "link-self-contained=+linker", "-Z", "unstable-options"],
-    "forbiddenRustflagFragments": ["fuse-ld="]
+    "linuxRustflags": [
+      "-Z",
+      "threads=0",
+      "-C",
+      "linker-features=+lld",
+      "-C",
+      "link-self-contained=+linker",
+      "-Z",
+      "unstable-options"
+    ],
+    "forbiddenRustflagFragments": [
+      "fuse-ld="
+    ]
   },
   "repoLocalGitConfig": [
-    ["core.symlinks", "true"],
-    ["core.longpaths", "true"]
+    [
+      "core.symlinks",
+      "true"
+    ],
+    [
+      "core.longpaths",
+      "true"
+    ]
   ],
   "unixBootstrap": {
     "installerInvocations": 1,
     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh",
-    "packageManagers": ["apt-get", "dnf", "pacman", "zypper"],
-    "requiredTools": ["cc", "c++", "make", "pkg-config", "curl", "git", "unzip"],
-    "forbidden": ["git config --global", ".cargo/config.toml", "fuse-ld", "mold"]
+    "packageManagers": [
+      "apt-get",
+      "dnf",
+      "pacman",
+      "zypper"
+    ],
+    "requiredTools": [
+      "cc",
+      "c++",
+      "make",
+      "pkg-config",
+      "curl",
+      "git",
+      "unzip"
+    ],
+    "forbidden": [
+      "git config --global",
+      ".cargo/config.toml",
+      "fuse-ld",
+      "mold"
+    ]
   },
   "windowsBootstrap": {
     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1",
-    "required": ["LongPathsEnabled", "[en]", "[de]", "\"toolchain\", \"install\"", "[Console]::OutputEncoding"],
-    "forbidden": ["git config --global", "\"config.toml\"", "\"target\", \"add\""]
+    "required": [
+      "LongPathsEnabled",
+      "[en]",
+      "[de]",
+      "\"toolchain\", \"install\"",
+      "[Console]::OutputEncoding"
+    ],
+    "forbidden": [
+      "git config --global",
+      "\"config.toml\"",
+      "\"target\", \"add\""
+    ]
   },
   "nativePins": {
-    "hosts": ["nodejs.org", "dl.google.com", "static.rust-lang.org", "github.com", "raw.githubusercontent.com"],
-    "tools": ["node", "go", "rustup", "uv"],
-    "platforms": ["darwin", "linux", "win32"],
-    "architectures": ["x64", "arm64"],
+    "hosts": [
+      "nodejs.org",
+      "dl.google.com",
+      "static.rust-lang.org",
+      "github.com",
+      "raw.githubusercontent.com"
+    ],
+    "tools": [
+      "node",
+      "go",
+      "rustup",
+      "uv"
+    ],
+    "platforms": [
+      "darwin",
+      "linux",
+      "win32"
+    ],
+    "architectures": [
+      "x64",
+      "arm64"
+    ],
     "rowShape": "^\\{\"tool\":\"[a-z-]+\",\"version\":\"[0-9a-f.]+\",\"platform\":\"[a-z0-9]+\",\"arch\":\"[a-z0-9]+\",\"url\":\"https://[^\"]+\",\"sha256\":\"[a-f0-9]{64}\"\\},?$",
-    "forbiddenInstallers": ["bun.sh/install", "sh.rustup.rs", "astral.sh/uv/install", "dot.net/v1/dotnet-install", "go.dev/VERSION", "winget upgrade", "Invoke-Expression", "iex ", "| sh", "| bash", "|sh", "|bash"],
-    "playwrightCache": "tools\\ms-playwright"
+    "forbiddenInstallers": [
+      "bun.sh/install",
+      "sh.rustup.rs",
+      "astral.sh/uv/install",
+      "dot.net/v1/dotnet-install",
+      "go.dev/VERSION",
+      "winget upgrade",
+      "Invoke-Expression",
+      "iex ",
+      "| sh",
+      "| bash",
+      "|sh",
+      "|bash"
+    ],
+    "playwrightCache": "tools\\ms-playwright",
+    "launcherRegistry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json"
   },
   "windowsLongPaths": {
     "cases": [
-      { "output": "\r\nHKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\r\n    LongPathsEnabled    REG_DWORD    0x1\r\n\r\n", "expected": true },
-      { "output": "\r\nHKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\r\n    LongPathsEnabled    REG_DWORD    0x0\r\n\r\n", "expected": false },
-      { "output": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\n    LongPathsEnabled    REG_DWORD    0x00000001\n", "expected": true },
-      { "output": "\r\nERROR: The system was unable to find the specified registry key or value.\r\n", "expected": null },
-      { "output": "", "expected": null }
+      {
+        "output": "\r\nHKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\r\n    LongPathsEnabled    REG_DWORD    0x1\r\n\r\n",
+        "expected": true
+      },
+      {
+        "output": "\r\nHKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\r\n    LongPathsEnabled    REG_DWORD    0x0\r\n\r\n",
+        "expected": false
+      },
+      {
+        "output": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\n    LongPathsEnabled    REG_DWORD    0x00000001\n",
+        "expected": true
+      },
+      {
+        "output": "\r\nERROR: The system was unable to find the specified registry key or value.\r\n",
+        "expected": null
+      },
+      {
+        "output": "",
+        "expected": null
+      }
     ]
   },
   "nodePin": {
@@ -75,8 +175,14 @@
     "deferredImports": {
       "source": "import { sep } from \"node:path\";\nexport const initial = sep;\nexport const load = () => import(\"./command.ts\");\n",
       "imports": [
-        { "path": "node:path", "kind": "import-statement" },
-        { "path": "./command.ts", "kind": "dynamic-import" }
+        {
+          "path": "node:path",
+          "kind": "import-statement"
+        },
+        {
+          "path": "./command.ts",
+          "kind": "dynamic-import"
+        }
       ]
     }
   }

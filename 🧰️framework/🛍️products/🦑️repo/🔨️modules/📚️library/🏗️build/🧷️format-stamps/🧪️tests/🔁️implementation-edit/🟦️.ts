@@ -79,7 +79,7 @@ test("the announcements of a restart after a half edit exist in both languages w
  expect(formatStampTextV1("de","loadfailure",{reason:"r",delay:2000,attempt:1,maximum:3})).toContain("Warte 2000 ms");
 });
 
-const mirrored=(()=>{const base=join(framework,"🛍️products","🦑️repo","🔨️modules","📚️library","🏗️build","📥️inputs","🔏️revision");return[join(base,"🟨️.mjs"),join(base,"🧬️schema","🔣️.json"),join(framework,"🔨️modules","📁️filesystem","🧾️observation","🔁️churn","🟦️.ts"),join(framework,"🔨️modules","📁️filesystem","🧾️observation","🔁️churn","🧬️schema","🔣️.json")];})();
+const mirrored=(()=>{const base=join(framework,"🛍️products","🦑️repo","🔨️modules","📚️library","🏗️build","📥️inputs","🔏️revision");return[join(base,"🟨️.mjs"),join(base,"🧬️schema","🔣️.json"),join(framework,"🔨️modules","📁️filesystem","🧾️observation","🔁️churn","🟦️.ts"),join(framework,"🔨️modules","📁️filesystem","🧾️observation","🔁️churn","🧬️schema","🔣️.json"),join(framework,"🔨️modules","📁️filesystem","🧾️observation","🔁️churn","🌊️races","🟦️.ts"),join(framework,"🔨️modules","📁️filesystem","🧾️observation","🔁️churn","🧬️schema","🌊️races.json")];})();
 const child=`import{existsSync,writeFileSync}from"node:fs";
 import{exitIfStaleImplementationV1}from${JSON.stringify(pathToFileURL(join(framework,"🛍️products","🦑️repo","🔨️modules","📚️library","🏗️build","🧷️format-stamps","🟨️.mjs")).href)};
 const[revision,target,directory,mode]=process.argv.slice(2),attempt=process.env.SEMIO_STALE_REEXEC??"0";
@@ -109,7 +109,7 @@ for(const[mode,editMode]of[["unpinned","append"],["unpinned","replace"],["pinned
   expect(outcome).toEqual({status:"reexecuted",code:0});
   expect(captured[0]).toContain("Stale loaded Source revision reader; restart required");
   expect(existsSync(join(directory,"done-0"))).toBe(false);expect(readFileSync(join(directory,"done-1"),"utf8")).toBe("completed");
-  expect(written.join("")).toContain("Restarting with the current implementation (1 of 3).");
+  expect(written.join("")).toContain("Restarting with the current implementation (1 of "+protocol.maximumReexecutions+").");
  }
 },60000);
 
@@ -134,7 +134,7 @@ test("a script process that ends on a failure a fresh process cures exits with t
 
 test("a command process that ends on an escaped concurrent edit waits the declared pause for its restart count before it yields exit 75; other restartable failures yield at once",()=>{
  const pauses=protocol.editFailure.backoffMs;
- for(const [attempt,expected] of [[0,pauses[0]],[1,pauses[1]],[2,pauses[2]],[3,pauses[pauses.length-1]]] as const){
+ for(const [attempt,expected] of [...pauses.keys(),pauses.length].map(index=>[index,pauses[Math.min(index,pauses.length-1)]] as const)){
   const waited:number[]=[],written:string[]=[];let code:number|undefined;
   exitIfStaleImplementationV1(concurrentEditV1("bytes","/w/a.tex","Consumed Print Source bytes changed","snapshot"),{environment:{SEMIO_STALE_REEXEC:String(attempt)},sleepSync:milliseconds=>{waited.push(milliseconds);},write:text=>{written.push(text);},exit:value=>{code=value;}});
   expect(waited,"attempt "+attempt).toEqual([expected]);expect(code).toBe(protocol.exitCode);expect(written.join("")).toContain("kept editing /w/a.tex while this command read it (its bytes changed). Waiting "+expected+" ms");expect(written.join("")).toContain("Ein anderer Prozess bearbeitete /w/a.tex laufend");

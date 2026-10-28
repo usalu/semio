@@ -1,4 +1,4 @@
-//! 🔓️ The open, close, reopen and change lifecycle, the ticket service and the real-tree purge.
+//! 🔓️ The open, close, reopen and change lifecycle, the ticket service and the generated-output purge.
 
 use super::*;
 
@@ -119,19 +119,6 @@ impl TransactionJournal {
         self.steps.is_empty()
     }
 }
-
-/// 🧹️ What an artifact purge removed.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PurgeReport {
-    pub removed_directories: Vec<String>,
-    pub removed_files: Vec<String>,
-}
-
-/// 📏️ A file above this size is purged from a closed ticket folder.
-pub const OVERSIZED_FILE_BYTES: u64 = 5 << 20;
-/// 🗃️ A subfolder whose files total above this size is purged from a closed ticket folder.
-pub const OVERSIZED_FOLDER_BYTES: u64 = 10 << 20;
 
 /// 🪪️ Request-scoped interaction facts, captured without mutating service or ambient repository state.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -513,70 +500,6 @@ impl<'a, S: TicketStore, T: IssueTracker, C: Clock, E: EventSink> TicketService<
         self.store.remove_tree(&directory)
     }
 
-    /// 🧽️ Deletes oversized artifacts from one ticket folder, deepest folder first.
-    pub fn purge_artifacts(&self, id: &TicketId) -> TicketResult<PurgeReport> {
-        let root = self.layout.ticket_dir(id);
-        let mut report = PurgeReport::default();
-        if !self.store.is_directory(&root) {
-            return Ok(report);
-        }
-        let mut directories: Vec<String> = Vec::new();
-        let mut files: Vec<(String, u64)> = Vec::new();
-        self.collect_tree(&root, &mut directories, &mut files);
-        let mut directory_sizes: BTreeMap<String, u64> = BTreeMap::new();
-        for (path, size) in &files {
-            let mut parent = dir_name(path);
-            while parent.starts_with(&root) {
-                *directory_sizes.entry(parent.clone()).or_default() += size;
-                if parent == root {
-                    break;
-                }
-                parent = dir_name(&parent);
-            }
-        }
-        directories.sort_by_key(|path| std::cmp::Reverse(path.matches('/').count()));
-        let mut deleted: Vec<String> = Vec::new();
-        for directory in directories {
-            if deleted.iter().any(|removed| directory.starts_with(&format!("{removed}/"))) {
-                continue;
-            }
-            if directory_sizes.get(&directory).copied().unwrap_or_default() <= OVERSIZED_FOLDER_BYTES {
-                continue;
-            }
-            self.store.remove_tree(&directory)?;
-            report.removed_directories.push(directory.clone());
-            deleted.push(directory);
-        }
-        for (path, size) in files {
-            if deleted.iter().any(|removed| path == *removed || path.starts_with(&format!("{removed}/"))) {
-                continue;
-            }
-            if base_name(&path) == TICKET_DOCUMENT_NAME || size <= OVERSIZED_FILE_BYTES {
-                continue;
-            }
-            self.store.remove_file(&path)?;
-            report.removed_files.push(path);
-        }
-        report.removed_directories.sort();
-        report.removed_files.sort();
-        Ok(report)
-    }
-
-    fn collect_tree(&self, root: &str, directories: &mut Vec<String>, files: &mut Vec<(String, u64)>) {
-        let Ok(entries) = self.store.entries(root) else { return };
-        for entry in entries {
-            let path = join_path(root, &entry.name);
-            match entry.kind {
-                NodeKind::Directory => {
-                    directories.push(path.clone());
-                    self.collect_tree(&path, directories, files);
-                }
-                NodeKind::File => files.push((path.clone(), self.store.metadata(&path).map(|metadata| metadata.size).unwrap_or_default())),
-                NodeKind::Symlink => {}
-            }
-        }
-    }
-
     fn hydrate(&self, ticket: &mut Ticket, id: &TicketId) {
         ticket.year = id.year;
         ticket.month = id.month;
@@ -666,12 +589,277 @@ pub fn encode_outcome(outcome: &TicketOutcome) -> String {
 
 //#endregion 🔓️Lifecycle
 
-//#region 🧹️RealPurge
+//#region 🧹️PurgeGenerated
+
+/// 🗑️ The one folder of a ticket whose content a purge may remove.
+pub const TICKET_GENERATED_DIRECTORY: &str = "🗑️generated";
+/// 📏️ A generated file above this size is purged.
+pub const OVERSIZED_FILE_BYTES: u64 = 5 << 20;
+/// 🗃️ A generated folder whose files total above this size is purged.
+pub const OVERSIZED_FOLDER_BYTES: u64 = 10 << 20;
+/// ⏱️ How recently a generated file may have been written before its ticket is left alone.
+pub const LIVE_WRITER_WINDOW: std::time::Duration = std::time::Duration::from_secs(600);
+
+/// 🎚️ Which part of an eligible generated folder is removed.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PurgeSelection {
+    /// 📏️ Files above 5 MiB and folders above 10 MiB.
+    Oversized,
+    /// 🧽️ Everything below the generated folder.
+    Generated,
+}
+
+/// 🗑️ One planned removal: a path below the tickets folder, its kind and the bytes it frees.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PurgeRemoval {
+    pub path: String,
+    pub kind: String,
+    pub bytes: u64,
+}
+
+/// ⏭️ Why a whole ticket is left alone.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PurgeSkip {
+    pub ticket: String,
+    pub reason: String,
+}
+
+/// 🧹️ What a purge removes (applied) or would remove (dry run), sorted by path and ticket.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PurgePlan {
+    pub removals: Vec<PurgeRemoval>,
+    pub skips: Vec<PurgeSkip>,
+}
+
+/// 🔎️ Answers which files below a repository-relative folder the git index tracks.
+pub trait TrackedFiles {
+    /// 🗂️ Repository-relative, slash-separated paths of the tracked files below `folder`; an error means "unknown".
+    fn tracked(&self, root: &std::path::Path, folder: &str) -> Result<BTreeSet<String>, String>;
+}
+
+/// 🌿️ The read-only `git ls-files` implementation of [`TrackedFiles`], which cannot climb above the root.
+pub struct GitTrackedFiles;
+
+impl TrackedFiles for GitTrackedFiles {
+    fn tracked(&self, root: &std::path::Path, folder: &str) -> Result<BTreeSet<String>, String> {
+        let ceiling = root.parent().map(std::path::Path::to_path_buf).unwrap_or_default();
+        let output = std::process::Command::new("git")
+            .args(["-c", "core.quotepath=off", "ls-files", "-z", "--cached", "--", folder])
+            .current_dir(root)
+            .env_clear()
+            .envs(std::env::vars_os().filter(|(name, _)| !name.to_string_lossy().to_ascii_uppercase().starts_with("GIT_")))
+            .env("GIT_OPTIONAL_LOCKS", "0")
+            .env("GIT_CEILING_DIRECTORIES", ceiling)
+            .output()
+            .map_err(|error| format!("git ls-files in {}: {error}", root.display()))?;
+        if !output.status.success() {
+            return Err(format!("git ls-files in {} exited with {}", root.display(), output.status));
+        }
+        Ok(String::from_utf8_lossy(&output.stdout).split('\0').filter(|entry| !entry.is_empty()).map(str::to_string).collect())
+    }
+}
+
+/// 🧭️ The whole input of a purge; without `apply` nothing on disk changes.
+pub struct PurgeOptions<'a> {
+    pub root: std::path::PathBuf,
+    pub tickets_dir: std::path::PathBuf,
+    pub selection: PurgeSelection,
+    pub apply: bool,
+    pub now: std::time::SystemTime,
+    pub tracked: &'a dyn TrackedFiles,
+}
+
+/// 📸️ The shape of a generated folder at one moment: an apply that finds it changed was racing a writer.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+struct GeneratedSnapshot {
+    files: usize,
+    bytes: u64,
+    newest: Option<std::time::SystemTime>,
+}
+
+/// 🚶️ The real directories and regular files below `root` (links are never followed) and their snapshot.
+fn walk_generated(root: &std::path::Path) -> Result<(Vec<std::path::PathBuf>, Vec<(std::path::PathBuf, u64)>, GeneratedSnapshot), String> {
+    let mut directories = vec![root.to_path_buf()];
+    let mut files = Vec::new();
+    let mut snapshot = GeneratedSnapshot::default();
+    let mut pending = vec![root.to_path_buf()];
+    while let Some(directory) = pending.pop() {
+        let entries = std::fs::read_dir(&directory).map_err(|error| format!("read {}: {error}", directory.display()))?;
+        for entry in entries {
+            let path = entry.map_err(|error| format!("read {}: {error}", directory.display()))?.path();
+            let metadata = match std::fs::symlink_metadata(&path) {
+                Ok(metadata) => metadata,
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+                Err(error) => return Err(format!("stat {}: {error}", path.display())),
+            };
+            if metadata.file_type().is_symlink() {
+                continue;
+            }
+            if metadata.is_dir() {
+                directories.push(path.clone());
+                pending.push(path);
+            } else if metadata.is_file() {
+                snapshot.files += 1;
+                snapshot.bytes += metadata.len();
+                let modified = metadata.modified().map_err(|error| format!("modified time of {}: {error}", path.display()))?;
+                snapshot.newest = Some(snapshot.newest.map_or(modified, |newest| newest.max(modified)));
+                files.push((path, metadata.len()));
+            }
+        }
+    }
+    Ok((directories, files, snapshot))
+}
+
+/// 🧭️ A slash-separated path of `path` below `base`, or the whole path where it lies elsewhere.
+fn slash_relative(base: &std::path::Path, path: &std::path::Path) -> String {
+    let relative = path.strip_prefix(base).unwrap_or(path);
+    relative.components().map(|component| component.as_os_str().to_string_lossy().into_owned()).collect::<Vec<_>>().join("/")
+}
+
+/// 🔓️ Whether the ticket document says exactly status closed.
+fn ticket_manifest_is_closed(ticket_dir: &std::path::Path) -> bool {
+    let Ok(text) = std::fs::read_to_string(ticket_dir.join(TICKET_DOCUMENT_NAME)) else { return false };
+    serde_json::from_str::<Value>(&text).ok().and_then(|document| document.get("status").and_then(Value::as_str).map(|status| status == "closed")).unwrap_or(false)
+}
+
+/// 🧮️ What to remove below one generated folder, or why the ticket is left whole.
+fn plan_generated_output(options: &PurgeOptions<'_>, generated: &std::path::Path) -> Result<Result<(Vec<PurgeRemoval>, GeneratedSnapshot), &'static str>, String> {
+    let Ok(tracked) = options.tracked.tracked(&options.root, &slash_relative(&options.root, generated)) else { return Ok(Err("tracked-unknown")) };
+    let (mut directories, files, snapshot) = walk_generated(generated)?;
+    if snapshot.newest.is_some_and(|newest| options.now.duration_since(newest).map_or(true, |age| age < LIVE_WRITER_WINDOW)) {
+        return Ok(Err("live-writer"));
+    }
+    let everything = options.selection == PurgeSelection::Generated;
+    let mut bytes_below: BTreeMap<std::path::PathBuf, u64> = BTreeMap::new();
+    let mut tracked_below: BTreeSet<std::path::PathBuf> = BTreeSet::new();
+    let mut tracked_file: BTreeSet<std::path::PathBuf> = BTreeSet::new();
+    for (path, size) in &files {
+        let is_tracked = tracked.contains(&slash_relative(&options.root, path));
+        if is_tracked {
+            tracked_file.insert(path.clone());
+        }
+        let mut parent = path.parent();
+        while let Some(directory) = parent {
+            *bytes_below.entry(directory.to_path_buf()).or_default() += size;
+            if is_tracked {
+                tracked_below.insert(directory.to_path_buf());
+            }
+            if directory == generated {
+                break;
+            }
+            parent = directory.parent();
+        }
+    }
+    directories.sort_by_key(|path| (path.components().count(), path.clone()));
+    let mut removed: Vec<std::path::PathBuf> = Vec::new();
+    let mut removals = Vec::new();
+    for directory in directories {
+        if (directory == generated && !everything) || removed.iter().any(|path| directory.starts_with(path)) || tracked_below.contains(&directory) {
+            continue;
+        }
+        let bytes = bytes_below.get(&directory).copied().unwrap_or_default();
+        if everything || bytes > OVERSIZED_FOLDER_BYTES {
+            removals.push(PurgeRemoval { path: slash_relative(&options.tickets_dir, &directory), kind: "directory".to_string(), bytes });
+            removed.push(directory);
+        }
+    }
+    for (path, size) in files {
+        if removed.iter().any(|directory| path.starts_with(directory)) || tracked_file.contains(&path) {
+            continue;
+        }
+        if everything || size > OVERSIZED_FILE_BYTES {
+            removals.push(PurgeRemoval { path: slash_relative(&options.tickets_dir, &path), kind: "file".to_string(), bytes: size });
+        }
+    }
+    Ok(Ok((removals, snapshot)))
+}
+
+/// 🧹️ Plans, and with `options.apply` performs, the removal of generated output of the given ticket folders.
+///
+/// Only the direct `🗑️generated` folder of a CLOSED ticket is eligible; tracked files, links, files
+/// outside it and folders with a recent writer are never touched. Twin of
+/// `PurgeTicketGeneratedOutput` in `📦️packages/🐹️go/🔓️finish-reopen/🐹️.go`.
+///
+/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🧬️schema/🔣️.json (PurgePolicy)
+pub fn purge_ticket_generated_output(options: &PurgeOptions<'_>, ticket_dirs: &[std::path::PathBuf]) -> Result<PurgePlan, String> {
+    let resolved = |path: &std::path::Path| std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+    let options = PurgeOptions { root: resolved(&options.root), tickets_dir: resolved(&options.tickets_dir), selection: options.selection, apply: options.apply, now: options.now, tracked: options.tracked };
+    let mut plan = PurgePlan::default();
+    let mut failures: Vec<String> = Vec::new();
+    for ticket_dir in ticket_dirs {
+        let name = ticket_dir.file_name().map(std::ffi::OsStr::to_os_string).unwrap_or_default();
+        let ticket_dir = resolved(ticket_dir.parent().unwrap_or_else(|| std::path::Path::new("."))).join(name);
+        let ticket = slash_relative(&options.tickets_dir, &ticket_dir);
+        let mut skip = |reason: &str| plan.skips.push(PurgeSkip { ticket: ticket.clone(), reason: reason.to_string() });
+        if !std::fs::symlink_metadata(&ticket_dir).is_ok_and(|metadata| metadata.is_dir()) {
+            skip("not-directory");
+            continue;
+        }
+        if !ticket_manifest_is_closed(&ticket_dir) {
+            skip("not-closed");
+            continue;
+        }
+        let generated = ticket_dir.join(TICKET_GENERATED_DIRECTORY);
+        let metadata = match std::fs::symlink_metadata(&generated) {
+            Ok(metadata) => metadata,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(error) => {
+                failures.push(format!("stat {}: {error}", generated.display()));
+                continue;
+            }
+        };
+        if metadata.file_type().is_symlink() {
+            skip("symlink-root");
+            continue;
+        }
+        if !metadata.is_dir() {
+            skip("not-directory");
+            continue;
+        }
+        let (removals, snapshot) = match plan_generated_output(&options, &generated) {
+            Ok(Ok(planned)) => planned,
+            Ok(Err(reason)) => {
+                skip(reason);
+                continue;
+            }
+            Err(error) => {
+                failures.push(error);
+                continue;
+            }
+        };
+        if options.apply {
+            if walk_generated(&generated).map_or(true, |(_, _, current)| current != snapshot) {
+                skip("live-writer");
+                continue;
+            }
+            for removal in &removals {
+                let path = options.tickets_dir.join(&removal.path);
+                if !path.starts_with(&generated) {
+                    failures.push(format!("refusing to remove {} outside {}", path.display(), generated.display()));
+                    continue;
+                }
+                let outcome = if removal.kind == "directory" { std::fs::remove_dir_all(&path) } else { std::fs::remove_file(&path) };
+                if let Err(error) = outcome {
+                    failures.push(format!("remove {}: {error}", path.display()));
+                }
+            }
+        }
+        plan.removals.extend(removals);
+    }
+    plan.removals.sort_by(|left, right| left.path.cmp(&right.path));
+    plan.skips.sort_by(|left, right| left.ticket.cmp(&right.ticket));
+    if failures.is_empty() { Ok(plan) } else { Err(failures.join("; ")) }
+}
+
+/// 🧹️ Purges every closed ticket below `options.tickets_dir`.
+pub fn purge_closed_ticket_generated_output(options: &PurgeOptions<'_>) -> Result<PurgePlan, String> {
+    purge_ticket_generated_output(options, &ticket_folder_roots(&options.tickets_dir))
+}
 
 /// 🌳️ Every slug directory under a dated `🎫️tickets` tree, in `YY/MM/DD/SLUG` walk order.
 ///
-/// Twin of `collectTicketFolderRoots` in `📦️packages/🐹️go/🐹️.go`: four levels deep, directories
-/// only, dot-prefixed slugs skipped, an unreadable level silently contributing nothing.
+/// Twin of `CollectTicketFolderRoots` in `📦️packages/🐹️go/🔓️finish-reopen/🐹️.go`: four levels deep,
+/// directories only, dot-prefixed slugs skipped, an unreadable level silently contributing nothing.
 pub fn ticket_folder_roots(tickets_dir: &std::path::Path) -> Vec<std::path::PathBuf> {
     let mut roots = Vec::new();
     for year in sorted_directories(tickets_dir) {
@@ -697,79 +885,4 @@ fn sorted_directories(path: &std::path::Path) -> Vec<std::path::PathBuf> {
     found
 }
 
-/// 🧼️ Deletes the oversized artifacts of one real ticket folder, deepest subfolder first.
-///
-/// Twin of `PurgeOversizedTicketArtifacts` in `📦️packages/🐹️go/🐹️.go`. A missing folder is a
-/// no-operation, symlinks are never followed, `🎫️ticket.json` is never removed and a file inside
-/// an already-deleted subtree is not visited again.
-pub fn purge_oversized_artifacts(ticket_dir: &std::path::Path) -> Result<PurgeReport, String> {
-    let mut report = PurgeReport::default();
-    let Ok(metadata) = std::fs::symlink_metadata(ticket_dir) else { return Ok(report) };
-    if !metadata.is_dir() {
-        return Err(format!("ticket path is not a directory: {}", ticket_dir.display()));
-    }
-    let mut directories: Vec<std::path::PathBuf> = Vec::new();
-    let mut files: Vec<(std::path::PathBuf, u64)> = Vec::new();
-    collect_real_tree(ticket_dir, &mut directories, &mut files);
-    let mut directory_sizes: BTreeMap<std::path::PathBuf, u64> = BTreeMap::new();
-    for (path, size) in &files {
-        let mut parent = path.parent().map(std::path::Path::to_path_buf);
-        while let Some(current) = parent {
-            if !current.starts_with(ticket_dir) {
-                break;
-            }
-            *directory_sizes.entry(current.clone()).or_default() += size;
-            if current == ticket_dir {
-                break;
-            }
-            parent = current.parent().map(std::path::Path::to_path_buf);
-        }
-    }
-    directories.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
-    let mut deleted: Vec<std::path::PathBuf> = Vec::new();
-    for directory in directories {
-        if deleted.iter().any(|removed| directory.starts_with(removed)) {
-            continue;
-        }
-        if directory_sizes.get(&directory).copied().unwrap_or_default() <= OVERSIZED_FOLDER_BYTES {
-            continue;
-        }
-        std::fs::remove_dir_all(&directory).map_err(|error| format!("delete oversized ticket folder {}: {error}", directory.display()))?;
-        report.removed_directories.push(directory.to_string_lossy().replace('\\', "/"));
-        deleted.push(directory);
-    }
-    for (path, size) in files {
-        if deleted.iter().any(|removed| path.starts_with(removed)) {
-            continue;
-        }
-        if path.file_name().is_some_and(|name| name == std::ffi::OsStr::new(TICKET_DOCUMENT_NAME)) || size <= OVERSIZED_FILE_BYTES {
-            continue;
-        }
-        std::fs::remove_file(&path).map_err(|error| format!("delete oversized ticket file {}: {error}", path.display()))?;
-        report.removed_files.push(path.to_string_lossy().replace('\\', "/"));
-    }
-    report.removed_directories.sort();
-    report.removed_files.sort();
-    Ok(report)
-}
-
-/// 🚶️ Every directory below `root` and every regular file with its size, symlinks skipped.
-fn collect_real_tree(root: &std::path::Path, directories: &mut Vec<std::path::PathBuf>, files: &mut Vec<(std::path::PathBuf, u64)>) {
-    let Ok(entries) = std::fs::read_dir(root) else { return };
-    let mut children: Vec<std::path::PathBuf> = entries.flatten().map(|entry| entry.path()).collect();
-    children.sort();
-    for child in children {
-        let Ok(metadata) = std::fs::symlink_metadata(&child) else { continue };
-        if metadata.file_type().is_symlink() {
-            continue;
-        }
-        if metadata.is_dir() {
-            directories.push(child.clone());
-            collect_real_tree(&child, directories, files);
-        } else {
-            files.push((child, metadata.len()));
-        }
-    }
-}
-
-//#endregion 🧹️RealPurge
+//#endregion 🧹️PurgeGenerated

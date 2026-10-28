@@ -13,10 +13,12 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	workspace "github.com/usalu/semio/repo/workspace"
 )
 
 func TestRepoMetaDirUsesSemioRoot(t *testing.T) {
-	root := t.TempDir()
+	root := workspace.CanonicalPath(t.TempDir())
 	previous := GetRootDir()
 	SetRootDir(root)
 	t.Cleanup(func() { SetRootDir(previous) })
@@ -29,8 +31,8 @@ func TestRepoMetaDirUsesSemioRoot(t *testing.T) {
 }
 
 func TestSetRootDirResetsGitignoreCache(t *testing.T) {
-	tmpDirA := t.TempDir()
-	tmpDirB := t.TempDir()
+	tmpDirA := workspace.CanonicalPath(t.TempDir())
+	tmpDirB := workspace.CanonicalPath(t.TempDir())
 	oldRoot := rootDir
 	defer func() { SetRootDir(oldRoot) }()
 	SetRootDir(tmpDirA)
@@ -70,7 +72,7 @@ func TestBuildBinaryArtifactsGitIgnored(t *testing.T) {
 }
 
 func TestSetRootDirCanonicalizesToRepoRoot(t *testing.T) {
-	repoRoot := t.TempDir()
+	repoRoot := workspace.CanonicalPath(t.TempDir())
 	nested := filepath.Join(repoRoot, "a", "b", "c")
 	if err := os.MkdirAll(filepath.Join(repoRoot, ".git"), 0755); err != nil {
 		t.Fatalf("mkdir .git: %v", err)
@@ -90,7 +92,7 @@ func TestSetRootDirCanonicalizesToRepoRoot(t *testing.T) {
 }
 
 func TestRenderPromptTemplateUsesRepoMetaRoot(t *testing.T) {
-	repoRoot := t.TempDir()
+	repoRoot := workspace.CanonicalPath(t.TempDir())
 	if err := os.MkdirAll(filepath.Join(repoRoot, ".git"), 0755); err != nil {
 		t.Fatalf("mkdir .git: %v", err)
 	}
@@ -119,10 +121,13 @@ func TestRenderPromptTemplateUsesRepoMetaRoot(t *testing.T) {
 }
 
 func TestFindRepoRootPrefersMonorepoMarkerOverLocalGoMod(t *testing.T) {
-	monoRoot := t.TempDir()
+	monoRoot := workspace.CanonicalPath(t.TempDir())
 	clientDir := filepath.Join(monoRoot, "repo", "cli")
 	if err := os.MkdirAll(clientDir, 0755); err != nil {
 		t.Fatalf("mkdir cli dir: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(monoRoot, ".git"), 0755); err != nil {
+		t.Fatalf("mkdir .git: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(clientDir, "main.go"), []byte("package main"), 0644); err != nil {
 		t.Fatalf("write main.go: %v", err)
@@ -137,10 +142,13 @@ func TestFindRepoRootPrefersMonorepoMarkerOverLocalGoMod(t *testing.T) {
 }
 
 func TestGetCacheDirUsesMonorepoRoot(t *testing.T) {
-	monoRoot := t.TempDir()
+	monoRoot := workspace.CanonicalPath(t.TempDir())
 	clientDir := filepath.Join(monoRoot, "repo", "cli")
 	if err := os.MkdirAll(clientDir, 0755); err != nil {
 		t.Fatalf("mkdir cli dir: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(monoRoot, ".git"), 0755); err != nil {
+		t.Fatalf("mkdir .git: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(clientDir, "main.go"), []byte("package main"), 0644); err != nil {
 		t.Fatalf("write main.go: %v", err)

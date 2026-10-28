@@ -1,0 +1,361 @@
+{
+ "note": "g5-course (gate-g, 2026-10-26 21:22): the learned classes of `repo --tool=bazel run @teaching/architecture-course:build` as they were on disk when the quiet admit at 2048 MB had to grow into the full request: 15 earlier runs, ratio clamped at 200% of a 17920 MB default (8 jobs), so 35840 MB, clamped to 28672 MB by the share bound, waited 24+ min. The ratios were learned against the default of the jobs a run was granted (3584 MB for one job) and applied to the default of the eight jobs it asks for.",
+ "leaf": "run:build:@teaching/architecture-course:build",
+ "nowMs": 1793047546789,
+ "store": {
+  "version": 1,
+  "classes": {
+   "run": {
+    "samples": [
+     {
+      "atMs": 1793047486789,
+      "ratioBasisPoints": 17296,
+      "activeMilliseconds": 1793265,
+      "peakAtMilliseconds": 615322
+     },
+     {
+      "atMs": 1793045693275,
+      "ratioBasisPoints": 13449,
+      "activeMilliseconds": 990512,
+      "peakAtMilliseconds": 360312
+     },
+     {
+      "atMs": 1793044346158,
+      "ratioBasisPoints": 19110,
+      "activeMilliseconds": 1625131,
+      "peakAtMilliseconds": 1245279
+     },
+     {
+      "atMs": 1793043374127,
+      "ratioBasisPoints": 14693,
+      "activeMilliseconds": 1575988,
+      "peakAtMilliseconds": 675166
+     },
+     {
+      "atMs": 1793041383535,
+      "ratioBasisPoints": 9710,
+      "activeMilliseconds": 1593103,
+      "peakAtMilliseconds": 225082
+     },
+     {
+      "atMs": 1793039474503,
+      "ratioBasisPoints": 14252,
+      "activeMilliseconds": 505845,
+      "peakAtMilliseconds": 345086
+     },
+     {
+      "atMs": 1793037826280,
+      "ratioBasisPoints": 6401,
+      "activeMilliseconds": 83080,
+      "peakAtMilliseconds": 75026
+     },
+     {
+      "atMs": 1793037742848,
+      "ratioBasisPoints": 5036,
+      "activeMilliseconds": 59600,
+      "peakAtMilliseconds": 45020
+     },
+     {
+      "atMs": 1793037682918,
+      "ratioBasisPoints": 5474,
+      "activeMilliseconds": 57419,
+      "peakAtMilliseconds": 45022
+     },
+     {
+      "atMs": 1793037606064,
+      "ratioBasisPoints": 7546,
+      "activeMilliseconds": 368426,
+      "peakAtMilliseconds": 195047
+     },
+     {
+      "atMs": 1793032898083,
+      "ratioBasisPoints": 6680,
+      "activeMilliseconds": 93472,
+      "peakAtMilliseconds": 75301
+     },
+     {
+      "atMs": 1793031110344,
+      "ratioBasisPoints": 13984,
+      "activeMilliseconds": 1098677,
+      "peakAtMilliseconds": 195032
+     },
+     {
+      "atMs": 1793030010998,
+      "ratioBasisPoints": 6496,
+      "activeMilliseconds": 182663,
+      "peakAtMilliseconds": 150069
+     },
+     {
+      "atMs": 1793028938600,
+      "ratioBasisPoints": 10717,
+      "activeMilliseconds": 999286,
+      "peakAtMilliseconds": 240068
+     },
+     {
+      "atMs": 1793028266025,
+      "ratioBasisPoints": 7762,
+      "activeMilliseconds": 204991,
+      "peakAtMilliseconds": 120044
+     },
+     {
+      "atMs": 1793027961212,
+      "ratioBasisPoints": 21752,
+      "activeMilliseconds": 472563,
+      "peakAtMilliseconds": 285081
+     }
+    ]
+   },
+   "run:build": {
+    "samples": [
+     {
+      "atMs": 1793045693275,
+      "ratioBasisPoints": 13449,
+      "activeMilliseconds": 990512,
+      "peakAtMilliseconds": 360312
+     },
+     {
+      "atMs": 1793044346158,
+      "ratioBasisPoints": 19110,
+      "activeMilliseconds": 1625131,
+      "peakAtMilliseconds": 1245279
+     },
+     {
+      "atMs": 1793041383535,
+      "ratioBasisPoints": 9710,
+      "activeMilliseconds": 1593103,
+      "peakAtMilliseconds": 225082
+     },
+     {
+      "atMs": 1793039474503,
+      "ratioBasisPoints": 14252,
+      "activeMilliseconds": 505845,
+      "peakAtMilliseconds": 345086
+     },
+     {
+      "atMs": 1793037826280,
+      "ratioBasisPoints": 6401,
+      "activeMilliseconds": 83080,
+      "peakAtMilliseconds": 75026
+     },
+     {
+      "atMs": 1793037742848,
+      "ratioBasisPoints": 5036,
+      "activeMilliseconds": 59600,
+      "peakAtMilliseconds": 45020
+     },
+     {
+      "atMs": 1793037682918,
+      "ratioBasisPoints": 5474,
+      "activeMilliseconds": 57419,
+      "peakAtMilliseconds": 45022
+     },
+     {
+      "atMs": 1793037606064,
+      "ratioBasisPoints": 7546,
+      "activeMilliseconds": 368426,
+      "peakAtMilliseconds": 195047
+     },
+     {
+      "atMs": 1793030010998,
+      "ratioBasisPoints": 6496,
+      "activeMilliseconds": 182663,
+      "peakAtMilliseconds": 150069
+     },
+     {
+      "atMs": 1793028266025,
+      "ratioBasisPoints": 7762,
+      "activeMilliseconds": 204991,
+      "peakAtMilliseconds": 120044
+     },
+     {
+      "atMs": 1793027961212,
+      "ratioBasisPoints": 21752,
+      "activeMilliseconds": 472563,
+      "peakAtMilliseconds": 285081
+     },
+     {
+      "atMs": 1793027522802,
+      "ratioBasisPoints": 16814,
+      "activeMilliseconds": 3568011,
+      "peakAtMilliseconds": 2520998
+     },
+     {
+      "atMs": 1793027424331,
+      "ratioBasisPoints": 7157,
+      "activeMilliseconds": 307500,
+      "peakAtMilliseconds": 90028
+     },
+     {
+      "atMs": 1793027284743,
+      "ratioBasisPoints": 16733,
+      "activeMilliseconds": 478964,
+      "peakAtMilliseconds": 120047
+     },
+     {
+      "atMs": 1793026804345,
+      "ratioBasisPoints": 14258,
+      "activeMilliseconds": 379740,
+      "peakAtMilliseconds": 210083
+     },
+     {
+      "atMs": 1793020416374,
+      "ratioBasisPoints": 21987,
+      "activeMilliseconds": 2884248,
+      "peakAtMilliseconds": 735108
+     }
+    ]
+   },
+   "run:build:@teaching/architecture-course:build": {
+    "samples": [
+     {
+      "atMs": 1793045693275,
+      "ratioBasisPoints": 13449,
+      "activeMilliseconds": 990512,
+      "peakAtMilliseconds": 360312
+     },
+     {
+      "atMs": 1793039474503,
+      "ratioBasisPoints": 14252,
+      "activeMilliseconds": 505845,
+      "peakAtMilliseconds": 345086
+     },
+     {
+      "atMs": 1793037826280,
+      "ratioBasisPoints": 6401,
+      "activeMilliseconds": 83080,
+      "peakAtMilliseconds": 75026
+     },
+     {
+      "atMs": 1793037742848,
+      "ratioBasisPoints": 5036,
+      "activeMilliseconds": 59600,
+      "peakAtMilliseconds": 45020
+     },
+     {
+      "atMs": 1793037682918,
+      "ratioBasisPoints": 5474,
+      "activeMilliseconds": 57419,
+      "peakAtMilliseconds": 45022
+     },
+     {
+      "atMs": 1793037606064,
+      "ratioBasisPoints": 7546,
+      "activeMilliseconds": 368426,
+      "peakAtMilliseconds": 195047
+     },
+     {
+      "atMs": 1793030010998,
+      "ratioBasisPoints": 6496,
+      "activeMilliseconds": 182663,
+      "peakAtMilliseconds": 150069
+     },
+     {
+      "atMs": 1793028266025,
+      "ratioBasisPoints": 7762,
+      "activeMilliseconds": 204991,
+      "peakAtMilliseconds": 120044
+     },
+     {
+      "atMs": 1793027424331,
+      "ratioBasisPoints": 7157,
+      "activeMilliseconds": 307500,
+      "peakAtMilliseconds": 90028
+     },
+     {
+      "atMs": 1793027284743,
+      "ratioBasisPoints": 16733,
+      "activeMilliseconds": 478964,
+      "peakAtMilliseconds": 120047
+     },
+     {
+      "atMs": 1793026804345,
+      "ratioBasisPoints": 14258,
+      "activeMilliseconds": 379740,
+      "peakAtMilliseconds": 210083
+     },
+     {
+      "atMs": 1793015124222,
+      "ratioBasisPoints": 14897,
+      "activeMilliseconds": 731616,
+      "peakAtMilliseconds": 525079
+     },
+     {
+      "atMs": 1793012845022,
+      "ratioBasisPoints": 17712,
+      "activeMilliseconds": 356464,
+      "peakAtMilliseconds": 195036
+     },
+     {
+      "atMs": 1793010200820,
+      "ratioBasisPoints": 23125,
+      "activeMilliseconds": 270932,
+      "peakAtMilliseconds": 270058
+     },
+     {
+      "atMs": 1793009923173,
+      "ratioBasisPoints": 24690,
+      "activeMilliseconds": 305778,
+      "peakAtMilliseconds": 285036
+     },
+     {
+      "atMs": 1793001625930,
+      "ratioBasisPoints": 6177,
+      "activeMilliseconds": 214724
+     }
+    ]
+   },
+   "run:build:@teaching/architecture-course:build~busy": {
+    "samples": [
+     {
+      "atMs": 1793045693275,
+      "ratioBasisPoints": 23535,
+      "activeMilliseconds": 990512,
+      "peakAtMilliseconds": 360312
+     },
+     {
+      "atMs": 1793039474503,
+      "ratioBasisPoints": 24941,
+      "activeMilliseconds": 505845,
+      "peakAtMilliseconds": 345086
+     },
+     {
+      "atMs": 1793037826280,
+      "ratioBasisPoints": 11201,
+      "activeMilliseconds": 83080,
+      "peakAtMilliseconds": 75026
+     },
+     {
+      "atMs": 1793037742848,
+      "ratioBasisPoints": 8813,
+      "activeMilliseconds": 59600,
+      "peakAtMilliseconds": 45020
+     },
+     {
+      "atMs": 1793037682918,
+      "ratioBasisPoints": 9580,
+      "activeMilliseconds": 57419,
+      "peakAtMilliseconds": 45022
+     },
+     {
+      "atMs": 1793037606064,
+      "ratioBasisPoints": 20752,
+      "activeMilliseconds": 368426,
+      "peakAtMilliseconds": 195047
+     },
+     {
+      "atMs": 1793030010998,
+      "ratioBasisPoints": 11367,
+      "activeMilliseconds": 182663,
+      "peakAtMilliseconds": 150069
+     },
+     {
+      "atMs": 1793028266025,
+      "ratioBasisPoints": 13584,
+      "activeMilliseconds": 204991,
+      "peakAtMilliseconds": 120044
+     }
+    ]
+   }
+  }
+ }
+}

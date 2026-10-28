@@ -1,0 +1,23 @@
+export const readSealedBlockedV1=(entry:SealedEntryV1):SealedBlockedV1|undefined=>{const value=sealedBlockedOfV1(parse(entry.blocked));return value?.entry===entry.entry?value:undefined;};
+/** 🔍️ The last stat check of a light command against one snapshot: when it ran, whether the live tree had drifted, and when a detached promotion was last started for it. Light commands read it to skip the check while it is recent. */
+export interface SealedCheckedV1{readonly version:1;readonly entry:string;readonly digest:string;readonly atMs:number;readonly drifted:boolean;readonly refreshedAtMs:number|null}
+/** 🔍️ Admits a check record. */
+export function sealedCheckedOfV1(value:unknown):SealedCheckedV1|undefined{
+ return closed(value,["version","entry","digest","atMs","drifted","refreshedAtMs"])&&value.version===1&&text(value.entry)&&hex.test(String(value.digest))&&count(value.atMs)&&typeof value.drifted==="boolean"&&(value.refreshedAtMs===null||count(value.refreshedAtMs))?value as unknown as SealedCheckedV1:undefined;
+}
+/** 🔍️ The check record of one snapshot; a record of another snapshot is no record. */
+export const readSealedCheckedV1=(entry:SealedEntryV1,digest:string):SealedCheckedV1|undefined=>{const value=sealedCheckedOfV1(parse(entry.checked));return value?.entry===entry.entry&&value.digest===digest?value:undefined;};
+/** 🔍️ Keeps the check record; a store that cannot be written costs the next command one more check and nothing else. */
+export function writeSealedCheckedV1(entry:SealedEntryV1,record:SealedCheckedV1):void{try{writeSealedFileV1(entry.checked,JSON.stringify(record));}catch{}}
+
+/** ⏳️ What a light command (help or a declared light operation) does with the sealed snapshot it found. While the snapshot or its last check is younger than `light.freshMilliseconds` it runs it without looking at the tree. Otherwise it asks whether the tree drifted: no drift runs it; a tree already known to be blocked runs it (the promotion would only refuse again); a snapshot older than `light.promoteAfterMilliseconds` is promoted before the command runs; a younger one runs while a detached promotion is started (`start`), at most once per `light.refreshDebounceMilliseconds`. `probed` says that the tree was looked at, so the caller records it.
+ * @see ./🧪️tests/🗂️store/🟦️.ts the laws, including the independent model */
+export function sealedLightActionV1(input:Readonly<{now:number;promotedAtMs:number;checked:Pick<SealedCheckedV1,"atMs"|"drifted"|"refreshedAtMs">|undefined;drifted:()=>boolean;blocked:()=>boolean}>,policy:SealedPolicyV1=sealedPolicyV1):Readonly<{action:"run"|"promote"|"refresh";probed:boolean;drifted:boolean;start:boolean}>{
+ const light=policy.light,age=input.now-input.promotedAtMs,since=input.checked?input.now-input.checked.atMs:Infinity;
+ if(Math.min(age,since)<light.freshMilliseconds)return Object.freeze({action:"run",probed:false,drifted:input.checked?.drifted??false,start:false});
+ if(!input.drifted())return Object.freeze({action:"run",probed:true,drifted:false,start:false});
+ if(input.blocked())return Object.freeze({action:"run",probed:true,drifted:true,start:false});
+ if(age>=light.promoteAfterMilliseconds)return Object.freeze({action:"promote",probed:true,drifted:true,start:false});
+ const recent=input.checked?.refreshedAtMs!=null&&input.now-input.checked.refreshedAtMs<light.refreshDebounceMilliseconds;
+ return Object.freeze({action:"refresh",probed:true,drifted:true,start:!recent});
+}

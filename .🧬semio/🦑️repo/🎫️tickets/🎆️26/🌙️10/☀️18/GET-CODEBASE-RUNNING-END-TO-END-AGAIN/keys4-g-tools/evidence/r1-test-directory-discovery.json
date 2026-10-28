@@ -1,0 +1,24 @@
+{
+ "target": "test-directory-discovery",
+ "tag": "r1",
+ "declared": 1332,
+ "rows": [
+  {
+   "leg": "bun-directory-discovery",
+   "kind": "bun",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 1,
+   "tail": " 0 fail |  18 expect() calls | Ran 1 test across 1 file. [638.00ms] | ",
+   "notes": [
+    "profiles:1",
+    "rules:29",
+    "capacity:600"
+   ]
+  }
+ ]
+}

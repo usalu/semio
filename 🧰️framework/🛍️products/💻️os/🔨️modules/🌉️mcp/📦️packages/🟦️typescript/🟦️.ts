@@ -3,4 +3,3 @@
 export { AcceptancePreconditionMissing, hubCredentialFromEnv, isAcceptancePreconditionMissing, mcpServerEntries, minimalInputForSchema, readMcpGatewaySource, requireMcpBinary, runMcpClientEndToEnd, spawnRawMcp } from "../../🟦️.ts";
 export type { McpClientE2ePinsV1, RawMcpProcess } from "../../🟦️.ts";
 export * from "../../🟦️.ts";
-export * from "../../🧬️schema-validation/🟦️.ts";

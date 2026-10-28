@@ -1,0 +1,60 @@
+{
+ "id": "dashlock",
+ "files": [
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/dashlock-g-tools/staged/dashlock/files/f00",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/dashlock/f000"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/dashlock-g-tools/staged/dashlock/files/f01",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/dashlock/f001"
+  },
+  {
+   "rel": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/dashlock-g-tools/staged/dashlock/files/f02",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/dashlock/f002"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/dashlock-g-tools/staged/dashlock/files/f03",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/dashlock/f003"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🔣️.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/dashlock-g-tools/staged/dashlock/files/f04",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/dashlock/f004"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📌️executable/🧪️tests/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/dashlock-g-tools/staged/dashlock/files/f05",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/dashlock/f005"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧊️digest/🧪️tests/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/dashlock-g-tools/staged/dashlock/files/f06",
+   "base": null
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧊️digest/🧪️tests/🔣️.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/dashlock-g-tools/staged/dashlock/files/f07",
+   "base": null
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧊️digest/🧪️tests/🐍️model.py",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/dashlock-g-tools/staged/dashlock/files/f08",
+   "base": null
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧪️tests/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/dashlock-g-tools/staged/dashlock/files/f09",
+   "base": null
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧪️tests/🐍️model.py",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/dashlock-g-tools/staged/dashlock/files/f10",
+   "base": null
+  }
+ ]
+}

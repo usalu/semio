@@ -8,7 +8,7 @@ import {incrementalChildEnvironmentV1,incrementalCliArgumentsV1,incrementalCliPo
 import type {IncrementalCommandPortsV1} from "../../⌨️command/🟦️.ts";
 import type {ConcurrentReportV1} from "../../🤝️concurrent/🟦️.ts";
 import {runConcurrencyCommandV1} from "../../🤝️concurrent/⌨️command/🟦️.ts";
-import {benchCompareV1,benchHostV1,benchJudgeV1,benchMarkersV1,benchMutateV1,benchReportV1,benchSeriesV1,type BenchHostV1,type BenchLaneV1,type BenchPairV1,type BenchProbeV1,type BenchReasonV1,type BenchReportV1,type BenchRowV1,type BenchSampleV1,type BenchSeriesV1,type BenchSloSetV1,type BenchSloToolV1,type BenchStartKindV1,type BenchToolV1} from "../🟦️.ts";
+import {benchCompareV1,benchHostV1,benchJudgeV1,benchMarkersV1,benchMutateV1,benchObservedValuesV1,benchObserverV1,benchReportV1,benchSeriesV1,type BenchHostV1,type BenchLaneV1,type BenchMetricV1,type BenchObservationV1,type BenchPairV1,type BenchProbeV1,type BenchReasonV1,type BenchReportV1,type BenchRowV1,type BenchSampleV1,type BenchSeriesV1,type BenchSloSetV1,type BenchSloToolV1,type BenchStartKindV1,type BenchToolV1} from "../🟦️.ts";
 import {terminateOwnedChildTree} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 const policy=schema.definitions.Policy.const;
@@ -16,8 +16,8 @@ const both=(english:string,german:string)=>`${english}\n${german}`;
 
 /** 🥠️ What a bench spawn runs: the implementation (or `neutral` for a command without `--tool`), the arguments of `repo` and whether the process tree's memory is sampled. */
 export type BenchSpawnSpecV1=Readonly<{tool:BenchSloToolV1;args:readonly string[];memory:boolean}>;
-/** 🪀️ One finished command: its exit code, wall time, when it started on the clock of the ports, the time to the first output and to the first tool marker line, and the peak resident size of its process tree. */
-export type BenchRunV1=Readonly<{exit:number|null;wallMs:number;startedMs:number;firstOutputMs:number|null;markerMs:number|null;peakRssBytes:number|null}>;
+/** 🪀️ One finished command: its exit code, wall time, when it started on the clock of the ports, the time to the first output and to the first tool marker line, the peak resident size of its process tree and what its output told (phases, executed actions, re-inferred projects; absent where the spawner does not read output). */
+export type BenchRunV1=Readonly<{exit:number|null;wallMs:number;startedMs:number;firstOutputMs:number|null;markerMs:number|null;peakRssBytes:number|null;observation?:BenchObservationV1}>;
 /** 🥞️ The tasks one cached run touched: those that may be cached, how many of them executed, and the uncached ones that executed. */
 export type BenchCacheRunV1=Readonly<{cacheable:number;executedCacheable:number;uncachedExecuted:number;total:number}>;
 /** 🥟️ The numbers of one concurrent-agent run: the span of the concurrent sessions, the serial reference, the longest wait for an unrelated project and the criteria that failed. */
@@ -79,14 +79,16 @@ export function benchSpawnV1(command:string,args:readonly string[],cwd:string,en
   if(signal.aborted){reject(signal.reason);return;}
   const startedMs=now(),child=spawn(command,[...args],{cwd,env:env as NodeJS.ProcessEnv,detached:system!=="win32",stdio:["ignore","pipe","pipe"],windowsHide:true}),decoders=[new StringDecoder("utf8"),new StringDecoder("utf8")],pending=["",""];
   let firstOutputMs:number|null=null,markerMs:number|null=null,peak=0,bytes=0,sampling=false,sampled=false,done=false;
+  const observer=benchObserverV1();
   const stop=()=>terminateOwnedChildTree(child);
   signal.addEventListener("abort",stop,{once:true});
   const scan=(at:0|1,chunk:Buffer)=>{
    const elapsed=now()-startedMs;
    if(firstOutputMs===null)firstOutputMs=elapsed;
-   bytes+=chunk.length;if(bytes>policy.maximumLogBytes||markerMs!==null||!markers.length)return;
+   bytes+=chunk.length;if(bytes>policy.maximumLogBytes)return;
    pending[at]+=decoders[at]!.write(chunk);
-   for(let cut=pending[at]!.indexOf("\n");cut>=0&&markerMs===null;cut=pending[at]!.indexOf("\n")){const line=pending[at]!.slice(0,cut).replace(/\r$/u,"");pending[at]=pending[at]!.slice(cut+1);if(markers.some(pattern=>pattern.test(line)))markerMs=elapsed;}
+   for(let cut=pending[at]!.indexOf("\n");cut>=0;cut=pending[at]!.indexOf("\n")){const line=pending[at]!.slice(0,cut).replace(/\r$/u,"");pending[at]=pending[at]!.slice(cut+1);observer.feed(elapsed,line);if(markerMs===null&&markers.some(pattern=>pattern.test(line)))markerMs=elapsed;}
+   if(pending[at]!.length>policy.maximumLogBytes/256)pending[at]="";
   };
   child.stdout!.on("data",(chunk:Buffer)=>scan(0,chunk));
   child.stderr!.on("data",(chunk:Buffer)=>scan(1,chunk));
@@ -99,7 +101,7 @@ export function benchSpawnV1(command:string,args:readonly string[],cwd:string,en
   child.on("close",code=>{
    done=true;if(timer)clearInterval(timer);signal.removeEventListener("abort",stop);
    if(signal.aborted){reject(signal.reason);return;}
-   accept(Object.freeze({exit:code,wallMs:now()-startedMs,startedMs,firstOutputMs,markerMs,peakRssBytes:memory&&sampled?peak:null}));
+   const wallMs=now()-startedMs;for(const rest of pending)if(rest)observer.feed(wallMs,rest.replace(/\r$/u,""));accept(Object.freeze({exit:code,wallMs,startedMs,firstOutputMs,markerMs,peakRssBytes:memory&&sampled?peak:null,observation:observer.finish(wallMs)}));
   });
  });
 }
@@ -115,7 +117,7 @@ export async function benchRunProbeV1(set:BenchSloSetV1,probe:BenchProbeV1,tool:
  if(lane==="resident"&&!context.service)return unavailable(probe,tool,"service-unavailable");
  if(probe.cold&&!ports.fresh)return unavailable(probe,tool,"not-cold");
  const unit=probe.unit===undefined?undefined:set.units.find(row=>row.id===probe.unit),target=probe.target??unit?.target;
- if(probe.kind==="edit"&&!unit)throw Error(both(`Unknown unit: ${probe.unit}`,`Unbekannte Einheit: ${probe.unit}`));
+ if((probe.kind==="edit"||probe.kind==="peer")&&!unit)throw Error(both(`Unknown unit: ${probe.unit}`,`Unbekannte Einheit: ${probe.unit}`));
  const samples:BenchSampleV1[]=[],args=target===undefined?[]:benchRunArgumentsV1(target,lane,context.service,probe.kind==="graph"?["--dry-run"]:[]);
  const step=async(at:number,body:()=>Promise<void>)=>{ports.check();await ports.progress(`${probe.id}:${tool}:${at+1}/${total}`);await body();};
  const series=(reason:BenchReasonV1|null=null)=>benchSeriesV1({probe:probe.id,tool,lane,status:"measured",reason,samples});
@@ -167,9 +169,9 @@ export async function benchRunProbeV1(set:BenchSloSetV1,probe:BenchProbeV1,tool:
    }else outcome=await attempt(ports,()=>timed());
    if(at<warmup)return;
    if(outcome instanceof Error){samples.push(failed(samples.length,here));return;}
-   if(probe.memory){if(outcome.peakRssBytes===null){missing++;samples.push(failed(samples.length,here));}else samples.push(sample(samples.length,outcome,{peakRssBytes:outcome.peakRssBytes},null,here));return;}
-   if(!unit){samples.push(sample(samples.length,outcome,{wallMs:outcome.wallMs},null,here));return;}
-   samples.push(sample(samples.length,outcome,outcome.exit===0?{startMs:offset+startOffset(outcome),greenMs:offset+outcome.wallMs}:{},startKindOf(outcome),here));
+   const timing=probe.kind==="edit"?outcome.exit===0?{startMs:offset+startOffset(outcome),greenMs:offset+outcome.wallMs}:{}:{wallMs:outcome.wallMs},values:Partial<Record<BenchMetricV1,number>>={...timing,...(outcome.observation?benchObservedValuesV1(outcome.observation):{})};
+   if(probe.memory){if(outcome.peakRssBytes===null){missing++;samples.push(failed(samples.length,here));return;}values.peakRssBytes=outcome.peakRssBytes;}
+   samples.push(sample(samples.length,outcome,values,probe.kind==="edit"?startKindOf(outcome):null,here));
   });
   return probe.memory===true&&samples.length>0&&missing===samples.length?benchSeriesV1({probe:probe.id,tool,lane,status:"unavailable",reason:"unsupported",samples:[]}):series();
  }finally{if(started)await ports.service.stop();}

@@ -1,0 +1,25 @@
+{
+ "name": "xplat3",
+ "code": "xplat3-g-tools/staged (apply.py)",
+ "lane": "xplat3-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "windows-section",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "## 🩹️ Troubleshooting",
+   "where": "before",
+   "block": "## 🪟️ Windows, Linux and macOS\n\nThe same commands everywhere; where a platform differs the code says so and its law runs through injected platforms on any host. Nothing here has run on Windows: the statements are static or modelled, one real Windows CI run decides.\n\n- **Renames over open files**: a publish rename over a file another process holds open fails on Windows (and under virus scanners). The four publish renames of the observation layer (`👁️observation`, `📥️inputs`, two each) now retry through `renameOverBusyFileSyncV1` with the layer's declared pauses and throw the last busy error; any other error is immediate.\n- **Installer mutex**: the PowerShell installer takes `Global\\` first (cross-session exclusion) and falls back to `Local\\` when the account may not create it (`UnauthorizedAccessException`).\n- **Symbolic links and the C library**: tests that need links run only where links can be made (one probe; a CI host must be able to), and the FFI probe picks `libSystem`, `ucrtbase` or `libc.so.6` per platform. The Node native core has a pure `win32` plan law (account name of 40 characters, both msvc targets, `.exe` compiler, 256-character limit refusal) and a real Windows law that builds the core, loads it under `node.exe` and checks all 7 primitives; it fails, not skips, on a Windows CI host without `rustc`.\n- **Unknown free space is not healthy space**: a failing `statfs` used to count as plenty. The lease-store pressure sweep now treats an unmeasurable store as under pressure and prints `? % free` (EN and DE), and `cache dedupe` reports `clones:false` (a volume without clones replaces nothing) and says that the gain is unknown when the free space cannot be read.\n- Not run on Windows: the real core law, the installer from a standard account, the rename retry against a real open handle.\n"
+  },
+  {
+   "id": "windows-section",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "## 🩹️ Fehlersuche",
+   "where": "before",
+   "block": "## 🪟️ Windows, Linux und macOS\n\nDieselben Befehle überall; wo eine Plattform abweicht, sagt es der Code, und sein Gesetz läuft über eingespeiste Plattformen auf jedem Rechner. Nichts davon ist unter Windows gelaufen: die Aussagen sind statisch oder modelliert, ein echter Windows-CI-Lauf entscheidet.\n\n- **Umbenennen über offene Dateien**: ein Veröffentlichungs-Umbenennen über eine Datei, die ein anderer Prozess offen hält, scheitert unter Windows (und unter Virenscannern). Die vier Veröffentlichungs-Umbenennungen der Beobachtungsschicht (`👁️observation`, `📥️inputs`, je zwei) wiederholen jetzt über `renameOverBusyFileSyncV1` mit den deklarierten Pausen der Schicht und werfen den letzten Busy-Fehler; jeder andere Fehler wirkt sofort.\n- **Installer-Mutex**: der PowerShell-Installer nimmt zuerst `Global\\` (Ausschluss über Sitzungen hinweg) und fällt auf `Local\\` zurück, wenn das Konto es nicht anlegen darf (`UnauthorizedAccessException`).\n- **Symbolische Links und die C-Bibliothek**: Tests, die Links brauchen, laufen nur dort, wo sich Links anlegen lassen (eine Sonde; ein CI-Rechner muss es können), und die FFI-Sonde wählt `libSystem`, `ucrtbase` oder `libc.so.6` je Plattform. Der native Kern für Node hat ein reines `win32`-Plangesetz (Kontoname mit 40 Zeichen, beide msvc-Ziele, `.exe`-Compiler, Ablehnung am 256-Zeichen-Limit) und ein echtes Windows-Gesetz, das den Kern baut, unter `node.exe` lädt und alle 7 Grundfunktionen prüft; es scheitert, statt zu überspringen, auf einem Windows-CI-Rechner ohne `rustc`.\n- **Unbekannter freier Platz ist kein gesunder Platz**: ein scheiternder `statfs` zählte früher als reichlich. Der Druck-Durchlauf des Lease-Speichers behandelt einen nicht messbaren Speicher jetzt als unter Druck und gibt `? % free` aus (EN und DE), und `cache dedupe` meldet `clones:false` (ein Volume ohne Klone ersetzt nichts) und sagt, dass der Gewinn unbekannt ist, wenn der freie Platz nicht lesbar ist.\n- Nicht unter Windows gelaufen: das echte Kern-Gesetz, der Installer aus einem Standardkonto, die Wiederholung des Umbenennens gegen ein echtes offenes Handle.\n"
+  }
+ ]
+}

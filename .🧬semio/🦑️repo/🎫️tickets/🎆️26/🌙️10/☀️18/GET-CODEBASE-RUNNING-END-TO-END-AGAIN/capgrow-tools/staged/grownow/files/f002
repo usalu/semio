@@ -1,0 +1,60 @@
+"""🌱️ Independent Python oracle of the growth of a running grant admitted with fewer jobs than it asked for: the decision of its grow request is the port of the host capacity decision in the upgrade oracle (grow requests come after every other request, wait `queue-order` while anything else waits or a barrier holds, `ramp` while the grant ramps, take the most jobs that fit with the protocol's spare jobs left free), and the time hysteresis is ported here (a grant grows after `growSettleAttempts` consecutive admitted attempts, to the fewest jobs they admitted). Run `python3 🐍️.py` to regenerate `../🧫️fixtures/🔣️.json`, `python3 🐍️.py --check` to prove the stored vectors are what the oracle produces."""
+import importlib.util,json,os,random,sys
+
+HERE=os.path.dirname(os.path.abspath(__file__))
+TARGET=os.path.join(HERE,"..","🧫️fixtures","🔣️.json")
+spec=importlib.util.spec_from_file_location("upgrade_oracle",os.path.join(HERE,"..","..","🐍️oracle","🐍️.py"))
+upgrade=importlib.util.module_from_spec(spec);spec.loader.exec_module(upgrade)
+
+def settle(previous,decision):
+    if decision["verdict"]!="admit":return {"next":None,"jobs":None}
+    attempts=(previous["attempts"] if previous else 0)+1;jobs=min(previous["jobs"] if previous else decision["jobs"],decision["jobs"])
+    if attempts>=upgrade.PROTOCOL["growSettleAttempts"]:return {"next":None,"jobs":jobs}
+    return {"next":{"attempts":attempts,"jobs":jobs},"jobs":None}
+
+def reduced_grant(rng,now):
+    jobs=rng.choice([1,1,2,3,4]);preferred=rng.choice([p for p in (2,4,6,8) if p>jobs]);per=rng.choice([768,1536,2048,2900]);fixed=rng.choice([1536,2200])
+    observed=rng.choice([None,fixed//2,fixed+jobs*per//2,fixed+jobs*per,fixed+jobs*per+3000])
+    g={"id":upgrade.ident(rng),"operation":"run","jobs":jobs,"cpu":jobs,"reservedMegabytes":fixed+jobs*per,"admittedAtMs":now-rng.choice([20000,70000,400000,2000000]),"observedMegabytes":observed,"pid":rng.randrange(100,90000),"bootAtMs":1_700_000_000_000}
+    if rng.random()<0.4:g["resumedAtMs"]=now-rng.choice([1000,30000,90000,500000])
+    if rng.random()<0.3:g["rampMilliseconds"]=rng.choice([30000,120000])
+    if rng.random()<0.2:g["arrivedAtMs"]=g["admittedAtMs"]-rng.choice([0,800])
+    if rng.random()<0.5:g["grownAtMs"]=g.get("resumedAtMs",g["admittedAtMs"])
+    request={"id":g["id"],"operation":"run","priority":"batch","minimumJobs":jobs+1,"preferredJobs":preferred,"fixedMegabytes":fixed,"perJobMegabytes":per,"cpuPerJob":rng.choice([1,1,2])}
+    return g,{"request":request,"arrivedAtMs":g.get("arrivedAtMs",g["admittedAtMs"]),"pid":g["pid"],"upgrade":True,"grow":True}
+
+def world(rng,policy,index):
+    now=1_800_000_000_000+rng.randrange(0,10_000_000);host=upgrade.random_host(rng);host["atMs"]=now
+    if rng.random()<0.5:host["pressure"]="normal"
+    if rng.random()<0.5:host["availableMegabytes"]=rng.randrange(host["totalMegabytes"]//2,host["totalMegabytes"]-1000)
+    grant,waiter=reduced_grant(rng,now)
+    ledger=[grant]+[upgrade.random_grant(rng,now,quiet=rng.random()<0.3) for _ in range(rng.choice([0,0,1,2,3]))]
+    queue=[waiter]
+    for _ in range(rng.choice([0,0,0,1,2])):
+        request=upgrade.random_request(rng,quiet=rng.random()<0.3);queue.append({"request":request,"arrivedAtMs":now-rng.choice([0,500,5000,31000,100000]),"pid":rng.randrange(100,90000)})
+    rng.shuffle(queue)
+    return {"name":f"grow-{index}","host":host,"ledger":ledger,"queue":queue,"nowMs":now,"expect":upgrade.evaluate(policy,host,ledger,queue,now)}
+
+def sequences(rng):
+    cases=[]
+    for index in range(80):
+        decisions=[{"verdict":"admit","jobs":rng.choice([2,3,5,8])} if rng.random()<0.7 else {"verdict":"wait","jobs":0} for _ in range(rng.choice([1,2,3,5,8]))]
+        state=None;steps=[]
+        for decision in decisions:
+            result=settle(state,decision);state=result["next"];steps.append(result)
+        cases.append({"name":f"settle-{index}","decisions":decisions,"expect":steps})
+    return cases
+
+def generate():
+    fixture=json.load(open(upgrade.DECISION,encoding="utf8"));policy={**fixture["policy"],"memory":{**fixture["policy"]["memory"],"maximumQuiet":4}}
+    upgrade.COUNTS.clear();rng=random.Random(20261027)
+    worlds=[world(rng,policy,index) for index in range(300)]
+    return {"policy":{"maximumQuiet":4},"protocol":{key:upgrade.PROTOCOL[key] for key in ("growSpareJobs","growSettleAttempts")},"worlds":worlds,"settle":sequences(rng),"coverage":{key:value for key,value in sorted(upgrade.COUNTS.items()) if key.startswith("grow")}}
+
+if __name__=="__main__":
+    value=generate();text=json.dumps(value,separators=(",",":"),ensure_ascii=False)+"\n"
+    if sys.argv[1:]==["--check"]:
+        stored=open(TARGET,encoding="utf8").read()
+        print("vectors equal the oracle" if stored==text else "STALE vectors");sys.exit(0 if stored==text else 1)
+    with open(TARGET,"w",encoding="utf8") as handle:handle.write(text)
+    print("wrote",len(value["worlds"]),"worlds,",len(value["settle"]),"settle sequences",value["coverage"])

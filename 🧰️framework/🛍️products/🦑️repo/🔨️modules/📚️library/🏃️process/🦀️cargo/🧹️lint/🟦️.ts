@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { resolveCargoPackageNames } from "../🔍️package-names/🟦️.ts";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
-import { cargoRepositoryPackageSelections } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import { cargoPackageSelectionsNearV1 } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { runCmd } from "../../🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 
@@ -14,7 +14,7 @@ import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️proces
  */
 export function runCargoLint(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): void {
   const resolvedPackages = resolveCargoPackageNames(packages, cwd);
-  const repository = getWorkspaceRoot(), rows = cargoRepositoryPackageSelections(repository, resolvedPackages);
+  const repository = getWorkspaceRoot(), rows = cargoPackageSelectionsNearV1(repository, join(cwd, "Cargo.toml"), resolvedPackages);
   const scopes = [...new Set(rows.map(row => row.workspace))];
   if (scopes.length > 1) { for (const scope of scopes) runCargoLint(rows.filter(row => row.workspace === scope).map(row => row.name), cwd, extraArgs, env); return; }
   const packageArgs = [...(rows.length ? ["--manifest-path", join(repository, rows[0]!.manifest)] : []), ...resolvedPackages.flatMap((pkg) => ["-p", pkg])];

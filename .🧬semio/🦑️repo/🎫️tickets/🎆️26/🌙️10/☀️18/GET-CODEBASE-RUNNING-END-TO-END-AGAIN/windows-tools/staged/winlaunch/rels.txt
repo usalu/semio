@@ -1,0 +1,15 @@
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🪟️windows-host/🐹️.go
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🛰️resident-windows/🐹️.go
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🐚️unix-host/🐹️.go
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🛰️resident/🐹️.go
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🧭️workspace-root/🐹️.go
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📥️runtime-provision/🐹️.go
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧭️root-contract/🐹️.go
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧭️root-contract/🥒️.feature
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📥️provision-contract/🐹️.go
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📥️provision-contract/🥒️.feature
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🪟️windows-contract/🐹️.go
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🪟️windows-contract/🥒️.feature
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🛰️service/🔑️session/🟨️.mjs
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🛰️service/🧪️tests/🟦️.ts

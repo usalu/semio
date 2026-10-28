@@ -9,6 +9,8 @@ export const HERE=import.meta.dir;
 export const ORACLE=join(HERE,"🐍️.py");
 export const NATIVE=process.env.SEMIO_REPO_NATIVE_DIR??"";
 export const WATCHER=process.env.SEMIO_REPO_WATCH_BINARY??(NATIVE?NATIVE+"/semio-repo-watch":"");
+/** 🔭 The native watcher of these laws: the configured binary, else the one the repository provisions for itself (built once from the pinned source), exactly as `repo service` resolves it. */
+export async function residentWatcherV1():Promise<string>{if(WATCHER)return WATCHER;const{ensureResidentWatcherV1}=await import("../🔭️watch/🏗️provision/🔌️tools/🟨️.mjs");return ensureResidentWatcherV1(join(HERE,"..","..","..","..","..","..","..",".."));}
 export const FAKETOOL=process.env.SEMIO_REPO_FAKETOOL_BINARY??(NATIVE?NATIVE+"/faketool":"");
 export const haveBinary=(path:string)=>{try{lstatSync(path);return true;}catch{return false;}};
 

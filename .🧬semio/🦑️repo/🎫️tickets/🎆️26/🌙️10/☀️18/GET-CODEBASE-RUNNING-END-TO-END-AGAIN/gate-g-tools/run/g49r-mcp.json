@@ -1,0 +1,31 @@
+{
+ "label": "g49r-mcp",
+ "target": "repo-mcp:test",
+ "started": "00:43:34",
+ "wall_s": 235.1,
+ "peak_tree_mb": 5387,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "1"
+  ],
+  "inferring": [
+   "1"
+  ],
+  "published": [
+   "699",
+   "1",
+   "112"
+  ],
+  "processes": [
+   "5",
+   "1 action cache hit, 2 internal, 3 local"
+  ],
+  "actions": [
+   "5"
+  ]
+ }
+}

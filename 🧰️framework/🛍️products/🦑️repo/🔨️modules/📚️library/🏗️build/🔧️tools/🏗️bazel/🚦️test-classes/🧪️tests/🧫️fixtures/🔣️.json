@@ -87,7 +87,7 @@
       "messages": {
         "shardNotHonoured": {
           "en": "No command of ${label} honoured shard ${index}/${total}; this shard ran the whole task.",
-          "de": "Kein Befehl von ${label} hat den Shard ${index}/${total} beachtet; dieser Shard hat die ganze Aufgabe ausgeführt."
+          "de": "Kein Befehl von ${label} hat den Shard ${index}/${total} beachtet; dieser Shard hat die ganze Task ausgeführt."
         }
       }
     }

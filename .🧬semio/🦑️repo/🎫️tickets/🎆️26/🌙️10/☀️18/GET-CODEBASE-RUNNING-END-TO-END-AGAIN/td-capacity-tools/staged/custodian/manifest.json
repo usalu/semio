@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🛟️custodian/🧪️tests/⏱️deadline/🟦️.ts": {
+  "file": "00.ts",
+  "base": "9825455ab4881fc680768f6cdea6cc93f986544ce187e51ab4f17ec207c60ac8",
+  "new": "67c2317484508cc4d6549bdef5ca19d13d5c37efd1b3537731bd48c5eab4394b"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🛟️custodian/🧪️tests/🟦️.ts": {
+  "file": "01.ts",
+  "base": "060173432f7b3e0dbe7f7286f5f27499df590a72f6de22e5ab450323cafbbafd",
+  "new": "e1c2d339f7c255e6638000bab399661a0a26eb78eaef77f83f5900464b1c66ce"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🛟️custodian/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "02.dat",
+  "base": "dfb067b37d4031e7de310266e497b48dcb9edf57829202ee41f901c36c80dab1",
+  "new": "1af4892126c53f2b376d00b15481843b0bbec70d8f4dd01a9cc019b7245befc3"
+ }
+}

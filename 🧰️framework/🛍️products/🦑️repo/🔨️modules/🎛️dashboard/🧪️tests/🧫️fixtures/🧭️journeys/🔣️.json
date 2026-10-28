@@ -399,5 +399,73 @@
       "loadMilliseconds": 5000,
       "interactionMilliseconds": 1000
     }
+  },
+  "hostScale": {
+    "clamp": {
+      "min": 1,
+      "max": 16
+    },
+    "cases": [
+      {
+        "name": "macOS idle",
+        "report": "{ 1.52 1.80 1.90 }",
+        "cores": 10,
+        "scale": 1.0
+      },
+      {
+        "name": "macOS loaded",
+        "report": "{ 34.74 37.97 32.60 }",
+        "cores": 10,
+        "scale": 3.474
+      },
+      {
+        "name": "Linux quiet",
+        "report": "0.52 0.58 0.59 1/467 12345",
+        "cores": 4,
+        "scale": 1.0
+      },
+      {
+        "name": "Linux loaded",
+        "report": "8.00 7.50 7.00 5/900 1",
+        "cores": 2,
+        "scale": 4.0
+      },
+      {
+        "name": "clamped at sixteen",
+        "report": "{ 400.00 1.00 1.00 }",
+        "cores": 4,
+        "scale": 16.0
+      },
+      {
+        "name": "empty report",
+        "report": "",
+        "cores": 8,
+        "scale": 1.0
+      },
+      {
+        "name": "unparsable report",
+        "report": "n/a",
+        "cores": 8,
+        "scale": 1.0
+      },
+      {
+        "name": "negative figure",
+        "report": "-3.0 1.0 1.0 1/2 3",
+        "cores": 1,
+        "scale": 1.0
+      },
+      {
+        "name": "no load average on the host",
+        "report": null,
+        "cores": 8,
+        "scale": 1.0
+      },
+      {
+        "name": "zero cores count as one",
+        "report": "3.0 1.0 1.0 1/2 3",
+        "cores": 0,
+        "scale": 3.0
+      }
+    ]
   }
 }

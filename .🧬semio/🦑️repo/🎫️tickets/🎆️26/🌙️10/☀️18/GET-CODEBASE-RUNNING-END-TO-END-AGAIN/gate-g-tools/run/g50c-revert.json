@@ -1,0 +1,20 @@
+{
+ "label": "g50c-revert",
+ "target": "@teaching/architecture-course:build",
+ "started": "02:09:32",
+ "wall_s": 9.8,
+ "peak_tree_mb": 1144,
+ "peak_processes": 3,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "2",
+   "1 disk cache hit, 1 internal"
+  ],
+  "actions": [
+   "2"
+  ]
+ }
+}

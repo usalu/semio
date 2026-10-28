@@ -1,0 +1,2 @@
+  if(snapshot!==undefined)try{closeSync(snapshot);}catch{}
+  const feed=child.stdio[3] as NodeJS.WritableStream|null;

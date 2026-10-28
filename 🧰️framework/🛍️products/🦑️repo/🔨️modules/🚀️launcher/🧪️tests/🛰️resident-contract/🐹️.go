@@ -19,6 +19,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strings"
 	"sync"
@@ -389,9 +390,57 @@ func TestResidentRequireAndBusy(t *testing.T) {
 	fake.reply = func(request map[string]any, write func(map[string]any)) {
 		write(map[string]any{"t": "refused", "id": 1, "code": "busy", "message": map[string]any{"en": "busy now", "de": "gerade ausgelastet"}, "retry": "later"})
 	}
+	waits := recordRestartWaits(t)
 	handled, code = fake.host(t).ForwardResident(context.Background(), root, "build", []string{"run", "a:build"})
 	if !handled || code != 75 || !strings.Contains(fake.stderr.String(), "gerade ausgelastet") {
 		t.Errorf("busy: handled=%v code=%d stderr=%q", handled, code, fake.stderr.String())
+	}
+	want := []time.Duration{250 * time.Millisecond, time.Second, 4 * time.Second, 12 * time.Second, 30 * time.Second, 30 * time.Second}
+	if !reflect.DeepEqual(*waits, want) {
+		t.Errorf("a busy service is asked again six times with the shared waits: got %v want %v", *waits, want)
+	}
+	if got := strings.Count(fake.stderr.String(), "Warte 250 ms, dann erneute Anfrage (1 von 6)"); got != 1 || !strings.Contains(fake.stderr.String(), "Waiting 30000 ms, then asking again (6 of 6)") {
+		t.Errorf("every restart is announced in both languages, preferred first: %q", fake.stderr.String())
+	}
+}
+
+func recordRestartWaits(t *testing.T) *[]time.Duration {
+	t.Helper()
+	waits := []time.Duration{}
+	previous := restartSleep
+	restartSleep = func(ctx context.Context, wait time.Duration) bool {
+		waits = append(waits, wait)
+		return ctx.Err() == nil
+	}
+	t.Cleanup(func() { restartSleep = previous })
+	return &waits
+}
+
+// 🛰️A service that is busy twice and then answers is asked again silently from the caller's view: the answer of the third attempt is the exit code and nothing else is refused.
+func TestResidentBusyServiceIsAskedAgain(t *testing.T) {
+	root := testRoot(t)
+	waits := recordRestartWaits(t)
+	fake := residentSetup(t, true)
+	asked := 0
+	fake.reply = func(request map[string]any, write func(map[string]any)) {
+		asked++
+		if asked < 3 {
+			write(map[string]any{"t": "refused", "id": 1, "code": "busy", "message": map[string]any{"en": "busy now", "de": "gerade ausgelastet"}, "retry": "later"})
+			return
+		}
+		write(map[string]any{"t": "accepted", "id": 1})
+		write(map[string]any{"t": "result", "id": 1, "exit": 0})
+	}
+	handled, code := fake.host(t).ForwardResident(context.Background(), root, "build", []string{"run", "a:build"})
+	if !handled || code != 0 || asked != 3 || len(*waits) != 2 {
+		t.Errorf("handled=%v code=%d asked=%d waits=%v stderr=%q", handled, code, asked, *waits, fake.stderr.String())
+	}
+	cancelled, stop := context.WithCancel(context.Background())
+	stop()
+	asked = 0
+	handled, code = fake.host(t).ForwardResident(cancelled, root, "build", []string{"run", "a:build"})
+	if !handled || code != 130 {
+		t.Errorf("a cancelled caller stops asking: handled=%v code=%d", handled, code)
 	}
 }
 
@@ -441,3 +490,49 @@ func TestResidentAgainstTheRealService(t *testing.T) {
 }
 
 // #endregion 🛰️Service
+
+// 🔐️The runtime directory is trusted only when it and its parent belong to the caller: a private leaf, a parent nobody else can write, no link in either place; the fixed temporary-directory fallback is the case this protects.
+func TestResidentTrustedDirectoryAndParent(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the pipe of a Windows host has no directory to trust")
+	}
+	root := t.TempDir()
+	build := func(name string, parent, leaf os.FileMode) string {
+		directory := filepath.Join(root, name, "id")
+		if err := os.MkdirAll(directory, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Chmod(filepath.Dir(directory), parent); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Chmod(directory, leaf); err != nil {
+			t.Fatal(err)
+		}
+		return directory
+	}
+	if !residentTrusted(build("private", 0o700, 0o700)) {
+		t.Error("a private leaf under a private parent must be trusted")
+	}
+	if !residentTrusted(build("readable-parent", 0o755, 0o700)) {
+		t.Error("a parent others may only read must be trusted")
+	}
+	for name, row := range map[string][2]os.FileMode{"world-writable-parent": {0o777, 0o700}, "group-writable-parent": {0o770, 0o700}, "open-leaf": {0o700, 0o755}} {
+		if residentTrusted(build(name, row[0], row[1])) {
+			t.Errorf("%s must be refused", name)
+		}
+	}
+	target := build("target", 0o700, 0o700)
+	link := filepath.Join(root, "link")
+	if err := os.Symlink(filepath.Dir(target), link); err != nil {
+		t.Fatal(err)
+	}
+	if residentTrusted(filepath.Join(link, "id")) {
+		t.Error("a link in place of the parent must be refused")
+	}
+	if residentTrusted(link) {
+		t.Error("a link in place of the leaf must be refused")
+	}
+	if residentTrusted(filepath.Join(root, "absent", "id")) {
+		t.Error("a missing directory must be refused")
+	}
+}

@@ -1,0 +1,3 @@
+guide: 🧰️framework/🛍️products/🦑️repo/📓️build-guide.md
+sha256 at staging: 38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c
+8 edit(s): staged-word[en], staged-word[de], quiet-4b[en], quiet-4b[de], pending-4b[en], pending-4b[de], quiet-row[en], quiet-row[de]

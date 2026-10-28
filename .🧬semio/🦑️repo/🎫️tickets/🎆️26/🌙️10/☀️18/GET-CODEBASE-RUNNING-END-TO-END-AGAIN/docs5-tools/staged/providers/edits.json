@@ -1,0 +1,43 @@
+{
+ "name": "providers",
+ "code": "peeredit2 providers + tools (live since G44); consumers batch pending",
+ "lane": "docs5",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "85cf39438347e94d0607db0d27d9bfa75e2bc58d1ebaf0e11e9a08515016bc74",
+ "needs": [],
+ "pending": [],
+ "edits": [
+  {
+   "id": "provider-rows",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "| Byte edit of a Rust product source | Bazel: plan reused, the test action re-executes (print one-line edit 105 s, the revert 20 s) |",
+   "where": "after",
+   "block": "| Edit of a module that only the `scheduling` view of a script provider reaches (leases, capacity, process supervision) | graph: the provider's shared closure fact keeps its answer, 0 projects re-inferred; no action key moves, 0 re-executions (shown graph-free by the law; the product run is owed by the gate) |\n| Edit of a module that keys output and that a provider walk reaches (`native-build`, a generator) | only the providers project and the owner whose root holds the file are re-inferred (expected at most 2 projects, 40-93 before); the actions that consume that provider re-execute |\n| Edit of the Cargo driver or of the lock script | no Rust crate is re-inferred (they hold the tool references `cargo-command` and `cargo-lock-owner`), only the providers project; the Rust action keys move, the TypeScript ones do not |"
+  },
+  {
+   "id": "provider-rows",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "| Byte-Änderung einer Rust-Produktquelle | Bazel: Plan wiederverwendet, die Test-Aktion läuft neu (Ein-Zeilen-Änderung von print 105 s, das Zurücksetzen 20 s) |",
+   "where": "after",
+   "block": "| Änderung eines Moduls, das nur die Sicht `scheduling` eines Script-Providers erreicht (Leases, Kapazität, Prozessaufsicht) | Graph: der gemeinsame Abschluss-Fakt des Providers behält seine Antwort, 0 Projekte neu abgeleitet; kein Aktionsschlüssel bewegt sich, 0 Neuausführungen (graphfrei vom Gesetz gezeigt; der Produktlauf steht am Tor aus) |\n| Änderung eines Moduls, das Ausgaben verschlüsselt und das ein Provider-Lauf erreicht (`native-build`, ein Generator) | nur das Provider-Projekt und der Eigentümer, dessen Wurzel die Datei hält, werden neu abgeleitet (erwartet höchstens 2 Projekte, vorher 40-93); die Aktionen, die diesen Provider verbrauchen, laufen neu |\n| Änderung des Cargo-Treibers oder des Lock-Skripts | kein Rust-Crate wird neu abgeleitet (sie halten die Werkzeug-Verweise `cargo-command` und `cargo-lock-owner`), nur das Provider-Projekt; die Rust-Aktionsschlüssel bewegen sich, die TypeScript-Schlüssel nicht |"
+  },
+  {
+   "id": "provider-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- A library edit lands as one graph generation. Measured at the gate: 7 to 170 projects re-inferred (170 in 355 s), a one-project change 34 s. A framework-wide edit re-infers about 566 projects, which took 60-120 min with a builder at 5-13 GB before the memory and early-cutoff fixes; not re-measured since.",
+   "where": "after",
+   "block": "- **Script providers and what re-infers** (live since the gate group G44): the import closure of a command script used to be stored once per product node that runs it, so a keyed edit re-inferred 40-93 projects. Now a walk stops at the ports a module designates, and a closure read through a view names each provider by a reference, `{input:\"scriptProvider:<port>:<view>\", projects:[\"@semio-tech/repo-script-providers\"]}` (views: `scheduling` for target sources and generic targets, `native` for native targets and commands), and each target-independent tool by `{input:\"toolClosure:<name>:native\", ...}` (`cargo-command` is the Cargo driver, `cargo-lock-owner` the lock script and its schema). The facts live once, in the project `@semio-tech/repo-script-providers` (`📚️library/🏃️process/🔌️providers`; the policy is `🧭️script-inputs/🔌️provider-closures/🔣️.json`). Action keys still carry the files: Bazel expands the references inside its groups, and because Nx forbids project references in named inputs `liftNxNamedInputReferencesV1` moves them into the targets. Every `closure-of` names a role (`👓️walk-views/🔣️.json`): `artifact-command` leaves scheduling code out, `artifact-sources` and `test-discovery` keep it (a test exercises scheduling code). Read a refresh accordingly: an edit of scheduling code alone prints no refresh of product owners and executes nothing; an edit of a keyed provider module re-infers the providers project and the owner whose root holds the file; an edit of the Cargo driver does not re-infer a single Rust crate. The first build after the landing re-infers every owner that holds a command walk once. All of this is shown graph-free (a law over ten cumulative edits against a Python model); the product runs of the peeredit2 result are owed by the gate. A consumer that needs literal files (a read oracle, a law, a query) expands the references with `expandedCommandInputsV1` (live, batch `consumers` of lane peeredit2; the closure API itself expands through it); a consumer that maps closure items through `path.replace` or `path.slice` fails with `path.replace is not a function` on a reference object."
+  },
+  {
+   "id": "provider-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- Eine Bibliotheksänderung landet als eine Graph-Generation. Am Tor gemessen: 7 bis 170 Projekte neu abgeleitet (170 in 355 s), eine Ein-Projekt-Änderung 34 s. Ein Framework-weiter Neuaufbau leitet rund 566 Projekte neu ab; das dauerte 60-120 min bei einem Erbauer mit 5-13 GB vor den Korrekturen von Speicher und frühem Abbruch; seither nicht neu gemessen.",
+   "where": "after",
+   "block": "- **Script-Provider und was neu abgeleitet wird** (live seit der Tor-Gruppe G44): der Import-Abschluss eines Befehlsskripts wurde früher einmal je Produktknoten gespeichert, der es ausführt, sodass eine verschlüsselte Änderung 40-93 Projekte neu ableitete. Jetzt endet ein Lauf an den Ports, die ein Modul bestimmt, und ein Abschluss, der durch eine Sicht gelesen wird, nennt jeden Provider über einen Verweis, `{input:\"scriptProvider:<port>:<view>\", projects:[\"@semio-tech/repo-script-providers\"]}` (Sichten: `scheduling` für Ziel-Quellen und generische Ziele, `native` für native Ziele und Befehle), und jedes zielunabhängige Werkzeug über `{input:\"toolClosure:<name>:native\", ...}` (`cargo-command` ist der Cargo-Treiber, `cargo-lock-owner` das Lock-Skript samt Schema). Die Fakten liegen einmal im Projekt `@semio-tech/repo-script-providers` (`📚️library/🏃️process/🔌️providers`; die Richtlinie ist `🧭️script-inputs/🔌️provider-closures/🔣️.json`). Aktionsschlüssel tragen weiter die Dateien: Bazel löst die Verweise in seinen Gruppen auf, und weil Nx Projektverweise in benannten Eingaben verbietet, verschiebt `liftNxNamedInputReferencesV1` sie in die Ziele. Jedes `closure-of` nennt eine Rolle (`👓️walk-views/🔣️.json`): `artifact-command` lässt Scheduling-Code weg, `artifact-sources` und `test-discovery` behalten ihn (ein Test übt Scheduling-Code aus). Lies eine Auffrischung entsprechend: eine Änderung nur an Scheduling-Code gibt keine Auffrischung von Produkt-Eigentümern aus und führt nichts aus; eine Änderung eines verschlüsselten Provider-Moduls leitet das Provider-Projekt und den Eigentümer neu ab, dessen Wurzel die Datei hält; eine Änderung des Cargo-Treibers leitet kein einziges Rust-Crate neu ab. Der erste Build nach der Landung leitet jeden Eigentümer, der einen Befehlslauf hält, einmal neu ab. All das ist graphfrei gezeigt (ein Gesetz über zehn kumulative Änderungen gegen ein Python-Modell); die Produktläufe des Ergebnisses von peeredit2 stehen am Tor aus. Ein Verbraucher, der wörtliche Dateien braucht (ein Lese-Orakel, ein Gesetz, eine Abfrage), löst die Verweise mit `expandedCommandInputsV1` auf (live, Paket `consumers` der Spur peeredit2; die Abschluss-API selbst löst darüber auf); ein Verbraucher, der Abschluss-Einträge durch `path.replace` oder `path.slice` abbildet, scheitert an einem Verweisobjekt mit `path.replace is not a function`."
+  }
+ ]
+}

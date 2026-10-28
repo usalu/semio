@@ -1,5 +1,5 @@
 import{expect,test}from"bun:test";
-import{chmodSync,cpSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,writeFileSync}from"node:fs";
+import{chmodSync,cpSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,symlinkSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{spawnSync}from"node:child_process";
@@ -104,3 +104,53 @@ test("both installers read the Go pin from the shared table, hold no version lit
   expect(pins.map((row:{platform:string;arch:string})=>`${row.platform}-${row.arch}`).sort()).toEqual(["darwin-arm64","darwin-x64","linux-arm64","linux-x64","win32-arm64","win32-x64"]);
   for(const row of pins)expect(row.url).toStartWith("https://dl.google.com/go/");
 });
+
+test.skipIf(!supported)("two first installs at once download the pinned Go once and both end with the launcher; the second says it waits, in both languages",async()=>{
+  const root=mkdtempSync(join(tmpdir(),"semio-install-"));
+  try{
+    const{bytes,sha256}=synthetic(root),script=scaffold(root,sha256);let served=0;
+    const server=Bun.serve({port:0,hostname:"127.0.0.1",idleTimeout:0,fetch:async request=>{if(new URL(request.url).pathname!==`/${archive}`)return new Response("missing",{status:404});served++;await Bun.sleep(1500);return new Response(bytes);}});
+    try{
+      const mirror=`http://127.0.0.1:${server.port}`,[first,second]=await Promise.all([install(script,root,mirror),install(script,root,mirror)]);
+      expect([first.status,second.status]).toEqual([0,0]);expect(served).toBe(1);
+      expect(first.stderr+second.stderr).toContain("Waiting for another process that installs the Go toolchain");expect(first.stderr+second.stderr).toContain("Warte auf einen anderen Prozess, der die Go-Toolchain installiert");
+      expect(leftovers(root)).toEqual([]);expect(existsSync(join(root,"bin/repo"))).toBe(true);
+    }finally{server.stop(true);}
+  }finally{rmSync(root,{recursive:true,force:true});}
+},120000);
+
+test("the Windows installer replaces a running launcher: earlier moved-aside copies go first, the new file is staged, the old one is renamed aside (Windows renames a running image but never overwrites or deletes it), then the new one takes its name, retried 10…1280 ms, and a final failure moves the old one back",()=>{
+  const windows=readFileSync(join(installerSource,"📥️install/🔵️.ps1"),"utf8");
+  const steps=['-Filter "repo.exe.old-*" -File','-Destination "$target.partial" -Force','$aside = "$target.old-" +','Move-Item -LiteralPath $target -Destination $aside','try { Move-Item -LiteralPath "$target.partial" -Destination $target; break }','Start-Sleep -Milliseconds ([int](10 * [Math]::Pow(2, $attempt)))','if ($aside) { Move-Item -LiteralPath $aside -Destination $target }','throw\n'].map(step=>windows.indexOf(step));
+  expect(steps.every(index=>index>0)).toBe(true);expect([...steps].sort((left,right)=>left-right)).toEqual(steps);
+  expect(windows).not.toContain('-Destination $target -Force');expect(windows).toContain('if ($attempt -lt 8)');expect(windows.charCodeAt(0)).toBe(0xfeff);
+});
+
+test("both installers hold the same lock around the toolchain install: wait at most fifteen minutes, say they wait and why they stop in both languages, and look again once the lock is theirs",()=>{
+  const shell=readFileSync(join(installerSource,"📥️install/🐚️.sh"),"utf8"),windows=readFileSync(join(installerSource,"📥️install/🔵️.ps1"),"utf8");
+  const waiting=["Waiting for another process that installs the Go toolchain…","Warte auf einen anderen Prozess, der die Go-Toolchain installiert…"],stopped=["installing the Go toolchain for 15 minutes","installiert seit 15 Minuten die Go-Toolchain"];
+  for(const text of[shell,windows]){for(const line of[...waiting,...stopped])expect(text).toContain(line);}
+  expect(shell).toContain("attempts\" -le 900");expect(shell).toContain("mkdir \"$1\"");expect(windows).toContain("FromMinutes(15)");expect(windows).toContain("New-InstallMutex \"semio-go-$version\"");expect(windows).toContain("Global\\$Name");expect(windows).toContain("Local\\$Name");expect(windows.indexOf("Global\\$Name")).toBeLessThan(windows.indexOf("Local\\$Name"));expect(windows).toContain("UnauthorizedAccessException");expect(windows).not.toMatch(/Mutex\]::new\(\$false, "Global\\semio/u);
+  expect(windows).toContain("AbandonedMutexException");expect(shell).toContain("kill -0 \"$owner\"");
+  expect(shell.indexOf("wait_for_lock \"$target.lock\"")).toBeLessThan(shell.indexOf("is_pinned_go \"$target/bin/go\"",shell.indexOf("wait_for_lock \"$target.lock\"")));
+  expect(windows.indexOf("$held = $mutex.WaitOne")).toBeLessThan(windows.indexOf("Test-PinnedGo -Path (Join-Path $Target"));
+});
+
+test.skipIf(!supported)("the installer names every other repo on the PATH that is not the installed launcher, in both languages, and stays silent for links to it",async()=>{
+  const root=mkdtempSync(join(tmpdir(),"semio-install-"));
+  try{
+    const{bytes,sha256}=synthetic(root),script=scaffold(root,sha256);
+    const server=Bun.serve({port:0,hostname:"127.0.0.1",fetch:()=>new Response(bytes)});
+    try{
+      const stale=join(root,"stale"),linked=join(root,"linked");mkdirSync(stale,{recursive:true});mkdirSync(linked,{recursive:true});
+      writeFileSync(join(stale,"repo"),"#!/bin/sh\n");chmodSync(join(stale,"repo"),0o755);
+      const mirror=`http://127.0.0.1:${server.port}`;
+      await install(script,root,mirror);
+      symlinkSync(join(root,"bin/repo"),join(linked,"repo"));
+      const run=await install(script,root,mirror,{PATH:`${linked}:${stale}:/usr/bin:/bin`});
+      expect(run.status).toBe(0);
+      expect(run.stderr).toContain(`Another repo on PATH shadows or duplicates the launcher: ${stale}/repo`);expect(run.stderr).toContain(`Ein anderes repo im PATH verdeckt oder dupliziert den Launcher: ${stale}/repo`);
+      expect(run.stderr).not.toContain(`launcher: ${linked}/repo`);
+    }finally{server.stop(true);}
+  }finally{rmSync(root,{recursive:true,force:true});}
+},120000);

@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Bazel input witness publication",
+  "description": "EN: A witnessed test's declared source set enters it as one source file the publisher writes after every capture: the digest of every planned file's path, size and content sha256, taken from the capture manifest without reading a byte again. The plan names the files per witness; the publisher rewrites a witness only when its digest moved, so Bazel sees an unchanged input when no planned byte changed. DE: Die deklarierten Quellen eines bezeugten Tests gehen als eine Quelldatei in ihn ein, die der Veröffentlicher nach jeder Erfassung schreibt: der Digest von Pfad, Größe und Inhalts-sha256 jeder geplanten Datei, aus dem Erfassungsmanifest genommen, ohne ein Byte erneut zu lesen. Der Plan nennt die Dateien je Zeuge; der Veröffentlicher schreibt einen Zeugen nur neu, wenn sich sein Digest bewegt hat, sodass Bazel eine unveränderte Eingabe sieht, wenn sich kein geplantes Byte geändert hat.",
+  "definitions": {
+    "Policy": {
+      "description": "EN: The file names: the plan the planner writes into the workspace and the suffix of every witness file (a source file of the workspace package, named after the source group). DE: Die Dateinamen: der Plan, den der Planer in den Arbeitsbereich schreibt, und die Endung jeder Zeugendatei (eine Quelldatei des Arbeitsbereichspakets, nach der Quellgruppe benannt).",
+      "const": {"version": 1, "plan": "witnesses.plan.json", "suffix": ".witness", "maximumPlanBytes": 268435456}
+    },
+    "Plan": {
+      "description": "EN: Per witness name the sorted repository paths of the declarable files of its source group. DE: Je Zeugenname die sortierten Repository-Pfade der deklarierbaren Dateien seiner Quellgruppe.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "witnesses"],
+      "properties": {
+        "version": {"const": 1},
+        "witnesses": {"type": "object", "propertyNames": {"pattern": "^w_[A-Za-z0-9_]+$"}, "additionalProperties": {"type": "array", "items": {"type": "string", "minLength": 1}}}
+      }
+    },
+    "Witness": {
+      "description": "EN: The content of one witness file. DE: Der Inhalt einer Zeugendatei.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "files", "sha256"],
+      "properties": {"version": {"const": 1}, "files": {"type": "integer", "minimum": 0}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}
+    }
+  }
+}

@@ -291,42 +291,6 @@
   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/NEW",
   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN"
  ],
- "sizeRemovals": [
-  {
-   "folder": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG",
-   "prefixes": [],
-   "expected": [
-    {
-     "kind": "ticket-file",
-     "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG/a.bin",
-     "bytes": 6291456
-    },
-    {
-     "kind": "ticket-dir",
-     "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG/sub",
-     "bytes": 12582912
-    }
-   ]
-  },
-  {
-   "folder": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG",
-   "prefixes": [
-    ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG/sub"
-   ],
-   "expected": [
-    {
-     "kind": "ticket-file",
-     "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG/a.bin",
-     "bytes": 6291456
-    }
-   ]
-  },
-  {
-   "folder": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/NEW",
-   "prefixes": [],
-   "expected": []
-  }
- ],
  "generatedRemovals": [
   {
    "folder": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG",
@@ -353,31 +317,6 @@
   },
   {
    "folder": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/NEW",
-   "prefixes": [],
-   "expected": []
-  }
- ],
- "openOversized": [
-  {
-   "folder": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN",
-   "prefixes": [],
-   "expected": [
-    {
-     "kind": "ticket-generated",
-     "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/huge.bin",
-     "bytes": 105906176
-    }
-   ]
-  },
-  {
-   "folder": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN",
-   "prefixes": [
-    ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/huge.bin"
-   ],
-   "expected": []
-  },
-  {
-   "folder": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG",
    "prefixes": [],
    "expected": []
   }
@@ -587,11 +526,8 @@
   ]
  },
  "thresholds": {
-  "ticketFile": 5242880,
-  "ticketDir": 10485760,
   "buildArtifact": 10737418240,
-  "oversizedIgnored": 104857600,
-  "openTicketFile": 104857600
+  "oversizedIgnored": 104857600
  },
  "walk": {
   "skipNames": [

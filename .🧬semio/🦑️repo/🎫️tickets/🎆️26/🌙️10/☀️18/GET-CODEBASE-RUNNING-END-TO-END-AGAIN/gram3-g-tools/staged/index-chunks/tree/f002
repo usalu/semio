@@ -1,0 +1,6 @@
+{
+ "version": 1,
+ "equality": {"seeds": 300},
+ "memory": {"owners": 2500, "sharedRows": 4000, "privateRows": 40, "budgetMegabytes": 8},
+ "bulkPatch": {"seeds": 60, "owners": 40, "steps": 12, "bulkRows": 50}
+}

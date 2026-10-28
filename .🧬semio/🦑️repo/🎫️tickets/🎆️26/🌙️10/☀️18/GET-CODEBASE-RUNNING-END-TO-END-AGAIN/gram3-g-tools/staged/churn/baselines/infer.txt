@@ -1,0 +1,11 @@
+(fail) a TypeScript program reused by a project is named by one derived fact too, and asking it again follows the files the compiler reads
+(fail) a target that declares no closure metadata is unchanged
+(fail) closure and digest move exactly with the declared sources
+(fail) closure digest moves exactly when an imported module changes
+(fail) command closure follows workspace package specifiers and agrees with esbuild and Bun's bundler
+(fail) declared module globs join the matched modules and their import closure, agreeing with esbuild and Bun's bundler
+(fail) literal module inputs a target declares contribute their own import closure
+(fail) literal new URL references to existing files join the closure with the imports of the modules they name
+(fail) records that read the same closure share its fact blocks: small headers, identical rows, a bad block recomputes and heals
+(fail) test: every file the target reads is declared or inferred
+(fail) the law is sensitive: removing a runtime-read input or the declared closure exposes the stale-green gap

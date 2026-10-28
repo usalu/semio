@@ -1,0 +1,141 @@
+{
+ "note": "g13-dash (gate-g, 2026-10-27 00:28-01:14): the learned classes of `repo --tool=bazel run @semio-tech/repo-dashboard-rs:build` as the quiet admit at 2048 MB had to grow: 6 earlier runs sized at 200 percent of the 17920 MB default of 8 jobs, so 35840 MB, clamped to 28672 MB by the share bound, waited 45 min with 12-15 GB spare while the run really peaks at 4.6-4.8 GB (the gate verdicts g8-dash 4.5 GB, g12-dash 4.8 GB). Reconstructed from the log facts, see make_g13.py.",
+ "leaf": "run:build:@semio-tech/repo-dashboard-rs:build",
+ "args": [
+  "run",
+  "@semio-tech/repo-dashboard-rs:build",
+  "--parallel=8"
+ ],
+ "nowMs": 1793047546789,
+ "totalMegabytes": 61440,
+ "spareMegabytes": 12119,
+ "peakMegabytes": [
+  4600,
+  4800
+ ],
+ "store": {
+  "version": 1,
+  "classes": {
+   "run": {
+    "samples": [
+     {
+      "atMs": 1793043946789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 190000,
+      "peakAtMilliseconds": 120000
+     },
+     {
+      "atMs": 1793040346789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 199000,
+      "peakAtMilliseconds": 124000
+     },
+     {
+      "atMs": 1793036746789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 208000,
+      "peakAtMilliseconds": 128000
+     },
+     {
+      "atMs": 1793033146789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 217000,
+      "peakAtMilliseconds": 132000
+     },
+     {
+      "atMs": 1793029546789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 226000,
+      "peakAtMilliseconds": 136000
+     },
+     {
+      "atMs": 1793025946789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 235000,
+      "peakAtMilliseconds": 140000
+     }
+    ]
+   },
+   "run:build": {
+    "samples": [
+     {
+      "atMs": 1793043946789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 190000,
+      "peakAtMilliseconds": 120000
+     },
+     {
+      "atMs": 1793040346789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 199000,
+      "peakAtMilliseconds": 124000
+     },
+     {
+      "atMs": 1793036746789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 208000,
+      "peakAtMilliseconds": 128000
+     },
+     {
+      "atMs": 1793033146789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 217000,
+      "peakAtMilliseconds": 132000
+     },
+     {
+      "atMs": 1793029546789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 226000,
+      "peakAtMilliseconds": 136000
+     },
+     {
+      "atMs": 1793025946789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 235000,
+      "peakAtMilliseconds": 140000
+     }
+    ]
+   },
+   "run:build:@semio-tech/repo-dashboard-rs:build": {
+    "samples": [
+     {
+      "atMs": 1793043946789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 190000,
+      "peakAtMilliseconds": 120000
+     },
+     {
+      "atMs": 1793040346789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 199000,
+      "peakAtMilliseconds": 124000
+     },
+     {
+      "atMs": 1793036746789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 208000,
+      "peakAtMilliseconds": 128000
+     },
+     {
+      "atMs": 1793033146789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 217000,
+      "peakAtMilliseconds": 132000
+     },
+     {
+      "atMs": 1793029546789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 226000,
+      "peakAtMilliseconds": 136000
+     },
+     {
+      "atMs": 1793025946789,
+      "ratioBasisPoints": 20000,
+      "activeMilliseconds": 235000,
+      "peakAtMilliseconds": 140000
+     }
+    ]
+   }
+  }
+ }
+}

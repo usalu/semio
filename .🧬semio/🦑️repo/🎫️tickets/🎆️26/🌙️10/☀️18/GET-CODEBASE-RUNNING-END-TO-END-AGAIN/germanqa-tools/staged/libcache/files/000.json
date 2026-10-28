@@ -1,0 +1,621 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Inactive Recomputable Cache Partition Reset",
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "profiles": [
+          "graph",
+          "nx"
+        ],
+        "platforms": [
+          "darwin",
+          "linux",
+          "win32"
+        ],
+        "maximumMilliseconds": 600000
+      }
+    },
+    "Partition": {
+      "enum": [
+        "rust",
+        "tools",
+        "graph",
+        "dependencies",
+        "products",
+        "diagnostics",
+        "nx",
+        "leases"
+      ]
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "dev",
+        "ino",
+        "mode",
+        "nlink",
+        "size"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "file",
+            "directory",
+            "link"
+          ]
+        },
+        "dev": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "ino": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nlink": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "size": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        }
+      }
+    },
+    "Capsule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "entries",
+        "rootNames",
+        "maximumPhysicalBytes"
+      ],
+      "properties": {
+        "directory": {
+          "$ref": "#/$defs/Entry"
+        },
+        "entries": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Entry"
+          },
+          "maxProperties": 4
+        },
+        "rootNames": {
+          "type": "array",
+          "maxItems": 1,
+          "items": {
+            "type": "string",
+            "maxLength": 256
+          }
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "Outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "partition",
+        "operation",
+        "retiredImages",
+        "logicalBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "partition": {
+          "$ref": "#/$defs/Profile"
+        },
+        "operation": {
+          "const": "reset-inactive"
+        },
+        "logicalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "retiredImages": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "RecordedEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "dev",
+        "ino",
+        "mode",
+        "nlink",
+        "size",
+        "mtimeNs",
+        "ctimeNs"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "file",
+            "directory",
+            "link"
+          ]
+        },
+        "dev": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "ino": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nlink": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "size": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "mtimeNs": {
+          "type": "string",
+          "pattern": "^-?[0-9]+$"
+        },
+        "ctimeNs": {
+          "type": "string",
+          "pattern": "^-?[0-9]+$"
+        }
+      }
+    },
+    "Intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "partition",
+        "namespace",
+        "ancestry",
+        "entries"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "inactive-reset-intent"
+        },
+        "partition": {
+          "$ref": "#/$defs/Partition"
+        },
+        "namespace": {
+          "$ref": "#/$defs/RecordedEntry"
+        },
+        "ancestry": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          }
+        },
+        "entries": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fixed.dmg",
+            "image.json",
+            "m"
+          ],
+          "properties": {
+            "fixed.dmg": {
+              "$ref": "#/$defs/RecordedEntry"
+            },
+            "image.json": {
+              "$ref": "#/$defs/RecordedEntry"
+            },
+            "m": {
+              "$ref": "#/$defs/RecordedEntry"
+            }
+          }
+        }
+      }
+    },
+    "RecoveryObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "directory",
+        "receiptStamp",
+        "receiptSha256"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "current-reset-intent",
+            "unsupported-receipt-shape"
+          ]
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+        },
+        "receiptStamp": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "version": {
+          "const": 1
+        }
+      }
+    },
+    "PublicationReceiverCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "nested",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "original-capsule-root",
+            "nested-capsule-receiver"
+          ]
+        },
+        "nested": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RemovalReceiverCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "scope",
+        "copied",
+        "accepted",
+        "count"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory"
+          ]
+        },
+        "scope": {
+          "enum": [
+            "current",
+            "closed"
+          ]
+        },
+        "copied": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        }
+      }
+    },
+    "PlannedProvenanceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "initialIntent",
+        "publishedIntent",
+        "resuming"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "initialIntent": {
+          "type": "boolean"
+        },
+        "publishedIntent": {
+          "type": "boolean"
+        },
+        "resuming": {
+          "type": "boolean"
+        }
+      }
+    },
+    "FinalRemovalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "foreignReplacement",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "final-post-remove",
+            "final-peer-replacement"
+          ]
+        },
+        "foreignReplacement": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Profile": {
+      "enum": [
+        "graph",
+        "nx",
+        "rust",
+        "products"
+      ]
+    },
+    "InactivePublicationProtocol": {
+      "const": {
+        "version": 1,
+        "platforms": [
+          "darwin"
+        ],
+        "maximumMilliseconds": 600000,
+        "maximumAncestors": 64,
+        "maximumReceiptBytes": 4096,
+        "maximumInformationBytes": 4194304,
+        "maximumInformationLines": 65536,
+        "maximumMountBytes": 1048576,
+        "maximumMountLines": 16384,
+        "entries": [
+          "fixed.dmg",
+          "image.json",
+          "m"
+        ],
+        "receipt": "image.json",
+        "backing": "fixed.dmg",
+        "root": "m",
+        "intent": ".reset.json",
+        "maximumIntentBytes": 16384,
+        "ledger": "boot-recovery",
+        "maximumLedgerEntries": 64,
+        "texts": {
+          "en": {
+            "obsolete": "The cache image {partition} ({directory}) was published in an unsupported receipt format, for example before the boot-stable ancestry binding. Its contents are recomputable: it is retired and rebuilt automatically.",
+            "attached": "The cache image {partition} ({directory}) is attached and has an unsupported receipt format. Detach it (hdiutil detach <device>) and run the command again: it is then rebuilt automatically.",
+            "declined": "The cache image {partition} ({directory}) is not recreated: its journal verdict is {reason} (a whole-image reset never drops persistent state or foreign charges). Space is recovered by collection (repo cache gc) only."
+          },
+          "de": {
+            "obsolete": "Das Cache-Image {partition} ({directory}) wurde in einem nicht unterstützten Quittungsformat veröffentlicht, zum Beispiel vor der bootstabilen Vorfahrenbindung. Sein Inhalt ist neu berechenbar: es wird stillgelegt und automatisch neu aufgebaut.",
+            "attached": "Das Cache-Image {partition} ({directory}) ist angehängt und hat ein nicht unterstütztes Quittungsformat. Hänge es ab (hdiutil detach <Gerät>) und führe den Befehl erneut aus: es wird dann automatisch neu aufgebaut.",
+            "declined": "Das Cache-Image {partition} ({directory}) wird nicht neu erzeugt: sein Journal-Urteil lautet {reason} (ein Gesamt-Reset verwirft nie persistenten Zustand oder fremde Belastungen). Platz wird nur durch Einsammeln (repo cache gc) zurückgewonnen."
+          }
+        },
+        "attachedRefusal": "Original relative child volume required"
+      }
+    },
+    "InactivePublicationOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "partition",
+        "operation",
+        "retiredFiles",
+        "logicalBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "partition": {
+          "$ref": "#/$defs/Partition"
+        },
+        "operation": {
+          "const": "reset-inactive"
+        },
+        "retiredFiles": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "logicalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ResetOwnerFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "profile",
+              "scenario",
+              "accepted",
+              "retiredImages"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "profile": {
+                "enum": [
+                  "graph",
+                  "nx",
+                  "rust",
+                  "products",
+                  "tools",
+                  "dependencies"
+                ]
+              },
+              "scenario": {
+                "enum": [
+                  "success",
+                  "absent",
+                  "resume",
+                  "copied-control",
+                  "capture-undefined",
+                  "close-failure",
+                  "retirement-failure",
+                  "retirement-false",
+                  "lease-close-false",
+                  "exclusive-refused",
+                  "declined"
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              },
+              "retiredImages": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "WorkspaceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "root",
+        "workspace",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "workspace": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RegrowPlanCases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 24,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "record",
+          "due",
+          "verdict",
+          "plan"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "record": {
+            "type": "boolean"
+          },
+          "due": {
+            "type": "boolean"
+          },
+          "verdict": {
+            "enum": [
+              "admitted",
+              "empty",
+              "persistent-state",
+              "foreign-charge",
+              "incomplete-charge",
+              "unreadable"
+            ]
+          },
+          "plan": {
+            "enum": [
+              "resume",
+              "skip",
+              "decline",
+              "reset"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

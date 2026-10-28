@@ -42,7 +42,7 @@ fn strict_snapshot_and_aggregate_json_vectors() {
         let snapshot: GisTerrainWindowConfig = decode(value);
         assert_eq!(serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&snapshot)).expect("snapshot JSON"), *value);
     }
-    store::os_store::test_support::assert_wire_witness::<GisTerrainWindowConfigMutation>(fixture_text!("../../../../../✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    store::os_store::test_support::assert_wire_witness::<GisTerrainWindowConfigMutation>(fixture_text!("../../../../../✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️camera/🧾️wire/🦠️case/🔣️.json"));
     for value in fixture["mutations"]["invalid"].as_array().expect("invalid operations") {
         assert!(semio_framework_pack_json::from_json_str::<GisTerrainWindowConfigMutation>(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "accepted {value}");
     }

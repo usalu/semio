@@ -1,0 +1,25 @@
+{
+ "extends": "../../../../../../../../tsconfig.json",
+ "compilerOptions": {
+  "noEmit": true,
+  "types": [
+   "bun"
+  ]
+ },
+ "include": [],
+ "files": [
+  "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🔁️incremental/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🧪️tests/🔁️incremental/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🔌️providers/🔷️typescript/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🏭️runner/🍞️bun/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/👷️worker/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/👷️worker/🔒️real-bazel/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📦️workspace-exports/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📦️workspace-exports/🧠️memo/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📦️workspace-exports/🧠️memo/🧪️tests/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🔒️classes/🟦️.ts"
+ ]
+}

@@ -1,0 +1,107 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts": {
+  "file": "f000",
+  "base": "ff021c47e026b7587c3f003a5484d5363ccf14b1e4fdbd41bf3295570cc10ab1",
+  "new": "88b5f49c4a1fb280e2d989072e01eb9ffea0016119a19e41b301c0d60a28cba0"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🧪️tests/🟦️.ts": {
+  "file": "f001",
+  "base": "d5eb4702fc20b7a9e68d8de028bc8c20714b99289a0791b17b0abc4920bb0aee",
+  "new": "e9efa39fde77e07dd39468e1ba41ad80ed0bd64197b29dd8fcfd8e63a4c666dd"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🧪️tests/🧫️declared/🟦️.ts": {
+  "file": "f002",
+  "base": "ffaa37f83431e6e54134d6299827d7b13091f04c0d9afc0e9fa72b3ad723fde2",
+  "new": "a38381605c56893d4d55431ab25cbca6461cf57f988f1c55e2ef0c5c405fe980"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🧬️schema/🪪️envelope.json": {
+  "file": "f003",
+  "base": null,
+  "new": "57427a15cdbaa3bfc525f4502ca12f925b9c9c01aefa7824aaacf9903de59bd4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/⏳️declared-wait/🟦️.ts": {
+  "file": "f004",
+  "base": "1194c877f98bcfe6595f7b43db14aa479ce3af6384fd19a201d386dd0caa84e0",
+  "new": "78d70cf7ea0050568b349a56b84ca26a02f03a209c2c8e5925c9471b65b82a93"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🤝️shared/🟦️.ts": {
+  "file": "f005",
+  "base": "2ba60ce60402b10690fd2fd8d098d8931bc74978fc1ddbf992a6a4b8ef3d9ee3",
+  "new": "8091477d7b3eb5a6bed944d1412236c812ff602a35b904d51bebb4c1d943cf7c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🪢️borrowing/🟦️.ts": {
+  "file": "f006",
+  "base": "fd57b699f6983cf0ddd3417c72f905c87807edecc2162f9a93387e06f5fcc327",
+  "new": "b847e784a4955028b3d6ffd3eb82b4d09dfd03a37d64b051f4d033f89d97ea15"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/🧪️tests/🟦️.ts": {
+  "file": "f007",
+  "base": "55d4bc85e1e6e3f9802e17a5af40749c6bff58d65c4e8fd56b54b835efe72b18",
+  "new": "b4838331d79b5d21cd97eb97132e1230c6ba509b0f82366c1c97d8d2747d0cd2"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/📥️consumption/🟦️.ts": {
+  "file": "f008",
+  "base": "3ea2988d69ae4c785f4e9314d1af04fc7828bf0e4f4b3a5cad5c54c9f8303c94",
+  "new": "c45b95ae1dec4538f520212551960611833c46751a4ba6e84793d05512f480b4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📊️reporting/🧪️tests/🟦️.ts": {
+  "file": "f009",
+  "base": "70931de019331d383877323fac8938ff348c526837022671aec3802d8d6319a2",
+  "new": "844d280e174aaab959ef97f30a9f5ed11771a0b035f58a0575c84f8a64e1b514"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🎛️phase/🟦️.ts": {
+  "file": "f010",
+  "base": "be1f88d457ebb7114ac1e7e27fb3a2eb90de0da3d2f137c4d07607d90f549fa0",
+  "new": "184eb42507c3a4d61a70d82c892623eebb5f744768f1d786b5e0a0731d34f840"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/📒️ledger/🟦️.ts": {
+  "file": "f011",
+  "base": "34edf2e9a2f64fe4255b987bcaafa26a99e446baa9e46a14d014592feb13e839",
+  "new": "ad9b280dc7f3c0c580354f0c6a6cf0c7b7fdea98481092e23ec2c9fe339103c3"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🚪️admission/🟦️.ts": {
+  "file": "f012",
+  "base": "11eca680885ae4a1bdbcb5eef042d897d833498ddc30fb862dd5a7baf286dfbe",
+  "new": "8b8655127a6c8684d6944fb5f6395f095fa01f9b5fb90158b90b0e3ef57e816e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/📏️windows/🟦️.ts": {
+  "file": "f013",
+  "base": "0fa634725b4f80ac14c91cda3db9203807f081b07dc998b41b57c00cb597688f",
+  "new": "194c11fb8fbbac3d43c939881e751a692eee7715da463c4ad6c9d566067f86bc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/🧪️tests/🟦️.ts": {
+  "file": "f014",
+  "base": "3fbb39f39dc9098bdc7c62a674df4a659b3d33ea9955770ad69ea2951b8db9de",
+  "new": "a5eed4fc7d8c2a35882d00844c82cdc00f45159e469b0344ea8de69905276db5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️source/🧪️tests/🟦️.ts": {
+  "file": "f015",
+  "base": "1e0bb0dd32e7926974e00fe3aa5af9426dd470e24e170b0f850dcc17ef51b4ef",
+  "new": "bf9e4b7086fdf02a3e8346a72d6769e4e1c68eca737ce0a2e4afb7eccb6d57ea"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/🔒️lifetime/🧪️tests/🟦️.ts": {
+  "file": "f016",
+  "base": "b3da09dc1b5c6fc7a4e7cfd358ec18e8d00227e1db5f4f91b6fcabaff5d2342b",
+  "new": "9c1902159f5ce25a0deeee287a97ec2fa037c03bd8b7c505ce153870b677c8fa"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/🧩️assembly/🧪️tests/🟦️.ts": {
+  "file": "f017",
+  "base": "637e1998328d92043e2a8eaa0e99f5a137533aefb70629885186e423799cbb14",
+  "new": "e4f979c299beb7eb58d1738dc750d3a5cdd8abfec6fc1dc9592f82259ddc9b2a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🧪️tests/🟦️.ts": {
+  "file": "f018",
+  "base": "a2895b8c30e94a7f1856d3943d87478fb72127d5f3ce048b8148d832a5a5965f",
+  "new": "7dbf0b680b0d05294444a9ebd24091f205e5a44a3d9b1c3bc5d996de18bcefcf"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🏗️native/🟦️.ts": {
+  "file": "f019",
+  "base": "040ec0804836186eb32e36323cef62f2dda9d4c5f52b80c3f9141aafc86f5ddb",
+  "new": "c5f99432568c0d3789e4a38a5290ce27bd576105f2381ba5000713af6c9f788c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🪪️native-birth/🟦️.ts": {
+  "file": "f020",
+  "base": null,
+  "new": "e7a56020bb46db04d64f6355d14035f94809f9e6fed5b816a6f0e4e48736f1c3"
+ }
+}

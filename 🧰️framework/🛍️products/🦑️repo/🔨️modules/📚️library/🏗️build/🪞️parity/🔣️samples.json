@@ -36,7 +36,7 @@
       "target": "@semio-tech/framework-graph:test",
       "note": {
         "en": "Test task with a dependency closure.",
-        "de": "Testaufgabe mit Abhängigkeitsabschluss."
+        "de": "Test-Task mit Abhängigkeitsabschluss."
       }
     },
     {
@@ -202,7 +202,7 @@
       "target": "@teaching/architecture-course:typecheck",
       "note": {
         "en": "Course type check with a seven-task closure.",
-        "de": "Typprüfung des Kurses mit sieben Aufgaben im Abschluss."
+        "de": "Typprüfung des Kurses mit sieben Tasks im Abschluss."
       }
     },
     {

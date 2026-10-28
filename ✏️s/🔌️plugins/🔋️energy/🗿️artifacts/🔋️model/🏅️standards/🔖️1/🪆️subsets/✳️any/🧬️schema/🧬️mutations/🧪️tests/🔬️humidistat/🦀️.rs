@@ -56,9 +56,9 @@ mod delete_humidistat {
 #[path = "."]
 mod change_humidistat_dehumidifying_setpoint_schedule {
     pub use crate::humidistat_mutations::change_humidistat_dehumidifying_setpoint_schedule::*;
-    #[path = "../../💧️humidistat/🏝️change-dehumidifying-setpoint-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
+    #[path = "../../💧️humidistat/🏝️dehumidify-setpoint-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
-    #[path = "../../💧️humidistat/🏝️change-dehumidifying-setpoint-schedule/🧪️tests/✅️repoints/🦀️.rs"]
+    #[path = "../../💧️humidistat/🏝️dehumidify-setpoint-schedule/🧪️tests/✅️repoints/🦀️.rs"]
     mod tests_repoints;
 }
 

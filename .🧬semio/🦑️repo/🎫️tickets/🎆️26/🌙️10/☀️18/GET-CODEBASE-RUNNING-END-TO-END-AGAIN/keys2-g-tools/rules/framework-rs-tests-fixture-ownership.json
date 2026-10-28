@@ -1,0 +1,43 @@
+{
+  "id": "framework-rs-tests-fixture-ownership",
+  "evidence": "static",
+  "description": "Like framework-rs-tests; the fixture ownership test also reads the pixel lock fixture that its hierarchy oracle compares (learned by the read oracle: a runtime path no static read can see).",
+  "select": {
+    "project": "@semio-tech/framework-rs",
+    "targets": [
+      "test-fixture-ownership-source"
+    ]
+  },
+  "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "reads"
+  ],
+  "reads": [
+    {
+      "router": {
+        "source": "🧰️framework/📦️packages/🦀️rust/📜️script.ts",
+        "bases": [
+          "🧰️framework"
+        ]
+      }
+    },
+    {
+      "globs": [
+        "{workspaceRoot}/bunfig.toml",
+        "{workspaceRoot}/tsconfig.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/**/*"
+      ]
+    },
+    {
+      "globs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json"
+      ]
+    }
+  ]
+}

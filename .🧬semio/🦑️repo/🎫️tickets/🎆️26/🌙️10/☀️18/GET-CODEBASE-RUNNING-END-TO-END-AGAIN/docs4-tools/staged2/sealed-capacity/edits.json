@@ -1,0 +1,38 @@
+{
+ "name": "sealed-capacity",
+ "code": "sealflip + quietfc round 3 (live)",
+ "lane": "docs4",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "e88fdd1b3edd95f1a46291cd1f2304ae9f06f3616faeeaa8a56826552197e872",
+ "needs": [],
+ "edits": [
+  {
+   "id": "sealed-flip",
+   "lang": "en",
+   "kind": "replace",
+   "old": "(live opt-in, default flip pending gate batch 8)",
+   "new": "(`SEMIO_REPO_SEAL=sealed` is opt-in; the default stays `live` until the flip, the last batch to land; `SEMIO_REPO_IMPLEMENTATION` is the dashboard's `rust|go` selector and no longer a sealing switch)"
+  },
+  {
+   "id": "sealed-flip",
+   "lang": "de",
+   "kind": "replace",
+   "old": "(live als Opt-in, Umlegen des Standards wartet auf Tor-Paket 8)",
+   "new": "(`SEMIO_REPO_SEAL=sealed` ist Opt-in; der Standard bleibt `live` bis zum Umlegen, dem letzten Paket; `SEMIO_REPO_IMPLEMENTATION` ist nur noch der `rust|go`-Wähler des Dashboards und kein Schalter des Versiegelns mehr)"
+  },
+  {
+   "id": "grown-jobs",
+   "lang": "en",
+   "kind": "replace",
+   "old": "so it is admitted at the largest size that fits and goes on; it never waits for memory on itself.",
+   "new": "so it is admitted at the largest size that fits and goes on with the jobs that memory carries (`… the run goes on with 4 of 8 job(s)`, never fewer than one), growing later when memory frees up (\"Growing a reduced grant\"); it never waits for memory on itself."
+  },
+  {
+   "id": "grown-jobs",
+   "lang": "de",
+   "kind": "replace",
+   "old": "wird deshalb mit der größten passenden Größe zugelassen und läuft weiter; er wartet nie auf sich selbst um Speicher.",
+   "new": "wird deshalb mit der größten passenden Größe zugelassen und läuft mit den Jobs weiter, die der Speicher trägt (`… 4 von 8 Job(s)`, nie weniger als einer), und wächst später, wenn Speicher frei wird („Wachsen einer reduzierten Freigabe“); er wartet nie auf sich selbst um Speicher."
+  }
+ ]
+}

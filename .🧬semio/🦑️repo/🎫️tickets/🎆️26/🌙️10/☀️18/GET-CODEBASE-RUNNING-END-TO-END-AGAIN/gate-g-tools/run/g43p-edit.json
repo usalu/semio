@@ -1,0 +1,31 @@
+{
+ "label": "g43p-edit",
+ "target": "@semio-tech/print-rs:test",
+ "started": "14:31:18",
+ "wall_s": 282.9,
+ "peak_tree_mb": 6490,
+ "peak_processes": 9,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "383"
+  ],
+  "inferring": [
+   "383"
+  ],
+  "published": [
+   "657",
+   "383",
+   "107"
+  ],
+  "processes": [
+   "3",
+   "1 internal, 2 local"
+  ],
+  "actions": [
+   "3"
+  ]
+ }
+}

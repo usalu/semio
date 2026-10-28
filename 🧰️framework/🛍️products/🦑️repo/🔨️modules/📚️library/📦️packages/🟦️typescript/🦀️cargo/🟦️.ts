@@ -3,6 +3,7 @@ export { runRepositoryPublishedCargoExecutableV1, withRepositoryPublishedCargoEx
 export { buildRepositoryCargoArtifacts, workspaceCargoVersion } from "../../../⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 export { readRepositoryWasmPackageIntentV1, repositoryWasmPackageNxOutputV1, repositoryWasmPackageRequestV1 } from "../../../⚡️caching/📦️artifacts/🕸️wasm/📋️contract/🟦️.ts";
 export type { RepositoryWasmPackageIntentV1 } from "../../../⚡️caching/📦️artifacts/🕸️wasm/📋️contract/🟦️.ts";
+export { focusFromCargoArgumentsV1 } from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 export { cargoTargetDirectory } from "../../../⚡️caching/🦀️cargo/🗂️directories/🟦️.ts";
 export { componentPassPlanV1, componentWorkspacesV1, nativeBuildPipelinePlanV1 } from "../../../⚡️caching/🦀️cargo/🟦️.ts";
 export { runRepositoryCargoTests } from "../../../🏃️process/🦀️cargo/🎟️admission/🟦️.ts";

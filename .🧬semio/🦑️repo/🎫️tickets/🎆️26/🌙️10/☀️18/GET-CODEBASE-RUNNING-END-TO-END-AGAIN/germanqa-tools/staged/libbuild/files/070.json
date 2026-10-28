@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "labels": {"en": "Remedy", "de": "Abhilfe"},
+  "exchange": {
+    "en": "The filesystem that holds the workspace cannot swap two directories in one atomic step (typical for FAT and exFAT volumes, SMB and NFS shares, FUSE, 9p or virtiofs bind mounts, and HFS+). Put the repository, or at least its .cache directory, on a local APFS, ext4, xfs, btrfs, NTFS or ReFS volume and run repo preflight again.",
+    "de": "Das Dateisystem des Arbeitsbereichs kann zwei Verzeichnisse nicht in einem atomaren Schritt vertauschen (typisch bei FAT- und exFAT-Laufwerken, SMB- und NFS-Freigaben, FUSE, 9p- oder virtiofs-Bind-Mounts und HFS+). Lege das Repository, mindestens aber das Verzeichnis .cache, auf ein lokales APFS-, ext4-, xfs-, btrfs-, NTFS- oder ReFS-Laufwerk und führe repo preflight erneut aus."
+  },
+  "exchangeContainer": {
+    "en": "Inside a devcontainer or another container, mount .cache as a named container volume (the repository's devcontainer does) instead of a bind mount from the host; bind mounts of Docker Desktop and similar tools go through a file sharing layer that has no atomic exchange.",
+    "de": "In einem Devcontainer oder einem anderen Container muss .cache als benanntes Container-Volume eingehängt werden (der Devcontainer des Repositorys tut das), nicht als Bind-Mount vom Host; Bind-Mounts von Docker Desktop und ähnlichen Werkzeugen laufen über eine Dateifreigabe-Schicht ohne atomaren Austausch."
+  },
+  "caseFolding": {
+    "linux": {
+      "en": "The filesystem treats upper and lower case as the same letters (a vfat, exFAT or case-folding NTFS mount, or a bind mount from a macOS or Windows host). Use a case-sensitive local filesystem such as ext4, xfs or btrfs for the repository's .cache, or a named container volume inside a devcontainer.",
+      "de": "Das Dateisystem behandelt Groß- und Kleinbuchstaben als gleich (ein vfat-, exFAT- oder case-folding-NTFS-Mount oder ein Bind-Mount von einem macOS- oder Windows-Host). Verwende für das .cache des Repositorys ein Dateisystem mit Groß-/Kleinschreibung wie ext4, xfs oder btrfs, im Devcontainer ein benanntes Container-Volume."
+    },
+    "darwin": {
+      "en": "The host volume folds letter case. The managed stores normally live in case-sensitive disk images that repo creates for you, so no change is needed unless the directory backend was chosen on purpose: then place .cache on a case-sensitive APFS volume (Disk Utility, Add Volume, Format: APFS (Case-sensitive)).",
+      "de": "Das Volume dieses Rechners ignoriert Groß-/Kleinschreibung. Die verwalteten Speicher liegen normalerweise in Disk-Images mit Groß-/Kleinschreibung, die repo selbst anlegt; eine Änderung ist nur nötig, wenn das Verzeichnis-Backend absichtlich gewählt wurde: lege .cache dann auf ein APFS-Volume mit Groß-/Kleinschreibung (Festplattendienstprogramm, Volume hinzufügen, Format: APFS (Groß-/Kleinschreibung))."
+    },
+    "win32": {
+      "en": "Per-directory case sensitivity is not available for this volume: it needs NTFS or ReFS, the Windows Subsystem for Linux optional feature, and an elevated command (fsutil file setCaseSensitiveInfo <directory> enable). Move the repository to a local NTFS or ReFS volume; where the feature is missing the stores fall back to fold-safe content.",
+      "de": "Die Groß-/Kleinschreibung pro Verzeichnis ist für dieses Laufwerk nicht verfügbar: sie braucht NTFS oder ReFS, das optionale Feature Windows-Subsystem für Linux und einen Befehl mit erhöhten Rechten (fsutil file setCaseSensitiveInfo <Verzeichnis> enable). Verschiebe das Repository auf ein lokales NTFS- oder ReFS-Laufwerk; fehlt das Feature, weichen die Speicher auf faltungssicheren Inhalt aus."
+    }
+  },
+  "tools": {
+    "cc": {
+      "darwin": {
+        "en": "No C compiler is on the PATH: install the command line developer tools with xcode-select --install.",
+        "de": "Kein C-Compiler im PATH: installiere die Kommandozeilen-Entwicklerwerkzeuge mit xcode-select --install."
+      },
+      "linux": {
+        "en": "No C compiler is on the PATH: install your distribution's compiler package (build-essential on Debian and Ubuntu, gcc on Fedora, base-devel on Arch).",
+        "de": "Kein C-Compiler im PATH: installiere das Compiler-Paket deiner Distribution (build-essential unter Debian und Ubuntu, gcc unter Fedora, base-devel unter Arch)."
+      }
+    },
+    "pkg-config": {
+      "linux": {
+        "en": "pkg-config is missing: install the pkg-config package of your distribution (pkgconf on Fedora and Arch, pkg-config on Debian and Ubuntu).",
+        "de": "pkg-config fehlt: installiere das Paket pkg-config deiner Distribution (pkgconf unter Fedora und Arch, pkg-config unter Debian und Ubuntu)."
+      }
+    },
+    "developer-tools": {
+      "darwin": {
+        "en": "The command line developer tools are not installed: /usr/bin/cc is only a stub that opens an installer. Run xcode-select --install, accept the license (sudo xcodebuild -license accept for a full Xcode) or point DEVELOPER_DIR at an installed Xcode, then run repo preflight again.",
+        "de": "Die Kommandozeilen-Entwicklerwerkzeuge sind nicht installiert: /usr/bin/cc ist nur ein Platzhalter, der ein Installationsprogramm öffnet. Führe xcode-select --install aus, akzeptiere die Lizenz (sudo xcodebuild -license accept bei einem vollständigen Xcode) oder setze DEVELOPER_DIR auf ein installiertes Xcode, und führe repo preflight danach erneut aus."
+      }
+    },
+    "msvc-linker": {
+      "win32": {
+        "en": "The Microsoft C++ build tools (the MSVC linker Rust needs) were not found. Install the Desktop development with C++ workload: run the Windows bootstrap (powershell -NoProfile -ExecutionPolicy Bypass -File 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1 setup), which installs Microsoft.VisualStudio.BuildTools through winget, or add the workload in the Visual Studio Installer, then open a new terminal.",
+        "de": "Die Microsoft-C++-Buildtools (der MSVC-Linker, den Rust braucht) wurden nicht gefunden. Installiere die Workload Desktopentwicklung mit C++: führe das Windows-Bootstrap aus (powershell -NoProfile -ExecutionPolicy Bypass -File 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1 setup), es installiert Microsoft.VisualStudio.BuildTools über winget, oder füge die Workload im Visual Studio Installer hinzu, und öffne danach ein neues Terminal."
+      }
+    },
+    "rust": {
+      "linux": {
+        "en": "No Rust compiler or rustup was found on the PATH or in the cargo directory (CARGO_HOME/bin, else ~/.cargo/bin): run the repository bootstrap (bash 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup), which installs rustup and the pinned toolchain, then run repo tools setup all. The native core that lets Node call the system is built with it.",
+        "de": "Weder ein Rust-Compiler noch rustup wurde im PATH oder im Cargo-Verzeichnis (CARGO_HOME/bin, sonst ~/.cargo/bin) gefunden: führe das Bootstrap des Repositorys aus (bash 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup), es installiert rustup und die gepinnte Toolchain, und danach repo tools setup all. Damit wird auch der native Kern gebaut, mit dem Node das System aufruft."
+      },
+      "darwin": {
+        "en": "No Rust compiler or rustup was found on the PATH or in the cargo directory (CARGO_HOME/bin, else ~/.cargo/bin): run the repository bootstrap (bash 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup), which installs rustup and the pinned toolchain, then run repo tools setup all. The native core that lets Node call the system is built with it.",
+        "de": "Weder ein Rust-Compiler noch rustup wurde im PATH oder im Cargo-Verzeichnis (CARGO_HOME/bin, sonst ~/.cargo/bin) gefunden: führe das Bootstrap des Repositorys aus (bash 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup), es installiert rustup und die gepinnte Toolchain, und danach repo tools setup all. Damit wird auch der native Kern gebaut, mit dem Node das System aufruft."
+      },
+      "win32": {
+        "en": "No Rust compiler or rustup was found on the PATH or in the cargo directory (CARGO_HOME/bin, else ~/.cargo/bin): run the repository bootstrap (powershell -NoProfile -ExecutionPolicy Bypass -File 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1 setup), which installs rustup and the pinned toolchain, then run repo tools setup all. The native core that lets Node call the system is built with it.",
+        "de": "Weder ein Rust-Compiler noch rustup wurde im PATH oder im Cargo-Verzeichnis (CARGO_HOME/bin, sonst ~/.cargo/bin) gefunden: führe das Bootstrap des Repositorys aus (powershell -NoProfile -ExecutionPolicy Bypass -File 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1 setup), es installiert rustup und die gepinnte Toolchain, und danach repo tools setup all. Damit wird auch der native Kern gebaut, mit dem Node das System aufruft."
+      }
+    },
+    "hdiutil": {
+      "darwin": {
+        "en": "hdiutil is missing from the PATH, but it is part of macOS: restore /usr/bin in the PATH of this shell and run repo preflight again.",
+        "de": "hdiutil fehlt im PATH, gehört aber zu macOS: stelle /usr/bin im PATH dieser Shell wieder her und führe repo preflight erneut aus."
+      }
+    }
+  }
+}

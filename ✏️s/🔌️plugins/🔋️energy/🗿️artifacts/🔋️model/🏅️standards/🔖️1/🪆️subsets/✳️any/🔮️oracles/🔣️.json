@@ -2220,8 +2220,8 @@
         },
         {
           "mutationId": "change-humidistat-dehumidifying-setpoint-schedule",
-          "sourceMutationDirectoryName": "🏝️change-dehumidifying-setpoint-schedule",
-          "mutationDirectoryName": "🏝️change-dehumidifying-setpoint-schedule",
+          "sourceMutationDirectoryName": "🏝️dehumidify-setpoint-schedule",
+          "mutationDirectoryName": "🏝️dehumidify-setpoint-schedule",
           "scenarios": [
             {
               "id": "change-humidistat-dehumidifying-setpoint-schedule-repoints-drying",
@@ -4410,8 +4410,8 @@
         },
         {
           "mutationId": "change-glazing-material-visible-transmittance",
-          "sourceMutationDirectoryName": "🥽️change-glazing-visible-transmittance",
-          "mutationDirectoryName": "🥽️change-glazing-visible-transmittance",
+          "sourceMutationDirectoryName": "🥽️glazing-visible-transmittance",
+          "mutationDirectoryName": "🥽️glazing-visible-transmittance",
           "scenarios": [
             {
               "id": "change-glazing-material-visible-transmittance-applies",

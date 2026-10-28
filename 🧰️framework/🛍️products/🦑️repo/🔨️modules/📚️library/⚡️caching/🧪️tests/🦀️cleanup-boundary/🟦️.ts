@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
+import{privateRepositoryWorkspaceV1}from"../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 /** 🦀️ Native Cargo leaves finish without launching detached storage management behind Nx. */
 export async function testCargoCleanupBoundary(workspace: string, output: string): Promise<void> {
@@ -37,13 +39,13 @@ export async function testCargoCleanupBoundary(workspace: string, output: string
     }])) }));
     const env = { ...process.env, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, REPO_ROOT: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), SEMIO_TEST_ARTIFACT_DIR: root, NODE_PATH: join(workspace, "node_modules"), CARGO_TARGET_DIR: join(root, "target"), CARGO_BUILD_BUILD_DIR: join(root, "build"), FORCE_COLOR: "0", NO_COLOR: "1" };
     for (const operation of fixture.operations) {
-      const log = await runTool("node",[require.resolve("nx/bin/nx.js"), "run", `fixture:${operation}`, "--outputStyle=stream"],root,signal,true,env,{version:1,directory:output,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program});
+      const log = await runTool("node",[require.resolve("nx/bin/nx.js"), "run", `fixture:${operation}`, "--outputStyle=stream"],root,signal,true,env,{version:1,directory:output,leaseDirectory:repositoryCargoPreparationStorageV1(repository.root).leaseDirectory,program:repositoryCargoPreparationStorageV1(repository.root).program});
       writeFileSync(join(root, `${operation}.log`), log);
       assert.equal(existsSync(join(root, fixture.cleanupStamp)), false, `${operation} must not schedule cleanup after completing its Nx leaf`);
       assert.equal(existsSync(join(root, fixture.cleanupMarker)), false, `${operation} launched detached cleanup`);
     }
     assert.ok(existsSync(join(root, "dist/build/.semio-artifact.json")), "Build still publishes owned artifacts");
-    const oracle = JSON.parse(await runTool("cargo",["metadata", "--locked", "--offline", "--no-deps", "--format-version=1"],root,signal,true,env,{version:1,directory:output,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program}));
+    const oracle = JSON.parse(await runTool("cargo",["metadata", "--locked", "--offline", "--no-deps", "--format-version=1"],root,signal,true,env,{version:1,directory:output,leaseDirectory:repositoryCargoPreparationStorageV1(repository.root).leaseDirectory,program:repositoryCargoPreparationStorageV1(repository.root).program}));
     assert.equal(oracle.packages[0].name, cargo.package);
     for (const entrypoint of fixture.entrypoints) assert.ok(!code.includes(entrypoint), "Cargo must not orchestrate cleanup indirectly");
     passed = true;

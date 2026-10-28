@@ -1,0 +1,27 @@
+{
+ "version": 1,
+ "arguments": [
+  {"arguments": [], "operands": [], "flags": []},
+  {"arguments": ["a.ts"], "operands": ["a.ts"], "flags": []},
+  {"arguments": ["--timeout", "60000", "/x/y/🟦️.ts"], "operands": ["/x/y/🟦️.ts"], "flags": ["--timeout", "60000"]},
+  {"arguments": ["/x/y/🟦️.ts", "--timeout", "240000"], "operands": ["/x/y/🟦️.ts"], "flags": ["--timeout", "240000"]},
+  {"arguments": ["--timeout", "120000", "--test-name-pattern", "source digest", "/x/🟦️.ts"], "operands": ["/x/🟦️.ts"], "flags": ["--timeout", "120000", "--test-name-pattern", "source digest"]},
+  {"arguments": ["/a/🟦️.ts", "/b/🟦️.ts", "/c/🟦️.ts", "--timeout", "60000"], "operands": ["/a/🟦️.ts", "/b/🟦️.ts", "/c/🟦️.ts"], "flags": ["--timeout", "60000"]},
+  {"arguments": ["-t", "name", "a.ts", "b.ts"], "operands": ["a.ts", "b.ts"], "flags": ["-t", "name"]},
+  {"arguments": ["--preload", "./p.ts", "a.ts"], "operands": ["a.ts"], "flags": ["--preload", "./p.ts"]},
+  {"arguments": ["--timeout=5", "a.ts", "--only"], "operands": ["a.ts"], "flags": ["--timeout=5", "--only"]},
+  {"arguments": ["--timeout"], "operands": [], "flags": ["--timeout"]}
+ ],
+ "budgets": {
+  "table": [["a.ts", 100], ["b.ts", 400]],
+  "defaultMegabytes": 1024,
+  "cases": [
+   {"operands": ["a.ts"], "budgetMegabytes": 100, "ceilingMegabytes": 150, "declared": true},
+   {"operands": ["a.ts", "b.ts"], "budgetMegabytes": 400, "ceilingMegabytes": 600, "declared": true},
+   {"operands": ["a.ts", "c.ts"], "budgetMegabytes": 1024, "ceilingMegabytes": 3072, "declared": true},
+   {"operands": ["c.ts"], "budgetMegabytes": 1024, "ceilingMegabytes": 3072, "declared": false},
+   {"operands": [], "budgetMegabytes": 1024, "ceilingMegabytes": 3072, "declared": false}
+  ]
+ },
+ "run": {"holdMegabytes": 300, "holdMilliseconds": 4000, "declaredBelow": 100, "declaredAbove": 400}
+}

@@ -1,0 +1,140 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "SHA-256 helper law fixture / Gesetzesdaten der SHA-256-Helfer",
+ "description": "EN: Texts (JSON escapes keep lone surrogates), byte strings (hex), delimited text lists and a seeded generated run whose digests must equal an independent Python implementation; delimiters that are not ASCII must be refused. EN: and a list of texts whose pairwise UTF-8 byte order is compared, and texts decoded from views into larger buffers. DE: Texte (JSON-Escapes erhalten einzelne Surrogate), Bytefolgen (Hex), getrennte Textlisten und ein erzeugter Lauf, deren Pruefsummen einer unabhaengigen Python-Umsetzung entsprechen muessen; nicht-ASCII-Trenner muessen abgelehnt werden.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "texts",
+  "bytes",
+  "delimited",
+  "refusedDelimiters",
+  "generated",
+  "order",
+  "views"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "texts": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "value"
+    ],
+    "properties": {
+     "name": {
+      "type": "string",
+      "minLength": 1
+     },
+     "value": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "bytes": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "hex"
+    ],
+    "properties": {
+     "name": {
+      "type": "string",
+      "minLength": 1
+     },
+     "hex": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{2})*$"
+     }
+    }
+   }
+  },
+  "delimited": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "delimiter",
+     "texts"
+    ],
+    "properties": {
+     "name": {
+      "type": "string",
+      "minLength": 1
+     },
+     "delimiter": {
+      "type": "string",
+      "minLength": 1
+     },
+     "texts": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "first": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "refusedDelimiters": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "string"
+   }
+  },
+  "generated": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "seed",
+    "texts",
+    "maximumLength"
+   ],
+   "properties": {
+    "seed": {
+     "type": "integer"
+    },
+    "texts": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "maximumLength": {
+     "type": "integer",
+     "minimum": 1
+    }
+   }
+  },
+  "order": {
+   "type": "array",
+   "minItems": 2,
+   "items": {
+    "type": "string"
+   }
+  },
+  "views": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "string"
+   }
+  }
+ }
+}

@@ -1515,7 +1515,7 @@
           "id": "mcp-security",
           "title": {
             "en": "semio MCP security: scopes, audience, rate limit, revocation",
-            "de": "semio-MCP-Sicherheit: Geltungsbereiche, Zielgruppe, Ratenbegrenzung, Widerruf"
+            "de": "semio-MCP-Sicherheit: Scopes, Zielgruppe, Ratenbegrenzung, Widerruf"
           },
           "criteria": [
             "4.4",
@@ -1757,7 +1757,7 @@
       "id": "hub-image",
       "title": {
         "en": "Hub container image: build and check",
-        "de": "Hub-Container-Abbild: bauen und prüfen"
+        "de": "Hub-Container-Image: bauen und prüfen"
       },
       "mode": "serial",
       "gatesRest": false,
@@ -1767,7 +1767,7 @@
           "id": "hub-image-build",
           "title": {
             "en": "Build the hub container image",
-            "de": "Hub-Container-Abbild bauen"
+            "de": "Hub-Container-Image bauen"
           },
           "criteria": [
             "2.8",
@@ -1783,7 +1783,7 @@
           "id": "hub-image-check",
           "title": {
             "en": "Check the hub container image",
-            "de": "Hub-Container-Abbild prüfen"
+            "de": "Hub-Container-Image prüfen"
           },
           "criteria": [
             "2.8",

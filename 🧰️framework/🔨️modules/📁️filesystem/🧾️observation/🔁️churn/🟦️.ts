@@ -1,16 +1,19 @@
+import {noticeLanguagesV1} from "../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
+import {renameSync} from "node:fs";
 import protocolSchema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {filesystemRaceOfErrorV1,filesystemRaceTableV1} from "./🌊️races/🟦️.ts";
 
 const protocol=Object.freeze(JSON.parse(JSON.stringify(protocolSchema.definitions.Protocol.const)) as ChurnProtocolV1);
 const sleeper=new Int32Array(new SharedArrayBuffer(4));
 
 /** 🧬️ The declared kind of a concurrent edit, closed by the schema. */
-export type ConcurrentEditReasonV1="bytes"|"identity"|"vanished"|"appeared"|"roster"|"length"|"ancestry"|"output"|"descriptor"|"generation"|"input";
+export type ConcurrentEditReasonV1="bytes"|"identity"|"vanished"|"appeared"|"roster"|"length"|"ancestry"|"output"|"descriptor"|"generation"|"input"|"busy";
 /** 🪜️ The layer a retry belongs to: `read` re-reads one file or directory, `snapshot` re-runs a batch of reads, `build` re-runs a whole compiler invocation. */
 export type ChurnProfileNameV1="read"|"snapshot"|"build";
 /** 📜️ One layer of the schema: its rank, its attempt bound and the pause before each further attempt. */
 export type ChurnProfileV1=Readonly<{rank:number;maximumAttempts:number;backoffMs:readonly number[]}>;
 /** 📖️ The closed protocol exactly as the schema declares it. */
-export type ChurnProtocolV1=Readonly<{version:1;staleImplementationCode:string;staleImplementationCodes:readonly string[];concurrentEditCode:string;primaryFirstAggregates:readonly string[];languages:readonly string[];profiles:Readonly<Record<ChurnProfileNameV1,ChurnProfileV1>>;reasons:Readonly<Record<string,Readonly<Record<ConcurrentEditReasonV1,string>>>>;texts:Readonly<Record<string,Readonly<Record<"retry"|"exhausted",string>>>>}>;
+export type ChurnProtocolV1=Readonly<{version:1;staleImplementationCode:string;staleImplementationCodes:readonly string[];concurrentEditCode:string;primaryFirstAggregates:readonly string[];languages:readonly string[];settleMilliseconds:number;profiles:Readonly<Record<ChurnProfileNameV1,ChurnProfileV1>>;reasons:Readonly<Record<string,Readonly<Record<ConcurrentEditReasonV1,string>>>>;texts:Readonly<Record<string,Readonly<Record<"retry"|"exhausted",string>>>>}>;
 /** 📣️ One announced retry: the layer, the attempt about to start, what changed and how long the pause is. */
 export type ChurnRetryEventV1=Readonly<{profile:ChurnProfileNameV1;attempt:number;maximum:number;path:string;reason:ConcurrentEditReasonV1;delayMs:number;text:string}>;
 /** 🎛️ Cancellation, progress and clock authority of one retrying step; `retryable` lets a caller refuse a retry of a failure that came out of work it ran inside (a tracked unit that failed closed its owners, so running again can only fail again). */
@@ -19,11 +22,9 @@ export type ChurnOptionsV1=Readonly<{signal?:AbortSignal;retryable?:(error:unkno
 /** 📕️ The closed churn protocol: layers, attempt bounds, pauses and EN/DE texts. */
 export function churnProtocolV1():ChurnProtocolV1{return protocol;}
 
-/** 🌐️ The languages a message is rendered in: the chosen one (`SEMIO_LANGUAGE`, `LC_ALL`, `LANG`), every declared language when none is chosen. */
+/** 🌐️ The languages a message is rendered in: the one the language protocol chooses, every declared language when it chooses none. */
 export function churnLanguagesV1(environment:Readonly<Record<string,string|undefined>>=process.env):readonly string[]{
- const pick=(value:string|undefined):string|undefined=>{const code=String(value??"").toLowerCase().split(/[-_.:@]/u)[0]!;return protocol.languages.includes(code)?code:undefined;};
- const chosen=pick(environment.SEMIO_LANGUAGE)??pick(environment.LC_ALL)??pick(environment.LANG);
- return chosen?[chosen]:protocol.languages;
+ return noticeLanguagesV1(protocol.languages,environment);
 }
 
 /** 💬️ Renders one declared message in one language; every placeholder must be given. */
@@ -52,14 +53,27 @@ export function concurrentEditV1(reason:ConcurrentEditReasonV1,path:string,detai
 /** 🧾️ What a concurrent edit changed: the kind, the path and the widest layer that already gave up on it. */
 export type ConcurrentEditFactsV1=Readonly<{reason:ConcurrentEditReasonV1;path:string;rank:number}>;
 const maximumCauseDepthV1=4;
-function editOf(error:unknown,depth:number=0):ConcurrentEditFactsV1|undefined{
+type EditFactsV1=ConcurrentEditFactsV1&Readonly<{holder?:object}>;
+const racesV1=new WeakMap<object,ConcurrentEditFactsV1|null>(),exhaustedRanksV1=new WeakMap<object,number>();
+/** 🌊️ The one place a raw filesystem error becomes a concurrent edit: decided once per error object (the first sight is the verdict, so every layer reads the same answer), `transient` as a raw edit any layer may retry, `persistent` as an edit the `read` layer cannot cure (rank of the read layer), and remembered with the widest layer that gave up on it, so the error itself, with its `code`, travels on unchanged. */
+function raceOf(error:object):EditFactsV1|undefined{
+ let decided=racesV1.get(error);
+ if(decided===undefined){
+  let decision:ReturnType<typeof filesystemRaceOfErrorV1>|undefined;try{decision=filesystemRaceOfErrorV1(error);}catch{}
+  decided=decision===undefined||decision.disposition==="none"||decision.reason===undefined?null:{reason:decision.reason,path:decision.path,rank:decision.disposition==="persistent"?protocol.profiles.read.rank:0};
+  racesV1.set(error,decided);
+ }
+ return decided?{...decided,rank:Math.max(decided.rank,exhaustedRanksV1.get(error)??0),holder:error}:undefined;
+}
+function editOf(error:unknown,depth:number=0):EditFactsV1|undefined{
  if(error instanceof ConcurrentEditErrorV1)return{reason:error.reason,path:error.path,rank:error.rank};
  if(error instanceof AggregateError&&protocol.primaryFirstAggregates.includes(error.message))return editOf(error.errors[0],depth);
- if(error instanceof AggregateError){let first:ConcurrentEditFactsV1|undefined;for(const member of error.errors){const edit=editOf(member,depth);if(!edit)return;first??=edit;if(edit.rank>first.rank)first=edit;}return first;}
+ if(error instanceof AggregateError){let first:EditFactsV1|undefined;for(const member of error.errors){const edit=editOf(member,depth);if(!edit)return;first??=edit;if(edit.rank>first.rank)first=edit;}return first;}
  if(error&&typeof error==="object"){
   const row=error as {name?:unknown;code?:unknown;path?:unknown;reason?:unknown;rank?:unknown;cause?:unknown};
   if(row.name==="FileObservationErrorV1"&&row.code==="changed"&&typeof row.path==="string")return{reason:"descriptor",path:row.path,rank:0};
   if(row.code===protocol.concurrentEditCode&&typeof row.path==="string"&&typeof row.reason==="string"&&Object.hasOwn(protocol.reasons.en!,row.reason))return{reason:row.reason as ConcurrentEditReasonV1,path:row.path,rank:typeof row.rank==="number"?row.rank:0};
+  if(typeof row.code==="string"&&typeof row.path==="string"){const race=raceOf(error);if(race)return race;}
   if(row.cause!==undefined&&depth<maximumCauseDepthV1)return editOf(row.cause,depth+1);
  }
  return;
@@ -68,7 +82,7 @@ function editOf(error:unknown,depth:number=0):ConcurrentEditFactsV1|undefined{
 export function concurrentEditWireV1(reason:ConcurrentEditReasonV1,path:string,message:string,from:ChurnProfileNameV1="snapshot"):Error{return Object.assign(new Error(message),{code:protocol.concurrentEditCode,reason,path,rank:protocol.profiles[from].rank-1});}
 
 /** 🔎️ The concurrent edit behind `error` when a layer of `rank` may retry it: raw errors and errors exhausted only by narrower layers; `undefined` for anything else. */
-export function concurrentEditOfV1(error:unknown,rank:number=Number.POSITIVE_INFINITY):ConcurrentEditFactsV1|undefined{const edit=editOf(error);return edit&&edit.rank<rank?edit:undefined;}
+export function concurrentEditOfV1(error:unknown,rank:number=Number.POSITIVE_INFINITY):ConcurrentEditFactsV1|undefined{const edit=editOf(error);return edit&&edit.rank<rank?{reason:edit.reason,path:edit.path,rank:edit.rank}:undefined;}
 /** ❓️ Whether `error` is a concurrent edit at all, whatever layer exhausted it. */
 export function isConcurrentEditV1(error:unknown):boolean{return editOf(error)!==undefined;}
 
@@ -80,10 +94,11 @@ const defaultSleep=(milliseconds:number,signal?:AbortSignal):Promise<void>=>new 
 const defaultSleepSync=(milliseconds:number):void=>{if(milliseconds>0)Atomics.wait(sleeper,0,0,milliseconds);};
 const defaultReport=(event:ChurnRetryEventV1):void=>{try{process.stderr.write(event.text+"\n");}catch{}};
 
-function plan(profileName:ChurnProfileNameV1,error:unknown,attempt:number,options:ChurnOptionsV1):Readonly<{retry:ChurnRetryEventV1}>|Readonly<{fail:ConcurrentEditErrorV1}>|undefined{
- const profile=protocol.profiles[profileName],edit=concurrentEditOfV1(error,profile.rank);if(!edit||options.retryable?.(error)===false)return;
+function plan(profileName:ChurnProfileNameV1,error:unknown,attempt:number,options:ChurnOptionsV1):Readonly<{retry:ChurnRetryEventV1}>|Readonly<{fail:Error}>|undefined{
+ const profile=protocol.profiles[profileName],edit=editOf(error);if(!edit||edit.rank>=profile.rank||options.retryable?.(error)===false)return;
  const environment=options.environment??process.env;
  if(attempt>=profile.maximumAttempts){
+  if(edit.holder){exhaustedRanksV1.set(edit.holder,profile.rank);return{fail:error as Error};}
   const message=lines(environment,"exhausted",language=>({path:edit.path,maximum:profile.maximumAttempts,reason:reasonOf(language,edit.reason)}));
   return{fail:new ConcurrentEditErrorV1(edit.reason,edit.path,undefined,profile.rank,{attempts:attempt,message,cause:error})};
  }
@@ -152,3 +167,35 @@ export async function offerRestartCustodiesV1(environment:Readonly<Record<string
 }
 /** 🧹️ Ends this process's hold on every registered custody (the replacement ended or none was started). */
 export async function settleRestartCustodiesV1():Promise<void>{for(const custody of [...restartState().custodies])try{await custody.settle();}catch{}restartState().custodies.clear();}
+
+/** 🚧️ Whether a filesystem error says "busy" in the closed race table: the sharing violations (`EBUSY`, `EPERM`, `EACCES`) a Windows host raises while another process (a reader, a scanner, an indexer) holds the file open; on POSIX hosts only the codes the table lists for every platform. */
+export function filesystemBusyErrorV1(error:unknown,platform:string=process.platform):boolean{
+ const code=(error as {code?:unknown}|null)?.code;if(typeof code!=="string")return false;
+ const table=filesystemRaceTableV1().codes;
+ return (Object.hasOwn(table.all,code)?table.all[code]:platform==="win32"&&Object.hasOwn(table.win32,code)?table.win32[code]:undefined)==="busy";
+}
+
+/** 🛻️ Renames a staged file over its target, retrying a busy target (a Windows reader, scanner or indexer that holds it open) on the `read` layer's declared pauses; the last busy failure, or any other failure, is thrown as it was, so a publish never fails on the first sharing violation. See https://learn.microsoft.com/windows/win32/fileio/obtaining-a-handle-to-a-file-for-renaming */
+export function renameOverBusyFileSyncV1(from:string,to:string,options:Readonly<{platform?:string;sleepSync?:(milliseconds:number)=>void;report?:(text:string)=>void;environment?:Readonly<Record<string,string|undefined>>;rename?:(from:string,to:string)=>void}>={}):void{
+ const{rename=renameSync,...rest}=options,outcome=settleBusyFilesystemSyncV1(to,()=>{rename(from,to);},rest);
+ if(!outcome.settled)throw outcome.error;
+}
+
+/** 🪞️ The verdict of {@link settleBusyFilesystemSyncV1}: the value, or the error that stayed after the bounded retries. */
+export type BusySettleV1<T>=Readonly<{settled:true;value:T}>|Readonly<{settled:false;error:unknown}>;
+
+/** 🏃️ Runs one filesystem operation that must not fail its caller (a lock release in a `finally`, a store rename): a busy file is retried on the `read` layer's declared pauses, anything else, or the last busy failure, is returned as `settled:false` and never thrown. `report` receives the bilingual exhaustion text once, so a stale leftover is never silent. */
+export function settleBusyFilesystemSyncV1<T>(path:string,operation:()=>T,options:Readonly<{platform?:string;sleepSync?:(milliseconds:number)=>void;report?:(text:string)=>void;environment?:Readonly<Record<string,string|undefined>>}>={}):BusySettleV1<T>{
+ const platform=options.platform??process.platform;let original:unknown;
+ try{
+  const value=retryOnConcurrentEditSyncV1("read",()=>{
+   try{return operation();}
+   catch(error){if(filesystemBusyErrorV1(error,platform)){original=error;throw concurrentEditV1("busy",path,String((error as {code?:unknown}).code));}throw error;}
+  },{onRetry:()=>undefined,...options.sleepSync?{sleepSync:options.sleepSync}:{},...options.environment?{environment:options.environment}:{}});
+  return Object.freeze({settled:true as const,value});
+ }catch(error){
+  const exhausted=error instanceof ConcurrentEditErrorV1&&original!==undefined;
+  if(exhausted)try{options.report?.((error as Error).message);}catch{}
+  return Object.freeze({settled:false as const,error:exhausted?original:error});
+ }
+}

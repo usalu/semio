@@ -1,0 +1,12 @@
+import {readFileSync,statSync} from "node:fs";
+const R="/Users/ueli/Documents/semio";
+const L=R+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build";
+const t0=performance.now();const lap=(n:string,x?:unknown)=>console.log(n,Math.round(performance.now()-t0),"ms rss",Math.round(process.memoryUsage().rss/1e6),"MB",x??"");
+const g=await import(L+"/🕸️graph/🕰️generations/🟨️.mjs");lap("import generations mjs");
+const cov=await import(L+"/🕸️graph/🕰️generations/🔭️coverage/🟨️.mjs");lap("import coverage");
+const dir=R+"/.cache/b/g/m/generations/";
+const p=g.readGenerationPointerV1(readFileSync(dir+"current.json"));lap("pointer",p.generation);
+const m=g.readGenerationManifestV1(readFileSync(dir+"m/"+p.manifest+".json"));lap("manifest",Object.keys(m.owners).length);
+const owners=Object.keys(m.owners).sort();
+const set=cov.decodeVerifiedScopeV1(owners,p.verified);lap("coverage",set.size);
+const {validateJsonSchemaSubset}=await import(R+"/🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts");lap("import validator");

@@ -637,3 +637,6 @@ nul
 **/📦️packages/🐹️go/📦️main/bin
 
 /output/pdf/
+
+# Machine-local native repository executable receipt
+/.🧬semio/🦑️repo/native-repo-path

@@ -24,6 +24,7 @@ test("dashboard CI host and gate vectors are closed and independently ordered",(
  const validate=new Ajv({strict:true}).compile(schema);expect(validate(cases)).toBe(true);
  expect(validate({...cases,unknown:true})).toBe(false);
  expect(validate({...cases,windowGate:{...cases.windowGate,command:"repo cargo test"}})).toBe(false);
+ expect(validate({...cases,sourceGate:{...cases.sourceGate,inputs:cases.sourceGate.inputs.slice(0,9)}})).toBe(false);
  expect(new Ajv({strict:true}).compile(coverageSchema)(coverage)).toBe(true);
  expect(cases.gates.find(row=>row.id===cases.windowGate.id)).toEqual(cases.windowGate);
  const db=new Database(":memory:");try{
@@ -83,5 +84,13 @@ test("dashboard CI Source gate is closed and reaches the owned early test branch
  const gate=cases.sourceGate,project=JSON.parse(readFileSync(join(root(),gate.owner,"📋️project.json"),"utf8")),target=project.targets[gate.target],script=readFileSync(join(root(),gate.owner,"../../🛤️task-routes/🟦️.ts"),"utf8").split("class TestScript")[1]!;
  expect(project.name).toBe(gate.project);expect(target.executor).toBe("repo:script");expect(target.cache).toBe(true);expect(target.dependsOn).toEqual([]);expect(target.outputs).toEqual([]);expect(target.inputs).toEqual(gate.inputs);expect(target.options).toEqual({cwd:gate.owner,command:gate.command,forwardAllArgs:false});expect(target.metadata.semio.execution).toEqual({version:1,kind:"source"});expect(target.metadata.semio.sourceInputObservation).toBe("freshness");expect(target.metadata.semio.runtimeSourceEntries).toEqual([gate.entry]);
  const entry=join(root(),gate.entry.slice("{workspaceRoot}/".length)),literal=relative(join(root(),gate.owner),entry).split(sep).join("/");expect(existsSync(entry)).toBe(true);expect(script).toContain(JSON.stringify(literal));expect(script).toContain('if(segments.length!==1)throw Error("Expected test ci-source");');
- const db=new Database(":memory:");try{expect(db.query("SELECT instr(?1,?2)>0 AND instr(?1,?2)<instr(?1,'await dashboardExecutable(') AS early,(SELECT count(DISTINCT value) FROM json_each(?3)) AS inputs").get(script,'if(segments[0]==="'+gate.selector+'")',JSON.stringify(target.inputs))).toEqual({early:1,inputs:9});}finally{db.close();}
+ const db=new Database(":memory:");try{expect(db.query("SELECT instr(?1,?2)>0 AND instr(?1,?2)<instr(?1,'await dashboardExecutable(') AS early,(SELECT count(DISTINCT value) FROM json_each(?3)) AS inputs").get(script,'if(segments[0]==="'+gate.selector+'")',JSON.stringify(target.inputs))).toEqual({early:1,inputs:target.inputs.length});}finally{db.close();}
+});
+
+test("dashboard CI Source gate declares every workflow and manifest file its test reads",()=>{
+ const gate=cases.sourceGate,source=readFileSync(import.meta.path,"utf8"),target=JSON.parse(readFileSync(join(root(),gate.owner,"📋️project.json"),"utf8")).targets[gate.target];
+ const reads=[...new Set([...[...source.matchAll(/"(\.github\/[\w./-]+\.ya?ml)"/gu)].map(match=>"{workspaceRoot}/"+match[1]),...[...source.matchAll(/gate\.owner,"([^"/]+\.json)"/gu)].map(match=>"{projectRoot}/"+match[1])])];
+ expect(reads).toContain("{projectRoot}/📋️project.json");expect(reads.length).toBeGreaterThanOrEqual(5);
+ for(const read of reads)expect(target.inputs,read).toContain(read);
+ for(const input of target.inputs as string[])expect(existsSync(join(root(),input.replace("{workspaceRoot}/","").replace("{projectRoot}",gate.owner))),input).toBe(true);
 });

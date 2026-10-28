@@ -1,0 +1,22 @@
+{
+ "nx.json": "0o644",
+ "🧰️framework/📦️packages/🟦️typescript/package.json": "0o644",
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts": "0o644",
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/📣️progress/🟦️.ts": "0o644",
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🔣️.json": "0o644",
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🟦️.ts": "0o644",
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🧪️tests/🔣️.json": "0o644",
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🧪️tests/🟦️.ts": "0o644",
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🧬️schema/🔣️.json": "0o644",
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🟦️.ts": "0o644",
+ "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts": "0o644",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json": "0o644",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔏️admission/🧫️.json": "0o644",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🔣️.json": "0o644",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🔣️.json": "0o644",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🗓️scheduling/🔣️.json": "0o644",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json": "0o644",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🎬️scopes/🔣️.json": "0o644",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json": "0o644",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗣️language-contract/🐹️.go": "0o644"
+}

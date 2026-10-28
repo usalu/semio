@@ -1,0 +1,6 @@
+census pid 51015 started 10:35 (lstart check before kill)
+census2 pid 53677 started 10:38:30 (workspace-internal art root)
+census3 started 10:42 art root temp/rg2a (short, workspace-internal)
+census3 pid 57206
+birth-probe pid 71593 started 10:55 (stop before finishing)
+birth-probe2 started 11:17

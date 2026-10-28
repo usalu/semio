@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph:walk-views:v1",
+  "title": "Command Walk Views",
+  "description": "The views through which a project reads a command walk. A view names the scheduling prefixes its consumers leave out of every roster they derive from the walk; the derived fact a project holds for the walk is the answer seen through that view, so a change of the walk that only moves files the view leaves out keeps the fact. The recipes table maps each closure recipe to the view all of its consumers read through; a recipe the table does not name reads the whole walk (fail closed).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "views", "recipes", "closures"],
+  "properties": {
+    "version": {"const": 1},
+    "views": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scheduling", "native"],
+      "properties": {
+        "scheduling": {"$ref": "#/definitions/View"},
+        "native": {"$ref": "#/definitions/View"}
+      }
+    },
+    "recipes": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 16,
+      "propertyNames": {"pattern": "^[a-z]+(-[a-z]+)*$"},
+      "additionalProperties": {"enum": ["scheduling", "native"]}
+    },
+    "closures": {
+      "description": "The declared role of every `closure-of` command closure and the view it is read through: a command closure that lands in an action key (an artifact's command) leaves the scheduling code out like every other command closure (the cargo driver and the lock owner are tool closures of the providers project, read through the native view); a closure of files an output is made of (artifact sources) or that a test runs (test discovery) is read whole.",
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 16,
+      "propertyNames": {"pattern": "^[a-z]+(-[a-z]+)*$"},
+      "additionalProperties": {"enum": ["scheduling", "native", "whole"]}
+    }
+  },
+  "definitions": {
+    "View": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prefixes", "contract"],
+      "properties": {
+        "prefixes": {"enum": ["scheduling", "scheduling-native"]},
+        "contract": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["en", "de"],
+          "properties": {
+            "en": {"type": "string", "minLength": 1, "maxLength": 400},
+            "de": {"type": "string", "minLength": 1, "maxLength": 400}
+          }
+        }
+      }
+    }
+  }
+}

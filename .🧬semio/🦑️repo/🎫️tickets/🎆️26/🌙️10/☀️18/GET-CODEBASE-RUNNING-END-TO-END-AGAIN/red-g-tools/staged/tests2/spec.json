@@ -1,0 +1,24 @@
+{
+ "files": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🔣️.json": [
+   {
+    "old": "        \"💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts\"\n      ]",
+    "new": "        \"💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts\",\n        \"💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🧪️tests/🟦️.ts\"\n      ]"
+   },
+   {
+    "old": "        \"💾️storage/🧾️ledger/🧪️tests/⚖️law/🟦️.ts\"\n      ]",
+    "new": "        \"💾️storage/🧾️ledger/🧪️tests/⚖️law/🟦️.ts\",\n        \"💾️storage/🧾️ledger/🎚️machine/🧪️tests/🟦️.ts\"\n      ]"
+   },
+   {
+    "old": "        \"🚀️bootstrap/🔌️nx-plugin/🧪️tests/🦀️native-dependency-closures/🟦️.ts\"\n      ]",
+    "new": "        \"🚀️bootstrap/🔌️nx-plugin/🧪️tests/🦀️native-dependency-closures/🟦️.ts\",\n        \"🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🧪️tests/🟦️.ts\"\n      ]"
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🧪️tests/🟦️.ts": [
+   {
+    "old": "const match=pattern.exec(target.options?.command??\"\");if(match&&match[1]!==undefined&&(target.options?.cwd===undefined||target.options.cwd.endsWith(\"⚡️caching\")))",
+    "new": "const command=target.options?.command??\"\",match=pattern.exec(command);if(match&&match[1]!==undefined&&(target.options?.cwd===undefined||target.options.cwd===\"{projectRoot}\"||target.options.cwd.endsWith(\"⚡️caching\")||command.includes(\"⚡️caching/📜️script.ts\")))"
+   }
+  ]
+ }
+}

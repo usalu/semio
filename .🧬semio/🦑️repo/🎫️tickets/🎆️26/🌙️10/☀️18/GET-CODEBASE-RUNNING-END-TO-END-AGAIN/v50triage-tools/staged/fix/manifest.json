@@ -1,0 +1,32 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/👷️worker/🟦️.ts": {
+  "file": "00.ts",
+  "base": "99aeacfcc1ae30499fb302b816566883deaf08726fdff38eecf24d742b0da343",
+  "new": "bd2aae3d83bae2b16b4e4390e080ca06c42164764f517b31dd9efd191e73ba44"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🧪️tests/♻️lru/🟦️.ts": {
+  "file": "01.ts",
+  "base": "b73b9833f34deecef35c15177bda1cb2811a03489735432d1186c5eb4b88133f",
+  "new": "026e1f85858677023dd1c1a2ad394e5cf17be6fc14fa0d008fbf7d2d4c8d8a11"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧾️witness/🧪️tests/🟦️.ts": {
+  "file": "02.ts",
+  "base": "78b92273d18b302db1967a1b1f62822edca4fae575376745d6dcaee5691e1f67",
+  "new": "93ffd3477415c7c6f3799787f9b0ec5439e0bd9b8e97ed5bcd14459b738b2927"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧾️witness/🟦️.ts": {
+  "file": "03.ts",
+  "base": "831d61f52b3148358a03e7426e0ab425449462ad3c83e7e7d40e66a05a49c645",
+  "new": "b0096e9aa066d4044c7c8373eab169fc78f73c348f6224a0575135b46bbc5271"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🗣️language-catalogs/🔒️allowlist/🔣️.json": {
+  "file": "04.json",
+  "base": "50b632444527263201ba5c22d1235c3640450f4f66a0c21fda3df16f480ae4a5",
+  "new": "18d8266479ab1f7735672d28d03192dd111caa8bb023d55d442b30cb5098015f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🗓️scheduling/🔣️.json": {
+  "file": "05.json",
+  "base": "4a6e5c0e99dd50582d980bf5da33eb8d51380611edcfd21926338087e14ed943",
+  "new": "a62ac56ef4aae5320243340d68096915fe345f4b63d5814d1fcb5973eb60b01b"
+ }
+}

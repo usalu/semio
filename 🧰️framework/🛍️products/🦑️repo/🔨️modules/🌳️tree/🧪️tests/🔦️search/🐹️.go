@@ -164,10 +164,13 @@ func TestSearchMonorepoTreeWithCache(t *testing.T) {
 }
 
 func TestGetCacheDirUsesMonorepoRoot(t *testing.T) {
-	monoRoot := t.TempDir()
+	monoRoot := workspace.CanonicalPath(t.TempDir())
 	clientDir := filepath.Join(monoRoot, "repo", "cli")
 	if err := os.MkdirAll(clientDir, 0755); err != nil {
 		t.Fatalf("mkdir cli dir: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(monoRoot, ".git"), 0755); err != nil {
+		t.Fatalf("mkdir .git: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(clientDir, "main.go"), []byte("package main"), 0644); err != nil {
 		t.Fatalf("write main.go: %v", err)

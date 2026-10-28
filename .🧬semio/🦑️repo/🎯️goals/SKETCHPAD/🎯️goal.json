@@ -1,0 +1,11 @@
+{
+  "title": "Sketchpad",
+  "description": "desc",
+  "prompt": "prompt",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "claude-code",
+  "llm": "opus-4-5"
+}

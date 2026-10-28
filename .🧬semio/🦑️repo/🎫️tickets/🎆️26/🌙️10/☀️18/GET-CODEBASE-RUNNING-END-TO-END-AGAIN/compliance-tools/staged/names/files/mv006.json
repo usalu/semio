@@ -1,0 +1,516 @@
+{
+ "note": "g29-print (gate-g, 2026-10-27 09:0x): print-rs:test starved 1296+ s in 'waiting to grow the reservation from 4096 MB to 18585 MB' with 9-14 GB spare on a 32 GB host (real peak 9.8-11.0 GB). 18585 = the 90th percentile (14866 MB, the dashboard run) of the POOLED peaks of the class `run`, borrowed because print's own classes kept none, plus the 25 % margin. Snapshot of ~/Library/Caches/semio/host-capacity/estimates.json taken after the revert, see make_g29.py.",
+ "leaf": "run:test:@semio-tech/print-rs:test",
+ "args": [
+  "run",
+  "@semio-tech/print-rs:test",
+  "--parallel=8"
+ ],
+ "totalMegabytes": 32768,
+ "spareMegabytes": 10456,
+ "store": {
+  "version": 1,
+  "classes": {
+   "run": {
+    "samples": [
+     {
+      "atMs": 1793087223806,
+      "ratioBasisPoints": 602,
+      "activeMilliseconds": 6081,
+      "peakAtMilliseconds": 3018,
+      "peakMegabytes": 1078
+     },
+     {
+      "atMs": 1793087213077,
+      "ratioBasisPoints": 610,
+      "activeMilliseconds": 5562,
+      "peakAtMilliseconds": 3018,
+      "peakMegabytes": 1093
+     },
+     {
+      "atMs": 1793087205895,
+      "ratioBasisPoints": 1778,
+      "activeMilliseconds": 18555,
+      "peakAtMilliseconds": 15018,
+      "peakMegabytes": 3186
+     },
+     {
+      "atMs": 1793087183835,
+      "ratioBasisPoints": 935,
+      "activeMilliseconds": 26642,
+      "peakAtMilliseconds": 15021,
+      "peakMegabytes": 1676
+     },
+     {
+      "atMs": 1793087155129,
+      "ratioBasisPoints": 5350,
+      "activeMilliseconds": 183067,
+      "peakAtMilliseconds": 105072,
+      "peakMegabytes": 9587
+     },
+     {
+      "atMs": 1793086969648,
+      "ratioBasisPoints": 8296,
+      "activeMilliseconds": 190077,
+      "peakAtMilliseconds": 150058,
+      "peakMegabytes": 14866
+     },
+     {
+      "atMs": 1793086566802,
+      "ratioBasisPoints": 2790,
+      "activeMilliseconds": 48713,
+      "peakAtMilliseconds": 30020
+     },
+     {
+      "atMs": 1793086434377,
+      "ratioBasisPoints": 14227,
+      "activeMilliseconds": 92546,
+      "peakAtMilliseconds": 45021
+     },
+     {
+      "atMs": 1793086339946,
+      "ratioBasisPoints": 40717,
+      "activeMilliseconds": 367499,
+      "peakAtMilliseconds": 330067
+     },
+     {
+      "atMs": 1793085968639,
+      "ratioBasisPoints": 12805,
+      "activeMilliseconds": 379931,
+      "peakAtMilliseconds": 120027
+     },
+     {
+      "atMs": 1793085587435,
+      "ratioBasisPoints": 18864,
+      "activeMilliseconds": 159929,
+      "peakAtMilliseconds": 120063
+     },
+     {
+      "atMs": 1793085425818,
+      "ratioBasisPoints": 4727,
+      "activeMilliseconds": 54113,
+      "peakAtMilliseconds": 15018
+     },
+     {
+      "atMs": 1793085366588,
+      "ratioBasisPoints": 7695,
+      "activeMilliseconds": 45273,
+      "peakAtMilliseconds": 15018
+     },
+     {
+      "atMs": 1793085269654,
+      "ratioBasisPoints": 8036,
+      "activeMilliseconds": 34321,
+      "peakAtMilliseconds": 15018
+     },
+     {
+      "atMs": 1793085233271,
+      "ratioBasisPoints": 4837,
+      "activeMilliseconds": 185386,
+      "peakAtMilliseconds": 120039
+     },
+     {
+      "atMs": 1793084600216,
+      "ratioBasisPoints": 7234,
+      "activeMilliseconds": 467243,
+      "peakAtMilliseconds": 240254
+     }
+    ]
+   },
+   "run:build": {
+    "samples": [
+     {
+      "atMs": 1793087223806,
+      "ratioBasisPoints": 602,
+      "activeMilliseconds": 6081,
+      "peakAtMilliseconds": 3018,
+      "peakMegabytes": 1078
+     },
+     {
+      "atMs": 1793087213077,
+      "ratioBasisPoints": 610,
+      "activeMilliseconds": 5562,
+      "peakAtMilliseconds": 3018,
+      "peakMegabytes": 1093
+     },
+     {
+      "atMs": 1793087205895,
+      "ratioBasisPoints": 1778,
+      "activeMilliseconds": 18555,
+      "peakAtMilliseconds": 15018,
+      "peakMegabytes": 3186
+     },
+     {
+      "atMs": 1793087183835,
+      "ratioBasisPoints": 935,
+      "activeMilliseconds": 26642,
+      "peakAtMilliseconds": 15021,
+      "peakMegabytes": 1676
+     },
+     {
+      "atMs": 1793087155129,
+      "ratioBasisPoints": 5350,
+      "activeMilliseconds": 183067,
+      "peakAtMilliseconds": 105072,
+      "peakMegabytes": 9587
+     },
+     {
+      "atMs": 1793086969648,
+      "ratioBasisPoints": 8296,
+      "activeMilliseconds": 190077,
+      "peakAtMilliseconds": 150058,
+      "peakMegabytes": 14866
+     },
+     {
+      "atMs": 1793085587435,
+      "ratioBasisPoints": 18864,
+      "activeMilliseconds": 159929,
+      "peakAtMilliseconds": 120063
+     },
+     {
+      "atMs": 1793085425818,
+      "ratioBasisPoints": 4727,
+      "activeMilliseconds": 54113,
+      "peakAtMilliseconds": 15018
+     },
+     {
+      "atMs": 1793085366588,
+      "ratioBasisPoints": 7695,
+      "activeMilliseconds": 45273,
+      "peakAtMilliseconds": 15018
+     },
+     {
+      "atMs": 1793085269654,
+      "ratioBasisPoints": 8036,
+      "activeMilliseconds": 34321,
+      "peakAtMilliseconds": 15018
+     },
+     {
+      "atMs": 1793085233271,
+      "ratioBasisPoints": 4837,
+      "activeMilliseconds": 185386,
+      "peakAtMilliseconds": 120039
+     },
+     {
+      "atMs": 1793084129186,
+      "ratioBasisPoints": 24993,
+      "activeMilliseconds": 167223,
+      "peakAtMilliseconds": 135066
+     },
+     {
+      "atMs": 1793083959244,
+      "ratioBasisPoints": 1673,
+      "activeMilliseconds": 53797,
+      "peakAtMilliseconds": 15028
+     },
+     {
+      "atMs": 1793083904963,
+      "ratioBasisPoints": 2053,
+      "activeMilliseconds": 44948,
+      "peakAtMilliseconds": 15018
+     },
+     {
+      "atMs": 1793083753388,
+      "ratioBasisPoints": 4674,
+      "activeMilliseconds": 155953,
+      "peakAtMilliseconds": 105041
+     },
+     {
+      "atMs": 1793083327149,
+      "ratioBasisPoints": 1957,
+      "activeMilliseconds": 33647,
+      "peakAtMilliseconds": 15018
+     }
+    ]
+   },
+   "run:build:@semio-tech/repo-dashboard-rs:build": {
+    "samples": [
+     {
+      "atMs": 1793086969648,
+      "ratioBasisPoints": 8296,
+      "activeMilliseconds": 190077,
+      "peakAtMilliseconds": 150058,
+      "peakMegabytes": 14866
+     },
+     {
+      "atMs": 1793085587435,
+      "ratioBasisPoints": 18864,
+      "activeMilliseconds": 159929,
+      "peakAtMilliseconds": 120063
+     },
+     {
+      "atMs": 1793084129186,
+      "ratioBasisPoints": 24993,
+      "activeMilliseconds": 167223,
+      "peakAtMilliseconds": 135066
+     },
+     {
+      "atMs": 1793082865029,
+      "ratioBasisPoints": 8993,
+      "activeMilliseconds": 137561,
+      "peakAtMilliseconds": 90094
+     },
+     {
+      "atMs": 1793082704067,
+      "ratioBasisPoints": 24943,
+      "activeMilliseconds": 148804,
+      "peakAtMilliseconds": 105060
+     },
+     {
+      "atMs": 1793081419207,
+      "ratioBasisPoints": 12310,
+      "activeMilliseconds": 325635,
+      "peakAtMilliseconds": 225107
+     },
+     {
+      "atMs": 1793063398744,
+      "ratioBasisPoints": 18202,
+      "activeMilliseconds": 195344,
+      "peakAtMilliseconds": 150215
+     },
+     {
+      "atMs": 1793062879305,
+      "ratioBasisPoints": 27111,
+      "activeMilliseconds": 136074,
+      "peakAtMilliseconds": 105067
+     },
+     {
+      "atMs": 1793062444118,
+      "ratioBasisPoints": 10239,
+      "activeMilliseconds": 130098,
+      "peakAtMilliseconds": 90059
+     },
+     {
+      "atMs": 1793062122164,
+      "ratioBasisPoints": 8830,
+      "activeMilliseconds": 199582,
+      "peakAtMilliseconds": 150074
+     },
+     {
+      "atMs": 1793061531906,
+      "ratioBasisPoints": 8365,
+      "activeMilliseconds": 141032,
+      "peakAtMilliseconds": 105062
+     },
+     {
+      "atMs": 1793060604445,
+      "ratioBasisPoints": 7087,
+      "activeMilliseconds": 155729,
+      "peakAtMilliseconds": 45311
+     }
+    ]
+   },
+   "run:build:@teaching/architecture-course:build": {
+    "samples": [
+     {
+      "atMs": 1793087223806,
+      "ratioBasisPoints": 602,
+      "activeMilliseconds": 6081,
+      "peakAtMilliseconds": 3018,
+      "peakMegabytes": 1078
+     },
+     {
+      "atMs": 1793087213077,
+      "ratioBasisPoints": 610,
+      "activeMilliseconds": 5562,
+      "peakAtMilliseconds": 3018,
+      "peakMegabytes": 1093
+     },
+     {
+      "atMs": 1793087205895,
+      "ratioBasisPoints": 1778,
+      "activeMilliseconds": 18555,
+      "peakAtMilliseconds": 15018,
+      "peakMegabytes": 3186
+     },
+     {
+      "atMs": 1793087183835,
+      "ratioBasisPoints": 935,
+      "activeMilliseconds": 26642,
+      "peakAtMilliseconds": 15021,
+      "peakMegabytes": 1676
+     },
+     {
+      "atMs": 1793087155129,
+      "ratioBasisPoints": 5350,
+      "activeMilliseconds": 183067,
+      "peakAtMilliseconds": 105072,
+      "peakMegabytes": 9587
+     },
+     {
+      "atMs": 1793085425818,
+      "ratioBasisPoints": 4727,
+      "activeMilliseconds": 54113,
+      "peakAtMilliseconds": 15018
+     },
+     {
+      "atMs": 1793085366588,
+      "ratioBasisPoints": 7695,
+      "activeMilliseconds": 45273,
+      "peakAtMilliseconds": 15018
+     },
+     {
+      "atMs": 1793085269654,
+      "ratioBasisPoints": 8036,
+      "activeMilliseconds": 34321,
+      "peakAtMilliseconds": 15018
+     },
+     {
+      "atMs": 1793085233271,
+      "ratioBasisPoints": 4837,
+      "activeMilliseconds": 185386,
+      "peakAtMilliseconds": 120039
+     },
+     {
+      "atMs": 1793083959244,
+      "ratioBasisPoints": 1673,
+      "activeMilliseconds": 53797,
+      "peakAtMilliseconds": 15028
+     },
+     {
+      "atMs": 1793083904963,
+      "ratioBasisPoints": 2053,
+      "activeMilliseconds": 44948,
+      "peakAtMilliseconds": 15018
+     },
+     {
+      "atMs": 1793083753388,
+      "ratioBasisPoints": 4674,
+      "activeMilliseconds": 155953,
+      "peakAtMilliseconds": 105041
+     },
+     {
+      "atMs": 1793083327149,
+      "ratioBasisPoints": 1957,
+      "activeMilliseconds": 33647,
+      "peakAtMilliseconds": 15018
+     },
+     {
+      "atMs": 1793083289661,
+      "ratioBasisPoints": 6721,
+      "activeMilliseconds": 264445,
+      "peakAtMilliseconds": 165037
+     },
+     {
+      "atMs": 1793082519426,
+      "ratioBasisPoints": 1767,
+      "activeMilliseconds": 29722,
+      "peakAtMilliseconds": 15018
+     },
+     {
+      "atMs": 1793082484462,
+      "ratioBasisPoints": 15492,
+      "activeMilliseconds": 201421,
+      "peakAtMilliseconds": 135053
+     }
+    ]
+   },
+   "run:test": {
+    "samples": [
+     {
+      "atMs": 1793086566802,
+      "ratioBasisPoints": 2790,
+      "activeMilliseconds": 48713,
+      "peakAtMilliseconds": 30020
+     },
+     {
+      "atMs": 1793086434377,
+      "ratioBasisPoints": 14227,
+      "activeMilliseconds": 92546,
+      "peakAtMilliseconds": 45021
+     },
+     {
+      "atMs": 1793086339946,
+      "ratioBasisPoints": 40717,
+      "activeMilliseconds": 367499,
+      "peakAtMilliseconds": 330067
+     },
+     {
+      "atMs": 1793085968639,
+      "ratioBasisPoints": 12805,
+      "activeMilliseconds": 379931,
+      "peakAtMilliseconds": 120027
+     },
+     {
+      "atMs": 1793084600216,
+      "ratioBasisPoints": 7234,
+      "activeMilliseconds": 467243,
+      "peakAtMilliseconds": 240254
+     }
+    ]
+   },
+   "run:test:@semio-tech/print-rs:test": {
+    "samples": [
+     {
+      "atMs": 1793086434377,
+      "ratioBasisPoints": 14227,
+      "activeMilliseconds": 92546,
+      "peakAtMilliseconds": 45021
+     },
+     {
+      "atMs": 1793086339946,
+      "ratioBasisPoints": 40717,
+      "activeMilliseconds": 367499,
+      "peakAtMilliseconds": 330067
+     },
+     {
+      "atMs": 1793085968639,
+      "ratioBasisPoints": 12805,
+      "activeMilliseconds": 379931,
+      "peakAtMilliseconds": 120027
+     },
+     {
+      "atMs": 1793084600216,
+      "ratioBasisPoints": 7234,
+      "activeMilliseconds": 467243,
+      "peakAtMilliseconds": 240254
+     }
+    ]
+   },
+   "run:test:@semio-tech/print-rs:test~busy": {
+    "samples": [
+     {
+      "atMs": 1793086434377,
+      "ratioBasisPoints": 24897,
+      "activeMilliseconds": 92546,
+      "peakAtMilliseconds": 45021
+     },
+     {
+      "atMs": 1793086339946,
+      "ratioBasisPoints": 71255,
+      "activeMilliseconds": 367499,
+      "peakAtMilliseconds": 330067
+     },
+     {
+      "atMs": 1793085968639,
+      "ratioBasisPoints": 48018,
+      "activeMilliseconds": 379931,
+      "peakAtMilliseconds": 120027
+     },
+     {
+      "atMs": 1793084600216,
+      "ratioBasisPoints": 48828,
+      "activeMilliseconds": 467243,
+      "peakAtMilliseconds": 240254
+     }
+    ]
+   },
+   "run:test:@semio-tech/print-rs:test~quiet": {
+    "samples": [
+     {
+      "atMs": 1793086515448,
+      "ratioBasisPoints": 25654,
+      "activeMilliseconds": 78123,
+      "peakAtMilliseconds": 60025
+     },
+     {
+      "atMs": 1793084664692,
+      "ratioBasisPoints": 19224,
+      "activeMilliseconds": 63944,
+      "peakAtMilliseconds": 45024
+     }
+    ]
+   }
+  }
+ }
+}

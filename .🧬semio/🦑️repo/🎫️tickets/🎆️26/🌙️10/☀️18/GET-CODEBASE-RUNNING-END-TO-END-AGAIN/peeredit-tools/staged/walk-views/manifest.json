@@ -1,0 +1,52 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": {
+  "file": "f01",
+  "base": "2474f743c405c5faa1b04a73320acb0b405b06ebe4d0dfba22368baaf058796a",
+  "new": "de85d7d797c2c9c5257e61c512374f57d15d2ea4aa336e34d2a99790b4cb7e1f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🔣️.json": {
+  "file": "f02",
+  "base": "e1300cc711f81b5dfd45f30db3e277af41d6529c07dbf56a87b46bc89164a712",
+  "new": "a322cdcd9f9ca98f4a2f3f592ec4b22b86dea0c0e30e92fbc7b4eaaee3a80035"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/👓️walk-views/🔣️.json": {
+  "file": "f03",
+  "base": null,
+  "new": "bebfb461b42a4081449d5c9c47fe08f42becc3e79d763efaa8b5a9a1354327ed"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/👓️walk-views/🟨️.d.mts": {
+  "file": "f04",
+  "base": null,
+  "new": "780de1dea822fa035d716f12fe1953cf87225e3d0a71807434a2167457a8bc53"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/👓️walk-views/🟨️.mjs": {
+  "file": "f05",
+  "base": null,
+  "new": "05793481442fd9373bf08b298bb28bfda92876b75b7f0b5902931d1c1189a6b1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/👓️walk-views/🧪️tests/🔣️.json": {
+  "file": "f06",
+  "base": null,
+  "new": "ce77bf3a83c796646a868a1b359b90b15fd47aeab97524539b3cc0583e62e5da"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/👓️walk-views/🧪️tests/🟦️.ts": {
+  "file": "f07",
+  "base": null,
+  "new": "4f842e53a2c4901bc75b78b1f804f85be4059326438c6f5fdae0d9590dd6f8e6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/👓️walk-views/🧪️tests/🐍️oracle/🐍️.py": {
+  "file": "f08",
+  "base": null,
+  "new": "688d5a22f4d353934edefbf600e52038fafc77f6d37efb94780d57acdf00340c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/👓️walk-views/🧪️tests/🧬️schema/🔣️.json": {
+  "file": "f09",
+  "base": null,
+  "new": "28514a339a1071a518a6a4f02ff4d28ea5a3239eafc0eb9967d4f45f401a049c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/👓️walk-views/🧬️schema/🔣️.json": {
+  "file": "f10",
+  "base": null,
+  "new": "76f13f007667012e71bb94871f3afe0c8a4a490e5b71b49502d5bf25149ff23a"
+ }
+}

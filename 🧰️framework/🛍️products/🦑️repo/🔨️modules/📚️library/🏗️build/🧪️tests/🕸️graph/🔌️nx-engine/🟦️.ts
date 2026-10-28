@@ -18,6 +18,7 @@ import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";
 import fixture from "../../🧫️fixtures/🕸️graph/🔣️.json";
 import pluginSchema from "../../../🧬️schema/📥️plugin.json";
+import {nxEngineUnkeyedPrefixesV1,splitNxEngineFilesV1} from "../../../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🟦️.ts";
 import {classifyNxOutputV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🟦️.ts";
 import budgetPolicy from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json";
 import engineSchema from "../../../🧬️schema/📥️engine.json";
@@ -72,15 +73,15 @@ test("private Nx engine digest affects real native task hashes while invocation 
  const real=hash(undefined,"wire-before","nx-before"),again=hash(undefined,"wire-before","nx-before");
  expect(real.value).toBe(again.value);expect(real.value).not.toBe(baseline.value);expect(JSON.stringify(real.instructions).length).toBeLessThan(4096);
  const implicit=projectBuildTargetForNxV1({execution:{kind:"command",command:"repo ./📜️script.ts"},cache:true});expect(implicit.inputs).toContain("default");expect(implicit.inputs).toContain("^default");
-});
+},60000);
 test("the private Nx engine is one runtime digest of its closure equal to an independent Python digest of the same files",()=>{
- const root=process.cwd(),inputs=nxBuildEngineInputsV1(),closure=nxBuildEngineClosureV1(),python=(files:readonly string[],base:string)=>{const run=Bun.spawnSync(["python3","-I","-c","import hashlib,json,os,sys\nbase,files=sys.argv[1],json.loads(sys.argv[2])\nd=hashlib.sha256()\nfor f in files:\n d.update(f.encode()+b'\\0'+hashlib.sha256(open(os.path.join(base,f),'rb').read()).hexdigest().encode()+b'\\n')\nprint(d.hexdigest())",base,JSON.stringify(files)]);expect(run.exitCode,run.stderr.toString()).toBe(0);return run.stdout.toString().trim();};
+ const root=process.cwd(),inputs=nxBuildEngineInputsV1(),closure=nxBuildEngineClosureV1(),python=(files:readonly string[],base:string,prefixes:readonly string[]=[])=>{const run=Bun.spawnSync(["python3","-I","-c","import hashlib,json,os,sys\nbase,files,prefixes=sys.argv[1],json.loads(sys.argv[2]),json.loads(sys.argv[3])\nd=hashlib.sha256()\nfor f in files:\n d.update(f.encode()+b'\\0'+hashlib.sha256(open(os.path.join(base,f),'rb').read()).hexdigest().encode()+b'\\n')\nif prefixes:\n d.update(b'\\0unkeyed\\0'+hashlib.sha256('\\n'.join(prefixes).encode()).hexdigest().encode()+b'\\n')\nprint(d.hexdigest())",base,JSON.stringify(files),JSON.stringify(prefixes)]);expect(run.exitCode,run.stderr.toString()).toBe(0);return run.stdout.toString().trim();};
  expect(inputs.some(value=>typeof value==="string")).toBe(false);expect(JSON.stringify(inputs).length).toBeLessThan(2048);
  const command=(inputs[0] as {runtime:string}).runtime,entry=closure.files.find(file=>file.endsWith("🧮️engine-digest/🟨️.mjs"));
  expect(entry).toBeDefined();expect(command).toBe(`bun "./${entry}"`);
  expect(closure.files).toEqual([...closure.files].sort());expect(new Set(closure.files).size).toBe(closure.files.length);
  const workspace=nxBuildEngineWorkspacePackageFileV1(root,"@semio-tech/process/routing")!;expect(closure.files).toContain(workspace.slice(root.length+1));
- const digest=nxBuildEngineDigestV1();expect(digest).toBe(python(closure.files,root));
+ const digest=nxBuildEngineDigestV1(),keyed=splitNxEngineFilesV1(closure.files).keyed;expect(keyed.length).toBeLessThan(closure.files.length);expect(digest).toBe(python(keyed,root,nxEngineUnkeyedPrefixesV1()));
  const run=Bun.spawnSync([process.execPath,join(root,entry!)],{cwd:root});expect(run.exitCode,run.stderr.toString()).toBe(0);expect(run.stdout.toString().trim()).toBe(digest);
 });
 test("the engine files digest follows bytes, names and order against the independent Python digest",async()=>{

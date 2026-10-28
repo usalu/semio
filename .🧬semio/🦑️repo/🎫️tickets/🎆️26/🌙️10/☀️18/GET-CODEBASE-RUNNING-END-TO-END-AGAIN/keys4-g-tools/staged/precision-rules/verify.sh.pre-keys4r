@@ -1,0 +1,18 @@
+#!/bin/sh
+# verify.sh : graph-free laws of the keys4-g precision batch (run BEFORE apply; nothing is written to the library).
+# 1. stage.py check (rule ids, base hash). 2. The live document with the staged rule at its head is accepted by the live precision engine and the eight targets derive exactly the file counts the oracle evidence was gathered with (expected-counts.json). 3. Live precision laws (single files).
+cd /Users/ueli/Documents/semio || exit 1
+C=".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN"; S="$C/keys4-g-tools/staged/precision-rules"; P="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision"
+OUT="${TMPDIR:-/tmp}/keys4-g-verify.$$.json"
+python3 -I "$S/stage.py" check || exit 1
+nice bun "$S/derive-merged.ts" "$P" "$S/rules/framework-rs-tests.json" @semio-tech/framework-rs ALL "🧰️framework/📦️packages/🦀️rust/📋️project.json" "$OUT" > /dev/null || exit 1
+python3 -I - "$OUT" "$S/expected-counts.json" <<'PY' || exit 1
+import json, sys
+got = {r["target"]: r.get("files") for r in json.load(open(sys.argv[1], encoding="utf-8"))["results"] if True}
+want = json.load(open(sys.argv[2], encoding="utf-8"))
+bad = {t: (got.get(t), n) for t, n in want.items() if got.get(t) != n}
+print("derived", len(want), "targets;", "counts equal the evidence" if not bad else "COUNT DRIFT (evidence must be re-run): %s" % bad)
+sys.exit(1 if bad else 0)
+PY
+rm -f "$OUT"
+nice bun test "./$P/🧪️tests/🟦️.ts" "./$P/🧪️tests/🛤️router/🟦️.ts" --timeout 120000 2>&1 | tail -6

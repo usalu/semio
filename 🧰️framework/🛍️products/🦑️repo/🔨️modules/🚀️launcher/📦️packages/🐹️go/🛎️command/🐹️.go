@@ -54,7 +54,7 @@ func (h Host) ReportRegistry(err error) int {
 		h.Stderr(builtin(Builtin["languageProtocol"], map[string]string{"path": problem.Path}))
 		return 2
 	}
-	h.Stderr(builtin(Builtin["registry."+problem.Kind], map[string]string{"path": problem.Path, "subject": problem.Subject, "found": strconv.Itoa(problem.Found), "expected": strconv.Itoa(Contract)}))
+	h.Stderr(builtin(Builtin["registry."+problem.Kind], map[string]string{"path": problem.Path, "subject": problem.Subject, "found": strconv.Itoa(problem.Found), "expected": strconv.Itoa(Contract), "command": InstallCommand(problem.Path)}))
 	return 2
 }
 

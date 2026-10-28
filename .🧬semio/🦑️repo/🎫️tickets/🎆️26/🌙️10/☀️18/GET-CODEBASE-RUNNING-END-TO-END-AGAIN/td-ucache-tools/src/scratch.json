@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "ancestorFiles": [
+    {"path": ".cargo/config.toml", "kind": "configuration"},
+    {"path": ".cargo/config", "kind": "configuration"},
+    {"path": "Cargo.toml", "kind": "workspace"},
+    {"path": "rust-toolchain.toml", "kind": "toolchain"},
+    {"path": "rust-toolchain", "kind": "toolchain"}
+  ],
+  "plants": {
+    "configuration": {"text": "[build]\nrustc-wrapper = \"semio-scratch-leak-wrapper\"\n", "evidence": "semio-scratch-leak-wrapper"},
+    "workspace": {"text": "[workspace]\nmembers = []\n", "evidence": "believes it's in a workspace"},
+    "toolchain": {"text": "[toolchain]\nchannel = \"semio-scratch-leak-toolchain\"\n", "legacyText": "semio-scratch-leak-toolchain\n", "evidence": "semio-scratch-leak-toolchain"}
+  }
+}

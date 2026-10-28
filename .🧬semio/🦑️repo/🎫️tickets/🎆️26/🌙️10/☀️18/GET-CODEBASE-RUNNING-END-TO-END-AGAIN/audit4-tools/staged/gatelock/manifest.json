@@ -1,0 +1,27 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/📋️contract/🟦️.ts": {
+  "file": "e00",
+  "base": "90ac2355a2e5c8e96d3fd0a7683ee4f8a19e31a04516bf9e9bd8a8d939a90e44",
+  "new": "f085a003bf3b539fb77da627c091214c22099ebca788fcbd3b4bc33a1b98097f"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts": {
+  "file": "e01",
+  "base": "c4631f2fa9311d7c382eb3481235399042905c2d0c9b102d66b6e18ac5436bb5",
+  "new": "d5a4372010c11d9dc442cd2c686d06f44b0354563803db2b5cead10a9e65543e"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🔼️upgrade/🟦️.ts": {
+  "file": "e02",
+  "base": "912b41ea9044c540e1d3bd26ce159c9dedc534a6c9834716f8e768fbc816b96c",
+  "new": "bc52111c900528214b06cf735a53ec9010ab50f438731e54321ca35a45a4a1c5"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🤝️handover/🟦️.ts": {
+  "file": "e03",
+  "base": "4722f147f7bbf9e55b67f62fdbf69330cf9421f050f6102d93baa904ada97c26",
+  "new": "b37f6354f433625f651446d56421c4b69ef145e8167935a030cfe888ab4a7c3e"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔏️fence/🟦️.ts": {
+  "file": "n00",
+  "base": null,
+  "new": "d39621df6a887be087aa6f60074a4846287db75caf90c8e7a5200adc31a54a85"
+ }
+}

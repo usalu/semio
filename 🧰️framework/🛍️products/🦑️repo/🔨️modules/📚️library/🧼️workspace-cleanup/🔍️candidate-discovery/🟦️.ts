@@ -1,5 +1,5 @@
 import { generatedOutputHasLiveLease } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { existsSync, lstatSync, readdirSync, type Dirent } from "node:fs";
+import { existsSync, lstatSync, readdirSync, realpathSync, type Dirent } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import {HUB_DATA_DIR_NAME,MAP_CACHE_DIR_NAME,SPACE_DATA_DIR_NAME} from "../../🗂️workspaces/🧬️metadata/🟦️.ts";
 import {runProbe} from "../../🏃️process/🔍️probe/🟦️.ts";
@@ -30,11 +30,13 @@ import {
   cleanTicketManifestIsClosed,
 } from "../🛡️protection/🟦️.ts";
 
-export const CLEAN_TICKET_FILE_MAX_BYTES = 5 * 1024 * 1024;
-export const CLEAN_TICKET_DIR_MAX_BYTES = 10 * 1024 * 1024;
 export const CLEAN_BUILD_ARTIFACT_MAX_BYTES = 10 * 1024 * 1024 * 1024;
 export const CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES = 100 * 1024 * 1024;
-export const CLEAN_OPEN_TICKET_OVERSIZED_FILE_MAX_BYTES = 100 * 1024 * 1024;
+/** 🧹️ The one purge law of ticket generated output, identical in Go, Rust and TypeScript. @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🧬️schema/🔣️.json (PurgePolicy) */
+export const CLEAN_TICKET_GENERATED_DIRECTORY = "🗑️generated";
+export const CLEAN_GENERATED_OVERSIZED_FILE_BYTES = 5 * 1024 * 1024;
+export const CLEAN_GENERATED_OVERSIZED_FOLDER_BYTES = 10 * 1024 * 1024;
+export const CLEAN_GENERATED_LIVE_WRITER_MS = 600_000;
 export function cleanPathBytes(abs: string): number {
   try {
     const st = lstatSync(abs);
@@ -176,47 +178,7 @@ export function cleanDiscoverTicketFolders(ticketsRoot: string): string[] {
   return folders;
 }
 
-export function cleanTicketSizeRemovals(root: string, ticketFolder: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
-  type Node = { abs: string; rel: string; isDir: boolean; size: number; children: Node[] };
-  const build = (abs: string): Node | null => {
-    if (cleanIsProtected(abs, protectedPrefixes)) return null;
-    let st;
-    try {
-      st = lstatSync(abs);
-    } catch {
-      return null;
-    }
-    const rel = relative(root, abs);
-    if (st.isSymbolicLink() || st.isFile()) return { abs, rel, isDir: false, size: st.size, children: [] };
-    if (!st.isDirectory()) return null;
-    const children: Node[] = [];
-    let size = 0;
-    for (const name of readdirSync(abs)) {
-      const child = build(join(abs, name));
-      if (!child) continue;
-      children.push(child);
-      size += child.size;
-    }
-    return { abs, rel, isDir: true, size, children };
-  };
-  const tree = build(ticketFolder);
-  if (!tree) return [];
-  const out: CleanRemoval[] = [];
-  const visit = (node: Node): void => {
-    for (const child of node.children) visit(child);
-    if (!node.isDir && node.size > CLEAN_TICKET_FILE_MAX_BYTES) {
-      out.push({ kind: "ticket-file", path: node.rel, bytes: node.size });
-      return;
-    }
-    if (node.isDir && node.size > CLEAN_TICKET_DIR_MAX_BYTES) {
-      out.push({ kind: "ticket-dir", path: node.rel, bytes: node.size });
-    }
-  };
-  for (const child of tree.children) visit(child);
-  return out;
-}
-
-export function cleanTicketGeneratedOutputRemovals(root: string, ticketFolder: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
+export function cleanTicketGeneratedOutputRemovals(root: string, ticketFolder: string, protectedPrefixes: readonly string[], now = Date.now()): CleanRemoval[] {
   const out: CleanRemoval[] = [];
   cleanWalkDirs(ticketFolder, (abs, name) => {
     if (!cleanIsTicketGeneratedOutputDir(name)) return "enter";
@@ -224,44 +186,126 @@ export function cleanTicketGeneratedOutputRemovals(root: string, ticketFolder: s
     if (cleanIntersectsProtected(abs, applicablePrefixes) || cleanIsProtected(abs, applicablePrefixes)) return "skip";
     if (!cleanTicketManifestIsClosed(ticketFolder, CLEAN_PROTECTION_VIEW)) return "skip";
     if (generatedOutputHasLiveLease(abs)) return "skip";
-    out.push({ kind: "ticket-generated", path: relative(root, abs), bytes: cleanPathBytes(abs) });
+    const plan = cleanPlanGeneratedDirectory(root, abs, "generated", now);
+    if (plan.skip === undefined) for (const removal of plan.removals) out.push({ kind: "ticket-generated", path: relative(root, removal.path), bytes: removal.bytes });
     return "skip";
   });
   return out;
 }
 
-export function cleanOpenTicketOversizedFileRemovals(root: string, ticketFolder: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
-  if (cleanTicketManifestIsClosed(ticketFolder, CLEAN_PROTECTION_VIEW)) return [];
-  const out: CleanRemoval[] = [];
-  const stack = [ticketFolder];
-  const applicablePrefixes = protectedPrefixes.filter((prefix) => resolve(prefix) !== resolve(ticketFolder));
-  while (stack.length > 0) {
-    const dir = stack.pop()!;
-    let names: string[];
-    try {
-      names = readdirSync(dir);
-    } catch {
-      continue;
-    }
-    for (const name of names) {
-      const abs = join(dir, name);
-      if (cleanIntersectsProtected(abs, applicablePrefixes) || cleanIsProtected(abs, applicablePrefixes)) continue;
-      let st;
+/** 🎚️ Which part of an eligible generated folder is removed: files above 5 MiB and folders above 10 MiB, or everything below it. */
+export type CleanGeneratedSelection = "oversized" | "generated";
+
+/** 🗑️ One planned removal below a generated folder. */
+export type CleanGeneratedRemoval = { path: string; kind: "file" | "directory"; bytes: number };
+
+/** ⏭️ Why a whole generated folder or ticket is left alone. */
+export type CleanGeneratedSkip = "not-closed" | "live-writer" | "symlink-root" | "not-directory" | "tracked-unknown";
+
+/** 🔎️ Answers which files below a repository-relative folder the git index tracks; undefined means unknown. */
+export type CleanTrackedFiles = (root: string, folder: string) => ReadonlySet<string> | undefined;
+
+/** 🌿️ Read-only `git ls-files` that cannot climb above the root and ignores any GIT_ redirection of the caller. */
+export const cleanGitTrackedFiles: CleanTrackedFiles = (root, folder) => {
+  const env: NodeJS.ProcessEnv = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.toUpperCase().startsWith("GIT_")));
+  env["GIT_OPTIONAL_LOCKS"] = "0";
+  env["GIT_CEILING_DIRECTORIES"] = dirname(resolve(root));
+  try {
+    const probe = runProbe("git", ["-c", "core.quotepath=off", "ls-files", "-z", "--cached", "--", folder.split(sep).join("/")], { cwd: root, env, budgetMs: 120_000 });
+    return probe.status === 0 ? new Set(probe.stdout.split("\0").filter(Boolean)) : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const cleanByteOrder = (left: string, right: string): number => Buffer.compare(Buffer.from(left), Buffer.from(right));
+
+/** 🧮️ Plans the removal below one generated folder: never a link, never a tracked file, never a folder holding one, and nothing at all while a file is younger than the live-writer window. */
+export function cleanPlanGeneratedDirectory(root: string, generated: string, selection: CleanGeneratedSelection, now: number, tracked: CleanTrackedFiles = cleanGitTrackedFiles): { removals: CleanGeneratedRemoval[]; skip?: CleanGeneratedSkip } {
+  let state;
+  try {
+    state = lstatSync(generated);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return { removals: [] };
+    throw error;
+  }
+  if (state.isSymbolicLink()) return { removals: [], skip: "symlink-root" };
+  if (!state.isDirectory()) return { removals: [], skip: "not-directory" };
+  const known = tracked(root, relative(root, generated));
+  if (known === undefined) return { removals: [], skip: "tracked-unknown" };
+  const directories = [generated];
+  const files: { path: string; size: number; tracked: boolean }[] = [];
+  let newest = Number.NEGATIVE_INFINITY;
+  for (let index = 0; index < directories.length; index += 1) {
+    for (const entry of readdirSync(directories[index]!, { withFileTypes: true })) {
+      const path = join(directories[index]!, entry.name);
+      let node;
       try {
-        st = lstatSync(abs);
-      } catch {
-        continue;
+        node = lstatSync(path);
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
+        throw error;
       }
-      if (st.isSymbolicLink()) continue;
-      if (st.isDirectory()) {
-        stack.push(abs);
-        continue;
+      if (node.isSymbolicLink()) continue;
+      if (node.isDirectory()) directories.push(path);
+      else if (node.isFile()) {
+        files.push({ path, size: node.size, tracked: known.has(relative(root, path).split(sep).join("/")) });
+        newest = Math.max(newest, node.mtimeMs);
       }
-      if (!st.isFile() || st.size <= CLEAN_OPEN_TICKET_OVERSIZED_FILE_MAX_BYTES) continue;
-      out.push({ kind: "ticket-generated", path: relative(root, abs), bytes: st.size });
     }
   }
-  return out;
+  if (files.length > 0 && now - newest < CLEAN_GENERATED_LIVE_WRITER_MS) return { removals: [], skip: "live-writer" };
+  const everything = selection === "generated";
+  const bytes = new Map<string, number>();
+  const holdsTracked = new Set<string>();
+  for (const file of files) {
+    for (let folder = dirname(file.path); ; folder = dirname(folder)) {
+      bytes.set(folder, (bytes.get(folder) ?? 0) + file.size);
+      if (file.tracked) holdsTracked.add(folder);
+      if (folder === generated) break;
+    }
+  }
+  const removals: CleanGeneratedRemoval[] = [];
+  const removed: string[] = [];
+  const covered = (path: string): boolean => removed.some((folder) => path === folder || path.startsWith(folder + sep));
+  for (const folder of [...directories].sort((left, right) => left.split(sep).length - right.split(sep).length || cleanByteOrder(left, right))) {
+    if ((folder === generated && !everything) || covered(folder) || holdsTracked.has(folder)) continue;
+    if (everything || (bytes.get(folder) ?? 0) > CLEAN_GENERATED_OVERSIZED_FOLDER_BYTES) {
+      removed.push(folder);
+      removals.push({ path: folder, kind: "directory", bytes: bytes.get(folder) ?? 0 });
+    }
+  }
+  for (const file of files) {
+    if (covered(file.path) || file.tracked) continue;
+    if (everything || file.size > CLEAN_GENERATED_OVERSIZED_FILE_BYTES) removals.push({ path: file.path, kind: "file", bytes: file.size });
+  }
+  return { removals };
+}
+
+/** 🧹️ A purge plan: ticket-relative removal paths and the tickets left whole, both in byte order. */
+export type CleanGeneratedPlan = { removals: CleanGeneratedRemoval[]; skips: { ticket: string; reason: CleanGeneratedSkip }[] };
+
+/** 🧹️ Plans the generated-output purge of the given ticket folders, or of every closed ticket below `ticketsDir`. Pure: it reads the filesystem and git, and removes nothing. */
+export function cleanPlanTicketGeneratedPurge(request: { root: string; ticketsDir: string; ticketDirs?: readonly string[]; selection: CleanGeneratedSelection; now: number; tracked?: CleanTrackedFiles }): CleanGeneratedPlan {
+  const root = realpathSync(request.root);
+  const ticketsDir = realpathSync(request.ticketsDir);
+  const folders = request.ticketDirs ?? cleanDiscoverTicketFolders(ticketsDir).filter((folder) => !folder.split(sep).pop()!.startsWith("."));
+  const plan: CleanGeneratedPlan = { removals: [], skips: [] };
+  const identity = (path: string): string => relative(ticketsDir, path).split(sep).join("/");
+  for (const input of folders) {
+    const folder = join(realpathSync(dirname(resolve(input))), resolve(input).split(sep).pop()!);
+    const ticket = identity(folder);
+    if (!cleanTicketManifestIsClosed(folder, CLEAN_PROTECTION_VIEW)) {
+      plan.skips.push({ ticket, reason: "not-closed" });
+      continue;
+    }
+    const outcome = cleanPlanGeneratedDirectory(root, join(folder, CLEAN_TICKET_GENERATED_DIRECTORY), request.selection, request.now, request.tracked);
+    if (outcome.skip !== undefined) plan.skips.push({ ticket, reason: outcome.skip });
+    for (const removal of outcome.removals) plan.removals.push({ ...removal, path: identity(removal.path) });
+  }
+  plan.removals.sort((left, right) => cleanByteOrder(left.path, right.path));
+  plan.skips.sort((left, right) => cleanByteOrder(left.ticket, right.ticket));
+  return plan;
 }
 
 export function cleanGitignoredMapForTicketRoots(root: string, ticketRoots: readonly string[]): Map<string, string[]> {

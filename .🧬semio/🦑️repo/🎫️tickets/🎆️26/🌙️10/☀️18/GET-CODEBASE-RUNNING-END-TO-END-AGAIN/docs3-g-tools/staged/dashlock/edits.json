@@ -1,0 +1,41 @@
+{
+ "name": "dashlock",
+ "code": "dashlock-g-tools/staged/dashlock",
+ "lane": "dashlock-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "dashlock-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "A test that needs a Rust oracle builds it through its own issued invocation, never a nested `repo cargo`.",
+   "where": "after",
+   "block": "\n- **A running dashboard never blocks a build.** Dashboard installs are content addressed (`dashboard-cli/<mode>/<digest>/semio`, `installed.json` swapped by rename) and a running dashboard holds only a SHARED lease on its digest directory. Cargo is reproducible, so a rebuild after a peer edit that does not change the binary (tests, docs, mtimes) yields the SAME digest; the publish used to request an EXCLUSIVE lease on it first and, behind the runner, failed after the 5-minute build with `Refusing to wait … dashboard-cli/prototype/<digest>`. Now an intact digest (marker owner, exact file list, single-link regular file, executable bit, sha256 equal to the directory name) is verified under a shared lease and reused without a copy or an exclusive request; a new digest is published beside the running one (the running inode is never replaced, on Windows a running .exe is never overwritten); only an absent or damaged digest takes the exclusive lease, as a try-lock, re-reading with bounded back-off, never hold-and-wait. After each install the current digest and the 2 newest are kept and older ones are reclaimed when nobody holds them (a held one is kept; before this nothing ever reclaimed them: 569 MB in 20 digests). Official-route proof still owed: hold the installed digest with `dashlock-g-tools/hold-installed.ts prototype`, touch a dashboard source file that leaves the binary equal, run `repo-dashboard-rs:build`, expect exit 0 and the same digest."
+  },
+  {
+   "id": "dashlock-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "Ein Test, der ein Rust-Orakel braucht, baut es über seinen eigenen ausgestellten Aufruf, nie über ein verschachteltes `repo cargo`.",
+   "where": "after",
+   "block": "\n- **Ein laufendes Dashboard blockiert nie einen Build.** Dashboard-Installationen sind inhaltsadressiert (`dashboard-cli/<Modus>/<Digest>/semio`, `installed.json` per Umbenennen getauscht), und ein laufendes Dashboard hält nur ein GETEILTES Lease auf seinem Digest-Verzeichnis. Cargo ist reproduzierbar, deshalb ergibt ein Neubau nach einer Peer-Änderung, die das Binär nicht ändert (Tests, Doku, Zeitstempel), DENSELBEN Digest; die Veröffentlichung verlangte dafür zuerst ein EXKLUSIVES Lease und scheiterte hinter dem Läufer nach dem 5-Minuten-Build mit `Refusing to wait … dashboard-cli/prototype/<Digest>`. Jetzt wird ein unversehrter Digest (Marker-Eigner, genaue Dateiliste, normale Datei mit einem Link, Ausführungsbit, sha256 gleich dem Verzeichnisnamen) unter einem geteilten Lease geprüft und ohne Kopie und ohne exklusive Anfrage weiterverwendet; ein neuer Digest wird neben dem laufenden veröffentlicht (der laufende Inode wird nie ersetzt, unter Windows wird eine laufende .exe nie überschrieben); nur ein fehlender oder beschädigter Digest nimmt das exklusive Lease, als Try-Lock, mit erneutem Lesen und begrenzter Wartezeit, nie als Halten-und-Warten. Nach jeder Installation bleiben der aktuelle Digest und die 2 neuesten, ältere werden zurückgewonnen, wenn sie niemand hält (ein gehaltener bleibt; zuvor räumte sie nichts auf: 569 MB in 20 Digests). Beweis über die offizielle Route steht aus: den installierten Digest mit `dashlock-g-tools/hold-installed.ts prototype` halten, eine Dashboard-Quelle anfassen, die das Binär gleich lässt, `repo-dashboard-rs:build` starten, erwartet Exit 0 und derselbe Digest."
+  },
+  {
+   "id": "dashlock-row",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "| `The runtime registry declares contract N, this launcher implements contract M. Rebuild and reinstall the launcher with: …` | the installed Go launcher is older than the registry; run the printed installer once (`🚀️launcher/📥️install`); there is one install location. |",
+   "where": "after",
+   "block": "| `Refusing to wait: <lease> (<mode>) has been unavailable for N s, held by process P for M s while this process holds <other> exclusively …` (`LeaseOrderErrorV1`; also `Self-deadlock: …` and `Deadlock detected: …`) | the lock-order law refuses a wait that would block everyone behind you: hold-and-wait after a 15 s grace, a request for a lease you already hold, or a cycle (this request is chosen as the victim so the others proceed). It is not a hang: release the held resource before waiting, or take the awaited one first. A dashboard rebuild no longer meets it behind a running dashboard. `SEMIO_LEASE_ORDER` set to `off`, `observe` or `enforce` overrides every rule at once (default: hold-and-wait, self-deadlock and cycle `enforce`, out-of-order `observe`); `SEMIO_LEASE_ORDER_POLICY` names another policy file. |"
+  },
+  {
+   "id": "dashlock-row",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "| `Die Laufzeitregistratur deklariert Vertrag N, dieser Launcher setzt Vertrag M um. Baue den Launcher neu und installiere ihn mit: …` | der installierte Go-Launcher ist älter als die Registratur; den ausgegebenen Installer einmal ausführen (`🚀️launcher/📥️install`); es gibt genau einen Installationsort. |",
+   "where": "after",
+   "block": "| `Warten abgelehnt: <Lease> (<Modus>) ist seit N s nicht verfügbar, gehalten von Prozess P seit M s, während dieser Prozess <anderes> exklusiv hält …` (`LeaseOrderErrorV1`; auch `Selbst-Verklemmung: …` und `Verklemmung erkannt: …`) | das Sperrreihenfolge-Gesetz lehnt ein Warten ab, das alle hinter dir blockieren würde: Halten-und-Warten nach 15 s Schonfrist, die Anforderung eines Leases, das du schon hältst, oder ein Zyklus (diese Anfrage wird zum Opfer gewählt, damit die anderen fortfahren). Es ist kein Hänger: die gehaltene Ressource vor dem Warten freigeben oder die erwartete zuerst nehmen. Ein Dashboard-Neubau trifft es hinter einem laufenden Dashboard nicht mehr. `SEMIO_LEASE_ORDER` mit `off`, `observe` oder `enforce` überschreibt alle Regeln zugleich (Standard: Halten-und-Warten, Selbst-Verklemmung und Zyklus `enforce`, falsche Reihenfolge `observe`); `SEMIO_LEASE_ORDER_POLICY` nennt eine andere Policy-Datei. |"
+  }
+ ]
+}

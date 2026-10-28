@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "requirements": {
+          "linux": ["cc", "rust"],
+          "darwin": ["cc", "developer-tools", "rust"],
+          "win32": ["msvc-linker", "rust"]
+        },
+        "pathExtensions": [".exe"],
+        "tools": {
+          "cc": {"kind": "path", "programs": ["cc"]},
+          "rust": {
+            "kind": "rust",
+            "programs": ["rustc", "rustup"],
+            "environment": {"compiler": "SEMIO_RUSTC"},
+            "directories": [{"environment": "CARGO_HOME", "homeSegments": [".cargo"], "segments": ["bin"]}]
+          },
+          "developer-tools": {
+            "kind": "developer-directory",
+            "environment": "DEVELOPER_DIR",
+            "program": "/usr/bin/xcode-select",
+            "arguments": ["-p"],
+            "timeoutSeconds": 10
+          },
+          "msvc-linker": {
+            "kind": "visual-studio",
+            "linker": "link",
+            "installation": {"environment": "VSINSTALLDIR"},
+            "locator": {"environments": ["ProgramFiles(x86)", "ProgramFiles"], "segments": ["Microsoft Visual Studio", "Installer", "vswhere.exe"], "fallback": "vswhere"},
+            "arguments": ["-latest", "-products", "*", "-requires", "{component}", "-property", "installationPath"],
+            "components": {"x64": "Microsoft.VisualStudio.Component.VC.Tools.x86.x64", "arm64": "Microsoft.VisualStudio.Component.VC.Tools.ARM64"},
+            "toolsSegments": ["VC", "Tools", "MSVC"],
+            "timeoutSeconds": 30
+          }
+        }
+      }
+    },
+    "Probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "found", "location", "how"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+        "found": {"type": "boolean"},
+        "location": {"type": ["string", "null"]},
+        "how": {"enum": ["environment", "path", "cargo-home", "developer-directory", "installer", "none"]}
+      }
+    },
+    "Scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "platform", "arch", "env", "home", "files", "directories", "commands", "expected"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "platform": {"enum": ["darwin", "linux", "win32"]},
+        "arch": {"enum": ["x64", "arm64"]},
+        "env": {"type": "object", "additionalProperties": {"type": "string"}},
+        "home": {"type": "string", "minLength": 1},
+        "files": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "directories": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["program", "arguments", "status", "stdout"],
+            "properties": {"program": {"type": "string"}, "arguments": {"type": "array", "items": {"type": "string"}}, "status": {"type": ["integer", "null"]}, "stdout": {"type": "string"}}
+          }
+        },
+        "expected": {"type": "array", "items": {"$ref": "#/definitions/Probe"}}
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenarios"],
+      "properties": {"scenarios": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Scenario"}}}
+    }
+  }
+}

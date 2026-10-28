@@ -1,0 +1,19 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "🏗️build/🕸️graph/🕰️generations/🧱️chunk-classes/🧬️schema/🔣️.json",
+ "definitions": [
+  "Policy"
+ ],
+ "sources": [
+  "🏗️build/🕸️graph/🕰️generations/🧱️chunk-classes/🟨️.mjs"
+ ],
+ "exports": [
+  {
+   "source": "🏗️build/🕸️graph/🕰️generations/🧱️chunk-classes/🟨️.mjs",
+   "name": "INDEX_CHUNK_POLICY_V1",
+   "definition": "Policy"
+  }
+ ],
+ "minimumNumber": 1000
+}

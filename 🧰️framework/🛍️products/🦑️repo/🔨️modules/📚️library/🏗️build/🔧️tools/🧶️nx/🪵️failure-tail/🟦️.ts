@@ -1,7 +1,7 @@
 import{refuseBuildV1}from"../../../📖️texts/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {retryOnConcurrentEditV1,type ChurnOptionsV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
-import {failureChurnOfTailsV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧾️refusals/🟦️.ts";
+import {declaredRefusalClassOfTextV1,failureChurnOfTailsV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧾️refusals/🟦️.ts";
 
 const policy=schema.definitions.Policy.const;
 /** 🪵️ The authored numbers of the Nx output tail. */
@@ -11,13 +11,24 @@ export type NxFailureTailV1=Readonly<{push(chunk:string|Uint8Array,channel?:"std
 /** 🏁️ What one finished Nx invocation left: its exit code and the tail of its output. */
 export type NxRunResultV1=Readonly<{code:number;tail:string}>;
 
-/** 🚨️ Keeps the last `maximumCharacters` characters of every chunk pushed, in arrival order; a byte chunk is decoded as a stream per channel, so a sequence cut between two chunks of the same stream is completed by the next one of that stream and the two streams never corrupt each other. */
+/** 🚨️ Keeps the last `maximumCharacters` characters of every chunk pushed, in arrival order; a byte chunk is decoded as a stream per channel, so a sequence cut between two chunks of the same stream is completed by the next one of that stream and the two streams never corrupt each other. Besides the tail it keeps, bounded by the policy, every complete line that names a refusal class by its own words (decided when the line arrives, per channel, so a line cut between two chunks is decided once it is complete and the unfinished last line is decided when the text is read): `text()` returns the kept lines that the tail no longer holds, then the tail. */
 export function createNxFailureTailV1(maximumCharacters:number=policy.maximumTailCharacters):NxFailureTailV1{
  if(!Number.isSafeInteger(maximumCharacters)||maximumCharacters<1||maximumCharacters>policy.maximumTailCharacters)throw refuseBuildV1("invalid","nx.failure-tail-size-required");
- const decoders={stdout:new TextDecoder("utf-8"),stderr:new TextDecoder("utf-8")};let kept="";
+ const decoders={stdout:new TextDecoder("utf-8"),stderr:new TextDecoder("utf-8")},pending={stdout:"",stderr:""},evidence:string[]=[];let kept="";
+ const evidenceOf=(line:string):string|undefined=>declaredRefusalClassOfTextV1(line)===undefined?undefined:line.slice(0,policy.maximumEvidenceLineCharacters);
+ const keep=(line:string):void=>{const found=evidenceOf(line);if(found===undefined||evidence.includes(found))return;if(evidence.length>=policy.maximumEvidenceLines)evidence.shift();evidence.push(found);};
+ const lines=(channel:"stdout"|"stderr",text:string):void=>{
+  const parts=(pending[channel]+text).split("\n");pending[channel]=parts.pop()!;
+  for(const line of parts)keep(line);
+  if(pending[channel].length>policy.maximumPendingLineCharacters){keep(pending[channel]);pending[channel]="";}
+ };
  return Object.freeze({
-  push(chunk:string|Uint8Array,channel:"stdout"|"stderr"="stdout"):void{kept+=typeof chunk==="string"?chunk:decoders[channel].decode(chunk,{stream:true});if(kept.length>maximumCharacters)kept=kept.slice(kept.length-maximumCharacters);},
-  text:()=>kept,
+  push(chunk:string|Uint8Array,channel:"stdout"|"stderr"="stdout"):void{const text=typeof chunk==="string"?chunk:decoders[channel].decode(chunk,{stream:true});kept+=text;if(kept.length>maximumCharacters)kept=kept.slice(kept.length-maximumCharacters);lines(channel,text);},
+  text:()=>{
+   const unfinished=[pending.stdout,pending.stderr].flatMap(line=>{const found=evidenceOf(line);return found===undefined||evidence.includes(found)?[]:[found];});
+   const missing=[...new Set([...evidence,...unfinished])].filter(line=>!kept.includes(line));
+   return missing.length===0?kept:missing.join("\n")+"\n"+kept;
+  },
  });
 }
 

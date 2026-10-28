@@ -13,13 +13,15 @@ import{Database}from"bun:sqlite";
 import{classifyBuildGraphRetirementStateV1}from"../../🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json";
 import cases from"../🧫️cases.json";
+import{privateRepositoryWorkspaceV1}from"../../../../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 test("graph retirement intent states match the independent SQLite transition oracle",()=>{
  const validate=new Ajv({strict:true}).compile({$schema:schema.$schema,definitions:schema.definitions,$ref:"#/definitions/RetirementState"}),db=new Database(":memory:");try{for(const row of cases.retirementStates){expect(validate(row.input)).toBe(true);const result=classifyBuildGraphRetirementStateV1(row.input),independent=db.query("select case when not ?1 and ?2='bound' and ?3='absent' then 'prepared' when ?2 in ('absent','fresh') and ?3='bound' then 'committed' when ?1 and ?2 in ('absent','fresh') and ?3='absent' and ?4=0 then 'terminal' else 'refuse' end state").get(Number(row.input.committed),row.input.original,row.input.retired,row.input.remaining)as{state:string};expect<unknown>(result).toBe(row.state);expect<unknown>(result).toBe(independent.state);}}finally{db.close();}
 });
 
 for(const scenario of cases.groups)registerIsolatedBuildTestV1(fileURLToPath(import.meta.url),"graph optional group retirement "+scenario,120000,checkpoint=>withBuildTestInvocationV1(async original=>{
  const stop=new AbortController(),control=createIssuedResourceControlV1(original,"test:graph-group",110000,stop.signal),negative=!["complete","new-generation","known-missing-pack"].includes(scenario);let failed=false,failure:unknown,productionFailure:unknown,refused=false,retained=false,commitReady=false,mutationReached=false;
- try{await withRepositoryBuildGraphPublicationFixtureV1(process.cwd(),original,control,async fixture=>{
+ try{await withRepositoryBuildGraphPublicationFixtureV1(repository.root,original,control,async fixture=>{
   const directory=join(fixture.root,"inference","mr"),key=recordKey("group-retirement"),graph={version:1,projects:{},dependencies:[],namedInputs:{},externalNodes:{}};let token="",lock="";const orphanBody=JSON.stringify({version:1,files:["Cargo.lock"]}),orphanHash=new Bun.CryptoHasher("sha256").update(orphanBody).digest("hex"),orphanPath=join(fixture.root,"build-input-closures",orphanHash+".json");const publish=()=>{mkdirSync(directory,{recursive:true});const records=openRecordStore(directory);records.put(key,Buffer.from(JSON.stringify({...graph,namedInputs:{source:[{env:token},{env:lock}]}})));records.flush();records.close();};
   await fixture.withWriter(async()=>{token=(compactSourceInputs(["{workspaceRoot}/Cargo.toml"],fixture.sourceRoot).find((row:any)=>row?.env?.startsWith("SEMIO_SOURCE_CLOSURE_"))as{env:string}).env;lock=cargoLockInput("Cargo.toml",fixture.sourceRoot).env;publish();});
   const pack=readdirSync(directory).find(name=>name.endsWith(".pack"))!,index=pack.slice(0,-5)+".idx",source=join(fixture.root,"build-input-closures",token.slice("SEMIO_SOURCE_CLOSURE_".length)+".json"),catalog=join(fixture.root,"retired");

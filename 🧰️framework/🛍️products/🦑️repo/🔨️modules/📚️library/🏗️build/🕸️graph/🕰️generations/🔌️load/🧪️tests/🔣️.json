@@ -1520,6 +1520,325 @@
           }
         ]
       }
+    },
+    {
+      "expected": {
+        "admitted": [
+          "course",
+          "kernel",
+          "lib",
+          "proctor",
+          "toolchain"
+        ]
+      },
+      "owners": {
+        "course": {
+          "edges": [
+            "lib"
+          ],
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/**/*"
+            ],
+            "proctorCargo": [
+              {
+                "input": "cargoToolchain",
+                "projects": [
+                  "proctor"
+                ]
+              },
+              "{workspaceRoot}/Cargo.toml"
+            ]
+          },
+          "root": "t/course",
+          "targets": {
+            "test": {
+              "dependsOn": [
+                "lib:build"
+              ],
+              "inputs": [
+                "default",
+                "proctorCargo"
+              ]
+            }
+          }
+        },
+        "kernel": {
+          "edges": [],
+          "root": "t/kernel",
+          "targets": {}
+        },
+        "lib": {
+          "edges": [],
+          "root": "t/lib",
+          "targets": {
+            "build": {}
+          }
+        },
+        "proctor": {
+          "edges": [
+            "kernel"
+          ],
+          "namedInputs": {
+            "cargoToolchain": [
+              {
+                "input": "lockfile",
+                "projects": "toolchain"
+              }
+            ]
+          },
+          "root": "t/proctor",
+          "targets": {
+            "build": {}
+          }
+        },
+        "toolchain": {
+          "edges": [],
+          "namedInputs": {
+            "lockfile": [
+              "{projectRoot}/Cargo.lock"
+            ]
+          },
+          "root": "t/toolchain",
+          "targets": {}
+        },
+        "unrelated": {
+          "edges": [],
+          "root": "t/unrelated",
+          "targets": {
+            "build": {}
+          }
+        }
+      },
+      "roots": [],
+      "selection": {
+        "kind": "tasks",
+        "tasks": [
+          {
+            "project": "course",
+            "target": "test"
+          }
+        ]
+      }
+    },
+    {
+      "expected": {
+        "admitted": [
+          "app",
+          "dep",
+          "gen",
+          "tool"
+        ]
+      },
+      "owners": {
+        "app": {
+          "edges": [
+            "dep"
+          ],
+          "root": "a/app",
+          "targets": {
+            "test": {
+              "inputs": [
+                "^shared",
+                {
+                  "dependencies": true,
+                  "input": "own"
+                }
+              ]
+            }
+          }
+        },
+        "dep": {
+          "edges": [],
+          "namedInputs": {
+            "inner": [
+              {
+                "input": "x",
+                "projects": [
+                  "tool"
+                ]
+              }
+            ],
+            "own": [
+              {
+                "input": "y",
+                "projects": [
+                  "gen"
+                ]
+              }
+            ],
+            "shared": [
+              "inner"
+            ]
+          },
+          "root": "a/dep",
+          "targets": {}
+        },
+        "gen": {
+          "edges": [],
+          "root": "a/gen",
+          "targets": {}
+        },
+        "skipped": {
+          "edges": [],
+          "namedInputs": {
+            "shared": [
+              {
+                "input": "z",
+                "projects": [
+                  "unknown-owner"
+                ]
+              }
+            ]
+          },
+          "root": "a/skipped",
+          "targets": {}
+        },
+        "tool": {
+          "edges": [],
+          "root": "a/tool",
+          "targets": {}
+        }
+      },
+      "roots": [],
+      "selection": {
+        "kind": "tasks",
+        "tasks": [
+          {
+            "project": "app",
+            "target": "test"
+          }
+        ]
+      }
+    },
+    {
+      "expected": {
+        "admitted": [
+          "dash",
+          "framework",
+          "lib",
+          "process",
+          "providers"
+        ]
+      },
+      "owners": {
+        "dash": {
+          "edges": [
+            "lib"
+          ],
+          "root": "pkg/dash",
+          "targets": {
+            "build": {
+              "metadata": {
+                "semio": {
+                  "execution": {
+                    "version": 1,
+                    "kind": "orchestration",
+                    "children": [
+                      {
+                        "project": "dash",
+                        "target": "compile"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "compile": {
+              "inputs": [
+                {
+                  "input": "scheduling",
+                  "projects": [
+                    "providers"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "providers": {
+          "edges": [
+            "process"
+          ],
+          "root": "lib/providers",
+          "targets": {}
+        },
+        "process": {
+          "edges": [
+            "framework"
+          ],
+          "root": "process",
+          "targets": {}
+        },
+        "framework": {
+          "edges": [],
+          "root": "framework",
+          "targets": {}
+        },
+        "lib": {
+          "edges": [],
+          "root": "lib",
+          "targets": {}
+        },
+        "course": {
+          "edges": [
+            "framework"
+          ],
+          "root": "course",
+          "targets": {
+            "build": {}
+          }
+        }
+      },
+      "roots": [],
+      "selection": {
+        "kind": "tasks",
+        "tasks": [
+          {
+            "project": "dash",
+            "target": "build"
+          }
+        ]
+      }
+    },
+    {
+      "expected": {
+        "error": "unknown"
+      },
+      "owners": {
+        "dash": {
+          "edges": [],
+          "root": "pkg/dash",
+          "targets": {
+            "build": {
+              "metadata": {
+                "semio": {
+                  "execution": {
+                    "version": 1,
+                    "kind": "orchestration",
+                    "children": [
+                      {
+                        "project": "ghost",
+                        "target": "compile"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "roots": [],
+      "selection": {
+        "kind": "tasks",
+        "tasks": [
+          {
+            "project": "dash",
+            "target": "build"
+          }
+        ]
+      }
     }
   ],
   "implementation": [

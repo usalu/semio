@@ -1,0 +1,177 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json": {
+  "file": "000.json",
+  "base": "509be476ee31142bcd746f5c9f148a1e5c535780ccbb74b40e0696423e3bf717",
+  "new": "0d4ec2a7b3bc7848eb57855037f1c7660af53425df26a30b7a13ecb7c7e702f2"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts": {
+  "file": "001.ts",
+  "base": "538781f2af9cbf4eeeedbf4608a22da150cffefd0829ec1ce70c3120ebd6151d",
+  "new": null
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts": {
+  "file": "002.ts",
+  "base": "4573145b65ea3110df3cf04e19dad64cbd9c3a5a8f299a7daff6b2f3d2724931",
+  "new": "6acffc47408a4f7bdc668c3ba56b060c2082cb412c4aed6d7c1d37f05e4dbcbe"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🟦️.ts": {
+  "file": "003.ts",
+  "base": "3795a3cd9e3456fb6c47bfd3cc366d95531bc99f651d139ed89b6e0398d70216",
+  "new": "aefd7980b8476e08b198e17902743165ef8db3ba1a589477645289c4d26eb6e8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts": {
+  "file": "004.ts",
+  "base": "9b48c5625f9b8cd0242a24578ea4d17f0851617f24540c88e62a97c4c3b71f15",
+  "new": "286034e91d209db0090f9cc7545c4e0e1601948e390ae8470f46ee6cfb89d336"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🟦️.ts": {
+  "file": "005.ts",
+  "base": "e6670e07ea5d9cadece9474a8ed7116e56c7d2d1615c5414d55ad1417f891300",
+  "new": "71b786d92693abad5a4615a0d6cd5d53638908b97609aca6a55a1a77a8981c97"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/🟦️.ts": {
+  "file": "006.ts",
+  "base": "bd0675cbc0efae638cd5a8fd062c9a328c47feb6e92cd212b107e45fe7ba60b7",
+  "new": "7197c12e481b8702c05a209ff840246f6eef8f57dfc7fcd5bcbe242674253a6a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️.ts": {
+  "file": "007.ts",
+  "base": "d2fc5cfd38bc0b00bad99fcc658d5b4cdfcc44294d56c0fef8826895130f8ebb",
+  "new": "f02577c61b6f914df6c8744c27a9ef75aa9e070ae6203bcc919c80bf8fd7560f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts": {
+  "file": "008.ts",
+  "base": "c379e10b99d840751ef7828a08ff516c1ee2d7d3ef024b67cb57649dbe9b2ce0",
+  "new": "a3734076e18c4a86d476f087628bfcf4ad2294cb02c12eb9a458e47056854a87"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔒️lock-sync/🟦️.ts": {
+  "file": "009.ts",
+  "base": "e64aff417fcd72bfaefa314aaa8f065d7db04795b6c2670d7c6fc29305dc7383",
+  "new": "1aa44fdd87607542cf1a9a47f32422c4b33b7182364e2f679855fbe9e761d4ae"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🚦️concurrent/💾️storage/🟦️.ts": {
+  "file": "010.ts",
+  "base": "ab6eb01ad7930b0da9c63cbcc36ec41ba35928d38838cc65cc5924f74edb29c3",
+  "new": "8ba2a20083aee328004b0d1dc5f483a78931e265a4a36dea5a707663f6b3d974"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/💾️storage/🟦️.ts": {
+  "file": "011.ts",
+  "base": "79978049ba38240a33650e045eb19d44fc0f1f8984a968cd1667069741a595b7",
+  "new": "7233ef097c6e07ab8516f1c330cb1e48655f212475385c4adb8daef423f67f8b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🟦️.ts": {
+  "file": "012.ts",
+  "base": "6652828910d1fe68bfdf1ba1d5b8f0434f244068d3988d7f134c93ecdfacd786",
+  "new": "bfa9c4f76b416667f647df30c6a7b627b01022699959e0c111ac24cf6bd3f63a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts": {
+  "file": "013.ts",
+  "base": "8c722dcb7acc6b9374b6cf5125c33fe0fe2826519b83aa168db83c94b32842d8",
+  "new": "282efc505ebe8c3a3de89bf2774cf4946077e8a2bb6a7a43b25403dc42198f6c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/⚙️runtime/🟦️.ts": {
+  "file": "014.ts",
+  "base": "3d6e3b1d3fee5109ca0e97b49379248d3d8cc290b83be2060c4310ea061eb5de",
+  "new": "8f541cb948c2c08a6d4251406014faeef3874755d14b2305c0ee9204d21ce17a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/📖️help/🟦️.ts": {
+  "file": "015.ts",
+  "base": "d77888141bd70d065bb64afc5f336d049eaf422c7ac16ee93723cbd39b5f2d98",
+  "new": "c50dc1d322df8e9709c99efe00211951abe50d883a487a21adbb43e117be6b20"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/⌨️command/🟦️.ts": {
+  "file": "016.ts",
+  "base": "34c9f17da61538f7b1f81b11250196be64383aa2c58821bcd66a7157e0d788f4",
+  "new": "97724aaaf5ec2170eb55afd1f0125e4fc896850a4e13a00ce40103cf9c1cadcc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/⌨️command/🟦️.ts": {
+  "file": "017.ts",
+  "base": "4503022f86295ce91ad653a13c0057a9a9d5e5ada9a50def2d0f912fa9143daa",
+  "new": "b04e55770ef25250815729d4601973b807f6e1136429d7b4611c7428bf5dda2c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts": {
+  "file": "018.ts",
+  "base": "7d438b1625a3e6e90abd26840946e26a42d54c5ab2ed15b98b1199546db25c48",
+  "new": "9c0e919bb0cbd06e5d01c6417b9ed712d8edb6296f0aac025272b8342f82c50c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "019.ts",
+  "base": "0ccd4fc71f8361b89c234e1b20ee27e9e4147729d2b0e0f60df200acaae718bd",
+  "new": "d101b77e6bd50c12c6192645d3cc06c7cac40015b0d0662bf9ca1bd5804fc6a6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🧪️tests/🟦️.ts": {
+  "file": "020.ts",
+  "base": "35792d24bf9a030d75afb3c1a1e926c2e4d4e9eb152c4a43750b3ea838ab3a89",
+  "new": "6720dc8897162cbf61c010036aaca5ace7fe49a5f74fcc1ffc863c96f44014d7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts": {
+  "file": "021.ts",
+  "base": "b83aa10cd366dfbb31dd00811ae0cff2e3e7eb0c99ef6cba29fc29558b2a38c9",
+  "new": "fd849e5e2f3f01e3d9debfbcb2bf904df66175e5a4f463639b4a1c2c402226e2"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧩️units/⌨️command/📜️script.ts": {
+  "file": "022.ts",
+  "base": "beda6d8eda56e0ff4216617d4facff7b185ba83532cf850a7f8d44134b0d7ff6",
+  "new": "88a4becec5bca12be85fdf3c34d40f8f7b4896142f5b1125ebe4240cd9b78cc2"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧩️units/⌨️command/🟦️.ts": {
+  "file": "023.ts",
+  "base": "11856ec9bec070d7a290a1ae554b20177ff967d3b9f127b51e6f1e5d366e2c91",
+  "new": "b1323a051ba961c3b7f073faa36c0072fdda2a6e02bfb2a57392217187926f74"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🟦️.ts": {
+  "file": "024.ts",
+  "base": "135770d8921cca6cf14d2bdb3c80ee7aa2546e4c03cb97ed7e71d1331ed7cd68",
+  "new": "8a15db2d68716939743733e67c3410696cee768b7ee60cd92c1aef3323abeda4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🚪️command/🟦️.ts": {
+  "file": "025.ts",
+  "base": "6b56c76a016b3d78307a96736c3c66dc18595633e785c6aab20dddfe4981a80a",
+  "new": "4a96218f5e5776706f56fe9122e215c225b4895c5d269d4c6caf1efdcc9e7dda"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/🟦️.ts": {
+  "file": "026.ts",
+  "base": "7090f79a441ac6c497684ee14b0224e80aeaf080b428c5b81621e765d60dee33",
+  "new": "ac5e88f4cd3a862db1127c954364f3b824137e3842c8f028c5cca674e9810dfd"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🟦️.ts": {
+  "file": "027.ts",
+  "base": "c73aa8fc638d4c1878ad55f3497a9bffc44850b9cd1581eb140fc9306be92944",
+  "new": "3a1409f7c82bee07479f4a148af0a04216580ff67941ee9c2895a8ac290c47f4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/⌨️command/🟦️.ts": {
+  "file": "028.ts",
+  "base": "7b9dd95469b91bc3731d967cce8da10295a41f73cc8abd35f21df01b6dd0457c",
+  "new": "7efef47e24c1914e4cb6ff92c67bd07276495b1eef0eeeeb635c324cac7a0350"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️ci-report/📜️script.ts": {
+  "file": "029.ts",
+  "base": "2970ad058518b5a80c78878f8edefea0ca33125fd9c6b59ccb1f151fedbee3a1",
+  "new": "1b4c90f68745d08062026c365bec79cda78852212f0643727d808e1925392761"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️ci-report/🗂️suites/📜️script.ts": {
+  "file": "030.ts",
+  "base": "8aeee6e556cab65bf493201e2f56f4166512117b9a8999534ad16e45c9638dd2",
+  "new": "0ab2c4d639e34e5063579c9e1b1309785cf9476831988609ee9276271c0786f2"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️ci-report/🧪️tests/🟦️.ts": {
+  "file": "031.ts",
+  "base": "b4a4bc47249689a6a78a7a04ab51d56df5fb45fac1c2604f4ce00b53c2026c43",
+  "new": "73276fd6a59f27edbf074a14e1623072113eb9e2b0e942b6f63c1c6065f585b5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️agent-sessions/⌨️command/🟦️.ts": {
+  "file": "032.ts",
+  "base": "a0dc683b5c5a39bdcb1d5857d856447c6fb7c92a858440f4c81eeb1527169c37",
+  "new": "f73c1290ae30bc49d77c787592cf051ff60a417465a259db99ba3a4e018e2e5e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🔒️lock/🟦️.ts": {
+  "file": "033.ts",
+  "base": "fd73d2a6fb425ba9c789e54db32f23ff4a95587002cc42dff415d0fb6c5fa643",
+  "new": "8a3c78910474ee2693af4af1351948b45b267e8b0a2e939e487b54d8250d161b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/🟦️.ts": {
+  "file": "034.ts",
+  "base": "e018090e319d853e43f11a4588d9a5afcc20d87915219757e84fddde53a2bfb5",
+  "new": "2ccd01b53a04c93b89e8bb6ef205a2df00221ac6f4649194ad513ddc236aeba7"
+ }
+}

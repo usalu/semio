@@ -1,0 +1,32 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧬️schema/🔣️.json": {
+  "file": "00.json",
+  "base": null,
+  "new": "ad34e1eb6837613a1c0c84e6d283b2a781b9425674fa05e75d79ac381e4717ef"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts": {
+  "file": "01.ts",
+  "base": "65036c8c3e11bde0044b1fa8d17f850e7c95fa74a0ff391c3a12a4c92b3f7f3e",
+  "new": "b83aa10cd366dfbb31dd00811ae0cff2e3e7eb0c99ef6cba29fc29558b2a38c9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/📥️reuse/🟦️.ts": {
+  "file": "02.ts",
+  "base": "a8d92c44d5257a760e13d5fb171368410f1ee001731a8ec0cdf630ad9335efb9",
+  "new": "df284be39956030dcf9c2c7b4f1f0b8dbd0e92bff3d4c1a95c29e8fae6fa4b6a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🔏️closure/🟦️.ts": {
+  "file": "03.ts",
+  "base": "aff62de92a01480c1dbf87203baa65d2b110bc6460a469ac30ce7bbb3c92bfb4",
+  "new": "4c39bb5bf7ebe4b5029f82b3c2f0849bee62c1d914d901a542e8036d4f1a0229"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🕸️graph/🔣️.json": {
+  "file": "04.json",
+  "base": null,
+  "new": "94b837529e452002957132020ff078ee7bea04623befb9633c754bcb1b922edc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🔂️revision-graph/🔣️.json": {
+  "file": "05.json",
+  "base": null,
+  "new": "18976b6b0a637f65e2588dc9c76e2185aa139b9b19ece2d1cb5fe7629ac2cfe8"
+ }
+}

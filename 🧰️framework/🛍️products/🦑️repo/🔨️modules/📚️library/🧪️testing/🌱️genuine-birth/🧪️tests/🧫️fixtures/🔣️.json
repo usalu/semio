@@ -8,7 +8,9 @@
   ],
   "executed": [
     { "birth": "setup", "pattern": "^probe birth carries the declared repository request$", "pass": 1 },
-    { "birth": "setup", "pattern": "^probe a\\.b\\(c\\)\\+\\[d\\]$", "pass": 1 }
+    { "birth": "setup", "pattern": "^probe a\\.b\\(c\\)\\+\\[d\\]$", "pass": 1 },
+    { "birth": "setup", "pattern": "^probe inventory reaches the file exactly when the birth prepares it$", "pass": 1 },
+    { "birth": "target-execution", "pattern": "^probe inventory reaches the file exactly when the birth prepares it$", "pass": 1 }
   ],
   "escalation": [
     { "previous": "setup", "failure": "Original immutable SDK required", "next": "setup-sdk" },

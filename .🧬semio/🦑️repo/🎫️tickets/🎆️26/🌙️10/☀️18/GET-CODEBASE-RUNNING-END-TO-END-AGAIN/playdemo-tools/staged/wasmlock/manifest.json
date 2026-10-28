@@ -1,0 +1,27 @@
+{
+ "✏️s/Cargo.lock": {
+  "file": "00",
+  "base": "85635c21d4c81036a185f8289eeaef923160392562b90a8b4e1108460534c6cb",
+  "new": "f7f9ede26961bbd5fad9950315d60f03f01fe03065eaf0daaeb1cd24672b2acc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🕸️wasm-bindgen/🔣️.json": {
+  "file": "01",
+  "base": "12f4563327062c1af9b8b45c1e6170f55e4d65051422f80e5a611aeafcb3da85",
+  "new": "2f9bf4e49ed3c5ac709034b0563ffba93f29248a6186941a67b46a77fd7b10ff"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🕸️wasm-bindgen/🟦️.ts": {
+  "file": "02",
+  "base": "f09de5d034c3da356451876e9068be97428d448f72a082a9ea27ec259bb3acd3",
+  "new": "3c8a3e253842649639410af76e564eb6ae85511b279f5aac3ece05fd4cb128b3"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🕸️wasm-bindgen-locks/🟦️.ts": {
+  "file": "03",
+  "base": "ef12d282a4b53ae24b5e8e4db983342c9afdb189f72bf8814c4ece5bb8fe36ed",
+  "new": "143cf1099920423336073f0453787f62aec9e040308e7229631110388111af80"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts": {
+  "file": "04",
+  "base": "5f1bb8fe629d0422589c88b81f881f2cf96377dcc06a6226fd480fa8b7c25a34",
+  "new": "de4e802d59288a29648dc70756cbfac602f86269c1c6a8da5806ca59c88f64f7"
+ }
+}

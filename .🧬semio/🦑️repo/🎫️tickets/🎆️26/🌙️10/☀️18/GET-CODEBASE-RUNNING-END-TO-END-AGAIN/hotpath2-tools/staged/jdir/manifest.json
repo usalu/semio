@@ -1,0 +1,42 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🛰️service/🔑️session/🟨️.mjs": {
+  "file": "00.mjs",
+  "base": "4afd0908f69136206e83d27e96babef7b836e6f8fa34ecaa30ef9818e5b01fa7",
+  "new": "a684b53b50fc8a161cebac74e46f3c59ca9a78987ee4499014e39809eb036007"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🛰️service/🔑️session/🟨️.d.mts": {
+  "file": "01.mts",
+  "base": "d22b747c4b441acf35cfba7558435306592db4df9e93affa6a535ef17cdd199b",
+  "new": "835c6272adc93dea536b47940a547c917b600237a7c2901f47d9a9df694d60fa"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📨️protocol/📍️endpoint/🟨️.mjs": {
+  "file": "02.mjs",
+  "base": "6611be7b49383ff41741377643c85153f36b7ea6c3e0106a10a05ef7563551bf",
+  "new": "ac5fcdba5ac114635006d772361ccb58023188b135417f80293b56f4201dfd3e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📨️protocol/📍️endpoint/🟨️.d.mts": {
+  "file": "03.mts",
+  "base": "021485c1ed04ea41fc7d1e1f5a9a6c6710b04529e1d62eb4634c9f428e6fe079",
+  "new": "94de5632fb9043b8589f4177bd2d85b639a2badf19b41227e3831d2609cfa63d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🟦️.ts": {
+  "file": "04.ts",
+  "base": "38dd5b066f1b85848ce4ba228fd5da6f1015a3fb13f0b4c966b1a2e182de462f",
+  "new": "7911eb9bfc571b69bc1edaed5a573b733ff4c5671e43224823640335064e2340"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🧪️tests/📍️directory/🟦️.ts": {
+  "file": "05.ts",
+  "base": null,
+  "new": "c903f1ab8430094559a8c64d50317830acc38e7b1abd719c3622f37f9876606d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🧪️tests/📍️directory/🐍️oracle/🐍️.py": {
+  "file": "06.py",
+  "base": null,
+  "new": "170c2a4f19ea15835d13ae3d300ecf0a49f9e6a258b047df11706fb9109e036d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🧪️tests/📍️directory/🧫️fixtures/🔣️.json": {
+  "file": "07.json",
+  "base": null,
+  "new": "632576f2431df00180258331c5011593cce1d4af14a4d586778284346dc94f4d"
+ }
+}

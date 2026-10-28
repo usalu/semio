@@ -21,6 +21,7 @@
     "dependencies_sync",
     "doctor",
     "exec",
+    "fleet_status",
     "graph",
     "incremental_discard",
     "incremental_list",
@@ -115,7 +116,8 @@
         "@semio-tech/repo-client:test"
       ],
       "environment": {
-        "SEMIO_TEST_LEVEL": "quick"
+        "SEMIO_TEST_LEVEL": "quick",
+        "SEMIO_LEASE_PRIORITY": "background"
       },
       "agent": ""
     },
@@ -138,7 +140,9 @@
         "--projects=a,b",
         "--targets=build,test"
       ],
-      "environment": {},
+      "environment": {
+        "SEMIO_LEASE_PRIORITY": "background"
+      },
       "agent": ""
     },
     {
@@ -156,7 +160,9 @@
         "--base=origin/main",
         "--targets=test"
       ],
-      "environment": {},
+      "environment": {
+        "SEMIO_LEASE_PRIORITY": "background"
+      },
       "agent": ""
     },
     {
@@ -245,6 +251,19 @@
       "valid": true,
       "argv": [
         "capacity",
+        "status",
+        "--json"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "fleet",
+      "tool": "fleet_status",
+      "arguments": {},
+      "valid": true,
+      "argv": [
+        "fleet",
         "status",
         "--json"
       ],
@@ -399,7 +418,9 @@
         "--phases=warm,edit",
         "--scenario=a,b"
       ],
-      "environment": {},
+      "environment": {
+        "SEMIO_LEASE_PRIORITY": "background"
+      },
       "agent": ""
     },
     {

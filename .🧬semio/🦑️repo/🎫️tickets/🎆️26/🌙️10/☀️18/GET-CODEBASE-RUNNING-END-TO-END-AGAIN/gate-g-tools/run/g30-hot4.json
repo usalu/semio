@@ -1,0 +1,12 @@
+{
+ "label": "g30-hot4",
+ "target": "@teaching/architecture-course:build",
+ "started": "09:18:30",
+ "wall_s": 10.1,
+ "peak_tree_mb": 1256,
+ "peak_processes": 3,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

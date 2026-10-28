@@ -1,0 +1,121 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "namespace only",
+   "namespace": "toml-parse-v1",
+   "inputs": []
+  },
+  {
+   "name": "one digest text",
+   "namespace": "toml-parse-v1",
+   "inputs": [
+    {
+     "text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+   ]
+  },
+  {
+   "name": "empty parts",
+   "namespace": "",
+   "inputs": [
+    {
+     "text": ""
+    },
+    {
+     "text": ""
+    }
+   ]
+  },
+  {
+   "name": "unicode length is counted in bytes",
+   "namespace": "n",
+   "inputs": [
+    {
+     "text": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts"
+    },
+    {
+     "text": "\u00e9\u6771"
+    }
+   ]
+  },
+  {
+   "name": "lone surrogates are replaced like the encoder does",
+   "namespace": "n\ud800",
+   "inputs": [
+    {
+     "text": "\udc00"
+    },
+    {
+     "text": "\ud83d"
+    },
+    {
+     "text": "\ude00"
+    }
+   ]
+  },
+  {
+   "name": "a part that looks like a prefix",
+   "namespace": "n",
+   "inputs": [
+    {
+     "text": "3:abc"
+    },
+    {
+     "text": "1:"
+    }
+   ]
+  },
+  {
+   "name": "bytes only",
+   "namespace": "source-analysis-v1",
+   "inputs": [
+    {
+     "hex": "00ff10"
+    },
+    {
+     "hex": ""
+    }
+   ]
+  },
+  {
+   "name": "texts and bytes mixed",
+   "namespace": "n",
+   "inputs": [
+    {
+     "text": "a"
+    },
+    {
+     "hex": "c328"
+    },
+    {
+     "text": "b"
+    }
+   ]
+  },
+  {
+   "name": "bytes equal to the text of another case",
+   "namespace": "n",
+   "inputs": [
+    {
+     "hex": "616263"
+    }
+   ]
+  },
+  {
+   "name": "the same text as a string",
+   "namespace": "n",
+   "inputs": [
+    {
+     "text": "abc"
+    }
+   ]
+  }
+ ],
+ "generated": {
+  "seed": 11,
+  "cases": 300,
+  "maximumParts": 5,
+  "maximumLength": 40
+ }
+}

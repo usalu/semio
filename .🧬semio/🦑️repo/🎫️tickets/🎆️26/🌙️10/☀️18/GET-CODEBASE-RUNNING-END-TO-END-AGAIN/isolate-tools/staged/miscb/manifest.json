@@ -1,0 +1,57 @@
+{
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts": {
+  "file": "f000",
+  "base": "d9e7a63afde8fc84b3afa2da0022e1f84abc41bb323858a22f5a51e78bce9471",
+  "new": "52ba51b2ff35cec9a407af2875fa2a5c5741ed32c3b2deed9d621cf390aefe05"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts": {
+  "file": "f001",
+  "base": "5d58850b22e53d5af339aee2ce283ae631df047924f8742e2447a5606d402d67",
+  "new": "aee45a0ab4e8d4ec45e9ed2c177ec5535e6c7118b0f5d5e72692e6c97722b012"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/⚙️configured/🧪️tests/🟦️.ts": {
+  "file": "f002",
+  "base": "897a5bb68a10acb27e1a9f9312d8003c2ef76bb4ed82713e01bdd71b30c6a508",
+  "new": "6df1b43b749653a0e941548baf96bb443feeb7eb37bae1df7106d1121d0d6d55"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🏃️command/🧪️tests/🟦️.ts": {
+  "file": "f003",
+  "base": "d5984f37d0568b79ffedb181d7f9e3750cafa28201fac9c2c4f39267f41c5db9",
+  "new": "1ffe7702146d781cb323604727a2116afd2f2885b81fc3d71dddd901044d0c3c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🔁️replan/🧪️tests/🟦️.ts": {
+  "file": "f004",
+  "base": "590d89f284a2bda58195ce92dc766610a43cbf5109d84766b0bc4735518e29a7",
+  "new": "401c035708960ed1463c5b39eb5b2ac7a9de000e2773d1997cb86d3668dd2562"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/📥️original-control/🟦️.ts": {
+  "file": "f005",
+  "base": "3d8536c76701f4b53117ed44dfdd4ae444d49ebf59832b4e903e7bbbc38838c3",
+  "new": "48eefa8417e5b05963a7bc04411d1d7f1c0f95fa5662b8692358cb88d85d4d80"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🕰️queued-preparation/🟦️.ts": {
+  "file": "f006",
+  "base": "94b4d0ef99c9066ee3ba03a4ee7d5782ef2d38ffc7a33233af60faa76b4e2ebc",
+  "new": "0f63b0f07237263275a41f6a53d96b33f82432565b34562b8a974fa24a24eec5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🧪️tests/🔌️nx/🟦️.ts": {
+  "file": "f007",
+  "base": "8422398c6bb54c01fdd5a950d448cb01727758f22b8cec0c963cc9c8f3656455",
+  "new": "d85dc185a74781c041720a4b9554dd9daa7f6fda43f3968e46850941033a6fcb"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🧪️tests/🟦️.ts": {
+  "file": "f008",
+  "base": "759065a7fa277ece56e0f7862425be3e9d3c934f78b95f21a4d234b272067b35",
+  "new": "0e47d3fb8f4fd5a24c582924332f0f5274bfcb092ac29e4798d4b7a605aa86fc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🧪️tests/🟦️.ts": {
+  "file": "f009",
+  "base": "74a3b5458e22d905bdcd272d5f8e5f6dcbd655c869f22356027f25c8377a96e5",
+  "new": "5ffd34afbc0ccde1f70d21742c60bdcdf1c84276f461545b02f0fdd0db1e706c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧾️artifact-root-source/🟦️.ts": {
+  "file": "f010",
+  "base": "71006da0022ecc13894001f09cffd7e19279fc76624f959ccebd2a0f733c8c28",
+  "new": "ed081f742d803db923ee2ca57be49dc19de3a532b594aaac3e9ddbd87c9deabc"
+ }
+}

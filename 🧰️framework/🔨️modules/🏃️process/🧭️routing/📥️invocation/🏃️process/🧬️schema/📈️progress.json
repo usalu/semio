@@ -5,7 +5,94 @@
     "purpose": "neutral-long-activity-message",
     "minimumElapsedMilliseconds": 15000,
     "secondsRounding": "nearest-integer",
-    "template": "{command} remains active on {resource} ({mode}, {seconds} s)",
+    "rows": {
+      "variable": "SEMIO_SCRIPT_PROGRESS",
+      "values": [
+        "machine",
+        "human"
+      ],
+      "terminalDefault": "human",
+      "otherwiseDefault": "machine"
+    },
+    "stagePhases": {
+      "owner": "repository:build",
+      "stage": "running",
+      "heartbeatMilliseconds": 15000,
+      "labels": {
+        "en": {
+          "template": "{command} · {phase}",
+          "phases": {
+            "build:source-admission": "Admitting the sources of the build",
+            "build:implementation-source": "Reading the sources of the build implementation",
+            "build:playground-components": "Collecting playground components",
+            "build:playground-variants": "Collecting playground variants",
+            "build:playground-native": "Collecting native playground inputs",
+            "build:command-source-packages": "Resolving the packages of command sources",
+            "build:cargo-owners": "Assigning Cargo owners",
+            "build:cargo-targets": "Collecting Cargo targets",
+            "build:graph-plan": "Planning the build graph",
+            "build:graph": "Assembling the build graph",
+            "build:infer": "Inferring projects",
+            "build:commands": "Reading the command declarations",
+            "build:neutral-child": "Running the neutral build child",
+            "build:input-precision": "Narrowing the inputs of the build",
+            "build:source-contracts": "Reading the source contracts",
+            "build:generator-producers": "Collecting generator producers",
+            "bazel:source-snapshot": "Snapshotting the sources for Bazel",
+            "bazel:plan-reuse": "Checking whether the Bazel plan can be reused",
+            "bazel:snapshot-restore": "Restoring the Bazel snapshot",
+            "bazel:captured-planner": "Running the Bazel planner",
+            "bazel:owned-action-child": "Running a Bazel action",
+            "bazel:action-birth": "Starting a Bazel action"
+          }
+        },
+        "de": {
+          "template": "{command} · {phase}",
+          "phases": {
+            "build:source-admission": "Quellen des Builds zulassen",
+            "build:implementation-source": "Quellen der Build-Implementierung lesen",
+            "build:playground-components": "Playground-Komponenten sammeln",
+            "build:playground-variants": "Playground-Varianten sammeln",
+            "build:playground-native": "Native Playground-Eingaben sammeln",
+            "build:command-source-packages": "Pakete der Befehlsquellen auflösen",
+            "build:cargo-owners": "Cargo-Eigentümer zuordnen",
+            "build:cargo-targets": "Cargo-Targets sammeln",
+            "build:graph-plan": "Build-Graph planen",
+            "build:graph": "Build-Graph zusammensetzen",
+            "build:infer": "Projekte ableiten",
+            "build:commands": "Befehlsdeklarationen lesen",
+            "build:neutral-child": "Neutralen Build-Kindprozess ausführen",
+            "build:input-precision": "Eingaben des Builds eingrenzen",
+            "build:source-contracts": "Quellverträge lesen",
+            "build:generator-producers": "Generator-Erzeuger sammeln",
+            "bazel:source-snapshot": "Quellen für Bazel sichern",
+            "bazel:plan-reuse": "Prüfen, ob der Bazel-Plan wiederverwendet werden kann",
+            "bazel:snapshot-restore": "Bazel-Schnappschuss wiederherstellen",
+            "bazel:captured-planner": "Bazel-Planer ausführen",
+            "bazel:owned-action-child": "Bazel-Aktion ausführen",
+            "bazel:action-birth": "Bazel-Aktion starten"
+          }
+        }
+      }
+    },
+    "longActivity": {
+      "labels": {
+        "en": {
+          "template": "{command} remains active on {resource} ({mode}, {seconds} s)",
+          "modes": {
+            "shared": "shared",
+            "exclusive": "exclusive"
+          }
+        },
+        "de": {
+          "template": "{command} bleibt auf {resource} aktiv ({mode}, {seconds} s)",
+          "modes": {
+            "shared": "geteilt",
+            "exclusive": "exklusiv"
+          }
+        }
+      }
+    },
     "sourceProvider": {
       "resourcePrefix": "javascript-source-provider:",
       "minimumPublicationMilliseconds": 250,
@@ -39,16 +126,6 @@
       "resourcePrefix": "cargo:source-admission:",
       "maximumResourceCharacters": 1024,
       "maximumCommandCharacters": 256,
-      "systemVariables": [
-        "SEMIO_DASHBOARD_LOCALE",
-        "LC_ALL",
-        "LC_MESSAGES",
-        "LANG"
-      ],
-      "fallback": [
-        "en",
-        "de"
-      ],
       "labels": {
         "en": {
           "template": "{command} · {phase}: {unit}/{units} {package} · {reads} reads · {files} files · {bytes} bytes",
@@ -106,12 +183,6 @@
     },
     "firstFailure": {
       "maximumReasonCharacters": 400,
-      "systemVariables": [
-        "SEMIO_LANGUAGE",
-        "LC_ALL",
-        "LC_MESSAGES",
-        "LANG"
-      ],
       "labels": {
         "en": "First failure: {first} (the later refusal \"{masked}\" is only its consequence.)",
         "de": "Erster Fehler: {first} (die spätere Ablehnung \"{masked}\" ist nur seine Folge.)"
@@ -128,6 +199,17 @@
           "modes": {
             "shared": "shared",
             "exclusive": "exclusive"
+          },
+          "holder": " · holder: {state}{progress}{eta}",
+          "holderProgress": ", {phase} {done} of {total}",
+          "holderPhase": ", {phase}",
+          "holderEta": ", about {minutes} min left",
+          "states": {
+            "progressing": "progressing",
+            "silent": "silent",
+            "stuck": "STUCK",
+            "stale": "STALE (older code)",
+            "unknown": "unknown (no live registry entry)"
           }
         },
         "de": {
@@ -135,19 +217,32 @@
           "modes": {
             "shared": "geteilt",
             "exclusive": "exklusiv"
+          },
+          "holder": " · Halter: {state}{progress}{eta}",
+          "holderProgress": ", {phase} {done} von {total}",
+          "holderPhase": ", {phase}",
+          "holderEta": ", noch etwa {minutes} min",
+          "states": {
+            "progressing": "macht Fortschritt",
+            "silent": "still",
+            "stuck": "FESTGEFAHREN",
+            "stale": "VERALTET (älterer Code)",
+            "unknown": "unbekannt (kein lebender Registereintrag)"
           }
         }
       }
     },
     "graphPhase": {
       "resourcePrefix": "build:graph-phase:",
-      "maximumResourceCharacters": 128,
+      "maximumResourceCharacters": 512,
+      "maximumNames": 3,
       "maximumCommandCharacters": 256,
       "commandPattern": "^[A-Za-z0-9:_/.-]+$",
       "countPattern": "^(?:0|[1-9][0-9]{0,15})$",
       "labels": {
         "en": {
           "template": "{command} · {phase}: {done} of {total} {units}",
+          "running": "{command} · {phase}: {done} of {total} {units} · {count} running, longest {seconds} s: {names}",
           "phases": {
             "inference": {
               "label": "Inferring projects",
@@ -168,23 +263,28 @@
             "assembly": {
               "label": "Assembling the graph",
               "units": "projects"
+            },
+            "prefetch": {
+              "label": "Preparing stale projects",
+              "units": "projects"
             }
           }
         },
         "de": {
           "template": "{command} · {phase}: {done} von {total} {units}",
+          "running": "{command} · {phase}: {done} von {total} {units} · {count} laufen, längstes {seconds} s: {names}",
           "phases": {
             "inference": {
               "label": "Projekte ableiten",
               "units": "Projekte"
             },
             "verification": {
-              "label": "Eingabehüllen prüfen",
-              "units": "Hüllen"
+              "label": "Eingabeabschlüsse prüfen",
+              "units": "Abschlüsse"
             },
             "expansion": {
-              "label": "Eingabehüllen auflösen",
-              "units": "Hüllen"
+              "label": "Eingabeabschlüsse auflösen",
+              "units": "Abschlüsse"
             },
             "facts": {
               "label": "Graph-Fakten prüfen",
@@ -192,6 +292,10 @@
             },
             "assembly": {
               "label": "Graph zusammensetzen",
+              "units": "Projekte"
+            },
+            "prefetch": {
+              "label": "Veraltete Projekte vorbereiten",
               "units": "Projekte"
             }
           }
@@ -657,6 +761,35 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 401
+        },
+        "holderState": {
+          "enum": [
+            "progressing",
+            "silent",
+            "stuck",
+            "stale",
+            "unknown"
+          ]
+        },
+        "holderPhase": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "holderDone": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "holderTotal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "holderEtaMinutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 525600
         }
       }
     },

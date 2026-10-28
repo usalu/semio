@@ -108,6 +108,13 @@ export function unitKeyV1(input:Readonly<{toolchain:string;normalized:readonly s
  return sha256V1(JSON.stringify([policy.namespace,input.toolchain,input.normalized,input.sourceSha256,input.externs.map(row=>[row.name,row.sha256]),input.environment]));
 }
 
+/** 🧩️ Names the parts of a first-level key by short digests (toolchain, arguments, source, externs, environment), so two compilations of one crate that disagree on the key are explained by the part that differs.
+ * @see ./🧪️tests/🧩️parts/🟦️.ts */
+export function unitKeyPartsV1(input:Parameters<typeof unitKeyV1>[0]):string{
+ const part=(value:unknown)=>sha256V1(JSON.stringify(value)).slice(0,8);
+ return["toolchain:"+part(input.toolchain),"args:"+part(input.normalized),"source:"+part(input.sourceSha256),"externs:"+part(input.externs.map(row=>[row.name,row.sha256])),"environment:"+part(input.environment)].join(" ");
+}
+
 function unescapeDepPath(text:string):string{return text.replace(/\\ /gu," ");}
 
 /** 📜️ Reads a Makefile-style dependency file: the files the compilation read and the environment variables it observed. */

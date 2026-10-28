@@ -93,7 +93,7 @@ export class Workspace {
     return new Workspace(root, portA, portB, runtime);
   }
 
-  get env(): Record<string, string> { return { SEMIO_DASHBOARD_RUNTIME_DIR: this.runtime, SEMIO_DASHBOARD_INSTANCE: "", SEMIO_DASHBOARD_CONFIG: join(this.runtime, "p.jsonl"), SEMIO_LOCALE: "en", SEMIO_APPEARANCE: "", SEMIO_LOCKED_TERMINOLOGY: "", SEMIO_DASHBOARD_RENDERER: "", SEMIO_DASHBOARD_LAYOUT: "", SEMIO_DASHBOARD_PREFIX: "", SEMIO_REPO_IMPLEMENTATION: "rust" }; }
+  get env(): Record<string, string> { return { SEMIO_DASHBOARD_RUNTIME_DIR: this.runtime, SEMIO_DASHBOARD_INSTANCE: "", SEMIO_DASHBOARD_CONFIG: join(this.runtime, "p.jsonl"), SEMIO_LANGUAGE: "en", SEMIO_APPEARANCE: "", SEMIO_LOCKED_TERMINOLOGY: "", SEMIO_DASHBOARD_RENDERER: "", SEMIO_DASHBOARD_LAYOUT: "", SEMIO_DASHBOARD_PREFIX: "", SEMIO_REPO_IMPLEMENTATION: "rust" }; }
 
   semio(args: string[], options: { env?: Record<string, string>; timeoutMs?: number } = {}): Promise<Run> {
     return semio(args, { cwd: this.root, env: { ...this.env, ...options.env }, timeoutMs: options.timeoutMs });

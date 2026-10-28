@@ -1,0 +1,9 @@
+export const FRONTIER_WALK_POLICY_V1:Readonly<{concurrency:number;racyMilliseconds:number;rootDirectory:"."}>;
+export interface FrontierWalkEntryV1{readonly name:string;readonly kind:"directory"|"file"|"other"}
+export interface FrontierWalkStatV1{readonly directory:boolean;readonly file:boolean;readonly mtimeMs:number;readonly ino:number;readonly mode:number}
+export interface FrontierWalkPortsV1{list(directory:string):Promise<readonly FrontierWalkEntryV1[]|undefined>;stat(path:string):Promise<FrontierWalkStatV1|undefined>;descend(name:string,path:string,parent:string):boolean;member(path:string):boolean;signal?:AbortSignal}
+export interface FrontierWalkV1{directories:[string,number,number][];members:[string,number][]}
+/** 🚶️ Walks the tree below `.` once. */
+export function walkFrontierV1(ports:FrontierWalkPortsV1):Promise<FrontierWalkV1>;
+/** ⏩️ Advances a previous frontier by listing only the directories whose stamp moved; undefined when the tree shows a change its parents do not explain, `{unchanged:true}` when nothing moved. */
+export function advanceFrontierV1(input:FrontierWalkPortsV1&{frontier:{capturedAt:number;directories:readonly (readonly [string,number,number])[];members:readonly (readonly [string,number])[]}}):Promise<undefined|{unchanged:true}|(FrontierWalkV1&{listed:number})>;

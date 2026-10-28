@@ -1,4 +1,3 @@
-import "./📦️document-size/🟦️.ts";
 /** 🕰️ Contract: many agents edit different projects of one folder while the graph is read, verified and published without any of them waiting for a whole-workspace rebuild. An edit in one project refreshes exactly its owners, never yields a stale graph for that project, a reader never sees a torn generation, concurrent writers coalesce under one builder, the exclusive hold of the facts resource is bounded to the pointer swap, and a graph policy decides who may wait. Every expectation is produced by the independent Python model in `🐍️.py`. */
 import {expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
@@ -487,5 +486,21 @@ test("a project that enters the closure through a build is verified in the same 
   const result=await world.refreshClosure(["a"]);
   expect(result.built).toBe(true);expect([...result.names].sort()).toEqual(["a","b","f"]);expect(world.log.map(row=>row.full)).toEqual([["a","b","f","g"],["b"],["f"]]);
   const graph:any=await world.graph(result.current,[...result.names]);expect(graph.projects.f.sources[0].sha256).toBe(sha("export const v=9;\n"));
+ }finally{clean(dir);}
+},30000);
+
+test("verification opens the fact index as a view that reads only the rows it checks; a build loads it whole to patch it",async()=>{
+ const dir=scratch();
+ try{
+  const files:Record<string,string>={};
+  for(const[name,imports]of[["a",["@syn/b"]],["b",[]],["c",[]]] as [string,string[]][])files[`pkg/${name}/project.json`]=JSON.stringify({name,package:`@syn/${name}`,uses:[]}),files[`pkg/${name}/src/index.ts`]=imports.map(spec=>`import "${spec}";`).join("\n")+"\nexport const v=1;\n";
+  await seed(dir,files);await createWorld(dir).refresh();
+  const world=createWorld(dir),stats=world.store.stats,loads=stats.indexLoads;
+  const clean1=await world.refreshClosure(["a"]);
+  expect(clean1.built).toBe(false);expect(stats.indexViews).toBeGreaterThanOrEqual(1);expect(stats.indexLoads).toBe(loads);
+  await applyOps(dir,[{op:"write",path:"pkg/b/src/index.ts",content:"export const v=2;\n"}]);
+  const dirty=await world.refreshClosure(["a"]);
+  expect(dirty.built).toBe(true);expect(stats.indexLoads).toBeGreaterThan(loads);
+  expect([...dirty.names].sort()).toEqual(["a","b"]);
  }finally{clean(dir);}
 },30000);

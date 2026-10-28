@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts": {
+  "file": "f01.ts",
+  "base": "fd727ab3f9159fd0031b4affb76c8b1d83bda0dd3331fd83172338830cb1d725",
+  "new": "88b023a61144f3576b487753cc20d1d9ec6f9d3c2041d082070ee20b5bf6de7d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧪️tests/🧪️resolution-inputs/🟦️.ts": {
+  "file": "f02.ts",
+  "base": null,
+  "new": "9a9c564482302dbcc1779edc6422fd5c4ac45250e9fc9bfacf36961182bb01ba"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧪️tests/🧪️resolution-inputs/🐍️.py": {
+  "file": "f03.py",
+  "base": null,
+  "new": "ebaec301fe687c1d193d0c13ddfb37a43c7445c4a0a79a25c2ad8483bbd98670"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧪️tests/🎛️control/🟦️.ts": {
+  "file": "f04.ts",
+  "base": "e2df20b4b67730c26ade8d25d9445c49fcfab3ed1a34d38ceb880cd5dac9509c",
+  "new": "678c75849c1b212a35d4e18271659eba0753553fd96cd07e2ff364913f015c87"
+ }
+}

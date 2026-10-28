@@ -1,0 +1,26 @@
+{
+ "name": "disk-memo",
+ "code": "diskbud (live since G40)",
+ "lane": "docs4",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "e88fdd1b3edd95f1a46291cd1f2304ae9f06f3616faeeaa8a56826552197e872",
+ "needs": [],
+ "edits": [
+  {
+   "id": "disk-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- New macOS images are created sparse (64 MiB, then resized: cost = content; live). The existing fixed images (about 98 GiB on this machine) stay fully allocated until recreated in a quiet window (helper ready, not applied). `~/.sinc` and ticket `🗑️generated` folders are outside the ledger.",
+   "where": "before",
+   "block": "- **Graph memo and journal state** (live, G40): the graph memo directory keeps the newest 8 records and then drops the oldest record while the records and the files they name exceed 1 GiB (the newest always stays; files no kept record names go after 60 s); a removal driven by bytes prints one line (`[repo graph] the graph memo exceeded its 1024 MiB budget: removed … older slice(s) …`, German `Das Graph-Memo überschritt sein Budget von 1024 MiB: …`). When a journal service starts it removes the state directories next to its own in the cache container (`<cache>/semio/repo/<id>` or `semio-repo-<uid>/<id>`, 12-hex ids) whose lock no service holds, after 7 days without a change (10 minutes when the worktree root they recorded is gone) and logs `[repo journal] removed N abandoned change journal state director(ies) (X MiB) …`; a custom layout is never swept."
+  },
+  {
+   "id": "disk-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- Neue macOS-Abbilder entstehen spärlich (64 MiB, dann vergrößert: Kosten = Inhalt; live). Die vorhandenen festen Abbilder (rund 98 GiB auf dieser Maschine) bleiben voll belegt, bis sie in einem ruhigen Fenster neu angelegt werden (Helfer bereit, nicht angewandt). `~/.sinc` und die `🗑️generated`-Ordner der Tickets liegen außerhalb des Verzeichnisses.",
+   "where": "before",
+   "block": "- **Graph-Memo und Journal-Zustand** (live, G40): das Verzeichnis des Graph-Memos behält die neuesten 8 Einträge und wirft danach den ältesten Eintrag weg, solange die Einträge und die Dateien, die sie nennen, 1 GiB überschreiten (der neueste bleibt immer; Dateien, die kein behaltener Eintrag nennt, gehen nach 60 s); eine von Bytes getriebene Entfernung gibt eine Zeile aus (`[repo graph] the graph memo exceeded its 1024 MiB budget: removed … older slice(s) …`, deutsch `Das Graph-Memo überschritt sein Budget von 1024 MiB: …`). Beim Start eines Journal-Dienstes entfernt er die Zustandsverzeichnisse neben seinem eigenen im Cache-Container (`<cache>/semio/repo/<id>` oder `semio-repo-<uid>/<id>`, 12-stellige Hex-Ids), deren Lock kein Dienst hält, nach 7 Tagen ohne Änderung (10 Minuten, wenn die Worktree-Wurzel, die sie festhielten, nicht mehr existiert) und protokolliert `[repo journal] removed N abandoned change journal state director(ies) (X MiB) …`; ein eigenes Layout wird nie aufgeräumt."
+  }
+ ]
+}

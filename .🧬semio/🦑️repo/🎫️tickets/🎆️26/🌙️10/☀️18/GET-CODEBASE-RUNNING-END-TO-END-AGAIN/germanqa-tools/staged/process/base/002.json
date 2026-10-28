@@ -1,0 +1,1965 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/host-capacity/v1",
+  "title": "Host capacity: machine-wide admission of expensive operations",
+  "definitions": {
+    "Observers": {
+      "description": "How each platform reads the memory a process tree holds. The measure is the footprint: what the processes hold privately plus what was swapped or compressed out of them (macOS phys_footprint, Linux proportional set size plus swapped proportional set size, Windows private working set). The resident set stays at the high-water mark of a process after it freed memory on macOS and does not count compressed pages at all, so it is the fallback of a platform whose footprint source cannot be read, never the first choice. The store of learned peaks is stamped with the measure, so peaks of another measure never mix with it.",
+      "const": {
+        "measure": "footprint",
+        "platforms": {
+          "darwin": {
+            "table": {
+              "command": "ps",
+              "arguments": [
+                "-A",
+                "-o",
+                "pid=,ppid=,rss="
+              ]
+            },
+            "footprint": {
+              "command": "footprint",
+              "arguments": [
+                "-f",
+                "bytes",
+                "--noCategories"
+              ],
+              "pidFlag": "-p"
+            }
+          },
+          "linux": {
+            "processDirectory": "/proc",
+            "footprint": {
+              "file": "smaps_rollup",
+              "fields": [
+                "Pss",
+                "SwapPss"
+              ]
+            },
+            "resident": {
+              "file": "status",
+              "field": "VmRSS"
+            }
+          },
+          "win32": {
+            "footprint": {
+              "command": "powershell.exe",
+              "arguments": [
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                "Get-CimInstance Win32_PerfFormattedData_PerfProc_Process|ForEach-Object{'{0} {1} {2}' -f $_.IDProcess,$_.CreatingProcessID,[int64]($_.WorkingSetPrivate/1024)}"
+              ]
+            },
+            "resident": {
+              "command": "powershell.exe",
+              "arguments": [
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                "Get-CimInstance Win32_Process|ForEach-Object{'{0} {1} {2}' -f $_.ProcessId,$_.ParentProcessId,[int64]($_.WorkingSetSize/1024)}"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "resource": "semio.host.capacity/v1",
+        "grantEnvironment": "SEMIO_HOST_CAPACITY_GRANT",
+        "planEnvironment": "SEMIO_HOST_CAPACITY_PLAN",
+        "directoryEnvironment": "SEMIO_HOST_CAPACITY_DIRECTORY",
+        "switchEnvironment": "SEMIO_HOST_CAPACITY",
+        "totalEnvironment": "SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES",
+        "maximumJobs": 1024,
+        "maximumFileBytes": 65536,
+        "bootToleranceMilliseconds": 120000,
+        "bootFile": "boot.json",
+        "handoverEnvironment": "SEMIO_HOST_CAPACITY_HANDOVER",
+        "handoverMaximumAgeMilliseconds": 120000,
+        "parkMaximumMilliseconds": 120000,
+        "handoverRefusals": [
+          "gone",
+          "token",
+          "expired",
+          "identity",
+          "operation"
+        ],
+        "estimatesFile": "estimates.json",
+        "maximumEstimateBytes": 1048576,
+        "maximumPeakMarks": 512,
+        "peakNearBasisPoints": 9500,
+        "marksEnvironment": "SEMIO_HOST_CAPACITY_PHASE_MARKS",
+        "phasesSuffix": ".phases",
+        "maximumPhaseTransitions": 64,
+        "maximumPhaseMarkBytes": 4096,
+        "upgradeSuffix": ".upgrade",
+        "upgradePollMilliseconds": 100,
+        "maximumUpgradeBytes": 1024,
+        "coresEnvironment": "SEMIO_HOST_CAPACITY_CORES",
+        "growSpareJobs": 1,
+        "growSettleAttempts": 2,
+        "upgradeNarrowedMinimumJobs": 1
+      }
+    },
+    "Level": {
+      "enum": [
+        "normal",
+        "warn",
+        "critical"
+      ]
+    },
+    "Resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cpu",
+        "megabytes"
+      ],
+      "properties": {
+        "cpu": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "megabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        }
+      }
+    },
+    "Operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "shape",
+        "fixedMegabytes",
+        "cpu",
+        "priority"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "shape": {
+          "enum": [
+            "tasks",
+            "fixed"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "test",
+            "check",
+            "generate",
+            "build",
+            "script",
+            "service"
+          ]
+        },
+        "fixedMegabytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "cpu": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "priority": {
+          "enum": [
+            "batch",
+            "interactive"
+          ]
+        },
+        "forecast": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "enabled",
+        "memory",
+        "swap",
+        "pressure",
+        "load",
+        "files",
+        "attaches",
+        "wait",
+        "kinds",
+        "operations",
+        "estimates",
+        "envelopes",
+        "classCeilings"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "memory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "floorBasisPoints",
+            "floorMinimumMegabytes",
+            "floorMaximumMegabytes",
+            "budgetBasisPoints",
+            "rampMilliseconds",
+            "maximumRamping",
+            "maximumQuiet",
+            "quietSoftStopGrants"
+          ],
+          "properties": {
+            "floorBasisPoints": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000
+            },
+            "floorMinimumMegabytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "floorMaximumMegabytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "budgetBasisPoints": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "rampMilliseconds": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumRamping": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64
+            },
+            "maximumQuiet": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64
+            },
+            "quietSoftStopGrants": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 64
+            }
+          }
+        },
+        "swap": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ceilingBasisPoints",
+            "outMegabytesPerSecond"
+          ],
+          "properties": {
+            "ceilingBasisPoints": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000
+            },
+            "outMegabytesPerSecond": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "pressure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "psiWarnPercent",
+            "psiCriticalPercent",
+            "availableWarnBasisPoints",
+            "availableCriticalBasisPoints",
+            "compressedWarnBasisPoints",
+            "compressedCriticalBasisPoints"
+          ],
+          "properties": {
+            "psiWarnPercent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "psiCriticalPercent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "availableWarnBasisPoints": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000
+            },
+            "availableCriticalBasisPoints": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000
+            },
+            "compressedWarnBasisPoints": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000
+            },
+            "compressedCriticalBasisPoints": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000
+            }
+          }
+        },
+        "load": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "perCoreCeiling",
+            "overrideAfterMilliseconds"
+          ],
+          "properties": {
+            "perCoreCeiling": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "overrideAfterMilliseconds": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "files": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ceilingBasisPoints"
+          ],
+          "properties": {
+            "ceilingBasisPoints": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
+            }
+          }
+        },
+        "attaches": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximum"
+          ],
+          "properties": {
+            "maximum": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4096
+            }
+          }
+        },
+        "wait": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pollMilliseconds",
+            "progressMilliseconds",
+            "heartbeatMilliseconds",
+            "staleMilliseconds",
+            "lockStaleMilliseconds",
+            "sampleMaximumAgeMilliseconds",
+            "maximumWaiters",
+            "bypassMilliseconds",
+            "maximumBypasses",
+            "agingMilliseconds",
+            "lendAfterMilliseconds",
+            "jitterBasisPoints"
+          ],
+          "properties": {
+            "pollMilliseconds": {
+              "type": "integer",
+              "minimum": 10
+            },
+            "progressMilliseconds": {
+              "type": "integer",
+              "minimum": 10
+            },
+            "heartbeatMilliseconds": {
+              "type": "integer",
+              "minimum": 10
+            },
+            "staleMilliseconds": {
+              "type": "integer",
+              "minimum": 1000
+            },
+            "lockStaleMilliseconds": {
+              "type": "integer",
+              "minimum": 100
+            },
+            "sampleMaximumAgeMilliseconds": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumWaiters": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4096
+            },
+            "bypassMilliseconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3600000
+            },
+            "maximumBypasses": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1024
+            },
+            "agingMilliseconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400000
+            },
+            "lendAfterMilliseconds": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 3600000
+            },
+            "jitterBasisPoints": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5000
+            }
+          }
+        },
+        "kinds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "test",
+            "check",
+            "generate",
+            "build",
+            "script",
+            "service"
+          ],
+          "properties": {
+            "test": {
+              "$ref": "#/definitions/Resource"
+            },
+            "check": {
+              "$ref": "#/definitions/Resource"
+            },
+            "generate": {
+              "$ref": "#/definitions/Resource"
+            },
+            "build": {
+              "$ref": "#/definitions/Resource"
+            },
+            "script": {
+              "$ref": "#/definitions/Resource"
+            },
+            "service": {
+              "$ref": "#/definitions/Resource"
+            }
+          }
+        },
+        "operations": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Operation"
+          }
+        },
+        "estimates": {
+          "$ref": "#/definitions/Estimates"
+        },
+        "envelopes": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/Envelope"
+          }
+        },
+        "classCeilings": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/Ceiling"
+          }
+        }
+      }
+    },
+    "Host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "atMs",
+        "platform",
+        "cores",
+        "totalMegabytes",
+        "availableMegabytes",
+        "pressure",
+        "swapUsedMegabytes",
+        "swapOutMegabytesPerSecond",
+        "load",
+        "openFiles",
+        "openFilesMaximum",
+        "attachedImages"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "cores": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "totalMegabytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "availableMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pressure": {
+          "$ref": "#/definitions/Level"
+        },
+        "swapUsedMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "swapOutMegabytesPerSecond": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "load": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "openFiles": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "openFilesMaximum": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "attachedImages": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "counters": {
+          "const": "partial"
+        }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "operation",
+        "priority",
+        "minimumJobs",
+        "preferredJobs",
+        "fixedMegabytes",
+        "perJobMegabytes",
+        "cpuPerJob"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{8,32}$"
+        },
+        "operation": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "priority": {
+          "enum": [
+            "batch",
+            "interactive"
+          ]
+        },
+        "minimumJobs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "preferredJobs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "fixedMegabytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "perJobMegabytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "cpuPerJob": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "envelopePerJobMegabytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "rampMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rampSlot": {
+          "type": "boolean"
+        },
+        "quiet": {
+          "type": "boolean"
+        },
+        "elastic": {
+          "type": "boolean"
+        },
+        "label": {
+          "type": "string",
+          "pattern": "^[^\\p{Cc}]{1,120}$"
+        }
+      }
+    },
+    "Waiter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request",
+        "arrivedAtMs",
+        "pid"
+      ],
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/Request"
+        },
+        "arrivedAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "session": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{12}\\.[a-z][a-z0-9]{0,11}$"
+        },
+        "weight": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "upgrade": {
+          "type": "boolean"
+        },
+        "grow": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "operation",
+        "jobs",
+        "cpu",
+        "reservedMegabytes",
+        "admittedAtMs",
+        "observedMegabytes",
+        "pid",
+        "bootAtMs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{8,32}$"
+        },
+        "operation": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "jobs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "cpu": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reservedMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "admittedAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observedMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bootAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "label": {
+          "type": "string",
+          "pattern": "^[^\\p{Cc}]{1,120}$"
+        },
+        "session": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{12}\\.[a-z][a-z0-9]{0,11}$"
+        },
+        "lentSinceMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "resumedAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "handover": {
+          "$ref": "#/definitions/Handover"
+        },
+        "rampMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rampSlot": {
+          "type": "boolean"
+        },
+        "phase": {
+          "$ref": "#/definitions/Phase"
+        },
+        "quiet": {
+          "type": "boolean"
+        },
+        "arrivedAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "upgradedAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "grownAtMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Reason": {
+      "enum": [
+        "fits",
+        "reduced",
+        "override",
+        "memory",
+        "swap",
+        "swap-activity",
+        "pressure-critical",
+        "pressure-warn",
+        "files",
+        "attaches",
+        "load",
+        "queue-order",
+        "ramp",
+        "quiet-limit"
+      ]
+    },
+    "Decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "verdict",
+        "jobs",
+        "reservedMegabytes",
+        "reason"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "admit",
+            "wait"
+          ]
+        },
+        "jobs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reservedMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "$ref": "#/definitions/Reason"
+        }
+      }
+    },
+    "Evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "floorMegabytes",
+        "unrealizedMegabytes",
+        "headroomMegabytes",
+        "binding",
+        "loadRoom",
+        "decisions"
+      ],
+      "properties": {
+        "floorMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unrealizedMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "headroomMegabytes": {
+          "type": "integer"
+        },
+        "binding": {
+          "enum": [
+            "available",
+            "budget"
+          ]
+        },
+        "loadRoom": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Decision"
+          }
+        }
+      }
+    },
+    "Plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "id",
+        "jobs",
+        "cpu",
+        "memoryMegabytes",
+        "fixedMegabytes",
+        "floorMegabytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "id": {
+          "type": "string"
+        },
+        "jobs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "cpu": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "memoryMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fixedMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "floorMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "support",
+        "setting"
+      ],
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "support": {
+          "enum": [
+            "exact",
+            "approximate",
+            "unsupported"
+          ]
+        },
+        "setting": {
+          "type": "string"
+        }
+      }
+    },
+    "Message": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "waiting",
+        "admitted",
+        "reduced",
+        "override",
+        "bypassed",
+        "status",
+        "grant",
+        "grantLent",
+        "waiter",
+        "reasons",
+        "errors",
+        "handover",
+        "adopted",
+        "handoverRefused",
+        "handoverReasons",
+        "estimated",
+        "treeUnobserved",
+        "footprintFallback",
+        "countersPartial",
+        "phased",
+        "quiet",
+        "upgrading",
+        "upgraded",
+        "upgradedPartly",
+        "upgradedReduced",
+        "upgradeWithdrawn",
+        "grantQuiet",
+        "waiterUpgrade",
+        "quietFollowUp",
+        "reducedGrows",
+        "grown",
+        "blocker",
+        "blockerHost",
+        "blockerStates"
+      ],
+      "properties": {
+        "waiting": {
+          "type": "string"
+        },
+        "blocker": {
+          "type": "string"
+        },
+        "blockerHost": {
+          "type": "string"
+        },
+        "blockerStates": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "running",
+            "growing",
+            "quiet",
+            "waiting"
+          ],
+          "properties": {
+            "running": {
+              "type": "string"
+            },
+            "growing": {
+              "type": "string"
+            },
+            "quiet": {
+              "type": "string"
+            },
+            "waiting": {
+              "type": "string"
+            }
+          }
+        },
+        "admitted": {
+          "type": "string"
+        },
+        "reduced": {
+          "type": "string"
+        },
+        "override": {
+          "type": "string"
+        },
+        "bypassed": {
+          "type": "string"
+        },
+        "reasons": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "memory",
+            "swap",
+            "swap-activity",
+            "pressure-critical",
+            "pressure-warn",
+            "files",
+            "attaches",
+            "load",
+            "queue-order",
+            "ramp",
+            "quiet-limit"
+          ],
+          "properties": {
+            "memory": {
+              "type": "string"
+            },
+            "swap": {
+              "type": "string"
+            },
+            "swap-activity": {
+              "type": "string"
+            },
+            "pressure-critical": {
+              "type": "string"
+            },
+            "pressure-warn": {
+              "type": "string"
+            },
+            "files": {
+              "type": "string"
+            },
+            "attaches": {
+              "type": "string"
+            },
+            "load": {
+              "type": "string"
+            },
+            "queue-order": {
+              "type": "string"
+            },
+            "ramp": {
+              "type": "string"
+            },
+            "quiet-limit": {
+              "type": "string"
+            }
+          }
+        },
+        "status": {
+          "type": "string"
+        },
+        "grant": {
+          "type": "string"
+        },
+        "grantLent": {
+          "type": "string"
+        },
+        "waiter": {
+          "type": "string"
+        },
+        "errors": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "planRequired",
+            "recordTooLarge",
+            "grantIdentifierRequired",
+            "queueFull",
+            "definitionRequired",
+            "floorOrder",
+            "pressureOrder",
+            "planJobs",
+            "countersUnavailable",
+            "platformUnsupported",
+            "quietUpgradeRequired"
+          ],
+          "properties": {
+            "planRequired": {
+              "type": "string"
+            },
+            "recordTooLarge": {
+              "type": "string"
+            },
+            "grantIdentifierRequired": {
+              "type": "string"
+            },
+            "queueFull": {
+              "type": "string"
+            },
+            "definitionRequired": {
+              "type": "string"
+            },
+            "floorOrder": {
+              "type": "string"
+            },
+            "pressureOrder": {
+              "type": "string"
+            },
+            "planJobs": {
+              "type": "string"
+            },
+            "countersUnavailable": {
+              "type": "string"
+            },
+            "platformUnsupported": {
+              "type": "string"
+            },
+            "quietUpgradeRequired": {
+              "type": "string"
+            }
+          }
+        },
+        "handover": {
+          "type": "string"
+        },
+        "adopted": {
+          "type": "string"
+        },
+        "handoverRefused": {
+          "type": "string"
+        },
+        "handoverReasons": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "gone",
+            "token",
+            "expired",
+            "identity",
+            "operation"
+          ],
+          "properties": {
+            "gone": {
+              "type": "string"
+            },
+            "token": {
+              "type": "string"
+            },
+            "expired": {
+              "type": "string"
+            },
+            "identity": {
+              "type": "string"
+            },
+            "operation": {
+              "type": "string"
+            }
+          }
+        },
+        "estimated": {
+          "type": "string"
+        },
+        "treeUnobserved": {
+          "type": "string"
+        },
+        "footprintFallback": {
+          "type": "string"
+        },
+        "countersPartial": {
+          "type": "string"
+        },
+        "phased": {
+          "type": "string"
+        },
+        "quiet": {
+          "type": "string"
+        },
+        "upgrading": {
+          "type": "string"
+        },
+        "upgraded": {
+          "type": "string"
+        },
+        "upgradedPartly": {
+          "type": "string"
+        },
+        "upgradedReduced": {
+          "type": "string"
+        },
+        "upgradeWithdrawn": {
+          "type": "string"
+        },
+        "grantQuiet": {
+          "type": "string"
+        },
+        "waiterUpgrade": {
+          "type": "string"
+        },
+        "quietFollowUp": {
+          "type": "string"
+        },
+        "reducedGrows": {
+          "type": "string"
+        },
+        "grown": {
+          "type": "string"
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "en": {
+          "waiting": "[capacity] waiting {seconds}s for {operation}: {reason} (need {need} MB; {spare} MB spare above the {floor} MB floor, load {load}; {running} running, {ahead} ahead); behind {behind}",
+          "blocker": "{label} ({state}, {jobs} job(s), {megabytes} MB)",
+          "blockerHost": "the host itself (nothing of ours)",
+          "blockerStates": {
+            "running": "running",
+            "growing": "waiting to grow",
+            "quiet": "quiet",
+            "waiting": "waiting ahead"
+          },
+          "admitted": "[capacity] admitted {operation}: {jobs} job(s), {reserved} MB reserved ({available} MB available, {floor} MB floor)",
+          "reduced": "[capacity] admitted {operation} with {jobs} of {preferred} job(s): the host cannot carry more right now",
+          "override": "[capacity] admitted {operation} after {seconds}s although {reason}: nothing of ours is running and memory holds",
+          "bypassed": "[capacity] host capacity governor is switched off ({switch}=off)",
+          "status": "[capacity] {available} MB available of {total} MB (floor {floor} MB, {spare} MB spare), pressure {pressure}, swap {swap} MB, load {load}, open files {files}, attached images {images}; {grants} running, {waiters} waiting",
+          "grant": "[capacity]   running {id} {operation}: {jobs} job(s), {reserved} MB reserved, {observed} MB observed, pid {pid}, since {seconds}s",
+          "waiter": "[capacity]   waiting {id} {operation}: wants {jobs} job(s), {need} MB, since {seconds}s, pid {pid}",
+          "grantLent": "[capacity]   lent {id} {operation}: its process only waits in a queue, so the {reserved} MB reserved and {cpu} core(s) count for nobody ({observed} MB observed, pid {pid}, since {seconds}s)",
+          "reasons": {
+            "memory": "not enough free memory",
+            "swap": "swap use is above its ceiling",
+            "swap-activity": "the host is swapping out too fast",
+            "pressure-critical": "memory pressure is critical",
+            "pressure-warn": "memory pressure is raised",
+            "files": "the machine has too many open files",
+            "attaches": "too many disk images are attached",
+            "load": "the cores are fully booked by our own running jobs",
+            "queue-order": "an earlier request is still waiting",
+            "ramp": "too many learned reservations are still growing to their peak",
+            "quiet-limit": "enough quiet reservations are already held"
+          },
+          "errors": {
+            "planRequired": "Closed host capacity plan required",
+            "recordTooLarge": "Bounded host capacity record required",
+            "grantIdentifierRequired": "Closed inherited host capacity grant identifier required",
+            "queueFull": "Host capacity queue is full",
+            "definitionRequired": "Closed host capacity {definition} required: {detail}",
+            "floorOrder": "Host capacity floor minimum exceeds its maximum",
+            "pressureOrder": "Host capacity pressure thresholds must rise from warn to critical",
+            "planJobs": "Host capacity plan needs jobs between the request bounds",
+            "countersUnavailable": "Linux memory counters unavailable",
+            "platformUnsupported": "Host capacity does not support {platform}",
+            "inheritedIdentifier": "Closed inherited host capacity grant identifier required",
+            "quietUpgradeRequired": "a quiet request needs the full request it may grow into, under the same id"
+          },
+          "handover": "[capacity] keeping the {operation} grant ({jobs} job(s), {reserved} MB reserved) for the command that replaces this one: it does not queue again",
+          "adopted": "[capacity] took over the {operation} grant of the command this one replaces ({jobs} job(s), {reserved} MB reserved): no queue",
+          "handoverRefused": "[capacity] the grant of the command this one replaces cannot be taken over ({reason}): queueing like any other request",
+          "handoverReasons": {
+            "gone": "the grant is gone or no longer current",
+            "token": "the handover token does not match",
+            "expired": "the offer expired",
+            "identity": "this process is not the one the grant was offered to",
+            "operation": "it was granted for another operation"
+          },
+          "estimated": "[capacity] {operation}: sized at {percent}% of the default from {samples} earlier run(s) of its class",
+          "treeUnobserved": "[capacity] the memory of running process trees cannot be observed on {platform} ({reason}); nothing is learned from this run and admission uses the declared sizes",
+          "footprintFallback": "[capacity] the memory footprint of running process trees cannot be read on {platform} ({reason}); the resident set is used instead, which can overstate what a process holds",
+          "countersPartial": "[capacity] the {platform} memory counters could not be read ({reason}); pressure and swap are unknown and the host is treated as under raised pressure, available memory is the operating system's free memory",
+          "phased": "[capacity] {operation}: sized at {percent}% of the default from {samples} earlier run(s) of its class, at least {floor} MB because of its {phase} phase",
+          "quiet": "[capacity] {operation}: forecast quiet because the last run of its class executed nothing ({samples} quiet run(s) behind its size, {percent}% of the recent runs): {reserved} MB reserved now, the full {full} MB only if work has to run",
+          "upgrading": "[capacity] {operation}: work has to run, waiting {seconds}s to grow the reservation from {from} MB to {to} MB: {reason} ({spare} MB spare above the {floor} MB floor; {running} running, {ahead} ahead); behind {behind}",
+          "upgraded": "[capacity] {operation}: reservation grown from {from} MB to {to} MB after {seconds}s ({jobs} job(s), {available} MB available, {floor} MB floor)",
+          "upgradedPartly": "[capacity] {operation}: reservation grown from {from} MB to {to} MB of the {wanted} MB it asked for, after {seconds}s: nothing else of ours is running (other runs of ours only wait to grow) and only that much memory is free ({available} MB available, {floor} MB floor); the run goes on with {jobs} of {preferred} job(s)",
+          "upgradedReduced": "[capacity] {operation}: reservation grown from {from} MB to {to} MB with {jobs} of {preferred} job(s) after {seconds}s: the host cannot carry more right now ({available} MB available, {floor} MB floor); the run grows to more jobs once memory and cores free up",
+          "upgradeWithdrawn": "[capacity] {operation}: the request to grow the reservation was withdrawn after {seconds}s; the run keeps its {reserved} MB",
+          "grantQuiet": "[capacity]   quiet {id} {operation}: forecast to execute nothing, {reserved} MB reserved instead of its full request, {observed} MB observed, pid {pid}, since {seconds}s",
+          "waiterUpgrade": "[capacity]   growing {id} {operation}: wants {jobs} job(s), {need} MB, since {seconds}s, pid {pid}",
+          "quietFollowUp": "[capacity] {operation}: forecast quiet because the earlier run of its class finished {seconds}s ago and left its results cached: {reserved} MB reserved now, the full {full} MB only if work has to run",
+          "reducedGrows": "[capacity] admitted {operation} with {jobs} of {preferred} job(s): the host cannot carry more right now; the run grows to more jobs once memory frees up",
+          "grown": "[capacity] {operation}: grown from {from} to {jobs} of {preferred} job(s) after {seconds}s, reservation {before} MB -> {reserved} MB: memory freed up and nothing of ours waits ({available} MB available, {floor} MB floor); work that starts from now on uses the new jobs"
+        },
+        "de": {
+          "waiting": "[capacity] wartet seit {seconds} s auf {operation}: {reason} (benötigt {need} MB; {spare} MB frei oberhalb der Untergrenze von {floor} MB, Last {load}; {running} laufen, {ahead} davor); hinter {behind}",
+          "blocker": "{label} ({state}, {jobs} Job(s), {megabytes} MB)",
+          "blockerHost": "dem Rechner selbst (nichts von uns)",
+          "blockerStates": {
+            "running": "läuft",
+            "growing": "wartet aufs Wachsen",
+            "quiet": "ruhig",
+            "waiting": "wartet davor"
+          },
+          "admitted": "[capacity] zugelassen {operation}: {jobs} Job(s), {reserved} MB reserviert ({available} MB verfügbar, Untergrenze {floor} MB)",
+          "reduced": "[capacity] {operation} mit {jobs} von {preferred} Job(s) zugelassen: der Rechner trägt gerade nicht mehr",
+          "override": "[capacity] {operation} nach {seconds} s zugelassen, obwohl {reason}: nichts von uns läuft und der Speicher reicht",
+          "bypassed": "[capacity] Kapazitätsregelung des Rechners ist ausgeschaltet ({switch}=off)",
+          "status": "[capacity] {available} MB verfügbar von {total} MB (Untergrenze {floor} MB, {spare} MB frei), Speicherdruck {pressure}, Auslagerung {swap} MB, Last {load}, offene Dateien {files}, eingehängte Images {images}; {grants} laufen, {waiters} warten",
+          "grant": "[capacity]   läuft {id} {operation}: {jobs} Job(s), {reserved} MB reserviert, {observed} MB beobachtet, pid {pid}, seit {seconds} s",
+          "waiter": "[capacity]   wartet {id} {operation}: möchte {jobs} Job(s), {need} MB, seit {seconds} s, pid {pid}",
+          "grantLent": "[capacity]   verliehen {id} {operation}: sein Prozess wartet nur in einer Schlange, darum zählen die {reserved} MB reserviert und {cpu} Kern(e) für niemanden ({observed} MB beobachtet, pid {pid}, seit {seconds} s)",
+          "reasons": {
+            "memory": "nicht genug freier Speicher",
+            "swap": "die Auslagerung liegt über ihrer Obergrenze",
+            "swap-activity": "der Rechner lagert zu schnell aus",
+            "pressure-critical": "der Speicherdruck ist kritisch",
+            "pressure-warn": "der Speicherdruck ist erhöht",
+            "files": "der Rechner hat zu viele offene Dateien",
+            "attaches": "zu viele Disk-Images sind eingehängt",
+            "load": "die Kerne sind von unseren laufenden Jobs voll belegt",
+            "queue-order": "eine frühere Anfrage wartet noch",
+            "ramp": "zu viele gelernte Reservierungen wachsen noch auf ihren Spitzenwert an",
+            "quiet-limit": "es werden schon genug ruhige Reservierungen gehalten"
+          },
+          "errors": {
+            "planRequired": "Geschlossener Kapazitätsplan des Rechners erforderlich",
+            "recordTooLarge": "Begrenzter Kapazitätseintrag des Rechners erforderlich",
+            "grantIdentifierRequired": "Geschlossene Kennung der geerbten Kapazitätszusage des Rechners erforderlich",
+            "queueFull": "Die Warteschlange der Rechnerkapazität ist voll",
+            "definitionRequired": "Geschlossene Kapazitätsdefinition {definition} des Rechners erforderlich: {detail}",
+            "floorOrder": "Die Untergrenze der Rechnerkapazität überschreitet ihre Obergrenze",
+            "pressureOrder": "Die Schwellen des Speicherdrucks müssen von Warnung zu kritisch steigen",
+            "planJobs": "Der Kapazitätsplan braucht Jobs zwischen den Grenzen der Anfrage",
+            "countersUnavailable": "Linux-Speicherzähler nicht verfügbar",
+            "platformUnsupported": "Die Rechnerkapazität unterstützt {platform} nicht",
+            "inheritedIdentifier": "Eine gültige Kennung der geerbten Host-Kapazitätsfreigabe ist erforderlich",
+            "quietUpgradeRequired": "eine ruhige Anfrage braucht die volle Anfrage, in die sie wachsen darf, unter derselben Kennung"
+          },
+          "handover": "[capacity] die Zusage für {operation} ({jobs} Job(s), {reserved} MB reserviert) bleibt für den Befehl, der diesen ersetzt: er reiht sich nicht erneut ein",
+          "adopted": "[capacity] Zusage für {operation} des ersetzten Befehls übernommen ({jobs} Job(s), {reserved} MB reserviert): keine Warteschlange",
+          "handoverRefused": "[capacity] die Zusage des ersetzten Befehls kann nicht übernommen werden ({reason}): Anfrage reiht sich wie jede andere ein",
+          "handoverReasons": {
+            "gone": "die Zusage ist erloschen oder nicht mehr aktuell",
+            "token": "die Übergabemarke passt nicht",
+            "expired": "das Angebot ist abgelaufen",
+            "identity": "dieser Prozess ist nicht der, dem die Zusage angeboten wurde",
+            "operation": "sie wurde für eine andere Operation erteilt"
+          },
+          "estimated": "[capacity] {operation}: auf {percent}% des Standardwerts bemessen, aus {samples} früheren Läufen seiner Klasse",
+          "treeUnobserved": "[capacity] Der Speicher laufender Prozessbäume kann unter {platform} nicht beobachtet werden ({reason}); aus diesem Lauf wird nichts gelernt und die Zulassung nutzt die deklarierten Größen",
+          "footprintFallback": "[capacity] Der Speicher-Fußabdruck laufender Prozessbäume kann unter {platform} nicht gelesen werden ({reason}); stattdessen gilt der residente Speicher, der überschätzen kann, was ein Prozess hält",
+          "countersPartial": "[capacity] Die Speicherzähler von {platform} konnten nicht gelesen werden ({reason}); Speicherdruck und Auslagerung sind unbekannt, der Rechner gilt als unter erhöhtem Druck, verfügbar ist der freie Speicher des Betriebssystems",
+          "phased": "[capacity] {operation}: auf {percent}% des Standardwerts bemessen, aus {samples} früheren Läufen seiner Klasse, mindestens {floor} MB wegen der Phase {phase}",
+          "quiet": "[capacity] {operation}: ruhig prognostiziert, weil der letzte Lauf seiner Klasse nichts ausführte ({samples} ruhige Läufe hinter ihrer Größe, {percent}% der jüngsten Läufe): jetzt {reserved} MB reserviert, die vollen {full} MB nur, wenn Arbeit laufen muss",
+          "upgrading": "[capacity] {operation}: es muss Arbeit laufen, wartet seit {seconds} s darauf, die Reservierung von {from} MB auf {to} MB zu vergrößern: {reason} ({spare} MB frei oberhalb der Untergrenze von {floor} MB; {running} laufen, {ahead} davor); hinter {behind}",
+          "upgraded": "[capacity] {operation}: Reservierung nach {seconds} s von {from} MB auf {to} MB vergrößert ({jobs} Job(s), {available} MB verfügbar, Untergrenze {floor} MB)",
+          "upgradedPartly": "[capacity] {operation}: Reservierung nach {seconds} s von {from} MB auf {to} MB der angefragten {wanted} MB vergrößert: nichts anderes von uns läuft (andere Läufe von uns warten nur auf ihr Wachstum) und mehr Speicher ist nicht frei ({available} MB verfügbar, Untergrenze {floor} MB); der Lauf geht mit {jobs} von {preferred} Job(s) weiter",
+          "upgradedReduced": "[capacity] {operation}: Reservierung nach {seconds} s von {from} MB auf {to} MB mit {jobs} von {preferred} Job(s) vergrößert: der Rechner trägt gerade nicht mehr ({available} MB verfügbar, Untergrenze {floor} MB); der Lauf wächst auf mehr Jobs, sobald Speicher und Kerne frei werden",
+          "upgradeWithdrawn": "[capacity] {operation}: die Anfrage, die Reservierung zu vergrößern, wurde nach {seconds} s zurückgezogen; der Lauf behält seine {reserved} MB",
+          "grantQuiet": "[capacity]   ruhig {id} {operation}: soll nichts ausführen, {reserved} MB statt der vollen Anfrage reserviert, {observed} MB beobachtet, pid {pid}, seit {seconds} s",
+          "waiterUpgrade": "[capacity]   wächst {id} {operation}: möchte {jobs} Job(s), {need} MB, seit {seconds} s, pid {pid}",
+          "quietFollowUp": "[capacity] {operation}: ruhig prognostiziert, weil der frühere Lauf seiner Klasse vor {seconds} s endete und seine Ergebnisse zwischengespeichert hinterließ: jetzt {reserved} MB reserviert, die vollen {full} MB nur, wenn Arbeit laufen muss",
+          "reducedGrows": "[capacity] {operation} mit {jobs} von {preferred} Job(s) zugelassen: der Rechner trägt gerade nicht mehr; der Lauf wächst auf mehr Jobs, sobald Speicher frei wird",
+          "grown": "[capacity] {operation}: nach {seconds} s von {from} auf {jobs} von {preferred} Job(s) gewachsen, Reservierung {before} MB -> {reserved} MB: Speicher ist frei geworden und nichts von uns wartet ({available} MB verfügbar, Untergrenze {floor} MB); Arbeit, die ab jetzt startet, nutzt die neuen Jobs"
+        }
+      }
+    },
+    "GrantLiveness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grant",
+        "expectedId",
+        "pidAlive",
+        "nowMs",
+        "bootAtMs",
+        "modifiedAtMs"
+      ],
+      "properties": {
+        "grant": {
+          "$ref": "#/definitions/Grant"
+        },
+        "expectedId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{8,32}$"
+        },
+        "pidAlive": {
+          "type": "boolean"
+        },
+        "nowMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bootAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "modifiedAtMs": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "GrantLivenessCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "object"
+        },
+        "expected": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Handover": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "token",
+        "fromPid",
+        "fromStarted",
+        "offeredAtMs"
+      ],
+      "properties": {
+        "token": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{22}$"
+        },
+        "fromPid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fromStarted": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "offeredAtMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "HandoverFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grant",
+        "grantCurrent",
+        "offered",
+        "operation",
+        "parent",
+        "nowMs"
+      ],
+      "properties": {
+        "grant": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/Grant"
+            }
+          ]
+        },
+        "grantCurrent": {
+          "type": "boolean"
+        },
+        "offered": {
+          "type": "string"
+        },
+        "operation": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "parent": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "pid",
+                "started"
+              ],
+              "properties": {
+                "pid": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "started": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          ]
+        },
+        "nowMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "HandoverCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "object"
+        },
+        "expected": {
+          "type": "string"
+        }
+      }
+    },
+    "Estimates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "halfLifeMilliseconds",
+        "quantileBasisPoints",
+        "marginBasisPoints",
+        "minimumSamples",
+        "maximumSamples",
+        "maximumClasses",
+        "minimumRatioBasisPoints",
+        "maximumRatioBasisPoints",
+        "minimumMegabytes",
+        "quickMilliseconds",
+        "maximumShareBasisPoints",
+        "fallbackCeilingMegabytes",
+        "defaultRampMilliseconds",
+        "maximumRampMilliseconds",
+        "phaseReferenceMegabytes",
+        "rebuildPriorMegabytes",
+        "rebuildShareBasisPoints",
+        "maximumRebuildSlots",
+        "quietReferenceMegabytes",
+        "quietMaximumMegabytes",
+        "quietFollowUpMilliseconds"
+      ],
+      "properties": {
+        "halfLifeMilliseconds": {
+          "type": "integer",
+          "minimum": 1000
+        },
+        "quantileBasisPoints": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "marginBasisPoints": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "minimumSamples": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "maximumSamples": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        },
+        "maximumClasses": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "minimumRatioBasisPoints": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "maximumRatioBasisPoints": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "minimumMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "quickMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumShareBasisPoints": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "fallbackCeilingMegabytes": {
+          "type": "integer",
+          "minimum": 512,
+          "maximum": 1048576
+        },
+        "defaultRampMilliseconds": {
+          "type": "integer",
+          "minimum": 1000
+        },
+        "maximumRampMilliseconds": {
+          "type": "integer",
+          "minimum": 1000
+        },
+        "phaseReferenceMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "rebuildPriorMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "rebuildShareBasisPoints": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "maximumRebuildSlots": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "quietReferenceMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "quietMaximumMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "quietFollowUpMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "EstimateSample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "atMs",
+        "ratioBasisPoints",
+        "activeMilliseconds"
+      ],
+      "properties": {
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ratioBasisPoints": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000000
+        },
+        "activeMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "peakAtMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "peakMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        }
+      }
+    },
+    "EstimateClass": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "samples"
+      ],
+      "properties": {
+        "samples": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/definitions/EstimateSample"
+          }
+        }
+      }
+    },
+    "EstimateStore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "classes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "measure": {
+          "const": "footprint"
+        },
+        "classes": {
+          "type": "object",
+          "maxProperties": 4096,
+          "propertyNames": {
+            "pattern": "^[^\\s]{1,200}$"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/EstimateClass"
+          }
+        }
+      }
+    },
+    "Outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "jobs",
+        "peakMegabytes",
+        "defaultMegabytes",
+        "activeMilliseconds",
+        "endedAtMs",
+        "peakAtMilliseconds"
+      ],
+      "properties": {
+        "operation": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "jobs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "peakMegabytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "defaultMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "activeMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endedAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "peakAtMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Estimate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ratioBasisPoints",
+        "samples",
+        "quick",
+        "rampMilliseconds"
+      ],
+      "properties": {
+        "ratioBasisPoints": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "samples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "quick": {
+          "type": "boolean"
+        },
+        "rampMilliseconds": {
+          "type": "integer",
+          "minimum": 1000
+        }
+      }
+    },
+    "Phase": {
+      "enum": [
+        "assembly",
+        "plan",
+        "rebuild",
+        "execution"
+      ]
+    },
+    "Envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "pattern",
+        "cpu",
+        "megabytes"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "pattern": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "cpu": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "megabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        }
+      },
+      "description": "🧰️ The resources a target holds at its peak when it runs several workers of its own (end-to-end suites): any target whose name matches `pattern` is sized at least at `cpu` cores and `megabytes` per job, whatever kind the worker pool classifies it as."
+    },
+    "Ceiling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "pattern",
+        "megabytes"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "pattern": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "megabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        }
+      },
+      "description": "The most a class of runs may ever ask for, whatever its learned ratio says: a declared bound on the class key (`operation:kind:project:target`) that holds until the class has measured enough runs to be capped by its own peaks."
+    },
+    "Limits": {
+      "description": "EN: The probe, heartbeat and cache limits of the host capacity engine. DE: Die Probe-, Herzschlag- und Cache-Grenzen der Host-Kapazitaets-Engine.",
+      "const": {
+        "optionalProbeMilliseconds": 3000,
+        "commandTimeoutMilliseconds": 10000,
+        "commandOutputBytes": 4194304,
+        "defaultPageBytes": 4096,
+        "reasonCharacters": 200,
+        "heartbeatFirstMilliseconds": 3000,
+        "settledOutcomeLimit": 256,
+        "quickQuantileBasisPoints": 5000
+      }
+    },
+    "LimitsDescriptions": {
+      "const": {
+        "en": {
+          "optionalProbeMilliseconds": "How long an optional counter probe (disk images, memory pressure) may run before it is abandoned.",
+          "commandTimeoutMilliseconds": "The hard timeout of one platform command that reads a counter.",
+          "commandOutputBytes": "The most output bytes of one platform command that is read (4 MiB).",
+          "defaultPageBytes": "The memory page size assumed when the platform does not report one.",
+          "reasonCharacters": "The most characters of the reason a failed probe reports.",
+          "heartbeatFirstMilliseconds": "The longest wait before the first heartbeat of a waiting request, whatever the policy interval says.",
+          "settledOutcomeLimit": "The most upgrade outcomes remembered by key; the oldest goes first.",
+          "quickQuantileBasisPoints": "The quantile of the active time, in basis points, that decides whether a class of runs counts as quick (the median)."
+        },
+        "de": {
+          "optionalProbeMilliseconds": "Wie lange eine optionale Zaehlerabfrage (Disk-Images, Speicherdruck) laufen darf, bevor sie verworfen wird.",
+          "commandTimeoutMilliseconds": "Das harte Zeitlimit eines Plattformbefehls, der einen Zaehler liest.",
+          "commandOutputBytes": "Die meisten Ausgabebytes eines Plattformbefehls, die gelesen werden (4 MiB).",
+          "defaultPageBytes": "Die angenommene Speicherseitengroesse, wenn die Plattform keine meldet.",
+          "reasonCharacters": "Die meisten Zeichen des Grundes, den eine fehlgeschlagene Abfrage meldet.",
+          "heartbeatFirstMilliseconds": "Die laengste Wartezeit bis zum ersten Herzschlag einer wartenden Anfrage, egal was das Richtlinien-Intervall sagt.",
+          "settledOutcomeLimit": "Die meisten nach Schluessel gemerkten Hochstufungs-Ergebnisse; das aelteste geht zuerst.",
+          "quickQuantileBasisPoints": "Das Quantil der aktiven Zeit in Basispunkten, das entscheidet, ob eine Laufklasse als schnell gilt (der Median)."
+        }
+      }
+    }
+  }
+}

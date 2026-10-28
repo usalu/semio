@@ -1,0 +1,1 @@
+🧽️ The registry no longer carries its copies of the language refusal texts (`languageRefusal`, `languageUnknownFlag`, `languageUnknownVariable`); land only after the launcher of batch `launcher` is rebuilt and installed, because an older launcher still requires them.

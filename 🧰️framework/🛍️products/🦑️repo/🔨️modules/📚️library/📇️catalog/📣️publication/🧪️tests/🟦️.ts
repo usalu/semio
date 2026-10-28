@@ -31,16 +31,18 @@ test("@iarna/toml reads the same manifest path from every valid document",()=>{
 });
 for(const row of corpus.admission.cases)test("component admission of "+row.target,()=>{const root=scratch(corpus.admission.files);expect<unknown>(publicationComponentAdmission(root,row.target)).toEqual(row.expected);});
 for(const row of corpus.admission.errors)test("component admission refuses "+row.target,()=>{const root=scratch(corpus.admission.files);expect(()=>publicationComponentAdmission(root,row.target)).toThrow(row.message);});
-test("an absolute target outside the workspace and a symlink are refused, an oversized file is flagged",()=>{
+test("an absolute target outside the workspace is refused",()=>{
  const root=scratch(corpus.admission.files),outside=scratch({"x":"y"});expect(()=>publicationComponentAdmission(root,join(outside,"x"))).toThrow("Publication component escapes workspace");
- if(process.platform==="win32")return;
+});
+test.skipIf(process.platform==="win32")("a symlink is refused and an oversized file is flagged (POSIX hosts)",()=>{
+ const root=scratch(corpus.admission.files);
  symlinkSync(join(root,"comp"),join(root,"link"));expect(()=>publicationComponentAdmission(root,"link/ok.wasm")).toThrow("no-follow regular ancestry");
  const fd=openSync(join(root,"comp","big.wasm"),"w");ftruncateSync(fd,corpus.admission.exceedsBytes);closeSync(fd);
  expect(publicationComponentAdmission(root,"comp/big.wasm")).toEqual({status:"exceeds-limit",limitBytes:67108864,byteLength:corpus.admission.exceedsBytes,path:"comp/big.wasm"});
 });
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

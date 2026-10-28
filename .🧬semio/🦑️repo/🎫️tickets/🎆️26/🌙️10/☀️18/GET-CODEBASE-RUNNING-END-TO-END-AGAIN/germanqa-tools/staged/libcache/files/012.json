@@ -1,0 +1,936 @@
+{
+ "version": 1,
+ "purpose": "dependency-generation-receipt-fixtures",
+ "rules": {
+  "opaque": [
+   "🗑️generated",
+   "🤖️generated",
+   "node_modules",
+   "target",
+   "dist",
+   "📤️dist",
+   "build",
+   "storybook-static",
+   "temp",
+   "coverage",
+   "__pycache__",
+   "🔌️plugin-modules",
+   "compose"
+  ],
+  "opaquePatterns": [
+   "^target(?:-[a-z0-9]+)*$"
+  ],
+  "walkRoots": [
+   "pkgs"
+  ]
+ },
+ "workspace": {
+  "files": {
+   "package.json": "{\"name\": \"fixture-root\", \"version\": \"0.0.0\", \"semio\": {\"workspace\": {\"schemaVersion\": 1, \"members\": [\"pkgs/*\"], \"owners\": []}}, \"workspaces\": [\"pkgs/a\", \"pkgs/b\", \"pkgs/🧩️widget\"]}",
+   "bun.lock": "{\"lockfileVersion\":1,\"workspaces\":{},\"packages\":{}}",
+   "pkgs/a/package.json": "{\"name\":\"a\",\"version\":\"1.0.0\",\"dependencies\":{\"dep\":\"^1.0.0\"}}",
+   "pkgs/a/src/index.ts": "export const a=1;\n",
+   "pkgs/b/package.json": "{\"name\":\"b\",\"version\":\"1.0.0\"}",
+   "pkgs/🧩️widget/package.json": "{\"name\":\"widget\",\"version\":\"1.0.0\"}",
+   "pkgs/🧩️widget/src/widget.ts": "export {};\n",
+   "store/j/g1/bindings.json": "{\"ready\":true}\n",
+   "store/j/g1/node_modules/dep/package.json": "{\"name\":\"dep\",\"version\":\"1.2.3\"}",
+   "store/j/g1/node_modules/dep/index.js": "module.exports=1;\n",
+   "store/j/g2/node_modules/other/package.json": "{\"name\":\"other\",\"version\":\"1.0.0\"}",
+   "impl/entry.ts": "import {createRequire} from \"node:module\";\nimport {fence} from \"./deep/fence.ts\";\nimport rules from \"./rules.json\" with {type:\"json\"};\nexport const limit=createRequire(import.meta.url)(\"./limit.cjs\");\nexport const run=()=>fence(rules);\n",
+   "impl/deep/fence.ts": "export const fence=(rules:unknown)=>rules;\nexport const later=()=>import(\"./later.ts\");\n",
+   "impl/deep/later.ts": "export const later=1;\n",
+   "impl/limit.cjs": "module.exports=Object.freeze({maximum:4});\n",
+   "impl/rules.json": "{\"limit\":4}\n",
+   "impl/🧬️schema/🔣️.json": "{\"type\":\"object\"}\n",
+   "impl/unrelated.ts": "export const unrelated=true;\n"
+  },
+  "links": {
+   "pkgs/a/node_modules": "@STORE@/j/g1/node_modules",
+   "pkgs/b/node_modules": "@STORE@/j/g2/node_modules",
+   "store/j/g1/node_modules/dep-link": "../../g2/node_modules/other"
+  },
+  "missing": [
+   "node_modules",
+   "bunfig.toml"
+  ],
+  "observed": {
+   "full": [
+    "store/j/g1/node_modules/dep/package.json"
+   ],
+   "anchors": [
+    "store/j/g1/node_modules/dep",
+    "store/j/g1/node_modules",
+    "store/j/g2/node_modules/other",
+    "store/j/g1"
+   ],
+   "links": [
+    "store/j/g1/node_modules/dep-link"
+   ],
+   "missing": [
+    "node_modules",
+    "pkgs/node_modules"
+   ]
+  },
+  "required": [
+   "."
+  ]
+ },
+ "progress": {
+  "directories": 4200
+ },
+ "cases": [
+  {
+   "name": "untouched tree matches",
+   "mutations": [],
+   "expect": "match",
+   "oracle": true
+  },
+  {
+   "name": "directory touched without change matches",
+   "mutations": [
+    {
+     "op": "touch",
+     "path": "pkgs"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "irrelevant file added matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "pkgs/a/readme.md",
+     "text": "notes"
+    }
+   ],
+   "expect": "match",
+   "oracle": true
+  },
+  {
+   "name": "hidden directory added matches",
+   "mutations": [
+    {
+     "op": "mkdir",
+     "path": "pkgs/.cache"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "opaque directory added matches",
+   "mutations": [
+    {
+     "op": "mkdir",
+     "path": "pkgs/a/dist"
+    },
+    {
+     "op": "mkdir",
+     "path": "pkgs/b/target-debug"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "source file edited matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "pkgs/a/src/index.ts",
+     "text": "export const a=2;\n"
+    }
+   ],
+   "expect": "match",
+   "oracle": true
+  },
+  {
+   "name": "new package falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "pkgs/z/package.json",
+     "text": "{\"name\":\"z\"}"
+    }
+   ],
+   "expect": "mismatch:membership-changed"
+  },
+  {
+   "name": "removed package falls back",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "pkgs/b"
+    }
+   ],
+   "expect": "mismatch:manifest-changed"
+  },
+  {
+   "name": "package replaced by symlink falls back",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "pkgs/b"
+    },
+    {
+     "op": "symlink",
+     "path": "pkgs/b",
+     "target": "a"
+    }
+   ],
+   "expect": "mismatch:manifest-changed"
+  },
+  {
+   "name": "source directory without manifests removed matches",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "pkgs/a/src"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "empty directory added under a source directory matches",
+   "mutations": [
+    {
+     "op": "mkdir",
+     "path": "pkgs/a/src/tests/fresh"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "directory with a source file added matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "pkgs/a/src/tests/case.ts",
+     "text": "export {};\n"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "directory with a nested package manifest added falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "pkgs/a/src/tests/deep/package.json",
+     "text": "{\"name\":\"deep\"}"
+    }
+   ],
+   "expect": "mismatch:membership-changed",
+   "reason": {
+    "path": "pkgs/a/src",
+    "detail": "listing"
+   }
+  },
+  {
+   "name": "symlink added to a source directory falls back",
+   "mutations": [
+    {
+     "op": "symlink",
+     "path": "pkgs/a/src/linked",
+     "target": "@STORE@/j/g1"
+    }
+   ],
+   "expect": "mismatch:membership-changed",
+   "reason": {
+    "path": "pkgs/a/src",
+    "detail": "listing"
+   }
+  },
+  {
+   "name": "source directory removed and recreated empty matches",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "pkgs/a/src"
+    },
+    {
+     "op": "mkdir",
+     "path": "pkgs/a/src"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "source directory replaced by symlink falls back",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "pkgs/a/src"
+    },
+    {
+     "op": "symlink",
+     "path": "pkgs/a/src",
+     "target": "../b"
+    }
+   ],
+   "expect": "mismatch:membership-changed"
+  },
+  {
+   "name": "nested package manifest appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "pkgs/a/src/package.json",
+     "text": "{\"name\":\"nested\"}"
+    }
+   ],
+   "expect": "mismatch:membership-changed"
+  },
+  {
+   "name": "member manifest edited falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "pkgs/b/package.json",
+     "text": "{\"name\":\"b\",\"version\":\"2.0.0\"}"
+    }
+   ],
+   "expect": "mismatch:manifest-changed",
+   "reason": {
+    "path": "pkgs/b/package.json",
+    "detail": "bytes"
+   },
+   "oracle": true
+  },
+  {
+   "name": "walk protocol stamp changed falls back",
+   "mutations": [],
+   "reseal": "walkStamp",
+   "expect": "mismatch:protocol-changed",
+   "reason": {
+    "detail": "semio.dependency-generation-walk/0"
+   },
+   "oracle": true
+  },
+  {
+   "name": "tool source entry and a transitive import edited together matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/entry.ts",
+     "text": "export const changed=1;\n"
+    },
+    {
+     "op": "write",
+     "path": "impl/deep/later.ts",
+     "text": "export const later=2;\n"
+    }
+   ],
+   "expect": "match",
+   "oracle": true
+  },
+  {
+   "name": "lock edited falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "bun.lock",
+     "text": "{\"lockfileVersion\":1,\"workspaces\":{},\"packages\":{\"x\":1}}"
+    }
+   ],
+   "expect": "mismatch:input-changed",
+   "reason": {
+    "path": "w:bun.lock",
+    "detail": "bytes"
+   },
+   "oracle": true
+  },
+  {
+   "name": "lock replaced by equal bytes falls back",
+   "mutations": [
+    {
+     "op": "replace",
+     "path": "bun.lock"
+    }
+   ],
+   "expect": "mismatch:input-changed",
+   "reason": {
+    "path": "w:bun.lock",
+    "detail": "identity"
+   },
+   "oracle": true
+  },
+  {
+   "name": "bunfig appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "bunfig.toml",
+     "text": "[install]\n"
+    }
+   ],
+   "expect": "mismatch:input-changed",
+   "reason": {
+    "path": "w:bunfig.toml",
+    "detail": "appeared"
+   },
+   "oracle": true
+  },
+  {
+   "name": "binding retargeted falls back",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "pkgs/a/node_modules"
+    },
+    {
+     "op": "symlink",
+     "path": "pkgs/a/node_modules",
+     "target": "@STORE@/j/g2/node_modules"
+    }
+   ],
+   "expect": "mismatch:binding-changed"
+  },
+  {
+   "name": "binding removed falls back",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "pkgs/a/node_modules"
+    }
+   ],
+   "expect": "mismatch:binding-changed"
+  },
+  {
+   "name": "ready receipt edited falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "store/j/g1/bindings.json",
+     "text": "{\"ready\":false}\n"
+    }
+   ],
+   "expect": "mismatch:ready-changed"
+  },
+  {
+   "name": "provider manifest edited falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "store/j/g1/node_modules/dep/package.json",
+     "text": "{\"name\":\"dep\",\"version\":\"1.2.4\"}"
+    }
+   ],
+   "expect": "mismatch:provider-changed"
+  },
+  {
+   "name": "ambient fallback appears falls back",
+   "mutations": [
+    {
+     "op": "mkdir",
+     "path": "node_modules"
+    }
+   ],
+   "expect": "mismatch:provider-changed"
+  },
+  {
+   "name": "provider link retargeted falls back",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "store/j/g1/node_modules/dep-link"
+    },
+    {
+     "op": "symlink",
+     "path": "store/j/g1/node_modules/dep-link",
+     "target": "../../g2/node_modules/other"
+    }
+   ],
+   "expect": "mismatch:provider-changed"
+  },
+  {
+   "name": "evidence tampered falls back",
+   "mutations": [],
+   "expect": "mismatch:evidence-invalid",
+   "tamper": "frontier"
+  },
+  {
+   "name": "execution evidence tampered falls back",
+   "mutations": [],
+   "expect": "mismatch:evidence-invalid",
+   "tamper": "execution"
+  },
+  {
+   "name": "runtime changed falls back",
+   "mutations": [],
+   "expect": "mismatch:runtime-changed",
+   "port": "runtime",
+   "reason": {
+    "detail": "manager"
+   }
+  },
+  {
+   "name": "open conditions fall back",
+   "mutations": [],
+   "expect": "mismatch:conditions-open",
+   "port": "conditions"
+  },
+  {
+   "name": "relist budget exceeded falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "pkgs/a/one.txt",
+     "text": "1"
+    },
+    {
+     "op": "write",
+     "path": "pkgs/b/two.txt",
+     "text": "2"
+    }
+   ],
+   "expect": "mismatch:membership-churn",
+   "relist": 1
+  },
+  {
+   "name": "inconsistent seal falls back",
+   "mutations": [],
+   "expect": "mismatch:sha-changed",
+   "reseal": "scopeReadSha256"
+  },
+  {
+   "name": "tool source entry edited matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/entry.ts",
+     "text": "import {createRequire} from \"node:module\";\nimport {fence} from \"./deep/fence.ts\";\nimport rules from \"./rules.json\" with {type:\"json\"};\nexport const limit=createRequire(import.meta.url)(\"./limit.cjs\");\nexport const run=()=>fence(rules);\n// changed\n"
+    }
+   ],
+   "expect": "match",
+   "oracle": true
+  },
+  {
+   "name": "tool source transitive import edited matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/deep/fence.ts",
+     "text": "export const fence=(rules:unknown)=>({...rules as object});\nexport const later=()=>import(\"./later.ts\");\n"
+    }
+   ],
+   "expect": "match",
+   "oracle": true
+  },
+  {
+   "name": "tool source dynamic import target edited matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/deep/later.ts",
+     "text": "export const later=2;\n"
+    }
+   ],
+   "expect": "match",
+   "oracle": true
+  },
+  {
+   "name": "tool source commonjs asset edited matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/limit.cjs",
+     "text": "module.exports=Object.freeze({maximum:5});\n"
+    }
+   ],
+   "expect": "match",
+   "oracle": true
+  },
+  {
+   "name": "tool source json asset edited matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/rules.json",
+     "text": "{\"limit\":5}\n"
+    }
+   ],
+   "expect": "match",
+   "oracle": true
+  },
+  {
+   "name": "tool source module-owned schema edited matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/🧬️schema/🔣️.json",
+     "text": "{\"type\":\"array\"}\n"
+    }
+   ],
+   "expect": "match",
+   "oracle": true
+  },
+  {
+   "name": "tool source file removed matches",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "impl/deep/later.ts"
+    }
+   ],
+   "expect": "match",
+   "oracle": true
+  },
+  {
+   "name": "tool source file replaced by symlink matches",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "impl/deep/later.ts"
+    },
+    {
+     "op": "symlink",
+     "path": "impl/deep/later.ts",
+     "target": "@STORE@/../impl/unrelated.ts"
+    }
+   ],
+   "expect": "match",
+   "oracle": true
+  },
+  {
+   "name": "tool source file rewritten with identical bytes matches",
+   "mutations": [
+    {
+     "op": "replace",
+     "path": "impl/deep/fence.ts"
+    }
+   ],
+   "expect": "match",
+   "oracle": true
+  },
+  {
+   "name": "tool source file touched without change matches",
+   "mutations": [
+    {
+     "op": "touch",
+     "path": "impl/rules.json"
+    }
+   ],
+   "expect": "match",
+   "oracle": true
+  },
+  {
+   "name": "file next to the tool source edited matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/unrelated.ts",
+     "text": "export const unrelated=false;\n"
+    }
+   ],
+   "expect": "match",
+   "oracle": true
+  },
+  {
+   "name": "file added next to the tool source matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/deep/extra.ts",
+     "text": "export const extra=1;\n"
+    }
+   ],
+   "expect": "match",
+   "oracle": true
+  },
+  {
+   "name": "bun revision changed falls back",
+   "mutations": [],
+   "expect": "mismatch:runtime-changed",
+   "port": "revision",
+   "reason": {
+    "detail": "revision"
+   }
+  },
+  {
+   "name": "workspace npmrc appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": ".npmrc",
+     "text": "registry=https://registry.example.test/\n"
+    }
+   ],
+   "expect": "mismatch:configuration-changed",
+   "reason": {
+    "path": "w:.npmrc"
+   },
+   "oracle": true
+  },
+  {
+   "name": "home npmrc appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": ".ambient/home/.npmrc",
+     "text": "//registry.example.test/:_authToken=x\n"
+    }
+   ],
+   "expect": "mismatch:configuration-changed",
+   "oracle": true
+  },
+  {
+   "name": "home bunfig appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": ".ambient/home/.bunfig.toml",
+     "text": "[install]\nregistry = \"https://registry.example.test/\"\n"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "xdg bunfig appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": ".ambient/xdg/.bunfig.toml",
+     "text": "[install]\n"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "home config bunfig appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": ".ambient/home/.config/.bunfig.toml",
+     "text": "[install]\n"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "store home npmrc appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "store/bun-home/.npmrc",
+     "text": "x=1\n"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "store home bunfig appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "store/bun-home/.bunfig.toml",
+     "text": "[install]\n"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "store config bunfig appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "store/bun-config/.bunfig.toml",
+     "text": "[install]\n"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "home npmrc appearing as a symlink falls back",
+   "mutations": [
+    {
+     "op": "mkdir",
+     "path": ".ambient/home"
+    },
+    {
+     "op": "write",
+     "path": ".ambient/target.txt",
+     "text": "a=1\n"
+    },
+    {
+     "op": "symlink",
+     "path": ".ambient/home/.npmrc",
+     "target": "@STORE@/../.ambient/target.txt"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "install cache directory variable set falls back",
+   "mutations": [
+    {
+     "op": "env",
+     "path": "BUN_INSTALL_CACHE_DIR",
+     "text": "/elsewhere/cache"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "registry variable set falls back",
+   "mutations": [
+    {
+     "op": "env",
+     "path": "NPM_CONFIG_REGISTRY",
+     "text": "https://registry.example.test/"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "lowercase registry variable set falls back",
+   "mutations": [
+    {
+     "op": "env",
+     "path": "npm_config_registry",
+     "text": "https://registry.example.test/"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "bun install variable set falls back",
+   "mutations": [
+    {
+     "op": "env",
+     "path": "BUN_INSTALL",
+     "text": "/elsewhere"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "proxy variable set falls back",
+   "mutations": [
+    {
+     "op": "env",
+     "path": "HTTPS_PROXY",
+     "text": "http://proxy.example.test:3128"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "certificate variable set falls back",
+   "mutations": [
+    {
+     "op": "env",
+     "path": "NODE_EXTRA_CA_CERTS",
+     "text": "/etc/ca.pem"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "ignored user agent variable changed matches",
+   "mutations": [
+    {
+     "op": "env",
+     "path": "NPM_CONFIG_USER_AGENT",
+     "text": "bun/9.9.9 elsewhere"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "unrelated variable changed matches",
+   "mutations": [
+    {
+     "op": "env",
+     "path": "PATH",
+     "text": "/opt/bin"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "empty home npmrc file appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": ".ambient/home/.npmrc",
+     "text": ""
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "unreadable home npmrc appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": ".ambient/home/.npmrc",
+     "text": "x=1\n"
+    },
+    {
+     "op": "chmod",
+     "path": ".ambient/home/.npmrc",
+     "text": "000"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  }
+ ],
+ "environment": {
+  "PATH": "/usr/bin",
+  "NPM_CONFIG_USER_AGENT": "bun/1.3.14 fixture",
+  "HOME_DIRECTORY": "unrelated"
+ },
+ "reasons": [
+  {
+   "class": "input-changed",
+   "path": "w:bun.lock",
+   "detail": "bytes",
+   "en": "An installer input changed its content: w:bun.lock.",
+   "de": "Eine Installer-Eingabe hat ihren Inhalt geändert: w:bun.lock."
+  },
+  {
+   "class": "input-changed",
+   "path": "w:bunfig.toml",
+   "detail": "appeared",
+   "en": "An installer input appeared that the receipt recorded as missing: w:bunfig.toml.",
+   "de": "Eine Installer-Eingabe ist aufgetaucht, die die Quittung als fehlend festgehalten hatte: w:bunfig.toml."
+  },
+  {
+   "class": "manifest-changed",
+   "path": "pkgs/b/package.json",
+   "detail": "bytes",
+   "en": "A workspace manifest changed its content: pkgs/b/package.json.",
+   "de": "Ein Workspace-Manifest hat seinen Inhalt geändert: pkgs/b/package.json."
+  },
+  {
+   "class": "runtime-changed",
+   "detail": "manager",
+   "en": "The package manager version changed.",
+   "de": "Die Version des Paketmanagers hat sich geändert."
+  },
+  {
+   "class": "protocol-changed",
+   "detail": "semio.dependency-generation-walk/0",
+   "en": "The dependency generation protocol changed: the receipt was sealed with semio.dependency-generation-walk/0, this tool declares semio.dependency-generation-walk/2.",
+   "de": "Das Protokoll der Abhängigkeitsgeneration hat sich geändert: Die Quittung wurde mit semio.dependency-generation-walk/0 versiegelt, dieses Werkzeug deklariert semio.dependency-generation-walk/2."
+  },
+  {
+   "class": "configuration-changed",
+   "path": "w:.npmrc",
+   "en": "The installer configuration changed: w:.npmrc.",
+   "de": "Die Installer-Konfiguration hat sich geändert: w:.npmrc."
+  },
+  {
+   "class": "membership-churn",
+   "path": "pkgs/a",
+   "en": "More than 4096 directories changed since the receipt, the first at pkgs/a.",
+   "de": "Seit der Quittung haben sich mehr als 4096 Verzeichnisse geändert, das erste bei pkgs/a."
+  },
+  {
+   "class": "sha-changed",
+   "en": "The combined read of the scope no longer equals the receipt.",
+   "de": "Das kombinierte Lesen des Bereichs entspricht nicht mehr der Quittung."
+  }
+ ]
+}

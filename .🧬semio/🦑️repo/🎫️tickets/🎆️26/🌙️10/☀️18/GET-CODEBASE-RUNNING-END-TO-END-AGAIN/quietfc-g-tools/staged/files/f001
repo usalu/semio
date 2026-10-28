@@ -1,0 +1,101 @@
+import type {HostCapacityPolicyV1,HostRequestV1} from "../📏️decision/🟦️.ts";
+import {estimateHostRatioV1,hostClassBoundV1,hostSampleQuantileV1,hostSampleWeightsV1,recordHostOutcomeV1,scaleHostRequestV1,type HostEstimateStoreV1,type HostEstimateV1} from "../📐️estimates/🟦️.ts";
+import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+
+/** 🪜️ The phases of one admitted run in the order it passes them: its own preparation (`assembly`: source capture, loader), the graph served from a current generation (`plan`), the graph built by this very run (`rebuild`, an excursion bounded by the graph builder custody and the compute slots, never part of a run's own reservation) and the tool (`execution`). */
+export const HOST_PHASES_V1=Object.freeze(["assembly","plan","rebuild","execution"] as const);
+export type HostPhaseV1=(typeof HOST_PHASES_V1)[number];
+/** 🪵️ One contiguous stretch of a run in one phase: when it began (active milliseconds of the run, lent time excluded), how long it lasted, the highest megabytes its tree held in it and the active time of the run at which the tree first came within 5 % of that peak; a segment nobody observed has peak 0. */
+export type HostPhaseSegmentV1=Readonly<{phase:HostPhaseV1;startMilliseconds:number;activeMilliseconds:number;peakMegabytes:number;peakAtMilliseconds:number}>;
+/** 🚏️ A phase boundary: the run entered `phase` at this active time. */
+export type HostPhaseTransitionV1=Readonly<{phase:HostPhaseV1;atMilliseconds:number}>;
+/** 🔬️ One reading of the process tree, tagged with the phase that was current when it was asked for (the reading that closes a phase is asked for at the boundary and arrives later). */
+export type HostPhaseReadingV1=readonly [atMilliseconds:number,megabytes:number,phase:HostPhaseV1|undefined];
+/** 🎯️ What a class learned per phase: a megabyte size with the time its phase needs to reach its peak. */
+export type HostPhaseSizeV1=Readonly<{megabytes:number;rampMilliseconds:number}>;
+/** 🧮️ The estimate of a run by phase: the usual ratio and ramp of its execution class (`HostEstimateV1`, the ramp being that of the phase that decides the reservation; its ratio is bounded by the measured or declared peak of the class and, once the class learned anything, by the generic fallback), the ratio a quiet reservation grows into (`growRatioBasisPoints`: always bounded by the class bound, so an unknown class keeps the conservative default for its first admission and still never grows into more than the fallback), the megabytes the learned `assembly` and `plan` phases need whatever the job count (`floorMegabytes`), and the learned sizes per phase. */
+export type HostPhaseEstimateV1=HostEstimateV1&Readonly<{growRatioBasisPoints:number;floorMegabytes:number;phases:Readonly<Partial<Record<HostPhaseV1,HostPhaseSizeV1>>>}>;
+/** 🌐️ What a finished run reports to be learned by phase (`HostRunV1` of the gate without its status). */
+export type HostPhasedRunV1=Readonly<{jobs:number;peakMegabytes:number;activeMilliseconds:number;peakAtMilliseconds:number;endedAtMs:number;phases?:readonly HostPhaseSegmentV1[];keepPeak?:boolean}>;
+
+const UNIT=1_000_000,SCALE=10000,round=(value:number):number=>Math.floor(value+0.5),clamp=(low:number,value:number,high:number):number=>Math.max(low,Math.min(high,value));
+
+/** 🏷️ Names the class a global phase learns under: `assembly`, `plan` and `rebuild` cost the same whichever task runs (a covered graph is small, a rebuilt one is large, whatever the target), so they share one class each; the execution phase learns under the class lineage of its task. */
+export function hostPhaseClassV1(phase:Exclude<HostPhaseV1,"execution">):string{return `phase:${phase}`;}
+
+/** ✂️ Cuts the readings of a run into its phase segments: the run starts in `assembly`, each transition opens the next stretch (a repeated phase opens a new one), a reading counts for the latest segment of its tag that began before it (the closing reading of a phase arrives after the boundary), the peak of a segment is its highest reading and `peakAtMilliseconds` the time of the first reading within `peakNearBasisPoints` of it; a run without transitions has no segments. */
+export function hostPhaseSegmentsV1(readings:readonly HostPhaseReadingV1[],transitions:readonly HostPhaseTransitionV1[],endMilliseconds:number,nearBasisPoints:number=schema.definitions.Protocol.const.peakNearBasisPoints):readonly HostPhaseSegmentV1[]{
+ if(transitions.length===0)return Object.freeze([]);
+ const bounds:{phase:HostPhaseV1;start:number}[]=[{phase:"assembly",start:0}];
+ for(const row of transitions)if(row.phase!==bounds[bounds.length-1]!.phase)bounds.push({phase:row.phase,start:Math.max(bounds[bounds.length-1]!.start,row.atMilliseconds)});
+ const rows=bounds.map((bound,index)=>({phase:bound.phase,start:bound.start,end:Math.max(bound.start,index+1<bounds.length?bounds[index+1]!.start:endMilliseconds),readings:[] as (readonly [number,number])[]}));
+ for(const [at,megabytes,tag] of readings){
+  const phase=tag??"assembly",owner=rows.filter(row=>row.phase===phase&&row.start<=at).pop()??rows.find(row=>row.phase===phase);
+  if(owner)owner.readings.push([at,megabytes]);
+ }
+ return Object.freeze(rows.map(row=>{
+  const peak=row.readings.reduce((high,[,megabytes])=>Math.max(high,megabytes),0),near=row.readings.filter(([,megabytes])=>megabytes*SCALE>=peak*nearBasisPoints).map(([at])=>at);
+  return Object.freeze({phase:row.phase,startMilliseconds:row.start,activeMilliseconds:row.end-row.start,peakMegabytes:peak,peakAtMilliseconds:peak===0?0:Math.min(...near)});
+ }));
+}
+
+const rebuilt=(segments:readonly HostPhaseSegmentV1[],at:number):number=>segments.reduce((sum,row)=>sum+(row.phase==="rebuild"?Math.max(0,Math.min(at,row.startMilliseconds+row.activeMilliseconds)-row.startMilliseconds):0),0);
+const strongest=(segments:readonly HostPhaseSegmentV1[],phase:HostPhaseV1):HostPhaseSegmentV1|undefined=>segments.filter((row,index)=>row.phase===phase&&row.peakMegabytes>0&&!(phase==="plan"&&segments[index-1]?.phase==="rebuild")).sort((left,right)=>right.peakMegabytes-left.peakMegabytes||left.startMilliseconds-right.startMilliseconds)[0];
+
+/** ✍️ Records one finished run: a run without phases is recorded exactly as `recordHostOutcomeV1` records it (one class lineage, the whole tree peak), a phased run records its execution segment under the class lineage of its task, against the default size of the request (a run that never started a tool did its work in its plan phase, which then counts as its execution too; the plan stretch that directly follows a graph build is not learned, because the builder still holds its memory until it exits), and its assembly, plan and rebuild segments under their global classes, in megabytes against `phaseReferenceMegabytes`; the clock the execution and global segments are measured on leaves out the time the run spent building the graph, so a run that happened to rebuild teaches the same as one served by coverage, and the graph build teaches only the rebuild class (time to peak counted from its own start). */
+export function recordHostPhasesV1(policy:HostCapacityPolicyV1,store:HostEstimateStoreV1,lineage:readonly string[],operation:string,defaultMegabytes:number,run:HostPhasedRunV1):HostEstimateStoreV1{
+ const phases=run.phases??[];
+ if(phases.length===0)return recordHostOutcomeV1(policy,store,lineage,{operation,jobs:run.jobs,peakMegabytes:run.peakMegabytes,defaultMegabytes,activeMilliseconds:run.activeMilliseconds,peakAtMilliseconds:run.peakAtMilliseconds,endedAtMs:run.endedAtMs,...run.keepPeak===true?{keepPeak:true}:{}});
+ const reference=policy.estimates.phaseReferenceMegabytes,own=run.activeMilliseconds-rebuilt(phases,run.activeMilliseconds);
+ let next=store;
+ const record=(classes:readonly string[],segment:HostPhaseSegmentV1,default_:number,active:(peakAt:number)=>number,keepPeak:boolean=false)=>{const peakAt=Math.max(0,segment.peakAtMilliseconds-rebuilt(phases,segment.peakAtMilliseconds));next=recordHostOutcomeV1(policy,next,classes,{operation,jobs:run.jobs,peakMegabytes:segment.peakMegabytes,defaultMegabytes:default_,activeMilliseconds:active(peakAt),peakAtMilliseconds:peakAt,endedAtMs:run.endedAtMs,...keepPeak?{keepPeak:true}:{}});};
+ const execution=strongest(phases,"execution")??strongest(phases,"plan");
+ if(execution)record(lineage,execution,defaultMegabytes,()=>own,run.keepPeak===true);
+ for(const phase of ["assembly","plan"] as const){const segment=strongest(phases,phase);if(segment)record([hostPhaseClassV1(phase)],segment,reference,peakAt=>Math.max(segment.activeMilliseconds,peakAt));}
+ const build=strongest(phases,"rebuild");
+ if(build)next=recordHostOutcomeV1(policy,next,[hostPhaseClassV1("rebuild")],{operation,jobs:run.jobs,peakMegabytes:build.peakMegabytes,defaultMegabytes:reference,activeMilliseconds:build.activeMilliseconds,peakAtMilliseconds:Math.min(build.activeMilliseconds,Math.max(0,build.peakAtMilliseconds-build.startMilliseconds)),endedAtMs:run.endedAtMs});
+ return next;
+}
+
+/** 📏️ Estimates what a global phase needs: the decayed quantile of the megabytes its class learned plus the margin, blended with the prior by the trust the effective samples earn (the prior is the conservative size an unknown class has, so pooled evidence can only shave it), never under `minimumMegabytes`, with the time the phase needs to reach its peak (quantile, margin, trust, bounded by the policy ramps); undefined while the class has no sample. */
+export function estimateHostPhaseV1(policy:HostCapacityPolicyV1,store:HostEstimateStoreV1,phase:Exclude<HostPhaseV1,"execution">,priorMegabytes:number,nowMs:number):(HostPhaseSizeV1&Readonly<{samples:number}>)|undefined{
+ const rules=policy.estimates,samples=store.classes[hostPhaseClassV1(phase)]?.samples??[],weight=hostSampleWeightsV1(policy,samples,nowMs),total=weight.reduce((sum,row)=>sum+row,0);
+ if(samples.length===0||total===0)return undefined;
+ const effective=total/UNIT,trust=Math.min(1,effective/rules.minimumSamples),margin=SCALE+rules.marginBasisPoints;
+ const learned=round(hostSampleQuantileV1(samples,weight,"ratioBasisPoints",rules.quantileBasisPoints)*margin*rules.phaseReferenceMegabytes/(SCALE*SCALE)),late=round(hostSampleQuantileV1(samples,weight,"peakAtMilliseconds",rules.quantileBasisPoints)*margin/SCALE);
+ return Object.freeze({megabytes:Math.max(rules.minimumMegabytes,round(trust*learned+(1-trust)*priorMegabytes)),rampMilliseconds:clamp(policy.memory.rampMilliseconds,round(trust*late+(1-trust)*rules.defaultRampMilliseconds),rules.maximumRampMilliseconds),samples:round(effective)});
+}
+
+/** 🧭️ Estimates a request by phase: the execution class as before (`estimateHostRatioV1`), the learned sizes of the global phases against the size of the request at its minimum jobs as prior (the graph build against `rebuildPriorMegabytes`), and the reservation they decide together: the highest of the phases, since phases follow each other; `floorMegabytes` is the part that does not scale with the jobs, the ramp is that of the phase that decides (the later one on a tie), and without a learned global phase the answer equals the execution estimate. */
+export function estimateHostPhasesV1(policy:HostCapacityPolicyV1,store:HostEstimateStoreV1,lineage:readonly string[],base:HostRequestV1,nowMs:number):HostPhaseEstimateV1{
+ const learnedExecution=estimateHostRatioV1(policy,store,lineage,nowMs),prior=base.fixedMegabytes+base.minimumJobs*base.perJobMegabytes,preferred=base.fixedMegabytes+base.preferredJobs*base.perJobMegabytes;
+ const bound=hostClassBoundV1(policy,store,lineage,nowMs),grow=preferred<=0?learnedExecution.ratioBasisPoints:Math.max(1,Math.min(learnedExecution.ratioBasisPoints,Math.floor(bound.megabytes*SCALE/preferred))),execution:HostEstimateV1=bound.source==="fallback"&&learnedExecution.samples===0?learnedExecution:Object.freeze({...learnedExecution,ratioBasisPoints:grow});
+ const learned=(phase:Exclude<HostPhaseV1,"execution">):HostPhaseSizeV1|undefined=>{const size=estimateHostPhaseV1(policy,store,phase,phase==="rebuild"?policy.estimates.rebuildPriorMegabytes:prior,nowMs);return size&&Object.freeze({megabytes:size.megabytes,rampMilliseconds:size.rampMilliseconds});};
+ const assembly=learned("assembly"),plan=learned("plan"),build=learned("rebuild");
+ const scaled:HostPhaseSizeV1=Object.freeze({megabytes:round(preferred*execution.ratioBasisPoints/SCALE),rampMilliseconds:execution.rampMilliseconds});
+ const floor=Math.max(assembly?.megabytes??0,plan?.megabytes??0),decisive=[assembly,plan].reduce<HostPhaseSizeV1|undefined>((best,row)=>row&&(!best||row.megabytes>best.megabytes)?row:best,undefined);
+ return Object.freeze({...execution,growRatioBasisPoints:grow,rampMilliseconds:decisive&&decisive.megabytes>scaled.megabytes?decisive.rampMilliseconds:execution.rampMilliseconds,floorMegabytes:floor,phases:Object.freeze({...(assembly?{assembly}:{}),...(plan?{plan}:{}),...(build?{rebuild:build}:{}),execution:scaled})});
+}
+
+/** 🔻️ What the gate should change when a run enters a phase: the reservation and the time it counts in full. */
+export type HostPhaseResizeV1=Readonly<{reservedMegabytes:number;rampMilliseconds:number}>;
+
+/** 🔧️ Makes the function that re-sizes a grant at a phase boundary: entering assembly, plan or execution the reservation falls to the highest need of the phases still to come (shrinking only, so no run ever has to wait for memory in the middle of its work; the need of the execution at the granted jobs, the learned constant sizes of assembly and plan), counting in full for the time the deciding phase needs to peak, measured from the grant's start; entering `rebuild` it rises to the learned rebuild size, at most the whole `capacityMegabytes`: the graph build is bounded by the builder custody and the compute slots (one build at a time), so its reservation is not held to the share a task may ask for, and it falls back at the next boundary. Without learned global phases nothing changes. */
+export function createHostPhaseResizerV1(policy:HostCapacityPolicyV1,base:HostRequestV1,estimate:HostPhaseEstimateV1,capacityMegabytes:number):(phase:HostPhaseV1,context:Readonly<{jobs:number;reservedMegabytes:number;activeMilliseconds:number}>)=>HostPhaseResizeV1|undefined{
+ const execution=scaleHostRequestV1(policy,base,estimate.ratioBasisPoints,capacityMegabytes),ramp=(milliseconds:number)=>clamp(policy.memory.rampMilliseconds,milliseconds,policy.estimates.maximumRampMilliseconds);
+ return (phase,context)=>{
+  if(phase==="rebuild"){
+   const build=estimate.phases.rebuild,wanted=build===undefined?0:Math.min(capacityMegabytes,build.megabytes);
+   return build!==undefined&&wanted>context.reservedMegabytes?Object.freeze({reservedMegabytes:wanted,rampMilliseconds:ramp(build.rampMilliseconds)}):undefined;
+  }
+  const rest=(["assembly","plan","execution"] as const).slice((["assembly","plan","execution"] as const).indexOf(phase)).map(name=>({megabytes:name==="execution"?execution.fixedMegabytes+context.jobs*execution.perJobMegabytes:estimate.phases[name]?.megabytes??0,rampMilliseconds:estimate.phases[name]?.rampMilliseconds??estimate.rampMilliseconds}));
+  const decisive=rest.reduce((best,row)=>row.megabytes>0&&row.megabytes>=best.megabytes?row:best,rest[0]!),wanted=Math.min(context.reservedMegabytes,decisive.megabytes);
+  return wanted<context.reservedMegabytes?Object.freeze({reservedMegabytes:wanted,rampMilliseconds:ramp(decisive.rampMilliseconds-context.activeMilliseconds)}):undefined;
+ };
+}
+
+/** 🎟️ How many graph computers the compute slots may run at once on this host: the share of the memory above the floor that the rebuild may use (`rebuildShareBasisPoints`) divided by what a rebuild learned to need (`rebuildPriorMegabytes` when it has not learned yet), between one and `maximumRebuildSlots`; the slots of the claim registry are bounded by this, so a rebuild is admitted by the memory it measurably takes. */
+export function hostRebuildSlotsV1(policy:HostCapacityPolicyV1,store:HostEstimateStoreV1,totalMegabytes:number,floorMegabytes:number,nowMs:number):number{
+ const rules=policy.estimates,size=estimateHostPhaseV1(policy,store,"rebuild",rules.rebuildPriorMegabytes,nowMs)?.megabytes??rules.rebuildPriorMegabytes;
+ return clamp(1,Math.floor(Math.floor(Math.max(0,totalMegabytes-floorMegabytes)*rules.rebuildShareBasisPoints/SCALE)/size),rules.maximumRebuildSlots);
+}

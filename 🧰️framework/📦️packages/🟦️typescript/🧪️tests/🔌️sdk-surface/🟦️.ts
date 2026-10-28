@@ -6,6 +6,9 @@ import { expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import ts from "typescript";
+import { testWorkersV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/👷️workers/🟦️.ts";
+/** 👷️ The fresh processes the two loading laws run at once: three at most, fewer when the admitted memory of the test run carries fewer (each loads a facade, 400 MB); six at once held the whole run at 2.8 GB. */
+const processes = testWorkersV1("bun-test", process.env, { request: 3 }).workers;
 
 const packageDir = resolve(import.meta.dir, "../..");
 const manifest = JSON.parse(readFileSync(join(packageDir, "package.json"), "utf8")) as { exports: Record<string, string> };
@@ -58,7 +61,7 @@ test("the TypeScript program has no diagnostic on any facade (names exist, value
   const roots = facades.map(([, target]) => join(packageDir, target));
   const program = ts.createProgram(roots, options);
   const mine = new Set(roots.map(p => resolve(p)));
-  const diagnostics = program.getSemanticDiagnostics().concat(program.getSyntacticDiagnostics()).filter(d => d.file && mine.has(resolve(d.file.fileName)) && !(d.code === 2307 && /\.sql['"]/.test(ts.flattenDiagnosticMessageText(d.messageText, "\n"))));
+  const diagnostics = roots.flatMap(root => { const file = program.getSourceFile(root); return file ? [...program.getSemanticDiagnostics(file), ...program.getSyntacticDiagnostics(file)] : []; }).filter(d => d.file && mine.has(resolve(d.file.fileName)) && !(d.code === 2307 && /\.sql['"]/.test(ts.flattenDiagnosticMessageText(d.messageText, "\n"))));
   expect(diagnostics.map(d => `${d.file!.fileName}: ${ts.flattenDiagnosticMessageText(d.messageText, "\n")}`)).toEqual([]);
 }, 180_000);
 
@@ -73,7 +76,7 @@ test("every facade loads through its package specifier in a fresh process", asyn
       results.push({ subpath, loaded: out.includes("LOADED"), stderr: err.split("\n").find(line => /error|Cannot/i.test(line)) ?? "" });
     }
   };
-  await Promise.all(Array.from({ length: 6 }, worker));
+  await Promise.all(Array.from({ length: processes }, worker));
   expect(results.filter(r => !r.loaded)).toEqual([]);
   expect(results.length).toBe(facades.length);
 }, 300_000);
@@ -107,7 +110,7 @@ test("every facade value export is the very binding of the module it names (runt
       results.push({ subpath: job.subpath, mismatched: out ? JSON.parse(out) : ["<did not run>"], stderr: out ? "" : err.split("\n").find(line => /error|Cannot/i.test(line)) ?? "" });
     }
   };
-  await Promise.all(Array.from({ length: 6 }, worker));
+  await Promise.all(Array.from({ length: processes }, worker));
   expect(results.filter(r => r.mismatched.length > 0)).toEqual([]);
   expect(results.length).toBeGreaterThan(100);
 }, 300_000);

@@ -1,0 +1,7 @@
+{
+  "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+  "compilerOptions": {"allowJs": true, "noEmit": true, "types": ["bun", "node"], "skipLibCheck": true},
+  "include": [],
+  "exclude": [],
+  "files": ["/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🟦️.ts", "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🧫️fixtures/🟦️echo.ts", "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🌳️owner-view/🧪️tests/🏝️reach/🟦️.ts", "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🌳️owner-view/🧪️tests/🧬️inference/🟦️.ts", "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🧪️tests/🔎️probes/🟦️.ts"]
+}

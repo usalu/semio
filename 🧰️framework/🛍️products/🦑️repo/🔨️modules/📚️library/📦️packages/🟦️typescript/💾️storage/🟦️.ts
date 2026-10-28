@@ -1,12 +1,14 @@
 /** 💾️ Public `@semio-tech/repo-lib/storage` entry (bounded repository storage: cache partitions, budget stores, Nx and compiler custody, bootstrap tooling, development state); explicit re-exports of the library paths that own each member, nothing is defined here. */
 export { requireCompilerWriterCustodyV1, withCompilerWorkspaceSharedWriteV1, withCompilerWorkspaceWriteV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
+export { compilerOriginOwnedV1 } from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts";
+export { unitCacheRootV1 } from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 export { reclaimUnitStorageV1 } from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts";
 export { relieveUnitStorageV1, retryAfterOutOfSpaceV1, withUnitPressureRecheckV1 } from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 export { withRepositoryComponentLaneV1 } from "../../../🏃️process/🦀️cargo/🚪️launcher/🟦️.ts";
 export { readObservedCargoConfigurationPlanV1, withRepositoryObservedCargoConfigurationV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/👓️reading/🟦️.ts";
 export { default as configurationReadingSchema } from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/👓️reading/🧬️schema/🔣️.json" with { type: "json" };
 export { default as ingressConfigurationSchema } from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🧬️schema/🔣️.json" with { type: "json" };
-export { withRepositoryCompilerStoreV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+export { withRepositoryCompilerLaneV1, withRepositoryCompilerStoreLaneV1, withRepositoryCompilerStoreV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 export { repositoryCachePartitionRootDataV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
 export { withRepositoryCacheStoreV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 export type { RepositoryCacheStoreV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";

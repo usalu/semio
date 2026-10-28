@@ -1,0 +1,54 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🔣️.json": {
+  "base": "c93f6e1fc0b0bf98c878245ebdd80348078ea4abe68c920d6ec975e3935334d1",
+  "new": "d37f1698126dd70a6286361d4e5fb8ad3dd53c1f3e86fadc0bd74aa95da091db"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🧬️schema/🔣️.json": {
+  "base": "9529a3557d5decfe8518752f98b48982f60789821ed619588148dcf439ae92c0",
+  "new": "aaf9180b732f78529118f5905025dc7d435972ae8d64996796c21de659fdfe03"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🟦️.ts": {
+  "base": "3665b082a9c50e97acbf697ed3289f1a5a45fc5672a9092002f520056760ecc3",
+  "new": "c73aa8fc638d4c1878ad55f3497a9bffc44850b9cd1581eb140fc9306be92944"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/⌨️command/🟦️.ts": {
+  "base": "d0420033ade08a771df8f4f4eb0b3453537dc2108091504068af8e95d2eab830",
+  "new": "c11daea5b56820fdbc07acd7b9cdc6fe6573a25eb04c253c50f1d46068e647f6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🧪️tests/🧫️fixtures/🔣️.json": {
+  "base": "8de566a3059b7ea4ed7093247addf24091830ac2d0f464f3ceb068df7506fce3",
+  "new": "a73f0a79bedfc7de32177fde193b740654243c7ddab84536fa3f3cbd70e1e2a4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🔣️policy.json": {
+  "base": "cc538d3e29f41a57812a2f189c604187e0f042298be3ae5e0f94fddfc9cc8976",
+  "new": "f2b3d0f7443f3b34b235fd37fed941ef71fe1b7240a7c31279a0d7f7748b2c6a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧬️schema/🔣️.json": {
+  "base": "98e859a145abcfe3fd2a687fce58d86221eccfc75e0d23fc66580c67bc2b9c3f",
+  "new": "944b385b885b6c1168201d568abff96af8191c40d23e604d162d6453e558e273"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🟦️.ts": {
+  "base": "8dad8643695103d74c6fd51eb954df4b330871ecb6862c84cc805af12cf31a08",
+  "new": "9fdd0583e0bc5df1ea2333cc156ccbcad23a782ea9c11a27ee631af2a3d9c5f7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/💊️remedies/📖️texts/🔣️.json": {
+  "base": "d9889f2bbcac2fc17d5f1d6b8e68d73c42137a915f84c077d0f7cbc7ff86296c",
+  "new": "3a4067632024582ffa575a5ed6f6eb56d4984e8e9cf68dae06e256a47f17afd2"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/💊️remedies/🧪️tests/🟦️.ts": {
+  "base": "3befc8b015e0ee14dac513281b846c473f7586797cbafa64715f4be1c0f70c70",
+  "new": "59a34cc74fd525c877855d2c3a38d83dc05cfa731a49335689f0929dbabea88f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧫️fixtures/🔣️.json": {
+  "base": "1a756edfcebc7c8ff6f0a0fc2953efd2e473ad183b1e591a66d2f1d5b815cc85",
+  "new": "3cfaf527d75285a80f516e8050d2c2ccb35ce60a9f2c2dc7b8bdd8372156056c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧪️tests/🧮️matrix/🔣️.json": {
+  "base": "bb2974370bb52c361d9a7d8985c3c786a2c3731c0a217d64a86db064e3a0e243",
+  "new": "ee8e7e4a84cad0c3223de630f410b8403d8783a4bfa9aa01504697f2ca034afb"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🛗️zero-touch/🗂️closures/🔣️.json": {
+  "base": "f7d72fb6f081b677b318431b90579410b3340ed74497ee89ea30573a98da9107",
+  "new": "af71c0d4455328ec2e95008cd4f3b541ce5f7267fa3c8ea78c3b438c2e52a183"
+ }
+}

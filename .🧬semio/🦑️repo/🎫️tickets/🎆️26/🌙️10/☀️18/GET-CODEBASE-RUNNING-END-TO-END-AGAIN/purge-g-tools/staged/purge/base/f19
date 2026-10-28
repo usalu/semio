@@ -1,0 +1,771 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "constants",
+  "nodes",
+  "protection",
+  "protectionDefects",
+  "generated",
+  "boundary",
+  "folderFor",
+  "generatedRoot",
+  "closed",
+  "projection",
+  "dedupe",
+  "huge",
+  "hugeErrors",
+  "incrementalPaths",
+  "names"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "constants": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "repoDir",
+    "ticketsDir",
+    "buildNames",
+    "cacheDir",
+    "generated",
+    "probePrefixes",
+    "incrementalMaxBytes",
+    "nativeBacking",
+    "manifest"
+   ],
+   "properties": {
+    "repoDir": {
+     "type": "string"
+    },
+    "ticketsDir": {
+     "type": "string"
+    },
+    "buildNames": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "cacheDir": {
+     "type": "string"
+    },
+    "generated": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "probePrefixes": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "incrementalMaxBytes": {
+     "type": "integer"
+    },
+    "nativeBacking": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "manifest": {
+     "type": "string"
+    }
+   }
+  },
+  "nodes": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "kind"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "kind": {
+      "enum": [
+       "directory",
+       "file",
+       "symlink"
+      ]
+     },
+     "text": {
+      "type": "string"
+     },
+     "childrenUnreadable": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "protection": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "candidate",
+     "allowed",
+     "expected",
+     "environment"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "candidate": {
+      "type": "string"
+     },
+     "allowed": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "environment": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "protectionDefects": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "candidate",
+     "allowed",
+     "expected",
+     "environment",
+     "defect"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "candidate": {
+      "type": "string"
+     },
+     "allowed": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "environment": {
+      "type": "boolean"
+     },
+     "defect": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "generated": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "candidate",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "candidate": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "boundary": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "expected"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "folderFor": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "expected"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "generatedRoot": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "expected"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "closed": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "expected"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "expected": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "projection": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "rows",
+    "protectedPrefixes",
+    "expectedKept",
+    "expectedProtected"
+   ],
+   "properties": {
+    "rows": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "kind",
+       "path",
+       "bytes"
+      ],
+      "properties": {
+       "kind": {
+        "type": "string"
+       },
+       "path": {
+        "type": "string"
+       },
+       "bytes": {
+        "type": "integer"
+       }
+      }
+     }
+    },
+    "protectedPrefixes": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "expectedKept": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "expectedProtected": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "dedupe": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "rows",
+     "expected"
+    ],
+    "properties": {
+     "rows": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "kind",
+        "path",
+        "bytes"
+       ],
+       "properties": {
+        "kind": {
+         "type": "string"
+        },
+        "path": {
+         "type": "string"
+        },
+        "bytes": {
+         "type": "integer"
+        }
+       }
+      }
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "huge": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "dir",
+     "max",
+     "expected"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "dir": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "path",
+       "crates"
+      ],
+      "properties": {
+       "path": {
+        "type": "string"
+       },
+       "crates": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "name",
+          "bytes",
+          "working"
+         ],
+         "properties": {
+          "name": {
+           "type": "string"
+          },
+          "bytes": {
+           "type": "integer"
+          },
+          "working": {
+           "type": "boolean"
+          }
+         }
+        }
+       }
+      }
+     },
+     "max": {
+      "type": "number"
+     },
+     "expected": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "hugeErrors": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "dir",
+     "max",
+     "message"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "dir": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "path",
+       "crates"
+      ],
+      "properties": {
+       "path": {
+        "type": "string"
+       },
+       "crates": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "name",
+          "bytes",
+          "working"
+         ],
+         "properties": {
+          "name": {
+           "type": "string"
+          },
+          "bytes": {
+           "type": "integer"
+          },
+          "working": {
+           "type": "boolean"
+          }
+         }
+        }
+       }
+      }
+     },
+     "max": {
+      "type": "number"
+     },
+     "message": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "incrementalPaths": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "path",
+     "roots",
+     "expected"
+    ],
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "roots": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "expected": {
+      "type": "boolean"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "names": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "misplacedRepo",
+    "misplacedTickets",
+    "buildArtifact",
+    "cargoTargetName",
+    "semioRoot",
+    "rootTransient",
+    "windowsIllegal",
+    "generatedDir",
+    "endsWithAscii"
+   ],
+   "properties": {
+    "misplacedRepo": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "expected"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "expected": {
+        "type": "boolean"
+       }
+      }
+     },
+     "minItems": 1
+    },
+    "misplacedTickets": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "expected"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "expected": {
+        "type": "boolean"
+       }
+      }
+     },
+     "minItems": 1
+    },
+    "buildArtifact": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "expected"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "expected": {
+        "type": "boolean"
+       }
+      }
+     },
+     "minItems": 1
+    },
+    "cargoTargetName": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "expected"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "expected": {
+        "type": "boolean"
+       }
+      }
+     },
+     "minItems": 1
+    },
+    "semioRoot": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "expected"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "expected": {
+        "type": "boolean"
+       }
+      }
+     },
+     "minItems": 1
+    },
+    "rootTransient": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "expected"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "expected": {
+        "type": "boolean"
+       }
+      }
+     },
+     "minItems": 1
+    },
+    "windowsIllegal": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "expected"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "expected": {
+        "type": "boolean"
+       }
+      }
+     },
+     "minItems": 1
+    },
+    "generatedDir": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "expected"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "expected": {
+        "type": "boolean"
+       }
+      }
+     },
+     "minItems": 1
+    },
+    "endsWithAscii": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "suffix",
+       "expected"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "suffix": {
+        "type": "string"
+       },
+       "expected": {
+        "type": "boolean"
+       }
+      }
+     },
+     "minItems": 1
+    }
+   }
+  }
+ }
+}

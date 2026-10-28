@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "🏗️build/📥️inputs/🔏️revision/🧬️schema/🔣️.json",
+ "definitions": [
+  "Policy"
+ ],
+ "sources": [
+  "🏗️build/📥️inputs/🔏️revision/🟨️.mjs"
+ ],
+ "exports": [
+  {
+   "source": "🏗️build/📥️inputs/🔏️revision/🟨️.mjs",
+   "name": "REVISION_POLICY_V1",
+   "definition": "Policy"
+  }
+ ]
+}

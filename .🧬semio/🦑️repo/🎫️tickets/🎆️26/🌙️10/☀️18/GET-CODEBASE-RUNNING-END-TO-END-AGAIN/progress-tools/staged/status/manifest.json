@@ -1,0 +1,32 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧬️schema/🔣️.json": {
+  "file": "00.json",
+  "base": "6a2088c9fc34780b1352034289dac2ad3fbd9499e213e2d6912c6e2ce8d058f6",
+  "new": "2c5d3e83b4a379346a4eb568f7ceb0a1db560855bdd470f4adab7e70fb30fa15"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🟦️.ts": {
+  "file": "01.ts",
+  "base": "323c2919f605882aa73ed9d0a3815c1ab519e10f9407de030a49a225e999b0ec",
+  "new": "55f5c4286b8a6259339867210f93e079fe1fa39a6ca9cceaebc158bf41f0abbc"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📋️status/🧬️schema/🔣️.json": {
+  "file": "02.json",
+  "base": "626fa52219b8ff21268d34cb13da70fb426f2976d924a196d426fc5c9adfe459",
+  "new": "66b004695ba54e33ae3498ac204713bfef52f72c95fee488e9c756e6ab02d7ea"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📋️status/🟦️.ts": {
+  "file": "03.ts",
+  "base": "7912af9a3309c15d4d855b232197fb834383b38319959d1f6f0c0d2e95bfac53",
+  "new": "81d6714679ccc3509e279c5a9e88b79c9a940d086e1412453478bf57c965ecd1"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/🧬️schema/🔣️.json": {
+  "file": "04.json",
+  "base": "d022c22d4201c1772e4b82bcce4cdda945f278a56a69f74520069f27884fd4a2",
+  "new": "8e860c673d6f90bc6def62737272a75ba5fb704166c030fe4469a8957ab932db"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/🧪️tests/🟦️.ts": {
+  "file": "05.ts",
+  "base": "974d3ab0d165613648ed8416e0296c6e39db2962509a1f4fc93f1d0731442838",
+  "new": "a61c67c94aac975d256280c42df76eeea81ff2db4c0a5d4083f7757b73366f79"
+ }
+}

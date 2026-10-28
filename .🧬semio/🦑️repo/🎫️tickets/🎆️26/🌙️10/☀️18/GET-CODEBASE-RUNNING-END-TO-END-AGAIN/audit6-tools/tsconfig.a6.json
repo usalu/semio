@@ -1,0 +1,18 @@
+{
+ "extends": "./🧰️framework/🛍️products/🦑️repo/tsconfig.json",
+ "compilerOptions": {
+  "noEmit": true,
+  "incremental": false,
+  "skipLibCheck": true,
+  "strict": true
+ },
+ "files": [
+  "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🟦️.ts",
+  "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧪️tests/✏️edit/🟦️.ts",
+  "./🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🧠️memo/🟦️.ts",
+  "./🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🧠️memo/🧪️tests/🟦️.ts",
+  "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/📤️relevance/🟦️.ts",
+  "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧪️tests/🟦️.ts"
+ ],
+ "include": []
+}

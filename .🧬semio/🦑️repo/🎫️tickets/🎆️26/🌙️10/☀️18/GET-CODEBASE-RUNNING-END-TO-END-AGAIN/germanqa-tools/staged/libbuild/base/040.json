@@ -1,0 +1,28 @@
+{
+ "version": 1,
+ "contract": {
+  "en": "A run that would only wait for a peer's graph build does not keep its loaders: after it has queued for the builder for yieldAfterMilliseconds, the process that waits writes a ticket and ends, the front door waits alone (no child, so its capacity reservation can be lent) until the graph generation advances past the ticket or wakeMilliseconds have passed, then starts the same snapshot again with the original request time, so the coverage stamp of the peer's build still serves it. A run yields at most maximumYields times; after that it queues in place as before.",
+  "de": "Ein Lauf, der nur auf den Graphbau eines Peers warten würde, behält seine Lader nicht: hat er yieldAfterMilliseconds in der Schlange des Bauers gestanden, schreibt der wartende Prozess ein Ticket und endet, die Vordertür wartet allein (ohne Kind, damit ihre Kapazitätsreservierung verliehen werden kann), bis die Graph-Generation das Ticket überholt hat oder wakeMilliseconds vergangen sind, und startet dann dasselbe Abbild erneut mit der ursprünglichen Anfragezeit, sodass der Abdeckungsstempel des Peer-Baus sie weiter bedient. Ein Lauf gibt höchstens maximumYields Mal ab; danach steht er wie bisher an Ort und Stelle in der Schlange."
+ },
+ "yieldAfterMilliseconds": 15000,
+ "maximumYields": 3,
+ "wakeMilliseconds": 600000,
+ "pollMilliseconds": 3000,
+ "progressMilliseconds": 30000,
+ "environment": {
+  "ticket": "SEMIO_BUILD_GRAPH_YIELD_TICKET",
+  "requestedAt": "SEMIO_BUILD_GRAPH_REQUESTED_AT",
+  "round": "SEMIO_BUILD_GRAPH_YIELD_ROUND"
+ },
+ "exitCode": 75,
+ "texts": {
+  "waiting": {
+   "en": "graph: a peer builds the graph; this run waits as its front door alone, without a loader ({seconds} s, generation {generation} was the newest when it queued)",
+   "de": "graph: ein Peer baut den Graphen; dieser Lauf wartet nur als Vordertür, ohne Lader ({seconds} s, Generation {generation} war die neueste, als er sich anstellte)"
+  },
+  "resumed": {
+   "en": "graph: generation {generation} is current or the wait ended after {seconds} s; starting again with the request time of the first start",
+   "de": "graph: Generation {generation} ist aktuell oder die Wartezeit endete nach {seconds} s; Neustart mit der Anfragezeit des ersten Starts"
+  }
+ }
+}

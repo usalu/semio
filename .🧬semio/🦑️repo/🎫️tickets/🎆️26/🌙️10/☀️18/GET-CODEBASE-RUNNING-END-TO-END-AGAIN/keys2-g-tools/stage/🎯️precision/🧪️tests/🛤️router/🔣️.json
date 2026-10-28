@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "tree": {
+    "rt/📜️script.ts": "import { BundleScript, ScriptRouter } from \"x\";\n/** 🧪️ alpha: a package and a test file. */\nclass AlphaScript extends BundleScript {\n  async run(): Promise<void> {\n    // a } in a comment and a 'quote\n    await testCargo(this.invocation, \"Cargo.toml\", [\"crate-a\"], [\"--lib\"]);\n    const text = \"}{\" + '}' + `}${1}`;\n    await run(process.execPath, [\"test\", join(this.root, \"../tests/unit/🟦️.ts\")]);\n  }\n}\n/** beta: a test file and a data directory only. */\nclass BetaScript extends BundleScript {\n  async run(): Promise<void> {\n    /* } */ await run(process.execPath, [\"test\", resolve(this.repoRoot, \"tests/helper.ts\"), resolve(this.repoRoot, \"data/two\")]);\n  }\n}\nclass GammaScript extends BundleScript {\n  async run(): Promise<void> {\n    await testCargo(this.invocation, \"Cargo.toml\", packages, []);\n  }\n}\nclass DeltaScript extends BundleScript {\n  async run(): Promise<void> {\n    await run(\"echo\", [\"nothing\"]);\n  }\n}\nconst router = new ScriptRouter(import.meta.dirname).register(\"test-alpha\", AlphaScript).register(\"test-beta\", BetaScript);\nrouter.register(\"test-gamma\", GammaScript);\nrouter.register(\"test-delta\", DeltaScript);\n",
+    "Cargo.toml": "[workspace]\nmembers = [\"crates/a\", \"crates/b\"]\n",
+    "crates/a/Cargo.toml": "[package]\nname = \"crate-a\"\nversion = \"0.1.0\"\n\n[dependencies]\nb = { path = \"../b\", package = \"crate-b\" }\n",
+    "crates/a/src/lib.rs": "pub fn a() {}\n",
+    "crates/b/Cargo.toml": "[package]\nname = \"crate-b\"\nversion = \"0.1.0\"\n",
+    "crates/b/src/lib.rs": "pub fn b() {}\n",
+    "tests/unit/🟦️.ts": "import { helper } from \"../helper.ts\";\nexport const t = helper;\n",
+    "tests/helper.ts": "export const helper = 1;\n",
+    "data/one.json": "{}\n",
+    "data/two/three.json": "{}\n",
+    "rt2/📜️script.ts": "import { TestScript } from \"./routes/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dirname).register(\"test\", TestScript);\n",
+    "rt2/routes/🟦️.ts": "const crates = [\"crate-a\", \"crate-b\"];\nconst other = [\"unused\"];\nexport class TestScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    if (segments[0] === \"unit\") {\n      await runRepositoryCargoTests(crates, root, invocation, rest);\n      return;\n    }\n    if(segments[0]===\"docs\"){\n      await this.bun([join(this.root, \"../../tests/unit/🟦️.ts\")]);\n      return;\n    }\n    if (segments[0] === \"single\") await this.bun([join(this.root, \"../../tests/helper.ts\")]);\n    await dashboardExecutable();\n  }\n}\n"
+  },
+  "cargo": {
+    "roots": {
+      "crates/a": [
+        "crates/a",
+        "crates/b"
+      ]
+    },
+    "sources": {
+      "crates/a": [
+        "{workspaceRoot}/crates/a/src/lib.rs"
+      ],
+      "crates/b": [
+        "{workspaceRoot}/crates/b/src/lib.rs"
+      ]
+    },
+    "toolchain": [
+      "Cargo.toml"
+    ]
+  },
+  "words": [
+    {
+      "command": "repo ./📜️script.ts test-alpha",
+      "words": [
+        "test-alpha"
+      ]
+    },
+    {
+      "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./c.json --cwd p -- repo ./📜️script.ts test-beta --flag",
+      "words": [
+        "test-beta",
+        "--flag"
+      ]
+    },
+    {
+      "command": "bun ./other.ts run",
+      "words": null
+    }
+  ],
+  "derived": [
+    {
+      "word": "test-alpha",
+      "files": [
+        "crates/a/src/lib.rs",
+        "crates/b/src/lib.rs",
+        "tests/helper.ts",
+        "tests/unit/🟦️.ts"
+      ],
+      "patterns": [
+        "{workspaceRoot}/crates/a/Cargo.toml",
+        "{workspaceRoot}/crates/b/Cargo.toml",
+        "{workspaceRoot}/Cargo.toml"
+      ]
+    },
+    {
+      "word": "test-beta",
+      "files": [
+        "tests/helper.ts"
+      ],
+      "patterns": [
+        "{workspaceRoot}/data/two/**/*"
+      ]
+    }
+  ],
+  "refused": [
+    {
+      "word": "test-gamma",
+      "message": "runs Cargo without a literal package"
+    },
+    {
+      "word": "test-delta",
+      "message": "names no package or path"
+    },
+    {
+      "word": "test-missing",
+      "message": "registers no command"
+    }
+  ],
+  "branches": [
+    {
+      "command": "repo ./📜️script.ts test unit",
+      "files": [
+        "crates/a/src/lib.rs",
+        "crates/b/src/lib.rs"
+      ],
+      "patterns": [
+        "{workspaceRoot}/crates/a/Cargo.toml",
+        "{workspaceRoot}/crates/b/Cargo.toml",
+        "{workspaceRoot}/Cargo.toml"
+      ]
+    },
+    {
+      "command": "repo ./📜️script.ts test docs",
+      "files": [
+        "tests/helper.ts",
+        "tests/unit/🟦️.ts"
+      ],
+      "patterns": []
+    },
+    {
+      "command": "repo ./📜️script.ts test single",
+      "files": [
+        "tests/helper.ts"
+      ],
+      "patterns": []
+    },
+    {
+      "command": "repo ./🔨️modules/🏃️process/📜️script.ts command -- repo ./📜️script.ts test unit",
+      "files": [
+        "crates/a/src/lib.rs",
+        "crates/b/src/lib.rs"
+      ],
+      "patterns": [
+        "{workspaceRoot}/crates/a/Cargo.toml",
+        "{workspaceRoot}/crates/b/Cargo.toml",
+        "{workspaceRoot}/Cargo.toml"
+      ]
+    }
+  ]
+}

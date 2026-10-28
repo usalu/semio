@@ -1,3 +1,4 @@
+import {noticeLanguagesV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import { Buffer } from "node:buffer";
 import { requireStoreReceiptV1, storeReceiptOutputV1 } from "../../🏗️build/🧾️store-receipt/🟨️.mjs";
 import schemaContract from "./🧬️schema/🔣️.json" with { type: "json" };
@@ -8,11 +9,9 @@ const projectIdentifier=/^(?:@[a-z0-9][a-z0-9-]*\/)?[a-z0-9][a-z0-9-]*$/u;
 const messages=JSON.parse(JSON.stringify(schemaContract.$defs.NativeHostMessagesV1.const));
 const requiredModes=["prototype","release"];
 
-/** 🌐️ The languages the refusal is rendered in: the chosen one (`SEMIO_LANGUAGE`, `LC_ALL`, `LANG`), both declared languages when none is chosen. */
+/** 🌐️ The languages the refusal is rendered in: the one the language protocol chooses, both declared languages when it chooses none. */
 export function nativeHostLanguagesV1(environment=process.env) {
-  const pick=value=>{const code=String(value??"").toLowerCase().split(/[-_.:@]/u)[0];return messages.languages.includes(code)?code:undefined;};
-  const chosen=pick(environment.SEMIO_LANGUAGE)??pick(environment.LC_ALL)??pick(environment.LANG);
-  return chosen?[chosen]:[...messages.languages];
+  return [...noticeLanguagesV1(messages.languages,environment)];
 }
 
 /** 🔎️ Lists every identity the declaration disagrees with in the authored owner facts. */

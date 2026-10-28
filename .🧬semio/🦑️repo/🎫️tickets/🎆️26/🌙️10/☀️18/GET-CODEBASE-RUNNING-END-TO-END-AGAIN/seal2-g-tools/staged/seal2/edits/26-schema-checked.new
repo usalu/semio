@@ -1,0 +1,14 @@
+    "Checked": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "entry", "digest", "atMs", "drifted", "refreshedAtMs"],
+      "properties": {
+        "version": { "const": 1 },
+        "entry": { "$ref": "#/definitions/Path" },
+        "digest": { "$ref": "#/definitions/Digest" },
+        "atMs": { "type": "integer", "minimum": 0 },
+        "drifted": { "type": "boolean" },
+        "refreshedAtMs": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "Digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },

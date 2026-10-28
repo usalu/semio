@@ -14,6 +14,8 @@ import ownerSchema from"../../../../../../../../../../../../🔨️modules/🏃�
 import nativeStorageSchema from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️json/🟦️.ts";
 import helperSchema from"./👷️asset-publication/🧬️schema.json";
 import corpus from"./🔣️.json";
+import{privateRepositoryWorkspaceV1}from"../../../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 const freshEnvironment:readonly string[]=helperSchema.definitions.FreshEnvironment.const;
 const compile=(text:string)=>ts.transpileModule(text.replace(/^import[^\n]*\n/gmu,"").replace(/^export /gmu,""),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 

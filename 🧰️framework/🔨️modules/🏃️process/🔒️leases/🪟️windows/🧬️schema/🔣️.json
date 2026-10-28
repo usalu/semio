@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/lease-windows/v1",
+  "description": "How the lease store treats the file errors and SQLite open failures a Windows host raises where a POSIX host does not: SQLite opens its files without delete sharing, and scanners, indexers and a peer that just closed a database keep a file busy for a moment, so removing, renaming or reopening a lease file fails with a sharing violation that is not a fault.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "busyCodes": {
+          "win32": ["EBUSY", "EPERM", "EACCES"]
+        },
+        "pausesMilliseconds": [10, 40, 160, 640],
+        "removal": {
+          "win32": {
+            "maxRetries": 3,
+            "retryDelay": 50
+          }
+        },
+        "unopenable": {
+          "win32": {
+            "code": "SQLITE_CANTOPEN",
+            "primary": 14
+          }
+        }
+      }
+    },
+    "Platform": {
+      "enum": ["darwin", "linux", "win32"]
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["definitions"]
+}

@@ -3,3 +3,7 @@
    `🖱️ui`, and its document globals. The quiz renderer is its only class-name surface besides `🖱️ui` itself. */
 @import "../../../🧰️framework/🔨️modules/🖱️ui/🧵️styles/🎨️.css";
 @source "../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react";
+/* 🧪️ Product CSS never depends on tests, fixtures, examples, e2e specs or stories: Tailwind scans no file of them, so a class used only there cannot change the served stylesheet.
+   `tailwindScan` in `📦️packages/🟦️typescript/📋️project.json` declares exactly the remaining scan region as a cache input; the law `keys3-g-tools/batch/laws/tailwind-scan.test.ts` keeps both in step. */
+@source not "../../../**/{🧪️tests,🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples,📖️stories,🎭️e2e}";
+@source not "../../../**/*.{feature,stories.*,story.*,mdx}";

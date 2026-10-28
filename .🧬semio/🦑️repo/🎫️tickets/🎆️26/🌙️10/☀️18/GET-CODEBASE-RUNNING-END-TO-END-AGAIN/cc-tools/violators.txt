@@ -1,8 +1,0 @@
-🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust
-🔨️modules/🧪️test/⚖️transient-preparation-law/📦️packages/🦀️rust
-🔨️modules/🧪️test/⚖️typed-input-law/📦️packages/🦀️rust
-🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust
-🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/⚖️declared-verb-verdicts/📦️packages/🦀️rust
-🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/⚖️laws/📦️packages/🦀️rust
-🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-carriers/📦️packages/🦀️rust
-🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-fixture/📦️packages/🦀️rust

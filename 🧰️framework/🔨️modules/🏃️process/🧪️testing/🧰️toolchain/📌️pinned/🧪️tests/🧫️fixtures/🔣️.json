@@ -9,8 +9,8 @@
   "refusals": [
     {"name": "no pin file", "file": null, "environment": {"SEMIO_LANGUAGE": "en"}, "message": "has no pinned channel"},
     {"name": "no channel key", "file": "[toolchain]\nprofile = \"minimal\"\n", "environment": {"SEMIO_LANGUAGE": "en"}, "message": "has no pinned channel"},
-    {"name": "the key belongs to another table", "file": "[other]\nchannel = \"stable\"\n", "environment": {"SEMIO_LANGUAGE": "de"}, "message": "keinen angehefteten Kanal"},
+    {"name": "the key belongs to another table", "file": "[other]\nchannel = \"stable\"\n", "environment": {"SEMIO_LANGUAGE": "de"}, "message": "keinen gepinnten Kanal"},
     {"name": "an incoming selection of another channel", "file": "[toolchain]\nchannel = \"nightly-2026-07-20\"\n", "environment": {"RUSTUP_TOOLCHAIN": "stable", "SEMIO_LANGUAGE": "en"}, "message": "disagrees with the pinned channel nightly-2026-07-20"},
-    {"name": "an incoming selection of another channel in German", "file": "[toolchain]\nchannel = \"nightly-2026-07-20\"\n", "environment": {"RUSTUP_TOOLCHAIN": "stable", "SEMIO_LANGUAGE": "de"}, "message": "widerspricht dem angehefteten Kanal nightly-2026-07-20"}
+    {"name": "an incoming selection of another channel in German", "file": "[toolchain]\nchannel = \"nightly-2026-07-20\"\n", "environment": {"RUSTUP_TOOLCHAIN": "stable", "SEMIO_LANGUAGE": "de"}, "message": "widerspricht dem gepinnten Kanal nightly-2026-07-20"}
   ]
 }

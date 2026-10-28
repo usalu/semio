@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Graph inference limits / Grenzen der Graph-Inferenz",
+  "definitions": {
+    "Limits": {
+      "description": "EN: The ticks, cache bounds, display lengths, strides and throttles of the graph inferrers. DE: Die Takte, Cache-Grenzen, Anzeigelaengen, Schrittweiten und Drosselungen der Graph-Inferrer.",
+      "const": {
+        "runningTickMilliseconds": 5000,
+        "sourceLineCharacters": 512,
+        "entryOverheadBytes": 192,
+        "rustSourceCacheBytes": 16777216,
+        "advanceThrottleMilliseconds": 200
+      }
+    },
+    "LimitsDescriptions": {
+      "const": {
+        "en": {
+          "runningTickMilliseconds": "How often the projects still being inferred are reported while a computation runs.",
+          "sourceLineCharacters": "The most characters of the source line a refused TOML parse reports.",
+          "entryOverheadBytes": "The bytes one cached reference list is charged on top of its JSON image.",
+          "rustSourceCacheBytes": "The default byte budget of the Rust source analysis cache (16 MiB).",
+          "advanceThrottleMilliseconds": "The least time between two progress advances of a script input walk."
+        },
+        "de": {
+          "runningTickMilliseconds": "Wie oft die noch zu inferierenden Projekte gemeldet werden, waehrend eine Berechnung laeuft.",
+          "sourceLineCharacters": "Die meisten Zeichen der Quellzeile, die ein abgelehnter TOML-Parse meldet.",
+          "entryOverheadBytes": "Die Bytes, die eine gecachte Referenzliste zusaetzlich zu ihrem JSON-Abbild kostet.",
+          "rustSourceCacheBytes": "Das Standard-Bytebudget des Caches der Rust-Quellanalyse (16 MiB).",
+          "advanceThrottleMilliseconds": "Die kleinste Zeit zwischen zwei Fortschrittsschritten eines Skripteingabe-Durchlaufs."
+        }
+      }
+    }
+  }
+}

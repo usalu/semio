@@ -1,0 +1,52 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": {
+  "file": "00.mjs",
+  "base": "a2a42a7617a655de0b293c3783ac121a7b6732973252f8335f15613f7e17382f",
+  "new": "eceb4fc145467da59363621035f996adc94c494b7d2b8aaa086f4d1072f7f60c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/♨️reuse/🟨️.mjs": {
+  "file": "01.mjs",
+  "base": null,
+  "new": "e1df7429d1c72756b04123e8bdd03d70154bae11ddec7bc9a1cdc5ffe44011ce"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/♨️reuse/🟨️.d.mts": {
+  "file": "02.mts",
+  "base": null,
+  "new": "325e077d161c3aded2ba726f31ffeabf2d6da708fe0ed8e59beed10fafec982a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🟦️.ts": {
+  "file": "03.ts",
+  "base": "eabecbefb66b94579ef2bfba1d73ea13a24fbfa95527e7443d777d7b9250f5ca",
+  "new": "f9224936ed8423a02c4139497fc5cd0b942f1805fa07c9c50efc4685498d5f65"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧬️schema/🔣️.json": {
+  "file": "04.json",
+  "base": "14a4c408ef87c19a97da8b30c764bc48e8a29157e0c296e1d5e1a693873837a3",
+  "new": "e6a29b64bf02154fdc0fb20a5c0dbac1bdc8912746c72bbc92ec196954d6e636"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🚪️command/🟦️.ts": {
+  "file": "05.ts",
+  "base": "864f72bfbc703a7e87987a5bd52a70b7a173fe1b60abfeb02bf6b359c4fdb302",
+  "new": "6b56c76a016b3d78307a96736c3c66dc18595633e785c6aab20dddfe4981a80a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧮️derive/♨️warm/🟦️.ts": {
+  "file": "06.ts",
+  "base": null,
+  "new": "208b9aeddc065d083c78daf0e24f2a7d58b0ddc41b4d9e4b363c635e60d4edcf"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧮️derive/♨️warm/⌨️main/🟦️.ts": {
+  "file": "07.ts",
+  "base": null,
+  "new": "fe8902a27fd231fb7f067092a7b8540172b88c16b123ecb0258682430f8e56bf"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧮️derive/♨️warm/🧪️tests/🟦️.ts": {
+  "file": "08.ts",
+  "base": null,
+  "new": "a0d1a443f84f8c98c79e0acc20c2e70d44d742bb52932e8434cb7e1fa00db019"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧮️derive/♨️warm/🧪️tests/🔣️.json": {
+  "file": "09.json",
+  "base": null,
+  "new": "b8b9fff0de91487b495379b888ce0584df209aa7b1c5282ca58d48814565e75d"
+ }
+}

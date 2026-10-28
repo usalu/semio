@@ -6,9 +6,13 @@ import {spawnSync} from "node:child_process";
 import {tmpdir} from "node:os";
 import {dirname,join,relative} from "node:path";
 import schema from "../../🧬️schema/🔣️.json";
+import {HERMETIC_SERVICES_V1} from "../../../../../🏃️execution/🔒️hermetic/🟦️.ts";
 import {createNativeBuildCallerCapabilitiesV1} from "../../../../../📥️caller/🟦️.ts";
 import {createIssuedResourceControlV1,createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import * as execution from "../../🟦️.ts";
+import buildPolicy from "../../../../../🔣️policy.json";
+import {planWorkersV1,readWorkerPolicyV1} from "../../../../../👷️workers/🟦️.ts";
+import {bazelWorkerSettingsV1} from "../../../👷️workers/🟦️.ts";
 
 const adapter=await import("../../../📜️script.ts");
 const binary=process.env.SEMIO_TEST_BAZEL_BINARY,contract=schema.definitions.Contract.const,host=execution.bazelExecutionPlatformV1(process.platform,process.arch),here=process.cwd();
@@ -37,6 +41,7 @@ await receiveScriptProcessInvocation(process.env,async original=>{
  if(verb==="test"){const{answer}=await import("@fx/lib"),pad=(await import("leftpad-fx")).default;console.log(pad(readFileSync(join(here,"data/in.txt"),"utf8").trim(),6)+answer);return;}
  if(verb==="build"){const{answer}=await import("@fx/lib"),pad=(await import("leftpad-fx")).default;mkdirSync(join(here,"dist"),{recursive:true});writeFileSync(join(here,"dist/out.txt"),pad(readFileSync(join(here,"data/in.txt"),"utf8").trim(),6)+answer+"|"+process.env.SEMIO_TEST_LEVEL);return;}
  if(verb==="typecheck"||verb==="typecheck-bad"){await typecheckAdmittedProjectV1({workspace:root,cwd:here,project:verb==="typecheck"?"tsconfig.json":"tsconfig.bad.json",owner:"fixture",timeoutMs:600000,invocation:original,control:{}} as never);return;}
+ if(verb==="typecheck-env"){if(!process.env.SEMIO_HERMETIC_TYPESCRIPT_CHECK)throw new Error("no service address");return;}
  if(verb==="check-leak"){console.log(readFileSync(join(root,"secret.txt"),"utf8"));return;}
  if(verb==="check-stray"){writeFileSync(join(here,"stray.txt"),"x");return;}
  if(verb==="check-import"){await import("hidden-fx");return;}
@@ -75,7 +80,7 @@ test.skipIf(!binary)("law: hermetic class members read only declared inputs and 
 
   const inputs=["{projectRoot}/**/*","{workspaceRoot}/lib/**/*","{workspaceRoot}/package.json","{workspaceRoot}/🧰️framework/**/*",{env:"SEMIO_TEST_LEVEL"},{runtime:"bun --version"},{externalDependencies:["leftpad-fx","typescript"]}];
   const target=(verb:string,outputs:string[])=>({execution:{kind:"command",command:`repo ./📜️script.ts ${verb}`,cwd:"proj"},outputs,inputs,cache:true});
-  const graph={version:1 as const,projects:{"@teaching/architecture-course":{name:"@teaching/architecture-course",root:"proj",targets:{test:target("test",[]),build:target("build",["{projectRoot}/dist"]),typecheck:target("typecheck",[]),"typecheck-bad":target("typecheck-bad",[]),"check-leak":target("check-leak",[]),"check-stray":target("check-stray",[]),"check-import":target("check-import",[]),"check-authority":target("check-authority",["{projectRoot}/authority.json"])}}},dependencies:[]} as any;
+  const graph={version:1 as const,projects:{"@teaching/architecture-course":{name:"@teaching/architecture-course",root:"proj",targets:{test:target("test",[]),build:target("build",["{projectRoot}/dist"]),typecheck:target("typecheck",[]),"typecheck-bad":target("typecheck-bad",[]),"typecheck-env":target("typecheck-env",[]),"check-leak":target("check-leak",[]),"check-stray":target("check-stray",[]),"check-import":target("check-import",[]),"check-authority":target("check-authority",["{projectRoot}/authority.json"])}}},dependencies:[]} as any;
   process.env.SEMIO_TEST_LEVEL="quick";
   const generate=async(name:string,root:string,plan:execution.BazelExecutionPlanV1)=>{
    const api=await import("../../../📜️script.ts"),workspace=join(directory,name),request={tasks:Object.keys(graph.projects["@teaching/architecture-course"].targets).map(target=>"@teaching/architecture-course:"+target)};
@@ -87,24 +92,25 @@ test.skipIf(!binary)("law: hermetic class members read only declared inputs and 
   };
   const{workspace,planned,api}=await generate("ws",checkout,{host:host.id,tools:{[host.id]:process.execPath}}),label=(verb:string)=>planned.tasks["@teaching/architecture-course:"+verb]!.label;
   const actions=api.bazelActionsV1(graph,planned,false,{hermetic:true});
-  expect(Object.fromEntries([...actions.values()].map(action=>[action.id.split(":")[1],action.hermeticClass])),"every target is a member of the class its name selects").toEqual({test:"ts-test",build:"ts-build",typecheck:"ts-typecheck","typecheck-bad":"ts-typecheck","check-leak":"ts-check","check-stray":"ts-check","check-import":"ts-check","check-authority":"ts-check"});
-  const flags=execution.bazelExecutionFlagsV1({host:{platform:process.platform,arch:process.arch},hermetic:true,jobs:2});
+  expect(Object.fromEntries([...actions.values()].map(action=>[action.id.split(":")[1],action.hermeticClass])),"every target is a member of the class its name selects").toEqual({test:"ts-test",build:"ts-build",typecheck:"ts-typecheck","typecheck-bad":"ts-typecheck","typecheck-env":"ts-typecheck","check-leak":"ts-check","check-stray":"ts-check","check-import":"ts-check","check-authority":"ts-check"});
+  const flags=execution.bazelExecutionFlagsV1({host:{platform:process.platform,arch:process.arch},hermetic:true,jobs:2}),workers=bazelWorkerSettingsV1(planWorkersV1(readWorkerPolicyV1(buildPolicy.workers),{cores:4,memoryBytes:16*1024**3})),service=[...workers.flags,...execution.bazelServiceFlagsV1({host:{platform:process.platform},workers:true,remote:false})],serviceMnemonic=HERMETIC_SERVICES_V1.mnemonic;
   const common=(base:string)=>[`--output_base=${join(directory,base)}`,`--install_base=${join(directory,"install")}`,"--nosystem_rc","--nohome_rc",`--bazelrc=${join(here,".bazelrc")}`,"--max_idle_secs=120"];
   const bazel=(base:string,args:string[],cwd=workspace)=>spawnSync(binary!,[...common(base),...args],{cwd,encoding:"utf8",timeout:540000,env:environment()});
-  const build=(base:string,verbs:string[],extra:string[]=[],cwd=workspace,labels=label)=>bazel(base,["build","--lockfile_mode=off","--incompatible_strict_action_env","--incompatible_autoload_externally=",...flags.command,...extra,...verbs.map(verb=>"//:"+labels(verb))],cwd);
+  const build=(base:string,verbs:string[],extra:string[]=[],cwd=workspace,labels=label)=>bazel(base,["build","--lockfile_mode=off","--incompatible_strict_action_env","--incompatible_autoload_externally=",...flags.command,...service,...extra,...verbs.map(verb=>"//:"+labels(verb))],cwd);
   const bin=(base:string)=>bazel(base,["info","bazel-bin","--lockfile_mode=off","--incompatible_autoload_externally=",...flags.command]).stdout.trim().split("\n").at(-1)!;
   const snapshotText=(outputs:string,verb:string,path:string)=>{const snapshot=JSON.parse(readFileSync(join(outputs,label(verb)+".snapshot/snapshot.json"),"utf8")),entry=snapshot.entries.find((row:any)=>row.path===path);return readFileSync(join(outputs,label(verb)+".snapshot/files",entry.file),"utf8");};
 
   const cache=join(directory,"disk"),log=join(directory,"a.json"),positive=["test","build","typecheck"],first=build("base-a",positive,[`--execution_log_json_file=${log}`,`--disk_cache=${cache}`]);
   expect(first.status,first.stderr+first.stdout).toBe(0);
-  const spawns=readLog(log).filter(row=>row.mnemonic===contract.toolchain.mnemonic);
+  const spawns=readLog(log).filter(row=>row.mnemonic===contract.toolchain.mnemonic||row.mnemonic===serviceMnemonic);
   expect(spawns.map(row=>row.targetLabel).sort()).toEqual(positive.map(verb=>"//:"+label(verb)).sort());
   const manifests=Object.fromEntries(positive.map(verb=>[verb,JSON.parse(readFileSync(join(workspace,label(verb)+".json"),"utf8"))]));
   for(const verb of positive){
    const spawn=spawns.find(row=>row.targetLabel==="//:"+label(verb))!,manifest=manifests[verb],tool=`tools/bun/${host.id}/${execution.bazelBunExecutableNameV1(host)}`,trees=[...new Set(spawn.inputs.map(input=>/^(bazel-out\/[^/]+\/bin\/m_[a-f0-9]{16})\//u.exec(input.path)?.[1]).filter((value):value is string=>value!==undefined))].map(prefix=>prefix+"/");
    expect(manifest.class,verb).toBe(verb==="typecheck"?"ts-typecheck":verb==="build"?"ts-build":"ts-test");expect(manifest.inputEnv).toEqual({SEMIO_TEST_LEVEL:"quick"});
    expect(trees.length===(verb==="typecheck"||verb==="test"||verb==="build"?1:0),`${verb} takes exactly one dependency tree`).toBe(true);
-   expect(execution.bazelHermeticViolationsV1(spawn,{inputs:[...manifest.inputs.map((path:string)=>adapter.bazelSourceAliasLabelV1(path)),"hermetic-runner.mjs",label(verb)+".json"],tool,properties:host.properties,trees}),`hermetic violations of ${verb}`).toEqual([]);
+   expect(execution.bazelHermeticViolationsV1(spawn,{inputs:[...manifest.inputs.map((path:string)=>adapter.bazelSourceAliasLabelV1(path)),"hermetic-runner.mjs",label(verb)+".json"],tool,properties:host.properties,trees,...(verb==="typecheck"?{service:true as const}:{})}),`hermetic violations of ${verb}`).toEqual([]);
+   expect(spawn.mnemonic,`${verb}: only the class with a service runs under the service mnemonic`).toBe(verb==="typecheck"?serviceMnemonic:contract.toolchain.mnemonic);expect(spawn.runner==="worker",`${verb}: only a service action runs in a worker`).toBe(verb==="typecheck");expect("service" in manifest,verb).toBe(verb==="typecheck");
    expect(manifest.inputs).toContain("proj/data/in.txt");expect(manifest.inputs).not.toContain("secret.txt");expect(manifest.inputs).toContain(hermetic+"/🚪️entry/🟦️.ts");
   }
   expect(Object.keys(manifests.test.nodeModules.find((row:any)=>row.path==="node_modules").workspace)).toEqual(["@fx/lib","@fx/proj"]);
@@ -123,9 +129,11 @@ test.skipIf(!binary)("law: hermetic class members read only declared inputs and 
   fails("check-import",/Cannot find (module|package) 'hidden-fx'/u);
   fails("check-stray",/undeclared writes outside the declared outputs: proj\/stray\.txt/u);
   fails("typecheck-bad",/not assignable to type 'number'|TS2322/u);
+  const served=build("base-a",["typecheck-env"]);expect(served.status,"a service action in a worker receives the service address\n"+served.stderr+served.stdout).toBe(0);
+  const ordinary=build("base-local",["typecheck-env"],[`--strategy=${serviceMnemonic}=local`]);expect(ordinary.status,"the same action as an ordinary process has no service").not.toBe(0);expect(ordinary.stderr+ordinary.stdout).toMatch(/no service address/u);
   const authority=build("base-a",["check-authority"]);expect(authority.status,authority.stderr+authority.stdout).toBe(0);const issued=JSON.parse(snapshotText(bin("base-a"),"check-authority","proj/authority.json")) as [string,boolean,string,string[]];expect(issued.slice(0,3)).toEqual(["1",true,"bazel"]);expect(issued[3]).toEqual(expect.arrayContaining(["SEMIO_SCRIPT_PROCESS_INVOCATION","SEMIO_SCRIPT_PROVIDERS","SEMIO_WORKSPACE_ROOT"]));expect(issued[3].filter(name=>/REMOTE|TOKEN/u.test(name))).toEqual([]);
 
-  const local=build("base-local",["test","typecheck"],["--strategy=RepoHermetic=local"]);expect(local.status,local.stderr+local.stdout).toBe(0);expect(local.stderr).toMatch(/\d+ local/u);
+  const local=build("base-local",["test","typecheck"],["--strategy=RepoHermetic=local",`--strategy=${serviceMnemonic}=local`]);expect(local.status,local.stderr+local.stdout).toBe(0);expect(local.stderr).toMatch(/\d+ local/u);
   fails("check-leak",/secret\.txt/u,["--strategy=RepoHermetic=local"],"base-local");
   fails("check-import",/Cannot find (module|package) 'hidden-fx'/u,["--strategy=RepoHermetic=local"],"base-local");
 

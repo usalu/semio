@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/repo/cargo-incremental-sessions/v1",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "idleMilliseconds": 3600000,
+        "minimumAgeMilliseconds": 600000,
+        "budgetShare": 0.1,
+        "sessionPrefix": "s-",
+        "lockSuffix": ".lock",
+        "workingSuffix": "-working",
+        "directory": "incremental",
+        "bases": ["b/*", "t/*", "u/l/*/b", "u/l/*/t", "components/*/b", "components/*/t"],
+        "maximumProfileDepth": 2,
+        "maximumEntriesPerSession": 262144,
+        "reportedRemovals": 8,
+        "yieldEvery": 4
+      }
+    },
+    "Reason": { "enum": ["idle", "budget", "pressure"] },
+    "Messages": {
+      "const": {
+        "scan": {
+          "en": "[repo cache] scanning Cargo incremental sessions below {root}",
+          "de": "[repo cache] durchsuche Cargo-Inkrementsitzungen unter {root}"
+        },
+        "progress": {
+          "en": "[repo cache] incremental sessions {done}/{total}",
+          "de": "[repo cache] Inkrementsitzungen {done}/{total}"
+        },
+        "would": {
+          "en": "[repo cache] would remove incremental session {path} ({bytes}, {reason})",
+          "de": "[repo cache] würde Inkrementsitzung {path} entfernen ({bytes}, {reason})"
+        },
+        "removed": {
+          "en": "[repo cache] removed incremental session {path} ({bytes}, {reason})",
+          "de": "[repo cache] Inkrementsitzung {path} entfernt ({bytes}, {reason})"
+        },
+        "held": {
+          "en": "[repo cache] kept incremental session {path}: a running compiler holds its lock",
+          "de": "[repo cache] Inkrementsitzung {path} behalten: ein laufender Compiler hält ihre Sperre"
+        },
+        "summaryPlan": {
+          "en": "[repo cache] incremental sessions: would remove {count} of {total} ({bytes}); {held} held by running compilers, {kept} kept",
+          "de": "[repo cache] Inkrementsitzungen: würde {count} von {total} entfernen ({bytes}); {held} von laufenden Compilern gehalten, {kept} behalten"
+        },
+        "summaryApply": {
+          "en": "[repo cache] incremental sessions: removed {count} of {total} ({bytes}); {held} held by running compilers, {kept} kept",
+          "de": "[repo cache] Inkrementsitzungen: {count} von {total} entfernt ({bytes}); {held} von laufenden Compilern gehalten, {kept} behalten"
+        },
+        "reason.idle": {
+          "en": "unused for {minutes} min and superseded",
+          "de": "seit {minutes} min ungenutzt und abgelöst"
+        },
+        "reason.budget": {
+          "en": "over the incremental budget",
+          "de": "über dem Inkrement-Budget"
+        },
+        "reason.pressure": {
+          "en": "image above the high-water mark",
+          "de": "Image über der Hochwassermarke"
+        }
+      }
+    },
+    "Session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "bytes", "lastUsedMs", "held", "newest"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "lastUsedMs": { "type": "integer", "minimum": 0 },
+        "held": { "type": "boolean" },
+        "newest": { "type": "boolean" }
+      }
+    },
+    "Input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["volumeBytes", "needBytes", "nowMs", "sessions"],
+      "properties": {
+        "volumeBytes": { "type": "integer", "minimum": 1 },
+        "needBytes": { "type": "integer", "minimum": 0 },
+        "nowMs": { "type": "integer", "minimum": 0 },
+        "sessions": { "type": "array", "items": { "$ref": "#/definitions/Session" } }
+      }
+    },
+    "Removal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "bytes", "reason"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "reason": { "$ref": "#/definitions/Reason" }
+      }
+    },
+    "Vector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "input", "remove"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "input": { "$ref": "#/definitions/Input" },
+        "remove": { "type": "array", "items": { "$ref": "#/definitions/Removal" } }
+      }
+    }
+  }
+}

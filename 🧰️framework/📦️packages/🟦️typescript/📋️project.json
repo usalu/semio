@@ -216,7 +216,11 @@
         "testEnv",
         "reads",
         "{projectRoot}/**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/📖️source-text/**/*"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/📖️source-text/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/{⚙️engine,🏗️initialization,🧰️test-support,🧩️composition,🧾️document,🎚️config,📜️space-history/🏠️space,📦️codec/🏭️factory}/**/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/**/📥️lifted/**/🦀️.rs",
+        "!{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/**/{🧪️tests,🧪️testing,📦️packages,node_modules}/**"
       ],
       "options": {
         "command": "repo ./📜️script.ts test-source-text",

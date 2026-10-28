@@ -1,0 +1,10 @@
+{
+ "extends": "../../../../../../../../tsconfig.json",
+ "compilerOptions": {"noEmit": true, "types": ["bun"]},
+ "include": [],
+ "files": [
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🧪️tests/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🚪️gate/🟦️.ts"
+ ]
+}

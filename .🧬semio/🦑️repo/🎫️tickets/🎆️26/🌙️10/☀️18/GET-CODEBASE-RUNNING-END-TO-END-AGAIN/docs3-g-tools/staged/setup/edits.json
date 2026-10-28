@@ -1,0 +1,25 @@
+{
+ "name": "setup",
+ "code": "setup-g-tools/staged",
+ "lane": "setup-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "setup-section",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "## 🚦️ Priority, leases and stuck holders",
+   "where": "before",
+   "block": "## 🧰️ First run on a new machine\n\n```bash\nbun repo preflight                  # what this host lacks, with the exact remedy of each (EN or DE)\nbun repo tools setup all            # pinned Nx and Bazel, every toolchain, the Node native core, then the compiler helpers\n```\n\n- **Prerequisites are named at once**: `rust` is required on every platform, `developer-tools` on macOS (`xcode-select -p`; remedy `xcode-select --install`), `msvc-linker` on Windows (`link.exe` on PATH, `VSINSTALLDIR` or `vswhere` with the x64 or ARM64 component; remedy: the Visual Studio Build Tools workload), `cc` and `pkg-config` on Linux (`build-essential` in the devcontainer image). Each remedy names the exact command; the bootstrap scripts (sh, ps1) install rustup and the pinned toolchain.\n- **Node native core** (`node-native-core`): Node's system calls come from a core built once per source digest from the pinned Rust toolchain; `repo tools setup all` builds it (a built core is left alone, a prebuilt one named by `SEMIO_RUNTIME_NATIVE_ADDON` stands in). Every missing prerequisite is reported at once, in English and German, before any compiler starts: `The Node native core cannot be built on <platform> <arch>: missing <list>; run repo preflight, it names the remedy of each`.\n- **Compiler helpers**: after a successful `repo tools setup` the optional step `compiler-helpers` (1200 s, all platforms) builds the rustc scheduler and the unit-cache compiler wrapper (a `/bin/sh` stand-in on POSIX, a native executable on Windows) inside the same compiler store, capacity grant and storage custody that `repo cargo` uses (`Preparing compiler-helpers: …`); a failure is reported and the setup goes on (`… could not be prepared (<reason>); it is built on the first compile instead`). Before, they were built on the first `repo cargo`.\n- Not verified: a live `repo tools setup all` with the step (it runs Cargo under the capacity gate) and the Windows and Linux branches of the helper build; the probes run for every platform through injected ports (23 hand-written scenarios and a Python oracle).\n"
+  },
+  {
+   "id": "setup-section",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "## 🚦️ Priorität, Leases und festhängende Halter",
+   "where": "before",
+   "block": "## 🧰️ Erster Lauf auf einem neuen Rechner\n\n```bash\nbun repo preflight                  # was diesem Rechner fehlt, mit der genauen Abhilfe zu jedem (EN oder DE)\nbun repo tools setup all            # gepinnte Nx und Bazel, jede Toolchain, der native Kern für Node, danach die Compiler-Helfer\n```\n\n- **Voraussetzungen werden auf einmal genannt**: `rust` ist auf jeder Plattform nötig, `developer-tools` unter macOS (`xcode-select -p`; Abhilfe `xcode-select --install`), `msvc-linker` unter Windows (`link.exe` im PATH, `VSINSTALLDIR` oder `vswhere` mit der x64- oder ARM64-Komponente; Abhilfe: die Workload der Visual Studio Build Tools), `cc` und `pkg-config` unter Linux (`build-essential` im Devcontainer-Image). Jede Abhilfe nennt den genauen Befehl; die Bootstrap-Skripte (sh, ps1) installieren rustup und die gepinnte Toolchain.\n- **Nativer Kern für Node** (`node-native-core`): die Systemaufrufe von Node kommen aus einem Kern, der einmal je Quell-Digest aus der gepinnten Rust-Toolchain gebaut wird; `repo tools setup all` baut ihn (ein gebauter Kern bleibt, ein vorgebauter, den `SEMIO_RUNTIME_NATIVE_ADDON` nennt, tritt an seine Stelle). Jede fehlende Voraussetzung wird auf einmal gemeldet, englisch und deutsch, bevor ein Compiler startet: `Der native Kern für Node kann auf <Plattform> <Arch> nicht gebaut werden: es fehlt <Liste>; führe repo preflight aus, es nennt die Abhilfe zu jedem`.\n- **Compiler-Helfer**: nach einem erfolgreichen `repo tools setup` baut der optionale Schritt `compiler-helpers` (1200 s, alle Plattformen) den rustc-Scheduler und den Compiler-Wrapper des Unit-Caches (ein `/bin/sh`-Stellvertreter unter POSIX, eine native Programmdatei unter Windows) im selben Compiler-Speicher, derselben Kapazitätszusage und derselben Speicher-Obhut, die `repo cargo` nutzt (`Bereite compiler-helpers vor: …`); ein Fehlschlag wird gemeldet und das Setup läuft weiter (`… konnte nicht vorbereitet werden (<Grund>); es wird stattdessen beim ersten Kompilieren gebaut`). Zuvor wurden sie beim ersten `repo cargo` gebaut.\n- Nicht verifiziert: ein echtes `repo tools setup all` mit dem Schritt (es startet Cargo unter dem Kapazitätstor) und die Windows- und Linux-Zweige des Helfer-Baus; die Sonden laufen für jede Plattform über eingespeiste Ports (23 handgeschriebene Szenarien und ein Python-Orakel).\n"
+  }
+ ]
+}

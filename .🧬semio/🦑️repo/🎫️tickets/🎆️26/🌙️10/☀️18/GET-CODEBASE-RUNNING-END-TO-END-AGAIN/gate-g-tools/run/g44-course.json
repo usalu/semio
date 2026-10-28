@@ -1,0 +1,31 @@
+{
+ "label": "g44-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "15:36:52",
+ "wall_s": 1149.5,
+ "peak_tree_mb": 6209,
+ "peak_processes": 6,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "198"
+  ],
+  "inferring": [
+   "197"
+  ],
+  "published": [
+   "661",
+   "4020",
+   "640"
+  ],
+  "processes": [
+   "8",
+   "1 internal, 7 local"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

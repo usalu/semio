@@ -1,0 +1,10 @@
+import {join} from "node:path";
+const R="/Users/ueli/Documents/semio";
+const L=R+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build";
+const t0=performance.now();const lap=(n:string)=>console.log(n,Math.round(performance.now()-t0),"ms rss",Math.round(process.memoryUsage().rss/1e6),"MB");
+const {runLeasesCliV1,readLeaseAdmissionV1}=await import(L+"/🔒️leases/⌨️command/🟦️.ts");lap("import leases cmd");
+const {readLeaseReportV1}=await import(R+"/🧰️framework/🔨️modules/🏃️process/🔒️leases/📋️status/🟦️.ts");lap("import status");
+const rep=readLeaseReportV1(join(R,".cache/b/l/m/data"),process.env,Date.now(),10);lap("lease report");
+console.log(rep.holders.length,rep.waiters.length);
+const adm=await readLeaseAdmissionV1(process.env,"en");lap("admission");
+console.log(adm?.grants.length,adm?.waiters.length);

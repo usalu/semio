@@ -1,0 +1,21 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "🏗️build/🕸️graph/📥️inference/🧬️schema/🔣️.json",
+ "definitions": [
+  "Limits"
+ ],
+ "sources": [
+  "🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+  "🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🟨️.mjs",
+  "🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs",
+  "🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs"
+ ],
+ "exports": [
+  {
+   "source": "🏗️build/🕸️graph/📥️inference/🧬️schema/🟨️.mjs",
+   "name": "INFERENCE_LIMITS_V1",
+   "definition": "Limits"
+  }
+ ]
+}

@@ -1,0 +1,6 @@
+{
+ "base": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🔣️.json": "6fc218d8f65854a86c626ca256226f1fb06ef645a464ac9f81d39406c0093da4"
+ },
+ "note": "the apply is anchored (profile anchor and tail anchor exactly once) and idempotent; the base hash is for information"
+}

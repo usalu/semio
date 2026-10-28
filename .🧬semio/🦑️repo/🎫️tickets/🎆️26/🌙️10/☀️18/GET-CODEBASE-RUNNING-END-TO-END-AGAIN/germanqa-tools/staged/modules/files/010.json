@@ -1,0 +1,701 @@
+{
+  "name": "@semio-tech/repo-developer-tools",
+  "projectType": "application",
+  "namedInputs": {
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "git-show": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "run",
+            "title": {
+              "en": "Inspect Git Commit",
+              "de": "Git-Commit prüfen"
+            },
+            "description": {
+              "en": "Inspect one commit's author, message and change summary, with an optional patch, within the dashboard task.",
+              "de": "Autor, Nachricht und Änderungsübersicht eines Commits mit optionalem Patch in der Dashboard-Aufgabe prüfen."
+            },
+            "parameters": [
+              {
+                "id": "revision",
+                "kind": "text",
+                "valueFlag": "--revision",
+                "default": "HEAD",
+                "title": {
+                  "en": "Commit Revision",
+                  "de": "Commit-Revision"
+                },
+                "description": {
+                  "en": "One existing commit, such as HEAD~1; ranges are refused.",
+                  "de": "Ein vorhandener Commit, etwa HEAD~1; Bereiche werden abgelehnt."
+                }
+              },
+              {
+                "id": "path",
+                "kind": "text",
+                "valueFlag": "--path",
+                "default": ".",
+                "title": {
+                  "en": "Repository Path",
+                  "de": "Repository-Pfad"
+                },
+                "description": {
+                  "en": "Limit output to this literal workspace-relative path; historical deleted files are supported.",
+                  "de": "Ausgabe auf diesen wörtlichen workspace-relativen Pfad begrenzen; gelöschte historische Dateien werden unterstützt."
+                }
+              },
+              {
+                "id": "view",
+                "kind": "choice",
+                "default": "summary",
+                "title": {
+                  "en": "Commit View",
+                  "de": "Commit-Ansicht"
+                },
+                "description": {
+                  "en": "Start with commit metadata and file statistics; include the patch when inspecting a selected path.",
+                  "de": "Mit Commit-Metadaten und Dateistatistiken beginnen; beim Prüfen eines gewählten Pfads den Patch einschließen."
+                },
+                "values": [
+                  {
+                    "id": "summary",
+                    "args": [
+                      "--view",
+                      "summary"
+                    ]
+                  },
+                  {
+                    "id": "patch",
+                    "args": [
+                      "--view",
+                      "patch"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+        }
+      },
+      "cache": false,
+      "executor": "repo:script",
+      "options": {
+        "forwardAllArgs": true,
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
+        "command": "repo ./📜️script.ts git-show"
+      }
+    },
+    "git-blame": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "run",
+            "title": {
+              "en": "Attribute Git Source Lines",
+              "de": "Git-Quellzeilen zuordnen"
+            },
+            "description": {
+              "en": "Inspect the authors and commits of a bounded source line range with text conversion disabled.",
+              "de": "Autoren und Commits eines begrenzten Quellzeilenbereichs ohne Textkonvertierung prüfen."
+            },
+            "parameters": [
+              {
+                "id": "file",
+                "kind": "text",
+                "valueFlag": "--file",
+                "required": true,
+                "title": {
+                  "en": "Source File",
+                  "de": "Quelldatei"
+                },
+                "description": {
+                  "en": "A literal workspace-relative source file in the selected revision.",
+                  "de": "Eine wörtliche workspace-relative Quelldatei in der gewählten Revision."
+                }
+              },
+              {
+                "id": "revision",
+                "kind": "text",
+                "valueFlag": "--revision",
+                "title": {
+                  "en": "Commit Revision",
+                  "de": "Commit-Revision"
+                },
+                "description": {
+                  "en": "Optional single revision; omit to include current working-file changes.",
+                  "de": "Optionale einzelne Revision; weglassen, um aktuelle Arbeitsdateiänderungen einzubeziehen."
+                }
+              },
+              {
+                "id": "line",
+                "kind": "text",
+                "valueFlag": "--line",
+                "default": "1",
+                "title": {
+                  "en": "Starting Line",
+                  "de": "Startzeile"
+                },
+                "description": {
+                  "en": "First source line to attribute, starting at 1.",
+                  "de": "Erste zuzuordnende Quellzeile, beginnend bei 1."
+                }
+              },
+              {
+                "id": "count",
+                "kind": "text",
+                "valueFlag": "--count",
+                "default": "50",
+                "title": {
+                  "en": "Line Count",
+                  "de": "Zeilenanzahl"
+                },
+                "description": {
+                  "en": "Maximum source lines, from 1 to 500.",
+                  "de": "Maximale Anzahl Quellzeilen zwischen 1 und 500."
+                }
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+        }
+      },
+      "cache": false,
+      "executor": "repo:script",
+      "options": {
+        "forwardAllArgs": true,
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
+        "command": "repo ./📜️script.ts git-blame"
+      }
+    },
+    "git-diff": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "run",
+            "title": {
+              "en": "Git Diff",
+              "de": "Git-Unterschiede"
+            },
+            "parameters": [
+              {
+                "kind": "text",
+                "title": {
+                  "en": "Repository Path",
+                  "de": "Repository-Pfad"
+                },
+                "valueFlag": "--path",
+                "description": {
+                  "en": "Limit output to this literal workspace-relative path.",
+                  "de": "Ausgabe auf diesen wörtlichen workspace-relativen Pfad begrenzen."
+                },
+                "default": ".",
+                "id": "path"
+              },
+              {
+                "id": "revision",
+                "valueFlag": "--revision",
+                "title": {
+                  "en": "Revision or Range",
+                  "de": "Revision oder Bereich"
+                },
+                "kind": "text",
+                "description": {
+                  "en": "An existing revision or range, such as HEAD~2..HEAD. Staged changes require one base revision, such as HEAD.",
+                  "de": "Eine vorhandene Revision oder ein Bereich, etwa HEAD~2..HEAD. Vorgemerkte Änderungen erfordern eine einzelne Basisrevision, etwa HEAD."
+                }
+              },
+              {
+                "description": {
+                  "en": "Inspect working files or staged changes.",
+                  "de": "Arbeitsdateien oder vorgemerkte Änderungen prüfen."
+                },
+                "kind": "choice",
+                "title": {
+                  "en": "Change Area",
+                  "de": "Änderungsbereich"
+                },
+                "id": "area",
+                "default": "worktree",
+                "values": [
+                  {
+                    "id": "worktree",
+                    "args": [
+                      "--area",
+                      "worktree"
+                    ]
+                  },
+                  {
+                    "id": "staged",
+                    "args": [
+                      "--area",
+                      "staged"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "description": {
+              "en": "Stream worktree or staged changes with external diff and text conversion disabled.",
+              "de": "Änderungen im Arbeitsverzeichnis oder Index ohne externe Diff-Programme und Textkonvertierung streamen."
+            }
+          },
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+        }
+      },
+      "cache": false,
+      "executor": "repo:script",
+      "options": {
+        "forwardAllArgs": true,
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
+        "command": "repo ./📜️script.ts git-diff"
+      }
+    },
+    "git-history": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "run",
+            "title": {
+              "en": "Git History",
+              "de": "Git-Verlauf"
+            },
+            "parameters": [
+              {
+                "kind": "text",
+                "title": {
+                  "en": "Repository Path",
+                  "de": "Repository-Pfad"
+                },
+                "valueFlag": "--path",
+                "description": {
+                  "en": "Limit output to this literal workspace-relative path.",
+                  "de": "Ausgabe auf diesen wörtlichen workspace-relativen Pfad begrenzen."
+                },
+                "default": ".",
+                "id": "path"
+              },
+              {
+                "id": "revision",
+                "valueFlag": "--revision",
+                "title": {
+                  "en": "Revision or Range",
+                  "de": "Revision oder Bereich"
+                },
+                "kind": "text",
+                "description": {
+                  "en": "An existing revision or range, such as HEAD~2..HEAD.",
+                  "de": "Eine vorhandene Revision oder ein Bereich, etwa HEAD~2..HEAD."
+                }
+              },
+              {
+                "kind": "text",
+                "title": {
+                  "en": "Commit Limit",
+                  "de": "Commit-Grenze"
+                },
+                "valueFlag": "--count",
+                "description": {
+                  "en": "Maximum commits, from 1 to 500.",
+                  "de": "Maximale Anzahl Commits zwischen 1 und 500."
+                },
+                "default": "50",
+                "id": "count"
+              }
+            ],
+            "description": {
+              "en": "Stream a bounded read-only commit history for the selected revision and path.",
+              "de": "Einen begrenzten, schreibgeschützten Commit-Verlauf für Revision und Pfad streamen."
+            }
+          },
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+        }
+      },
+      "cache": false,
+      "executor": "repo:script",
+      "options": {
+        "forwardAllArgs": true,
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
+        "command": "repo ./📜️script.ts git-history"
+      }
+    },
+    "terminal": {
+      "continuous": true,
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "run",
+            "title": {
+              "en": "Workspace Terminal",
+              "de": "Workspace-Terminal"
+            },
+            "parameters": [
+              {
+                "kind": "text",
+                "title": {
+                  "en": "Working Directory",
+                  "de": "Arbeitsverzeichnis"
+                },
+                "valueFlag": "--directory",
+                "description": {
+                  "en": "An existing workspace-relative directory.",
+                  "de": "Ein vorhandenes workspace-relatives Verzeichnis."
+                },
+                "default": ".",
+                "id": "directory"
+              },
+              {
+                "description": {
+                  "en": "Use the platform system shell or an already installed named shell without startup profiles.",
+                  "de": "Die System-Shell der Plattform oder eine bereits installierte benannte Shell ohne Startprofile verwenden."
+                },
+                "kind": "choice",
+                "title": {
+                  "en": "Shell",
+                  "de": "Shell"
+                },
+                "id": "shell",
+                "default": "system",
+                "values": [
+                  {
+                    "id": "system",
+                    "args": [
+                      "--shell",
+                      "system"
+                    ]
+                  },
+                  {
+                    "id": "powershell",
+                    "args": [
+                      "--shell",
+                      "powershell"
+                    ]
+                  },
+                  {
+                    "id": "bash",
+                    "args": [
+                      "--shell",
+                      "bash"
+                    ]
+                  },
+                  {
+                    "id": "zsh",
+                    "args": [
+                      "--shell",
+                      "zsh"
+                    ]
+                  },
+                  {
+                    "id": "cmd",
+                    "args": [
+                      "--shell",
+                      "cmd"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "description": {
+              "en": "Start a supervised native shell for advanced commands or an already installed debugger. Input, output and cancellation stay in the dashboard task.",
+              "de": "Eine überwachte native Shell für erweiterte Befehle oder einen bereits installierten Debugger starten. Eingabe, Ausgabe und Abbruch bleiben in der Dashboard-Aufgabe."
+            }
+          },
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
+      },
+      "cache": false,
+      "executor": "repo:script",
+      "options": {
+        "forwardAllArgs": true,
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
+        "command": "repo ./📜️script.ts terminal"
+      }
+    },
+    "test": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "test",
+            "title": {
+              "en": "Test Developer Tools",
+              "de": "Entwicklerwerkzeuge testen"
+            },
+            "parameters": [],
+            "description": {
+              "en": "Verify portable request vectors, process cancellation and workspace custody.",
+              "de": "Portable Anfragevektoren, Prozessabbruch und Workspace-Zuständigkeit prüfen."
+            }
+          }
+        }
+      },
+      "cache": true,
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "outputs": [],
+      "options": {
+        "forwardAllArgs": true,
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
+        "command": "repo ./📜️script.ts test"
+      }
+    },
+    "git-status": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "run",
+            "title": {
+              "en": "Git Status",
+              "de": "Git-Status"
+            },
+            "parameters": [
+              {
+                "kind": "text",
+                "title": {
+                  "en": "Repository Path",
+                  "de": "Repository-Pfad"
+                },
+                "valueFlag": "--path",
+                "description": {
+                  "en": "Limit output to this literal workspace-relative path.",
+                  "de": "Ausgabe auf diesen wörtlichen workspace-relativen Pfad begrenzen."
+                },
+                "default": ".",
+                "id": "path"
+              },
+              {
+                "description": {
+                  "en": "Choose normal, all or no untracked-file discovery.",
+                  "de": "Normale, vollständige oder keine Suche nach unversionierten Dateien wählen."
+                },
+                "kind": "choice",
+                "title": {
+                  "en": "Untracked Files",
+                  "de": "Unversionierte Dateien"
+                },
+                "id": "untracked",
+                "default": "normal",
+                "values": [
+                  {
+                    "id": "normal",
+                    "args": [
+                      "--untracked",
+                      "normal"
+                    ]
+                  },
+                  {
+                    "id": "all",
+                    "args": [
+                      "--untracked",
+                      "all"
+                    ]
+                  },
+                  {
+                    "id": "no",
+                    "args": [
+                      "--untracked",
+                      "no"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "description": {
+              "en": "Stream read-only repository status without index refresh locks or external hooks.",
+              "de": "Den schreibgeschützten Repository-Status ohne Index-Aktualisierungssperren oder externe Hooks streamen."
+            }
+          },
+          "cache": { "version": 1, "class": "diagnostic", "reason": "reads-caller-input" }
+        }
+      },
+      "cache": false,
+      "executor": "repo:script",
+      "options": {
+        "forwardAllArgs": true,
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
+        "command": "repo ./📜️script.ts git-status"
+      }
+    },
+    "debug": {
+      "continuous": true,
+      "cache": false,
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
+        "command": "repo ./📜️script.ts debug",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "run",
+            "title": {
+              "en": "Debug a Program",
+              "de": "Programm debuggen"
+            },
+            "description": {
+              "en": "Choose an installed debugger and a workspace program. Use task input for breakpoints and stepping; Stop cancels the supervised debugger and its child program. Check Debugger Availability first.",
+              "de": "Installierten Debugger und ein Workspace-Programm wählen. Aufgabeneingabe für Haltepunkte und Einzelschritte verwenden; Stop beendet den überwachten Debugger und sein Kindprogramm. Zuerst Debugger-Verfügbarkeit prüfen."
+            },
+            "parameters": [
+              {
+                "id": "profile",
+                "kind": "choice",
+                "required": true,
+                "title": {
+                  "en": "Debugger Profile",
+                  "de": "Debugger-Profil"
+                },
+                "description": {
+                  "en": "node-inspect: Node.js; python-pdb: Python; lldb: LLVM (usual macOS choice); gdb: GNU. Windows GDB accepts ASCII native target and working paths in this profile; choose installed LLDB for Unicode native targets. Check Debugger Availability.",
+                  "de": "node-inspect: Node.js; python-pdb: Python; lldb: LLVM (übliche Wahl auf macOS); gdb: GNU. Windows-GDB akzeptiert hier ASCII-Pfade für natives Ziel und Arbeitsverzeichnis; für native Unicode-Ziele installiertes LLDB wählen. Debugger-Verfügbarkeit prüfen."
+                },
+                "values": [
+                  {
+                    "id": "node-inspect",
+                    "args": [
+                      "--profile",
+                      "node-inspect"
+                    ]
+                  },
+                  {
+                    "id": "python-pdb",
+                    "args": [
+                      "--profile",
+                      "python-pdb"
+                    ]
+                  },
+                  {
+                    "id": "gdb",
+                    "args": [
+                      "--profile",
+                      "gdb"
+                    ]
+                  },
+                  {
+                    "id": "lldb",
+                    "args": [
+                      "--profile",
+                      "lldb"
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "program",
+                "kind": "text",
+                "required": true,
+                "valueFlag": "--program",
+                "title": {
+                  "en": "Program File",
+                  "de": "Programmdatei"
+                },
+                "description": {
+                  "en": "Existing workspace-relative JavaScript/Python file or native executable; build native programs with debug symbols first.",
+                  "de": "Vorhandene workspace-relative JavaScript-/Python-Datei oder native Programmdatei; native Programme zuerst mit Debug-Symbolen bauen."
+                }
+              },
+              {
+                "id": "directory",
+                "kind": "text",
+                "default": ".",
+                "valueFlag": "--directory",
+                "title": {
+                  "en": "Working Directory",
+                  "de": "Arbeitsverzeichnis"
+                },
+                "description": {
+                  "en": "Existing workspace-relative directory used by the debugger and program.",
+                  "de": "Vorhandenes workspace-relatives Arbeitsverzeichnis für Debugger und Programm."
+                }
+              },
+              {
+                "id": "arguments",
+                "kind": "text",
+                "default": "[]",
+                "valueFlag": "--arguments",
+                "title": {
+                  "en": "Program Arguments (JSON List)",
+                  "de": "Programmargumente (JSON-Liste)"
+                },
+                "description": {
+                  "en": "Example: [\"--name\",\"Ada Lovelace\"]. Each quoted item stays one literal argument; no shell expressions are evaluated. Up to 64 arguments and 8192 characters total.",
+                  "de": "Beispiel: [\"--name\",\"Ada Lovelace\"]. Jedes Listenelement bleibt ein wörtliches Argument; Shell-Ausdrücke werden nicht ausgewertet. Höchstens 64 Argumente und insgesamt 8192 Zeichen."
+                }
+              }
+            ]
+          },
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
+      }
+    },
+    "debuggers": {
+      "cache": false,
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
+        "command": "repo ./📜️script.ts debuggers",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "inspect",
+            "title": {
+              "en": "Debugger Availability",
+              "de": "Debugger-Verfügbarkeit"
+            },
+            "description": {
+              "en": "Show Node.js Inspector, Python Pdb, GNU Debugger and LLVM Debugger availability and executable paths. Missing optional tools include the next action.",
+              "de": "Verfügbarkeit und Programmpfade von Node.js-Inspektor, Python-Pdb, GNU-Debugger und LLVM-Debugger anzeigen. Bei fehlenden optionalen Werkzeugen erscheint der nächste Schritt."
+            },
+            "parameters": []
+          },
+          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+        }
+      },
+      "continuous": true
+    },
+    "setup-debugger": {
+      "cache": false,
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
+        "command": "repo ./📜️script.ts setup-debugger",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "setup",
+            "title": {
+              "en": "Set Up Native Debugger",
+              "de": "Nativen Debugger einrichten"
+            },
+            "description": {
+              "en": "Verify full LLDB startup, or provision its fixed host packages. Linux repair requires root or noninteractive sudo; Windows machine LLVM requires an elevated host bootstrap. Existing usable LLDB installs nothing.",
+              "de": "Vollständigen LLDB-Start prüfen oder festgelegte Host-Pakete einrichten. Linux-Reparatur erfordert root oder nichtinteraktives sudo; maschinenweites Windows-LLVM eine erhöhte Host-Einrichtung. Funktionsfähiges LLDB installiert nichts."
+            },
+            "parameters": []
+          },
+          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+        }
+      }
+    }
+  }
+}

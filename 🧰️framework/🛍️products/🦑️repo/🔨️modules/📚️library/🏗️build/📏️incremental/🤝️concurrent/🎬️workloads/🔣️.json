@@ -458,7 +458,7 @@
           "excludeUncached": true,
           "title": {
             "en": "A task executes in one session only; the others execute no action for it",
-            "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+            "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
           },
           "owners": [
             "conc-bazel",
@@ -1020,6 +1020,118 @@
                 "projects"
               ],
               "stdout": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "product-agents",
+      "title": {
+        "en": "Three agents edit and build the three products",
+        "de": "Drei Agenten ändern und bauen die drei Produkte"
+      },
+      "summary": {
+        "en": "The dashboard, the architecture course and print are built warm once, then three agents each change a source of one product and rebuild it together with the others; nobody may wait for an unrelated product and every result equals a serial run.",
+        "de": "Dashboard, Architekturkurs und Druck werden einmal warm gebaut, dann ändert je ein Agent eine Quelle eines Produkts und baut es zusammen mit den anderen neu; niemand darf auf ein fremdes Produkt warten und jedes Ergebnis entspricht einem seriellen Lauf."
+      },
+      "criteria": "default",
+      "setup": [
+        {
+          "kind": "run",
+          "target": "@semio-tech/repo-dashboard-rs:build"
+        },
+        {
+          "kind": "run",
+          "target": "@teaching/architecture-course:build"
+        },
+        {
+          "kind": "run",
+          "target": "@semio-tech/print:build"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "dashboard",
+          "area": "product-dashboard",
+          "group": "g-dashboard",
+          "steps": [
+            {
+              "kind": "edit",
+              "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🦀️.rs",
+              "op": "private-body",
+              "language": "rs"
+            },
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/repo-dashboard-rs:build"
+            },
+            {
+              "kind": "revert"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/repo-dashboard-rs:build"
+            }
+          ]
+        },
+        {
+          "id": "course",
+          "area": "product-course",
+          "group": "g-course",
+          "steps": [
+            {
+              "kind": "edit",
+              "file": "🎓️teaching/🏛️architecture/📚️course/📚️course/🟦️.ts",
+              "op": "private-body",
+              "language": "ts"
+            },
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "run",
+              "target": "@teaching/architecture-course:build"
+            },
+            {
+              "kind": "revert"
+            },
+            {
+              "kind": "run",
+              "target": "@teaching/architecture-course:build"
+            }
+          ]
+        },
+        {
+          "id": "print",
+          "area": "product-print",
+          "group": "g-print",
+          "steps": [
+            {
+              "kind": "edit",
+              "file": "🧰️framework/🛍️products/📓️print/📦️artifacts/📖️pdf/🟦️.ts",
+              "op": "private-body",
+              "language": "ts"
+            },
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/print:build"
+            },
+            {
+              "kind": "revert"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/print:build"
             }
           ]
         }

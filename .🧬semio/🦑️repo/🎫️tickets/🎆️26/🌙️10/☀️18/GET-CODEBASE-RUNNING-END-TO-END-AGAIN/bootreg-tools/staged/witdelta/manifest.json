@@ -1,0 +1,27 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/👁️witness/🟦️.ts": {
+  "file": "00.ts",
+  "base": "b86dd5be5b111fa79bf825fe44c560f8320ad09cccea1171fd260b7249062e34",
+  "new": "08da58d8d272d3467a440381e3a3b6236704058b4fbf9345edd0fd8868be9674"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/👁️witness/🧬️schema/🔣️.json": {
+  "file": "01.json",
+  "base": "f513fdb02dbf32e018381ca526da409ff209a99f9620604fa818c14c79ea393e",
+  "new": "baafa3dd147ea5cfabeb8b19c3308caac96a2eeb86f8bc98d6495160d8f3214e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/👁️witness/🧪️tests/🟦️.ts": {
+  "file": "02.ts",
+  "base": "9588ef85f652f7ef85963476f99f89591a1907f354ab84af0980ce0a60118d76",
+  "new": "0231c29f891ad3f17b973b89bd11d484d2e8fd92abeaf83f15c5707abca7ed41"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/👁️witness/🧪️tests/🔣️.json": {
+  "file": "03.json",
+  "base": "4b88941238aad9d80834646a7a4938c97c37db864d6c52f0cc67854643ffa790",
+  "new": "0bf17b94a3e2c6467fe874092ae4194e9d32e3a4f885053650c0762317e4ffb6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/👁️witness/🧪️tests/🐍️.py": {
+  "file": "04.py",
+  "base": "ac2492c368d9dad8cd3f3ec9f57c234d9211d25d9238c494549cd986ebdd630d",
+  "new": "f0039b03fd0ebf40c9f811a1e4fb8edfdc25c628a14fc90e9204776d366e92f7"
+ }
+}

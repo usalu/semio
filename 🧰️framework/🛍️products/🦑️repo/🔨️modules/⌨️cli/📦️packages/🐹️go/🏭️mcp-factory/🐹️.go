@@ -53,11 +53,17 @@ func wrapMcpToolHandler(timeout time.Duration, handler func(context.Context, Cal
 	}
 }
 
-// 🦀️CreateMcpServer builds the MCP server for the given IDE kind (stdio).
-func CreateMcpServer(rootDir string, kind providers.McpClientKind, toolTimeout time.Duration) (*MCPServer,error) {
+// 🧭️newMcpRepository binds one repository to its executor and context.
+func newMcpRepository(rootDir string) (*mcpRepository,error) {
  executor,err:=graphqlpkg.NewExecutor(rootDir)
  if err!=nil { return nil,err }
- repository:=&mcpRepository{root:executor.Repository().GetRootDir(),executor:executor,repo:executor.Repository()}
+ return &mcpRepository{root:executor.Repository().GetRootDir(),executor:executor,repo:executor.Repository()},nil
+}
+
+// 🦀️CreateMcpServer builds the MCP server for the given IDE kind (stdio).
+func CreateMcpServer(rootDir string, kind providers.McpClientKind, toolTimeout time.Duration) (*MCPServer,error) {
+ repository,err:=newMcpRepository(rootDir)
+ if err!=nil { return nil,err }
 	if kind == "" {
 		kind = providers.McpClientGeneric
 	}

@@ -1,0 +1,615 @@
+{
+ "version": 1,
+ "acquire": [
+  {
+   "id": "an empty pool starts a lane",
+   "crateKey": "a",
+   "bounds": {
+    "maximumLanes": 3,
+    "maximumLiveLanes": 5,
+    "quotaBytes": 1000
+   },
+   "lanes": [],
+   "expect": {
+    "kind": "new"
+   }
+  },
+  {
+   "id": "the newest free lane of the same crate set is warm",
+   "crateKey": "a",
+   "bounds": {
+    "maximumLanes": 3,
+    "maximumLiveLanes": 5,
+    "quotaBytes": 1000
+   },
+   "lanes": [
+    {
+     "id": "l1",
+     "claimed": false,
+     "lastUsedMs": 10,
+     "crateKey": "a",
+     "bytes": 100
+    },
+    {
+     "id": "l2",
+     "claimed": false,
+     "lastUsedMs": 20,
+     "crateKey": "b",
+     "bytes": 100
+    },
+    {
+     "id": "l3",
+     "claimed": false,
+     "lastUsedMs": 30,
+     "crateKey": "a",
+     "bytes": 100
+    }
+   ],
+   "expect": {
+    "kind": "warm",
+    "id": "l3"
+   }
+  },
+  {
+   "id": "a claimed warm lane is not taken, the pool at its bound reuses the least recently used free lane",
+   "crateKey": "a",
+   "bounds": {
+    "maximumLanes": 3,
+    "maximumLiveLanes": 5,
+    "quotaBytes": 1000
+   },
+   "lanes": [
+    {
+     "id": "l1",
+     "claimed": true,
+     "lastUsedMs": 10,
+     "crateKey": "a",
+     "bytes": 100
+    },
+    {
+     "id": "l2",
+     "claimed": false,
+     "lastUsedMs": 20,
+     "crateKey": "b",
+     "bytes": 100
+    },
+    {
+     "id": "l3",
+     "claimed": false,
+     "lastUsedMs": 15,
+     "crateKey": "c",
+     "bytes": 100
+    }
+   ],
+   "expect": {
+    "kind": "lru",
+    "id": "l3"
+   }
+  },
+  {
+   "id": "a pool within its bounds grows instead of evicting a cold lane",
+   "crateKey": "a",
+   "bounds": {
+    "maximumLanes": 3,
+    "maximumLiveLanes": 5,
+    "quotaBytes": 1000
+   },
+   "lanes": [
+    {
+     "id": "l1",
+     "claimed": false,
+     "lastUsedMs": 10,
+     "crateKey": "b",
+     "bytes": 100
+    },
+    {
+     "id": "l2",
+     "claimed": false,
+     "lastUsedMs": 20,
+     "crateKey": "c",
+     "bytes": 100
+    }
+   ],
+   "expect": {
+    "kind": "new"
+   }
+  },
+  {
+   "id": "recorded bytes above the quota reuse a free lane although the count has room",
+   "crateKey": "a",
+   "bounds": {
+    "maximumLanes": 3,
+    "maximumLiveLanes": 5,
+    "quotaBytes": 1000
+   },
+   "lanes": [
+    {
+     "id": "l1",
+     "claimed": false,
+     "lastUsedMs": 10,
+     "crateKey": "b",
+     "bytes": 900
+    },
+    {
+     "id": "l2",
+     "claimed": false,
+     "lastUsedMs": 20,
+     "crateKey": "c",
+     "bytes": 200
+    }
+   ],
+   "expect": {
+    "kind": "lru",
+    "id": "l1"
+   }
+  },
+  {
+   "id": "every lane live below the live maximum grows beyond the bound",
+   "crateKey": "a",
+   "bounds": {
+    "maximumLanes": 3,
+    "maximumLiveLanes": 5,
+    "quotaBytes": 1000
+   },
+   "lanes": [
+    {
+     "id": "l1",
+     "claimed": true,
+     "lastUsedMs": 10,
+     "crateKey": "a",
+     "bytes": 1
+    },
+    {
+     "id": "l2",
+     "claimed": true,
+     "lastUsedMs": 20,
+     "crateKey": "b",
+     "bytes": 1
+    },
+    {
+     "id": "l3",
+     "claimed": true,
+     "lastUsedMs": 30,
+     "crateKey": "c",
+     "bytes": 1
+    }
+   ],
+   "expect": {
+    "kind": "new"
+   }
+  },
+  {
+   "id": "every lane live at the live maximum waits",
+   "crateKey": "a",
+   "bounds": {
+    "maximumLanes": 3,
+    "maximumLiveLanes": 5,
+    "quotaBytes": 1000
+   },
+   "lanes": [
+    {
+     "id": "l1",
+     "claimed": true,
+     "lastUsedMs": 1,
+     "crateKey": "a",
+     "bytes": 1
+    },
+    {
+     "id": "l2",
+     "claimed": true,
+     "lastUsedMs": 2,
+     "crateKey": "a",
+     "bytes": 1
+    },
+    {
+     "id": "l3",
+     "claimed": true,
+     "lastUsedMs": 3,
+     "crateKey": "a",
+     "bytes": 1
+    },
+    {
+     "id": "l4",
+     "claimed": true,
+     "lastUsedMs": 4,
+     "crateKey": "a",
+     "bytes": 1
+    },
+    {
+     "id": "l5",
+     "claimed": true,
+     "lastUsedMs": 5,
+     "crateKey": "a",
+     "bytes": 1
+    }
+   ],
+   "expect": {
+    "kind": "busy"
+   }
+  },
+  {
+   "id": "equal recency breaks by identifier",
+   "crateKey": "z",
+   "bounds": {
+    "maximumLanes": 3,
+    "maximumLiveLanes": 5,
+    "quotaBytes": 1000
+   },
+   "lanes": [
+    {
+     "id": "lb",
+     "claimed": false,
+     "lastUsedMs": 5,
+     "crateKey": "a",
+     "bytes": 1
+    },
+    {
+     "id": "la",
+     "claimed": false,
+     "lastUsedMs": 5,
+     "crateKey": "b",
+     "bytes": 1
+    },
+    {
+     "id": "lc",
+     "claimed": false,
+     "lastUsedMs": 7,
+     "crateKey": "c",
+     "bytes": 1
+    }
+   ],
+   "expect": {
+    "kind": "lru",
+    "id": "la"
+   }
+  },
+  {
+   "id": "a lane of unknown crate set is never warm",
+   "crateKey": "a",
+   "bounds": {
+    "maximumLanes": 3,
+    "maximumLiveLanes": 5,
+    "quotaBytes": 1000
+   },
+   "lanes": [
+    {
+     "id": "l1",
+     "claimed": false,
+     "lastUsedMs": 10,
+     "crateKey": "",
+     "bytes": null
+    },
+    {
+     "id": "l2",
+     "claimed": false,
+     "lastUsedMs": 11,
+     "crateKey": "",
+     "bytes": null
+    },
+    {
+     "id": "l3",
+     "claimed": false,
+     "lastUsedMs": 12,
+     "crateKey": "",
+     "bytes": null
+    }
+   ],
+   "expect": {
+    "kind": "lru",
+    "id": "l1"
+   }
+  },
+  {
+   "id": "a whole-workspace request is warm for the whole-workspace lane",
+   "crateKey": "*",
+   "bounds": {
+    "maximumLanes": 3,
+    "maximumLiveLanes": 5,
+    "quotaBytes": 1000
+   },
+   "lanes": [
+    {
+     "id": "l1",
+     "claimed": false,
+     "lastUsedMs": 10,
+     "crateKey": "a",
+     "bytes": 1
+    },
+    {
+     "id": "l2",
+     "claimed": false,
+     "lastUsedMs": 11,
+     "crateKey": "*",
+     "bytes": 1
+    },
+    {
+     "id": "l3",
+     "claimed": false,
+     "lastUsedMs": 12,
+     "crateKey": "b",
+     "bytes": 1
+    }
+   ],
+   "expect": {
+    "kind": "warm",
+    "id": "l2"
+   }
+  }
+ ],
+ "trim": [
+  {
+   "id": "inside the bounds nothing is removed",
+   "bounds": {
+    "maximumLanes": 3,
+    "maximumLiveLanes": 5,
+    "quotaBytes": 1000
+   },
+   "lanes": [
+    {
+     "id": "l1",
+     "claimed": false,
+     "lastUsedMs": 1,
+     "crateKey": "a",
+     "bytes": 100
+    },
+    {
+     "id": "l2",
+     "claimed": false,
+     "lastUsedMs": 2,
+     "crateKey": "b",
+     "bytes": 100
+    }
+   ],
+   "expect": []
+  },
+  {
+   "id": "above the count the oldest idle lanes go first",
+   "bounds": {
+    "maximumLanes": 3,
+    "maximumLiveLanes": 5,
+    "quotaBytes": 1000
+   },
+   "lanes": [
+    {
+     "id": "l1",
+     "claimed": false,
+     "lastUsedMs": 4,
+     "crateKey": "a",
+     "bytes": 1
+    },
+    {
+     "id": "l2",
+     "claimed": false,
+     "lastUsedMs": 1,
+     "crateKey": "b",
+     "bytes": 1
+    },
+    {
+     "id": "l3",
+     "claimed": false,
+     "lastUsedMs": 3,
+     "crateKey": "c",
+     "bytes": 1
+    },
+    {
+     "id": "l4",
+     "claimed": false,
+     "lastUsedMs": 2,
+     "crateKey": "d",
+     "bytes": 1
+    },
+    {
+     "id": "l5",
+     "claimed": false,
+     "lastUsedMs": 5,
+     "crateKey": "e",
+     "bytes": 1
+    }
+   ],
+   "expect": [
+    "l2",
+    "l4"
+   ]
+  },
+  {
+   "id": "above the quota the oldest idle lanes go until it holds",
+   "bounds": {
+    "maximumLanes": 3,
+    "maximumLiveLanes": 5,
+    "quotaBytes": 1000
+   },
+   "lanes": [
+    {
+     "id": "l1",
+     "claimed": false,
+     "lastUsedMs": 1,
+     "crateKey": "a",
+     "bytes": 600
+    },
+    {
+     "id": "l2",
+     "claimed": false,
+     "lastUsedMs": 2,
+     "crateKey": "b",
+     "bytes": 300
+    },
+    {
+     "id": "l3",
+     "claimed": false,
+     "lastUsedMs": 3,
+     "crateKey": "c",
+     "bytes": 300
+    }
+   ],
+   "expect": [
+    "l1"
+   ]
+  },
+  {
+   "id": "a claimed lane is never removed",
+   "bounds": {
+    "maximumLanes": 3,
+    "maximumLiveLanes": 5,
+    "quotaBytes": 1000
+   },
+   "lanes": [
+    {
+     "id": "l1",
+     "claimed": true,
+     "lastUsedMs": 1,
+     "crateKey": "a",
+     "bytes": 900
+    },
+    {
+     "id": "l2",
+     "claimed": false,
+     "lastUsedMs": 2,
+     "crateKey": "b",
+     "bytes": 300
+    },
+    {
+     "id": "l3",
+     "claimed": false,
+     "lastUsedMs": 3,
+     "crateKey": "c",
+     "bytes": 300
+    }
+   ],
+   "expect": [
+    "l2",
+    "l3"
+   ]
+  },
+  {
+   "id": "only claimed lanes over the bound leave the pool alone",
+   "bounds": {
+    "maximumLanes": 3,
+    "maximumLiveLanes": 5,
+    "quotaBytes": 1000
+   },
+   "lanes": [
+    {
+     "id": "l1",
+     "claimed": true,
+     "lastUsedMs": 1,
+     "crateKey": "a",
+     "bytes": 500
+    },
+    {
+     "id": "l2",
+     "claimed": true,
+     "lastUsedMs": 2,
+     "crateKey": "a",
+     "bytes": 500
+    },
+    {
+     "id": "l3",
+     "claimed": true,
+     "lastUsedMs": 3,
+     "crateKey": "a",
+     "bytes": 500
+    },
+    {
+     "id": "l4",
+     "claimed": true,
+     "lastUsedMs": 4,
+     "crateKey": "a",
+     "bytes": 500
+    },
+    {
+     "id": "l5",
+     "claimed": true,
+     "lastUsedMs": 5,
+     "crateKey": "a",
+     "bytes": 500
+    }
+   ],
+   "expect": []
+  },
+  {
+   "id": "unknown sizes count for the lane count only",
+   "bounds": {
+    "maximumLanes": 3,
+    "maximumLiveLanes": 5,
+    "quotaBytes": 1000
+   },
+   "lanes": [
+    {
+     "id": "l1",
+     "claimed": false,
+     "lastUsedMs": 1,
+     "crateKey": "a",
+     "bytes": null
+    },
+    {
+     "id": "l2",
+     "claimed": false,
+     "lastUsedMs": 2,
+     "crateKey": "b",
+     "bytes": null
+    },
+    {
+     "id": "l3",
+     "claimed": false,
+     "lastUsedMs": 3,
+     "crateKey": "c",
+     "bytes": null
+    },
+    {
+     "id": "l4",
+     "claimed": false,
+     "lastUsedMs": 4,
+     "crateKey": "d",
+     "bytes": null
+    }
+   ],
+   "expect": [
+    "l1"
+   ]
+  }
+ ],
+ "quota": [
+  {
+   "id": "a store quota below the capacity bounds the pool",
+   "capacityBytes": 107374182400,
+   "machineQuotaBytes": 18897856102,
+   "laneShareNumerator": 1,
+   "laneShareDenominator": 5,
+   "expect": 3779571220
+  },
+  {
+   "id": "no machine budget falls back to the capacity",
+   "capacityBytes": 42949672960,
+   "machineQuotaBytes": null,
+   "laneShareNumerator": 1,
+   "laneShareDenominator": 5,
+   "expect": 8589934592
+  },
+  {
+   "id": "a quota above the capacity does not widen the pool",
+   "capacityBytes": 10737418240,
+   "machineQuotaBytes": 53687091200,
+   "laneShareNumerator": 1,
+   "laneShareDenominator": 5,
+   "expect": 2147483648
+  }
+ ],
+ "sweep": {
+  "claim": {
+   "configs": 72,
+   "states": 42129,
+   "violations": 0,
+   "stuck": 0,
+   "unreachableDone": 0,
+   "overlaps": 48
+  },
+  "unguarded": {
+   "configs": 72,
+   "states": 45573,
+   "violations": 3552,
+   "stuck": 0,
+   "unreachableDone": 0,
+   "overlaps": 48
+  }
+ }
+}

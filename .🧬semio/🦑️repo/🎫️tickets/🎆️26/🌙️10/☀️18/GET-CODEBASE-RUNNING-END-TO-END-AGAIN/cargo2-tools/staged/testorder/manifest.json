@@ -1,0 +1,82 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts": {
+  "file": "00.ts",
+  "base": "67bb6d3d082aa8b2998decb11503d62a5bbe0d5a04fee7f0c1374331c0528814",
+  "new": "29604c57eb6f9baa10131df83518321f87665650dd62305a07c0b0125dfe55b6"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts": {
+  "file": "01.ts",
+  "base": "37cab2239a732c48be59c6d0bc9c4be415d9c04c6095329409906099e0fd15f4",
+  "new": "4fcf50810d2c194dccff695afa3054e7c5743870bd6901e05e5f6ed117d0ad29"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts": {
+  "file": "02.ts",
+  "base": "7451a9cdf4d5c6ff81a149d312d667ad57054a94087bb4a3f649f02e68ad877b",
+  "new": "43aba720b84fa2aef4a9fe991b045ed19a1c84afdf08f7fd3fc5422f8fbd23f8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts": {
+  "file": "03.ts",
+  "base": "a295525d3391e975ff830712458be4e4b45c75d5986df650a0ae0e6d2438f209",
+  "new": "e08fcee8c903be956a8976d34ed1246b76f03fbfa28cc5e9f3c65480b88de358"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🧪️tests/📥️consumers/🟦️.ts": {
+  "file": "04.ts",
+  "base": "9b950e787a1411efac9d6e4a2b3124aaf536610123bead3a696e0a14fb1f913b",
+  "new": "e602b6da768459741b86a2576521c68d92f3e3de428e99a2c55ed89aec55e01a"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🧪️tests/📥️consumers/🔣️.json": {
+  "file": "05.json",
+  "base": "ce5d53018f3548c05c88cc51d0ef110528e9afc9bbc5a6a53ce57e1617535bb3",
+  "new": "c1ea530f6165ff7321f97e913adf191771b32373c8f44883ea7d5889ddea6b6f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/⛓️cpu-last/🟦️.ts": {
+  "file": "06.ts",
+  "base": "e6d7fb40a4b0fd096aa321bb3bed008705ab1888edb698aeb01ec187dac49666",
+  "new": "992e0071a85913ca9c166101e5c4e5f14d26ba373633a05eed82e81e03e6f8e8"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🪜️order/🟦️.ts": {
+  "file": "07.ts",
+  "base": null,
+  "new": "2488bac04c3ca9ee8138ae53c64da1ca9f4b9bdab0555388a55a5e8659a02c1d"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🪜️order/🔣️.json": {
+  "file": "08.json",
+  "base": null,
+  "new": "e14ef36bf18bef653de5319a9ddc225e684067dab4eb16b29944309298d72c5b"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🪜️order/🐍️.py": {
+  "file": "09.py",
+  "base": null,
+  "new": "b2cce529db66daea641356b8fe1d93d614b2d08ec51a10a90f7dede658a4bf25"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🧪️tests/🪜️order/🟦️.ts": {
+  "file": "10.ts",
+  "base": null,
+  "new": "ae632b2cdf76d6b79cc936f623faa0bf33e89f4dee18623de54a91c6c081484e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🧪️tests/🪜️order/🔣️.json": {
+  "file": "11.json",
+  "base": null,
+  "new": "b1b83c2a240d541b70854ad10e4180e888dad78ad81036feb34a53f74442d2f6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🧪️tests/🪜️order/🐍️.py": {
+  "file": "12.py",
+  "base": null,
+  "new": "60b8a3d2a1c96d1f762a802f0542c6cead4eec9e9f7f926dac2e8c7531c6f72e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🧪️tests/🪜️steps/🟦️.ts": {
+  "file": "13.ts",
+  "base": null,
+  "new": "8ff3444a6e8981c71f91dc66a89454ed0710984784e2552c1c90151994a47416"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🧪️tests/🪜️steps/🔣️.json": {
+  "file": "14.json",
+  "base": null,
+  "new": "4885892dffaf2809225591cea604b4326866181d9b687087a867dfadce2f92df"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🧪️tests/🪜️steps/🐍️.py": {
+  "file": "15.py",
+  "base": null,
+  "new": "cac594755e3268e49c1011eb859a9a650af46182d34ac1c09f25c847eaef6c5b"
+ }
+}

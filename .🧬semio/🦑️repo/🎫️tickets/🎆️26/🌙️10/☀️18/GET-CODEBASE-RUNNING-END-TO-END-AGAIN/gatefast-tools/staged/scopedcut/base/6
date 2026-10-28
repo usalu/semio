@@ -1,0 +1,85 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "Early cutoff of derived facts in the graph fact index",
+ "description": "A derived fact is a question put to a pure computation over raw facts (the closure of the files a command imports, say) and the digest of its answer. The fact index lists it as the row of kind `derived` (`path` is the canonical question, `fact` the digest of the answer): every project that consumed the answer holds this one row instead of the thousands of raw rows the computation read, and one pseudo owner named `@derived:` plus the first 32 hex digits of the sha256 of the canonical row holds the row together with those raw rows (its support). When a raw row of a support is stale the question is asked again; an equal answer keeps every consuming project valid (the support is replaced by the rows the new computation read), a different answer stales exactly the projects that hold the row. A derived row is never checked as a raw fact. A pseudo owner without a project that holds its row is removed.",
+ "definitions": {
+  "Policy": {
+   "const": {
+    "version": 1,
+    "kind": "derived",
+    "ownerPrefix": "@derived:",
+    "nameDigestCharacters": 32,
+    "deriveConcurrency": 2,
+    "maximumSuspects": 65536
+   }
+  },
+  "Row": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["kind", "path", "fact"],
+   "properties": {
+    "kind": {"type": "string"},
+    "path": {"type": "string"},
+    "fact": {}
+   }
+  },
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "worlds"],
+   "properties": {
+    "version": {"const": 1},
+    "worlds": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "owners", "derived", "stale", "answers", "expect"],
+      "properties": {
+       "id": {"type": "string"},
+       "owners": {
+        "type": "object",
+        "description": "project name to the raw rows it holds directly and the derived questions it holds",
+        "additionalProperties": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": ["raw", "derived"],
+         "properties": {
+          "raw": {"type": "array", "items": {"type": "string"}},
+          "derived": {"type": "array", "items": {"type": "string"}}
+         }
+        }
+       },
+       "derived": {
+        "type": "object",
+        "description": "derived question to its recorded answer digest and the raw rows of its support",
+        "additionalProperties": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": ["answer", "support"],
+         "properties": {"answer": {"type": "string"}, "support": {"type": "array", "items": {"type": "string"}}}
+        }
+       },
+       "stale": {"type": "array", "items": {"type": "string"}, "description": "raw rows that no longer hold"},
+       "answers": {
+        "type": "object",
+        "description": "the answer digest a question gets now, and `!error` when the computation fails",
+        "additionalProperties": {"type": "string"}
+       },
+       "expect": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["dirty", "held", "changed"],
+        "properties": {
+         "dirty": {"type": "array", "items": {"type": "string"}},
+         "held": {"type": "array", "items": {"type": "string"}},
+         "changed": {"type": "array", "items": {"type": "string"}}
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

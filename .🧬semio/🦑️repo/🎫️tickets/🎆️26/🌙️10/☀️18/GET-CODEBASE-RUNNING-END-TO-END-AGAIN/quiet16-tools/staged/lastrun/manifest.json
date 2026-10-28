@@ -1,0 +1,87 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🌦️forecast/🟦️.ts": {
+  "file": "00.ts",
+  "base": "5a122a864fded54629c151692780b59a6a36264223452825b2f98c8ac78c0152",
+  "new": "dc14e00bafff1a19f2df41345af0a7f69bf376df59976240c5f4724a4ed6e060"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts": {
+  "file": "01.ts",
+  "base": "4e9db478850eb79a2a1aeca693608b8f4d639de74c3a062acf05fb159a14e593",
+  "new": "2ffab8aa1d0c120f5dd9ad438d61b57ee695d1385817309eea53f3192a09121b"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json": {
+  "file": "02.json",
+  "base": "4085ddd3c509feee9d7640bd708c223f2680e7a2da239576597e5e5d8bcb9422",
+  "new": "62e85d4717dbd40f5f2b81fd2ab9d61ed8306c665169ffe4de7175a360bbe425"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json": {
+  "file": "03.json",
+  "base": "ae60a8da402a03dbf7101db5c6b34768dc97f4fc6520fb78872a0739aa6613b2",
+  "new": "3029ad7a3ec4d61b065f2b8bac6714308acfb2c7b459dbc465328ac0477e44ad"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "04.json",
+  "base": "ad3a19ec56ca16558e6d2da1edd2da7e6dd92f72433e433f0d022d115d1b6b6c",
+  "new": "1acea2896debf2fa1c6f893716eafc87125887e5803bf29a47f80cd6dbf7fca7"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪜️phases/🧫️fixtures/🔣️.json": {
+  "file": "05.json",
+  "base": "434e730c8903ca5729d0e5154a709d0ffb2df126ddcb2a5219f2cc8bd2b7fec1",
+  "new": "41d4979bafed001e4c693efe86aa83f73dc9b6b5199edb02baf4f438c47b6aa8"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📐️estimates/🧫️fixtures/🔣️.json": {
+  "file": "06.json",
+  "base": "42114bde459221ebccf31362d0e7a748399f351d736b5174b9fcde5cc1c5cdc5",
+  "new": "6aba6a877172e56d03835330c0244319bc39d91e4f735168444e9963d4490b27"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📐️estimates/🐍️oracle/🐍️.py": {
+  "file": "07.py",
+  "base": "c7b830d3b839a7d03cbce58d6120ba65a6a2328f31db79a3de6864208a1042cb",
+  "new": "fb7adc8a28fed670b6d07f1c0aee558d12e0161903a234a897caa324937cc51d"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🧫️fixtures/📼️recorded.json": {
+  "file": "08.json",
+  "base": "d1bfcfb22f4ae273ce595ce4ab7153844f840fdff773d42867d3f52d234fb169",
+  "new": "9f8647c48ac19791d6ad8bb7e2b9c7f606518ce29901654b7f0fa27f611c0d28"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🧫️fixtures/🔣️.json": {
+  "file": "09.json",
+  "base": "b06ae84fcde69f2b89220012f8b42a1f28b585e042a81aa72cdcfc02b4495fce",
+  "new": "196301da53d86de59e0ecd4915b5df08cc5592a745f381a8a879d66d15246960"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🟦️.ts": {
+  "file": "10.ts",
+  "base": "f482aed4519375f21321d60335bdfb13cb70b9850aa6c39df16ffb330b705ab2",
+  "new": "f0c496470f3a2578b79c24ebdf2b77da94804b9322ece409316115a5bcb9225d"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🐍️oracle/🐍️.py": {
+  "file": "11.py",
+  "base": "7c76759cc22eb7c80951799583434bce3d1aa11ee9b270bc6a3c77d553ea506f",
+  "new": "cb1215f7577f9d521bb67ebb09038c065db3759d5c1821b4fca0207986988ebc"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🧫️fixtures/🔣️.json": {
+  "file": "12.json",
+  "base": "d36061ceae9d0d710a96201974e5024b169cda5facaf283a79750ad7af626ac6",
+  "new": "a1e58c1b35a7b49f549097bd008b30e29667aaeba01c6d54afd85e312449d8a6"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🟦️.ts": {
+  "file": "13.ts",
+  "base": "374d766aef826c621718eee8c3524623cda5cd26b8a3a0ae37b141489893668a",
+  "new": "308e9510c1cb60c9b3b0aa4b8227e6f8a2d510076d7f3be9588ef115de283227"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🟦️.ts": {
+  "file": "14.ts",
+  "base": "a3cc6dfe161119f65deb5b4537172dfc80a7c63177ee18199f46ef8ec51e089e",
+  "new": "930b26e66996fa3f3bb60df508e9497a9b1562a9bd6981af898b87c0d797701e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🟦️.ts": {
+  "file": "15.ts",
+  "base": "3c0389dcfc2f24935aff2be893ebeba6e4aaaac4ac448e66e34cc08e9590267a",
+  "new": "38076fd91c5171ccefb85eeb6c1f3241c599c8e90cb9104fa9236187836c75e7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🤫️quiet/🧫️fixtures/🔣️.json": {
+  "file": "16.json",
+  "base": "04fe33dadc7a1f8ba44f1b985210d1ddd0ed3da68ea6877f8b183b55db3a6661",
+  "new": "1aa32cb4e514d6c2e14164f7d410fbf141c19e11cc8e0d88ad9e4aed25840098"
+ }
+}

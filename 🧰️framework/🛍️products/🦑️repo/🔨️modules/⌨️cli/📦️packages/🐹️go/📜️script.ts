@@ -15,7 +15,7 @@ class BuildScript extends BundleScript {
   async run(): Promise<void> {
     const binary = resolveCliBin(this.repoRoot);
     mkdirSync(dirname(binary), { recursive: true });
-    await runCanonicalGoBuild(resolve(import.meta.dirname, "../../../💻️client/🔌️mcp"), ["-trimpath", "-o", binary, "."], { control: scriptCompilerAdmissionControlV1(this.invocation, "repo-cli:build", buildBudgetMs()), env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") }, budgetMs: buildBudgetMs() });
+    await runCanonicalGoBuild(resolve(import.meta.dirname, "../../../💻️client/🔌️mcp"), ["-trimpath", "-o", binary, "."], { invocation:this.invocation, control: scriptCompilerAdmissionControlV1(this.invocation, "repo-cli:build", buildBudgetMs()), env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") }, budgetMs: buildBudgetMs() });
   }
 }
 

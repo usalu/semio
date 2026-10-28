@@ -1,0 +1,218 @@
+{
+  "name": "@semio-tech/repo-graphql-rs",
+  "$schema": "../../../📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "projectType": "library",
+  "namedInputs": {
+    "testEnv": [
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
+    ],
+    "default": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/**/*",
+      "sharedGlobals"
+    ]
+  },
+  "targets": {
+    "build": {
+      "executor": "repo:script",
+      "inputs": [
+        "production",
+        "^production",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts build"
+      },
+      "metadata": {
+        "semio": {
+          "rustBuildIntent": {
+            "version": 1,
+            "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust/Cargo.toml",
+            "package": "semio-framework-repo-graphql",
+            "scope": "package",
+            "fallback": {
+              "kind": "bounded-cargo",
+              "adapters": [
+                "foreign-source",
+                "proc-macro",
+                "build-script",
+                "build-script-run",
+                "effective-profile"
+              ]
+            }
+          }
+        }
+      },
+      "cache": true
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts test"
+      }
+    },
+    "generate-types": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/{📖️parse,📽️projection,📥️source,📋️plan,🏃️execution,⌛️queries}/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🧪️tests/🧫️fixtures/📜️served-schema/🔗️.graphql"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/🤖️generated/🔗️graphql-types/🟦️.ts"
+      ],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts generate-types",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "title": {
+              "en": "Generate GraphQL Types",
+              "de": "GraphQL-Typen erzeugen"
+            },
+            "description": {
+              "en": "Use canonical GraphQL documents and the served schema independently of editor integrations.",
+              "de": "Nutzt kanonische GraphQL-Dokumente und das bereitgestellte Schema unabhängig von Editorintegrationen."
+            }
+          },
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
+        }
+      }
+    },
+    "check-types": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/{📖️parse,📽️projection,📥️source,📋️plan,🏃️execution,⌛️queries}/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🧪️tests/🧫️fixtures/📜️served-schema/🔗️.graphql",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/🤖️generated/🔗️graphql-types/🟦️.ts"
+      ],
+      "outputs": [],
+      "dependsOn": [
+        "generate-types"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts check-types",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "title": {
+              "en": "Check GraphQL Types",
+              "de": "GraphQL-Typen prüfen"
+            },
+            "description": {
+              "en": "Use canonical GraphQL documents and the served schema independently of editor integrations.",
+              "de": "Nutzt kanonische GraphQL-Dokumente und das bereitgestellte Schema unabhängig von Editorintegrationen."
+            }
+          }
+        }
+      }
+    },
+    "preview-types": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/{📖️parse,📽️projection,📥️source,📋️plan,🏃️execution,⌛️queries}/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🧪️tests/🧫️fixtures/📜️served-schema/🔗️.graphql"
+      ],
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts preview-types",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "title": {
+              "en": "Preview GraphQL Types",
+              "de": "GraphQL-Typen vorschauen"
+            },
+            "description": {
+              "en": "Use canonical GraphQL documents and the served schema independently of editor integrations.",
+              "de": "Nutzt kanonische GraphQL-Dokumente und das bereitgestellte Schema unabhängig von Editorintegrationen."
+            }
+          }
+        }
+      }
+    },
+    "test-types-source": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/{📖️parse,📽️projection,📥️source,📋️plan,🏃️execution,⌛️queries}/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🧪️tests/🧫️fixtures/📜️served-schema/🔗️.graphql",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/🧪️tests/🟦️.ts",
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        },
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/🤖️generated/🔗️graphql-types/🟦️.ts"
+      ],
+      "outputs": [],
+      "dependsOn": [
+        "generate-types"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts test-types-source",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/🧪️tests/🟦️.ts"
+          ],
+          "dashboard": {
+            "title": {
+              "en": "Test GraphQL Types",
+              "de": "GraphQL-Typen testen"
+            },
+            "description": {
+              "en": "Use canonical GraphQL documents and the served schema independently of editor integrations.",
+              "de": "Nutzt kanonische GraphQL-Dokumente und das bereitgestellte Schema unabhängig von Editorintegrationen."
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+# file<TAB>suite id<TAB>scratch (sandbox|checkout)
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/🔒️lifetime/🧪️tests/🟦️.ts	build-graph-rust	checkout
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/🧩️assembly/🧪️tests/🟦️.ts	build-graph-rust	checkout
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️source/🧪️tests/🟦️.ts	build-graph-rust	checkout
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🎛️phase/🟦️.ts	build-inputs-storage	sandbox
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/📒️ledger/🟦️.ts	build-inputs-storage	sandbox
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🚪️admission/🟦️.ts	build-inputs-storage	sandbox
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/🧪️tests/🟦️.ts	build-inputs-revision	sandbox
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/📏️windows/🟦️.ts	build-inputs-revision	sandbox
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📊️reporting/🧪️tests/🟦️.ts	build-reporting	sandbox
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/🧪️tests/🟦️.ts	build-command-line	sandbox
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/📥️consumption/🟦️.ts	build-targets-selection	sandbox
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🏗️native/🟦️.ts	build-workspace-phase-laws	sandbox
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/⏳️declared-wait/🟦️.ts	storage-compiler	sandbox
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🤝️shared/🟦️.ts	compiler-headroom	sandbox
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🪢️borrowing/🟦️.ts	storage-compiler	sandbox

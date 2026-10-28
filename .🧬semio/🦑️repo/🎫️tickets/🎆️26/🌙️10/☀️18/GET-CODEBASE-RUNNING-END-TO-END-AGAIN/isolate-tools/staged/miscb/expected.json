@@ -1,0 +1,124 @@
+{
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts": {
+  "mode": "plain",
+  "pass": 29,
+  "fails": [
+   "neutral OS Vite artifact DATA matches neutral publication budgets and independent SQLite inventory",
+   "neutral actual OS and app Vite callers explicitly carry their domain input inventory",
+   "neutral browser inventory bounds every entry before allocation and agrees with fast-glob and SQLite",
+   "neutral config products-root DATA has no physical owner import",
+   "neutral declared factory engines select the same exact OS config and reader facet",
+   "neutral distribution compiler uses a carried owned child and actual published reader handback",
+   "neutral distribution engine coordinates equal actual selected product files and exact chunk owners",
+   "neutral domain cache callbacks consume their actual returned phase before child work",
+   "neutral engine catalog source owners declare their wasm package source and the inference selects the engine owners",
+   "neutral engine delivery catalog binds exact producer packages and paid reader paths",
+   "neutral engine optimizer names come from exact Source producer DATA without generated package probes",
+   "neutral generic WASM package has one genuine paid callback and selected product owner",
+   "neutral model product boundary refuses forged custody and copies closed selected-mode DATA",
+   "neutral package inventory bounds actual Node trees before retaining their complete roster"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/⚙️configured/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "Source parser distinguishes createRequire context from loaded dependencies",
+   "configured Source admits inherited bytes before reading and does not scan unrelated include trees",
+   "configured Source resolves genuine aliases, package owners and lazy inputs against esbuild",
+   "configured executable Source refuses type-only resolution unless runtime ownership is explicit",
+   "configured module metadata is admitted before external resolver reads",
+   "runtime imports parse the admitted bytes without reopening their Source path"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🏃️command/🧪️tests/🟦️.ts": {
+  "mode": "plain",
+  "pass": 2,
+  "fails": [
+   "actual Cargo command retains complete native compiler input and feature custody",
+   "actual Cargo command uses its required owner through real native execution and retirement"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🔁️replan/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "Cargo manifest replanning defining types and dashboard controls are complete",
+   "Cargo original preparation replan always-changing",
+   "Cargo original preparation replan always-changing-after-update",
+   "Cargo original preparation replan changed-after-update",
+   "Cargo original preparation replan changed-once",
+   "Cargo original preparation replan expired",
+   "Cargo original preparation replan identical"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/📥️original-control/🟦️.ts": {
+  "mode": "env",
+  "pass": 3,
+  "fails": [
+   "(unnamed)",
+   "actual artifact wrappers and repository consumer forward the identical original invocation",
+   "actual original finite process deadline cancels its queued preparation without releasing a peer holder",
+   "controlled resolver retains exact Unicode closure and refuses changed or cancelled custody",
+   "original preparation authority closes only its own budget operation",
+   "original preparation authority closes only its own child operation",
+   "original preparation authority closes only its own deadline operation",
+   "original preparation custody bounds and closes dependency fetch",
+   "original preparation custody bounds and closes dependency update"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🕰️queued-preparation/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": [
+   "queued native preparation survives waiting beyond one active recipe budget"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🧪️tests/🔌️nx/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": [
+   "ordinary Nx retains and restores the actual bounded coordinator Next artifact"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 1,
+  "fails": [
+   "(unnamed)",
+   "actual frozen Nx resolves original mode output placeholders",
+   "actual indirect Next projector holds transitive Source through graph use"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "actual Next input producer retains complete Source only through its callback",
+   "actual coordinator app Source aliases and routes have a finite complete input closure"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧾️artifact-root-source/🟦️.ts": {
+  "mode": "env",
+  "pass": 3,
+  "fails": [
+   "(unnamed)",
+   "ended test runs are retired oldest first above the high-water mark, a dry run keeps them and reports in German",
+   "materializes exact owned host plan and result paths without compiling",
+   "refuses dangling symlink escapes from the declared artifact owner",
+   "refuses escape and foreign output ownership before marker writes",
+   "test outputs exclude retirement while an actual original task reader is held",
+   "test outputs retain actual finite paths and refuse released async callbacks",
+   "test outputs retain live runs and retire released runs under actual exclusive custody",
+   "the test protocol report root beside the task identities stays reserved and never breaks the run inventory"
+  ]
+ }
+}

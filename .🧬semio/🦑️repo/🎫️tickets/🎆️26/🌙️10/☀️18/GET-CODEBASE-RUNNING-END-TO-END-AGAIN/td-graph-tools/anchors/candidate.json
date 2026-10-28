@@ -1,0 +1,34 @@
+[
+{
+"old": "o-tech/process/leases\";\n\ntest(\"Graph candidates ",
+"new": "o-tech/process/leases\";\nimport{physicalSourceOriginV1}from\"../../../📥️inputs/🔏️revision/🟨️.mjs\";\n\ntest(\"Graph candidates "
+},
+{
+"old": "est,true),node=tree.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text===\"loadBuildGraphV1\");if(!node)throw Error(\"Actual graph loader required\");\n const transformed=ts.transform(node,[context=>{const visit:ts.Visitor=node=>ts.isPropertyAccessExpression(node)&&ts.isMetaProperty(node.expression)?ts.factory.createStringLiteral(\"file:///owned/graph.ts\"):ts.visitEachChild(node,visit,context);return node=>ts.visitNode(node,visit)as ts.FunctionDeclaration;}]);\n const code=ts.transpileModule(ts.createPrinter().printNode(ts.EmitHint.Unspecified,transformed.transformed[0]!,tree).replace(\"export \",\"\"),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText,database=new Database(\":memory:\"),phase=routing.createIssuedResourceControlV1",
+"new": "est,true),node=tree.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text===\"loadBuildGraphUnpinnedV1\");if(!node)throw Error(\"Actual graph loader required\");\n const transformed=ts.transform(node,[context=>{const visit:ts.Visitor=node=>ts.isPropertyAccessExpression(node)&&ts.isMetaProperty(node.expression)?ts.factory.createStringLiteral(\"file:///owned/graph.ts\"):ts.isMetaProperty(node)?ts.factory.createIdentifier(\"importMetaV1\"):ts.isCallExpression(node)&&node.expression.kind===ts.SyntaxKind.ImportKeyword?ts.factory.createCallExpression(ts.factory.createIdentifier(\"importModuleV1\"),undefined,ts.visitNodes(node.arguments,visit,ts.isExpression)):ts.visitEachChild(node,visit,context);return node=>ts.visitNode(node,visit)as ts.FunctionDeclaration;}]);\n const code=ts.transpileModule(ts.createPrinter().printNode(ts.EmitHint.Unspecified,transformed.transformed[0]!,tree).replace(\"export \",\"\"),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText,database=new Database(\":memory:\"),phase=routing.createIssuedResourceControlV1"
+},
+{
+"old": "rolInvocationV1:routing.requireIssuedResourceControlInvocationV1,checkResourceLeaseControl,checkScriptInvocation:routing.checkScriptInvocation,readBuildGraphSelectionV1:(value:unknown)=>value,readBuildOwnerRegistryV1:(value:unknown)=>value,createRequire:()=>()=>({readBuildOwnerRegistrySourceV1:()=>JSON.stringify(registry())}),readFile:async()=>JSON.stringify(registry()),buildGraphScopeKeyV1:(_selection:unknown,value:{owners:number[]})=>String(value.owners[0]).padStart(64,\"0\"),",
+"new": "rolInvocationV1:routing.requireIssuedResourceControlInvocationV1,checkResourceLeaseControl,checkScriptInvocation:routing.checkScriptInvocation,readBuildGraphSelectionV1:(value:unknown)=>value,readBuildOwnerRegistryV1:(value:unknown)=>value,importModuleV1:async(specifier:string)=>{expect(specifier).toBe(\"./📥️inference/🟨️.mjs\");return{readBuildOwnerRegistrySourceV1:()=>JSON.stringify(registry())};},readFile:async()=>JSON.stringify(registry()),buildGraphScopeKeyV1:(_selection:unknown,value:{owners:number[]})=>String(value.owners[0]).padStart(64,\"0\"),"
+},
+{
+"old": "ails)throw closeFault;}},buildGraphPathV1:()=>\"/",
+"new": "ails)throw closeFault;}},readSealedBuildGraphV1:async()=>undefined,buildGraphPathV1:()=>\"/"
+},
+{
+"old": "+\";return loadBuildGraphV1;\")(...Object.values(b",
+"new": "+\";return loadBuildGraphUnpinnedV1;\")(...Object.values(b"
+},
+{
+"old": "\",target:\"build\"}]}:{})}});}catch(error){failed=",
+"new": "\",target:\"build\"}]}:{})},...(row.selection===\"all\"?{baseline:true}:{})});}catch(error){failed="
+},
+{
+"old": "ind((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text===\"loadBuildGraphAttemptV1\");if(!node)throw Error(\"Actual graph candidate required\");const transformed=ts.transform(node,[context=>{const visit:ts.Visitor=node=>ts.isPropertyAccessExpression(node)&&ts.isMetaProperty(node.expression)?ts.factory.createStringLiteral(\"file:///owned/graph.ts\"):ts.visitEachChild(node,visit,context);return node=>ts.visitNode(node,visit)as ts.FunctionDeclaration;}]);\n const code=ts.transpileModule(ts.createPrinter().printNode(ts.EmitHint.Unspecified,transformed.transformed[0]!,tree),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText,phase=routing.createIssuedResourceControlV1(original,\"graph:candidate-inven",
+"new": "ind((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text===\"loadBuildGraphAttemptV1\");if(!node)throw Error(\"Actual graph candidate required\");const transformed=ts.transform(node,[context=>{const visit:ts.Visitor=node=>ts.isPropertyAccessExpression(node)&&ts.isMetaProperty(node.expression)?ts.factory.createStringLiteral(\"file:///owned/graph.ts\"):ts.isMetaProperty(node)?ts.factory.createIdentifier(\"importMetaV1\"):ts.isCallExpression(node)&&node.expression.kind===ts.SyntaxKind.ImportKeyword?ts.factory.createCallExpression(ts.factory.createIdentifier(\"importModuleV1\"),undefined,ts.visitNodes(node.arguments,visit,ts.isExpression)):ts.visitEachChild(node,visit,context);return node=>ts.visitNode(node,visit)as ts.FunctionDeclaration;}]);\n const code=ts.transpileModule(ts.createPrinter().printNode(ts.EmitHint.Unspecified,transformed.transformed[0]!,tree),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText,phase=routing.createIssuedResourceControlV1(original,\"graph:candidate-inven"
+},
+{
+"old": "=>{}};\n const bindings={requireIssuedResourceCon",
+"new": "=>{}};\n const bindings={importMetaV1:{url:\"file:///owned/graph.ts\"},physicalSourceOriginV1,observationV1:observation,importModuleV1:async(specifier:string)=>{expect([\"./📥️inference/🟨️.mjs\",\"../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs\",\"./📥️inference/🛡️policy/🟨️.mjs\"]).toContain(specifier);return specifier===\"./📥️inference/🟨️.mjs\"?producer:{};},requireIssuedResourceCon"
+}
+]

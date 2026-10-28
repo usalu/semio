@@ -269,6 +269,7 @@
     "./dsl/record/testing/variant-field": "./🗣️dsl/🧪️testing/🌿️variant-field/🟦️.ts",
     "./runtime/glob": "./⚙️runtime/🌐️glob/🟦️.ts",
     "./runtime/identity": "./⚙️runtime/🏷️identity/🟦️.ts",
+    "./runtime/language": "./⚙️runtime/🗣️language/🟦️.ts",
     "./runtime/sqlite": "./⚙️runtime/🗃️sqlite/🟦️.ts",
     "./runtime/test": "./⚙️runtime/🧪️test/🟦️.ts",
     "./runtime/main": "./⚙️runtime/🏁️main/🟦️.ts",
@@ -278,6 +279,8 @@
     "./runtime/source": "./⚙️runtime/🔬️source/🟦️.ts",
     "./runtime/semver": "./⚙️runtime/🔢️semver/🟦️.ts",
     "./runtime/native": "./⚙️runtime/🧲️native/🟦️.ts",
+    "./runtime/native/libc": "./⚙️runtime/🧲️native/📚️libc/🟦️.ts",
+    "./runtime/native/toolchain": "./⚙️runtime/🧲️native/🧰️toolchain/🟦️.ts",
     "./runtime/serve": "./⚙️runtime/🌍️serve/🟦️.ts",
     "./runtime/selection": "./⚙️runtime/🧭️selection/🟦️.ts"
   },

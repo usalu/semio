@@ -1,0 +1,473 @@
+{
+ "version": 1,
+ "edits": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🟦️.ts",
+   "name": "records import",
+   "old": "import { createHash, randomBytes } from \"node:crypto\";",
+   "new": "import { createHash, hash, randomBytes } from \"node:crypto\";"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🟦️.ts",
+   "name": "records value digest",
+   "old": "  return createHash(\"sha256\").update(value).digest(\"hex\").slice(0, 32);",
+   "new": "  return hash(\"sha256\", value, \"hex\").slice(0, 32);"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🟦️.ts",
+   "name": "records key",
+   "old": "  const hash = createHash(\"sha256\");\n  for (const part of [namespace, ...inputs]) {\n    const bytes = typeof part === \"string\" ? Buffer.from(part, \"utf8\") : part;\n    hash.update(`${bytes.byteLength}:`).update(bytes);\n  }\n  return hash.digest(\"hex\");\n}",
+   "new": "  const parts = [namespace, ...inputs];\n  if (parts.every((part) => typeof part === \"string\")) {\n    let text = \"\";\n    for (const part of parts as string[]) text += `${Buffer.byteLength(part)}:${part}`;\n    return hash(\"sha256\", text, \"hex\");\n  }\n  const chained = createHash(\"sha256\");\n  for (const part of parts) chained.update(`${typeof part === \"string\" ? Buffer.byteLength(part) : part.byteLength}:`).update(part);\n  return chained.digest(\"hex\");\n}"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🦀️resolution/🟦️.ts",
+   "name": "resolution import",
+   "old": "import {createHash} from \"node:crypto\";",
+   "new": "import {compareUtf8V1, sha256HexV1} from \"../../🧂️text-bytes/🟨️.mjs\";"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🦀️resolution/🟦️.ts",
+   "name": "resolution sha",
+   "old": "const sha = (value: string): string => createHash(\"sha256\").update(value).digest(\"hex\");\nconst bytes = (left: string, right: string): number => Buffer.compare(Buffer.from(left), Buffer.from(right));",
+   "new": "const sha = (value: string): string => sha256HexV1(value);\nconst bytes = (left: string, right: string): number => compareUtf8V1(left, right);"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+   "name": "inputs import",
+   "old": "import { createHash, randomBytes, randomUUID } from \"node:crypto\";",
+   "new": "import { createHash, randomBytes, randomUUID } from \"node:crypto\";\nimport { sha256DelimitedHexV1, sha256FirstByteV1, sha256HexV1 } from \"../🧂️text-bytes/🟨️.mjs\";"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+   "name": "inputs memo",
+   "old": "const INVENTORY_MEMO_V1 = new Map(), INVENTORY_MEMO_LIMIT_V1 = 4096;",
+   "new": "const INVENTORY_MEMO_V1 = new Map(), INVENTORY_MEMO_LIMIT_V1 = 4096, CHUNK_CUTS_V1 = new Map(), CHUNK_CUTS_LIMIT_V1 = 131072;"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+   "name": "inputs release",
+   "old": "export function releaseInputMemoryV1() { INVENTORY_MEMO_V1.clear(); VERIFIED_CLOSURES_V1.clear(); }",
+   "new": "export function releaseInputMemoryV1() { INVENTORY_MEMO_V1.clear(); VERIFIED_CLOSURES_V1.clear(); CHUNK_CUTS_V1.clear(); }"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+   "name": "inputs inventory key",
+   "old": "  const hash = createHash(\"sha256\").update(workspaceRoot).update(\"\\0\");\n  for (const file of files) hash.update(file).update(\"\\0\");\n  const key = hash.digest(\"hex\"), known = INVENTORY_MEMO_V1.get(key);",
+   "new": "  const key = sha256DelimitedHexV1(files, \"\\0\", workspaceRoot), known = INVENTORY_MEMO_V1.get(key);"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+   "name": "inputs chunk cut",
+   "old": "    if (current.length >= INPUT_CLOSURE_CHUNK_MINIMUM_V1 && createHash(\"sha256\").update(file).digest()[0] % INPUT_CLOSURE_CHUNK_MODULUS_V1 === 0) { chunks.push(current); current = []; }",
+   "new": "    if (current.length >= INPUT_CLOSURE_CHUNK_MINIMUM_V1 && chunkEndsAfterV1(file)) { chunks.push(current); current = []; }"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+   "name": "inputs chunk cut memo",
+   "old": "const INPUT_CLOSURE_CHUNK_MINIMUM_V1 = 16, INPUT_CLOSURE_CHUNK_MODULUS_V1 = 128;",
+   "new": "const INPUT_CLOSURE_CHUNK_MINIMUM_V1 = 16, INPUT_CLOSURE_CHUNK_MODULUS_V1 = 128;\n\n/** ✂️ Whether a chunk ends after this path: a pure function of the path, asked again for every roster that holds it, so it is answered once per path until the memo is released. */\nfunction chunkEndsAfterV1(file) {\n  let ends = CHUNK_CUTS_V1.get(file);\n  if (ends === undefined) {\n    if (CHUNK_CUTS_V1.size >= CHUNK_CUTS_LIMIT_V1) CHUNK_CUTS_V1.clear();\n    ends = sha256FirstByteV1(file) % INPUT_CLOSURE_CHUNK_MODULUS_V1 === 0;\n    CHUNK_CUTS_V1.set(file, ends);\n  }\n  return ends;\n}"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+   "name": "inputs chunk key",
+   "old": "const contract = capturedInventoryV1(chunk, workspaceRoot).text, key = createHash(\"sha256\").update(contract).digest(\"hex\"); publishInputClosureV1(join(directory, `${key}.json`), contract);",
+   "new": "const contract = capturedInventoryV1(chunk, workspaceRoot).text, key = sha256HexV1(contract); publishInputClosureV1(join(directory, `${key}.json`), contract);"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+   "name": "inputs lock key",
+   "old": "contract = captured.text, key = createHash(\"sha256\").update(contract).digest(\"hex\"), directory = repositoryBuildGraphWriterDirectoryV1(workspaceRoot,\"build-lock-closures\")",
+   "new": "contract = captured.text, key = sha256HexV1(contract), directory = repositoryBuildGraphWriterDirectoryV1(workspaceRoot,\"build-lock-closures\")"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation import",
+   "old": "import { createHash } from \"node:crypto\";",
+   "new": "import { createHash } from \"node:crypto\";\nimport { sha256HexV1, utf8TextV1 } from \"../🧂️text-bytes/🟨️.mjs\";\n\n/** 🔢️ A hex SHA-256 digest, compiled once. */\nconst SHA256_HEX_V1 = /^[a-f0-9]{64}$/u;"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 1",
+   "old": "createHash(\"sha256\").update(JSON.stringify([recordStampV1(),inferenceAuthorityDigestV1()])).digest(\"hex\")",
+   "new": "sha256HexV1(JSON.stringify([recordStampV1(),inferenceAuthorityDigestV1()]))"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 2",
+   "old": "createHash(\"sha256\").update(JSON.stringify([...loadObservations.values()].filter(row=>!(row.kind===\"file\"&&stampedFragments.some(fragment=>row.path.includes(fragment)))).map(row=>JSON.stringify([observationIdentityV1(row),observationMeaningV1(row)])).sort())).digest(\"hex\")",
+   "new": "sha256HexV1(JSON.stringify([...loadObservations.values()].filter(row=>!(row.kind===\"file\"&&stampedFragments.some(fragment=>row.path.includes(fragment)))).map(row=>JSON.stringify([observationIdentityV1(row),observationMeaningV1(row)])).sort()))"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 3",
+   "old": "createHash(\"sha256\").update(JSON.stringify([recordStampV1(),inferenceAuthorityDigestV1(),key])).digest(\"hex\")",
+   "new": "sha256HexV1(JSON.stringify([recordStampV1(),inferenceAuthorityDigestV1(),key]))"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 4",
+   "old": "sha256: createHash(\"sha256\").update(fs.readFileSync(path)).digest(\"hex\")",
+   "new": "sha256: sha256HexV1(fs.readFileSync(path))"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 5",
+   "old": ",sha256:createHash(\"sha256\").update(bytes).digest(\"hex\")",
+   "new": ",sha256:sha256HexV1(bytes)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 6",
+   "old": "createHash(\"sha256\").update(result.image).digest(\"hex\")",
+   "new": "sha256HexV1(result.image)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 7",
+   "old": ",sha256=createHash(\"sha256\").update(bytes).digest(\"hex\")",
+   "new": ",sha256=sha256HexV1(bytes)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 8",
+   "old": "createHash(\"sha256\").update(replay.image).digest(\"hex\")",
+   "new": "sha256HexV1(replay.image)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 9",
+   "old": "createHash(\"sha256\").update(JSON.stringify(entries.map(entry=>typed?[String(entry.name),nodeType(entry)]:String(entry)).sort())).digest(\"hex\")",
+   "new": "sha256HexV1(JSON.stringify(entries.map(entry=>typed?[String(entry.name),nodeType(entry)]:String(entry)).sort()))"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 10",
+   "old": "createHash(\"sha256\").update(typescriptTextV1(fs.readFileSync(path))).digest(\"hex\")",
+   "new": "sha256HexV1(typescriptTextV1(fs.readFileSync(path)))"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 11",
+   "old": "createHash(\"sha256\").update(value).digest(\"hex\")",
+   "new": "sha256HexV1(value)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 12",
+   "old": "espace, createHash(\"sha256\").update(bytes).digest(\"hex\")",
+   "new": "espace, sha256HexV1(bytes)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 13",
+   "old": "mespace,createHash(\"sha256\").update(bytes).digest(\"hex\")",
+   "new": "mespace,sha256HexV1(bytes)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 14",
+   "old": " return createHash(\"sha256\").update(fs.readFileSync(path)).digest(\"hex\")",
+   "new": " return sha256HexV1(fs.readFileSync(path))"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 15",
+   "old": "createHash(\"sha256\").update(JSON.stringify([nestedProject?recordStampV1():OBSERVATION_REVISION, nestedProject?inferenceAuthorityDigestV1():null, key])).digest(\"hex\")",
+   "new": "sha256HexV1(JSON.stringify([nestedProject?recordStampV1():OBSERVATION_REVISION, nestedProject?inferenceAuthorityDigestV1():null, key]))"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 16",
+   "old": "createHash(\"sha256\").update(line).digest(\"hex\")",
+   "new": "sha256HexV1(line)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 17",
+   "old": "createHash(\"sha256\").update(image).digest(\"hex\")",
+   "new": "sha256HexV1(image)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 18",
+   "old": "createHash(\"sha256\").update(header).digest(\"hex\")",
+   "new": "sha256HexV1(header)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 19",
+   "old": "tes);if(createHash(\"sha256\").update(bytes).digest(\"hex\")",
+   "new": "tes);if(sha256HexV1(bytes)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 20",
+   "old": "createHash(\"sha256\").update(result).digest(\"hex\")",
+   "new": "sha256HexV1(result)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 21",
+   "old": "createHash(\"sha256\").update(observationRowsJsonV1(block.rows)).digest(\"hex\")",
+   "new": "sha256HexV1(observationRowsJsonV1(block.rows))"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest 22",
+   "old": "createHash(\"sha256\").update(await readFileAsync(path)).digest(\"hex\")",
+   "new": "sha256HexV1(await readFileAsync(path))"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation analysis hit",
+   "old": "if(hit!==undefined)try{const candidate=JSON.parse(Buffer.from(hit).toString(\"utf8\"));",
+   "new": "if(hit!==undefined)try{const candidate=JSON.parse(utf8TextV1(hit));"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation record hit",
+   "old": "if (hit !== undefined) { try { return JSON.parse(Buffer.from(hit).toString(\"utf8\")); } catch {} }",
+   "new": "if (hit !== undefined) { try { return JSON.parse(utf8TextV1(hit)); } catch {} }"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation file record hit",
+   "old": "try { const value = JSON.parse(Buffer.from(hit).toString(\"utf8\")); record(\"file\", key, hint); return value; } catch {}",
+   "new": "try { const value = JSON.parse(utf8TextV1(hit)); record(\"file\", key, hint); return value; } catch {}"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation async file record hit",
+   "old": "if(hit!==undefined)try{const value=JSON.parse(Buffer.from(hit).toString(\"utf8\"));record(\"file\",key,hint);return value;}catch{}",
+   "new": "if(hit!==undefined)try{const value=JSON.parse(utf8TextV1(hit));record(\"file\",key,hint);return value;}catch{}"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation settle owned",
+   "old": "  settleRead(absolute(path), stamp, bytes, fact);\n  const encoding = encodingOf(options);\n  return encoding ? bytes.toString(encoding) : bytes;",
+   "new": "  const encoding = encodingOf(options);\n  settleRead(absolute(path), stamp, bytes, fact, encoding !== undefined);\n  return encoding ? bytes.toString(encoding) : bytes;"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation settle head",
+   "old": "function settleRead(key, stamp, bytes, fact) {",
+   "new": "function settleRead(key, stamp, bytes, fact, owned = false) {"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation settle store",
+   "old": "ino: stamp.ino, bytes: Buffer.from(bytes), row: canonicalObservationV1(\"file\", key, fact) });",
+   "new": "ino: stamp.ino, bytes: owned ? bytes : Buffer.from(bytes), row: canonicalObservationV1(\"file\", key, fact) });"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🦀️resolution/🟦️.ts",
+   "name": "resolution key regexes",
+   "old": "const normalizeKey = (pattern: string): string => pattern.replace(/^!?\\{(?:workspaceRoot|projectRoot)\\}\\//u, \"\").replace(/^(?:\\.\\/)+/u, \"\");",
+   "new": "/** 🔤️ The prefixes of an input pattern that name its root, compiled once instead of once per pattern. */\nconst ROOT_PREFIX_V1 = /^!?\\{(?:workspaceRoot|projectRoot)\\}\\//u, DOT_SLASH_V1 = /^(?:\\.\\/)+/u;\nconst normalizeKey = (pattern: string): string => pattern.replace(ROOT_PREFIX_V1, \"\").replace(DOT_SLASH_V1, \"\");"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "name": "precision bare and toml regexes",
+   "old": "const bare = (pattern: string): string => pattern.replace(/^!?\\{(?:workspaceRoot|projectRoot)\\}\\//u, \"\").replace(/^(?:\\.\\/)+/u, \"\");",
+   "new": "/** 🔤️ The prefixes of an input pattern that name its root and the shapes of a manifest header and a router branch, compiled once instead of once per call. */\nconst ROOT_PREFIX_V1 = /^!?\\{(?:workspaceRoot|projectRoot)\\}\\//u, DOT_SLASH_V1 = /^(?:\\.\\/)+/u, MANIFEST_HEADER_V1 = /^\\s*\\[([^\\]]+)\\]\\s*$/u;\nconst ROUTER_BRANCH_V1 = /^(\\s*)if \\(segments\\[0\\] === \"([^\"]+)\"(?: && segments\\[1\\] === \"([^\"]+)\")?/u;\nconst bare = (pattern: string): string => pattern.replace(ROOT_PREFIX_V1, \"\").replace(DOT_SLASH_V1, \"\");"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "name": "precision manifest header",
+   "old": "const header = /^\\s*\\[([^\\]]+)\\]\\s*$/u.exec(line);",
+   "new": "const header = MANIFEST_HEADER_V1.exec(line);"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "name": "precision router branch",
+   "old": "const head = /^(\\s*)if \\(segments\\[0\\] === \"([^\"]+)\"(?: && segments\\[1\\] === \"([^\"]+)\")?/u.exec(lines[index]!);",
+   "new": "const head = ROUTER_BRANCH_V1.exec(lines[index]!);"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+   "name": "inputs pattern characters",
+   "old": "function compileBuildInputPatternV1(pattern) {\n  const compile=(source)=>{",
+   "new": "/** 🔤️ The characters of a portable input pattern that a regular expression must escape or that make it a glob, compiled once instead of once per character. */\nconst REGEX_METACHARACTER_V1 = /[\\^$.*+?()[\\]{}|]/g, GLOB_CHARACTER_V1 = /[!*?{}[\\]]/u;\n\nfunction compileBuildInputPatternV1(pattern) {\n  const compile=(source)=>{"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+   "name": "inputs escape",
+   "old": "else result+=character.replace(/[\\^$.*+?()[\\]{}|]/g,\"\\\\$&\");",
+   "new": "else result+=character.replace(REGEX_METACHARACTER_V1,\"\\\\$&\");"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+   "name": "inputs glob character",
+   "old": "input.startsWith(\"{workspaceRoot}/\") && !/[!*?{}[\\]]/u.test(input.slice(\"{workspaceRoot}/\".length))",
+   "new": "input.startsWith(\"{workspaceRoot}/\") && !GLOB_CHARACTER_V1.test(input.slice(\"{workspaceRoot}/\".length))"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+   "name": "discovery unsafe path",
+   "old": "/** 🏭️ Resolves only one exact ignored output contract to its physical authored task owner. */\nexport function readBuildGeneratedCompileOutputV1(",
+   "new": "/** 🚧️ The characters a generated import path may not hold, compiled once. */\nconst UNSAFE_GENERATED_PATH_V1 = /[\\\\%*?#[\\]{}]/u;\n\n/** 🏭️ Resolves only one exact ignored output contract to its physical authored task owner. */\nexport function readBuildGeneratedCompileOutputV1("
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+   "name": "discovery unsafe use",
+   "old": "&&!/[\\\\%*?#[\\]{}]/u.test(value);const refusal=",
+   "new": "&&!UNSAFE_GENERATED_PATH_V1.test(value);const refusal="
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "name": "scripts source use 1",
+   "old": "return { path, source: /\\.[cm]?[jt]sx?$/u.test(path) };",
+   "new": "return { path, source: DECLARED_MODULE_SUFFIX_V1.test(path) };"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "name": "scripts source use 2",
+   "old": "if(!source||!/\\.[cm]?[jt]sx?$/u.test(path)){",
+   "new": "if(!source||!DECLARED_MODULE_SUFFIX_V1.test(path)){"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+   "name": "assembly prefix pattern",
+   "old": "import { createHash } from \"node:crypto\";",
+   "new": "import { createHash } from \"node:crypto\";\n\n/** 🧭️ The workspace placeholder of an input path, compiled once. */\nconst WORKSPACE_PLACEHOLDER_V1 = /^\\{workspaceRoot\\}\\//u;"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+   "name": "assembly prefix use 1",
+   "old": ".map((path) => path.replace(/^\\{workspaceRoot\\}\\//u, \"\")),",
+   "new": ".map((path) => path.replace(WORKSPACE_PLACEHOLDER_V1, \"\")),"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+   "name": "assembly prefix use 2",
+   "old": "loaded.buildInputPathMatchesV1(path.replace(/^\\{workspaceRoot\\}\\//u, \"\")",
+   "new": "loaded.buildInputPathMatchesV1(path.replace(WORKSPACE_PLACEHOLDER_V1, \"\")"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+   "name": "assembly prefix use 3",
+   "old": "files.add(path.replace(/^\\{workspaceRoot\\}\\//u, \"\"));",
+   "new": "files.add(path.replace(WORKSPACE_PLACEHOLDER_V1, \"\"));"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs",
+   "name": "arguments whitespace head",
+   "old": "/** 🔤️ Reads a literal process command without evaluating shell operators or substitutions. */\nexport function literalCommandTokensV1(command){",
+   "new": "/** 🔤️ Whitespace and shell operator characters, compiled once instead of once per character. */\nconst WHITESPACE_V1 = /\\s/u, SHELL_OPERATOR_V1 = /[;&|<>`$\"']/u;\n\n/** 🔤️ Reads a literal process command without evaluating shell operators or substitutions. */\nexport function literalCommandTokensV1(command){"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs",
+   "name": "arguments whitespace 1",
+   "old": "while(/\\s/u.test(command[cursor]??\"\")&&cursor<command.length)cursor++;",
+   "new": "while(WHITESPACE_V1.test(command[cursor]??\"\")&&cursor<command.length)cursor++;"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs",
+   "name": "arguments whitespace 2",
+   "old": "else{while(cursor<command.length&&!/\\s/u.test(command[cursor]))cursor++;const token=command.slice(start,cursor);if(/[;&|<>`$\"']/u.test(token))",
+   "new": "else{while(cursor<command.length&&!WHITESPACE_V1.test(command[cursor]))cursor++;const token=command.slice(start,cursor);if(SHELL_OPERATOR_V1.test(token))"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs",
+   "name": "arguments whitespace 3",
+   "old": "if(cursor<command.length&&!/\\s/u.test(command[cursor]))throw",
+   "new": "if(cursor<command.length&&!WHITESPACE_V1.test(command[cursor]))throw"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs",
+   "name": "analyses rust patterns",
+   "old": "function rustInputTokens(source) {\n  const tokens = [], rawPattern = /(?:b|c)?r(#+)?\"/y, characterPattern = /(?:b)?'(?:\\\\(?:u\\{[0-9a-fA-F_]+\\}|x[0-9a-fA-F]{2}|.)|[^'\\\\\\n])'/uy, identifierPattern = /(?:r#)?[\\p{ID_Start}_][\\p{ID_Continue}]*/uy;",
+   "new": "const RUST_RAW_PATTERN_V1 = /(?:b|c)?r(#+)?\"/y, RUST_CHARACTER_PATTERN_V1 = /(?:b)?'(?:\\\\(?:u\\{[0-9a-fA-F_]+\\}|x[0-9a-fA-F]{2}|.)|[^'\\\\\\n])'/uy, RUST_IDENTIFIER_PATTERN_V1 = /(?:r#)?[\\p{ID_Start}_][\\p{ID_Continue}]*/uy, UNICODE_WHITESPACE_V1 = /\\s/u, RAW_IDENTIFIER_PREFIX_V1 = /^r#/;\n\nfunction rustInputTokens(source) {\n  const tokens = [], rawPattern = RUST_RAW_PATTERN_V1, characterPattern = RUST_CHARACTER_PATTERN_V1, identifierPattern = RUST_IDENTIFIER_PATTERN_V1;"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs",
+   "name": "analyses whitespace",
+   "old": "code > 127 && /\\s/u.test(char)) { i++; continue; }",
+   "new": "code > 127 && UNICODE_WHITESPACE_V1.test(char)) { i++; continue; }"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs",
+   "name": "analyses raw prefix",
+   "old": "tokens[i + 1].text.replace(/^r#/, \"\")",
+   "new": "tokens[i + 1].text.replace(RAW_IDENTIFIER_PREFIX_V1, \"\")"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation digest pattern",
+   "old": "!/^[a-f0-9]{64}$/u.test(fact.source.sha256??\"\")||!/^[a-f0-9]{64}$/u.test(fact.resultSha256??\"\")",
+   "new": "!SHA256_HEX_V1.test(fact.source.sha256??\"\")||!SHA256_HEX_V1.test(fact.resultSha256??\"\")"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation file record images",
+   "old": "const settledReads = new Map(), SETTLED_READ_BYTES = 128 * 1024 * 1024;",
+   "new": "const settledReads = new Map(), SETTLED_READ_BYTES = 128 * 1024 * 1024;\n\n/** 🧠️ The JSON image of the analysis of a settled file, per namespace and path, while the file keeps its stamp: the analysis is a pure function of the bytes, so a file that many projects ask about is read, hashed, parsed and stored once and every later asker parses the image. Bounded like the settled reads. */\nconst fileRecordImages = new Map(), FILE_RECORD_IMAGE_BYTES = 64 * 1024 * 1024, FILE_RECORD_IMAGE_LIMIT = 1024 * 1024;\nlet fileRecordImageBytes = 0;\nfunction rememberFileRecordImageV1(memoKey, key, image) {\n  const settled = settledReads.get(key), previous = fileRecordImages.get(memoKey);\n  if (previous) { fileRecordImageBytes -= previous.image.length; fileRecordImages.delete(memoKey); }\n  if (settled === undefined || image.length > FILE_RECORD_IMAGE_LIMIT) return;\n  while (fileRecordImageBytes + image.length > FILE_RECORD_IMAGE_BYTES && fileRecordImages.size > 0) {\n    const oldest = fileRecordImages.keys().next().value;\n    fileRecordImageBytes -= fileRecordImages.get(oldest).image.length;\n    fileRecordImages.delete(oldest);\n  }\n  fileRecordImages.set(memoKey, { size: settled.size, mtimeMs: settled.mtimeMs, ctimeMs: settled.ctimeMs, ino: settled.ino, row: settled.row, image });\n  fileRecordImageBytes += image.length;\n}\nfunction rememberedFileRecordImageV1(memoKey, path) {\n  const known = fileRecordImages.get(memoKey);\n  if (known === undefined) return undefined;\n  let stamp;\n  try { stamp = fs.statSync(path); } catch {}\n  if (stamp && stamp.size === known.size && stamp.mtimeMs === known.mtimeMs && stamp.ctimeMs === known.ctimeMs && stamp.ino === known.ino) return known;\n  fileRecordImageBytes -= known.image.length;\n  fileRecordImages.delete(memoKey);\n  return undefined;\n}"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation file record release",
+   "old": " settledReads.clear();settledReadBytes=0;sourceAnalysisImages.clear();sourceAnalysisBytes=0;",
+   "new": " settledReads.clear();settledReadBytes=0;fileRecordImages.clear();fileRecordImageBytes=0;sourceAnalysisImages.clear();sourceAnalysisBytes=0;"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation file record memo hit",
+   "old": "  const key = absolute(path), hint = scope.hints.get(key);\n  if (hint) {",
+   "new": "  const key = absolute(path), memoKey = namespace + \"\\0\" + key, remembered = rememberedFileRecordImageV1(memoKey, path);\n  if (remembered !== undefined) { recordRowV1(remembered.row); return JSON.parse(remembered.image); }\n  const hint = scope.hints.get(key);\n  if (hint) {"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation file record memo store",
+   "old": "  const bytes = observedFs.readFileSync(path), value = compute(bytes), image = jsonImage(value);\n  if (image === undefined) return value;",
+   "new": "  const bytes = observedFs.readFileSync(path), value = compute(bytes), image = jsonImage(value);\n  if (image === undefined) return value;\n  rememberFileRecordImageV1(memoKey, key, image);"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🟨️.mjs",
+   "name": "native source inputs memo",
+   "old": "export function cargoSourceInputs(root, workspaceRoot, facts, includeTests = true, compiled = false) {\n  const directory = join(workspaceRoot, root), manifest = join(directory, \"Cargo.toml\");",
+   "new": "export function cargoSourceInputs(root, workspaceRoot, facts, includeTests = true, compiled = false) {\n  if (facts === null || typeof facts !== \"object\") return cargoSourceInputsOfV1(root, workspaceRoot, facts, includeTests, compiled);\n  let memo = CARGO_SOURCE_INPUTS_V1.get(facts);\n  if (memo === undefined) CARGO_SOURCE_INPUTS_V1.set(facts, memo = new Map());\n  const files = memoizedObservedComputationV1(memo, JSON.stringify([root, workspaceRoot, includeTests, compiled]), () => cargoSourceInputsOfV1(root, workspaceRoot, facts, includeTests, compiled));\n  return files === undefined ? undefined : [...files];\n}\n\n/** 🧠️ The answers of {@link cargoSourceInputs} per fact table (one per project): the targets of a project ask for the same crates again and again, and a replayed answer hands every asker the rows it rests on without probing the tree again. */\nconst CARGO_SOURCE_INPUTS_V1 = new WeakMap();\n\nfunction cargoSourceInputsOfV1(root, workspaceRoot, facts, includeTests, compiled) {\n  const directory = join(workspaceRoot, root), manifest = join(directory, \"Cargo.toml\");"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs",
+   "name": "analyses string literal",
+   "old": "      try { tokens.push({ text: JSON.parse(literal), string: true }); }\n      catch { tokens.push({ text: literal.slice(1, -1), string: true }); }",
+   "new": "      if (!literal.includes(\"\\\\\")) tokens.push({ text: literal.slice(1, -1), string: true });\n      else try { tokens.push({ text: JSON.parse(literal), string: true }); }\n      catch { tokens.push({ text: literal.slice(1, -1), string: true }); }"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "name": "scripts source use 3",
+   "old": "if(requiredSources||resource.suffix||!/\\.[cm]?[jt]sx?$/u.test(resource.specifier))",
+   "new": "if(requiredSources||resource.suffix||!DECLARED_MODULE_SUFFIX_V1.test(resource.specifier))"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "name": "scripts source use 4",
+   "old": "&& /\\.[cm]?[jt]sx?$/u.test(input) &&",
+   "new": "&& DECLARED_MODULE_SUFFIX_V1.test(input) &&"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+   "name": "assembly prefix use 4",
+   "old": ".replaceAll(\"{projectRoot}\", nativeRoot).replace(/^\\{workspaceRoot\\}\\//u, \"\");",
+   "new": ".replaceAll(\"{projectRoot}\", nativeRoot).replace(WORKSPACE_PLACEHOLDER_V1, \"\");"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+   "name": "inputs overlap wildcard",
+   "old": "wildcard = source.search(/[!*?{}[\\]]/u)",
+   "new": "wildcard = source.search(GLOB_CHARACTER_V1)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation revision pattern",
+   "old": "typeof revision!==\"string\"||!/^[a-f0-9]{64}$/u.test(revision)||",
+   "new": "typeof revision!==\"string\"||!SHA256_HEX_V1.test(revision)||"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "name": "observation publication pattern",
+   "old": "if(row.kind===\"file\"&&/^[a-f0-9]{64}$/u.test(row.fact?.sha256??\"\")&&",
+   "new": "if(row.kind===\"file\"&&SHA256_HEX_V1.test(row.fact?.sha256??\"\")&&"
+  }
+ ]
+}

@@ -106,7 +106,7 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
     console.log(`[${logPrefix}] ${buildLabel} ${packProfileArgs.join(" ")} --target web --out-dir ${pkgDir} --out-name ${wasmBaseName} --no-pack`);
     const t0 = Date.now();
     leased=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:policy.buildDirectory,targetDirectory:cargoOutput,args:selection.cargo,signal,control});
-    await withCargoCompilerInputsV1({manifest:join(componentDir,"Cargo.toml"),cwd:componentDir,arguments:selection.cargo,environment:buildEnv,control},opts.withCargoInputs,async actual=>{
+    await withCargoCompilerInputsV1({manifest:join(componentDir,"Cargo.toml"),cwd:componentDir,arguments:selection.cargo,environment:buildEnv,control},opts.withCargoInputs,actual=>actual.withWriter(async()=>{
     let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined,bodyFailed=false;
     try{
     const signal=actual.control.signal;capacity=await acquireCompilerCapacityLeaseV1({request:{kind:"available",maximumParallelism:Math.max(1,Math.min(availableParallelism(),4))},directory:policy.leaseDirectory,control:actual.control});checkResourceLeaseControl(actual.control);
@@ -153,7 +153,7 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
     }catch(error){bodyFailed=true;throw error;}finally{
       let failed=false,failure:unknown;for(const cleanup of[()=>{const held=capacity;capacity=undefined;held?.release();}])try{cleanup();}catch(error){if(!failed){failed=true;failure=error;}}if(!bodyFailed&&failed)throw failure;
     }
-    });
+    }));
   }catch(error){primaryFailed=true;throw error;}finally{
     let failed=false,failure:unknown;for(const cleanup of[async()=>{const held=leased;leased=undefined;try{held?.release();}catch(error){try{await withIssuedResourceOperationV1(opts.control,async()=>{throw error;});}catch{}throw error;}},async()=>rmSync(cargoOutput,{recursive:true,force:true}),async()=>rmSync(packageOutput,{recursive:true,force:true})])try{await cleanup();}catch(error){if(!failed){failed=true;failure=error;}}if(!primaryFailed&&failed)throw failure;
   }

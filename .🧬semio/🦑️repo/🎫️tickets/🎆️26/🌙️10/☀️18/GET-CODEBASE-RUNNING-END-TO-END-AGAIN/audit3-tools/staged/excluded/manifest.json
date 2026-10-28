@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "00.ts",
+  "base": "2660a1f6522539914fef8ff73ac660b37ede8e5bc0a89adc9c4556a3a17fec1f",
+  "new": "563c2f05def18dfe5decadd2d8a27c064f9bc1e507955460ba14928b9111b088"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🧪️tests/🕳️excluded-names/🟦️.ts": {
+  "file": "01.ts",
+  "base": null,
+  "new": "83955b210d84bceb31b201204b1005a0a85900771811563ddfbe4966e345d8a3"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🧪️tests/🕳️excluded-names/🧫️fixtures/🟦️.ts": {
+  "file": "02.ts",
+  "base": null,
+  "new": "dff9d517e1c4d79fa51e55672831676669613147265b2850d50222746c019563"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🧪️tests/🕳️excluded-names/🧫️fixtures/🔣️.json": {
+  "file": "03.json",
+  "base": null,
+  "new": "9df5a4aca2c77795601bdbb16e73beb438cb0187581c941126996d72e2959e9a"
+ }
+}

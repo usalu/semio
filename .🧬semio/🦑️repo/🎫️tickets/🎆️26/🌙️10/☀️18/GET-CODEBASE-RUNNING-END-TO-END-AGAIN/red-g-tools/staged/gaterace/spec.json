@@ -1,0 +1,20 @@
+{
+ "files": {
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts": [
+   {
+    "old": "function takeLock(directory:string,now:number,policy:HostCapacityPolicyV1,pid:number):boolean{\n const lock=join(directory,\"lock\");\n try{mkdirSync(lock,{mode:0o700});writeFileSync(join(lock,\"owner\"),`${pid}:${now}`);return true;}\n catch(error){\n  if((error as NodeJS.ErrnoException).code!==\"EEXIST\")throw error;\n  let text=\"\";try{text=readFileSync(join(lock,\"owner\"),\"utf8\");}catch{}\n  const owner=/^(\\d+):(\\d+)$/u.exec(text),since=owner?Number(owner[2]):modified(lock);\n  if(owner&&!alive(Number(owner[1]))||now-since>policy.wait.lockStaleMilliseconds)rmSync(lock,{recursive:true,force:true});\n  return false;\n }\n}",
+    "new": "/** 🔒️ Takes the machine-wide ledger lock (a directory with an owner file) once: `false` when another process holds it, when the lock was lost to a stale-lock breaker between creation and the owner write (the caller simply asks again), or after this call broke a lock whose owner is gone or too old; a stale verdict is acted on only while the owner text is still the one it was based on, so a breaker never removes the lock a newer taker just wrote. `afterCreate` lets a law pause between creation and the owner write. */\nfunction takeLock(directory:string,now:number,policy:HostCapacityPolicyV1,pid:number,afterCreate?:()=>void):boolean{\n const lock=join(directory,\"lock\");\n try{mkdirSync(lock,{mode:0o700});}\n catch(error){\n  if((error as NodeJS.ErrnoException).code!==\"EEXIST\")throw error;\n  let text=\"\";try{text=readFileSync(join(lock,\"owner\"),\"utf8\");}catch{}\n  const owner=/^(\\d+):(\\d+)$/u.exec(text),since=owner?Number(owner[2]):modified(lock);\n  if(owner&&!alive(Number(owner[1]))||now-since>policy.wait.lockStaleMilliseconds){let again=\"\";try{again=readFileSync(join(lock,\"owner\"),\"utf8\");}catch{}if(again===text)rmSync(lock,{recursive:true,force:true});}\n  return false;\n }\n afterCreate?.();\n try{writeFileSync(join(lock,\"owner\"),`${pid}:${now}`);return true;}\n catch(error){if((error as NodeJS.ErrnoException).code===\"ENOENT\")return false;throw error;}\n}\n/** 🧷️ The ledger lock primitive for laws that need to pause inside it. */\nexport const takeHostLockV1=takeLock;"
+   }
+  ],
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🚪️gate/🟦️.ts": [
+   {
+    "old": "withHostCapacityV1,type HostCapacityOptionsV1,type HostSampleV1} from \"../../🟦️.ts\";",
+    "new": "takeHostLockV1,withHostCapacityV1,type HostCapacityOptionsV1,type HostSampleV1} from \"../../🟦️.ts\";"
+   },
+   {
+    "old": "test(\"Two requests that fit together run together and a third waits for one of them\"",
+    "new": "test(\"A lock that a stale-lock breaker removes between creation and the owner write is lost without a crash, and the lock of a dead owner is broken once and then taken\",()=>{\n const directory=fresh(),lock=join(directory,\"lock\");\n expect(takeHostLockV1(directory,Date.now(),base,process.pid,()=>rmSync(lock,{recursive:true,force:true}))).toBe(false);\n expect(takeHostLockV1(directory,Date.now(),base,process.pid)).toBe(true);\n expect(readFileSync(join(lock,\"owner\"),\"utf8\")).toMatch(new RegExp(\"^\"+process.pid+\":\\\\d+$\"));\n expect(takeHostLockV1(directory,Date.now(),base,process.pid)).toBe(false);\n expect(existsSync(lock)).toBe(true);\n rmSync(lock,{recursive:true,force:true});\n const dead=spawnSync(process.execPath,[\"-e\",\"0\"]).pid;\n mkdirSync(lock);writeFileSync(join(lock,\"owner\"),`${dead}:${Date.now()}`);\n expect(takeHostLockV1(directory,Date.now(),base,process.pid)).toBe(false);\n expect(existsSync(lock)).toBe(false);\n expect(takeHostLockV1(directory,Date.now(),base,process.pid)).toBe(true);\n});\n\ntest(\"Two requests that fit together run together and a third waits for one of them\""
+   }
+  ]
+ }
+}

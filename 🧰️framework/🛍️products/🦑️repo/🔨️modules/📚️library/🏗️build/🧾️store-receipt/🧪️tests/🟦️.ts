@@ -80,11 +80,16 @@ test("verification reports exactly the language-agnostic findings",async()=>{
  }
 });
 
-test("links bound to published content are part of the receipt and verified with it",async()=>{
- const linked={...receipt(),entries:[fixture.entries[1]!] as never,links:fixture.links.map(({path,target})=>({path,target})) as never};
+const linkedReceipt=()=>({...receipt(),entries:[fixture.entries[1]!] as never,links:fixture.links.map(({path,target})=>({path,target})) as never});
+
+test("links bound to published content are part of the receipt",()=>{
+ const linked=linkedReceipt();
  expect(validate(linked)).toBe(true);
  expect(parseStoreReceiptV1(encodeStoreReceiptV1(linked))).toEqual(linked);
- if(process.platform==="win32")return;
+});
+
+test.skipIf(process.platform==="win32")("links bound to published content are verified with the receipt (POSIX hosts)",async()=>{
+ const linked=linkedReceipt();
  for(const row of fixture.linkVerification){
   const root=workspace();
   for(const link of fixture.links){mkdirSync(dirname(join(root,link.path)),{recursive:true});symlinkSync(link.symlink,join(root,link.path));}
@@ -205,7 +210,7 @@ test("without a declared receipt the selected run is the whole story",async()=>{
 });
 
 test("every declared receipt output belongs to its own target and to a handler that publishes through a recording publisher",()=>{
- const publishers=/runArtifactRustPackageMain|runArtifactTypeScriptPackageMain|buildAdmittedWasmWebV1|buildRepositoryWasmWebV1|buildAdmittedCargoArtifactsV1|buildRepositoryCargoArtifacts|buildViteArtifact|runViteBuild|withRepositoryArtifactDestinationV1|stageRepositoryArtifacts|publishPlayPageCohortV1|buildReleasePipelineV1/u,listed=spawnSync("git",["ls-files","-z","--","*📋️project.json"],{cwd:workspaceRoot,encoding:"utf8",maxBuffer:1<<28});
+ const publishers=/runArtifactRustPackageMain|runArtifactTypeScriptPackageMain|buildAdmittedWasmWebV1|buildRepositoryWasmWebV1|buildAdmittedCargoArtifactsV1|buildRepositoryCargoArtifacts|buildViteArtifact|runViteBuild|withRepositoryArtifactDestinationV1|stageRepositoryArtifacts|publishPlayPageCohortV1|buildReleasePipelineV1|stageAdmittedArtifactTreesV1/u,listed=spawnSync("git",["ls-files","-z","--","*📋️project.json"],{cwd:workspaceRoot,encoding:"utf8",maxBuffer:1<<28});
  expect(listed.status).toBe(0);
  let declared=0;
  for(const file of listed.stdout.split("\0").filter(name=>name&&!name.startsWith(".🧬semio/"))){
@@ -218,10 +223,11 @@ test("every declared receipt output belongs to its own target and to a handler t
    declared+=1;
    expect(receipts,file+" "+name).toEqual([storeReceiptOutputV1(name)]);
    expect(target.metadata?.semio?.rustBuildIntent,file+" "+name+" is replaced by per-unit compile tasks").toBeUndefined();
-   const script=/^repo (\S*📜️script\.ts)/u.exec(target.options?.command??"")?.[1];
+   const script=/^repo "?([^\s"]*📜️script\.ts)/u.exec(target.options?.command??"")?.[1];
    expect(script,file+" "+name).toBeDefined();
    const source=resolve(workspaceRoot,(target.options?.cwd??dirname(file)).replace("{projectRoot}",dirname(file)),script!);
-   expect(publishers.test(readModuleTreeSource(source,{tests:true})),file+" "+name+" publishes through "+source).toBe(true);
+   const own=readModuleTreeSource(source,{tests:true}),imported=[...own.matchAll(/(?:from\s*|import\s*\(\s*)["'](\.{1,2}\/[^"']+\.ts)["']/gu)].flatMap(match=>{const target=resolve(dirname(source),match[1]!);return existsSync(target)?[readModuleTreeSource(target,{tests:true})]:[];});
+   expect(publishers.test([own,...imported].join("\n")),file+" "+name+" publishes through "+source+" or a module it imports").toBe(true);
   }
  }
  expect(declared).toBeGreaterThan(0);

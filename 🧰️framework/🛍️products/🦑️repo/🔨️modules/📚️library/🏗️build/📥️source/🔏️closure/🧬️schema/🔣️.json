@@ -258,14 +258,36 @@
         }
       }
     },
+    "CommandIdentities": {
+      "description": "The two identities the captured stream loader compiles into every module it evaluates: an entry evaluated without both was never loaded by a captured loader.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "loaderIdentity"
+      ],
+      "properties": {
+        "identity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "loaderIdentity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
     "CommandCase": {
+      "description": "One evaluated entry against one proof: `proof` says whether the proof names the loader this process loaded or one a peer saved later; `unpinned` and `pinned` are the outcomes without and with an implementation pin (a pin never admits what is refused without it, and never restarts).",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "id",
         "identity",
         "loader",
-        "accepted"
+        "proof",
+        "unpinned",
+        "pinned"
       ],
       "properties": {
         "id": {
@@ -286,8 +308,24 @@
             "different"
           ]
         },
-        "accepted": {
-          "type": "boolean"
+        "proof": {
+          "enum": [
+            "loaded",
+            "peer-saved"
+          ]
+        },
+        "unpinned": {
+          "enum": [
+            "accepted",
+            "authentication",
+            "stale"
+          ]
+        },
+        "pinned": {
+          "enum": [
+            "accepted",
+            "authentication"
+          ]
         }
       }
     },

@@ -1,0 +1,26 @@
+{
+ "target": "test-action-choices",
+ "tag": "c1",
+ "declared": 1899,
+ "rows": [
+  {
+   "leg": "cargo-app-surface",
+   "crate": "semio-framework-manifest-app-surface",
+   "test": "lib:semio_framework_manifest_app_surface",
+   "kind": "cargo",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 3,
+   "tail": " | test result: ok. 72 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s |  | ",
+   "notes": [
+    "profiles:3",
+    "rules:1236",
+    "capacity:600"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,2 @@
+fdleak-enfile [de] | ENFILE / Dateitabelle voll | vorübergehend; Befehle wiederholen
+fdleak-enfile [en] | ENFILE / file table full | transient; commands retry

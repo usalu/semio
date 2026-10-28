@@ -1,0 +1,158 @@
+/** 🔗️ Contract: see `./🔣️.json` (schema `./🧬️schema/🔣️.json`). Process chain of one run: (1) the graph planner is the adopted snapshot started as the second loader (one loader process, no `repo` runner, no second capture), under the caller's Original and funding; (2) a loader's resident memory does not grow with modules times import resolutions (independent measurement: the loader's own report against `ps` read by the loader about itself, and the old shape measured at the time of the fix); (3) a run that waits for host capacity is the front door alone: below the resident bound and without any loader child. Third-party oracle for the corpus: Ajv. */
+import{test,expect}from"bun:test";
+import Ajv from"ajv";
+import{createHash,randomBytes}from"node:crypto";
+import{existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync}from"node:fs";
+import{Glob}from"bun";
+import{tmpdir,uptime}from"node:os";
+import{join,relative}from"node:path";
+import{fileURLToPath}from"node:url";
+import corpus from"./🔣️.json";
+import schema from"./🧬️schema/🔣️.json";
+import{buildSourceClosureIdentityV1,buildSourceClosureStreamLoaderV1}from"../../../📥️source/🔏️closure/🟦️.ts";
+import{captureCompilerBuildSourceClosureV1}from"../../../📥️source/🔏️closure/🏗️compiler/🟦️.ts";
+import{adoptCapturedBuildCommandV1,runAdoptedCapturedBuildSourceV1}from"../../../📥️source/🔏️closure/🚪️command/🟦️.ts";
+import{captureOwnedCommandResultV1,runOwnedCommand}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
+import{createIssuedResourceControlV1,readScriptProcessEnvelope,readIssuedScriptProcessEnvelopeV1,scriptInvocationEnvironment,SCRIPT_PROCESS_INVOCATION_ENV}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+
+const sha=(value:string)=>createHash("sha256").update(value).digest("hex"),megabytes=(kilobytes:number)=>Math.round(kilobytes/1024);
+
+test("the corpus is closed by its schema",()=>{
+ const ajv=new Ajv({strict:true});
+ expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);
+ expect(ajv.validate(schema,{...corpus,extra:1})).toBe(false);
+ expect(ajv.validate(schema,{...corpus,planner:{...corpus.planner,loaderProcesses:2}})).toBe(false);
+});
+
+test("the graph planner is the adopted snapshot started as the second loader, never another repo runner",()=>withBuildTestInvocationV1(async original=>{
+ const control=createIssuedResourceControlV1(original,"test:chain-planner",60000),text=JSON.stringify({version:1,root:"/r",entry:"e.ts",files:[]}),calls:unknown[][]=[],{planner}=corpus;
+ const options={label:planner.label,cwd:"/r",budgetMilliseconds:1000,environment:{...process.env,...planner.environment},stdout:"stderr" as const,onProgress:()=>undefined,launch:(async(...call:unknown[])=>{calls.push(call);}) as never};
+ await expect(runAdoptedCapturedBuildSourceV1(planner.arguments,original,control,options)).rejects.toThrow(planner.refusals.noAdoption);
+ const proof=(digest:string)=>({version:1 as const,root:"/r",snapshot:null,sha256:digest,loaderSha256:sha(buildSourceClosureStreamLoaderV1),recheck:()=>undefined,text:()=>text});
+ adoptCapturedBuildCommandV1(proof("0".repeat(64)));
+ await expect(runAdoptedCapturedBuildSourceV1(planner.arguments,original,control,options)).rejects.toThrow(planner.refusals.digestMismatch);
+ expect(calls).toHaveLength(0);
+ adoptCapturedBuildCommandV1(proof(sha(text)));
+ await runAdoptedCapturedBuildSourceV1(planner.arguments,original,control,options);
+ expect(calls).toHaveLength(planner.loaderProcesses);
+ const [command,argv,cwd,label,budget,given]=calls[0] as [string,string[],string,string,number,Record<string,any>];
+ expect(command).toBe(process.execPath);
+ expect(argv.slice(0,4)).toEqual(["--eval",buildSourceClosureStreamLoaderV1,"--",sha(text)]);
+ expect(argv.slice(4)).toEqual(planner.arguments);
+ for(const word of planner.forbiddenArguments)expect(argv).not.toContain(word);
+ expect([cwd,label,budget]).toEqual(["/r",planner.label,1000]);
+ expect(given.control).toBe(control);expect(given.signal).toBe(control.signal);expect(given.stdout).toBe("stderr");
+ expect(given.auxiliaryInput).toEqual({version:1,text});
+ expect(given.env.BUN_RUNTIME_TRANSPILER_CACHE_PATH).toBe("0");
+ for(const [key,value] of Object.entries(planner.environment))expect(given.env[key]).toBe(value);
+ const projected=readScriptProcessEnvelope(JSON.parse(given.env[SCRIPT_PROCESS_INVOCATION_ENV]),Date.now()),birth=readIssuedScriptProcessEnvelopeV1(original);
+ expect(projected.capabilities).toEqual(birth.capabilities);
+ if(birth.deadlineEpochMilliseconds!==null)expect(projected.deadlineEpochMilliseconds!).toBeLessThanOrEqual(birth.deadlineEpochMilliseconds);
+}),60000);
+
+test.skipIf(process.platform==="win32")("a loader starts its second loader from its own snapshot, directly and under the same implementation digest",()=>withBuildTestInvocationV1(async original=>{
+ const area=mkdtempSync(join(tmpdir(),"chain-law-second-")),entry=relative(process.cwd(),fileURLToPath(new URL("./🧫️fixtures/🪆️relaunch.ts",import.meta.url))).split("\\").join("/"),control=createIssuedResourceControlV1(original,"test:chain-second",240000),file=join(area,"second.json"),observed={stdout:"",stderr:""};
+ try{
+  const snapshot=await captureCompilerBuildSourceClosureV1(process.cwd(),entry,original,control),text=JSON.stringify(snapshot);
+  await runOwnedCommand(process.execPath,["--eval",buildSourceClosureStreamLoaderV1,"--",buildSourceClosureIdentityV1(snapshot),"first"],process.cwd(),"chain-law:first",240000,{control,signal:control.signal,env:{...scriptInvocationEnvironment(original,process.env),CHAIN_LAW_SECOND_FILE:file,BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"},auxiliaryInput:{version:1,text},stdout:"ignore",output:{maximumBytes:65536,maximumLines:256},outputConsumer:(bytes,stream)=>{observed[stream]+=Buffer.from(bytes).toString("utf8");}});
+  const line=observed.stdout.split("\n").find(row=>row.startsWith("CHAIN "));expect(line,observed.stderr).toBeDefined();
+  expect(existsSync(file),observed.stderr).toBe(true);
+  const first=JSON.parse(line!.slice(6)).first as {pid:number;sha256:string;args:string[]},second=JSON.parse(readFileSync(file,"utf8")) as {pid:number;parent:number;sha256:string;args:string[]};
+  expect(second.sha256).toBe(first.sha256);expect(second.sha256).toBe(sha(text));
+  expect(second.parent).toBe(first.pid);expect(second.pid).not.toBe(first.pid);
+  expect(second.args).toEqual([...first.args,"second"]);
+ }finally{rmSync(area,{recursive:true,force:true});}
+}),300000);
+
+test.skipIf(process.platform==="win32")("the second loader ends with its budget and leaves no process behind",()=>withBuildTestInvocationV1(async original=>{
+ const area=mkdtempSync(join(tmpdir(),"chain-law-end-")),entry=relative(process.cwd(),fileURLToPath(new URL("./🧫️fixtures/🪆️relaunch.ts",import.meta.url))).split("\\").join("/"),control=createIssuedResourceControlV1(original,"test:chain-end",240000),file=join(area,"second.json"),observed={stdout:"",stderr:""};
+ try{
+  const snapshot=await captureCompilerBuildSourceClosureV1(process.cwd(),entry,original,control),text=JSON.stringify(snapshot),started=Date.now();
+  await runOwnedCommand(process.execPath,["--eval",buildSourceClosureStreamLoaderV1,"--",buildSourceClosureIdentityV1(snapshot),"first"],process.cwd(),"chain-law:first",240000,{control,signal:control.signal,env:{...scriptInvocationEnvironment(original,process.env),CHAIN_LAW_SECOND_FILE:file,CHAIN_LAW_SLEEP:"1",CHAIN_LAW_BUDGET:String(corpus.planner.endBudgetMilliseconds),BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"},auxiliaryInput:{version:1,text},stdout:"ignore",output:{maximumBytes:65536,maximumLines:256},outputConsumer:(bytes,stream)=>{observed[stream]+=Buffer.from(bytes).toString("utf8");}});
+  const line=observed.stdout.split("\n").find(row=>row.startsWith("CHAIN "));expect(line,observed.stderr).toBeDefined();
+  const report=JSON.parse(line!.slice(6)) as {error:string|null},second=JSON.parse(readFileSync(file,"utf8")) as {pid:number};
+  expect(report.error,observed.stderr).toMatch(/timeout/u);
+  expect(Date.now()-started).toBeLessThan(corpus.planner.endBudgetMilliseconds+corpus.planner.endGraceMilliseconds+60000);
+  let alive=true;try{process.kill(second.pid,0);}catch{alive=false;}
+  expect(alive,"the second loader is still running").toBe(false);
+ }finally{rmSync(area,{recursive:true,force:true});}
+}),300000);
+
+test.skipIf(process.platform==="win32")("a graph-free run is the front door and one loader, and its whole tree stays below the bound",()=>withBuildTestInvocationV1(async original=>{
+ const {run:law}=corpus,root=process.cwd(),door=fileURLToPath(new URL("../../../🚪️door/📜️script.ts",import.meta.url)),environment:Record<string,string|undefined>={...process.env,SEMIO_LANGUAGE:"en",SEMIO_BUILD_SERVICE:"off"};
+ for(const key of Object.keys(environment))if(key===SCRIPT_PROCESS_INVOCATION_ENV||key.startsWith("SEMIO_HOST_CAPACITY_"))delete environment[key];
+ const control=createIssuedResourceControlV1(original,"test:chain-run",law.timeoutMilliseconds+60000);let settled=false,peakTree=0,peakLoader=0,peakHeavy=0;
+ const run=runOwnedCommand(process.execPath,[door,"repo",...law.command],root,"chain-law:run",law.timeoutMilliseconds,{env:environment,stdout:"ignore",output:{maximumBytes:1048576,maximumLines:20000},outputConsumer:()=>undefined}).finally(()=>{settled=true;});
+ run.catch(()=>undefined);
+ const table=async()=>{const result=await captureOwnedCommandResultV1("ps",["-axo","pid=,ppid=,rss=,command="],root,{control,output:{maximumBytes:8388608,maximumLines:60000}});return result.stdout.split("\n").flatMap(line=>{const match=/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(.*)$/u.exec(line);return match?[{pid:Number(match[1]),parent:Number(match[2]),kilobytes:Number(match[3]),command:match[4]!}]:[];});};
+ while(!settled){
+  const rows=await table(),tree=new Set([process.pid]);let grew=true;while(grew){grew=false;for(const row of rows)if(!tree.has(row.pid)&&tree.has(row.parent)){tree.add(row.pid);grew=true;}}
+  const mine=rows.filter(row=>tree.has(row.pid)&&row.pid!==process.pid&&(row.command.includes("script.ts")||row.command.includes(" --eval "))),loaders=mine.filter(row=>row.command.includes(" --eval "));
+  peakTree=Math.max(peakTree,megabytes(mine.reduce((sum,row)=>sum+row.kilobytes,0)));peakHeavy=Math.max(peakHeavy,mine.length);
+  for(const row of loaders)peakLoader=Math.max(peakLoader,megabytes(row.kilobytes));
+  await Bun.sleep(law.sampleMilliseconds);
+ }
+ await run;
+ expect(peakHeavy,"the door and one loader").toBeLessThanOrEqual(law.maximumHeavyProcesses);
+ expect(peakLoader,"resident megabytes of the loader").toBeLessThanOrEqual(law.maximumLoaderResidentMegabytes);
+ expect(peakTree,"resident megabytes of the whole run").toBeLessThanOrEqual(law.maximumTreeResidentMegabytes);
+}),300000);
+
+test("a new `repo` re-exec of a production process is declared here before it exists",async()=>{
+ const {literal,root,sites}=corpus.repoRunnerSpawnSites,found:string[]=[];
+ for await(const file of new Glob("**/*.{ts,mjs}").scan({cwd:root,onlyFiles:true})){
+  if(file.includes("🧪️tests")||file.includes("node_modules")||file.includes("🗑️generated"))continue;
+  if(readFileSync(join(root,file),"utf8").includes(literal))found.push(join(root,file));
+ }
+ expect(found.sort()).toEqual([...sites].sort());
+},60000);
+
+test("the graph plan call site starts the adopted snapshot and no repo runner",()=>{
+ const text=readFileSync(fileURLToPath(new URL("../../🕸️graph/🟦️.ts",import.meta.url)),"utf8");
+ expect(text).toContain("runAdoptedCapturedBuildSourceV1(args,parent,phaseControl");
+ expect(text).not.toContain('["repo",...args]');
+});
+
+test.skipIf(process.platform==="win32")("a loader's resident memory does not grow with its modules times their import resolutions",()=>withBuildTestInvocationV1(async original=>{
+ const {modules,declaredImports,maximumResidentMegabytes,agreementPercent}=corpus.loaderMemory,files:{path:string;sha256:string;base64:string;imports:Record<string,string>}[]=[];
+ const add=(path:string,body:string,imports:Record<string,string>)=>files.push({path,sha256:sha(body),base64:Buffer.from(body).toString("base64"),imports});
+ const entry='import"./m0.ts";export async function runCapturedBuildSourceV1(args,proof){proof.recheck();const inside=Math.round(process.memoryUsage().rss/1048576),outside=Math.round(Number(Bun.spawnSync(["ps","-o","rss=","-p",String(process.pid)]).stdout.toString().trim())/1024),digest=require("node:crypto").createHash("sha256").update(proof.text()).digest("hex");console.log("CHAIN "+JSON.stringify({inside,outside,textMatches:digest===proof.sha256}));}';
+ add("entry.ts",entry,{"./m0.ts":"m0.ts"});
+ for(let index=0;index<modules;index++){const imports:Record<string,string>={};if(index+1<modules)imports["./m"+(index+1)+".ts"]="m"+(index+1)+".ts";for(let at=0;at<declaredImports;at++)imports["./declared-import-specifier-number-"+at+".ts"]="m0.ts";add("m"+index+".ts",(index+1<modules?'import"./m'+(index+1)+'.ts";':"")+"export const v"+index+"="+index+";",imports);}
+ files.sort((a,b)=>Buffer.compare(Buffer.from(a.path),Buffer.from(b.path)));
+ const snapshot={version:1 as const,root:join(tmpdir(),"chain-law-root"),entry:"entry.ts",files},text=JSON.stringify(snapshot),control=createIssuedResourceControlV1(original,"test:chain-loader",120000),observed={stdout:"",stderr:""};
+ await runOwnedCommand(process.execPath,["--eval",buildSourceClosureStreamLoaderV1,"--",buildSourceClosureIdentityV1(snapshot)],process.cwd(),"chain-law:loader",120000,{control,signal:control.signal,env:{...scriptInvocationEnvironment(original,process.env),BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"},auxiliaryInput:{version:1,text},stdout:"ignore",output:{maximumBytes:65536,maximumLines:256},outputConsumer:(bytes,stream)=>{observed[stream]+=Buffer.from(bytes).toString("utf8");}});
+ const line=observed.stdout.split("\n").find(row=>row.startsWith("CHAIN "));expect(line,observed.stderr).toBeDefined();
+ const report=JSON.parse(line!.slice(6)) as {inside:number;outside:number;textMatches:boolean};
+ expect(report.textMatches).toBe(true);
+ expect(report.inside).toBeLessThan(maximumResidentMegabytes);
+ expect(report.outside).toBeLessThan(maximumResidentMegabytes);
+ expect(Math.abs(report.inside-report.outside)/Math.max(report.inside,report.outside)*100).toBeLessThanOrEqual(agreementPercent);
+ expect(corpus.loaderMemory.measuredBeforeMegabytesAtLeast).toBeGreaterThan(maximumResidentMegabytes);
+}),180000);
+
+test.skipIf(process.platform==="win32")("a run that waits for host capacity is the front door alone: small and without any loader",()=>withBuildTestInvocationV1(async original=>{
+ const {waiter}=corpus,area=mkdtempSync(join(tmpdir(),"chain-law-gate-")),mark="chain-law-"+randomBytes(6).toString("hex"),root=process.cwd(),door=fileURLToPath(new URL("../../../🚪️door/📜️script.ts",import.meta.url));
+ mkdirSync(join(area,"grants"));mkdirSync(join(area,"queue"));
+ writeFileSync(join(area,"grants","chainlawfake0001.json"),JSON.stringify({id:"chainlawfake0001",operation:"run",jobs:1,cpu:1,reservedMegabytes:waiter.fakeGrantMegabytes,admittedAtMs:Date.now(),observedMegabytes:null,pid:process.pid,bootAtMs:Math.round((Date.now()-uptime()*1000)/1000)*1000}));
+ const environment:Record<string,string|undefined>={...process.env,SEMIO_HOST_CAPACITY_DIRECTORY:area,SEMIO_LANGUAGE:"en",SEMIO_BUILD_SERVICE:"off"};
+ for(const key of Object.keys(environment))if(key===SCRIPT_PROCESS_INVOCATION_ENV||key.startsWith("SEMIO_HOST_CAPACITY_")&&key!=="SEMIO_HOST_CAPACITY_DIRECTORY"||key==="SEMIO_HOST_CAPACITY")delete environment[key];
+ const control=createIssuedResourceControlV1(original,"test:chain-waiter",300000),stop=new AbortController();let seen="";
+ const run=runOwnedCommand(process.execPath,[door,"repo","run",waiter.target,"--",mark],root,"chain-law:waiter",300000,{signal:stop.signal,env:environment,stdout:"ignore",output:{maximumBytes:262144,maximumLines:4096},outputConsumer:bytes=>{seen+=Buffer.from(bytes).toString("utf8");}});
+ run.catch(()=>undefined);
+ const table=async()=>{const result=await captureOwnedCommandResultV1("ps",["-axo","pid=,ppid=,rss=,command="],root,{control,output:{maximumBytes:8388608,maximumLines:60000}});return result.stdout.split("\n").flatMap(line=>{const match=/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(.*)$/u.exec(line);return match?[{pid:Number(match[1]),parent:Number(match[2]),kilobytes:Number(match[3]),command:match[4]!}]:[];});};
+ try{
+  const started=Date.now();while(!seen.includes("[capacity] waiting")){if(Date.now()-started>waiter.startTimeoutMilliseconds)throw Error("The run did not reach the capacity queue: "+seen.slice(0,800));await Bun.sleep(250);}
+  let samples=0;const until=Date.now()+waiter.observeMilliseconds;
+  while(Date.now()<until||samples===0){
+   const rows=await table(),front=rows.find(row=>row.command.includes(mark)&&row.command.includes("script.ts"));
+   expect(front,"the front door of the waiting run").toBeDefined();
+   const children=new Set([front!.pid]);let grew=true;while(grew){grew=false;for(const row of rows)if(!children.has(row.pid)&&children.has(row.parent)){children.add(row.pid);grew=true;}}
+   const heavy=rows.filter(row=>children.has(row.pid)&&row.pid!==front!.pid&&(row.command.includes(" --eval ")||row.command.startsWith(process.execPath)));
+   expect(megabytes(front!.kilobytes),"resident megabytes of the waiting front door").toBeLessThanOrEqual(waiter.maximumDoorResidentMegabytes);
+   expect(heavy.length,JSON.stringify(heavy.map(row=>row.command.slice(0,80)))).toBeLessThanOrEqual(waiter.maximumHeavyChildren);
+   samples++;await Bun.sleep(500);
+  }
+ }finally{stop.abort();await run.catch(()=>undefined);rmSync(area,{recursive:true,force:true});}
+}),240000);

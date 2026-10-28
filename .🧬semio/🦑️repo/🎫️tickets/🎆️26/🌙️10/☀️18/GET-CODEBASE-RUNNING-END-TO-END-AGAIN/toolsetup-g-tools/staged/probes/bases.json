@@ -1,0 +1,18 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.mjs": {
+  "base": "2c8aff35923f2a9cef86f5f02a4bcc14832711b0b4f27705c022e85df2082a98",
+  "new": "c68a6c8df252260921922a698ed7fcba1c3c0c7d58b1dc9ebb119216dfc183c2"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.d.mts": {
+  "base": "9098a8f3750d29b44f3b9e9edb7bc7776455d62025cef20d79e925e06ac6ef37",
+  "new": "fd98627b46655cc952fd6e144e29ef7fdeb6ae63e6a035cf3d53d3f5ca0a33ba"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧬️schema/🔣️.json": {
+  "base": "44f41322cd6ed73ce542ae7bc02ee2d5e162834c7ab8cb9d6640120bfa6550e6",
+  "new": "b36b549eeaf7471665ef2b089a036a9e58fccf523a5a81aeee57a29746c66b19"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧪️tests/🟦️.ts": {
+  "base": "7296b95c31a45dcf69dcf4b687ca514e9bda4b5b0fe7b8af783f3c31591840fc",
+  "new": "efb0ce1951c1bd3432e2a2e13a5bb74c70773b947de44b1f51cab44fb4bdc30c"
+ }
+}

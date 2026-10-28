@@ -1,0 +1,196 @@
+{
+  "version": 1,
+  "caps": [
+    {
+      "id": "default",
+      "limit": "default",
+      "cached": false,
+      "accepted": true
+    },
+    {
+      "id": "exact",
+      "limit": 8,
+      "cached": false,
+      "accepted": true
+    },
+    {
+      "id": "under",
+      "limit": 7,
+      "cached": false,
+      "accepted": false
+    },
+    {
+      "id": "zero",
+      "limit": 0,
+      "cached": false,
+      "accepted": false
+    },
+    {
+      "id": "negative",
+      "limit": -1,
+      "cached": false,
+      "accepted": false
+    },
+    {
+      "id": "above",
+      "limit": 134217729,
+      "cached": false,
+      "accepted": false
+    },
+    {
+      "id": "fraction",
+      "limit": 0.5,
+      "cached": false,
+      "accepted": false
+    },
+    {
+      "id": "nan",
+      "limit": "nan",
+      "cached": false,
+      "accepted": false
+    },
+    {
+      "id": "cached-exact",
+      "limit": 8,
+      "cached": true,
+      "accepted": true
+    },
+    {
+      "id": "cached-under",
+      "limit": 7,
+      "cached": true,
+      "accepted": false
+    }
+  ],
+  "races": [
+    {
+      "id": "stable",
+      "fdStable": true,
+      "namespaceStable": true,
+      "completed": true,
+      "accepted": true
+    },
+    {
+      "id": "parent-transient",
+      "fdStable": true,
+      "namespaceStable": true,
+      "completed": true,
+      "accepted": true
+    },
+    {
+      "id": "parent-permanent",
+      "fdStable": true,
+      "namespaceStable": false,
+      "completed": true,
+      "accepted": false
+    },
+    {
+      "id": "leaf-permanent",
+      "fdStable": false,
+      "namespaceStable": false,
+      "completed": true,
+      "accepted": false
+    },
+    {
+      "id": "write",
+      "fdStable": false,
+      "namespaceStable": true,
+      "completed": true,
+      "accepted": false
+    },
+    {
+      "id": "truncate",
+      "fdStable": false,
+      "namespaceStable": true,
+      "completed": false,
+      "accepted": false
+    },
+    {
+      "id": "grow",
+      "fdStable": false,
+      "namespaceStable": true,
+      "completed": true,
+      "accepted": false
+    },
+    {
+      "id": "cancel",
+      "fdStable": true,
+      "namespaceStable": true,
+      "completed": false,
+      "accepted": false
+    },
+    {
+      "id": "error",
+      "fdStable": true,
+      "namespaceStable": true,
+      "completed": false,
+      "accepted": false
+    },
+    {
+      "id": "undefined",
+      "fdStable": true,
+      "namespaceStable": true,
+      "completed": false,
+      "accepted": false
+    },
+    {
+      "id": "empty",
+      "fdStable": true,
+      "namespaceStable": true,
+      "completed": true,
+      "accepted": true
+    },
+    {
+      "id": "leaf-transient",
+      "fdStable": false,
+      "namespaceStable": true,
+      "completed": true,
+      "accepted": false
+    },
+    {
+      "id": "grow-eof",
+      "fdStable": false,
+      "namespaceStable": true,
+      "completed": true,
+      "accepted": false
+    }
+  ],
+  "costs": [
+    {
+      "parents": 1,
+      "chunks": 0,
+      "fullChunkOperations": 13,
+      "fdChunkOperations": 13
+    },
+    {
+      "parents": 1,
+      "chunks": 1,
+      "fullChunkOperations": 17,
+      "fdChunkOperations": 15
+    },
+    {
+      "parents": 16,
+      "chunks": 1,
+      "fullChunkOperations": 92,
+      "fdChunkOperations": 75
+    },
+    {
+      "parents": 16,
+      "chunks": 128,
+      "fullChunkOperations": 2505,
+      "fdChunkOperations": 329
+    },
+    {
+      "parents": 64,
+      "chunks": 0,
+      "fullChunkOperations": 265,
+      "fdChunkOperations": 265
+    },
+    {
+      "parents": 64,
+      "chunks": 128,
+      "fullChunkOperations": 8841,
+      "fdChunkOperations": 521
+    }
+  ]
+}

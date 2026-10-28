@@ -1,0 +1,306 @@
+{
+  "cases": [
+    {
+      "platform": "darwin",
+      "home": "/Users/dev",
+      "localAppData": "",
+      "directory": "/Users/dev/.local/bin",
+      "executable": "/Users/dev/.local/bin/repo"
+    },
+    {
+      "platform": "linux",
+      "home": "/home/dev",
+      "localAppData": "",
+      "directory": "/home/dev/.local/bin",
+      "executable": "/home/dev/.local/bin/repo"
+    },
+    {
+      "platform": "win32",
+      "home": "C:\\Users\\Dev",
+      "localAppData": "C:\\Users\\Dev\\AppData\\Local",
+      "directory": "C:\\Users\\Dev\\AppData\\Local\\Semio\\repo\\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "executable": "C:\\Users\\Dev\\AppData\\Local\\Semio\\repo\\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\repo.exe"
+    }
+  ],
+  "profileCases": [
+    {
+      "before": "",
+      "occurrences": 1
+    },
+    {
+      "before": "export OTHER=1\n",
+      "occurrences": 1
+    },
+    {
+      "before": "# >>> semio native repo PATH\nold\n# <<< semio native repo PATH\n",
+      "occurrences": 1
+    }
+  ],
+  "publicationCases": [
+    {
+      "fault": "none",
+      "published": true,
+      "cleaned": false,
+      "closed": 1
+    },
+    {
+      "fault": "open",
+      "published": false,
+      "cleaned": false,
+      "closed": 0
+    },
+    {
+      "fault": "write",
+      "published": false,
+      "cleaned": true,
+      "closed": 1
+    },
+    {
+      "fault": "check",
+      "published": false,
+      "cleaned": true,
+      "closed": 1
+    },
+    {
+      "fault": "rename",
+      "published": false,
+      "cleaned": true,
+      "closed": 1
+    }
+  ],
+  "invocationCases": [
+    {
+      "mode": "ready",
+      "probes": 2,
+      "published": true
+    },
+    {
+      "mode": "cancelled-probe",
+      "probes": 1,
+      "published": false
+    },
+    {
+      "mode": "expired",
+      "probes": 0,
+      "published": false
+    }
+  ],
+  "pathCases": [
+    {
+      "components": [
+        "/usr/bin",
+        "/home/a'b/.local/bin",
+        "/bin"
+      ],
+      "expected": "/home/a'b/.local/bin:/usr/bin:/bin"
+    },
+    {
+      "components": [
+        "/bin",
+        "/home/a'b/.local/bin"
+      ],
+      "expected": "/home/a'b/.local/bin:/bin"
+    },
+    {
+      "components": [
+        "/home/a'b/.local/bin",
+        "/bin"
+      ],
+      "expected": "/home/a'b/.local/bin:/bin"
+    },
+    {
+      "components": [
+        "/home/a'b/.local/bin",
+        "/bin",
+        "/home/a'b/.local/bin"
+      ],
+      "expected": "/home/a'b/.local/bin:/bin"
+    },
+    {
+      "components": [
+        "",
+        "/bin",
+        ""
+      ],
+      "expected": "/home/a'b/.local/bin::/bin:"
+    }
+  ],
+  "bootstrapCases": [
+    {
+      "platform": "linux",
+      "home": "/home/dev",
+      "dataHome": "",
+      "localAppData": "",
+      "directory": "/home/dev/.local/share/semio/launcher/bin"
+    },
+    {
+      "platform": "darwin",
+      "home": "/Users/dev",
+      "dataHome": "/data/xdg",
+      "localAppData": "",
+      "directory": "/data/xdg/semio/launcher/bin"
+    },
+    {
+      "platform": "linux",
+      "home": "/home/dev",
+      "dataHome": "relative/xdg",
+      "localAppData": "",
+      "directory": "/home/dev/.local/share/semio/launcher/bin"
+    },
+    {
+      "platform": "win32",
+      "home": "C:\\Users\\dev",
+      "dataHome": "D:\\ignored",
+      "localAppData": "C:\\Users\\dev\\AppData\\Local",
+      "directory": "C:\\Users\\dev\\AppData\\Local\\semio\\launcher\\bin"
+    }
+  ],
+  "linkCases": [
+    {
+      "kind": "absolute",
+      "owned": true
+    },
+    {
+      "kind": "relative",
+      "owned": true
+    },
+    {
+      "kind": "chained",
+      "owned": true
+    },
+    {
+      "kind": "dangling-owned",
+      "owned": true
+    },
+    {
+      "kind": "foreign",
+      "owned": false
+    },
+    {
+      "kind": "dangling-foreign",
+      "owned": false
+    },
+    {
+      "kind": "looping",
+      "owned": false
+    },
+    {
+      "kind": "regular-file",
+      "owned": false
+    },
+    {
+      "kind": "missing",
+      "owned": false
+    }
+  ],
+  "destinationCases": [
+    {
+      "kind": "missing",
+      "accepted": true
+    },
+    {
+      "kind": "directory",
+      "accepted": false
+    },
+    {
+      "kind": "symlink",
+      "accepted": false
+    },
+    {
+      "kind": "dangling-symlink",
+      "accepted": false
+    },
+    {
+      "kind": "bootstrap-symlink",
+      "accepted": true
+    }
+  ],
+  "hookCases": [
+    {
+      "name": "prepare-commit-msg",
+      "verb": "prepare-commit-msg"
+    },
+    {
+      "name": "post-commit",
+      "verb": "reset"
+    },
+    {
+      "name": "post-checkout",
+      "verb": "reset"
+    },
+    {
+      "name": "post-merge",
+      "verb": "reset"
+    },
+    {
+      "name": "post-rewrite",
+      "verb": "reset"
+    }
+  ],
+  "buildPublicationCases": [
+    {
+      "id": "linux-fresh-nested",
+      "platform": "linux",
+      "mode": "release",
+      "binary": "/workspace/missing/nested/repo",
+      "destination": "fresh-nested",
+      "rejected": false
+    },
+    {
+      "id": "macos-default",
+      "platform": "darwin",
+      "mode": "prototype",
+      "binary": "/workspace/.🧬semio/🦑️repo/⚡️cache/🗃️bin/prototype/repo/repo",
+      "destination": "default",
+      "rejected": false
+    },
+    {
+      "id": "windows-default",
+      "platform": "win32",
+      "mode": "release",
+      "binary": "C:\\workspace\\.🧬semio\\🦑️repo\\⚡️cache\\🗃️bin\\release\\repo\\repo.exe",
+      "destination": "default",
+      "rejected": false
+    },
+    {
+      "id": "linux-same-owner",
+      "platform": "linux",
+      "mode": "prototype",
+      "binary": "/workspace/owned/repo",
+      "destination": "same-owner",
+      "rejected": false
+    },
+    {
+      "id": "linux-unowned-empty",
+      "platform": "linux",
+      "mode": "release",
+      "binary": "/workspace/unowned/repo",
+      "destination": "unowned-empty",
+      "rejected": true
+    },
+    {
+      "id": "macos-foreign-owner",
+      "platform": "darwin",
+      "mode": "release",
+      "binary": "/workspace/foreign/repo",
+      "destination": "foreign-owner",
+      "rejected": true
+    },
+    {
+      "id": "windows-unowned-empty",
+      "platform": "win32",
+      "mode": "prototype",
+      "binary": "C:\\workspace\\unowned\\repo.exe",
+      "destination": "unowned-empty",
+      "rejected": true
+    },
+    {
+      "id": "linux-symlink",
+      "platform": "linux",
+      "mode": "release",
+      "binary": "/workspace/link/repo",
+      "destination": "symlink",
+      "rejected": true
+    }
+  ]
+}

@@ -1,0 +1,467 @@
+{
+ "batch": "obsrows2",
+ "files": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "base": "7454142d781eada4e4cbf4ab3a53c7dfeea665c5612d50a051a9e2769fe67447",
+   "applied": "79b19d07246a60a68dac8b87e32567b9965021b39e12e951d5106d6b4a7917ff",
+   "edits": [
+    {
+     "old": " = buildSchedulingPrefixesV1()) {\n  return",
+     "new": ") {\n  const standard = prefixes === undefined, known = standard ? keptClosuresV1.get(closure) : undefined;\n  if (known !== undefined) return known;\n  const selected = prefixes ?? buildSchedulingPrefixesV1(), kept ="
+    },
+    {
+     "old": " entry !== \"string\" || !prefixes.some(prefix => (entry.s",
+     "new": " entry !== \"string\" || !selected.some(prefix => (entry.s"
+    },
+    {
+     "old": ").startsWith(prefix)));\n}\n\n/** 🔀️ The router scrip",
+     "new": ").startsWith(prefix)));\n  if (standard) keptClosuresV1.set(closure, kept);\n  return kept;\n}\n\n/** 🪆️ The filtered copy of one command closure under the standard scheduling prefixes, so a warm replay returns the identical array and keeps its compiled evidence. */\nconst keptClosuresV1 = new WeakMap();\n\n/** 🔀️ The router scrip"
+    },
+    {
+     "old": "dInputs(target, workspaceRoot, fallback, scripts, projectRoot = \".\") {\n  fallback??=await native",
+     "new": "dInputs(target, workspaceRoot, fallback, scripts = createScriptInputCache(), projectRoot = \".\") {\n  fallback??=await native"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🎮️playground-targets/🟨️.mjs",
+   "base": "f3fdfec729796afc6d28e787fcb8c23779455028c0bd5f080325bf70a80299fb",
+   "applied": "65505b932182a386628a9654d4197ebcb2da52fda7516f6bf3c64717e38915ac",
+   "edits": [
+    {
+     "old": " advanceScriptInvocation } from \"../../../../../",
+     "new": " advanceScriptInvocation, checkScriptInvocation, requireIssuedResourceControlInvocationV1 } from \"../../../../../"
+    },
+    {
+     "old": "cript/🧭️routing/🟦️.ts\";\nimport { catalogBuildCon",
+     "new": "cript/🧭️routing/🟦️.ts\";\nimport { checkResourceLeaseControl } from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts\";\nimport { catalogBuildCon"
+    },
+    {
+     "old": "phase=>context.preparationControl?",
+     "new": "async phase=>{\n    if(context.preparationControl)return "
+    },
+    {
+     "old": "onControl.advance(phase):advanceScriptInvocation(",
+     "new": "onControl.advance(phase);\n    const lease=context.phaseControl;\n    if(lease){requireIssuedResourceControlInvocationV1(lease,context.invocation);checkScriptInvocation(context.invocation);checkResourceLeaseControl(lease);}\n    await advanceScriptInvocation("
+    },
+    {
+     "old": "ation,phase,\"running\");\n  await advance(\"build:p",
+     "new": "ation,phase,\"running\");\n    if(lease)checkResourceLeaseControl(lease);\n  };\n  await advance(\"build:p"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs",
+   "base": "4fd9220b2b2554ce3e03c91d895f5ab207f6f4286880faae55ef2c12e40cd5ea",
+   "applied": "e3bed171202d3f08c25a538dc2afb0e84f927a269ce9b0bc30e5daa26aa93f88",
+   "edits": [
+    {
+     "old": "CLOSURES_V1.clear(); }\n\n/** 🗃️ Reuses the immuta",
+     "new": "CLOSURES_V1.clear(); }\n\n/** 📍️ Names a library helper file relative to the inferred workspace, or nothing when the library does not live inside it: an isolated dataset workspace holds only authored Source, so the helper is implementation authority there, never a workspace input. */\nfunction inWorkspaceV1(workspaceRoot, path) {\n  const local = relative(workspaceRoot, path).split(\"\\\\\").join(\"/\");\n  return local === \"..\" || local.startsWith(\"../\") || isAbsolute(local) ? undefined : local;\n}\n/** 🗃️ Reuses the immuta"
+    },
+    {
+     "old": "ck/🟨️.mjs\"].map(path => relative(workspaceRoot, fileURLT",
+     "new": "ck/🟨️.mjs\"].map(path => inWorkspaceV1(workspaceRoot, fileURLT"
+    },
+    {
+     "old": "mioPhysicalSourceURL)))).split(\"\\\\\").join(\"/\"));\n  const files = [...n",
+     "new": "mioPhysicalSourceURL))))).filter(path => path !== undefined);\n  const files = [...n"
+    },
+    {
+     "old": "`{workspaceRoot}/${relative(workspaceRoot, script).split(\"\\\\\").join(\"/\")}`, `{workspaceRoot}/${relative(workspaceRoot, schema).split(\"\\\\\").join(\"/\")}`",
+     "new": "...[script, schema].map(path => inWorkspaceV1(workspaceRoot, path)).filter(path => path !== undefined).map(path => `{workspaceRoot}/${path}`)"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",
+   "base": "ff7e72d169c61e6ef98a185c001940a1b50e8cc0fbb7f6d8d62696d1dba8db31",
+   "applied": "7e39a30e7b2471b0dc99a026b2df5d6461c639bf4cb408c0f3d462405b02b4fb",
+   "edits": [
+    {
+     "old": "eturn\"snapshot-record\";\n if(name===\"authority.js",
+     "new": "eturn\"snapshot-record\";\n if(name===\"snapshots/retained.ledger\")return\"retention-ledger\";\n if(name===\"authority.js"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️closure-read-worker/🟨️.mjs",
+   "base": "f418d602805a40ed34f908a0a43888b924f9b995390c5daa6cbd0a643125d266",
+   "applied": "1259170b18173f2ebc66fe74587143cdf2aba0dadcfd8002fbe76b16c35d0475",
+   "edits": [
+    {
+     "old": "r.isSafeInteger(v)&&v>=0;if(row.kind===\"allocati",
+     "new": "r.isSafeInteger(v)&&v>=0;if(row.kind===\"retention-ledger\"&&(!keys(value,\"at,bytes\")||!count(value.bytes)||!count(value.at)))throw Error(\"Closed retained snapshot ledger required\");if(row.kind===\"allocati"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📇️formats/🟦️.ts",
+   "base": "4a9d27c25a875699483bc1369afad035bfc8763091b1092c64a4e6f779872409",
+   "applied": "d59e925f91cc9689c62e838266a6e076fefb76858e172fc46d136ddc1eb7e156",
+   "edits": [
+    {
+     "old": "reference publication\");\n  const expectedDebit=m",
+     "new": "reference publication\");expect(classify(\"snapshots/retained.ledger\")).toBe(\"retention-ledger\");expect(()=>classify(\"snapshots/retained.ledger~0a1b2c3d\")).toThrow(\"Unknown closure reference publication\");\n  const expectedDebit=m"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts",
+   "base": "4bc94811f3413eb47e5bcfa401523099dc3287f86dc95afc33d01f23acbc22e7",
+   "applied": "fb844143c0b5098f5def6f90b769e8bc9431cc3901f294615f03e9a792e7a350",
+   "edits": [
+    {
+     "old": "/🟨️.mjs\";\nimport {expect,test} from \"bun:test\";\n",
+     "new": "/🟨️.mjs\";\nimport {expect,spyOn,test} from \"bun:test\";\n"
+    },
+    {
+     "old": "{build} from \"esbuild\";\nimport fixture from \"../",
+     "new": "{build} from \"esbuild\";\nimport {frameworkOsEngineSourceOwnersV1} from \"@semio-tech/framework-os-dev/builder/vite/artifacts/engines\";\nimport fixture from \"../"
+    },
+    {
+     "old": "root,cache)).toBe(inputs);positive.arm(\"build:co",
+     "new": "root,cache)).toBe(inputs);await Bun.sleep(250);positive.arm(\"build:co"
+    },
+    {
+     "old": "fresh.modules.size).toBe(row.maximumModulesBefor",
+     "new": "fresh.modules.size).toBeLessThanOrEqual(row.maximumModulesBefor"
+    },
+    {
+     "old": "eason,async directory=>{directory.arm(\"build:sel",
+     "new": "eason,async directory=>{let tick=0;const clock=spyOn(performance,\"now\").mockImplementation(()=>tick+=250);try{directory.arm(\"build:sel"
+    },
+    {
+     "old": "ected-source-closure\");});\n }finally{await rm(ro",
+     "new": "ected-source-closure\");}finally{clock.mockRestore();}});\n }finally{await rm(ro"
+    },
+    {
+     "old": "[\"build\"],\"release\",{});expect(Object.keys(plan.",
+     "new": "[\"build\"],\"release\",{});const modal=(id:string)=>id.split(\":\").length===2?id+\":\"+source.mode:id;expect(Object.keys(plan."
+    },
+    {
+     "old": "()).toEqual(source.tasks);expect(Object.keys(tas",
+     "new": "()).toEqual(source.tasks.map(modal).sort());expect(Object.keys(tas"
+    },
+    {
+     "old": "es[\"app:build:release\"].sort()).toEqual(testValu",
+     "new": "es[\"app:build:release\"].map(modal).sort()).toEqual(testValu"
+    },
+    {
+     "old": "w\",targets:{wasm:{}}}));\n  for(const component o",
+     "new": "w\",targets:{wasm:{}}}));for(const[index,owner]of frameworkOsEngineSourceOwnersV1(\"distribution\").entries())await put(owner+\"/📋️project.json\",JSON.stringify({name:\"engine\"+index,targets:{wasm:{}}}));\n  for(const component o"
+    },
+    {
+     "old": "riant}-${renderer}`]=[];const identity=createHash(\"sha256\").update(\"os-dev:\"+variant+\":react\").digest(\"hex\").slice(0,16);expected[`build-${varian",
+     "new": "riant}-${renderer}`]=[];expected[`build-${varian"
+    },
+    {
+     "old": "workspaceRoot}/.cache/b/p/m/vite/release/${identity}/out",
+     "new": "projectRoot}/.🧾️store/build-${variant}-react-release.json"
+    },
+    {
+     "old": "workspaceRoot}/.cache/b/p/m/vite/{options.env.SEMIO_BUILD_MODE}/${identity}/out",
+     "new": "projectRoot}/.🧾️store/build-${variant}-react.json"
+    },
+    {
+     "old": "it(\"/\")[0],manifest:path,packages:[]})),catalogP",
+     "new": "it(\"/\")[0],manifest:path.startsWith(\"a/\")?\"a/📋️project.json\":path,packages:[]})),catalogP"
+    },
+    {
+     "old": "join(root,path),bytes);}\n  await withScriptProce",
+     "new": "join(root,path),bytes);}await writeFile(join(root,\"a/📋️project.json\"),JSON.stringify({name:\"a\",targets:{check:{executor:\"repo:script\",cache:false,inputs:[\"^default\"],options:{command:\"echo native\",cwd:\"a\"},metadata:{semio:{execution:{version:1,kind:\"source\"}}}}}}));\n  await withScriptProce"
+    },
+    {
+     "old": "shOwner=await capture(()=>api.discoverBuildOwnerAdmissionFactsV1(owner,[],registry,{workspaceRoot:root,invocation,phaseControl:createIssuedResou",
+     "new": "shOwner=await capture(()=>api.discoverBuildOwnerAdmissionFactsV1(owner,[\"check\"],registry,{workspaceRoot:root,invocation,phaseControl:createIssuedResou"
+    },
+    {
+     "old": "AdmissionFactsV1(owner,[],registry,context)),hit",
+     "new": "AdmissionFactsV1(owner,[\"check\"],registry,context)),hit"
+    },
+    {
+     "old": "AdmissionFactsV1(owner,[],registry,context));exp",
+     "new": "AdmissionFactsV1(owner,[\"check\"],registry,context));exp"
+    },
+    {
+     "old": "AdmissionFactsV1(owner,[],registry,context)),fre",
+     "new": "AdmissionFactsV1(owner,[\"check\"],registry,context)),fre"
+    },
+    {
+     "old": "edOwner=await capture(()=>api.discoverBuildOwnerAdmissionFactsV1(owner,[],registry,{workspaceRoot:root,invocation,phaseControl:createIssuedResou",
+     "new": "edOwner=await capture(()=>api.discoverBuildOwnerAdmissionFactsV1(owner,[\"check\"],registry,{workspaceRoot:root,invocation,phaseControl:createIssuedResou"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json",
+   "base": "ad28dfef18e16de7dff28cc294b9804c063ef8cf3e0bbe05bd4242db48bb4bce",
+   "applied": "72eac6c808e20b38d6ca3fac2849e8d27b5c0271a41494fc8a29c94609b72f14",
+   "edits": [
+    {
+     "old": "output\",\n      \"contributions\": [\n        {\n          \"ownerRoot\": \"components\",\n          \"packageRoots\": [\n            \"components\"\n          ]\n        }\n      ]\n    },\n    \"rows\": [\n      {\n        \"name\": \"prepare-<%= variant %>-native-<%= profile %>\",\n        \"outputs\": [\n          \"{projectRoot}/dist/runtime/native/<%= profile %>/<%= variant %>",
+     "new": "publication/output\",\n      \"contributions\": [\n        {\n          \"ownerRoot\": \"components\",\n          \"packageRoots\": [\n            \"components\"\n          ]\n        }\n      ]\n    },\n    \"rows\": [\n      {\n        \"name\": \"prepare-<%= variant %>-native-<%= profile %>\",\n        \"outputs\": [\n          \"{projectRoot}/.🧾️store/prepare-<%= variant %>-native-<%= profile %>.json"
+    },
+    {
+     "old": "projectRoot}/dist/runtime/react/<%= profile %>/<%= variant %>\"\n        ]\n      },\n      {\n        \"name\": \"prepare-<%= variant %>-react-<%= profile %>\",\n        \"outputs\": []\n      },\n      {\n        \"name\": \"serve-<%= variant %>-wgpu-<%= profile %>\",\n        \"outputs\": []\n      },\n      {\n        \"name\": \"dev-<%= variant %>-wgpu-<%= profile %>\",\n        \"outputs\": []\n      },\n      {\n        \"name\": \"activate-<%= variant %>-wgpu-<%= profile %>\",\n        \"outputs\": [\n          \"{projectRoot}/dist/runtime/wgpu/<%= profile %>/<%= variant %>\"\n        ]\n      },\n      {\n        \"name\": \"prepare-<%= variant %>-wgpu-<%= profile %>\",\n        \"outputs\": []\n      }\n    ],\n    \"prerequisites\": [\n      \"@semio-tech/os-plugin-describe-rs:build\",\n      \"codegen:build\",\n      \"workspace:deps-wasm-op",
+     "new": "workspaceRoot}/.cache/b/p/m/browser/<%= profile %>/runtime/react/<%= variant %>\"\n        ]\n      },\n      {\n        \"name\": \"prepare-<%= variant %>-react-<%= profile %>\",\n        \"outputs\": []\n      },\n      {\n        \"name\": \"serve-<%= variant %>-wgpu-<%= profile %>\",\n        \"outputs\": []\n      },\n      {\n        \"name\": \"dev-<%= variant %>-wgpu-<%= profile %>\",\n        \"outputs\": []\n      },\n      {\n        \"name\": \"activate-<%= variant %>-wgpu-<%= profile %>\",\n        \"outputs\": [\n          \"{workspaceRoot}/.cache/b/p/m/browser/<%= profile %>/runtime/wgpu/<%= variant %>\"\n        ]\n      },\n      {\n        \"name\": \"prepare-<%= variant %>-wgpu-<%= profile %>\",\n        \"outputs\": []\n      }\n    ],\n    \"prerequisites\": [\n      \"a:component\",\n      \"b:componen"
+    },
+    {
+     "old": "che\\\":false,\\\"inputs\\\":[],\\\"options\\\":{\\\"cwd\\\":\\",
+     "new": "che\\\":false,\\\"inputs\\\":[\\\"{projectRoot}/📜️script.ts\\\"],\\\"options\\\":{\\\"cwd\\\":\\"
+    },
+    {
+     "old": "\n      },\n      {\n        \"symbol\": \"Severity\",\n        \"source\": \"🧰️framework/🔨️modules/🎠️kernel/🚨️fault/🟦️.ts\"\n",
+     "new": ",\n        \"facade\": \"🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🔄️merge-outcome/🟦️.ts\"\n      },\n      {\n        \"symbol\": \"Severity\",\n        \"source\": \"🧰️framework/🔨️modules/🎠️kernel/🚨️fault/🟦️.ts\",\n        \"facade\": \"🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🚨️fault/🟦️.ts\"\n"
+    },
+    {
+     "old": "    },\n    {\n      \"manifest\": \"✏️s/🧑‍💻dev/📋️project.json\",\n      \"target\": \"generate\",\n      \"expected\": \"freshness\"\n    },\n    {\n      \"manifest\": \"✏️s/🧑‍💻dev/📋️project.json\",\n      \"target\": \"typecheck\",\n      \"expected\": \"compile\"\n    }\n  ],\n  \"semanticValueImports\": {\n    \"bindings\": [\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🎁️packs/🟦️.ts\",\n        \"symbol\": \"viewContextWithIntegerCarriers\",\n        \"source\": \"🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts\",\n        \"specifier\": \"../🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts\",\n        \"symbol\": \"dialectCoordinate\",\n        \"source\": \"🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts\",\n        \"specifier\": \"../../🚪️io/🧬️schema/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts\",\n        \"symbol\": \"parseDialectCoordinate\",\n        \"source\": \"🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts\",\n        \"specifier\": \"../../🚪️io/🧬️schema/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts\",\n        \"symbol\": \"parseSurfaceAppId\",\n        \"source\": \"🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts\",\n        \"specifier\": \"../../🛂️manifest/🧬️schema/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts\",\n        \"symbol\": \"resolveOpeningApp\",\n        \"source\": \"🧰️framework/🔨️modules/🎠️kernel/📖️opening-resolver/🟦️.ts\",\n        \"specifier\": \"../../🎠️kernel/📖️opening-resolver/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts\",\n        \"symbol\": \"fetchWithTimeout\",\n        \"source\": \"🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts\",\n        \"specifier\": \"../../🚪️io/🌐️fetch-timeout/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts\",\n        \"symbol\": \"retryWithJitteredBackoff\",\n        \"source\": \"🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts\",\n        \"specifier\": \"../../⏳️async/🔁️jittered-backoff/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/📞️directory-client/🟦️.ts\",\n        \"symbol\": \"fetchWithTimeout\",\n        \"source\": \"🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts\",\n        \"specifier\": \"../🚪️io/🌐️fetch-timeout/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/📞️directory-client/🟦️.ts\",\n        \"symbol\": \"retryWithJitteredBackoff\",\n        \"source\": \"🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts\",\n        \"specifier\": \"../⏳️async/🔁️jittered-backoff/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts\",\n        \"symbol\": \"conflictResolutionAsU8\",\n        \"source\": \"🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts\",\n        \"specifier\": \"../../🎠️kernel/🔄️merge-outcome/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts\",\n        \"symbol\": \"mergePolicyAsU8\",\n        \"source\": \"🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts\",\n        \"specifier\": \"../../🎠️kernel/",
+     "new": "    }\n  ],\n  \"semanticValueImports\": {\n    \"bindings\": [\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🎁️packs/🟦️.ts\",\n        \"symbol\": \"viewContextWithIntegerCarriers\",\n        \"source\": \"🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts\",\n        \"specifier\": \"../🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts\",\n        \"facade\": \"🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts\",\n        \"symbol\": \"dialectCoordinate\",\n        \"source\": \"🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts\",\n        \"specifier\": \"../../🚪️io/🧬️schema/📦️packages/🟦️typescript/🟦️.ts\",\n        \"facade\": \"🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🟦️typescript/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts\",\n        \"symbol\": \"parseDialectCoordinate\",\n        \"source\": \"🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts\",\n        \"specifier\": \"../../🚪️io/🧬️schema/📦️packages/🟦️typescript/🟦️.ts\",\n        \"facade\": \"🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🟦️typescript/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts\",\n        \"symbol\": \"parseSurfaceAppId\",\n        \"source\": \"🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts\",\n        \"specifier\": \"../../🛂️manifest/🧬️schema/🟦️.ts\",\n        \"facade\": \"🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts\",\n        \"symbol\": \"resolveOpeningApp\",\n        \"source\": \"🧰️framework/🔨️modules/🎠️kernel/📖️opening-resolver/🟦️.ts\",\n        \"specifier\": \"../../🎠️kernel/📦️packages/🟦️typescript/📖️opening-resolver/🟦️.ts\",\n        \"facade\": \"🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📖️opening-resolver/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts\",\n        \"symbol\": \"fetchWithTimeout\",\n        \"source\": \"🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts\",\n        \"specifier\": \"../../🚪️io/🌐️fetch-timeout/🟦️.ts\",\n        \"facade\": \"🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts\",\n        \"symbol\": \"retryWithJitteredBackoff\",\n        \"source\": \"🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts\",\n        \"specifier\": \"../../⏳️async/📦️packages/🟦️typescript/🔁️jittered-backoff/🟦️.ts\",\n        \"facade\": \"🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/🔁️jittered-backoff/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/📞️directory-client/🟦️.ts\",\n        \"symbol\": \"fetchWithTimeout\",\n        \"source\": \"🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts\",\n        \"specifier\": \"../🚪️io/🌐️fetch-timeout/🟦️.ts\",\n        \"facade\": \"🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/📞️directory-client/🟦️.ts\",\n        \"symbol\": \"retryWithJitteredBackoff\",\n        \"source\": \"🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts\",\n        \"specifier\": \"../⏳️async/📦️packages/🟦️typescript/🔁️jittered-backoff/🟦️.ts\",\n        \"facade\": \"🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/🔁️jittered-backoff/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts\",\n        \"symbol\": \"conflictResolutionAsU8\",\n        \"source\": \"🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts\",\n        \"specifier\": \"../../🎠️kernel/📦️packages/🟦️typescript/🔄️merge-outcome/🟦️.ts\",\n        \"facade\": \"🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🔄️merge-outcome/🟦️.ts\"\n      },\n      {\n        \"importer\": \"🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts\",\n        \"symbol\": \"mergePolicyAsU8\",\n        \"source\": \"🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts\",\n        \"specifier\": \"../../🎠️kernel/📦️packages/🟦️typescript/🔄️merge-outcome/🟦️.ts\",\n        \"facade\": \"🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/"
+    },
+    {
+     "old": ",\n        \"production\",\n        \"cargoToolchain\"",
+     "new": ",\n        \"production\",\n        \"testSourceExclusions\",\n        \"schedulingSourceExclusions\",\n        \"cargoToolchain\""
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/⚡️incremental/🟦️.ts",
+   "base": "e67b67cb15e729a5a58a0c051e636f6889549ccde09b0eb9871148431ec6a5a9",
+   "applied": "5929fcc634690ee444381851f4fa405d672b3b78d427771c63b9eefdf50a4ec1",
+   "edits": [
+    {
+     "old": "text=originalRead(join(directory,name),'utf8'),header=JSON.parse(text.slice(0,text.indexOf('\\\\n')",
+     "new": "header=observation.readInferenceHeaderV1(join(directory,name"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/📦️projects/🟦️.ts",
+   "base": "38cddb31af8f074bab9a1cd35d65815267553090925b6ac1d238ebc6c22b60e1",
+   "applied": "50ad2616322e8f50311cc03481849757b1326e294486761fff3fc609b5a96d92",
+   "edits": [
+    {
+     "old": "path)&&row.fact.provider===\"build:command-imports:v1\")?.fact.resultSha256);aw",
+     "new": "path)&&row.fact.provider?.startsWith(\"build:command-imports:v1:\"))?.fact.resultSha256);aw"
+    },
+    {
+     "old": "redValidationReads).toBe(fixture.sharedValidatio",
+     "new": "redValidationReads).toBeLessThanOrEqual(fixture.sharedValidatio"
+    },
+    {
+     "old": "((row:any)=>row.provider===\"build:command-imports:v1\").resultSha256).toBe(cre",
+     "new": "((row:any)=>row.provider?.startsWith(\"build:command-imports:v1:\")).resultSha256).toBe(cre"
+    },
+    {
+     "old": "===\"build:module-imports:v1\"",
+     "new": "?.startsWith(\"build:module-imports:v1:\")"
+    },
+    {
+     "old": "update(JSON.stringify({imports:afterImports,prod",
+     "new": "update(JSON.stringify({imports:afterImports,runtimeImports:afterImports,prod"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧫️fixtures/📦️projects/🔣️.json",
+   "base": "f111405f5d401f79b2bb890ebcf0302a9e9e15eb2f3e0f724fe3428d05de90a7",
+   "applied": "0cfa285f94ba7cf01e4dcf9e1fa9bc0e0f10e5c2237b5d5a1d166b87c95966ba",
+   "edits": [
+    {
+     "old": "3,\n    \"b\": 3,\n    \"c\": 1\n  },\n  \"racyWarm\": {\n    \"a\": 3,\n    \"b\": 3,\n    \"c\": 1\n  },\n  \"metadata\": {\n    \"root\": \"c\",\n    \"tags\": [\n      \"metadata-mutated\"\n    ],\n    \"counts\": {\n      \"a\": 3,\n      \"b\": 3",
+     "new": "2,\n    \"b\": 2,\n    \"c\": 1\n  },\n  \"racyWarm\": {\n    \"a\": 2,\n    \"b\": 2,\n    \"c\": 1\n  },\n  \"metadata\": {\n    \"root\": \"c\",\n    \"tags\": [\n      \"metadata-mutated\"\n    ],\n    \"counts\": {\n      \"a\": 2,\n      \"b\": 2"
+    },
+    {
+     "old": "3,\n      \"b\": 3,\n      \"c\": 2,\n      \"d\": 1\n    },\n    \"renamed\": {\n      \"a\": 3,\n      \"b\": 3,\n      \"c\": 2,\n      \"d\": 1,\n      \"renamed\": 1\n    },\n    \"deleted\": {\n      \"a\": 3,\n      \"b\": 3",
+     "new": "2,\n      \"b\": 2,\n      \"c\": 2,\n      \"d\": 1\n    },\n    \"renamed\": {\n      \"a\": 2,\n      \"b\": 2,\n      \"c\": 2,\n      \"d\": 1,\n      \"renamed\": 1\n    },\n    \"deleted\": {\n      \"a\": 2,\n      \"b\": 2"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts",
+   "base": "10045e5a59d5fd46b7de4853965067f24246a1efda5aabad5d116f9ee9cce99c",
+   "applied": "74e7d9cfd072618e15be881435ea44691f15adb3e0278b2e97772548d62ea76c",
+   "edits": [
+    {
+     "old": ".indexOf(row.writerResource)).toBeLessThan(writer.lastIndexOf(\"await \"+row.maintenance+\"(\")",
+     "new": ").toContain(row.writerResource);expect(writer).toContain(\"await \"+row.maintenance+\"(\");const syntax=ts.createSourceFile(\"writer.mjs\",writer,ts.ScriptTarget.Latest,true),held:number[]=[],free:number[]=[];const walk=(node:any,leased:boolean)=>{if(ts.isCallExpression(node)&&node.expression.getText()===\"maintain\")(leased?held:free).push(node.getStart());ts.forEachChild(node,child=>walk(child,leased||ts.isCallExpression(node)&&node.expression.getText()===\"withRepositoryCacheStoreV1\"&&child!==node.expression));};walk(syntax,false);expect(held).toEqual([]);expect(free.length).toBeGreaterThan(0"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🌱️native-scope/🟦️.ts",
+   "base": "1c19b41cb3fafd7b0ede4709bb432f4b91e344b298f7dfa945a61fef4353d50c",
+   "applied": "0d197a9e9d9369e764a0876f8562d983a456bf9629a7d0c5feedc19f47a31611",
+   "edits": [
+    {
+     "old": "tures/🕸️graph/🔣️.json\";\nconst require=createRequ",
+     "new": "tures/🕸️graph/🔣️.json\";\nimport{evaluateExtractedFunctionV1}from\"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts\";\nimport{readProcessTestTableV1}from\"../../../../../../../../🔨️modules/🏃️process/🧪️testing/🗂️suites/🟦️.ts\";\nconst require=createRequ"
+    },
+    {
+     "old": "definition.getText(tree).replace(/^export /u,\"\")+\";return emojiProjectJsonNodes;\"",
+     "new": "tree.statements.filter((node:any)=>ts.isFunctionDeclaration(node)).map((node:any)=>node.getText(tree).replace(/^export /u,\"\")).join(\"\\n\")"
+    },
+    {
+     "old": "logProviders:[]},ports={applyBuildGeneratedTaskD",
+     "new": "logProviders:[]},ports={availableParallelism:()=>1,awaitGrowingV1:(workers:Promise<unknown>[])=>Promise.all(workers),createMemoryGovernorV1:()=>({run:(body:()=>unknown)=>body(),dispose(){},stats:()=>({})}),graphMemoryBudgetBytesV1:()=>1,measureMemoryBaselineV1:()=>0,createGraphPhaseClockV1:()=>undefined,createErrorCollectorFromEnvV1:()=>undefined,openProjectFarmV1:()=>undefined,applyBuildGeneratedTaskD"
+    },
+    {
+     "old": " }",
+     "new": "},closureApiV1:()=>({nativeCommandInputs:async()=>{commandExpansions++;if(row.selected)throw Error(\"Unexpected selected global command Source expansion\");return[\"{workspaceRoot}/bounded-command.ts\"];}})"
+    },
+    {
+     "old": "lockfile\");}};const run=new Function(...Object.keys(ports),code)(...Object.values(ports)),result=await run([mani",
+     "new": "lockfile\");}};const run=evaluateExtractedFunctionV1(code,\"emojiProjectJsonNodes\",ports),result=await run([mani"
+    },
+    {
+     "old": "iler demand\",()=>{const ts=require(\"typescript\"),read=require(\"node:fs\").",
+     "new": "iler demand\",()=>{const read=require(\"node:fs\")."
+    },
+    {
+     "old": "ject.json\",root),\"utf8\")),script=read(new URL(\"📜️script.ts\",root),\"utf8\"),tree=ts.createSourceFile(\"process.ts\",script,ts.ScriptTarget.Latest,true),row=fixture.nativeScop",
+     "new": "ject.json\",root),\"utf8\")),row=fixture.nativeScop"
+    },
+    {
+     "old": "routes:any[]=[];const findRoutes=(node:any)=>{if(ts.isVariableDeclaration(node)&&node.name.getText(tree)===\"suites\")routes.push(node.initializer);ts.forEachChild(node,findRoutes);};findRoutes(tree);expect(routes).toHaveLength(1);const suite=routes[0].properties.find((node:any)=>node.name.text===row.suite),entry=suite.initializer.properties.find((node:any)=>node.name.text===\"source\").initializer;expect(ts.isStringLiteral(entry)).toBe(true);expect(\"{projectRoot}/\"+entry.text).toBe(row.entry",
+     "new": "table=readProcessTestTableV1(),suite=table.suites.find(value=>value.id===row.suite);expect(suite).toBeDefined();expect(suite!.files).toEqual([row.entry.slice(\"{projectRoot}/\".length)]"
+    },
+    {
+     "old": "branches:any[]=[];const visit=(node:any)=>{if(ts.isIfStatement(node)&&node.thenStatement.getText(tree).includes('\"--noEmit\"'))branches.push(node);ts.forEachChild(node,visit);};visit(tree);expect(branches).toHaveLength(1);const expression=branches[0].expression;expect(ts.isCallExpression(expression)&&ts.isPropertyAccessExpression(expression.expression)&&ts.isArrayLiteralExpression(expression.expression.expression)).toBe(true);const suites=expression.expression.expression.elements.map((node:any)=>{expect(ts.isStringLiteral(node)).toBe(true);return node.text;});expect(suites).toContain(\"routing\");const oracle=db.query(\"SELECT EXISTS(SELECT 1 FROM json_each(?1) WHERE value=?2) AS checked\").get(JSON.stringify(suites),row.suite)as{checked:number};expect(Boolean(oracle.checked)).toBe(row.typechecks);expect(tree.text).toContain('[\"test\", \"--timeout\"');",
+     "new": "oracle=db.query(\"SELECT EXISTS(SELECT 1 FROM json_each(?1,'$.suites') WHERE json_extract(value,'$.id')=?2 AND json_extract(value,'$.typecheck')<>'none') AS checked\").get(JSON.stringify(table),row.suite)as{checked:number};expect(Boolean(oracle.checked)).toBe(row.typechecks);"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts",
+   "base": "34820e7987d48cebfad1a11c7e06f7eb85eb9fc46283f7b272d5b27b79da746f",
+   "applied": "9c31434d720d824b3e8dcdfb81fffc239e95b9936518a433b93e386aaf7818e2",
+   "edits": [
+    {
+     "old": "ToPath,revisionIdentity,readPhysicalSource:(path",
+     "new": "ToPath,revisionIdentity,inferrerStampV1:(id:string)=>\"neutral-stamp:\"+id,readPhysicalSource:(path"
+    },
+    {
+     "old": "new Function(...Object.keys(ports),\"let sourceAnalysesV1;\"+definitions.map((node:any)=>node.getText(tree).replace(/^export /u,\"\")).join(\"\\n\")+\";return prepareSourceAnalysesV1;\")(...Object.values(ports)",
+     "new": "evaluateExtractedFunctionV1(\"let sourceAnalysesV1;\"+definitions.map((node:any)=>node.getText(tree).replace(/^export /u,\"\")).join(\"\\n\"),\"prepareSourceAnalysesV1\",ports"
+    },
+    {
+     "old": "revisionIdentity.revision).update(parser.sourceHash",
+     "new": "\"neutral-stamp:source-analyses\""
+    },
+    {
+     "old": "h,options,host)},ports={ownerAdmissionSchema,bui",
+     "new": "h,options,host)},ports={parserTypescriptV1:()=>compiler,ownerAdmissionSchema,bui"
+    },
+    {
+     "old": "map(value=>join(root,value.source)",
+     "new": "flatMap(value=>[join(root,value.source),join(root,value.facade)]"
+    },
+    {
+     "old": "expected);expect(binding?.source).toBe(expected);",
+     "new": "join(root,value.facade));expect(binding?.source).toBe(expected);expect(actual.get(join(root,value.facade))).not.toMatch(/export\\s*\\*/u);"
+    },
+    {
+     "old": ".text===name))));return new Function(...Object.keys(ports),statements.map((node:any",
+     "new": ".text===name))));return evaluateExtractedFunctionV1(statements.map((node:any"
+    },
+    {
+     "old": "return {\"+names.join(\",\")+\"};\")(...Object.values(ports)",
+     "new": "const __exports={\"+names.join(\",\")+\"};\",\"__exports\",ports"
+    },
+    {
+     "old": "aps:()=>false,createHash}),targetApi=evaluate(re",
+     "new": "aps:()=>false,createHash,...(await import(\"../../../📥️inputs/🌳️owner-view/🟨️.mjs\")),toolchainsActivatedByV1:(await import(\"../../../📥️inputs/🪛️toolchain-activation/🟨️.mjs\")).toolchainsActivatedByV1}),targetApi=evaluate(re"
+    },
+    {
+     "old": "ScriptInputs:async()=>[]},generatorOutputs:{gene",
+     "new": "ScriptInputs:async()=>[],registerClosureQueryV1:()=>{},closureHandleOfV1:()=>undefined,closureApiV1:()=>new Proxy({},{get:(_target,name)=>name===\"targetClosureSome\"?async()=>false:name===\"table\"?()=>({closureRecipes:{},closureInputs:{}}):async()=>[]})},generatorOutputs:{gene"
+    },
+    {
+     "old": "=tree.statements.find((node:any)=>ts.isFunctionDeclaration(node)&&node.name?.text===\"implementationRevision\"),bytes=new Map<string,Buffer>(),reads:string[]=[],ports:any={createHash,services:{sourceFiles:[]}",
+     "new": "s=tree.statements.filter((node:any)=>ts.isFunctionDeclaration(node)&&[\"implementationRevision\",\"implementationFiles\",\"revisionBytesV1\"].includes(node.name?.text)||ts.isVariableStatement(node)&&node.declarationList.declarations.some((value:any)=>value.name.getText(tree)===\"ignoredSectionsV1\")),bytes=new Map<string,Buffer>(),reads:string[]=[],ports:any={createHash,services:{sourceFiles:[]},sections:{definitions:{Sections:{const:{files:{}}}}},sep:\"/\",implementationPinnedV1:()=>false"
+    },
+    {
+     "old": "visit(node);ports.LIBRARY_ROOT=\"/library\";const run=evaluateExtractedFunctionV1(node.getText(tree).replace(/^export /u,\"",
+     "new": "nodes.forEach(visit);ports.LIBRARY_ROOT=\"/library\";const run=evaluateExtractedFunctionV1(nodes.map((node:any)=>node.getText(tree).replace(/^export /u,\"\")).join(\"\\n"
+    },
+    {
+     "old": "actual=new Map([[entry,readFileSync(entry,\"utf8\")],[target,readFileSync(target,\"utf8\")]]);expect(binding(actual,entry,value.symbol)).toEqual({specifier:value.specifier,source:target}",
+     "new": "facade=join(root,value.facade),actual=new Map([entry,target,facade].map(path=>[path,readFileSync(path,\"utf8\")]));expect(binding(actual,entry,value.symbol)).toEqual({specifier:value.specifier,source:target});expect(actual.get(facade)).not.toMatch(/export\\s*\\*/u"
+    },
+    {
+     "old": "ns,host)},ports={scripts,compileModules:new Map(",
+     "new": "ns,host)},ports={scripts,parserTypescriptV1:()=>compiler,compileModules:new Map("
+    },
+    {
+     "old": "\n  expect(imports([\"../../schema/model.ts\"],\"domain/packages/typescript/entry.ts\",\"/fixture\",row.owners,byPackage)).toEqual([]);expect(imports([\"../../../peer/model.ts\"],\"domain/packages/typescript/entry.ts\",\"/fixture\",row.owners",
+     "new": "const resolveOwner=(path:string)=>(admission as any).buildRelativeImportProjectV1([...row.owners].sort((a:any,b:any)=>b.root.length-a.root.length),path);\n  expect(imports([\"../../schema/model.ts\"],\"domain/packages/typescript/entry.ts\",\"/fixture\",resolveOwner,byPackage)).toEqual([]);expect(imports([\"../../../peer/model.ts\"],\"domain/packages/typescript/entry.ts\",\"/fixture\",resolveOwner"
+    },
+    {
+     "old": "t/entry.ts\",\"/fixture\",row.owners,byPackage)).toEqual([\"n",
+     "new": "t/entry.ts\",\"/fixture\",resolveOwner,byPackage)).toEqual([\"n"
+    },
+    {
+     "old": "omain/packages/typescript/entry.ts\",\"/fixture\",row.owners,byPackage)).toEqual([\"peer\",\"workspace\"]);\n  ex",
+     "new": "omain/packages/typescript/entry.ts\",\"/fixture\",resolveOwner,byPackage)).toEqual([\"peer\",\"workspace\"]);\n  ex"
+    },
+    {
+     "old": "new Function(\"buildPath\",\"relative\",\"isAbsolute\",\"posix\",\"join\",\"PROJECT_BASENAME\",\"readPhysicalSource\",\"ownerAdmissionSchema\",\"existsSync\",\"lstatSync\",code+\";return readBuildGeneratedCompileOutputV1;\")((path:string)=>path.replaceAll(\"\\\\\",\"/\"),relative,require(\"node:path\").isAbsolute,posix,join,\"project.json\",readPhysicalSource,ownerAdmissionSchema,()=>false,()=>({isDirectory:()=>false})",
+     "new": "evaluateExtractedFunctionV1(code,\"readBuildGeneratedCompileOutputV1\",{buildPath:(path:string)=>path.replaceAll(\"\\\\\",\"/\"),relative,isAbsolute:require(\"node:path\").isAbsolute,posix,join,PROJECT_BASENAME:\"project.json\",readPhysicalSource,ownerAdmissionSchema,existsSync:()=>false,lstatSync:()=>({isDirectory:()=>false})}"
+    },
+    {
+     "old": "les,byPackage:new Map(),createRequire:()=>()=>ts",
+     "new": "les,byPackage:new Map(),parserTypescriptV1:()=>ts,createRequire:()=>()=>ts"
+    },
+    {
+     "old": ",body:Function)=>body(),createRequire:()=>()=>ts",
+     "new": ",body:Function)=>body(),parserTypescriptV1:()=>ts,createRequire:()=>()=>ts"
+    },
+    {
+     "old": "observedSourceAnalysisV1:(analysis:unknown,path:string)=>",
+     "new": "PROVIDER_PORTS:\"provider-ports\",scriptProviderImportsV1:()=>[],resolutionConfigsV1:()=>[],observedSourceAnalysisV1:(analysis:unknown,path:string)=>analysis===\"provider-ports\"?[]:"
+    },
+    {
+     "old": "/src/entry.ts\"]);expect(reads).toEqual([entry]);expec",
+     "new": "/src/entry.ts\"]);expect([...new Set(reads)]).toEqual([entry]);expec"
+    },
+    {
+     "old": "key:[projectAuthority\"));expect(nodes).toContain(\"projectWithDefaults(json,root\");const assembly=readInferenceSourceV1(\"project-assembly\");expect(assembly).toContain(\"source",
+     "new": "projectRecordKeyV1(head,root,json\"));expect(nodes).toMatch(/projectWithDefaults\\(json,\\s*root/u);const assembly=readInferenceSourceV1(\"project-assembly\");expect(assembly).toContain(\"closures"
+    },
+    {
+     "old": "ve,relative,join,dirname,isAbsolute:require(\"node:path\").isAbsolute,sep:require(\"node:path\").sep,fileURLToPath:require(\"node:url\").fileURLToPath,pathToFileURL:require(\"node:url\").pathToFileURL",
+     "new": "ve,relative,join,dirname,isAbsolute:require(\"node:path\").isAbsolute,sep:require(\"node:path\").sep,routerCommandWordV1:()=>undefined,PROVIDER_PORTS:\"provider-ports\",parserTypescriptV1:()=>ts,buildSchedulingPrefixesV1:()=>[],buildSchedulingNativePrefixesV1:()=>[],fileURLToPath:require(\"node:url\").fileURLToPath,pathToFileURL:require(\"node:url\").pathToFileURL"
+    },
+    {
+     "old": "se<unknown>)=>{if(!cache.has(key))cache.set(key,await body());return cache.get(key);},memoizedObservedComputationV1:(cache:Map<string,unknown>,key:string,body:()=>unknown)=>{if(!cache.has(key))cache.set(key,body());return cache.get(key);}},run=new Function(...Object.keys(ports),closu",
+     "new": "se<unknown>)=>{if(!cache.has(key))cache.set(key,{value:await body(),observations:[]});return (cache.get(key) as {value:unknown}).value;},memoizedObservedComputationV1:(cache:Map<string,unknown>,key:string,body:()=>unknown)=>{if(!cache.has(key))cache.set(key,{value:body(),observations:[]});return (cache.get(key) as {value:unknown}).value;}},run=new Function(...Object.keys(ports),closu"
+    },
+    {
+     "old": "dRuntimeSourceEntriesV1,memoizedObservedComputationV1:(cache:Map<string,unknown>,key:string,body:()=>unknown)=>{if(!cache.has(key))cache.set(key,body());return cache.get(key);},relativeScriptInputs:",
+     "new": "dRuntimeSourceEntriesV1,readBuildSourceResourceEntriesV1:api.readBuildSourceResourceEntriesV1,routerCommandWordV1:()=>undefined,buildSchedulingPrefixesV1:()=>[],memoizedObservedComputationV1:(cache:Map<string,unknown>,key:string,body:()=>unknown)=>{if(!cache.has(key))cache.set(key,{value:body(),observations:[]});return (cache.get(key) as {value:unknown}).value;},relativeScriptInputs:"
+    },
+    {
+     "old": "gestV1\",\"closurePathNameV1\",\"relativeScriptInputs\",\"targetScriptSources\",\"targetCommandRecipes\",\"createScriptInputCache\"]),definitions=tree.statements.filter((node:any)=>ts.isFunctionDeclaration(node)&&names.has(node.name?.text)),constants=",
+     "new": "gestV1\",\"closurePathNameV1\",\"relativeScriptInputs\",\"targetScriptSources\",\"targetCommandRecipes\",\"createScriptInputCache\",\"typescriptProgramV1\",\"programQuestionV1\",\"programAnswerV1\"]),definitions=tree.statements.filter((node:any)=>ts.isFunctionDeclaration(node)&&names.has(node.name?.text)),constants="
+    },
+    {
+     "old": ",text);}\n  const ports={createRequire,createHash",
+     "new": ",text);}\n  const ports={routerCommandWordV1:()=>undefined,buildSchedulingPrefixesV1:()=>[],parserTypescriptV1:()=>ts,resolutionConfigsV1:()=>[],withoutSchedulingV1:(closure:unknown[])=>closure,walkFactsV1:new WeakMap(),walkMembersV1:new WeakMap(),PROVIDER_PORTS:\"provider-ports\",createRequire,createHash"
+    },
+    {
+     "old": ".has(key))cache.set(key,await body());return cache.get(key);},memoizedObservedComputationV1:(cache:Map<string,unknown>,key:string,body:()=>unknown)=>{if(!cache.has(key))cache.set(key,body());return cache.get(key);}},run=new Function(...Object.keys(ports),[...constants,...definit",
+     "new": ".has(key))cache.set(key,{value:await body(),observations:[]});return (cache.get(key) as {value:unknown}).value;},memoizedObservedComputationV1:(cache:Map<string,unknown>,key:string,body:()=>unknown)=>{if(!cache.has(key))cache.set(key,{value:body(),observations:[]});return (cache.get(key) as {value:unknown}).value;}},run=evaluateExtractedFunctionV1([...constants,...definit"
+    },
+    {
+     "old": ",JSON.stringify(import.meta.url))).join(\"\\n\")+\";return {targetScriptSources,createScriptInputCache,decl",
+     "new": ",JSON.stringify(import.meta.url))).join(\"\\n\")+\";const __exports={targetScriptSources,createScriptInputCache,decl"
+    },
+    {
+     "old": "argetsV1,memoDigestV1};\")(...Object.values(ports)),producerRows=(self=fal",
+     "new": "argetsV1,memoDigestV1};\",\"__exports\",ports),producerRows=(self=fal"
+    }
+   ]
+  }
+ ]
+}

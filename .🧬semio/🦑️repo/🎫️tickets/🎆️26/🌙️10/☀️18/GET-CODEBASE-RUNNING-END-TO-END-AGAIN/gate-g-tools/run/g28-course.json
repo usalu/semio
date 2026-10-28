@@ -1,0 +1,31 @@
+{
+ "label": "g28-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "08:10:47",
+ "wall_s": 187.4,
+ "peak_tree_mb": 7647,
+ "peak_processes": 7,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 5.0,
+ "graph": {
+  "refreshing": [
+   "41"
+  ],
+  "inferring": [
+   "41"
+  ],
+  "published": [
+   "609",
+   "41",
+   "102"
+  ],
+  "processes": [
+   "8",
+   "1 internal, 7 worker"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

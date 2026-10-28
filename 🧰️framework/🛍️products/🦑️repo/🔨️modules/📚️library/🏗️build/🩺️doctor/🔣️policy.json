@@ -136,7 +136,7 @@
       },
       "safety": {
         "en": "Uses the registry's own liveness rule (process missing, or silent for five minutes); a folder goes only when its lease directory outside this checkout is gone and no living process is registered in it (directories inside the checkout may sit on a detached image and are never judged gone). The rows are diagnostics; no lease depends on them.",
-        "de": "Verwendet die eigene Lebendigkeitsregel des Registers (Prozess fehlt oder fünf Minuten still); ein Ordner verschwindet nur, wenn sein Lease-Verzeichnis außerhalb dieses Arbeitsverzeichnisses nicht mehr existiert und kein lebender Prozess darin eingetragen ist (Verzeichnisse innerhalb des Arbeitsverzeichnisses können auf einem ausgehängten Abbild liegen und gelten nie als verschwunden). Die Zeilen sind Diagnose; kein Lease hängt von ihnen ab."
+        "de": "Verwendet die eigene Lebendigkeitsregel des Registers (Prozess fehlt oder fünf Minuten still); ein Ordner verschwindet nur, wenn sein Lease-Verzeichnis außerhalb dieses Arbeitsverzeichnisses nicht mehr existiert und kein lebender Prozess darin eingetragen ist (Verzeichnisse innerhalb des Arbeitsverzeichnisses können auf einem ausgehängten Image liegen und gelten nie als verschwunden). Die Zeilen sind Diagnose; keine Lease hängt von ihnen ab."
       }
     },
     {

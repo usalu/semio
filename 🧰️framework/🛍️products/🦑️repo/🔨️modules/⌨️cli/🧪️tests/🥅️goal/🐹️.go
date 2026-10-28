@@ -109,7 +109,11 @@ func TestGoalsMcpResource(t *testing.T) {
 	withExhaustiveRepo(t)
 	req := ReadResourceRequest{}
 	req.Params.URI = "repo://goals"
-	contents, err := handleGoalsResource(context.Background(), req)
+	repository, err := newMcpRepository(workspace.GetRootDir())
+	if err != nil {
+		t.Fatalf("newMcpRepository returned error: %v", err)
+	}
+	contents, err := repository.handleGoalsResource(context.Background(), req)
 	if err != nil {
 		t.Fatalf("handleGoalsResource returned error: %v", err)
 	}

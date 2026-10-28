@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/typescript-check/incremental-corpus/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "files", "steps"],
+  "properties": {
+    "version": { "const": 1 },
+    "files": { "$ref": "#/definitions/Files" },
+    "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Step" } }
+  },
+  "definitions": {
+    "Files": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" } },
+    "Step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "expected"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "write": { "$ref": "#/definitions/Files" },
+        "delete": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "expected": { "type": "array", "items": { "type": "string", "pattern": "^[^:]+:TS[0-9]+$" } }
+      }
+    }
+  }
+}

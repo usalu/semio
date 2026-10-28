@@ -1,20 +1,21 @@
+import {noticeLanguagesV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {lstatSync,readFileSync} from "node:fs";
 import {dirname,isAbsolute,join,parse,relative,resolve,sep} from "node:path";
 import catalogue from "../⚙️operations/🔣️catalog.json" with {type:"json"};
 import policy from "./🔣️.json" with {type:"json"};
 import {buildOperationArgumentsV1,normalizeBuildOptionsV1} from "../⚙️operations/🔤️options/🟦️.ts";
 import {buildHelpForArgumentsV1,resolveBuildCliLanguageV1} from "../⚙️operations/📖️help/🟦️.ts";
-import {profilePhaseV1} from "../⏱️profile/🟨️.mjs";
+import {profileCurrentPhaseV1,profilePhaseV1} from "../⏱️profile/🟨️.mjs";
 import {writeResultLineV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 
 /** 🛃️ The part of the neutral operations catalogue the front door reads: languages, global options with their allowed values, command and subcommand names. */
-export type BuildDoorCatalogueV1=Readonly<{languages:readonly string[];flags:readonly Readonly<{name:string;aliases?:readonly string[];value:string;valueName?:string;operations?:readonly string[]}>[];operations:readonly Readonly<{name:string;requires:string;subcommands?:readonly Readonly<{name:string}>[]}>[]}>;
+export type BuildDoorCatalogueV1=Readonly<{languages:readonly string[];flags:readonly Readonly<{name:string;aliases?:readonly string[];value:string;valueName?:string;operations?:readonly string[]}>[];operations:readonly Readonly<{name:string;requires:string;synopsis?:string;subcommands?:readonly Readonly<{name:string}>[]}>[]}>;
 
 /** 🛅️ Which commands run without the build implementation, which subcommand sets are closed and the refusal texts. */
-export type BuildDoorPolicyV1=Readonly<{version:1;passthrough:readonly string[];fullTargetPrefixes:readonly string[];environment:Readonly<Record<"--tool"|"--workers",string>>;light:readonly Readonly<{operation:string;export:string;call:"root-args-environment"|"args-options"}>[];closedSubcommands:readonly string[];refusedExitCode:number;texts:Readonly<Record<BuildDoorRefusalIdV1,Readonly<Record<string,string>>>>}>;
+export type BuildDoorPolicyV1=Readonly<{version:1;liveness:Readonly<{delaysSeconds:readonly number[];repeatSeconds:number;unknownPhase:string;texts:Readonly<Record<"en"|"de",string>>}>;passthrough:readonly string[];fullTargetPrefixes:readonly string[];environment:Readonly<Record<"--tool"|"--workers",string>>;light:readonly Readonly<{operation:string;export:string;call:"root-args-environment"|"args-options"}>[];closedSubcommands:readonly string[];refusedExitCode:number;texts:Readonly<Record<BuildDoorRefusalIdV1,Readonly<Record<string,string>>>>}>;
 
 /** 🚧️ The refusals the front door can state before any storage, lease or graph exists. */
-export type BuildDoorRefusalIdV1="unknownCommand"|"unknownSubcommand"|"invalidValue";
+export type BuildDoorRefusalIdV1="unknownCommand"|"unknownSubcommand"|"invalidValue"|"missingArgument";
 
 /** 🛣️ Where one invocation goes: help, a refusal, a light command that owns its closure, or the full implementation. */
 export type BuildDoorRouteV1=Readonly<{kind:"full"}>|Readonly<{kind:"help";args:readonly string[]}>|Readonly<{kind:"refused";id:BuildDoorRefusalIdV1;values:Readonly<Record<string,string>>}>|Readonly<{kind:"light";operation:string;args:readonly string[]}>;
@@ -30,6 +31,7 @@ export const buildDoorLightLoadersV1:Readonly<Record<string,()=>Promise<Readonly
  leases:()=>import("../🔒️leases/⌨️command/🟦️.ts"),
  doctor:()=>import("../🩺️doctor/⌨️command/🟦️.ts"),
  capacity:()=>import("../🌡️host-capacity/⌨️command/🟦️.ts"),
+ fleet:()=>import("../🚢️fleet-status/⌨️command/🟦️.ts"),
 });
 
 const allowedValues=(source:BuildDoorCatalogueV1,option:string):readonly string[]|undefined=>{const name=source.flags.find(flag=>flag.name===option)?.valueName;return name!==undefined&&/^[A-Za-z0-9-]+(\|[A-Za-z0-9-]+)+$/u.test(name)?name.split("|"):undefined;};
@@ -59,6 +61,14 @@ export function buildDoorRequestsHelpV1(args:readonly string[]):boolean{
  return head.length===0||head.some(argument=>argument==="--help"||argument==="-h");
 }
 
+/** 🧷️ The required positional a synopsis names right after the command (`run <project:target>`), when the operation arguments hold none before `--`; the front door refuses it before any storage, lease, capacity grant or graph exists. */
+export function missingBuildDoorArgumentV1(row:Readonly<{name:string;synopsis?:string}>,operation:readonly string[]):string|undefined{
+ const lead=row.synopsis?.slice(row.name.length).trim().split(/\s+/u)[0];
+ if(lead===undefined||!lead.startsWith("<"))return undefined;
+ const boundary=operation.indexOf("--");
+ return operation.slice(1,boundary<0?undefined:boundary).some(argument=>!argument.startsWith("-"))?undefined:lead;
+}
+
 /** 🎯️ Chooses the language and the route of one invocation from the catalogue alone; nothing else is loaded, read or spawned. */
 export function planBuildDoorV1(typed:readonly string[],environment:NodeJS.ProcessEnv,sources:BuildDoorSourcesV1={}):BuildDoorPlanV1{
  const source=sources.catalogue??(catalogue as BuildDoorCatalogueV1),rules=sources.policy??(policy as BuildDoorPolicyV1),args=normalizeBuildOptionsV1(typed,source),language=(sources.language??resolveBuildCliLanguageV1)(args,environment),full={language,route:{kind:"full"} as const};
@@ -72,6 +82,8 @@ export function planBuildDoorV1(typed:readonly string[],environment:NodeJS.Proce
  if(command!==undefined&&!command.startsWith("-")&&!row)return {language,route:{kind:"refused",id:"unknownCommand",values:{command,known:source.operations.map(candidate=>candidate.name).join(", ")}}};
  const subcommand=operation[1];
  if(row&&rules.closedSubcommands.includes(row.name)&&subcommand!==undefined&&!subcommand.startsWith("-")&&!row.subcommands?.some(candidate=>candidate.name===subcommand))return {language,route:{kind:"refused",id:"unknownSubcommand",values:{command:row.name,subcommand,known:(row.subcommands??[]).map(candidate=>candidate.name).join(", ")}}};
+ const usage=row?missingBuildDoorArgumentV1(row,operation):undefined;
+ if(row&&usage!==undefined)return {language,route:{kind:"refused",id:"missingArgument",values:{command:row.name,usage}}};
  if(row&&rules.light.some(candidate=>candidate.operation===row.name))return {language,route:{kind:"light",operation:row.name,args:operation}};
  return full;
 }
@@ -89,6 +101,16 @@ export type BuildDoorPortsV1=Readonly<{write:(line:string)=>void;error:(line:str
 /** 🖥️ The ports of the real process. */
 export function buildDoorProcessPortsV1():BuildDoorPortsV1{
  return {write:writeResultLineV1,error:line=>console.error(line),exit:code=>{process.exitCode=code;},load:operation=>{const loader=buildDoorLightLoadersV1[operation];if(!loader)throw Error(`No light loader for ${operation}`);return loader();}};
+}
+
+/** 💓️ Says every few seconds what the front door works on until the build script reports itself: the first sentence after 5 s, then after 10 s and 20 s, then every 30 s, in the chosen language or in both when none is chosen; the phase is the one the profile started last. Returns the call that stops it. */
+export function startBuildDoorLivenessV1(environment:NodeJS.ProcessEnv,options:Readonly<{write?:(line:string)=>void;phase?:()=>string|undefined;delaysMilliseconds?:readonly number[];repeatMilliseconds?:number;now?:()=>number;policy?:BuildDoorPolicyV1}>={}):()=>void{
+ const rules=(options.policy??(policy as BuildDoorPolicyV1)).liveness,write=options.write??(line=>{process.stderr.write(line+"\n");}),phase=options.phase??profileCurrentPhaseV1,now=options.now??(()=>performance.now()),delays=options.delaysMilliseconds??rules.delaysSeconds.map(seconds=>seconds*1000),repeat=options.repeatMilliseconds??rules.repeatSeconds*1000,languages:readonly ("en"|"de")[]=noticeLanguagesV1(["en","de"] as const,environment),started=now();
+ let index=0,timer:ReturnType<typeof setTimeout>|undefined,stopped=false;
+ const beat=()=>{if(stopped)return;const seconds=String(Math.round((now()-started)/1000)),current=phase()??rules.unknownPhase;for(const language of languages)write(rules.texts[language].replace("{seconds}",()=>seconds).replace("{phase}",()=>current));schedule();};
+ const schedule=()=>{if(stopped)return;const wait=index<delays.length?delays[index]!-(index===0?0:delays[index-1]!):repeat;index++;timer=setTimeout(beat,wait);timer.unref();};
+ schedule();
+ return()=>{stopped=true;if(timer!==undefined)clearTimeout(timer);};
 }
 
 /** 🛎️ Serves help, refusals and light commands; returns `full` only when the build implementation has to start, so a command that needs none never loads it. */

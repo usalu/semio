@@ -5,6 +5,8 @@ import { isAbsolute, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { OwnedCommandFailure, runOwnedCommand, type OwnedCommandOptions, type OwnedCommandStreamV1 } from "../../🎛️owned-execution/🟦️.ts";
 import { terminateOwnedChildTree } from "../../🪓️termination/🟦️.ts";
+import { requireExplicitBunTestOperandsV1 } from "../../🧪️testing/🟨️bun/🚧️operands/🟦️.ts";
+import { testCheckoutRootV1 } from "../../🧪️testing/🏖️sandbox/🛡️guard/🟦️.ts";
 import { settleOwnedChildV1 } from "../../🎛️owned-execution/🏁️settlement/🟦️.ts";
 import { hostCapacityDirectoryV1, newHostCapacityIdV1, sizeHostRequestV1, withHostCapacityV1, type HostActionKindV1, type HostCapacityPolicyV1 } from "../../🏗️build/🌡️host-capacity/🟦️.ts";
 import { findToolV1, toolCallerAllowedV1, toolLanguageV1, toolMessageV1, TOOL_REGISTRY_V1, type ToolEntryV1, type ToolRegistryV1 } from "../📖️registry/🟦️.ts";
@@ -187,6 +189,7 @@ export function runToolSyncV1(toolId: string, args: readonly string[], options?:
 export function runToolSyncV1(toolId: string, args: readonly string[], options?: ToolRunOptionsV1): ToolSyncResultV1<string | Buffer>;
 export function runToolSyncV1(toolId: string, args: readonly string[], options: ToolRunOptionsV1 = {}): ToolSyncResultV1<string | Buffer> {
   const { entry, registry, language, resolution, environment, cwd } = prepare(toolId, options);
+  requireExplicitBunTestOperandsV1(resolution.command!, [...resolution.prefix, ...args], cwd, environment, testCheckoutRootV1(cwd, environment as NodeJS.ProcessEnv) ?? cwd);
   const result = spawnSync(resolution.command!, [...resolution.prefix, ...args], {
     cwd, env: environment, encoding: options.encoding ?? "buffer", maxBuffer: options.maxBuffer ?? 64 * 1024 * 1024, windowsHide: true,
     ...options.stdio === undefined ? {} : { stdio: options.stdio }, ...options.timeout ? { timeout: options.timeout } : {}, ...options.killSignal === undefined ? {} : { killSignal: options.killSignal }, ...options.input === undefined ? {} : { input: options.input },
@@ -199,6 +202,7 @@ export function runToolSyncV1(toolId: string, args: readonly string[], options: 
 /** 🌊️ Starts a registered tool and answers its process at once, for streams, long runs and children the caller cancels itself (a stream exists only for a stdio entry set to `pipe`); the registry resolves the executable and sanitizes the environment, every other option is Node's. */
 export function startToolV1(toolId: string, args: readonly string[], options: ToolRunOptionsV1 = {}): ChildProcessByStdio<Writable, Readable, Readable> {
   const { resolution, environment, cwd } = prepare(toolId, options);
+  requireExplicitBunTestOperandsV1(resolution.command!, [...resolution.prefix, ...args], cwd, environment, testCheckoutRootV1(cwd, environment as NodeJS.ProcessEnv) ?? cwd);
   return spawn(resolution.command!, [...resolution.prefix, ...args], {
     cwd, env: environment, windowsHide: true, ...options.stdio === undefined ? {} : { stdio: options.stdio }, ...options.detached === undefined ? {} : { detached: options.detached }, ...options.signal === undefined ? {} : { signal: options.signal },
     ...options.timeout ? { timeout: options.timeout } : {}, ...options.killSignal === undefined ? {} : { killSignal: options.killSignal },

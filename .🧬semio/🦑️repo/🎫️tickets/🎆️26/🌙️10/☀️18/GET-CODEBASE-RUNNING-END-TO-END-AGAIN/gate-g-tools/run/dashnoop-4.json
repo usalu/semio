@@ -1,0 +1,31 @@
+{
+ "label": "dashnoop-4",
+ "target": "@semio-tech/repo-dashboard-rs:build",
+ "started": "00:53:24",
+ "wall_s": 419.4,
+ "peak_tree_mb": 6819,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 35.2,
+ "graph": {
+  "refreshing": [
+   "97"
+  ],
+  "inferring": [
+   "95"
+  ],
+  "published": [
+   "700",
+   "98",
+   "245"
+  ],
+  "processes": [
+   "3",
+   "1 internal, 2 worker"
+  ],
+  "actions": [
+   "3"
+  ]
+ }
+}

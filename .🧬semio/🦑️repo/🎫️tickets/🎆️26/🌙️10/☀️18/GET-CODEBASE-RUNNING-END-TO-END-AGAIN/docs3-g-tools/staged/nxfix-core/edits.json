@@ -1,0 +1,25 @@
+{
+ "name": "nxfix-core",
+ "code": "nxfix-g-tools/staged/core (its manifest entry for the guide)",
+ "lane": "nxfix-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "nx-path",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- **Live**: a run finishes with the implementation it loaded; an edit it did not load restarts the outermost command with exit 75 (at most 6 times; `SEMIO_STALE_REEXEC` counts). See the many-agents section for how to land an edit.",
+   "where": "after",
+   "block": "- **Nx path**: Nx reports a task that exited 75 as an ordinary failed task, so the outermost command finds the restart in the output: every line that names a refusal class (a nested command's restart announcement included) is kept besides the 256 KiB tail while the siblings keep printing, and a stale task restarts the outermost command; a task whose inputs were edited runs the invocation again (bounded). `nx:put-gate:` and `nx:put-slot:` rank with the image they write (7), after the artifact paths (6) a publication happens under."
+  },
+  {
+   "id": "nx-path",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- **Live**: ein Lauf endet mit der Implementierung, die er geladen hat; eine Änderung, die er nicht geladen hat, startet den äußersten Befehl mit Exit 75 neu (höchstens 6 Mal; `SEMIO_STALE_REEXEC` zählt). Wie eine Änderung landet, steht im Abschnitt über viele Agenten.",
+   "where": "after",
+   "block": "- **Nx-Pfad**: Nx meldet eine Aufgabe mit Exit 75 als gewöhnlich fehlgeschlagene Aufgabe, deshalb findet der äußerste Befehl den Neustart in der Ausgabe: jede Zeile, die eine Ablehnungsklasse nennt (auch die Neustart-Ansage eines verschachtelten Befehls), bleibt neben den 256 KiB Ende erhalten, während die Geschwister weiter ausgeben, und eine veraltete Aufgabe startet den äußersten Befehl neu; eine Aufgabe, deren Eingaben bearbeitet wurden, führt den Aufruf erneut aus (begrenzt). `nx:put-gate:` und `nx:put-slot:` ordnen sich mit dem Image ein, in das sie schreiben (7), nach den Artefaktpfaden (6), unter denen eine Veröffentlichung geschieht."
+  }
+ ]
+}

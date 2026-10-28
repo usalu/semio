@@ -1,0 +1,39 @@
+"""Applies, checks or reverts the xplat3-g batch: every staged file replaces its live file when the live file still has the recorded base digest. Usage: python3 -I apply.py check|apply|revert [--root DIR]"""
+import hashlib, os, shutil, sys
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = "/Users/ueli/Documents/semio"
+if "--root" in sys.argv:
+    ROOT = sys.argv[sys.argv.index("--root") + 1]
+STAGED = os.path.join(HERE, "staged", "files")
+BACKUP = os.path.join(HERE, "backup")
+def digest(path):
+    with open(path, "rb") as handle:
+        return hashlib.sha256(handle.read()).hexdigest()
+rows = [line.rstrip("\n").split("\t", 1) for line in open(os.path.join(HERE, "bases.tsv"), encoding="utf-8") if line.strip()]
+mode = sys.argv[1] if len(sys.argv) > 1 else "check"
+failed = 0
+for base, rel in rows:
+    live, staged, saved = os.path.join(ROOT, rel), os.path.join(STAGED, rel), os.path.join(BACKUP, rel)
+    want = digest(staged)
+    have = digest(live) if os.path.exists(live) else "NEW"
+    state = "applied" if have == want else "ready" if have == base else "DRIFT"
+    if mode == "check":
+        print(state, rel)
+        failed += state == "DRIFT"
+    elif mode == "apply":
+        if state == "DRIFT":
+            print("DRIFT (not applied)", rel); failed += 1; continue
+        if state == "ready":
+            if base != "NEW":
+                os.makedirs(os.path.dirname(saved), exist_ok=True); shutil.copyfile(live, saved)
+            os.makedirs(os.path.dirname(live), exist_ok=True); shutil.copyfile(staged, live)
+        print("applied" if state == "ready" else "already", rel)
+    elif mode == "revert":
+        if state != "applied":
+            print("not applied, kept", rel); continue
+        if base == "NEW":
+            os.remove(live)
+        else:
+            shutil.copyfile(saved, live)
+        print("reverted", rel)
+sys.exit(1 if failed else 0)

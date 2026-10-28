@@ -1,0 +1,8 @@
+{
+ "script.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+ "fingerprint.test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️fingerprint/🟦️.ts",
+ "inventory.test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️inventory/🟦️.ts",
+ "implementation.test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🔏️implementation/🟦️.ts",
+ "go.test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🐹️go/🧪️tests/🟦️.ts",
+ "toolchains.test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧰️toolchains/🧪️tests/🟦️.ts"
+}

@@ -1,0 +1,27 @@
+{
+  "files": {
+    "package.json": "{\"name\":\"fx\",\"workspaces\":[\"*\"]}\n",
+    "project.json": "{}\n",
+    "idx/script.ts": "//\n",
+    "a/🧬️schema/x.json": "{\"x\":1}\n",
+    "b/c/🧬️schema/y.json": "{\"y\":1}\n",
+    "a/📦️packages/🧬️schema/z.json": "{\"z\":1}\n",
+    ".hidden/🧬️schema/h.json": "{\"h\":1}\n",
+    "docs/readme.md": "r\n"
+  },
+  "graph": {
+    "version": 1,
+    "projects": {
+      "idx": {
+        "name": "idx",
+        "root": "idx",
+        "targets": {
+          "index": {"execution": {"kind": "command", "command": "repo ./script.ts index"}, "outputs": [], "cache": true, "inputs": ["{workspaceRoot}/**/🧬️schema/**/*.json", "!{workspaceRoot}/**/{target,node_modules,📦️packages}/**", "!{workspaceRoot}/**/.*/**"]},
+          "bare": {"execution": {"kind": "command", "command": "repo ./script.ts bare"}, "outputs": [], "cache": true, "inputs": ["{workspaceRoot}/**/*.md"]}
+        }
+      }
+    },
+    "dependencies": []
+  },
+  "request": {"tasks": ["idx:index"], "args": []}
+}

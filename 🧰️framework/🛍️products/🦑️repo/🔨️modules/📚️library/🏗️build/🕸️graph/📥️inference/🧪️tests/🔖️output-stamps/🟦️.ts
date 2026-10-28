@@ -21,7 +21,7 @@ const api=plugin.cacheInternals as Record<string,(...args:unknown[])=>unknown>,l
 export const canonical=(value:unknown):string=>JSON.stringify(sort(value));
 const sort=(value:any):any=>Array.isArray(value)?value.map(sort):value&&typeof value==="object"?Object.fromEntries(Object.keys(value).sort().map(key=>[key,sort(value[key])])):value;
 const digest=(value:unknown)=>createHash("sha256").update(canonical(value)).digest("hex");
-const revive=(value:any,workspace:string):any=>typeof value==="string"?value.split("{ws}").join(workspace):Array.isArray(value)?value.map(item=>revive(item,workspace)):value&&typeof value==="object"?("$map" in value?new Map(value.$map.map((row:any)=>revive(row,workspace))):Object.fromEntries(Object.entries(value).map(([key,item])=>[key,revive(item,workspace)]))):value;
+const revive=(value:any,workspace:string):any=>typeof value==="string"?value.split("{ws}").join(workspace):Array.isArray(value)?value.map(item=>revive(item,workspace)):value&&typeof value==="object"?("$scripts" in value?(plugin as any).createScriptInputCache({workspaceRoot:workspace}):"$map" in value?new Map(value.$map.map((row:any)=>revive(row,workspace))):Object.fromEntries(Object.entries(value).map(([key,item])=>[key,revive(item,workspace)]))):value;
 
 /** 🏃️ Runs one probe in its own fixture workspace and returns its output with the machine specific paths replaced. */
 export async function runProbe(probe:any):Promise<unknown>{

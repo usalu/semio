@@ -342,11 +342,13 @@ test("concurrent maintenance: collection is generation-scoped and never waits fo
  rmSync(directory,{recursive:true,force:true});rmSync(root,{recursive:true,force:true});
 });
 
-/** 📐️ The declared dependencies partition must hold the current generation set plus one building set: derived from the measured sizes in the schema, checked against the cache policy for a linking backend, and a copying backend is shown to need far more. */
-test("concurrent budget: the declared partition holds the package cache, scratch space and two generation sets for a linking backend",()=>{
+/** 📐️ The declared dependencies partition must hold the current generation set plus one building set: derived from the measured sizes in the schema, checked against every declared platform backend, including Linux copying, with an independent Python arithmetic oracle. */
+test("concurrent budget: the declared partition funds every platform backend and both generation sets",()=>{
  const budget=protocol.budget,declared=readRepositoryCacheBudgetV1(policy).partitions.dependencies.usableBytes;
  expect(core.concurrentRequiredImageBytesV1(true)).toBeLessThanOrEqual(declared);
- expect(core.concurrentRequiredImageBytesV1(false)).toBeGreaterThan(declared);
+ const independent=oracle("budget",fixture.budget);
+ for(const[index,row]of fixture.budget.entries()){expect(core.concurrentRequiredImageBytesV1(row.sharing)).toBe(row.requiredBytes);expect(independent[index].requiredBytes).toBe(row.requiredBytes);expect(row.requiredBytes).toBeLessThanOrEqual(declared);}
+ expect(core.concurrentRequiredImageBytesV1(false)).toBeGreaterThan(core.concurrentRequiredImageBytesV1(true));
  expect(protocol.admission.defaultGenerationBytes).toBe(4*budget.physicalGenerationBytes);
  const measured=budget.measured,unique=(measured.usedKiB-measured.packageCacheKiB-measured.temporariesKiB-measured.receiptsKiB-measured.capsulesKiB)*1024/measured.generationsCounted;
  expect(budget.physicalGenerationBytes).toBeGreaterThanOrEqual(unique);expect(budget.physicalGenerationBytes).toBeLessThan(2*unique);
@@ -354,6 +356,7 @@ test("concurrent budget: the declared partition holds the package cache, scratch
  expect(budget.packageCacheBytes).toBeGreaterThan(measured.packageCacheKiB*1024);
  const backends=(installSchema.$defs.ProducerRecipeProtocol.const as unknown as {backends:Record<string,string>}).backends;
  expect(backends.darwin).toBe("clonefile");
+ for(const backend of Object.values(backends))expect(core.concurrentRequiredImageBytesV1(backend==="clonefile")).toBeLessThanOrEqual(declared);
  for(const language of protocol.languages){const text=core.concurrentTextV1(language,"budgetTooSmall",{needed:6400,free:512});expect(text).toContain("6400");expect(text).toContain("512");}
 });
 

@@ -1,0 +1,32 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs": {
+  "file": "00.mjs",
+  "base": "a8954930a6c8628700079e3143141da5cfcfcf6f2d9b151829510b0d86dcaeea",
+  "new": "6637587c5d076e04c55fa6c7564511c2ef073799dc53948e785c420c60f4f623"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.mjs": {
+  "file": "01.mjs",
+  "base": "f3a178d293e50e187264d047197bde7b8342ba41843893b8e001783c4d17335c",
+  "new": "6acdbb8f069d70619b5a3db90c40ca5f1ddf9eb2f9147313360fa690ddad716b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.d.mts": {
+  "file": "02.mts",
+  "base": "62afe8b23701a72479581dc9b8957749f5ef23e1b1fa9c0271ef1ecfb3e81dbc",
+  "new": "7d871c48efa23ef092da55f0c424593e102dec8e2a157c211b2715c7bf6b0912"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🟦️.ts": {
+  "file": "03.ts",
+  "base": "63494dcf1f9e3c0074434453929ef214be48cd39143d575666181f440cffadf3",
+  "new": "dda641a9709b2c99d5fa408f68156289359f31ceb15b7f8728d58557a5423366"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🔒️farm-close/🟦️.ts": {
+  "file": "04.ts",
+  "base": "e03007b26052bbea33b239fed3f38c557642dc54e092f38dc45a9c02c662e920",
+  "new": "bcc8e8c7bb387decd3b887e1edb495691eadd156fc8c71b29e44e29fb4c24c8f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🪆️captured/🟦️.ts": {
+  "file": "05.ts",
+  "base": "23766ab01c63aee223b0040c175184a4ce0fc35f10d9e61bc72437b7bb42898e",
+  "new": "16da4c28fd2078695d7f986af514f37e7b4768c7f9e47ad4e9575b7bbbb01018"
+ }
+}

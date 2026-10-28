@@ -235,8 +235,7 @@ test("the judge fails a backend that forgets its cache, hides failures, ignores 
  expect(thrower).toMatchObject({"run-cold":"error"});
 },600000);
 
-const gated=(name:string,variable:string,backend:string)=>test(`a real ${name} is judged by the same scenarios and every verdict agrees with the registry`,async()=>{
- if(!process.env[variable]){console.log(`skipped: ${variable} is not set`);return;}
+const gated=(name:string,variable:string,backend:string)=>test.skipIf(!process.env[variable])(`a real ${name} is judged by the same scenarios and every verdict agrees with the registry`,async()=>{
  const report=await runConformanceV1(set,[backend],"all",host(join(scratchRoot,backend)));
  console.log(renderConformanceReportV1(report,set,"en"));
  expect(report.rows.filter(row=>["regression","stale-claim","error"].includes(row.verdict)).map(row=>[row.scenario,row.verdict,row.failures])).toEqual([]);

@@ -98,7 +98,7 @@ test.skipIf(!python)("the rendered execution BUILD and hermetic rules parse as S
  expect(rows2.filter(row=>row.function==="toolchain").map(row=>row.attributes.name)).toEqual(["bun_toolchain_darwin_arm64","bun_toolchain_linux_x64"]);
  const rules=parse(api.BAZEL_HERMETIC_STARLARK);expect(rules.exitCode,rules.stderr.toString()).toBe(0);
  expect(api.BAZEL_HERMETIC_STARLARK).not.toMatch(/no-remote|no-sandbox|use_default_shell_env = True|local"/u);
- expect(api.BAZEL_HERMETIC_STARLARK).toContain('"block-network": "1"');expect(api.BAZEL_HERMETIC_STARLARK).toContain('mnemonic = "RepoHermetic"');
+ expect(api.BAZEL_HERMETIC_STARLARK).toContain('"block-network": "1"');expect(api.BAZEL_HERMETIC_STARLARK).toContain('mnemonic = ctx.attr.mnemonic if ctx.attr.mnemonic else "RepoHermetic"');
  for(const[key,value]of Object.entries(contract.actionEnvironment))expect(api.BAZEL_HERMETIC_STARLARK).toContain(`"${key}": "${value}"`);
 });
 

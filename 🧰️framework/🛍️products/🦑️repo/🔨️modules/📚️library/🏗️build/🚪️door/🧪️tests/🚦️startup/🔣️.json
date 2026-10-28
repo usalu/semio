@@ -70,6 +70,9 @@
       "id": "tools",
       "match": [
         "/🏗️build/🔧️tools/"
+      ],
+      "except": [
+        "/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/📖️status/"
       ]
     },
     {
@@ -100,6 +103,15 @@
         "/🏗️build/🌡️host-capacity/",
         "/🏃️process/🏗️build/🌡️host-capacity/"
       ]
+    },
+    {
+      "id": "sealed",
+      "match": [
+        "/🏗️build/🏛️sealed/"
+      ],
+      "except": [
+        "/🏗️build/🏛️sealed/🧭️mode/"
+      ]
     }
   ],
   "rows": [
@@ -125,10 +137,11 @@
         "revision",
         "routing",
         "leases",
-        "host-capacity"
+        "host-capacity",
+        "sealed"
       ],
-      "maximumModules": 13,
-      "maximumBytes": 70000
+      "maximumModules": 16,
+      "maximumBytes": 74000
     },
     {
       "id": "command-help",
@@ -153,10 +166,11 @@
         "revision",
         "routing",
         "leases",
-        "host-capacity"
+        "host-capacity",
+        "sealed"
       ],
-      "maximumModules": 13,
-      "maximumBytes": 70000
+      "maximumModules": 16,
+      "maximumBytes": 74000
     },
     {
       "id": "refusal",
@@ -181,10 +195,11 @@
         "revision",
         "routing",
         "leases",
-        "host-capacity"
+        "host-capacity",
+        "sealed"
       ],
-      "maximumModules": 13,
-      "maximumBytes": 70000
+      "maximumModules": 16,
+      "maximumBytes": 74000
     },
     {
       "id": "unknown-command",
@@ -208,10 +223,74 @@
         "revision",
         "routing",
         "leases",
-        "host-capacity"
+        "host-capacity",
+        "sealed"
       ],
-      "maximumModules": 13,
-      "maximumBytes": 70000
+      "maximumModules": 16,
+      "maximumBytes": 74000
+    },
+    {
+      "id": "fleet-entry",
+      "kind": "import",
+      "module": "../../../🚢️fleet-status/⌨️command/🟦️.ts",
+      "forbid": [
+        "graph",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision"
+      ],
+      "maximumModules": 100,
+      "maximumBytes": 1250000
+    },
+    {
+      "id": "fleet-door",
+      "kind": "door",
+      "args": ["repo", "fleet", "status"],
+      "forbid": [
+        "graph",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision"
+      ],
+      "maximumModules": 110,
+      "maximumBytes": 1300000
+    },
+    {
+      "id": "bazel-status-leaf",
+      "kind": "import",
+      "module": "../../../🔧️tools/🏗️bazel/🧵️sessions/📖️status/🟦️.ts",
+      "forbid": [
+        "graph",
+        "native-build",
+        "test-harness",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision",
+        "routing",
+        "leases",
+        "host-capacity",
+        "sealed"
+      ],
+      "maximumModules": 5,
+      "maximumBytes": 24000
     },
     {
       "id": "leases-entry",
@@ -232,8 +311,8 @@
         "revision",
         "routing"
       ],
-      "maximumModules": 26,
-      "maximumBytes": 227200
+      "maximumModules": 32,
+      "maximumBytes": 379000
     },
     {
       "id": "capacity-entry",
@@ -254,8 +333,8 @@
         "revision",
         "routing"
       ],
-      "maximumModules": 22,
-      "maximumBytes": 175400
+      "maximumModules": 33,
+      "maximumBytes": 316000
     },
     {
       "id": "doctor-entry",
@@ -271,8 +350,8 @@
         "resident",
         "store-receipt"
       ],
-      "maximumModules": 80,
-      "maximumBytes": 946000
+      "maximumModules": 102,
+      "maximumBytes": 915000
     },
     {
       "id": "caller-entry",
@@ -283,8 +362,8 @@
         "test-harness",
         "cargo"
       ],
-      "maximumModules": 60,
-      "maximumBytes": 764000
+      "maximumModules": 41,
+      "maximumBytes": 391000
     },
     {
       "id": "watchdog-leaf",
@@ -309,6 +388,31 @@
       ],
       "maximumModules": 2,
       "maximumBytes": 14000
+    },
+    {
+      "id": "sealed-mode-leaf",
+      "kind": "import",
+      "module": "../../../🏛️sealed/🧭️mode/🟦️.ts",
+      "forbid": [
+        "graph",
+        "native-build",
+        "test-harness",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision",
+        "routing",
+        "leases",
+        "host-capacity",
+        "sealed"
+      ],
+      "maximumModules": 2,
+      "maximumBytes": 1500
     },
     {
       "id": "negative-control-cargo-execution",

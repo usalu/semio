@@ -1,0 +1,494 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:cache-ledger:v1",
+  "title": "Cache Ledger",
+  "description": "Every byte a build, test or tool caches has exactly one declared home: a budgeted fixed partition, a budgeted area inside one partition, or a budgeted area of a declared loose root. Anything else is retired or undeclared and collected.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "roots",
+    "areas",
+    "retirements"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "roots": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "native"
+      ],
+      "properties": {
+        "repository": {
+          "$ref": "#/$defs/root"
+        },
+        "native": {
+          "$ref": "#/$defs/root"
+        }
+      }
+    },
+    "areas": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": {
+        "$ref": "#/$defs/area"
+      }
+    },
+    "needs": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/$defs/need"
+      }
+    },
+    "retirements": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "$ref": "#/$defs/retirement"
+      }
+    }
+  },
+  "$defs": {
+    "bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1125899906842624
+    },
+    "milliseconds": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 31536000000
+    },
+    "directory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "pattern": "^[^/\\\\:*?\"<>|\\u0000-\\u001f]+(/[^/\\\\:*?\"<>|\\u0000-\\u001f]+){0,3}$"
+    },
+    "bilingual": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        }
+      }
+    },
+    "root": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "maximumBytes",
+        "undeclaredUnusedAgeMs",
+        "undeclaredQuietMs",
+        "ignored"
+      ],
+      "properties": {
+        "directory": {
+          "$ref": "#/$defs/directory"
+        },
+        "maximumBytes": {
+          "$ref": "#/$defs/bytes"
+        },
+        "undeclaredUnusedAgeMs": {
+          "$ref": "#/$defs/milliseconds"
+        },
+        "undeclaredQuietMs": {
+          "$ref": "#/$defs/milliseconds"
+        },
+        "ignored": {
+          "type": "array",
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        }
+      }
+    },
+    "budget": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes"
+          ],
+          "properties": {
+            "bytes": {
+              "$ref": "#/$defs/bytes"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "basisPoints"
+          ],
+          "properties": {
+            "basisPoints": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "remainder"
+          ],
+          "properties": {
+            "remainder": {
+              "const": true
+            }
+          }
+        }
+      ]
+    },
+    "managed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner"
+      ],
+      "properties": {
+        "owner": {
+          "enum": [
+            "image",
+            "control",
+            "cargo",
+            "nx",
+            "nx-tooling",
+            "bazel",
+            "semio",
+            "test-evidence",
+            "dashboard",
+            "graph",
+            "remote-cache",
+            "remote-execution"
+          ]
+        }
+      }
+    },
+    "collect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unusedAgeMs",
+        "quietMs",
+        "custody"
+      ],
+      "properties": {
+        "unusedAgeMs": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/milliseconds"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quietMs": {
+          "$ref": "#/$defs/milliseconds"
+        },
+        "custody": {
+          "enum": [
+            "quiet",
+            "sqlite",
+            "lease",
+            "pid"
+          ]
+        },
+        "lease": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "depth": {
+          "enum": [
+            1,
+            2
+          ]
+        },
+        "units": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      }
+    },
+    "area": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "root",
+        "kind",
+        "writers",
+        "purpose"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,39}$"
+        },
+        "root": {
+          "enum": [
+            "repository",
+            "native"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "partition",
+            "control",
+            "nested",
+            "tree"
+          ]
+        },
+        "directory": {
+          "$ref": "#/$defs/directory"
+        },
+        "pattern": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "partition": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,39}$"
+        },
+        "budget": {
+          "$ref": "#/$defs/budget"
+        },
+        "managed": {
+          "$ref": "#/$defs/managed"
+        },
+        "recreate": {
+          "enum": [
+            "derived",
+            "carried"
+          ]
+        },
+        "carry": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/directory"
+          }
+        },
+        "reclaim": {
+          "$ref": "#/$defs/reclaim"
+        },
+        "collect": {
+          "$ref": "#/$defs/collect"
+        },
+        "writers": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        },
+        "purpose": {
+          "$ref": "#/$defs/bilingual"
+        }
+      }
+    },
+    "reclaim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "softAvailableBytes",
+        "targetAvailableBytes"
+      ],
+      "properties": {
+        "softAvailableBytes": {
+          "$ref": "#/$defs/bytes"
+        },
+        "targetAvailableBytes": {
+          "$ref": "#/$defs/bytes"
+        }
+      }
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "measuredBytes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,39}$"
+        },
+        "area": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,39}$"
+        },
+        "bytes": {
+          "$ref": "#/$defs/bytes"
+        },
+        "measuredBytes": {
+          "$ref": "#/$defs/bytes"
+        }
+      }
+    },
+    "need": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "partition",
+        "measuredOn",
+        "headroomPercent",
+        "floorBytes",
+        "components"
+      ],
+      "properties": {
+        "partition": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,39}$"
+        },
+        "measuredOn": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "headroomPercent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "floorBytes": {
+          "$ref": "#/$defs/bytes"
+        },
+        "components": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/component"
+          }
+        }
+      }
+    },
+    "retirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "directory",
+        "quietMs",
+        "reason"
+      ],
+      "properties": {
+        "root": {
+          "enum": [
+            "repository",
+            "native"
+          ]
+        },
+        "directory": {
+          "$ref": "#/$defs/directory"
+        },
+        "quietMs": {
+          "$ref": "#/$defs/milliseconds"
+        },
+        "reason": {
+          "$ref": "#/$defs/bilingual"
+        }
+      }
+    },
+    "runtime": {
+      "const": {
+        "statusEntriesPerTarget": 200000,
+        "collectEntriesPerUnit": 5000000,
+        "progressEvery": 2000,
+        "checkEvery": 128,
+        "removeBatch": 32,
+        "listedRemovalsPerTarget": 25,
+        "sqliteProbesPerUnit": 5000,
+        "progressIntervalMs": 250,
+        "sizeLedgerFile": "🧭️size-ledger.json",
+        "maximumSizeRecords": 4096,
+        "imageOverheadBytes": 268435456,
+        "quotaQuietMs": 259200000,
+        "sweepIntervalMs": 43200000,
+        "overBudgetIntervalMs": 1800000,
+        "futureSkewMs": 86400000
+      }
+    },
+    "sizeLedger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "records"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "records": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "usedBytes",
+              "partial",
+              "atMs"
+            ],
+            "properties": {
+              "usedBytes": {
+                "$ref": "#/$defs/bytes"
+              },
+              "partial": {
+                "type": "boolean"
+              },
+              "atMs": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

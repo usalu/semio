@@ -1,0 +1,26 @@
+{
+ "name": "rust-path",
+ "code": "cargofix synchronize + leaseorder-c + rustedit testmemo + rustfast (all live)",
+ "lane": "docs4",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "7b768aa704cb715daea331a3c60713677f3d915c4269d1fd9a93231de873fa50",
+ "needs": [],
+ "edits": [
+  {
+   "id": "rust-bullets",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "## 🧪️ Tests and routing tables",
+   "where": "before",
+   "block": "- **Cargo preparation without a child process** (live): every Rust test or build used to start a second `repo` process (`synchronize`: owner closure, member rosters, `cargo --version`) only to find its receipt `<key>.sync.json` still valid, 23-42 s of every `print-rs:test` action. The child now also writes `<key>.witness.json` next to the receipt (every answer its plans read: listings of sub-directories, `Cargo.toml` and lock texts, `.cargo/config.toml`, `CARGO_*` variables, and the stamp of the toolchain's `cargo`, each with a stat taken before the answer) and the caller replays it in the process in 0.3-0.4 s. The child starts only when an answer differs: a member or owner manifest, the lock, a new directory, the Cargo configuration, a `CARGO_*` variable, the toolchain, a deleted receipt or witness, or a recipe that has to run.\n- **Lock order of the Rust path** (live): the compiler writer custody (`repo:compiler-writer:`, class `image`) is entered after the Cargo store, custody and recipe leases, and artifacts are published after it. Before, a queued exclusive writer could close a cycle between a native pass, a relay and the writer that only the cycle detector or 120 s resolved. A cold dashboard build prints no `[lease-order]` line with `repo:compiler-writer:` held.\n- **Source admission of repository tests** (live): the foreign digest book and the admission memos that `bun repo cargo` used now serve the repository tests too, so the admission of the 375 units of a `print-rs:test` action is expected to take about 3 s on the second run instead of 45 s.\n"
+  },
+  {
+   "id": "rust-bullets",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "## 🧪️ Tests und Routing-Tabellen",
+   "where": "before",
+   "block": "- **Cargo-Aufbereitung ohne Kindprozess** (live): jeder Rust-Test und -Build startete früher einen zweiten `repo`-Prozess (`synchronize`: Eigner-Abschluss, Mitgliederlisten, `cargo --version`), nur um festzustellen, dass sein Beleg `<key>.sync.json` noch gilt, 23-42 s jeder `print-rs:test`-Aktion. Das Kind schreibt jetzt neben den Beleg auch `<key>.witness.json` (jede Antwort, die seine Pläne lasen: Listen von Unterverzeichnissen, Texte von `Cargo.toml` und Lock, `.cargo/config.toml`, `CARGO_*`-Variablen und der Stempel des `cargo` der Toolchain, jeweils mit einem vor der Antwort genommenen Stat), und der Aufrufer spielt ihn im Prozess in 0,3-0,4 s nach. Das Kind startet nur, wenn eine Antwort abweicht: ein Mitglieds- oder Eigner-Manifest, die Lock-Datei, ein neues Verzeichnis, die Cargo-Konfiguration, eine `CARGO_*`-Variable, die Toolchain, ein gelöschter Beleg oder Zeuge oder ein Rezept, das laufen muss.\n- **Sperrreihenfolge des Rust-Pfads** (live): die Compiler-Schreiber-Obhut (`repo:compiler-writer:`, Klasse `image`) wird nach den Cargo-Store-, Obhut- und Rezept-Leases betreten, und Artefakte werden nach ihr veröffentlicht. Früher konnte ein wartender exklusiver Schreiber einen Zyklus zwischen einem nativen Durchgang, einem Relay und dem Schreiber schließen, den nur der Zyklusdetektor oder 120 s auflösten. Ein kalter Dashboard-Build gibt keine Zeile `[lease-order]` mit gehaltenem `repo:compiler-writer:` aus.\n- **Quellzulassung der Repository-Tests** (live): das Fremd-Digest-Buch und die Zulassungs-Memos, die `bun repo cargo` nutzte, bedienen jetzt auch die Repository-Tests; die Zulassung der 375 Units einer `print-rs:test`-Aktion soll im zweiten Lauf rund 3 s statt 45 s dauern.\n"
+  }
+ ]
+}

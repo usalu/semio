@@ -1,0 +1,25 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["version", "worlds"],
+ "properties": {
+  "version": {"const": 1},
+  "worlds": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["name", "features", "all", "roots", "known", "groups"],
+    "properties": {
+     "name": {"type": "string"},
+     "features": {"type": "array", "items": {"type": "string", "minLength": 1}},
+     "all": {"type": "boolean"},
+     "roots": {"type": "array", "items": {"type": "string", "minLength": 1}},
+     "known": {"type": "array", "items": {"type": "string", "minLength": 1}},
+     "groups": {"type": "array", "items": {"type": "array", "minItems": 2, "maxItems": 2, "items": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]}}
+    }
+   }
+  }
+ }
+}

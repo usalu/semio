@@ -1,0 +1,6 @@
+/** ⏱️ Before/after of the repository test runner's package selection on a real tree (read-only): the batch's declared selection (module from <module-root>) against the whole-repository inventory, equal rows and operation counts. `bun nearbench.ts <module-root> <tree-root> <near-manifest> <name>...` */
+const [moduleRoot,root,near,...names]=process.argv.slice(2) as [string,string,string,...string[]];
+const ws=await import(moduleRoot+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts");
+for(let i=0;i<3;i++){const observations=new Map(),a=performance.now(),fast=ws.cargoDeclaredPackageSelectionsV1(root,near,names,observations),b=performance.now();const kinds:Record<string,number>={};for(const row of observations.values())kinds[(row as any).operation]=(kinds[(row as any).operation]??0)+1;console.log(`[DEBUG] declared ${(b-a).toFixed(1)} ms ops ${JSON.stringify(kinds)} rows ${JSON.stringify(fast)}`);}
+const c=performance.now(),full=ws.cargoRepositoryPackageSelections(root,names),d=performance.now();console.log(`[DEBUG] repository inventory ${(d-c).toFixed(0)} ms rows ${JSON.stringify(full)}`);
+const fast=ws.cargoDeclaredPackageSelectionsV1(root,near,names);console.log(`[DEBUG] equal ${JSON.stringify(fast)===JSON.stringify(full)}`);

@@ -1,0 +1,9 @@
+📥️caller/🧪️tests/📥️birth/🟦️.ts	1	pass=0	fail=6	native=0
+⚙️operations/🧪️tests/🟦️.ts	1	pass=0	fail=1	native=0
+🚀️bootstrap/⌨️cli/🧪️tests/🟦️.ts	1	pass=0	fail=7	native=0
+🚀️bootstrap/⌨️cli/🧪️tests/🧮️arguments/🟦️.ts	1	pass=0	fail=1	native=0
+🏃️execution/🧪️tests/🟦️.ts	1	pass=0	fail=1	native=0
+👁️observation/🧪️tests/⚡️incremental/🟦️.ts	1	pass=0	fail=0	native=0
+👁️observation/🧪️tests/📥️reuse/🟦️.ts	1	pass=0	fail=4	native=0
+👁️observation/🧪️tests/📦️projects/🟦️.ts	1	pass=0	fail=3	native=0
+👁️observation/🧪️tests/🟦️.ts	1	pass=0	fail=11	native=0

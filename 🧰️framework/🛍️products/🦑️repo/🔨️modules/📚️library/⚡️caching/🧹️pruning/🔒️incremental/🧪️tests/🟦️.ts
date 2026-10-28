@@ -6,9 +6,11 @@ import{join,dirname}from"node:path";
 import fg from"fast-glob";
 import fixture from"./🧫️fixtures/🔣️.json";
 import{acquireCargoBuildLeaseV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+import{privateRepositoryWorkspaceV1}from"../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 test("Incremental compaction rescans under compiler ownership and preserves current, working and foreign-profile sessions",()=>withBuildTestInvocationV1(async original=>{
- const output=process.env.SEMIO_TEST_ARTIFACT_DIR;expect(output).toBeTruthy();mkdirSync(output!,{recursive:true});const root=mkdtempSync(join(output!,"i-")),build=join(root,"b"),leaseRoot=join(process.cwd(),".cache/b/l/m/data");mkdirSync(leaseRoot,{recursive:true});const leases=mkdtempSync(join(leaseRoot,"i-")),controller=new AbortController();let held:any,run:Promise<any>|undefined;
+ const output=process.env.SEMIO_TEST_ARTIFACT_DIR;expect(output).toBeTruthy();mkdirSync(output!,{recursive:true});const root=mkdtempSync(join(output!,"i-")),build=join(root,"b"),leaseRoot=join(repository.root,".cache/b/l/m/data");mkdirSync(leaseRoot,{recursive:true});const leases=mkdtempSync(join(leaseRoot,"i-")),controller=new AbortController();let held:any,run:Promise<any>|undefined;
  try{
   for(const row of fixture.sessions){const path=join(build,row.path);mkdirSync(path,{recursive:true});writeFileSync(join(path,"data"),"x".repeat(row.bytes));utimesSync(join(path,"data"),row.time/1000,row.time/1000);const lock=join(dirname(path),row.path.split("/").at(-1)!.replace(/-[^-]+$/u,".lock"));writeFileSync(lock,"");utimesSync(lock,row.time/1000,row.time/1000);}
   const oracle=fg.sync("**/s-*/data",{cwd:build,onlyFiles:true}).map(path=>path.slice(0,-5)).sort();expect(oracle).toEqual(fixture.sessions.map(row=>row.path).sort());

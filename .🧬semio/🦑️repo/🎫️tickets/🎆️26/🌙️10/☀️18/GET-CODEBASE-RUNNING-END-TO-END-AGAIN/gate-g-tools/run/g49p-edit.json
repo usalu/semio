@@ -1,0 +1,12 @@
+{
+ "label": "g49p-edit",
+ "target": "@semio-tech/print-rs:test",
+ "started": "23:01:34",
+ "wall_s": 31.4,
+ "peak_tree_mb": 87,
+ "peak_processes": 2,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 25.3,
+ "graph": {}
+}

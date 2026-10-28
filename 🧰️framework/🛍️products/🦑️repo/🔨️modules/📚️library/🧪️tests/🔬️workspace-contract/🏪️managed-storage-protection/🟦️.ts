@@ -1,6 +1,7 @@
 import Ajv from "ajv";
 import { describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, truncateSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, truncateSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { contractRoot } from "../🏗️shared-fixtures/🟦️.ts";
@@ -30,7 +31,10 @@ function build(): string {
   const put = (path: string, text: string): void => {
     mkdirSync(dirname(join(root, path)), { recursive: true });
     writeFileSync(join(root, path), text);
+    const old = new Date(Date.now() - 7_200_000);
+    utimesSync(join(root, path), old, old);
   };
+  if (spawnSync("git", ["init", "-q"], { cwd: root }).status !== 0) throw new Error("git init failed for the managed storage fixture");
   for (const ticket of fixture.tickets) {
     const base = `${fixture.dayRoot}/${ticket.slug}`;
     if (ticket.manifest !== null) put(`${base}/🎫️ticket.json`, ticket.manifest);
@@ -88,10 +92,10 @@ describe("workspace cleanup protects what other owners retire", () => {
       const rows = [
         { kind: "gitignore" as const, path: `${image}/fixed.dmg`, bytes: fixture.imageBackingBytes },
         { kind: "ticket-generated" as const, path: `${open}/${generated}`, bytes: 1 },
-        { kind: "ticket-dir" as const, path: `${open}/sub`, bytes: 1 },
+        { kind: "gitignore" as const, path: `${open}/sub`, bytes: 1 },
       ];
       expect(cleanProjectRemovals(root, rows, [])).toEqual([]);
-      for (const row of rows) expect(cleanRemovePath(root, join(root, row.path), false, [], row.kind !== "gitignore"), row.path).toBe(false);
+      for (const row of rows) expect(cleanRemovePath(root, join(root, row.path), false, []), row.path).toBe(false);
       expect(existsSync(join(root, image, "fixed.dmg"))).toBe(true);
       expect(existsSync(join(root, open, generated))).toBe(true);
     } finally {

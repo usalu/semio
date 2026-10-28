@@ -2049,6 +2049,21 @@
         }
       }
     },
+    "BootSessionRead": {
+      "const": { "version": 1, "maximumAttempts": 3 },
+      "description": "The boot session identifier is read by one idempotent child; a child whose terminal events the host lost is refused with its closed cause and read again, at most maximumAttempts times in all, and no other failure is repeated."
+    },
+    "BootSessionReadCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "outcomes", "attempts", "result"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "outcomes": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "enum": ["ok", "lost", "fault"] } },
+        "attempts": { "type": "integer", "minimum": 1, "maximum": 3 },
+        "result": { "enum": ["value", "lost", "fault"] }
+      }
+    },
     "BootSession": {
       "type": "string",
       "pattern": "^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$"

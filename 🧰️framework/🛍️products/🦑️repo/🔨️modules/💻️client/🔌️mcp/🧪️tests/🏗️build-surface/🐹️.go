@@ -224,6 +224,17 @@ func TestBuildSurfaceRefusesDriftBetweenCatalogueAndPolicy(t *testing.T) {
 	if _, err := Derive(catalogue, unknownFlag); err == nil {
 		t.Fatal("a required flag the row does not accept must be refused")
 	}
+	unnamed := policy
+	unnamed.Priority = PolicyPriority{}
+	if _, err := Derive(catalogue, unnamed); err == nil || !strings.Contains(err.Error(), "lease priority variable") {
+		t.Fatalf("a policy without a lease priority variable must be refused: %v", err)
+	}
+	unknownClass := policy
+	unknownClass.Tools = append([]PolicyTool(nil), policy.Tools...)
+	unknownClass.Tools[0].Priority = "urgent"
+	if _, err := Derive(catalogue, unknownClass); err == nil || !strings.Contains(err.Error(), "unknown lease priority") {
+		t.Fatalf("an unknown lease priority class must be refused: %v", err)
+	}
 	if _, err := ParsePolicy([]byte(`{"version":1,"tools":[{}],"bogus":true}`)); err == nil {
 		t.Fatal("the authored policy is closed")
 	}

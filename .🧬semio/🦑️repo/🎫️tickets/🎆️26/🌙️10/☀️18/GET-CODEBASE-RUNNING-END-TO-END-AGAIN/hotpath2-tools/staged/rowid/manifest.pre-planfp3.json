@@ -1,0 +1,32 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌿️environment/🔏️identity/🟦️.ts": {
+  "file": "00.ts",
+  "base": null,
+  "new": "de18d2677db4d14b734038ef927a32846ff25b4f36367d472ebad53c2fdfacd5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌿️environment/🔏️identity/🧬️schema/🔣️.json": {
+  "file": "01.json",
+  "base": null,
+  "new": "a1931dcd59e3e61593d191ba15f136f4e16d80107c6b902580fe6e2816797382"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌿️environment/🔏️identity/🧪️tests/🟦️.ts": {
+  "file": "02.ts",
+  "base": null,
+  "new": "dad0f0290540c3fb0fdaedaa06ed6adaa2150148c372a918a5b0b15a659bfd8f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌿️environment/🔏️identity/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "03.json",
+  "base": null,
+  "new": "cfa5c08968fba0ec6775371de1a01ea4c649818c2d8e26b7baf500fdc8dad77c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌿️environment/🔏️identity/🧪️tests/🧮️resources/🐍️oracle/🐍️.py": {
+  "file": "04.py",
+  "base": null,
+  "new": "b0a6d2863d1dae9e6884b8a77fea8c066ec23fae36d24f23ccb5c890167fbe83"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "05.ts",
+  "base": "016b7e618f1140210178985aab9bcb338487d314c6cc0ce4736ab64efebb3655",
+  "new": "c0b48c06666cbf295e48c892be8ef2babb4665175815b94b862c7c8c8ca3877e"
+ }
+}

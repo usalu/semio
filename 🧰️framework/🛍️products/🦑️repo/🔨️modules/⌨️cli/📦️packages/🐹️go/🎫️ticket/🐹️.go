@@ -15,6 +15,7 @@ import (
 
 	model "github.com/usalu/semio/repo/model"
 	ticketspkg "github.com/usalu/semio/repo/tickets"
+	workspace "github.com/usalu/semio/repo/workspace"
 )
 
 // #region 🕸️Test Command
@@ -412,33 +413,35 @@ func ticketCommand(factory EngineFactory, config *Config) *Command {
 
 	purgeArtifactsCmd := &Command{
 		Use:   "purge-artifacts [path]",
-		Short: "Delete ticket-folder files above 5 MiB and subfolders above 10 MiB",
+		Short: "Plan the removal of generated output above 5 MiB (files) or 10 MiB (folders) from closed tickets; only --apply removes it | Plant das Entfernen von generierten Ausgaben über 5 MiB (Dateien) oder 10 MiB (Ordner) geschlossener Tickets; nur --apply entfernt sie",
 		RunE: func(cmd *Command, args []string) error {
-			all, _ := cmd.Flags().GetBool("all")
-			if all || len(args) == 0 {
-				count, err := ticketspkg.PurgeAllOversizedTicketArtifacts()
-				if err != nil {
-					return err
+			apply, _ := cmd.Flags().GetBool("apply")
+			options := ticketspkg.PurgeOptions{Root: workspace.GetRootDir(), TicketsDir: ticketspkg.GetTicketsDir(), Selection: ticketspkg.PurgeOversized, Apply: apply}
+			var plan ticketspkg.PurgePlan
+			var err error
+			if len(args) == 0 {
+				plan, err = ticketspkg.PurgeClosedTicketGeneratedOutput(options)
+			} else {
+				year, month, day, slug, parseErr := parseTicketPath(args[0])
+				if parseErr != nil {
+					return parseErr
 				}
-				fmt.Fprintf(cmd.OutOrStdout(), "Purged oversized artifacts in %d ticket folders\n", count)
-				return nil
+				ticket, readErr := ticketspkg.ReadTicket(year, month, day, slug)
+				if readErr != nil {
+					return readErr
+				}
+				plan, err = ticketspkg.PurgeTicketGeneratedOutput(options, []string{ticket.FolderPath})
 			}
-			year, month, day, slug, err := parseTicketPath(args[0])
 			if err != nil {
 				return err
 			}
-			ticket, err := ticketspkg.ReadTicket(year, month, day, slug)
-			if err != nil {
-				return err
+			for _, line := range plan.Report(apply) {
+				fmt.Fprintln(cmd.OutOrStdout(), line)
 			}
-			if err := ticketspkg.PurgeOversizedTicketArtifacts(ticket.FolderPath); err != nil {
-				return err
-			}
-			fmt.Fprintf(cmd.OutOrStdout(), "Purged oversized artifacts in %s\n", ticket.FolderPath)
 			return nil
 		},
 	}
-	purgeArtifactsCmd.Flags().Bool("all", false, "Purge oversized artifacts in every ticket folder")
+	purgeArtifactsCmd.Flags().Bool("apply", false, "Remove the planned output instead of only printing the plan | Geplante Ausgaben entfernen statt nur den Plan auszugeben")
 
 	root.AddCommand(changeCmd)
 	root.AddCommand(openCmd)

@@ -1,0 +1,20 @@
+ let pointer=readSealedPointerV1(store);
+ const light=sealedLightCommandV1(argv,door.light.map(row=>row.operation)),verdict=startVerdictV1(root,store,mode,pointer,light);
+ if(verdict.action==="promote"){
+  try{
+   const done=await promote(root,entry,environment,say);
+   if(mode==="promote"){say(sealedTextV1(languages,"promoteDone",{digest:done.pointer.digest.slice(0,12),status:done.status})+"\n");process.exitCode=["fresh","refreshed","promoted","served"].includes(done.status)?0:1;return;}
+  }catch(error){
+   const message=String((error as Error).message??error);
+   say((error as{code?:string}).code==="SEMIO_IMPLEMENTATION_NONE"?message+"\n":sealedTextV1(languages,"promoter",{reason:message.replace(/\s+/gu," ").slice(0,200)})+"\n");
+   if(mode==="promote"){process.exitCode=1;return;}
+  }
+  pointer=readSealedPointerV1(store);
+  if(light&&pointer&&Date.now()-pointer.promotedAtMs>=sealedPolicyV1.light.refuseAfterMilliseconds){
+   const rows=readSealedBlockedV1(store)?.rows??[],shown=rows.slice(0,sealedPolicyV1.shownBlockedRows).map(row=>sealedTextV1(["en"],"blockedRow",{path:row.path,line:row.line,column:row.column,message:row.message})).join("; ")||"-";
+   say(sealedTextV1(languages,"refused",{digest:pointer.digest.slice(0,12),hours:Math.floor((Date.now()-pointer.promotedAtMs)/3600000),rows:shown,variable:sealedPolicyV1.modeVariable})+"\n");process.exitCode=75;return;
+  }
+ }else if(verdict.action==="refresh"&&verdict.start&&pointer){
+  const pid=(options.refresh??refreshV1)(argv,environment);
+  if(pid!==undefined)say(sealedTextV1(languages,"stale",{digest:pointer.digest.slice(0,12),minutes:Math.floor((Date.now()-pointer.promotedAtMs)/60000),pid})+"\n");
+ }

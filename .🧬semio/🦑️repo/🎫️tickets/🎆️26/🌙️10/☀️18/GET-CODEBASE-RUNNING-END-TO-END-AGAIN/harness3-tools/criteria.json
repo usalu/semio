@@ -1,0 +1,22 @@
+{
+ "version": 1,
+ "about": "Acceptance thresholds of the two never-run scenarios (brief-wave-1026g targets); render.py judges, the harnesses only measure.",
+ "agents3": {
+  "declaredTotalMegabytes": 16384,
+  "declaredCores": 8,
+  "footprintMaxOfDeclaredMinusFloor": true,
+  "swapGrowthMegabytesMax": 512,
+  "swapoutBytesMax": 1073741824,
+  "freePercentMin": 5,
+  "starvedWaitSeconds": 60,
+  "queueToRunRatioMax": 2.0,
+  "queueMinimumSeconds": 120,
+  "silenceMillisecondsMax": 60000,
+  "waitRowGapMillisecondsMax": 60000,
+  "retries75Max": 3
+ },
+ "peer": {
+  "baselineMaxExecuted": 0,
+  "needDuringRunStages": 1
+ }
+}

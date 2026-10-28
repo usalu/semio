@@ -1,0 +1,12 @@
+const R="/Users/ueli/Documents/semio";
+const L=R+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
+const t0=performance.now();const lap=(n:string,x?:unknown)=>console.log(n,Math.round(performance.now()-t0),"ms rss",Math.round(process.memoryUsage().rss/1e6),"MB",x??"");
+const ledgerM=await import(L+"/⚡️caching/💾️storage/🧾️ledger/🟦️.ts");lap("import ledger");
+const runner=await import(L+"/🏗️build/🧹️cache-gc/🏃️runner/🟦️.ts");lap("import runner");
+const machine=await import(L+"/⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts");lap("import machine");
+const ports=runner.cacheRunnerPortsV1({signal:new AbortController().signal,progress:async()=>{},exclusive:async()=>undefined});
+const ledger=ledgerM.cacheLedgerV1();lap("ledger");
+const report=await runner.reportCacheLedgerV1(R,ledger,ports);lap("report",report.partitions.length+" partitions "+report.areas.length+" areas");
+const looseBytes=report.roots.reduce((s:number,r:any)=>s+r.usedBytes,0);
+const plan=machine.planMachineBudgetV1({totalBytes:machine.machinePolicyV1().defaultTotalBytes,hostFreeBytes:runner.machineHostFreeBytesV1(R),uses:runner.machineUsesV1(report,looseBytes,null)});lap("plan",plan.stores.length);
+console.log(JSON.stringify(report.partitions.map((p:any)=>[p.id,p.state,p.usedBytes,p.capacityBytes,p.source])));

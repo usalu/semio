@@ -10,7 +10,7 @@ const P=GENERATION_PIN_POLICY_V1,HEX=/^[a-f0-9]{64}$/u,isObject=value=>value!==n
 
 /** 💬️ Words one refusal in one language. */
 export function renderGenerationPinMessageV1(key,fields,language){
- const text=GENERATION_PIN_MESSAGES_V1[language]?.[key];if(text===undefined)throw Error("Known generation pin message required: "+key);
+ const text=GENERATION_PIN_MESSAGES_V1[language]?.[key];if(text===undefined)throw Error("generation-pin-message-undeclared:"+key);
  return text.replace(/\{(\w+)\}/gu,(_,name)=>String(fields[name]??""));
 }
 
@@ -21,9 +21,9 @@ export function generationPinRefusalV1(key,fields={}){
 
 /** 🔏️ Encodes the pin of a generation the Original served: the owner invocation, the manifest and the owners (`covered`, every owner when undefined) of the manifest it served. */
 export function encodeGenerationPinV1({owner,generation,manifest,owners,covered,atMs}){
- if(!Number.isSafeInteger(owner)||owner<1||!Number.isSafeInteger(generation)||generation<0||typeof manifest!=="string"||!HEX.test(manifest)||!Array.isArray(owners))throw Error("Closed generation pin input required");
+ if(!Number.isSafeInteger(owner)||owner<1||!Number.isSafeInteger(generation)||generation<0||typeof manifest!=="string"||!HEX.test(manifest)||!Array.isArray(owners))throw generationPinRefusalV1("inputInvalid");
  const stamp=readVerifiedStampV1({atMs,...encodeVerifiedScopeV1(owners,covered===undefined?new Set(owners):covered)}),text=JSON.stringify({version:1,owner,generation,manifest,covered:{atMs:stamp.atMs,count:stamp.count,owners:stamp.owners}});
- if(Buffer.byteLength(text)>P.maximumBytes)throw Error("Bounded generation pin required");
+ if(Buffer.byteLength(text)>P.maximumBytes)throw generationPinRefusalV1("unbounded",{maximum:P.maximumBytes});
  return text;
 }
 

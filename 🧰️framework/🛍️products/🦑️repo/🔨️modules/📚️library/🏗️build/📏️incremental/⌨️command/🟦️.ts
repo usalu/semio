@@ -3,7 +3,7 @@ import {buildBackendAlternationV1,buildBackendIdsV1} from "../../🔌️backends
 import {access,mkdir,mkdtemp,readdir,rm} from "node:fs/promises";
 import {homedir,tmpdir} from "node:os";
 import {join,posix,win32} from "node:path";
-import {resolveLanguageV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import scenarios from "../📋️scenarios/🔣️.json" with {type:"json"};
 import {incrementalExpectedV1,incrementalReportV1,incrementalScenarioIssuesV1,renderIncrementalReportV1,renderIncrementalScenariosV1,type IncrementalExpectedV1,type IncrementalPhaseV1,type IncrementalScenarioSetV1,type IncrementalToolV1} from "../🟦️.ts";

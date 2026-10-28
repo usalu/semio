@@ -1,0 +1,18 @@
+{
+ "tests": [],
+ "knownRed": [
+  "every writer named by the ledger exists",
+  "no cache root exists below a module directory: partitions and their images belong to the checkout root"
+ ],
+ "laws": [
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/⚖️law/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/⚖️law/🌐️native/🟦️.ts",
+   "filter": "source writes"
+  }
+ ]
+}

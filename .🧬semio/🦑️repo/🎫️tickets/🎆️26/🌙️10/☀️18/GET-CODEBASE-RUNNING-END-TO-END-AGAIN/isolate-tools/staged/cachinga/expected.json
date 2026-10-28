@@ -1,0 +1,116 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 2,
+  "fails": [
+   "(unnamed)",
+   "Vite artifact reader detects unregistered byte mutation under original custody",
+   "Vite artifact reader retains published bytes and rejects escaped consumption",
+   "Vite live workspaces share finite storage and retire only their original temporary",
+   "actual Vite intent builds retain finite products and refuse every other Original mode",
+   "actual compiler state retains its finite writer lease through original callback",
+   "concurrent cancellable Vite listeners retain finite products until the abort that stops them"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🧪️tests/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": [
+   "real published executable runs inside finite image reader custody and holds its publisher until settlement"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧪️tests/📥️physical/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "physical scratch binding retains exact package and artifact readers through accepted child completion",
+   "physical scratch binding-foreign refuses existing ordinary output without adoption or deletion",
+   "physical scratch bundle-esbuild uses only its opaque sink and preserves Source",
+   "physical scratch bundle-runtime uses only its opaque sink and preserves Source",
+   "physical scratch cancel drains accepted work and funded cleanup before Original rejection",
+   "physical scratch failure drains accepted work and funded cleanup before Original rejection",
+   "physical scratch original-cancel retains real EX through SIGINT and cleans before canceled child death",
+   "physical scratch original-child",
+   "physical scratch phase refuses an unrelated longer sibling before physical effects",
+   "physical scratch publication retains its opaque scope and actual unchanged artifact resource",
+   "physical scratch raw-esbuild destination refuses before compiler writes",
+   "physical scratch raw-publication refuses unissued output while preserving actual input",
+   "physical scratch raw-runtime destination refuses before compiler writes",
+   "physical scratch success drains accepted work under actual EX and removes only its owned inode",
+   "physical scratch undefined drains accepted work and funded cleanup before Original rejection"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 2,
+  "fails": [
+   "(unnamed)",
+   "artifact publication defining types and typed dashboard source control are complete",
+   "repository artifact publication refuses unmarked directories without deleting input",
+   "repository artifact publisher preserves foreign bytes behind the actual consumer lease"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "issued daemon service holds its actual images and SDK after finite parent callback closes"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏇️waiter/🧪️tests/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": [
+   "Actual installed graph cache lets the original waiter rebuild missing publication"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "actual Node graph publication refuses write faults before child dispatch and preserves prior files",
+   "actual admitted graph writer keeps original producer custody through receipt minting",
+   "actual admitted unchanged graph publication preserves accepted physical generation",
+   "graph publication rollback Source preserves arbitrary primary and ordered recovery failure",
+   "graph publication transaction requires a genuine live writer and closed durable journal"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/🧪️tests/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🔒️bounded/🧪️tests/🍎️image/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "frozen Nx cache hooks retain product and compiler output custody across graph identities"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🔒️bounded/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 6,
+  "fails": [
+   "actual frozen Nx refuses authored cache initialization without original bounded namespace"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🧬️lifetime/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 7,
+  "fails": [
+   "daemon data namespace binds watched root and closed watcher identity"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/📦️transaction/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "graph publication rollback Source preserves arbitrary primary and ordered recovery failure",
+   "graph publication transaction requires a genuine live writer and closed durable journal"
+  ]
+ }
+}

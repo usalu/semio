@@ -1,0 +1,8 @@
+{
+  "cases": [
+    {"name": "sh.exe on PATH", "env": {"Path": "C:\\Windows;C:\\Git\\usr\\bin"}, "files": ["C:\\Git\\usr\\bin\\sh.exe"], "expect": {"state": "path", "path": "C:\\Git\\usr\\bin\\sh.exe"}},
+    {"name": "only inside Program Files", "env": {"PATH": "C:\\Windows", "ProgramFiles": "C:\\Program Files"}, "files": ["C:\\Program Files\\Git\\usr\\bin\\sh.exe"], "expect": {"state": "bundled", "path": "C:\\Program Files\\Git\\usr\\bin\\sh.exe"}},
+    {"name": "per-user install", "env": {"PATH": "C:\\Windows", "LOCALAPPDATA": "C:\\Users\\dev\\AppData\\Local"}, "files": ["C:\\Users\\dev\\AppData\\Local\\Programs\\Git\\bin\\sh.exe"], "expect": {"state": "bundled", "path": "C:\\Users\\dev\\AppData\\Local\\Programs\\Git\\bin\\sh.exe"}},
+    {"name": "no shell at all", "env": {"PATH": "C:\\Windows", "ProgramFiles": "C:\\Program Files"}, "files": [], "expect": {"state": "missing"}}
+  ]
+}

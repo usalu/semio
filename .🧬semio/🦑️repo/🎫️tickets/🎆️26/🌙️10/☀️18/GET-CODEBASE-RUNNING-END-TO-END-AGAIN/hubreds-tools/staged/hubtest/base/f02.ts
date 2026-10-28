@@ -1,0 +1,30 @@
+import {readVitestPolicyV1} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
+// #region 🔌️Adapters
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "vitest/config";
+
+const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
+// #endregion 🔌️Adapters
+
+const dir = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
+const repoRoot = resolve(dir, "../../..");
+
+/** 🧪️ Vitest for `os-hub-ts` — the hub-owned `🤝️integration`, `🤝️two-client-document` and `📈️document-growth` cases, gated behind
+ * `HUB_E2E=1` (see their own docs), and the ungated `📝️trace-record`, `📌️document-check-in`, `🛡️access-policy`, `🚧️hostile-input`, `📊️observability`, `🌱️creation-progress`, `🪞️pair-content` and `🔀️forwarding-proxy` oracles. Aliases `@semio-tech/framework-os` to its real source
+ * file, matching every other vite/vitest config in this repo. */
+const policy=readVitestPolicyV1(process.env,testRoot);
+export default defineConfig({
+  cacheDir:policy.cacheRoot,
+  root: testRoot,
+  resolve: {
+    alias: [{ find: /^@semio-tech\/framework-os$/u, replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") }],
+  },
+  test: {
+    root: testRoot,
+    name: "os-hub-ts",
+    environment: "node",
+    include: [resolve(dir, "../../🧪️tests/⛓️linked-codec-ownership/🟦️.ts"), resolve(dir, "../../🧪️tests/🛫️catalog-selection-preflight/🟦️.ts"), resolve(dir, "../../🧪️tests/🤝️integration/🟦️.ts"), resolve(dir, "../../🧪️tests/🤝️two-client-document/🟦️.ts"), resolve(dir, "../../🧪️tests/📈️document-growth/🟦️.ts"), resolve(dir, "../../🧪️tests/📝️trace-record/🟦️.ts"), resolve(dir, "../../🧪️tests/📌️document-check-in/🟦️.ts"), resolve(dir, "../../🧪️tests/🚧️hostile-input/🟦️.ts"), resolve(dir, "../../🧪️tests/📊️observability/🟦️.ts"), resolve(dir, "../../🧪️tests/🌱️creation-progress/🟦️.ts"), resolve(dir, "../../🧪️tests/🪞️pair-content/🟦️.ts"), resolve(dir, "../../🧪️tests/🔀️forwarding-proxy/🟦️.ts")],
+    passWithNoTests: false,
+  },
+});

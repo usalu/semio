@@ -1,0 +1,77 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🔣️.json": {
+  "file": "f001",
+  "base": "59a7313399532d83ed544588e1af7bca1d10f2ce852df0716abc101d3c436cb6",
+  "new": "0382b843975c612896c76135006c92fe3b002853058215e5f61b5f33f609c794"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧬️schema/🔣️.json": {
+  "file": "f002",
+  "base": "efbc661aa46734bf096c36a3e196da7c1b7db48d1f7a75049edaf76f5cfb891a",
+  "new": "10352b3e5d36e665d2fbe1583fc882c9e49cdf39f6876c55040ddf43bc23c540"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🟦️.ts": {
+  "file": "f003",
+  "base": "95803e9e72ac0d6ede0915e0d4a56c6e6ff33606f44c474b84029b78405a5dab",
+  "new": "6e76d669272fcf212808b0dc1c3ea042d12153cd60528924a98bba567fd924f4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🚦️trampoline/🟦️.ts": {
+  "file": "f004",
+  "base": "1392ef4405429c7ff5ac78c69b001db725aa728d8a86a6e69b6ce2e4f49ef584",
+  "new": "80c23ffff96fd0d4afccfaf3aab60ff73da4ac1171850b8f3af352e20959e3ad"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧪️tests/🚦️trampoline/🟦️.ts": {
+  "file": "f005",
+  "base": "fe45633c159be8d61e5323708b69ad86e086a1e89b7ef79533dc20d5516b3771",
+  "new": "075959a9f08eb62f134351479c342767515f3728742fcf38e394cf7433dd2ff9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧪️tests/🧫️fixtures/📜️trampoline.ts": {
+  "file": "f006",
+  "base": "c75bcc2d768da886d3b94f364a9da446380950ccc0af1c18c81834bde0166a60",
+  "new": "5047f1495dcd94cb0a92fcef2f041403eb80d5cab50d27799f21d2bd785f8ce0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧪️tests/🗂️store/🟦️.ts": {
+  "file": "f007",
+  "base": "691139a9b7e75ad9ff3a8295a36049230f59f626379c0364ed7ad97b0f6f53a6",
+  "new": "e584c5ab19c1b3850024a504127c55bf5cb6abcf5639c1e42745569121eddd8b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🧪️tests/🟦️.ts": {
+  "file": "f008",
+  "base": "2879e9a5fc9b2d21af0a9bdadb881b2a1c65e32f824a24db0af13ea34242ce5b",
+  "new": "b01bb87b61cb4beb362bca2b3bd4a4b91f014c25d7275465d07afcda8a3b1acd"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🧪️tests/🚦️startup/🟦️.ts": {
+  "file": "f009",
+  "base": "d7c1d854dfdfda8c6b8372b0aa19e16be7be60a7094e76a665d6110ada661cd5",
+  "new": "e0f64091eeedf7cb9bec6d9c4afdb577a389b710bbd6f8ec599c19bf866b131a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/README.md": {
+  "file": "f010",
+  "base": "a545e269b96ea36edb439d611f2669ba83f0ec1cd4cf75ec9988c657dea99f26",
+  "new": "a487179d1100fc973e89d893ef72257c32baa1cdce27843e6f340ba36e7418b5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md": {
+  "file": "f011",
+  "base": "24c9538050f43d9beb777f37654319faf8a6007054ef3718d5773fed9243b2bd",
+  "new": "ca4070c6a08871f80f4de5e95c303b8b8a8ccaed2c69fd22e49fb8d1900f435b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧬️schema/🔣️.json": {
+  "file": "f012",
+  "base": "84127b7b33391e69f2782181e9afaa086194535ee06231a6a2e8b98e944b4b3c",
+  "new": "04143b0e2c20d7c5f3e82622d45442d989b755c61d1430c6d55fbabbbebfa532"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧪️tests/🟦️.ts": {
+  "file": "f013",
+  "base": "ef07ad2583708a79dee9f2148a7997d2a74099cf7ec5598a405438cccb6a3c7a",
+  "new": "673da4a478dd8682b051d34ed0d79c02aa18d38daf37651e60a704c1ce31e47b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧬️schema/🔣️.json": {
+  "file": "f014",
+  "base": "2b93d0c5b40fd978d19f951ed697470be3354bb332c8e039c269408fe102b3cc",
+  "new": "0704a6fa503fc5d1cd452239c56f38fb6c65cb891b7c96f3ef48a57c68f65800"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧪️tests/🟦️.ts": {
+  "file": "f015",
+  "base": "8583f098356c9d395eb4b4268be399b30d29886324da4e61a5987b304d0ebc28",
+  "new": "16862124b919af4aef008d67df53544ca3305280460909d7d4c443f0cb53707b"
+ }
+}

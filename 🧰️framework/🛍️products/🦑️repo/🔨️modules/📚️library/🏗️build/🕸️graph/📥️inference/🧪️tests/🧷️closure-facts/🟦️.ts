@@ -27,7 +27,7 @@ for(const row of fixture.order)test("order: "+row.name,()=>{const text=body(row.
 for(const row of fixture.present)test("present: "+row.name,()=>{expect(body(row.function).includes(row.text)).toBe(true);});
 for(const row of fixture.absent)test("absent: "+row.name,()=>{expect(body(row.function).includes(row.text)).toBe(false);});
 test("the independent text model reaches the same verdict",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

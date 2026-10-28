@@ -1,0 +1,47 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs": {
+  "file": "f00",
+  "base": "79cc425e0f7dc6170d53944da6f29e088b278371c2c438e31b0a180248ce848e",
+  "new": "782979b84e1170db129047faaf30cd0ba3a20074f04ad216afff928daf41ddec"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.d.mts": {
+  "file": "f01",
+  "base": "eabd9b0b02c8bafa55f3315b023d5d235c1864f1760c1f5189088939f7aeaa41",
+  "new": "52c636c3ef8451f258ff087b5be7034024cf749a0fcfabdb48635fb0db6f9ad2"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🧪️tests/🟦️.ts": {
+  "file": "f02",
+  "base": "14c8060d2454a02bae3890dfd8c99dedab546293f1e0a8f96f5c93bf1323fab2",
+  "new": "2213127eb91a11da7494a376c3a00991a82908f4b709bcf6fd5cb7a2f772134e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": {
+  "file": "f03",
+  "base": "178f0b0efe78bab4ba00c9214c41f73e07f420f24275b637a445e944febd9ad5",
+  "new": "a388d6a2526768d318e7ed72f06bbd8f99d95ba8fb9546adbfcf15f8a4c336b8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs": {
+  "file": "f04",
+  "base": "cb52badcd8699c4766d58578865b6fba32c4ebb213b7a2ed6657be8d6c4a7645",
+  "new": "3b1343c68075ffb277b0c22e0634ace004e32540259d85973d28034dcd6dafcb"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/♻️revision/🟨️.mjs": {
+  "file": "f05",
+  "base": "4e740927dfe774efa184b95aba7982f00fa6882a92f07e326bef55764cbfa702",
+  "new": "0385d54968986bee5009df338c9d3695389911663e1c713c0710bdc369d0088e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔖️stamps/🧬️schema/🔣️.json": {
+  "file": "f06",
+  "base": "74ca4e7a9e3b24578785921096fbe2a047e56180aa96150e314d0ae9337c65eb",
+  "new": "e1ee28f343143cb4761498e827c67e5ca27915bcb1e426d45260f2025257e0e7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🔖️output-stamps/🔣️.json": {
+  "file": "f07",
+  "base": "15c9ece612bc5f64b6495aed792ec9e39ad3d5d9893e55a394ac77df8b896613",
+  "new": "a60d654452107086b435c0dbbab71fb99c18d4f4c46092e1288a8594ea6e0d26"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts": {
+  "file": "f08",
+  "base": "898ecb226fbde4cb988325098ab080576498e4132021bb1e35848c629ab4f668",
+  "new": "fe83e5a5b8e7f249ea28e209427edd2a2325fa2b7c9e65a68108fa071acf9e76"
+ }
+}

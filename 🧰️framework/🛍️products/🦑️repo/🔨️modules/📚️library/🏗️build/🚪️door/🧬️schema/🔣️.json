@@ -4,7 +4,7 @@
   "description": "Which commands the front door serves without loading the build implementation, which subcommand sets are closed, and the EN/DE texts of its refusals. Commands, subcommands, options and help come from the neutral operations catalogue.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "passthrough", "fullTargetPrefixes", "environment", "light", "closedSubcommands", "refusedExitCode", "texts"],
+  "required": ["version", "passthrough", "fullTargetPrefixes", "environment", "light", "closedSubcommands", "refusedExitCode", "liveness", "texts"],
   "properties": {
     "version": { "const": 1 },
     "passthrough": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/Word" } },
@@ -18,14 +18,26 @@
     "light": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/Light" } },
     "closedSubcommands": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/Word" } },
     "refusedExitCode": { "type": "integer", "minimum": 2, "maximum": 63 },
+    "liveness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["delaysSeconds", "repeatSeconds", "unknownPhase", "texts"],
+      "properties": {
+        "delaysSeconds": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 1 } },
+        "repeatSeconds": { "type": "integer", "minimum": 1 },
+        "unknownPhase": { "type": "string", "minLength": 1 },
+        "texts": { "$ref": "#/definitions/LocalizedText" }
+      }
+    },
     "texts": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["unknownCommand", "unknownSubcommand", "invalidValue"],
+      "required": ["unknownCommand", "unknownSubcommand", "invalidValue", "missingArgument"],
       "properties": {
         "unknownCommand": { "$ref": "#/definitions/LocalizedText" },
         "unknownSubcommand": { "$ref": "#/definitions/LocalizedText" },
-        "invalidValue": { "$ref": "#/definitions/LocalizedText" }
+        "invalidValue": { "$ref": "#/definitions/LocalizedText" },
+        "missingArgument": { "$ref": "#/definitions/LocalizedText" }
       }
     }
   },

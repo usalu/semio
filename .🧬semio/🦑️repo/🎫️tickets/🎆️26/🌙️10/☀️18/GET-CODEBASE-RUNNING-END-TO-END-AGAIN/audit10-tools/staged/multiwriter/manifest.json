@@ -1,0 +1,122 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔀️merge/🟨️.d.mts": {
+  "file": "00-merge-af49ab0c",
+  "base": null,
+  "new": "cfac435002cc71a1de3565188955a2a0a70c6b0c0708d8ca3e01a7de09e9ac06"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔀️merge/🟨️.mjs": {
+  "file": "01-merge-1a220964",
+  "base": null,
+  "new": "50f147a4e201ba5f439beecb61cc6516f844e7fa7781fb2c075e2e9b48354df8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔀️merge/🧪️tests/🐍️oracle/🐍️.py": {
+  "file": "02-oracle-eef27b8a",
+  "base": null,
+  "new": "67071ed6041c6e721f58e7b67988e71292827358700743c2a4c63e4f4675f672"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔀️merge/🧪️tests/🟦️.ts": {
+  "file": "03-tests-ff280004",
+  "base": null,
+  "new": "403387365c1f82959c68c0dabb4487e94d53a258a2f1adabf3def8a388fa1f75"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔀️merge/🧬️schema/🔣️.json": {
+  "file": "04-schema-30746426",
+  "base": null,
+  "new": "c8fd77928b3e1751e97397f5f9a81a1a1a1d4b7919ca9912193e790ec94f3b86"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.d.mts": {
+  "file": "05-load-752b2096",
+  "base": "ca97d14056c4f05b683f15269ad25311b1ad6956fd3c96a081108ade69a29896",
+  "new": "8bd6556088dd26a744adf403ba347ed2e5d61f538c2c55f3a4ef8905b3af1169"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs": {
+  "file": "06-load-944fe695",
+  "base": "dbeca498960924ba17937c2fc491b1efb4e2c7ada2d03e8d9b3a2c6694600b9b",
+  "new": "f3a0266520968b37e435febe861543852d8ae028f4bd28e465303d8bd120557b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🧪️tests/🚧️withheld-dependency/🔣️.json": {
+  "file": "07-withheld-dependency-9a372ba9",
+  "base": "87cdd81a5e55ace512c8d763d4c2a816f0d94b05b3cb6a26752019c74a943de7",
+  "new": "22bc357c46fed1c7b0b36c25004515eba792e91814ca6420e43741fc80fd4685"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔐️custody/🟨️.d.mts": {
+  "file": "08-custody-6bac7e00",
+  "base": null,
+  "new": "363a66b411b22a10633adf7ca7498690aa65e3021ab76f06d0337a0f90eb2a9a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔐️custody/🟨️.mjs": {
+  "file": "09-custody-e4b29f3d",
+  "base": null,
+  "new": "e0f69ab1c94e5dfcdd1246a1fa83c092bca945d5464f59804b2ae1ade0cdf84d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔐️custody/🧪️tests/🐍️oracle/🐍️.py": {
+  "file": "10-oracle-7560b2d8",
+  "base": null,
+  "new": "1d4e2230d1a32e53d571979750271aba3f5e1ef5ca535b520f931d810dfe6b3f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔐️custody/🧪️tests/🟦️.ts": {
+  "file": "11-tests-97f9bd80",
+  "base": null,
+  "new": "4a65a14df8d78ae8925f8db24234f13a2c3bbe5090094f7b21f84f80878479fa"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔐️custody/🧬️schema/🔣️.json": {
+  "file": "12-schema-cd788788",
+  "base": null,
+  "new": "0d65080881b02156278cdc9bfcd70a518b72e72d64986134818c4f0b67a37335"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.d.mts": {
+  "file": "13-generations-4c15a320",
+  "base": "852f06985c10412ac3893e364350b06860fedeb91bb55523a239f93e6cd42d3d",
+  "new": "d5d2f8c421340f8040c2b1394705a54fa9bce92f36ff5d6086cf6771de6cb031"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs": {
+  "file": "14-generations-7c171fea",
+  "base": "6e7efb95ede58332b19bb8d37a9a289e8e6b82468bcf135def5f70533472f4e3",
+  "new": "ee8ef999653d40b7bad46816506e0bc7b2e2d408bbfdf66dfcc6d8cef44cd339"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/🟨️.d.mts": {
+  "file": "15-claims-31a6bb65",
+  "base": "46deabe73f7aa76ef637d5923e66cdf44c4c2e74386b09b6a876fea85f712da0",
+  "new": "03b7c3ff4f018abc54bcbc1fced320e17b883faa52ec822078d45cad74718954"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/🟨️.mjs": {
+  "file": "16-claims-cca64949",
+  "base": "098a253eb79fc335cf794afb11b19e88754f61fed8089a5776fe11336ce3c08d",
+  "new": "70e06aa1694b93fdfcdf5afffcea768ca1a3db88e6482e69c4864bb900bf736a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/🧪️tests/💤️idle/🟦️.ts": {
+  "file": "17-idle-99082694",
+  "base": "23af3a1dfe8adaabb4408d92ed12f800abccac22c776e3e212718ae62b69552a",
+  "new": "bf1b36aeeae8920ff2a5ec16c8b95d4676c448243c3fa554f31adefb11738368"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/👯️multiwriter/🟦️.ts": {
+  "file": "18-multiwriter-f2b1e6f4",
+  "base": null,
+  "new": "db74a70f66ea0e1868c6bca3ee3f8171e8962d5e99a142c383996d80a96d8e52"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧬️schema/🔣️.json": {
+  "file": "19-schema-f02b8436",
+  "base": "5c99323f782dbc01ac9838c353c29bdcd6cf37681d1988d9d85ca0802d630304",
+  "new": "c455c9d16cf7e757fe88ac573ca2453195ee393d40c4b7df7915772c4c554a7b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts": {
+  "file": "20-graph-3d0758c6",
+  "base": "87d670b56966de75ed8fe0da525e814ebb31a2ca98aad09d2971ebf0ce74de44",
+  "new": "14c009bd58e82c10a2c4b3bb8df41cef3a3ac1270693a502d70b4f1a26301be7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🔼️upgrade-before-custody/🟦️.ts": {
+  "file": "21-upgrade-before-custody-3d97b2cf",
+  "base": "fd11be015555b44afa45174b0f47f5ea35ac909c4ce330c0fcb86329343723cb",
+  "new": "bc91183e7c60815a25574343bdd4a3a343550aaa9935b78d3716ff9b24fc3f79"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🕰️generation-protocol/🔣️.json": {
+  "file": "22-generation-protocol-2d5b34da",
+  "base": "3b4a47b15bf0ff139248aba51105ba542e5ee43fbce1743bc05b0437d9ec5235",
+  "new": "670ad73938fa696073bfedf580244648dbb9b3eec6471f22ccd73e7dd9c4cc9e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🕰️generation-protocol/🟦️.ts": {
+  "file": "23-generation-protocol-4ab3aba6",
+  "base": "4fd85ca364a1785efb1aa16447cde5f02b40f4fc2f2fae50d99c8282fd1416be",
+  "new": "44f82827b77d17d72fa826fe4bb1e02b7363615723a9923f475d002dbbd91ed6"
+ }
+}

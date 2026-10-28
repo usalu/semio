@@ -281,10 +281,10 @@
           "coalesced": "Der laufende Bau ist fertig; die Abhängigkeiten sind aktuell.",
           "published": "{scope} wurde auf die neue Abhängigkeits-Generation umgeschaltet (Epoche {epoch}).",
           "collected": "{count} ersetzte Abhängigkeits-Generation(en) entfernt.",
-          "kept": "{count} ersetzte Abhängigkeits-Generation(en) behalten, weil sie angeheftet, jung oder das Rollback-Ziel sind.",
-          "reclaiming": "Es wird Platz für eine weitere Abhängigkeits-Generation geschaffen ({needed} MiB nötig, {free} MiB frei): ersetzte Generationen, die kein Leser angeheftet hat, werden entfernt.",
-          "admissionRefused": "Das Abhängigkeits-Image kann keine weitere Generation aufnehmen: {needed} MiB nötig, {free} MiB frei, nachdem jede nicht angeheftete ersetzte Generation entfernt wurde. Platz schaffen oder das Abhängigkeits-Budget erhöhen und den Befehl erneut ausführen; die veröffentlichten Generationen bleiben unberührt.",
-          "budgetTooSmall": "Das deklarierte Abhängigkeits-Image-Budget ({free} MiB) kann auf dieser Plattform Paket-Cache, Arbeitsplatz und die installierten Generationen plus einen Satz im Bau nicht aufnehmen ({needed} MiB nötig). Die Abhängigkeits-Partition in der Cache-Richtlinie erhöhen und das Image neu erzeugen, solange kein Befehl läuft, dann den Befehl erneut ausführen; es wurde nichts verändert."
+          "kept": "{count} ersetzte Abhängigkeits-Generation(en) behalten, weil sie gepinnt, jung oder das Rollback-Ziel sind.",
+          "reclaiming": "Es wird Platz für eine weitere Abhängigkeits-Generation geschaffen ({needed} MiB nötig, {free} MiB frei): ersetzte Generationen, die kein Leser gepinnt hat, werden entfernt.",
+          "admissionRefused": "Das Abhängigkeits-Image kann keine weitere Generation aufnehmen: {needed} MiB nötig, {free} MiB frei, nachdem jede nicht gepinnte ersetzte Generation entfernt wurde. Platz schaffen oder das Abhängigkeits-Budget erhöhen und den Befehl erneut ausführen; die veröffentlichten Generationen bleiben unberührt.",
+          "budgetTooSmall": "Das deklarierte Abhängigkeits-Image-Budget ({free} MiB) kann auf dieser Plattform Paket-Cache, Arbeitsfläche und die installierten Generationen plus einen Satz im Bau nicht aufnehmen ({needed} MiB nötig). Die Abhängigkeits-Partition in der Cache-Richtlinie erhöhen und das Image neu erzeugen, solange kein Befehl läuft, dann den Befehl erneut ausführen; es wurde nichts verändert."
         }
       }
     }

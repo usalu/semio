@@ -1,0 +1,28 @@
+{
+ "label": "g45-ctest",
+ "target": "@teaching/architecture-course:test",
+ "started": "17:30:10",
+ "wall_s": 744.6,
+ "peak_tree_mb": 3725,
+ "peak_processes": 7,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "122"
+  ],
+  "inferring": [
+   "122"
+  ],
+  "published": [
+   "668",
+   "122",
+   "108"
+  ],
+  "processes": [
+   "11",
+   "1 action cache hit, 6 disk cache hit, 2 internal, 3 local"
+  ]
+ }
+}

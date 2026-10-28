@@ -16,7 +16,6 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-value-snapshot-projection = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-pack-json = { workspace = true }

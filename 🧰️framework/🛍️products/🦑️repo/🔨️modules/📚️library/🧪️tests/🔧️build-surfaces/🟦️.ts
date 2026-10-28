@@ -1,4 +1,3 @@
-import "../../🏗️build/🧭️selection/🧪️tests/🟦️.ts";
 import { expect, test } from "bun:test";
 import {testRipgrepV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
@@ -24,7 +23,6 @@ import graphSchema from "../../🏗️build/🧬️schema/🔣️.json";
 import {neutralBuildTargetV1,resolveBuildTargetV1} from "../../🏗️build/🕸️graph/🟦️.ts";
 import {planBazelTasksV1} from "../../🏗️build/🔧️tools/🏗️bazel/📜️script.ts";
 import { nativeHostContractLaws } from "../../🎮️playground/🖥️native-host/🧪️tests/🟦️.ts";
-
 const root = findWorkspaceRoot(import.meta.dir);
 const read = (path: string): string => readFileSync(join(root, path), "utf8");
 

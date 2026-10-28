@@ -1,0 +1,20 @@
+{
+ "baseline": {},
+ "codes": {
+  "0-check": 0,
+  "1-apply": 0,
+  "2-check": 0,
+  "3-revert": 0,
+  "4-check": 0
+ },
+ "apply": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.d.mts": "887d36c010cd8bc79489bd34d18d1d7f66a54bda823092b06a2bd86705be0e85",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs": "252c07c61be0d455ae28a1f9d4c3c21ca838a9abce32bddad0561c4a3e26b36e",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/legacy.ts": "26b27164af45b71bca6a0fc797a8943e87b3bb9ee7a8e3b14e76f245d6ed039b",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/🔣️.json": "e4f6d6f658a28783cf58103a71fad30c1e14f553abaa77bb4214c8438cf3ec0c",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/🟦️.ts": "d73e1ae036079c2a5ad38ed1eb2a1f6c7d8fac04068df30493c4a1799fa33861",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/🧬️schema/🔣️.json": "11999671a904140085f9135735ee65fe49d460439b10489c863485176144cda0",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧬️schema/🔣️.json": "1d05538aedd7ab104408975c4cec6b993fc1fbeddca8b16208a48029dbf68482"
+ },
+ "revert": {}
+}

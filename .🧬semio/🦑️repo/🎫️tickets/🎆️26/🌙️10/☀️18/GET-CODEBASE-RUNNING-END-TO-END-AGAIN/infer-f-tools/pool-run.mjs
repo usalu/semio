@@ -1,0 +1,24 @@
+import {existsSync,readFileSync,mkdtempSync,realpathSync,rmSync}from"node:fs";
+import {join}from"node:path";import {tmpdir}from"node:os";import {createHash}from"node:crypto";
+const ROOT=process.cwd(),L=ROOT+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/";
+const [listFile,megabytes,workers]=process.argv.slice(2);
+const roots=readFileSync(listFile,"utf8").trim().split("\n").filter(Boolean);
+const inference=await import(L+"🕸️graph/📥️inference/🟨️.mjs");await inference.libraryBootstrap;
+const pool=await import(L+"🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🏊️pool/🟨️.mjs");
+const admission=await import(L+"🕸️graph/🚪️admission/🟦️.ts");
+const obs=await import(L+"👁️observation/🟨️.mjs");
+const registry=admission.readBuildOwnerRegistryV1(JSON.parse(readFileSync(join(ROOT,"📋️build-owners.json"),"utf8")));
+const base=mkdtempSync(join(realpathSync(tmpdir()),"semio-graph-farm-"));
+const session={version:2,workspaceRoot:ROOT,registry,projectsByRoot:[],componentRoots:[],commandInputs:null,lateClosures:false,stagingBase:base};
+const events=[];
+const farm=pool.createFarmV1({entry:ROOT+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs",service:new URL("file://"+ROOT+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️service/🟨️.mjs").href,workers:Number(workers),megabytes:Number(megabytes),session,accept:id=>id===obs.inferenceRecordIdentityV1(),report:(e,f)=>events.push([e,f]),retired:(slot,gen)=>{try{rmSync(join(base,"w"+slot+"-g"+gen),{recursive:true,force:true});}catch{}}});
+await farm.ready;
+const t0=performance.now(),rows=[];
+await Promise.all(roots.map(async root=>{
+ const json=JSON.parse(readFileSync(join(ROOT,root,"📋️project.json"),"utf8")),targets=Object.entries(json.targets??{});
+ const native=existsSync(join(ROOT,root,"Cargo.toml"))||targets.some(([,t])=>t.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts")),pipeline=targets.some(([,t])=>t.metadata?.semio?.release);
+ const p0=performance.now(),out=await farm.run({name:json.name,root,json:{...json,root},native,pipeline,nativeRoot:root,selectedInputs:[],head:["infer-f"],cacheKey:createHash("sha256").update(root).digest("hex").slice(0,24)});
+ rows.push({name:json.name,seconds:Math.round((performance.now()-p0)/100)/10,ok:!!out.reply,failure:out.failure?.message?.slice(0,120),lost:out.lost,cpuMs:out.reply?.cpuMilliseconds});
+}));
+console.log(JSON.stringify({seconds:Math.round((performance.now()-t0)/100)/10,stats:farm.stats(),events:events.map(e=>[e[0],e[1]]),rows},null,0));
+await farm.close();rmSync(base,{recursive:true,force:true});process.exit(0);

@@ -1,0 +1,2723 @@
+{
+ "version": 1,
+ "plans": [
+  {
+   "name": "this machine: 32 GB, 10 cores",
+   "host": {
+    "cores": 10,
+    "memoryMegabytes": 32768
+   },
+   "memory": {
+    "floorBasisPoints": 2000,
+    "floorMinimumMegabytes": 4096,
+    "floorMaximumMegabytes": 8192
+   },
+   "expected": {
+    "slots": 5,
+    "services": 4,
+    "heapMegabytes": 1536,
+    "residentMegabytes": 2048,
+    "budgetMegabytes": 10486,
+    "cpuPerServer": 2,
+    "memoryPerServerMegabytes": 3145,
+    "limit": "memory"
+   }
+  },
+  {
+   "name": "laptop: 16 GB, 8 cores",
+   "host": {
+    "cores": 8,
+    "memoryMegabytes": 16384
+   },
+   "memory": {
+    "floorBasisPoints": 2000,
+    "floorMinimumMegabytes": 4096,
+    "floorMaximumMegabytes": 8192
+   },
+   "expected": {
+    "slots": 2,
+    "services": 4,
+    "heapMegabytes": 1536,
+    "residentMegabytes": 2048,
+    "budgetMegabytes": 4915,
+    "cpuPerServer": 4,
+    "memoryPerServerMegabytes": 3686,
+    "limit": "memory"
+   }
+  },
+  {
+   "name": "laptop 16 GB, 10 cores (ram-g floor 12.5 %: two servers)",
+   "host": {
+    "cores": 10,
+    "memoryMegabytes": 16384
+   },
+   "memory": {
+    "floorBasisPoints": 1250,
+    "floorMinimumMegabytes": 1536,
+    "floorMaximumMegabytes": 4096
+   },
+   "expected": {
+    "slots": 2,
+    "services": 4,
+    "heapMegabytes": 1536,
+    "residentMegabytes": 2048,
+    "budgetMegabytes": 5734,
+    "cpuPerServer": 5,
+    "memoryPerServerMegabytes": 4301,
+    "limit": "memory"
+   }
+  },
+  {
+   "name": "small: 8 GB, 4 cores",
+   "host": {
+    "cores": 4,
+    "memoryMegabytes": 8192
+   },
+   "memory": {
+    "floorBasisPoints": 2000,
+    "floorMinimumMegabytes": 4096,
+    "floorMaximumMegabytes": 8192
+   },
+   "expected": {
+    "slots": 1,
+    "services": 4,
+    "heapMegabytes": 1126,
+    "residentMegabytes": 1638,
+    "budgetMegabytes": 1638,
+    "cpuPerServer": 4,
+    "memoryPerServerMegabytes": 2458,
+    "limit": "floor"
+   }
+  },
+  {
+   "name": "tiny: 4 GB, 2 cores",
+   "host": {
+    "cores": 2,
+    "memoryMegabytes": 4096
+   },
+   "memory": {
+    "floorBasisPoints": 2000,
+    "floorMinimumMegabytes": 4096,
+    "floorMaximumMegabytes": 8192
+   },
+   "expected": {
+    "slots": 1,
+    "services": 4,
+    "heapMegabytes": 768,
+    "residentMegabytes": 1280,
+    "budgetMegabytes": 0,
+    "cpuPerServer": 2,
+    "memoryPerServerMegabytes": 256,
+    "limit": "floor"
+   }
+  },
+  {
+   "name": "big: 128 GB, 32 cores",
+   "host": {
+    "cores": 32,
+    "memoryMegabytes": 131072
+   },
+   "memory": {
+    "floorBasisPoints": 2000,
+    "floorMinimumMegabytes": 4096,
+    "floorMaximumMegabytes": 8192
+   },
+   "expected": {
+    "slots": 6,
+    "services": 4,
+    "heapMegabytes": 1536,
+    "residentMegabytes": 2048,
+    "budgetMegabytes": 49152,
+    "cpuPerServer": 5,
+    "memoryPerServerMegabytes": 12288,
+    "limit": "policy"
+   }
+  },
+  {
+   "name": "cores bound: 64 GB, 4 cores",
+   "host": {
+    "cores": 4,
+    "memoryMegabytes": 65536
+   },
+   "memory": {
+    "floorBasisPoints": 2000,
+    "floorMinimumMegabytes": 4096,
+    "floorMaximumMegabytes": 8192
+   },
+   "expected": {
+    "slots": 2,
+    "services": 4,
+    "heapMegabytes": 1536,
+    "residentMegabytes": 2048,
+    "budgetMegabytes": 22937,
+    "cpuPerServer": 2,
+    "memoryPerServerMegabytes": 17203,
+    "limit": "cores"
+   }
+  },
+  {
+   "name": "single core: 64 GB, 1 core",
+   "host": {
+    "cores": 1,
+    "memoryMegabytes": 65536
+   },
+   "memory": {
+    "floorBasisPoints": 2000,
+    "floorMinimumMegabytes": 4096,
+    "floorMaximumMegabytes": 8192
+   },
+   "expected": {
+    "slots": 1,
+    "services": 4,
+    "heapMegabytes": 1536,
+    "residentMegabytes": 2048,
+    "budgetMegabytes": 22937,
+    "cpuPerServer": 1,
+    "memoryPerServerMegabytes": 34407,
+    "limit": "floor"
+   }
+  },
+  {
+   "name": "workstation: 64 GB, 16 cores",
+   "host": {
+    "cores": 16,
+    "memoryMegabytes": 65536
+   },
+   "memory": {
+    "floorBasisPoints": 2000,
+    "floorMinimumMegabytes": 4096,
+    "floorMaximumMegabytes": 8192
+   },
+   "expected": {
+    "slots": 6,
+    "services": 4,
+    "heapMegabytes": 1536,
+    "residentMegabytes": 2048,
+    "budgetMegabytes": 22937,
+    "cpuPerServer": 2,
+    "memoryPerServerMegabytes": 5734,
+    "limit": "policy"
+   }
+  }
+ ],
+ "ranks": [
+  {
+   "name": "nothing used yet keeps slot order",
+   "slots": [
+    "s0",
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "states": {},
+   "key": "0000000000000001",
+   "expected": [
+    "s0",
+    "s1",
+    "s2",
+    "s3"
+   ]
+  },
+  {
+   "name": "the slot of the last selection comes first",
+   "slots": [
+    "s0",
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "states": {
+    "s0": {
+     "version": 1,
+     "slot": "s0",
+     "key": "0000000000000002",
+     "keys": [
+      "0000000000000002"
+     ],
+     "usedAt": 100
+    },
+    "s1": {
+     "version": 1,
+     "slot": "s1",
+     "key": "0000000000000001",
+     "keys": [
+      "0000000000000001"
+     ],
+     "usedAt": 50
+    }
+   },
+   "key": "0000000000000001",
+   "expected": [
+    "s1",
+    "s2",
+    "s3",
+    "s0"
+   ]
+  },
+  {
+   "name": "a slot that only remembers the key is no better than any other used slot",
+   "slots": [
+    "s0",
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "states": {
+    "s0": {
+     "version": 1,
+     "slot": "s0",
+     "key": "0000000000000002",
+     "keys": [
+      "0000000000000002",
+      "0000000000000001"
+     ],
+     "usedAt": 100
+    },
+    "s2": {
+     "version": 1,
+     "slot": "s2",
+     "key": "0000000000000003",
+     "keys": [
+      "0000000000000003"
+     ],
+     "usedAt": 10
+    }
+   },
+   "key": "0000000000000001",
+   "expected": [
+    "s1",
+    "s3",
+    "s2",
+    "s0"
+   ]
+  },
+  {
+   "name": "never used slots come before other used slots",
+   "slots": [
+    "s0",
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "states": {
+    "s0": {
+     "version": 1,
+     "slot": "s0",
+     "key": "0000000000000002",
+     "keys": [
+      "0000000000000002"
+     ],
+     "usedAt": 100
+    },
+    "s1": {
+     "version": 1,
+     "slot": "s1",
+     "key": "0000000000000003",
+     "keys": [
+      "0000000000000003"
+     ],
+     "usedAt": 200
+    }
+   },
+   "key": "0000000000000001",
+   "expected": [
+    "s2",
+    "s3",
+    "s0",
+    "s1"
+   ]
+  },
+  {
+   "name": "used slots are least recently used first",
+   "slots": [
+    "s0",
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "states": {
+    "s0": {
+     "version": 1,
+     "slot": "s0",
+     "key": "0000000000000002",
+     "keys": [
+      "0000000000000002"
+     ],
+     "usedAt": 300
+    },
+    "s1": {
+     "version": 1,
+     "slot": "s1",
+     "key": "0000000000000003",
+     "keys": [
+      "0000000000000003"
+     ],
+     "usedAt": 100
+    },
+    "s2": {
+     "version": 1,
+     "slot": "s2",
+     "key": "0000000000000004",
+     "keys": [
+      "0000000000000004"
+     ],
+     "usedAt": 200
+    },
+    "s3": {
+     "version": 1,
+     "slot": "s3",
+     "key": "0000000000000005",
+     "keys": [
+      "0000000000000005"
+     ],
+     "usedAt": 400
+    }
+   },
+   "key": "0000000000000001",
+   "expected": [
+    "s1",
+    "s2",
+    "s0",
+    "s3"
+   ]
+  },
+  {
+   "name": "two warm slots prefer the more recent one",
+   "slots": [
+    "s0",
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "states": {
+    "s0": {
+     "version": 1,
+     "slot": "s0",
+     "key": "0000000000000001",
+     "keys": [
+      "0000000000000001"
+     ],
+     "usedAt": 100
+    },
+    "s1": {
+     "version": 1,
+     "slot": "s1",
+     "key": "0000000000000001",
+     "keys": [
+      "0000000000000001"
+     ],
+     "usedAt": 900
+    },
+    "s2": {
+     "version": 1,
+     "slot": "s2",
+     "key": "0000000000000002",
+     "keys": [
+      "0000000000000002",
+      "0000000000000001"
+     ],
+     "usedAt": 500
+    }
+   },
+   "key": "0000000000000001",
+   "expected": [
+    "s1",
+    "s0",
+    "s3",
+    "s2"
+   ]
+  },
+  {
+   "name": "recency ties keep the slot number order",
+   "slots": [
+    "s0",
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "states": {
+    "s0": {
+     "version": 1,
+     "slot": "s0",
+     "key": "0000000000000002",
+     "keys": [
+      "0000000000000002"
+     ],
+     "usedAt": 100
+    },
+    "s1": {
+     "version": 1,
+     "slot": "s1",
+     "key": "0000000000000003",
+     "keys": [
+      "0000000000000003"
+     ],
+     "usedAt": 100
+    }
+   },
+   "key": "0000000000000001",
+   "expected": [
+    "s2",
+    "s3",
+    "s0",
+    "s1"
+   ]
+  },
+  {
+   "name": "a slot that once served the key but holds another selection now is an ordinary used slot",
+   "slots": [
+    "s0",
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "key": "0000000000000001",
+   "states": {
+    "s0": {
+     "version": 1,
+     "slot": "s0",
+     "key": "0000000000000002",
+     "keys": [
+      "0000000000000002",
+      "0000000000000001"
+     ],
+     "usedAt": 100
+    },
+    "s2": {
+     "version": 1,
+     "slot": "s2",
+     "key": "0000000000000003",
+     "keys": [
+      "0000000000000003"
+     ],
+     "usedAt": 10
+    }
+   },
+   "expected": [
+    "s1",
+    "s3",
+    "s2",
+    "s0"
+   ]
+  },
+  {
+   "name": "two selections that once shared a slot do not pull each other back onto it",
+   "slots": [
+    "s0",
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "key": "0000000000000002",
+   "states": {
+    "s0": {
+     "version": 1,
+     "slot": "s0",
+     "key": "0000000000000001",
+     "keys": [
+      "0000000000000001",
+      "0000000000000002"
+     ],
+     "usedAt": 100
+    },
+    "s1": {
+     "version": 1,
+     "slot": "s1",
+     "key": "0000000000000003",
+     "keys": [
+      "0000000000000003",
+      "0000000000000002"
+     ],
+     "usedAt": 200
+    }
+   },
+   "expected": [
+    "s2",
+    "s3",
+    "s0",
+    "s1"
+   ]
+  }
+ ],
+ "garbage": [
+  {
+   "name": "empty inventory",
+   "slots": 3,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [],
+    "foreign": []
+   },
+   "expected": {
+    "packages": [],
+    "outputBases": [],
+    "foreign": [],
+    "temporaries": []
+   },
+   "services": 4
+  },
+  {
+   "name": "old packages beyond the retained age go, the newest always stays",
+   "slots": 3,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s0",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s0",
+       "key": "0000000000000001",
+       "keys": [
+        "0000000000000001"
+       ],
+       "usedAt": 8553600000
+      },
+      "packages": [
+       {
+        "key": "0000000000000001",
+        "modifiedAt": 6912000000
+       },
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 7776000000
+       },
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8553600000
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "expected": {
+    "packages": [
+     {
+      "slot": "s0",
+      "key": "0000000000000002",
+      "reason": "age"
+     }
+    ],
+    "outputBases": [],
+    "foreign": [],
+    "temporaries": []
+   },
+   "services": 4
+  },
+  {
+   "name": "only the newest package of a slot stays when everything is old",
+   "slots": 3,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s1",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s1",
+       "key": "0000000000000009",
+       "keys": [
+        "0000000000000009"
+       ],
+       "usedAt": 6048000000
+      },
+      "packages": [
+       {
+        "key": "0000000000000004",
+        "modifiedAt": 6048000000
+       },
+       {
+        "key": "0000000000000005",
+        "modifiedAt": 5961600000
+       },
+       {
+        "key": "0000000000000006",
+        "modifiedAt": 5875200000
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "expected": {
+    "packages": [
+     {
+      "slot": "s1",
+      "key": "0000000000000005",
+      "reason": "age"
+     },
+     {
+      "slot": "s1",
+      "key": "0000000000000006",
+      "reason": "age"
+     }
+    ],
+    "outputBases": [
+     {
+      "slot": "s1",
+      "reason": "idle"
+     }
+    ],
+    "foreign": [],
+    "temporaries": []
+   },
+   "services": 4
+  },
+  {
+   "name": "packages beyond the retained count go even when young",
+   "slots": 3,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s0",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s0",
+       "key": "0000000000000001",
+       "keys": [
+        "0000000000000001"
+       ],
+       "usedAt": 8639999999
+      },
+      "packages": [
+       {
+        "key": "0000000000000001",
+        "modifiedAt": 8553600000
+       },
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8553600000
+       },
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8553600000
+       },
+       {
+        "key": "0000000000000004",
+        "modifiedAt": 8553600000
+       },
+       {
+        "key": "0000000000000005",
+        "modifiedAt": 8553600000
+       },
+       {
+        "key": "0000000000000006",
+        "modifiedAt": 8553600000
+       },
+       {
+        "key": "0000000000000007",
+        "modifiedAt": 8553600000
+       },
+       {
+        "key": "0000000000000008",
+        "modifiedAt": 8553600000
+       },
+       {
+        "key": "0000000000000009",
+        "modifiedAt": 8553600000
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "expected": {
+    "packages": [
+     {
+      "slot": "s0",
+      "key": "0000000000000007",
+      "reason": "count"
+     },
+     {
+      "slot": "s0",
+      "key": "0000000000000008",
+      "reason": "count"
+     },
+     {
+      "slot": "s0",
+      "key": "0000000000000009",
+      "reason": "count"
+     }
+    ],
+    "outputBases": [],
+    "foreign": [],
+    "temporaries": []
+   },
+   "services": 4
+  },
+  {
+   "name": "slots beyond the capacity lose output base and packages",
+   "slots": 2,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s0",
+      "outputBase": true,
+      "packages": [
+       {
+        "key": "0000000000000001",
+        "modifiedAt": 8553600000
+       }
+      ]
+     },
+     {
+      "slot": "s12",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s12",
+       "key": "0000000000000002",
+       "keys": [
+        "0000000000000002"
+       ],
+       "usedAt": 8553600000
+      },
+      "packages": [
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8553600000
+       },
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8467200000
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "expected": {
+    "packages": [
+     {
+      "slot": "s12",
+      "key": "0000000000000002",
+      "reason": "capacity"
+     },
+     {
+      "slot": "s12",
+      "key": "0000000000000003",
+      "reason": "capacity"
+     }
+    ],
+    "outputBases": [
+     {
+      "slot": "s12",
+      "reason": "capacity"
+     }
+    ],
+    "foreign": [],
+    "temporaries": []
+   },
+   "services": 4
+  },
+  {
+   "name": "an output base idle for two weeks goes",
+   "slots": 3,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s1",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s1",
+       "key": "0000000000000002",
+       "keys": [
+        "0000000000000002"
+       ],
+       "usedAt": 7344000000
+      },
+      "packages": []
+     },
+     {
+      "slot": "s0",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s0",
+       "key": "0000000000000001",
+       "keys": [
+        "0000000000000001"
+       ],
+       "usedAt": 7516800000
+      },
+      "packages": []
+     }
+    ],
+    "foreign": []
+   },
+   "expected": {
+    "packages": [],
+    "outputBases": [
+     {
+      "slot": "s1",
+      "reason": "idle"
+     }
+    ],
+    "foreign": [],
+    "temporaries": []
+   },
+   "services": 4
+  },
+  {
+   "name": "a held slot is never touched",
+   "slots": 2,
+   "now": 8640000000,
+   "held": [
+    "s0",
+    "s5"
+   ],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s0",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s0",
+       "key": "0000000000000001",
+       "keys": [
+        "0000000000000001"
+       ],
+       "usedAt": 5184000000
+      },
+      "packages": [
+       {
+        "key": "0000000000000001",
+        "modifiedAt": 5184000000
+       },
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 5097600000
+       }
+      ]
+     },
+     {
+      "slot": "s5",
+      "outputBase": true,
+      "packages": [
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8553600000
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "expected": {
+    "packages": [],
+    "outputBases": [],
+    "foreign": [],
+    "temporaries": []
+   },
+   "services": 4
+  },
+  {
+   "name": "foreign entries are listed sorted",
+   "slots": 3,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [],
+    "foreign": [
+     "workspaces/0123456789abcdef",
+     "server/fedcba9876543210",
+     "server/0123456789abcdef"
+    ]
+   },
+   "expected": {
+    "packages": [],
+    "outputBases": [],
+    "foreign": [
+     "server/0123456789abcdef",
+     "server/fedcba9876543210",
+     "workspaces/0123456789abcdef"
+    ],
+    "temporaries": []
+   },
+   "services": 4
+  },
+  {
+   "name": "a service slot within the service capacity keeps its output base",
+   "slots": 3,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "d1",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "d1",
+       "key": "0000000000000007",
+       "keys": [
+        "0000000000000007"
+       ],
+       "usedAt": 8553600000
+      },
+      "packages": [
+       {
+        "key": "0000000000000007",
+        "modifiedAt": 8553600000
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "expected": {
+    "packages": [],
+    "outputBases": [],
+    "foreign": [],
+    "temporaries": []
+   },
+   "services": 4
+  },
+  {
+   "name": "a service slot beyond the service capacity is retired",
+   "slots": 3,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "d4",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "d4",
+       "key": "0000000000000008",
+       "keys": [
+        "0000000000000008"
+       ],
+       "usedAt": 8553600000
+      },
+      "packages": [
+       {
+        "key": "0000000000000008",
+        "modifiedAt": 8553600000
+       },
+       {
+        "key": "0000000000000009",
+        "modifiedAt": 8467200000
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "expected": {
+    "packages": [
+     {
+      "slot": "d4",
+      "key": "0000000000000008",
+      "reason": "capacity"
+     },
+     {
+      "slot": "d4",
+      "key": "0000000000000009",
+      "reason": "capacity"
+     }
+    ],
+    "outputBases": [
+     {
+      "slot": "d4",
+      "reason": "capacity"
+     }
+    ],
+    "foreign": [],
+    "temporaries": []
+   },
+   "services": 4
+  },
+  {
+   "name": "pressure takes the oldest unprotected packages first and keeps the newest, the remembered selection and the young one",
+   "slots": 3,
+   "services": 4,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s0",
+      "outputBase": true,
+      "outputBaseBytes": 629145600,
+      "state": {
+       "version": 1,
+       "slot": "s0",
+       "key": "0000000000000001",
+       "keys": [
+        "0000000000000001",
+        "0000000000000002",
+        "0000000000000003"
+       ],
+       "usedAt": 8638200000
+      },
+      "packages": [
+       {
+        "key": "0000000000000001",
+        "modifiedAt": 8638200000,
+        "bytes": 524288000
+       },
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8622000000,
+        "bytes": 838860800
+       },
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8586000000,
+        "bytes": 314572800
+       },
+       {
+        "key": "0000000000000004",
+        "modifiedAt": 8639700000,
+        "bytes": 419430400
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "pressure": {
+    "freeBytes": 1073741824,
+    "softBytes": 3221225472,
+    "targetBytes": 6442450944
+   },
+   "expected": {
+    "packages": [
+     {
+      "slot": "s0",
+      "key": "0000000000000002",
+      "reason": "pressure"
+     },
+     {
+      "slot": "s0",
+      "key": "0000000000000003",
+      "reason": "pressure"
+     }
+    ],
+    "outputBases": [],
+    "temporaries": [],
+    "foreign": []
+   }
+  },
+  {
+   "name": "pressure stops once the target free space is reached",
+   "slots": 3,
+   "services": 4,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s0",
+      "outputBase": true,
+      "outputBaseBytes": 629145600,
+      "state": {
+       "version": 1,
+       "slot": "s0",
+       "key": "0000000000000001",
+       "keys": [
+        "0000000000000001"
+       ],
+       "usedAt": 8638200000
+      },
+      "packages": [
+       {
+        "key": "0000000000000001",
+        "modifiedAt": 8638200000,
+        "bytes": 524288000
+       },
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8622000000,
+        "bytes": 3221225472
+       },
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8586000000,
+        "bytes": 4294967296
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "pressure": {
+    "freeBytes": 2684354560,
+    "softBytes": 3221225472,
+    "targetBytes": 6442450944
+   },
+   "expected": {
+    "packages": [
+     {
+      "slot": "s0",
+      "key": "0000000000000003",
+      "reason": "pressure"
+     }
+    ],
+    "outputBases": [],
+    "temporaries": [],
+    "foreign": []
+   }
+  },
+  {
+   "name": "pressure without measured sizes takes every candidate",
+   "slots": 3,
+   "services": 4,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s0",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s0",
+       "key": "0000000000000001",
+       "keys": [
+        "0000000000000001"
+       ],
+       "usedAt": 8638200000
+      },
+      "packages": [
+       {
+        "key": "0000000000000001",
+        "modifiedAt": 8638200000
+       },
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8622000000
+       },
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8586000000
+       }
+      ]
+     },
+     {
+      "slot": "s1",
+      "outputBase": false,
+      "packages": [
+       {
+        "key": "0000000000000005",
+        "modifiedAt": 8628000000
+       },
+       {
+        "key": "0000000000000006",
+        "modifiedAt": 8634000000
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "pressure": {
+    "freeBytes": 2147483648,
+    "softBytes": 3221225472,
+    "targetBytes": 6442450944
+   },
+   "expected": {
+    "packages": [
+     {
+      "slot": "s0",
+      "key": "0000000000000002",
+      "reason": "pressure"
+     },
+     {
+      "slot": "s0",
+      "key": "0000000000000003",
+      "reason": "pressure"
+     },
+     {
+      "slot": "s1",
+      "key": "0000000000000005",
+      "reason": "pressure"
+     }
+    ],
+    "outputBases": [],
+    "temporaries": [],
+    "foreign": []
+   }
+  },
+  {
+   "name": "above the soft threshold the pressure rule does nothing",
+   "slots": 3,
+   "services": 4,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s0",
+      "outputBase": true,
+      "outputBaseBytes": 629145600,
+      "state": {
+       "version": 1,
+       "slot": "s0",
+       "key": "0000000000000001",
+       "keys": [
+        "0000000000000001",
+        "0000000000000002",
+        "0000000000000003"
+       ],
+       "usedAt": 8638200000
+      },
+      "packages": [
+       {
+        "key": "0000000000000001",
+        "modifiedAt": 8638200000,
+        "bytes": 524288000
+       },
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8622000000,
+        "bytes": 838860800
+       },
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8586000000,
+        "bytes": 314572800
+       },
+       {
+        "key": "0000000000000004",
+        "modifiedAt": 8639700000,
+        "bytes": 419430400
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "pressure": {
+    "freeBytes": 4294967296,
+    "softBytes": 3221225472,
+    "targetBytes": 6442450944
+   },
+   "expected": {
+    "packages": [],
+    "outputBases": [],
+    "temporaries": [],
+    "foreign": []
+   }
+  },
+  {
+   "name": "exactly at the soft threshold the pressure rule does nothing",
+   "slots": 3,
+   "services": 4,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s0",
+      "outputBase": true,
+      "outputBaseBytes": 629145600,
+      "state": {
+       "version": 1,
+       "slot": "s0",
+       "key": "0000000000000001",
+       "keys": [
+        "0000000000000001",
+        "0000000000000002",
+        "0000000000000003"
+       ],
+       "usedAt": 8638200000
+      },
+      "packages": [
+       {
+        "key": "0000000000000001",
+        "modifiedAt": 8638200000,
+        "bytes": 524288000
+       },
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8622000000,
+        "bytes": 838860800
+       },
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8586000000,
+        "bytes": 314572800
+       },
+       {
+        "key": "0000000000000004",
+        "modifiedAt": 8639700000,
+        "bytes": 419430400
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "pressure": {
+    "freeBytes": 3221225472,
+    "softBytes": 3221225472,
+    "targetBytes": 6442450944
+   },
+   "expected": {
+    "packages": [],
+    "outputBases": [],
+    "temporaries": [],
+    "foreign": []
+   }
+  },
+  {
+   "name": "idle output bases go after the packages when the packages are not enough, the longest idle first",
+   "slots": 4,
+   "services": 4,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s0",
+      "outputBase": true,
+      "outputBaseBytes": 1073741824,
+      "state": {
+       "version": 1,
+       "slot": "s0",
+       "key": "0000000000000001",
+       "keys": [
+        "0000000000000001"
+       ],
+       "usedAt": 8614800000
+      },
+      "packages": [
+       {
+        "key": "0000000000000001",
+        "modifiedAt": 8614800000,
+        "bytes": 209715200
+       }
+      ]
+     },
+     {
+      "slot": "s1",
+      "outputBase": true,
+      "outputBaseBytes": 2147483648,
+      "state": {
+       "version": 1,
+       "slot": "s1",
+       "key": "0000000000000002",
+       "keys": [
+        "0000000000000002"
+       ],
+       "usedAt": 8568000000
+      },
+      "packages": [
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8568000000,
+        "bytes": 209715200
+       }
+      ]
+     },
+     {
+      "slot": "s2",
+      "outputBase": true,
+      "outputBaseBytes": 3221225472,
+      "state": {
+       "version": 1,
+       "slot": "s2",
+       "key": "0000000000000003",
+       "keys": [
+        "0000000000000003"
+       ],
+       "usedAt": 8632800000
+      },
+      "packages": [
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8632800000,
+        "bytes": 209715200
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "pressure": {
+    "freeBytes": 1073741824,
+    "softBytes": 3221225472,
+    "targetBytes": 6442450944
+   },
+   "expected": {
+    "packages": [],
+    "outputBases": [
+     {
+      "slot": "s0",
+      "reason": "pressure"
+     },
+     {
+      "slot": "s1",
+      "reason": "pressure"
+     }
+    ],
+    "temporaries": [],
+    "foreign": []
+   }
+  },
+  {
+   "name": "a held slot and an output base idle for less than the minimum stay under pressure",
+   "slots": 3,
+   "services": 4,
+   "now": 8640000000,
+   "held": [
+    "s0"
+   ],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s0",
+      "outputBase": true,
+      "outputBaseBytes": 1073741824,
+      "state": {
+       "version": 1,
+       "slot": "s0",
+       "key": "0000000000000001",
+       "keys": [
+        "0000000000000001",
+        "0000000000000002"
+       ],
+       "usedAt": 8638200000
+      },
+      "packages": [
+       {
+        "key": "0000000000000001",
+        "modifiedAt": 8638200000,
+        "bytes": 209715200
+       },
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8586000000,
+        "bytes": 943718400
+       }
+      ]
+     },
+     {
+      "slot": "s1",
+      "outputBase": true,
+      "outputBaseBytes": 1073741824,
+      "state": {
+       "version": 1,
+       "slot": "s1",
+       "key": "0000000000000003",
+       "keys": [
+        "0000000000000003",
+        "0000000000000004"
+       ],
+       "usedAt": 8638200000
+      },
+      "packages": [
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8638200000,
+        "bytes": 209715200
+       },
+       {
+        "key": "0000000000000004",
+        "modifiedAt": 8586000000,
+        "bytes": 943718400
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "pressure": {
+    "freeBytes": 1073741824,
+    "softBytes": 3221225472,
+    "targetBytes": 6442450944
+   },
+   "expected": {
+    "packages": [
+     {
+      "slot": "s1",
+      "key": "0000000000000004",
+      "reason": "pressure"
+     }
+    ],
+    "outputBases": [],
+    "temporaries": [],
+    "foreign": []
+   }
+  },
+  {
+   "name": "leftover capture folders of kept packages are listed, those of removed or held ones are not",
+   "slots": 3,
+   "services": 4,
+   "now": 8640000000,
+   "held": [
+    "s1"
+   ],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s0",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s0",
+       "key": "0000000000000001",
+       "keys": [
+        "0000000000000001",
+        "0000000000000002",
+        "0000000000000003",
+        "0000000000000004",
+        "0000000000000005",
+        "0000000000000006",
+        "0000000000000007"
+       ],
+       "usedAt": 8638200000
+      },
+      "packages": [
+       {
+        "key": "0000000000000001",
+        "modifiedAt": 8638200000,
+        "temporary": true
+       },
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8637600000
+       },
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8637000000
+       },
+       {
+        "key": "0000000000000004",
+        "modifiedAt": 8636400000
+       },
+       {
+        "key": "0000000000000005",
+        "modifiedAt": 8635800000
+       },
+       {
+        "key": "0000000000000006",
+        "modifiedAt": 8635200000
+       },
+       {
+        "key": "0000000000000007",
+        "modifiedAt": 8634600000,
+        "temporary": true
+       }
+      ]
+     },
+     {
+      "slot": "s1",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s1",
+       "key": "0000000000000008",
+       "keys": [
+        "0000000000000008"
+       ],
+       "usedAt": 8638200000
+      },
+      "packages": [
+       {
+        "key": "0000000000000008",
+        "modifiedAt": 8638200000,
+        "temporary": true
+       }
+      ]
+     },
+     {
+      "slot": "s2",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s2",
+       "key": "0000000000000009",
+       "keys": [
+        "0000000000000009"
+       ],
+       "usedAt": 8638200000
+      },
+      "packages": [
+       {
+        "key": "0000000000000009",
+        "modifiedAt": 8638200000,
+        "temporary": true
+       },
+       {
+        "key": "000000000000000a",
+        "modifiedAt": 8460000000,
+        "temporary": true
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "expected": {
+    "packages": [
+     {
+      "slot": "s0",
+      "key": "0000000000000007",
+      "reason": "count"
+     }
+    ],
+    "outputBases": [],
+    "temporaries": [
+     {
+      "slot": "s0",
+      "key": "0000000000000001"
+     },
+     {
+      "slot": "s2",
+      "key": "0000000000000009"
+     },
+     {
+      "slot": "s2",
+      "key": "000000000000000a"
+     }
+    ],
+    "foreign": []
+   }
+  },
+  {
+   "name": "packages of a slot beyond the capacity are credited to the pressure need",
+   "slots": 2,
+   "services": 1,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s0",
+      "outputBase": true,
+      "outputBaseBytes": 1073741824,
+      "state": {
+       "version": 1,
+       "slot": "s0",
+       "key": "0000000000000002",
+       "keys": [
+        "0000000000000002",
+        "0000000000000003"
+       ],
+       "usedAt": 8638200000
+      },
+      "packages": [
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8638200000,
+        "bytes": 209715200
+       },
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8586000000,
+        "bytes": 943718400
+       }
+      ]
+     },
+     {
+      "slot": "s14",
+      "outputBase": true,
+      "outputBaseBytes": 4294967296,
+      "packages": [
+       {
+        "key": "0000000000000001",
+        "modifiedAt": 8638200000,
+        "bytes": 3221225472
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "pressure": {
+    "freeBytes": 1073741824,
+    "softBytes": 3221225472,
+    "targetBytes": 6442450944
+   },
+   "expected": {
+    "packages": [
+     {
+      "slot": "s14",
+      "key": "0000000000000001",
+      "reason": "capacity"
+     }
+    ],
+    "outputBases": [
+     {
+      "slot": "s14",
+      "reason": "capacity"
+     }
+    ],
+    "temporaries": [],
+    "foreign": []
+   }
+  },
+  {
+   "name": "unheld growth slots are retired whole, longest idle first, until the target is met",
+   "slots": 3,
+   "services": 4,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s0",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s0",
+       "key": "0000000000000001",
+       "keys": [
+        "0000000000000001"
+       ],
+       "usedAt": 8639700000
+      },
+      "packages": [
+       {
+        "key": "0000000000000001",
+        "modifiedAt": 8639700000,
+        "bytes": 838860800
+       }
+      ],
+      "outputBaseBytes": 419430400
+     },
+     {
+      "slot": "s3",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s3",
+       "key": "0000000000000002",
+       "keys": [
+        "0000000000000002"
+       ],
+       "usedAt": 8622000000
+      },
+      "packages": [
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8622000000,
+        "bytes": 1572864000
+       }
+      ],
+      "outputBaseBytes": 524288000
+     },
+     {
+      "slot": "s4",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s4",
+       "key": "0000000000000003",
+       "keys": [
+        "0000000000000003"
+       ],
+       "usedAt": 8632800000
+      },
+      "packages": [
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8632800000,
+        "bytes": 1258291200
+       }
+      ],
+      "outputBaseBytes": 419430400
+     },
+     {
+      "slot": "s5",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s5",
+       "key": "0000000000000004",
+       "keys": [
+        "0000000000000004"
+       ],
+       "usedAt": 8638200000
+      },
+      "packages": [
+       {
+        "key": "0000000000000004",
+        "modifiedAt": 8638200000,
+        "bytes": 943718400
+       }
+      ],
+      "outputBaseBytes": 314572800
+     }
+    ],
+    "foreign": []
+   },
+   "pressure": {
+    "freeBytes": 1073741824,
+    "softBytes": 3221225472,
+    "targetBytes": 6442450944
+   },
+   "expected": {
+    "packages": [
+     {
+      "slot": "s3",
+      "key": "0000000000000002",
+      "reason": "growth"
+     },
+     {
+      "slot": "s4",
+      "key": "0000000000000003",
+      "reason": "growth"
+     },
+     {
+      "slot": "s5",
+      "key": "0000000000000004",
+      "reason": "growth"
+     }
+    ],
+    "outputBases": [
+     {
+      "slot": "s3",
+      "reason": "growth"
+     },
+     {
+      "slot": "s4",
+      "reason": "growth"
+     },
+     {
+      "slot": "s5",
+      "reason": "growth"
+     }
+    ],
+    "temporaries": [],
+    "foreign": []
+   }
+  },
+  {
+   "name": "growth slots idle for less than the grace and held ones stay",
+   "slots": 3,
+   "services": 4,
+   "now": 8640000000,
+   "held": [
+    "s5"
+   ],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s3",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s3",
+       "key": "0000000000000002",
+       "keys": [
+        "0000000000000002"
+       ],
+       "usedAt": 8639700000
+      },
+      "packages": [
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8639700000,
+        "bytes": 1572864000
+       }
+      ],
+      "outputBaseBytes": 524288000
+     },
+     {
+      "slot": "s4",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s4",
+       "key": "0000000000000003",
+       "keys": [
+        "0000000000000003"
+       ],
+       "usedAt": 8628000000
+      },
+      "packages": [
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8628000000,
+        "bytes": 1258291200
+       }
+      ],
+      "outputBaseBytes": 419430400
+     },
+     {
+      "slot": "s5",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s5",
+       "key": "0000000000000004",
+       "keys": [
+        "0000000000000004"
+       ],
+       "usedAt": 8638200000
+      },
+      "packages": [
+       {
+        "key": "0000000000000004",
+        "modifiedAt": 8638200000,
+        "bytes": 943718400
+       }
+      ],
+      "outputBaseBytes": 314572800
+     }
+    ],
+    "foreign": []
+   },
+   "pressure": {
+    "freeBytes": 1073741824,
+    "softBytes": 3221225472,
+    "targetBytes": 6442450944
+   },
+   "expected": {
+    "packages": [
+     {
+      "slot": "s4",
+      "key": "0000000000000003",
+      "reason": "growth"
+     }
+    ],
+    "outputBases": [
+     {
+      "slot": "s4",
+      "reason": "growth"
+     }
+    ],
+    "temporaries": [],
+    "foreign": []
+   }
+  },
+  {
+   "name": "retirement stops as soon as the need is covered",
+   "slots": 3,
+   "services": 4,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s3",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s3",
+       "key": "0000000000000002",
+       "keys": [
+        "0000000000000002"
+       ],
+       "usedAt": 8622000000
+      },
+      "packages": [
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8622000000,
+        "bytes": 3145728000
+       }
+      ],
+      "outputBaseBytes": 524288000
+     },
+     {
+      "slot": "s4",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s4",
+       "key": "0000000000000003",
+       "keys": [
+        "0000000000000003"
+       ],
+       "usedAt": 8628000000
+      },
+      "packages": [
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8628000000,
+        "bytes": 3145728000
+       }
+      ],
+      "outputBaseBytes": 419430400
+     },
+     {
+      "slot": "s5",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s5",
+       "key": "0000000000000004",
+       "keys": [
+        "0000000000000004"
+       ],
+       "usedAt": 8634000000
+      },
+      "packages": [
+       {
+        "key": "0000000000000004",
+        "modifiedAt": 8634000000,
+        "bytes": 3145728000
+       }
+      ],
+      "outputBaseBytes": 314572800
+     }
+    ],
+    "foreign": []
+   },
+   "pressure": {
+    "freeBytes": 2684354560,
+    "softBytes": 3221225472,
+    "targetBytes": 6442450944
+   },
+   "expected": {
+    "packages": [
+     {
+      "slot": "s3",
+      "key": "0000000000000002",
+      "reason": "growth"
+     },
+     {
+      "slot": "s4",
+      "key": "0000000000000003",
+      "reason": "growth"
+     }
+    ],
+    "outputBases": [
+     {
+      "slot": "s3",
+      "reason": "growth"
+     },
+     {
+      "slot": "s4",
+      "reason": "growth"
+     }
+    ],
+    "temporaries": [],
+    "foreign": []
+   }
+  },
+  {
+   "name": "planned slots are never retired as growth slots",
+   "slots": 3,
+   "services": 4,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s0",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s0",
+       "key": "0000000000000001",
+       "keys": [
+        "0000000000000001"
+       ],
+       "usedAt": 8622000000
+      },
+      "packages": [
+       {
+        "key": "0000000000000001",
+        "modifiedAt": 8622000000,
+        "bytes": 3145728000
+       }
+      ],
+      "outputBaseBytes": 524288000
+     },
+     {
+      "slot": "s1",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s1",
+       "key": "0000000000000002",
+       "keys": [
+        "0000000000000002"
+       ],
+       "usedAt": 8622000000
+      },
+      "packages": [
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8622000000,
+        "bytes": 3145728000
+       }
+      ],
+      "outputBaseBytes": 524288000
+     },
+     {
+      "slot": "s2",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s2",
+       "key": "0000000000000003",
+       "keys": [
+        "0000000000000003"
+       ],
+       "usedAt": 8622000000
+      },
+      "packages": [
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8622000000,
+        "bytes": 3145728000
+       }
+      ],
+      "outputBaseBytes": 524288000
+     }
+    ],
+    "foreign": []
+   },
+   "pressure": {
+    "freeBytes": 1073741824,
+    "softBytes": 3221225472,
+    "targetBytes": 6442450944
+   },
+   "expected": {
+    "packages": [],
+    "outputBases": [],
+    "temporaries": [],
+    "foreign": []
+   }
+  },
+  {
+   "name": "without measured sizes every old growth slot goes",
+   "slots": 3,
+   "services": 4,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s3",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s3",
+       "key": "0000000000000002",
+       "keys": [
+        "0000000000000002"
+       ],
+       "usedAt": 8622000000
+      },
+      "packages": [
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8622000000
+       }
+      ]
+     },
+     {
+      "slot": "s9",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s9",
+       "key": "0000000000000003",
+       "keys": [
+        "0000000000000003"
+       ],
+       "usedAt": 8634000000
+      },
+      "packages": [
+       {
+        "key": "0000000000000003",
+        "modifiedAt": 8634000000
+       }
+      ]
+     },
+     {
+      "slot": "s11",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s11",
+       "key": "0000000000000004",
+       "keys": [
+        "0000000000000004"
+       ],
+       "usedAt": 8638800000
+      },
+      "packages": [
+       {
+        "key": "0000000000000004",
+        "modifiedAt": 8638800000
+       }
+      ]
+     }
+    ],
+    "foreign": []
+   },
+   "pressure": {
+    "freeBytes": 1073741824,
+    "softBytes": 3221225472,
+    "targetBytes": 6442450944
+   },
+   "expected": {
+    "packages": [
+     {
+      "slot": "s11",
+      "key": "0000000000000004",
+      "reason": "growth"
+     },
+     {
+      "slot": "s3",
+      "key": "0000000000000002",
+      "reason": "growth"
+     },
+     {
+      "slot": "s9",
+      "key": "0000000000000003",
+      "reason": "growth"
+     }
+    ],
+    "outputBases": [
+     {
+      "slot": "s11",
+      "reason": "growth"
+     },
+     {
+      "slot": "s3",
+      "reason": "growth"
+     },
+     {
+      "slot": "s9",
+      "reason": "growth"
+     }
+    ],
+    "temporaries": [],
+    "foreign": []
+   }
+  },
+  {
+   "name": "no pressure no retirement",
+   "slots": 3,
+   "services": 4,
+   "now": 8640000000,
+   "held": [],
+   "inventory": {
+    "slots": [
+     {
+      "slot": "s3",
+      "outputBase": true,
+      "state": {
+       "version": 1,
+       "slot": "s3",
+       "key": "0000000000000002",
+       "keys": [
+        "0000000000000002"
+       ],
+       "usedAt": 8622000000
+      },
+      "packages": [
+       {
+        "key": "0000000000000002",
+        "modifiedAt": 8622000000,
+        "bytes": 3145728000
+       }
+      ],
+      "outputBaseBytes": 524288000
+     }
+    ],
+    "foreign": []
+   },
+   "pressure": {
+    "freeBytes": 10737418240,
+    "softBytes": 3221225472,
+    "targetBytes": 6442450944
+   },
+   "expected": {
+    "packages": [],
+    "outputBases": [],
+    "temporaries": [],
+    "foreign": []
+   }
+  }
+ ],
+ "restore": [
+  {
+   "name": "one root",
+   "roots": [
+    "a/b/dist"
+   ],
+   "expected": [
+    {
+     "resource": "bazel-restore:",
+     "mode": "shared"
+    },
+    {
+     "resource": "bazel-restore:a",
+     "mode": "shared"
+    },
+    {
+     "resource": "bazel-restore:a/b",
+     "mode": "shared"
+    },
+    {
+     "resource": "bazel-restore:a/b/dist",
+     "mode": "exclusive"
+    }
+   ]
+  },
+  {
+   "name": "sibling roots share their ancestors",
+   "roots": [
+    "a/b/dist",
+    "a/b/types"
+   ],
+   "expected": [
+    {
+     "resource": "bazel-restore:",
+     "mode": "shared"
+    },
+    {
+     "resource": "bazel-restore:a",
+     "mode": "shared"
+    },
+    {
+     "resource": "bazel-restore:a/b",
+     "mode": "shared"
+    },
+    {
+     "resource": "bazel-restore:a/b/dist",
+     "mode": "exclusive"
+    },
+    {
+     "resource": "bazel-restore:a/b/types",
+     "mode": "exclusive"
+    }
+   ]
+  },
+  {
+   "name": "a root inside another root stays exclusive",
+   "roots": [
+    "a/b",
+    "a/b/dist"
+   ],
+   "expected": [
+    {
+     "resource": "bazel-restore:",
+     "mode": "shared"
+    },
+    {
+     "resource": "bazel-restore:a",
+     "mode": "shared"
+    },
+    {
+     "resource": "bazel-restore:a/b",
+     "mode": "exclusive"
+    },
+    {
+     "resource": "bazel-restore:a/b/dist",
+     "mode": "exclusive"
+    }
+   ]
+  },
+  {
+   "name": "top level root",
+   "roots": [
+    "dist"
+   ],
+   "expected": [
+    {
+     "resource": "bazel-restore:",
+     "mode": "shared"
+    },
+    {
+     "resource": "bazel-restore:dist",
+     "mode": "exclusive"
+    }
+   ]
+  },
+  {
+   "name": "no roots hold only the shared root",
+   "roots": [],
+   "expected": [
+    {
+     "resource": "bazel-restore:",
+     "mode": "shared"
+    }
+   ]
+  },
+  {
+   "name": "emoji paths stay as they are",
+   "roots": [
+    "🧰️framework/🛍️x/dist"
+   ],
+   "expected": [
+    {
+     "resource": "bazel-restore:",
+     "mode": "shared"
+    },
+    {
+     "resource": "bazel-restore:🧰️framework",
+     "mode": "shared"
+    },
+    {
+     "resource": "bazel-restore:🧰️framework/🛍️x",
+     "mode": "shared"
+    },
+    {
+     "resource": "bazel-restore:🧰️framework/🛍️x/dist",
+     "mode": "exclusive"
+    }
+   ]
+  },
+  {
+   "name": "too many resources fall back to the exclusive root",
+   "roots": [
+    "p0/q0/r0/dist",
+    "p1/q1/r1/dist",
+    "p2/q2/r2/dist",
+    "p3/q3/r3/dist",
+    "p4/q4/r4/dist",
+    "p5/q5/r5/dist",
+    "p6/q6/r6/dist",
+    "p7/q7/r7/dist",
+    "p8/q8/r8/dist",
+    "p9/q9/r9/dist",
+    "p10/q10/r10/dist",
+    "p11/q11/r11/dist",
+    "p12/q12/r12/dist",
+    "p13/q13/r13/dist",
+    "p14/q14/r14/dist",
+    "p15/q15/r15/dist",
+    "p16/q16/r16/dist",
+    "p17/q17/r17/dist",
+    "p18/q18/r18/dist",
+    "p19/q19/r19/dist",
+    "p20/q20/r20/dist",
+    "p21/q21/r21/dist",
+    "p22/q22/r22/dist",
+    "p23/q23/r23/dist",
+    "p24/q24/r24/dist",
+    "p25/q25/r25/dist",
+    "p26/q26/r26/dist",
+    "p27/q27/r27/dist",
+    "p28/q28/r28/dist",
+    "p29/q29/r29/dist"
+   ],
+   "expected": [
+    {
+     "resource": "bazel-restore:",
+     "mode": "exclusive"
+    }
+   ]
+  }
+ ],
+ "restoreRefused": [
+  {
+   "name": "absolute",
+   "roots": [
+    "/etc/x"
+   ]
+  },
+  {
+   "name": "dot dot",
+   "roots": [
+    "a/../b"
+   ]
+  },
+  {
+   "name": "empty segment",
+   "roots": [
+    "a//b"
+   ]
+  },
+  {
+   "name": "empty root",
+   "roots": [
+    ""
+   ]
+  }
+ ],
+ "messages": [
+  {
+   "id": "waiting",
+   "values": {
+    "slots": 3,
+    "seconds": 12
+   },
+   "en": "[bazel] all 3 Bazel server slots are in use; waiting for one (12 s)",
+   "de": "[bazel] alle 3 Bazel-Server-Slots sind belegt; warte auf einen freien Slot (12 s)"
+  },
+  {
+   "id": "waiting-service",
+   "values": {
+    "slots": 4,
+    "seconds": 7
+   },
+   "en": "[bazel] all 4 Bazel service slots are in use; waiting for one (7 s)",
+   "de": "[bazel] alle 4 Bazel-Dienst-Slots sind belegt; warte auf einen freien Slot (7 s)"
+  },
+  {
+   "id": "claimed",
+   "values": {
+    "slot": "s1",
+    "mode": "warm"
+   },
+   "en": "[bazel] session slot s1: warm",
+   "de": "[bazel] Sitzungs-Slot s1: warm"
+  },
+  {
+   "id": "stopped",
+   "values": {
+    "slot": "s2"
+   },
+   "en": "[bazel] stopped the server of slot s2",
+   "de": "[bazel] Server von Slot s2 gestoppt"
+  },
+  {
+   "id": "status-header",
+   "values": {},
+   "en": "slot  state   last selection    last used",
+   "de": "Slot  Status  letzte Auswahl    zuletzt benutzt"
+  },
+  {
+   "id": "status-held",
+   "values": {},
+   "en": "in use",
+   "de": "belegt"
+  },
+  {
+   "id": "status-free",
+   "values": {},
+   "en": "free",
+   "de": "frei"
+  },
+  {
+   "id": "warm",
+   "values": {},
+   "en": "warm server and package for this selection",
+   "de": "warmer Server und warmes Paket für diese Auswahl"
+  },
+  {
+   "id": "switch",
+   "values": {},
+   "en": "the package of the slot is replaced in place for a different selection, the server stays",
+   "de": "das Paket des Slots wird für eine andere Auswahl an Ort und Stelle ersetzt, der Server bleibt"
+  },
+  {
+   "id": "fresh",
+   "values": {},
+   "en": "fresh server",
+   "de": "frischer Server"
+  }
+ ],
+ "workspaces": {
+  "root": "/bounded/products/bazel/workspaces",
+  "accepted": [
+   {
+    "slot": "s0",
+    "key": "0000000000000001",
+    "path": "/bounded/products/bazel/workspaces/s0/0000000000000000"
+   }
+  ],
+  "refused": [
+   {
+    "slot": "x0",
+    "key": "0000000000000001"
+   },
+   {
+    "slot": "s0",
+    "key": "XYZ"
+   },
+   {
+    "slot": "../s0",
+    "key": "0000000000000001"
+   },
+   {
+    "slot": "s0",
+    "key": "0123456789abcde"
+   }
+  ]
+ },
+ "languages": [
+  {
+   "environment": {
+    "SEMIO_LANGUAGE": "de"
+   },
+   "expected": "de"
+  },
+  {
+   "environment": {
+    "SEMIO_LANGUAGE": "en",
+    "LANG": "de_DE.UTF-8"
+   },
+   "expected": "en"
+  },
+  {
+   "environment": {
+    "LANG": "de_DE.UTF-8"
+   },
+   "expected": "de"
+  },
+  {
+   "environment": {
+    "LC_ALL": "C",
+    "LANG": "de_DE.UTF-8"
+   },
+   "expected": null
+  },
+  {
+   "environment": {},
+   "expected": null
+  }
+ ],
+ "overrides": [
+  {
+   "environment": {},
+   "slots": null
+  },
+  {
+   "environment": {
+    "SEMIO_BAZEL_SERVERS": ""
+   },
+   "slots": null
+  },
+  {
+   "environment": {
+    "SEMIO_BAZEL_SERVERS": "2"
+   },
+   "slots": 2
+  },
+  {
+   "environment": {
+    "SEMIO_BAZEL_SERVERS": "12"
+   },
+   "slots": 12
+  },
+  {
+   "environment": {
+    "SEMIO_BAZEL_SERVERS": "0"
+   },
+   "slots": "refused"
+  },
+  {
+   "environment": {
+    "SEMIO_BAZEL_SERVERS": "100"
+   },
+   "slots": "refused"
+  },
+  {
+   "environment": {
+    "SEMIO_BAZEL_SERVERS": "two"
+   },
+   "slots": "refused"
+  }
+ ]
+}

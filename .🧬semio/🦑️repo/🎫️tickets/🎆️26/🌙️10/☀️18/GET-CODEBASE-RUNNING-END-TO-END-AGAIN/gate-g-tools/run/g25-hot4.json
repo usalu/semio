@@ -1,0 +1,12 @@
+{
+ "label": "g25-hot4",
+ "target": "@teaching/architecture-course:build",
+ "started": "07:31:46",
+ "wall_s": 20.2,
+ "peak_tree_mb": 1914,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

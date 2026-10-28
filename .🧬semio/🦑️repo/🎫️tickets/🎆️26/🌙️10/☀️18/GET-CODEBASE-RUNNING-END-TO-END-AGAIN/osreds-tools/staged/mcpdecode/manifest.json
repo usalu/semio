@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🛡️policy/🧪️tests/🔬️quick/🦀️.rs": {
+  "file": "f01.rs",
+  "base": "eff733762b45a9334ac29b44a69e5c2e4596bb17859b51e94db3ae4a8326543e",
+  "new": "f519fb89161693b7143eb049f5bff6ab13b2cf83027c6abb59b164b012ea1135"
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🖥️ui/🧪️tests/🔬️quick/🦀️.rs": {
+  "file": "f02.rs",
+  "base": "58df2f3602fe2166120b3af48770c0a2eecc7312e98081085c2ebc2c6ede7357",
+  "new": "a73c0cea2744d20b9bcaf989047ecd84397fe67d887a299c889b19ff95c87d73"
+ }
+}

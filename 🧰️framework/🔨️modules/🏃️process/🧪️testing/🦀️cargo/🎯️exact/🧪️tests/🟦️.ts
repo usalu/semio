@@ -19,6 +19,8 @@ import Ajv from"ajv";
 import ts from"typescript";
 import schema from"../📋️protocol/🧬️schema/🔣️.json";
 import fixture from"./🧫️fixtures/🔣️.json";
+import{privateRepositoryWorkspaceV1}from"../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 test("compiler runtime loader matches neutral platform vectors and independent SQLite environment projection", () => {
   expect(new Ajv2020({ strict: true }).compile(loaderSchema)(loaderFixture)).toBe(true);
   const oracle = new Database(":memory:");
@@ -67,7 +69,7 @@ for (const outcome of ["admitted", "failed", "relative", "multiline", "cancelled
           return { status: 0, signal: null, stderr: "", stdout: args[0] === "--list" ? "fixture::law: test\n" : "test fixture::law ... ok\ntest result: ok. 1 passed; 0 failed; 0 ignored;\n" };
         },
       };
-      const result = runExactCargoLaws({ invocation, control, storage: law.storage, leaseDirectory: join(process.cwd(), ".cache/b/l/m/data"), sourceBoundary: lawSourceBoundaryV1, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 60000, listMilliseconds: 60000, lawMilliseconds: 60000 }, cwd: source, artifactDir: artifacts, cargoTargetDir: target, env: { ...process.env, ...law.environment, SEMIO_TEST_ARTIFACT_DIR: undefined, CARGO_BUILD_BUILD_DIR: build, COMPILER_AUTHORITY: "original" }, nativeEnv: { COMPILER_AUTHORITY: "native" }, groups: [{ package: "fixture", target: { kind: "lib", name: "fixture" }, laws: ["fixture::law"] }], manifestPaths: { fixture: manifest } }, port);
+      const result = runExactCargoLaws({ invocation, control, storage: law.storage, leaseDirectory: join(repository.root, ".cache/b/l/m/data"), sourceBoundary: lawSourceBoundaryV1, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 60000, listMilliseconds: 60000, lawMilliseconds: 60000 }, cwd: source, artifactDir: artifacts, cargoTargetDir: target, env: { ...process.env, ...law.environment, SEMIO_TEST_ARTIFACT_DIR: undefined, CARGO_BUILD_BUILD_DIR: build, COMPILER_AUTHORITY: "original" }, nativeEnv: { COMPILER_AUTHORITY: "native" }, groups: [{ package: "fixture", target: { kind: "lib", name: "fixture" }, laws: ["fixture::law"] }], manifestPaths: { fixture: manifest } }, port);
       if (outcome === "admitted") { expect((await result)[0]?.assertions).toBe(1); expect(calls).toEqual(["cargo", "rustc", executable, executable]); }
       else { await expect(result).rejects.toThrow(); expect(calls).toEqual(["cargo", "rustc"]); }
     }));

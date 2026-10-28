@@ -64,7 +64,7 @@ test.skipIf(!python)("a generator snapshot restore leaves identical files untouc
    expect(JSON.parse(oracle.stdout.toString())).toEqual(Object.fromEntries(Object.entries(corpus.snapshot.files).map(([path,text])=>[path,sha(text)])));
    write(root,corpus.snapshot.edited);await executorApi.restoreBazelSnapshotV1(root,snapshot,original,control());
    for(const[path,text]of Object.entries(corpus.snapshot.files))expect(bytes(path)).toBe(text);
-   await expect(executorApi.captureBazelSnapshotV1({workspace:root,task:task([corpus.snapshot.missing])},join(base,"missing"),original)).rejects.toThrow("was not produced");
+   await expect(executorApi.captureBazelSnapshotV1({workspace:root,task:task([corpus.snapshot.missing])},join(base,"missing"),original)).rejects.toThrow("build.bazel.replayed-output-missing");
    await executorApi.captureBazelSnapshotV1({workspace:root,task:task([corpus.snapshot.missing],true,{semio:{optionalOutputs:true}})},join(base,"optional"),original);
    await executorApi.captureBazelSnapshotV1({workspace:root,task:task([corpus.snapshot.missing],false)},join(base,"uncached"),original);
   });

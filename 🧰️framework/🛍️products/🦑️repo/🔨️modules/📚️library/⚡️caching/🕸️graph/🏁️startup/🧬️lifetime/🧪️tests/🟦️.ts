@@ -6,6 +6,7 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
 import {createNxDaemonLifetimeV1,createNxDaemonReadinessV1,type NxDaemonLifetimeEventV1} from "../🟦️.ts";
 
+const repository=await privateRepositoryWorkspaceV1();
 function sqliteOracle(events:readonly Readonly<{type:string;resource?:string;id?:string}>[]){
  const db=new Database(":memory:");db.exec("create table state(phase text, parentHeld integer, server integer);insert into state values('awaiting-acquisition',1,0);create table loans(name text primary key);create table children(kind text,id text,primary key(kind,id));");let accepted=true;
  try{for(const event of events){db.exec("begin");try{const state=db.query("select * from state").get() as {phase:string;parentHeld:number;server:number};if(state.phase==="terminal")throw Error("settled");let query="",args:(string|number)[]=[];
@@ -70,7 +71,7 @@ test("daemon sockets use a short funded namespace for each watched root and reje
  const validate=new Ajv({strict:true}).compile(socketSchema),tooling="a".repeat(64),socketRoot=resolve("/cache/l/m"),roots=new Set<string>();for(const row of socketFixture.cases){const workspaceRoot=row.workspaceRoot.startsWith("/")?resolve(row.workspaceRoot):row.workspaceRoot,selection={version:1,toolingIdentity:tooling,workspaceRoot,graphIdentity:row.graphIdentity,implementationIdentity:"d".repeat(64),watcherIdentity:row.watcherIdentity};if(!row.accepted){expect(()=>boundedNxSocketNamespaceV1(socketRoot,tooling,workspaceRoot,row.graphIdentity,"d".repeat(64),row.watcherIdentity??undefined)).toThrow();continue;}expect(validate(selection)).toBe(true);const namespace=boundedNxSocketNamespaceV1(socketRoot,tooling,workspaceRoot,row.graphIdentity,"d".repeat(64),row.watcherIdentity??undefined),key=new Bun.CryptoHasher("sha256").update(JSON.stringify([tooling,workspaceRoot.replaceAll("\\","/"),row.graphIdentity,"d".repeat(64),row.watcherIdentity])).digest("hex").slice(0,24);expect(namespace.environment.NX_SOCKET_DIR).toBe(join(socketRoot,"s",key));expect(namespace.environment.SEMIO_NX_SOCKET_STORAGE).toBe(socketRoot);expect(namespace.environment.NX_DAEMON_SOCKET_DIR).toBeUndefined();expect(Buffer.byteLength(join(namespace.environment.NX_SOCKET_DIR!,"d.sock"))).toBeLessThanOrEqual(95);roots.add(namespace.environment.NX_SOCKET_DIR!);}expect(roots.size).toBe(6);expect(()=>boundedNxSocketNamespaceV1("/"+"🦀".repeat(22),tooling,"/workspace/first",null,"d".repeat(64))).toThrow();
 });
 /** 🗂️ Independent watched workspaces and activation bindings cannot collide within one real funded data root. */
-test("daemon data namespace binds watched root and closed watcher identity",async()=>receiveScriptProcessInvocation(process.env,original=>withRepositoryCacheStoreV1(process.cwd(),"diagnostics",original,createIssuedResourceControlV1(original,"cache:store-entry",0),async store=>{
+test("daemon data namespace binds watched root and closed watcher identity",async()=>receiveScriptProcessInvocation(process.env,original=>withRepositoryCacheStoreV1(repository.root,"diagnostics",original,createIssuedResourceControlV1(original,"cache:store-entry",0),async store=>{
  const directory=mkdtempSync(join(store.root,"dn-")),root=join(directory,"image"),first=join(directory,"first"),second=join(directory,"second");for(const path of[root,first,second])mkdirSync(path);
  try{const identity="a".repeat(64),one=boundedNxNamespaceV1(root,root,identity,first,null,"d".repeat(64)),two=boundedNxNamespaceV1(root,root,identity,second,null,"d".repeat(64)),watch=boundedNxNamespaceV1(root,root,identity,first,null,"d".repeat(64),"1".repeat(24));expect(one.environment.NX_WORKSPACE_DATA_DIRECTORY).not.toBe(two.environment.NX_WORKSPACE_DATA_DIRECTORY);expect(watch.environment.NX_WORKSPACE_DATA_DIRECTORY).not.toBe(one.environment.NX_WORKSPACE_DATA_DIRECTORY);expect(()=>boundedNxNamespaceV1(root,root,identity,first,null,"d".repeat(64),"../escape")).toThrow();expect(one.environment.NX_CACHE_DIRECTORY).toBe(two.environment.NX_CACHE_DIRECTORY);}
  finally{rmSync(directory,{recursive:true,force:true});}
@@ -78,12 +79,27 @@ test("daemon data namespace binds watched root and closed watcher identity",asyn
 
 import {receiveScriptProcessInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 
 /** 🚪️ Independent JavaScript parsing keeps public daemon controls inside the same original service route. */
 test("public daemon start and stop preserve original service ownership",()=>{
  const patch=readFileSync(resolve(import.meta.dir,"../../../../🩹️patches/nx@23.2.0.patch"),"utf8"),client=patch.split("diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js\n")[1]!.split("diff --git ")[0]!,entry=patch.split("diff --git a/dist/src/command-line/daemon/daemon.js b/dist/src/command-line/daemon/daemon.js\n")[1]?.split("diff --git ")[0];
  expect(entry).toBeDefined();expect(client).toContain("await this.requestShutdown()");expect(client).toContain("-                process.kill(pid, 'SIGTERM');");expect(entry).toContain("+        await daemonClient.startDaemonIfNecessary();");
  const body=client.split("+    async stop() {")[1]?.split("\n+    }")[0];expect(body).toBeDefined();const ast=parse("async function stop(){"+body!.split("\n").filter(line=>line.startsWith("+")).map(line=>line.slice(1)).join("\n")+"}",{sourceType:"script"});expect(JSON.stringify(ast)).toContain("withNxDaemonStartupV1");
+});
+
+/** 🪶️ A client that is already connected sends its message without entering the startup owner: the connected check comes first, so only a client that is not connected pays for the exclusive startup lease, the tool store, the namespace and a birth server (every message of every client used to, serialized on one lease, which made the tail of every Nx run a queue of no-op startups). The patch text is executed, not pattern-matched: the statements the patch puts before the startup owner run against a stand-in client, the AST is read by a third-party parser. */
+test("a connected daemon client returns before it loads or enters the startup owner; a disconnected one still does",async()=>{
+ const patch=readFileSync(resolve(import.meta.dir,"../../../../🩹️patches/nx@23.2.0.patch"),"utf8"),client=patch.split("diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js\n")[1]!.split("diff --git ")[0]!;
+ const hunk=client.split("\n@@ ").find(part=>part.includes("async startDaemonIfNecessary() {"))!,rows=hunk.split("\n").slice(1).filter(line=>line.startsWith(" ")||line.startsWith("+")).map(line=>line.slice(1));
+ const declared=rows.findIndex(line=>line.includes("async startDaemonIfNecessary() {")),owner=rows.findIndex(line=>line.includes("return frozen.authorizers.withNxDaemonStartupV1("));
+ expect(declared).toBeGreaterThanOrEqual(0);expect(owner).toBeGreaterThan(declared+1);
+ const source="async function startDaemonIfNecessary(){\n"+rows.slice(declared+1,owner).join("\n")+"\nreturn 'startup owner entered';\n}",ast=parse(source,{sourceType:"script"}) as unknown as {program:{body:{body:{body:{type:string;test?:{left:{property:{name:string}};right:{property:{name:string}};operator:string}}[]}}[]}};
+ const first=ast.program.body[0]!.body.body[0]!;expect(first.type).toBe("IfStatement");expect(first.test!.left.property.name).toBe("_daemonStatus");expect(first.test!.right.property.name).toBe("CONNECTED");expect(first.test!.operator).toBe("==");
+ const DaemonStatus={DISCONNECTED:0,CONNECTING:1,CONNECTED:2};
+ const run=async(status:number)=>{const loaded:string[]=[];const require=(path:string)=>{loaded.push(path);return{loadSemioGraphAuthorizersV1:async()=>({authorizers:{withNxDaemonStartupV1:()=>undefined},toolingIdentity:"t"})};};const method=new Function("DaemonStatus","require","return ("+source+")")(DaemonStatus,require) as (this:object)=>Promise<unknown>;return{result:await method.call({_daemonStatus:status}),loaded};};
+ expect(await run(DaemonStatus.CONNECTED)).toEqual({result:undefined,loaded:[]});
+ for(const status of [DaemonStatus.DISCONNECTED,DaemonStatus.CONNECTING]){const row=await run(status);expect(row.result,String(status)).toBe("startup owner entered");expect(row.loaded.length,String(status)).toBeGreaterThan(0);}
 });
 
 /** 🚦️ A client that connects the moment the socket listens must wait for readiness instead of being refused: the daemon log of run 10 shows listen at .925, request at .126+1 s, ready later. */

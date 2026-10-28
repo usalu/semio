@@ -1,0 +1,68 @@
+{
+ "id": "e1",
+ "startedAt": "2026-10-26T19:08:29.423354+00:00",
+ "cmd": [
+  "nice",
+  "-n",
+  "10",
+  "bun",
+  "repo",
+  "--tool=bazel",
+  "run",
+  "@semio-tech/print-rs:build"
+ ],
+ "cwd": "/Users/ueli/Documents/semio",
+ "exit": 0,
+ "wallMs": 2636793.2,
+ "firstOutputMs": 29.6,
+ "executeStartMs": 1652692.2,
+ "peakRssBytes": 3669360640,
+ "peakRssAtMs": 1386857.4,
+ "bazelServersPeakRssBytes": 799588352,
+ "peakFootprintBytes": 1118372864,
+ "peakFootprintCompressedBytes": 6111232,
+ "gate": {
+  "lastRow": "6b",
+  "batch": "GROUP 2 = rev3-g (win-withheld + upgrade",
+  "appliedAt": "18:46",
+  "rows": 11
+ },
+ "swapUsedMbStart": 434.31,
+ "swapUsedMbEnd": 3465.31,
+ "swapUsedMbMax": 3705.31,
+ "load1Start": 31.3720703125,
+ "load1End": 28.0458984375,
+ "phases": {
+  "boot": 575.9,
+  "queue-capacity": 1011637.4,
+  "admission": 22219.7,
+  "verify": 71908.3,
+  "graph": 296635.3,
+  "tool-setup": 249715.6,
+  "execute": 979712.8,
+  "finish": 4388.2
+ },
+ "actions": {
+  "bazel": {
+   "processes": 2,
+   "executed": 1,
+   "cached": 3,
+   "internal": 1,
+   "line": "INFO: 2 processes: 3 action cache hit, 1 internal, 1 local.",
+   "totalActions": 2
+  },
+  "nx": null
+ },
+ "graph": {
+  "refreshedProjects": 0,
+  "inferredProjects": 2,
+  "generation": null,
+  "publishedSeconds": null
+ },
+ "capacityWaits": 179,
+ "capacityFirst": "[capacity] run: sized at 200% of the default from 3 earlier run(s) of its class",
+ "capacityLast": "[capacity] run: sized at 200% of the default from 3 earlier run(s) of its class",
+ "totalMbProfile": null,
+ "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/rustedit-g/e1.log",
+ "lines": 2402
+}

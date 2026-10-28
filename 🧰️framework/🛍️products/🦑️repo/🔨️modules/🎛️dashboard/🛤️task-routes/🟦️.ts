@@ -5,10 +5,11 @@ import {runOwnedCommand} from "../../../../../🔨️modules/🏃️process/📦
 import { createIssuedResourceControlV1,scriptInvocationEnvironment } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runOwnedBuildChildInvocationV1 } from "../../📚️library/📦️packages/🟦️typescript/🏗️build/🟦️.ts";
+import { withPlannedTestWorkersV1 } from "../../📚️library/📦️packages/🟦️typescript/🧪️testing/👷️workers/🟦️.ts";
 /** ⚙️ Builds, installs and tests the `semio-framework-repo-dashboard` crate and execs its `semio` binary (owned build route for `repo/dashboard/rs`). */
 import {join,relative} from "node:path";
 import { mkdir } from "node:fs/promises";
-import { captureDashboardSources, installedDashboard, installDashboard, staleDashboard, launchDashboard, withInstalledDashboardV1, type DashboardExecutionOptions } from "../../📚️library/📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
+import { captureDashboardSources, currentDashboardArtifactV1, exportDashboardArtifactV1, installDashboardArtifactV1, sayDashboardCurrentV1, installedDashboard, staleDashboard, launchDashboard, withInstalledDashboardV1, type DashboardExecutionOptions } from "../../📚️library/📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
 import { devToolingEnv, repoTestArtifactEnvironment } from "../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 import { BundleScript, type ScriptInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -18,22 +19,22 @@ const crates = ["semio-framework-repo-dashboard-core", "semio-framework-repo-das
 const dashboardOptions=(invocation:ScriptInvocation,workspace:string):DashboardExecutionOptions=>({invocation,workspace,network:repositoryCargoNetworkV1(invocation,workspace),mode:readBuildMode(process.env.SEMIO_BUILD_MODE),control:scriptCompilerAdmissionControlV1(invocation,"dashboard:execution",0)});
 export class BuildScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
-    if(process.env.SEMIO_TASK_PROJECT!=="@semio-tech/repo-dashboard-rs"||process.env.SEMIO_TASK_TARGET!=="build"){await runOwnedBuildChildInvocationV1(this.repoRoot,["run","@semio-tech/repo-dashboard-rs:build",...segments],this.invocation,createIssuedResourceControlV1(this.invocation,"dashboard:build",0));return;}
-    await buildAndInstallDashboard(this.root,this.repoRoot,dashboardOptions(this.invocation,this.repoRoot));
+    if(process.env.SEMIO_TASK_PROJECT!=="@semio-tech/repo-dashboard-rs"||process.env.SEMIO_TASK_TARGET!=="build"){if(!currentDashboardArtifactV1(this.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE)))await runOwnedBuildChildInvocationV1(this.repoRoot,["run","@semio-tech/repo-dashboard-rs:build",...segments],this.invocation,createIssuedResourceControlV1(this.invocation,"dashboard:build",0));await installDashboardArtifactV1(this.root,this.repoRoot,dashboardOptions(this.invocation,this.repoRoot));return;}
+    await buildDashboardArtifactV1(this.root,this.repoRoot,dashboardOptions(this.invocation,this.repoRoot));
   }
 }
 export class CompileScript extends BundleScript {
   async run(segments:string[]):Promise<void>{await runDeclaredRustBuildV1(this.repoRoot,"@semio-tech/repo-dashboard-rs",this.root,this.invocation,segments,"compile");}
 }
 export class InstallScript extends BundleScript {
-  async run(): Promise<void> { console.log(`[dashboard] Installed ${await installDashboard(this.root, this.repoRoot,dashboardOptions(this.invocation,this.repoRoot))}`); }
+  async run(): Promise<void> { console.log(`[dashboard] Installed ${await installDashboardArtifactV1(this.root,this.repoRoot,dashboardOptions(this.invocation,this.repoRoot))}`); }
 }
 export class PreferencesScript extends BundleScript {
   async run(segments:string[]):Promise<void>{process.exitCode=await launchDashboard(this.repoRoot,["preferences",...segments],dashboardOptions(this.invocation,this.repoRoot));}
 }
 export class TestScript extends BundleScript {
   private async bun(args:string[],label:string,options:DashboardExecutionOptions,env:NodeJS.ProcessEnv={}):Promise<void>{
-    await runOwnedCommand(process.execPath,["test",...args],this.repoRoot,label,compilerAdmissionBudgetV1(options.control),{env:scriptInvocationEnvironment(this.invocation,devToolingEnv(env)),signal:options.control.signal});
+    await withPlannedTestWorkersV1("bun-test",process.env,label,()=>runOwnedCommand(process.execPath,["test",...args],this.repoRoot,label,compilerAdmissionBudgetV1(options.control),{env:scriptInvocationEnvironment(this.invocation,devToolingEnv(env)),signal:options.control.signal}),1);
   }
 
   private async native(selection: { packages: string[]; extraArgs: string[] }, rest: string[]): Promise<void> {
@@ -56,7 +57,7 @@ export class TestScript extends BundleScript {
     }
     if(segments[0]==="cold-start"){
       if(segments.length!==1)throw Error("Expected test cold-start");
-      await this.bun([join(this.root,"../../🧪️tests/🧊️execution/❄️cold-start/🟦️.ts"),"--timeout","21600000"],"dashboard:cold-start",options,{...repoTestArtifactEnvironment(this.repoRoot,"dashboard-cold-start"),SEMIO_LOCALE:"en"});return;
+      await this.bun([join(this.root,"../../🧪️tests/🧊️execution/❄️cold-start/🟦️.ts"),"--timeout","21600000"],"dashboard:cold-start",options,{...repoTestArtifactEnvironment(this.repoRoot,"dashboard-cold-start"),SEMIO_LANGUAGE:"en"});return;
     }
     if(segments[0]==="language"){
       if(segments.length!==1)throw Error("Expected test language");
@@ -69,7 +70,7 @@ export class TestScript extends BundleScript {
     if(segments[0]==="source-freshness"){
       if(segments.length!==1)throw Error("Expected test source-freshness");
       const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR??join(this.repoRoot,".🧬semio/🦑️repo/⚡️cache/tests/dashboard-sources");await mkdir(artifacts,{recursive:true});
-      await this.bun([join(this.root,"../../🧪️tests/🧊️execution/🟦️.ts"),"--timeout","120000","--test-name-pattern","source digest"],"dashboard:source-freshness",options,{SEMIO_TEST_ARTIFACT_DIR:artifacts});return;
+      await this.bun([join(this.root,"../../🧪️tests/🧊️execution/🟦️.ts"),"--timeout","120000","--test-name-pattern","source digest"],"dashboard:source-freshness",options,{SEMIO_TEST_ARTIFACT_DIR:artifacts});await this.bun([join(this.root,"../../🧪️tests/🧊️execution/🧾️compiled/🟦️.ts"),"--timeout","120000"],"dashboard:compiled-freshness",options,{SEMIO_TEST_ARTIFACT_DIR:artifacts});return;
     }
     if (segments[0] === "windows") {
       const { rest } = resolveTestLevel(segments.slice(1), "quick");
@@ -87,7 +88,7 @@ export class TestScript extends BundleScript {
     if (segments[0] === "execution") {
       const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(this.repoRoot, ".🧬semio/🦑️repo/⚡️cache/tests/dashboard-execution");
       await mkdir(artifacts, { recursive: true });
-      await this.bun([join(this.root,"../../🧪️tests/🧊️execution/🟦️.ts")],"dashboard:execution-test",options,{SEMIO_TEST_ARTIFACT_DIR:artifacts});return;
+      await this.bun([join(this.root,"../../🧪️tests/🧊️execution/🟦️.ts"),join(this.root,"../../🧪️tests/🧊️execution/🧾️compiled/🟦️.ts")],"dashboard:execution-test",options,{SEMIO_TEST_ARTIFACT_DIR:artifacts});return;
     }
     if (BATTLE_SUITES.includes(segments[0] ?? "")) { await battle(this.root, this.repoRoot, segments[0]!,options); return; }
     const { rest } = resolveTestLevel(segments, "quick");
@@ -131,12 +132,19 @@ export class RunScript extends BundleScript {
 export class DaemonScript extends BundleScript {
   async run(segments:string[]):Promise<void>{process.exitCode=await launchDashboard(this.repoRoot,["daemon",...segments],dashboardOptions(this.invocation,this.repoRoot));}
 }
-/** 🔨️ Builds the selected executable and installs it; the sources are captured first so edits made during the build stay detectable, and Ctrl+C cancels the build. */
-export async function buildAndInstallDashboard(packageRoot: string, workspace: string, options:DashboardExecutionOptions): Promise<string> {
+/** 🏺️ Builds this mode's artifact, the cacheable output of `build`, unless the artifact is current for the captured sources and everything its executable was compiled from (`currentDashboardArtifactV1`), then no nested build runs at all; the sources are captured first so edits made during the build stay detectable, and Ctrl+C cancels the build. */
+export async function buildDashboardArtifactV1(packageRoot: string, workspace: string, options:DashboardExecutionOptions): Promise<string> {
   compilerAdmissionBudgetV1(options.control);const mode=readBuildMode(options.mode);
   const sources = await captureDashboardSources(packageRoot, workspace);compilerAdmissionBudgetV1(options.control);
+  const current=currentDashboardArtifactV1(workspace,mode);
+  if(current){sayDashboardCurrentV1(mode,sources,current.compiled);return current.executable;}
   await runDeclaredRustBuildV1(workspace,"@semio-tech/repo-dashboard-rs",packageRoot,options.invocation,[],"compile");
-  return await installDashboard(packageRoot, workspace, options,sources);
+  return await exportDashboardArtifactV1(packageRoot, workspace, options,sources);
+}
+/** 🔨️ Builds this mode's artifact and installs it (`installDashboardArtifactV1`). */
+export async function buildAndInstallDashboard(packageRoot: string, workspace: string, options:DashboardExecutionOptions): Promise<string> {
+  await buildDashboardArtifactV1(packageRoot,workspace,options);
+  return await installDashboardArtifactV1(packageRoot,workspace,options);
 }
 /** 🚀️ Selects one mode's immutable executable, rebuilding only when that installation's sources changed. */
 export async function dashboardExecutable(packageRoot: string, workspace: string, options:DashboardExecutionOptions): Promise<string> {

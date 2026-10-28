@@ -1,0 +1,20 @@
+{
+ "label": "g25-dash2",
+ "target": "@semio-tech/repo-dashboard-rs:build",
+ "started": "07:32:06",
+ "wall_s": 141.6,
+ "peak_tree_mb": 2951,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "2",
+   "1 internal, 1 worker"
+  ],
+  "actions": [
+   "2"
+  ]
+ }
+}

@@ -1,7 +1,4 @@
-import"./🏭️producer/🟦️.ts";
-import"./🦀️framework/🟦️.ts";
 import"@semio-tech/nx-bootstrap-tools/sdk/binary/testing/phase";
-import"../../🔧️tools/💾️storage/🧪️tests/🟦️.ts";
 import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import{test,expect}from"bun:test";
 import{readFile}from"node:fs/promises";
@@ -10,7 +7,6 @@ import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import schema from"./🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
-
 test("Build graph APIs carry the exact active issued phase before inference and reads",async()=>{
  const sources={graph:await readFile(new URL("../../🕸️graph/🟦️.ts",import.meta.url),"utf8"),invocation:await readFile(new URL("../../🧭️invocation/🕸️graph/🟦️.ts",import.meta.url),"utf8"),build:await readFile(new URL("../../📜️script.ts",import.meta.url),"utf8"),runtime:await readFile(new URL("../../⌨️command/⚙️runtime/🟦️.ts",import.meta.url),"utf8")};for(const[name,parameters]of Object.entries(corpus.parameters)){const source=name==="loadBuildGraphV1"?sources.graph:name==="runOwnedBuildInvocationV1"?sources.build:sources.invocation,tree=ts.createSourceFile("owner.ts",source,ts.ScriptTarget.Latest,true),owner=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===name);if(!owner||!ts.isFunctionDeclaration(owner))throw Error("Actual graph API required");expect(owner.parameters.map(row=>row.name.getText(tree))).toEqual(parameters);}
  const graphTree=ts.createSourceFile("graph.ts",sources.graph,ts.ScriptTarget.Latest,true),contexts:import("typescript").ObjectLiteralExpression[]=[];const visit=(node:import("typescript").Node)=>{if(ts.isObjectLiteralExpression(node)){const names=node.properties.map(row=>row.name?.getText(graphTree));if(names.includes("workspaceRoot")&&names.includes("invocation"))contexts.push(node);}ts.forEachChild(node,visit);};visit(graphTree);expect(contexts.length).toBeGreaterThan(0);for(const node of contexts)expect(node.properties.map(row=>row.name?.getText(graphTree))).toContain("phaseControl");expect(sources.runtime).toContain("runOwnedBuildInLeasesV1(root,args,parent,diagnosticPhase)");expect(sources.build).toContain("phaseControl:ResourceLeaseControl");

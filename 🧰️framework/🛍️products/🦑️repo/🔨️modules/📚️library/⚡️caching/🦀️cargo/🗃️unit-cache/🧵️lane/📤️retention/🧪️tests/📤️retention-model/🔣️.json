@@ -1,0 +1,487 @@
+{
+ "version": 1,
+ "policy": {
+  "ledgerPattern": "^cargo-unit-provenance-[A-Za-z0-9._-]{1,200}\\.json$",
+  "maximumFiles": 4096,
+  "maximumFileBytes": 134217728,
+  "layout": {
+   "lanes": "l",
+   "build": "b",
+   "target": "t"
+  }
+ },
+ "plan": [
+  {
+   "id": "an empty shared ledger receives every receipt in name order",
+   "lane": [
+    {
+     "name": "cargo-unit-provenance-b.json",
+     "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "bytes": 100
+    },
+    {
+     "name": "cargo-unit-provenance-a.json",
+     "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "bytes": 100
+    }
+   ],
+   "shared": [],
+   "expect": [
+    {
+     "action": "publish",
+     "name": "cargo-unit-provenance-a.json",
+     "bytes": 100
+    },
+    {
+     "action": "publish",
+     "name": "cargo-unit-provenance-b.json",
+     "bytes": 100
+    }
+   ]
+  },
+  {
+   "id": "the same bytes under the same name are dropped",
+   "lane": [
+    {
+     "name": "cargo-unit-provenance-a.json",
+     "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "bytes": 100
+    }
+   ],
+   "shared": [
+    {
+     "name": "cargo-unit-provenance-a.json",
+     "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "bytes": 100
+    }
+   ],
+   "expect": [
+    {
+     "action": "same",
+     "name": "cargo-unit-provenance-a.json",
+     "bytes": 100
+    }
+   ]
+  },
+  {
+   "id": "another digest under the same name is a conflict and never published",
+   "lane": [
+    {
+     "name": "cargo-unit-provenance-a.json",
+     "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "bytes": 100
+    }
+   ],
+   "shared": [
+    {
+     "name": "cargo-unit-provenance-a.json",
+     "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "bytes": 100
+    }
+   ],
+   "expect": [
+    {
+     "action": "conflict",
+     "name": "cargo-unit-provenance-a.json",
+     "bytes": 100
+    }
+   ]
+  },
+  {
+   "id": "a mixed set decides every name on its own",
+   "lane": [
+    {
+     "name": "cargo-unit-provenance-1.json",
+     "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "bytes": 100
+    },
+    {
+     "name": "cargo-unit-provenance-2.json",
+     "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "bytes": 100
+    },
+    {
+     "name": "cargo-unit-provenance-3.json",
+     "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+     "bytes": 100
+    }
+   ],
+   "shared": [
+    {
+     "name": "cargo-unit-provenance-2.json",
+     "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "bytes": 100
+    },
+    {
+     "name": "cargo-unit-provenance-3.json",
+     "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+     "bytes": 100
+    },
+    {
+     "name": "cargo-unit-provenance-9.json",
+     "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+     "bytes": 100
+    }
+   ],
+   "expect": [
+    {
+     "action": "publish",
+     "name": "cargo-unit-provenance-1.json",
+     "bytes": 100
+    },
+    {
+     "action": "same",
+     "name": "cargo-unit-provenance-2.json",
+     "bytes": 100
+    },
+    {
+     "action": "conflict",
+     "name": "cargo-unit-provenance-3.json",
+     "bytes": 100
+    }
+   ]
+  },
+  {
+   "id": "names outside the ledger pattern are ignored",
+   "lane": [
+    {
+     "name": ".tmp-x",
+     "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "bytes": 100
+    },
+    {
+     "name": "notes.txt",
+     "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "bytes": 100
+    },
+    {
+     "name": "cargo-unit-provenance-.json",
+     "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "bytes": 100
+    },
+    {
+     "name": "cargo-unit-provenance-a/b.json",
+     "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "bytes": 100
+    },
+    {
+     "name": "cargo-unit-provenance-a.json\n",
+     "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "bytes": 100
+    },
+    {
+     "name": "cargo-unit-provenance-é.json",
+     "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "bytes": 100
+    },
+    {
+     "name": "cargo-unit-provenance-ok.json",
+     "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "bytes": 100
+    }
+   ],
+   "shared": [],
+   "expect": [
+    {
+     "action": "publish",
+     "name": "cargo-unit-provenance-ok.json",
+     "bytes": 100
+    }
+   ]
+  },
+  {
+   "id": "a receipt over the byte bound is refused, one exactly at the bound is published",
+   "lane": [
+    {
+     "name": "cargo-unit-provenance-big.json",
+     "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "bytes": 134217729
+    },
+    {
+     "name": "cargo-unit-provenance-edge.json",
+     "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+     "bytes": 134217728
+    }
+   ],
+   "shared": [],
+   "expect": [
+    {
+     "action": "refuse",
+     "name": "cargo-unit-provenance-big.json",
+     "bytes": 134217729
+    },
+    {
+     "action": "publish",
+     "name": "cargo-unit-provenance-edge.json",
+     "bytes": 134217728
+    }
+   ]
+  },
+  {
+   "id": "an empty lane plans nothing",
+   "lane": [],
+   "shared": [
+    {
+     "name": "cargo-unit-provenance-a.json",
+     "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "bytes": 100
+    }
+   ],
+   "expect": []
+  }
+ ],
+ "origin": [
+  {
+   "id": "the shared build and target directories are owned",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/m/b/prototype",
+    "targetDirectory": "/s/m/t/prototype"
+   },
+   "expect": true,
+   "lane": false
+  },
+  {
+   "id": "the shared build directory with another target is not owned",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/m/b/prototype",
+    "targetDirectory": "/s/m/t/release"
+   },
+   "expect": false,
+   "lane": false
+  },
+  {
+   "id": "a lane with its own target is owned",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/u/l/ab12/b",
+    "targetDirectory": "/s/u/l/ab12/t"
+   },
+   "expect": true,
+   "lane": true
+  },
+  {
+   "id": "a lane with the recipe slot inside its build directory is owned",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/u/l/ab12/b",
+    "targetDirectory": "/s/u/l/ab12/b/t/0123456789abcdef"
+   },
+   "expect": true,
+   "lane": true
+  },
+  {
+   "id": "a lane whose target is its own build directory is not owned",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/u/l/ab12/b",
+    "targetDirectory": "/s/u/l/ab12/b"
+   },
+   "expect": false,
+   "lane": true
+  },
+  {
+   "id": "a lane with the target of another lane is not owned",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/u/l/ab12/b",
+    "targetDirectory": "/s/u/l/zz99/t"
+   },
+   "expect": false,
+   "lane": true
+  },
+  {
+   "id": "dot segments are normalised before the decision",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/u/l/ab12/./b/",
+    "targetDirectory": "/s/u/l/ab12/b/../t"
+   },
+   "expect": true,
+   "lane": true
+  },
+  {
+   "id": "a target that escapes the lane through dot dot is not owned",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/u/l/ab12/b",
+    "targetDirectory": "/s/u/l/ab12/b/../../x"
+   },
+   "expect": false,
+   "lane": true
+  },
+  {
+   "id": "a lookalike lanes directory is not owned",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/u/lx/ab12/b",
+    "targetDirectory": "/s/u/lx/ab12/t"
+   },
+   "expect": false,
+   "lane": false
+  },
+  {
+   "id": "an upper case lane identifier is not owned",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/u/l/AB12/b",
+    "targetDirectory": "/s/u/l/AB12/t"
+   },
+   "expect": false,
+   "lane": false
+  },
+  {
+   "id": "a lane identifier of 13 characters is not owned",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/u/l/abcdefghijklm/b",
+    "targetDirectory": "/s/u/l/abcdefghijklm/t"
+   },
+   "expect": false,
+   "lane": false
+  },
+  {
+   "id": "a lane identifier of 12 characters is owned",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/u/l/abcdefghijkl/b",
+    "targetDirectory": "/s/u/l/abcdefghijkl/t"
+   },
+   "expect": true,
+   "lane": true
+  },
+  {
+   "id": "a build directory with a suffix is not owned",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/u/l/ab12/bx",
+    "targetDirectory": "/s/u/l/ab12/t"
+   },
+   "expect": false,
+   "lane": false
+  },
+  {
+   "id": "a build directory one level deeper is not owned",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/u/l/ab12/c/b",
+    "targetDirectory": "/s/u/l/ab12/c/t"
+   },
+   "expect": false,
+   "lane": false
+  },
+  {
+   "id": "a lane directory itself is not owned",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/u/l/ab12",
+    "targetDirectory": "/s/u/l/ab12/t"
+   },
+   "expect": false,
+   "lane": false
+  },
+  {
+   "id": "a lane of another cache root is not owned",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/other/u/l/ab12/b",
+    "targetDirectory": "/other/u/l/ab12/t"
+   },
+   "expect": false,
+   "lane": false
+  },
+  {
+   "id": "a lane of the same cache root under another store is not owned",
+   "cacheRoot": "/t/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/u/l/ab12/b",
+    "targetDirectory": "/s/u/l/ab12/t"
+   },
+   "expect": false,
+   "lane": false
+  },
+  {
+   "id": "the cache root itself is not owned",
+   "cacheRoot": "/s/u",
+   "shared": {
+    "build": "/s/m/b/prototype",
+    "target": "/s/m/t/prototype"
+   },
+   "origin": {
+    "buildDirectory": "/s/u",
+    "targetDirectory": "/s/u/l/ab12/t"
+   },
+   "expect": false,
+   "lane": false
+  }
+ ]
+}

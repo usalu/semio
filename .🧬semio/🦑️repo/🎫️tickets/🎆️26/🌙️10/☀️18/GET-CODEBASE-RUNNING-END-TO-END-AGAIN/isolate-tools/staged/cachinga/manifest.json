@@ -1,0 +1,62 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🧪️tests/🟦️.ts": {
+  "file": "f000",
+  "base": "d398903ea9939dc6ab2c74241fb5020cf37e8b7f6becaf896acd146952a21b99",
+  "new": "294ccdaad49f9cc1c5b9ead3b25493a74ca3c547ac7efa16b6789f1e5b91147a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🧪️tests/🟦️.ts": {
+  "file": "f001",
+  "base": "56a04356aed00dbe9eedced7205ef0db944feba5188962b6ae1da66bc6cc923d",
+  "new": "f7d980d02c0ee7dda3d38a348681afa3ca0586847a0d76acd6f769a0ed270cd6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧪️tests/📥️physical/🟦️.ts": {
+  "file": "f002",
+  "base": "e1db53d23fc072b46f319c4db9f8876f502881c14e3f3e2b079ac7d15216b88d",
+  "new": "3bbee0e50d09a8ef8759d19b794da4e52293eec01c2d0e9b093e9019074d8e40"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🔒️bounded/🧪️tests/🍎️image/🟦️.ts": {
+  "file": "f003",
+  "base": "0fe6e2324411f9506490ac8a2b3418d64f9bece722a25419a0a30b1f351eaad4",
+  "new": "15b9e59017dc2bb17f6a6fb14b1fc825bb385707e1f9439e298742204c7ea7f9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🔒️bounded/🧪️tests/🟦️.ts": {
+  "file": "f004",
+  "base": "e57a55497609a0ab357ffc08976e27ef12113d772f4f9c02c8eca830376fd79d",
+  "new": "fb2638742393ed678bbc0bee5ead41f1a77072424b0c3d4d179d61b7e0d9baf7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🧪️tests/🟦️.ts": {
+  "file": "f005",
+  "base": "6740bfad062d0cd8b4b8a8d40e5cc591568af7d1e6855a17219a7d6bdf2e68af",
+  "new": "e7d8d78a6a66cb96464d985bbf9e3c3c1b44320b6b88e5a115b608fc79c9030a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/🟦️.ts": {
+  "file": "f006",
+  "base": "4831817f74085a2044d677d82af4fd2df0fe9908c0618e59b4c8459fc7bc0329",
+  "new": "07653700e21b685d0bdb5efce91fcc33b8024ceb2774a92c31f38c024844f4a5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🧬️lifetime/🧪️tests/🟦️.ts": {
+  "file": "f007",
+  "base": "fc6420fbf87ad40531a9ab825dddd0b99912ea52f71829fe962bd893c78aa541",
+  "new": "f0edb74696f1ba65785c7a8d10b24ccb139e07e5513b93eb77cc04be0e95b9d0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏇️waiter/🧪️tests/🟦️.ts": {
+  "file": "f008",
+  "base": "8ad4dc580a72553363b6fabcc7237cc78c2e0cb9c75d9d34d98cfe7776a19bda",
+  "new": "c1a481da7890f44ba5f2908e466999006456a4dc5abb2f6fce31dcaa577dcb4c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/📦️transaction/🟦️.ts": {
+  "file": "f009",
+  "base": "4f18e577561b00d9f4df837e448a3cc9318f3027c21bdf27b408d8e6dcc9ecd2",
+  "new": "47052f7afec049d44b3f20460e6da213a8e4f690b36d796a7bf83538ab10a983"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/🟦️.ts": {
+  "file": "f010",
+  "base": "78ae0a4fb01c5535f962fc97297622e05a2f6c32cc913ce95ea8fd4709bb11fe",
+  "new": "5e8f34ffd3784579c92808adb4baa7a87c4d2324d5c962287008cd9ee9bc30a1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/🧪️tests/🟦️.ts": {
+  "file": "f011",
+  "base": "5c3a241138be5348d016b9c3627d22439deec6c2cc9da1039700ca03735c13c5",
+  "new": "18016a7be211489cb7a6c3550855c4139d6605638a45cfc2a3f4c38cfbe837bf"
+ }
+}

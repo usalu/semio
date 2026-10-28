@@ -1,0 +1,43 @@
+{
+ "baseline": {},
+ "codes": {
+  "0-check": 0,
+  "1-apply": 0,
+  "2-check": 0,
+  "3-revert": 0,
+  "4-check": 0
+ },
+ "apply": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🟦️.ts": "b65260616a541cce607bfe97de33fa6d3433e96ae61396691e30282f96b06c02",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧪️tests/🔑️key-parts/🐍️.py": "722bff5da7120dbb75d3fde7826e7ed94ebaf1c06b143e9c0d60b89d13de6956",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧪️tests/🔑️key-parts/🔣️.json": "24e0337d8a2af40a2397a654aa9fa6640abe6aef91147277f5ab7ed15e6c7ad9",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧪️tests/🔑️key-parts/🟦️.ts": "88817f6838d9f16a80da4b131f624267b959de072903d52f1c6bb2ea4c87c07c",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧪️tests/🔑️key-parts/🧬️schema/🔣️.json": "21bdfa85c677955a847cc8b564c3daa1c4cbbcb5664c9211ed8cf195d5098a86",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs": "4fad1eeef77f0729abd8a1bddd3c39ea77301d760b2903e09da67f2c55ca47d2",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧠️file-record-image/🟦️.ts": "bf4ac4a43b7129fdf872b12cb4fc07905f495137462216f804a11f982eb23e00",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs": "8bdfa2f090b145b1f956ff2bf5871d3b1ed470d041033821c7281a7a9b39e314",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts": "513e162769512f800af704311559e289a40a8c913fc95f2de424b72de6775e72",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs": "8138038ac09cfaa3d609aa6a9737b47d4dd00ac74c5e99cb85f6fa49fd61056d",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🦀️resolution/🟦️.ts": "f4bfc35240f284c2a9934df0c18a2ea4d9741e88e130b8e6364b4bcf0d1b0341",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/🧂️chunk-memo/🟦️.ts": "c00888955d0795f45842b5d4e7a682783ed4bd5c9a64e7cc78383c2ffabf2552",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs": "6df21960f154f4336e62e8a66a32d64d71b675355e688ed6211a6ce9a7f773f1",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🟨️.mjs": "673b7674fac44d811d58c3525ee1171a578d3618fe310e5865277aa3da9133ea",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🧪️tests/🦀️source-inputs-memo/🟦️.ts": "536dc427dceaf9d68f4f402e453af8f8bdb9802b811fcb3c3b9725962f101303",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs": "2d965300b73eee2f21f8f0b48f6ac378ab7bd65155b87c8e6be4e7a811f34a49",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🧪️tests/🦀️rust-literals/🔣️.json": "ed93ea0369b5e83f2852c70dd353b5bb2d17a176e93e4c870ac316f965502472",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🧪️tests/🦀️rust-literals/🟦️.ts": "ca5c5bb7d5de62a09767cfc3b786b837a439f41a7043fa71f4fe746b671a7239",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🧪️tests/🦀️rust-literals/🧬️schema/🔣️.json": "bc884ea3331be58a18f875635e8d80b30bfbfa1e1341c7f38065dc3830eacb55",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": "1dd5f19ef2e4468bda5cd423f7fd0307f40f73e56ff3a79ae451b2fb5b002dbd",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs": "9f5d0f3c455246ed2b55bfcbfb003c310a0be185e6b28db269c4a526641556ed",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🟨️.d.mts": "cf8f952e2c566c334fe3195002de1eb4efee7b81ff5f71dc5b11849700b08870",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🟨️.mjs": "14ae0c670b7bcebe586f2c4fbdb57262da10788e80dd7babeb0e27e7300284b5",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🧪️tests/🐍️.py": "ce1458dd6e582e94345d848594a2239d0282758cfaef147d9ac3630fa1562ea9",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🧪️tests/🔣️.json": "4c3526939a8d46bc28778c771d39e49dc133c9d76c4f0a752b38de9799123f82",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🧪️tests/🟦️.ts": "f1a600d6099c022e54ae6b8291e95d7b1c883193c5a92597f8f30711d9a12eab",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🧪️tests/🧬️schema/🔣️.json": "281c4b55cbcde471834e0290c4ca1ef88586611bd211a751ed66d346838554d8",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧂️hoisted-literals/🔣️.json": "8d0061adfe564dfa1ff1eae6c9ab0d296490d4643d495cc032e8397b9d142c2e",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧂️hoisted-literals/🟦️.ts": "2b6a3f9ccfdd75b3f9c12d460eec78ed63f45e15d94b184921bb7bac1b0af09b",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧂️hoisted-literals/🧬️schema/🔣️.json": "920fbd579fa01728505c0c2d95baf1ce8fd784180b283b483c91d4dfb02acd58"
+ },
+ "revert": {}
+}

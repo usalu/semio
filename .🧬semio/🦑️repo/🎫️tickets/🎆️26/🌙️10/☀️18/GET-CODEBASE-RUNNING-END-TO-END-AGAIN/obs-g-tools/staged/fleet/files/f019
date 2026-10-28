@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "passthrough": ["build", "test"],
+  "fullTargetPrefixes": ["@semio-tech/repo-dashboard-rs:"],
+  "environment": { "--tool": "SEMIO_BUILD_TOOL", "--workers": "SEMIO_BUILD_WORKERS" },
+  "light": [
+    { "operation": "leases", "export": "runLeasesCliV1", "call": "root-args-environment" },
+    { "operation": "doctor", "export": "runDoctorCliV1", "call": "root-args-environment" },
+    { "operation": "capacity", "export": "runCapacityCommandV1", "call": "args-options" },
+    { "operation": "fleet", "export": "runFleetCliV1", "call": "root-args-environment" }
+  ],
+  "closedSubcommands": ["tools", "show", "incremental", "concurrency", "dependencies", "cache", "remote-cache", "capacity", "leases", "fleet", "remote-execution"],
+  "refusedExitCode": 2,
+  "texts": {
+    "unknownCommand": {
+      "en": "Unknown command \"{command}\". Known commands: {known}. Run \"repo --help\" for the list.",
+      "de": "Unbekannter Befehl \"{command}\". Bekannte Befehle: {known}. \"repo --help\" zeigt die Liste."
+    },
+    "unknownSubcommand": {
+      "en": "Unknown subcommand \"{subcommand}\" of \"{command}\". Known subcommands: {known}. Run \"repo {command} --help\".",
+      "de": "Unbekannter Unterbefehl \"{subcommand}\" von \"{command}\". Bekannte Unterbefehle: {known}. \"repo {command} --help\" zeigt die Hilfe."
+    },
+    "invalidValue": {
+      "en": "{option} accepts {allowed}, not \"{value}\".",
+      "de": "{option} akzeptiert {allowed}, nicht \"{value}\"."
+    }
+  }
+}

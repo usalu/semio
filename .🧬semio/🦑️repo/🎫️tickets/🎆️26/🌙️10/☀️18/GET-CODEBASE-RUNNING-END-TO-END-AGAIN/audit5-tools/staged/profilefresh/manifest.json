@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🔣️.json": {
+  "file": "f00.json",
+  "base": "20f29da6dd95e4671e7e5dc971e83f3779927aa6ad8cecde665faa1ad2a1145e",
+  "new": "eeebb1881de297b71dbcf43ad6e33a4df2b8835edc11102482d4ebecbb0ca40a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🧾️compiled/🟦️.ts": {
+  "file": "f01.ts",
+  "base": "9a0542fdacc475624a28423e3eb94d7e9f2f0c76c927daafca993ffc582f9281",
+  "new": "fe1e747d4ce286196fa4187e2adb79c28307e75084f6a9b1f0aaf7b52aef73d0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md": {
+  "file": "f02.md",
+  "base": "681b5a562fea40419bf899ff437909cd2854bb6306627ec5ce9d05ebdcfc2727",
+  "new": "7201215c2eae340a3a933cf6a4060b09d81143a2827101c8382c6c422f17639b"
+ }
+}

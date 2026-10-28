@@ -11,6 +11,8 @@ export interface NativeStorageGeometryV1{
  filesystemBytes(root:string,declared:number):number;
  usedBytes(root:string):number;
  space(root:string,declared:number):Readonly<{bsize:number;bavail:number}>;
+ invalidate():void;
+ mapped(directories:readonly string[],control:ResourceLeaseControl):Promise<boolean>;
 }
 
 /** 🔌️ Every operation the platform facade routes to one backend; both first-party backends implement the same closed list. */

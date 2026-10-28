@@ -320,7 +320,10 @@
           ]
         },
         "outcome": {
-          "const": "refuse"
+          "enum": [
+            "refuse",
+            "recompute"
+          ]
         }
       }
     },
@@ -467,7 +470,7 @@
           "items": {
             "enum": [
               "warm",
-              "typed-missing-refusal",
+              "missing-block-recomputed",
               "group-absent",
               "recomputed"
             ]
@@ -479,6 +482,82 @@
       "description": "The format and meaning of a persisted project record. Bump the stamp when the rows, the digest or the validation of a record change for the same inputs; a record written under another stamp is a miss.",
       "const": {
         "stamp": "semio.graph-record/2"
+      }
+    },
+    "limits": {
+      "description": "EN: The limits of the observation module: the racy window, the in-process memo budgets, the block cut and the sweep. DE: Die Grenzen des Beobachtungsmoduls: das Racy-Fenster, die Speicherbudgets im Prozess, der Blockschnitt und der Sweep.",
+      "const": {
+        "racyMilliseconds": 2000,
+        "sourceAnalysisBytes": 16777216,
+        "sourceAnalysisOverheadBytes": 192,
+        "settledReadBytes": 134217728,
+        "fileRecordImageBytes": 67108864,
+        "fileRecordImageMaximumBytes": 1048576,
+        "verifiedBlockRows": 4194304,
+        "blockMinimumRows": 32,
+        "blockCutMask": 127,
+        "blockRefusalMilliseconds": 30000,
+        "detachedLayerRows": 64,
+        "leafReadChunkBytes": 65536,
+        "sweepGraceMilliseconds": 600000,
+        "fingerprintProgressRows": 128,
+        "sweepHeaderProgressRows": 256,
+        "sweepBlockProgressRows": 1024,
+        "settledReadMaximumFileBytes": 4194304,
+        "settleRounds": 64,
+        "holdNestingLimit": 64,
+        "maximumIdentifierCharacters": 256,
+        "nativeRealpathMaximumCharacters": 260
+      }
+    },
+    "limitsDescriptions": {
+      "const": {
+        "en": {
+          "racyMilliseconds": "A file stamped this close to the start of a computation may still change within one timestamp tick, so its result is never persisted (racy-git rule).",
+          "sourceAnalysisBytes": "The in-process budget of the analysis images of sources (16 MiB); the oldest image goes first.",
+          "sourceAnalysisOverheadBytes": "The bytes one analysis image is charged on top of its image and nested observations.",
+          "settledReadBytes": "The in-process budget of settled file reads (128 MiB); a read beyond it clears the memo.",
+          "fileRecordImageBytes": "The in-process budget of the JSON images of file analyses (64 MiB).",
+          "fileRecordImageMaximumBytes": "The largest JSON image of one file analysis that is remembered or stored (1 MiB).",
+          "verifiedBlockRows": "The most rows of blocks this process verified and remembers at once.",
+          "blockMinimumRows": "The fewest rows a block holds before the content-defined cut may end it.",
+          "blockCutMask": "The mask of the content-defined block cut: a row ends a block when its key hash under this mask is zero.",
+          "blockRefusalMilliseconds": "How long a directory that refused a block publication is not asked again.",
+          "detachedLayerRows": "The rows of one detached observation layer.",
+          "leafReadChunkBytes": "The size of one read while an observation leaf is loaded (64 KiB).",
+          "sweepGraceMilliseconds": "How long a superseded block stays before the sweep may remove it.",
+          "fingerprintProgressRows": "After how many source rows the preparation reports progress and checks for cancellation.",
+          "sweepHeaderProgressRows": "After how many headers the sweep reports progress.",
+          "sweepBlockProgressRows": "After how many blocks the sweep reports progress.",
+          "settledReadMaximumFileBytes": "The largest file whose read is remembered as a settled read (4 MiB).",
+          "settleRounds": "The most rounds a computation is repeated while the files it read keep changing.",
+          "holdNestingLimit": "The deepest nesting of analyses whose recorded observations are checked again.",
+          "maximumIdentifierCharacters": "The most characters of the identity of a registered source analysis.",
+          "nativeRealpathMaximumCharacters": "A path shorter than this is resolved with the native realpath (the classic Windows path limit)."
+        },
+        "de": {
+          "racyMilliseconds": "Eine Datei, die so kurz vor dem Start einer Berechnung gestempelt wurde, kann sich noch im selben Zeitstempel-Takt ändern, daher wird ihr Ergebnis nie gespeichert (Racy-Git-Regel).",
+          "sourceAnalysisBytes": "Das Prozessbudget der Analyse-Images von Quellen (16 MiB); das älteste Image geht zuerst.",
+          "sourceAnalysisOverheadBytes": "Die Bytes, die ein Analyse-Image zusätzlich zu Image und verschachtelten Beobachtungen kostet.",
+          "settledReadBytes": "Das Prozessbudget beruhigter Dateilesungen (128 MiB); eine Lesung darüber leert den Speicher.",
+          "fileRecordImageBytes": "Das Prozessbudget der JSON-Images von Dateianalysen (64 MiB).",
+          "fileRecordImageMaximumBytes": "Das grösste JSON-Image einer Dateianalyse, das gemerkt oder gespeichert wird (1 MiB).",
+          "verifiedBlockRows": "Die meisten Zeilen von Blöcken, die dieser Prozess verifiziert hat und gleichzeitig merkt.",
+          "blockMinimumRows": "Die wenigsten Zeilen eines Blocks, bevor der inhaltsbestimmte Schnitt ihn beenden darf.",
+          "blockCutMask": "Die Maske des inhaltsbestimmten Blockschnitts: eine Zeile beendet einen Block, wenn ihr Schlüssel-Hash unter dieser Maske null ist.",
+          "blockRefusalMilliseconds": "Wie lange ein Verzeichnis, das eine Blockveröffentlichung verweigert hat, nicht erneut gefragt wird.",
+          "detachedLayerRows": "Die Zeilen einer abgetrennten Beobachtungsschicht.",
+          "leafReadChunkBytes": "Die Größe eines Lesevorgangs beim Laden eines Beobachtungsblatts (64 KiB).",
+          "sweepGraceMilliseconds": "Wie lange ein abgelöster Block bleibt, bevor der Sweep ihn entfernen darf.",
+          "fingerprintProgressRows": "Nach wie vielen Quellzeilen die Vorbereitung Fortschritt meldet und auf Abbruch prüft.",
+          "sweepHeaderProgressRows": "Nach wie vielen Kopfzeilen der Sweep Fortschritt meldet.",
+          "sweepBlockProgressRows": "Nach wie vielen Blöcken der Sweep Fortschritt meldet.",
+          "settledReadMaximumFileBytes": "Die grösste Datei, deren Lesung als beruhigte Lesung gemerkt wird (4 MiB).",
+          "settleRounds": "Die meisten Runden, die eine Berechnung wiederholt wird, solange sich die gelesenen Dateien weiter ändern.",
+          "holdNestingLimit": "Die tiefste Verschachtelung von Analysen, deren aufgezeichnete Beobachtungen erneut geprüft werden.",
+          "maximumIdentifierCharacters": "Die meisten Zeichen der Identität einer registrierten Quellanalyse.",
+          "nativeRealpathMaximumCharacters": "Ein Pfad, der kürzer ist, wird mit dem nativen realpath aufgelöst (die klassische Windows-Pfadgrenze)."
+        }
       }
     }
   }

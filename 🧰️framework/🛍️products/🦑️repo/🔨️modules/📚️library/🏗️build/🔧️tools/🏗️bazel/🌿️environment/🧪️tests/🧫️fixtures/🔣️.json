@@ -1,0 +1,73 @@
+{
+ "environments": [
+  {
+   "name": "the phase profile switch",
+   "environment": {
+    "SEMIO_REPO_PROFILE": "json",
+    "PATH": "/usr/bin",
+    "HOME": "/home/dev"
+   },
+   "kept": [
+    "HOME",
+    "PATH"
+   ]
+  },
+  {
+   "name": "agent, desktop and terminal session variables",
+   "environment": {
+    "CLAUDE_CODE_SESSION_ID": "s1",
+    "CLAUDECODE": "1",
+    "ANTHROPIC_BASE_URL": "https://example.invalid",
+    "XPC_FLAGS": "0x0",
+    "XPC_SERVICE_NAME": "0",
+    "__CFBundleIdentifier": "app",
+    "__CF_USER_TEXT_ENCODING": "0x1F5:0:0",
+    "TERM_SESSION_ID": "w0t0p0",
+    "SECURITYSESSIONID": "q",
+    "LaunchInstanceID": "l",
+    "SEMIO_LANGUAGE": "de",
+    "SEMIO_BUILD_MODE": "release"
+   },
+   "kept": [
+    "SEMIO_BUILD_MODE",
+    "SEMIO_LANGUAGE"
+   ]
+  },
+  {
+   "name": "traces and verbose switches",
+   "environment": {
+    "NODE_DEBUG": "fs",
+    "SEMIO_LEASE_TRACE": "1",
+    "SEMIO_PROGRESS_DEADLINE_TRACE": "1",
+    "BUN_CONFIG_VERBOSE_FETCH": "curl",
+    "CC": "clang",
+    "CFLAGS": "-O2"
+   },
+   "kept": [
+    "CC",
+    "CFLAGS"
+   ]
+  },
+  {
+   "name": "names that only look like ambient ones",
+   "environment": {
+    "CLAUDE": "prefix itself",
+    "MYCLAUDE": "inside",
+    "XPC": "no underscore",
+    "TERM_SESSION": "short",
+    "TERM": "xterm"
+   },
+   "kept": [
+    "MYCLAUDE",
+    "TERM",
+    "TERM_SESSION",
+    "XPC"
+   ]
+  },
+  {
+   "name": "an empty environment",
+   "environment": {},
+   "kept": []
+  }
+ ]
+}

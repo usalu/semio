@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Imports read corpus",
+  "description": "🔭️ An in-memory workspace, entry glob sets and the module files and import closure the `imports` read must derive; sets that select no module file must be refused.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "tree", "cases", "refused"],
+  "properties": {
+    "version": { "const": 1 },
+    "tree": { "type": "object", "additionalProperties": { "type": "string" } },
+    "cases": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["id", "entries", "selected", "closure"], "properties": { "id": { "type": "string" }, "entries": { "type": "array", "items": { "type": "string" } }, "selected": { "type": "array", "items": { "type": "string" } }, "closure": { "type": "array", "items": { "type": "string" } } } } },
+    "refused": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["id", "entries"], "properties": { "id": { "type": "string" }, "entries": { "type": "array", "items": { "type": "string" } } } } }
+  }
+}

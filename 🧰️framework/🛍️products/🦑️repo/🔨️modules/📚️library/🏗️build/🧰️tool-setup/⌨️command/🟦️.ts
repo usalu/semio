@@ -18,7 +18,7 @@ import {systemNativeToolPortV1} from "../../../⚡️caching/🚀️bootstrap/�
 import {bunDistribution, prepareBun} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🟦️.ts";
 import {binaryenDirectory, prepareBinaryen} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🟦️.ts";
 import {bazelDistribution} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts";
-import {locateToolV1, renderToolReportV1, resolveSiblingPackageV1, setupToolsV1, runtimeWarningV1, runningRuntimeLineV1, toolRowV1, toolRowsV1, toolSetupMessageV1, verifyToolsV1, type ToolContextV1, type ToolProvisionerV1, type ToolReportV1, type ToolRowV1} from "../🟦️.ts";
+import {locateToolV1, renderToolReportV1, resolveSiblingPackageV1, setupToolsV1, runtimeWarningV1, runningRuntimeLineV1, toolRowV1, toolRowsV1, toolSetupMessageV1, toolStepsV1, verifyToolsV1, warmToolStepsV1, type ToolContextV1, type ToolProvisionerV1, type ToolReportV1, type ToolRowV1, type ToolStepRunnerV1} from "../🟦️.ts";
 import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 
 const executableSuffix = (platform: NodeJS.Platform): string => platform === "win32" ? ".exe" : "";
@@ -156,5 +156,14 @@ export async function runToolchainsSetupV1(root: string, invocation: ScriptInvoc
       await installDotnetSdkV1(pin, dotnetSdkDirectoryV1(context.toolsRoot, pin, host, installer.sha256), installer.sha256, installer, host, context.environment, port, signal, (command, args, env) => execute(command, args, env, signal));
     } else if (setup.kind === "rust") await execute("rustup", ["toolchain", "install"], pinned(), signal);
   };
-  return setupToolsV1(rows, context, provision, control.signal, line => console.log(line));
+  const reports = await setupToolsV1(rows, context, provision, control.signal, line => console.log(line));
+  if (names.length === 0 && reports.every(report => report.status === "ok" || report.status === "deferred")) {
+    const prepare: ToolStepRunnerV1 = async (step, signal) => {
+      const {prepareRepositoryCargoHelpersV1} = await import("../../../🏃️process/🦀️cargo/🧰️native-helpers/🟦️.ts");
+      signal.throwIfAborted();
+      await prepareRepositoryCargoHelpersV1(invocation, entry("cargo:helpers"), root, step.configuration, process.env, step.timeoutSeconds * 1000);
+    };
+    await warmToolStepsV1(toolStepsV1(process.platform), prepare, control.signal, line => console.log(line), context.environment);
+  }
+  return reports;
 }

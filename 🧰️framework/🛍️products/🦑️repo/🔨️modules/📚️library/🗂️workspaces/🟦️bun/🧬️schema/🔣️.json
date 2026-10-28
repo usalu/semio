@@ -49,7 +49,8 @@
         "negativeStates": "all-original-decisions",
         "unsettled": "exact-projected-relist-before-and-after-continuation",
         "finalFence": "synchronous-states-stamps-policy-and-manifest-bytes",
-        "uncertainty": "complete-original-derivation"
+        "uncertainty": "complete-original-derivation",
+        "progressBatchPaths": 64
       }
     },
     "FrontierReplayCase": {
@@ -834,6 +835,36 @@
         "observations": "same-object-complete-frontier",
         "authentication": "complete-replay-then-no-await-final-fence",
         "failure": "refuse-without-adoption"
+      }
+    },
+    "FrontierBatchCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "paths",
+        "mutation",
+        "callbacks",
+        "accepted"
+      ],
+      "properties": {
+        "paths": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "mutation": {
+          "enum": [
+            "none",
+            "first",
+            "last"
+          ]
+        },
+        "callbacks": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "accepted": {
+          "type": "boolean"
+        }
       }
     }
   }

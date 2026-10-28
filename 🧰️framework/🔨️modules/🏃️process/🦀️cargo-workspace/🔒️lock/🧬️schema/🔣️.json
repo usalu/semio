@@ -68,7 +68,7 @@
         },
         "online": {
           "en": "Crate {crate} is missing from the shared registry; fetching it online for {workspace}.",
-          "de": "Das Crate {crate} fehlt in der gemeinsamen Registry; es wird für {workspace} online geholt."
+          "de": "Die Crate {crate} fehlt in der gemeinsamen Registry; sie wird für {workspace} online geholt."
         },
         "refreshed": {
           "en": "The Cargo.lock of {workspace} is current again.",
@@ -76,11 +76,11 @@
         },
         "unresolvableOffline": {
           "en": "The Cargo.lock of {workspace} cannot be refreshed: crate {crate} is not in the shared registry and this build has no network grant. Run `repo sync cargo` once with network access. {detail}",
-          "de": "Die Cargo.lock von {workspace} kann nicht aktualisiert werden: Das Crate {crate} fehlt in der gemeinsamen Registry und dieser Build hat keine Netzfreigabe. Führe einmal `repo sync cargo` mit Netzzugang aus. {detail}"
+          "de": "Die Cargo.lock von {workspace} kann nicht aktualisiert werden: Die Crate {crate} fehlt in der gemeinsamen Registry und dieser Build hat keine Netzfreigabe. Führe einmal `repo sync cargo` mit Netzzugang aus. {detail}"
         },
         "unresolvable": {
           "en": "The Cargo.lock of {workspace} cannot be refreshed: crate {crate} cannot be resolved. {detail}",
-          "de": "Die Cargo.lock von {workspace} kann nicht aktualisiert werden: Das Crate {crate} lässt sich nicht auflösen. {detail}"
+          "de": "Die Cargo.lock von {workspace} kann nicht aktualisiert werden: Die Crate {crate} lässt sich nicht auflösen. {detail}"
         },
         "failed": {
           "en": "The Cargo.lock of {workspace} cannot be refreshed. {detail}",

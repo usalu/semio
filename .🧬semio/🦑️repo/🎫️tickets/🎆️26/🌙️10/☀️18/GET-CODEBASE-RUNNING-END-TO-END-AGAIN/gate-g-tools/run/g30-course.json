@@ -1,0 +1,24 @@
+{
+ "label": "g30-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "09:13:17",
+ "wall_s": 253.8,
+ "peak_tree_mb": 6507,
+ "peak_processes": 9,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "40"
+  ],
+  "inferring": [
+   "40"
+  ],
+  "published": [
+   "617",
+   "42",
+   "146"
+  ]
+ }
+}

@@ -13,7 +13,7 @@ export function isRuntimeExecutableV1(command: string): boolean {
 }
 /** 🧭️ Resolves the program word of declared data: the hosting runtime's registry name becomes the executable running now, every other word stays as declared. */
 export function runtimeProgramV1(program: string): string { return program === hostRow().executable ? runtimeIdentityV1().executable : program; }
-/** 🔎️ Tells whether a command names the hosting runtime: its registry name, with or without a directory and `.exe`, or the executable running now. */
+/** 💬️ Tells whether a command names the hosting runtime: its registry name, with or without a directory and `.exe`, or the executable running now. */
 export function isHostRuntimeCommandV1(command: string): boolean {
   if (command === process.execPath || (command.split(/[\\/]/u).pop() ?? "").replace(/\.exe$/iu, "") === hostRow().executable) return true;
   const path = process.getBuiltinModule("node:path");
@@ -21,25 +21,27 @@ export function isHostRuntimeCommandV1(command: string): boolean {
 }
 /** 🏷️ Gives the bare command word the shell resolves to the hosting runtime. */
 export function runtimeCommandNameV1(): string { return hostRow().executable; }
-/** 🪪️ Lists the identifiers of every registered runtime in registry order; they double as package export condition names. */
+/** 📋️ Lists the identifiers of every registered runtime in registry order; they double as package export condition names. */
 export function runtimeIdsV1(): RuntimeIdV1[] { return (RUNTIME_REGISTRY_V1.runtimes as readonly HostRowV1[]).map(row => row.id as RuntimeIdV1); }
-/** 🏷️ Lists the bare command words of every registered runtime in registry order. */
+/** 🗂️ Lists the bare command words of every registered runtime in registry order. */
 export function runtimeCommandNamesV1(): string[] { return (RUNTIME_REGISTRY_V1.runtimes as readonly HostRowV1[]).map(row => row.executable); }
 /** 🍞️ Names the directory that holds the hosting runtime's adapter-specific code next to a module, such as a preload. */
 export function runtimeAdapterNameV1(): string { return hostRow().adapter; }
+/** 🔤️ Lists the names of the global namespace objects of every registered runtime in registry order: the detection key with a capital first letter, which source analyzers need to recognise runtime members in foreign code. */
+export function runtimeNamespaceNamesV1(): string[] { return (RUNTIME_REGISTRY_V1.runtimes as readonly { detect: string }[]).map(row => row.detect.charAt(0).toUpperCase() + row.detect.slice(1)); }
 /** 🔑️ Gives stable identity text for cache keys, such as `bun:1.3.14`. */
 export function runtimeKeyV1(): string { return runtimeIdentityV1().key; }
-/** 🏷️ Names the TypeScript `--types` environment that matches the hosting runtime. */
+/** 🧬️ Names the TypeScript `--types` environment that matches the hosting runtime. */
 export function runtimeTypeEnvironmentV1(): string { return (RUNTIME_REGISTRY_V1.runtimes as readonly { id: string; typeEnvironment: string }[]).find(row => row.id === runtimeHostIdV1())!.typeEnvironment; }
 /** ❓️ Tells whether the hosting runtime provides a family at all. */
 export function runtimeSupportsV1(family: RuntimeFamilyV1): boolean { return runtimeSupportV1(family) !== "missing"; }
-/** 🏷️ Tells how the hosting runtime provides a family. */
+/** 📢️ Tells how the hosting runtime provides a family. */
 export function runtimeSupportLevelV1(family: RuntimeFamilyV1): RuntimeSupportV1 { return runtimeSupportV1(family); }
 /** 🧱️ Tells whether a specifier names a module that some registered runtime provides itself; it is a fact about source text, so every registry row counts, not only the host. */
 export function isRuntimeBuiltinSpecifierV1(specifier: string): boolean {
   return RUNTIME_REGISTRY_V1.runtimes.some(row => (row.builtins.names as readonly string[]).includes(specifier) || row.builtins.prefixes.some(prefix => specifier.startsWith(prefix)));
 }
-/** 🏃️ Gives the executable that starts a script in the named runtime: the running one for the host, else the registry's executable name. */
+/** 🚀️ Gives the executable that starts a script in the named runtime: the running one for the host, else the registry's executable name. */
 export function runtimeExecutableForV1(id: RuntimeIdV1): string {
   return runtimeHostIdV1() === id ? process.execPath : ((RUNTIME_REGISTRY_V1.runtimes as readonly { id: string; executable: string }[]).find(row => row.id === id)?.executable ?? id);
 }

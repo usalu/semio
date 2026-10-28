@@ -1,10 +1,11 @@
 import type { BuildExecutionV1, BuildGraphInvalidationInventoryV1, BuildGraphModuleAuthorityV1, BuildGraphPartStubV1, BuildGraphPartV1, BuildGraphRowV1, BuildGraphV1, BuildProjectV1, BuildTargetV1, BuildUnavailableProjectV1 } from "./📋️model/🟦️.ts";
 import{refuseBuildV1}from"../📖️texts/🟦️.ts";
+import graphSchema from"./🧬️schema/🔣️.json"with{type:"json"};
 import{staleImplementationV1}from"../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import{buildGraphRetryDiagnosticV1}from"./🔁retry/🟨️.mjs";
 import type graphSnapshotPolicy from"../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🔣️policy.json";
 import type exactReadSchema from"../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json";
-import{captureBoundedSourceRevisionV1,capturePhysicalSourceTextV1,clearPinnedAuthorityV1,implementationPinnedV1,physicalSourceOriginV1,pinnedAuthorityReadV1,withImplementationPinV1,type PhysicalSourceModuleMetaV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
+import{REVISION_POLICY_V1,captureBoundedSourceRevisionV1,capturePhysicalSourceTextV1,clearPinnedAuthorityV1,implementationPinnedV1,physicalSourceOriginV1,pinnedAuthorityReadV1,withImplementationPinV1,type PhysicalSourceModuleMetaV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
 import{fileURLToPath}from"node:url";
 import{selectPackageManagerV1}from"../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
 const javascriptManagerV1=selectPackageManagerV1("javascript");
@@ -33,7 +34,13 @@ import {buildGraphWriterResourceV1} from "../📥️inputs/💾️storage/🔒�
 import {withRepositoryCacheStoreV1,type RepositoryCacheStoreV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{decodeGraphRecordsV1}from"../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📇️records/🟨️.mjs";
-import{createGenerationStoreV1,createNodeFilePortV1,createFrontierV1,diffFrontiersV1,frontierHoldsV1,stableDirectoriesV1,canonicalJsonV1 as canonicalGenerationJsonV1}from"./🕰️generations/🟨️.mjs";
+import{GENERATION_POLICY_V1,createGenerationStoreV1,createNodeFilePortV1,createFrontierV1,diffFrontiersV1,frontierHoldsV1,readGenerationPointerV1,stableDirectoriesV1,canonicalJsonV1 as canonicalGenerationJsonV1}from"./🕰️generations/🟨️.mjs";
+import{advanceFrontierV1}from"./🕰️generations/🌿️frontier-walk/🟨️.mjs";
+import{discoverTestOwnersV1,selectTestFeaturesV1}from"./🎯️test-owners/🟨️.mjs";
+import{CLAIMS_POLICY_V1,createClaimRegistryV1,createQueuedClaimLeasePortV1,prepareStaleProjectsV1,renderClaimMessageV1,slotCountV1,type ClaimMessageKeyV1}from"./🕰️generations/🧩️claims/🟨️.mjs";
+import{createSliceCustodyV1,renderCustodyMessageV1,type SliceClaimV1,type SliceCustodyV1}from"./🕰️generations/🔐️custody/🟨️.mjs";
+import{totalmem}from"node:os";
+import{markBuildCapacityPhaseV1,upgradeBuildCapacityBeforeRebuildV1}from"../🌡️host-capacity/🚏️marks/🟦️.ts";
 import{loadGenerationGraphV1,renderGenerationMessageV1,survivingStubsV1,withholdDanglingTestProjectsV1}from"./🕰️generations/🔌️load/🟨️.mjs";
 import{deriveEnvironmentV1,environmentRowHoldsV1}from"./🕰️generations/🌍️environment/🟨️.mjs";
 import{GRAPH_MEMORY_POLICY_V1,graphStringInternerV1,createMemoryPortsV1}from"../🧠️memory/🟨️.mjs";
@@ -41,24 +48,26 @@ import{residentGraphSeamsV1}from"../🏡️resident/🕰️graph-hooks/🔌️ho
 import{createGenerationFilesV1}from"./🗂️generation-files/🟦️.ts";
 import generationSchemaV1 from"./🕰️generations/🧬️schema/🔣️.json"with{type:"json"};
 import{declareFormatStampV1,requireCurrentFormatStampsV1}from"../🧷️format-stamps/🟨️.mjs";
-import {resolveLanguageV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {CATALOG_LANGUAGES_V1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 declareFormatStampV1("graph.generation",generationSchemaV1);
 /** 🔖️ The declared format stamps whose move makes a loaded graph implementation obsolete: it neither reads nor builds nor publishes a generation any more. */
 const graphFormatStampsV1=Object.freeze(["graph.generation","graph.record","graph.inferrers"]);
+/** 📏️ The declared limits of the graph module; its schema file is their single source. */
+const GRAPH_LIMITS_V1=Object.freeze({...graphSchema.definitions.Limits.const});
 
-const graphSnapshotPolicyURLV1=new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🔣️policy.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),exactReadPolicyURLV1=new URL("../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(graphSnapshotPolicyURLV1),65536,true),exactReadPolicyCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(exactReadPolicyURLV1),65536,true);
+const graphSnapshotPolicyURLV1=new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🔣️policy.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),exactReadPolicyURLV1=new URL("../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(graphSnapshotPolicyURLV1),REVISION_POLICY_V1.maximumTextBytes,true),exactReadPolicyCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(exactReadPolicyURLV1),REVISION_POLICY_V1.maximumTextBytes,true);
 const graphSnapshotPolicyV1:typeof graphSnapshotPolicy=Object.freeze(JSON.parse(graphSnapshotPolicyCaptureV1.text??"")),exactSourceReadPolicyV1:typeof exactReadSchema.definitions.Policy.const=Object.freeze(JSON.parse(exactReadPolicyCaptureV1.text??"").definitions.Policy.const);
-function requireCurrentGraphReadPoliciesV1():void{if(implementationPinnedV1())return;if(captureBoundedSourceRevisionV1(fileURLToPath(graphSnapshotPolicyURLV1),65536).sha256!==graphSnapshotPolicyCaptureV1.sha256||captureBoundedSourceRevisionV1(fileURLToPath(exactReadPolicyURLV1),65536).sha256!==exactReadPolicyCaptureV1.sha256)throw staleImplementationV1("Stale loaded Graph reader policy; restart required");}
+function requireCurrentGraphReadPoliciesV1():void{if(implementationPinnedV1())return;if(captureBoundedSourceRevisionV1(fileURLToPath(graphSnapshotPolicyURLV1),REVISION_POLICY_V1.maximumTextBytes).sha256!==graphSnapshotPolicyCaptureV1.sha256||captureBoundedSourceRevisionV1(fileURLToPath(exactReadPolicyURLV1),REVISION_POLICY_V1.maximumTextBytes).sha256!==exactReadPolicyCaptureV1.sha256)throw staleImplementationV1("Stale loaded Graph reader policy; restart required");}
 
 /** 📖️ Reads each declaration through the same exact source fact boundary as inference. */
-function graphDeclarationV1(path:string):any{const url=new URL(path,physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL));return JSON.parse(pinnedAuthorityReadV1(url.href,()=>{const captured=capturePhysicalSourceTextV1(url,65536),observed=observationV1.observedFs.readFileSync(url,"utf8");if(observed!==captured)throw Error("Current graph declaration Source changed");return observed;}));}
+function graphDeclarationV1(path:string):any{const url=new URL(path,physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL));return JSON.parse(pinnedAuthorityReadV1(url.href,()=>{const captured=capturePhysicalSourceTextV1(url,REVISION_POLICY_V1.maximumTextBytes),observed=observationV1.observedFs.readFileSync(url,"utf8");if(observed!==captured)throw Error("Current graph declaration Source changed");return observed;}));}
 /** 🗂️ The graph implementation files whose bytes the module authority covers, and whose loaded bytes every generation names. */
-const graphImplementationUrlsV1=():URL[]=>[new URL(physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🧮️digest/📥️read/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/📥️reuse/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/📥️reuse/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/📋️data/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/📋️data/📥️load/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/📋️data/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🚪️admission/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧭️selection/📥️options/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/🚪️selection.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/📋️owners.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/🚪️admission.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/🪶️lean.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/🔒️writer/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/📒️ledger/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🔏️revision/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🔏️revision/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🔁retry/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🔁retry/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🗂️generation-files/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🕰️generations/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🕰️generations/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🕰️generations/🔌️load/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🕰️generations/🌍️environment/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🧭️file-owner/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️closure-read-worker/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️source/🔏️closure/🟢️node/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️source/🔏️closure/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️source/🔏️closure/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🎯️precision/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🦀️resolution/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🦀️resolution/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🦀️resolution/💾️receipt/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧠️memory/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyURLV1,new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/📇️format/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))];
-const graphModuleAuthorityV1=():BuildGraphModuleAuthorityV1=>{requireCurrentSourceInventoryV1();requireCurrentGraphReadPoliciesV1();const observation=observationV1;if(typeof observation.requireCurrentObservationV1!=="function")throw Error("Loaded observation current-instance guard required");observation.requireCurrentObservationV1();const implementation=createHash("sha256");for(const path of graphImplementationUrlsV1())implementation.update(captureBoundedSourceRevisionV1(fileURLToPath(path),8388608).sha256);return {implementation:implementation.digest("hex"),publication:captureBoundedSourceRevisionV1(fileURLToPath(new URL("../🧬️schema/📣️publication.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),65536).sha256};};
+const graphImplementationUrlsV1=():URL[]=>[new URL(physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🧮️digest/📥️read/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/📥️reuse/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/📥️reuse/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/📋️data/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/📋️data/📥️load/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/📋️data/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🚪️admission/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧭️selection/📥️options/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/🚪️selection.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/📋️owners.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/🚪️admission.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/🪶️lean.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/🔒️writer/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/📒️ledger/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🔏️revision/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🔏️revision/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🔁retry/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🔁retry/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🗂️generation-files/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🕰️generations/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🕰️generations/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🕰️generations/🔌️load/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🕰️generations/🌍️environment/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🧭️file-owner/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️closure-read-worker/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️source/🔏️closure/🟢️node/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️source/🔏️closure/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️source/🔏️closure/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🎯️precision/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🦀️resolution/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🦀️resolution/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🦀️resolution/💾️receipt/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧠️memory/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyURLV1,new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/📇️format/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))];
+const graphModuleAuthorityV1=():BuildGraphModuleAuthorityV1=>{requireCurrentSourceInventoryV1();requireCurrentGraphReadPoliciesV1();const observation=observationV1;if(typeof observation.requireCurrentObservationV1!=="function")throw Error("Loaded observation current-instance guard required");observation.requireCurrentObservationV1();const implementation=createHash("sha256");for(const path of graphImplementationUrlsV1())implementation.update(captureBoundedSourceRevisionV1(fileURLToPath(path),REVISION_POLICY_V1.maximumSourceBytes).sha256);return {implementation:implementation.digest("hex"),publication:captureBoundedSourceRevisionV1(fileURLToPath(new URL("../🧬️schema/📣️publication.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),REVISION_POLICY_V1.maximumTextBytes).sha256};};
 const loadedGraphModuleAuthorityV1=graphModuleAuthorityV1();
 /** 📋️ The loaded graph implementation as workspace facts of the bytes it had when this module loaded; a pinned build names these and no later edit. */
-const loadedGraphImplementationRowsV1:readonly {kind:"digest";path:string;fact:{sha256:string;size:number;mtimeMs:number}}[]=graphImplementationUrlsV1().map(url=>{const path=fileURLToPath(url),status=lstatSync(path),captured=captureBoundedSourceRevisionV1(path,8388608);return {kind:"digest" as const,path,fact:{sha256:captured.sha256,size:status.size,mtimeMs:status.mtimeMs}};});
+const loadedGraphImplementationRowsV1:readonly {kind:"digest";path:string;fact:{sha256:string;size:number;mtimeMs:number}}[]=graphImplementationUrlsV1().map(url=>{const path=fileURLToPath(url),status=lstatSync(path),captured=captureBoundedSourceRevisionV1(path,REVISION_POLICY_V1.maximumSourceBytes);return {kind:"digest" as const,path,fact:{sha256:captured.sha256,size:status.size,mtimeMs:status.mtimeMs}};});
 
 /** 🔒️ Refuses a loaded implementation or declaration superseded while an original invocation waited. */
 export function requireBuildGraphModuleAuthorityV1(original:BuildGraphModuleAuthorityV1,current:BuildGraphModuleAuthorityV1):void{
@@ -134,7 +143,21 @@ async function withBuildGraphStateV1<T>(root:string,invocation:ScriptInvocation,
     const writer=await acquireQueuedResourceLease({directory:join(root,".cache/b/l/m/data"),resource:scope?buildGraphPublicationWriterResourceV1(store.root,scope):"build-graph-state:"+store.root,mode:"exclusive",owner:randomBytes(16).toString("base64url"),control:actualControl,signal:actualControl.signal});
     try{requireCurrentGraphModuleV1();checkResourceLeaseControl(actualControl);return await body(store,actualControl);}finally{writer.release();}
   };
-  return scope?withRepositoryBuildGraphSelectionV1(root,invocation,phaseControl,scope,run,scope===generationScopeV1?{optionalCaches:false}:undefined):withRepositoryBuildGraphFactStoreV1(root,invocation,phaseControl,run);
+  return scope?withRepositoryBuildGraphSelectionV1(root,invocation,phaseControl,scope,run):withRepositoryBuildGraphFactStoreV1(root,invocation,phaseControl,run);
+}
+
+/** 🛡️ The slice custody of the generation builders of one graph image (see `./🕰️generations/🔐️custody`): claim documents beside the generations, leases in the repository lease directory. */
+function generationCustodyV1(root:string,store:RepositoryCacheStoreV1,control:ResourceLeaseControl):SliceCustodyV1{
+  return createSliceCustodyV1({root:join(store.root,"generations"),fs:generationFilesV1(store) as never,lease:createQueuedClaimLeasePortV1({acquire:acquireQueuedResourceLease as never,directory:join(root,".cache/b/l/m/data"),control})});
+}
+
+/** 🧑‍🤝‍🧑️ Builds inside the shared cohort of the generation namespace (sweeps stay out) under a slice claim on the owners `request` writes (every owner when it is undefined or structural): refreshes of disjoint projects build at the same time, overlapping ones one after the other in ticket order. */
+async function withGenerationCustodyV1<T>(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,request:{readonly dirty:readonly string[];readonly structural:boolean}|undefined,body:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl,claim:SliceClaimV1)=>Promise<T>):Promise<T> {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);requireCurrentGraphModuleV1();
+  return withRepositoryBuildGraphSelectionV1(root,invocation,phaseControl,generationScopeV1,async(store,control)=>{
+    const language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language,claim=await generationCustodyV1(root,store,control).hold({owners:request?.dirty??[],structural:request===undefined||request.structural,signal:control.signal,say:(key,fields)=>{process.stderr.write(renderCustodyMessageV1(key,fields,language)+"\n");}});
+    try{requireCurrentGraphModuleV1();checkResourceLeaseControl(control);return await body(store,control,claim);}finally{await claim.release();}
+  },{optionalCaches:false,shared:true});
 }
 
 /** ♻️ Invalidates current graph authority while retaining charged storage, immutable pins and source facts. */
@@ -185,7 +208,7 @@ export function requireLiveBuildGraphV1(graph:BuildGraphV1):BuildGraphV1{
 
 /** 📁️ Discovers real workspace authority while yielding cancellation and progress. */
 export async function workspaceBuildFilesV1(root:string,invocation?:ScriptInvocation):Promise<string[]> {
-  const cachePolicy=graphDeclarationV1("../../⚡️caching/🔣️policy.json"),ownership=graphDeclarationV1("../../🗂️workspaces/🔣️policy.json"),excluded=new Set([...cachePolicy.generatedDirectories,".git",".🧬semio",".nx",".cache","node_modules","dist","target",".venv","venv","__pycache__",".pytest_cache",".next",".turbo","temp","🗑️generated"]),pending=[""],files:string[]=[],directories:string[]=[];
+  const descends=buildWalkDescendsV1(),pending=[""],files:string[]=[],directories:string[]=[];
   let visited=0;
   while(pending.length){
     if(invocation)checkScriptInvocation(invocation);
@@ -199,13 +222,19 @@ export async function workspaceBuildFilesV1(root:string,invocation?:ScriptInvoca
       for(const entry of entries){
         if(entry.isSymbolicLink())continue;
         const path=join(directory,entry.name).replaceAll("\\","/");
-        if(entry.isDirectory()){if(!excluded.has(entry.name)&&!entry.name.startsWith("extension-host-build-")&&!(ownership.collections.names.includes(entry.name)&&directory.split("/").at(-1)!==ownership.collections.moduleMember)&&path!=="compose")pending.push(path);}
+        if(entry.isDirectory()){if(descends(entry.name,path,directory))pending.push(path);}
         else if(entry.isFile())files.push(path);
       }
     }
-    const previous=visited;visited+=batch.length;if(Math.floor(visited/128)!==Math.floor(previous/128)&&invocation)await advanceScriptInvocation(invocation,"build:discover","running");
+    const previous=visited;visited+=batch.length;if(Math.floor(visited/GRAPH_LIMITS_V1.discoveryProgressStride)!==Math.floor(previous/GRAPH_LIMITS_V1.discoveryProgressStride)&&invocation)await advanceScriptInvocation(invocation,"build:discover","running");
   }
   files.sort();inventoryDirectoriesV1.set(files,directories.sort());if(invocation)await advanceScriptInvocation(invocation,"build:discover","complete");return files;
+}
+
+/** 🚶️ Whether the workspace walk enters a directory: not a generated, cache or dependency directory, not a build artifact directory of an extension host, not a collection directory below anything but a module member and not the composition directory. The one rule of the walk of every file inventory and of the advance of the membership frontier. */
+export function buildWalkDescendsV1():(name:string,path:string,parent:string)=>boolean {
+  const cachePolicy=graphDeclarationV1("../../⚡️caching/🔣️policy.json"),ownership=graphDeclarationV1("../../🗂️workspaces/🔣️policy.json"),excluded=new Set([...cachePolicy.generatedDirectories,".git",".🧬semio",".nx",".cache","node_modules","dist","target",".venv","venv","__pycache__",".pytest_cache",".next",".turbo","temp","🗑️generated"]);
+  return (name,path,parent)=>!excluded.has(name)&&!name.startsWith("extension-host-build-")&&!(ownership.collections.names.includes(name)&&parent.split("/").at(-1)!==ownership.collections.moduleMember)&&path!=="compose";
 }
 
 /** 📥️ Expands private input compaction into portable source declarations. */
@@ -219,7 +248,7 @@ function portableInputs(root:string,value:unknown,invocation:ScriptInvocation,co
   captureInferenceInventoryReferencesV1(value);
   const pending:unknown[]=[value],seen=new WeakSet<object>(),tokens=new Map<string,NonNullable<ReturnType<typeof token>>>();let visited=0;
   while(pending.length){
-    if(invocation&&visited++%1024===0)checkScriptInvocation(invocation);
+    if(invocation&&visited++%GRAPH_LIMITS_V1.invocationCheckStride===0)checkScriptInvocation(invocation);
     const item=pending.pop();if(!item||typeof item!=="object"||seen.has(item))continue;seen.add(item);
     const compact=token(item);if(compact)tokens.set(compact.key,compact);else for(const child of Object.values(item))if(child&&typeof child==="object")pending.push(child);
   }
@@ -250,7 +279,7 @@ function portableInputs(root:string,value:unknown,invocation:ScriptInvocation,co
     });
     const copies=new WeakMap<object,unknown>();visited=0;
     const transform=(item:unknown):unknown=>{
-      if(invocation&&visited++%1024===0)checkScriptInvocation(invocation);
+      if(invocation&&visited++%GRAPH_LIMITS_V1.invocationCheckStride===0)checkScriptInvocation(invocation);
       if(!item||typeof item!=="object")return item;
       const compact=token(item);if(compact)return expanded.get(compact.key)!;
       if(copies.has(item))return copies.get(item);
@@ -327,7 +356,16 @@ export function recordSealedGenerationPinV1(text:string|undefined):void{sealedGe
 /** 🧭️ The pin this command is bound by: the one its Original invocation put in the environment while that process is alive; a pin of anyone else is none. */
 function boundGenerationPinV1():GenerationPinV1|undefined{const state=generationPinStateV1(process.env);return state.state==="bound"?state.pin:undefined;}
 
-/** 🔌️ The identity of the one builder custody of the generation store: every builder of the all-workspace graph queues on it, shared readers never do. */
+/** 🪤️ The tags of the owners the test and policy discovery produces. An owner with one of them is kept from generation to generation and holds the observations of the whole discovery, so it is discovered again only when one of them is stale, the environment moved or an input of the discovery was added, removed or changed; an owner with another tag (the tags before the observations were kept) is discovered again once. */
+const TEST_TAG_V1="tests-v2",POLICY_TAG_V1="policy-v2";
+
+/** ❓️ Whether the test and policy owners of the previous generation are kept as they are: there is a previous generation whose owners carry the current tags, the environment did not move, no tagged owner is dirty (its root is among the roots being refreshed) and no input of the discovery (a `.feature` file or a `📜️script.ts`) was added, removed or changed since; an unknown change list counts as a change. */
+export function taggedOwnersRetainedV1({cold,changed,roots,stubs,environment,previousEnvironment}:{cold:boolean;changed:readonly string[]|undefined;roots:ReadonlySet<string>;stubs:Record<string,{root:string;tag?:string}>;environment:string;previousEnvironment:string|null}):boolean{
+  const tagged=Object.values(stubs).filter(stub=>stub.tag!==undefined);
+  return !cold&&changed!==undefined&&tagged.length>0&&tagged.every(stub=>stub.tag===TEST_TAG_V1||stub.tag===POLICY_TAG_V1)&&environment===previousEnvironment&&!tagged.some(stub=>roots.has(stub.root))&&!changed.some(path=>path.endsWith(".feature")||path.endsWith("📜️script.ts"));
+}
+
+/** 🔌️ The generation namespace of the graph image: its writer lease is taken as a shared cohort by every builder, prefetch and idle probe (sweeps take it exclusively), the slice custody decides who builds. */
 const generationScopeV1=createHash("sha256").update("semio-graph-generations-v1").digest("hex");
 
 /** 📈️ Opens the generation documents of the graph partition: every path stays inside the original store and the store is rechecked while documents move. */
@@ -341,13 +379,16 @@ export function buildGraphGenerationIdentityV1(registry:BuildOwnerRegistryV1):st
 }
 
 /** 🕰️ Binds the repository to the graph generation load: shared reader custody, the builder custody, the bounded facts lease, fact checks that understand environment rows, the membership frontier and the partial inference. */
-function generationHostV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,registry:BuildOwnerRegistryV1,compact=false){
-  const registryDigest=createHash("sha256").update(JSON.stringify(registry)).digest("hex"),state={files:[] as string[],stable:new Set<string>()},leaseDirectory=join(root,".cache/b/l/m/data");
+export function generationHostV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,registry:BuildOwnerRegistryV1,compact=false){
+  const registryDigest=createHash("sha256").update(JSON.stringify(registry)).digest("hex"),state={files:[] as string[],stable:new Set<string>(),carry:false},leaseDirectory=join(root,".cache/b/l/m/data");
   const read=async(path:string)=>{try{return await readFile(join(root,path),"utf8");}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}};
   const statFile=async(path:string)=>{try{const status=await lstat(join(root,path));return status.isFile()?{size:status.size,mtimeMs:status.mtimeMs}:undefined;}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}};
   const statEntry=async(path:string)=>{try{const status=await lstat(join(root,path));return {directory:status.isDirectory(),file:status.isFile(),mtimeMs:status.mtimeMs,ino:status.ino,mode:status.mode};}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}};
+  const listEntry=async(directory:string)=>{try{return(await readdir(join(root,directory),{withFileTypes:true})).map(entry=>({name:entry.name,kind:(entry.isSymbolicLink()?"other":entry.isDirectory()?"directory":entry.isFile()?"file":"other") as "directory"|"file"|"other"}));}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}};
   let analyses:Promise<void>|undefined;
   const analysesPrepared=():Promise<void>=>analyses??=import("./📥️inference/🟨️.mjs").then(async producer=>{await producer.libraryBootstrap;producer.prepareSourceAnalysesV1();});
+  let deriver:Promise<(row:{kind:string;path:string;fact:unknown},signal?:AbortSignal)=>Promise<{fact:unknown;rows:readonly {kind:string;path:string;fact:unknown}[]}>>|undefined;
+  const deriveAgain=async(row:{kind:string;path:string;fact:unknown},signal?:AbortSignal)=>{deriver??=import("./📥️inference/🟨️.mjs").then(async producer=>{await producer.libraryBootstrap;producer.prepareSourceAnalysesV1();return producer.openGenerationDeriverV1({workspaceRoot:root,registry});});return(await deriver)(row,signal) as never;};
   const holdsByStat=async(rows:readonly {kind:string;path:string;fact:any}[],signal?:AbortSignal):Promise<boolean>=>{
     const plain:typeof rows[number][]=[],own:typeof rows[number][]=[];for(const row of rows){if(row.kind==="closure")continue;(row.kind==="field"||row.kind==="digest"?own:plain).push(row);}
     for(let at=0;at<own.length;at+=64){signal?.throwIfAborted();if(!(await Promise.all(own.slice(at,at+64).map(row=>environmentRowHoldsV1(row as never,{read,stat:statFile})))).every(Boolean))return false;}
@@ -361,6 +402,15 @@ function generationHostV1(root:string,invocation:ScriptInvocation,phaseControl:R
   }});
   const membershipByStat=async(previous:{manifest:{membership:string};frontier:any}|undefined,signal?:AbortSignal)=>{
     if(previous&&await frontierHoldsV1(previous.frontier,statEntry,{signal})){state.files=previous.frontier.members.map((row:[string,number])=>row[0]);return {digest:previous.manifest.membership,frontier:previous.frontier,changes:[]};}
+    const config=(path:string)=>["📋️project.json","Cargo.toml"].includes(path.slice(path.lastIndexOf("/")+1));
+    if(previous?.frontier){
+      const capturedAt=Date.now(),descends=buildWalkDescendsV1(),advanced=await advanceFrontierV1({frontier:previous.frontier,stat:statEntry,list:listEntry,descend:(name,path,parent)=>descends(name,path,parent==="."?"":parent),member:graphMemberPredicateV1(),signal});
+      if(advanced&&!("unchanged"in advanced)){
+        const frontier=createFrontierV1({directories:advanced.directories,members:advanced.members,capturedAt}),digest=createHash("sha256").update(canonicalGenerationJsonV1(frontier.members)).digest("hex");
+        state.files=frontier.members.map((row:[string,number])=>row[0]);
+        return {digest,frontier,changes:diffFrontiersV1(previous.frontier,frontier).map(change=>({...change,...(!change.directory&&config(change.path)?{config:true}:{})}))};
+      }
+    }
     const capturedAt=Date.now(),all=await workspaceBuildFilesV1(root,invocation),members=buildGraphMembersV1(all),directoryPaths=inventoryDirectoriesV1.get(all)??[];
     const stamp=async<T>(paths:readonly string[],row:(path:string,status:NonNullable<Awaited<ReturnType<typeof statEntry>>>)=>T):Promise<T[]>=>{
       const out:T[]=new Array(paths.length);let next=0;
@@ -370,7 +420,6 @@ function generationHostV1(root:string,invocation:ScriptInvocation,phaseControl:R
     const directories=await stamp(directoryPaths,(path,status)=>[path,status.mtimeMs,status.ino] as [string,number,number]),stamped=await stamp(members,(path,status)=>[path,status.mode] as [string,number]);
     const frontier=createFrontierV1({directories,members:stamped,capturedAt}),digest=createHash("sha256").update(canonicalGenerationJsonV1(frontier.members)).digest("hex");
     state.files=members;
-    const config=(path:string)=>["📋️project.json","Cargo.toml"].includes(path.slice(path.lastIndexOf("/")+1));
     return {digest,frontier,changes:previous?diffFrontiersV1(previous.frontier,frontier).map(change=>({...change,...(!change.directory&&config(change.path)?{config:true}:{})})):[]};
   };
   const seams=residentGraphSeamsV1({root,membership:membershipByStat,holds:holdsByStat,adopt:(files:string[])=>{state.files=files;}}),holds=seams.holds;
@@ -383,17 +432,22 @@ function generationHostV1(root:string,invocation:ScriptInvocation,phaseControl:R
     workspaceRoot:root,separator:sep,language:resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language,namedInputs:graphDeclarationV1("../🔣️policy.json").namedInputs,registryDigest,signal:invocation.control.signal,verbose:process.env.SEMIO_GRAPH_PHASES==="1"||process.env.SEMIO_BUILD_PROFILE_INPUTS==="1",
     async identity(){requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation","refuse");return buildGraphGenerationIdentityV1(registry);},
     async implementationRows(){const producer=await import("./📥️inference/🟨️.mjs");await producer.libraryBootstrap;const rows:{kind:"digest";path:string;fact:{sha256:string;size:number;mtimeMs:number}}[]=[];for(const row of [...loadedGraphImplementationRowsV1,...producer.loadedImplementationRowsV1]){const inside=relative(root,row.path);if(inside===""||inside.startsWith("..")||isAbsolute(inside))continue;rows.push({...row,path:inside.split(sep).join("/")});}return producer.classifyImplementationRowsV1(rows);},
-    release:async()=>{observationV1.releaseInferenceMemoryV1();(await import("../📥️inputs/🟨️.mjs")).releaseInputMemoryV1();(await import("./📥️inference/🧭️script-inputs/🟨️.mjs")).resetClosureEntriesV1();graphStringInternerV1.clear();createMemoryPortsV1().collect();},
+    release:async()=>{observationV1.releaseInferenceMemoryV1();(await import("../📥️inputs/🟨️.mjs")).releaseInputMemoryV1();if(!state.carry){(await import("./📥️inference/🧭️script-inputs/🟨️.mjs")).resetClosureEntriesV1();setupSharesV1.delete(invocation);}graphStringInternerV1.clear();createMemoryPortsV1().collect();},
+    carryClosures:(on:boolean)=>{state.carry=on;},
+    builderIdle:(request:GenerationPrefetchRequestV1)=>builderIdleV1({root,invocation,phaseControl,request}),
     withShared:<T>(body:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>Promise<T>)=>withRepositoryCacheStoreV1(root,"graph",invocation,phaseControl,async(store,control)=>{await store.recheck();checkResourceLeaseControl(control);return body(store,control);}),
-    withBuilder:async<T>(body:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>Promise<T>)=>{
+    withBuilder:async<T>(build:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl,claim:SliceClaimV1)=>Promise<T>,request?:{readonly dirty:readonly string[];readonly structural:boolean})=>{
+      const body=async(store:RepositoryCacheStoreV1,control:ResourceLeaseControl,claim:SliceClaimV1)=>{await markBuildCapacityPhaseV1("rebuild");return build(store,control,claim);};
+      await upgradeBuildCapacityBeforeRebuildV1();
       let image:string|undefined;
-      const result=await withBuildGraphStateV1(root,invocation,phaseControl,(store,control)=>{image=store.root;return body(store,control);},generationScopeV1);
+      const result=await withGenerationCustodyV1(root,invocation,phaseControl,request,(store,control,claim)=>{image=store.root;return body(store,control,claim);});
+      await markBuildCapacityPhaseV1("plan");
       if(image!==undefined)await sweepSupersededBlocksV1(root,image,invocation,phaseControl,(key,fields)=>process.stderr.write(renderGenerationMessageV1(key as never,fields,resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language)+"\n"));
       return result;
     },
-    storeOptions:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>({root:join(store.root,"generations"),fs:generationFilesV1(store),lease:lease(control),holds,resources:{facts:"repository-graph-facts:"+resolve(root)}}),
+    storeOptions:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>({root:join(store.root,"generations"),fs:generationFilesV1(store),lease:lease(control),holds,derive:deriveAgain,resources:{facts:"repository-graph-facts:"+resolve(root)}}),
     membership,
-    discoverPart:(spec:{cold:boolean;owners:string[];discover:string[];removed:string[];previousEnv:string|null;stubs:Record<string,BuildGraphPartStubV1>},signal:AbortSignal|undefined,control:ResourceLeaseControl)=>{signal?.throwIfAborted();requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation");return discoverBuildGraphPartV1(root,registry,invocation,control,state.files,{cold:spec.cold,roots:new Set([...spec.owners.map(name=>spec.stubs[name]!.root),...spec.discover.map(path=>dirname(path))]),stubs:survivingStubsV1(spec.stubs,spec.removed),previousEnv:spec.previousEnv});},
+    discoverPart:(spec:{cold:boolean;owners:string[];discover:string[];removed:string[];changed?:string[];previousEnv:string|null;stubs:Record<string,BuildGraphPartStubV1>},signal:AbortSignal|undefined,control:ResourceLeaseControl)=>{signal?.throwIfAborted();requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation");return discoverBuildGraphPartV1(root,registry,invocation,control,state.files,{cold:spec.cold,changed:spec.changed,roots:new Set([...spec.owners.map(name=>spec.stubs[name]!.root),...spec.discover.map(path=>dirname(path))]),stubs:survivingStubsV1(spec.stubs,spec.removed),previousEnv:spec.previousEnv});},
     expand:async(projects:Record<string,unknown>,control:ResourceLeaseControl)=>compact?projects:(await portableInputs(root,projects,invocation,control)) as Record<string,unknown>,
     expansionLimits:{maximumProjects:32,maximumBytes:Math.floor(graphDeclarationV1("../👁️observation/📥️reuse/🧬️schema/🔣️.json").definitions.Policy.const.maximumTextBytes/4)},
     readLean:(value:unknown)=>readBuildGraphLeanV1(value),
@@ -401,6 +455,7 @@ function generationHostV1(root:string,invocation:ScriptInvocation,phaseControl:R
     sealed:(record:{generation:number;manifest:string;owners:readonly string[];covered:ReadonlySet<string>|undefined;atMs:number})=>{sealedGenerationPinTextV1=encodeGenerationPinV1({owner:generationPinOwnerV1(process.env),...record});},
     clock:(control:ResourceLeaseControl)=>createGraphPhaseClockV1({publish:resource=>control.publish({resource,mode:"shared",elapsedMs:0}),write:writeGraphPhaseRowV1}),
     say:(key:string,fields:Record<string,string|number>)=>{process.stderr.write(renderGenerationMessageV1(key as never,fields,resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language)+"\n");},
+    async prefetch(request:GenerationPrefetchRequestV1){await upgradeBuildCapacityBeforeRebuildV1();return prefetchStaleGenerationV1({root,invocation,phaseControl,registry,files:()=>state.files,request,release:()=>this.release(),language:resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language,book:()=>markBuildCapacityPhaseV1("rebuild")});},
   };
 }
 
@@ -408,7 +463,11 @@ function generationHostV1(root:string,invocation:ScriptInvocation,phaseControl:R
 async function sweepSupersededBlocksV1(root:string,image:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,say:(key:string,fields:Record<string,string|number>)=>void):Promise<void>{
   try{
     const scan=await import("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),directory=join(root,".cache/b/l/m/data");
-    const report=await scan.supersedeBuildGraphObservationBlocksV1(image,{lease:async(kind,identity)=>{try{return await acquireResourceLease({directory,resource:buildGraphWriterResourceV1(root,kind,identity),mode:"exclusive",signal:invocation.control.signal,control:phaseControl,timeoutMs:0});}catch(error){if(/timed out/iu.test(String((error as Error).message)))return undefined;throw error;}}},{cancelled:()=>invocation.control.signal.aborted,progress:()=>{}},{minimumBlocks:24576,blocksPerHeader:6});
+    const timedOut=(error:unknown)=>/timed out/iu.test(String((error as Error).message)),resourceOf=(kind:"selection"|"dataset"|"canonical",identity:string)=>buildGraphWriterResourceV1(root,kind,identity);
+    const report=await scan.supersedeBuildGraphObservationBlocksV1(image,{lease:scan.createSweepLeasePortV1({
+      acquire:async(kind,identity)=>{try{return await acquireResourceLease({directory,resource:resourceOf(kind,identity),mode:"exclusive",signal:invocation.control.signal,control:phaseControl,timeoutMs:0});}catch(error){if(timedOut(error))return undefined;throw error;}},
+      acquireQueued:async(kind,identity,timeoutMs)=>{try{return await acquireQueuedResourceLease({directory,resource:resourceOf(kind,identity),mode:"exclusive",owner:randomBytes(16).toString("base64url"),signal:invocation.control.signal,control:phaseControl,timeoutMs});}catch(error){if(timedOut(error))return undefined;throw error;}},
+      waitMilliseconds:GENERATION_POLICY_V1.sweepWaitMilliseconds})},{cancelled:()=>invocation.control.signal.aborted,progress:()=>{}},{minimumBlocks:GRAPH_LIMITS_V1.sweepMinimumBlocks,blocksPerHeader:GRAPH_LIMITS_V1.sweepBlocksPerHeader});
     if(report.removed)say("swept",{removed:report.removed,megabytes:Math.round(report.bytes/1048576),headers:report.headers});
   }catch(error){if(invocation.control.signal.aborted)throw error;process.stderr.write("graph: sweep of superseded observation blocks failed: "+String((error as Error).message)+"\n");}
 }
@@ -422,61 +481,164 @@ function requireEqualBuildGraphsV1(actual:BuildGraphV1,expected:BuildGraphV1):vo
   for(const key of["externalNodes","unavailable","namedInputs"] as const)if(!same(actual[key]??null,expected[key]??null))throw Error(`Graph generation differs from full inference at ${key}`);
 }
 
-/** 🧩️ Infers only the projects whose roots are in `part.roots` (all of them when cold) plus the test and policy contributions, recomputes the edges of every other owner when the environment moved, and returns the pieces owner by owner. Everything an owner consumed is recorded in its own project record or in the capture around this call, so a later edit finds exactly its consumers. */
-export async function discoverBuildGraphPartV1(root:string,registry:BuildOwnerRegistryV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,files:readonly string[],part:{cold:boolean;roots:ReadonlySet<string>;stubs:Record<string,BuildGraphPartStubV1>;previousEnv:string|null}):Promise<BuildGraphPartV1> {
+/** 🧩️ The stale projects of a pending refresh: the generation they were planned against, their names, their roots and the implementation digest of the planner. */
+type GenerationPrefetchRequestV1={readonly generation:number;readonly dirty:readonly string[];readonly roots:Readonly<Record<string,string>>;readonly structural:boolean;readonly implementation:string};
+
+/** 🌐️ Fills the project records of the owners whose roots are in `roots` without assembling anything: the inference the build runs for them with the options it runs it with (so the records are the ones the build finds warm), without the test and policy contributions, the edges and the environment. */
+export async function prefetchBuildGraphProjectsV1(root:string,registry:BuildOwnerRegistryV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,files:readonly string[],roots:ReadonlySet<string>):Promise<number> {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);registry=readBuildOwnerRegistryV1(registry);
+  requireBuildOwnerRegistryAuthorityV1(registry,JSON.parse(pinnedAuthorityReadV1(join(root,"📋️build-owners.json"),()=>observationV1.observedFs.readFileSync(join(root,"📋️build-owners.json"),"utf8"))));
+  const owner=await import("./📥️inference/🟨️.mjs");checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();
+  const context={workspaceRoot:root,invocation,phaseControl,registry,setupShare:setupShareV1(invocation)};
+  const captured=await observationV1.captureObservedSourceInputsV1(async()=>{
+    const options={analyzeLockfile:false,catalogProviders:registry.catalogProviders.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath})),snapshot:true,ownerRoots:roots,onOwnerObservations:()=>{}};
+    return (await owner.discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")||javascriptManagerV1.lockFileNames().includes(file)||file.endsWith(".patch")),options,context)).length;
+  },undefined,false);
+  return captured.value;
+}
+
+/** 🔏️ The content stamp of every stale owner: a digest of the identity (path, size, modification time) of each captured file below its root, so a done claim covers an owner only for the content it was made for and an edit after the prefetch opens the owner again; an owner without a root, or whose files cannot be read, gets `-`, which only equals itself. */
+export async function ownerContentStampsV1(root:string,files:readonly string[],roots:Readonly<Record<string,string>>,owners:readonly string[]):Promise<Readonly<Record<string,string>>>{
+  const{lstat}=await import("node:fs/promises"),byRoot=new Map<string,string[]>(),rows=new Map<string,string[]>(),failed=new Set<string>();
+  for(const name of owners){const base=roots[name];if(base===undefined)continue;const key=base==="."?"":base.replace(/\/+$/u,"");byRoot.set(key,[...byRoot.get(key)??[],name]);}
+  for(const file of files){
+    let owner:string[]|undefined,cut=file.length;
+    for(;;){owner=byRoot.get(file.slice(0,cut));if(owner||cut<=0)break;cut=file.lastIndexOf("/",cut-1);if(cut<0){owner=byRoot.get("");break;}}
+    if(!owner)continue;
+    let row:string;
+    try{const info=await lstat(isAbsolute(file)?file:join(root,file));row=file+"\0"+info.size+"\0"+Math.floor(info.mtimeMs);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT"){for(const name of owner)failed.add(name);continue;}row=file+"\0gone";}
+    for(const name of owner){const list=rows.get(name)??rows.set(name,[]).get(name)!;if(list.length>=GRAPH_LIMITS_V1.ownerRowListMaximum)failed.add(name);else list.push(row);}
+  }
+  return Object.fromEntries(owners.map(name=>[name,roots[name]===undefined||failed.has(name)?"-":createHash("sha256").update((rows.get(name)??[]).sort().join("\n")).digest("hex").slice(0,16)]));
+}
+
+/** 🎟️ The compute slots of a graph rebuild: the configured count (the memory share of the claim registry, or the forced `SEMIO_GRAPH_COMPUTERS`), lowered to what rebuilds measurably took on earlier runs of this host so the slots are admitted by the memory they use; a store that cannot be read keeps the configured count. */
+async function rebuildSlotsV1():Promise<number>{
+  const configured=slotCountV1({memoryMegabytes:Math.floor(totalmem()/1048576),environment:process.env});
+  if(process.env.SEMIO_GRAPH_COMPUTERS!==undefined)return configured;
+  try{return Math.min(configured,(await import("../🌡️host-capacity/🟦️.ts")).buildRebuildSlotsV1(process.env));}catch{return configured;}
+}
+
+/** 🤝️ Prepares the stale projects of a pending refresh together with the commands that wait for the same graph, before the exclusive build (the caller has asked for the capacity of the rebuild; the learned size is booked by `book` once a chunk is claimed, not while the run waits for a compute slot): claims a chunk of them, fills their project records in chunks that release the heap in between, joins what a peer computes, and never fails the command (the build computes what is left and reports a real failure). */
+async function prefetchStaleGenerationV1(input:{root:string;invocation:ScriptInvocation;phaseControl:ResourceLeaseControl;registry:BuildOwnerRegistryV1;files:()=>readonly string[];request:GenerationPrefetchRequestV1;release:()=>Promise<void>;language:"en"|"de";book:()=>Promise<unknown>}):Promise<void> {
+  const{root,invocation,phaseControl,registry,request}=input;
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);requireCurrentGraphModuleV1();
+  const say=(key:ClaimMessageKeyV1,fields:Record<string,string|number>)=>{process.stderr.write(renderClaimMessageV1(key,fields,input.language)+"\n");};
+  try{await withRepositoryBuildGraphSelectionV1(root,invocation,phaseControl,generationScopeV1,async(store,control)=>{
+    const files=generationFilesV1(store),directory=join(store.root,"generations"),clock=createGraphPhaseClockV1({publish:resource=>control.publish({resource,mode:"shared",elapsedMs:0}),write:writeGraphPhaseRowV1});
+    const claims=createClaimRegistryV1({root:directory,fs:files as never,lease:createQueuedClaimLeasePortV1({acquire:acquireQueuedResourceLease as never,directory:join(root,".cache/b/l/m/data"),control})});
+    let begun=false,booked=false;
+    try{
+      await prepareStaleProjectsV1({registry:claims,base:request.generation,implementation:request.implementation,wanted:request.dirty,stamps:await ownerContentStampsV1(root,input.files(),request.roots,request.dirty),slots:await rebuildSlotsV1(),signal:invocation.control.signal,say,
+        served:async()=>{const bytes=await files.read(join(directory,GENERATION_POLICY_V1.pointer)) as Uint8Array|undefined,pointer=bytes?readGenerationPointerV1(bytes):undefined;return pointer&&pointer.generation!==request.generation?pointer.generation:undefined;},
+        progress:async({done,total})=>{if(!begun){begun=true;await clock.begin("prefetch",total);}await clock.advance("prefetch",done);},
+        run:async owners=>{
+          checkScriptInvocation(invocation);
+          if(!booked){booked=true;await input.book();}
+          const roots=new Set(owners.map(name=>request.roots[name]).filter((value):value is string=>value!==undefined));
+          try{if(roots.size)await prefetchBuildGraphProjectsV1(root,registry,invocation,control,input.files(),roots);}finally{await input.release();}
+        }});
+    }finally{if(begun)await clock.end("prefetch").catch(()=>undefined);}
+  },{optionalCaches:false,shared:true});}
+  catch(error){if(invocation.control.signal.aborted)throw error;say("failed",{reason:String((error as Error)?.message??error).replace(/\s+/gu," ").slice(0,GRAPH_LIMITS_V1.reasonCharacters)});}
+}
+
+/** 🧺️ What one command's prefetch and build share of the whole-workspace setup of the inference (the native owners, the catalogue and the config bytes behind a validated observation, see `emojiProjectJsonNodes`): one per command, handed along in the inference context, dropped by the final release of the command; `computed` and `reused` count the setups. */
+const setupSharesV1=new WeakMap<object,{readonly cache:Map<string,unknown>;computed:number;reused:number}>();
+function setupShareV1(invocation:object):{readonly cache:Map<string,unknown>;computed:number;reused:number}{
+  let share=setupSharesV1.get(invocation);if(!share)setupSharesV1.set(invocation,share={cache:new Map(),computed:0,reused:0});
+  return share;
+}
+
+/** 💤️ Whether this command may build at once: a slice claim on its stale owners would be held at once and no live peer claim covers a stale owner of its plan, so a prefetch first would compute the owners twice. Any doubt or failure answers false and the prefetch runs as before. */
+async function builderIdleV1(input:{root:string;invocation:ScriptInvocation;phaseControl:ResourceLeaseControl;request:GenerationPrefetchRequestV1}):Promise<boolean> {
+  const{root,invocation,phaseControl,request}=input;
+  try{
+    requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);requireCurrentGraphModuleV1();
+    return await withRepositoryBuildGraphSelectionV1(root,invocation,phaseControl,generationScopeV1,async(store,control)=>{
+      const claims=createClaimRegistryV1({root:join(store.root,"generations"),fs:generationFilesV1(store) as never,lease:createQueuedClaimLeasePortV1({acquire:acquireQueuedResourceLease as never,directory:join(root,".cache/b/l/m/data"),control})});
+      return claims.idle({base:request.generation,implementation:request.implementation,wanted:request.dirty,builderFree:()=>generationCustodyV1(root,store,control).idle({owners:request.dirty,structural:request.structural,signal:invocation.control.signal}),signal:invocation.control.signal});
+    },{optionalCaches:false,shared:true});
+  }catch(error){if(invocation.control.signal.aborted)throw error;return false;}
+}
+
+/** 🧵️ The owners of the previous generation that keep their fragment and only get their edges again when the environment moved: every owner of a real project root that is not inferred again. A withheld owner has no edges, but its fragment names the environment it was published for, so it is refreshed like the others; tagged owners are rediscovered as a group when the environment moves. */
+export function edgeRefreshOwnersV1(input:{cold:boolean;environment:string;previousEnvironment:string|null;roots:ReadonlySet<string>;stubs:Readonly<Record<string,{root:string;kind:string;tag?:string}>>;inferred:ReadonlySet<string>}):{projects:string[];withheld:string[]} {
+  if(input.cold||input.environment===input.previousEnvironment)return{projects:[],withheld:[]};
+  const kept=Object.entries(input.stubs).filter(([name,stub])=>!stub.tag&&!input.inferred.has(name)&&!input.roots.has(stub.root));
+  return{projects:kept.filter(([,stub])=>stub.kind==="project").map(([name])=>name),withheld:kept.filter(([,stub])=>stub.kind==="unavailable").map(([name])=>name)};
+}
+
+/** 🔗️ Infers only the projects whose roots are in `part.roots` (all of them when cold) plus the test and policy contributions, recomputes the edges of every other owner when the environment moved, and returns the pieces owner by owner. Everything an owner consumed is recorded in its own project record or in the capture around this call, so a later edit finds exactly its consumers. */
+export async function discoverBuildGraphPartV1(root:string,registry:BuildOwnerRegistryV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,files:readonly string[],part:{cold:boolean;roots:ReadonlySet<string>;stubs:Record<string,BuildGraphPartStubV1>;previousEnv:string|null;changed?:readonly string[]}):Promise<BuildGraphPartV1> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);registry=readBuildOwnerRegistryV1(registry);
   requireBuildOwnerRegistryAuthorityV1(registry,JSON.parse(pinnedAuthorityReadV1(join(root,"📋️build-owners.json"),()=>observationV1.observedFs.readFileSync(join(root,"📋️build-owners.json"),"utf8"))));
   const [owner,tests,policies]=await Promise.all([import("./📥️inference/🟨️.mjs"),import("../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs"),import("./📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();
-  const nodeRows:Record<string,BuildGraphRowV1[]>={},context={workspaceRoot:root,invocation,phaseControl,registry},stubs=Object.entries(part.stubs),realRoots=new Set(stubs.filter(([,stub])=>!stub.tag).map(([,stub])=>stub.root));
+  const nodeRows:Record<string,BuildGraphRowV1[]>={},derivedFacts=new Map<string,{readonly row:BuildGraphRowV1;readonly support:readonly BuildGraphRowV1[]}>(),context={workspaceRoot:root,invocation,phaseControl,registry,setupShare:setupShareV1(invocation)},stubs=Object.entries(part.stubs),realRoots=new Set(stubs.filter(([,stub])=>!stub.tag).map(([,stub])=>stub.root));
   const read=async(path:string)=>{try{return await readFile(join(root,path),"utf8");}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}},stat=async(path:string)=>{try{const status=await lstat(join(root,path));return status.isFile()?{size:status.size,mtimeMs:status.mtimeMs}:undefined;}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}};
   const captured=await observationV1.captureObservedSourceInputsV1(async()=>{
-    const options={analyzeLockfile:true,catalogProviders:registry.catalogProviders.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath})),snapshot:true,...(part.cold?{}:{ownerRoots:part.roots}),onOwnerObservations:(name:string,rows:BuildGraphRowV1[])=>{nodeRows[name]=rows;}};
+    const options={analyzeLockfile:true,catalogProviders:registry.catalogProviders.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath})),snapshot:true,...(part.cold?{}:{ownerRoots:part.roots}),onOwnerObservations:(name:string,rows:BuildGraphRowV1[],derived?:{readonly row:BuildGraphRowV1;readonly support:readonly BuildGraphRowV1[]}[])=>{nodeRows[name]=rows;for(const fact of derived??[])derivedFacts.set(fact.row.path+"\0"+fact.row.fact,fact);}};
     const primary=await owner.discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")||javascriptManagerV1.lockFileNames().includes(file)||file.endsWith(".patch")),options,context);
     if(invocation)await advanceScriptInvocation(invocation,"build:infer","running");
-    const testContributions=await tests.discoverTestBuildProjectsV1(files.filter(file=>file.endsWith(".feature")),{},context),contributions=[...primary,...testContributions];
-    const policyOwners=Object.assign({},...contributions.map(([,contribution])=>contribution.projects??{}));
-    contributions.push(...await policies.default.createNodesV2[1](files.filter(file=>file.endsWith("📜️script.ts")&&(part.cold||part.roots.has(dirname(file))||!realRoots.has(dirname(file)))),{}, {workspaceRoot:root,projects:policyOwners}));
-    const projects:Record<string,any>={},externalNodes:Record<string,unknown>={},unavailable=new Map<string,BuildUnavailableProjectV1>(),tags:Record<string,string>={},configs:Record<string,string>={},primaryNames=new Set<string>(),testNames=new Set(testContributions.flatMap(([,contribution])=>Object.keys(contribution.projects??{})));
-    contributions.forEach(([file,contribution],index)=>{
+    const projects:Record<string,any>={},externalNodes:Record<string,unknown>={},unavailable=new Map<string,BuildUnavailableProjectV1>(),tags:Record<string,string>={},configs:Record<string,string>={},primaryNames=new Set<string>(),testNames=new Set<string>();
+    const merge=(list:[string,any][],primaryList:boolean)=>list.forEach(([file,contribution])=>{
       Object.assign(externalNodes,contribution.externalNodes);
       for(const row of (contribution.unavailable??[]) as BuildUnavailableProjectV1[])unavailable.set(row.root,row);
       for(const[name,project]of Object.entries(contribution.projects??{}) as [string,any][]){
         if(projects[name]&&projects[name].root!==project.root)throw Error(`Duplicate build project ${name}`);
         projects[name]={...projects[name],...project,name,targets:{...projects[name]?.targets,...project.targets}};
-        if(index<primary.length)primaryNames.add(name);
+        if(primaryList)primaryNames.add(name);
         configs[name]??=file;
       }
     });
-    for(const name of Object.keys(projects))if(!primaryNames.has(name))tags[name]=testNames.has(name)?"tests":"policy";
+    merge(primary as [string,any][],true);
     const kept=stubs.filter(([name,stub])=>!stub.tag&&stub.kind==="project"&&!projects[name]&&!part.roots.has(stub.root));
-    withholdDanglingTestProjectsV1({projects,configs,unavailable,dangling:tests.danglingTestDependenciesV1({...Object.fromEntries(kept.map(([name,stub])=>[name,{root:stub.root}])),...projects}),digest:file=>observedFileDigestV1(root,file)});
-    const listed=[...kept.map(([name,stub])=>({name,root:stub.root,nativeRoot:stub.nativeRoot,config:stub.config})),...Object.entries(projects).filter(([name])=>!tags[name]).map(([name,project])=>({name,root:project.root,nativeRoot:project.metadata?.nativeRoot as string|undefined,config:configs[name]}))];
+    const listed=[...kept.map(([name,stub])=>({name,root:stub.root,nativeRoot:stub.nativeRoot,config:stub.config})),...Object.entries(projects).map(([name,project])=>({name,root:project.root,nativeRoot:project.metadata?.nativeRoot as string|undefined,config:configs[name]}))];
     const env=await deriveEnvironmentV1({projects:listed,workspaceManifests:files.filter(file=>file==="Cargo.toml"||file.endsWith("/Cargo.toml")),lock:javascriptManagerV1.primaryLockName(),taxonomy:"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",read,stat});
-    const edgeNames=!part.cold&&env.digest!==part.previousEnv?kept.map(([name])=>name):[],processed=new Set([...Object.keys(projects),...edgeNames]);
-    const contextProjects:Record<string,any>={...Object.fromEntries(kept.map(([name,stub])=>[name,{name,root:stub.root,targets:Object.fromEntries(stub.targets.map(target=>[target,{}])),...(stub.nativeRoot?{metadata:{nativeRoot:stub.nativeRoot}}:{})}])),...projects};
-    const ownerOf=createProjectFileIndexV1(contextProjects),withheld=[...unavailable.keys(),...stubs.filter(([,stub])=>!stub.tag&&stub.kind==="unavailable"&&!part.roots.has(stub.root)).map(([,stub])=>stub.root)],projectFileMap:Record<string,{file:string}[]>=Object.fromEntries([...processed].map(name=>[name,[]]));
+    const tagged=stubs.filter(([,stub])=>stub.tag),retained=taggedOwnersRetainedV1({cold:part.cold,changed:part.changed,roots:part.roots,stubs:part.stubs,environment:env.digest,previousEnvironment:part.previousEnv});
+    const incremental=!retained&&!part.cold&&part.changed!==undefined&&tagged.some(([,stub])=>stub.tag===TEST_TAG_V1)&&tagged.every(([,stub])=>stub.tag===TEST_TAG_V1||stub.tag===POLICY_TAG_V1)&&env.digest===part.previousEnv;
+    const tagRows:BuildGraphRowV1[]=[],testRows:BuildGraphRowV1[]=[],factsInto=(sink:BuildGraphRowV1[])=>async<T>(run:()=>Promise<T>|T):Promise<T>=>{const taken=await observationV1.captureObservedSourceInputsV1(async()=>run(),undefined,false);sink.push(...(taken.observations as BuildGraphRowV1[]));return taken.value;},discoveredForTags=factsInto(tagRows),discoveredForTests=factsInto(testRows);
+    const known=new Set(tagged.filter(([,stub])=>stub.tag===TEST_TAG_V1).map(([,stub])=>stub.root)),groups=retained?new Map<string,string[]>():selectTestFeaturesV1(files.filter(file=>file.endsWith(".feature")),{all:!incremental,roots:new Set([...part.roots,...(part.changed??[]).filter(path=>path.endsWith(".feature")).map(path=>dirname(path))]),known});
+    const discovery=await observationV1.withObservationRoundV1(()=>discoverTestOwnersV1<BuildGraphRowV1>({tests:tests as never,capture:run=>observationV1.captureObservedSourceInputsV1(async()=>run(),undefined,false) as unknown as Promise<{value:any;observations:readonly BuildGraphRowV1[]}>,context,groups})),testContributions=discovery.contributions as [string,any][];for(const fact of discovery.derived)derivedFacts.set(fact.row.path+"\0"+fact.row.fact,fact);
+    for(const[,contribution]of testContributions)for(const name of Object.keys(contribution.projects??{}))testNames.add(name);
+    const policyOwners=Object.assign({},...[...primary,...testContributions].map(([,contribution])=>contribution.projects??{}));
+    const policyContributions=await discoveredForTags(()=>policies.default.createNodesV2[1](files.filter(file=>file.endsWith("📜️script.ts")&&(part.cold||part.roots.has(dirname(file))||!retained&&!realRoots.has(dirname(file)))),{}, {workspaceRoot:root,projects:policyOwners}));
+    merge(testContributions as [string,any][],false);merge(policyContributions as [string,any][],false);
+    for(const name of Object.keys(projects))if(!primaryNames.has(name))tags[name]=testNames.has(name)?TEST_TAG_V1:POLICY_TAG_V1;
+    if(!retained)await discoveredForTests(()=>withholdDanglingTestProjectsV1({projects,configs,unavailable,dangling:tests.danglingTestDependenciesV1({...Object.fromEntries(kept.map(([name,stub])=>[name,{root:stub.root}])),...projects}),digest:file=>observedFileDigestV1(root,file)}));
+    const keptTagged=retained?tagged:incremental?tagged.filter(([,stub])=>stub.tag===TEST_TAG_V1&&!groups.has(stub.root)&&!part.roots.has(stub.root)):[],keptNames=new Set(keptTagged.map(([name])=>name));
+    const refresh=edgeRefreshOwnersV1({cold:part.cold,environment:env.digest,previousEnvironment:part.previousEnv,roots:part.roots,stubs:part.stubs,inferred:new Set(Object.keys(projects))}),edgeNames=refresh.projects,processed=new Set([...Object.keys(projects),...edgeNames]);
+    const contextProjects:Record<string,any>={...Object.fromEntries([...kept,...keptTagged.filter(([,stub])=>stub.kind==="project")].map(([name,stub])=>[name,{name,root:stub.root,targets:Object.fromEntries(stub.targets.map(target=>[target,{}])),...(stub.nativeRoot?{metadata:{nativeRoot:stub.nativeRoot}}:{})}])),...projects};
+    const ownerOf=createProjectFileIndexV1(contextProjects),withheld=[...unavailable.keys(),...stubs.filter(([name,stub])=>(!stub.tag||keptNames.has(name))&&stub.kind==="unavailable"&&!part.roots.has(stub.root)).map(([,stub])=>stub.root)],projectFileMap:Record<string,{file:string}[]>=Object.fromEntries([...processed].map(name=>[name,[]]));
     for(const file of files){const found=ownerOf(file);if(found!==undefined&&projectFileMap[found]&&!withheld.some(withheldRoot=>file.startsWith(withheldRoot+"/")&&withheldRoot.length>contextProjects[found].root.length))projectFileMap[found]!.push({file});}
-    const graphContext={workspaceRoot:root,projects:contextProjects,fileMap:{projectFileMap},invocation,phaseControl,selection:{kind:"all"},registry,completeSourceImports:false};
-    const testEdges:unknown=await tests.discoverTestBuildDependenciesV1({},graphContext);if(!Array.isArray(testEdges))throw Error("Test dependency DATA array required");
-    const edges=[...await owner.discoverBuildDependenciesV1(options,graphContext),...testEdges];
+    const streamed=new Set<string>(edgeNames),direct=Object.fromEntries([...processed].filter(name=>!streamed.has(name)).map(name=>[name,projectFileMap[name]!]));
+    const graphContext={workspaceRoot:root,projects:contextProjects,fileMap:{projectFileMap:direct},invocation,phaseControl,selection:{kind:"all"},registry,completeSourceImports:false,moduleGraphProjects:new Set(Object.keys(projects)),edgeChunkOwners:CLAIMS_POLICY_V1.chunkOwners};
+    const testEdges:unknown=retained?[]:await discoveredForTests(()=>tests.discoverTestBuildDependenciesV1({},graphContext));if(!Array.isArray(testEdges))throw Error("Test dependency DATA array required");
+    const implementation=streamed.size?await owner.loadCurrentImplementationV1():undefined;await implementation?.libraryBootstrap;
+    const streaming=await implementation?.createStreamingEdgesV1(options,{...graphContext,fileMap:{projectFileMap}}),edges=[...(await owner.discoverBuildDependenciesV1(options,graphContext)).filter((edge:{source:string})=>!streamed.has(edge.source)),...testEdges];
     const metadata=await owner.createMetadata({nodes:Object.fromEntries(Object.entries(contextProjects).map(([name,data])=>[name,{name,type:"lib",data}]))},options,graphContext);
     if(!metadata||typeof metadata!=="object"||Array.isArray(metadata))throw Error("Graph metadata DATA object required");
     for(const[name,value]of Object.entries(metadata)){if(!projects[name])continue;if(!value||typeof value!=="object"||!("metadata"in value)||!value.metadata||typeof value.metadata!=="object"||Array.isArray(value.metadata))throw Error("Project metadata DATA object required");projects[name].metadata={...projects[name].metadata,...value.metadata,semio:{...projects[name].metadata?.semio,...("semio"in value.metadata&&value.metadata.semio&&typeof value.metadata.semio==="object"?value.metadata.semio:{})}};}
     const neutral=Object.fromEntries(Object.entries(projects).map(([name,project])=>[name,{...project,targets:Object.fromEntries(Object.entries(project.targets??{}).map(([target,value])=>[target,neutralBuildTargetV1(value as Record<string,any>,`${name}:${target}`)]))}]));
     if(invocation)await advanceScriptInvocation(invocation,"build:graph","complete");
-    const rows=[...unavailable.values()];
+    const rows=[...unavailable.values()],testRowLists=new Map<object,BuildGraphRowV1[]>(),testNodeRows=(name:string)=>{const own=discovery.rows.get(name)??[];let list=testRowLists.get(own);if(!list)testRowLists.set(own,list=[...own,...testRows]);return list;};
     return {
-      owners:[...Object.entries(neutral).map(([name,node]:[string,any])=>({name,root:node.root as string,nativeRoot:node.metadata?.nativeRoot as string|undefined,config:configs[name],...(tags[name]?{tag:tags[name]}:{}),node,nodeRows:nodeRows[name]})),...rows.filter(row=>row.project!==undefined).map(row=>({name:row.project!,root:row.root,config:row.source,...(tags[row.project!]?{tag:tags[row.project!]}:{}),unavailable:row,nodeRows:nodeRows[row.project!]}))],
-      edgeOnly:edgeNames.map(name=>({name})),edges:edges as BuildGraphPartV1["edges"],externalNodes,parseUnavailable:rows.filter(row=>row.project===undefined),env,replaceTags:["tests","policy"],
+      owners:[...Object.entries(neutral).map(([name,node]:[string,any])=>({name,root:node.root as string,nativeRoot:node.metadata?.nativeRoot as string|undefined,config:configs[name],...(tags[name]?{tag:tags[name]}:{}),node,nodeRows:tags[name]===TEST_TAG_V1?testNodeRows(name):tags[name]?tagRows:nodeRows[name]})),...rows.filter(row=>row.project!==undefined).map(row=>({name:row.project!,root:row.root,config:row.source,...(tags[row.project!]?{tag:tags[row.project!]}:{}),unavailable:row,nodeRows:tags[row.project!]===TEST_TAG_V1?testNodeRows(row.project!):tags[row.project!]?tagRows:nodeRows[row.project!]}))],
+      edgeOnly:[...edgeNames.map(name=>streamed.has(name)?{name,streamed:true as const}:{name}),...refresh.withheld.map(name=>({name}))],reEdge:streaming&&((name:string,fragment:{node?:any})=>streaming.edgesOf(name,fragment.node)),derived:[...derivedFacts.values()],edges:edges as BuildGraphPartV1["edges"],externalNodes,parseUnavailable:rows.filter(row=>row.project===undefined),env,replaceTags:retained?[]:incremental?["policy",POLICY_TAG_V1]:["tests","policy",TEST_TAG_V1,POLICY_TAG_V1],
     };
   },undefined,false);
   return {...captured.value,rows:[...captured.observations] as BuildGraphRowV1[]};
 }
 
-/** 🧺️ Keeps exactly the discovered files whose presence the portable graph consumes, as declared by the build policy. */
+/** 🧳️ Keeps exactly the discovered files whose presence the portable graph consumes, as declared by the build policy. */
 export function buildGraphMembersV1(files:readonly string[]):string[] {
+  return files.filter(graphMemberPredicateV1());
+}
+
+/** 🤔️ Whether one discovered file is a member of the build graph, as declared by the build policy. */
+export function graphMemberPredicateV1():(file:string)=>boolean {
   const {basenames,suffixes,lockEcosystems}=graphDeclarationV1("../🔣️policy.json").graphMembers as {basenames:string[];suffixes:string[];lockEcosystems:string[]},names=new Set([...basenames,...lockEcosystems.flatMap(ecosystem=>selectPackageManagerV1(ecosystem).lockFileNames())]);
-  return files.filter(file=>names.has(file.slice(file.lastIndexOf("/")+1))||suffixes.some(suffix=>file.endsWith(suffix)));
+  return file=>names.has(file.slice(file.lastIndexOf("/")+1))||suffixes.some(suffix=>file.endsWith(suffix));
 }
 
 /** 🧾️ Identifies complete admitted physical membership, types and modes independently of implementation bytes. */
@@ -489,7 +651,7 @@ export async function buildGraphMembershipV1(root:string,files:string[],invocati
   return createHash("sha256").update(records.join("\n")).digest("hex");
 }
 
-/** 🔏️ Admits content-aware observations through the same owned inference mechanism. */
+/** 🚪️ Admits content-aware observations through the same owned inference mechanism. */
 export async function buildGraphSourceFactsHoldV1(observations:readonly unknown[],invocation?:ScriptInvocation,onStale?:(row:{kind:string;path:string;fact:unknown})=>void):Promise<boolean>{return observationV1.observationsHold(observations,64,new Set(),new Set(),invocation?.control.signal,onStale);}
 
 type OwnerRegistryInvalidationV1={readonly kind:"invalidated";readonly reason:"owner-registry"};
@@ -501,7 +663,7 @@ const isOwnerRegistryInvalidationV1=(value:unknown):value is OwnerRegistryInvali
 async function withRetainedGraphSnapshotV1<T>(workspace:string,store:RepositoryCacheStoreV1,path:string,control:ResourceLeaseControl,run:(source:string)=>Promise<T>):Promise<T>{
  const policy=graphSnapshotPolicyV1,lease=await acquireQueuedResourceLease({directory:join(workspace,".cache/b/l/m/data"),resource:"build-graph:"+path,mode:"shared",owner:randomBytes(16).toString("base64url"),control,signal:control.signal});let failed=false;
  try{await store.recheck();checkResourceLeaseControl(control);const directory=dirname(path),parent=await lstat(directory,{bigint:true}),before=await lstat(path,{bigint:true});checkResourceLeaseControl(control);if(!parent.isDirectory()||parent.isSymbolicLink()||!before.isFile()||before.isSymbolicLink()||before.nlink!==1n||before.size<0n||before.size>BigInt(policy.maximumSnapshotBytes))throw Error("Original bounded Graph snapshot required");
- return await withArtifactDescriptorV1(()=>open(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0)|(constants.O_NONBLOCK??0)),async file=>{const verify=async()=>{await store.recheck();checkResourceLeaseControl(control);requireNativeStoragePathV1(store.root,path);const linked=await lstat(path,{bigint:true}),opened=await file.stat({bigint:true}),actualParent=await lstat(directory,{bigint:true});checkResourceLeaseControl(control);if(!actualParent.isDirectory()||actualParent.isSymbolicLink()||actualParent.dev!==parent.dev||actualParent.ino!==parent.ino||[linked,opened].some(row=>!row.isFile()||row.isSymbolicLink()||["dev","ino","size","nlink","mtimeNs","ctimeNs"].some(key=>row[key as keyof typeof row]!==before[key as keyof typeof before])))throw Error("Retained Graph snapshot descriptor changed");};await verify();const bytes=Buffer.alloc(Number(before.size));try{let offset=0;while(offset<bytes.length){await verify();const row=await file.read(bytes,offset,Math.min(65536,bytes.length-offset),offset);checkResourceLeaseControl(control);if(!row.bytesRead)throw Error("Retained Graph snapshot shortened");offset+=row.bytesRead;await control.yieldContinuation();}if((await file.read(Buffer.alloc(1),0,1,bytes.length)).bytesRead)throw Error("Retained Graph snapshot grew");await verify();const value=await run(new TextDecoder("utf-8",{fatal:true}).decode(bytes));await verify();return value;}finally{bytes.fill(0);}});
+ return await withArtifactDescriptorV1(()=>open(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0)|(constants.O_NONBLOCK??0)),async file=>{const verify=async()=>{await store.recheck();checkResourceLeaseControl(control);requireNativeStoragePathV1(store.root,path);const linked=await lstat(path,{bigint:true}),opened=await file.stat({bigint:true}),actualParent=await lstat(directory,{bigint:true});checkResourceLeaseControl(control);if(!actualParent.isDirectory()||actualParent.isSymbolicLink()||actualParent.dev!==parent.dev||actualParent.ino!==parent.ino||[linked,opened].some(row=>!row.isFile()||row.isSymbolicLink()||["dev","ino","size","nlink","mtimeNs"].some(key=>row[key as keyof typeof row]!==before[key as keyof typeof before])))throw Error("Retained Graph snapshot descriptor changed");};await verify();const bytes=Buffer.alloc(Number(before.size));try{let offset=0;while(offset<bytes.length){await verify();const row=await file.read(bytes,offset,Math.min(GRAPH_LIMITS_V1.snapshotReadChunkBytes,bytes.length-offset),offset);checkResourceLeaseControl(control);if(!row.bytesRead)throw Error("Retained Graph snapshot shortened");offset+=row.bytesRead;await control.yieldContinuation();}if((await file.read(Buffer.alloc(1),0,1,bytes.length)).bytesRead)throw Error("Retained Graph snapshot grew");await verify();const value=await run(new TextDecoder("utf-8",{fatal:true}).decode(bytes));await verify();return value;}finally{bytes.fill(0);}});
  }catch(error){failed=true;throw error;}finally{try{lease.release();}catch(error){if(!failed)throw error;}}
 }
 
@@ -514,7 +676,7 @@ export function withRepositoryBuildGraphPublicationV1<T>(root:string,control:Res
 /** 🎬️ Resolves one candidate while keeping every candidate's memory within its own finite attempt. */
 async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse?:boolean;sealedOnly?:boolean},registry?:BuildOwnerRegistryV1,scope?:string):Promise<BuildGraphV1|OwnerRegistryInvalidationV1|undefined> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();
-  const invalidated=(reason:string,details:Record<string,unknown>={})=>{if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true"){let diagnostic;try{diagnostic=buildGraphRetryDiagnosticV1(root,reason,details,path=>captureBoundedSourceRevisionV1(path,8388608).sha256);}catch{diagnostic=buildGraphRetryDiagnosticV1(root,reason);}process.stderr.write("[graph-retry] "+JSON.stringify(diagnostic)+"\n");}return undefined;};
+  const invalidated=(reason:string,details:Record<string,unknown>={})=>{if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true"){let diagnostic;try{diagnostic=buildGraphRetryDiagnosticV1(root,reason,details,path=>captureBoundedSourceRevisionV1(path,REVISION_POLICY_V1.maximumSourceBytes).sha256);}catch{diagnostic=buildGraphRetryDiagnosticV1(root,reason);}process.stderr.write("[graph-retry] "+JSON.stringify(diagnostic)+"\n");}return undefined;};
   const phaseRows:{phase:string;milliseconds:number}[]=[],timing=(phase:string,started:number,details:Record<string,unknown>={})=>{const row={phase,milliseconds:Math.round(performance.now()-started),...details};phaseRows.push(row);if(process.env.SEMIO_BUILD_PROFILE_INPUTS==="1"||process.env.SEMIO_GRAPH_PHASES==="1")process.stderr.write("[graph-phase] "+JSON.stringify(row)+"\n");};
   const image=async(source:string)=>{let started=performance.now();const decoded=JSON.parse(source);timing("graph-json-parse",started,{bytes:Buffer.byteLength(source)});started=performance.now();const expanded=await portableInputs(root,decoded,invocation,phaseControl);timing("graph-input-expand",started);started=performance.now();const graph=readBuildGraphV1(expanded);timing("graph-schema-validation",started,{projects:Object.keys(graph.projects).length,dependencies:graph.dependencies.length});return graph;};
   if(!registry)throw Error("Original canonical graph owner registry required");
@@ -554,7 +716,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
   const stale:{kind:string;path:string;fact:unknown}[]=[],holds=await buildGraphSourceFactsHoldV1(captured.observations,invocation,row=>{if(stale.length<8)stale.push(row);});
   if(selected&&JSON.stringify(initial.admission)!==JSON.stringify(final.admission))return invalidated("admission",{before:createHash("sha256").update(JSON.stringify(initial.admission)).digest("hex"),after:createHash("sha256").update(JSON.stringify(final.admission)).digest("hex"),stale});
   if(before!==after||!holds)return invalidated(before!==after?"membership":"observed-facts",{before,after,stale});
-  const publishStarted=performance.now(),compact=captured.value as BuildGraphV1,source=JSON.stringify(compact),digest=createHash("sha256").update(source).digest("hex"),authority=JSON.stringify({version:3,module:loadedGraphModuleAuthorityV1,membership:after,graph:digest,observations:captured.observations});timing("graph-serialize",publishStarted,{graphBytes:Buffer.byteLength(source),authorityBytes:Buffer.byteLength(authority)});if(Buffer.byteLength(source)>536870912||Buffer.byteLength(authority)>536870912)throw Error("Build graph cache exceeds its finite publication limit: "+Buffer.byteLength(source)+" graph bytes, "+Buffer.byteLength(authority)+" authority bytes, 536870912 allowed");await mkdir(dirname(path),{recursive:true});const expandStarted=performance.now(),graph=readBuildGraphV1(await portableInputs(root,compact,invocation,phaseControl));timing("graph-expansion",expandStarted);
+  const publishStarted=performance.now(),compact=captured.value as BuildGraphV1,source=JSON.stringify(compact),digest=createHash("sha256").update(source).digest("hex"),authority=JSON.stringify({version:3,module:loadedGraphModuleAuthorityV1,membership:after,graph:digest,observations:captured.observations});timing("graph-serialize",publishStarted,{graphBytes:Buffer.byteLength(source),authorityBytes:Buffer.byteLength(authority)});if(Buffer.byteLength(source)>graphSnapshotPolicyV1.maximumSnapshotBytes||Buffer.byteLength(authority)>graphSnapshotPolicyV1.maximumSnapshotBytes)throw Error("Build graph cache exceeds its finite publication limit: "+Buffer.byteLength(source)+" graph bytes, "+Buffer.byteLength(authority)+" authority bytes, "+graphSnapshotPolicyV1.maximumSnapshotBytes+" allowed");await mkdir(dirname(path),{recursive:true});const expandStarted=performance.now(),graph=readBuildGraphV1(await portableInputs(root,compact,invocation,phaseControl));timing("graph-expansion",expandStarted);
   const temporary=path+"."+randomUUID(),receipt=authorityPath+"."+randomUUID();try{await writeFile(temporary,source,{flag:"wx"});await writeFile(receipt,authority,{flag:"wx"});if(invocation)checkScriptInvocation(invocation);requireCurrentGraphModuleV1();if(!await buildGraphSourceFactsHoldV1(captured.observations,invocation,row=>{if(stale.length<8)stale.push(row);}))return invalidated("publication-facts",{before,after,stale});timing("graph-publication",publishStarted);process.stderr.write("[graph-phase] "+JSON.stringify({summary:phaseRows.map(row=>[row.phase,row.milliseconds])})+"\n");await rename(temporary,path);await rename(receipt,authorityPath);}finally{await Promise.all([rm(temporary,{force:true}),rm(receipt,{force:true})]);}
   return graph;
 }
@@ -624,7 +786,7 @@ async function loadBuildGraphUnpinnedV1(root:string,invocation:ScriptInvocation,
     if(scope===undefined){const sealed=await readSealedBuildGraphV1(root,invocation,phaseControl,options,registry);if(sealed&&!isOwnerRegistryInvalidationV1(sealed)){checkScriptInvocation(invocation);return sealed;}}
     const graph=await withBuildGraphStateV1(root,invocation,phaseControl,async(store,actualControl)=>{
       const staging=scope?join(store.root,"selected"):store.root;await store.recheck();checkResourceLeaseControl(actualControl);requireNativeStoragePathV1(store.root,staging);await mkdir(staging,{recursive:true});checkResourceLeaseControl(actualControl);const selectedStage=scope?new RegExp("^"+scope+"(?:\\.authority)?\\.json\\.[a-f0-9-]{36}$","u"):undefined;
-      const staged=await readdir(staging);checkResourceLeaseControl(actualControl);for(const name of staged){if(!(selectedStage?.test(name)??/^(?:canonical|authority)\.json\.[a-f0-9-]{36}$/u.test(name)))continue;await store.recheck();checkResourceLeaseControl(actualControl);const path=join(staging,name),status=await lstat(path);checkResourceLeaseControl(actualControl);if(!status.isFile()||status.isSymbolicLink()||status.nlink!==1||status.size>536870912)throw Error("Owned bounded graph staging file required");await rm(path);checkResourceLeaseControl(actualControl);}
+      const staged=await readdir(staging);checkResourceLeaseControl(actualControl);for(const name of staged){if(!(selectedStage?.test(name)??/^(?:canonical|authority)\.json\.[a-f0-9-]{36}$/u.test(name)))continue;await store.recheck();checkResourceLeaseControl(actualControl);const path=join(staging,name),status=await lstat(path);checkResourceLeaseControl(actualControl);if(!status.isFile()||status.isSymbolicLink()||status.nlink!==1||status.size>graphSnapshotPolicyV1.maximumSnapshotBytes)throw Error("Owned bounded graph staging file required");await rm(path);checkResourceLeaseControl(actualControl);}
       checkResourceLeaseControl(actualControl);await store.recheck();return loadBuildGraphAttemptV1(root,invocation,actualControl,options,registry,scope);
     },scope);
     checkScriptInvocation(invocation);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();

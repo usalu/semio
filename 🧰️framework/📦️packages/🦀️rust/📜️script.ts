@@ -163,7 +163,7 @@ class CoreModulesTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const phaseControl=createIssuedResourceControlV1(this.invocation,"framework:tests",0);
     const { rest } = resolveTestLevel(segments);
-    for(const [module,name] of [["🔏️hash","hash"],["🔲️pixels","pixels"],["📏️intrinsic-size","intrinsic-size"],["🏗️mesh-engine","mesh-engine"]])await testCargo(this.invocation,phaseControl,this.repoRoot,`🔨️modules/${module}/📦️packages/🦀️rust/Cargo.toml`,[`semio-framework-${name}`],rest.length?rest:["--lib"]);
+    for(const [manifest,name] of [["🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml","semio-framework-hash"],["🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml","semio-framework-pixels"],["🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml","semio-framework-intrinsic-size"],["🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/Cargo.toml","semio-framework-mesh-engine"]])await testCargo(this.invocation,phaseControl,this.repoRoot,manifest,[name],rest.length?rest:["--lib"]);
   }
 }
 

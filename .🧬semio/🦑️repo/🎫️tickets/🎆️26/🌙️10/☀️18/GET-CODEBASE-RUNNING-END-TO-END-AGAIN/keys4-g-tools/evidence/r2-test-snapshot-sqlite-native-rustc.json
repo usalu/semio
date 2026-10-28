@@ -1,0 +1,8 @@
+{
+ "target": "test-snapshot-sqlite-native",
+ "closureCrates": 1,
+ "workspaceFilesRead": 13,
+ "declared": 456,
+ "undeclared": [],
+ "probeErrors": []
+}

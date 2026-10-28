@@ -135,7 +135,7 @@
             },
             {
               "id": "removes-an-unselected-middle-generation",
-              "directoryName": "🔓️removes-an-unselected-middle-row"
+              "directoryName": "🔓️unselected-middle"
             },
             {
               "id": "removes",
@@ -620,14 +620,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📷️update-camera/⬅️before.json",
+          "path": "../🧪️tests/🧫️fixtures/📷️update-camera/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:9ea962eca96d2ebf26b99095baa4a216e535188306e7dadb8a1c1f9a19e55214",
           "bytes": 801
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📷️update-camera/➡️after.json",
+          "path": "../🧪️tests/🧫️fixtures/📷️update-camera/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:bb62e863d08cca5570d9c7d73c6d0b86df80d631b45465e28f143a64080df069",
           "bytes": 802

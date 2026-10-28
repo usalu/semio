@@ -9,11 +9,13 @@ import {exactExecutableFingerprint,originalNativeLibraryDirectory,configuredExac
 import {withRepositoryCompilerStoreV1} from "../../../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {runRepositoryExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../🟦️.ts";
 import fixture from "@semio-tech/process/testing/cargo/exact/testing/fixtures.json";
+import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 test("actual repository exact Cargo prepares and acquires every selected bounded workspace",async()=>{
  const mode=process.env.SEMIO_BUILD_MODE;if(mode!=="prototype"&&mode!=="release")throw Error("Original build mode required");
  await receiveScriptProcessInvocation(process.env,async invocation=>{
-  const workspace=process.cwd(),control=scriptCompilerAdmissionControlV1(invocation,"repository-exact:physical",120000);
+  const workspace=repository.root,control=scriptCompilerAdmissionControlV1(invocation,"repository-exact:physical",120000);
   await withRepositoryCompilerStoreV1(workspace,mode,control,process.env,async (store,control)=>{
    const root=mkdtempSync(join(store.buildDirectory,"ex-")),suffix=randomUUID().slice(0,8),packages=[0,1].map(index=>"exact_"+suffix+"_"+index),manifests=Object.fromEntries(packages.map((name,index)=>[name,join(root,String(index),"Cargo.toml")])),events:string[]=[];
    try{

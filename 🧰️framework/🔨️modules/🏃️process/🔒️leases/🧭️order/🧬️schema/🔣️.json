@@ -73,6 +73,9 @@
           "type": "string",
           "pattern": "^[a-z][a-z0-9-]*$"
         },
+        "inert": {
+          "type": "boolean"
+        },
         "title": {
           "type": "object",
           "additionalProperties": false,
@@ -526,15 +529,23 @@
         },
         "holdAndWait": {
           "en": "Refusing to wait: {requested} ({requestedMode}) has been unavailable for {seconds} s{blocker} while this process holds {held} exclusively, which blocks everyone who needs {held}. Release {held} before waiting, or acquire {requested} first.",
-          "de": "Warten abgelehnt: {requested} ({requestedMode}) ist seit {seconds} s nicht verfügbar{blocker}, während dieser Prozess {held} exklusiv haelt und damit alle blockiert, die {held} brauchen. {held} vor dem Warten freigeben oder {requested} zuerst nehmen."
+          "de": "Warten abgelehnt: {requested} ({requestedMode}) ist seit {seconds} s nicht verfügbar{blocker}, während dieser Prozess {held} exklusiv hält und damit alle blockiert, die {held} brauchen. {held} vor dem Warten freigeben oder {requested} zuerst nehmen."
         },
         "selfDeadlock": {
           "en": "Self-deadlock: {requested} is requested {requestedMode} while this process already holds it {heldMode}. Take the strongest mode up front or use the queued upgrade.",
-          "de": "Selbst-Verklemmung: {requested} wird {requestedMode} angefordert, obwohl dieser Prozess es bereits {heldMode} haelt. Den stärksten Modus gleich nehmen oder das Upgrade der Warteschlange benutzen."
+          "de": "Selbst-Verklemmung: {requested} wird {requestedMode} angefordert, obwohl dieser Prozess es bereits {heldMode} hält. Den stärksten Modus gleich nehmen oder das Upgrade der Warteschlange benutzen."
         },
         "cycle": {
           "en": "Deadlock detected: {cycle}. This request was chosen to fail so the others can proceed.",
-          "de": "Verklemmung erkannt: {cycle}. Diese Anfrage wurde zum Scheitern gewaehlt, damit die anderen fortfahren können."
+          "de": "Verklemmung erkannt: {cycle}. Diese Anfrage wurde zum Scheitern gewählt, damit die anderen fortfahren können."
+        },
+        "modeShared": {
+          "en": "shared",
+          "de": "geteilt"
+        },
+        "modeExclusive": {
+          "en": "exclusive",
+          "de": "exklusiv"
         },
         "blocker": {
           "en": ", held by process {pid} for {heldSeconds} s",

@@ -1,0 +1,11 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🚧️operands/🟦️.ts": "f01.ts",
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🚧️operands/🧪️tests/🟦️.ts": "f02.ts",
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🟦️.ts": "f03.ts",
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🆓️unknown/🟦️.ts": "f04.ts",
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🔐️custody/🟦️.ts": "f05.ts",
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🧱️unit-exclusion/🟦️.ts": "f06.ts",
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🧪️tests/🟦️.ts": "f07.ts",
+ "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/🚧️boundary/🟦️.ts": "f08.ts",
+ "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️graph-phase/🔣️.json": "f09.json"
+}

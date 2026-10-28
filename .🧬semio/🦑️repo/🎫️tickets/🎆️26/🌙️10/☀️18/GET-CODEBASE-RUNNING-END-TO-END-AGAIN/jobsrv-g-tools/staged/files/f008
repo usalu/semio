@@ -1,0 +1,530 @@
+{
+ "cases": [
+  {
+   "name": "no variable at all",
+   "platform": "linux",
+   "environment": {},
+   "fifos": [],
+   "expect": {
+    "kind": "none"
+   }
+  },
+  {
+   "name": "a variable without a pool",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "-j4 -s"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "none"
+   }
+  },
+  {
+   "name": "Cargo's own pipe with both descriptors open",
+   "platform": "linux",
+   "environment": {
+    "CARGO_MAKEFLAGS": "-j --jobserver-fds=3,5 --jobserver-auth=3,5",
+    "SEMIO_UNIT_CACHE_JOBSERVER_FDS": "3,5"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "pipe",
+    "read": 3,
+    "write": 5
+   }
+  },
+  {
+   "name": "Cargo's own pipe, descriptors not proven open",
+   "platform": "linux",
+   "environment": {
+    "CARGO_MAKEFLAGS": "-j --jobserver-fds=3,5 --jobserver-auth=3,5"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "closed",
+    "variable": "CARGO_MAKEFLAGS",
+    "reason": "not-inherited"
+   }
+  },
+  {
+   "name": "a census of other numbers proves nothing",
+   "platform": "linux",
+   "environment": {
+    "CARGO_MAKEFLAGS": "-j --jobserver-fds=3,5 --jobserver-auth=3,5",
+    "SEMIO_UNIT_CACHE_JOBSERVER_FDS": "3,4"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "closed",
+    "variable": "CARGO_MAKEFLAGS",
+    "reason": "not-inherited"
+   }
+  },
+  {
+   "name": "an outer make's pipe on other numbers",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "-j8 --jobserver-auth=7,8",
+    "SEMIO_UNIT_CACHE_JOBSERVER_FDS": "7,8"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "pipe",
+    "read": 7,
+    "write": 8
+   }
+  },
+  {
+   "name": "leading zeros are the same numbers",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=03,05",
+    "SEMIO_UNIT_CACHE_JOBSERVER_FDS": "03,05"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "pipe",
+    "read": 3,
+    "write": 5
+   }
+  },
+  {
+   "name": "a plus sign is a number to Rust but not to the stand-in's census",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=+3,+5"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "closed",
+    "variable": "MAKEFLAGS",
+    "reason": "not-inherited"
+   }
+  },
+  {
+   "name": "descriptors above the stdio window cannot be handed on",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=70,71",
+    "SEMIO_UNIT_CACHE_JOBSERVER_FDS": "70,71"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "closed",
+    "variable": "MAKEFLAGS",
+    "reason": "out-of-range"
+   },
+   "stricter": true
+  },
+  {
+   "name": "the last descriptor inside the window is handed on",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=62,63",
+    "SEMIO_UNIT_CACHE_JOBSERVER_FDS": "62,63"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "pipe",
+    "read": 62,
+    "write": 63
+   }
+  },
+  {
+   "name": "negative descriptors mean the pool is disabled for this process",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=-2,-2"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "closed",
+    "variable": "MAKEFLAGS",
+    "reason": "disabled"
+   }
+  },
+  {
+   "name": "one negative descriptor disables it too",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=3,-1"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "closed",
+    "variable": "MAKEFLAGS",
+    "reason": "disabled"
+   }
+  },
+  {
+   "name": "three numbers are no pool",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=3,5,7",
+    "SEMIO_UNIT_CACHE_JOBSERVER_FDS": "3,5"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "closed",
+    "variable": "MAKEFLAGS",
+    "reason": "malformed"
+   }
+  },
+  {
+   "name": "one number is no pool",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=3"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "closed",
+    "variable": "MAKEFLAGS",
+    "reason": "malformed"
+   }
+  },
+  {
+   "name": "letters are no pool",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=3,x"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "closed",
+    "variable": "MAKEFLAGS",
+    "reason": "malformed"
+   }
+  },
+  {
+   "name": "an empty value is no pool",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth="
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "closed",
+    "variable": "MAKEFLAGS",
+    "reason": "malformed"
+   }
+  },
+  {
+   "name": "a named fifo that exists",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "-j4 --jobserver-auth=fifo:/tmp/pool"
+   },
+   "fifos": [
+    "/tmp/pool"
+   ],
+   "expect": {
+    "kind": "fifo",
+    "path": "/tmp/pool"
+   }
+  },
+  {
+   "name": "a named fifo that is gone",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "-j4 --jobserver-auth=fifo:/tmp/gone"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "closed",
+    "variable": "MAKEFLAGS",
+    "reason": "missing-fifo"
+   }
+  },
+  {
+   "name": "a fifo path may contain a colon",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=fifo:/tmp/a:b"
+   },
+   "fifos": [
+    "/tmp/a:b"
+   ],
+   "expect": {
+    "kind": "fifo",
+    "path": "/tmp/a:b"
+   }
+  },
+  {
+   "name": "fifo without a path",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=fifo:"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "closed",
+    "variable": "MAKEFLAGS",
+    "reason": "malformed"
+   }
+  },
+  {
+   "name": "fifo without a colon",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=fifo"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "closed",
+    "variable": "MAKEFLAGS",
+    "reason": "malformed"
+   }
+  },
+  {
+   "name": "Cargo hands a fifo on in both flags",
+   "platform": "linux",
+   "environment": {
+    "CARGO_MAKEFLAGS": "-j --jobserver-fds=fifo:/tmp/pool --jobserver-auth=fifo:/tmp/pool"
+   },
+   "fifos": [
+    "/tmp/pool"
+   ],
+   "expect": {
+    "kind": "fifo",
+    "path": "/tmp/pool"
+   }
+  },
+  {
+   "name": "the first variable that is set decides, even without a pool",
+   "platform": "linux",
+   "environment": {
+    "CARGO_MAKEFLAGS": "-j",
+    "MAKEFLAGS": "--jobserver-auth=fifo:/tmp/pool"
+   },
+   "fifos": [
+    "/tmp/pool"
+   ],
+   "expect": {
+    "kind": "none"
+   }
+  },
+  {
+   "name": "an empty variable that is set still decides",
+   "platform": "linux",
+   "environment": {
+    "CARGO_MAKEFLAGS": "",
+    "MAKEFLAGS": "--jobserver-auth=fifo:/tmp/pool"
+   },
+   "fifos": [
+    "/tmp/pool"
+   ],
+   "expect": {
+    "kind": "none"
+   }
+  },
+  {
+   "name": "MAKEFLAGS is read when CARGO_MAKEFLAGS is absent",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=3,5",
+    "MFLAGS": "--jobserver-auth=fifo:/tmp/pool",
+    "SEMIO_UNIT_CACHE_JOBSERVER_FDS": "3,5"
+   },
+   "fifos": [
+    "/tmp/pool"
+   ],
+   "expect": {
+    "kind": "pipe",
+    "read": 3,
+    "write": 5
+   }
+  },
+  {
+   "name": "MFLAGS is the last resort",
+   "platform": "linux",
+   "environment": {
+    "MFLAGS": "--jobserver-auth=fifo:/tmp/pool"
+   },
+   "fifos": [
+    "/tmp/pool"
+   ],
+   "expect": {
+    "kind": "fifo",
+    "path": "/tmp/pool"
+   }
+  },
+  {
+   "name": "the last declaration wins",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=3,4 --jobserver-auth=5,6",
+    "SEMIO_UNIT_CACHE_JOBSERVER_FDS": "5,6"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "pipe",
+    "read": 5,
+    "write": 6
+   }
+  },
+  {
+   "name": "auth beats fds even when fds is declared later",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=3,4 --jobserver-fds=5,6",
+    "SEMIO_UNIT_CACHE_JOBSERVER_FDS": "3,4"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "pipe",
+    "read": 3,
+    "write": 4
+   }
+  },
+  {
+   "name": "fds alone are read",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-fds=3,4",
+    "SEMIO_UNIT_CACHE_JOBSERVER_FDS": "3,4"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "pipe",
+    "read": 3,
+    "write": 4
+   }
+  },
+  {
+   "name": "a value ends at the first space only",
+   "platform": "linux",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=3,5\t-x"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "closed",
+    "variable": "MAKEFLAGS",
+    "reason": "malformed"
+   }
+  },
+  {
+   "name": "Windows: Cargo's named semaphore",
+   "platform": "win32",
+   "environment": {
+    "CARGO_MAKEFLAGS": "-j --jobserver-fds=__rust_jobserver_semaphore_1a2b --jobserver-auth=__rust_jobserver_semaphore_1a2b"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "semaphore",
+    "name": "__rust_jobserver_semaphore_1a2b"
+   }
+  },
+  {
+   "name": "Windows: the launcher's semaphore in MAKEFLAGS",
+   "platform": "win32",
+   "environment": {
+    "MAKEFLAGS": "-j6 --jobserver-auth=semio-jobserver-42-ab12"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "semaphore",
+    "name": "semio-jobserver-42-ab12"
+   }
+  },
+  {
+   "name": "Windows: a fifo word is just a name there",
+   "platform": "win32",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=fifo:x"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "semaphore",
+    "name": "fifo:x"
+   }
+  },
+  {
+   "name": "Windows: numbers are a name too, never descriptors",
+   "platform": "win32",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=3,5",
+    "SEMIO_UNIT_CACHE_JOBSERVER_FDS": "3,5"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "semaphore",
+    "name": "3,5"
+   }
+  },
+  {
+   "name": "Windows: an empty name is no pool",
+   "platform": "win32",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth="
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "closed",
+    "variable": "MAKEFLAGS",
+    "reason": "malformed"
+   }
+  },
+  {
+   "name": "Windows: no pool named",
+   "platform": "win32",
+   "environment": {
+    "MAKEFLAGS": "-j4"
+   },
+   "fifos": [],
+   "expect": {
+    "kind": "none"
+   }
+  }
+ ],
+ "closedPools": [
+  {
+   "name": "Cargo's stale pipe loses its flags and names the empty pool",
+   "environment": {
+    "CARGO_MAKEFLAGS": "-j --jobserver-fds=3,5 --jobserver-auth=3,5"
+   },
+   "empty": "/c/bin/jobserver-empty",
+   "patch": {
+    "NUM_JOBS": "1",
+    "CARGO_MAKEFLAGS": "-j1 --jobserver-fds=fifo:/c/bin/jobserver-empty --jobserver-auth=fifo:/c/bin/jobserver-empty"
+   }
+  },
+  {
+   "name": "other make flags stay, every variable that is set is rewritten",
+   "environment": {
+    "MAKEFLAGS": "-s -j4 --jobserver-auth=3,4 -k",
+    "MFLAGS": "-j --jobserver-fds=3,4"
+   },
+   "empty": "/c/bin/jobserver-empty",
+   "patch": {
+    "NUM_JOBS": "1",
+    "MAKEFLAGS": "-s -k -j1 --jobserver-fds=fifo:/c/bin/jobserver-empty --jobserver-auth=fifo:/c/bin/jobserver-empty",
+    "MFLAGS": "-j1 --jobserver-fds=fifo:/c/bin/jobserver-empty --jobserver-auth=fifo:/c/bin/jobserver-empty"
+   }
+  },
+  {
+   "name": "without an empty pool only -j1 remains",
+   "environment": {
+    "CARGO_MAKEFLAGS": "-j --jobserver-auth=fifo:/gone"
+   },
+   "empty": null,
+   "patch": {
+    "NUM_JOBS": "1",
+    "CARGO_MAKEFLAGS": "-j1"
+   }
+  },
+  {
+   "name": "a variable that is not set is not invented",
+   "environment": {
+    "MAKEFLAGS": "--jobserver-auth=9,9"
+   },
+   "empty": "/e",
+   "patch": {
+    "NUM_JOBS": "1",
+    "MAKEFLAGS": "-j1 --jobserver-fds=fifo:/e --jobserver-auth=fifo:/e"
+   }
+  }
+ ]
+}

@@ -1,0 +1,21 @@
+{
+  "resolutions": [
+    {
+      "id": "win32-powershell",
+      "program": "powershell",
+      "environment": {
+        "SystemRoot": "C:\\Windows",
+        "PATH": "C:\\evil"
+      },
+      "expected": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+    },
+    {
+      "id": "win32-powershell-other-drive",
+      "program": "powershell",
+      "environment": {
+        "SystemRoot": "D:\\WINNT"
+      },
+      "expected": "D:\\WINNT\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+    }
+  ]
+}

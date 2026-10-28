@@ -1,0 +1,48 @@
+# result-tsfix-g (executor tsfix-g, wave 1026g): strict TypeScript errors of the graph module
+
+FOR gate-g: 13:58 I apply three small, compile-atomic type-only edits in `🕸️graph` now (no runtime change, no staged batch touched): (1) `L/🏗️build/🕸️graph/🕰️generations/🟨️.d.mts` GenerationPolicyV1 gains `sweepWaitMilliseconds`; (2) `L/🏗️build/🕸️graph/🕰️generations/🧩️claims/🟨️.d.mts` declares what `🟨️.mjs` and the schema already define (`failedRetryMilliseconds`, claim `stamps`, `chunkOfV1` `stamps`/`nowMs`, prefetch `stamps`); (3) `L/🏗️build/🕸️graph/🟦️.ts` line 526/529 and `L/🏗️build/🕸️graph/📋️model/🟦️.ts` line 18: the derived-fact `support` is `readonly BuildGraphRowV1[]` (every consumer already takes readonly). `L` = `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library`. Anchored patches in `C/tsfix-g-tools/`, re-run: `C/tsfix-g-tools/run.sh graph` (tsconfig `tsconfig.graph.json`, entry = the graph module, 673 files, official route `bun repo tools exec tsc`).
+FOR nodeffi-g: tsc --strict reports 20 TS7006 (implicit any) in `🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🧮️system/🟦️.ts`: lines 80-88 (`pointer`, `offset`) and 132-133 (`view`, `pointer`, `byteLength`). Not touched by me.
+
+## Before (13:52, live tree)
+24 errors: 20 in the node file above (nodeffi-g), 3 in the graph module: `🟦️.ts(446)` TS2339 `sweepWaitMilliseconds` not on GenerationPolicyV1; `🟦️.ts(501)` TS2353 `stamps` not on ClaimPrefetchOptionsV1; `🟦️.ts(551)` TS2345 readonly `support` into mutable.
+Root cause of the first two: hold-g added the runtime fields to `🟨️.mjs` + schema but the hand-written `.d.mts` declarations were not updated (the `.mjs` ARE correct: `chunkOfV1` compares `claim.stamps?.[name]===stamps?.[name]`, failed claims expire after `failedRetryMilliseconds`). Third: the real contract is readonly (`DerivedFactV1.support` and `TestOwnerDiscoveryV1.derived` are readonly), the local map type was stricter than every consumer.
+
+FOR gate-g: 14:10 one more type-only edit, same reason: `L/🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.d.mts` line 20, `GenerationPartV1.derived` names `DerivedFactV1[]` of `🕰️generations/✂️cutoff` (its `support` is readonly, like the graph module's) instead of a second mutable copy of the same shape.
+
+FOR gate-g: 14:35 the repo library tsc config (the same config tsc-d ran) also reports 16 errors in the TESTS of `🕸️graph` (listed below); fixing them now, all in test files except two lines of runtime-neutral typing: `🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.mjs` (the default `write` returns void instead of the boolean of `stderr.write`; `onReady` gets its JSDoc `@param` so callers are typed; no behaviour change). Test files: `⏱️phases`, `🎯️test-owners`, `📥️inference/🧪️tests/{✂️derived-walks,🚧️withheld-rows}`, `🕸️dependency-edges/🧪️tests/🪣️re-edge-chunks`, `🕰️generations/✂️cutoff/🧪️tests/{🟦️.ts,🏪️store}`, `🕰️generations/🔌️load/🧪️tests`, `📦️project-farm/🧪️tests` (no edit needed there, fixed by the `.mjs`). Patch script `C/tsfix-g-tools/apply2.py` (anchored, `check` before `apply`).
+
+FOR gate-g: 15:10 one more JS-typing edit in `L/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.mjs`: `signal`, `command`, `commandArguments`, `spawnProcess` default to `undefined` (the code already tests `=== undefined`; in a JS-inferred signature a destructured name without default is REQUIRED, so every caller and test had to pass them). No behaviour change.
+(the 5 non-graph errors reported here at 15:10 are fixed at 16:05, see section "Outside graph" at the end.)
+
+## Result (15:10): graph module strict-clean
+Official route `bun repo tools exec tsc -- -p … --noEmit` (tsc of the registered tool). Proof the checker ran = file counts.
+| scope | files | errors before | errors after |
+| --- | ---: | ---: | ---: |
+| entry `🕸️graph/🟦️.ts` closure (`tsconfig.graph.json`) | 673 | 3 (+20 node) | 0 (+21 node, see FOR nodeffi-g) |
+| every `.ts` below `🕸️graph/**` incl. all its tests (`tsconfig.graphall.json`) | 1744 | 16 (+20 node) | 0 (+21 node) |
+| repo library config (`📦️packages/🟦️typescript/tsconfig.json`, what tsc-d runs) | 7505 | 41 (21 node, 15 graph, 5 other) | 26 (21 node, 0 graph, 5 other, FOR line above) |
+(the node count 20 -> 21 is one more implicit-any report the same file already had in the repo library run, not new code of mine.)
+
+## Fixes, each at the source (no `any`, no `@ts-ignore`, no suppression)
+1. `🕰️generations/🟨️.d.mts`: `GenerationPolicyV1.sweepWaitMilliseconds` (the `.mjs` and the schema define it since hold-g).
+2. `🕰️generations/🧩️claims/🟨️.d.mts`: `ClaimsPolicyV1.failedRetryMilliseconds`, `ClaimV1.stamps`, `chunkOfV1` options `stamps`/`nowMs` and claim rows `endedMs`/`stamps`, `ClaimPrefetchOptionsV1.stamps`. These declarations are the TypeScript contract of hold-g's content stamps; the `.mjs` was right, the declaration had not followed.
+3. Derived facts are readonly end to end: `🕸️graph/🟦️.ts` (`derivedFacts` map + `onOwnerObservations`), `📋️model/🟦️.ts` `BuildGraphPartV1.derived`, `🔌️load/🟨️.d.mts` `GenerationPartV1.derived` now names the one `DerivedFactV1` of `✂️cutoff` (before: three structurally different copies, one mutable).
+4. Farm `.mjs`: default `write` returns void, `onReady` typed by JSDoc, `signal/command/commandArguments/spawnProcess` optional (see FOR lines).
+5. Tests (all fixtures are JSON, whose heterogeneous array elements TypeScript normalises to unions with `?: undefined`): `write` helpers of derived-walks, withheld-rows and cutoff store take `Partial<Record<string,string>>` and skip absent entries; cutoff store `held` is read as `step.held!==undefined` instead of `"held" in step`; phases replay has a declared `PhaseStepV1` (casts `as never` removed); test-owners compares `[owner,features][]` arrays and iterates the typed map; re-edge-chunks types the oracle answer as `[string,string,string][]`; load test no longer passes `name`/`root` that `sliceViewV1` never reads; derived-walks types its path callback; cutoff test declares `World` (before: derived from the JSON union, which made `Object.entries(world.owners)` rows `any`) and obtains `worlds` through the Ajv schema check as a type guard (`isFixture`), so the fixture is validated at load and typed without a cast.
+No logic bug surfaced: every error was a declaration drift or a test typing issue, so there is no new behaviour to guard with a law; tsc over the whole graph tree is the guard (the declarations are now checked against their callers by the graph module itself).
+
+## Graph unit laws after the edits (single files, `nice -n 10 bun test ./<file>`)
+claims 124, generations 27, test-owners 67, load 68, cutoff 138, cutoff store 4, phases 17, derived-walks 4, withheld-rows 6, re-edge-chunks 3, project-farm 22, generation-protocol 47, edge-refresh 7, sealed-reuse 14, tagged-retention 74, portable 3: all pass, 0 fail.
+
+## Files
+`L/🏗️build/🕸️graph/{🟦️.ts, 📋️model/🟦️.ts, 🕰️generations/{🟨️.d.mts, 🧩️claims/🟨️.d.mts, 🔌️load/🟨️.d.mts}, 📥️inference/📦️project-nodes/🏊️project-farm/🟨️.mjs}` and the tests named in 5. Tools: `C/tsfix-g-tools/` (`run.sh <name>` + `tsconfig.{graph,graphall,few}.json`, `run-repolib.sh`, `apply.py`, `apply2.py`). `🗑️generated/tsfix-g` removed.
+
+## Outside graph (coordinator request 15:40): the 5 remaining library errors, fixed at 16:05
+All in test files, `L` = `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library`; patches `C/tsfix-g-tools/apply3.py` plus two one-line edits.
+1. `L/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🟦️.ts` line 64 (`physicalRecoveryLaw`): REAL BUG. `recover` called `recovery.recoverCompactCompilerHeadroomV1` but `recovery` was never imported in that function (only in the sibling export test), so the macOS recovery law would have thrown a ReferenceError the first time the lifetime invoked `recover`. Now `recovery=await import("../♻️recovery/🟦️.ts")` next to `api`. No new law: this law IS the guard, it could not reach the line before. NOT RUN: the law sits in the `withBuildTestInvocationV1` macOS image test, which needs a real parent Original (bare `bun test` answers "Original parent Script process invocation required", same on the unchanged file) and mounts a real image; the official route was not started (host at load 55, capacity wait 1300 s). The 5 other tests of the file pass bare, incl. the export test of the same module.
+2. `L/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🧫️fixtures/🟦️echo.ts`: the top-level `status` collided with the DOM global (script without import/export); renamed `exitStatus`, runtime identical. Windows suite 5 pass.
+3. `L/🏗️build/📥️inputs/🌳️owner-view/🧪️tests/🏝️reach/🟦️.ts`: `corpus.exceptions` is `[]` in the JSON, so TypeScript types it `never[]`; it is read through the declared shape `{path,reason}[]` of its schema (annotation, no cast). 3 pass.
+4. `L/🏗️build/📥️inputs/🌳️owner-view/🧪️tests/🧬️inference/🟦️.ts`: the evaluated result is a `Record<string,unknown[]>` while the corpus row is `string[]|null`; `expect<unknown[] | null>(…)` states the comparison type. 2 pass.
+5. `L/🏗️build/🩺️doctor/🧪️tests/🔎️probes/🟦️.ts` line 234: the test passed the policy where `analyzeDoctorV1` takes options; it now passes `{policy:DOCTOR_POLICY_V1}` (the way line 295 does) and the `as never` on the facts is gone (they type-check as `DoctorFactsV1`). The old call silently used the default policy, which is equal, so no behaviour change in the verdict. 14 pass.
+Check: `tsconfig.rest.json` (the 5 files + closure, 1011 files): 21 errors, all in the node runtime file (nodeffi-g), 0 elsewhere. Combined with the earlier scopes the repo library config has 0 errors except the node file.
+`🗑️generated/tsfix-g` removed again.

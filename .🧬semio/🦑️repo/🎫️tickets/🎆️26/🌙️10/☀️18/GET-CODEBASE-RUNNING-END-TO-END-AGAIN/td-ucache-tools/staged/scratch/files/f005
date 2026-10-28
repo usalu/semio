@@ -1,0 +1,85 @@
+/** 🧾️ Contract: compiling in a pooled lane records the same provenance as compiling in the shared directory, and releasing the lane through the retention rule loses none of it. One real Cargo workspace (a library with a build script and a dependent library) is built three ways with the real receipt writer: in a shared build directory with a plain compiler (the old path), in a cold pooled lane through the unit cache wrapper, and in a second lane that restores every unit from the cache. After the directories are normalised the three receipts agree on every unit, source input, dependency-info source, build script and invocation input; every recorded artifact digest is checked by an independent implementation (`hashlib`); and the shared ledger holds the lane receipts byte for byte.
+ * @see ../../🟦️.ts */
+import {expect,test} from "bun:test";
+import {spawnSync} from "node:child_process";
+import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
+import {CurrentPhysicalOwnerV1} from "@semio-tech/framework-filesystem/observation/current";
+import {requireTestToolV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import {cargoProvenancePhysicalControlV1,writeCompletedCargoInvocationProvenanceV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import {decodeCargoProvenanceV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import {compilerLaneEnvironmentV1} from "../../../../../../💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🟦️.ts";
+import {acquirePooledLaneV1} from "../../../🏊️pool/🟦️.ts";
+import {retainLaneOutputsV1} from "../../🟦️.ts";
+import {cargoScratchBaseV1} from "../../../../🧪️tests/🏖️scratch/🟦️.ts";
+
+const python=requireTestToolV1("python"),toolchain="nightly-2026-07-20";
+const base=cargoScratchBaseV1();
+const shas=(paths:readonly string[]):string[]=>{const run=spawnSync(python,["-I","-c","import hashlib,json,sys;print(json.dumps([hashlib.sha256(open(p,'rb').read()).hexdigest() for p in json.load(sys.stdin)]))"],{input:JSON.stringify(paths),encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout);};
+const environment=(root:string):Record<string,string>=>({PATH:process.env.PATH!,HOME:process.env.HOME!,RUSTUP_TOOLCHAIN:toolchain,CARGO_HOME:join(root,"home"),CARGO_TERM_COLOR:"never",CARGO_UNSTABLE_BUILD_DIR_NEW_LAYOUT:"true",CARGO_UNSTABLE_FINE_GRAIN_LOCKING:"true"});
+
+function workspace(root:string):string{
+ const w=join(root,"ws");mkdirSync(join(w,"dep/src"),{recursive:true});mkdirSync(join(w,"app/src"),{recursive:true});
+ writeFileSync(join(w,"Cargo.toml"),'[workspace]\nresolver = "2"\nmembers = ["dep","app"]\n[profile.dev]\ndebug = 0\n');
+ writeFileSync(join(w,"dep/Cargo.toml"),'[package]\nname = "dep"\nversion = "0.1.0"\nedition = "2021"\nbuild = "build.rs"\n');
+ writeFileSync(join(w,"dep/build.rs"),'fn main(){println!("cargo:rustc-cfg=fixture");println!("cargo:rerun-if-changed=build.rs");}\n');
+ writeFileSync(join(w,"dep/src/lib.rs"),'#[cfg(fixture)] pub fn one()->u32{1}\n');
+ writeFileSync(join(w,"app/Cargo.toml"),'[package]\nname = "app"\nversion = "0.1.0"\nedition = "2021"\n[dependencies]\ndep = { path = "../dep" }\n');
+ writeFileSync(join(w,"app/src/lib.rs"),'pub fn two()->u32{dep::one()+1}\n');
+ const run=spawnSync("cargo",["generate-lockfile","--manifest-path",join(w,"Cargo.toml")],{cwd:w,env:environment(root),encoding:"utf8"});expect(run.status,run.stderr).toBe(0);
+ return w;
+}
+
+type Built={receipt:string;ledger:string;build:string;target:string;decoded:ReturnType<typeof decodeCargoProvenanceV1>};
+async function compile(root:string,w:string,name:string,directories:Readonly<{build:string;target:string;env:Record<string,string|undefined>}>):Promise<Built>{
+ const manifest=join(w,"Cargo.toml"),args=["build","--locked","--manifest-path",manifest,"-p","app"];
+ const run=spawnSync("cargo",[...args,"--message-format=json-render-diagnostics"],{cwd:w,env:directories.env as NodeJS.ProcessEnv,encoding:"utf8",maxBuffer:1<<27});expect(run.status,run.stderr).toBe(0);
+ const units:{message:unknown;evidence:unknown}[]=[],buildScripts:unknown[]=[];
+ for(const line of run.stdout.split("\n")){if(!line.startsWith("{"))continue;const message=JSON.parse(line);if(message.reason==="build-script-executed")buildScripts.push(message);if(message.reason==="compiler-artifact")units.push({message,evidence:{version:1,kind:"discovery",paths:[],producer:null}});}
+ const receipt=join(root,"receipts","cargo-unit-provenance-"+name+".json");
+ await writeCompletedCargoInvocationProvenanceV1(receipt,{manifest,cwd:w,command:"cargo",args:[...args,"--message-format=json-render-diagnostics"],buildDirectory:directories.build,builtAtMs:1,status:0,cancelled:false,units:units as never,buildScripts:buildScripts as never},new Map(),join(root,"home"),()=>new CurrentPhysicalOwnerV1(w,cargoProvenancePhysicalControlV1({cancelled:()=>false,remainingMs:()=>120000,onProgress:()=>undefined})));
+ return{receipt,ledger:join(directories.build,"semio-cargo-provenance","cargo-unit-provenance-"+name+".json"),build:directories.build,target:directories.target,decoded:decodeCargoProvenanceV1(readFileSync(receipt,"utf8"))};
+}
+
+const normaliser=(built:Built,w:string)=>(text:string):string=>text.replaceAll(built.build,"<BUILD>").replaceAll(built.target,"<TARGET>").replaceAll(w,"<WS>");
+function projection(built:Built,w:string){
+ const n=normaliser(built,w),doc=built.decoded as unknown as Record<string,any>;
+ const unit=(row:any)=>({package:n(row.message.package_id),target:row.message.target.name,kind:[...row.message.target.kind].sort(),crateTypes:[...row.message.target.crate_types].sort(),features:[...row.message.features].sort(),profile:row.message.profile,files:row.message.filenames.map((file:string)=>n(file).split("/").at(-1)!.replace(/-[0-9a-f]{16}(?=\.|$)/u,"-<HASH>")).sort(),inputs:row.inputs.map((input:any)=>({path:n(input.path),kind:input.kind,sha256:input.sha256})).sort((a:any,b:any)=>a.path<b.path?-1:1),depInfoSources:row.depInfo.flatMap((dep:any)=>dep.sources).sort(),artifacts:row.artifacts.map((artifact:any)=>n(artifact.path).split("/").at(-1)!.replace(/-[0-9a-f]{16}(?=\.|$)/u,"-<HASH>")).sort()});
+ return{status:doc.status,cancelled:doc.cancelled,command:doc.command,args:doc.args.map(n),cwd:n(doc.cwd),manifest:n(doc.manifest),units:doc.units.map(unit).sort((a:any,b:any)=>(a.package+a.target+a.kind)<(b.package+b.target+b.kind)?-1:1),buildScripts:doc.buildScripts.map((row:any)=>({package:n(row.package_id),cfgs:row.cfgs,env:row.env,linked:row.linked_libs,outDir:n(row.out_dir).replace(/[0-9a-f]{16}/u,"<HASH>")})),invocationInputs:doc.invocationInputs.map((input:any)=>({path:n(input.path),sha256:input.sha256})).sort((a:any,b:any)=>a.path<b.path?-1:1)};
+}
+
+test("the old shared-directory path, a cold lane and a lane restored from the unit cache record the same provenance, and retention publishes it byte for byte",async()=>{
+ const root=mkdtempSync(join(base,"pe-")),w=workspace(root),cache=join(root,"u"),sharedBuild=join(root,"shared","b"),sharedTarget=join(root,"shared","t");
+ try{
+  const old=await compile(root,w,"old",{build:sharedBuild,target:sharedTarget,env:{...environment(root),CARGO_BUILD_BUILD_DIR:sharedBuild,CARGO_TARGET_DIR:sharedTarget}});
+  expect(old.decoded.units.length).toBeGreaterThanOrEqual(3);
+  const lanes:Built[]=[],held:{id:string}[]=[];
+  for(const [name,crates] of [["cold",["app"]],["warm",["elsewhere"]]] as const){
+   const lane=await acquirePooledLaneV1(cache,{crates,quotaBytes:Number.MAX_SAFE_INTEGER});held.push({id:lane.paths.id});
+   const env=compilerLaneEnvironmentV1({environment:{...environment(root),RUSTC:"rustc"},cacheRoot:cache,lane:{id:lane.paths.id,base:lane.paths.base,target:lane.paths.target,build:lane.paths.build},toolchain:"fixture-toolchain",crates,unitCache:true});
+   expect(env.RUSTC_WRAPPER,"the unit cache wrapper is in the chain").toBeTruthy();
+   try{
+    const built=await compile(root,w,name,{build:lane.paths.build,target:lane.paths.target,env:env as Record<string,string|undefined>});
+    expect(existsSync(built.ledger),"the producer writes its ledger copy into the lane build directory").toBe(true);
+    const artifacts=built.decoded.units.flatMap(unit=>unit.artifacts);expect(artifacts.length).toBeGreaterThan(0);
+    expect(artifacts.every(row=>typeof row.sha256==="string")).toBe(true);expect(shas(artifacts.map(row=>row.path)),name+" artifact digests").toEqual(artifacts.map(row=>row.sha256 as string));
+    const laneBytes=readFileSync(built.ledger);
+    const summary=await retainLaneOutputsV1({lane:lane.paths.build,shared:sharedBuild,laneId:lane.paths.id,language:"en"});
+    expect(summary).toMatchObject({published:1,conflicts:[]});
+    expect(existsSync(built.ledger),"retention removes the lane copy").toBe(false);
+    expect(readFileSync(join(sharedBuild,"semio-cargo-provenance","cargo-unit-provenance-"+name+".json")).equals(laneBytes)).toBe(true);
+    const events=readFileSync(join(cache,"x",lane.paths.id+".jsonl"),"utf8").trim().split("\n").map(line=>JSON.parse(line).kind as string);
+    if(name==="cold")expect(events.filter(kind=>kind==="publish").length,"the cold lane fills the unit cache: "+events.join(",")).toBeGreaterThan(0);
+    else expect(events.filter(kind=>kind==="hit").length,"the warm lane restores units from the cache: "+events.join(",")).toBeGreaterThan(0);
+    lanes.push(built);
+   }finally{lane.release();}
+  }
+  const oldArtifacts=old.decoded.units.flatMap(unit=>unit.artifacts);expect(shas(oldArtifacts.map(row=>row.path))).toEqual(oldArtifacts.map(row=>row.sha256 as string));
+  const expected=projection(old,w);
+  for(const built of lanes)expect(projection(built,w)).toEqual(expected);
+  expect(new Set(held.map(row=>row.id)).size,"two different lanes").toBe(2);
+  expect(readdirSync(join(sharedBuild,"semio-cargo-provenance")).sort()).toEqual(["cargo-unit-provenance-cold.json","cargo-unit-provenance-old.json","cargo-unit-provenance-warm.json"]);
+  const ledgerKinds=["old","cold","warm"].map(name=>decodeCargoProvenanceV1(readFileSync(join(sharedBuild,"semio-cargo-provenance","cargo-unit-provenance-"+name+".json"),"utf8")));
+  expect(ledgerKinds.map(doc=>doc.units.length)).toEqual([expected.units.length,expected.units.length,expected.units.length]);
+ }finally{rmSync(root,{recursive:true,force:true});}
+},600000);

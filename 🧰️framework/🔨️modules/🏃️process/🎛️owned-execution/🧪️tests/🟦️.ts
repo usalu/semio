@@ -1,19 +1,21 @@
 import { expect, test } from "bun:test";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import Ajv from "ajv";
+import { Database } from "bun:sqlite";
+import heartbeatSchema from "../🧬️schema/📣️heartbeat.json";
 import exitSchema from "../🧬️schema/📪️exit.json";
 import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8"));
+/** 🗂️ The suite's artifact directory, or the system temporary directory in a bare run. */
+const artifactParent = process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir();
 
 test("terminates a bounded owned descendant process", async () => {
   const owner = resolve(import.meta.dir, "../🟦️.ts");
   expect(existsSync(owner)).toBe(true);
   if (!existsSync(owner)) return;
-  const artifactParent = process.env.SEMIO_TEST_ARTIFACT_DIR;
-  expect(artifactParent).toBeTruthy();
-  if (!artifactParent) return;
   const root = mkdtempSync(resolve(artifactParent, "owned-execution-"));
   const marker = resolve(root, "descendant.txt");
   const source = [
@@ -47,12 +49,11 @@ test("terminates a bounded owned descendant process", async () => {
 }, { timeout: 10_000 });
 
 test("owned command cancellation and UTF-8 reports match independent Node execution", async () => {
-  const owner = resolve(import.meta.dir, "../🟦️.ts"), artifactParent = process.env.SEMIO_TEST_ARTIFACT_DIR!;
-  expect(artifactParent).toBeTruthy();
+  const owner = resolve(import.meta.dir, "../🟦️.ts");
   const root = mkdtempSync(resolve(artifactParent, "owned-reports-")), module = resolve(root, "owner.mjs");
   const { createRequire } = await import("node:module"), { spawnSync } = await import("node:child_process");
   const bundled = await createRequire(import.meta.url)("esbuild").build({entryPoints:[owner],bundle:true,write:false,platform:"node",format:"esm",metafile:true,logLevel:"silent"});
-  const neutralValidator="🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";expect(Object.keys(bundled.metafile.inputs)).toContain(neutralValidator);const neutralOwners=["🧰️framework/🔨️modules/🧬️schema/✅️validator/","🧰️framework/🔨️modules/⚙️runtime/","🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/","🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/","🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/"];expect(Object.keys(bundled.metafile.inputs).every((path:string)=>path.startsWith("🧰️framework/🔨️modules/🏃️process/")||neutralOwners.some(prefix=>path.startsWith(prefix)))).toBe(true);
+  const neutralValidator="🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";expect(Object.keys(bundled.metafile.inputs)).toContain(neutralValidator);const neutralOwners=["🧰️framework/🔨️modules/🧬️schema/✅️validator/","🧰️framework/🔨️modules/⚙️runtime/","🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/","🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/","🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/","🧰️framework/📦️packages/🟦️typescript/⚙️runtime/"];expect(Object.keys(bundled.metafile.inputs).every((path:string)=>path.startsWith("🧰️framework/🔨️modules/🏃️process/")||neutralOwners.some(prefix=>path.startsWith(prefix)))).toBe(true);
   writeFileSync(module, bundled.outputFiles[0].text);
   const run = async (api: any, executable: string, row: any): Promise<any> => {
     const marker = resolve(root, row.mode + ".txt"), controller = new AbortController(), lines: string[] = [];
@@ -85,13 +86,31 @@ test("progress remains observable until explicitly stopped", async () => {
   const count=lines.length;await Bun.sleep(fixture.progress.intervalMs*4);expect(lines.length).toBe(count);
 });
 
+test("the progress heartbeat is declared in English and German, follows the chosen language and names both when none is chosen, checked against SQLite", async () => {
+  const { startNativeProgress } = await import("../🟦️.ts"), database = new Database(":memory:");
+  try {
+    const cases: [Record<string, string>, string[]][] = [[{ SEMIO_LANGUAGE: "de" }, ["de"]], [{ SEMIO_LANGUAGE: "en", LANG: "de_DE.UTF-8" }, ["en"]], [{ LANG: "de_CH.UTF-8" }, ["de"]], [{ LC_ALL: "C", LANG: "en_US.UTF-8" }, ["en", "de"]], [{ LANGUAGE: "fr:de" }, ["de"]], [{}, ["en", "de"]], [{ LANG: "fr_FR.UTF-8" }, ["en", "de"]]];
+    for (const [environment, languages] of cases) {
+      const lines: string[] = [], stop = startNativeProgress("x:y $& z", 1, line => lines.push(line), environment);
+      await Bun.sleep(40); stop();
+      expect(lines.length, JSON.stringify(environment)).toBeGreaterThanOrEqual(languages.length);
+      const seen = lines.slice(0, languages.length).map(line => languages.find(language => (database.query("select replace(replace(json_extract(?1,'$.'||?2||'.running'),'{label}',?3),'{seconds}',?4) text").get(JSON.stringify(heartbeatSchema.const.labels), language, "x:y $& z", /(\d+) s$/u.exec(line)?.[1] ?? "") as { text: string }).text === line));
+      expect(seen, JSON.stringify(environment)).toEqual(languages);
+      for (const line of lines) expect(line).toMatch(/^\[x:y \$& z\] (?:still running after|läuft seit) \d+ s$/u);
+      const count = lines.length; await Bun.sleep(20); expect(lines.length).toBe(count);
+    }
+    expect(heartbeatSchema.const.labels.en.running).not.toContain("elapsedMs");
+    expect(heartbeatSchema.const.labels.de.running).not.toContain("elapsedMs");
+  } finally { database.close(); }
+});
+
 test("the progress heartbeat follows the stdout destination, so stderr routing keeps stdout machine-clean", () => {
   const owner = resolve(import.meta.dir, "../🟦️.ts");
   const script = `import {runOwnedCommand} from ${JSON.stringify(owner)};await runOwnedCommand(process.execPath,["--eval","setTimeout(()=>{},600)"],process.cwd(),"heartbeat",0,{stdout:process.argv[1],progressIntervalMs:50});`;
   for (const mode of ["stderr", "inherit"] as const) {
     const actual = Bun.spawnSync([process.execPath, "--eval", script, mode], { cwd: process.cwd(), env: process.env, stdout: "pipe", stderr: "pipe" });
     expect(actual.exitCode, actual.stderr.toString()).toBe(0);
-    const heartbeat = /\[heartbeat\] running elapsedMs=\d+/u, out = actual.stdout.toString(), err = actual.stderr.toString();
+    const heartbeat = /\[heartbeat\] (?:still running after|läuft seit) \d+ s/u, out = actual.stdout.toString(), err = actual.stderr.toString();
     expect(heartbeat.test(mode === "stderr" ? err : out)).toBe(true);
     expect(heartbeat.test(mode === "stderr" ? out : err)).toBe(false);
   }
@@ -101,7 +120,7 @@ test("owned timeout and stop drain descendant-created groups and inherited pipes
   const { spawn, spawnSync } = await import("node:child_process"), { default: treeKill } = await import("tree-kill");
   const corpus = JSON.parse(readFileSync(resolve(import.meta.dir, "🧫️fixtures/🌳️ownership/🔣️.json"), "utf8"));
   const { runOwnedCommand } = await import("../🟦️.ts");
-  const root = mkdtempSync(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!, "owned-groups-"));
+  const root = mkdtempSync(resolve(artifactParent, "owned-groups-"));
   const alive = (pid: number): boolean => {
     try { process.kill(pid, 0); } catch { return false; }
     if (process.platform === "win32") return true;
@@ -158,7 +177,6 @@ test("original owned child close preserves exact status signal and drained outpu
   expect(new Ajv({strict:true}).compile(exitSchema)(corpus)).toBe(true);
   expect(validateJsonSchemaSubset(exitSchema,corpus)).toEqual([]);
   const {spawnSync}=await import("node:child_process"),{runOwnedCommand}=await import("../🟦️.ts");
-  const artifactParent=process.env.SEMIO_TEST_ARTIFACT_DIR!;expect(artifactParent).toBeTruthy();
   const root=mkdtempSync(resolve(artifactParent,"owned-exit-"));
   const child="const row=JSON.parse(process.argv[1]);process.stdout.write(row.stdout+'\\n');process.stderr.write(row.stderr+'\\n',()=>{if(row.signal)process.kill(process.pid,row.signal);else process.exit(row.code)})";
   const oracle="const{spawn}=require('node:child_process');const row=JSON.parse(process.argv[1]);const child=spawn(process.execPath,['-e',process.argv[2],JSON.stringify(row)],{stdio:['ignore','pipe','pipe']});let stdout='',stderr='';child.stdout.on('data',bytes=>stdout+=bytes);child.stderr.on('data',bytes=>stderr+=bytes);child.once('close',(code,signal)=>console.log(JSON.stringify({code,signal,stdout,stderr})))";

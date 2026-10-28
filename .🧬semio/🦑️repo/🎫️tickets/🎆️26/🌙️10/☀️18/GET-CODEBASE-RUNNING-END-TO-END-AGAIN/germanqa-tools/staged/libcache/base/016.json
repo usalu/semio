@@ -1,0 +1,372 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.cargo/UnitCacheV1",
+  "title": "Content-addressed Cargo compile-unit cache, per-lane build directories and per-unit single-flight leases",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "namespace": "semio.cargo.unit-cache/v1",
+        "layout": {
+          "objects": "o", "entries": "e", "locks": "k", "slots": "s", "tickets": "q", "events": "x", "lanes": "l",
+          "stamps": "m", "admissions": "a", "foreign": "f", "plans": "p", "runs": "r", "temporary": "w", "target": "t", "build": "b", "live": "v", "metadata": "lane.json", "size": "lane.size", "destination": "lane.ledger"
+        },
+        "lock": {
+          "heartbeatMilliseconds": 2000, "staleMilliseconds": 20000,
+          "pollMinimumMilliseconds": 10, "pollMaximumMilliseconds": 200, "pollBackoffBasisPoints": 15000, "maximumWaitMilliseconds": 1800000
+        },
+        "slot": { "heartbeatMilliseconds": 2000, "staleMilliseconds": 20000, "pollMilliseconds": 25 },
+        "key": {
+          "environmentPrefixes": ["CARGO_PKG_"],
+          "environmentNames": [
+            "CARGO_CRATE_NAME", "CARGO_BIN_NAME", "CARGO_MANIFEST_DIR", "CARGO_PRIMARY_PACKAGE", "CARGO_ENCODED_RUSTFLAGS",
+            "RUSTC_BOOTSTRAP", "SDKROOT", "MACOSX_DEPLOYMENT_TARGET", "IPHONEOS_DEPLOYMENT_TARGET"
+          ],
+          "cacheableCrateTypes": ["lib", "rlib", "proc-macro", "bin", "cdylib", "dylib", "staticlib"],
+          "linkedCrateTypes": ["bin", "cdylib", "dylib", "staticlib"],
+          "maximumVariants": 8,
+          "maximumOutputBytes": 1073741824,
+          "maximumDependencyFiles": 65536,
+          "outputToken": "@@semio-out@@",
+          "laneToken": "@@semio-lane@@"
+        },
+        "buildScript": {
+          "platforms": ["darwin", "linux"],
+          "environmentNames": [
+            "TARGET", "HOST", "PROFILE", "OPT_LEVEL", "DEBUG", "RUSTC", "RUSTDOC", "RUSTC_LINKER", "RUSTC_WRAPPER", "RUSTC_WORKSPACE_WRAPPER",
+            "CARGO_ENCODED_RUSTFLAGS", "CARGO_MANIFEST_DIR", "CARGO_MANIFEST_LINKS", "CARGO_PRIMARY_PACKAGE"
+          ],
+          "environmentPrefixes": ["CARGO_PKG_", "CARGO_FEATURE_", "CARGO_CFG_", "DEP_"],
+          "maximumOutputBytes": 268435456,
+          "maximumPackageFiles": 4096,
+          "ignoredDirectories": ["target", ".git", "node_modules"],
+          "undeclaredIgnoredExtensions": [".rs"],
+          "shimMarker": "semio-unit-cache-build-script"
+        },
+        "broker": {
+          "environment": "SEMIO_BUILD_BROKER", "pass": "SEMIO_BUILD_PASS",
+          "recallAttempts": 20, "recallPauseMilliseconds": 50, "timeoutMilliseconds": 5000
+        },
+        "gc": {
+          "casShare": 0.25, "casProtectedShare": 0.1, "laneShare": 0.2, "incrementalShare": 0.1, "admissionShare": 0.03, "admissionRetentionMilliseconds": 604800000, "admissionTemporaryMilliseconds": 3600000,
+          "highWaterShare": 0.875, "lowWaterShare": 0.75, "collectorIntervalMilliseconds": 300000, "maintenanceIntervalMilliseconds": 600000, "collectorClaim": "gc",
+          "outOfSpacePatterns": ["\\(os error (28|112)\\)", "No space left on device", "ENOSPC", "There is not enough space on the disk"], "outOfSpaceRetries": 1,
+          "laneIdleMilliseconds": 86400000, "liveMarkerStaleMilliseconds": 30000, "eventLogMaximumBytes": 4194304, "emergencyFreeBytes": 4294967296, "watchClaim": "watch", "watchPollMilliseconds": 30000, "watchQuietMilliseconds": 600000, "watchMaximumMilliseconds": 7200000, "watchStalledRounds": 10, "watchScanMilliseconds": 900000, "recheckMilliseconds": 60000, "unitStamp": "units.stamp", "unitIntervalMilliseconds": 21600000
+        },
+        "pool": {
+          "maximumLanes": 16, "maximumLiveLanes": 32, "pollMilliseconds": 50, "pollMaximumMilliseconds": 1000, "pollBackoffBasisPoints": 15000, "listedCrates": 16, "machineStore": "rust", "reserved": ["d"]
+        },
+        "retention": {
+          "ledger": "semio-cargo-provenance", "ledgerPattern": "^cargo-unit-provenance-[A-Za-z0-9._-]{1,200}\\.json$",
+          "maximumFiles": 4096, "maximumFileBytes": 134217728, "chunkBytes": 1048576
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "overflow": {
+          "en": "[repo cargo] {busy} of {total} pooled lanes are busy with other Cargo processes; using the new lane {lane} beyond the pool bound (starts empty and fills from the shared unit cache)",
+          "de": "[repo cargo] {busy} von {total} gepoolten Lanes sind von anderen Cargo-Prozessen belegt; verwende die neue Lane {lane} über die Pool-Grenze hinaus (startet leer und füllt sich aus dem gemeinsamen Unit-Cache)"
+        },
+        "trimmed": {
+          "en": "[repo cargo] lane pool trimmed to its bound ({count} lanes, {quotaMib} MiB): removed {removed} idle lane(s)",
+          "de": "[repo cargo] Lane-Pool auf seine Grenze gekürzt ({count} Lanes, {quotaMib} MiB): {removed} ruhende Lane(s) entfernt"
+        },
+        "poolBusy": {
+          "en": "[repo cargo] all {live} live lanes are in use (maximum {maximum}); waiting for a free lane",
+          "de": "[repo cargo] Alle {live} aktiven Lanes sind belegt (Maximum {maximum}); warte auf eine freie Lane"
+        },
+        "collected": {
+          "en": "[repo cargo] unit cache cleanup removed {lanes} lane(s), {incremental} incremental set(s), {sessions} incremental session(s), {units} build unit(s) and {objects} object(s)",
+          "de": "[repo cargo] Unit-Cache-Bereinigung entfernte {lanes} Lane(s), {incremental} Inkrementell-Satz/Sätze, {sessions} Inkrementell-Sitzung(en), {units} Build-Einheit(en) und {objects} Objekt(e)"
+        },
+        "collector": {
+          "en": "[repo cargo] the compiler image is {usedPercent} % full (high-water mark {highPercent} %); a low-priority unit cache collector was started in the background",
+          "de": "[repo cargo] Das Compiler-Image ist zu {usedPercent} % belegt (Hochwassermarke {highPercent} %); ein Unit-Cache-Collector mit niedriger Priorität wurde im Hintergrund gestartet"
+        },
+        "collectorFailed": {
+          "en": "[repo cargo] the background unit cache collector could not be started: {reason}",
+          "de": "[repo cargo] Der Unit-Cache-Collector im Hintergrund konnte nicht gestartet werden: {reason}"
+        },
+        "wrapperUnavailable": {
+          "en": "[repo cargo] the unit cache is off for this Cargo process: no native compiler wrapper could be built ({reason}); compiles run without the shared cache",
+          "de": "[repo cargo] Der Unit-Cache ist für diesen Cargo-Prozess aus: Es konnte kein nativer Compiler-Wrapper gebaut werden ({reason}); Kompilierungen laufen ohne den gemeinsamen Cache"
+        },
+        "jobserverClosed": {
+          "en": "[repo cargo] the job-token pool named by {variable} cannot be reached by this process ({reason}); the command runs on its own single job slot instead of starting more jobs than were admitted",
+          "de": "[repo cargo] Der in {variable} genannte Job-Token-Pool ist für diesen Prozess nicht erreichbar ({reason}); der Befehl läuft auf seinem eigenen einzelnen Job-Slot, statt mehr Jobs zu starten als zugelassen wurden"
+        },
+        "outOfSpace": {
+          "en": "[repo cargo] the compiler image ran out of space ({freeGib} GiB free of {volumeGib} GiB); cleaned up {lanes} lane(s), {incremental} incremental set(s), {sessions} incremental session(s), {units} build unit(s) and {objects} object(s) and retrying the command once",
+          "de": "[repo cargo] Im Compiler-Image ist der Platz ausgegangen ({freeGib} GiB frei von {volumeGib} GiB); {lanes} Lane(s), {incremental} Inkrementell-Satz/Sätze, {sessions} Inkrementell-Sitzung(en), {units} Build-Einheit(en) und {objects} Objekt(e) bereinigt, der Befehl wird einmal wiederholt"
+        },
+        "stillFull": {
+          "en": "[repo cargo] the compiler image is still full after the cleanup ({freeGib} GiB free of {volumeGib} GiB): the running lanes of other commands hold the space; wait for them or raise the rust partition in the budget policy",
+          "de": "[repo cargo] Das Compiler-Image ist nach der Bereinigung weiterhin voll ({freeGib} GiB frei von {volumeGib} GiB): die laufenden Lanes anderer Befehle belegen den Platz; auf deren Ende warten oder die Rust-Partition in der Budget-Richtlinie vergrößern"
+        },
+        "retentionConflict": {
+          "en": "[repo cargo] lane {lane} holds {count} provenance file(s) whose names already exist in the shared ledger with other bytes ({names}); they stay in the lane and were not published",
+          "de": "[repo cargo] Lane {lane} enthält {count} Provenienz-Datei(en), deren Namen im gemeinsamen Ledger schon mit anderen Bytes existieren ({names}); sie bleiben in der Lane und wurden nicht veröffentlicht"
+        }
+      }
+    },
+    "LaneId": { "type": "string", "pattern": "^[a-z0-9]{1,12}$" },
+    "Digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "Output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "sha256", "bytes", "executable"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^/\\\\]+$" },
+        "sha256": { "$ref": "#/definitions/Digest" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "executable": { "type": "boolean" },
+        "template": { "type": "boolean" }
+      }
+    },
+    "Dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "anyOf": [{ "$ref": "#/definitions/Digest" }, { "type": "null" }] }
+      }
+    },
+    "EnvironmentDependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "value": { "anyOf": [{ "type": "string" }, { "type": "null" }] }
+      }
+    },
+    "Provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["peakRssBytes", "userMs", "sysMs", "wallMs", "rmetaOffsetMs"],
+      "properties": {
+        "peakRssBytes": { "type": "integer", "minimum": 0 },
+        "userMs": { "type": "integer", "minimum": 0 },
+        "sysMs": { "type": "integer", "minimum": 0 },
+        "wallMs": { "type": "integer", "minimum": 0 },
+        "rmetaOffsetMs": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }] }
+      }
+    },
+    "BuildFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "kind", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["file", "tree", "package"] },
+        "sha256": { "$ref": "#/definitions/Digest" }
+      }
+    },
+    "BuildOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "bytes", "executable", "template"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/definitions/Digest" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "executable": { "type": "boolean" },
+        "template": { "type": "boolean" }
+      }
+    },
+    "BuildEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "key", "package", "facts", "environment", "outputs", "stdout", "stderr", "createdMs"],
+      "properties": {
+        "version": { "const": 1 },
+        "key": { "$ref": "#/definitions/Digest" },
+        "package": { "type": "string" },
+        "facts": { "type": "array", "items": { "$ref": "#/definitions/BuildFact" } },
+        "environment": { "type": "array", "items": { "$ref": "#/definitions/EnvironmentDependency" } },
+        "outputs": { "type": "array", "items": { "$ref": "#/definitions/BuildOutput" } },
+        "stdout": { "anyOf": [{ "$ref": "#/definitions/Digest" }, { "type": "null" }] },
+        "stderr": { "anyOf": [{ "$ref": "#/definitions/Digest" }, { "type": "null" }] },
+        "createdMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "key", "crate", "dependencies", "environment", "outputs", "stderr", "stdout", "createdMs"],
+      "properties": {
+        "version": { "const": 1 },
+        "key": { "$ref": "#/definitions/Digest" },
+        "crate": { "type": "string", "minLength": 1 },
+        "dependencies": { "type": "array", "items": { "$ref": "#/definitions/Dependency" } },
+        "environment": { "type": "array", "items": { "$ref": "#/definitions/EnvironmentDependency" } },
+        "outputs": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Output" } },
+        "stderr": { "anyOf": [{ "$ref": "#/definitions/Digest" }, { "type": "null" }] },
+        "stdout": { "anyOf": [{ "$ref": "#/definitions/Digest" }, { "type": "null" }] },
+        "createdMs": { "type": "integer", "minimum": 0 },
+        "provenance": { "anyOf": [{ "$ref": "#/definitions/Provenance" }, { "type": "null" }] }
+      }
+    },
+    "Event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "atMs", "lane", "pid", "kind", "crate", "key", "milliseconds", "waitedMs"],
+      "properties": {
+        "version": { "const": 1 },
+        "atMs": { "type": "integer", "minimum": 0 },
+        "lane": { "$ref": "#/definitions/LaneId" },
+        "pid": { "type": "integer", "minimum": 0 },
+        "kind": { "enum": ["hit", "miss", "publish", "bypass", "lock-wait", "lock-timeout", "slot-wait", "incremental", "failed", "script-hit", "script-miss", "script-publish", "script-bypass", "broker-replay", "broker-unreachable"] },
+        "crate": { "type": "string" },
+        "key": { "anyOf": [{ "$ref": "#/definitions/Digest" }, { "type": "null" }] },
+        "milliseconds": { "type": "integer", "minimum": 0 },
+        "waitedMs": { "type": "integer", "minimum": 0 },
+        "reason": { "type": "string" }
+      }
+    },
+    "AdmissionStamp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "present", "dev", "ino", "size", "mtimeNs", "ctimeNs"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "present": { "type": "boolean" },
+        "dev": { "type": "string", "pattern": "^[0-9]*$" },
+        "ino": { "type": "string", "pattern": "^[0-9]*$" },
+        "size": { "type": "string", "pattern": "^[0-9]*$" },
+        "mtimeNs": { "type": "string", "pattern": "^[0-9]*$" },
+        "ctimeNs": { "type": "string", "pattern": "^[0-9]*$" }
+      }
+    },
+    "AdmissionMemo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "key", "stamps", "inputs", "cfg", "environment", "createdMs"],
+      "properties": {
+        "version": { "const": 1 },
+        "key": { "$ref": "#/definitions/Digest" },
+        "stamps": { "type": "array", "items": { "$ref": "#/definitions/AdmissionStamp" } },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "digest", "bytes"],
+            "properties": { "path": { "type": "string" }, "digest": { "type": "string" }, "bytes": { "type": "integer", "minimum": 0 } }
+          }
+        },
+        "cfg": { "type": "array", "items": { "type": "string" } },
+        "environment": { "anyOf": [{ "type": "null" }, { "type": "object", "additionalProperties": { "anyOf": [{ "type": "string" }, { "type": "null" }] } }] },
+        "createdMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "LaneSize": {
+      "description": "The size file beside a lane (`lane.size`): its measured logical bytes, the part its Cargo incremental sessions hold, and when it was measured. The pool bounds idle lanes by `bytes - incrementalBytes`; the sessions are bounded by the collector's incremental share. / Die Größendatei neben einer Lane (`lane.size`): ihre gemessenen logischen Bytes, der Teil ihrer inkrementellen Cargo-Sitzungen und der Messzeitpunkt. Der Pool begrenzt untätige Lanes nach `bytes - incrementalBytes`; die Sitzungen begrenzt der inkrementelle Anteil des Sammlers.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bytes", "incrementalBytes", "measuredMs"],
+      "properties": {"bytes": {"type": "integer", "minimum": 0}, "incrementalBytes": {"type": "integer", "minimum": 0}, "measuredMs": {"type": "integer", "minimum": 0}}
+    },
+    "GcLane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "bytes", "incrementalBytes", "lastUsedMs", "live"],
+      "properties": {
+        "id": { "$ref": "#/definitions/LaneId" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "incrementalBytes": { "type": "integer", "minimum": 0 },
+        "lastUsedMs": { "type": "integer", "minimum": 0 },
+        "live": { "type": "boolean" }
+      }
+    },
+    "GcObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["digest", "bytes", "lastUsedMs"],
+      "properties": {
+        "digest": { "$ref": "#/definitions/Digest" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "lastUsedMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "GcInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capacityBytes", "volumeBytes", "freeBytes", "nowMs", "lanes", "objects"],
+      "properties": {
+        "capacityBytes": { "type": "integer", "minimum": 1 },
+        "volumeBytes": { "type": "integer", "minimum": 1 },
+        "freeBytes": { "type": "integer", "minimum": 0 },
+        "nowMs": { "type": "integer", "minimum": 0 },
+        "lanes": { "type": "array", "items": { "$ref": "#/definitions/GcLane" } },
+        "objects": { "type": "array", "items": { "$ref": "#/definitions/GcObject" } }
+      }
+    },
+    "PressureVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "input", "decision"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["volumeBytes", "freeBytes", "emergencyBytes", "nowMs", "lastLaunchMs"],
+          "properties": {
+            "volumeBytes": { "type": "integer", "minimum": 1 },
+            "freeBytes": { "type": "integer", "minimum": 0 },
+            "emergencyBytes": { "type": "integer", "minimum": 0 },
+            "nowMs": { "type": "integer", "minimum": 0 },
+            "lastLaunchMs": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }] }
+          }
+        },
+        "decision": { "enum": ["enough", "maintain", "watch", "launch", "throttled", "collect-now"] }
+      }
+    },
+    "OutOfSpaceVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "outOfSpace"],
+      "properties": { "text": { "type": "string" }, "outOfSpace": { "type": "boolean" } }
+    },
+    "GcPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["removeLanes", "removeIncremental", "removeObjects"],
+      "properties": {
+        "removeLanes": { "type": "array", "items": { "$ref": "#/definitions/LaneId" } },
+        "removeIncremental": { "type": "array", "items": { "$ref": "#/definitions/LaneId" } },
+        "removeObjects": { "type": "array", "items": { "$ref": "#/definitions/Digest" } }
+      }
+    },
+    "KeyVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "arguments", "cacheable"],
+      "properties": {
+        "name": { "type": "string" },
+        "arguments": { "type": "array", "items": { "type": "string" } },
+        "cacheable": { "type": "boolean" },
+        "reason": { "type": "string" },
+        "crateName": { "type": "string" },
+        "outDir": { "type": "string" },
+        "source": { "type": "string" },
+        "externs": { "type": "array", "items": { "type": "string" } },
+        "normalized": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "DepInfoVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "text", "dependencies", "environment"],
+      "properties": {
+        "name": { "type": "string" },
+        "text": { "type": "string" },
+        "dependencies": { "type": "array", "items": { "type": "string" } },
+        "environment": { "type": "array", "items": { "$ref": "#/definitions/EnvironmentDependency" } }
+      }
+    }
+  }
+}

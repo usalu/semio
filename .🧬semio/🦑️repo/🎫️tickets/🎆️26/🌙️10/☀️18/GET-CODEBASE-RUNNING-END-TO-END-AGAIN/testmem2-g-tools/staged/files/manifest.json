@@ -1,0 +1,27 @@
+{
+ "🧰️framework/📦️packages/🟦️typescript/🧪️tests/🔌️sdk-surface/🟦️.ts": {
+  "file": "f001",
+  "sha256": "c3b21f8b77d70ed1db757dbf08818c2d0131650db7b7da99a7887522f70d2042",
+  "mode": 420
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/🚧️boundary/🟦️.ts": {
+  "file": "f002",
+  "sha256": "f9925b49b076c7f307d7ce1e95af711bbafe01b271a0b09099206447e4358f61",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md": {
+  "file": "f003",
+  "sha256": "87a05760675a91b01bedfef6dee3e29b4927d26d8a865e61edf0a625953c1f39",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts": {
+  "file": "f004",
+  "sha256": "7a02529757c27eae787f59e01fbb0facabe41e7686b8fb1b299f33794e4c5cf5",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🎓️course-inputs/🟦️.ts": {
+  "file": "f005",
+  "sha256": "70ae8b3e57ba32b51e245b9d390d858bb7003095d379110015b8c9387caa6c7e",
+  "mode": 420
+ }
+}

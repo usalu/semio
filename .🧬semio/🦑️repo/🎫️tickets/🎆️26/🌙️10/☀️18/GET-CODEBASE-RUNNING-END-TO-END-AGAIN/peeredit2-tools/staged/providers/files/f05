@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "views": {
+    "scheduling": {
+      "prefixes": "scheduling",
+      "contract": {
+        "en": "The roster without the files of every declared scheduling domain: what a target keeps of its own command closure (the scheduling code decides when and where the command runs, never what it writes).",
+        "de": "Die Liste ohne die Dateien aller deklarierten Scheduling-Domänen: was ein Target von seinem eigenen Befehlsabschluss behält (der Scheduling-Code entscheidet, wann und wo der Befehl läuft, nie was er schreibt)."
+      }
+    },
+    "native": {
+      "prefixes": "scheduling-native",
+      "contract": {
+        "en": "The roster without the scheduling files a Rust compile may leave out: the native-build modules that assemble the Cargo arguments stay in.",
+        "de": "Die Liste ohne die Scheduling-Dateien, die ein Rust-Kompilat auslassen darf: die Native-Build-Module, die die Cargo-Argumente zusammensetzen, bleiben drin."
+      }
+    }
+  },
+  "recipes": {
+    "target-sources": "scheduling",
+    "generic-target": "scheduling",
+    "native-target": "native",
+    "native-command": "native"
+  },
+  "closures": {
+    "cargo-lock-owner": "native",
+    "artifact-command": "scheduling",
+    "artifact-sources": "whole",
+    "test-discovery": "whole"
+  }
+}

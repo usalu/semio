@@ -1,0 +1,32 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "script.ts",
+  "base": "3d23f586ce67beb393a3c255ef9c27bdcb690c64dac9377eb072e282b85629fd",
+  "new": "9192bd3e971254e6ce5aac4b233546dea40dae7670fb88e2b009c80cc70ba1f8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️fingerprint/🟦️.ts": {
+  "file": "fingerprint.test.ts",
+  "base": "4f1d343b61284f95a3349d2c37169586c44ccf0aaf01debe82c1e3ccd82264c1",
+  "new": "77a270637444126342ec5c07f7b1c44554778500bd4b81c54df0bf65b4f676ea"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️inventory/🟦️.ts": {
+  "file": "inventory.test.ts",
+  "base": "2bf8c757d4c8ab2cecd5d14f8aa6bb2fc6d3074881a51481aba5776b7b58c7a7",
+  "new": "8bd5f25d1544c153be8f4ba4aa22cac3a6a87aff1c99cf58116058df5221fc40"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🔏️implementation/🟦️.ts": {
+  "file": "implementation.test.ts",
+  "base": "f63c6795b124b48c255b941ae09906db0209c0b26bdd5475457d1d7812a318cb",
+  "new": "e45cb877fef55a83fc11556aab3411a7b5ead4bfd1d78a456fdbfed0386e013f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🐹️go/🧪️tests/🟦️.ts": {
+  "file": "go.test.ts",
+  "base": "c81dd9243c0df43132b52ebc95784fb1243fff825dd2f38d4ab617e081bf5567",
+  "new": "84682f515d1497c7398d8bd6e26dc44aab422bd96fe263af9cbe5d952a62b896"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧰️toolchains/🧪️tests/🟦️.ts": {
+  "file": "toolchains.test.ts",
+  "base": "3f510c0181d14c838cd6b2c92bf76f5dc3e88b786210468746a3d634e3572bcd",
+  "new": "e0085dd46f09de3e6919d9a43d7a5f07bb94d916a08c34fa010a5ed8e05733eb"
+ }
+}

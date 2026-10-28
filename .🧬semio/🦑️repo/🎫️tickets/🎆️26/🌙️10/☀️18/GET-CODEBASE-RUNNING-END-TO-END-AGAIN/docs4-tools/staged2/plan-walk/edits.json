@@ -1,0 +1,40 @@
+{
+ "name": "plan-walk",
+ "code": "printhot gitrow + audit3 excluded (live)",
+ "lane": "docs4",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "e88fdd1b3edd95f1a46291cd1f2304ae9f06f3616faeeaa8a56826552197e872",
+ "needs": [],
+ "edits": [
+  {
+   "id": "walk-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "   - **Compilers**: rustc front-end threads follow the admitted cores (`SEMIO_COMPILER_PARALLELISM`).",
+   "where": "before",
+   "block": "   - **Plan walk, excluded names and the git row** (live, G36-G39): the `g` row (git index listing) digests only the files the planner admits (not `.🧬semio/`, not `.git/`), so a ticket file another agent staged no longer ends a plan (about 30 ms more per check). The source walk keeps a directory with an excluded name (`.git`, `.🧬semio`, `.cache`, `.nx`, `node_modules`, `target`, `dist`, `build`, `coverage`, `.venv`, `__pycache__`) at any depth and asks git once which of them it ignores as a whole (`check-ignore`); the others are walked like any directory, because an untracked file in a nested `.🧬semio` or in an un-ignored `target` was a case of unsound reuse. `.git` itself and the unadmitted root bookkeeping are never entered."
+  },
+  {
+   "id": "walk-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "   - **Compiler**: die Frontend-Threads von rustc folgen den zugelassenen Kernen (`SEMIO_COMPILER_PARALLELISM`).",
+   "where": "before",
+   "block": "   - **Plan-Lauf, ausgeschlossene Namen und die Git-Zeile** (live, G36-G39): die Zeile `g` (Git-Index-Liste) bildet nur über die Dateien einen Digest, die der Planer zulässt (nicht `.🧬semio/`, nicht `.git/`), sodass eine Ticket-Datei, die ein anderer Agent vormerkte, keinen Plan mehr beendet (rund 30 ms mehr je Prüfung). Der Quell-Lauf behält ein Verzeichnis mit ausgeschlossenem Namen (`.git`, `.🧬semio`, `.cache`, `.nx`, `node_modules`, `target`, `dist`, `build`, `coverage`, `.venv`, `__pycache__`) in jeder Tiefe und fragt Git einmal, welche davon es als Ganzes ignoriert (`check-ignore`); die übrigen werden wie jedes Verzeichnis durchlaufen, weil eine unverfolgte Datei in einem verschachtelten `.🧬semio` oder in einem nicht ignorierten `target` ein Fall unsauberer Wiederverwendung war. `.git` selbst und die nicht zugelassene Wurzel-Buchführung werden nie betreten."
+  },
+  {
+   "id": "walk-store",
+   "lang": "en",
+   "kind": "replace",
+   "old": "(before, the first run after a build and the revert of an edit replanned, 45-50 s)",
+   "new": "(before, the first run after a build and the revert of an edit replanned, 45-50 s; now edit and revert of a course source both print `plan reused`, 25 s and 35 s in gate run g34c)"
+  },
+  {
+   "id": "walk-store",
+   "lang": "de",
+   "kind": "replace",
+   "old": "(vorher planten der erste Lauf nach einem Build und das Zurücksetzen einer Änderung neu, 45-50 s)",
+   "new": "(vorher planten der erste Lauf nach einem Build und das Zurücksetzen einer Änderung neu, 45-50 s; jetzt geben Änderung und Zurücksetzen einer Kurs-Quelle beide `plan reused` aus, 25 s und 35 s im Tor-Lauf g34c)"
+  }
+ ]
+}

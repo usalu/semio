@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🛰️service/🔑️session/🟨️.d.mts": {
+  "file": "00.mts",
+  "base": "835c6272adc93dea536b47940a547c917b600237a7c2901f47d9a9df694d60fa",
+  "new": "6464065d5e618a48e67aa9dd69b5c7528f97e7f55ac7a130ec5b2d1ca4e72186"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🟦️.ts": {
+  "file": "01.ts",
+  "base": "8ab6f2f7fe167ccd1cba20be4b900ad2eb69b34c271f6c2d7303dce88df029bb",
+  "new": "94312928f5040508e5b5942dbc55e8bb2acfa79e13426ad01667791d6e7f6ead"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🧪️tests/🟦️.ts": {
+  "file": "02.ts",
+  "base": "7dbf0b680b0d05294444a9ebd24091f205e5a44a3d9b1c3bc5d996de18bcefcf",
+  "new": "825555360c82ecd6f086525023b665c147f0cf2754175befd6ecd372808359b9"
+ }
+}

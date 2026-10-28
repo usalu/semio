@@ -49,7 +49,7 @@ test("the toolchain identity needs no compiler process and changes with the pinn
 
 test("rendered BUILD text equals an independent rendering and the Starlark rule serializes one Cargo action at a time",()=>{
  for(const row of corpus.render){
-  const text=cargo.renderBazelCargoBuildV1(row as any),expected=oracle("import json,sys\nr=json.load(sys.stdin)\nq=lambda v:json.dumps(v,ensure_ascii=False)\nL=['load(%s, \"repo_cargo\")'%q(r['load']),'']\nfor a in sorted(r['actions'],key=lambda a:a['label']):\n L+=['repo_cargo(','    name = %s,'%q(a['label']),'    manifest = %s,'%q(a['manifest']),'    runner = %s,'%q(r['runner']),'    srcs = ['+''.join('\\n        %s,'%q(s) for s in sorted(set(a['srcs'])))+'\\n    ],','    bun = %s,'%q(r['bun']),'    identity = %s,'%q(a['id']),')','']\nprint(json.dumps('\\n'.join(L)))",row);
+  const text=cargo.renderBazelCargoBuildV1(row as any),expected=oracle("import json,sys\nr=json.load(sys.stdin)\nq=lambda v:json.dumps(v,ensure_ascii=False)\nL=['load(%s, \"repo_cargo\")'%q(r['load']),'']\nfor a in sorted(r['actions'],key=lambda a:a['label']):\n L+=['repo_cargo(','    name = %s,'%q(a['label']),'    manifest = %s,'%q(a['manifest']),'    runner = %s,'%q(r['runner']),'    srcs = ['+''.join('\\n        %s,'%q(s) for s in sorted(set(a['srcs'])))+'\\n    ],','    runtime = %s,'%q(r['bun']),'    identity = %s,'%q(a['id']),')','']\nprint(json.dumps('\\n'.join(L)))",row);
   expect(text,row.name).toBe(expected);
  }
  expect(cargo.BAZEL_CARGO_RULE_V1).toContain("resource_set = cargo_resources");
@@ -65,12 +65,12 @@ test("only native Cargo task actions are exclusive and the generated rule carrie
  expect(block).toContain("exclusive = True,");
 });
 
-test.skipIf(!process.env.SEMIO_BAZEL_BIN)("the real Bazel loads the rendered Cargo rule",()=>{
+test.skipIf(!process.env.SEMIO_TEST_BAZEL_BINARY)("the real Bazel loads the rendered Cargo rule",()=>{
  const root=mkdtempSync(join(tmpdir(),"bzl-cargo-"));
  try{
   writeFileSync(join(root,"MODULE.bazel"),'module(name = "t", version = "0.0.0")\n');writeFileSync(join(root,"tasks.bzl"),cargo.BAZEL_CARGO_RULE_V1);writeFileSync(join(root,"runner.ts"),"");writeFileSync(join(root,"a.json"),"{}");
   writeFileSync(join(root,"BUILD.bazel"),cargo.renderBazelCargoBuildV1({load:":tasks.bzl",bun:"/bin/bun",runner:"runner.ts",actions:[{label:"a",id:"a",manifest:"a.json",srcs:[]}]}));
-  const run=spawnSync(process.env.SEMIO_BAZEL_BIN!,[`--output_base=${join(root,"ob")}`,"--nosystem_rc","--nohome_rc","--noworkspace_rc","query","//:all","--lockfile_mode=off","--incompatible_autoload_externally="],{cwd:root,encoding:"utf8"});
+  const run=spawnSync(process.env.SEMIO_TEST_BAZEL_BINARY!,[`--output_base=${join(root,"ob")}`,"--nosystem_rc","--nohome_rc","--noworkspace_rc","query","//:all","--lockfile_mode=off","--incompatible_autoload_externally="],{cwd:root,encoding:"utf8"});
   expect(run.status,run.stderr).toBe(0);expect(run.stdout.trim()).toContain("//:a");
- }finally{spawnSync(process.env.SEMIO_BAZEL_BIN!,[`--output_base=${join(root,"ob")}`,"--nosystem_rc","shutdown"],{cwd:root});rmSync(root,{recursive:true,force:true});}
+ }finally{spawnSync(process.env.SEMIO_TEST_BAZEL_BINARY!,[`--output_base=${join(root,"ob")}`,"--nosystem_rc","shutdown"],{cwd:root});rmSync(root,{recursive:true,force:true});}
 },120000);

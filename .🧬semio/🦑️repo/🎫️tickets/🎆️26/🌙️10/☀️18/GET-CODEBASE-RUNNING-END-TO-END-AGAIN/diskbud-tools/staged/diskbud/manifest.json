@@ -1,0 +1,52 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧹️retention/🟦️.ts": {
+  "file": "n00",
+  "base": null,
+  "new": "d6cfa51c7c093c8a03970712ad1ac01b6baf251066233a1f780006b61375eafb"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧹️retention/🧬️schema/🔣️.json": {
+  "file": "n01",
+  "base": null,
+  "new": "08b81994db90217fb897ed8a703b47679ace62d1afe77c158489e6e782c872da"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧪️tests/🧹️retention/🟦️.ts": {
+  "file": "n02",
+  "base": null,
+  "new": "e6843ff815629a64a4dd31bc2ca98809b488e13285bb3941b5bb97618cc836ca"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧪️tests/🧹️retention/🐍️.py": {
+  "file": "n03",
+  "base": null,
+  "new": "c3b5125fff8a81c4a95cad3948a971f9bf1dc138d37ceff3c53f556fba673c09"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🧹️abandoned/🟦️.ts": {
+  "file": "n04",
+  "base": null,
+  "new": "dfcad773eaaa131532441bfe1b9b27dbeed8634246806c95f6ee12c28bc52610"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🧹️abandoned/🧬️schema/🔣️.json": {
+  "file": "n05",
+  "base": null,
+  "new": "8861ab8690c030a942e5c8b5978c2acb51eaf7182736df34cfac9b91622130c2"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🧪️tests/🧹️abandoned/🟦️.ts": {
+  "file": "n06",
+  "base": null,
+  "new": "d98e11003377bccc5cfdc1e2c8738a3395eaa5273e824f04ddcd4017f45c07c6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🧪️tests/🧹️abandoned/🐍️.py": {
+  "file": "n07",
+  "base": null,
+  "new": "6a9543b5585c96b63a1c66d61e2e632ae385384869998af428fa0e0e82af1e42"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🟦️.ts": {
+  "file": "e00",
+  "base": "ef3552b76752e1fb8ab3fe34fdf33f406eaa8bd4d3c447f1556aee093c639db1",
+  "new": "28a8b4d57b04c41704b86f15ce2c58b21bc9e3e6512712e2f53411d6ecee8e95"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🟦️.ts": {
+  "file": "e01",
+  "base": "631b18ded83aba2b2c101fc763e49fbe2d43e5aa1630df772d58792893bfbaef",
+  "new": "916e6c1c461ff05886226acd1f2495bf920db9e1b008c4affbbe8e9a12a7d882"
+ }
+}

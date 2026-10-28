@@ -1,0 +1,1187 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "const": {
+    "version": 1,
+    "purpose": "neutral-long-activity-message",
+    "minimumElapsedMilliseconds": 15000,
+    "secondsRounding": "nearest-integer",
+    "rows": {
+      "variable": "SEMIO_SCRIPT_PROGRESS",
+      "values": [
+        "machine",
+        "human"
+      ],
+      "terminalDefault": "human",
+      "otherwiseDefault": "machine"
+    },
+    "stagePhases": {
+      "owner": "repository:build",
+      "stage": "running",
+      "heartbeatMilliseconds": 15000,
+      "labels": {
+        "en": {
+          "template": "{command} · {phase}",
+          "phases": {
+            "build:source-admission": "Admitting the sources of the build",
+            "build:implementation-source": "Reading the sources of the build implementation",
+            "build:playground-components": "Collecting playground components",
+            "build:playground-variants": "Collecting playground variants",
+            "build:playground-native": "Collecting native playground inputs",
+            "build:command-source-packages": "Resolving the packages of command sources",
+            "build:cargo-owners": "Assigning Cargo owners",
+            "build:cargo-targets": "Collecting Cargo targets",
+            "build:graph-plan": "Planning the build graph",
+            "build:graph": "Assembling the build graph",
+            "build:infer": "Inferring projects",
+            "build:commands": "Reading the command declarations",
+            "build:neutral-child": "Running the neutral build child",
+            "build:input-precision": "Narrowing the inputs of the build",
+            "build:source-contracts": "Reading the source contracts",
+            "build:generator-producers": "Collecting generator producers",
+            "bazel:source-snapshot": "Snapshotting the sources for Bazel",
+            "bazel:plan-reuse": "Checking whether the Bazel plan can be reused",
+            "bazel:snapshot-restore": "Restoring the Bazel snapshot",
+            "bazel:captured-planner": "Running the Bazel planner",
+            "bazel:owned-action-child": "Running a Bazel action",
+            "bazel:action-birth": "Starting a Bazel action"
+          }
+        },
+        "de": {
+          "template": "{command} · {phase}",
+          "phases": {
+            "build:source-admission": "Quellen des Builds zulassen",
+            "build:implementation-source": "Quellen der Build-Implementierung lesen",
+            "build:playground-components": "Playground-Komponenten sammeln",
+            "build:playground-variants": "Playground-Varianten sammeln",
+            "build:playground-native": "Native Playground-Eingaben sammeln",
+            "build:command-source-packages": "Pakete der Befehlsquellen auflösen",
+            "build:cargo-owners": "Cargo-Eigentümer zuordnen",
+            "build:cargo-targets": "Cargo-Targets sammeln",
+            "build:graph-plan": "Build-Graph planen",
+            "build:graph": "Build-Graph zusammensetzen",
+            "build:infer": "Projekte ableiten",
+            "build:commands": "Befehlsdeklarationen lesen",
+            "build:neutral-child": "Neutralen Build-Kindprozess ausführen",
+            "build:input-precision": "Eingaben des Builds eingrenzen",
+            "build:source-contracts": "Quellverträge lesen",
+            "build:generator-producers": "Generator-Erzeuger sammeln",
+            "bazel:source-snapshot": "Quellen für Bazel sichern",
+            "bazel:plan-reuse": "Prüfen, ob der Bazel-Plan wiederverwendet werden kann",
+            "bazel:snapshot-restore": "Bazel-Schnappschuss wiederherstellen",
+            "bazel:captured-planner": "Bazel-Planer ausführen",
+            "bazel:owned-action-child": "Bazel-Aktion ausführen",
+            "bazel:action-birth": "Bazel-Aktion starten"
+          }
+        }
+      }
+    },
+    "longActivity": {
+      "labels": {
+        "en": {
+          "template": "{command} remains active on {resource} ({mode}, {seconds} s)",
+          "modes": {
+            "shared": "shared",
+            "exclusive": "exclusive"
+          }
+        },
+        "de": {
+          "template": "{command} bleibt auf {resource} aktiv ({mode}, {seconds} s)",
+          "modes": {
+            "shared": "geteilt",
+            "exclusive": "exklusiv"
+          }
+        }
+      }
+    },
+    "sourceProvider": {
+      "resourcePrefix": "javascript-source-provider:",
+      "minimumPublicationMilliseconds": 250,
+      "maximumCompleted": 65536,
+      "counterPattern": "^(?:0|[1-9][0-9]*)$",
+      "maximumResourceCharacters": 64,
+      "maximumCommandCharacters": 256,
+      "commandPattern": "^[A-Za-z0-9:_/.-]+$",
+      "labels": {
+        "en": "{command} · Checking declared package providers: {completed} edges",
+        "de": "{command} · Deklarierte Paketanbieter prüfen: {completed} Kanten"
+      },
+      "scope": "original-process-presentation-only",
+      "flush": [
+        "resource-change",
+        "phase-change",
+        "counter-reset",
+        "clock-refusal",
+        "settlement"
+      ],
+      "preserved": [
+        "all-original-publish-calls",
+        "all-guards",
+        "all-yields",
+        "command-streams",
+        "errors",
+        "semantic-receipts"
+      ]
+    },
+    "sourceAdmission": {
+      "resourcePrefix": "cargo:source-admission:",
+      "maximumResourceCharacters": 1024,
+      "maximumCommandCharacters": 256,
+      "systemVariables": [
+        "SEMIO_LANGUAGE",
+        "SEMIO_DASHBOARD_LOCALE",
+        "LC_ALL",
+        "LC_MESSAGES",
+        "LANG"
+      ],
+      "fallback": [
+        "en",
+        "de"
+      ],
+      "labels": {
+        "en": {
+          "template": "{command} · {phase}: {unit}/{units} {package} · {reads} reads · {files} files · {bytes} bytes",
+          "phases": {
+            "cfg": "Checking source configuration",
+            "read": "Reading sources",
+            "complete": "Source admitted"
+          }
+        },
+        "de": {
+          "template": "{command} · {phase}: {unit}/{units} {package} · {reads} Lesevorgänge · {files} Dateien · {bytes} Bytes",
+          "phases": {
+            "cfg": "Quellkonfiguration prüfen",
+            "read": "Quellen lesen",
+            "complete": "Quellen zugelassen"
+          }
+        }
+      }
+    },
+    "parserSource": {
+      "resourcePrefix": "build:parser-source:",
+      "maximumResourceCharacters": 128,
+      "maximumCommandCharacters": 256,
+      "maximumCompleted": 9007199254740991,
+      "completedPattern": "^[1-9][0-9]*$",
+      "commandPattern": "^[A-Za-z0-9:_/.-]+$",
+      "labels": {
+        "en": {
+          "template": "{command} · {operation}: {completed} {units}",
+          "units": "operations",
+          "operations": {
+            "state": "Inspecting source metadata",
+            "list": "Listing source entries",
+            "readText": "Reading source text",
+            "membership": "Checking source membership",
+            "frontier": "Rechecking source evidence",
+            "selection": "Checking source selection",
+            "publication": "Verifying source publication"
+          }
+        },
+        "de": {
+          "template": "{command} · {operation}: {completed} {units}",
+          "units": "Vorgänge",
+          "operations": {
+            "state": "Quellmetadaten prüfen",
+            "list": "Quelleinträge auflisten",
+            "readText": "Quelltext lesen",
+            "membership": "Quellzugehörigkeit prüfen",
+            "frontier": "Quellnachweise erneut prüfen",
+            "selection": "Quellauswahl prüfen",
+            "publication": "Quellveröffentlichung prüfen"
+          }
+        }
+      }
+    },
+    "firstFailure": {
+      "maximumReasonCharacters": 400,
+      "systemVariables": [
+        "SEMIO_LANGUAGE",
+        "LC_ALL",
+        "LC_MESSAGES",
+        "LANG"
+      ],
+      "labels": {
+        "en": "First failure: {first} (the later refusal \"{masked}\" is only its consequence.)",
+        "de": "Erster Fehler: {first} (die spätere Ablehnung \"{masked}\" ist nur seine Folge.)"
+      }
+    },
+    "queueWait": {
+      "resourcePrefix": "lease-queue:",
+      "maximumResourceCharacters": 1024,
+      "maximumCommandCharacters": 256,
+      "commandPattern": "^[A-Za-z0-9:_/.-]+$",
+      "labels": {
+        "en": {
+          "template": "{command} · Waiting for access to {resource} ({mode}): position {position} of {queued}, behind the request of process {holderPid} ({holderMode}, queued {holderSeconds} s ago)",
+          "modes": {
+            "shared": "shared",
+            "exclusive": "exclusive"
+          },
+          "holder": " · holder: {state}{progress}{eta}",
+          "holderProgress": ", {phase} {done} of {total}",
+          "holderPhase": ", {phase}",
+          "holderEta": ", about {minutes} min left",
+          "states": {
+            "progressing": "progressing",
+            "silent": "silent",
+            "stuck": "STUCK",
+            "stale": "STALE (older code)",
+            "unknown": "unknown (no live registry entry)"
+          }
+        },
+        "de": {
+          "template": "{command} · Wartet auf Zugriff auf {resource} ({mode}): Position {position} von {queued}, hinter der Anfrage von Prozess {holderPid} ({holderMode}, seit {holderSeconds} s eingereiht)",
+          "modes": {
+            "shared": "geteilt",
+            "exclusive": "exklusiv"
+          },
+          "holder": " · Halter: {state}{progress}{eta}",
+          "holderProgress": ", {phase} {done} von {total}",
+          "holderPhase": ", {phase}",
+          "holderEta": ", noch etwa {minutes} min",
+          "states": {
+            "progressing": "macht Fortschritt",
+            "silent": "still",
+            "stuck": "FESTGEFAHREN",
+            "stale": "VERALTET (älterer Code)",
+            "unknown": "unbekannt (kein lebender Registereintrag)"
+          }
+        }
+      }
+    },
+    "graphPhase": {
+      "resourcePrefix": "build:graph-phase:",
+      "maximumResourceCharacters": 512,
+      "maximumNames": 3,
+      "maximumCommandCharacters": 256,
+      "commandPattern": "^[A-Za-z0-9:_/.-]+$",
+      "countPattern": "^(?:0|[1-9][0-9]{0,15})$",
+      "labels": {
+        "en": {
+          "template": "{command} · {phase}: {done} of {total} {units}",
+          "running": "{command} · {phase}: {done} of {total} {units} · {count} running, longest {seconds} s: {names}",
+          "phases": {
+            "inference": {
+              "label": "Inferring projects",
+              "units": "projects"
+            },
+            "verification": {
+              "label": "Verifying input closures",
+              "units": "closures"
+            },
+            "expansion": {
+              "label": "Expanding input closures",
+              "units": "closures"
+            },
+            "facts": {
+              "label": "Verifying graph facts",
+              "units": "facts"
+            },
+            "assembly": {
+              "label": "Assembling the graph",
+              "units": "projects"
+            },
+            "prefetch": {
+              "label": "Preparing stale projects",
+              "units": "projects"
+            }
+          }
+        },
+        "de": {
+          "template": "{command} · {phase}: {done} von {total} {units}",
+          "running": "{command} · {phase}: {done} von {total} {units} · {count} laufen, längstes {seconds} s: {names}",
+          "phases": {
+            "inference": {
+              "label": "Projekte ableiten",
+              "units": "Projekte"
+            },
+            "verification": {
+              "label": "Eingabeabschlüsse prüfen",
+              "units": "Abschlüsse"
+            },
+            "expansion": {
+              "label": "Eingabeabschlüsse auflösen",
+              "units": "Abschlüsse"
+            },
+            "facts": {
+              "label": "Graph-Fakten prüfen",
+              "units": "Fakten"
+            },
+            "assembly": {
+              "label": "Graph zusammensetzen",
+              "units": "Projekte"
+            },
+            "prefetch": {
+              "label": "Veraltete Projekte vorbereiten",
+              "units": "Projekte"
+            }
+          }
+        }
+      }
+    },
+    "cacheScan": {
+      "resourcePrefix": "cache-scan:",
+      "minimumPublicationMilliseconds": 250,
+      "maximumPathCharacters": 256,
+      "maximumResourceCharacters": 267,
+      "maximumCommandCharacters": 256,
+      "commandPattern": "^[A-Za-z0-9:_/.-]+$",
+      "pathPattern": "^(?:/[^\\u0000-\\u001F\\u007F]*|[A-Za-z]:[\\\\/][^\\u0000-\\u001F\\u007F]*|\\\\\\\\[^\\\\/\\u0000-\\u001F\\u007F]+[\\\\/][^\\\\/\\u0000-\\u001F\\u007F]+(?:[\\\\/][^\\u0000-\\u001F\\u007F]*)?)$",
+      "maximumElapsedMilliseconds": 9007199254740991,
+      "labels": {
+        "en": "{command} · Scanning compiler cache: {path} ({seconds} s)",
+        "de": "{command} · Compiler-Cache prüfen: {path} ({seconds} s)"
+      },
+      "scope": "original-process-presentation-only",
+      "flush": [
+        "resource-change",
+        "phase-change",
+        "elapsed-reset",
+        "clock-refusal",
+        "settlement"
+      ],
+      "preserved": [
+        "all-original-publish-calls",
+        "all-guards",
+        "all-yields",
+        "command-streams",
+        "errors",
+        "semantic-receipts"
+      ]
+    },
+    "cacheDelete": {
+      "resourcePrefix": "cache-delete:",
+      "minimumPublicationMilliseconds": 250,
+      "maximumPathCharacters": 256,
+      "maximumResourceCharacters": 269,
+      "maximumCommandCharacters": 256,
+      "commandPattern": "^[A-Za-z0-9:_/.-]+$",
+      "pathPattern": "^(?:/[^\\u0000-\\u001F\\u007F]*|[A-Za-z]:[\\\\/][^\\u0000-\\u001F\\u007F]*|\\\\\\\\[^\\\\/\\u0000-\\u001F\\u007F]+[\\\\/][^\\\\/\\u0000-\\u001F\\u007F]+(?:[\\\\/][^\\u0000-\\u001F\\u007F]*)?)$",
+      "maximumElapsedMilliseconds": 9007199254740991,
+      "labels": {
+        "en": "{command} · Removing inactive compiler cache: {path}",
+        "de": "{command} · Inaktiven Compiler-Cache entfernen: {path}"
+      },
+      "scope": "original-process-presentation-only",
+      "flush": [
+        "resource-change",
+        "phase-change",
+        "clock-refusal",
+        "settlement"
+      ],
+      "preserved": [
+        "all-original-publish-calls",
+        "all-guards",
+        "all-yields",
+        "command-streams",
+        "errors",
+        "semantic-receipts"
+      ],
+      "elapsedSemantics": "current-unit",
+      "elapsedReset": "retain-pending-within-same-original-work"
+    },
+    "tooling": {
+      "resources": [
+        "nx:source-verification",
+        "nx:storage-planning",
+        "nx:sdk-derivative-recheck",
+        "nx:source-index"
+      ],
+      "namespacePrefix": "nx-sdk-derived-namespace:",
+      "minimumPublicationMilliseconds": 250,
+      "maximumPathCharacters": 256,
+      "maximumResourceCharacters": 281,
+      "maximumCommandCharacters": 256,
+      "commandPattern": "^[A-Za-z0-9:_/.-]+$",
+      "pathPattern": "^(?:/[^\\u0000-\\u001F\\u007F]*|[A-Za-z]:[\\\\/][^\\u0000-\\u001F\\u007F]*|\\\\\\\\[^\\\\/\\u0000-\\u001F\\u007F]+[\\\\/][^\\\\/\\u0000-\\u001F\\u007F]+(?:[\\\\/][^\\u0000-\\u001F\\u007F]*)?)$",
+      "namespaceDigestPattern": "(?:^|[\\\\/])[0-9a-f]{64}$",
+      "maximumElapsedMilliseconds": 9007199254740991,
+      "scope": "original-process-presentation-only",
+      "elapsedSemantics": "current-unit",
+      "flush": [
+        "resource-change",
+        "phase-change",
+        "clock-refusal",
+        "settlement"
+      ],
+      "preserved": [
+        "all-original-publish-calls",
+        "all-guards",
+        "all-yields",
+        "command-streams",
+        "errors",
+        "semantic-receipts"
+      ],
+      "labels": {
+        "en": {
+          "nx:source-verification": "{command} · Verifying build tools",
+          "nx:storage-planning": "{command} · Planning build tool storage",
+          "nx:sdk-derivative-recheck": "{command} · Verifying build tool integrity",
+          "nx:source-index": "{command} · Reading build tool index",
+          "namespace": "{command} · Preparing build tools"
+        },
+        "de": {
+          "nx:source-verification": "{command} · Build-Werkzeuge prüfen",
+          "nx:storage-planning": "{command} · Speicher für Build-Werkzeuge planen",
+          "nx:sdk-derivative-recheck": "{command} · Integrität der Build-Werkzeuge prüfen",
+          "nx:source-index": "{command} · Build-Werkzeugindex lesen",
+          "namespace": "{command} · Build-Werkzeuge vorbereiten"
+        }
+      }
+    },
+    "dependencyWork": {
+      "minimumPublicationMilliseconds": 5000,
+      "maximumPendingRows": 11,
+      "maximumObservationRank": 10,
+      "maximumCompleted": 9007199254740991,
+      "maximumElapsedMilliseconds": 9007199254740991,
+      "maximumResourceCharacters": 128,
+      "maximumCommandCharacters": 256,
+      "maximumOwnerCharacters": 256,
+      "commandPattern": "^[A-Za-z0-9:_/.-]+$",
+      "ownerPattern": "^[^\\u0000-\\u001F\\u007F]+$",
+      "counterPattern": "^(?:0|[1-9][0-9]*)$",
+      "slots": [
+        {
+          "id": "ownership-state",
+          "family": "ownership",
+          "resourcePrefix": "dependencies:store-ownership:state:",
+          "mode": "exclusive",
+          "counter": true
+        },
+        {
+          "id": "ownership-list",
+          "family": "ownership",
+          "resourcePrefix": "dependencies:store-ownership:list:",
+          "mode": "exclusive",
+          "counter": true
+        },
+        {
+          "id": "ownership-readText",
+          "family": "ownership",
+          "resourcePrefix": "dependencies:store-ownership:readText:",
+          "mode": "exclusive",
+          "counter": true
+        },
+        {
+          "id": "ownership-membership",
+          "family": "ownership",
+          "resourcePrefix": "dependencies:store-ownership:membership:",
+          "mode": "exclusive",
+          "counter": true
+        },
+        {
+          "id": "ownership-frontier",
+          "family": "ownership",
+          "resourcePrefix": "dependencies:store-ownership:frontier:",
+          "mode": "exclusive",
+          "counter": true
+        },
+        {
+          "id": "ownership-selection",
+          "family": "ownership",
+          "resourcePrefix": "dependencies:store-ownership:selection:",
+          "mode": "exclusive",
+          "counter": true
+        },
+        {
+          "id": "ownership-publication",
+          "family": "ownership",
+          "resourcePrefix": "dependencies:store-ownership:publication:",
+          "mode": "exclusive",
+          "counter": true
+        },
+        {
+          "id": "replay",
+          "family": "replay",
+          "resourcePrefix": "dependencies:store-input-replay",
+          "mode": "shared",
+          "counter": false
+        },
+        {
+          "id": "scan",
+          "family": "scan",
+          "resourcePrefix": "javascript-installed-paths:",
+          "mode": "shared",
+          "counter": true
+        },
+        {
+          "id": "ledger",
+          "family": "ledger",
+          "resourcePrefix": "javascript-installed-paths:ledger:",
+          "mode": "shared",
+          "counter": true
+        },
+        {
+          "id": "preservation",
+          "family": "preservation",
+          "resourcePrefix": "javascript-preserving-source:",
+          "mode": "exclusive",
+          "counter": true
+        }
+      ],
+      "families": [
+        "ownership",
+        "replay",
+        "scan",
+        "ledger",
+        "preservation"
+      ],
+      "clockStates": [
+        "unopened",
+        "paced",
+        "unclocked"
+      ],
+      "clockReversal": "drain-and-rebase",
+      "clockNonfinite": "drain-and-await-finite-observation",
+      "ordering": "rank-compressed-latest-observation-within-each-drain",
+      "firstObservation": "one-per-frame-not-per-slot",
+      "dueObservation": "replace-current-slot-before-drain",
+      "reset": "drain-affected-family-and-advance-shared-window",
+      "replayElapsedMilliseconds": 0,
+      "sinkFailure": "dequeue-attempted-row-retain-untouched-rows",
+      "scope": "original-process-presentation-only",
+      "preserved": [
+        "all-original-publish-calls",
+        "all-guards",
+        "all-yields",
+        "command-streams",
+        "errors",
+        "semantic-receipts",
+        "existing-typed-schedulers"
+      ],
+      "frameStages": [
+        "contribution",
+        "loading",
+        "running",
+        "complete"
+      ]
+    },
+    "selectionStages": {
+      "owner": "repository:build",
+      "stage": "running",
+      "commands": [
+        "build:selected-declaration",
+        "build:selected-catalog-targets",
+        "build:selected-command-sources",
+        "build:selected-native-closure",
+        "build:selected-compile-closure",
+        "build:projects",
+        "build:modules",
+        "build:selected-normalization",
+        "build:selected-native-preparation",
+        "build:selected-source-closure",
+        "build:selected-source-inputs",
+        "build:selected-compile-imports",
+        "build:command-source-imports",
+        "build:project-assembly"
+      ],
+      "maximumDistinctStages": 14,
+      "maximumPendingRows": 1,
+      "heartbeatMilliseconds": 15000,
+      "firstObservation": "each-distinct-stage",
+      "heartbeat": "latest-stage-only",
+      "terminal": "latest-stage-unless-already-published",
+      "clockReversal": "flush-latest-and-rebase",
+      "clockNonfinite": "flush-latest-and-await-finite-observation",
+      "scope": "presentation-only"
+    }
+  },
+  "definitions": {
+    "ProviderClockCases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "steps",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "at",
+                "count",
+                "kind"
+              ],
+              "properties": {
+                "at": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "elapsed": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65536
+                },
+                "kind": {
+                  "enum": [
+                    "provider",
+                    "other",
+                    "complete"
+                  ]
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "SourceCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "environment",
+          "resource",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "environment": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "resource": {
+            "type": "string"
+          },
+          "expected": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "ParserCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "environment",
+          "resource",
+          "command",
+          "mode",
+          "elapsedMs",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "environment": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "resource": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "shared",
+              "exclusive"
+            ]
+          },
+          "elapsedMs": {
+            "type": "number"
+          },
+          "expected": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "QueueWait": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "position",
+        "queued",
+        "holderMode",
+        "holderPid",
+        "holderSeconds",
+        "resource"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 999999
+        },
+        "queued": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 999999
+        },
+        "holderMode": {
+          "enum": [
+            "shared",
+            "exclusive"
+          ]
+        },
+        "holderPid": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9999999999
+        },
+        "holderSeconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31536000
+        },
+        "resource": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 401
+        },
+        "holderState": {
+          "enum": [
+            "progressing",
+            "silent",
+            "stuck",
+            "stale",
+            "unknown"
+          ]
+        },
+        "holderPhase": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "holderDone": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "holderTotal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "holderEtaMinutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 525600
+        }
+      }
+    },
+    "QueueCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "environment",
+          "resource",
+          "command",
+          "mode",
+          "elapsedMs",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "environment": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "resource": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "shared",
+              "exclusive"
+            ]
+          },
+          "elapsedMs": {
+            "type": "number"
+          },
+          "expected": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "CacheClockCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "steps",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "at",
+                "elapsed",
+                "path",
+                "kind"
+              ],
+              "properties": {
+                "at": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "elapsed": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "path": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "cache",
+                    "provider",
+                    "other",
+                    "complete",
+                    "delete"
+                  ]
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "ToolingClockCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "steps",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "at",
+                "elapsed",
+                "resource",
+                "kind"
+              ],
+              "properties": {
+                "at": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "elapsed": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "resource": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "tooling",
+                    "complete",
+                    "other"
+                  ]
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "DependencyWorkCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "steps",
+          "expected",
+          "human",
+          "after",
+          "throws",
+          "failWrite",
+          "oracle"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "publish",
+                    "flush"
+                  ]
+                },
+                "at": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "enum": [
+                        "NaN",
+                        "Infinity",
+                        "-Infinity"
+                      ]
+                    }
+                  ]
+                },
+                "progress": {
+                  "type": "object",
+                  "required": [
+                    "owner",
+                    "command",
+                    "stage"
+                  ],
+                  "additionalProperties": true,
+                  "properties": {
+                    "owner": {
+                      "type": "string"
+                    },
+                    "command": {
+                      "type": "string"
+                    },
+                    "stage": {
+                      "type": "string"
+                    },
+                    "activity": {
+                      "type": "object",
+                      "required": [
+                        "resource",
+                        "mode",
+                        "elapsedMs"
+                      ],
+                      "additionalProperties": true,
+                      "properties": {
+                        "resource": {
+                          "type": "string"
+                        },
+                        "mode": {
+                          "enum": [
+                            "shared",
+                            "exclusive"
+                          ]
+                        },
+                        "elapsedMs": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "human": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "after": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "throws": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "failWrite": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "integer",
+                "minimum": 1
+              }
+            ]
+          },
+          "oracle": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "SelectionStageClockCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "steps",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "at",
+                "progress"
+              ],
+              "properties": {
+                "at": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "progress": {
+                  "type": "object",
+                  "maxProperties": 5
+                }
+              }
+            },
+            "maxItems": 256
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "uniqueItems": true,
+            "maxItems": 256
+          }
+        }
+      },
+      "maxItems": 32
+    }
+  }
+}

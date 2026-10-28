@@ -8,7 +8,7 @@ mod create_generation_appends;
 mod delete_generation_removes;
 #[path = "../../🗑️delete-generation/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
 mod delete_generation_removes_a_middle_row;
-#[path = "../../🗑️delete-generation/🧪️tests/🔓️removes-an-unselected-middle-row/🦀️.rs"]
+#[path = "../../🗑️delete-generation/🧪️tests/🔓️unselected-middle/🦀️.rs"]
 mod delete_generation_removes_an_unselected_middle_row;
 #[path = "../../🏷️rename-generation/🧪️tests/🏷️retitles/🦀️.rs"]
 mod rename_generation_retitles;

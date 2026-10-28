@@ -1,0 +1,1 @@
+const{images,resolutions}=admitCapturedImagesV1(value,encoded,spans,{maximumFileBytes:${policy.maximumFileBytes},maximumSourceBytes:${policy.maximumSourceBytes}},hash,path,check);

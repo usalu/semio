@@ -1,0 +1,590 @@
+{
+  "neutralRouting": [
+    {
+      "project": "@semio-tech/repo-yaml-rs",
+      "target": "build",
+      "environment": {},
+      "selected": false
+    },
+    {
+      "project": "@semio-tech/repo-yaml-rs",
+      "target": "build",
+      "environment": {
+        "SEMIO_TASK_PROJECT": "@semio-tech/repo-yaml-rs",
+        "SEMIO_TASK_TARGET": "build"
+      },
+      "selected": true
+    },
+    {
+      "project": "@semio-tech/repo-yaml-rs",
+      "target": "build",
+      "environment": {
+        "SEMIO_TASK_PROJECT": "@semio-tech/repo-dashboard-rs",
+        "SEMIO_TASK_TARGET": "build"
+      },
+      "selected": false
+    },
+    {
+      "project": "@semio-tech/repo-dashboard-rs",
+      "target": "compile",
+      "environment": {
+        "SEMIO_TASK_PROJECT": "@semio-tech/repo-dashboard-rs",
+        "SEMIO_TASK_TARGET": "compile"
+      },
+      "selected": true
+    },
+    {
+      "project": "@semio-tech/repo-dashboard-rs",
+      "target": "compile",
+      "environment": {
+        "SEMIO_TASK_PROJECT": "@semio-tech/repo-dashboard-rs",
+        "SEMIO_TASK_TARGET": "build"
+      },
+      "selected": false
+    }
+  ],
+  "accepted": [
+    {
+      "intent": {
+        "version": 1,
+        "manifest": "crate/Cargo.toml",
+        "package": "selected",
+        "scope": "package"
+      },
+      "arguments": [
+        "-p",
+        "selected"
+      ]
+    },
+    {
+      "intent": {
+        "version": 1,
+        "manifest": "crate/Cargo.toml",
+        "package": "selected",
+        "scope": "library",
+        "features": [
+          "first",
+          "dep/second"
+        ],
+        "defaultFeatures": false,
+        "target": "x86_64-pc-windows-msvc"
+      },
+      "arguments": [
+        "-p",
+        "selected",
+        "--lib",
+        "--features",
+        "first,dep/second",
+        "--no-default-features",
+        "--target",
+        "x86_64-pc-windows-msvc"
+      ]
+    },
+    {
+      "intent": {
+        "version": 1,
+        "manifest": "🧱️crate/Cargo.toml",
+        "package": "selected",
+        "scope": "binary",
+        "binary": "main",
+        "defaultFeatures": true
+      },
+      "arguments": [
+        "-p",
+        "selected",
+        "--bin",
+        "main"
+      ]
+    },
+    {
+      "intent": {
+        "version": 1,
+        "manifest": "crate/Cargo.toml",
+        "package": "selected",
+        "scope": "package",
+        "fallback": {
+          "kind": "bounded-cargo",
+          "adapters": [
+            "foreign-source",
+            "proc-macro",
+            "build-script",
+            "build-script-run"
+          ]
+        }
+      },
+      "arguments": [
+        "-p",
+        "selected"
+      ]
+    }
+  ],
+  "rejected": [
+    null,
+    {
+      "version": 2,
+      "manifest": "Cargo.toml",
+      "package": "selected",
+      "scope": "package"
+    },
+    {
+      "version": 1,
+      "manifest": "../crate/Cargo.toml",
+      "package": "selected",
+      "scope": "package"
+    },
+    {
+      "version": 1,
+      "manifest": "/crate/Cargo.toml",
+      "package": "selected",
+      "scope": "package"
+    },
+    {
+      "version": 1,
+      "manifest": "C:/crate/Cargo.toml",
+      "package": "selected",
+      "scope": "package"
+    },
+    {
+      "version": 1,
+      "manifest": "crate\\Cargo.toml",
+      "package": "selected",
+      "scope": "package"
+    },
+    {
+      "version": 1,
+      "manifest": "crate//Cargo.toml",
+      "package": "selected",
+      "scope": "package"
+    },
+    {
+      "version": 1,
+      "manifest": "crate/Cargo.toml",
+      "package": "--workspace",
+      "scope": "package"
+    },
+    {
+      "version": 1,
+      "manifest": "crate/Cargo.toml",
+      "package": "selected",
+      "scope": "workspace"
+    },
+    {
+      "version": 1,
+      "manifest": "crate/Cargo.toml",
+      "package": "selected",
+      "scope": "binary"
+    },
+    {
+      "version": 1,
+      "manifest": "crate/Cargo.toml",
+      "package": "selected",
+      "scope": "library",
+      "binary": "main"
+    },
+    {
+      "version": 1,
+      "manifest": "crate/Cargo.toml",
+      "package": "selected",
+      "scope": "package",
+      "profile": "release"
+    },
+    {
+      "version": 1,
+      "manifest": "crate/Cargo.toml",
+      "package": "selected",
+      "scope": "package",
+      "features": [
+        "same",
+        "same"
+      ]
+    },
+    {
+      "version": 1,
+      "manifest": "crate/Cargo.toml",
+      "package": "selected",
+      "scope": "package",
+      "features": [
+        "one,two"
+      ]
+    },
+    {
+      "version": 1,
+      "manifest": "crate/Cargo.toml",
+      "package": "selected",
+      "scope": "package",
+      "target": "../target.json"
+    },
+    {
+      "version": 1,
+      "manifest": "Cargo.toml",
+      "package": "selected\n",
+      "scope": "package"
+    },
+    {
+      "version": 1,
+      "manifest": "crate/Cargo.toml",
+      "package": "selected",
+      "scope": "package",
+      "fallback": {
+        "kind": "cached-cargo",
+        "adapters": [
+          "foreign-source"
+        ]
+      }
+    },
+    {
+      "version": 1,
+      "manifest": "crate/Cargo.toml",
+      "package": "selected",
+      "scope": "package",
+      "fallback": {
+        "kind": "bounded-cargo",
+        "adapters": [
+          "foreign-source",
+          "foreign-source"
+        ]
+      }
+    },
+    {
+      "version": 1,
+      "manifest": "crate/Cargo.toml",
+      "package": "selected",
+      "scope": "package",
+      "fallback": {
+        "kind": "bounded-cargo",
+        "adapters": [
+          "unknown"
+        ]
+      }
+    },
+    {
+      "version": 1,
+      "manifest": "crate:unsafe/Cargo.toml",
+      "package": "selected",
+      "scope": "package",
+      "fallback": {
+        "kind": "bounded-cargo",
+        "adapters": [
+          "foreign-source",
+          "proc-macro",
+          "build-script",
+          "build-script-run"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "project": "@semio-tech/repo-yaml-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-goals-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-codebase-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗂️codebase/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗂️codebase/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-metrics-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-hooks-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-tree-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-test-runner-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-contributors-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧑️contributors/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧑️contributors/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-move-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-todos-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📝️todos/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📝️todos/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-coordinator-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-tickets-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-languages-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-model-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-graphql-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-events-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-providers-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-identity-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪪️identity/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪪️identity/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-search-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-workspace-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "project": "@semio-tech/repo-statutes-rs",
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/📦️packages/🦀️rust/Cargo.toml"
+    }
+  ],
+  "fallback": {
+    "intent": {
+      "version": 1,
+      "manifest": "crate/Cargo.toml",
+      "package": "selected",
+      "scope": "package",
+      "fallback": {
+        "kind": "bounded-cargo",
+        "adapters": [
+          "foreign-source",
+          "proc-macro",
+          "build-script",
+          "build-script-run",
+          "effective-profile"
+        ]
+      }
+    },
+    "unsupported": [
+      {
+        "unit": "foreign-lib",
+        "adapters": [
+          "foreign-source"
+        ]
+      },
+      {
+        "unit": "foreign-macro",
+        "adapters": [
+          "foreign-source",
+          "proc-macro"
+        ]
+      },
+      {
+        "unit": "workspace-lib",
+        "adapters": [
+          "effective-profile"
+        ]
+      },
+      {
+        "unit": "workspace-root",
+        "adapters": [
+          "foreign-source",
+          "proc-macro",
+          "build-script",
+          "build-script-run",
+          "effective-profile"
+        ]
+      }
+    ],
+    "expected": [
+      "build-script",
+      "build-script-run",
+      "effective-profile",
+      "foreign-source",
+      "proc-macro"
+    ],
+    "rejected": [
+      [
+        {
+          "unit": "unknown",
+          "adapters": [
+            "unknown"
+          ]
+        }
+      ],
+      [
+        {
+          "unit": "binary",
+          "adapters": [
+            "binary"
+          ]
+        }
+      ],
+      [
+        {
+          "unit": "missing",
+          "adapters": []
+        }
+      ]
+    ]
+  },
+  "appRoutes": [
+    {
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📋️project.json",
+      "target": "build",
+      "scope": "package"
+    },
+    {
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📋️project.json",
+      "target": "build-cli",
+      "scope": "binary",
+      "binary": "repo"
+    },
+    {
+      "declaration": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+      "target": "compile",
+      "scope": "binary",
+      "binary": "semio",
+      "cacheClass": "driver-owned",
+      "cacheReason": "freshness-owned-by-driver"
+    }
+  ],
+  "fallbackTarget": {
+    "execution": {
+      "kind": "command",
+      "command": "repo leaf/📜️script.ts build",
+      "env": {
+        "BASE": "original"
+      }
+    },
+    "cache": true,
+    "outputs": [
+      "leaf/old"
+    ],
+    "configurations": {
+      "prototype": {
+        "execution": {
+          "args": [
+            "prototype"
+          ],
+          "env": {
+            "MODE": "prototype"
+          }
+        }
+      },
+      "release": {
+        "execution": {
+          "args": [
+            "release"
+          ],
+          "env": {
+            "MODE": "release"
+          }
+        }
+      }
+    }
+  },
+  "orchestration": {
+    "parent": {
+      "project": "parent",
+      "target": "build"
+    },
+    "children": [
+      {
+        "project": "child",
+        "target": "compile"
+      }
+    ],
+    "requests": [
+      [
+        "repo",
+        "run",
+        "parent:build"
+      ],
+      [
+        "repo",
+        "run",
+        "child:compile"
+      ]
+    ],
+    "rejected": [
+      {
+        "version": 1,
+        "kind": "orchestration",
+        "children": [
+          {
+            "project": "parent",
+            "target": "build"
+          }
+        ]
+      },
+      {
+        "version": 1,
+        "kind": "orchestration",
+        "children": [
+          {
+            "project": "missing",
+            "target": "compile"
+          }
+        ]
+      },
+      {
+        "version": 1,
+        "kind": "orchestration",
+        "children": [
+          {
+            "project": "child",
+            "target": "missing"
+          }
+        ]
+      }
+    ],
+    "rejectedTasks": [
+      {
+        "project": "missing",
+        "target": "build"
+      },
+      {
+        "project": "parent",
+        "target": "missing"
+      },
+      {
+        "project": "parent",
+        "target": "build",
+        "configuration": "invented"
+      }
+    ]
+  }
+}

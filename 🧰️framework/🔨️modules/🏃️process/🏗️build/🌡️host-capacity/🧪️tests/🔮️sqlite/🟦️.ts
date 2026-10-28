@@ -11,12 +11,12 @@ export function sqliteHostOracleV1(policy:HostCapacityPolicyV1,item:Omit<HostCas
  const host=item.host,share=Math.floor(host.totalMegabytes*policy.memory.floorBasisPoints/10000),floor=Math.min(host.totalMegabytes,Math.max(policy.memory.floorMinimumMegabytes,Math.min(policy.memory.floorMaximumMegabytes,share))),cap=Math.max(0,host.totalMegabytes-floor);
  const database=new Database(":memory:");
  try{
-  database.run("CREATE TABLE grants(reserved INTEGER, observed INTEGER, cpu INTEGER, admitted INTEGER, ramp INTEGER, lent INTEGER)");
-  database.run("CREATE TABLE waiters(id TEXT, priority TEXT, arrived INTEGER, minimum INTEGER, pref INTEGER, fixed INTEGER, perjob INTEGER, cpu INTEGER)");
-  const insertGrant=database.prepare("INSERT INTO grants VALUES (?,?,?,?,?,?)"),insertWaiter=database.prepare("INSERT INTO waiters VALUES (?,?,?,?,?,?,?,?)");
-  for(const grant of item.ledger)insertGrant.run(grant.reservedMegabytes,grant.observedMegabytes,grant.cpu,grant.admittedAtMs,grant.resumedAtMs??grant.admittedAtMs,grant.lentSinceMs===undefined?0:1);
-  for(const waiter of item.queue){const r=waiter.request;insertWaiter.run(r.id,r.priority,waiter.arrivedAtMs,r.minimumJobs,r.preferredJobs,r.fixedMegabytes,r.perJobMegabytes,r.cpuPerJob);}
-  const totals=database.query(`SELECT COALESCE(SUM(CASE WHEN ${item.nowMs}-ramp<${policy.memory.rampMilliseconds} THEN MAX(reserved-COALESCE(observed,0),0) ELSE 0 END),0) AS unrealized, COALESCE(SUM(CASE WHEN ${item.nowMs}-ramp<${policy.memory.rampMilliseconds} THEN reserved ELSE COALESCE(observed,reserved) END),0) AS committed, COALESCE(SUM(cpu),0) AS cpu, COUNT(*) AS n FROM grants WHERE lent=0`).get() as {unrealized:number;committed:number;cpu:number;n:number};
+  database.run("CREATE TABLE grants(reserved INTEGER, observed INTEGER, cpu INTEGER, admitted INTEGER, ramp INTEGER, lent INTEGER, rampms INTEGER, slot INTEGER)");
+  database.run("CREATE TABLE waiters(id TEXT, priority TEXT, arrived INTEGER, minimum INTEGER, pref INTEGER, fixed INTEGER, perjob INTEGER, cpu INTEGER, slot INTEGER)");
+  const insertGrant=database.prepare("INSERT INTO grants VALUES (?,?,?,?,?,?,?,?)"),insertWaiter=database.prepare("INSERT INTO waiters VALUES (?,?,?,?,?,?,?,?,?)");
+  for(const grant of item.ledger)insertGrant.run(grant.reservedMegabytes,grant.observedMegabytes,grant.cpu,grant.admittedAtMs,grant.resumedAtMs??grant.admittedAtMs,grant.lentSinceMs===undefined?0:1,grant.rampMilliseconds??policy.memory.rampMilliseconds,grant.rampSlot===true?1:0);
+  for(const waiter of item.queue){const r=waiter.request;insertWaiter.run(r.id,r.priority,waiter.arrivedAtMs,r.minimumJobs,r.preferredJobs,r.fixedMegabytes,r.perJobMegabytes,r.cpuPerJob,r.rampSlot===true?1:0);}
+  const totals=database.query(`SELECT COALESCE(SUM(CASE WHEN ${item.nowMs}-ramp<rampms THEN MAX(reserved-COALESCE(observed,0),0) ELSE 0 END),0) AS unrealized, COALESCE(SUM(CASE WHEN ${item.nowMs}-ramp<rampms THEN MAX(reserved,COALESCE(observed,0)) ELSE COALESCE(observed,reserved) END),0) AS committed, COALESCE(SUM(cpu),0) AS cpu, COUNT(*) AS n, COALESCE(SUM(CASE WHEN slot=1 AND ${item.nowMs}-ramp<rampms THEN 1 ELSE 0 END),0) AS rampers FROM grants WHERE lent=0`).get() as {unrealized:number;committed:number;cpu:number;n:number;rampers:number};
   const observed=host.availableMegabytes-floor-totals.unrealized,budget=Math.floor(cap*policy.memory.budgetBasisPoints/10000)-totals.committed,room=Math.min(observed,budget);
   const ceiling=policy.load.perCoreCeiling*host.cores,unlimited=host.load===null&&totals.cpu===0,load=unlimited?null:ceiling-Math.max(host.load??0,totals.cpu);
   const swapCeiling=Math.floor(host.totalMegabytes*policy.swap.ceilingBasisPoints/10000),rate=host.swapOutMegabytesPerSecond;
@@ -27,24 +27,25 @@ export function sqliteHostOracleV1(policy:HostCapacityPolicyV1,item:Omit<HostCas
   const held=item.ledger.reduce((sum,grant)=>sum+(grant.observedMegabytes??0),0),drainedRoom=Math.min(Math.min(host.availableMegabytes+held,host.totalMegabytes)-floor,Math.floor(cap*policy.memory.budgetBasisPoints/10000));
   const memoryJobs="CASE WHEN s.room>="+cap+" THEN w.pref WHEN w.perjob=0 THEN CASE WHEN w.fixed<=s.room THEN w.pref ELSE 0 END ELSE MAX(0,MIN(w.pref,(s.room-w.fixed)/w.perjob)) END",loadJobs="CASE WHEN s.load IS NULL THEN w.pref ELSE MAX(0,MIN(w.pref,CAST(s.load/w.cpu AS INTEGER))) END";
   const count=`CASE WHEN MIN(${memoryJobs},${loadJobs})>=w.minimum THEN MIN(${memoryJobs},${loadJobs}) WHEN ${memoryJobs}>=w.minimum AND s.own+w.minimum*w.cpu<=${ceiling} THEN w.minimum ELSE 0 END`;
-  const fitsMinimum=`(MIN(w.fixed+w.minimum*w.perjob,${cap})<=s.room)`,overrideDue=`(${empty}=1 AND s.admitted=0 AND (${item.nowMs}-w.arrived)>=${policy.load.overrideAfterMilliseconds})`,open=`(${quoted} IS NULL AND s.blocked=0)`;
+  const fitsMinimum=`(MIN(w.fixed+w.minimum*w.perjob,${cap})<=s.room)`,overrideDue=`(${empty}=1 AND s.admitted=0 AND (${item.nowMs}-w.arrived)>=${policy.load.overrideAfterMilliseconds})`,slotted=`(${quoted} IS NULL AND s.blocked=0 AND w.slot=1 AND s.rampers>=${policy.memory.maximumRamping})`,open=`(${quoted} IS NULL AND s.blocked=0 AND NOT ${slotted})`;
   const normal=`(${open} AND ${soft}=0 AND ${count}>=w.minimum)`,forced=`(${open} AND NOT ${normal} AND ${fitsMinimum} AND ${overrideDue})`;
   const drains=`(${soft}=0 AND MIN(w.fixed+w.minimum*w.perjob,${cap})<=${drainedRoom} AND w.minimum*w.cpu<=${ceiling})`,bypassed="(SELECT COUNT(*) FROM grants g WHERE g.admitted>=w.arrived)",limit=policy.wait.maximumBypasses;
   const waiting=`(NOT (${normal} OR ${forced}) AND ${open} AND (NOT ${fitsMinimum} OR ${soft}=0) AND ${drains})`,patient=`(${item.nowMs}-w.arrived>=${policy.wait.bypassMilliseconds} OR ${bypassed}>=${limit})`;
   const jobs=`CASE WHEN ${normal} THEN ${count} WHEN ${forced} THEN w.minimum ELSE 0 END`,admit=`(${normal} OR ${forced})`;
   const sql=`WITH RECURSIVE
    w AS (SELECT row_number() OVER (ORDER BY CASE WHEN priority='interactive' OR ${item.nowMs}-arrived>=${policy.wait.agingMilliseconds} THEN 0 ELSE 1 END, arrived, id) AS ord, * FROM waiters),
-   step(ord,id,verdict,jobs,reserved,reason,room,load,blocked,admitted,heads,own) AS (
-    SELECT 0,'','',0,0,'',${room},${load===null?"NULL":load},0,0,NULL,${totals.cpu}
+   step(ord,id,verdict,jobs,reserved,reason,room,load,blocked,admitted,heads,own,rampers) AS (
+    SELECT 0,'','',0,0,'',${room},${load===null?"NULL":load},0,0,NULL,${totals.cpu},${totals.rampers}
     UNION ALL
     SELECT w.ord,w.id,CASE WHEN ${admit} THEN 'admit' ELSE 'wait' END,${jobs},CASE WHEN ${admit} THEN MIN(w.fixed+(${jobs})*w.perjob,${cap}) ELSE 0 END,
-     CASE WHEN ${quoted} IS NOT NULL THEN ${quoted} WHEN s.blocked=1 THEN 'queue-order' WHEN ${normal} THEN CASE WHEN ${count}<w.pref THEN 'reduced' ELSE 'fits' END WHEN NOT ${fitsMinimum} THEN 'memory' WHEN ${overrideDue} THEN 'override' WHEN ${soft}=1 THEN '${softReason}' ELSE 'load' END,
+     CASE WHEN ${quoted} IS NOT NULL THEN ${quoted} WHEN s.blocked=1 THEN 'queue-order' WHEN ${slotted} THEN 'ramp' WHEN ${normal} THEN CASE WHEN ${count}<w.pref THEN 'reduced' ELSE 'fits' END WHEN NOT ${fitsMinimum} THEN 'memory' WHEN ${overrideDue} THEN 'override' WHEN ${soft}=1 THEN '${softReason}' ELSE 'load' END,
      s.room-CASE WHEN ${admit} THEN MIN(w.fixed+(${jobs})*w.perjob,${cap}) ELSE 0 END,
      CASE WHEN s.load IS NULL THEN NULL ELSE s.load-(${jobs})*w.cpu END,
      CASE WHEN s.blocked=1 THEN 1 WHEN ${admit} THEN CASE WHEN s.heads IS NOT NULL AND s.heads+1>=${limit} THEN 1 ELSE 0 END WHEN ${waiting} AND ${patient} THEN 1 ELSE 0 END,
      s.admitted+CASE WHEN ${admit} THEN 1 ELSE 0 END,
      CASE WHEN s.blocked=1 THEN s.heads WHEN ${admit} THEN CASE WHEN s.heads IS NULL THEN NULL ELSE s.heads+1 END WHEN ${waiting} AND NOT ${patient} THEN MAX(COALESCE(s.heads,-1),${bypassed}) ELSE s.heads END,
-     s.own+(${jobs})*w.cpu
+     s.own+(${jobs})*w.cpu,
+     s.rampers+CASE WHEN ${admit} AND w.slot=1 THEN 1 ELSE 0 END
     FROM step s JOIN w ON w.ord=s.ord+1)
    SELECT id,verdict,jobs,reserved,reason FROM step WHERE ord>0 ORDER BY ord`;
   const decisions=(database.query(sql).all() as {id:string;verdict:"admit"|"wait";jobs:number;reserved:number;reason:HostDecisionV1["reason"]}[]).map(row=>({id:row.id,verdict:row.verdict,jobs:row.jobs,reservedMegabytes:row.reserved,reason:row.reason}));
@@ -66,4 +67,12 @@ export function randomHostCaseV1(random:()=>number,index:number):Omit<HostCaseV1
  const ledger:HostGrantV1[]=Array.from({length:whole(0,4)},(_,row)=>{const reserved=whole(512,8192);return {id:`grant${index}x${row}aa`,operation:"run",jobs:1,cpu:whole(1,6),reservedMegabytes:reserved,admittedAtMs:900_000,observedMegabytes:pick([null,0,Math.floor(reserved/2),reserved]),pid:1,bootAtMs:0};});
  const queue:HostWaiterV1[]=Array.from({length:whole(1,6)},(_,row)=>{const minimum=whole(1,3);return {request:{id:`req${index}x${row}aaaa`,operation:"run",priority:pick(["batch","batch","interactive"] as const),minimumJobs:minimum,preferredJobs:minimum+whole(0,9),fixedMegabytes:whole(0,3072),perJobMegabytes:pick([0,512,1024,1024,2048,4096]),cpuPerJob:whole(1,3)},arrivedAtMs:whole(0,1_000_000),pid:1};});
  return {name:`corpus-${index}`,host,ledger,queue,nowMs:pick([1_000_000,1_100_000,1_200_000,1_300_000])};
+}
+
+/** 🌀️ Generates one random case whose grants carry their own time to peak and ramp slot, hold more than they reserved, and whose requests ask for a ramp slot: the state the ramp rules (`rampMilliseconds`, `rampSlot`, `memory.maximumRamping`) decide on. */
+export function randomRampCaseV1(random:()=>number,index:number):Omit<HostCaseV1,"expect">{
+ const base=randomHostCaseV1(random,index),pick=<T>(rows:readonly T[]):T=>rows[Math.floor(random()*rows.length)]!;
+ const ledger=base.ledger.map(grant=>({...grant,...pick([undefined,60000,300000,900000,1800000] as const)===undefined?{}:{rampMilliseconds:pick([60000,300000,900000,1800000] as const)},...pick([true,false,undefined] as const)===undefined?{}:{rampSlot:pick([true,true,false] as const)},observedMegabytes:pick([null,0,Math.floor(grant.reservedMegabytes/2),grant.reservedMegabytes,grant.reservedMegabytes*2])}));
+ const queue=base.queue.map(waiter=>({...waiter,request:{...waiter.request,...pick([undefined,undefined,true,false] as const)===undefined?{}:{rampSlot:pick([true,true,false] as const)}}}));
+ return {name:`ramp-corpus-${index}`,host:base.host,ledger,queue,nowMs:base.nowMs};
 }

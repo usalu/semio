@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Bazel keyed command environment",
+  "description": "🌿️ Schema-first contract of the environment a command runs in when its output keys a Bazel action or a reusable plan (a `runtime` input row of the task graph). The digest of such a command is the digest of its STANDARD OUTPUT only: standard error is diagnostics and never keys anything. The command receives the issued task environment minus (1) every diagnostic switch listed in `Policy.diagnostic`, which changes what a process prints (the phase profile prints a JSON document with pid and milliseconds, the traces print time stamps) and (2) every ambient host, agent or session variable of the world witness policy (`ambientEnvironment` in the witness schema). / Schema-first Vertrag der Umgebung, in der ein Befehl laeuft, dessen Ausgabe eine Bazel-Aktion oder einen wiederverwendbaren Plan schluesselt (eine `runtime`-Eingabezeile des Aufgabengraphen). Der Digest eines solchen Befehls ist der Digest seiner STANDARDAUSGABE allein: die Fehlerausgabe ist Diagnose und schluesselt nie etwas. Der Befehl erhaelt die ausgestellte Aufgabenumgebung ohne (1) jeden Diagnoseschalter aus `Policy.diagnostic`, der veraendert, was ein Prozess ausgibt (das Phasenprofil gibt ein JSON-Dokument mit Pid und Millisekunden aus, die Traces geben Zeitstempel aus) und (2) jede umgebende Host-, Agenten- oder Sitzungsvariable der Weltzeugen-Richtlinie (`ambientEnvironment` im Zeugen-Schema).",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "description": "Authored values. `diagnostic`: names of switches that change what a process prints and therefore never reach a keyed command. `runtime`: the finite bounds of the captured standard output.",
+      "const": {
+        "version": 1,
+        "diagnostic": [
+          "SEMIO_REPO_PROFILE",
+          "SEMIO_LEASE_TRACE",
+          "SEMIO_PROGRESS_DEADLINE_TRACE",
+          "NODE_DEBUG",
+          "BUN_CONFIG_VERBOSE_FETCH"
+        ],
+        "runtime": {
+          "maximumBytes": 4194304,
+          "maximumLines": 65536
+        }
+      }
+    },
+    "Messages": {
+      "type": "object",
+      "description": "Refusal text in English and German; `{name}` placeholders are replaced by the reported values.",
+      "const": {
+        "en": {
+          "failed": "Runtime input {runtime} exited with status {status} and signal {signal}: {stderr}"
+        },
+        "de": {
+          "failed": "Laufzeiteingabe {runtime} endete mit Status {status} und Signal {signal}: {stderr}"
+        }
+      }
+    }
+  }
+}

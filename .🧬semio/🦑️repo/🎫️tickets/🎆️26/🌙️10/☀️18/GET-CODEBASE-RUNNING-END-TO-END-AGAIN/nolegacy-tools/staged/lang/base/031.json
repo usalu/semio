@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "id": "process",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "leases.yielding-requires-exclusive": {
+      "en": "Yielding lease tickets require exclusive access",
+      "de": "Nachgebende Lease-Tickets erfordern exklusiven Zugriff"
+    },
+    "routing.forwarded-request-invocation-required": {
+      "en": "The original forwarded request needs its script process invocation",
+      "de": "Die ursprüngliche weitergeleitete Anfrage braucht ihren Skriptprozess-Aufruf"
+    },
+    "routing.renewable-control-needs-nonrenewable-maximum": {
+      "en": "A renewable original control requires its nonrenewable maximum as the requested budget",
+      "de": "Eine erneuerbare ursprüngliche Steuerung verlangt ihr nicht erneuerbares Maximum als angefordertes Budget"
+    },
+    "script.suite-sources-missing": {
+      "en": "Test suite sources are missing (bun test would silently skip them): {missing}",
+      "de": "Quellen der Testsuite fehlen (bun test würde sie stillschweigend überspringen): {missing}"
+    },
+    "script.suite-launcher-missing": {
+      "en": "Test suite launcher is not provided by the route: {launcher}",
+      "de": "Der Starter der Testsuite wird von der Route nicht bereitgestellt: {launcher}"
+    },
+    "script.suite-unknown": {
+      "en": "Unknown test suite {suite}; the route table declares: {known}",
+      "de": "Unbekannte Testsuite {suite}; die Routentabelle deklariert: {known}"
+    },
+    "script.suite-files-failed": {
+      "en": "Test suite {suite} failed in {count} test file(s): {files}",
+      "de": "Die Testsuite {suite} ist in {count} Testdatei(en) fehlgeschlagen: {files}"
+    },
+    "script.suite-platform-skipped": {
+      "en": "SKIPPED, not passed: test suite {suite} is declared for {platforms} and this host is {host}; none of its {count} test file(s) ran.",
+      "de": "ÜBERSPRUNGEN, nicht bestanden: Die Testsuite {suite} ist für {platforms} deklariert und dieser Rechner ist {host}; keine ihrer {count} Testdatei(en) wurde ausgeführt."
+    },
+    "testing.extracted-function-required": {
+      "en": "Extracted function required: {name}",
+      "de": "Extrahierte Funktion erforderlich: {name}"
+    },
+    "leases.invalid-resource": {
+      "en": "Invalid lease resource",
+      "de": "Ungültige Lease-Ressource"
+    },
+    "leases.invalid-access-mode": {
+      "en": "Invalid resource access mode",
+      "de": "Ungültiger Zugriffsmodus der Ressource"
+    },
+    "leases.invalid-timeout": {
+      "en": "Invalid resource lease timeout",
+      "de": "Ungültiges Zeitlimit der Ressourcen-Lease"
+    },
+    "leases.admission-resource-reserved": {
+      "en": "Directory admission resource is reserved",
+      "de": "Die Ressource der Verzeichnis-Zulassung ist reserviert"
+    },
+    "leases.invalid-queue-owner": {
+      "en": "Invalid lease queue owner",
+      "de": "Ungültiger Besitzer der Lease-Warteschlange"
+    },
+    "execution.renewable-command-needs-ceiling": {
+      "en": "A renewable repository command requires a positive ceiling",
+      "de": "Ein erneuerbarer Repository-Befehl verlangt eine positive Obergrenze"
+    },
+    "testing.route-table-invalid": {
+      "en": "The process test route table is invalid: it must satisfy its closed schema",
+      "de": "Die Routentabelle der Prozess-Tests ist ungültig: sie muss ihrem geschlossenen Schema genügen"
+    },
+    "testing.route-suite-duplicated": {
+      "en": "The process test route table repeats a suite identifier",
+      "de": "Die Routentabelle der Prozess-Tests wiederholt eine Suite-Kennung"
+    },
+    "testing.platform-policy-invalid": {
+      "en": "The platform evidence rules of the test suites are invalid: they must satisfy their closed schema and every pattern must be a regular expression",
+      "de": "Die Plattform-Belegregeln der Testsuites sind ungültig: sie müssen ihrem geschlossenen Schema genügen und jedes Muster muss ein regulärer Ausdruck sein"
+    },
+    "capacity.empty-process-table": {
+      "en": "The process table is empty",
+      "de": "Die Prozesstabelle ist leer"
+    },
+    "nativeBuild.metadata-incomplete": {
+      "en": "Resolved Cargo metadata with a workspace root and packages required",
+      "de": "Aufgelöste Cargo-Metadaten mit Workspace-Wurzel und Paketen sind erforderlich"
+    },
+    "nativeBuild.writer-custody-not-entered": {
+      "en": "Offered Cargo compiler writer custody was never entered",
+      "de": "Die angebotene Schreiber-Obhut des Cargo-Compilers wurde nie betreten"
+    },
+    "publication.lease-directory-required": {
+      "en": "Explicit absolute publication lease directory required",
+      "de": "Ein ausdrücklich angegebenes absolutes Lease-Verzeichnis für die Veröffentlichung ist erforderlich"
+    },
+    "typescript.check-cancelled": {
+      "en": "TypeScript check cancelled",
+      "de": "TypeScript-Prüfung abgebrochen"
+    },
+    "typescript.check-switches-not-admitted": {
+      "en": "TypeScript check switches not admitted by the engine: {switches}",
+      "de": "Die Engine lässt diese TypeScript-Prüfschalter nicht zu: {switches}"
+    },
+    "typescript.retained-programs-range": {
+      "en": "Retained TypeScript programs must be an integer from 1 to {maximum}",
+      "de": "Die Zahl der behaltenen TypeScript-Programme muss eine ganze Zahl von 1 bis {maximum} sein"
+    },
+    "cargoTiming.process-id-required": {
+      "en": "Actual process id required",
+      "de": "Eine tatsächliche Prozess-ID ist erforderlich"
+    },
+    "agentSessions.process-snapshot-empty": {
+      "en": "Empty process snapshot",
+      "de": "Leeres Prozessabbild"
+    },
+    "agentSessions.process-snapshot-refused": {
+      "en": "Process snapshot refused",
+      "de": "Prozessabbild abgelehnt"
+    },
+    "testing.birth-single": {
+      "en": "One test process receives one birth: {owner} declares another envelope than the one {declared} declared",
+      "de": "Ein Testprozess erhält genau eine Geburt: {owner} deklariert eine andere Hülle als die von {declared} deklarierte"
+    },
+    "testing.capabilities-differ": {
+      "en": "Inherited build test capabilities differ from the declared envelope of {owner}",
+      "de": "Die geerbten Fähigkeiten des Build-Tests weichen von der deklarierten Hülle von {owner} ab"
+    },
+    "testing.command-budget-invalid": {
+      "en": "Invalid test command budget",
+      "de": "Ungültiges Budget des Testbefehls"
+    },
+    "testing.contention-policy-required": {
+      "en": "Closed test budget contention policy required",
+      "de": "Eine geschlossene Konkurrenzrichtlinie des Testbudgets ist erforderlich"
+    },
+    "testing.envelope-late": {
+      "en": "Build test envelope declared after the first callback: {owner}",
+      "de": "Die Hülle des Build-Tests wurde nach dem ersten Rückruf deklariert: {owner}"
+    },
+    "testing.envelope-required": {
+      "en": "Finite closed build test envelope required",
+      "de": "Eine endliche, geschlossene Hülle des Build-Tests ist erforderlich"
+    },
+    "testing.grant-issuer-required": {
+      "en": "Registered build test grant issuer required: {kind} for {owner}",
+      "de": "Ein registrierter Aussteller der Build-Test-Berechtigung ist erforderlich: {kind} für {owner}"
+    },
+    "testing.stretch-invalid": {
+      "en": "Stretch of at least one required",
+      "de": "Eine Dehnung von mindestens eins ist erforderlich"
+    }
+  }
+}

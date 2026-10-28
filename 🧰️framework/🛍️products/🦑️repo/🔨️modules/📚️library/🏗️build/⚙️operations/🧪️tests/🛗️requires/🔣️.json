@@ -2,7 +2,7 @@
   "version": 1,
   "requires": {
     "dependencies": ["run", "run-many", "affected", "exec", "watch", "graph", "show", "inputs", "conformance"],
-    "none": ["reset", "tools", "preflight", "incremental", "concurrency", "units", "bench", "dependencies", "cargo", "cache", "remote-cache", "capacity", "leases", "service", "remote-execution", "doctor", "session"]
+    "none": ["reset", "tools", "preflight", "incremental", "concurrency", "units", "bench", "dependencies", "cargo", "cache", "remote-cache", "capacity", "leases", "fleet", "service", "remote-execution", "doctor", "session"]
   },
   "unknownOperation": "dependencies",
   "ensure": {

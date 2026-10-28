@@ -1,0 +1,33 @@
+{
+ "new": {
+  "00.ts": [
+   "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🟦️.ts",
+   "src/contention.ts"
+  ],
+  "01.json": [
+   "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🔣️.json",
+   "src/policy.json"
+  ],
+  "02.json": [
+   "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🧬️schema/🔣️.json",
+   "src/schema.json"
+  ],
+  "03.ts": [
+   "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🧪️tests/🟦️.ts",
+   "src/test.ts"
+  ],
+  "04.json": [
+   "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🧪️tests/🧫️fixtures/🔣️.json",
+   "src/fixture.json"
+  ],
+  "05.py": [
+   "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🧪️tests/🐍️oracle/🐍️.py",
+   "src/oracle.py"
+  ]
+ },
+ "modified": {
+  "06.ts": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+  "07.json": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json",
+  "08.md": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md"
+ }
+}

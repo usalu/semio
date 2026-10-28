@@ -13,7 +13,7 @@ import {admitCargoSelectionV1} from "../../../../../../../../🔨️modules/🏃
 import {pinExecutableArtifact} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts";
 import {withResourceLeases,checkResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {withRepositoryCompilerStoreV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {withRepositoryCompilerLaneV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {withRepositoryCargoInputsV1,repositoryCargoNetworkV1} from "../../📥️dependencies/🟦️.ts";
 
 /** 🧪️ Names exactly one manifest/package test executable and its original assertion arguments. */
@@ -39,7 +39,7 @@ function cargoTestRuntimeEnvironmentV1(compiler:Readonly<Record<string,string|un
 export async function runRepositoryCargoTestExecutableV1(value:CargoExecutableTestRequestV1,workspace:string,invocation:ScriptInvocation,consumerEnvironment:Readonly<Record<string,string|undefined>>={}):Promise<void>{
  const request=readCargoExecutableTestRequestV1(value),root=resolve(workspace),manifest=resolve(root,request.manifest),mode=readBuildMode(process.env.SEMIO_BUILD_MODE),control=scriptCompilerAdmissionControlV1(invocation,"cargo:test-executable",0),network=repositoryCargoNetworkV1(invocation,root),leaseDirectory=join(root,".cache/b/l/m/data");
  if(manifest.length>256)throw Error("Bounded Cargo test manifest required");
- await withRepositoryCompilerStoreV1(root,mode,control,scriptInvocationEnvironment(invocation,process.env),async (store,control)=>{
+ await withRepositoryCompilerLaneV1(root,mode,control,scriptInvocationEnvironment(invocation,process.env),{crates:[request.package]},async (store,control)=>{
   for(let directory=dirname(manifest);;directory=dirname(directory)){const facts=lstatSync(directory);if(!facts.isDirectory()||facts.isSymbolicLink())throw Error("Physical Cargo test manifest ancestry required");if(directory===root)break;}const manifestFacts=lstatSync(manifest);if(!manifestFacts.isFile()||manifestFacts.isSymbolicLink()||manifestFacts.nlink!==1||manifestFacts.size>store.sourceBoundary.maxSourceBytes)throw Error("Bounded physical Cargo test manifest required");
   const args=["test","--manifest-path",manifest,"-p",request.package,"--test",request.test,"--no-run","--locked","--profile",buildModePolicy(mode).cargoProfile,"--message-format=json"];
   await withRepositoryCargoInputsV1({invocation,consumption:{kind:"compiler",producer:"artifact",operation:"test"},workspace:root,cwd:root,manifest,args,network,control,storage:store.storage,environment:store.environment},async input=>{

@@ -15,6 +15,7 @@ import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import{runtimeAssetStageTrees}from"@semio-tech/framework-canvas-ts/runtime-assets/staging";
 import { artifactsStorageSchema as publication } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import { infiniteFontsReadingSchema as fonts } from "@semio-tech/framework-os/modules/infinite/testing/fixtures";
+const repository=await privateRepositoryWorkspaceV1();
 const workspace=resolve(import.meta.dir,"../../../../../../../../.."),producer=resolve(import.meta.dir,"../🟦️.ts");
 test("neutral OS Vite artifact DATA matches neutral publication budgets and independent SQLite inventory",async()=>{
  const oracle=new Ajv({strict:true}),db=new Database(":memory:"),products=resolve(workspace,".fixture-products");
@@ -48,14 +49,14 @@ test("neutral config products-root DATA has no physical owner import",async()=>{
  const source=readFileSync(path,"utf8"),tree=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true),imports=tree.statements.filter(ts.isImportDeclaration);
  expect(imports.every(row=>row.importClause?.isTypeOnly||((row.moduleSpecifier as ts.StringLiteral).text==="node:path")||(row.moduleSpecifier as ts.StringLiteral).text.endsWith(".json"))).toBe(true);
  const{repositoryCachePartitionRootDataV1}=await import(pathToFileURL(path).href)as{repositoryCachePartitionRootDataV1:(workspace:string,id:string)=>string};
- const db=new Database(":memory:");try{const actual=repositoryCachePartitionRootDataV1(workspace,"products"),expected=join(workspace,".cache/b/p/m");expect(actual).toBe(expected);expect(db.query("select instr(?1,?2)=1 confined").get(actual,workspace)).toEqual({confined:1});for(const id of["__proto__","constructor","unknown"])expect(()=>repositoryCachePartitionRootDataV1(workspace,id)).toThrow();for(const root of["relative","/../workspace",workspace+"/..",workspace+"/"+"x".repeat(257)])expect(()=>repositoryCachePartitionRootDataV1(root,"products")).toThrow();}finally{db.close();}
+ const db=new Database(":memory:");try{const actual=repositoryCachePartitionRootDataV1(repository.root,"products"),expected=join(repository.root,".cache/b/p/m");expect(actual).toBe(expected);expect(db.query("select instr(?1,?2)=1 confined").get(actual,repository.root)).toEqual({confined:1});for(const id of["__proto__","constructor","unknown"])expect(()=>repositoryCachePartitionRootDataV1(repository.root,id)).toThrow();for(const root of["relative","/../workspace",repository.root+"/..",repository.root+"/"+"x".repeat(257)])expect(()=>repositoryCachePartitionRootDataV1(root,"products")).toThrow();}finally{db.close();}
 });
 
 test("neutral Vite config cache paths are DATA inside the declared products root",async()=>{
  const path=resolve(import.meta.dir,"../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📂️paths/🟦️.ts");
  expect(existsSync(path),"actual pure Vite cache DATA leaf").toBe(true);const source=readFileSync(path,"utf8");expect(source).not.toMatch(/ScriptInvocation|ResourceLeaseControl|withRepository|node:fs|nativeImageRoot/);
  const{viteCacheDirectory}=await import(pathToFileURL(path).href)as{viteCacheDirectory:(workspace:string,environment:Record<string,string|undefined>)=>string};
- const issued=join(workspace,".cache/b/p/m/vite/state");for(const mode of["prototype","release"])expect(viteCacheDirectory(workspace,{SEMIO_BUILD_MODE:mode,SEMIO_VITE_CACHE_DIRECTORY:issued})).toBe(issued);for(const environment of[{SEMIO_BUILD_MODE:"release"},{SEMIO_BUILD_MODE:"production",SEMIO_VITE_CACHE_DIRECTORY:issued},{SEMIO_BUILD_MODE:"release",SEMIO_VITE_CACHE_DIRECTORY:workspace}])expect(()=>viteCacheDirectory(workspace,environment)).toThrow();
+ const issued=join(repository.root,".cache/b/p/m/vite/state");for(const mode of["prototype","release"])expect(viteCacheDirectory(repository.root,{SEMIO_BUILD_MODE:mode,SEMIO_VITE_CACHE_DIRECTORY:issued})).toBe(issued);for(const environment of[{SEMIO_BUILD_MODE:"release"},{SEMIO_BUILD_MODE:"production",SEMIO_VITE_CACHE_DIRECTORY:issued},{SEMIO_BUILD_MODE:"release",SEMIO_VITE_CACHE_DIRECTORY:repository.root}])expect(()=>viteCacheDirectory(repository.root,environment)).toThrow();
 });
 
 test("neutral distribution compiler uses a carried owned child and actual published reader handback",()=>{
@@ -67,6 +68,7 @@ import compileReceiptSchema from "../../../../🚚️distribution/🏗️compile
 import {readDistributionCompileReceiptV1} from "../../../../🚚️distribution/🏗️compiler/📋️contract/🟦️.ts";
 import { loadNativeBuildCaptureDocument, loadNativeBuildCaptureSchema, loadProcessArtifactsFilesDocument } from "@semio-tech/process/testing/fixtures";
 import { artifactsPublicationSourcesSchemaUrl } from "@semio-tech/process/testing/fixtures";
+import{privateRepositoryWorkspaceV1}from"../../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧫️private-repository/🟦️.ts";
 test("neutral distribution publication receipt is finite DATA and agrees with Ajv and SQLite",()=>{
  const oracle=new Ajv({strict:true}),db=new Database(":memory:");try{for(const mode of["prototype","release"]as const){const value={version:1,mode,owner:compileReceiptSchema.definitions.Protocol.const.owner,manifestSha256:new Bun.CryptoHasher("sha256").update("actual output witness").digest("hex")},text=JSON.stringify(value);expect(oracle.validate(compileReceiptSchema,value)).toBe(true);expect(JSON.stringify(readDistributionCompileReceiptV1(text,mode))).toBe((db.query("select json(?) wire").get(text)as{wire:string}).wire);for(const candidate of[{...value,owner:"foreign"},{...value,manifestSha256:"a"},{...value,path:"/unpaid"},{...value,version:2}]){expect(oracle.validate(compileReceiptSchema,candidate)).toBe(false);expect(()=>readDistributionCompileReceiptV1(JSON.stringify(candidate),mode)).toThrow();}expect(()=>readDistributionCompileReceiptV1(text,mode==="prototype"?"release":"prototype")).toThrow();expect(()=>readDistributionCompileReceiptV1(" ".repeat(compileReceiptSchema.definitions.Protocol.const.maximumReceiptBytes)+text,mode)).toThrow();}}
  finally{db.close();}

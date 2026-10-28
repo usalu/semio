@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "id": "caching",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "layout.root-and-workspace-required": {
+      "en": "Canonical absolute repository root and workspace required",
+      "de": "Kanonische absolute Repository-Wurzel und Workspace erforderlich"
+    },
+    "orchestration.caller-repository-root-refused": {
+      "en": "Original native caller repository root refused",
+      "de": "Repository-Wurzel des ursprünglichen nativen Aufrufers abgelehnt"
+    },
+    "orchestration.child-deadline-exhausted": {
+      "en": "Original finite native child deadline exhausted",
+      "de": "Endliche Frist des ursprünglichen nativen Kindprozesses erschöpft"
+    },
+    "reset.residue-retained": {
+      "en": "Unknown reset residue retained",
+      "de": "Unbekannter Rest des Zurücksetzens bleibt erhalten"
+    },
+    "reset.intent-changed": {
+      "en": "Original reset intent changed",
+      "de": "Die ursprüngliche Absicht des Zurücksetzens hat sich geändert"
+    },
+    "reset.current-intent-changed": {
+      "en": "Current reset intent changed",
+      "de": "Die aktuelle Absicht des Zurücksetzens hat sich geändert"
+    },
+    "daemon.service-required": {
+      "en": "Original acquired daemon service required",
+      "de": "Ursprünglich erworbener Daemon-Dienst erforderlich"
+    },
+    "daemon.root-released": {
+      "en": "Original daemon root released",
+      "de": "Ursprüngliche Daemon-Wurzel freigegeben"
+    },
+    "wasm-bindgen.lock-drift": {
+      "en": "wasm-bindgen lock drift:\n{mismatches}",
+      "de": "wasm-bindgen-Lock weicht ab:\n{mismatches}"
+    },
+    "daemon.slots-exhausted": {
+      "en": "Nx daemon slots exhausted ({kind} limit {limit})",
+      "de": "Nx-Daemon-Plätze erschöpft ({kind}-Obergrenze {limit})"
+    },
+    "compiler.configuration-view-required": {
+      "en": "Cargo step admission requires a compiler configuration view",
+      "de": "Die Zulassung eines Cargo-Schritts erfordert eine Compiler-Konfigurationsansicht"
+    },
+    "compiler.live-configuration-view-required": {
+      "en": "Live issued Cargo configuration view required",
+      "de": "Eine aktuell ausgestellte Cargo-Konfigurationsansicht ist erforderlich"
+    },
+    "compiler.other-configuration-needs-scope": {
+      "en": "A Cargo step selecting another configuration requires its own input scope",
+      "de": "Ein Cargo-Schritt, der eine andere Konfiguration wählt, braucht seinen eigenen Eingabebereich"
+    },
+    "lane.provenance-changed": {
+      "en": "Lane provenance file changed while it was retained: {file}",
+      "de": "Die Herkunftsdatei der Lane hat sich während der Aufbewahrung geändert: {file}"
+    }
+  }
+}

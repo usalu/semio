@@ -24,11 +24,11 @@ func TestTestsRunAgainstAnOwnedRoot(t *testing.T) {
 	}
 }
 
-// 📌️TestHermeticGuardFlagsHeldBindings proves the client's own roots, a test override and a bound executor are reported when they point into the real root.
+// 📌️TestHermeticGuardFlagsHeldBindings proves the client's own roots, a test override and a bound executor are reported when they resolve to the real root, which a directory below it without a `.git` of its own does.
 func TestHermeticGuardFlagsHeldBindings(t *testing.T) {
 	base := t.TempDir()
 	real := filepath.Join(base, "real")
-	if err := os.MkdirAll(real, 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(real, ".git"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	guard := sandbox.NewGuard(real)

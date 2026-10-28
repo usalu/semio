@@ -1,0 +1,27 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.d.mts": {
+  "file": "0",
+  "base": "d6a4611c1c88377becc092a2f62e5088ef1c8747727c65e007915e6339ff32c6",
+  "new": "ca97d14056c4f05b683f15269ad25311b1ad6956fd3c96a081108ade69a29896"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs": {
+  "file": "1",
+  "base": "44cb417ef520b990c0070bf16e3ef7799ebf5935fd57da19df90e6d75ac2df4d",
+  "new": "dbeca498960924ba17937c2fc491b1efb4e2c7ada2d03e8d9b3a2c6694600b9b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🧪️tests/🐍️.py": {
+  "file": "2",
+  "base": "261a0e11a5ee0c0e582d2bb9bffc4f8b63887978389361fa8b9395baad6c340f",
+  "new": "2e8e6a8d24d0574ab76f0e6084a6a4e2632818df28b06ca03497a99e074a879a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🧪️tests/🔣️.json": {
+  "file": "3",
+  "base": "f4626a0dac4a204c307d7f906caac10141be4a1affd6f63db7abc1daa1754402",
+  "new": "f47c1d5c0d5e86d6a5968baf895430d01964d4c2435241cf508b1e7beb3b7be7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🧪️tests/🟦️.ts": {
+  "file": "4",
+  "base": "ab939fecf1ad58f988d8df7098bc89e345b54bc9caf69082f93b6facb080a2a5",
+  "new": "f260fc6026ab3c24bfab173025ddfe149afe7ab15e43454879496eeeb6989a47"
+ }
+}

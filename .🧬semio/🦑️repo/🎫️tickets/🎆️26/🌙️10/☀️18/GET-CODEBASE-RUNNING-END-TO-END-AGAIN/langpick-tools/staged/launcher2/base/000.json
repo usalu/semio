@@ -1,0 +1,291 @@
+{
+ "$schema": "./🧬️schema/🔣️.json",
+ "contract": 1,
+ "languages": [
+  "en",
+  "de"
+ ],
+ "language": {
+  "protocol": "🧰️framework/🔨️modules/⚙️runtime/🗣️language/🔣️.json"
+ },
+ "restart": {
+  "policy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🧬️schema/🔣️.json"
+ },
+ "routing": {
+  "catalogue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json"
+ },
+ "selected": "bun",
+ "runtimes": {
+  "bun": {
+   "version": "1.4.2",
+   "executable": {
+    "unix": "bun",
+    "windows": "bun.exe"
+   },
+   "probe": {
+    "arguments": [
+     "--version"
+    ]
+   },
+   "download": {
+    "base": "https://github.com/oven-sh/bun/releases/download/bun-v1.4.2",
+    "format": "zip",
+    "member": "{stem}/{executable}",
+    "maximumExtractedBytes": 268435456
+   },
+   "launch": {
+    "before": [],
+    "options": {
+     "watch": [
+      "--watch"
+     ],
+     "cwd": [
+      "--cwd",
+      "{value}"
+     ]
+    },
+    "environment": {
+     "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0"
+    }
+   },
+   "distributions": [
+    {
+     "platform": "win32",
+     "arch": "x64",
+     "libc": "any",
+     "archive": "bun-windows-x64-baseline.zip",
+     "bytes": 39807490,
+     "sha256": "78c221c2376f79731ccf4e4af0b3bb46d81fefa3296c5abee09ad8a1b21e68c6"
+    },
+    {
+     "platform": "win32",
+     "arch": "arm64",
+     "libc": "any",
+     "archive": "bun-windows-aarch64.zip",
+     "bytes": 36330062,
+     "sha256": "a7a16b876a305fd1029c66dbd27007b4f6112ae896532f675878731a21e50cfd"
+    },
+    {
+     "platform": "darwin",
+     "arch": "x64",
+     "libc": "any",
+     "archive": "bun-darwin-x64-baseline.zip",
+     "bytes": 28440543,
+     "sha256": "bad5bbd6cf14d0980d115f5954c9ff904df619d5e994d2da1ffccd3f316300b0"
+    },
+    {
+     "platform": "darwin",
+     "arch": "arm64",
+     "libc": "any",
+     "archive": "bun-darwin-aarch64.zip",
+     "bytes": 25377591,
+     "sha256": "90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f"
+    },
+    {
+     "platform": "linux",
+     "arch": "x64",
+     "libc": "gnu",
+     "archive": "bun-linux-x64-baseline.zip",
+     "bytes": 36646949,
+     "sha256": "c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f"
+    },
+    {
+     "platform": "linux",
+     "arch": "arm64",
+     "libc": "gnu",
+     "archive": "bun-linux-aarch64.zip",
+     "bytes": 36602920,
+     "sha256": "54328bbc2d9c8e0c9f892c544d66c57a83b84139e34909e5ee81758f1ac8fda7"
+    },
+    {
+     "platform": "linux",
+     "arch": "x64",
+     "libc": "musl",
+     "archive": "bun-linux-x64-musl-baseline.zip",
+     "bytes": 34100976,
+     "sha256": "76e1db84e98f22f78de0a87e309bfbbf297732847f9720db36750646c85c8c18"
+    },
+    {
+     "platform": "linux",
+     "arch": "arm64",
+     "libc": "musl",
+     "archive": "bun-linux-aarch64-musl.zip",
+     "bytes": 33975245,
+     "sha256": "71760b6c8ea30623b81a4907cb815d48e2ea266f2e73e751534a44a0607950df"
+    }
+   ]
+  }
+ },
+ "implementation": {
+  "version": {
+   "file": "🧰️framework/🛍️products/🦑️repo/package.json",
+   "key": "version"
+  },
+  "entries": {
+   "build": {
+    "script": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts",
+    "prefix": [
+     "repo"
+    ]
+   },
+   "workspace": {
+    "script": "📜️script.ts",
+    "prefix": []
+   }
+  }
+ },
+ "cache": {
+  "environment": "SEMIO_RUNTIME_CACHE",
+  "mirrorEnvironment": "SEMIO_RUNTIME_MIRROR",
+  "runtimeEnvironment": "SEMIO_RUNTIME",
+  "toolsPartition": [
+   ".cache",
+   "b",
+   "t",
+   "m"
+  ],
+  "user": [
+   "semio",
+   "runtimes"
+  ],
+  "maximumPathLength": 256
+ },
+ "messages": {
+  "runtimeUnknown": {
+   "en": "Runtime {name} is not declared in the registry (declared: {declared}).",
+   "de": "Die Laufzeit {name} ist in der Registratur nicht deklariert (deklariert: {declared})."
+  },
+  "runtimeUnsupported": {
+   "en": "{runtime} {version} has no pinned distribution for {platform}/{arch}{libc}.",
+   "de": "Für {runtime} {version} gibt es keine gepinnte Distribution für {platform}/{arch}{libc}."
+  },
+  "entryUnknown": {
+   "en": "The repository implementation has no entry {name} (declared: {declared}).",
+   "de": "Die Repository-Implementierung hat keinen Einstieg {name} (deklariert: {declared})."
+  },
+  "entryMissing": {
+   "en": "The repository implementation entry is missing: {path}",
+   "de": "Der Einstieg der Repository-Implementierung fehlt: {path}"
+  },
+  "provisioning": {
+   "en": "Provisioning {runtime} {version} for {platform}/{arch}: first use, {megabytes} MiB from {source}.",
+   "de": "Bereitstellung von {runtime} {version} für {platform}/{arch}: erste Nutzung, {megabytes} MiB von {source}."
+  },
+  "downloading": {
+   "en": "Downloading {runtime} {version}: {percent}% ({done} of {total} MiB).",
+   "de": "Lade {runtime} {version}: {percent} % ({done} von {total} MiB)."
+  },
+  "waitingForPeer": {
+   "en": "Another process is provisioning {runtime} {version}; waiting for it.",
+   "de": "Ein anderer Prozess stellt {runtime} {version} bereit; warte darauf."
+  },
+  "ready": {
+   "en": "{runtime} {version} is ready: {path}",
+   "de": "{runtime} {version} ist bereit: {path}"
+  },
+  "downloadFailed": {
+   "en": "Download of {url} failed: {reason}. Retry, point SEMIO_RUNTIME_MIRROR at a mirror of {source}, or pre-seed {directory} with the verified distribution.",
+   "de": "Der Download von {url} ist fehlgeschlagen: {reason}. Wiederhole ihn, richte SEMIO_RUNTIME_MIRROR auf einen Spiegel von {source} oder lege die geprüfte Distribution in {directory} vor."
+  },
+  "integrityFailed": {
+   "en": "The {what} of {archive} is {actual}, the registry pins {expected}. Nothing was installed.",
+   "de": "Die {what} von {archive} ist {actual}, die Registratur pinnt {expected}. Es wurde nichts installiert."
+  },
+  "extractFailed": {
+   "en": "The executable {member} cannot be extracted from {archive}.",
+   "de": "Die ausführbare Datei {member} lässt sich nicht aus {archive} entpacken."
+  },
+  "extractTooLarge": {
+   "en": "The executable {member} in {archive} is larger than {limit} bytes; nothing was installed.",
+   "de": "Die ausführbare Datei {member} in {archive} ist größer als {limit} Bytes; es wurde nichts installiert."
+  },
+  "mirrorRefused": {
+   "en": "The mirror {url} is refused: only https, or http on this machine, may replace {source}.",
+   "de": "Der Spiegel {url} wird abgelehnt: nur https, oder http auf diesem Rechner, darf {source} ersetzen."
+  },
+  "redirectRefused": {
+   "en": "The download was redirected to {url}, which is neither https nor on this machine; nothing was installed.",
+   "de": "Der Download wurde auf {url} umgeleitet, das weder https noch auf diesem Rechner ist; es wurde nichts installiert."
+  },
+  "unexpected": {
+   "en": "Unexpected error: {reason}",
+   "de": "Unerwarteter Fehler: {reason}"
+  },
+  "probeFailed": {
+   "en": "The provisioned {runtime} reports {actual}, the registry pins {expected}. Nothing was installed.",
+   "de": "Die bereitgestellte Laufzeit {runtime} meldet {actual}, die Registratur pinnt {expected}. Es wurde nichts installiert."
+  },
+  "pathTooLong": {
+   "en": "{path} is longer than {limit} characters; use a shorter SEMIO_RUNTIME_CACHE.",
+   "de": "{path} ist länger als {limit} Zeichen; verwende ein kürzeres SEMIO_RUNTIME_CACHE."
+  },
+  "cacheUnavailable": {
+   "en": "No cache directory is available: {reason}. Set SEMIO_RUNTIME_CACHE.",
+   "de": "Es gibt kein Cache-Verzeichnis: {reason}. Setze SEMIO_RUNTIME_CACHE."
+  },
+  "cancelled": {
+   "en": "Cancelled.",
+   "de": "Abgebrochen."
+  },
+  "handOffFailed": {
+   "en": "Cannot start {path}: {reason}",
+   "de": "{path} lässt sich nicht starten: {reason}"
+  },
+  "domainNeedsInstall": {
+   "en": "repo {verb} needs the full native command, this is the launcher only. Install it once: repo run repo-mcp:install",
+   "de": "repo {verb} braucht den vollständigen nativen Befehl, dies ist nur der Launcher. Einmalig installieren: repo run repo-mcp:install"
+  },
+  "helpNative": {
+   "en": "Native commands of the repository (repo <command> --help):",
+   "de": "Native Befehle des Repositorys (repo <Befehl> --help):"
+  },
+  "helpDashboard": {
+   "en": "dashboard [arguments]   Human control plane (not for agents).",
+   "de": "dashboard [Argumente]   Menschliche Kontrollebene (nicht für Agenten)."
+  },
+  "helpOsMcp": {
+   "en": "dev mcp stdio os [arguments]   MCP server of the OS over stdio.",
+   "de": "dev mcp stdio os [Argumente]   MCP-Server des OS über stdio."
+  },
+  "guardTest": {
+   "en": "Bun {running} runs this test, the repository pins {runtime} {version}. Run it through the repository instead: repo tools exec --light bun -- test {files} (and your options).",
+   "de": "Bun {running} führt diesen Test aus, das Repository pinnt {runtime} {version}. Führe ihn stattdessen über das Repository aus: repo tools exec --light bun -- test {files} (und deine Optionen)."
+  },
+  "guardMissing": {
+   "en": "Bun {running} runs this, the repository pins {runtime} {version}, which is not provisioned here, and the repo launcher is not on the PATH. Install the launcher once, it provisions the pinned runtime: {install}",
+   "de": "Bun {running} führt dies aus, das Repository pinnt {runtime} {version}, das hier nicht bereitgestellt ist, und der repo-Launcher liegt nicht im PATH. Installiere den Launcher einmalig, er stellt die gepinnte Laufzeit bereit: {install}"
+  },
+  "guardLoop": {
+   "en": "Bun {running} still runs this after the repository started the pinned {runtime} {version}; the provisioned runtime does not report the pinned version. Remove it and start again: the launcher provisions it anew.",
+   "de": "Bun {running} führt dies noch immer aus, nachdem das Repository das gepinnte {runtime} {version} gestartet hat; die bereitgestellte Laufzeit meldet nicht die gepinnte Version. Entferne sie und starte erneut: der Launcher stellt sie neu bereit."
+  },
+  "versionRuntimeReady": {
+   "en": "runtime {runtime} {version}: ready, {path}",
+   "de": "Laufzeit {runtime} {version}: bereit, {path}"
+  },
+  "versionRuntimeAbsent": {
+   "en": "runtime {runtime} {version}: not provisioned yet, fetched on first use",
+   "de": "Laufzeit {runtime} {version}: noch nicht bereitgestellt, wird bei der ersten Nutzung geladen"
+  },
+  "versionImplementation": {
+   "en": "implementation {version} ({source})",
+   "de": "Implementierung {version} ({source})"
+  },
+  "versionImplementationUnknown": {
+   "en": "implementation: version unreadable ({source})",
+   "de": "Implementierung: Version nicht lesbar ({source})"
+  },
+  "languageRefusal": {
+   "en": "No language selected for texts. Pass --lang={choice}, set SEMIO_LANGUAGE={choice}, or run with a locale such as LANG=en_US.UTF-8 (resolution order: --lang, SEMIO_LANGUAGE, LANGUAGE, LC_ALL, LC_MESSAGES, LANG, the operating system language list).",
+   "de": "Keine Sprache für Texte gewählt. Übergib --lang={choice}, setze SEMIO_LANGUAGE={choice} oder starte mit einem Locale wie LANG=de_DE.UTF-8 (Reihenfolge: --lang, SEMIO_LANGUAGE, LANGUAGE, LC_ALL, LC_MESSAGES, LANG, Sprachliste des Betriebssystems)."
+  },
+  "languageUnknownFlag": {
+   "en": "Unknown language: {value} ({choice})",
+   "de": "Unbekannte Sprache: {value} ({choice})"
+  },
+  "languageUnknownVariable": {
+   "en": "{name} names a language that is not offered: {value} ({choice})",
+   "de": "{name} nennt eine nicht angebotene Sprache: {value} ({choice})"
+  }
+ }
+}

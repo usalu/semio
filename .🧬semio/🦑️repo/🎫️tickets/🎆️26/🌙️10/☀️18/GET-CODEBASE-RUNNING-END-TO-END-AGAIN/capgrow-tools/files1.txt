@@ -1,0 +1,16 @@
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🔼️upgrade/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🌱️grow/🐍️oracle/🐍️.py
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🌱️grow/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🌱️grow/🥒️.feature
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🌱️grow/🧫️fixtures/🔣️.json
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🐍️oracle/🐍️.py
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json
+🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🐍️oracle/🐍️.py
+🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🧫️fixtures/🔣️.json
+🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧬️schema/🔣️.json
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🌱️grow/🟦️.ts

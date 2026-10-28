@@ -1,0 +1,21 @@
+import{execFileSync}from"node:child_process";import{readFileSync}from"node:fs";
+const R="/Users/ueli/Documents/semio/",L=R+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/";
+process.chdir(R);
+const inference=await import(L+"🕸️graph/📥️inference/🟨️.mjs");await inference.libraryBootstrap;
+const tests=await import(R+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟨️.mjs");
+const policies=await import(L+"🕸️graph/📥️inference/🛡️policy/🟨️.mjs");
+const obs=await import(L+"👁️observation/🟨️.mjs");
+const admission=await import(L+"🕸️graph/🚪️admission/🟦️.ts");
+const registry=admission.readBuildOwnerRegistryV1(JSON.parse(readFileSync(R+"📋️build-owners.json","utf8")));
+const files=execFileSync("git",["ls-files","-z"],{cwd:R,maxBuffer:1<<29}).toString().split("\0").filter(Boolean);
+console.log("tracked files",files.length);
+const context={workspaceRoot:R.slice(0,-1),registry};
+let t=Date.now();
+const cap=await obs.captureObservedSourceInputsV1(()=>obs.observeInferenceSnapshotV1(async()=>{
+ const tc=await tests.discoverTestBuildProjectsV1(files.filter(f=>f.endsWith(".feature")),{},context);
+ console.log("tests contributions",tc.length,"projects",tc.reduce((n,[,c])=>n+Object.keys(c.projects??{}).length,0),"ms",Date.now()-t);t=Date.now();
+ const owners=Object.assign({},...tc.map(([,c])=>c.projects??{}));
+ const pc=await policies.default.createNodesV2[1](files.filter(f=>f.endsWith("📜️script.ts")),{},{workspaceRoot:context.workspaceRoot,projects:owners});
+ console.log("policy contributions",pc.length,"projects",pc.reduce((n,[,c])=>n+Object.keys(c.projects??{}).length,0),"ms",Date.now()-t);
+}),undefined,false);
+console.log("rows",cap.observations.length);

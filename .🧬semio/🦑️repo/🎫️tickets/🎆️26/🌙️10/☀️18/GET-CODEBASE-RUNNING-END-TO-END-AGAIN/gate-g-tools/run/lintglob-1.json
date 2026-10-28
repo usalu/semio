@@ -1,0 +1,12 @@
+{
+ "label": "lintglob-1",
+ "target": "workspace:lint-repo",
+ "started": "02:59:04",
+ "wall_s": 8.6,
+ "peak_tree_mb": 1290,
+ "peak_processes": 4,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

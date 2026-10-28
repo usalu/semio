@@ -37,7 +37,7 @@ test("a record that differs from its name, a missing record and an open manifest
 });
 
 test("the independent python reader rebuilds the same graph from the written records",async()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const dir=mkdtempSync(join(realpathSync(tmpdir()),"graph-records-"));
  try{
   const encoded=await encodeGraphRecordsV1(corpus.graph,{policy:corpus.policy as never,maximumBytes:policy.maximumSnapshotBytes});

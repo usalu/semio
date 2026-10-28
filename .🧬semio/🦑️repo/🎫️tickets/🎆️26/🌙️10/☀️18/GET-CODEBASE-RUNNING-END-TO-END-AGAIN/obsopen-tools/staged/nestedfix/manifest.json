@@ -1,0 +1,32 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts": {
+  "file": "f00",
+  "base": "5576cdb5ff7d39c14b019ffe483673fc80f7dc0fe44feeeca414a9f921a0bc70",
+  "new": "9611ba2e485effea152aa3e29da7e3d02d23a09120804f81d6da50f549b1dbf1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧱️blocks/🟦️.ts": {
+  "file": "f01",
+  "base": "15f438ba792585ad0e572d82ca47dac6f20fe2d19dc483cdf45c2e8135506430",
+  "new": "0c8a6f185f83a5f9640cdd02bc4c170cda3493e0859c97d4aa051d0e2f5ca04f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧱️blocks/👷️child/🟦️.ts": {
+  "file": "f02",
+  "base": "7bb4bf534cf328553f5848813a97e8a5501efc2c1c3e59986c5e001806528d4f",
+  "new": "fae4e2807015a74122cb720d442fc26a6fc2d88f7ceac6ca16faff1edb303d8b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🪪️presence/🟦️.ts": {
+  "file": "f03",
+  "base": "46bb54fb34f5cc80958501692a8dd114eff733f4d28b8be60c22cec5881ac519",
+  "new": "f98cbe6506ff4e110cb2ce3f6db69493bad6e8c6cbb180c33eaa1f56789c6110"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🪪️presence/👷️child/🟦️.ts": {
+  "file": "f04",
+  "base": "22895454c030b6e9f8eef5d394a8cca679f10c905ff4d33760cdba1864aa4a75",
+  "new": "fb6e9d9428ca667cd7bc6d758b9bd00b1cc8ee555fc54ed11f416e75b56c23bc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/📥️reuse/🟦️.ts": {
+  "file": "f05",
+  "base": "8b8bd16c867616b58d6c968d102f1055f3c2dfa1d5140583c22ee804f15d492a",
+  "new": "a8d92c44d5257a760e13d5fb171368410f1ee001731a8ec0cdf630ad9335efb9"
+ }
+}

@@ -1,0 +1,49 @@
+{
+ "batch": "inferfix",
+ "files": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "base": "9f268520ae2e3a4c902fd7f40b42338d187132bf6e301aa49177d2be1a2e6fe6",
+   "applied": "7454142d781eada4e4cbf4ab3a53c7dfeea665c5612d50a051a9e2769fe67447",
+   "edits": [
+    {
+     "old": " return {closure:closure&&withoutSchedulingV1(closure),fallback,",
+     "new": " const kept=closure&&withoutSchedulingV1(closure);\n if(kept&&kept!==closure){const compiled=scripts.compiledNames.get(closure);if(compiled){const present=new Set(kept);scripts.compiledNames.set(kept,new Set([...compiled].filter(name=>present.has(name))));}}\n return {closure:kept,fallback,"
+    }
+   ],
+   "keep": "9f268520ae2e3a4c"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/📐️declared-inputs/🟦️.ts",
+   "base": "f58061d01756b6583f3dd1f2849476453cca6d75c8537de4c5eca981f774fd13",
+   "applied": "cf12c5e4998d75de88bbfa8b14f8925052092131ce8401b0836d3c2e8ff6a58d",
+   "edits": [
+    {
+     "old": "test(\"a declared TypeScript project joins exactly",
+     "new": "test(\"the closure a target reports still answers the command modules it compiled, so no dependency edge of its command sources is lost to the scheduling split\",()=>withFixture(async root=>{\n const cache=createScriptInputCache(),got=await cacheInternals.targetScriptSources({metadata:corpus.modules.metadata,options:{cwd:corpus.projectRoot,command:corpus.command}},root,cache,corpus.projectRoot),compiled=cache.compiledNames.get(got.closure);\n expect(compiled,\"compiled names of the reported closure\").toBeDefined();\n for(const entry of corpus.modules.oracleEntries)for(const path of (await esbuildOracle(root,entry)).filter(name=>/\\.(?:[cm]?[jt]s)$/u.test(name)))expect(compiled!.has(\"{workspaceRoot}/\"+path),path).toBe(true);\n expect([...compiled!].every((name:string)=>got.closure.includes(name))).toBe(true);\n}));\n\ntest(\"a declared TypeScript project joins exactly"
+    },
+    {
+     "old": "toEqual([\"app/src/a.ts\",\"app/📜️script.ts\"])",
+     "new": "toEqual([\"app/src/a.ts\",\"app/tsconfig.json\",\"app/📜️script.ts\",\"tsconfig.base.json\"])"
+    }
+   ],
+   "keep": "f58061d01756b658"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/📐️declared-inputs/🔣️.json",
+   "base": "4ead44fc3fa6b22f9ff54acd3c2b0bc4ff27ebdb171ce386dbc7174b2d511c60",
+   "applied": "dfe80e6f39cf6c29317be5ba2ec387966b897f42ee6d84b5f3d1707189c90b30",
+   "edits": [
+    {
+     "old": "      \"app/test/one.test.ts\",\n      \"app/📜️script.ts\"\n",
+     "new": "      \"app/test/one.test.ts\",\n      \"app/tsconfig.json\",\n      \"app/📜️script.ts\",\n      \"tsconfig.base.json\"\n"
+    },
+    {
+     "old": "        \"app/test/second.test.ts\",\n        \"app/📜️script.ts\"\n",
+     "new": "        \"app/test/second.test.ts\",\n        \"app/tsconfig.json\",\n        \"app/📜️script.ts\",\n        \"tsconfig.base.json\"\n"
+    }
+   ],
+   "keep": "4ead44fc3fa6b22f"
+  }
+ ]
+}

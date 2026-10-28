@@ -1,0 +1,616 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/lease-order/v1",
+  "title": "Lease lock order, hold-and-wait and deadlock policy",
+  "definitions": {
+    "Rule": {
+      "enum": [
+        "enforce",
+        "observe",
+        "off"
+      ]
+    },
+    "Mode": {
+      "enum": [
+        "shared",
+        "exclusive"
+      ]
+    },
+    "Match": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "prefix",
+            "exact"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      }
+    },
+    "Class": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "rank",
+        "scope",
+        "owner",
+        "title",
+        "match"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "rank": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "scope": {
+          "enum": [
+            "machine",
+            "checkout",
+            "project",
+            "crate",
+            "generation",
+            "path",
+            "session"
+          ]
+        },
+        "owner": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "title": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1
+            },
+            "de": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "match": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Match"
+          }
+        }
+      }
+    },
+    "Allowed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "reason"
+      ],
+      "properties": {
+        "from": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "to": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "reason": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1
+            },
+            "de": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "fromPrefix",
+            "toPrefix"
+          ],
+          "properties": {
+            "kind": {
+              "const": "same-directory-suffix"
+            },
+            "fromPrefix": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "toPrefix": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        }
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "rules",
+        "holdAndWait",
+        "cycle",
+        "registry",
+        "fairness",
+        "gate",
+        "media",
+        "classes",
+        "allowed"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "rules": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "outOfOrder",
+            "holdAndWait",
+            "selfDeadlock",
+            "cycle"
+          ],
+          "properties": {
+            "outOfOrder": {
+              "enum": [
+                "enforce",
+                "observe",
+                "off"
+              ]
+            },
+            "holdAndWait": {
+              "enum": [
+                "enforce",
+                "observe",
+                "off"
+              ]
+            },
+            "selfDeadlock": {
+              "enum": [
+                "enforce",
+                "observe",
+                "off"
+              ]
+            },
+            "cycle": {
+              "enum": [
+                "enforce",
+                "observe",
+                "off"
+              ]
+            },
+            "strictWait": {
+              "enum": [
+                "enforce",
+                "observe",
+                "off"
+              ]
+            }
+          }
+        },
+        "holdAndWait": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "graceMilliseconds",
+            "pollMilliseconds"
+          ],
+          "properties": {
+            "graceMilliseconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400000
+            },
+            "pollMilliseconds": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 60000
+            }
+          }
+        },
+        "cycle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "intervalMilliseconds"
+          ],
+          "properties": {
+            "intervalMilliseconds": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 60000
+            }
+          }
+        },
+        "registry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "flushMilliseconds",
+            "maximumEntryBytes",
+            "maximumViolations"
+          ],
+          "properties": {
+            "flushMilliseconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60000
+            },
+            "maximumEntryBytes": {
+              "type": "integer",
+              "minimum": 1024,
+              "maximum": 1048576
+            },
+            "maximumViolations": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
+            }
+          }
+        },
+        "gate": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "releaseWhileWaiting",
+            "pollInitialMilliseconds",
+            "pollMaximumMilliseconds",
+            "admissionPatienceMilliseconds",
+            "claimSweepIntervalMilliseconds",
+            "claimSweepPressureFreeRatio",
+            "claimSweepPressureIntervalMilliseconds"
+          ],
+          "properties": {
+            "releaseWhileWaiting": {
+              "type": "boolean"
+            },
+            "pollInitialMilliseconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 60000
+            },
+            "pollMaximumMilliseconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 60000
+            },
+            "admissionPatienceMilliseconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 600000,
+              "description": "How long a request that must not wait for its resource (timeout 0) still waits for the directory admission gate, which is held only for microseconds; 0 keeps the strict single attempt."
+            },
+            "claimSweepIntervalMilliseconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400000,
+              "description": "The least time between two retirement sweeps of settled queue claims that one process starts from queue acquisitions; each sweep takes the directory admission gate exclusively for a moment, so a sweep per acquisition starves every other opener."
+            },
+            "claimSweepPressureFreeRatio": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "The fraction of the lease store's filesystem that must stay free; below it a queue acquisition sweeps settled claims at the pressure interval instead of the ordinary one, because every queued acquisition leaves a settled claim database behind and a bounded lease volume otherwise fills faster than one sweep per interval retires them; 0 never applies pressure."
+            },
+            "claimSweepPressureIntervalMilliseconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400000,
+              "description": "The least time between two claim sweeps of one process while the lease store is under pressure."
+            }
+          }
+        },
+        "fairness": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "queuedWithResourceLeases"
+          ],
+          "properties": {
+            "queuedWithResourceLeases": {
+              "type": "boolean"
+            },
+            "reentrantShared": {
+              "type": "boolean"
+            },
+            "writerPreferenceMilliseconds": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 3600000
+            }
+          }
+        },
+        "classes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Class"
+          }
+        },
+        "allowed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Allowed"
+          }
+        },
+        "media": {
+          "type": "array",
+          "description": "Resource names that are a medium, not a resource: `prefix` followed by a directory path names an image, and a shared hold of it whose directory contains the lease directory a request uses is the store the lease lives in. It must be open before any lease can be taken, so it never takes part in ordering.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "prefix"
+            ],
+            "properties": {
+              "prefix": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            }
+          }
+        },
+        "strictWaits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StrictWait"
+          }
+        }
+      }
+    },
+    "Held": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resource",
+        "mode",
+        "atMs"
+      ],
+      "properties": {
+        "resource": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "mode": {
+          "enum": [
+            "shared",
+            "exclusive"
+          ]
+        },
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Violation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "held",
+        "heldMode",
+        "heldRank",
+        "heldClass",
+        "requested",
+        "requestedMode",
+        "requestedRank",
+        "requestedClass",
+        "atMs",
+        "pid"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "enum": [
+            "out-of-order",
+            "hold-and-wait",
+            "self-deadlock",
+            "cycle"
+          ]
+        },
+        "held": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "heldMode": {
+          "enum": [
+            "shared",
+            "exclusive"
+          ]
+        },
+        "heldRank": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heldClass": {
+          "type": "string"
+        },
+        "requested": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "requestedMode": {
+          "enum": [
+            "shared",
+            "exclusive"
+          ]
+        },
+        "requestedRank": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "requestedClass": {
+          "type": "string"
+        },
+        "waitedMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blockerPid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "blockerHeldSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cycle": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "enforced": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "outOfOrder": {
+          "en": "Lock order violated: {requested} ({requestedClass}, rank {requestedRank}) is requested while {held} ({heldClass}, rank {heldRank}) is held {heldMode}. Acquire locks in ascending rank or release {held} first.",
+          "de": "Sperrreihenfolge verletzt: {requested} ({requestedClass}, Rang {requestedRank}) wird angefordert, während {held} ({heldClass}, Rang {heldRank}) {heldMode} gehalten wird. Sperren in aufsteigendem Rang nehmen oder {held} zuerst freigeben."
+        },
+        "holdAndWait": {
+          "en": "Refusing to wait: {requested} ({requestedMode}) has been unavailable for {seconds} s{blocker} while this process holds {held} exclusively, which blocks everyone who needs {held}. Release {held} before waiting, or acquire {requested} first.",
+          "de": "Warten abgelehnt: {requested} ({requestedMode}) ist seit {seconds} s nicht verfügbar{blocker}, während dieser Prozess {held} exklusiv hält und damit alle blockiert, die {held} brauchen. {held} vor dem Warten freigeben oder {requested} zuerst nehmen."
+        },
+        "selfDeadlock": {
+          "en": "Self-deadlock: {requested} is requested {requestedMode} while this process already holds it {heldMode}. Take the strongest mode up front or use the queued upgrade.",
+          "de": "Selbst-Verklemmung: {requested} wird {requestedMode} angefordert, obwohl dieser Prozess es bereits {heldMode} hält. Den stärksten Modus gleich nehmen oder das Upgrade der Warteschlange benutzen."
+        },
+        "cycle": {
+          "en": "Deadlock detected: {cycle}. This request was chosen to fail so the others can proceed.",
+          "de": "Verklemmung erkannt: {cycle}. Diese Anfrage wurde zum Scheitern gewählt, damit die anderen fortfahren können."
+        },
+        "modeShared": {
+          "en": "shared",
+          "de": "geteilt"
+        },
+        "modeExclusive": {
+          "en": "exclusive",
+          "de": "exklusiv"
+        },
+        "blocker": {
+          "en": ", held by process {pid} for {heldSeconds} s",
+          "de": ", gehalten von Prozess {pid} seit {heldSeconds} s"
+        },
+        "observed": {
+          "en": "[lease-order] {message}",
+          "de": "[lease-order] {message}"
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "registryDirectoryEnvironment": "SEMIO_LEASE_REGISTRY_DIRECTORY",
+        "policyEnvironment": "SEMIO_LEASE_ORDER_POLICY",
+        "modeEnvironment": "SEMIO_LEASE_ORDER",
+        "inheritedEnvironment": "SEMIO_LEASE_INHERITED",
+        "invocationEnvironment": "SEMIO_BUILD_INVOCATION_PID",
+        "invocationChainEnvironment": "SEMIO_BUILD_INVOCATION_PIDS",
+        "maximumInvocationChain": 16,
+        "maximumReportedResourceCharacters": 120,
+        "maximumInherited": 64
+      }
+    },
+    "StrictWait": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "held",
+        "requested",
+        "reason"
+      ],
+      "properties": {
+        "held": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "requested": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "reason": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1
+            },
+            "de": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

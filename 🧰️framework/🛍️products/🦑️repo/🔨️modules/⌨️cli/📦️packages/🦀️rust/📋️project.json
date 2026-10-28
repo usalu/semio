@@ -89,11 +89,11 @@
             "verb": "test",
             "title": {
               "en": "Test Native Repository CLI and MCP Scope",
-              "de": "Native Repository-CLI und MCP-Geltungsbereich Testen"
+              "de": "Native Repository-CLI und MCP-Scope testen"
             },
             "description": {
               "en": "Run seven native crates and the authenticated installed SDK root-scope laws.",
-              "de": "Sieben native Crates und authentifizierte installierte SDK-Geltungsbereichsgesetze ausführen."
+              "de": "Sieben native Crates und authentifizierte installierte SDK-Scope-Gesetze ausführen."
             }
           },
           "cache": {

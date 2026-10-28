@@ -1,0 +1,27 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs": {
+  "file": "00.mjs",
+  "base": "59626c7af86bb4d109fc31e481fb518e9e66ae2cc76a6727b82edc940c58fc6f",
+  "new": "327620e602dd2f19a64a39fa59c36fb2a25f966700ce153388c80ffd99274021"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.d.mts": {
+  "file": "01.d.mts",
+  "base": "19c03eae973aefa178b21b1ee29601b88a286fcdd0d151f396492f8eb5544007",
+  "new": "2bb5781d61903d4a3732f0ae7fd5d141db2f33c3b3cc71bbdffb92aa2f0d89ca"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔁️bootstrap/🟨️.mjs": {
+  "file": "02.mjs",
+  "base": "1b49aa51ebca21d70aa72510fc8178af1906c91ab2dec15b575e728119c92199",
+  "new": "7d3425f3f82e257eded2a8dcea68c09b0d010df4c7a225056e9812bd275c05a7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🧪️tests/🔁️verifier/🟦️.ts": {
+  "file": "03.ts",
+  "base": null,
+  "new": "0bf5514deaaa563544df6483dcd055d9848fd5ce434c6b06245e84a7251a4153"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🧪️tests/🧫️fixtures/🔁️verifier/🔣️.json": {
+  "file": "04.json",
+  "base": null,
+  "new": "b604f683704338f4126b3880eabd37dc939fb94b26fae561bf4bd3b40c3ffe84"
+ }
+}

@@ -1,0 +1,67 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧬️schema/🔣️.json": {
+  "file": "00.json",
+  "base": "c455c9d16cf7e757fe88ac573ca2453195ee393d40c4b7df7915772c4c554a7b",
+  "new": "ce108fc791c8b15519268c49b6bcca605a95fdb9fbadd80ebb84ec1fd8862cc2"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs": {
+  "file": "01.mjs",
+  "base": "8dc1daa5e6fbdb56130a0e134d121c718766fabf80bb8c48663293b0d76c30fd",
+  "new": "00ba51f0f1d1225ef88f3c0711b7694fd59fb4c543c7a2da6afe423c36bc1478"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.d.mts": {
+  "file": "02.mts",
+  "base": "d5d2f8c421340f8040c2b1394705a54fa9bce92f36ff5d6086cf6771de6cb031",
+  "new": "a5f84fe607264720534f3db38867031f1c03944a623f1fe8cea55b560b18e384"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs": {
+  "file": "03.mjs",
+  "base": "f141c4451bb28b11bd0196825d4b363719169d5f20634bdac87c928b0b4393d2",
+  "new": "56c4f4863ec24a0bd1a1d8ce7cd4c21d6b74668ec7523227f53fcacc54a9ff63"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/🧬️schema/🔣️.json": {
+  "file": "04.json",
+  "base": "3cc3707c6dfa14432ae5ac64071b68edce212d42108742a3f860267299a32781",
+  "new": "e24d72553e68352ea8be0e0d9fc0bbc22fc2308d67d49ee8aebf03475ea66108"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/🟨️.mjs": {
+  "file": "05.mjs",
+  "base": "5926ab3102f95cd2d9b6d56f1d7f2c3dbf052c901f56ba69324c4b6ddcf3ae9b",
+  "new": "6fca33ef0d76d49add0ba11ecda46e6c7a47e0167a4c371896dee6ec638babd1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/🟨️.d.mts": {
+  "file": "06.mts",
+  "base": "1f24be2269a5b1a40581092849acc44bc15f250a5c58ee3fc062e742aad52c23",
+  "new": "64f808bd4950f84e0a23d96b189b168101060cac5c1e5b8de3b82dd04e4728df"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧱️chunk-classes/🧬️schema/🔣️.json": {
+  "file": "07.json",
+  "base": "222579ee1432e330703938591ffdbffe76f17575de28db3f561b679751d88507",
+  "new": "28c7a7d6ef3850d272e627771acf13be593785ffa9e0862c72e7d33d326bc662"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧱️chunk-classes/🟨️.mjs": {
+  "file": "08.mjs",
+  "base": "21246158508b6a3cb82ed35fd818cdf67289a49d1283f5dc523d33a02948b039",
+  "new": "0971b97254c3c12c6a407586c731a626d71465151e639d346af075e1d35b17ba"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧱️chunk-classes/🟨️.d.mts": {
+  "file": "09.mts",
+  "base": "5c41e94bd663f86e92725c7099000c9e208b34d2cc1d993648eb5bf03b630449",
+  "new": "48136fb52ccf03636aa9e015d2f4cd1ed4ead459aa688b1c7dc2051a03af73cd"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🕰️generations/🔣️.json": {
+  "file": "10.json",
+  "base": null,
+  "new": "22e3db76448ed1fa96669042b3e6cd98f57eac2f97710c7f502443502b97c9b3"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🧩️generation-claims/🔣️.json": {
+  "file": "11.json",
+  "base": null,
+  "new": "0e2f278d50aa0c80bd9b572b84471b7f59b34b9b82a7216f444fc870e5cac0e0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🧱️generation-chunks/🔣️.json": {
+  "file": "12.json",
+  "base": null,
+  "new": "5e06e24aea9ee6921a22edee514c67eb8f41709a5692f623ed527a4fb0be490c"
+ }
+}

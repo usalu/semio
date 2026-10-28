@@ -1,0 +1,13 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Observation sequence law fixture / Gesetz der Beobachtungsfolge",
+ "description": "EN: A fixed scenario of reads, listings, probes, repeats, an edit between two reads, a memoized replay and a persisted project record reused in a second round records exactly these rows in exactly this order; the digests were taken from the observation module before the row table. DE: Ein festes Szenario aus Lesen, Auflisten, Prüfen, Wiederholen, einer Änderung zwischen zwei Lesevorgängen, einer gemerkten Wiederholung und einem gespeicherten Projektergebnis, das in einer zweiten Runde wiederverwendet wird, zeichnet genau diese Zeilen in genau dieser Reihenfolge auf; die Prüfsummen stammen aus dem Beobachtungsmodul vor der Zeilentabelle.",
+ "type": "object", "additionalProperties": false, "required": ["version", "files", "directories", "expected"],
+ "properties": {
+  "version": {"const": 1}, "files": {"type": "integer", "minimum": 1}, "directories": {"type": "integer", "minimum": 1},
+  "expected": {"type": "object", "additionalProperties": false, "required": ["capture", "records"], "properties": {
+   "capture": {"type": "object", "additionalProperties": false, "required": ["rows", "sha256"], "properties": {"rows": {"type": "integer"}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}},
+   "records": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["round", "value", "rows", "sha256"], "properties": {"round": {"type": "integer"}, "value": {"type": "integer"}, "rows": {"type": "integer"}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}}}
+  }}
+ }
+}

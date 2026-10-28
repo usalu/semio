@@ -1,5 +1,6 @@
 import "./📜️source-proofs/🟦️.ts";
 import "../../../📚️library/📦️packages/🟦️typescript/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️runtime-selection/🟦️.ts";
+import { plannedTestWorkersV1 } from "../../../📚️library/📦️packages/🟦️typescript/🧪️testing/👷️workers/🟦️.ts";
 import humanUsage from "../../⌨️usage/🧪️tests/🔣️.json";
 import humanUsageSchema from "../../⌨️usage/🧬️schema/🔣️.json";
 import { expect, test } from "bun:test";
@@ -13,6 +14,13 @@ import { semioSchemaAjvV1 } from "../../../../../../🔨️modules/🧬️schema
 import { inspectRustModuleChildren,readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import schema from "../../🧬️schema/🎛️dispatch/🔣️.json" with { type: "json" };
 import fixture from "../🧫️fixtures/🎛️dispatch/🔣️.json" with { type: "json" };
+
+/** 👷️ The `withPlannedTestWorkersV1` port of an evaluated route: the REAL worker policy plans the received environment (one `bun-test` worker for a request of one), only the learning write is left out so a test never teaches the shared store. */
+const plannedWorkersPortV1 = async <T>(runner: "bun-test", environment: Readonly<Record<string, string | undefined>>, specific: string | undefined, work: (plan: ReturnType<typeof plannedTestWorkersV1>) => Promise<T>, request?: number): Promise<T> => {
+  const plan = plannedTestWorkersV1(runner, environment, specific, request, () => {});
+  expect([plan.runner, plan.workers, request]).toEqual(["bun-test", 1, 1]);
+  return work(plan);
+};
 
 /** ⚖️ Runs the advertised observation selector against the actual carved Rust owner and received invocation. */
 test("borrowed observation controls select the exact persistent library law with one Original",async()=>{
@@ -55,6 +63,7 @@ test("dashboard test dispatch retains one current context through every selected
       runOwnedCommand: async (...args: unknown[]) => { const env = (args[5] as { env: { received: unknown; SEMIO_DASHBOARD_BIN?: string } }).env; expect(active.size).toBe(0); active.add(args[3]); expect(env.received).toBe(invocation); if (authorityCall(args)) authorityCustody = leased; if (env.SEMIO_DASHBOARD_BIN) expect(leased).toBe(true); const event = authorityCall(args) ? "authority" : String(args[3]); events.push(event); owned.push(args); await Promise.resolve(); if (env.SEMIO_DASHBOARD_BIN) expect(leased).toBe(true); active.delete(args[3]); events.push(event+"-settled"); },
       battle: async (...args: unknown[]) => { expect(args[3]).toBe(options); events.push("battle"); battles.push(args); },
       resolveTestLevel: (segments: string[], minimum?: string) => { expect(minimum).toBe("quick"); return { rest: segments.slice(1) }; },
+      withPlannedTestWorkersV1: plannedWorkersPortV1,
       withInstalledDashboardV1: async (workspace: unknown, context: unknown, body: (path: string) => Promise<void>) => { expect(context).toBe(options); events.push("installed"); installed.push([workspace, context]); leased = true; try { await body("installed-dashboard"); } finally { leased = false; events.push("released"); } },
       runRepositoryCargoTests: async (...args: unknown[]) => { events.push("native"); native.push(args); },
     };
@@ -105,6 +114,7 @@ test("dashboard window tests select the native test owners after the crate split
     compilerAdmissionBudgetV1: (value: unknown) => { expect(value).toBe(control); return 0; },
     scriptInvocationEnvironment: (value: unknown, env: unknown) => { expect(value).toBe(invocation); return { ...(env as object), received: invocation }; },
     resolveTestLevel: (segments: string[], minimum?: string) => { expect(minimum).toBe("quick"); expect([["--nocapture"], ["quick", "--nocapture"]]).toContainEqual(segments); return { rest: ["--nocapture"] }; },
+    withPlannedTestWorkersV1: plannedWorkersPortV1,
     runOwnedCommand: async (...args: unknown[]) => { expect((args[5] as { signal: unknown; env: { received: unknown } }).signal).toBe(control.signal); expect((args[5] as { env: { received: unknown } }).env.received).toBe(invocation); commands.push(args); await Promise.resolve(); expect(native).toHaveLength(0); }, devToolingEnv: (env: unknown) => env, repoTestArtifactEnvironment: () => ({}),
     runRepositoryCargoTests: async (...args: unknown[]) => { native.push(args); },
   };

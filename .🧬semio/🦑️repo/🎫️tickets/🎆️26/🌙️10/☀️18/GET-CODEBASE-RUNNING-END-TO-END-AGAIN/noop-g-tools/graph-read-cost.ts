@@ -1,0 +1,14 @@
+import{readFileSync}from"node:fs";import{resolve,join}from"node:path";
+const root=resolve(import.meta.dirname,"../../../../../../../..");
+const D="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph";
+const rec=await import(join(root,D,"📇️records/🟨️.mjs"));const policy=JSON.parse(readFileSync(join(root,D,"🔣️policy.json"),"utf8")).records;
+const dir=join(root,".cache/b/g/m/snapshots"),manifest=readFileSync(join(dir,process.argv[2]!+".json"));
+const graph=await rec.decodeGraphRecordsV1(manifest,async(d:string)=>new Uint8Array(readFileSync(join(dir,d+".gz"))),{policy});
+const lap=(l:string,t:number)=>console.log(l,Math.round(performance.now()-t));
+const{readBuildGraphV1}=await import(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts"));
+let t=performance.now();const text=JSON.stringify(graph);lap("stringify "+(text.length/1048576).toFixed(1)+"MB",t);
+t=performance.now();const parsed=JSON.parse(text);lap("parse",t);
+t=performance.now();const read=readBuildGraphV1(parsed);lap("readBuildGraphV1 (validate)",t);
+t=performance.now();const read2=readBuildGraphV1(JSON.parse(text));lap("parse+validate again",t);
+const{writeJsonStreamV1}=await import(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🌊️json-stream/🟨️.mjs"));
+t=performance.now();let n=0;await writeJsonStreamV1(graph,(s:string)=>{n+=s.length;return Promise.resolve();},{});lap("writeJsonStreamV1 "+(n/1048576).toFixed(1)+"MB",t);

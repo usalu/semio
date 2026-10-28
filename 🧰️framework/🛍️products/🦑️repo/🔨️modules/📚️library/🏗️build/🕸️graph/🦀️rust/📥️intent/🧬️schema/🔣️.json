@@ -38,6 +38,13 @@
       "maxLength": 128,
       "pattern": "^[A-Za-z0-9_][A-Za-z0-9_-]*$(?![\\s\\S])"
     },
+    "sourcesRecord": {
+      "description": "🧾️ The file the build publishes beside the binary, in the same atomic publication: every source Cargo compiled it from (its own dep-info) and when that build started (`semio.cargo.binary-sources/v1`). Only a binary deliverable has one.",
+      "type": "string",
+      "minLength": 14,
+      "maxLength": 160,
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_-]*\\.sources\\.json(?![\\s\\S])"
+    },
     "features": {
       "type": "array",
       "minItems": 1,
@@ -103,12 +110,14 @@
           "binary"
         ],
         "properties": {
-          "binary": {}
+          "binary": {},
+          "sourcesRecord": {}
         }
       },
       "else": {
         "properties": {
-          "binary": false
+          "binary": false,
+          "sourcesRecord": false
         }
       }
     }

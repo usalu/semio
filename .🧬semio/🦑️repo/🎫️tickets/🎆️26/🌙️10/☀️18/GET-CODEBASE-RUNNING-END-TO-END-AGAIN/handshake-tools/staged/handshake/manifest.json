@@ -1,0 +1,22 @@
+{
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🎬️executor/🟦️.ts": {
+    "file": "executor.ts",
+    "base": "165057a73ce40ae9b1a52aa7db13222c7ff178a4ed75a822a24ae245d84ffeb8",
+    "new": "f7a75c6d38ad806d2452cf4c0fbb6a0b102224c87c1e25f414b8614ba6708d01"
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🗓️scheduling/🔣️.json": {
+    "file": "scheduling.json",
+    "base": "3890d2afc77f06456631cf0886a1c48ece4e6b14b68e26a8cd4e435fb97473bf",
+    "new": "673c8e13ddfada58d4aee36d7a6ccddf8c574189d3322d62141f4e054f7ec146"
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️handshake/🟦️.ts": {
+    "file": "test.ts",
+    "base": null,
+    "new": "4af408bb267ce3eee58021fa4ed42cc060ced910473e317be7bbbca935d20373"
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️handshake/🔣️.json": {
+    "file": "fixture.json",
+    "base": null,
+    "new": "be092b401da94f9c4d05bbd79766198cdfcf926ade813d19338edc7d944a8bbf"
+  }
+}

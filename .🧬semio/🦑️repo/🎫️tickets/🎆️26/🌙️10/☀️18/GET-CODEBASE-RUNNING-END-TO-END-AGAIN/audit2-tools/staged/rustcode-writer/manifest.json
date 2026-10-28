@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🟦️.ts": {
+  "file": "00.ts",
+  "base": "727e4422c850337e1c05006e7014f2d57db05acf32a3521319ea72ea6e6658d6",
+  "new": "4a0184808b11417e67f6fbbea843fa60ac4fc71ea855c8871c121076ee1e63f8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🧪️tests/🖊️writer/🟦️.ts": {
+  "file": "01.ts",
+  "base": null,
+  "new": "b3a1922fe1468a19c5603b1d38636c29252afd17a40f322a0163f36af5fbef13"
+ }
+}

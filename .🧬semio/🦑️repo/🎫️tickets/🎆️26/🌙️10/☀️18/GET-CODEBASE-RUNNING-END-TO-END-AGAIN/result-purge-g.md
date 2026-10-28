@@ -1,0 +1,47 @@
+FOR gate-g: batch ready `purge-g-tools/staged/purge` (20 files under `📚️library`: workspace-cleanup + 8 suites; `python3 -I purge-g-tools/stage.py check|apply|revert`; laws `sh purge-g-tools/staged/purge/verify.sh`; P0 data-loss guard, land early, no product build needed: it only changes `repo clean` and its tests).
+
+# result-purge-g (P0: purge and clean must never delete tracked files or live work of open tickets)
+
+Lane purge-g, 10-26 19:07-20:30. Nothing was run against the real checkout (no purge, no clean, no restore of the deleted monolith-split files). Ticket not closed.
+
+## What was wrong (audit C/audit-sweep-1026g.md, confirmed in code)
+- Go `PurgeOversizedTicketArtifacts` (tickets, 🔓️finish-reopen) and Rust `purge_oversized_artifacts` walked the WHOLE ticket folder, `RemoveAll` on any subfolder above 10 MiB and any file above 5 MiB, for every ticket (`--all` or no argument), open or closed, tracked or not, written a second ago or not. The Go client `ticket-purge` was generated-only but also ignored status. A Rust and a Go store-based `PurgeArtifacts` repeated the whole-tree rule.
+- `repo clean`: `cleanTicketSizeRemovals` (every ticket, >5 MiB file / >10 MiB dir) plus the `allowedOpenTicket` bypass in `cleanRemovePath` / `cleanProjectRemovals` removed non-generated subtrees and ignored files of OPEN tickets; two official tests (`clean-ticket-runs`) asserted exactly that as intended behaviour.
+
+## The one purge law (schema first)
+`🎫️tickets/🧬️schema/🔣️.json` `$defs.PurgePolicy` (+ `PurgeSelection`, `PurgeRemoval`, `PurgeSkip`, `PurgePlan`, `PurgeCase`; `PurgeReport` removed):
+1. Only the direct child `🗑️generated` of a CLOSED ticket (manifest `status == "closed"` exactly) is eligible; nothing else in a ticket is ever touched, whatever its size.
+2. Selection `oversized` (ticket close, `repo ticket purge-artifacts`): files above 5 MiB and folders above 10 MiB (exact sizes stay). Selection `generated` (`repo clean`): everything below it.
+3. A file the git index tracks is never removed; a folder holding one is kept, its other contents are judged on their own. `git ls-files -z --cached` is read-only, cannot climb above the root (GIT_CEILING_DIRECTORIES), ignores GIT_* redirection; an unanswerable query fails closed (`tracked-unknown`).
+4. Any regular file younger than 600 s (a future mtime counts as young) skips the whole ticket (`live-writer`). A live lease only ever refreshes such a file (lease age limit 120 s), so Go and Rust need no lease reader; the TS clean keeps its explicit lease check as a superset.
+5. Links are never followed, counted or removed through; a generated root that is a link or a file is skipped (`symlink-root`, `not-directory`).
+6. Plan by default; `--apply` acts. Apply re-walks and refuses (`live-writer`) when the folder changed between plan and removal. Close time purges the closing ticket's generated output with the same guards (its own fresh output is therefore kept until a later purge).
+`--all` is gone: no argument = every closed ticket (dry run), a ticket path = that ticket.
+
+## Implementations (one per language, no compat layer)
+- Go LIVE: `🎫️tickets/📦️packages/🐹️go/🔓️finish-reopen/🐹️.go` (`PurgeTicketGeneratedOutput`, `PurgeClosedTicketGeneratedOutput`, `GitTrackedFiles`, `PurgePlan.Report` EN+DE); `FinishTicket` uses it; store-based `PurgeArtifacts`/`PurgeReport` removed from service-close/service. CLI `⌨️cli/.../🎫️ticket` and client `ticket-command` / `ticket-finish-reopen` call the same function; client `🧹️ticket-purge` is now a 10-line adapter (go.mod: tickets direct).
+- Rust LIVE: `🎫️tickets/🔓️lifecycle/🦀️.rs` region 🧹️PurgeGenerated (`purge_ticket_generated_output`, `purge_closed_ticket_generated_output`, `GitTrackedFiles` behind trait `TrackedFiles`); store-based `purge_artifacts`, `PurgeReport` removed; verb `ticket_purge_artifacts` + command tree flag `--apply` (EN | DE text).
+- TS STAGED (library): `🧼️workspace-cleanup/🔍️candidate-discovery` `cleanPlanGeneratedDirectory` / `cleanPlanTicketGeneratedPurge` / `cleanGitTrackedFiles`; `cleanTicketSizeRemovals`, `cleanOpenTicketOversizedFileRemovals`, the 5/10/100 MiB ticket constants, kinds `ticket-file`/`ticket-dir`, the `allowedOpenTicket` parameter and bypass (protection, removal) are deleted; `cleanRemovalProtection` now always protects open tickets; nested links inside a generated folder are unlinked, never followed. `repo clean` keeps its default (apply); it can now only remove generated output of closed, untracked, quiet tickets plus the other classes it always had.
+- The pre-existing lifecycle scenario `an-oversized-artifact-is-purged` (whole-tree, in-memory) and its fixture block were removed from feature, Go and Rust adapters; the client retention tests were replaced by the fixture below.
+
+## Laws and oracle
+- Fixture `🎫️tickets/🧪️tests/🧫️fixtures/🧹️purge-generated/🧹️cases.json`: 18 cases (open ticket with tracked 11 MiB subtree plus fresh generated; open old output; the 16 retention vectors of the earlier lane; selection generated; tracked file kept / folder kept; 599/600/-30 s window; 5 MiB and 10 MiB boundaries; root as file/link/missing/empty; inner links; manifest states; scope ticket; hidden folder; two tickets one writer; git unknown; nested `🗑️generated` name).
+- Oracle: independent Python decision table `🧪️tests/🧹️purge-generated/🐍️.py` (`write` freezes `expect`, `check` re-derives it, cross-checks every declared tracked flag against real `git ls-files` of a throwaway repo, and checks the schema policy). Plus third-party `glob` enumeration in the TS suite and in the client glob oracle (`verifyTicketRetentionOracle`, now over this fixture).
+- Each language materialises every case as REAL files in a throwaway repository outside the checkout (own `.git`, sparse files, set mtimes, `git add -f` for tracked), asserts: dry-run plan == frozen plan, dry run changes nothing (tree incl. mtimes), applied plan == frozen plan, resulting tree == tree minus planned paths, external link targets untouched.
+
+## Evidence (all graph-free, single suites; nothing official except one failed attempt)
+- Go (canonical overlay, `go test -short`, package `tickets`): ok 10.3 s, incl. 18 case subtests + close-time tests + `TestPurgeClosedTicketsNeverTouchesAnOpenTicket`; client `TestFinishTicketPurgesOversizedArtifacts` ok; cli and client `go vet` clean.
+- Rust: real crate compiled and tested with a private target dir (offline, nightly-2026-07-20, `purge-g` scratch crate that path-includes the live source): 19 passed / 0 failed (3 new). `repo-cli-verbs` `cargo check`: 0 warnings, 0 errors. The ONE official attempt `bun repo run @semio-tech/repo-tickets-rs:test` (20:00) waited 12 min in the capacity queue and died on a peer's transient `Cannot find module ... 📣️progress/🟦️.ts` (not this lane); not repeated because the same source was verified above.
+- TS on a symlink overlay of the checkout (only the 20 files are real copies): candidate-discovery 27/27, removal 14/14, protection 177/177, command 30/30, new `🧹️ticket-generated-purge` 20/20, clean-ticket-runs 4/4 (two tests inverted: open tickets keep everything; a new test holds the 17:16 scenario), managed-storage 2/2, ticket-protection 2/3 and scaffold-source 7/8 (the two reds are BASELINE on the live tree, unrelated).
+- Laws that fail before / pass after: `clean-ticket-runs` "clean never removes anything from an open ticket and never a tracked file or a fresh writer of a closed one" and fixture case 1 (open ticket, tracked 11 MiB subtree, fresh generated) in all three languages.
+- `git status --short | grep 🎫️tickets | grep -v GET-CODEBASE | wc -l`: 8039 (19:25, before the first Go run) / 8046 (before the official attempt) / 8048 (after): the 8,024 deleted monolith-split lines plus pre-existing fixture-ticket pollution (`RENAMED-IMPORTANT` 19:13 etc., before my first test); no new line under `.🧬semio/🦑️repo/🎫️tickets` came from this lane.
+
+## Staged batch (gate-g)
+`purge-g-tools/staged/purge`: 20 files (16 edited, 1 new test, 3 fixtures/corpora), all-or-nothing apply that refuses on base drift, revert restores base bytes; selftest on a scratch root: 20 pending -> apply -> 20 applied -> revert -> 20 pending. Land order: independent of the other batches; touches only `🧼️workspace-cleanup/**` and the 8 listed suites. Verify: `sh purge-g-tools/staged/purge/verify.sh` (expect 2 baseline reds named in it). NOT staged: `🔣️schema-catalog.json` / `📓️schema-catalog.md` still list `PurgeReport`; the catalog is already stale by 8,775 diff lines from other lanes, so the next `schema generate` picks the change up (render tool `purge-g-tools/render-catalog.ts` if wanted).
+
+## Open items / decisions for the user
+1. Recovery of the 8,024 deleted monolith-split files stays the user's call (`git restore --source=HEAD`; I did nothing).
+2. `repo clean` still applies by default (a `--dry` flag exists); making it dry-run by default would match purge-artifacts but changes a broader command.
+3. Oracle registry (`🎫️tickets/🔮️oracles/🔣️.json`) has no entry for this direct-test law (git CLI + glob + Python model); the older BDD scenario was removed, not replaced by a feature/adapter triple.
+4. aud-sweep item 4 (test temp roots resolving the real checkout) is proof2-g's `go-root-marker`; my Go tests bind a sandbox or use explicit roots and never resolve the checkout.
+5. Ask the user to grep `~/.zsh_history` for `purge-artifacts` (17:16, ~17:45) to settle the invoker.

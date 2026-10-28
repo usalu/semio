@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/repo/cargo-fill-rate/v1",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "file": "fill.jsonl",
+        "maximumBytes": 1048576,
+        "windowMilliseconds": 1800000,
+        "minimumSpanMilliseconds": 60000,
+        "keepRows": 4000
+      }
+    },
+    "Sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "atMs",
+        "freeBytes",
+        "volumeBytes"
+      ],
+      "properties": {
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "freeBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "volumeBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "profiles": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "Rates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spanMs",
+        "freeBytesPerHour",
+        "profileBytesPerHour"
+      ],
+      "properties": {
+        "spanMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "freeBytesPerHour": {
+          "type": "integer"
+        },
+        "profileBytesPerHour": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "Vector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "nowMs",
+        "samples",
+        "rates"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nowMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Sample"
+          }
+        },
+        "rates": {
+          "$ref": "#/definitions/Rates"
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "rate": {
+          "en": "[repo cache] fill rate over the last {minutes} min: {rate} GiB/h on the image ({free} GiB free); busiest profiles: {profiles}",
+          "de": "[repo cache] Füllrate der letzten {minutes} min: {rate} GiB/h im Image ({free} GiB frei); aktivste Profile: {profiles}"
+        },
+        "none": {
+          "en": "[repo cache] fill rate: not enough samples yet",
+          "de": "[repo cache] Füllrate: noch zu wenige Messpunkte"
+        }
+      }
+    }
+  }
+}

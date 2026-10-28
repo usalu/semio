@@ -1,6 +1,20 @@
+import {appendFileSync,mkdirSync,renameSync,statSync} from "node:fs";
+import {dirname} from "node:path";
 import schema from"./🧬️schema/🔣️.json" with { type: "json" };
+import {refuseProcessV1} from "../../../../../../../🔨️modules/🏃️process/📖️texts/🟦️.ts";
 /** 📏️ Bounds observational data without issuing process or writer authority. */
 export const cargoTimingPolicyV1=Object.freeze({...schema.definitions.Policy.const});
+/** 📒️ Formats one phase mark of a Cargo launch as a ledger line: a closed phase and point, finite times.
+ * @see ./🧪️tests/📒️ledger/🟦️.ts */
+export function cargoTimingLedgerRowV1(pid:number,command:string,phase:string,point:string,atMs:number,elapsedMs:number):string{
+ cargoTimingEventV1(phase,point,atMs,elapsedMs,null);if(!Number.isSafeInteger(pid)||pid<1)throw refuseProcessV1("invalid","cargoTiming.process-id-required");
+ return JSON.stringify({version:1,atMs,pid,command:command.slice(0,64),phase,point,elapsedMs})+"\n";
+}
+/** 📥️ Appends ledger lines; a ledger at or above `maximumBytes` first moves to `<file>.1` (one generation), and a ledger that cannot be written costs nothing. */
+export function appendCargoTimingLedgerV1(file:string,rows:string,maximumBytes:number=cargoTimingPolicyV1.maximumLogBytes):void{
+ if(!rows)return;
+ try{mkdirSync(dirname(file),{recursive:true});try{if(statSync(file).size>=maximumBytes)renameSync(file,file+".1");}catch{}appendFileSync(file,rows);}catch{}
+}
 /** 🧾️ Records one OS-observed process; ancestry is diagnostic data, never retirement custody. */
 export type OwnedProcessObservationV1=Readonly<{pid:number;parentPid:number;birth:string;cpuMilliseconds:number;elapsedMilliseconds:number;state:string;rssBytes:number;name:string}>;
 /** ⏲️ Decodes the common Unix process CPU/elapsed clock without floating-point fraction loss. */

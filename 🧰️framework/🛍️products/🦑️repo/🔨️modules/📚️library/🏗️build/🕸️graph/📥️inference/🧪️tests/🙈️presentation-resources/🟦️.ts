@@ -28,7 +28,7 @@ test("the command closure of the entry omits presentation resources and keeps th
 });
 
 test("python scan of the entry's import statements agrees with the fixture",()=>{
- const python=testPythonV1();if(!python)return;
+ const python=testPythonV1();if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",fileURLToPath(new URL("./🐍️.py",import.meta.url)),fileURLToPath(new URL("./🔣️.json",import.meta.url)),root]);
  expect(result.stdout.toString().trim()).toBe("ok");
 });

@@ -354,7 +354,8 @@
     "policy": {
       "maximumBytes": 1073741824,
       "lowWaterBytes": 536870912,
-      "minimumAvailableBytes": 1073741824
+      "minimumAvailableBytes": 1073741824,
+      "retirementWindowMilliseconds": 15000
     },
     "cleanupError": "Owned optional cache closer failed",
     "writerDeadlineMilliseconds": 150,
@@ -783,7 +784,7 @@
     "publication": {
       "version": 1,
       "ownerRoot": "catalog/publication",
-      "outputRoot": "catalog/output",
+      "outputRoot": "catalog/publication/output",
       "contributions": [
         {
           "ownerRoot": "components",
@@ -797,7 +798,7 @@
       {
         "name": "prepare-<%= variant %>-native-<%= profile %>",
         "outputs": [
-          "{projectRoot}/dist/runtime/native/<%= profile %>/<%= variant %>"
+          "{projectRoot}/.🧾️store/prepare-<%= variant %>-native-<%= profile %>.json"
         ]
       },
       {
@@ -819,7 +820,7 @@
       {
         "name": "activate-<%= variant %>-react-<%= profile %>",
         "outputs": [
-          "{projectRoot}/dist/runtime/react/<%= profile %>/<%= variant %>"
+          "{workspaceRoot}/.cache/b/p/m/browser/<%= profile %>/runtime/react/<%= variant %>"
         ]
       },
       {
@@ -837,7 +838,7 @@
       {
         "name": "activate-<%= variant %>-wgpu-<%= profile %>",
         "outputs": [
-          "{projectRoot}/dist/runtime/wgpu/<%= profile %>/<%= variant %>"
+          "{workspaceRoot}/.cache/b/p/m/browser/<%= profile %>/runtime/wgpu/<%= variant %>"
         ]
       },
       {
@@ -846,9 +847,8 @@
       }
     ],
     "prerequisites": [
-      "@semio-tech/os-plugin-describe-rs:build",
-      "codegen:build",
-      "workspace:deps-wasm-opt"
+      "a:component",
+      "b:component"
     ],
     "cancellation": "Original Script process deadline exhausted"
   },
@@ -1049,7 +1049,7 @@
         ]
       },
       {
-        "id": "all-to-task",
+        "id": "owners-to-task",
         "ancestor": [
           "exec",
           "--projects=app",
@@ -1064,7 +1064,11 @@
           "app:test"
         ],
         "pin": {
-          "kind": "all"
+          "kind": "owners",
+          "projects": [
+            "app"
+          ],
+          "exclude": []
         },
         "calls": [
           "ancestor:reuse",
@@ -1139,9 +1143,7 @@
             }
           ]
         },
-        "calls": [
-          "requested:reuse"
-        ],
+        "calls": [],
         "missingAuthority": true,
         "refused": true
       },
@@ -2239,7 +2241,6 @@
     ],
     "batch": {
       "count": 21,
-      "maximumReads": 16,
       "filePrefix": "app/batch-"
     },
     "digestError": "Build input closure content differs"
@@ -3012,7 +3013,7 @@
           "--configuration=prototype"
         ],
         "native": {
-          "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target",
+          "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/u/l/d/t",
           "transport": {
             "maximumBytes": 134217728,
             "maximumLines": 1000000
@@ -3040,7 +3041,7 @@
           "--configuration=prototype"
         ],
         "native": {
-          "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target",
+          "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/u/l/d/t",
           "transport": {
             "maximumBytes": 134217728,
             "maximumLines": 1000000
@@ -3068,7 +3069,7 @@
           "--configuration=prototype"
         ],
         "native": {
-          "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target",
+          "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/u/l/d/t",
           "transport": {
             "maximumBytes": 134217728,
             "maximumLines": 1000000
@@ -3110,12 +3111,12 @@
       {
         "platform": "posix",
         "root": "/work/semio",
-        "artifact": "/work/semio/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target"
+        "artifact": "/work/semio/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/u/l/d/t"
       },
       {
         "platform": "win32",
         "root": "C:\\work\\semio",
-        "artifact": "C:\\work\\semio\\.🧬semio\\🦑️repo\\⚡️cache\\rust\\fixed\\m\\cargo\\shared\\target"
+        "artifact": "C:\\work\\semio\\.🧬semio\\🦑️repo\\⚡️cache\\rust\\fixed\\m\\u\\l\\d\\t"
       }
     ]
   },
@@ -3358,8 +3359,8 @@
       ]
     },
     "files": {
-      "app/📋️project.json": "{\"name\":\"app\",\"targets\":{\"test\":{\"executor\":\"repo:script\",\"cache\":false,\"inputs\":[],\"options\":{\"cwd\":\"app\",\"command\":\"repo ./📜️script.ts test\"},\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}}}}}",
-      "app/📜️script.ts": "import type {Thing} from '../library/api.mjs'; export const current:Thing={value:1};\n",
+      "app/📋️project.json": "{\"name\":\"app\",\"targets\":{\"test\":{\"executor\":\"repo:script\",\"cache\":false,\"inputs\":[\"{projectRoot}/📜️script.ts\"],\"options\":{\"cwd\":\"app\",\"command\":\"repo ./📜️script.ts test\"},\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}}}}}",
+      "app/📜️script.ts": "import {runtime} from '../library/api.mjs'; export const current=runtime;\n",
       "library/📋️project.json": "{\"name\":\"lib\",\"targets\":{}}",
       "library/api.mjs": "export const runtime=1;\n",
       "library/api.d.mts": "export type {Thing} from './definition.ts';\n",
@@ -3464,10 +3465,10 @@
     },
     "files": {
       "app/📋️project.json": "{\"name\":\"app\",\"targets\":{\"test\":{\"executor\":\"repo:script\",\"cache\":false,\"dependsOn\":[\"^build\"],\"inputs\":[\"{workspaceRoot}/Cargo.toml\",\"^api\",{\"input\":\"types\",\"projects\":[\"lib\"]}],\"options\":{\"command\":\"repo ./📜️script.ts test\",\"cwd\":\"app\"},\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}}}}}",
-      "app/📜️script.ts": "import type {Thing} from '../library/api.ts'; import raw from '../raw/data.ts?raw'; export const current:Thing = {value:1};\n",
+      "app/📜️script.ts": "import {thing} from '../library/api.ts'; import raw from '../raw/data.ts?raw'; export const current = thing;\n",
       "raw/data.ts": "import './missing.ts'; export default 'raw';\n",
       "library/📋️project.json": "{\"name\":\"lib\",\"namedInputs\":{\"api\":[\"{projectRoot}/api-data/**/*\"],\"types\":[\"{projectRoot}/types/**/*\"]},\"targets\":{\"build\":{\"executor\":\"repo:noop\",\"cache\":false,\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}}}}}",
-      "library/api.ts": "export interface Thing {value:number}\n",
+      "library/api.ts": "export const thing = {value:1};\n",
       "library/api-data/data.json": "{\"version\":1}\n",
       "library/types/data.json": "{\"version\":2}\n",
       "📋️project.json": "{\"name\":\"workspace\",\"namedInputs\":{\"api\":[\"{projectRoot}/specific/**/*\"]},\"targets\":{\"build\":{\"executor\":\"repo:noop\"}}}",
@@ -5733,7 +5734,7 @@
             "compiled": [],
             "closure": [],
             "dependencies": [],
-            "error": "Ordinary command Source required",
+            "error": "Ordinary compiler input refused: runtime.js",
             "sourceRefusal": true
           }
         ],
@@ -6249,11 +6250,13 @@
     "bindings": [
       {
         "symbol": "MutationMessage",
-        "source": "🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts"
+        "source": "🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",
+        "facade": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🔄️merge-outcome/🟦️.ts"
       },
       {
         "symbol": "Severity",
-        "source": "🧰️framework/🔨️modules/🎠️kernel/🚨️fault/🟦️.ts"
+        "source": "🧰️framework/🔨️modules/🎠️kernel/🚨️fault/🟦️.ts",
+        "facade": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🚨️fault/🟦️.ts"
       }
     ],
     "neutral": {
@@ -6705,67 +6708,78 @@
         "importer": "🧰️framework/🔨️modules/🎁️packs/🟦️.ts",
         "symbol": "viewContextWithIntegerCarriers",
         "source": "🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts",
-        "specifier": "../🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts"
+        "specifier": "../🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts",
+        "facade": "🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts"
       },
       {
         "importer": "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
         "symbol": "dialectCoordinate",
         "source": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
-        "specifier": "../../🚪️io/🧬️schema/🟦️.ts"
+        "specifier": "../../🚪️io/🧬️schema/📦️packages/🟦️typescript/🟦️.ts",
+        "facade": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🟦️typescript/🟦️.ts"
       },
       {
         "importer": "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
         "symbol": "parseDialectCoordinate",
         "source": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
-        "specifier": "../../🚪️io/🧬️schema/🟦️.ts"
+        "specifier": "../../🚪️io/🧬️schema/📦️packages/🟦️typescript/🟦️.ts",
+        "facade": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🟦️typescript/🟦️.ts"
       },
       {
         "importer": "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
         "symbol": "parseSurfaceAppId",
         "source": "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
-        "specifier": "../../🛂️manifest/🧬️schema/🟦️.ts"
+        "specifier": "../../🛂️manifest/🧬️schema/🟦️.ts",
+        "facade": "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts"
       },
       {
         "importer": "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
         "symbol": "resolveOpeningApp",
         "source": "🧰️framework/🔨️modules/🎠️kernel/📖️opening-resolver/🟦️.ts",
-        "specifier": "../../🎠️kernel/📖️opening-resolver/🟦️.ts"
+        "specifier": "../../🎠️kernel/📦️packages/🟦️typescript/📖️opening-resolver/🟦️.ts",
+        "facade": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📖️opening-resolver/🟦️.ts"
       },
       {
         "importer": "🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts",
         "symbol": "fetchWithTimeout",
         "source": "🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
-        "specifier": "../../🚪️io/🌐️fetch-timeout/🟦️.ts"
+        "specifier": "../../🚪️io/🌐️fetch-timeout/🟦️.ts",
+        "facade": "🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts"
       },
       {
         "importer": "🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts",
         "symbol": "retryWithJitteredBackoff",
         "source": "🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
-        "specifier": "../../⏳️async/🔁️jittered-backoff/🟦️.ts"
+        "specifier": "../../⏳️async/📦️packages/🟦️typescript/🔁️jittered-backoff/🟦️.ts",
+        "facade": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/🔁️jittered-backoff/🟦️.ts"
       },
       {
         "importer": "🧰️framework/🔨️modules/📞️directory-client/🟦️.ts",
         "symbol": "fetchWithTimeout",
         "source": "🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
-        "specifier": "../🚪️io/🌐️fetch-timeout/🟦️.ts"
+        "specifier": "../🚪️io/🌐️fetch-timeout/🟦️.ts",
+        "facade": "🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts"
       },
       {
         "importer": "🧰️framework/🔨️modules/📞️directory-client/🟦️.ts",
         "symbol": "retryWithJitteredBackoff",
         "source": "🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
-        "specifier": "../⏳️async/🔁️jittered-backoff/🟦️.ts"
+        "specifier": "../⏳️async/📦️packages/🟦️typescript/🔁️jittered-backoff/🟦️.ts",
+        "facade": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/🔁️jittered-backoff/🟦️.ts"
       },
       {
         "importer": "🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts",
         "symbol": "conflictResolutionAsU8",
         "source": "🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",
-        "specifier": "../../🎠️kernel/🔄️merge-outcome/🟦️.ts"
+        "specifier": "../../🎠️kernel/📦️packages/🟦️typescript/🔄️merge-outcome/🟦️.ts",
+        "facade": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🔄️merge-outcome/🟦️.ts"
       },
       {
         "importer": "🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts",
         "symbol": "mergePolicyAsU8",
         "source": "🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",
-        "specifier": "../../🎠️kernel/🔄️merge-outcome/🟦️.ts"
+        "specifier": "../../🎠️kernel/📦️packages/🟦️typescript/🔄️merge-outcome/🟦️.ts",
+        "facade": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🔄️merge-outcome/🟦️.ts"
       }
     ],
     "neutral": {
@@ -6950,6 +6964,8 @@
         "sharedGlobals",
         "schemaSources",
         "production",
+        "testSourceExclusions",
+        "schedulingSourceExclusions",
         "cargoToolchain",
         "go",
         "uv",

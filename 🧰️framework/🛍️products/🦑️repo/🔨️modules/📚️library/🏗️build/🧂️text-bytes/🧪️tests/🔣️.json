@@ -1,0 +1,180 @@
+{
+ "version": 1,
+ "texts": [
+  {
+   "name": "empty",
+   "value": ""
+  },
+  {
+   "name": "ascii",
+   "value": "abc"
+  },
+  {
+   "name": "path with emoji and variation selectors",
+   "value": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfd7\ufe0fbuild/\ud83d\udc41\ufe0fobservation/\ud83d\udfe8\ufe0f.mjs"
+  },
+  {
+   "name": "astral pair",
+   "value": "a\ud83d\ude00b"
+  },
+  {
+   "name": "lone high surrogate",
+   "value": "a\ud800b"
+  },
+  {
+   "name": "lone low surrogate",
+   "value": "\udc00"
+  },
+  {
+   "name": "reversed pair",
+   "value": "\ude00\ud83d"
+  },
+  {
+   "name": "nul and control characters",
+   "value": "a\u0000b\u0001\u007f"
+  },
+  {
+   "name": "latin and cjk",
+   "value": "Z\u00fcrich \u6771\u4eac \u00f1"
+  }
+ ],
+ "bytes": [
+  {
+   "name": "no bytes",
+   "hex": ""
+  },
+  {
+   "name": "all byte values",
+   "hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f7f80ff"
+  },
+  {
+   "name": "invalid utf-8 bytes stay bytes",
+   "hex": "c328a0a1f0288cbc"
+  }
+ ],
+ "delimited": [
+  {
+   "name": "no texts",
+   "delimiter": "\u0000",
+   "texts": []
+  },
+  {
+   "name": "one empty text",
+   "delimiter": "\u0000",
+   "texts": [
+    ""
+   ]
+  },
+  {
+   "name": "roster",
+   "delimiter": "\u0000",
+   "texts": [
+    "/w",
+    "a/b.ts",
+    "a/c.ts",
+    "\ud83e\uddf0\ufe0fx/\ud83d\udfe8\ufe0f.mjs"
+   ]
+  },
+  {
+   "name": "lone surrogates at both text edges",
+   "delimiter": "\u0000",
+   "texts": [
+    "a\ud800",
+    "\udc00b",
+    "\ud83d",
+    "\ude00"
+   ]
+  },
+  {
+   "name": "colon delimiter",
+   "delimiter": ":",
+   "texts": [
+    "3",
+    "abc",
+    "0",
+    "",
+    "4",
+    "\ud83e\uddc2\ufe0f"
+   ]
+  },
+  {
+   "name": "two character delimiter",
+   "delimiter": "\r\n",
+   "texts": [
+    "x",
+    "y"
+   ]
+  },
+  {
+   "name": "a first text before the roster",
+   "delimiter": "\u0000",
+   "first": "/Users/ueli/Documents/semio",
+   "texts": [
+    "a/b.ts",
+    "\ud83e\uddf0\ufe0fx"
+   ]
+  },
+  {
+   "name": "a first text and no roster",
+   "delimiter": "\u0000",
+   "first": "/w",
+   "texts": []
+  },
+  {
+   "name": "a lone surrogate ends the first text",
+   "delimiter": "\u0000",
+   "first": "x\ud83d",
+   "texts": [
+    "\ude00y"
+   ]
+  }
+ ],
+ "refusedDelimiters": [
+  "",
+  "\u00e9",
+  "\ud800",
+  "a\ud83e\uddc2"
+ ],
+ "generated": {
+  "seed": 7,
+  "texts": 400,
+  "maximumLength": 70
+ },
+ "order": [
+  "",
+  "a",
+  "ab",
+  "b",
+  "B",
+  "\u00e9",
+  "z",
+  "\u00ff",
+  "\u0800",
+  "\ud7ff",
+  "\ue000",
+  "\uffff",
+  "\ud800",
+  "\udbff",
+  "\udc00",
+  "\udfff",
+  "\ud83d\ude00",
+  "\ud83d\ude01",
+  "\ud800\udc00",
+  "a\ud800",
+  "a\ud800b",
+  "a\ud83d\ude00",
+  "a\ue000",
+  "\ud83d",
+  "\ud83dx",
+  "x\ud83d\ude00y",
+  "\ud83e\uddf0\ufe0fframework",
+  "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0f",
+  "\ud83e\uddf0",
+  "\ud83e\uddf0\ufe0f"
+ ],
+ "views": [
+  "",
+  "abc",
+  "\u00e9\u6771\ud83e\uddf0\ufe0f\ud800z"
+ ]
+}

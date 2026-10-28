@@ -1,0 +1,1479 @@
+diff -ruN --exclude=node_modules ov-base/🧰️framework/📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts ov/🧰️framework/📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts
+--- ov-base/🧰️framework/📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts	2026-10-25 09:26:48
++++ ov/🧰️framework/📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts	2026-10-26 10:41:12
+@@ -1,2 +1,2 @@
+ /** 🏁️ Public `@semio-tech/framework/runtime/main` entry: explicit re-exports of the module that owns each member. */
+-export { isMainModuleV1 } from "../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
++export { isMainModuleV1, onTerminationV1, terminationSignalsV1 } from "../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🔨️modules/⚙️runtime/🏁️main/🟦️.ts ov/🧰️framework/🔨️modules/⚙️runtime/🏁️main/🟦️.ts
+--- ov-base/🧰️framework/🔨️modules/⚙️runtime/🏁️main/🟦️.ts	2026-10-22 09:23:29
++++ ov/🧰️framework/🔨️modules/⚙️runtime/🏁️main/🟦️.ts	2026-10-26 10:41:12
+@@ -8,3 +8,15 @@
+   const canonical = (path: string): string => { const real = pathToFileURL(realpathSync(path)).href; return process.platform === "win32" ? real.toLowerCase() : real; };
+   try { return canonical(entry) === canonical(fileURLToPath(metaUrl)); } catch { return false; }
+ }
++
++/** 🛑️ The signals that ask a process to stop. Node delivers `SIGINT` (Ctrl+C) everywhere and `SIGTERM` on POSIX hosts only; a Windows process hears the console instead: `SIGBREAK` (Ctrl+Break) and `SIGHUP` (the console window closes). An external `taskkill` without `/F` posts the same close event, so listening to all four is what makes cancellation reach a Windows child at all. */
++export function terminationSignalsV1(platform: string = process.platform): readonly NodeJS.Signals[] {
++  return platform === "win32" ? ["SIGINT", "SIGTERM", "SIGBREAK", "SIGHUP"] : ["SIGINT", "SIGTERM"];
++}
++
++/** 🛑️ Runs `handler` once when a stop signal arrives and answers the function that removes the listeners again. */
++export function onTerminationV1(handler: (signal: NodeJS.Signals) => void, platform: string = process.platform, target: Pick<NodeJS.Process, "once" | "removeListener"> = process): () => void {
++  const listeners = terminationSignalsV1(platform).map((signal) => [signal, () => handler(signal)] as const);
++  for (const [signal, listener] of listeners) target.once(signal, listener);
++  return () => { for (const [signal, listener] of listeners) target.removeListener(signal, listener); };
++}
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🔨️modules/⚙️runtime/🧪️tests/🛑️termination/🟦️.ts ov/🧰️framework/🔨️modules/⚙️runtime/🧪️tests/🛑️termination/🟦️.ts
+--- ov-base/🧰️framework/🔨️modules/⚙️runtime/🧪️tests/🛑️termination/🟦️.ts	1970-01-01 01:00:00
++++ ov/🧰️framework/🔨️modules/⚙️runtime/🧪️tests/🛑️termination/🟦️.ts	2026-10-26 10:41:32
+@@ -0,0 +1,35 @@
++import {expect, test} from "bun:test";
++import {spawn} from "node:child_process";
++import {EventEmitter} from "node:events";
++import {fileURLToPath} from "node:url";
++import {onTerminationV1, terminationSignalsV1} from "../../🏁️main/🟦️.ts";
++
++/** 🛑️ Contract: a Windows process listens to the console signals as well (`SIGBREAK`, `SIGHUP`), because `SIGTERM` never reaches it; a POSIX process keeps `SIGINT` and `SIGTERM`. The handler runs once per arrival and the disposer removes every listener. */
++const module = fileURLToPath(new URL("../../🏁️main/🟦️.ts", import.meta.url));
++
++test("the signal set depends on the platform", () => {
++  expect(terminationSignalsV1("win32")).toEqual(["SIGINT", "SIGTERM", "SIGBREAK", "SIGHUP"]);
++  for (const platform of ["linux", "darwin"]) expect(terminationSignalsV1(platform)).toEqual(["SIGINT", "SIGTERM"]);
++});
++
++test("every Windows console signal reaches the handler once and the disposer removes the listeners", () => {
++  const target = new EventEmitter(), seen: string[] = [];
++  const dispose = onTerminationV1((signal) => seen.push(signal), "win32", target as never);
++  for (const signal of terminationSignalsV1("win32")) { target.emit(signal); target.emit(signal); }
++  expect(seen).toEqual(["SIGINT", "SIGTERM", "SIGBREAK", "SIGHUP"]);
++  const again = onTerminationV1(() => seen.push("x"), "win32", target as never);
++  again();
++  for (const signal of terminationSignalsV1("win32")) expect(target.listenerCount(signal)).toBe(0);
++  dispose();
++});
++
++test("a real process stops on SIGTERM through the handler (POSIX hosts)", async () => {
++  if (process.platform === "win32") return;
++  const child = spawn(process.execPath, ["-e", `import(${JSON.stringify(module)}).then(({onTerminationV1})=>{onTerminationV1(signal=>{console.log("stopped:"+signal);process.exit(0);});console.log("ready");setInterval(()=>{},1000);});`], {stdio: ["ignore", "pipe", "inherit"]});
++  let output = "";
++  const done = new Promise<number | null>((resolve) => child.on("close", resolve));
++  await new Promise<void>((resolve) => child.stdout.on("data", (chunk) => { output += chunk; if (output.includes("ready")) resolve(); }));
++  child.kill("SIGTERM");
++  expect(await done).toBe(0);
++  expect(output).toContain("stopped:SIGTERM");
++});
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts
+--- ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts	2026-10-26 09:42:37
++++ ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts	2026-10-26 10:31:27
+@@ -13,8 +13,8 @@
+ export type HostOperationV1=Readonly<{name:string;shape:"tasks"|"fixed";kind?:HostActionKindV1;fixedMegabytes:number;cpu:number;priority:"batch"|"interactive"}>;
+ /** 📜️ The authored host capacity policy (`Policy` of the schema). */
+ export type HostCapacityPolicyV1=Readonly<{version:1;enabled:boolean;memory:Readonly<{floorBasisPoints:number;floorMinimumMegabytes:number;floorMaximumMegabytes:number;budgetBasisPoints:number;rampMilliseconds:number;maximumRamping:number}>;swap:Readonly<{ceilingBasisPoints:number;outMegabytesPerSecond:number}>;pressure:Readonly<{psiWarnPercent:number;psiCriticalPercent:number;availableWarnBasisPoints:number;availableCriticalBasisPoints:number;compressedWarnBasisPoints:number;compressedCriticalBasisPoints:number}>;load:Readonly<{perCoreCeiling:number;overrideAfterMilliseconds:number}>;files:Readonly<{ceilingBasisPoints:number}>;attaches:Readonly<{maximum:number}>;wait:Readonly<{pollMilliseconds:number;progressMilliseconds:number;heartbeatMilliseconds:number;staleMilliseconds:number;lockStaleMilliseconds:number;sampleMaximumAgeMilliseconds:number;maximumWaiters:number;bypassMilliseconds:number;maximumBypasses:number;agingMilliseconds:number;lendAfterMilliseconds:number}>;kinds:Readonly<Record<HostActionKindV1,HostResourceV1>>;operations:readonly HostOperationV1[];estimates:HostEstimatePolicyV1}>;
+-/** 🖥️ One sample of the host (`Host` of the schema); every platform reduces to these fields, `null` marking a counter the platform does not offer: the machine-wide open file table (used and maximum) and the number of attached disk images join memory, swap and load. */
+-export type HostSampleV1=Readonly<{version:1;atMs:number;platform:"darwin"|"linux"|"win32";cores:number;totalMegabytes:number;availableMegabytes:number;pressure:"normal"|"warn"|"critical";swapUsedMegabytes:number|null;swapOutMegabytesPerSecond:number|null;load:number|null;openFiles:number|null;openFilesMaximum:number|null;attachedImages:number|null}>;
++/** 🖥️ One sample of the host (`Host` of the schema); every platform reduces to these fields, `null` marking a counter the platform does not offer, `counters:"partial"` marking a sample whose platform probe failed (pressure and swap unknown, treated as raised pressure): the machine-wide open file table (used and maximum) and the number of attached disk images join memory, swap and load. */
++export type HostSampleV1=Readonly<{version:1;atMs:number;platform:"darwin"|"linux"|"win32";cores:number;totalMegabytes:number;availableMegabytes:number;pressure:"normal"|"warn"|"critical";swapUsedMegabytes:number|null;swapOutMegabytesPerSecond:number|null;load:number|null;openFiles:number|null;openFilesMaximum:number|null;attachedImages:number|null;counters?:"partial"}>;
+ /** 🎫️ What one operation asks for (`Request` of the schema); `envelopePerJobMegabytes` is the per-job memory a tool may use when it differs from the reserved `perJobMegabytes`; `rampMilliseconds` is how long the run needs to reach its peak (what its class learned, else the policy ramp) and `rampSlot` marks a reservation sized below the default, which may only ramp in a bounded number of slots at once. */
+ export type HostRequestV1=Readonly<{id:string;operation:string;priority:"batch"|"interactive";minimumJobs:number;preferredJobs:number;fixedMegabytes:number;perJobMegabytes:number;cpuPerJob:number;envelopePerJobMegabytes?:number;rampMilliseconds?:number;rampSlot?:boolean}>;
+ /** ⏳️ A request in the queue (`Waiter` of the schema). */
+@@ -173,7 +173,7 @@
+ }
+ 
+ /** 🖨️ Fills one catalogue message of the chosen language; unknown placeholders stay visible. */
+-export function formatHostCapacityV1(language:"en"|"de",name:"waiting"|"admitted"|"estimated"|"reduced"|"override"|"bypassed"|"status"|"grant"|"grantLent"|"waiter"|"handover"|"adopted"|"handoverRefused",values:Readonly<Record<string,string|number>>):string{
++export function formatHostCapacityV1(language:"en"|"de",name:"waiting"|"admitted"|"estimated"|"reduced"|"override"|"bypassed"|"status"|"grant"|"grantLent"|"waiter"|"handover"|"adopted"|"handoverRefused"|"treeUnobserved"|"countersPartial",values:Readonly<Record<string,string|number>>):string{
+  return fillHostCapacityV1(schema.definitions.Messages.const[language][name],values);
+ }
+ 
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts
+--- ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts	2026-10-26 09:18:12
++++ ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts	2026-10-26 10:34:49
+@@ -1,5 +1,6 @@
+ import {mkdirSync,readFileSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
+ import {dirname,join} from "node:path";
++import {settleBusyFilesystemSyncV1} from "../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+ import {requireHostCapacityV1,isHostCapacityV1,type HostCapacityPolicyV1,type HostRequestV1} from "../📏️decision/🟦️.ts";
+ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+ 
+@@ -102,8 +103,8 @@
+  }catch{return emptyHostEstimateStoreV1();}
+ }
+ 
+-/** 🔏️ Applies one update to the stored estimates under a short directory lock and an atomic replace; when the lock cannot be taken within the bound the sample is dropped, never the run. */
+-export async function updateHostEstimateStoreV1(directory:string,policy:HostCapacityPolicyV1,update:(store:HostEstimateStoreV1)=>HostEstimateStoreV1,ports:Readonly<{now?:()=>number;pid?:number;sleep?:(milliseconds:number)=>Promise<void>}>={}):Promise<boolean>{
++/** 🔏️ Applies one update to the stored estimates under a short directory lock and an atomic replace; when the lock cannot be taken within the bound the sample is dropped, never the run. The replace of a store another run holds open (a Windows sharing violation) is retried on the churn pauses; a store that stays busy drops the sample, removes the temporary file and says so once in every language. */
++export async function updateHostEstimateStoreV1(directory:string,policy:HostCapacityPolicyV1,update:(store:HostEstimateStoreV1)=>HostEstimateStoreV1,ports:Readonly<{now?:()=>number;pid?:number;sleep?:(milliseconds:number)=>Promise<void>;platform?:string;sleepSync?:(milliseconds:number)=>void;rename?:(from:string,to:string)=>void}>={}):Promise<boolean>{
+  const now=ports.now??Date.now,pause=ports.sleep??(milliseconds=>new Promise<void>(done=>setTimeout(done,milliseconds))),lock=join(directory,"estimates.lock"),deadline=now()+policy.wait.lockStaleMilliseconds;
+  mkdirSync(directory,{recursive:true,mode:0o700});
+  for(;;){
+@@ -118,7 +119,10 @@
+  try{
+   const next=requireHostCapacityV1<HostEstimateStoreV1>("EstimateStore",update(readHostEstimateStoreV1(directory))),text=JSON.stringify(next),temporary=`${storePath(directory)}.${ports.pid??process.pid}.tmp`;
+   if(text.length>schema.definitions.Protocol.const.maximumEstimateBytes)return false;
+-  mkdirSync(dirname(temporary),{recursive:true});writeFileSync(temporary,text);renameSync(temporary,storePath(directory));return true;
++  mkdirSync(dirname(temporary),{recursive:true});writeFileSync(temporary,text);
++  const replaced=settleBusyFilesystemSyncV1(storePath(directory),()=>(ports.rename??renameSync)(temporary,storePath(directory)),{report:line=>{try{process.stderr.write(line+"\n");}catch{}},...ports.platform?{platform:ports.platform}:{},...ports.sleepSync?{sleepSync:ports.sleepSync}:{}});
++  if(!replaced.settled){rmSync(temporary,{force:true});return false;}
++  return true;
+  }catch{return false;}
+  finally{rmSync(lock,{recursive:true,force:true});}
+ }
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts
+--- ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts	2026-10-26 07:40:55
++++ ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts	2026-10-26 10:33:14
+@@ -1,18 +1,18 @@
+ import {execFile} from "node:child_process";
+ import {readdir,readFile} from "node:fs/promises";
+ import {cpus,freemem,loadavg,platform as osPlatform,totalmem} from "node:os";
+-import {hostCapacityErrorV1,type HostCapacityPolicyV1,type HostSampleV1} from "../📏️decision/🟦️.ts";
++import {formatHostCapacityV1,hostCapacityErrorV1,type HostCapacityPolicyV1,type HostSampleV1} from "../📏️decision/🟦️.ts";
+ 
+ const OPTIONAL_PROBE_MILLISECONDS=3000,MEGABYTE=1048576,SCALE:Readonly<Record<string,number>>={K:1/1024,M:1,G:1024,T:1048576};
+ 
+ /** 🧮️ Raw platform counters in bytes before the policy turns them into one sample; `null` marks a counter the platform does not offer. */
+-export type HostCountersV1=Readonly<{availableBytes:number|null;compressedBytes:number|null;constrainedBytes:number|null;swapUsedBytes:number|null;swappedOutBytes:number|null;pressureLevel:"normal"|"warn"|"critical"|null;stallPercent:number|null;openFiles:number|null;openFilesMaximum:number|null;attachedImages:number|null}>;
++export type HostCountersV1=Readonly<{availableBytes:number|null;compressedBytes:number|null;constrainedBytes:number|null;swapUsedBytes:number|null;swappedOutBytes:number|null;pressureLevel:"normal"|"warn"|"critical"|null;stallPercent:number|null;openFiles:number|null;openFilesMaximum:number|null;attachedImages:number|null;partial?:true}>;
+ /** 🔌️ Runs one program and answers its standard output; the only way the sampler reaches a command. */
+ export type HostCommandRunnerV1=(command:string,args:readonly string[],signal?:AbortSignal)=>Promise<string>;
+ /** 📄️ Reads one text file, answering null when it does not exist. */
+ export type HostTextReaderV1=(path:string)=>Promise<string|null>;
+ /** 🔬️ Everything one platform read needs, injectable so every platform parses from fixtures. */
+-export type HostProbeV1=Readonly<{platform:HostSampleV1["platform"];run:HostCommandRunnerV1;read:HostTextReaderV1;signal?:AbortSignal}>;
++export type HostProbeV1=Readonly<{platform:HostSampleV1["platform"];run:HostCommandRunnerV1;read:HostTextReaderV1;signal?:AbortSignal;notify?:(line:string)=>void}>;
+ /** 🗃️ A shared sample record: the sample plus the cumulative swap counter its successor needs for a rate. */
+ export type HostSampleRecordV1=Readonly<{host:HostSampleV1;swappedOutMegabytes:number|null}>;
+ 
+@@ -75,11 +75,25 @@
+  return best;
+ }
+ 
+-/** ⚙️ Counts the cores this process may use: the logical cores, bounded by the tightest cgroup v2 CPU quota above the process on Linux. */
++/** 🧱️ Names the cgroup v1 CFS files that bound this process's CPU, innermost cgroup first and the controller root last: the `N:cpu,cpuacct:/path` (or `N:cpu:/path`) row of `/proc/self/cgroup` gives the path under `/sys/fs/cgroup/cpu,cpuacct` (also mounted as `/sys/fs/cgroup/cpu`); no such row names nothing. */
++export function cgroupV1CpuFilesV1(membership:string|null):readonly Readonly<{quota:string;period:string}>[]{
++ const row=(membership??"").split("\n").find(line=>/^[0-9]+:[^:]*\bcpu\b[^:]*:/u.test(line));if(row===undefined)return[];
++ const controllers=row.split(":")[1]!,mount="/sys/fs/cgroup/"+controllers,parts=row.split(":").slice(2).join(":").split("/").filter(Boolean);
++ return Array.from({length:parts.length+1},(_,index)=>{const depth=parts.length-index,base=[mount,...parts.slice(0,depth)].join("/");return{quota:base+"/cpu.cfs_quota_us",period:base+"/cpu.cfs_period_us"};});
++}
++
++/** 🧠️ Turns `cpu.cfs_quota_us` and `cpu.cfs_period_us` rows (cgroup v1; a quota of `-1` is unlimited) into the tightest quota in whole cores, or null when no level limits the CPU. */
++export function parseCfsQuotaCoresV1(rows:readonly Readonly<{quota:string|null;period:string|null}>[]):number|null{
++ const cpuMax=rows.flatMap(row=>{const quota=/^-?[0-9]+$/u.exec((row.quota??"").trim())?.[0],period=/^[0-9]+$/u.exec((row.period??"").trim())?.[0];return quota===undefined||period===undefined||Number(quota)<0?[]:[`${quota} ${period}`];});
++ return parseCpuQuotaCoresV1(cpuMax);
++}
++
++/** ⚙️ Counts the cores this process may use: the logical cores, bounded by the tightest CPU quota above the process on Linux (cgroup v2 `cpu.max`, or cgroup v1 `cpu.cfs_quota_us` over `cpu.cfs_period_us`). */
+ export async function readHostCoresV1(probe:HostProbeV1,logical:number):Promise<number>{
+  if(probe.platform!=="linux")return logical;
+- const membership=await probe.read("/proc/self/cgroup");if(!(membership??"").split("\n").some(line=>line.startsWith("0::")))return logical;
+- const quota=parseCpuQuotaCoresV1(await Promise.all(cgroupMemoryFilesV1(membership).map(row=>probe.read(row.maximum.replace(/memory\.max$/u,"cpu.max")))));
++ const membership=await probe.read("/proc/self/cgroup");
++ const v2=(membership??"").split("\n").some(line=>line.startsWith("0::")),v1=cgroupV1CpuFilesV1(membership);
++ const quota=v2?parseCpuQuotaCoresV1(await Promise.all(cgroupMemoryFilesV1(membership).map(row=>probe.read(row.maximum.replace(/memory\.max$/u,"cpu.max"))))):v1.length?parseCfsQuotaCoresV1(await Promise.all(v1.map(async row=>({quota:await probe.read(row.quota),period:await probe.read(row.period)})))):null;
+  return quota===null?logical:Math.min(logical,quota);
+ }
+ 
+@@ -89,9 +103,9 @@
+  const share=available*10000/total,fromAvailable=share<policy.pressure.availableCriticalBasisPoints?"critical" as const:share<policy.pressure.availableWarnBasisPoints?"warn" as const:"normal" as const;
+  const fromStall=counters.stallPercent===null?undefined:counters.stallPercent>=policy.pressure.psiCriticalPercent?"critical" as const:counters.stallPercent>=policy.pressure.psiWarnPercent?"warn" as const:"normal" as const;
+  const squeeze=counters.compressedBytes==null?0:counters.compressedBytes*10000/(total*MEGABYTE),fromCompressed=squeeze>=policy.pressure.compressedCriticalBasisPoints?"critical" as const:squeeze>=policy.pressure.compressedWarnBasisPoints?"warn" as const:"normal" as const;
+- const rank={normal:0,warn:1,critical:2} as const,pressure=([counters.pressureLevel??fromStall??"normal",fromAvailable,fromCompressed] as const).reduce((worst,level)=>rank[level]>rank[worst]?level:worst);
++ const rank={normal:0,warn:1,critical:2} as const,pressure=([counters.pressureLevel??fromStall??"normal",fromAvailable,fromCompressed,...counters.partial?["warn" as const]:[]] as const).reduce((worst,level)=>rank[level]>rank[worst]?level:worst);
+  const swappedOut=megabytes(counters.swappedOutBytes),seconds=previous===undefined?0:(facts.atMs-previous.atMs)/1000,rate=previous!==undefined&&seconds>0&&swappedOut!==null&&previous.swappedOutMegabytes!==null?Math.max(0,Math.round((swappedOut-previous.swappedOutMegabytes)/seconds*100)/100):null;
+- return Object.freeze({version:1,atMs:facts.atMs,platform:facts.platform,cores:facts.cores,totalMegabytes:total,availableMegabytes:Math.floor(available),pressure,swapUsedMegabytes:megabytes(counters.swapUsedBytes),swapOutMegabytesPerSecond:rate,load:facts.load,openFiles:counters.openFiles,openFilesMaximum:counters.openFilesMaximum,attachedImages:counters.attachedImages});
++ return Object.freeze({version:1,atMs:facts.atMs,platform:facts.platform,cores:facts.cores,totalMegabytes:total,availableMegabytes:Math.floor(available),pressure,swapUsedMegabytes:megabytes(counters.swapUsedBytes),swapOutMegabytesPerSecond:rate,load:facts.load,openFiles:counters.openFiles,openFilesMaximum:counters.openFilesMaximum,attachedImages:counters.attachedImages,...counters.partial?{counters:"partial" as const}:{}});
+ }
+ 
+ let previousCpu:Readonly<{idle:number;total:number}>|undefined;
+@@ -118,6 +132,14 @@
+  return Object.freeze({availableBytes:available,compressedBytes:null,constrainedBytes:null,swapUsedBytes:used===null?0:used*MEGABYTE,swappedOutBytes:pages===null?null:pages*4096,pressureLevel:null,stallPercent:null,openFiles:null,openFilesMaximum:null,attachedImages:null});
+ }
+ 
++const noticedV1=new WeakMap<object,Set<string>>(),standardErrorV1={};
++/** 📣️ Says once per process and sink, in every language, that this host is blind where the gate cannot learn or measure: nothing fails, so the line is the only signal. Never throws. */
++function noticeOnceV1(key:string,message:"treeUnobserved"|"countersPartial",values:Readonly<Record<string,string|number>>,notify?:(line:string)=>void):void{
++ const sink=notify??standardErrorV1,seen=noticedV1.get(sink)??new Set<string>();noticedV1.set(sink,seen);
++ if(seen.has(key))return;seen.add(key);
++ try{for(const language of["en","de"] as const){const line=formatHostCapacityV1(language,message,values);if(notify)notify(line);else process.stderr.write(line+"\n");}}catch{}
++}
++
+ /** 🌍️ Reads the raw counters of the probed platform; the open file table and the attached images are optional facts that fall back to `null` instead of failing the sample. */
+ export async function readHostCountersV1(probe:HostProbeV1):Promise<HostCountersV1>{
+  if(probe.platform==="darwin"){
+@@ -126,8 +148,13 @@
+   return parseDarwinCountersV1(vmStat,swap,level,files??"",images);
+  }
+  if(probe.platform==="linux"){const[meminfo,vmstat,pressure,fileNr,membership]=await Promise.all(["/proc/meminfo","/proc/vmstat","/proc/pressure/memory","/proc/sys/fs/file-nr","/proc/self/cgroup"].map(path=>probe.read(path)));if(meminfo==null||vmstat==null)throw hostCapacityErrorV1("countersUnavailable");const limit=effectiveCgroupMemoryV1(await Promise.all(cgroupMemoryFilesV1(membership??null).map(async row=>({maximum:await probe.read(row.maximum),current:await probe.read(row.current)}))));return parseLinuxCountersV1(meminfo,vmstat,pressure??null,limit.maximum,limit.current,fileNr??null);}
+- if(probe.platform==="win32"){const text=await probe.run("powershell.exe",["-NoProfile","-NonInteractive","-Command",WINDOWS_COUNTERS_COMMAND],boundedSignalV1(probe.signal)).catch(()=>null);if(text!==null)return parseWindowsCountersV1(text);}
+- return Object.freeze({availableBytes:freemem(),compressedBytes:null,constrainedBytes:null,swapUsedBytes:null,swappedOutBytes:null,pressureLevel:null,stallPercent:null,openFiles:null,openFilesMaximum:null,attachedImages:null});
++ let failure="the platform probe is unavailable";
++ if(probe.platform==="win32"){
++  try{return parseWindowsCountersV1(await probe.run("powershell.exe",["-NoProfile","-NonInteractive","-Command",WINDOWS_COUNTERS_COMMAND],boundedSignalV1(probe.signal)));}
++  catch(error){failure=String((error as Error)?.message??error).split("\n")[0]!.slice(0,200);}
++ }
++ noticeOnceV1("countersPartial."+probe.platform,"countersPartial",{platform:probe.platform,reason:failure},probe.notify);
++ return Object.freeze({availableBytes:freemem(),compressedBytes:null,constrainedBytes:null,swapUsedBytes:null,swappedOutBytes:null,pressureLevel:null,stallPercent:null,openFiles:null,openFilesMaximum:null,attachedImages:null,partial:true as const});
+ }
+ 
+ /** 🖥️ Reads one host sample: counters, core count, total memory and load. */
+@@ -153,6 +180,9 @@
+  return Object.freeze({platform,run:runHostCommandV1,read:readHostTextV1,...signal?{signal}:{}});
+ }
+ 
++/** 🪟️ The one PowerShell command that lists every Windows process as `pid ppid working-set-kilobytes` lines, the shape of `ps -A -o pid=,ppid=,rss=`, so one parser and one tree sum serve macOS and Windows. */
++export const WINDOWS_PROCESS_TABLE_COMMAND="Get-CimInstance Win32_Process|ForEach-Object{'{0} {1} {2}' -f $_.ProcessId,$_.ParentProcessId,[int64]($_.WorkingSetSize/1024)}";
++
+ /** 🌳️ Parses `ps -A -o pid=,ppid=,rss=` into rows. */
+ export function parseProcessTableV1(text:string):readonly Readonly<{pid:number;parent:number;rssKilobytes:number}>[]{
+  const rows=[];for(const line of text.split("\n")){const match=/^\s*(\d+)\s+(\d+)\s+(\d+)\s*$/u.exec(line);if(match)rows.push(Object.freeze({pid:Number(match[1]),parent:Number(match[2]),rssKilobytes:Number(match[3])}));}
+@@ -180,9 +210,12 @@
+  return rows.filter((row):row is NonNullable<typeof row>=>row!==undefined);
+ }
+ 
+-/** 👁️ Observes what the process tree under one pid holds: `/proc` on Linux (no external tool), `ps` on macOS, null where the platform has no cheap process table. */
+-export async function observeTreeMegabytesV1(pid:number,run:HostCommandRunnerV1=runHostCommandV1,platform:HostSampleV1["platform"]=osPlatform() as HostSampleV1["platform"],proc:Readonly<{read:HostTextReaderV1;list:()=>Promise<readonly string[]>}>={read:readHostTextV1,list:()=>readdir("/proc")}):Promise<number|null>{
+- if(platform==="win32")return null;
++/** 👁️ Observes what the process tree under one pid holds: `/proc` on Linux (no external tool), `ps` on macOS, one PowerShell process table on Windows; null when the process is gone or, on Windows, when PowerShell cannot answer, which is announced once in every language (the gate then learns nothing from the run and keeps the declared sizes). */
++export async function observeTreeMegabytesV1(pid:number,run:HostCommandRunnerV1=runHostCommandV1,platform:HostSampleV1["platform"]=osPlatform() as HostSampleV1["platform"],proc:Readonly<{read:HostTextReaderV1;list:()=>Promise<readonly string[]>}>={read:readHostTextV1,list:()=>readdir("/proc")},notify?:(line:string)=>void):Promise<number|null>{
++ if(platform==="win32"){
++  try{return treeMegabytesV1(parseProcessTableV1(await run("powershell.exe",["-NoProfile","-NonInteractive","-Command",WINDOWS_PROCESS_TABLE_COMMAND])),pid);}
++  catch(error){noticeOnceV1("treeUnobserved.win32","treeUnobserved",{platform,reason:String((error as Error)?.message??error).split("\n")[0]!.slice(0,200)},notify);return null;}
++ }
+  if(platform==="linux")return treeMegabytesV1(await readLinuxProcessTableV1(proc.read,proc.list),pid);
+  return treeMegabytesV1(parseProcessTableV1(await run("ps",["-A","-o","pid=,ppid=,rss="])),pid);
+ }
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📐️estimates/🟦️.ts ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📐️estimates/🟦️.ts
+--- ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📐️estimates/🟦️.ts	2026-10-26 09:12:16
++++ ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📐️estimates/🟦️.ts	2026-10-26 10:34:55
+@@ -1,6 +1,7 @@
+ import {expect,test} from "bun:test";
+ import Ajv from "ajv";
+-import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
++import {mkdirSync,mkdtempSync,readdirSync,renameSync,rmSync,writeFileSync} from "node:fs";
++import {churnProtocolV1} from "../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+ import {tmpdir} from "node:os";
+ import {join} from "node:path";
+ import {readHostCapacityPolicyV1,isHostCapacityV1,type HostCapacityPolicyV1,type HostRequestV1} from "../../📏️decision/🟦️.ts";
+@@ -151,3 +152,18 @@
+ });
+ 
+ const schemaFile=():string=>schema.definitions.Protocol.const.estimatesFile;
++
++test("A store another run holds open (a Windows sharing violation) is replaced after the declared pauses; one that stays busy drops the sample, leaves no temporary file and says so in every language",async()=>{
++ const directory=mkdtempSync(join(tmpdir(),"ram-est-busy-")),busy=(code:string)=>Object.assign(new Error(code),{code}),update=(store:HostEstimateStoreV1)=>recordHostOutcomeV1(policy,store,["run"],outcome({endedAtMs:7}));
++ try{
++  const pauses:number[]=[];let failures=2;
++  const done=await updateHostEstimateStoreV1(directory,policy,update,{platform:"win32",sleepSync:ms=>{pauses.push(ms);},rename:(from,to)=>{if(failures-->0)throw busy("EPERM");renameSync(from,to);}});
++  expect(done).toBe(true);expect(pauses).toEqual(churnProtocolV1().profiles.read.backoffMs.slice(0,2));expect(readHostEstimateStoreV1(directory).classes["run"]!.samples.length).toBe(1);
++  const written:string[]=[],original=process.stderr.write.bind(process.stderr);(process.stderr as {write:unknown}).write=(chunk:string)=>{written.push(String(chunk));return true;};
++  let kept:boolean;try{kept=await updateHostEstimateStoreV1(directory,policy,update,{platform:"win32",sleepSync:()=>undefined,rename:()=>{throw busy("EBUSY");}});}finally{(process.stderr as {write:unknown}).write=original;}
++  expect(kept).toBe(false);expect(readdirSync(directory).filter(name=>name.endsWith(".tmp")),"no temporary file stays behind").toEqual([]);
++  expect(written.join("").split("\n").filter(Boolean).length,"one line per declared language").toBe(churnProtocolV1().languages.length);expect(written.join("")).toContain(schemaFile());
++  expect(readHostEstimateStoreV1(directory).classes["run"]!.samples.length,"the stored samples are untouched").toBe(1);
++  expect(await updateHostEstimateStoreV1(directory,policy,update,{platform:"linux",sleepSync:()=>{throw Error("no pause expected");},rename:()=>{throw busy("EPERM");}}),"on POSIX a permission refusal is final").toBe(false);
++ }finally{rmSync(directory,{recursive:true,force:true});}
++});
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📡️sampling/🟦️.ts ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📡️sampling/🟦️.ts
+--- ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📡️sampling/🟦️.ts	2026-10-26 07:41:16
++++ ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📡️sampling/🟦️.ts	2026-10-26 10:32:57
+@@ -41,7 +41,7 @@
+  expect(await readHostCountersV1({platform:"darwin",run,read:async()=>null})).toEqual(fixture.darwin[0]!.expect as never);
+  expect(calls.sort()).toEqual(["/usr/bin/hdiutil info","sysctl -n kern.memorystatus_vm_pressure_level","sysctl -n vm.swapusage","sysctl kern.num_files kern.maxfiles","vm_stat"]);
+  expect(await observeTreeMegabytesV1(102,async()=>fixture.tree.table,"darwin")).toBe(22);
+- expect(await observeTreeMegabytesV1(102,async()=>{throw Error("no command expected");},"win32")).toBeNull();
++ expect(await observeTreeMegabytesV1(102,async()=>{throw Error("no powershell");},"win32",undefined,()=>undefined)).toBeNull();
+ });
+ 
+ test("The optional open file table and image count fall back to unknown when their probes fail, and never fail the sample",async()=>{
+@@ -49,7 +49,7 @@
+  expect(await readHostCountersV1({platform:"darwin",run,read:async()=>null})).toMatchObject({openFiles:null,openFilesMaximum:null,attachedImages:null,availableBytes:fixture.darwin[0]!.expect.availableBytes});
+  const only=new Map<string,string>([["/proc/meminfo",fixture.linux[0]!.meminfo],["/proc/vmstat",fixture.linux[0]!.vmstat]]);
+  expect(await readHostCountersV1({platform:"linux",run:async()=>"",read:async path=>only.get(path)??null})).toMatchObject({openFiles:null,openFilesMaximum:null,attachedImages:null});
+- expect(await readHostCountersV1({platform:"win32",run:async()=>{throw Error("no powershell");},read:async()=>null})).toMatchObject({openFiles:null,openFilesMaximum:null,attachedImages:null,swapUsedBytes:null});
++ expect(await readHostCountersV1({platform:"win32",run:async()=>{throw Error("no powershell");},read:async()=>null,notify:()=>undefined})).toMatchObject({openFiles:null,openFilesMaximum:null,attachedImages:null,swapUsedBytes:null});
+ });
+ 
+ test("A missing Linux counter file fails closed",async()=>{
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪟️windows/🟦️.ts ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪟️windows/🟦️.ts
+--- ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪟️windows/🟦️.ts	1970-01-01 01:00:00
++++ ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪟️windows/🟦️.ts	2026-10-26 10:33:22
+@@ -0,0 +1,80 @@
++import {expect,test} from "bun:test";
++import {spawnSync} from "node:child_process";
++import {mkdtempSync,readFileSync,rmSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {join} from "node:path";
++import {fileURLToPath} from "node:url";
++import {testPythonV1} from "../../../../📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
++import {newHostCapacityIdV1,readHostCapacityPolicyV1,requireHostCapacityV1,withHostCapacityV1,type HostSampleV1} from "../../🟦️.ts";
++import {cgroupV1CpuFilesV1,observeTreeMegabytesV1,parseProcessTableV1,readHostCoresV1,readHostCountersV1,reduceHostSampleV1,treeMegabytesV1,WINDOWS_PROCESS_TABLE_COMMAND,type HostCommandRunnerV1} from "../../📡️sampling/🟦️.ts";
++import decisionFixture from "../🧫️fixtures/🔣️.json";
++import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
++
++/** 🪟️ Contract: Windows and cgroup v1 hosts are read through injected ports, from fixtures, on any machine. A Windows host observes its process trees through one PowerShell process table (so the gate learns peaks there like on macOS and Linux), and a host whose probe fails is never silent: the line exists in every language, the sample says `counters: "partial"`, and unknown pressure counts as raised. The tree sum equals an independent Python implementation. */
++const here=fileURLToPath(new URL(".",import.meta.url)),policy=readHostCapacityPolicyV1(decisionFixture.policy);
++
++test("the Windows process table is parsed through the shared parser and equals the independent Python tree sum", async () => {
++ const rows=parseProcessTableV1(fixture.processTable);expect(rows.length).toBe(5);
++ const python=testPythonV1();
++ for(const [pid,megabytes] of Object.entries(fixture.trees)){
++  expect(treeMegabytesV1(rows,Number(pid)),pid).toBe(megabytes);
++  if(python)expect(JSON.parse(spawnSync(python,["-I",join(here,"🧫️fixtures","🐍️tree.py"),fixture.processTable,pid],{encoding:"utf8"}).stdout),"oracle "+pid).toBe(megabytes);
++  const calls:string[][]=[];
++  const run:HostCommandRunnerV1=async(command,args)=>{calls.push([command,...args]);return fixture.processTable;};
++  expect(await observeTreeMegabytesV1(Number(pid),run,"win32",undefined,()=>{throw Error("no notice expected");})).toBe(megabytes);
++  expect(calls).toEqual([["powershell.exe","-NoProfile","-NonInteractive","-Command",WINDOWS_PROCESS_TABLE_COMMAND]]);
++ }
++ expect(WINDOWS_PROCESS_TABLE_COMMAND).toContain("Win32_Process");expect(WINDOWS_PROCESS_TABLE_COMMAND).toContain("ParentProcessId");expect(WINDOWS_PROCESS_TABLE_COMMAND).toContain("WorkingSetSize");
++});
++
++test("a Windows host that cannot list its processes says so once in every language and observes nothing", async () => {
++ const lines:string[]=[];
++ expect(await observeTreeMegabytesV1(100,async()=>{throw Error("powershell.exe timed out");},"win32",undefined,line=>{lines.push(line);})).toBeNull();
++ expect(lines.length).toBe(2);expect(lines[0]).toContain("cannot be observed on win32");expect(lines[0]).toContain("powershell.exe timed out");expect(lines[1]).toContain("kann unter win32 nicht beobachtet werden");
++ const written:string[]=[],original=process.stderr.write.bind(process.stderr);
++ (process.stderr as {write:unknown}).write=(chunk:string)=>{written.push(String(chunk));return true;};
++ try{for(let round=0;round<3;round++)await observeTreeMegabytesV1(100,async()=>{throw Error("again");},"win32");}finally{(process.stderr as {write:unknown}).write=original;}
++ expect(written.length,"announced once per process, not per heartbeat").toBe(2);
++});
++
++test("the gate learns the peak of a Windows tree through the process table, and a blind host keeps the declared sizes after saying so", async () => {
++ const directory=mkdtempSync(join(tmpdir(),"hcw-")),tree=(pid:number)=>`${pid} 4 51200\n${pid+1} ${pid} 25600\n`;
++ const sample=async()=>({host:{version:1 as const,atMs:Date.now(),platform:"win32" as const,cores:8,totalMegabytes:32768,availableMegabytes:20000,pressure:"normal" as const,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:1,openFiles:null,openFilesMaximum:null,attachedImages:null} satisfies HostSampleV1,swappedOutMegabytes:0});
++ const control={signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined};
++ const fast=readHostCapacityPolicyV1({...decisionFixture.policy,wait:{...decisionFixture.policy.wait,pollMilliseconds:10,progressMilliseconds:20,heartbeatMilliseconds:20}});
++ const run=async(runner:HostCommandRunnerV1,lines:string[])=>{const learned:{peakMegabytes:number}[]=[],notify=(line:string)=>{lines.push(line);};
++  await withHostCapacityV1({directory,policy:fast,request:{id:newHostCapacityIdV1(),operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:100,perJobMegabytes:0,cpuPerJob:1},control,environment:{},write:()=>undefined,sample,observe:pid=>observeTreeMegabytesV1(pid,runner,"win32",undefined,notify),learn:row=>{learned.push(row);}},async()=>{await new Promise(done=>setTimeout(done,150));});
++  return learned;};
++ try{
++  const seen:string[]=[],ok=await run(async()=>tree(process.pid),seen);
++  expect(ok.length).toBe(1);expect(ok[0]!.peakMegabytes).toBe(75);expect(seen).toEqual([]);
++  const blind:string[]=[],none=await run(async()=>{throw Error("no powershell");},blind);
++  expect(none,"nothing is learned from a run nobody could observe").toEqual([]);expect(blind.length,"one line per language, once").toBe(2);
++ }finally{rmSync(directory,{recursive:true,force:true});}
++},20000);
++
++test("a failed Windows counter probe marks the sample partial, raises the pressure and stays valid against the closed schema", async () => {
++ const lines:string[]=[];
++ const counters=await readHostCountersV1({platform:"win32",run:async()=>{throw Error("powershell.exe is not recognised");},read:async()=>null,notify:line=>{lines.push(line);}});
++ expect(counters.partial).toBe(true);expect(lines.length).toBe(2);expect(lines[0]).toContain("could not be read");expect(lines[1]).toContain("konnten nicht gelesen werden");
++ const facts={platform:"win32" as const,cores:8,totalMegabytes:16384,atMs:5,load:null},healthy={...counters,partial:undefined,availableBytes:16384*1048576};
++ const partial=reduceHostSampleV1(policy,facts,{...counters,availableBytes:16384*1048576}),whole=reduceHostSampleV1(policy,facts,healthy as never);
++ expect(partial.counters).toBe("partial");expect(partial.pressure,"unknown pressure is never normal").toBe("warn");
++ expect("counters" in whole,"a complete sample keeps its old shape").toBe(false);expect(whole.pressure).toBe("normal");
++ requireHostCapacityV1("Host",partial);requireHostCapacityV1("Host",whole);
++ expect(()=>requireHostCapacityV1("Host",{...partial,counters:"full"})).toThrow();
++});
++
++test("a cgroup v1 CPU quota bounds the cores like the v2 quota, from the same kind of fixture", async () => {
++ for(const [name,row] of Object.entries(fixture.cgroupV1)){
++  const files=new Map(Object.entries(row.files));
++  const cores=await readHostCoresV1({platform:"linux",run:async()=>{throw Error("no command expected");},read:async path=>path==="/proc/self/cgroup"?row.membership:files.get(path)??null},row.logical);
++  expect(cores,name).toBe(row.cores);
++ }
++ expect(cgroupV1CpuFilesV1("4:cpu,cpuacct:/a/b\n").map(file=>file.quota)).toEqual(["/sys/fs/cgroup/cpu,cpuacct/a/b/cpu.cfs_quota_us","/sys/fs/cgroup/cpu,cpuacct/a/cpu.cfs_quota_us","/sys/fs/cgroup/cpu,cpuacct/cpu.cfs_quota_us"]);
++ expect(cgroupV1CpuFilesV1("0::/x\n3:memory:/y\n")).toEqual([]);expect(cgroupV1CpuFilesV1(null)).toEqual([]);
++});
++
++test("the fixture file is the one the tests read", () => {
++ expect(JSON.parse(readFileSync(join(here,"🧫️fixtures","🔣️.json"),"utf8")).trees["100"]).toBe(35);
++});
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪟️windows/🧫️fixtures/🐍️tree.py ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪟️windows/🧫️fixtures/🐍️tree.py
+--- ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪟️windows/🧫️fixtures/🐍️tree.py	1970-01-01 01:00:00
++++ ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪟️windows/🧫️fixtures/🐍️tree.py	2026-10-26 10:32:57
+@@ -0,0 +1,16 @@
++import json,sys
++table,pid=sys.argv[1],int(sys.argv[2])
++rows={}
++for line in table.splitlines():
++    parts=line.split()
++    if len(parts)==3 and all(p.isdigit() for p in parts):
++        rows[int(parts[0])]=(int(parts[1]),int(parts[2]))
++if pid not in rows:
++    print(json.dumps(None)); sys.exit(0)
++seen,stack,total=set(),[pid],0
++while stack:
++    cur=stack.pop()
++    if cur in seen: continue
++    seen.add(cur); total+=rows[cur][1]
++    stack.extend(p for p,(parent,_) in rows.items() if parent==cur)
++print(json.dumps(total//1024))
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪟️windows/🧫️fixtures/🔣️.json ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪟️windows/🧫️fixtures/🔣️.json
+--- ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪟️windows/🧫️fixtures/🔣️.json	1970-01-01 01:00:00
++++ ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪟️windows/🧫️fixtures/🔣️.json	2026-10-26 10:32:57
+@@ -0,0 +1,11 @@
++{
++  "processTable": "  4 0 120\r\n 100 4 20480\r\n 200 100 10240\r\n 300 100 5120\r\n 400 1 99999\r\n\r\n",
++  "trees": {"100": 35, "200": 10, "300": 5, "400": 97, "999": null},
++  "cgroupV1": {
++    "limited": {"membership": "4:cpu,cpuacct:/docker/abc\n3:memory:/docker/abc\n", "files": {"/sys/fs/cgroup/cpu,cpuacct/docker/abc/cpu.cfs_quota_us": "200000\n", "/sys/fs/cgroup/cpu,cpuacct/docker/abc/cpu.cfs_period_us": "100000\n", "/sys/fs/cgroup/cpu,cpuacct/cpu.cfs_quota_us": "-1\n", "/sys/fs/cgroup/cpu,cpuacct/cpu.cfs_period_us": "100000\n"}, "logical": 10, "cores": 2},
++    "rounded": {"membership": "2:cpu:/job\n", "files": {"/sys/fs/cgroup/cpu/job/cpu.cfs_quota_us": "150000\n", "/sys/fs/cgroup/cpu/job/cpu.cfs_period_us": "100000\n"}, "logical": 10, "cores": 2},
++    "unlimited": {"membership": "4:cpu,cpuacct:/docker/abc\n", "files": {"/sys/fs/cgroup/cpu,cpuacct/docker/abc/cpu.cfs_quota_us": "-1\n", "/sys/fs/cgroup/cpu,cpuacct/docker/abc/cpu.cfs_period_us": "100000\n"}, "logical": 6, "cores": 6},
++    "aboveHost": {"membership": "4:cpu,cpuacct:/\n", "files": {"/sys/fs/cgroup/cpu,cpuacct/cpu.cfs_quota_us": "1600000\n", "/sys/fs/cgroup/cpu,cpuacct/cpu.cfs_period_us": "100000\n"}, "logical": 8, "cores": 8},
++    "noCpuRow": {"membership": "3:memory:/docker/abc\n", "files": {}, "logical": 4, "cores": 4}
++  }
++}
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json
+--- ov-base/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json	2026-10-26 09:10:54
++++ ov/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json	2026-10-26 10:31:11
+@@ -483,6 +483,9 @@
+             "null"
+           ],
+           "minimum": 0
++        },
++        "counters": {
++          "const": "partial"
+         }
+       }
+     },
+@@ -841,7 +844,9 @@
+         "adopted",
+         "handoverRefused",
+         "handoverReasons",
+-        "estimated"
++        "estimated",
++        "treeUnobserved",
++        "countersPartial"
+       ],
+       "properties": {
+         "waiting": {
+@@ -1006,6 +1011,12 @@
+         },
+         "estimated": {
+           "type": "string"
++        },
++        "treeUnobserved": {
++          "type": "string"
++        },
++        "countersPartial": {
++          "type": "string"
+         }
+       }
+     },
+@@ -1056,7 +1067,9 @@
+             "identity": "this process is not the one the grant was offered to",
+             "operation": "it was granted for another operation"
+           },
+-          "estimated": "[capacity] {operation}: sized at {percent}% of the default from {samples} earlier run(s) of its class"
++          "estimated": "[capacity] {operation}: sized at {percent}% of the default from {samples} earlier run(s) of its class",
++          "treeUnobserved": "[capacity] the memory of running process trees cannot be observed on {platform} ({reason}); nothing is learned from this run and admission uses the declared sizes",
++          "countersPartial": "[capacity] the {platform} memory counters could not be read ({reason}); pressure and swap are unknown and the host is treated as under raised pressure, available memory is the operating system's free memory"
+         },
+         "de": {
+           "waiting": "[capacity] wartet seit {seconds} s auf {operation}: {reason} (benötigt {need} MB; {spare} MB frei oberhalb der Untergrenze von {floor} MB, Last {load}; {running} laufen, {ahead} davor)",
+@@ -1103,7 +1116,9 @@
+             "identity": "dieser Prozess ist nicht der, dem die Zusage angeboten wurde",
+             "operation": "sie wurde für eine andere Operation erteilt"
+           },
+-          "estimated": "[capacity] {operation}: auf {percent}% des Standardwerts bemessen, aus {samples} frueheren Laeufen seiner Klasse"
++          "estimated": "[capacity] {operation}: auf {percent}% des Standardwerts bemessen, aus {samples} frueheren Laeufen seiner Klasse",
++          "treeUnobserved": "[capacity] Der Speicher laufender Prozessbaeume kann unter {platform} nicht beobachtet werden ({reason}); aus diesem Lauf wird nichts gelernt und die Zulassung nutzt die deklarierten Groessen",
++          "countersPartial": "[capacity] Die Speicherzaehler von {platform} konnten nicht gelesen werden ({reason}); Speicherdruck und Auslagerung sind unbekannt, der Rechner gilt als unter erhoehtem Druck, verfuegbar ist der freie Speicher des Betriebssystems"
+         }
+       }
+     },
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts ov/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts
+--- ov-base/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts	2026-10-26 08:52:35
++++ ov/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts	2026-10-26 10:27:05
+@@ -1,5 +1,5 @@
+ import protocolSchema from "./🧬️schema/🔣️.json" with {type:"json"};
+-import {filesystemRaceOfErrorV1} from "./🌊️races/🟦️.ts";
++import {filesystemRaceOfErrorV1,filesystemRaceTableV1} from "./🌊️races/🟦️.ts";
+ 
+ const protocol=Object.freeze(JSON.parse(JSON.stringify(protocolSchema.definitions.Protocol.const)) as ChurnProtocolV1);
+ const sleeper=new Int32Array(new SharedArrayBuffer(4));
+@@ -167,3 +167,29 @@
+ }
+ /** 🧹️ Ends this process's hold on every registered custody (the replacement ended or none was started). */
+ export async function settleRestartCustodiesV1():Promise<void>{for(const custody of [...restartState().custodies])try{await custody.settle();}catch{}restartState().custodies.clear();}
++
++/** 🚧️ Whether a filesystem error says "busy" in the closed race table: the sharing violations (`EBUSY`, `EPERM`, `EACCES`) a Windows host raises while another process (a reader, a scanner, an indexer) holds the file open; on POSIX hosts only the codes the table lists for every platform. */
++export function filesystemBusyErrorV1(error:unknown,platform:string=process.platform):boolean{
++ const code=(error as {code?:unknown}|null)?.code;if(typeof code!=="string")return false;
++ const table=filesystemRaceTableV1().codes;
++ return (Object.hasOwn(table.all,code)?table.all[code]:platform==="win32"&&Object.hasOwn(table.win32,code)?table.win32[code]:undefined)==="busy";
++}
++
++/** 🔓️ The verdict of {@link settleBusyFilesystemSyncV1}: the value, or the error that stayed after the bounded retries. */
++export type BusySettleV1<T>=Readonly<{settled:true;value:T}>|Readonly<{settled:false;error:unknown}>;
++
++/** 🔁️ Runs one filesystem operation that must not fail its caller (a lock release in a `finally`, a store rename): a busy file is retried on the `read` layer's declared pauses, anything else, or the last busy failure, is returned as `settled:false` and never thrown. `report` receives the bilingual exhaustion text once, so a stale leftover is never silent. */
++export function settleBusyFilesystemSyncV1<T>(path:string,operation:()=>T,options:Readonly<{platform?:string;sleepSync?:(milliseconds:number)=>void;report?:(text:string)=>void;environment?:Readonly<Record<string,string|undefined>>}>={}):BusySettleV1<T>{
++ const platform=options.platform??process.platform;let original:unknown;
++ try{
++  const value=retryOnConcurrentEditSyncV1("read",()=>{
++   try{return operation();}
++   catch(error){if(filesystemBusyErrorV1(error,platform)){original=error;throw concurrentEditV1("busy",path,String((error as {code?:unknown}).code));}throw error;}
++  },{onRetry:()=>undefined,...options.sleepSync?{sleepSync:options.sleepSync}:{},...options.environment?{environment:options.environment}:{}});
++  return Object.freeze({settled:true as const,value});
++ }catch(error){
++  const exhausted=error instanceof ConcurrentEditErrorV1&&original!==undefined;
++  if(exhausted)try{options.report?.((error as Error).message);}catch{}
++  return Object.freeze({settled:false as const,error:exhausted?original:error});
++ }
++}
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🔒️busy/🟦️.ts ov/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🔒️busy/🟦️.ts
+--- ov-base/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🔒️busy/🟦️.ts	1970-01-01 01:00:00
++++ ov/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🔒️busy/🟦️.ts	2026-10-26 10:48:24
+@@ -0,0 +1,48 @@
++import {expect,test} from "bun:test";
++import {chmodSync,mkdirSync,mkdtempSync,rmSync,unlinkSync,writeFileSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {join} from "node:path";
++import {churnProtocolV1,filesystemBusyErrorV1,settleBusyFilesystemSyncV1} from "../../🟦️.ts";
++
++const error=(code:string)=>Object.assign(new Error(code),{code});
++const plan=churnProtocolV1().profiles.read;
++
++test("the sharing violations are busy on a Windows host only, vanished and unknown codes never", () => {
++ for(const code of["EBUSY","EPERM","EACCES"])expect(filesystemBusyErrorV1(error(code),"win32"),code).toBe(true);
++ expect(filesystemBusyErrorV1(error("EPERM"),"linux")).toBe(false);expect(filesystemBusyErrorV1(error("EPERM"),"darwin")).toBe(false);
++ for(const code of["ENOENT","ENOSPC","EIO"])expect(filesystemBusyErrorV1(error(code),"win32"),code).toBe(false);
++ expect(filesystemBusyErrorV1(null,"win32")).toBe(false);expect(filesystemBusyErrorV1({},"win32")).toBe(false);
++});
++
++test("a busy file is retried on the declared pauses of the read layer and then settles", () => {
++ const pauses:number[]=[];let calls=0;
++ const result=settleBusyFilesystemSyncV1("C:\\cache\\unit.lock",()=>{if(++calls<3)throw error("EPERM");return "released";},{platform:"win32",sleepSync:ms=>{pauses.push(ms);}});
++ expect(result).toEqual({settled:true,value:"released"});expect(calls).toBe(3);expect(pauses).toEqual(plan.backoffMs.slice(0,2));
++});
++
++test("a file that stays busy is returned as a failure after the declared attempts, reported once in every language, never thrown", () => {
++ const pauses:number[]=[],reports:string[]=[];let calls=0;
++ const result=settleBusyFilesystemSyncV1("C:\\cache\\unit.lock",()=>{calls++;throw error("EBUSY");},{platform:"win32",sleepSync:ms=>{pauses.push(ms);},report:text=>{reports.push(text);},environment:{}});
++ expect(result.settled).toBe(false);expect((result as {error:{code:string}}).error.code).toBe("EBUSY");
++ expect(calls).toBe(plan.maximumAttempts);expect(pauses).toEqual([...plan.backoffMs]);
++ expect(reports.length).toBe(1);expect(reports[0]).toContain("unit.lock");expect(reports[0]!.split("\n").length,"one line per declared language").toBe(churnProtocolV1().languages.length);
++});
++
++test("an error that is not busy is not retried and the report stays quiet", () => {
++ let calls=0;const reports:string[]=[];
++ const result=settleBusyFilesystemSyncV1("/cache/unit.lock",()=>{calls++;throw error("ENOSPC");},{platform:"win32",sleepSync:()=>{throw Error("must not sleep");},report:text=>{reports.push(text);}});
++ expect(result.settled).toBe(false);expect(calls).toBe(1);expect(reports).toEqual([]);
++});
++
++test("a real permission refusal of this host (a read-only directory) is classified by the platform: busy under win32 rules, final under its own", () => {
++ if(process.platform==="win32")return;
++ const directory=mkdtempSync(join(tmpdir(),"busy-")),file=join(directory,"claim.lock");writeFileSync(file,"x");chmodSync(directory,0o500);
++ try{
++  let own=0,pauses=0;
++  const native=settleBusyFilesystemSyncV1(file,()=>{own++;unlinkSync(file);},{sleepSync:()=>{pauses++;}});
++  if(native.settled)return;
++  expect((native as {error:{code:string}}).error.code).toMatch(/^(EACCES|EPERM)$/u);expect(own).toBe(1);expect(pauses).toBe(0);
++  let windows=0;const retried=settleBusyFilesystemSyncV1(file,()=>{windows++;unlinkSync(file);},{platform:"win32",sleepSync:()=>{}});
++  expect(retried.settled).toBe(false);expect(windows).toBe(plan.maximumAttempts);
++ }finally{chmodSync(directory,0o700);rmSync(directory,{recursive:true,force:true});}
++});
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🟦️.ts	2026-10-26 09:16:46
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🟦️.ts	2026-10-26 10:30:42
+@@ -42,6 +42,7 @@
+  try{
+   for(const path of[lane.paths.target,lane.paths.build])requireNativeStoragePathV1(store.storage.backing.root,path);
+   const view=Object.freeze({...store,buildDirectory:lane.paths.build,environment:compilerLaneEnvironmentV1({environment:store.environment,cacheRoot,lane:{id:lane.paths.id,base:lane.paths.base,target:lane.paths.target,build:lane.paths.build},toolchain:store.toolchain.digest,crates:request.crates,unitCache:request.unitCache??true})});
++  const refusal=view.environment.SEMIO_UNIT_CACHE_REFUSAL;if(refusal&&refusal!==store.environment.SEMIO_UNIT_CACHE_REFUSAL)process.stderr.write(refusal+"\n");
+   input.register(view);
+   return await body(view,control);
+  }finally{lane.release();}
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/📖️texts/🔣️.json ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/📖️texts/🔣️.json
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/📖️texts/🔣️.json	2026-10-26 09:40:48
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/📖️texts/🔣️.json	2026-10-26 10:39:58
+@@ -54,6 +54,7 @@
+     "dedupe.replaced": { "en": "Replaced {path} by a clone ({bytes})", "de": "{path} durch einen Klon ersetzt ({bytes})" },
+     "dedupe.changed": { "en": "Keeping {path}: it changed or was used while deduplicating", "de": "Behalte {path}: es hat sich während des Deduplizierens geändert oder wurde benutzt" },
+     "dedupe.unsupported": { "en": "Keeping {path}: it cannot be cloned here (the volume has no clones or the directory is not writable)", "de": "Behalte {path}: hier nicht klonbar (das Volume kennt keine Klone oder das Verzeichnis ist nicht beschreibbar)" },
++    "dedupe.noClone": { "en": "{directory}: this volume cannot make copy-on-write clones (ext4 and NTFS cannot), so deduplication frees nothing here and was skipped; the disk budget is held by garbage collection alone", "de": "{directory}: Dieses Volume kann keine Copy-on-Write-Klone anlegen (ext4 und NTFS können das nicht), daher gewinnt Deduplizierung hier nichts und wurde übersprungen; das Speicherbudget hält allein die Garbage Collection" },
+     "dedupe.absent": { "en": "Skipping {id}: {directory} does not exist or its image is not mounted", "de": "Überspringe {id}: {directory} existiert nicht oder sein Image ist nicht eingehängt" },
+     "dedupe.partial": { "en": "{id}: stopped at {count} candidate files; run again for the rest", "de": "{id}: bei {count} Kandidatendateien angehalten; für den Rest erneut ausführen" },
+     "dedupe.summary": { "en": "Replaced {replaced} files by clones; the volume gained {gained} (at most {freed} by count, blocks may already have been shared), {skipped} kept, {failed} failed", "de": "{replaced} Dateien durch Klone ersetzt; das Volume gewann {gained} (höchstens {freed} nach Zählung, Blöcke waren teils schon geteilt), {skipped} behalten, {failed} fehlgeschlagen" },
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🏁️entry.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🏁️entry.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🏁️entry.ts	1970-01-01 01:00:00
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🏁️entry.ts	2026-10-26 10:27:45
+@@ -0,0 +1,4 @@
++import {runUnitCacheMainV1} from "./📜️script.ts";
++
++/** 🏁️ The entry compiled into the native compiler wrapper (`bun build --compile`): the Windows stand-in Cargo can execute directly, because a batch file cannot take the quoted arguments Cargo passes to the compiler. */
++process.exitCode=await runUnitCacheMainV1(process.argv.slice(2),process.env,process.cwd());
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts	2026-10-25 09:16:07
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts	2026-10-26 10:27:45
+@@ -140,8 +140,12 @@
+  throw Error("Unknown unit-cache command");
+ }
+ 
+-if(isMainModuleV1(import.meta.url)){
+- const argv=process.argv.slice(2);
+- if(argv[0]==="--semio-unit-cache"){manageV1(argv.slice(1)).then(result=>{console.log(JSON.stringify(result));},error=>{console.error(String(error?.message??error));process.exitCode=1;});}
+- else wrapRustcV1(argv,process.env,process.cwd()).then(status=>{process.exitCode=status;},error=>{console.error(String(error?.message??error));process.exitCode=1;});
++/** 🏁️ Runs the wrapper as a process: `--semio-unit-cache <command> …` is an operator command (its JSON result on standard output), anything else is one rustc command line Cargo hands to the wrapper. Resolves to the exit status; shared by the script entry and the native executable entry (`🏁️entry.ts`), whose `argv[1]` is no file the main-module test could match. */
++export async function runUnitCacheMainV1(argv:readonly string[],environment:Environment,cwd:string):Promise<number>{
++ try{
++  if(argv[0]==="--semio-unit-cache"){console.log(JSON.stringify(await manageV1(argv.slice(1))));return 0;}
++  return await wrapRustcV1(argv,environment,cwd);
++ }catch(error){console.error(String((error as Error)?.message??error));return 1;}
+ }
++
++if(isMainModuleV1(import.meta.url))runUnitCacheMainV1(process.argv.slice(2),process.env,process.cwd()).then(status=>{process.exitCode=status;});
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🔒️lock/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🔒️lock/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🔒️lock/🟦️.ts	2026-10-26 09:09:41
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🔒️lock/🟦️.ts	2026-10-26 10:27:16
+@@ -1,6 +1,7 @@
+ import {randomBytes} from "node:crypto";
+ import {closeSync,linkSync,mkdirSync,openSync,readFileSync,readdirSync,renameSync,rmSync,statSync,utimesSync,writeSync} from "node:fs";
+ import {join} from "node:path";
++import {settleBusyFilesystemSyncV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+ import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
+ 
+ const policy=UNIT_CACHE_POLICY_V1;
+@@ -10,6 +11,11 @@
+ /** 🫀️ Whether a process exists; a permission refusal still means it exists. */
+ export function processAliveV1(pid:number):boolean{try{process.kill(pid,0);return true;}catch(error){return(error as NodeJS.ErrnoException).code==="EPERM";}}
+ 
++/** 🧹️ Removes one claim file and never throws: a Windows sharing violation (`EPERM`, `EBUSY`, `EACCES` while a reader, scanner or indexer holds the file) is retried on the churn table's pauses, and a file that stays busy is announced in every language and left to age out as stale; `false` then. */
++export function removeClaimFileV1(path:string,world:Readonly<{platform?:string;sleepSync?:(milliseconds:number)=>void;report?:(text:string)=>void}>={}):boolean{
++ return settleBusyFilesystemSyncV1(path,()=>rmSync(path,{force:true}),{report:text=>{try{(world.report??(line=>process.stderr.write(line+"\n")))(text);}catch{}},...world.platform?{platform:world.platform}:{},...world.sleepSync?{sleepSync:world.sleepSync}:{}}).settled;
++}
++
+ type Holder=Readonly<{pid:number;token:string;atMs:number}>;
+ function holderOf(path:string):Holder|undefined{try{const row=JSON.parse(readFileSync(path,"utf8"));return typeof row?.pid==="number"?row:undefined;}catch{return undefined;}}
+ function ageOf(path:string,now:number):number|undefined{try{return now-statSync(path).mtimeMs;}catch{return undefined;}}
+@@ -27,7 +33,7 @@
+  const grave=path+".dead-"+randomBytes(4).toString("hex");
+  try{renameSync(path,grave);}catch{return;}
+  if(!stale(grave,staleMs,Date.now())){try{linkSync(grave,path);}catch{}}
+- rmSync(grave,{force:true});
++ removeClaimFileV1(grave);
+ }
+ 
+ function tryCreate(path:string,heartbeatMs:number):ClaimV1|undefined{
+@@ -36,7 +42,7 @@
+  try{writeSync(fd,JSON.stringify({pid:process.pid,token,atMs:Date.now()}));}finally{closeSync(fd);}
+  const beat=setInterval(()=>{try{const now=new Date();utimesSync(path,now,now);}catch{}},heartbeatMs);beat.unref?.();
+  let released=false;
+- return Object.freeze({path,waitedMs:0,release(){if(released)return;released=true;clearInterval(beat);if(holderOf(path)?.token===token)rmSync(path,{force:true});}});
++ return Object.freeze({path,waitedMs:0,release(){if(released)return;released=true;clearInterval(beat);if(holderOf(path)?.token===token)removeClaimFileV1(path);}});
+ }
+ 
+ /** 🚪️ Takes the claim only if it is free right now, replacing a dead or silent holder; never waits. */
+@@ -92,11 +98,11 @@
+      const path=join(slots,String(index)+".lock");
+      if(stale(path,policy.slot.staleMilliseconds,now))removeStale(path,policy.slot.staleMilliseconds);
+      const claim=tryCreate(path,policy.slot.heartbeatMilliseconds);
+-     if(claim){clearInterval(beat);rmSync(ticket,{force:true});return Object.freeze({...claim,waitedMs:Date.now()-started});}
++     if(claim){clearInterval(beat);removeClaimFileV1(ticket);return Object.freeze({...claim,waitedMs:Date.now()-started});}
+     }
+    }
+    if(!reported&&Date.now()-started>200){reported=true;options.onWait?.(Date.now()-started);}
+    await sleepV1(policy.slot.pollMilliseconds,options.signal);
+   }
+- }catch(error){clearInterval(beat);rmSync(ticket,{force:true});throw error;}
++ }catch(error){clearInterval(beat);removeClaimFileV1(ticket);throw error;}
+ }
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts	2026-10-26 09:16:07
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts	2026-10-26 10:28:06
+@@ -1,9 +1,9 @@
+ import {availableParallelism,setPriority} from "node:os";
+-import {spawn} from "node:child_process";
++import {spawn,spawnSync} from "node:child_process";
+ import {fileURLToPath} from "node:url";
+-import {appendFileSync,chmodSync,closeSync,mkdirSync,openSync,readFileSync,renameSync,statSync,writeFileSync} from "node:fs";
++import {appendFileSync,chmodSync,closeSync,existsSync,mkdirSync,openSync,readFileSync,readdirSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
+ import {dirname,join} from "node:path";
+-import {randomBytes} from "node:crypto";
++import {createHash,randomBytes} from "node:crypto";
+ import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
+ import {collectGarbageSingleFlightV1,gcOutOfSpaceV1,gcPressureV1,measureVolumeV1,type GcPressureV1} from "../🧹️gc/🟦️.ts";
+ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+@@ -11,6 +11,8 @@
+ const policy=UNIT_CACHE_POLICY_V1;
+ /** 📍️ The wrapper script Cargo runs in place of rustc. */
+ export const UNIT_CACHE_SCRIPT_V1=fileURLToPath(new URL("../📜️script.ts",import.meta.url));
++/** 🏁️ The module a native compiler wrapper is built from. */
++export const UNIT_CACHE_ENTRY_V1=fileURLToPath(new URL("../🏁️entry.ts",import.meta.url));
+ 
+ /** 🎯️ The package names a Cargo command line selects with `-p` or `--package`; their units compile incrementally in the lane instead of through the shared cache. */
+ export function focusFromCargoArgumentsV1(args:readonly string[]):string[]{
+@@ -24,28 +26,62 @@
+  return[...new Set(names)].sort();
+ }
+ 
+-/** 🪞️ Where the executable stand-in for the compiler wrapper lives: Cargo runs it as `<wrapper> <rustc> <arguments>`. */
+-export function unitCacheShimPathV1(cacheRoot:string,platform:NodeJS.Platform=process.platform):string{return join(cacheRoot,"bin",platform==="win32"?"rustc-wrapper.cmd":"rustc-wrapper");}
++/** 🪞️ Where the executable stand-in for the compiler wrapper lives: Cargo runs it as `<wrapper> <rustc> <arguments>`. On Windows it is a native executable named by the digest of the code it embeds (`rustc-wrapper-<digest>.exe`, see {@link ensureUnitCacheShimV1}), because Cargo passes arguments with quotes (`--cfg feature="std"`) and Rust refuses to hand those to a batch file. */
++export function unitCacheShimPathV1(cacheRoot:string,platform:NodeJS.Platform=process.platform,digest?:string):string{return join(cacheRoot,"bin",platform==="win32"?`rustc-wrapper-${digest??"native"}.exe`:"rustc-wrapper");}
+ 
+-/** 📜️ The text of the stand-in: it names the runtime and the wrapper script by absolute path, so no `PATH` entry and no file mode of the tracked script matters. */
+-export function unitCacheShimSourceV1(runtime:string,script:string,platform:NodeJS.Platform=process.platform):string{
+- if(platform==="win32")return `@"${runtime}" "${script}" %*\r\n`;
++/** 📜️ The text of the POSIX stand-in: it names the runtime and the wrapper script by absolute path, so no `PATH` entry and no file mode of the tracked script matters. */
++export function unitCacheShimSourceV1(runtime:string,script:string):string{
+  const quote=(text:string)=>"'"+text.replaceAll("'","'\\''")+"'";
+  return `#!/bin/sh\nexec ${quote(runtime)} ${quote(script)} "$@"\n`;
+ }
+ 
+-/** 🛠️ Writes the stand-in once (atomically, executable) and returns its path. Build scripts that run `$RUSTC` reach the real compiler; only Cargo's own compiler calls go through the wrapper. */
+-export function ensureUnitCacheShimV1(cacheRoot:string,runtime:string=process.execPath,script:string=UNIT_CACHE_SCRIPT_V1,platform:NodeJS.Platform=process.platform):string{
+- const path=unitCacheShimPathV1(cacheRoot,platform),text=unitCacheShimSourceV1(runtime,script,platform);
++/** 🏗️ How a native wrapper is made: `bundle` answers the code the executable would embed (its digest names the executable), `compile` writes the executable. Injectable so a test can count and fail the steps. */
++export type UnitCacheNativeBuildV1=Readonly<{bundle:(runtime:string,entry:string)=>string;compile:(runtime:string,entry:string,outfile:string)=>void}>;
++
++/** ⚙️ The real build: the runtime's own bundler and `--compile`, so the executable embeds the runtime and needs no `PATH` entry, no batch file and no interpreter lookup at run time. */
++export const UNIT_CACHE_NATIVE_BUILD_V1:UnitCacheNativeBuildV1=Object.freeze({
++ bundle(runtime,entry){
++  const run=spawnSync(runtime,["build","--target=bun",entry],{encoding:"utf8",maxBuffer:1<<28,windowsHide:true});
++  if(run.status!==0||!run.stdout)throw Error(String(run.error?.message??run.stderr??"bundler failed").trim()||"bundler failed");
++  return run.stdout;
++ },
++ compile(runtime,entry,outfile){
++  const run=spawnSync(runtime,["build","--compile",entry,"--outfile",outfile],{encoding:"utf8",maxBuffer:1<<26,windowsHide:true});
++  if(run.status!==0)throw Error(String(run.error?.message??run.stderr??"compiler failed").trim()||"compiler failed");
++ },
++});
++
++/** 🚫️ Why no native wrapper could be made, in every language: the unit cache is switched off for that Cargo process, never half-working. */
++export function unitCacheWrapperRefusalV1(reason:string):string{return (["en","de"] as const).map(language=>laneMessageV1("wrapperUnavailable",{reason},language)).join("\n");}
++
++/** 🪟️ Makes the native wrapper: bundle, name by digest, compile once (a temporary name, then an atomic rename), and remove the executables of older code that no running Cargo holds. */
++function ensureNativeWrapperV1(cacheRoot:string,runtime:string,entry:string,platform:NodeJS.Platform,build:UnitCacheNativeBuildV1):string{
++ const digest=createHash("sha256").update(build.bundle(runtime,entry)).digest("hex").slice(0,16),path=unitCacheShimPathV1(cacheRoot,platform,digest);
++ if(existsSync(path))return path;
++ mkdirSync(dirname(path),{recursive:true});
++ const temporary=path+"."+randomBytes(4).toString("hex")+".tmp";
++ try{build.compile(runtime,entry,temporary);chmodSync(temporary,0o755);renameSync(temporary,path);}
++ catch(error){rmSync(temporary,{force:true});if(!existsSync(path))throw error;}
++ for(const name of readdirSync(dirname(path)))if(/^rustc-wrapper-[0-9a-f]+\.exe(\..*\.tmp)?$/u.test(name)&&join(dirname(path),name)!==path)try{rmSync(join(dirname(path),name),{force:true});}catch{}
++ return path;
++}
++
++/** 🛠️ Writes the stand-in once (atomically, executable) and returns its path. POSIX: a `/bin/sh` script. Windows: a native executable built from `🏁️entry.ts`; a build that fails throws, and {@link unitCacheEnvironmentV1} turns that into a bilingual refusal. Build scripts that run `$RUSTC` reach the real compiler; only Cargo's own compiler calls go through the wrapper. */
++export function ensureUnitCacheShimV1(cacheRoot:string,runtime:string=process.execPath,script:string=UNIT_CACHE_SCRIPT_V1,platform:NodeJS.Platform=process.platform,build:UnitCacheNativeBuildV1=UNIT_CACHE_NATIVE_BUILD_V1,entry:string=UNIT_CACHE_ENTRY_V1):string{
++ if(platform==="win32")return ensureNativeWrapperV1(cacheRoot,runtime,entry,platform,build);
++ const path=unitCacheShimPathV1(cacheRoot,platform),text=unitCacheShimSourceV1(runtime,script);
+  let current:string|undefined;try{current=readFileSync(path,"utf8");}catch{}
+  if(current!==text){mkdirSync(dirname(path),{recursive:true});const temporary=path+"."+randomBytes(4).toString("hex");writeFileSync(temporary,text);chmodSync(temporary,0o755);renameSync(temporary,path);}
+  return path;
+ }
+ 
+ /** 🧩️ The environment block that routes every compiler call of one Cargo process through the unit cache: Cargo runs the stand-in as `<wrapper> <rustc> <arguments>`, the wrapper script serves a unit from the cache or falls back to the memory-admitting scheduler for every miss. `RUSTC` stays the real compiler, so build scripts that exec it work whatever the file mode of the script or `PATH`. A launcher adds this after its storage admission and never before; without a `scheduler` a miss runs the compiler directly. */
+-export function unitCacheEnvironmentV1(input:Readonly<{cacheRoot:string;lane:string;laneRoot:string;scheduler?:string;compiler:string;toolchain:string;focus:readonly string[];slots?:number;runtime?:string;features?:Readonly<{buildScripts?:boolean;brokerReplay?:boolean}>}>):Record<string,string>{
++export function unitCacheEnvironmentV1(input:Readonly<{cacheRoot:string;lane:string;laneRoot:string;scheduler?:string;compiler:string;toolchain:string;focus:readonly string[];slots?:number;runtime?:string;platform?:NodeJS.Platform;build?:UnitCacheNativeBuildV1;features?:Readonly<{buildScripts?:boolean;brokerReplay?:boolean}>}>):Record<string,string>{
++ let wrapper:string;
++ try{wrapper=ensureUnitCacheShimV1(input.cacheRoot,input.runtime,undefined,input.platform,input.build);}
++ catch(error){return{RUSTC_WRAPPER:"",SEMIO_UNIT_CACHE:"off",SEMIO_UNIT_CACHE_REFUSAL:unitCacheWrapperRefusalV1(String((error as Error)?.message??error).split("\n")[0]!)};}
+  return{
+-  RUSTC_WRAPPER:ensureUnitCacheShimV1(input.cacheRoot,input.runtime),
++  RUSTC_WRAPPER:wrapper,
+   SEMIO_UNIT_CACHE_ROOT:input.cacheRoot,
+   SEMIO_UNIT_CACHE_LANE:input.lane,
+   SEMIO_UNIT_CACHE_LANE_ROOT:input.laneRoot,
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🟦️.ts	2026-10-26 09:19:53
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🟦️.ts	2026-10-26 10:28:19
+@@ -276,7 +276,7 @@
+  expect(block.RUSTC_WRAPPER).toBe(unitCacheShimPathV1(cacheRoot));expect("RUSTC" in block,"the compiler stays the real one").toBe(false);
+  expect(readFileSync(block.RUSTC_WRAPPER,"utf8")).toBe(unitCacheShimSourceV1("/bin/bun",script));expect(statSync(block.RUSTC_WRAPPER).mode&0o111).toBe(0o111);
+  expect(ensureUnitCacheShimV1(cacheRoot,"/bin/bun")).toBe(block.RUSTC_WRAPPER);
+- expect(unitCacheShimSourceV1("/o'p/bun","/s/it's.ts","linux")).toBe("#!/bin/sh\nexec '/o'\\''p/bun' '/s/it'\\''s.ts' \"$@\"\n");expect(unitCacheShimSourceV1("C:\\bun.exe","C:\\s.ts","win32")).toBe('@"C:\\bun.exe" "C:\\s.ts" %*\r\n');expect(unitCacheShimPathV1("/u","win32").endsWith("rustc-wrapper.cmd")).toBe(true);
++ expect(unitCacheShimSourceV1("/o'p/bun","/s/it's.ts")).toBe("#!/bin/sh\nexec '/o'\\''p/bun' '/s/it'\\''s.ts' \"$@\"\n");expect(unitCacheShimPathV1("/u","win32","abc").endsWith("rustc-wrapper-abc.exe"),"a native executable, never a batch file").toBe(true);
+  expect(JSON.parse(block.SEMIO_UNIT_CACHE_INNER)).toEqual(["/t/scheduler","rustc"]);expect(block.SEMIO_UNIT_CACHE_FOCUS).toBe("a,b");expect(block.SEMIO_UNIT_CACHE_SLOTS).toBe("6");
+  expect(unitCacheRootV1("/store")).toBe("/store/u");
+ });
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🟦️.ts	1970-01-01 01:00:00
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🟦️.ts	2026-10-26 10:48:07
+@@ -0,0 +1,77 @@
++import {expect,test} from "bun:test";
++import {chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,rmSync,writeFileSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {join,resolve} from "node:path";
++import {spawnSync} from "node:child_process";
++import {fileURLToPath} from "node:url";
++import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
++import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
++import {ensureUnitCacheShimV1,unitCacheEnvironmentV1,unitCacheShimPathV1,UNIT_CACHE_NATIVE_BUILD_V1,type UnitCacheNativeBuildV1} from "../../🚪️launch/🟦️.ts";
++import {removeClaimFileV1,tryClaimV1} from "../../🔒️lock/🟦️.ts";
++import {churnProtocolV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
++
++/** 🪟️ Contract: Cargo executes `RUSTC_WRAPPER` directly with arguments that carry quotes; on Windows that has to be a native executable (a batch file cannot take them), and a claim release in a `finally` never throws on a sharing violation. The native wrapper is built and run for real on every host (the `.exe` name is only a name there); the Windows-only facts are injected. */
++const here=fileURLToPath(new URL(".",import.meta.url)),base=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir());mkdirSync(base,{recursive:true});
++const scratch=()=>mkdtempSync(join(base,"ucw-"));
++const echoScript=resolve(here,"🧫️fixtures/🟦️echo.ts"),echoPython=resolve(here,"🧫️fixtures/🐍️echo.py");
++
++test("the Windows stand-in is a native executable that hands Cargo's quoted arguments to the compiler unchanged, like the independent Python echo", () => {
++ const root=scratch();
++ try{
++  const wrapper=ensureUnitCacheShimV1(join(root,"u"),process.execPath,undefined,"win32");
++  expect(wrapper.endsWith(".exe")).toBe(true);expect(readdirSync(join(root,"u","bin")).some(name=>name.endsWith(".cmd")||name.endsWith(".bat")),"never a batch file").toBe(false);
++  const python=testPythonV1();
++  for(const row of fixture.rustcArguments){
++   const run=spawnSync(wrapper,["C:\\rust\\bin\\rustc.exe",...row],{encoding:"utf8",env:{PATH:process.env.PATH??"",SEMIO_UNIT_CACHE_INNER:JSON.stringify([process.execPath,echoScript])}});
++   expect(run.status,run.stderr).toBe(0);expect(JSON.parse(run.stdout)).toEqual(row);
++   if(python){const oracle=spawnSync(python,["-I",echoPython,...row],{encoding:"utf8"});expect(JSON.parse(oracle.stdout)).toEqual(JSON.parse(run.stdout));}
++  }
++  for(const status of fixture.exitStatuses){
++   const run=spawnSync(wrapper,["rustc","--crate-name","x"],{encoding:"utf8",env:{PATH:process.env.PATH??"",XPLAT_EXIT:String(status),SEMIO_UNIT_CACHE_INNER:JSON.stringify([process.execPath,echoScript])}});
++   expect(run.status).toBe(status);
++  }
++ }finally{rmSync(root,{recursive:true,force:true});}
++},120000);
++
++test("the executable is named by the code it embeds: unchanged code is never recompiled, changed code replaces the older executable", () => {
++ const root=join(scratch(),"u"),calls={bundle:0,compile:0};let code="one";
++ const build:UnitCacheNativeBuildV1={bundle:()=>{calls.bundle++;return code;},compile:(_runtime,_entry,outfile)=>{calls.compile++;writeFileSync(outfile,"exe:"+code);}};
++ try{
++  const first=ensureUnitCacheShimV1(root,"/bin/bun","/s.ts","win32",build,"/entry.ts");
++  expect(ensureUnitCacheShimV1(root,"/bin/bun","/s.ts","win32",build,"/entry.ts")).toBe(first);expect(calls.compile).toBe(1);
++  code="two";const second=ensureUnitCacheShimV1(root,"/bin/bun","/s.ts","win32",build,"/entry.ts");
++  expect(second).not.toBe(first);expect(calls.compile).toBe(2);expect(existsSync(first),"the older executable is removed").toBe(false);expect(existsSync(second)).toBe(true);
++  expect(readdirSync(join(root,"bin")).filter(name=>name.endsWith(".tmp"))).toEqual([]);
++ }finally{rmSync(join(root,".."),{recursive:true,force:true});}
++});
++
++test("a wrapper that cannot be built switches the unit cache off for that Cargo process and says so in both languages", () => {
++ const root=join(scratch(),"u"),failing:UnitCacheNativeBuildV1={bundle:()=>{throw Error("bundler missing");},compile:()=>{throw Error("unused");}};
++ try{
++  const block=unitCacheEnvironmentV1({cacheRoot:root,lane:"l",laneRoot:join(root,"l"),compiler:"rustc",toolchain:"tc",focus:[],platform:"win32",build:failing});
++  expect(block.RUSTC_WRAPPER,"an empty value overrides the configured wrapper").toBe("");expect(block.SEMIO_UNIT_CACHE).toBe("off");
++  const lines=block.SEMIO_UNIT_CACHE_REFUSAL!.split("\n");expect(lines.length).toBe(2);expect(lines[0]).toContain("bundler missing");expect(lines[1]).toContain("Unit-Cache");expect(lines[1]).toContain("bundler missing");
++  expect(existsSync(join(root,"bin"))).toBe(false);
++ }finally{rmSync(join(root,".."),{recursive:true,force:true});}
++});
++
++test("the POSIX stand-in stays a script and the Windows path names an executable", () => {
++ expect(unitCacheShimPathV1("/u","linux")).toBe(join("/u","bin","rustc-wrapper"));expect(unitCacheShimPathV1("/u","win32","0123").endsWith("rustc-wrapper-0123.exe")).toBe(true);
++ expect(typeof UNIT_CACHE_NATIVE_BUILD_V1.compile).toBe("function");
++});
++
++test("releasing a claim never throws, whatever the file system says; a sharing violation is retried on the churn pauses first and announced when it stays", () => {
++ if(process.platform==="win32")return;
++ const root=scratch(),locks=join(root,"locks");mkdirSync(locks);
++ try{
++  const claim=tryClaimV1(locks,"unit")!;expect(claim).toBeDefined();
++  chmodSync(locks,0o500);
++  expect(()=>claim.release(),"a refusal of the host is final and never thrown").not.toThrow();
++  const pauses:number[]=[],reports:string[]=[];
++  expect(removeClaimFileV1(join(locks,"unit.lock"),{platform:"win32",sleepSync:ms=>{pauses.push(ms);},report:text=>{reports.push(text);}})).toBe(false);
++  expect(pauses).toEqual([...churnProtocolV1().profiles.read.backoffMs]);expect(reports.length).toBe(1);expect(reports[0]).toContain("unit.lock");
++  chmodSync(locks,0o700);
++  expect(removeClaimFileV1(join(locks,"unit.lock"))).toBe(true);expect(existsSync(join(locks,"unit.lock"))).toBe(false);
++  expect(removeClaimFileV1(join(locks,"absent.lock"))).toBe(true);
++ }finally{try{chmodSync(locks,0o700);}catch{}rmSync(root,{recursive:true,force:true});}
++});
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🧫️fixtures/🐍️echo.py ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🧫️fixtures/🐍️echo.py
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🧫️fixtures/🐍️echo.py	1970-01-01 01:00:00
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🧫️fixtures/🐍️echo.py	2026-10-26 10:28:59
+@@ -0,0 +1,4 @@
++import json,sys
++if len(sys.argv)>1 and sys.argv[1]=="--exit":
++    sys.exit(int(sys.argv[2]))
++sys.stdout.write(json.dumps(sys.argv[1:],ensure_ascii=False))
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🧫️fixtures/🔣️.json ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🧫️fixtures/🔣️.json
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🧫️fixtures/🔣️.json	1970-01-01 01:00:00
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🧫️fixtures/🔣️.json	2026-10-26 10:28:59
+@@ -0,0 +1,9 @@
++{
++  "rustcArguments": [
++    ["--crate-name", "serde", "--edition=2021", "--cfg", "feature=\"std\"", "--cfg", "feature=\"derive\"", "src\\lib.rs"],
++    ["--crate-name", "a b", "-C", "metadata=a b", "--out-dir", "C:\\Users\\dev one\\target\\debug\\deps"],
++    ["--check-cfg", "cfg(feature, values(\"a\", \"b\"))", "--emit=dep-info,metadata"],
++    ["--crate-name", "ünï", "--cfg", "x=\"\"", "", "--", "last"]
++  ],
++  "exitStatuses": [0, 1, 101]
++}
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🧫️fixtures/🟦️echo.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🧫️fixtures/🟦️echo.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🧫️fixtures/🟦️echo.ts	1970-01-01 01:00:00
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🧫️fixtures/🟦️echo.ts	2026-10-26 10:28:59
+@@ -0,0 +1,3 @@
++const status=process.env.XPLAT_EXIT;
++if(status!==undefined)process.exit(Number(status));
++process.stdout.write(JSON.stringify(process.argv.slice(2)));
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json	2026-10-26 09:18:52
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json	2026-10-26 10:28:25
+@@ -84,6 +84,10 @@
+           "en": "[repo cargo] the background unit cache collector could not be started: {reason}",
+           "de": "[repo cargo] Der Unit-Cache-Collector im Hintergrund konnte nicht gestartet werden: {reason}"
+         },
++        "wrapperUnavailable": {
++          "en": "[repo cargo] the unit cache is off for this Cargo process: no native compiler wrapper could be built ({reason}); compiles run without the shared cache",
++          "de": "[repo cargo] Der Unit-Cache ist für diesen Cargo-Prozess aus: Es konnte kein nativer Compiler-Wrapper gebaut werden ({reason}); Kompilierungen laufen ohne den gemeinsamen Cache"
++        },
+         "outOfSpace": {
+           "en": "[repo cargo] the compiler image ran out of space ({freeGib} GiB free of {volumeGib} GiB); cleaned up {lanes} lane(s), {incremental} incremental set(s), {sessions} incremental session(s), {units} build unit(s) and {objects} object(s) and retrying the command once",
+           "de": "[repo cargo] Im Compiler-Image ist der Platz ausgegangen ({freeGib} GiB frei von {volumeGib} GiB); {lanes} Lane(s), {incremental} Inkrementell-Satz/Sätze, {sessions} Inkrementell-Sitzung(en), {units} Build-Einheit(en) und {objects} Objekt(e) bereinigt, der Befehl wird einmal wiederholt"
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/📖️texts/🔣️.json ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/📖️texts/🔣️.json
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/📖️texts/🔣️.json	2026-10-22 10:53:26
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/📖️texts/🔣️.json	2026-10-26 10:43:57
+@@ -6,6 +6,14 @@
+     "de"
+   ],
+   "messages": {
++    "hooks.shell-bundled": {
++      "en": "setup: sh.exe is not on PATH, only Git for Windows' own shell ({path}) exists; git runs the commit hooks with it, but an IDE or a cmd session that starts the hook files directly skips them (the hooks swallow errors). Add its folder to PATH to cover both",
++      "de": "setup: sh.exe liegt nicht im PATH, nur die eigene Shell von Git für Windows ({path}) existiert; git führt die Commit-Hooks damit aus, aber eine IDE oder eine cmd-Sitzung, die die Hook-Dateien direkt startet, überspringt sie (die Hooks verschlucken Fehler). Den Ordner in den PATH aufnehmen, um beides abzudecken"
++    },
++    "hooks.shell-missing": {
++      "en": "setup: no POSIX shell (sh.exe) found: the commit hooks cannot run on this machine. Install Git for Windows (it brings sh.exe) and run setup again",
++      "de": "setup: Keine POSIX-Shell (sh.exe) gefunden: die Commit-Hooks können auf diesem Rechner nicht laufen. Git für Windows installieren (bringt sh.exe mit) und setup erneut ausführen"
++    },
+     "message.at-least-one-description-bullet": {
+       "en": "micro-commit: at least one description bullet is required",
+       "de": "micro-commit: Mindestens ein Beschreibungs-Bullet ist erforderlich"
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🪝️hooks/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🪝️hooks/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🪝️hooks/🟦️.ts	2026-10-26 10:18:11
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🪝️hooks/🟦️.ts	2026-10-26 10:43:57
+@@ -1,6 +1,7 @@
+-import { join } from "node:path";
++import { join, win32 } from "node:path";
+ import { chmodSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+ import { GK_COMMIT_TEMPLATE_FILE } from "../📄️prepared-message/🟦️.ts";
++import { sayCommitV1 } from "../📖️texts/🟦️.ts";
+ 
+ const MICRO_COMMIT_POST_WIPE_HOOKS = ["post-commit", "post-checkout", "post-merge", "post-rewrite"] as const;
+ 
+@@ -120,4 +121,25 @@
+   if (existsSync(stalePreCommit)) rmSync(stalePreCommit, { force: true });
+   const repoPreCommit = join(repoHooksDir, "pre-commit");
+   if (existsSync(repoPreCommit)) rmSync(repoPreCommit, { force: true });
++}
++
++/** 🐚️ Where the POSIX shell of the hook files lives on a Windows host: `path` (`sh.exe` on `PATH`, any caller can run the hooks), `bundled` (only inside a Git for Windows install, which runs the hooks itself but an IDE or `cmd` session that starts the hook files directly cannot) or `missing`; `undefined` on every other platform, where the shebang line is enough. */
++export type HookShellV1 = Readonly<{ state: "path" | "bundled"; path: string }> | Readonly<{ state: "missing" }> | undefined;
++
++/** 🔎️ Finds the shell the hook files need on a Windows host: `PATH` first (case-insensitive key), then the Git for Windows locations (`Program Files`, `Program Files (x86)`, the per-user install). */
++export function resolveHookShellV1(environment: Readonly<Record<string, string | undefined>> = process.env, platform: string = process.platform, exists: (path: string) => boolean = existsSync): HookShellV1 {
++  if (platform !== "win32") return undefined;
++  const value = (key: string): string | undefined => environment[Object.keys(environment).find((candidate) => candidate.toLowerCase() === key.toLowerCase()) ?? key];
++  const onPath = (value("PATH") ?? "").split(";").filter(Boolean).map((directory) => win32.join(directory, "sh.exe")).find(exists);
++  if (onPath !== undefined) return { state: "path", path: onPath };
++  const roots = [value("ProgramFiles"), value("ProgramFiles(x86)"), value("ProgramW6432"), value("LOCALAPPDATA") === undefined ? undefined : win32.join(value("LOCALAPPDATA")!, "Programs")].filter((root): root is string => root !== undefined && root !== "");
++  const bundled = roots.flatMap((root) => [win32.join(root, "Git", "usr", "bin", "sh.exe"), win32.join(root, "Git", "bin", "sh.exe")]).find(exists);
++  return bundled === undefined ? { state: "missing" } : { state: "bundled", path: bundled };
++}
++
++/** 📣️ Says in both languages what the hook files can rely on: nothing when `sh.exe` is on `PATH`, a notice when only Git for Windows' own shell exists (git runs the hooks, a direct start skips them silently because the hooks swallow errors), a warning when no shell exists at all. */
++export function reportHookShellV1(shell: HookShellV1 = resolveHookShellV1(), say: typeof sayCommitV1 = sayCommitV1): void {
++  if (shell === undefined || shell.state === "path") return;
++  if (shell.state === "bundled") say("hooks.shell-bundled", { path: shell.path }, "info");
++  else say("hooks.shell-missing", {}, "warn");
+ }
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🪝️hooks/🧪️tests/🔣️.json ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🪝️hooks/🧪️tests/🔣️.json
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🪝️hooks/🧪️tests/🔣️.json	1970-01-01 01:00:00
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🪝️hooks/🧪️tests/🔣️.json	2026-10-26 10:43:57
+@@ -0,0 +1,8 @@
++{
++  "cases": [
++    {"name": "sh.exe on PATH", "env": {"Path": "C:\\Windows;C:\\Git\\usr\\bin"}, "files": ["C:\\Git\\usr\\bin\\sh.exe"], "expect": {"state": "path", "path": "C:\\Git\\usr\\bin\\sh.exe"}},
++    {"name": "only inside Program Files", "env": {"PATH": "C:\\Windows", "ProgramFiles": "C:\\Program Files"}, "files": ["C:\\Program Files\\Git\\usr\\bin\\sh.exe"], "expect": {"state": "bundled", "path": "C:\\Program Files\\Git\\usr\\bin\\sh.exe"}},
++    {"name": "per-user install", "env": {"PATH": "C:\\Windows", "LOCALAPPDATA": "C:\\Users\\dev\\AppData\\Local"}, "files": ["C:\\Users\\dev\\AppData\\Local\\Programs\\Git\\bin\\sh.exe"], "expect": {"state": "bundled", "path": "C:\\Users\\dev\\AppData\\Local\\Programs\\Git\\bin\\sh.exe"}},
++    {"name": "no shell at all", "env": {"PATH": "C:\\Windows", "ProgramFiles": "C:\\Program Files"}, "files": [], "expect": {"state": "missing"}}
++  ]
++}
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🪝️hooks/🧪️tests/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🪝️hooks/🧪️tests/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🪝️hooks/🧪️tests/🟦️.ts	1970-01-01 01:00:00
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🪝️hooks/🧪️tests/🟦️.ts	2026-10-26 10:43:57
+@@ -0,0 +1,29 @@
++import {expect, test} from "bun:test";
++import {reportHookShellV1, resolveHookShellV1} from "../🟦️.ts";
++import fixture from "./🔣️.json" with {type: "json"};
++
++/** 🐚️ Contract: a Windows host is told, in both languages, when the commit hook files cannot rely on a shell that every caller finds; other hosts need nothing because the shebang line is enough. */
++test("every Windows host vector finds the shell the way the setup documents", () => {
++  for (const row of fixture.cases) {
++    const files = new Set(row.files.map((file) => file.toLowerCase()));
++    expect(resolveHookShellV1(row.env, "win32", (path) => files.has(path.toLowerCase())), row.name).toEqual(row.expect as never);
++  }
++  for (const platform of ["linux", "darwin"]) expect(resolveHookShellV1({PATH: "/bin"}, platform, () => false)).toBeUndefined();
++});
++
++test("the report is silent for a shell on PATH and on POSIX hosts, an info line for the bundled shell and a warning when none exists", () => {
++  const lines: Array<[string, Record<string, unknown>, string | undefined]> = [], say = ((key: string, values: Record<string, unknown>, level?: string) => { lines.push([key, values, level]); }) as never;
++  reportHookShellV1(undefined, say);
++  reportHookShellV1({state: "path", path: "C:\\x\\sh.exe"}, say);
++  expect(lines).toEqual([]);
++  reportHookShellV1({state: "bundled", path: "C:\\Git\\usr\\bin\\sh.exe"}, say);
++  reportHookShellV1({state: "missing"}, say);
++  expect(lines).toEqual([["hooks.shell-bundled", {path: "C:\\Git\\usr\\bin\\sh.exe"}, "info"], ["hooks.shell-missing", {}, "warn"]]);
++});
++
++test("both messages exist in English and German", async () => {
++  const catalog = (await import("../../📖️texts/🔣️.json", {with: {type: "json"}})).default.messages as Record<string, {en: string; de: string}>;
++  for (const key of ["hooks.shell-bundled", "hooks.shell-missing"]) { expect(catalog[key]!.en.length).toBeGreaterThan(20); expect(catalog[key]!.de.length).toBeGreaterThan(20); }
++  expect(catalog["hooks.shell-bundled"]!.en).toContain("{path}");
++  expect(catalog["hooks.shell-bundled"]!.de).toContain("{path}");
++});
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts	2026-10-25 09:36:06
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts	2026-10-26 10:43:57
+@@ -5,7 +5,7 @@
+ import { ensureMcpBinary } from "../../../../../💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🟦️.ts";
+ import { dispatchSubcommand } from "../../🚨️policy/🧭️entrypoints/🟦️.ts";
+ import { runCmd } from "../../🏃️process/🟦️.ts";
+-import { installMicroCommitGitHooks } from "../📝️commit/🪝️hooks/🟦️.ts";
++import { installMicroCommitGitHooks, reportHookShellV1 } from "../📝️commit/🪝️hooks/🟦️.ts";
+ import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+ import { spawnSync } from "node:child_process";
+ import { existsSync, linkSync, mkdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
+@@ -126,6 +126,7 @@
+     for (const [key, value] of REPO_LOCAL_GIT_CONFIG) runCmd("git", ["config", "--local", key, value], { cwd: this.root });
+     if (process.platform === "win32") this.reportWindowsLongPaths();
+     installMicroCommitGitHooks(this.root);
++    reportHookShellV1();
+     const source = "AGENTS.md";
+     for (const alias of AGENT_INSTRUCTION_ALIASES) {
+       const aliasPath = join(this.root, ...alias.split("/"));
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/⌨️command/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/⌨️command/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/⌨️command/🟦️.ts	2026-10-26 07:42:36
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/⌨️command/🟦️.ts	2026-10-26 10:34:11
+@@ -26,6 +26,7 @@
+   if(head.includes("--json")){context.write(JSON.stringify({...snapshot,sessions,estimates:readHostEstimateStoreV1(directory)},null,2));return 0;}
+   const language=resolveHostCapacityLanguageV1(context.environment),host=snapshot.host;
+   context.write(formatHostCapacityV1(language,"status",{available:host.availableMegabytes,total:host.totalMegabytes,floor:snapshot.evaluation.floorMegabytes,spare:snapshot.evaluation.headroomMegabytes,pressure:host.pressure,swap:host.swapUsedMegabytes??"n/a",load:host.load??"n/a",files:host.openFiles??"n/a",images:host.attachedImages??"n/a",grants:snapshot.grants.length,waiters:snapshot.waiters.length}));
++  if(host.counters==="partial")context.write(formatHostCapacityV1(language,"countersPartial",{platform:host.platform,reason:language==="de"?"Probe fehlgeschlagen":"probe failed"}));
+   for(const grant of snapshot.grants)context.write(formatHostCapacityV1(language,grant.lentSinceMs===undefined?"grant":"grantLent",{id:grant.id,operation:grant.operation,jobs:grant.jobs,cpu:grant.cpu,reserved:grant.reservedMegabytes,observed:grant.observedMegabytes??"n/a",pid:grant.pid,seconds:Math.round((now()-(grant.lentSinceMs??grant.admittedAtMs))/1000)}));
+   for(const waiter of snapshot.waiters)context.write(formatHostCapacityV1(language,"waiter",{id:waiter.request.id,operation:waiter.request.operation,jobs:waiter.request.preferredJobs,need:waiter.request.fixedMegabytes+waiter.request.minimumJobs*waiter.request.perJobMegabytes,pid:waiter.pid,seconds:Math.round((now()-waiter.arrivedAtMs)/1000)}));
+   for(const line of renderAgentSessionCapacityV1(sessions,language))context.write(line);
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🪟️partial/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🪟️partial/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🪟️partial/🟦️.ts	1970-01-01 01:00:00
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🪟️partial/🟦️.ts	2026-10-26 10:34:17
+@@ -0,0 +1,28 @@
++import {afterAll,expect,test} from "bun:test";
++import {mkdtempSync,rmSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {join} from "node:path";
++import {readHostCapacityPolicyV1,type HostSampleV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
++import buildPolicy from "../../../🔣️policy.json" with {type:"json"};
++import {runCapacityCommandV1} from "../../⌨️command/🟦️.ts";
++
++/** 🪟️ Contract: `repo capacity status` says in the selected language when the host counters are partial (a Windows probe failed), and prints nothing extra for a complete sample. */
++const roots:string[]=[];afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
++const policy=readHostCapacityPolicyV1({...buildPolicy.hostCapacity,wait:{...buildPolicy.hostCapacity.wait,sampleMaximumAgeMilliseconds:0}});
++const host=(over:Partial<HostSampleV1>={}):HostSampleV1=>({version:1,atMs:Date.now(),platform:"win32",cores:8,totalMegabytes:16384,availableMegabytes:9000,pressure:"warn",swapUsedMegabytes:null,swapOutMegabytesPerSecond:null,load:null,openFiles:null,openFilesMaximum:null,attachedImages:null,...over});
++const status=async(sample:HostSampleV1,language:string,args:string[]=["status"])=>{
++ const directory=mkdtempSync(join(tmpdir(),"hcp-"));roots.push(directory);const lines:string[]=[];
++ expect(await runCapacityCommandV1(args,{environment:{LANG:language},write:line=>{lines.push(line);},directory,policy,sample:async()=>({host:sample,swappedOutMegabytes:null})})).toBe(0);
++ return lines;
++};
++
++test("a partial sample adds one line in the selected language and the JSON snapshot carries the marker",async()=>{
++ const english=await status(host({counters:"partial"}),"en_US.UTF-8"),german=await status(host({counters:"partial"}),"de_DE.UTF-8");
++ expect(english.length).toBe(2);expect(english[1]).toMatch(/win32 memory counters could not be read \(probe failed\)/u);
++ expect(german[1]).toMatch(/Speicherzaehler von win32 konnten nicht gelesen werden \(Probe fehlgeschlagen\)/u);
++ expect(JSON.parse((await status(host({counters:"partial"}),"en_US.UTF-8",["status","--json"]))[0]!).host.counters).toBe("partial");
++});
++
++test("a complete sample prints the status line alone",async()=>{
++ expect((await status(host(),"en_US.UTF-8")).length).toBe(1);
++});
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🏃️run/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🏃️run/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🏃️run/🟦️.ts	2026-10-26 09:52:54
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🏃️run/🟦️.ts	2026-10-26 10:36:30
+@@ -1,15 +1,41 @@
+ import {spawn, spawnSync} from "node:child_process";
++import {existsSync} from "node:fs";
++import {isAbsolute, win32} from "node:path";
++import document from "../🔣️.json" with {type: "json"};
+ 
+ /** 🏃️ What a captured command did: exit status (124 on timeout), the tail of stdout and stderr and its wall time. */
+ export type CapturedV1 = {readonly exit: number; readonly output: string; readonly seconds: number; readonly timedOut: boolean};
+ 
+ const TAIL_BYTES = 65536;
+ 
++/** 🧭️ What a command name stands for: the file to start, or the bilingual reason it must not be started. */
++export type CommandResolutionV1 = {readonly path: string} | {readonly refusal: string};
++
++/** 🔎️ Resolves a command the way a Windows shell does, because `CreateProcess` appends only `.exe`: every directory of `PATH` (case-insensitive key) is tried with each `PATHEXT` extension, and the first hit decides. An executable (`.exe`, `.com`) is started directly; a batch file (`.cmd`, `.bat`: `npm`, `yarn`, `pnpm` shims) cannot take arbitrary arguments safely without a shell, so it is refused in every language instead of failing as `ENOENT` and reading as a difference between the runs. Anything else, and every non-Windows host, keeps the name unchanged. */
++export function resolveCommandV1(name: string, environment: Readonly<Record<string, string | undefined>>, platform: string = process.platform, exists: (path: string) => boolean = existsSync): CommandResolutionV1 {
++  if (platform !== "win32") return {path: name};
++  const value = (key: string): string | undefined => environment[Object.keys(environment).find((candidate) => candidate.toLowerCase() === key.toLowerCase()) ?? key];
++  const extensions = (value("PATHEXT") ?? ".COM;.EXE;.BAT;.CMD").split(";").filter(Boolean).map((extension) => extension.toLowerCase());
++  const hasExtension = win32.extname(name) !== "";
++  const directories = /[\\/]/u.test(name) || win32.isAbsolute(name) || isAbsolute(name) ? [""] : (value("PATH") ?? "").split(";").filter(Boolean);
++  for (const directory of directories) {
++    const base = directory === "" ? name : win32.join(directory, name);
++    for (const candidate of [...(hasExtension ? [base] : []), ...extensions.map((extension) => base + extension)]) {
++      if (!exists(candidate)) continue;
++      const extension = win32.extname(candidate).toLowerCase();
++      if (extension === ".cmd" || extension === ".bat") return {refusal: (["en", "de"] as const).map((language) => document.messages.batchCommand[language].replace(/\{(\w+)\}/gu, (_, key: string) => ({command: name, path: candidate} as Record<string, string>)[key] ?? "")).join("\n")};
++      return {path: candidate};
++    }
++  }
++  return {path: name};
++}
++
+ /** 🏃️ Runs a command with bounded memory (only the output tail is kept) and a deadline; on timeout the whole process tree is killed (a process group on POSIX, `taskkill /T` on Windows). */
+-export function captureV1(command: readonly string[], options: {readonly cwd: string; readonly env: Readonly<Record<string, string | undefined>>; readonly timeoutMs: number; readonly signal?: AbortSignal}): Promise<CapturedV1> {
++export function captureV1(command: readonly string[], options: {readonly cwd: string; readonly env: Readonly<Record<string, string | undefined>>; readonly timeoutMs: number; readonly signal?: AbortSignal; readonly resolution?: (name: string) => CommandResolutionV1}): Promise<CapturedV1> {
+   return new Promise((resolve) => {
+-    const started = Date.now(), windows = process.platform === "win32";
+-    const child = spawn(command[0]!, command.slice(1), {cwd: options.cwd, env: options.env as NodeJS.ProcessEnv, detached: !windows, stdio: ["ignore", "pipe", "pipe"]});
++    const started = Date.now(), windows = process.platform === "win32", resolved = (options.resolution ?? ((name) => resolveCommandV1(name, options.env)))(command[0]!);
++    if ("refusal" in resolved) { resolve({exit: 127, output: resolved.refusal, seconds: 0, timedOut: false}); return; }
++    const child = spawn(resolved.path, command.slice(1), {cwd: options.cwd, env: options.env as NodeJS.ProcessEnv, detached: !windows, stdio: ["ignore", "pipe", "pipe"]});
+     let tail = "", timedOut = false;
+     const keep = (chunk: Buffer) => { tail = (tail + chunk.toString("utf8")).slice(-TAIL_BYTES); };
+     child.stdout.on("data", keep);
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🔣️.json ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🔣️.json
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🔣️.json	2026-10-26 09:52:17
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🔣️.json	2026-10-26 10:35:59
+@@ -41,6 +41,10 @@
+     "outputDiffers": {
+       "en": "The mirror run produced different output than the workspace run",
+       "de": "Der Lauf im Spiegel lieferte eine andere Ausgabe als der Lauf im Arbeitsbereich"
++    },
++    "batchCommand": {
++      "en": "The command {command} resolves to the batch file {path}; the mirror backend starts executables only (a batch file cannot take arbitrary arguments safely). Name the executable, or run the program the batch file starts",
++      "de": "Der Befehl {command} löst zur Batch-Datei {path} auf; das Spiegel-Backend startet nur ausführbare Dateien (eine Batch-Datei kann beliebige Argumente nicht sicher annehmen). Die ausführbare Datei benennen oder das Programm starten, das die Batch-Datei aufruft"
+     }
+   },
+   "windows": {
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🚪️cli/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🚪️cli/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🚪️cli/🟦️.ts	2026-10-26 09:53:15
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🚪️cli/🟦️.ts	2026-10-26 10:41:41
+@@ -1,4 +1,5 @@
+ import {readFileSync, writeFileSync} from "node:fs";
++import {onTerminationV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
+ import {readOracleTextV1, runReadOracleV1, windowsPlanV1, type ReadOracleReportV1} from "../🟦️.ts";
+ 
+ /** 🚪️ Parses the command line of the read oracle into a request; the language is required, none is assumed. */
+@@ -30,8 +31,7 @@
+   }
+   const language = (parsed.request as {language: "en" | "de"}).language;
+   const controller = new AbortController();
+-  process.once("SIGINT", () => controller.abort());
+-  process.once("SIGTERM", () => controller.abort());
++  onTerminationV1(() => controller.abort());
+   const report: ReadOracleReportV1 = await runReadOracleV1(parsed.request, {progress: (text) => console.error(text), signal: controller.signal});
+   if (report.backend === "mirror" && process.platform === "win32") for (const line of windowsPlanV1(language)) console.error(line);
+   const values = {allowed: report.allowed, learned: report.learned.length, backend: report.backend, strength: report.strength, exit: report.rounds.at(-1)!.exit};
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🧪️tests/🪟️windows/🔣️.json ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🧪️tests/🪟️windows/🔣️.json
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🧪️tests/🪟️windows/🔣️.json	1970-01-01 01:00:00
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🧪️tests/🪟️windows/🔣️.json	2026-10-26 10:36:30
+@@ -0,0 +1,11 @@
++{
++  "cases": [
++    {"name": "a cmd shim of a package manager is refused", "command": "npm", "env": {"Path": "C:\\Windows\\System32;C:\\nodejs"}, "files": ["C:\\nodejs\\npm", "C:\\nodejs\\npm.cmd", "C:\\Windows\\System32\\cmd.exe"], "expect": {"refusal": "C:\\nodejs\\npm.cmd"}},
++    {"name": "an exe on the path is started directly", "command": "git", "env": {"PATH": "C:\\Git\\cmd;C:\\nodejs"}, "files": ["C:\\Git\\cmd\\git.exe"], "expect": {"path": "C:\\Git\\cmd\\git.exe"}},
++    {"name": "the first directory decides, as in the shell", "command": "tool", "env": {"PATH": "C:\\a;C:\\b"}, "files": ["C:\\a\\tool.cmd", "C:\\b\\tool.exe"], "expect": {"refusal": "C:\\a\\tool.cmd"}},
++    {"name": "within one directory the extensions follow PATHEXT", "command": "tool", "env": {"PATH": "C:\\a", "PATHEXT": ".EXE;.CMD"}, "files": ["C:\\a\\tool.cmd", "C:\\a\\tool.exe"], "expect": {"path": "C:\\a\\tool.exe"}},
++    {"name": "an explicit extension is kept", "command": "python.exe", "env": {"PATH": "C:\\py"}, "files": ["C:\\py\\python.exe"], "expect": {"path": "C:\\py\\python.exe"}},
++    {"name": "an absolute name without extension gets one", "command": "C:\\tools\\x", "env": {"PATH": "C:\\other"}, "files": ["C:\\tools\\x.exe", "C:\\other\\x.cmd"], "expect": {"path": "C:\\tools\\x.exe"}},
++    {"name": "an unknown command keeps its name and fails as not found", "command": "ghost", "env": {"PATH": "C:\\a"}, "files": [], "expect": {"path": "ghost"}}
++  ]
++}
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🧪️tests/🪟️windows/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🧪️tests/🪟️windows/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🧪️tests/🪟️windows/🟦️.ts	1970-01-01 01:00:00
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🧪️tests/🪟️windows/🟦️.ts	2026-10-26 10:48:24
+@@ -0,0 +1,31 @@
++import {expect, test} from "bun:test";
++import {captureV1, resolveCommandV1} from "../../🏃️run/🟦️.ts";
++import fixture from "./🔣️.json" with {type: "json"};
++
++/** 🪟️ Contract: on Windows a plan command resolves through `PATH` and `PATHEXT` like the shell, an executable starts directly and a batch shim is refused in both languages instead of failing as "not found"; every other host keeps the name. The lookup rule is the documented `cmd.exe` order, so the vectors are authored from it. */
++test("every Windows lookup vector resolves as the shell would", () => {
++  for (const row of fixture.cases) {
++    const files = new Set(row.files.map((file) => file.toLowerCase())), resolved = resolveCommandV1(row.command, row.env, "win32", (path) => files.has(path.toLowerCase()));
++    if ("path" in row.expect) expect(resolved, row.name).toEqual({path: row.expect.path as string});
++    else {
++      expect("refusal" in resolved, row.name).toBe(true);
++      const lines = (resolved as {refusal: string}).refusal.split("\n");
++      expect(lines.length).toBe(2);
++      expect(lines[0]).toContain((row.expect as {refusal: string}).refusal);
++      expect(lines[0]).toContain("batch file");
++      expect(lines[1]).toContain("Batch-Datei");
++    }
++  }
++});
++
++test("other hosts keep the name unchanged, whatever the files say", () => {
++  for (const platform of ["linux", "darwin"]) expect(resolveCommandV1("npm", {PATH: "/bin"}, platform, () => true)).toEqual({path: "npm"});
++});
++
++test("a refused command ends the capture with the not-found status and the reason, without starting anything", async () => {
++  const done = await captureV1(["npm", "run", "x"], {cwd: process.cwd(), env: {}, timeoutMs: 1000, resolution: () => ({refusal: "REASON"})});
++  expect(done).toEqual({exit: 127, output: "REASON", seconds: 0, timedOut: false});
++  const real = await captureV1([process.execPath, "-e", "console.log('ok')"], {cwd: process.cwd(), env: {PATH: process.env.PATH}, timeoutMs: 20000});
++  expect(real.exit).toBe(0);
++  expect(real.output.trim()).toBe("ok");
++});
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🧬️schema/🔣️.json ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🧬️schema/🔣️.json
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🧬️schema/🔣️.json	2026-10-26 10:03:29
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🧬️schema/🔣️.json	2026-10-26 10:35:59
+@@ -283,7 +283,8 @@
+         "dirty",
+         "usage",
+         "traceMissing",
+-        "outputDiffers"
++        "outputDiffers",
++        "batchCommand"
+       ],
+       "properties": {
+         "round": {
+@@ -314,6 +315,9 @@
+           "$ref": "#/definitions/Text"
+         },
+         "outputDiffers": {
++          "$ref": "#/definitions/Text"
++        },
++        "batchCommand": {
+           "$ref": "#/definitions/Text"
+         }
+       }
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🟦️.ts	2026-10-26 10:03:10
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🟦️.ts	2026-10-26 10:39:10
+@@ -11,7 +11,7 @@
+ import schema from"./🧬️schema/🔣️.json" with {type:"json"};
+ import type{BazelTaskV1}from"../📋️task-plan/🟦️.ts";
+ import{createHash}from"node:crypto";
+-import{chmod,lstat,mkdir,mkdtemp,readFile,readlink,rename,rm,symlink,writeFile}from"node:fs/promises";
++import{chmod,copyFile,link,lstat,mkdir,mkdtemp,readFile,readlink,rename,rm,stat,symlink,writeFile}from"node:fs/promises";
+ import{dirname,join}from"node:path";
+ export{BAZEL_HERMETIC_DEPENDENCIES,BAZEL_HERMETIC_RUNNER}from"./🏭️runner/🟦️.ts";
+ 
+@@ -169,13 +169,28 @@
+  return lines.join("\n");
+ }
+ 
+-/** 🔗️ Links each provisioned bun executable into the generated package at its toolchain path, replacing a link that points elsewhere. */
+-export async function linkBazelToolchainsV1(workspace:string,tools:Readonly<Record<string,string>>):Promise<void>{
++/** 🔗️ Puts each provisioned bun executable at its toolchain path in the generated package, replacing what points or looks elsewhere. POSIX: a symbolic link. Windows: a symbolic link of a file needs a privilege (Developer Mode or an administrator), so the file is hard-linked (same volume, no privilege) and copied when the volumes differ; an entry that is already the same file or an up-to-date copy is kept. */
++export async function linkBazelToolchainsV1(workspace:string,tools:Readonly<Record<string,string>>,platform:NodeJS.Platform=process.platform,ports:Readonly<{link?:typeof link;copy?:typeof copyFile}>={}):Promise<void>{
+  for(const[id,target]of Object.entries(tools)){
+   const path=join(workspace,bazelBunToolPathV1(bazelExecutionPlatformByIdV1(id)));await mkdir(dirname(path),{recursive:true});
++  if(platform==="win32"){
++   if(await sameFileV1(path,target))continue;
++   await rm(path,{force:true});
++   try{await(ports.link??link)(target,path);}catch{await(ports.copy??copyFile)(target,path);await chmod(path,0o755);}
++   continue;
++  }
+   try{if(await readlink(path)===target)continue;await rm(path,{force:true});}catch(error){if(!["ENOENT","EINVAL"].includes((error as NodeJS.ErrnoException).code??""))throw error;await rm(path,{force:true});}
+   await symlink(target,path);
+  }
++}
++
++/** 🟰️ Whether `path` is a regular file that is `target` itself (a hard link) or a copy that is as large as it and not older. */
++async function sameFileV1(path:string,target:string):Promise<boolean>{
++ try{
++  const [own,real]=await Promise.all([lstat(path,{bigint:true}),stat(target,{bigint:true})]);
++  if(!own.isFile())return false;
++  return(own.ino!==0n&&own.ino===real.ino&&own.dev===real.dev)||(own.size===real.size&&own.mtimeNs>=real.mtimeNs);
++ }catch{return false;}
+ }
+ 
+ const environmentLines=Object.entries(contract.actionEnvironment).map(([key,value])=>`${JSON.stringify(key)}: ${JSON.stringify(value)}`).join(", ");
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🪟️toolchain-link/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🪟️toolchain-link/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🪟️toolchain-link/🟦️.ts	1970-01-01 01:00:00
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🪟️toolchain-link/🟦️.ts	2026-10-26 10:39:10
+@@ -0,0 +1,41 @@
++import {expect,test} from "bun:test";
++import {copyFileSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readlinkSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {join} from "node:path";
++import * as api from "../../🟦️.ts";
++
++/** 🪟️ Contract: the toolchain entry of the generated Bazel package never needs the symbolic-link privilege on Windows; it is the provisioned file itself (hard link) or an up-to-date copy. The Windows rules run on any host through the injected platform. */
++const fresh=()=>mkdtempSync(join(tmpdir(),"bun-win-link-"));
++const entry=(workspace:string)=>join(workspace,api.bazelBunToolPathV1(api.bazelExecutionPlatformByIdV1("linux-x64")));
++
++test("on Windows the entry is a hard link to the provisioned file, kept when current and replaced when it moves, even over a symbolic link of an older run", async () => {
++ const directory=fresh(),first=join(directory,"first"),second=join(directory,"second"),workspace=join(directory,"ws");
++ try{
++  writeFileSync(first,"1");writeFileSync(second,"22");const path=entry(workspace);
++  await api.linkBazelToolchainsV1(workspace,{"linux-x64":first},"win32");
++  expect(lstatSync(path).isSymbolicLink()).toBe(false);expect(lstatSync(path).ino).toBe(lstatSync(first).ino);
++  await api.linkBazelToolchainsV1(workspace,{"linux-x64":first},"win32");expect(lstatSync(path).ino).toBe(lstatSync(first).ino);
++  await api.linkBazelToolchainsV1(workspace,{"linux-x64":second},"win32");expect(readFileSync(path,"utf8")).toBe("22");expect(lstatSync(path).ino).toBe(lstatSync(second).ino);
++  rmSync(path);symlinkSync(first,path);
++  await api.linkBazelToolchainsV1(workspace,{"linux-x64":first},"win32");expect(lstatSync(path).isSymbolicLink(),"a symbolic link is replaced by the file").toBe(false);expect(readFileSync(path,"utf8")).toBe("1");
++ }finally{rmSync(directory,{recursive:true,force:true});}
++});
++
++test("when the volumes differ the file is copied, a current copy is kept and a stale copy is refreshed", async () => {
++ const directory=fresh(),target=join(directory,"bun"),workspace=join(directory,"ws"),denied=async()=>{throw Object.assign(new Error("EXDEV"),{code:"EXDEV"});};
++ let copies=0;const copy=async(from:string,to:string)=>{copies++;copyFileSync(from,to);};
++ try{
++  writeFileSync(target,"v1");const path=entry(workspace);
++  await api.linkBazelToolchainsV1(workspace,{"linux-x64":target},"win32",{link:denied as never,copy:copy as never});
++  expect(copies).toBe(1);expect(readFileSync(path,"utf8")).toBe("v1");expect(lstatSync(path).mode&0o111).toBeGreaterThan(0);
++  await api.linkBazelToolchainsV1(workspace,{"linux-x64":target},"win32",{link:denied as never,copy:copy as never});expect(copies,"a current copy is kept").toBe(1);
++  writeFileSync(target,"version two");utimesSync(target,new Date(Date.now()+5000),new Date(Date.now()+5000));
++  await api.linkBazelToolchainsV1(workspace,{"linux-x64":target},"win32",{link:denied as never,copy:copy as never});expect(copies).toBe(2);expect(readFileSync(path,"utf8")).toBe("version two");
++ }finally{rmSync(directory,{recursive:true,force:true});}
++});
++
++test("POSIX hosts keep the symbolic link", async () => {
++ const directory=fresh(),target=join(directory,"bun");
++ try{writeFileSync(target,"x");mkdirSync(join(directory,"ws"));await api.linkBazelToolchainsV1(join(directory,"ws"),{"linux-x64":target},"linux");expect(readlinkSync(entry(join(directory,"ws")))).toBe(target);}
++ finally{rmSync(directory,{recursive:true,force:true});}
++});
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🔄️reexec/🟨️.mjs ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🔄️reexec/🟨️.mjs
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🔄️reexec/🟨️.mjs	2026-10-26 09:07:44
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🔄️reexec/🟨️.mjs	2026-10-26 10:41:48
+@@ -9,7 +9,7 @@
+ /** 🚀️ Starts the replacement process with the caller's terminal and forwards stop signals; resolves with its exit code. */
+ export function launchReplacementProcessV1({execPath,args,environment}){
+  return new Promise((accept,reject)=>{
+-  const child=spawn(execPath,args,{stdio:"inherit",env:environment}),forwards=["SIGINT","SIGTERM"].map(signal=>[signal,()=>{try{child.kill(signal);}catch{}}]);
++  const child=spawn(execPath,args,{stdio:"inherit",env:environment}),forwards=(process.platform==="win32"?["SIGINT","SIGTERM","SIGBREAK","SIGHUP"]:["SIGINT","SIGTERM"]).map(signal=>[signal,()=>{try{child.kill(signal);}catch{}}]);
+   for(const[signal,forward]of forwards)process.on(signal,forward);
+   const finish=()=>{for(const[signal,forward]of forwards)process.off(signal,forward);};
+   child.once("error",error=>{finish();reject(error);});
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/👯️dedupe/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/👯️dedupe/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/👯️dedupe/🟦️.ts	2026-10-26 08:58:19
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/👯️dedupe/🟦️.ts	2026-10-26 10:39:58
+@@ -1,6 +1,6 @@
+ import {createHash} from "node:crypto";
+ import {constants} from "node:fs";
+-import {chmod,copyFile,lstat,open,readdir,rename,unlink,utimes} from "node:fs/promises";
++import {chmod,copyFile,lstat,open,readdir,rename,unlink,utimes,writeFile} from "node:fs/promises";
+ import {dirname,join} from "node:path";
+ import {cacheTextV1,formatCacheBytesV1,type CacheLanguageV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
+ import type {CacheRunnerPortsV1} from "../🏃️runner/🟦️.ts";
+@@ -69,12 +69,20 @@
+  try{await copyFile(source,destination,constants.COPYFILE_FICLONE_FORCE);return true;}catch{await unlink(destination).catch(()=>{});return false;}
+ }
+ 
++/** 🔬️ Whether the volume of `base` makes clones: a probe file is cloned once, so a volume without clones (ext4, NTFS) ends the run before the census hashes a single file. A directory that cannot be written reads as "no clones". */
++async function volumeClonesV1(base:string,clone:(source:string,destination:string)=>Promise<boolean>):Promise<boolean>{
++ const source=join(base,".dedupe-probe-"+process.pid),destination=source+".clone";
++ try{await writeFile(source,"x");return await clone(source,destination);}catch{return false;}
++ finally{await unlink(source).catch(()=>{});await unlink(destination).catch(()=>{});}
++}
++
+ /**
+  * 🧹️ Finds duplicates below `base` with a streaming census (one walk counting sizes, one walk hashing only files whose size occurs twice, hardlinks hashed once) and, unless asked to only plan, replaces each duplicate by a copy-on-write clone of the canonical file.
+  * A file used within the quiet time, with a volatile name, or changed since it was hashed is left alone; the replacement is a temporary clone renamed over the file, so a reader sees either the old or the new, identical, bytes. Progress and cancellation per file; memory stays bounded by `maximumFiles` candidates.
+  */
+ export async function dedupeTreeV1(request:DedupeRequestV1,ports:CacheRunnerPortsV1,clone:(source:string,destination:string)=>Promise<boolean>=cloneFileV1):Promise<DedupeOutcomeV1>{
+  const text=(key:string,variables:Readonly<Record<string,string|number>>={})=>cacheTextV1(request.language,key,variables),now=ports.now(),sizes=new Map<number,number>();
++ if(!request.dryRun&&!await volumeClonesV1(request.base,clone)){request.write(text("dedupe.noClone",{directory:request.base}));return Object.freeze({plan:planDedupeV1([]),replaced:0,freedBytes:0,skipped:0,failed:[],partial:false});}
+  let seen=0,last=-Infinity;const tick=async(stage:string):Promise<void>=>{ports.signal.throwIfAborted();const at=ports.now();if(at-last>=250){last=at;await ports.progress(stage);ports.signal.throwIfAborted();}};
+  for await(const file of filesV1(request.base,ports)){if(file.size<request.minimumBytes)continue;sizes.set(file.size,(sizes.get(file.size)??0)+1);if(++seen%512===0)await tick("dedupe:count");}
+  const candidates:DedupeFileV1[]=[],stamps=new Map<string,{ino:number;mtimeMs:number;size:number;mode:number}>(),hashes=new Map<string,string|null>();let partial=false,hashed=0;
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/👯️dedupe/🧪️tests/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/👯️dedupe/🧪️tests/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/👯️dedupe/🧪️tests/🟦️.ts	2026-10-26 08:58:08
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/👯️dedupe/🧪️tests/🟦️.ts	2026-10-26 10:40:11
+@@ -11,7 +11,7 @@
+ const ports=(extra:Partial<Parameters<typeof cacheRunnerPortsV1>[0]>={},controller=new AbortController())=>{let calls=0;return cacheRunnerPortsV1({signal:controller.signal,now:()=>now+(calls++)*300,progress:async()=>{},exclusive:async()=>({release:()=>{}}),...extra});};
+ function put(path:string,content:string,ageMs:number,mode=0o644):string{const full=join(root,path);mkdirSync(join(full,".."),{recursive:true});writeFileSync(full,content.padEnd(SIZE,"."));chmodSync(full,mode);const time=(now-ageMs)/1000;utimesSync(full,time,time);return full;}
+ function listing(base:string):string[]{return readdirSync(base,{recursive:true,withFileTypes:true}).filter(entry=>entry.isFile()).map(entry=>join(entry.parentPath,entry.name)).sort();}
+-const request=(dryRun:boolean,write:(line:string)=>void=()=>{})=>({base:root,minimumBytes:SIZE,quietMs:HOUR,maximumFiles:1000,dryRun,language:"en" as const,write});
++const request=(dryRun:boolean,write:(line:string)=>void=()=>{},language:"en"|"de"="en")=>({base:root,minimumBytes:SIZE,quietMs:HOUR,maximumFiles:1000,dryRun,language,write});
+ beforeAll(()=>{root=mkdtempSync(join(tmpdir(),"ddp-"));});
+ afterAll(()=>{rmSync(root,{recursive:true,force:true});});
+ 
+@@ -92,10 +92,11 @@
+  expect(again.plan.replacements.length).toBe(3);
+ });
+ 
+-test("a volume that cannot clone keeps every file and leaves no temporary behind",async()=>{
+- fixture();const before=listing(root).map(path=>[path,statSync(path).ino]),lines:string[]=[];
+- const outcome=await dedupeTreeV1(request(false,line=>lines.push(line)),ports(),async()=>false);
+- expect(outcome.replaced).toBe(0);expect(outcome.skipped).toBe(3);expect(lines.filter(line=>line.includes("cannot be cloned")).length).toBe(3);
++test("a volume that cannot clone says so once, before any file is hashed, keeps every file and leaves no probe behind",async()=>{
++ fixture();const before=listing(root).map(path=>[path,statSync(path).ino]),lines:string[]=[];let hashing=false;
++ const outcome=await dedupeTreeV1(request(false,line=>lines.push(line)),ports({progress:async stage=>{if(stage.startsWith("dedupe:"))hashing=true;}}),async()=>false);
++ expect(outcome.replaced).toBe(0);expect(outcome.skipped).toBe(0);expect(outcome.plan.groups).toBe(0);expect(lines.length).toBe(1);expect(lines[0]).toContain("cannot make copy-on-write clones");expect(hashing,"the census never started").toBe(false);
++ expect((await dedupeTreeV1(request(false,line=>lines.push(line),"de"),ports(),async()=>false)).replaced).toBe(0);expect(lines[1]).toContain("keine Copy-on-Write-Klone");
+  expect(listing(root).map(path=>[path,statSync(path).ino])).toEqual(before);
+  expect(await cloneFileV1(join(root,"a/x1"),join(root,"a/x1"))).toBe(false);
+ });
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/⌨️command/🟦️.ts ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/⌨️command/🟦️.ts
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/⌨️command/🟦️.ts	2026-10-25 13:12:46
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/⌨️command/🟦️.ts	2026-10-26 10:41:55
+@@ -87,7 +87,7 @@
+ export function runInheritedV1(command:string,args:readonly string[],environment:Readonly<Record<string,string|undefined>>):Promise<number>{
+   return new Promise(done=>{
+     const child=spawn(command,[...args],{stdio:"inherit",env:environment as NodeJS.ProcessEnv,windowsHide:true}),forward=(signal:NodeJS.Signals)=>()=>{child.kill(signal);};
+-    const handlers=(["SIGINT","SIGTERM"]as const).map(signal=>[signal,forward(signal)]as const);
++    const handlers=((process.platform==="win32"?["SIGINT","SIGTERM","SIGBREAK","SIGHUP"]:["SIGINT","SIGTERM"])as NodeJS.Signals[]).map(signal=>[signal,forward(signal)]as const);
+     for(const[signal,handler]of handlers)process.on(signal,handler);
+     const settle=(code:number)=>{for(const[signal,handler]of handlers)process.removeListener(signal,handler);done(code);};
+     child.once("error",()=>settle(127));
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🛰️resident-unix/🐹️.go ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🛰️resident-unix/🐹️.go
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🛰️resident-unix/🐹️.go	2026-10-22 09:32:18
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🛰️resident-unix/🐹️.go	2026-10-26 10:45:50
+@@ -14,6 +14,7 @@
+ 	"io"
+ 	"net"
+ 	"os"
++	"path/filepath"
+ 	"syscall"
+ 	"time"
+ )
+@@ -26,13 +27,19 @@
+ 	return net.DialTimeout("unix", endpoint, 250*time.Millisecond)
+ }
+ 
++// 🔐️residentTrusted accepts the runtime directory of a worktree only when it is a real directory (no link) of the caller that no one else can enter, and its parent `semio-repo-<uid>` is a real directory of the caller that no one else can write: under the shared temporary directory the parent is created by whoever comes first, and a parent of another user could swap the private directory for its own after this check.
+ func residentTrusted(directory string) bool {
++	return residentOwnedDirectory(directory, 0o077) && residentOwnedDirectory(filepath.Dir(directory), 0o022)
++}
++
++// 🔐️residentOwnedDirectory is true for a directory (not a link) of the calling user whose permission bits do not include any of `forbidden`.
++func residentOwnedDirectory(directory string, forbidden os.FileMode) bool {
+ 	info, err := os.Lstat(directory)
+ 	if err != nil || !info.IsDir() {
+ 		return false
+ 	}
+ 	status, ok := info.Sys().(*syscall.Stat_t)
+-	return ok && int(status.Uid) == os.Getuid() && info.Mode().Perm()&0o077 == 0
++	return ok && int(status.Uid) == os.Getuid() && info.Mode().Perm()&forbidden == 0
+ }
+ 
+ // #endregion 🛰️ResidentUnix
+diff -ruN --exclude=node_modules ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🛰️resident-contract/🐹️.go ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🛰️resident-contract/🐹️.go
+--- ov-base/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🛰️resident-contract/🐹️.go	2026-10-26 09:39:29
++++ ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🛰️resident-contract/🐹️.go	2026-10-26 10:46:09
+@@ -490,3 +490,49 @@
+ }
+ 
+ // #endregion 🛰️Service
++
++// 🔐️The runtime directory is trusted only when it and its parent belong to the caller: a private leaf, a parent nobody else can write, no link in either place; the fixed temporary-directory fallback is the case this protects.
++func TestResidentTrustedDirectoryAndParent(t *testing.T) {
++	if runtime.GOOS == "windows" {
++		t.Skip("the pipe of a Windows host has no directory to trust")
++	}
++	root := t.TempDir()
++	build := func(name string, parent, leaf os.FileMode) string {
++		directory := filepath.Join(root, name, "id")
++		if err := os.MkdirAll(directory, 0o700); err != nil {
++			t.Fatal(err)
++		}
++		if err := os.Chmod(filepath.Dir(directory), parent); err != nil {
++			t.Fatal(err)
++		}
++		if err := os.Chmod(directory, leaf); err != nil {
++			t.Fatal(err)
++		}
++		return directory
++	}
++	if !residentTrusted(build("private", 0o700, 0o700)) {
++		t.Error("a private leaf under a private parent must be trusted")
++	}
++	if !residentTrusted(build("readable-parent", 0o755, 0o700)) {
++		t.Error("a parent others may only read must be trusted")
++	}
++	for name, row := range map[string][2]os.FileMode{"world-writable-parent": {0o777, 0o700}, "group-writable-parent": {0o770, 0o700}, "open-leaf": {0o700, 0o755}} {
++		if residentTrusted(build(name, row[0], row[1])) {
++			t.Errorf("%s must be refused", name)
++		}
++	}
++	target := build("target", 0o700, 0o700)
++	link := filepath.Join(root, "link")
++	if err := os.Symlink(filepath.Dir(target), link); err != nil {
++		t.Fatal(err)
++	}
++	if residentTrusted(filepath.Join(link, "id")) {
++		t.Error("a link in place of the parent must be refused")
++	}
++	if residentTrusted(link) {
++		t.Error("a link in place of the leaf must be refused")
++	}
++	if residentTrusted(filepath.Join(root, "absent", "id")) {
++		t.Error("a missing directory must be refused")
++	}
++}

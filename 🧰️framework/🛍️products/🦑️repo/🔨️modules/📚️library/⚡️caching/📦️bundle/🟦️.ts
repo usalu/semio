@@ -5,7 +5,7 @@ import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬�
 import { mkdir, mkdtemp, readFile, lstat, realpath, copyFile, writeFile } from "node:fs/promises";
 import type { BunBundleRequest, BunBundleResult } from "./🟦️bun/🟦️.ts";
 import { availableParallelism } from "node:os";
-import { resolveLanguageV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import { resolveLanguageV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import { CATALOG_LANGUAGES_V1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import { describeCompileUnitsV1, withCompilerCapacityScopeV1, fixedCompilerCapacityRequestV1, scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { createRequire } from "node:module";

@@ -34,13 +34,13 @@
     "c": 1
   },
   "changed": {
-    "a": 3,
-    "b": 3,
+    "a": 2,
+    "b": 2,
     "c": 1
   },
   "racyWarm": {
-    "a": 3,
-    "b": 3,
+    "a": 2,
+    "b": 2,
     "c": 1
   },
   "metadata": {
@@ -49,8 +49,8 @@
       "metadata-mutated"
     ],
     "counts": {
-      "a": 3,
-      "b": 3,
+      "a": 2,
+      "b": 2,
       "c": 2
     }
   },
@@ -62,21 +62,21 @@
       "d/📜️script.ts": "export const structural=true;\n"
     },
     "counts": {
-      "a": 3,
-      "b": 3,
+      "a": 2,
+      "b": 2,
       "c": 2,
       "d": 1
     },
     "renamed": {
-      "a": 3,
-      "b": 3,
+      "a": 2,
+      "b": 2,
       "c": 2,
       "d": 1,
       "renamed": 1
     },
     "deleted": {
-      "a": 3,
-      "b": 3,
+      "a": 2,
+      "b": 2,
       "c": 2,
       "d": 1,
       "renamed": 1

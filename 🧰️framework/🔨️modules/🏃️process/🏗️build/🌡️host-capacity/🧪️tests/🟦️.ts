@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import {describeHostReasonV1,formatHostCapacityErrorV1,hostCapacityErrorV1,evaluateHostCapacityV1,formatHostCapacityV1,hostFloorMegabytesV1,isHostCapacityV1,orderHostWaitersV1,planHostCapacityV1,readHostCapacityPolicyV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,sizeHostRequestV1,type HostDefinitionV1,type HostGrantV1,type HostSampleV1,type HostWaiterV1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
-import {randomHostCaseV1,seededRandomV1,sqliteHostOracleV1,type HostCaseV1} from "./🔮️sqlite/🟦️.ts";
+import {randomHostCaseV1,randomRampCaseV1,seededRandomV1,sqliteHostOracleV1,type HostCaseV1} from "./🔮️sqlite/🟦️.ts";
 
 const policy=readHostCapacityPolicyV1(fixture.policy);
 const run=(item:Omit<HostCaseV1,"expect">)=>evaluateHostCapacityV1(policy,item.host,item.ledger,item.queue,item.nowMs);
@@ -43,6 +43,28 @@ test("The decision equals a recursive SQLite oracle on every hand case and on a 
  });
  const verdicts=new Set(fixture.corpus.flatMap(item=>item.expect.decisions.map(row=>row.reason)));
  for(const reason of ["fits","reduced","override","memory","queue-order","pressure-critical","pressure-warn","files","attaches","load","swap","swap-activity"])expect(verdicts.has(reason as never),`corpus reaches ${reason}`).toBe(true);
+});
+
+test("Ramp rules: a grant counts its reservation for its own time to peak and what it holds when that is more, and only maximumRamping shrunk reservations may ramp at once; the hand cases, the seeded corpus and the SQLite oracle agree",()=>{
+ for(const item of fixture.rampCases){
+  expect(run(item as never),item.name).toEqual(item.expect as never);
+  expect(sqliteHostOracleV1(policy,item as never),`${item.name} oracle`).toEqual(item.expect as never);
+ }
+ const random=seededRandomV1(20261026);
+ fixture.rampCorpus.forEach((item,index)=>{
+  const fresh=randomRampCaseV1(random,index);
+  expect(JSON.parse(JSON.stringify(fresh)),`ramp corpus ${index} regenerates`).toEqual({name:item.name,host:item.host,ledger:item.ledger,queue:item.queue,nowMs:item.nowMs});
+  expect(sqliteHostOracleV1(policy,fresh),`ramp corpus ${index} oracle`).toEqual(item.expect as never);
+  expect(JSON.parse(JSON.stringify(run(item as never))),`ramp corpus ${index} implementation`).toEqual(item.expect as never);
+ });
+ const reasons=new Set(fixture.rampCorpus.flatMap(item=>item.expect.decisions.map(row=>row.reason)));
+ for(const reason of ["fits","memory","ramp","queue-order"])expect(reasons.has(reason as never),`ramp corpus reaches ${reason}`).toBe(true);
+ for(const item of [...fixture.rampCases,...fixture.rampCorpus]){
+  const live=item.ledger.filter(grant=>(grant as {lentSinceMs?:number}).lentSinceMs===undefined),ramping=live.filter(grant=>(grant as {rampSlot?:boolean}).rampSlot===true&&item.nowMs-((grant as {resumedAtMs?:number}).resumedAtMs??grant.admittedAtMs)<((grant as {rampMilliseconds?:number}).rampMilliseconds??policy.memory.rampMilliseconds)).length;
+  const admittedSlots=item.expect.decisions.filter(row=>row.verdict==="admit"&&(item.queue.find(waiter=>waiter.request.id===row.id)!.request as {rampSlot?:boolean}).rampSlot===true).length;
+  expect(ramping+admittedSlots,`${item.name}: shrunk reservations ramping at once`).toBeLessThanOrEqual(Math.max(policy.memory.maximumRamping,ramping));
+  for(const row of item.expect.decisions.filter(candidate=>candidate.reason==="ramp"))expect((item.queue.find(waiter=>waiter.request.id===row.id)!.request as {rampSlot?:boolean}).rampSlot,`${item.name}: only shrunk requests wait for a slot`).toBe(true);
+ }
 });
 
 test("Evaluation is pure: frozen inputs are not touched and order of arrival never changes the outcome of a permuted queue",()=>{
@@ -107,7 +129,7 @@ test("Policy ordering rules are enforced beyond the schema",()=>{
 });
 
 test("Messages exist for every reason in English and German and fill every placeholder",()=>{
- const values={files:8000,images:10,total:32768,pressure:"normal",swap:0,grants:1,waiters:0,seconds:12,operation:"run",reason:"x",need:4096,spare:100,floor:6553,load:3.5,running:2,ahead:1,jobs:3,preferred:8,reserved:7000,available:9000,switch:"SEMIO_HOST_CAPACITY"};
+ const values={files:8000,images:10,total:32768,pressure:"normal",swap:0,grants:1,waiters:0,seconds:12,operation:"run",reason:"x",need:4096,spare:100,floor:6553,load:3.5,running:2,ahead:1,behind:"x",jobs:3,preferred:8,reserved:7000,available:9000,switch:"SEMIO_HOST_CAPACITY"};
  for(const language of ["en","de"] as const)for(const name of ["waiting","admitted","reduced","override","bypassed","status"] as const)expect(formatHostCapacityV1(language,name,values)).not.toMatch(/\{[a-z]+\}/u);
  expect(formatHostCapacityV1("de","waiting",values)).toContain("wartet seit 12 s");
  expect(formatHostCapacityV1("en","waiting",values)).toContain("waiting 12s");

@@ -9,11 +9,11 @@
         "namespace": "semio.cargo.unit-cache/v1",
         "layout": {
           "objects": "o", "entries": "e", "locks": "k", "slots": "s", "tickets": "q", "events": "x", "lanes": "l",
-          "stamps": "m", "admissions": "a", "runs": "r", "temporary": "w", "target": "t", "build": "b", "live": "v", "metadata": "lane.json"
+          "stamps": "m", "admissions": "a", "foreign": "f", "plans": "p", "runs": "r", "temporary": "w", "target": "t", "build": "b", "live": "v", "metadata": "lane.json", "size": "lane.size", "destination": "lane.ledger"
         },
         "lock": {
           "heartbeatMilliseconds": 2000, "staleMilliseconds": 20000,
-          "pollMinimumMilliseconds": 10, "pollMaximumMilliseconds": 200, "maximumWaitMilliseconds": 1800000
+          "pollMinimumMilliseconds": 10, "pollMaximumMilliseconds": 200, "pollBackoffBasisPoints": 15000, "maximumWaitMilliseconds": 1800000
         },
         "slot": { "heartbeatMilliseconds": 2000, "staleMilliseconds": 20000, "pollMilliseconds": 25 },
         "key": {
@@ -48,38 +48,65 @@
           "recallAttempts": 20, "recallPauseMilliseconds": 50, "timeoutMilliseconds": 5000
         },
         "gc": {
-          "casShare": 0.25, "casProtectedShare": 0.1, "laneShare": 0.2, "incrementalShare": 0.1,
+          "casShare": 0.25, "casProtectedShare": 0.1, "laneShare": 0.2, "incrementalShare": 0.1, "admissionShare": 0.03, "admissionRetentionMilliseconds": 604800000, "admissionTemporaryMilliseconds": 3600000,
           "highWaterShare": 0.875, "lowWaterShare": 0.75, "collectorIntervalMilliseconds": 300000, "maintenanceIntervalMilliseconds": 600000, "collectorClaim": "gc",
           "outOfSpacePatterns": ["\\(os error (28|112)\\)", "No space left on device", "ENOSPC", "There is not enough space on the disk"], "outOfSpaceRetries": 1,
           "laneIdleMilliseconds": 86400000, "liveMarkerStaleMilliseconds": 30000, "eventLogMaximumBytes": 4194304, "emergencyFreeBytes": 4294967296, "watchClaim": "watch", "watchPollMilliseconds": 30000, "watchQuietMilliseconds": 600000, "watchMaximumMilliseconds": 7200000, "watchStalledRounds": 10, "watchScanMilliseconds": 900000, "recheckMilliseconds": 60000, "unitStamp": "units.stamp", "unitIntervalMilliseconds": 21600000
+        },
+        "pool": {
+          "maximumLanes": 16, "maximumLiveLanes": 32, "pollMilliseconds": 50, "pollMaximumMilliseconds": 1000, "pollBackoffBasisPoints": 15000, "listedCrates": 16, "machineStore": "rust", "reserved": ["d"]
+        },
+        "retention": {
+          "ledger": "semio-cargo-provenance", "ledgerPattern": "^cargo-unit-provenance-[A-Za-z0-9._-]{1,200}\\.json$",
+          "maximumFiles": 4096, "maximumFileBytes": 134217728, "chunkBytes": 1048576
         }
       }
     },
     "Messages": {
       "const": {
         "overflow": {
-          "en": "[repo cargo] lane {base} is busy with another Cargo process; using overflow lane {lane} (starts empty and fills from the shared unit cache)",
-          "de": "[repo cargo] Lane {base} ist von einem anderen Cargo-Prozess belegt; verwende Überlauf-Lane {lane} (startet leer und füllt sich aus dem gemeinsamen Unit-Cache)"
+          "en": "[repo cargo] {busy} of {total} pooled lanes are busy with other Cargo processes; using the new lane {lane} beyond the pool bound (starts empty and fills from the shared unit cache)",
+          "de": "[repo cargo] {busy} von {total} gepoolten Lanes sind von anderen Cargo-Prozessen belegt; verwende die neue Lane {lane} über die Pool-Grenze hinaus (startet leer und füllt sich aus dem gemeinsamen Unit-Cache)"
+        },
+        "trimmed": {
+          "en": "[repo cargo] lane pool trimmed to its bound ({count} lanes, {quotaMib} MiB): removed {removed} idle lane(s)",
+          "de": "[repo cargo] Lane-Pool auf seine Grenze gekürzt ({count} Lanes, {quotaMib} MiB): {removed} ruhende Lane(s) entfernt"
+        },
+        "poolBusy": {
+          "en": "[repo cargo] all {live} live lanes are in use (maximum {maximum}); waiting for a free lane",
+          "de": "[repo cargo] Alle {live} aktiven Lanes sind belegt (Maximum {maximum}); warte auf eine freie Lane"
         },
         "collected": {
           "en": "[repo cargo] unit cache cleanup removed {lanes} lane(s), {incremental} incremental set(s), {sessions} incremental session(s), {units} build unit(s) and {objects} object(s)",
-          "de": "[repo cargo] Unit-Cache-Bereinigung entfernte {lanes} Lane(s), {incremental} Inkrementell-Satz/Sätze, {sessions} Inkrementell-Sitzung(en), {units} Build-Einheit(en) und {objects} Objekt(e)"
+          "de": "[repo cargo] Unit-Cache-Bereinigung entfernte {lanes} Lane(s), {incremental} Inkrementsatz/-sätze, {sessions} Inkrementsitzung(en), {units} Build-Einheit(en) und {objects} Objekt(e)"
         },
         "collector": {
           "en": "[repo cargo] the compiler image is {usedPercent} % full (high-water mark {highPercent} %); a low-priority unit cache collector was started in the background",
-          "de": "[repo cargo] Das Compiler-Image ist zu {usedPercent} % belegt (Hochwassermarke {highPercent} %); ein Unit-Cache-Collector mit niedriger Priorität wurde im Hintergrund gestartet"
+          "de": "[repo cargo] Das Compiler-Image ist zu {usedPercent} % belegt (Hochwassermarke {highPercent} %); ein Unit-Cache-Sammler mit niedriger Priorität wurde im Hintergrund gestartet"
         },
         "collectorFailed": {
           "en": "[repo cargo] the background unit cache collector could not be started: {reason}",
-          "de": "[repo cargo] Der Unit-Cache-Collector im Hintergrund konnte nicht gestartet werden: {reason}"
+          "de": "[repo cargo] Der Unit-Cache-Sammler im Hintergrund konnte nicht gestartet werden: {reason}"
+        },
+        "wrapperUnavailable": {
+          "en": "[repo cargo] the unit cache is off for this Cargo process: no native compiler wrapper could be built ({reason}); compiles run without the shared cache",
+          "de": "[repo cargo] Der Unit-Cache ist für diesen Cargo-Prozess aus: Es konnte kein nativer Compiler-Wrapper gebaut werden ({reason}); Kompilierungen laufen ohne den gemeinsamen Cache"
+        },
+        "jobserverClosed": {
+          "en": "[repo cargo] the job-token pool named by {variable} cannot be reached by this process ({reason}); the command runs on its own single job slot instead of starting more jobs than were admitted",
+          "de": "[repo cargo] Der in {variable} genannte Job-Token-Pool ist für diesen Prozess nicht erreichbar ({reason}); der Befehl läuft auf seinem eigenen einzelnen Job-Slot, statt mehr Jobs zu starten als zugelassen wurden"
         },
         "outOfSpace": {
           "en": "[repo cargo] the compiler image ran out of space ({freeGib} GiB free of {volumeGib} GiB); cleaned up {lanes} lane(s), {incremental} incremental set(s), {sessions} incremental session(s), {units} build unit(s) and {objects} object(s) and retrying the command once",
-          "de": "[repo cargo] Im Compiler-Image ist der Platz ausgegangen ({freeGib} GiB frei von {volumeGib} GiB); {lanes} Lane(s), {incremental} Inkrementell-Satz/Sätze, {sessions} Inkrementell-Sitzung(en), {units} Build-Einheit(en) und {objects} Objekt(e) bereinigt, der Befehl wird einmal wiederholt"
+          "de": "[repo cargo] Im Compiler-Image ist der Platz ausgegangen ({freeGib} GiB frei von {volumeGib} GiB); {lanes} Lane(s), {incremental} Inkrementsatz/-sätze, {sessions} Inkrementsitzung(en), {units} Build-Einheit(en) und {objects} Objekt(e) bereinigt, der Befehl wird einmal wiederholt"
         },
         "stillFull": {
           "en": "[repo cargo] the compiler image is still full after the cleanup ({freeGib} GiB free of {volumeGib} GiB): the running lanes of other commands hold the space; wait for them or raise the rust partition in the budget policy",
           "de": "[repo cargo] Das Compiler-Image ist nach der Bereinigung weiterhin voll ({freeGib} GiB frei von {volumeGib} GiB): die laufenden Lanes anderer Befehle belegen den Platz; auf deren Ende warten oder die Rust-Partition in der Budget-Richtlinie vergrößern"
+        },
+        "retentionConflict": {
+          "en": "[repo cargo] lane {lane} holds {count} provenance file(s) whose names already exist in the shared ledger with other bytes ({names}); they stay in the lane and were not published",
+          "de": "[repo cargo] Lane {lane} enthält {count} Provenienz-Datei(en), deren Namen im gemeinsamen Hauptbuch schon mit anderen Bytes existieren ({names}); sie bleiben in der Lane und wurden nicht veröffentlicht"
         }
       }
     },
@@ -234,6 +261,13 @@
         "environment": { "anyOf": [{ "type": "null" }, { "type": "object", "additionalProperties": { "anyOf": [{ "type": "string" }, { "type": "null" }] } }] },
         "createdMs": { "type": "integer", "minimum": 0 }
       }
+    },
+    "LaneSize": {
+      "description": "The size file beside a lane (`lane.size`): its measured logical bytes, the part its Cargo incremental sessions hold, and when it was measured. The pool bounds idle lanes by `bytes - incrementalBytes`; the sessions are bounded by the collector's incremental share. / Die Größendatei neben einer Lane (`lane.size`): ihre gemessenen logischen Bytes, der Teil ihrer inkrementellen Cargo-Sitzungen und der Messzeitpunkt. Der Pool begrenzt untätige Lanes nach `bytes - incrementalBytes`; die Sitzungen begrenzt der inkrementelle Anteil des Sammlers.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bytes", "incrementalBytes", "measuredMs"],
+      "properties": {"bytes": {"type": "integer", "minimum": 0}, "incrementalBytes": {"type": "integer", "minimum": 0}, "measuredMs": {"type": "integer", "minimum": 0}}
     },
     "GcLane": {
       "type": "object",

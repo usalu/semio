@@ -1,0 +1,40 @@
+{
+ "name": "rust-lanes",
+ "code": "cargo2 incremental + sessions + testorder, bootreg selnear + witdelta + planmemo + nxmeta (all live)",
+ "lane": "docs4",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "e88fdd1b3edd95f1a46291cd1f2304ae9f06f3616faeeaa8a56826552197e872",
+ "needs": [],
+ "edits": [
+  {
+   "id": "rust-more",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "## 🧪️ Tests and routing tables",
+   "where": "before",
+   "block": "- **Incremental compiles of workspace crates** (live, G36-G39): a miss of the unit cache for a workspace crate that Cargo compiles incrementally keeps its rustc session in the lane and is still published (the key ignores the incremental directory; registry crates never get the flag); miss events carry the suffix ` incremental:lane`. A one-line edit of print's crate recompiles in 8 s instead of 46-76 s (the first compile in a lane costs about 3 % more and seeds the session). The idle-lane quota counts files only, not session bytes (those have their own 10 % share; `lane.size` records `incrementalBytes`), so another product's run no longer trims the lane that holds the session.\n- **Start of a Rust test action** (live, G42-G43): a test or lint run looks the packages it names up in their workspace members instead of walking an inventory of 126,000 directories (15.6 s to milliseconds); the preparation witness keeps the entries of every listing, so a landing that only adds directories without a `Cargo.toml` leaves the receipt valid and starts no preparation child (15-30 s of the first print action after such a landing); the capture of the Cargo unit graph is served from a memo (at most 4 records per store, keyed by program, arguments, workspace, Cargo configuration, toolchain and the Cargo-read environment; its inputs are the manifests, the lock and the target discovery paths) in about 0.5 s while sources change but manifests do not; and Nextest gets the planned metadata as `--cargo-metadata <file>`, so it starts no `cargo metadata` of its own.\n"
+  },
+  {
+   "id": "rust-more",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "## 🧪️ Tests und Routing-Tabellen",
+   "where": "before",
+   "block": "- **Inkrementelle Compiles von Workspace-Crates** (live, G36-G39): ein Fehltreffer des Unit-Caches für ein Workspace-Crate, das Cargo inkrementell kompiliert, behält seine rustc-Sitzung in der Lane und wird trotzdem veröffentlicht (der Schlüssel ignoriert das Inkrementell-Verzeichnis; Registry-Crates bekommen das Flag nie); Fehltreffer-Ereignisse tragen das Suffix ` incremental:lane`. Eine Ein-Zeilen-Änderung am Crate von print kompiliert in 8 s statt 46-76 s (der erste Compile in einer Lane kostet rund 3 % mehr und legt die Sitzung an). Die Quote für Leerlauf-Lanes zählt nur Dateien, nicht die Bytes der Sitzungen (die haben einen eigenen Anteil von 10 %; `lane.size` hält `incrementalBytes` fest), sodass der Lauf eines anderen Produkts die Lane mit der Sitzung nicht mehr abräumt.\n- **Start einer Rust-Test-Aktion** (live, G42-G43): ein Test- oder Lint-Lauf schlägt die Pakete, die er nennt, in ihren Workspace-Mitgliedern nach, statt ein Inventar von 126.000 Verzeichnissen zu durchlaufen (15,6 s auf Millisekunden); der Zeuge der Aufbereitung behält die Einträge jeder Liste, sodass eine Landung, die nur Verzeichnisse ohne `Cargo.toml` hinzufügt, den Beleg gültig lässt und kein Aufbereitungs-Kind startet (15-30 s der ersten print-Aktion nach so einer Landung); die Erfassung des Cargo-Unit-Graphen wird aus einem Memo bedient (höchstens 4 Einträge je Store, geschlüsselt nach Programm, Argumenten, Workspace, Cargo-Konfiguration, Toolchain und der von Cargo gelesenen Umgebung; seine Eingaben sind die Manifeste, die Lock-Datei und die Pfade der Ziel-Entdeckung) in rund 0,5 s, solange sich Quellen, aber keine Manifeste ändern; und Nextest bekommt die geplanten Metadaten als `--cargo-metadata <Datei>`, startet also kein eigenes `cargo metadata`.\n"
+  },
+  {
+   "id": "order-pairs",
+   "lang": "en",
+   "kind": "replace",
+   "old": "; two pairs remain on the Rust test path of print (`cargo:configuration-view` under the Cargo store lease, `cargo:configuration-publication` under the compiler writer).",
+   "new": "; the two pairs of the Rust test path of print (`cargo:configuration-view` under the Cargo store lease, `cargo:configuration-publication` under the compiler writer) are fixed by taking the leases in their declared order."
+  },
+  {
+   "id": "order-pairs",
+   "lang": "de",
+   "kind": "replace",
+   "old": "; zwei Paare bleiben auf dem Rust-Testpfad von print (`cargo:configuration-view` unter der Cargo-Store-Lease, `cargo:configuration-publication` unter dem Compiler-Schreiber).",
+   "new": "; die zwei Paare des Rust-Testpfads von print (`cargo:configuration-view` unter der Cargo-Store-Lease, `cargo:configuration-publication` unter dem Compiler-Schreiber) sind behoben, indem die Leases in ihrer deklarierten Reihenfolge genommen werden."
+  }
+ ]
+}

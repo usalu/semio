@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/library/workspaces/cargo/preparation/witness/component.json",
+  "title": "CargoPreparationWitness",
+  "description": "Everything a Cargo synchronization receipt hashed, kept beside it so a launcher can decide without starting the preparation child that the receipt still holds.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "receipt", "lock", "hashed", "observations", "tools"],
+  "properties": {
+    "version": {"const": 1},
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inputsSha256", "lockSha256"],
+      "properties": {
+        "inputsSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "lockSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "lock": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?:/|[A-Za-z]:[\\\\/])"},
+    "hashed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sources", "inputs", "ownerRoster", "members", "recipes", "configuration", "globalConfiguration", "tool", "compilerEnvironment"],
+      "properties": {
+        "sources": {"type": "array"},
+        "inputs": {"type": "array"},
+        "ownerRoster": {"type": "string"},
+        "members": {"type": "array"},
+        "recipes": {"type": "array", "maxItems": 0},
+        "configuration": {"type": "array"},
+        "globalConfiguration": {"type": "array"},
+        "tool": {"type": "string", "minLength": 1},
+        "compilerEnvironment": {"type": "object"}
+      }
+    },
+    "observations": {
+      "type": "array",
+      "maxItems": 262144,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["operation", "path", "stamp"],
+        "properties": {
+          "operation": {"enum": ["state", "presence", "list", "text"]},
+          "path": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?:/|[A-Za-z]:[\\\\/])"},
+          "stamp": {"type": "string", "pattern": "^(?:file|directory|symlink|other|true|false|[0-9a-f]{64})$"},
+          "stat": {"type": "string", "pattern": "^[0-9]+(?::[0-9]+){4}$"}
+        }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "stamp"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?:/|[A-Za-z]:[\\\\/])"},
+          "stamp": {"type": "string", "pattern": "^file:[0-9]+:[0-9]+:[0-9]+:[0-9]+:[0-9]+$"}
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "maximumBytes": 16777216,
+        "receiptSuffix": ".sync.json",
+        "witnessSuffix": ".witness.json",
+        "listedFile": "Cargo.toml",
+        "racyMilliseconds": 2000,
+        "globalConfiguration": ["config", "config.toml"],
+        "compilerEnvironment": {"prefix": "CARGO_", "excludedPrefixes": ["CARGO_TARGET_"], "excludedNames": ["CARGO_MAKEFLAGS", "CARGO_BUILD_JOBS", "CARGO_BUILD_BUILD_DIR"], "names": ["RUSTUP_TOOLCHAIN", "RUSTFLAGS", "RUSTC"]}
+      }
+    }
+  }
+}

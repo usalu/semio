@@ -20,7 +20,7 @@
     "maximumControlBytes": {
       "type": "integer",
       "minimum": 4096,
-      "maximum": 1048576
+      "maximum": 16777216
     },
     "partitions": {
       "type": "object",

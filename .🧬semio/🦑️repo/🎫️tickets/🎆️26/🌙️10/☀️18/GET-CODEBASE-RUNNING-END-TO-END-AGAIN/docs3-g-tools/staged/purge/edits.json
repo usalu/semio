@@ -1,0 +1,39 @@
+{
+ "name": "purge",
+ "code": "purge-g-tools/staged/purge",
+ "lane": "purge-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "purge-disk-budget",
+   "lang": "en",
+   "kind": "replace",
+   "old": "delete the `🗑️generated` folder of your ticket when you are done (outside the ledger).",
+   "new": "delete the `🗑️generated` folder of your ticket when you are done with it (outside the ledger); the purge law in the disk section says what `repo ticket purge-artifacts` and `repo clean` may remove, and they never touch anything else of a ticket."
+  },
+  {
+   "id": "purge-disk-budget",
+   "lang": "de",
+   "kind": "replace",
+   "old": "den `🗑️generated`-Ordner des eigenen Tickets am Ende löschen (außerhalb des Verzeichnisses).",
+   "new": "den `🗑️generated`-Ordner des eigenen Tickets am Ende löschen (außerhalb des Verzeichnisses); das Purge-Gesetz im Plattenabschnitt sagt, was `repo ticket purge-artifacts` und `repo clean` entfernen dürfen, und sie fassen nie etwas anderes eines Tickets an."
+  },
+  {
+   "id": "purge-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- New macOS images are created sparse (64 MiB, then resized: cost = content; live). The existing fixed images (about 98 GiB on this machine) stay fully allocated until recreated in a quiet window (helper ready, not applied). `~/.sinc` and ticket `🗑️generated` folders are outside the ledger.",
+   "where": "after",
+   "block": "- **Purging ticket output (the one purge law)**: only the direct `🗑️generated` folder of a CLOSED ticket (manifest `status` exactly `closed`) is ever eligible, whatever the size of anything else in the ticket (inputs, scripts, configs and reports stay). `repo ticket purge-artifacts [<ticket>]` plans and `--apply` removes (no argument = every closed ticket, `--all` is gone): files above 5 MiB and folders above 10 MiB; closing a ticket purges its own output with the same guards. `repo clean` applies by default, so run `repo clean --dry` first; it removes everything below `🗑️generated` of closed tickets (plus the classes it always had), and it can no longer remove files of an open ticket. Never removed: a file the git index tracks (a folder holding one is kept, its other contents judged alone; a failing `git ls-files` fails closed as `tracked-unknown`); a ticket that has any file younger than 600 s (`live-writer`, a future mtime counts as young; apply re-walks and refuses when the folder changed after the plan); a ticket that is not closed (`not-closed`); links (never followed; a root that is a link or a file is skipped as `symlink-root` or `not-directory`). The old rules (whole-ticket size sweeps and an open-ticket bypass in `repo clean`) fit the 17:16 loss of 8,024 tracked files and the 17:45 wipe of live output; one 18-case fixture, an independent Python decision table and real `git` and glob oracles now hold Go, Rust and TypeScript to the same plan. Open: recovery of the lost monolith-split files is the user's call; `repo clean` still applies by default."
+  },
+  {
+   "id": "purge-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- Neue macOS-Abbilder entstehen spärlich (64 MiB, dann vergrößert: Kosten = Inhalt; live). Die vorhandenen festen Abbilder (rund 98 GiB auf dieser Maschine) bleiben voll belegt, bis sie in einem ruhigen Fenster neu angelegt werden (Helfer bereit, nicht angewandt). `~/.sinc` und die `🗑️generated`-Ordner der Tickets liegen außerhalb des Verzeichnisses.",
+   "where": "after",
+   "block": "- **Ticket-Ausgaben entfernen (das eine Purge-Gesetz)**: in Frage kommt nur der direkte Ordner `🗑️generated` eines GESCHLOSSENEN Tickets (Manifest-`status` genau `closed`), gleich wie groß alles andere im Ticket ist (Eingaben, Skripte, Konfigurationen und Berichte bleiben). `repo ticket purge-artifacts [<Ticket>]` plant und `--apply` entfernt (ohne Argument = jedes geschlossene Ticket, `--all` gibt es nicht mehr): Dateien über 5 MiB und Ordner über 10 MiB; das Schließen eines Tickets entfernt seine eigene Ausgabe mit denselben Schutzregeln. `repo clean` wendet standardmäßig an, also zuerst `repo clean --dry`; es entfernt alles unter `🗑️generated` geschlossener Tickets (und die Klassen, die es immer hatte) und kann keine Dateien eines offenen Tickets mehr entfernen. Nie entfernt wird: eine Datei, die der Git-Index verfolgt (ein Ordner, der eine enthält, bleibt, sein übriger Inhalt wird für sich beurteilt; ein scheiternder `git ls-files` scheitert geschlossen als `tracked-unknown`); ein Ticket mit einer Datei, die jünger als 600 s ist (`live-writer`, eine Änderungszeit in der Zukunft gilt als jung; das Anwenden läuft neu durch und lehnt ab, wenn sich der Ordner nach dem Plan änderte); ein nicht geschlossenes Ticket (`not-closed`); Links (nie verfolgt; eine Wurzel, die ein Link oder eine Datei ist, wird als `symlink-root` oder `not-directory` übersprungen). Die alten Regeln (Größenläufe über das ganze Ticket und eine Umgehung für offene Tickets in `repo clean`) passen zum Verlust von 8.024 verfolgten Dateien um 17:16 und zum Leeren lebender Ausgaben um 17:45; eine Fixture mit 18 Fällen, eine unabhängige Python-Entscheidungstabelle und echte `git`- und Glob-Orakel halten Go, Rust und TypeScript jetzt auf denselben Plan. Offen: die Wiederherstellung der verlorenen monolith-split-Dateien entscheidet der Nutzer; `repo clean` wendet weiterhin standardmäßig an."
+  }
+ ]
+}

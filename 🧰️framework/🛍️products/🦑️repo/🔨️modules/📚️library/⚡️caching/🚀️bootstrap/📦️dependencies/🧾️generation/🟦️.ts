@@ -48,10 +48,12 @@ export interface GenerationCaptureInputV1{
 }
 /** 📤️ Is either a sealed receipt with its evidence bytes or a deferral that never publishes unsound facts. */
 export type GenerationCaptureResultV1=Readonly<{status:"captured";receipt:GenerationReceiptV1;files:readonly Readonly<{name:string;bytes:Buffer}>[]}>|Readonly<{status:"deferred";reason:string;path?:string}>;
-/** 🔎️ Is the complete input to one verification; every store specific operation arrives as a port. */
+/** 🔎️ Is the complete input to one verification; every store specific operation arrives as a port, and `recheck` leaves out the provider observations, the last and by far the largest tier, for a second look seconds after a complete verification of the same receipt. */
 export interface GenerationVerifyInputV1{
  readonly workspace:string;readonly storeRoot:string;readonly receipt:GenerationReceiptV1;readonly readEvidence:(name:string,maximumBytes:number)=>Uint8Array;readonly runtime:()=>GenerationRuntimeV1;readonly conditionsClosed:()=>boolean;
- readonly producer:()=>GenerationProducerV1;
+ readonly producer:()=>GenerationProducerV1;readonly recheck?:boolean;
+ /** 🤝️ Answers which of the given workspace-relative paths a change journal proves untouched since the receipt was last verified; the verifier then skips their rows. Without it, or with an empty answer, every row is looked at. */
+ readonly vouched?:(paths:readonly string[])=>Promise<ReadonlySet<string>>|ReadonlySet<string>;
  readonly project:(path:string)=>readonly Readonly<{name:string;kind:string}>[];
  readonly observeBindings:(scope:string,pairs:readonly Readonly<{sourceDirectory:string;targetDirectory:string}>[])=>string;
  readonly readReady:(path:string)=>Promise<string>|string;readonly control:GenerationControlV1;
@@ -108,10 +110,15 @@ const stateKind=(facts:BigIntStats):string=>facts.isSymbolicLink()?"symlink":fac
 const stateTuple=(facts:BigIntStats|undefined):string=>JSON.stringify(facts?[stateKind(facts),String(facts.dev),String(facts.ino),Number(facts.mode)]:["missing"]);
 const posixRelative=(root:string,path:string):string=>(relative(root,path)||".").split(sep).join("/");
 const encodeRows=(rows:readonly (readonly unknown[])[]):Buffer=>Buffer.from(rows.map(row=>JSON.stringify(row)).join("\n")+(rows.length?"\n":""));
+let decodedLast:{sha256:string;rows:(readonly unknown[])[];timer:ReturnType<typeof setTimeout>}|undefined;
 const decodeRows=(bytes:Uint8Array,expected:GenerationEvidenceV1):(readonly unknown[])[]=>{
  if(bytes.length!==expected.bytes||generationSha256V1(bytes)!==expected.sha256)throw Error("Sealed generation evidence required");
+ if(decodedLast?.sha256===expected.sha256)return decodedLast.rows;
  const text=new TextDecoder("utf-8",{fatal:true}).decode(bytes),rows=text.length?text.slice(0,-1).split("\n").map(line=>JSON.parse(line)as unknown[]):[];
  if(rows.length!==expected.rows||rows.some(row=>!Array.isArray(row)))throw Error("Complete generation evidence rows required");
+ if(decodedLast)clearTimeout(decodedLast.timer);
+ const timer=setTimeout(()=>{decodedLast=undefined;},protocol.decodedRowsRetainMilliseconds);timer.unref?.();
+ decodedLast={sha256:expected.sha256,rows,timer};
  return rows;
 };
 const evidenceOf=(rows:readonly (readonly unknown[])[],suffix:string):Readonly<{evidence:GenerationEvidenceV1;file:Readonly<{name:string;bytes:Buffer}>}>=>{
@@ -195,26 +202,30 @@ export async function verifyGenerationReceiptV1(input:GenerationVerifyInputV1):P
   }
   const fingerprints=new Map<string,string>();
   for(const row of receipt.ready){await advance();let fingerprint:string;try{fingerprint=await input.readReady(generationResolveV1(row.location,workspace,storeRoot));}catch(error){if(control.signal.aborted)throw error;return mismatch("ready-changed",row.scope);}if(fingerprint!==row.fingerprint)return mismatch("ready-changed",row.scope);fingerprints.set(row.scope,fingerprint);}
+  const asRelative=(absolute:string):string|undefined=>{const from=relative(workspace,absolute).split(sep).join("/");return from===""||from===".."||from.startsWith("../")||isAbsolute(from)?undefined:from;};
+  const known=input.vouched?await input.vouched([...receipt.inputs.flatMap(group=>group.sources.map(source=>asRelative(generationResolveV1(source.path,workspace,storeRoot)))),...receipt.membership.texts.map(row=>asRelative(resolve(workspace,row.path)))].filter((path):path is string=>path!==undefined)):new Set<string>();
   for(const group of receipt.inputs)for(const source of group.sources){
-   await advance();const path=generationResolveV1(source.path,workspace,storeRoot),facts=lstatBig(path);
+   await advance();const path=generationResolveV1(source.path,workspace,storeRoot);if(known.has(asRelative(path)??""))continue;const facts=lstatBig(path);
    if(source.kind==="missing"){if(facts)return mismatch("input-changed",source.path,"appeared");continue;}
    if(!facts||facts.isSymbolicLink()||(source.kind==="file"?!facts.isFile():!facts.isDirectory())||String(facts.dev)!==source.dev||String(facts.ino)!==source.ino||Number(facts.mode)!==source.mode)return mismatch("input-changed",source.path,"identity");
    if(source.kind==="file"){if(facts.size>BigInt(protocol.maximumSourceFileBytes)||generationSha256V1(readGenerationData(path,protocol.maximumSourceFileBytes))!==source.sha256)return mismatch("input-changed",source.path,"bytes");}
   }
   for(const row of receipt.membership.texts){
-   await advance();let text:string;
+   await advance();if(known.has(asRelative(resolve(workspace,row.path))??""))continue;let text:string;
    try{text=new TextDecoder("utf-8",{fatal:true}).decode(readGenerationData(resolve(workspace,row.path),protocol.maximumSourceFileBytes));}catch(error){if(control.signal.aborted)throw error;return mismatch("manifest-changed",row.path,"unreadable");}
    if(generationSha256V1(text)!==row.sha256)return mismatch("manifest-changed",row.path,"bytes");
   }
   let relisted=0,scanned=0;
   const rows=decodeRows(input.readEvidence(receipt.membership.frontier.name,protocol.maximumEvidenceBytes),receipt.membership.frontier),flags=new Map<string,number>(),child=(parent:string,name:string)=>parent==="."?name:parent+"/"+name;
   for(const row of rows)if(row[0]==="d")flags.set(row[1]as string,row[10]as number);
+  const settled=input.vouched?await input.vouched(rows.map(row=>row[1]as string)):new Set<string>();
   const scan=(path:string):boolean=>{
    if(++scanned>protocol.maximumScan)return true;
    let list:readonly Readonly<{name:string;kind:string}>[];try{list=input.project(path);}catch{return true;}
    return list.some(entry=>entry.name==="package.json"||entry.kind==="symlink"||entry.kind==="directory"&&scan(join(path,entry.name)));
   };
   for(const row of rows){
+   if(settled.has(row[1]as string)){if(++work%protocol.checkWork===0)control.check();if(work%protocol.progressWork===0)await control.tick(work);continue;}
    await advance();const path=resolve(workspace,row[1]as string),facts=lstatBig(path);
    if(row[0]==="s"){if(stateTuple(facts)!==JSON.stringify(row.slice(2)))return mismatch("membership-changed",row[1]as string,"state");continue;}
    if(!facts||!facts.isDirectory()){if(row[10]===0&&!facts?.isSymbolicLink())continue;return mismatch("membership-changed",row[1]as string,"directory");}
@@ -224,7 +235,7 @@ export async function verifyGenerationReceiptV1(input:GenerationVerifyInputV1):P
    const pruned=live.filter(entry=>entry.kind!=="directory"||(flags.get(child(row[1]as string,entry.name))??(scan(join(path,entry.name))?1:0))===1);
    if(generationProjectionDigestV1(pruned)!==row[9])return mismatch("membership-changed",row[1]as string,"listing");
   }
-  for(const row of decodeRows(input.readEvidence(receipt.execution.evidence.name,protocol.maximumEvidenceBytes),receipt.execution.evidence)){
+  if(!input.recheck)for(const row of decodeRows(input.readEvidence(receipt.execution.evidence.name,protocol.maximumEvidenceBytes),receipt.execution.evidence)){
    await advance();const path=generationResolveV1(row[1]as string,workspace,storeRoot),facts=lstatBig(path),full=row[6]===1,expected=full?row[4]:row[3];
    if((facts?(full?generationStampV1(facts):generationAnchorV1(facts)):null)!==expected)return mismatch("provider-changed",row[1]as string,"identity");
    if(row[2]==="l"&&readlinkSync(path)!==row[5])return mismatch("provider-changed",row[1]as string,"target");

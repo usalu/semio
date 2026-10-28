@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "name": "a program spawned unconditionally",
+      "text": "import{test}from\"bun:test\";\ntest(\"a\",()=>{\nspawnSync(\"ps\",[\"-o\",\"stat=\"]);\n});",
+      "expected": {
+        "unconditioned": [
+          "posix-program"
+        ],
+        "conditioned": [],
+        "gated": []
+      }
+    },
+    {
+      "name": "a program inside a test whose header is skipped on the host",
+      "text": "test.skipIf(!posix)(\"a\",()=>{\nspawnSync(\"sh\",[\"-c\",\"x\"]);\n});",
+      "expected": {
+        "unconditioned": [],
+        "conditioned": [],
+        "gated": [
+          "posix-program",
+          "posix-shell-script"
+        ]
+      }
+    },
+    {
+      "name": "a program in a test block that names the platform",
+      "text": "test(\"b\",()=>{\nif(process.platform===\"win32\")return;\nspawnSync(\"ps\",[\"-o\",\"x\"]);\n});",
+      "expected": {
+        "unconditioned": [],
+        "conditioned": [
+          "posix-program"
+        ],
+        "gated": []
+      }
+    },
+    {
+      "name": "a line that names the platform guards a symbolic link, a mode and a signal",
+      "text": "const a=process.platform!==\"win32\"?symlinkSync(x,y):0;\nconst b=process.platform!==\"win32\"?chmodSync(x,0o700):0;\nconst c=process.platform!==\"win32\"?process.kill(-4,\"SIGKILL\"):0;",
+      "expected": {
+        "unconditioned": [],
+        "conditioned": [],
+        "gated": []
+      }
+    },
+    {
+      "name": "a line that names the platform does not guard a program",
+      "text": "if(process.platform===\"darwin\")spawnSync(\"hdiutil\",[\"info\"]);",
+      "expected": {
+        "unconditioned": [],
+        "conditioned": [
+          "posix-program"
+        ],
+        "gated": []
+      }
+    },
+    {
+      "name": "a literal python3 command",
+      "text": "test(\"p\",()=>{\nBun.spawnSync([\"python3\",\"-I\",\"-c\",\"1\"]);\n});",
+      "expected": {
+        "unconditioned": [
+          "python3-command"
+        ],
+        "conditioned": [],
+        "gated": []
+      }
+    },
+    {
+      "name": "several causes come out in the order of the policy",
+      "text": "test(\"m\",()=>{\nchmodSync(a,0o755);\nsymlinkSync(a,b);\nprocess.kill(-pid,\"SIGKILL\");\nwriteFileSync(f,\"#!/bin/sh\\n\");\n});",
+      "expected": {
+        "unconditioned": [
+          "posix-shell-script",
+          "symlink",
+          "permission-bits",
+          "posix-process-control"
+        ],
+        "conditioned": [],
+        "gated": []
+      }
+    },
+    {
+      "name": "a skipped describe is not inherited by the test inside it",
+      "text": "describe.skipIf(win)(\"d\",()=>{\ntest(\"x\",()=>{\nchmodSync(a,0o755);\n});});",
+      "expected": {
+        "unconditioned": [
+          "permission-bits"
+        ],
+        "conditioned": [],
+        "gated": []
+      }
+    },
+    {
+      "name": "a file without any host-bound fact",
+      "text": "import{test,expect}from\"bun:test\";\ntest(\"c\",()=>{expect(1+1).toBe(2);});",
+      "expected": {
+        "unconditioned": [],
+        "conditioned": [],
+        "gated": []
+      }
+    },
+    {
+      "name": "non-ASCII letters before the call do not hide it",
+      "text": "Müspawn(\"kill\",[1]);",
+      "expected": {
+        "unconditioned": [
+          "posix-program"
+        ],
+        "conditioned": [],
+        "gated": []
+      }
+    },
+    {
+      "name": "the header and the marker on one line",
+      "text": "test(\"t\",()=>spawnSync(\"kill\",[\"-9\",\"1\"]));",
+      "expected": {
+        "unconditioned": [
+          "posix-program"
+        ],
+        "conditioned": [],
+        "gated": []
+      }
+    },
+    {
+      "name": "a test skipped with skip",
+      "text": "test.skip(\"x\",()=>{spawnSync(\"ps\",[]);});",
+      "expected": {
+        "unconditioned": [],
+        "conditioned": [],
+        "gated": [
+          "posix-program"
+        ]
+      }
+    },
+    {
+      "name": "an absolute system tool",
+      "text": "const t=\"/usr/bin/python3\";\ntest(\"a\",()=>{use(\"/usr/bin/hdiutil\");});",
+      "expected": {
+        "unconditioned": [
+          "posix-program"
+        ],
+        "conditioned": [],
+        "gated": []
+      }
+    },
+    {
+      "name": "a shell found by the execSync call",
+      "text": "test(\"e\",()=>{\nexecSync(\"echo 1\");\n});",
+      "expected": {
+        "unconditioned": [
+          "posix-shell-script"
+        ],
+        "conditioned": [],
+        "gated": []
+      }
+    }
+  ]
+}

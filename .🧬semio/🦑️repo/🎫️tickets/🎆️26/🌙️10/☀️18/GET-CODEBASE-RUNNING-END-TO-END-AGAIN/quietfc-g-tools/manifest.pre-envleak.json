@@ -1,0 +1,167 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🟦️.ts": {
+  "file": "f000",
+  "base": "1a0fd1ea496e912fc6dd05b9c53c8cb35a8b7d788f6e8301bf5e665364050b4e",
+  "new": "fa716707ed4d0d00f818a390fa9f45d5706a3c77d145c82624d5fc9de06d407f"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🪜️phases/🟦️.ts": {
+  "file": "f001",
+  "base": "f34e9ee5f7adf0da22b2411ba38be2341403ec8b6a6a0d4db895a94694ba9776",
+  "new": "916c70960614d30e4cbfe05f4e879c570dc351b20484fa9238fdf3d958d9739f"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts": {
+  "file": "f002",
+  "base": "fc01b588fc010ec6570e4bbe56105a716c58705b903310aa0b26fd1bbf36b646",
+  "new": "171629e482b2ebc74a48d418ad4e25639df9b4418bdb8dd4910728caa07847dc"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts": {
+  "file": "f003",
+  "base": "36c9c5f36d26fa0e5a2cefc456edfc6fa3a3b0e53bfd2b6bcc2893435f1b8e50",
+  "new": "399cdf51cc1b3bc2be7ecc97be5ba81c1b793f733e86dd6f2cdd7860294f7370"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts": {
+  "file": "f004",
+  "base": "1d74888d4a532c833529ec9feec30b374a6fc97afdd9c2baaef3184ff6d6a093",
+  "new": "d891ac39ab796e5c694e692a7437d97158bf5b0cd7745d80ac9a7cb227bd5d49"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🌦️forecast/🟦️.ts": {
+  "file": "f005",
+  "base": "bb8ee5e39dd6929c785c8d708a0953b0909f28d3f9268893b507c55dedea79a8",
+  "new": "b8ed2a38f3f49d0c55244986d6a0ad715197ebc121bc294defcf086f9f5fac4a"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts": {
+  "file": "f006",
+  "base": null,
+  "new": "f1c6064daab0286ad108e49619ceb8987575a12f86987efbdd70c859b7bfc782"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪜️phases/🧫️fixtures/🔣️.json": {
+  "file": "f007",
+  "base": "d83c75dff5ce7fe67d6e50346c8296fcbda584d2d92f89900485f5a1a53d8fdf",
+  "new": "434e730c8903ca5729d0e5154a709d0ffb2df126ddcb2a5219f2cc8bd2b7fec1"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📐️estimates/🐍️oracle/🐍️.py": {
+  "file": "f008",
+  "base": "7f8f3cee95bbae9f61a4a3e9141803c9d131e56c4745ced11d33e070ba0013b5",
+  "new": "4996539d8e84c46710402027d8e43258d4d4a21adc4fcbde58c54c81376bd7e5"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📐️estimates/🧫️fixtures/🔣️.json": {
+  "file": "f009",
+  "base": "9df437efcd17df7e30ceee1134bd7c563f59d13d28bb3d67e919024546a2ddb6",
+  "new": "4fb54e27ea7e7cced5321c4aff9fa5e352d2cbbdc41aea5bf8fd14fb70a48d84"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🟦️.ts": {
+  "file": "f010",
+  "base": null,
+  "new": "f482aed4519375f21321d60335bdfb13cb70b9850aa6c39df16ffb330b705ab2"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🥒️.feature": {
+  "file": "f011",
+  "base": null,
+  "new": "d37f7a866634a6657deeb5925b7c2c9c9525dfcf6db7ad3b29336367a3de1510"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🐍️oracle/🐍️.py": {
+  "file": "f012",
+  "base": null,
+  "new": "3571b07439ea8cb9c60c4e64cbab4352e9bf9ce6c6297caa8bdbbd466759d1a3"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🧫️fixtures/📼️recorded.json": {
+  "file": "f013",
+  "base": null,
+  "new": "0d89ba0f16973821fbff63fbaa6a40ba722042670ca6428898f5729916854c66"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🧫️fixtures/🔣️.json": {
+  "file": "f014",
+  "base": null,
+  "new": "9430d981393e5213c561d9e92622c669343bf55f123a8013b68195c6e91b5795"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "f015",
+  "base": "6eda5cfcbf6ee13adbc6a0e7e584da4d28ea89d68cd3ccb1e32ac1f31e63637c",
+  "new": "7e43c10fb26ee9b94cd99cd00df827f1459c4aa255e67cf3c477d143b0c7a5a3"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🐍️oracle/🐍️.py": {
+  "file": "f016",
+  "base": "b97f6e0a215ac57cf7204d6b73a2af21cea38f4a7f45d70b7b0a5eddbe53d216",
+  "new": "7b8f751988f0485f48ab285655841f1a7ba87ea5f009d5cf35b39829607dd97c"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🧫️fixtures/🔣️.json": {
+  "file": "f017",
+  "base": "6a7e68d1a92001d24e7570953fdd4b00e72a86c7dc470d04466b8f4edf9dc917",
+  "new": "c0a11976923d1fd81f02c1c28382594d345141cb66ff562db32d436a562654c1"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json": {
+  "file": "f018",
+  "base": "ed809a61d1ebe7385c3b835e84f2174d9089f4fa633ff89d4aa606584f7f8f27",
+  "new": "f2e70f2ffc397a11bba4d29c65bc2729dd0825d2272b7f1fe387c8814c0ac2c3"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts": {
+  "file": "f019",
+  "base": "8c71c3b2d8da54a3b62d893266a4ac659e74e5bfe75f51281555b838859cb1b3",
+  "new": "4a0d18948e2b3cd94b2b66aecf09daf0fc296f481a1d7abff038f29dcff8f4a0"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/🟦️.ts": {
+  "file": "f020",
+  "base": "0cfeac3aa77ae4829ae85232691f4ea8b0afc674e44a121ff58199c7ee14298a",
+  "new": "b4cb4842e0aaf7a0a77421dbc51f1c37573a969001503a9748cbb999ea2793cd"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts": {
+  "file": "f021",
+  "base": null,
+  "new": "5c3dca61a7b837e66a49b67aeb0049d912acc97f2c3879241aff259872f66fb4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🟦️.ts": {
+  "file": "f022",
+  "base": "bfc5734a0a6f8885c7e82626f8eefdd0548b17bd3832091d334a4e8c55e4cc80",
+  "new": "c6e0ba38c8b521f1d784e7a99e8e730d22b7e69cb932136196fe9afcf5d7c5b4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🟦️.ts": {
+  "file": "f023",
+  "base": null,
+  "new": "afc9c0ba37be18043d4be8bc9e6b89588ab5636abb0408298a8e51df129222a0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🧫️fixtures/📼️g5.json": {
+  "file": "f024",
+  "base": null,
+  "new": "5f0e9717896b567012b8794d2b3726e9289f07696cc3f01c7fcf6400a962cce5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "f025",
+  "base": "93c8d5c284be9d4e1fe300400fc895ef427c20515accab668d9b9bf0ceb4385b",
+  "new": "d9e031921de470e21715f00e8343f79768b06ddde1bce8934716b9cb2871c34f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🟦️.ts": {
+  "file": "f026",
+  "base": "9fbf0acfd469352eb2a08bda0ba27477dc6e06932a07108983a8f0777f4858ae",
+  "new": "612ea674eddb444f04498c9f7e308fd3a1012bd00e5b6283107706e35e4ead6b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👷️workers/🟦️.ts": {
+  "file": "f027",
+  "base": "c9b247d401f4332110588461109f40b6f829d7ada2234a45b92bcc9d21082588",
+  "new": "5c2b9c93b710761cbf5cf86f10c8d31baa35863c4aa9aa7eda5bec664668f727"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json": {
+  "file": "f028",
+  "base": "fa9d966ccd4e1db75c5dc3b1e4be52e7dc6cb937c76ea20c9fdaec11e9584b39",
+  "new": "d9170135d0f53d8a8793ff03d5294af23e1fc7cc49e99d6d5191446c7ca3d509"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "f029",
+  "base": "8f4cfbd2ad4ef5d89066287a5f8621f4326694da7b08b6d510af54c7783df194",
+  "new": "2da47efc9c8dfaff25957c5905c0883b65f9b467f2bd952dd7f40535a47ad47e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md": {
+  "file": "f030",
+  "base": "af7d3b6d7b87d0f16d74c86cf810dbcefe99f48ae6bec0516075d8fe3efacb27",
+  "new": "cfb8b8f585793a9fb345daa00e40128844d188130b7c55b321deba2cd33f1f6f"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪜️phases/🐍️oracle/🐍️.py": {
+  "file": "f031",
+  "base": "131b3a9568281584e865a5742d36f74eaf7c224fc612f581218ab64f98c621eb",
+  "new": "cdeec54f5bcc51c960806b328989fe9b6a26c74c02d659a57bee6fa9193efdac"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🧫️fixtures/📼️g13.json": {
+  "file": "f033",
+  "base": null,
+  "new": "72c69e5ea69af50da17bf74d1bdd95c93d8be84a7c677fce623a569804f27862"
+ }
+}

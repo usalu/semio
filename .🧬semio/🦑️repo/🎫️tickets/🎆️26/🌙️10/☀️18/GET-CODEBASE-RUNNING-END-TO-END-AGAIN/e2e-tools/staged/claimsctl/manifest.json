@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/🟨️.mjs": {
+  "file": "claims.mjs",
+  "base": "098a253eb79fc335cf794afb11b19e88754f61fed8089a5776fe11336ce3c08d",
+  "new": "df4c752e52feb06e8ffe39c58dce906c55bb82d4cbf2350dc165c1b04cbaa084"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/🧪️tests/🎛️control/🟦️.ts": {
+  "file": "law.ts",
+  "base": null,
+  "new": "b5055f5f46a448398c65d9106199d4aef50a75b9ae56349724f22b164ccf5d02"
+ }
+}

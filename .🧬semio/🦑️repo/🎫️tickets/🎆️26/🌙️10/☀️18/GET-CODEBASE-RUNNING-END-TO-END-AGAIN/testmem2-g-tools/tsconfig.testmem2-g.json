@@ -1,0 +1,19 @@
+{
+ "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+ "compilerOptions": {
+  "noEmit": true,
+  "incremental": false,
+  "skipLibCheck": true
+ },
+ "include": [],
+ "exclude": [],
+ "files": [
+  "/private/tmp/claude-501/-Users-ueli-Documents-semio/de5d5cb4-dca7-469c-b840-78655a0500ed/scratchpad/tm2g-wb/🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/📏️file-budgets/🟦️.ts",
+  "/private/tmp/claude-501/-Users-ueli-Documents-semio/de5d5cb4-dca7-469c-b840-78655a0500ed/scratchpad/tm2g-wb/🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/📏️file-budgets/🧪️tests/🟦️.ts",
+  "/private/tmp/claude-501/-Users-ueli-Documents-semio/de5d5cb4-dca7-469c-b840-78655a0500ed/scratchpad/tm2g-wb/🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/📏️file-budgets/🧪️tests/🧱️capped-files/🟦️.ts",
+  "/private/tmp/claude-501/-Users-ueli-Documents-semio/de5d5cb4-dca7-469c-b840-78655a0500ed/scratchpad/tm2g-wb/🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/📁️files/🟦️.ts",
+  "/private/tmp/claude-501/-Users-ueli-Documents-semio/de5d5cb4-dca7-469c-b840-78655a0500ed/scratchpad/tm2g-wb/🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🏃️run/🟦️.ts",
+  "/private/tmp/claude-501/-Users-ueli-Documents-semio/de5d5cb4-dca7-469c-b840-78655a0500ed/scratchpad/tm2g-wb/🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts",
+  "/private/tmp/claude-501/-Users-ueli-Documents-semio/de5d5cb4-dca7-469c-b840-78655a0500ed/scratchpad/tm2g-wb/🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"
+ ]
+}

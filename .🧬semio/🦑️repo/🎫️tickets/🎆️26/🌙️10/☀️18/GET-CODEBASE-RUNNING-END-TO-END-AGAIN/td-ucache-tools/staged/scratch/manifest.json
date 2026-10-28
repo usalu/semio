@@ -1,0 +1,42 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🟦️.ts": {
+  "file": "f001",
+  "base": "8500c33fd6cfa8d15354428fbf677e200b3028b5d7e57a85307d30487550673c",
+  "new": "6652828910d1fe68bfdf1ba1d5b8f0434f244068d3988d7f134c93ecdfacd786"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🌱️incremental/🟦️.ts": {
+  "file": "f002",
+  "base": "4b369322eee978852b95bf892d6bc5d7198552e0a320828a7587e78ff22bf705",
+  "new": "6b6af80612698405bbb4b9ef6e0b9fe9122b51c82c0b3a19cbb4d5e713bebccd"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧪️tests/🟦️.ts": {
+  "file": "f003",
+  "base": "38f3607713e00f0a44905a7ffb7a08bfd451a9e6f85ed8180a4f1365c1750663",
+  "new": "48bb1b62c9b8a910d312e122b55da6e3cb06e1760ad93f97dcb4110c214724c5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧪️tests/🚦️pool/🟦️.ts": {
+  "file": "f004",
+  "base": "be86ac4b9a80a6e0fc221cf8a705a737cd64e6eb2d5accb3ecd6d7e9629cc5f5",
+  "new": "ba1e0f9a46dab50f12be714a8157dcf6170e947d26d6d0a21d9fba9817f0cc9b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/🧾️provenance-equality/🟦️.ts": {
+  "file": "f005",
+  "base": "1a5ee1176ab57521b3af8ff2e0693df251d44246039c950d470f0a77845d8a01",
+  "new": "0d2279bf6c5926b36fe14140f8fd140e8065ae458f2ec946950079de1b2ef8b1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🏖️scratch/🟦️.ts": {
+  "file": "f006",
+  "base": null,
+  "new": "51b409764cd584e63e7fccab6324660c5d68066bedb7faa599b5e33c274f7c34"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🏖️scratch/🔣️.json": {
+  "file": "f007",
+  "base": null,
+  "new": "4e6c3a9a23bbb55cc697376027f613fa735f966998fd7671c05ec60203de3e02"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🏖️scratch/🧪️tests/🟦️.ts": {
+  "file": "f008",
+  "base": null,
+  "new": "067a0fc466bc0ca38b9e71343d228c77646ad279217938ca36046db11ef75fc0"
+ }
+}

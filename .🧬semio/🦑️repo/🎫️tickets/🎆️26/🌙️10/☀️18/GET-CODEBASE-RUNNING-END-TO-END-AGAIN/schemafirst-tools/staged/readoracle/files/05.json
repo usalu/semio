@@ -1,0 +1,19 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "🏗️build/📥️inputs/🔭️read-oracle/🧬️schema/🔣️.json",
+ "definitions": [
+  "Policy"
+ ],
+ "sources": [
+  "🏗️build/📥️inputs/🔭️read-oracle/🍎️seatbelt/🟦️.ts",
+  "🏗️build/📥️inputs/🔭️read-oracle/🐧️linux/🟦️.ts",
+  "🏗️build/📥️inputs/🔭️read-oracle/🚪️cli/🟦️.ts",
+  "🏗️build/📥️inputs/🔭️read-oracle/🏃️run/🟦️.ts"
+ ],
+ "document": "🏗️build/📥️inputs/🔭️read-oracle/🔣️.json",
+ "pointer": [
+  "policy"
+ ],
+ "minimumNumber": 200
+}

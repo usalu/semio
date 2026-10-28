@@ -33,13 +33,21 @@
       "const": {
         "stalled": {
           "en": "This process ({owner}) made no progress for {minutes} min and has no live child: it exits now so that the leases it holds are released.",
-          "de": "Dieser Prozess ({owner}) hat seit {minutes} Min. keinen Fortschritt gemacht und hat kein lebendes Kind: er beendet sich jetzt, damit die von ihm gehaltenen Leases freigegeben werden."
+          "de": "Dieser Prozess ({owner}) hat seit {minutes} min keinen Fortschritt gemacht und hat kein lebendes Kind: er beendet sich jetzt, damit die von ihm gehaltenen Leases freigegeben werden."
         },
         "treeStalled": {
           "en": "This process ({owner}) made no progress for {minutes} min and its {children} child process(es) used no CPU time for {treeMinutes} min: the children are stopped and this process exits now so that the leases it holds are released.",
-          "de": "Dieser Prozess ({owner}) hat seit {minutes} Min. keinen Fortschritt gemacht und seine {children} Kindprozess(e) haben seit {treeMinutes} Min. keine CPU-Zeit verbraucht: die Kinder werden beendet und dieser Prozess beendet sich jetzt, damit die von ihm gehaltenen Leases freigegeben werden."
+          "de": "Dieser Prozess ({owner}) hat seit {minutes} min keinen Fortschritt gemacht und seine {children} Kindprozess(e) haben seit {treeMinutes} min keine CPU-Zeit verbraucht: die Kinder werden beendet und dieser Prozess beendet sich jetzt, damit die von ihm gehaltenen Leases freigegeben werden."
         },
-        "terminating": {
+        "interrupted": {
+      "en": "{signal} received: the running work is cancelled and its leases are released; this process exits after {seconds} s at the latest.",
+      "de": "{signal} empfangen: die laufende Arbeit wird abgebrochen und ihre Leases werden freigegeben; dieser Prozess endet spätestens nach {seconds} s."
+    },
+    "cancelled": {
+      "en": "Cancelled ({signal}); leases released.",
+      "de": "Abgebrochen ({signal}); Leases freigegeben."
+    },
+    "terminating": {
           "en": "{signal} did not end this process within {seconds} s: it exits now.",
           "de": "{signal} hat diesen Prozess nicht innerhalb von {seconds} s beendet: er beendet sich jetzt."
         }

@@ -1,0 +1,31 @@
+{
+ "label": "g25-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "07:24:42",
+ "wall_s": 206.6,
+ "peak_tree_mb": 8886,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "inferring": [
+   "2"
+  ],
+  "refreshing": [
+   "2"
+  ],
+  "published": [
+   "604",
+   "2",
+   "52"
+  ],
+  "processes": [
+   "8",
+   "1 internal, 3 local, 4 worker"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

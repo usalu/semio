@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -147,6 +148,11 @@ type PolicyIdentity struct {
 	Environment AgentEnvironment `json:"environment"`
 }
 
+// 🎚️PolicyPriority names the variable the lease queue reads its priority class from.
+type PolicyPriority struct {
+	Variable string `json:"variable"`
+}
+
 type PolicyGlobal struct {
 	Flag        string `json:"flag"`
 	Input       string `json:"input"`
@@ -224,6 +230,7 @@ type PolicyTool struct {
 	Defaults    map[string]json.RawMessage `json:"defaults"`
 	Positional  []PolicyPositional         `json:"positional"`
 	Environment []string                   `json:"environment"`
+	Priority    string                     `json:"priority"`
 	Annotations *ToolAnnotationsPolicy     `json:"annotations"`
 }
 
@@ -241,6 +248,7 @@ type Policy struct {
 	BuildPolicy  string                       `json:"buildPolicy"`
 	Backends     string                       `json:"backends"`
 	Identity     PolicyIdentity               `json:"identity"`
+	Priority     PolicyPriority               `json:"priority"`
 	Globals      []PolicyGlobal               `json:"globals"`
 	OmittedFlags []PolicyOmitted              `json:"omittedFlags"`
 	Strip        []string                     `json:"strip"`
@@ -307,16 +315,18 @@ type Bound struct {
 
 // 🛠️BuildTool is one derived tool.
 type BuildTool struct {
-	Name       string
-	Operation  string
-	Subcommand string
-	Kind       string
-	Title      string
-	Inputs     []Input
-	Bound      []Bound
-	AnyOf      [][]string
-	Schema     Tool
-	Limits     PolicyLimits
+	Name             string
+	Operation        string
+	Subcommand       string
+	Kind             string
+	Title            string
+	Inputs           []Input
+	Bound            []Bound
+	AnyOf            [][]string
+	Schema           Tool
+	Limits           PolicyLimits
+	Priority         string
+	PriorityVariable string
 }
 
 // 🌐️flagProperty names the input of a flag: `--dry-run` is `dry_run`.
@@ -376,6 +386,9 @@ func enumOf(valueName string) []string {
 
 // 🧮️Derive builds every exposed tool from the catalogue and the policy, and refuses a policy that names something the catalogue does not have, a flag no row accepts, or a row that is neither exposed nor excluded.
 func Derive(catalogue Catalogue, policy Policy) ([]BuildTool, error) {
+	if policy.Priority.Variable == "" {
+		return nil, errors.New("mcp: the policy names no lease priority variable")
+	}
 	var tools []BuildTool
 	seen := map[string]bool{}
 	identity, err := regexp.Compile(policy.Identity.Pattern)
@@ -427,7 +440,10 @@ func Derive(catalogue Catalogue, policy Policy) ([]BuildTool, error) {
 		if summary.English() == "" || summary.German() == "" {
 			return nil, fmt.Errorf("mcp: tool %q has no summary in both languages", name)
 		}
-		tool := BuildTool{Name: name, Operation: spec.Operation, Subcommand: spec.Subcommand, Kind: spec.Kind, Title: strings.TrimSpace("repo " + spec.Operation + " " + spec.Subcommand), Limits: policy.Limits}
+		tool := BuildTool{Name: name, Operation: spec.Operation, Subcommand: spec.Subcommand, Kind: spec.Kind, Title: strings.TrimSpace("repo " + spec.Operation + " " + spec.Subcommand), Limits: policy.Limits, Priority: spec.Priority, PriorityVariable: policy.Priority.Variable}
+		if spec.Priority != "" && !slices.Contains([]string{"interactive", "agent", "background"}, spec.Priority) {
+			return nil, fmt.Errorf("mcp: tool %q names the unknown lease priority %q", name, spec.Priority)
+		}
 		properties := map[string]Schema{}
 		var required []string
 		add := func(input Input, schema Schema) error {
@@ -786,6 +802,9 @@ func (tool BuildTool) Plan(raw json.RawMessage) (Invocation, error) {
 		return Invocation{}, refuse("unknown arguments: %s (accepted: %s)", strings.Join(unknown, ", "), strings.Join(names, ", "))
 	}
 	invocation := Invocation{Environment: map[string]string{}, Values: values}
+	if tool.Priority != "" {
+		invocation.Environment[tool.PriorityVariable] = tool.Priority
+	}
 	positional, flagged, trailing := []string{}, []string{}, []string{}
 	for _, input := range tool.Inputs {
 		value, present := values[input.Name]

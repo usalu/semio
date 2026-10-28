@@ -1,0 +1,40 @@
+# result-keys4r (wave 1026g, 10-27 07:00-07:30): keys4 precision-rules re-evidenced against the live tree
+
+FOR coordinator: batch ready `C/keys4-g-tools/staged/precision-rules` (rule `framework-rs-tests`, 8 evidenced framework-rs targets; ONE library file `🎯️precision/🔣️.json`). Verified on mirror `k4rul` (batch applied by its own `stage.py apply --root`): `verify.sh` green (8/8 targets keep every evidenced input, precision suites 21 pass / 0 fail), apply/revert/re-apply byte-exact, live tree untouched (guard clean). Land with `python3 -I C/keys4-g-tools/staged/precision-rules/stage.py apply` (default root = live; `--root R` for another checkout); revert `... stage.py revert`. Product verdict to run after landing (the rule only changes the keys of `@semio-tech/framework-rs` test targets, but `🔣️.json` is a build-library file, so the graph re-infers): `bun repo run @semio-tech/framework-rs:test-directory-discovery` twice (second must be a cache hit; then edit a file that is NOT in its 4-file set and re-run: hit) plus `@semio-tech/framework-rs:test-original-factory-admission-source`, then ONE course build (`@semio-tech/course:build`, graph generation refresh). `@semio-tech/print-rs:test` is not needed for this rule (no print target is selected); run it only if the gate wants a full triple.
+
+## Verdict
+No precision bug. The COUNT DRIFT was the verify gate itself: it demanded EQUAL file counts with the 19:04 derivation, so every landed batch that grows an import closure or a mounted Rust tree "failed" it. Counts only GREW (never a file lost). Law replaced: the derived declared set must be a SUPERSET of the set the read oracle ran with (growth reported, a dropped input fails unless explained), proven by a negative control.
+
+## Drift explained (derivation at 19:04 -> live 07:00, `🗑️generated/keys4r/live-derive.json` vs `🗑️generated/keys4-g/fw-derived.json`, `cmp.py`)
+| target | before | now | files added | landed batch |
+|---|---|---|---|---|
+| test-source-projection | 2214 | 2223 (+9) | `📁️filesystem/🧾️observation/📜️changes/🪪️vouch/{🟦️.ts,🧬️schema/🔣️.json}` + library `🏡️resident/📜️journal/🪪️vouch/🟦️.ts` (3) | verify2-g vouch + rev4 vouch-anchor (before 23:10; why the coordinator saw 2217 at 23:55) |
+| | | | `…/📜️changes/🗻️mount/{🟦️.ts,🧬️schema/🔣️.json}` (2) | witness2-g (remote-FS refusal, landed 00:13) |
+| | | | `…/🕸️graph/🧠️memo/{🟦️.ts,📤️relevance,🚪️command,🧬️schema/🔣️.json}` (4) | boot-g graph-memo (landed 06:57) |
+| test-original-factory-admission-source | 1828 | 1845 (+17) | 17 files of `🧳️retained/**` (`⚠️diagnostic ✂️span 🔎️key 🔺️diff(+🪢️sequence,🫴️receiving tests) 🩹️patch(+🚚️apply, tests) 📦️packages/🦀️rust/🦀️.rs 🦀️.rs 🧪️tests`) | pathmod-g rust-mounts (landed 23:39). This closes the COMPILE GAP finding of result-keys4-g (8 mounted files rustc read but the set lacked) |
+| the other six | 4/5/14/319/388/385 | identical (file lists and patterns byte-equal, mtime of every declared file older than the evidence) | none | |
+Full declared sets (files + pattern expansion + kept globs, what the oracle ran with): source-projection 3050 -> 3059 (+9, 0 removed), admission-source 2025 -> 2040 (+16, 1 removed), all others equal (`🗑️generated/keys4r/allow/` vs `keys4-g/allow/`).
+The ONE path that left a declared set: `🧳️retained/📦️packages/🦀️rust/📋️project.json` (admission-source). The old derivation fell back to the crate directory pattern `…/🦀️rust/**/*` (+ `!…/target/**`); pathmod replaced it by the exact rustc source set (Cargo.toml, `🦀️.rs`, the mounted tree). A project.json is no rustc input: bun read oracle clean with it absent, rustc dep-info leg clean. Recorded with reason in `evidenced/dropped.json`.
+
+## New evidence (tag r2, `C/keys4-g-tools/evidence/r2-*`)
+- Bun legs, KERNEL-ENFORCED (Seatbelt, live read-oracle module `🔭️read-oracle/🚪️cli`, live tree, the NEW declared sets): source-projection (3059 files, 78 expect), directory-discovery (1332), host-effect-invocation (31), artifact-kind-source (40), original-factory-admission-source (2040, 55 expect): all `passed`, `learned: 0`, round 1, same expect() counts as r1. Negative control (`r2ctl-…json`): admission allow list without `admission/` -> `clean:false, learned:1`.
+- Cargo targets (deflate-encoding, history-progress, snapshot-sqlite-native): declared sets byte-identical to the evidenced ones and no declared file modified since the r1 leg (mtime check), so the 20:4x runtime legs (0 learned) stand; the shared cargo store holding the test executables is gone (re-running them = the 1989 s cold build, not done). Compile-time leg REPLACED by the compiler directly (no cargo build): new `keys4-g-tools/rustc-leg.py` (closure from the Cargo.toml walk of `depinfo.py`, pathmod-g's `rustc --emit=dep-info` probe per entry point, lib+test+bin+build, all features): deflate closure 21 crates 318 files read / 0 undeclared (declared 367), history-progress 26 crates 387 / 0 (442), sqlite-native 1 crate 13 / 0 (456, includes the oracle bin). `r2-*-rustc.json`. (Informational `r2-test-original-factory-admission-source-rustc.json`: 3 files of retained's DEV-dependency crate `⏱️trace/🧮️memory/🧪️testing/📥️requests`; an artifact of forcing retained as the start crate, dev-deps of a transitive dependency are not built; the target is bun-only.)
+- Pre-existing and unchanged: `unresolved` of test-snapshot-sqlite-native = the two bun test names its `native` class skips (`🔬️unit/🟦️.ts`, `🤝️interoperability/🟦️.ts`); recorded in `evidenced/unresolved.json`, a NEW unresolved entry fails the law.
+
+## Changes in the staged batch (originals kept as `*.pre-keys4r`)
+- `verify.sh`: root = `K4_ROOT` (default live; `pwd -P`), evidence dir `K4_EVIDENCED`; law = superset of `evidenced/<target>.allow` (the exact allow lists of the r2 oracle run) with growth report, `evidenced/dropped.json` (explained drops), gitignored `🤖️generated/` files absent from the root are environment (a mirror cannot hold them), `evidenced/unresolved.json`; built-in negative control of the checker. `expected-counts.json` removed (equality gate).
+- `derive-merged.ts`: root from `K4_ROOT`, emits `declared` (files + pattern expansion + kept globs; git listing or a walk without `.git`); `realhost.ts` = copy of keys-g realhost with root from env and a manifest walk without git (the mirror has no `.git`).
+- `stage.py`: backup copy only for the default (live) root; the stale 23:54 backup was kept as `backup/🔣️.json.23-54-pre-keys4r`. `base.txt` = live sha256 b842731e.. (informational).
+- `run-target.ts`: oracle CLI = live read-oracle module (was a scratchpad overlay), `KEYS4_G` output dir override.
+
+## Verify output (mirror `k4rul`, `--only framework`, batch = `stage.py apply --root {root}`)
+```
+python3 -I C/mirror-tools/mirror.py create k4rul --only framework --batch "python3 -I $S/stage.py apply --root {root}"
+python3 -I C/mirror-tools/mirror.py run k4rul --peers-ok -- env K4_ROOT=$TMPDIR/sm/k4rul sh $S/verify.sh     # S = C/keys4-g-tools/staged/precision-rules
+test-artifact-kind-source 40/40  deflate 367/367  directory-discovery 1332/1332  history-progress 442/442  host-effect 31 vs 30 (1 = absent gitignored generated file)  admission-source 2040/2040  sqlite-native 456/456  source-projection 3059/3059   all 8 targets keep every evidenced input
+ 21 pass / 1 skip / 0 fail, 5502 expect() calls (precision + router suites)        guard clean: live tree unchanged
+```
+Control: evidence dir with `AGENTS.md` added to deflate -> `PRECISION LOSS ... ['AGENTS.md']`, exit 1. Round trip on the mirror: applied sha b617bad2837d; `stage.py revert --root` -> b842731e3ebf == live (`cmp` byte-exact); re-apply -> b617bad2837d; second apply "nothing to do"; `mirror diff` = only `🔣️.json`.
+
+## Landing note
+Because the law is now monotone, a future landed batch that grows these closures no longer fails verify; a batch that makes a derivation LOSE an evidenced input does. If a gate is red again, run `sh verify.sh` and read the `-N LOST` column. Raw scratch: `C/🗑️generated/keys4r/` (live-derive.json, allow/, ctl/, cmp.py).

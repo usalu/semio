@@ -1,0 +1,49 @@
+{
+ "target": "test-staged-payload-funding",
+ "tag": "c1",
+ "declared": 1322,
+ "rows": [
+  {
+   "leg": "cargo-job",
+   "crate": "semio-framework-job",
+   "test": "lib:semio_framework_job",
+   "kind": "cargo",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [
+    "🧰️framework/🔨️modules/🧵️job/🏭️construction/🧪️tests/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🧵️job/🛬️receiving/🧪️tests/🧫️fixtures/🔣️.json"
+   ],
+   "rounds": 2,
+   "seconds": 3,
+   "tail": " | test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s |  | ",
+   "notes": [
+    "profiles:2",
+    "rules:903",
+    "capacity:600",
+    "profiles:2"
+   ]
+  },
+  {
+   "leg": "cargo-tool-run",
+   "crate": "semio-framework-tool-run",
+   "test": "lib:semio_framework_tool_run",
+   "kind": "cargo",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 1,
+   "tail": " | test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s |  | ",
+   "notes": [
+    "profiles:2",
+    "rules:903",
+    "capacity:600"
+   ]
+  }
+ ]
+}

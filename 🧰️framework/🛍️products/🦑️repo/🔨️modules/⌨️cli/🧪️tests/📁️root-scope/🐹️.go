@@ -22,13 +22,17 @@ import (
  model "github.com/usalu/semio/repo/model"
  providers "github.com/usalu/semio/repo/providers"
  workspace "github.com/usalu/semio/repo/workspace"
+ sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
+
+// 🧭️checkoutRoot is the checkout that owns the fixtures of this module, located from the directory the test binary started in.
+func checkoutRoot() string { return sandbox.OriginPath("..", "..", "..", "..", "..", "..", "..") }
 
 func TestMcpServersRetainIndependentRepositoryRoots(t *testing.T) {
  t.Setenv("COMPOSE_SERVER_ADDR","");t.Setenv("COMPOSE_SERVER_TOKEN","")
- cwd, err := os.Getwd(); if err != nil { t.Fatal(err) }
+ cwd, err := os.Stat("."); if err != nil { t.Fatal(err) }
  originalRoot, originalBound := workspace.LookupRootDir()
- corpusPath := filepath.Join(workspace.FindRepoRoot(cwd), "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/🧪️tests/🧫️fixtures/🔣️.json")
+ corpusPath := filepath.Join(checkoutRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/🧪️tests/🧫️fixtures/🔣️.json")
  raw, err := os.ReadFile(corpusPath); if err != nil { t.Fatal(err) }
  var corpus struct { Profiles []string; MimeType string; Cases []struct { Name string; Files []struct { Path string; Text string }; Folders []string }; Reads []struct { URI string; Field string } }
  if err := json.Unmarshal(raw, &corpus); err != nil { t.Fatal(err) }
@@ -65,11 +69,11 @@ func TestMcpServersRetainIndependentRepositoryRoots(t *testing.T) {
   }
 
   if profile==corpus.Profiles[0] {
-   fixtureRaw,err:=os.ReadFile(filepath.Join(workspace.FindRepoRoot(cwd),"🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🧪️tests/🌿️tickets/📁️scope/🔣️.json"));if err!=nil { t.Fatal(err) }
+   fixtureRaw,err:=os.ReadFile(filepath.Join(checkoutRoot(),"🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🧪️tests/🌿️tickets/📁️scope/🔣️.json"));if err!=nil { t.Fatal(err) }
    var lifecycle struct { Roots []struct{Draft string};Open map[string]interface{};Change map[string]interface{};Close map[string]interface{};Reopen map[string]interface{};Expected struct{Slug,OriginalSlug string;DraftFiles []string} };if err:=json.Unmarshal(fixtureRaw,&lifecycle);err!=nil { t.Fatal(err) }
    type outcome struct { Path string;Ticket model.Ticket }
    call:=func(index int,name string,args map[string]interface{}) outcome {t.Helper();wire,err:=json.Marshal(map[string]interface{}{"jsonrpc":"2.0","id":3,"method":"tools/call","params":map[string]interface{}{"name":name,"arguments":args}});if err!=nil { t.Fatal(err) };var out strings.Builder;if err:=Serve(context.Background(),servers[index],io.NopCloser(strings.NewReader(string(wire)+"\n")),&out);err!=nil { t.Fatal(err) };var reply struct { Error json.RawMessage;Result struct { IsError bool;Content []struct{Text string} } };if err:=json.Unmarshal([]byte(out.String()),&reply);err!=nil { t.Fatal(err) };if len(reply.Error)>0&&string(reply.Error)!="null"||reply.Result.IsError||len(reply.Result.Content)!=1 { t.Fatalf("settled ticket protocol: %s",out.String()) };var value outcome;if err:=json.Unmarshal([]byte(reply.Result.Content[0].Text),&value);err!=nil { t.Fatal(err) };if _,_,_,_,err:=parseTicketPath(value.Path);err!=nil { t.Fatal(err) };return value }
-   optionRaw,err:=os.ReadFile(filepath.Join(workspace.FindRepoRoot(cwd),"🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/🎫️tickets/🧪️tests/🧫️fixtures/🔣️.json"));if err!=nil {t.Fatal(err)};var options struct {ArgumentCases []struct{Arguments map[string]interface{};Accepted bool}};if err:=json.Unmarshal(optionRaw,&options);err!=nil {t.Fatal(err)}
+   optionRaw,err:=os.ReadFile(filepath.Join(checkoutRoot(),"🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/🎫️tickets/🧪️tests/🧫️fixtures/🔣️.json"));if err!=nil {t.Fatal(err)};var options struct {ArgumentCases []struct{Arguments map[string]interface{};Accepted bool}};if err:=json.Unmarshal(optionRaw,&options);err!=nil {t.Fatal(err)}
    for _,row:=range options.ArgumentCases {if row.Accepted {continue};args:=map[string]interface{}{"emoji":lifecycle.Open["emoji"],"title":lifecycle.Open["title"],"prompt":lifecycle.Open["prompt"],"goal":lifecycle.Open["goal"],"client":lifecycle.Open["client"],"no_issue":true,"no_management":true};for key,value:=range row.Arguments {args[key]=value};wire,_:=json.Marshal(map[string]interface{}{"jsonrpc":"2.0","id":4,"method":"tools/call","params":map[string]interface{}{"name":"ticket_open","arguments":args}});var out strings.Builder;if err:=Serve(context.Background(),servers[0],io.NopCloser(strings.NewReader(string(wire)+"\n")),&out);err!=nil {t.Fatal(err)};var reply struct {Error json.RawMessage};if err:=json.Unmarshal([]byte(out.String()),&reply);err!=nil {t.Fatal(err)};if len(reply.Error)==0||string(reply.Error)=="null" {t.Fatalf("malformed authority flags were accepted: %s",out.String())};reader:=graphqlpkg.NewRepoContext(roots[0]);tickets,err:=reader.GetTickets(nil,nil,nil,nil);if err!=nil||len(tickets)!=0 {t.Fatal("malformed authority flags changed private ticket state")}}
    opened:=[]outcome{}
    for index:=0;index<2;index++ {
@@ -117,13 +121,12 @@ func TestMcpServersRetainIndependentRepositoryRoots(t *testing.T) {
    }
   }
  }
- after, err := os.Getwd(); if err != nil || after != cwd { t.Fatal("server changed process cwd") }
+ after, err := os.Stat("."); if err != nil || !os.SameFile(cwd, after) { t.Fatal("server changed process cwd") }
  afterRoot, afterBound := workspace.LookupRootDir(); if afterRoot != originalRoot || afterBound != originalBound { t.Fatal("server changed ambient root") }
 }
 
 func TestMcpRepositoryOptionsPreservePresence(t *testing.T) {
- cwd,err:=os.Getwd();if err!=nil { t.Fatal(err) }
- raw,err:=os.ReadFile(filepath.Join(workspace.FindRepoRoot(cwd),"🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🧭️root-selection/🧪️tests/🧫️fixtures/🔣️.json"));if err!=nil { t.Fatal(err) }
+ raw,err:=os.ReadFile(filepath.Join(checkoutRoot(),"🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🧭️root-selection/🧪️tests/🧫️fixtures/🔣️.json"));if err!=nil { t.Fatal(err) }
  var corpus struct { OptionCases []struct { Args []string; Root *string; Accepted bool } };if err:=json.Unmarshal(raw,&corpus);err!=nil { t.Fatal(err) }
  for _,row:=range corpus.OptionCases {
   command,config:=NewRootWithConfig(defaultEngineFactory);command.SetArgs(append([]string{"mcp","--dry-run"},row.Args...));err:=command.Execute()
@@ -134,7 +137,7 @@ func TestMcpRepositoryOptionsPreservePresence(t *testing.T) {
 }
 
 func TestMcpResourceTemplateFixture(t *testing.T) {
- cwd,err:=os.Getwd();if err!=nil { t.Fatal(err) };raw,err:=os.ReadFile(filepath.Join(workspace.FindRepoRoot(cwd),"🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/📄️resources/🧭️routes/🧪️tests/🧫️fixtures/🔣️.json"));if err!=nil { t.Fatal(err) }
+ raw,err:=os.ReadFile(filepath.Join(checkoutRoot(),"🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/📄️resources/🧭️routes/🧪️tests/🧫️fixtures/🔣️.json"));if err!=nil { t.Fatal(err) }
  var fixture struct{Cases []struct{Name string;Template string;URI string;Expected bool}};if err:=json.Unmarshal(raw,&fixture);err!=nil { t.Fatal(err) };for _,row:=range fixture.Cases { if actual:=matchResourceTemplate(row.Template,row.URI);actual!=row.Expected { t.Errorf("%s: %v != %v",row.Name,actual,row.Expected) } }
 }
 
@@ -143,7 +146,7 @@ func (recorder *rootProcessRecorder) Run(request providers.ProcessRequest) provi
 func (recorder *rootProcessRecorder) Issued() [][]string { result:=[][]string{};for _,request:=range recorder.requests { result=append(result,request.Argv) };return result }
 
 func TestMcpRepositoryPortsRetainCapturedConfiguration(t *testing.T) {
- cwd,err:=os.Getwd();if err!=nil { t.Fatal(err) };raw,err:=os.ReadFile(filepath.Join(workspace.FindRepoRoot(cwd),"🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/📄️resources/📥️bindings/🧪️tests/🧫️fixtures/🔣️.json"));if err!=nil { t.Fatal(err) }
+ raw,err:=os.ReadFile(filepath.Join(checkoutRoot(),"🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/📄️resources/📥️bindings/🧪️tests/🧫️fixtures/🔣️.json"));if err!=nil { t.Fatal(err) }
  var fixture struct { Contexts []struct{ID,Root,Endpoint,Token string}; Operations []struct{Context,Kind,Ambient,Expected string} };if err:=json.Unmarshal(raw,&fixture);err!=nil { t.Fatal(err) }
  type received struct { endpoint,token,path string; payload map[string]interface{} };messages:=make(chan received,len(fixture.Operations));emitters:=map[string]events.HTTPEmitter{};recorders:=map[string]*rootProcessRecorder{};ports:=map[string]*providers.GitHubManagementProvider{}
  for _,row:=range fixture.Contexts {

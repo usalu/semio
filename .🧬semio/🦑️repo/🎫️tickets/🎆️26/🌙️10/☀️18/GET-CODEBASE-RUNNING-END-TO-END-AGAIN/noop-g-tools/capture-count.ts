@@ -1,0 +1,10 @@
+import fsp from "node:fs/promises";import {resolve} from "node:path";
+const counts:Record<string,number>={};const wrap=(o:any,name:string)=>{const f=o[name];o[name]=(...a:any[])=>{counts[name]=(counts[name]??0)+1;return f.apply(o,a);};};
+for(const n of ["lstat","open","readFile","opendir","realpath","stat"])wrap(fsp,n);
+const t0=performance.now();
+const m=await import("../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts");
+const root=resolve(import.meta.dirname,"../../../../../../../..");
+for(const k of Object.keys(counts))counts[k]=0;
+const t=performance.now();
+const c=await m.captureNxAuthorizerSourcesV1(root,process.argv[2]!,new AbortController().signal,{installed:true});
+console.log(JSON.stringify({files:c.manifest.sources.length,ms:Math.round(performance.now()-t),counts,cpu:process.cpuUsage()}));

@@ -1,0 +1,12 @@
+{
+ "target": "test-deflate-encoding",
+ "crates": [
+  "semio-framework-deflate"
+ ],
+ "closureCrates": 21,
+ "depInfoUnits": 40,
+ "workspaceFilesRead": 186,
+ "declared": 367,
+ "undeclared": [],
+ "closureWithoutUnits": []
+}

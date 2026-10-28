@@ -1,0 +1,37 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🍞️bun/🟦️.ts": {
+  "file": "001.ts",
+  "base": "c9df28ebfcc7be2bb37dae1f2b5395a8abdd25c83f43eaa006e7bf6c240adc58",
+  "new": "52ea71d6d64b4d3eb484d9eeba026b5e3f93c25ac2e4665383576f73494ce96a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧭️sites/🟦️.ts": {
+  "file": "002.ts",
+  "base": "1712c58b997bcf1aaaa0ca0628ba5a44ef4c9fe561fdb8bd3f45821c2b5f9e7b",
+  "new": "fc3de485a3ce45831bbc4de3af3a870ad7a7533759898c2bcfc4fd415fbfc28c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧭️sites/🧬️schema/🔣️.json": {
+  "file": "003.json",
+  "base": "b6d6ca6c19abf4609bf4571349b1bbe3863d19bc484d048f14113418b881cc5d",
+  "new": "eff416dec47d982892e46639d2010b508d048b2d7e5e531f102ef0e416392605"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🧪️tests/🏷️loader-identity/🟦️.ts": {
+  "file": "004.ts",
+  "base": "e5ee4653546a60f09ef6f021df32da3e2b7ca2f275d6889e46d0b9c0256c7e86",
+  "new": "8a966b8925b5ed7efb7dc8f9e72b1bfd533e2e7bd41086d3d1de1a173122cdf9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/🧭️sites/🟦️.ts": {
+  "file": "005.ts",
+  "base": "9581d59f83d2063c19adec9fc9319c179bdd2ce2866a7badbd0890c9dd586cfd",
+  "new": "f071cde7890751db866277021d1a32f703847cc04b62128e29ec109f65f79e3a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧭️sites/🧪️tests/🟦️.ts": {
+  "file": "006.ts",
+  "base": "9dcc2e05512cbbbefc3d835bdcfde60edc7c45c287fc6fdc4e7d251cd918b797",
+  "new": "50081e87342e4c52d9cec4f36e8b9ccc7420a11d13e72f4825c3c21167c2d812"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🧭️closure-law/🟦️.ts": {
+  "file": "007.ts",
+  "base": "fa6efd5ceff66df866ceb633abb843b1df4dda5d4e00d8be9549fb6f8f062969",
+  "new": "7af5c6644e9b3d8513316cb117c57abfc74c2b2e20df9c456256fff9525020ff"
+ }
+}

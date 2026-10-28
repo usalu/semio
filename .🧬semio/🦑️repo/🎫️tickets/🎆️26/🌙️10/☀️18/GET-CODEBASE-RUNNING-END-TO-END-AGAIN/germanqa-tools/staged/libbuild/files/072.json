@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "extractors": {
+    "failedTasksHeading": "^\\s*(?:NX\\s+)?Failed tasks:?\\s*$",
+    "failedTask": "^\\s*-\\s+(\\S+:\\S+)\\s*$",
+    "testTarget": "^test(?:-.+)?$"
+  },
+  "rules": [
+    {
+      "id": "bazel-source-link",
+      "kind": "strip-prefix",
+      "surface": "input-bazel",
+      "prefix": "s/",
+      "justification": {
+        "en": "Bazel names every source file under its link directory in the generated workspace; the repository path is what follows the prefix.",
+        "de": "Bazel nennt jede Quelldatei im erzeugten Workspace unter ihrem Link-Verzeichnis; der Repository-Pfad ist das, was dem Präfix folgt."
+      },
+      "evidence": "Bazel adapter schema actions.sources.link = s"
+    },
+    {
+      "id": "bazel-build-file",
+      "kind": "ignore-glob",
+      "surface": "input-bazel",
+      "glob": "BUILD.bazel",
+      "justification": {
+        "en": "The generated BUILD file is the Bazel rendering of the task graph, not an input of the task.",
+        "de": "Die erzeugte BUILD-Datei ist Bazels Darstellung des Task-Graphen, keine Eingabe der Task."
+      },
+      "evidence": "renderBazelBuildV1 writes BUILD.bazel at the workspace root"
+    },
+    {
+      "id": "bazel-module-files",
+      "kind": "ignore-glob",
+      "surface": "input-bazel",
+      "glob": "MODULE.bazel*",
+      "justification": {
+        "en": "MODULE.bazel and its lock pin Bazel's own module graph, which Nx has no counterpart for.",
+        "de": "MODULE.bazel und die Sperre legen Bazels eigenen Modulgraphen fest, für den Nx keine Entsprechung hat."
+      },
+      "evidence": "prepareBazelModulesV1 writes MODULE.bazel.lock"
+    },
+    {
+      "id": "bazel-task-manifest",
+      "kind": "ignore-glob",
+      "surface": "input-bazel",
+      "glob": "t_*.json",
+      "justification": {
+        "en": "The task manifest carries the declared command, working directory and environment of the task; it is how Bazel keys them, while Nx hashes them as part of the target.",
+        "de": "Das Task-Manifest trägt Befehl, Arbeitsverzeichnis und Umgebung der Task; so bildet Bazel deren Schlüssel, während Nx sie als Teil des Ziels hasht."
+      },
+      "evidence": "bazelManifestV1 renders <label>.json"
+    },
+    {
+      "id": "bazel-task-launcher",
+      "kind": "ignore-glob",
+      "surface": "input-bazel",
+      "glob": "t_*.sh",
+      "justification": {
+        "en": "The launcher script starts the shared task runner; Nx starts the same runner through its own executor.",
+        "de": "Das Startskript startet den gemeinsamen Task-Läufer; Nx startet denselben Läufer über seinen eigenen Executor."
+      },
+      "evidence": "STARLARK_RULES launcher attribute"
+    },
+    {
+      "id": "bazel-products",
+      "kind": "ignore-glob",
+      "surface": "input-bazel",
+      "glob": "bazel-out/**",
+      "justification": {
+        "en": "Products of other Bazel actions (dependency snapshots, the captured runner implementation) stand for what Nx reports as dependency outputs; their content is compared by the outputs check.",
+        "de": "Produkte anderer Bazel-Aktionen (Abhängigkeits-Schnappschüsse, die erfasste Läufer-Implementierung) entsprechen dem, was Nx als Abhängigkeitsausgaben meldet; ihr Inhalt wird von der Ausgabenprüfung verglichen."
+      },
+      "evidence": "bazelActionsV1 restore edges"
+    },
+    {
+      "id": "bazel-external",
+      "kind": "ignore-glob",
+      "surface": "input-bazel",
+      "glob": "external/**",
+      "justification": {
+        "en": "External repositories hold the pinned Bun toolchain and Bazel's own rules.",
+        "de": "Externe Repositories enthalten die festgelegte Bun-Toolchain und Bazels eigene Regeln."
+      },
+      "evidence": "prepareBazelBunV1 toolchain repository"
+    },
+    {
+      "id": "lock-covers-external",
+      "kind": "covered-by",
+      "surface": "input-nx",
+      "category": "external",
+      "anyOf": [
+        "bun.lock",
+        "s/bun.lock"
+      ],
+      "justification": {
+        "en": "Nx hashes the resolved external packages; Bazel receives the lock file those packages are resolved from.",
+        "de": "Nx hasht die aufgelösten externen Pakete; Bazel erhält die Sperrdatei, aus der diese aufgelöst werden."
+      },
+      "evidence": "Bazel adapter schema actions.sources.bundled = bun.lock, package.json"
+    }
+  ]
+}

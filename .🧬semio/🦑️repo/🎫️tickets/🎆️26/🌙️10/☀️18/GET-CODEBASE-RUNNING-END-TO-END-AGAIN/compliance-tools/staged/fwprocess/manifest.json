@@ -1,0 +1,67 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts": {
+  "file": "000.ts",
+  "base": "2ffab8aa1d0c120f5dd9ad438d61b57ee695d1385817309eea53f3192a09121b",
+  "new": "c9380fe6584e1d13335df29846e2f2c20a0a80342ca595a4e2f5d3dcfde882fd"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts": {
+  "file": "001.ts",
+  "base": "f1c6064daab0286ad108e49619ceb8987575a12f86987efbdd70c859b7bfc782",
+  "new": "c1b5039938dee7706e3e4accb4fdcda369dc6be2cf36717e52943ae0276d5461"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts": {
+  "file": "002.ts",
+  "base": "3dd397a2cf8f5cec4a88fbc9df94c6019293df4aab810cc21cb4cba81f348103",
+  "new": "a3609c6fff0ddfa0a9a6b863e44f5849f0a0dd77d31fe63774a6aecada786bde"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🟦️.ts": {
+  "file": "003.ts",
+  "base": "c7239160db95d39a04d408684e5b0281b77b7fa611b156f2df60d2586fcbcb6d",
+  "new": "e44e17b129b380adf292a072965c43b417970c29f9a0479b889a86f86f47c47c"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts": {
+  "file": "004.ts",
+  "base": "0db55ae46577ed237d8915e9607acbe817eb1ab226f002b21cc0f0bf8e9ee94e",
+  "new": "6b77221882514010fed04bc44519aed2f75dbe75b381710837e4ab6691a295ff"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🟦️.ts": {
+  "file": "005.ts",
+  "base": "778c39bde8d1e668805eb81d522bac3a0731fb5c07782ded5cc6c7968f77076a",
+  "new": "dc336606ca29ee10dfc9b0c9dea32df51bb70994249aed534ad269271f476f5a"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🧯️ceiling/🟦️.ts": {
+  "file": "006.ts",
+  "base": "3bf31a8998fa3b00a670397dc87dfd125c3aa5eca6e13be3e690e74c98aaebb6",
+  "new": "20ede74eeadbd4eb9bfe458b5586984eb23593622d45facbc343d035c3ba6aaa"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🟦️.ts": {
+  "file": "007.ts",
+  "base": "1bcfea7b5483dc55a053ac453bae586237cbe6b5172b6b79ba450eda952ed793",
+  "new": "5050e7ce7802ace58a68357aef15306541c5644f7e8c276dd5ce852a95767d56"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts": {
+  "file": "008.ts",
+  "base": "8379487a2898a2756fca7ef23fa717a2b0f2e4c8b2f244d7f7cd8351e377ebc0",
+  "new": "3c45cfb882c4301b583e4195459fc09abe84b60265e062e038957aec181e5bb8"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🐍️oracle/🐍️.py": {
+  "file": "009.py",
+  "base": "3571b07439ea8cb9c60c4e64cbab4352e9bf9ce6c6297caa8bdbbd466759d1a3",
+  "new": "f37307457c40b7a9f4c414216aeee498c8bf985c5cc1b7241a84d276d3c197d3"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪜️phases/🐍️oracle/🐍️.py": {
+  "file": "010.py",
+  "base": "cdeec54f5bcc51c960806b328989fe9b6a26c74c02d659a57bee6fa9193efdac",
+  "new": "3e2fac223e4fc638754aed168659def5ab731841e879fa23bfb39b924fb371f9"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🐍️oracle/🐍️.py": {
+  "file": "011.py",
+  "base": "a7e8ecd339076211826ee4bbeb4c94ed56e47bf8d6a68562285da80fe48b447c",
+  "new": "07d986dc390f7897cb0ade570df3ce82d09c44b242575dff47949862c8be98ee"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts": {
+  "file": "013.ts",
+  "base": "cd20c397efa39f7f0770290c0c7f0a55c7174114851b2003a7c32af33b37fa06",
+  "new": "de8690d02aee9e0a383de1ff6e2064b94b824bd47bdd25342e24ba9ce62cc3dd"
+ }
+}

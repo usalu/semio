@@ -139,35 +139,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/💬️set-engagement/✅️set/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/💬️engagement/✅️set/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:ed5ed80a87418a2048fa788aa7d432b7e1731e39713df99ef7a5a5b0a4e58650",
           "bytes": 78
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/💬️set-engagement/✅️set/🦠️mutation/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/💬️engagement/✅️set/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:9f8eb2d61cb7ef9cae75e82781ba6b53cf8e36fdcb0fdf1a8c2db41d2497bb94",
           "bytes": 80
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/💬️set-engagement/✅️set/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/💬️engagement/✅️set/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:3ba99a46578302437699b9b67522c496b62baf3e5f32dd44c8db7d3b257e7744",
           "bytes": 106
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/💬️set-engagement/✅️set/🔺️diff/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/💬️engagement/✅️set/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:3ba99a46578302437699b9b67522c496b62baf3e5f32dd44c8db7d3b257e7744",
           "bytes": 106
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/💬️set-engagement/✅️set/🎯️outcome/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/💬️engagement/✅️set/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44
@@ -203,35 +203,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📐️set-editor/✅️set/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-editor/✅️set/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:ed5ed80a87418a2048fa788aa7d432b7e1731e39713df99ef7a5a5b0a4e58650",
           "bytes": 78
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/📐️set-editor/✅️set/🦠️mutation/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-editor/✅️set/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3957454d1dfcfb2aec2633b93be1bd5a5df2a967351975eb86164a81bb6969d7",
-          "bytes": 89
+          "sha256": "sha256:955d717c8f8a947cdb9231df61cf3691ce3f936770e5f9bcf503ea672586bd04",
+          "bytes": 106
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📐️set-editor/✅️set/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-editor/✅️set/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
-          "sha256": "sha256:50e7d3c86cbba11beee66b75a58ced781b9226b24f7b479d364a370594bc0c0e",
-          "bytes": 109
+          "sha256": "sha256:5a9c04a45730e2da5d942a0f681d2909e5847a29719d307c75a64eca784a03b6",
+          "bytes": 126
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/📐️set-editor/✅️set/🔺️diff/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-editor/✅️set/🔺️diff/🔣️.json",
           "mediaType": "application/json",
-          "sha256": "sha256:50e7d3c86cbba11beee66b75a58ced781b9226b24f7b479d364a370594bc0c0e",
-          "bytes": 109
+          "sha256": "sha256:5a9c04a45730e2da5d942a0f681d2909e5847a29719d307c75a64eca784a03b6",
+          "bytes": 126
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/📐️set-editor/✅️set/🎯️outcome/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/📐️set-editor/✅️set/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44
@@ -267,35 +267,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🔍️set-lint-generation/✅️set/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/🔍️lint-gen/✅️set/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:ed5ed80a87418a2048fa788aa7d432b7e1731e39713df99ef7a5a5b0a4e58650",
           "bytes": 78
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🔍️set-lint-generation/✅️set/🦠️mutation/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/🔍️lint-gen/✅️set/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:4adc350fd4f6b4be14cbd2c2f4c55600c18c0bfa66f6109c6df14227ad67688c",
           "bytes": 50
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🔍️set-lint-generation/✅️set/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/🔍️lint-gen/✅️set/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:559727bb2ce29c7ca5178a312a658d8a33a7163e1ca8c9cc3f37d7344982f1e6",
           "bytes": 78
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🔍️set-lint-generation/✅️set/🔺️diff/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/🔍️lint-gen/✅️set/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:559727bb2ce29c7ca5178a312a658d8a33a7163e1ca8c9cc3f37d7344982f1e6",
           "bytes": 78
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🔍️set-lint-generation/✅️set/🎯️outcome/🔣️.json",
+          "path": "../🧪️tests/🧫️fixtures/🔍️lint-gen/✅️set/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44

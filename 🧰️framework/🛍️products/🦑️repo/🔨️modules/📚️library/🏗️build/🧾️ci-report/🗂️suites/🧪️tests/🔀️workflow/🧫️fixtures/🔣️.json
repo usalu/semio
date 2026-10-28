@@ -1,0 +1,332 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "description": "The subset of the GitHub workflow and composite action syntax this repository uses, closed: an unknown key at any level is a finding. A local stand-in for a workflow linter that the tool registry does not pin.",
+ "definitions": {
+  "Step": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "type": "string",
+     "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$"
+    },
+    "name": {
+     "type": "string"
+    },
+    "if": {
+     "type": [
+      "string",
+      "boolean"
+     ]
+    },
+    "uses": {
+     "type": "string"
+    },
+    "with": {
+     "type": "object",
+     "additionalProperties": {
+      "type": [
+       "string",
+       "number",
+       "boolean"
+      ]
+     }
+    },
+    "run": {
+     "type": "string"
+    },
+    "shell": {
+     "enum": [
+      "bash",
+      "pwsh",
+      "sh",
+      "cmd",
+      "powershell",
+      "python"
+     ]
+    },
+    "env": {
+     "type": "object",
+     "additionalProperties": {
+      "type": [
+       "string",
+       "number",
+       "boolean"
+      ]
+     }
+    },
+    "continue-on-error": {
+     "type": [
+      "boolean",
+      "string"
+     ]
+    },
+    "working-directory": {
+     "type": "string"
+    },
+    "timeout-minutes": {
+     "type": [
+      "number",
+      "string"
+     ]
+    }
+   },
+   "oneOf": [
+    {
+     "required": [
+      "uses"
+     ],
+     "properties": {
+      "uses": true
+     }
+    },
+    {
+     "required": [
+      "run"
+     ],
+     "properties": {
+      "run": true
+     }
+    }
+   ]
+  },
+  "Job": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "runs-on",
+    "steps"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "needs": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "array",
+       "items": {
+        "type": "string"
+       },
+       "uniqueItems": true
+      }
+     ]
+    },
+    "if": {
+     "type": [
+      "string",
+      "boolean"
+     ]
+    },
+    "runs-on": {
+     "type": "string"
+    },
+    "timeout-minutes": {
+     "type": [
+      "number",
+      "string"
+     ],
+     "minimum": 1,
+     "maximum": 360
+    },
+    "continue-on-error": {
+     "type": [
+      "boolean",
+      "string"
+     ]
+    },
+    "env": {
+     "type": "object",
+     "additionalProperties": {
+      "type": [
+       "string",
+       "number",
+       "boolean"
+      ]
+     }
+    },
+    "outputs": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "defaults": {
+     "type": "object"
+    },
+    "permissions": {
+     "type": "object"
+    },
+    "concurrency": {
+     "type": [
+      "string",
+      "object"
+     ]
+    },
+    "strategy": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "matrix"
+     ],
+     "properties": {
+      "fail-fast": {
+       "type": [
+        "boolean",
+        "string"
+       ]
+      },
+      "max-parallel": {
+       "type": "integer"
+      },
+      "matrix": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "include"
+       ],
+       "properties": {
+        "include": {
+         "type": "array",
+         "minItems": 1,
+         "items": {
+          "type": "object",
+          "additionalProperties": {
+           "type": [
+            "string",
+            "number",
+            "boolean"
+           ]
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "steps": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "$ref": "#/definitions/Step"
+     }
+    },
+    "environment": {
+     "type": [
+      "string",
+      "object"
+     ]
+    }
+   }
+  },
+  "Workflow": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "name",
+    "on",
+    "permissions",
+    "jobs"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "on": {
+     "type": "object"
+    },
+    "permissions": {
+     "type": "object"
+    },
+    "concurrency": {
+     "type": "object"
+    },
+    "env": {
+     "type": "object",
+     "additionalProperties": {
+      "type": [
+       "string",
+       "number",
+       "boolean"
+      ]
+     }
+    },
+    "defaults": {
+     "type": "object"
+    },
+    "jobs": {
+     "type": "object",
+     "minProperties": 1,
+     "additionalProperties": {
+      "$ref": "#/definitions/Job"
+     }
+    }
+   }
+  },
+  "Action": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "name",
+    "description",
+    "runs"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "description": {
+     "type": "string"
+    },
+    "inputs": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "description"
+      ],
+      "properties": {
+       "description": {
+        "type": "string"
+       },
+       "required": {
+        "type": "boolean"
+       },
+       "default": {
+        "type": [
+         "string",
+         "number",
+         "boolean"
+        ]
+       }
+      }
+     }
+    },
+    "runs": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "using",
+      "steps"
+     ],
+     "properties": {
+      "using": {
+       "const": "composite"
+      },
+      "steps": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "$ref": "#/definitions/Step"
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

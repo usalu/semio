@@ -1,0 +1,12 @@
+{
+ "label": "g48-hot2",
+ "target": "@teaching/architecture-course:build",
+ "started": "22:20:10",
+ "wall_s": 8.3,
+ "peak_tree_mb": 1053,
+ "peak_processes": 3,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

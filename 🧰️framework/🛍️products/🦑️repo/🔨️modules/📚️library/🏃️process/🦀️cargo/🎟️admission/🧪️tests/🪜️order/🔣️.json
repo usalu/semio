@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "port": {"file": "../../🟦️.ts", "function": "execute", "writer": "withCompilerWorkspaceSharedWriteV1", "writerProperty": "writer", "admission": "repositoryCargoConfigurationStepArgumentsV1", "admissionProperty": "admit"},
+  "runner": {"file": "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts", "functions": ["runCargoTestsV1", "runCargoLintV1"], "scope": "withCargoCompilerInputsV1", "lease": "acquireCargoBuildLeaseV1", "enter": "withWriter"}
+}

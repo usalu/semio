@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/📦️packages/🐹️go/📋️project.json": {
+  "file": "00-📋️project.json",
+  "base": null,
+  "new": "c91b80c7ad527652f48a0b52c46cf0098e7539ea7c8ee2f72b819e7402baef1a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/📦️packages/🐹️go/📜️script.ts": {
+  "file": "01-📜️script.ts",
+  "base": null,
+  "new": "98e46aa5de3d14d9ace23d9e4ea1789a11e3bb3e4b0072dad2ca3bc0bd986992"
+ },
+ "📋️build-owners.json": {
+  "file": "02-📋️build-owners.json",
+  "base": "b7176b4176dd364affd0dd6bc186b58ee9ae497d005cf232f489fa6022d6731b",
+  "new": "ac2334c11a79248c29a085841962c003e2b74fc0a3ca7e9d38374a26e0607f11"
+ }
+}

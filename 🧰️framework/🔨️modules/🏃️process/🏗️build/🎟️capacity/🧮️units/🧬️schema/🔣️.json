@@ -15,8 +15,15 @@
           "bun-bundle": {
             "maximumUnits": 4,
             "minimumUnits": 2
+          },
+          "vite-dev-service": {
+            "maximumUnits": 2,
+            "minimumUnits": 1
           }
-        }
+        },
+        "unitQuantileBasisPoints": 7500,
+        "minimumUnitMegabytes": 256,
+        "minimumUnitSamples": 8
       }
     },
     "Pressure": {
@@ -43,7 +50,9 @@
         "cores",
         "availableMegabytes",
         "pressure",
-        "grantedJobs"
+        "grantedJobs",
+        "grantedMegabytes",
+        "unitMegabytes"
       ],
       "properties": {
         "cores": {
@@ -76,6 +85,19 @@
           ],
           "minimum": 1,
           "maximum": 1024
+        },
+        "grantedMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 16777216
+        },
+        "unitMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
         }
       }
     },
@@ -102,7 +124,8 @@
       "required": [
         "preferred",
         "minimum",
-        "reason"
+        "reason",
+        "budgetMegabytes"
       ],
       "properties": {
         "preferred": {
@@ -117,6 +140,14 @@
         },
         "reason": {
           "$ref": "#/definitions/Reason"
+        },
+        "budgetMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 16777216
         }
       }
     },
@@ -129,7 +160,7 @@
           "reasons": {
             "share": "one compile may use half of the host so others run beside it",
             "needed": "the work cannot use more",
-            "granted": "the machine admission granted fewer jobs",
+            "granted": "the machine admission granted fewer jobs and its memory carries no more compile units",
             "memory": "the free memory carries fewer compile units",
             "pressure-warn": "memory pressure is raised",
             "pressure-critical": "memory pressure is critical",
@@ -146,12 +177,12 @@
           "granted": "[compile-units] {operation}: {granted} von {cores} Kernen nach {seconds} s zugeteilt; der Build nutzt -j{granted}",
           "reasons": {
             "share": "ein Kompilierlauf darf die Hälfte des Rechners nutzen, damit andere daneben laufen",
-            "needed": "die Arbeit kann nicht mehr nutzen",
-            "granted": "die Maschinen-Zulassung hat weniger Jobs erteilt",
+            "needed": "die Arbeit kann nicht mehr davon nutzen",
+            "granted": "die Rechner-Zulassung hat weniger Jobs erteilt und ihr Speicher trägt nicht mehr Compile-Einheiten",
             "memory": "der freie Speicher trägt weniger Compile-Einheiten",
             "pressure-warn": "der Speicherdruck ist erhöht",
             "pressure-critical": "der Speicherdruck ist kritisch",
-            "fixed": "eine feste Klasse erhält einen kleinen gezählten Platz"
+            "fixed": "eine feste Klasse erhält einen kleinen gezählten Slot"
           },
           "errors": {
             "definitionRequired": "Geschlossener Compile-Einheiten-Wert erforderlich: {detail}",

@@ -1,0 +1,21 @@
+{
+ "command": [
+  "bun",
+  "test",
+  "--timeout",
+  "60000",
+  "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🌐️language/🟦️.ts"
+ ],
+ "allowed": 1944,
+ "learned": [],
+ "rounds": [
+  {
+   "round": 0,
+   "exit": 0,
+   "seconds": 8.1,
+   "denied": [],
+   "tail": "bun test v1.3.14 (0d9b296a)\nbun test v1.4.2 (744846f84)\n\n 7 pass\n 0 fail\n 60 expect() calls\nRan 7 tests across 1 file. [161.00ms]\n"
+  }
+ ],
+ "passed": true
+}

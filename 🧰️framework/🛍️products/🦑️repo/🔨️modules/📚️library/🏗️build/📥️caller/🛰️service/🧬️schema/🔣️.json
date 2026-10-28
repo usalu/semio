@@ -260,13 +260,13 @@
             "audit": "The request could not be recorded in the audit journal and was not run."
           },
           "de": {
-            "grant": "Der residente Dienst hält keine Dienst-Berechtigung, die zu diesem Worktree und Schlüssel passt.",
+            "grant": "Der residente Dienst hält keine Dienst-Berechtigung, die zu diesem Arbeitsbaum und Schlüssel passt.",
             "token": "Die Berechtigung ist nicht echt.",
             "caveats": "Der Berechtigung fehlt eine erforderliche Einschränkung ({caveat}).",
             "expired": "Die Berechtigung ist abgelaufen.",
             "unbounded": "Die Berechtigung hat keine Lebensdauer innerhalb der erlaubten {hours} Stunden.",
             "revoked": "Diese Agenten-Sitzung wurde widerrufen.",
-            "worktree": "Die Anfrage gehört nicht zu dem Worktree, den dieser Dienst bedient.",
+            "worktree": "Die Anfrage gehört nicht zu dem Arbeitsbaum, den dieser Dienst bedient.",
             "agent": "Die Berechtigung wurde einem anderen Agenten ausgestellt.",
             "scope": "Die Berechtigung erlaubt diesen Befehl oder dieses Projekt nicht.",
             "arguments": "Der Befehl ist kein einfacher Task-Befehl des Katalogs: {reason}.",

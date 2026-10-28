@@ -1,0 +1,11 @@
+#!/bin/sh
+# 🐌 test compiler: counts the compile jobs alive at once (a file per job in $JS_DIR, the count seen at each start in $JS_LOG), then runs the real compiler
+case " $* " in
+ *" -c "*)
+  : "${JS_DIR:?}" "${JS_LOG:?}"
+  touch "$JS_DIR/run.$$"
+  ls "$JS_DIR" | grep -c '^run\.' >> "$JS_LOG"
+  sleep "${JS_SLEEP:-0.6}"
+  rm -f "$JS_DIR/run.$$";;
+esac
+exec "${JS_REAL_CC:-cc}" "$@"

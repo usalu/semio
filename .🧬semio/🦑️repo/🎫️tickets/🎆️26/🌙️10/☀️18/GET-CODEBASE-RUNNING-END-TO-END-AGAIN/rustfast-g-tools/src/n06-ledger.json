@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "marks": [
+    {"phase": "store", "point": "begin", "elapsed": 0},
+    {"phase": "store", "point": "ready", "elapsed": 100412},
+    {"phase": "inputs", "point": "begin", "elapsed": 100430},
+    {"phase": "inputs", "point": "ready", "elapsed": 140900},
+    {"phase": "graph", "point": "begin", "elapsed": 140910},
+    {"phase": "graph", "point": "end", "elapsed": 185000},
+    {"phase": "source", "point": "begin", "elapsed": 185010},
+    {"phase": "source", "point": "end", "elapsed": 300500},
+    {"phase": "child", "point": "begin", "elapsed": 327000},
+    {"phase": "child", "point": "end", "elapsed": 827000},
+    {"phase": "consume", "point": "begin", "elapsed": 827010},
+    {"phase": "consume", "point": "end", "elapsed": 973000}
+  ],
+  "expected": {
+    "phases": [["store", 100412], ["inputs", 40470], ["graph", 44090], ["source", 115490], ["child", 500000], ["consume", 145990]],
+    "rows": 12
+  }
+}

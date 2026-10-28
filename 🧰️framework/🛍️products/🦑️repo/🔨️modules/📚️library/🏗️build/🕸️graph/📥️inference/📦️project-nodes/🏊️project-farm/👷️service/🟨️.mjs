@@ -1,20 +1,22 @@
-import { lstatSync, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { lstatSync, mkdirSync, readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { libraryBootstrap } from "../../../🟨️.mjs";
-import { inferenceRecordIdentityV1, observeInferenceSnapshotV1 } from "../../../../../../🏗️build/👁️observation/🟨️.mjs";
+import { adoptInferenceAuthorityV1, inferenceRecordIdentityV1, observeInferenceSnapshotV1 } from "../../../../../../🏗️build/👁️observation/🟨️.mjs";
 import { withImplementationPinV1 } from "../../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
 import { withBuildGraphStagingV1 } from "../../../../../../🏗️build/📥️inputs/💾️storage/🟨️.mjs";
 import { createProjectInferenceEnvironmentV1, produceProjectRecordV1 } from "../../🟨️.mjs";
+import { graphFarmIdentityV1 } from "../🪆️captured/🟨️.mjs";
 
 let environment, staging;
 
-/** 🔌️ Opens one worker session: the same inference implementation as the parent, memos of its own, and a staging directory of its own that nothing else writes to; answers the identity its records are written under. */
+/** 🔌️ Opens one worker session: the same inference implementation as the parent, memos of its own, and a staging directory of its own that nothing else writes to and that only the parent removes, once it saw this process exit (a worker recycled right after a job must leave the leaves of that job for the parent to adopt); serves under the sealed load authority its parent sent unless one of its own load rows conflicts with it, and answers the farm identity it serves under: the captured implementation it runs from, the identity its records are written under and the first conflicting rows. */
 export async function open(session, { slot, generation }) {
   await libraryBootstrap;
   environment = await observeInferenceSnapshotV1(() => createProjectInferenceEnvironmentV1(session));
   staging = join(session.stagingBase, "w" + slot + "-g" + generation);
   mkdirSync(staging, { recursive: true });
-  return inferenceRecordIdentityV1();
+  const conflicts = Array.isArray(session.authority) ? adoptInferenceAuthorityV1(session.authority) : [];
+  return { ...graphFarmIdentityV1(inferenceRecordIdentityV1()), conflicts: conflicts.slice(0, 3) };
 }
 
 /** 🧾️ Names a staged leaf relative to the staging root with forward slashes, or undefined when the path is no leaf of this staging. */
@@ -33,6 +35,3 @@ export async function run(job) {
   const used = process.cpuUsage(cpu);
   return { names: [...names].sort(), cpuMilliseconds: Math.round((used.user + used.system) / 1000) };
 }
-
-/** 🧹️ Removes the staging directory. */
-export function close() { if (staging) rmSync(staging, { recursive: true, force: true }); }

@@ -1,0 +1,154 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:native-image-receiver",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumReceivers": 32,
+        "maximumReceiptBytes": 4096,
+        "maximumPendingOperations": 32,
+        "maximumOpeningObservations": 4,
+        "concurrentChangeAttempts": 6,
+        "orphanNotice": {
+          "en": "Funded child without a creator claim ignored (a retirement stopped half way): {path}",
+          "de": "Finanziertes Kind ohne Erzeuger-Beleg ignoriert (eine Stilllegung blieb auf halbem Weg stehen): {path}"
+        },
+        "foreignMountRefusal": {
+          "en": "Foreign native image mounted inside the parent, not funded by it and not a sibling race: mount {mount}, backing image {image}, device {device}, owner {owner}. Detach the device {device} (a test sandbox must live outside every managed native parent).",
+          "de": "Fremdes natives Abbild im Elternteil eingehängt, weder von ihm finanziert noch ein Geschwister-Wettlauf: Einhängepunkt {mount}, Abbilddatei {image}, Gerät {device}, Besitzer {owner}. Das Gerät {device} aushängen (eine Test-Sandbox muss außerhalb jedes verwalteten nativen Elternteils liegen)."
+        },
+        "concurrentChangeBackoffMilliseconds": 250,
+        "concurrentChangePatterns": [
+          "^Original persistent descendant claim changed$",
+          "^Original persistent descendant kernel roster changed$",
+          "^Exact original parent child allocation required(: |$)"
+        ]
+      }
+    },
+    "Evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "role",
+        "guard",
+        "mapping",
+        "receipt",
+        "creator",
+        "pending",
+        "bodyLive",
+        "openingLive",
+        "receiverOwnsGuard",
+        "acknowledged",
+        "activationAccepted",
+        "verified"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "role": {
+          "enum": [
+            "fresh",
+            "inactive",
+            "mounted"
+          ]
+        },
+        "guard": {
+          "enum": [
+            "none",
+            "exclusive",
+            "shared"
+          ]
+        },
+        "mapping": {
+          "enum": [
+            "unknown",
+            "inactive",
+            "active",
+            "ambiguous"
+          ]
+        },
+        "receipt": {
+          "enum": [
+            "absent",
+            "created",
+            "existing",
+            "changed"
+          ]
+        },
+        "creator": {
+          "enum": [
+            "none",
+            "exact",
+            "unknown"
+          ]
+        },
+        "pending": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "bodyLive": {
+          "type": "boolean"
+        },
+        "openingLive": {
+          "type": "boolean"
+        },
+        "receiverOwnsGuard": {
+          "type": "boolean"
+        },
+        "acknowledged": {
+          "type": "boolean"
+        },
+        "activationAccepted": {
+          "type": "boolean"
+        },
+        "verified": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Action": {
+      "enum": [
+        "join-accepted",
+        "refuse",
+        "retain-unresolved",
+        "cleanup-before-ack",
+        "observe-before-effect",
+        "create",
+        "activate",
+        "observe-after-effect",
+        "construct-receiver",
+        "acknowledge",
+        "transfer-to-shared",
+        "acquire-shared",
+        "verify-receiver",
+        "ready"
+      ]
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "input": {
+          "$ref": "#/definitions/Evidence"
+        },
+        "expected": {
+          "$ref": "#/definitions/Action"
+        }
+      }
+    }
+  }
+}

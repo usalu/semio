@@ -1,0 +1,30 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "version": 1,
+  "roots": ["🧰️framework"],
+  "testPath": "/🧪️tests?/|/🧪️testing/",
+  "sourceExtensions": [".ts", ".tsx", ".mts", ".mjs", ".js"],
+  "checkoutCalls": ["process.cwd", "testToolchainDirectoryV1", "testCheckoutRootV1", "repositoryCheckoutRootV1"],
+  "checkoutEnvironment": ["SEMIO_WORKSPACE_ROOT"],
+  "storeCalls": [
+    "^(with|open|recover|withRequired)Repository\\w*V\\d+$",
+    "^repository\\w*(Budget|LeaseDirectory|PartitionRoot|DataDirectory|PreparationStorage|ArtifactRoot|StrictStorage)V\\d+$",
+    "^requireRepository\\w*(Writer|Custody|Image)V\\d+$",
+    "^withVite(Storage|Artifact)V\\d+$",
+    "^withOriginalNx\\w*V\\d+$",
+    "^withManaged\\w*V\\d+$",
+    "^(with|require)NxSdkDerivative\\w*V\\d+$",
+    "^withNxGraphFixtureV\\d+$",
+    "^\\w*NxToolingStorageV\\d+$",
+    "^nxToolingUseStorageV\\d+$",
+    "^acquire(Queued)?ResourceLease$",
+    "^openNativePlatformStorageV\\d+$",
+    "^recoverBuildGraph\\w*V\\d+$"
+  ],
+  "storeLiterals": ["(^|/)\\.cache/b(/|$)", "⚡️cache/rust(/|$)"],
+  "exceptions": [
+    {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🧪️tests/🎭️stub/🟦️.ts", "reason": {"en": "The stub tool runs with the scratch directory its parent test created as working directory, so its process.cwd() is that scratch tree and never the checkout.", "de": "Das Stub-Werkzeug läuft mit dem Scratch-Verzeichnis, das sein Eltern-Test angelegt hat, als Arbeitsverzeichnis; sein process.cwd() ist dieser Scratch-Baum und nie der Checkout."}},
+    {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧫️private-repository/🟦️.ts", "reason": {"en": "The shared private repository names the checkout's tools image once: the immutable Nx toolkit the test runner grants is read in place there like any installed toolchain, never written, leased or measured by a test.", "de": "Das gemeinsame private Repository nennt das Werkzeug-Image des Checkouts genau einmal: das unveränderliche Nx-Toolkit, das der Testläufer gewährt, wird dort wie jede installierte Toolchain gelesen und von keinem Test geschrieben, gemietet oder vermessen."}},
+    {"path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧫️test-store-isolation/🧪️tests/🟦️.ts", "reason": {"en": "The law proves that the test preload refuses the checkout's live store, so it names that store on purpose and expects every reach to throw.", "de": "Das Gesetz beweist, dass der Test-Preload den aktiven Speicher des Checkouts verweigert; es nennt diesen Speicher absichtlich und erwartet, dass jeder Zugriff scheitert."}}
+  ]
+}

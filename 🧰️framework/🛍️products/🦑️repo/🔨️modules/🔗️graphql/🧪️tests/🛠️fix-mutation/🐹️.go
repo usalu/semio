@@ -87,16 +87,8 @@ func TestFixMutationAppliesAutofixesOnDisk(t *testing.T) {
 	expected := readStatutesFixture(t, "🧪️file-fixable-expected")
 
 	root := t.TempDir()
-	sandbox.BindRoot(t, root)
-
-	relative := statutesFixtureDir + "/🧪️file-fixable/🟦️.tsx"
+	relative := seedFixableTechnology(t, root, original)
 	absolute := filepath.Join(root, filepath.FromSlash(relative))
-	if err := os.MkdirAll(filepath.Dir(absolute), 0o755); err != nil {
-		t.Fatalf("failed to create fixture dir: %v", err)
-	}
-	if err := os.WriteFile(absolute, []byte(original), 0o644); err != nil {
-		t.Fatalf("failed to write fixture copy: %v", err)
-	}
 
 	var repoContext model.RepoContext = NewRepoContext(root)
 	scope := relative

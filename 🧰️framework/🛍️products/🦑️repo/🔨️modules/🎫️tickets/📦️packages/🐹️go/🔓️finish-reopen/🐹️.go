@@ -1,6 +1,8 @@
 package tickets
 
 import (
+	json "encoding/json"
+	errors "errors"
 	fmt "fmt"
 	fs "io/fs"
 	os "os"
@@ -21,208 +23,382 @@ import (
 
 // #region 🔓️Finish Reopen
 
-const ticketOversizedFileBytes = 5 << 20
+// #region 🧹️Purge Generated Output
 
-const ticketOversizedFolderBytes = 10 << 20
+// 🧹️TicketGeneratedDirectory is the one folder of a ticket whose content a purge may remove.
+const TicketGeneratedDirectory = "🗑️generated"
 
-// 🧹️purgeOversizedTicketArtifacts deletes files above 5 MiB and subfolders above 10 MiB inside a closed ticket folder.
-func PurgeOversizedTicketArtifacts(ticketDir string) error {
-	ticketDir = strings.TrimSpace(ticketDir)
-	if ticketDir == "" {
-		return nil
-	}
-	absDir, err := filepath.Abs(ticketDir)
-	if err != nil {
-		return err
-	}
-	info, err := os.Stat(absDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-		return err
-	}
-	if !info.IsDir() {
-		return fmt.Errorf("ticket path is not a directory: %s", absDir)
-	}
+// 📏️OversizedFileBytes is the size above which a generated file is purged.
+const OversizedFileBytes int64 = 5 << 20
 
-	type fileEntry struct {
-		path string
-		size int64
-	}
-	dirSizes := make(map[string]int64)
-	var dirs []string
-	var files []fileEntry
+// 🗃️OversizedFolderBytes is the size above which a generated folder is purged.
+const OversizedFolderBytes int64 = 10 << 20
 
-	walkErr := filepath.WalkDir(absDir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			workspace.WriteWarningf("Failed to walk ticket folder %s: %v", path, err)
-			return nil
-		}
-		if !ticketPathContained(absDir, path) {
-			if d.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		if d.Type()&fs.ModeSymlink != 0 {
-			if d.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		if d.IsDir() {
-			if path != absDir {
-				dirs = append(dirs, path)
-			}
-			return nil
-		}
-		fi, err := os.Lstat(path)
-		if err != nil {
-			workspace.WriteWarningf("Failed to stat ticket artifact %s: %v", path, err)
-			return nil
-		}
-		if fi.Mode()&fs.ModeSymlink != 0 {
-			return nil
-		}
-		size := fi.Size()
-		files = append(files, fileEntry{path: path, size: size})
-		for parent := filepath.Dir(path); ticketPathContained(absDir, parent); parent = filepath.Dir(parent) {
-			dirSizes[parent] += size
-			if parent == absDir {
-				break
-			}
-		}
-		return nil
-	})
-	if walkErr != nil {
-		return walkErr
-	}
+// ⏱️LiveWriterWindow is how recently a generated file may have been written before its ticket is left alone.
+const LiveWriterWindow = 10 * time.Minute
 
-	sort.Slice(dirs, func(i, j int) bool {
-		return strings.Count(dirs[i], string(os.PathSeparator)) > strings.Count(dirs[j], string(os.PathSeparator))
-	})
+// 🎚️PurgeSelection says which part of an eligible generated folder is removed.
+type PurgeSelection string
 
-	deleted := make(map[string]bool)
-	for _, dir := range dirs {
-		if ticketArtifactUnderDeleted(dir, deleted) {
-			continue
-		}
-		if dirSizes[dir] <= ticketOversizedFolderBytes {
-			continue
-		}
-		if err := os.RemoveAll(dir); err != nil {
-			workspace.WriteWarningf("Failed to delete oversized ticket folder %s: %v", dir, err)
-			continue
-		}
-		deleted[dir] = true
-	}
+const (
+	// 📏️PurgeOversized removes generated files above 5 MiB and generated folders above 10 MiB.
+	PurgeOversized PurgeSelection = "oversized"
+	// 🧽️PurgeGenerated removes everything below the generated folder.
+	PurgeGenerated PurgeSelection = "generated"
+)
 
-	ticketJSONBase := "🎫️ticket.json"
-	for _, file := range files {
-		if ticketArtifactUnderDeleted(file.path, deleted) {
-			continue
-		}
-		if filepath.Base(file.path) == ticketJSONBase {
-			continue
-		}
-		if file.size <= ticketOversizedFileBytes {
-			continue
-		}
-		if err := os.Remove(file.path); err != nil {
-			workspace.WriteWarningf("Failed to delete oversized ticket file %s: %v", file.path, err)
-		}
-	}
-	return nil
+// 🗑️PurgeRemoval is one planned removal: a path below the tickets folder, its kind and the bytes it frees.
+type PurgeRemoval struct {
+	Path  string `json:"path"`
+	Kind  string `json:"kind"`
+	Bytes int64  `json:"bytes"`
 }
 
-// 🧹️collectTicketFolderRoots returns every slug directory under the dated ticket tree.
-func collectTicketFolderRoots() ([]string, error) {
-	ticketsDir := GetTicketsDir()
-	if !workspace.FileExists(ticketsDir) {
-		return nil, nil
-	}
-	var roots []string
-	yearEntries, err := os.ReadDir(ticketsDir)
-	if err != nil {
-		return nil, err
-	}
-	for _, yearEntry := range yearEntries {
-		if !yearEntry.IsDir() {
-			continue
-		}
-		yearPath := filepath.Join(ticketsDir, yearEntry.Name())
-		monthEntries, err := os.ReadDir(yearPath)
-		if err != nil {
-			continue
-		}
-		for _, monthEntry := range monthEntries {
-			if !monthEntry.IsDir() {
-				continue
-			}
-			monthPath := filepath.Join(yearPath, monthEntry.Name())
-			dayEntries, err := os.ReadDir(monthPath)
-			if err != nil {
-				continue
-			}
-			for _, dayEntry := range dayEntries {
-				if !dayEntry.IsDir() {
-					continue
-				}
-				dayPath := filepath.Join(monthPath, dayEntry.Name())
-				slugEntries, err := os.ReadDir(dayPath)
-				if err != nil {
-					continue
-				}
-				for _, slugEntry := range slugEntries {
-					if !slugEntry.IsDir() {
-						continue
-					}
-					if strings.HasPrefix(slugEntry.Name(), ".") {
-						continue
-					}
-					roots = append(roots, filepath.Join(dayPath, slugEntry.Name()))
-				}
-			}
-		}
-	}
-	return roots, nil
+// ⏭️PurgeSkip is why a whole ticket is left alone.
+type PurgeSkip struct {
+	Ticket string `json:"ticket"`
+	Reason string `json:"reason"`
 }
 
-// 🧹️PurgeAllOversizedTicketArtifacts deletes oversized artifacts in every ticket folder.
-func PurgeAllOversizedTicketArtifacts() (int, error) {
-	roots, err := collectTicketFolderRoots()
-	if err != nil {
-		return 0, err
-	}
-	purged := 0
-	for _, root := range roots {
-		if err := PurgeOversizedTicketArtifacts(root); err != nil {
-			return purged, err
-		}
-		purged++
-	}
-	return purged, nil
+// 🧹️PurgePlan is what a purge removes (applied) or would remove (dry run), sorted by path and ticket.
+type PurgePlan struct {
+	Removals []PurgeRemoval `json:"removals"`
+	Skips    []PurgeSkip    `json:"skips"`
 }
 
-// 🛡️ticketPathContained reports whether path stays inside the ticket root directory.
-func ticketPathContained(root, path string) bool {
-	rel, err := filepath.Rel(root, path)
+// 🔎️TrackedFiles answers which files below a repository-relative folder the git index tracks.
+type TrackedFiles func(root, folder string) (map[string]bool, error)
+
+// 🧭️PurgeOptions is the whole input of a purge; without Apply nothing on disk changes.
+type PurgeOptions struct {
+	Root       string
+	TicketsDir string
+	Selection  PurgeSelection
+	Apply      bool
+	Now        time.Time
+	Tracked    TrackedFiles
+}
+
+// 🌿️GitTrackedFiles lists the index entries below folder with a read-only git query that cannot climb above root.
+func GitTrackedFiles(root, folder string) (map[string]bool, error) {
+	command := workspace.ToolCommand("git", "-c", "core.quotepath=off", "ls-files", "-z", "--cached", "--", filepath.ToSlash(folder))
+	command.Dir = root
+	command.Env = gitQueryEnvironment(command.Env, root)
+	output, err := command.Output()
+	if err != nil {
+		return nil, fmt.Errorf("git ls-files in %s: %w", root, err)
+	}
+	tracked := make(map[string]bool)
+	for _, entry := range strings.Split(string(output), "\x00") {
+		if entry != "" {
+			tracked[entry] = true
+		}
+	}
+	return tracked, nil
+}
+
+// 🧼️gitQueryEnvironment is the process environment without any GIT_ redirection, with discovery capped at root.
+func gitQueryEnvironment(base []string, root string) []string {
+	environment := []string{"GIT_OPTIONAL_LOCKS=0", "GIT_CEILING_DIRECTORIES=" + filepath.Dir(root)}
+	if base == nil {
+		base = os.Environ()
+	}
+	for _, entry := range base {
+		if !strings.HasPrefix(strings.ToUpper(entry), "GIT_") {
+			environment = append(environment, entry)
+		}
+	}
+	return environment
+}
+
+// 🔓️ticketManifestIsClosed reports whether the ticket document says exactly status closed.
+func ticketManifestIsClosed(ticketDir string) bool {
+	data, err := os.ReadFile(filepath.Join(ticketDir, "🎫️ticket.json"))
 	if err != nil {
 		return false
 	}
-	return rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+	var document struct {
+		Status string `json:"status"`
+	}
+	return json.Unmarshal(data, &document) == nil && document.Status == "closed"
 }
 
-// 🗑️ticketArtifactUnderDeleted reports whether path lies inside a deleted ticket subtree.
-func ticketArtifactUnderDeleted(path string, deleted map[string]bool) bool {
-	for dir := range deleted {
-		if path == dir || strings.HasPrefix(path, dir+string(os.PathSeparator)) {
-			return true
+// 🌳️CollectTicketFolderRoots returns every slug directory under the dated tickets folder.
+func CollectTicketFolderRoots(ticketsDir string) ([]string, error) {
+	if !workspace.FileExists(ticketsDir) {
+		return nil, nil
+	}
+	levels := []string{ticketsDir}
+	for depth := 0; depth < 4; depth++ {
+		var next []string
+		for _, parent := range levels {
+			entries, err := os.ReadDir(parent)
+			if err != nil {
+				if depth == 0 {
+					return nil, err
+				}
+				continue
+			}
+			for _, entry := range entries {
+				if entry.IsDir() && (depth < 3 || !strings.HasPrefix(entry.Name(), ".")) {
+					next = append(next, filepath.Join(parent, entry.Name()))
+				}
+			}
+		}
+		levels = next
+	}
+	sort.Strings(levels)
+	return levels, nil
+}
+
+// 📸️generatedSnapshot is the shape of a generated folder at one moment: used to refuse an apply that raced a writer.
+type generatedSnapshot struct {
+	files  int
+	bytes  int64
+	newest time.Time
+}
+
+// 🟰️equal reports whether two snapshots describe the same files.
+func (snapshot generatedSnapshot) equal(other generatedSnapshot) bool {
+	return snapshot.files == other.files && snapshot.bytes == other.bytes && snapshot.newest.Equal(other.newest)
+}
+
+// 🧹️generatedFile is one regular file below a generated folder.
+type generatedFile struct {
+	path    string
+	size    int64
+	tracked bool
+}
+
+// 🚶️walkGenerated lists the real directories and regular files below root, never following a link.
+func walkGenerated(root string, tracked map[string]bool, repoRoot string) (dirs []string, files []generatedFile, snapshot generatedSnapshot, err error) {
+	err = filepath.WalkDir(root, func(path string, entry fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.Type()&fs.ModeSymlink != 0 {
+			return nil
+		}
+		if entry.IsDir() {
+			dirs = append(dirs, path)
+			return nil
+		}
+		info, statErr := entry.Info()
+		if os.IsNotExist(statErr) {
+			return nil
+		}
+		if statErr != nil {
+			return statErr
+		}
+		if !info.Mode().IsRegular() {
+			return nil
+		}
+		relative, relErr := filepath.Rel(repoRoot, path)
+		if relErr != nil {
+			return relErr
+		}
+		files = append(files, generatedFile{path: path, size: info.Size(), tracked: tracked[filepath.ToSlash(relative)]})
+		snapshot.files++
+		snapshot.bytes += info.Size()
+		if info.ModTime().After(snapshot.newest) {
+			snapshot.newest = info.ModTime()
+		}
+		return nil
+	})
+	return dirs, files, snapshot, err
+}
+
+// 🧮️planGeneratedOutput decides what to remove below one ticket's generated folder; a non-empty skip leaves the ticket whole.
+func planGeneratedOutput(options PurgeOptions, ticketDir, generated string) (removals []PurgeRemoval, skip string, snapshot generatedSnapshot, err error) {
+	tracked, err := options.Tracked(options.Root, mustRelative(options.Root, generated))
+	if err != nil {
+		return nil, "tracked-unknown", snapshot, nil
+	}
+	dirs, files, snapshot, err := walkGenerated(generated, tracked, options.Root)
+	if err != nil {
+		return nil, "", snapshot, err
+	}
+	if snapshot.files > 0 && options.Now.Sub(snapshot.newest) < LiveWriterWindow {
+		return nil, "live-writer", snapshot, nil
+	}
+	everything := options.Selection == PurgeGenerated
+	bytesBelow := make(map[string]int64, len(dirs))
+	trackedBelow := make(map[string]bool, len(dirs))
+	for _, file := range files {
+		for parent := filepath.Dir(file.path); ; parent = filepath.Dir(parent) {
+			bytesBelow[parent] += file.size
+			trackedBelow[parent] = trackedBelow[parent] || file.tracked
+			if parent == generated {
+				break
+			}
 		}
 	}
-	return false
+	sort.Slice(dirs, func(left, right int) bool {
+		leftDepth, rightDepth := strings.Count(dirs[left], string(os.PathSeparator)), strings.Count(dirs[right], string(os.PathSeparator))
+		return leftDepth < rightDepth || (leftDepth == rightDepth && dirs[left] < dirs[right])
+	})
+	var removed []string
+	covered := func(path string) bool {
+		for _, directory := range removed {
+			if path == directory || strings.HasPrefix(path, directory+string(os.PathSeparator)) {
+				return true
+			}
+		}
+		return false
+	}
+	for _, directory := range dirs {
+		if (directory == generated && !everything) || covered(directory) || trackedBelow[directory] {
+			continue
+		}
+		if everything || bytesBelow[directory] > OversizedFolderBytes {
+			removed = append(removed, directory)
+			removals = append(removals, PurgeRemoval{Path: directory, Kind: "directory", Bytes: bytesBelow[directory]})
+		}
+	}
+	for _, file := range files {
+		if covered(file.path) || file.tracked {
+			continue
+		}
+		if everything || file.size > OversizedFileBytes {
+			removals = append(removals, PurgeRemoval{Path: file.path, Kind: "file", Bytes: file.size})
+		}
+	}
+	return removals, "", snapshot, nil
 }
+
+// 🛡️containedIn reports whether path is root itself or lies below it.
+func containedIn(root, path string) bool {
+	relative, err := filepath.Rel(root, path)
+	return err == nil && relative != ".." && !strings.HasPrefix(relative, ".."+string(filepath.Separator))
+}
+
+// 🧭️resolvedPath is path with every symbolic link resolved, or path itself where it does not exist.
+func resolvedPath(path string) string {
+	if resolved, err := filepath.EvalSymlinks(path); err == nil {
+		return resolved
+	}
+	return path
+}
+
+// 🧭️mustRelative is filepath.Rel for paths known to share a root.
+func mustRelative(root, path string) string {
+	relative, err := filepath.Rel(root, path)
+	if err != nil {
+		return path
+	}
+	return relative
+}
+
+// 🧹️PurgeTicketGeneratedOutput plans, and with options.Apply performs, the removal of generated output of the given ticket folders.
+// Only the direct 🗑️generated folder of a CLOSED ticket is eligible; tracked files, links, files outside it and folders with a recent writer are never touched.
+// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🧬️schema/🔣️.json (PurgePolicy)
+func PurgeTicketGeneratedOutput(options PurgeOptions, ticketDirs []string) (PurgePlan, error) {
+	if options.Tracked == nil {
+		options.Tracked = GitTrackedFiles
+	}
+	if options.Selection == "" {
+		options.Selection = PurgeOversized
+	}
+	if options.Now.IsZero() {
+		options.Now = time.Now()
+	}
+	options.Root, options.TicketsDir = resolvedPath(options.Root), resolvedPath(options.TicketsDir)
+	plan := PurgePlan{Removals: []PurgeRemoval{}, Skips: []PurgeSkip{}}
+	var failures []error
+	for _, ticketDir := range ticketDirs {
+		ticketDir = filepath.Join(resolvedPath(filepath.Dir(filepath.Clean(ticketDir))), filepath.Base(ticketDir))
+		ticket := filepath.ToSlash(mustRelative(options.TicketsDir, ticketDir))
+		generated := filepath.Join(ticketDir, TicketGeneratedDirectory)
+		skip := func(reason string) { plan.Skips = append(plan.Skips, PurgeSkip{Ticket: ticket, Reason: reason}) }
+		if folder, err := os.Lstat(ticketDir); err != nil || !folder.IsDir() {
+			skip("not-directory")
+			continue
+		}
+		if !ticketManifestIsClosed(ticketDir) {
+			skip("not-closed")
+			continue
+		}
+		info, err := os.Lstat(generated)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			failures = append(failures, err)
+			continue
+		}
+		if info.Mode()&fs.ModeSymlink != 0 {
+			skip("symlink-root")
+			continue
+		}
+		if !info.IsDir() {
+			skip("not-directory")
+			continue
+		}
+		removals, reason, snapshot, err := planGeneratedOutput(options, ticketDir, generated)
+		if err != nil {
+			failures = append(failures, err)
+			continue
+		}
+		if reason != "" {
+			skip(reason)
+			continue
+		}
+		if options.Apply {
+			if _, _, current, err := walkGenerated(generated, nil, options.Root); err != nil || !current.equal(snapshot) {
+				skip("live-writer")
+				continue
+			}
+			for _, removal := range removals {
+				if !containedIn(generated, removal.Path) {
+					failures = append(failures, fmt.Errorf("refusing to remove %s outside %s", removal.Path, generated))
+					continue
+				}
+				if err := os.RemoveAll(removal.Path); err != nil {
+					failures = append(failures, err)
+				}
+			}
+		}
+		for _, removal := range removals {
+			removal.Path = filepath.ToSlash(mustRelative(options.TicketsDir, removal.Path))
+			plan.Removals = append(plan.Removals, removal)
+		}
+	}
+	sort.Slice(plan.Removals, func(left, right int) bool { return plan.Removals[left].Path < plan.Removals[right].Path })
+	sort.Slice(plan.Skips, func(left, right int) bool { return plan.Skips[left].Ticket < plan.Skips[right].Ticket })
+	return plan, errors.Join(failures...)
+}
+
+// 📣️Report renders the plan as English and German lines for a command line, ending in the totals.
+func (plan PurgePlan) Report(applied bool) []string {
+	var lines []string
+	var freed int64
+	for _, removal := range plan.Removals {
+		freed += removal.Bytes
+		verb := "would remove / würde entfernen"
+		if applied {
+			verb = "removed / entfernt"
+		}
+		lines = append(lines, fmt.Sprintf("%s %s (%d bytes)", verb, removal.Path, removal.Bytes))
+	}
+	for _, skip := range plan.Skips {
+		lines = append(lines, fmt.Sprintf("skipped / übersprungen %s: %s", skip.Ticket, skip.Reason))
+	}
+	if applied {
+		return append(lines, fmt.Sprintf("Removed %d paths (%d bytes) / %d Pfade entfernt (%d Bytes)", len(plan.Removals), freed, len(plan.Removals), freed))
+	}
+	return append(lines, fmt.Sprintf("Dry run: %d paths (%d bytes) would be removed; repeat with --apply / Probelauf: %d Pfade (%d Bytes) würden entfernt; mit --apply wiederholen", len(plan.Removals), freed, len(plan.Removals), freed))
+}
+
+// 🧹️PurgeClosedTicketGeneratedOutput purges every closed ticket below options.TicketsDir.
+func PurgeClosedTicketGeneratedOutput(options PurgeOptions) (PurgePlan, error) {
+	roots, err := CollectTicketFolderRoots(options.TicketsDir)
+	if err != nil {
+		return PurgePlan{}, err
+	}
+	return PurgeTicketGeneratedOutput(options, roots)
+}
+
+// #endregion 🧹️Purge Generated Output
 
 // 🔖️FinishTicket MUST return a non-nil error when the operation fails.
 func FinishTicket(ticket *model.Ticket, summary string, files []string, noManagement bool, bulk bool) error {
@@ -384,8 +560,8 @@ func FinishTicket(ticket *model.Ticket, summary string, files []string, noManage
 		}
 		return err
 	}
-	if err := PurgeOversizedTicketArtifacts(ticket.FolderPath); err != nil {
-		workspace.WriteWarningf("Failed to purge oversized ticket artifacts: %v", err)
+	if _, err := PurgeTicketGeneratedOutput(PurgeOptions{Root: workspace.GetRootDir(), TicketsDir: GetTicketsDir(), Selection: PurgeOversized, Apply: true}, []string{ticket.FolderPath}); err != nil {
+		workspace.WriteWarningf("Failed to purge oversized ticket generated output: %v", err)
 	}
 	ticketID := model.FormatTicketRelPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 	fileList := files

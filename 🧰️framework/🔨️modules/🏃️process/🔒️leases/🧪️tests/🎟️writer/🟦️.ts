@@ -18,7 +18,8 @@ import{createIssuedResourceControlV1,createRequestedIssuedResourceControlV1}from
 import interleaving from"./🎟️interleaving.json"with{type:"json"};
 import{captureOwnedCommandV1}from"../../../🎛️owned-execution/🟦️.ts";
 import componentSchema from"../../🧬️schema/📜️ticket.json"with{type:"json"};
-import{withBuildTestInvocationV1}from"../../../🧪️testing/📥️invocation/🟦️.ts";
+import{declareBuildTestEnvelopeV1,withBuildTestInvocationV1}from"../../../🧪️testing/📥️invocation/🟦️.ts";
+declareBuildTestEnvelopeV1({owner:"test:resource-lease-writer",maximumElapsedMilliseconds:300000,capabilities:{artifacts:true,command:"writer"}});
 
 test("actual shared lease public promotion cannot prove exclusive writer custody",async()=>{
  expect(new Ajv({strict:true}).validate({$schema:componentSchema.$schema,definitions:componentSchema.definitions,$ref:"#/definitions/WriterIssuanceCorpus"},fixture)).toBe(true);expect(validateJsonSchemaSubset(schema,fixture,componentSchema)).toEqual([]);

@@ -37,13 +37,14 @@ export class SynchronizeScript extends Script {
  protected readonly environment:Readonly<Record<string,string|undefined>>=process.env;
  protected phase(){return nativeCallerPhaseV1(this.invocation,this.root,createIssuedResourceControlV1(this.invocation,"native:preparation-entry",0));}
  protected async execute(command:string,args:string[],cwd:string,label:string,budget:number,options:OwnedCommandOptions):Promise<void>{await runOwnedCommand(command,args,cwd,label,budget,options);}
+ protected toolInputs():readonly string[]{return [];}
  protected async capture(command:string,args:string[],cwd:string,label:string,budget:number,options:OwnedCommandOptions):Promise<string>{let output="";await runOwnedCommand(command,args,cwd,label,budget,{...options,stdout:"stderr",onLine:(line,stream)=>{if(stream==="stdout")output+=line+"\n";}});return output;}
  async run(args:string[]):Promise<void>{
   if(args[0]==="--cargo-arguments"){const request=cargoWorkspacePreparationInvocationV1(cargoPreparationStorageFromEnvironmentV1(this.environment),this.root,args.slice(1),process.cwd(),this.environment);if(!request)throw new Error("Selected exact Cargo preparation required");args=[...request.args.slice(2)];}
   if(args.length<2||args[0]!=="--manifest"||(args.length-2)%2||args.slice(2).some((value,index)=>index%2===0?value!=="--package":!value))throw new Error("synchronize --manifest <selected-owner> [--package <name>...]");
   const packages=args.filter((_,index)=>index>=3&&index%2===1);if(new Set(packages).size!==packages.length)throw new Error("Duplicate selected Cargo package");
   const phase=this.phase();await phase.advance("cargo:synchronization");const owner=cargoWorkspaceForManifest(this.root,args[1]!);
-  try{await withPreparedCargoDependencyPairV1(cargoPreparationStorageFromEnvironmentV1(this.environment),this.root,owner.manifest,phase.leaseControl,async(argv,cwd,signal)=>{if(signal!==phase.leaseControl.signal)throw new Error("Original Cargo dependency signal required");await phase.advance("cargo:"+argv[0]);await this.execute("cargo",argv,cwd,"cargo:selected-dependencies",phase.budget(),phase.options(this.environment));phase.budget();},async(cwd,signal)=>{if(signal!==phase.leaseControl.signal)throw new Error("Original Cargo identity signal required");await phase.advance("cargo:identity");const identity=await this.capture("cargo",["--version"],cwd,"cargo:selected-identity",phase.budget(),phase.options(this.environment));phase.budget();return identity;},cargoPreparationControlV1(phase),[],packages);}
+  try{await withPreparedCargoDependencyPairV1(cargoPreparationStorageFromEnvironmentV1(this.environment),this.root,owner.manifest,phase.leaseControl,async(argv,cwd,signal)=>{if(signal!==phase.leaseControl.signal)throw new Error("Original Cargo dependency signal required");await phase.advance("cargo:"+argv[0]);await this.execute("cargo",argv,cwd,"cargo:selected-dependencies",phase.budget(),phase.options(this.environment));phase.budget();},async(cwd,signal)=>{if(signal!==phase.leaseControl.signal)throw new Error("Original Cargo identity signal required");await phase.advance("cargo:identity");const identity=await this.capture("cargo",["--version"],cwd,"cargo:selected-identity",phase.budget(),phase.options(this.environment));phase.budget();return identity;},cargoPreparationControlV1(phase),[],packages,this.toolInputs());}
   catch(error){this.invocation.control.signal.throwIfAborted();throw error;}
  }
 }
@@ -68,6 +69,7 @@ export class BoundedSynchronizeScript extends Script {
       class BoundedSynchronize extends SynchronizeScript {
         protected override readonly environment = environment;
         protected override phase() { return phase; }
+        protected override toolInputs(): readonly string[] { return [store.toolchain.cargo]; }
         protected override execute(command: string, args: string[], cwd: string, label: string, budget: number, options: OwnedCommandOptions): Promise<void> { return withCompilerWorkspaceSharedWriteV1(store.storage, cargoPreparationStorageFromEnvironmentV1(environment).leaseDirectory, storeControl, () => super.execute(command, args, cwd, label, budget, options)); }
       }
       await new BoundedSynchronize(root, findWorkspaceRoot(root), this.invocation).run(args);

@@ -6,7 +6,8 @@ import {mkdtempSync,readFileSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {nxPutSlotCountV1,nxPutSlotResourceV1,withNxPutSlotV1} from "../🟦️.ts";
+import {checkLeaseOrderV1,classifyLeaseResourceV1,leaseOrderPolicyV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🧭️order/🟦️.ts";
+import {nxPutGateResourceV1,nxPutSlotCountV1,nxPutSlotResourceV1,withNxPutSlotV1} from "../🟦️.ts";
 
 const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"./🧫️fixtures/🔣️.json"),"utf8")) as any;
 const artifacts=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());
@@ -71,4 +72,14 @@ test("source: puts run in a slot under the shared writer custody and judge headr
  expect(nxSource).toContain("withNxPutSlotV1({root:scope.root,leaseDirectory:scope.leaseDirectory,control:scope.control,slots:nxPutSlotCountV1(scope.environment)}");
  expect(nxSource).toContain("withCompilerSharedHeadroomV1(");expect(nxSource).not.toContain("withCompilerInitialHeadroomV1");
  expect(nxSource).toContain("await slot.others()*maximum");
+});
+
+test("the gate and every slot of an image rank with the image and are taken in order under a held artifact path (the real names, the authored policy, an independent classifier)",()=>{
+ const live=leaseOrderPolicyV1({}),names=[nxPutGateResourceV1("/a"),...Array.from({length:16},(_,index)=>nxPutSlotResourceV1("/a",index))],held=[{directory:"/l",resource:"artifact:/w/.cache/b/p/m/print/prototype/documents/print/paper",mode:"shared" as const,atMs:1,task:1}];
+ const model=spawnSync(testPythonV1()??"python3",["-I",resolve(import.meta.dir,"./🐍️order.py"),resolve(import.meta.dir,"../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🔣️policy.json"),...names],{encoding:"utf8"});expect(model.status).toBe(0);
+ const classes=JSON.parse(model.stdout) as Record<string,[string,number]>;
+ for(const name of names){
+  expect(classifyLeaseResourceV1(live,name).id,name).toBe("image");expect(classes[name],name).toEqual(["image",classifyLeaseResourceV1(live,name).rank]);
+  expect(checkLeaseOrderV1(live,held,{directory:"/l",resource:name,mode:"exclusive",nonblocking:false}),name).toBeUndefined();
+ }
 });

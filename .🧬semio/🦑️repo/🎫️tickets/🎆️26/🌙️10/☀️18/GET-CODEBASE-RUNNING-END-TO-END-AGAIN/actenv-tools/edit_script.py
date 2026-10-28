@@ -1,0 +1,27 @@
+"""🪢 Edits 📜️script.ts of a checkout so that the runtime channel to action processes carries the declared allowlist only. usage: edit_script.py ROOT [apply|revert]. Idempotent; refuses (exit 2) when an anchor is missing and the edit is not applied already."""
+import os, sys
+ROOT = os.path.abspath(sys.argv[1]) if __name__ == "__main__" and len(sys.argv) > 1 else "."; VERB = sys.argv[2] if __name__ == "__main__" and len(sys.argv) > 2 else "apply"
+PATH = os.path.join(ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts")
+EDITS = [
+    ('import {runBazelRuntimeCommandV1,type BazelCommandCapturerV1} from "./🌿️environment/🟦️.ts";\n',
+     'import {runBazelRuntimeCommandV1,type BazelCommandCapturerV1} from "./🌿️environment/🟦️.ts";\nimport {bazelActionEnvironmentV1,readBazelDeclaredEnvironmentV1,recordBazelDeclaredEnvironmentV1} from "./🌿️environment/🏃️action/🟦️.ts";\n'),
+    ('/** 🪢 Publishes the live runtime beside the immutable implementation, outside every action key. */\nasync function writeBazelRuntimeV1(workspace:string,root:string,environment:NodeJS.ProcessEnv):Promise<void>{\n const value:BazelRuntimeV1={version:1,workspace:root,environment:Object.fromEntries(Object.entries(environment).filter((entry):entry is [string,string]=>entry[1]!==undefined))};\n',
+     '/** 🪢 Publishes the live runtime beside the immutable implementation, outside every action key: only the declared allowlist of the action environment channel, never an ambient desktop, agent, session or credential variable. */\nasync function writeBazelRuntimeV1(workspace:string,root:string,environment:NodeJS.ProcessEnv,declared:ReadonlySet<string>):Promise<void>{\n const value:BazelRuntimeV1={version:1,workspace:root,environment:bazelActionEnvironmentV1(environment,declared)};\n'),
+    ('await writeBazelRuntimeV1(workspace,root,scriptInvocationEnvironment(invocation,environment));const client=',
+     'const declared=await readBazelDeclaredEnvironmentV1(workspace);await writeBazelRuntimeV1(workspace,root,scriptInvocationEnvironment(invocation,environment),declared);const client='),
+    ('   await writeBazelRuntimeV1(workspace,root,scriptInvocationEnvironment(invocation,environment));await clearBazelFailureTailsV1(failures);',
+     '   await writeBazelRuntimeV1(workspace,root,scriptInvocationEnvironment(invocation,environment),declared);await clearBazelFailureTailsV1(failures);'),
+    ('profileMarkV1("bazel.rendered");await writeBazelRuntimeV1(workspace,root,scriptInvocationEnvironment(invocation,process.env));if(publish==="capture")',
+     'profileMarkV1("bazel.rendered");await writeBazelRuntimeV1(workspace,root,scriptInvocationEnvironment(invocation,process.env),await recordBazelDeclaredEnvironmentV1(workspace,graph,plan));if(publish==="capture")'),
+]
+def transform(text, verb):
+    for old, new in EDITS:
+        applied = text.count(new) >= 1
+        if (verb == "apply") == applied: continue
+        src, dst = (old, new) if verb == "apply" else (new, old)
+        if text.count(src) != 1: print("ANCHOR", text.count(src), src[:80].replace("\n", "\\n")); sys.exit(2)
+        text = text.replace(src, dst)
+    return text
+if __name__ == "__main__":
+    text = transform(open(PATH, encoding="utf8").read(), VERB)
+    tmp = PATH + ".stage"; open(tmp, "w", encoding="utf8").write(text); os.replace(tmp, PATH); print(VERB, "ok")

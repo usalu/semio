@@ -1,0 +1,10 @@
+--- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/⚙️runtime/🟦️.ts	2026-10-27 13:00:34
++++ /var/folders/pm/zdg449hs6r33w_2gtsn23byc0000gn/T/sm/meder/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/⚙️runtime/🟦️.ts	2026-10-27 13:54:50
+@@ -104,6 +104,7 @@
+       else if(Array.isArray(result)&&!resolved.args.includes("--json"))writeResultLineV1(result.join("\n"));else{const {writeJsonStreamV1}=await import("../../🕸️graph/🕰️generations/🌊️json-stream/🟨️.mjs");await writeJsonStreamV1(result,text=>new Promise<void>((resolve,reject)=>{machineOutputV1.write(text,error=>error?reject(error):resolve());}),{signal:invocation.control.signal});machineOutputV1.write("\n");}
+       return;
+     }
++    if(process.env.SEMIO_BUILD_GRAPH_MEMO_DERIVE!==undefined){await profilePhaseV1("graph.memo-derive",async()=>(await import("../../🧭️invocation/🕸️graph/🧠️memo/🧮️derive/🟦️.ts")).answerGraphMemoDerivationV1(root,process.env,phaseControl.signal));return;}
+     const {prepareBuildToolStorageV1}=await profilePhaseV1("tools.storage-load",()=>import("../../🔧️tools/💾️storage/🟦️.ts"));await profilePhaseV1("tools.storage",()=>prepareBuildToolStorageV1(root,selected.tool,invocation,phaseControl,0));
+     const loadHere=async()=>loadBuildInvocationGraphV1(root,resolved.args,parent,invocation,phaseControl,process.env.SEMIO_BUILD_REUSE_GRAPH==="true",undefined,selected.graphPolicy,(await import("../../🔌️backends/🟦️.ts")).buildBackendCompactGraphV1(selected.tool)),planFile=process.env[BUILD_GRAPH_PLAN_OUT_V1];
+     if(planFile!==undefined){await profilePhaseV1("graph.plan",async()=>writeBuildGraphPlanV1(planFile,await loadHere(),phaseControl.signal));return;}

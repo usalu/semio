@@ -1,0 +1,42 @@
+{
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🪪️vouch/🟦️.ts": {
+  "base": null,
+  "new": "ad3e1d8011d7b6c5335a459d598c05296d2b55921f07b6652fa136d87336762f"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🪪️vouch/🧬️schema/🔣️.json": {
+  "base": null,
+  "new": "35c02756762a63be5f5c73f88f7c29bcecc1d8e492459fa95ce9d0f8d8a77acf"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🪪️vouch/🧪️tests/🟦️.ts": {
+  "base": null,
+  "new": "fc04fd036b0128657702c15fe0fbd2d51612b7e07f8f8ad26ebf93d770b24070"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🪪️vouch/🧪️tests/🐍️.py": {
+  "base": null,
+  "new": "0f7c2ebddaf2ad0b0752561c0d6d1f450188c38ede63afc56608666ef63aca7e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🪪️vouch/🟦️.ts": {
+  "base": null,
+  "new": "6f9978a3fba906558e345dd561b5bfbfd13a5211fd9b5e4acd373466913c6020"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🟦️.ts": {
+  "base": "edcfad5ac1a6c1b1a62d6b29e9f1f5766f85cc225cfa8ad7623d593d11ad28f2",
+  "new": "848e607405de51d2e5b913b61bc6372fe269cca4709a27a24c11ffc2c5426813"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🧬️schema/🔣️.json": {
+  "base": "d6443a9128d68f2e502bcbf50062cb97a18f7be05e6c280f60cee68e69b19618",
+  "new": "7b4a21535478558d3d0b7577b53ce9836f498f7d187d0b5b1f95d3331ff808bb"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/💾️storage/🟦️.ts": {
+  "base": "5f1d9513f3d97b7658402a0a2c228fc1c78d71d51103dfe40d5e22d5d386e334",
+  "new": "79978049ba38240a33650e045eb19d44fc0f1f8984a968cd1667069741a595b7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🟦️.ts": {
+  "base": "fd42898f13f8086af0f9aded2be6fd454264daa2e8f088dcdf722f8c8379745c",
+  "new": "05c3965b2c52834df9f8a4c0579726f1e9af1e5bb9b9aba26af0439d919dfe65"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts": {
+  "base": "13fd9c53da21197cf57e82d87882f9f65cc17db8341bb04faddfb25476fa65ff",
+  "new": "f6e2d09fba92c238c0839b2a01a101634da8af0afc9ce162e62cd3ff066c2367"
+ }
+}

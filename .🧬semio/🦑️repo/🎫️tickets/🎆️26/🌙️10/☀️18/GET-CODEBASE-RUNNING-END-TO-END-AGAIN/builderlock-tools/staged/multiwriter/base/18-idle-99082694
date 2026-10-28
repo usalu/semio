@@ -1,0 +1,50 @@
+/** 💤️ Contract: a command builds at once when the builder custody is free and no live running claim of its plan names a wanted owner; a held custody, or a live peer claim on a wanted owner, keeps the prefetch. Every case equals the independent Python model, a claim of a dead command is no claim, and probing the custody leaves it free. */
+import{afterAll,expect,test}from"bun:test";
+import Ajv2020 from"ajv/dist/2020";
+import{mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync}from"node:fs";
+import{tmpdir}from"node:os";
+import{dirname,join}from"node:path";
+import{fileURLToPath}from"node:url";
+import{testPythonV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import{CLAIMS_POLICY_V1,createClaimRegistryV1,createFileClaimLeasePortV1}from"../../🟨️.mjs";
+import{canonicalJsonV1,createNodeFilePortV1}from"../../../🟨️.mjs";
+import schema from"./🧬️schema/🔣️.json";
+import fixture from"./🔣️.json";
+
+const python=testPythonV1(),oracle=join(dirname(fileURLToPath(import.meta.url)),"🐍️.py"),sleep=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
+const model=(input:unknown)=>{const run=Bun.spawnSync([python!,"-I",oracle],{stdin:Buffer.from(JSON.stringify(input))});expect(run.stderr.toString()).toBe("");expect(run.exitCode).toBe(0);return JSON.parse(run.stdout.toString()) as {idle:boolean};};
+const roots:string[]=[];
+afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
+const BUILDER="graph-builder:idle-law";
+
+test("the fixture is closed under its schema",()=>{expect(new Ajv2020({strict:false}).validate(schema,fixture)).toBe(true);});
+
+for(const row of fixture.cases)test("the idle verdict equals the Python model and the stated verdict: "+row.id,async()=>{
+ const root=realpathSync(mkdtempSync(join(tmpdir(),"claims-idle-")));roots.push(root);
+ const leases=join(root,"leases"),port=createFileClaimLeasePortV1(leases),registry=createClaimRegistryV1({root:join(root,"generations"),fs:createNodeFilePortV1(),lease:createFileClaimLeasePortV1(leases)}),held:{release():void}[]=[];
+ mkdirSync(join(root,"generations",CLAIMS_POLICY_V1.directory),{recursive:true});
+ const planOf={same:{base:fixture.base,implementation:fixture.implementation},base:{base:fixture.base-1,implementation:fixture.implementation},implementation:{base:fixture.base,implementation:fixture.otherImplementation}};
+ for(const[at,claim]of row.claims.entries()){
+  const token=(at+1).toString(16).padStart(24,"0"),document={version:1,token,...planOf[claim.plan as keyof typeof planOf],owners:[...claim.owners].sort(),state:claim.state,startedMs:1,...(claim.state==="running"?{}:{endedMs:2})};
+  writeFileSync(join(root,"generations",CLAIMS_POLICY_V1.directory,token+".json"),canonicalJsonV1(document));
+  if(claim.live){const hold=await port.tryHold(registry.resource.claim(token));expect(hold).toBeDefined();held.push(hold!);}
+ }
+ if(row.builderHeld){const hold=await port.tryHold(BUILDER);expect(hold).toBeDefined();held.push(hold!);}
+ try{
+  const verdict=await registry.idle({base:fixture.base,implementation:fixture.implementation,wanted:fixture.wanted,builder:BUILDER});
+  expect(verdict).toBe(model({base:fixture.base,implementation:fixture.implementation,wanted:fixture.wanted,case:row}).idle);
+  expect(verdict).toBe(row.idle);
+ }finally{for(const hold of held)hold.release();}
+});
+
+test("probing the builder custody leaves it free, and a running claim of a dead command is removed by the look",async()=>{
+ const root=realpathSync(mkdtempSync(join(tmpdir(),"claims-idle-")));roots.push(root);
+ const leases=join(root,"leases"),port=createFileClaimLeasePortV1(leases),registry=createClaimRegistryV1({root:join(root,"generations"),fs:createNodeFilePortV1(),lease:createFileClaimLeasePortV1(leases)});
+ const directory=join(root,"generations",CLAIMS_POLICY_V1.directory),token="0".repeat(23)+"f";
+ mkdirSync(directory,{recursive:true});
+ writeFileSync(join(directory,token+".json"),canonicalJsonV1({version:1,token,base:fixture.base,implementation:fixture.implementation,owners:["a"],state:"running",startedMs:1}));
+ expect(await registry.idle({base:fixture.base,implementation:fixture.implementation,wanted:["a"],builder:BUILDER})).toBe(true);
+ await sleep(30);
+ const again=await port.tryHold(BUILDER);expect(again).toBeDefined();again!.release();
+ expect((await registry.list()).filter(claim=>claim.token===token)).toEqual([]);
+});

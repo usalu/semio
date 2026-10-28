@@ -1,0 +1,49 @@
+{
+ "schema": "semio.framework.build.bazel-test-classes.course-shards/v1",
+ "recordedWith": "vitest 4.1.12 run --shard=<i>/3 -t <matches nothing> --reporter=json on the course config (2026-10-27), root-relative files",
+ "count": 3,
+ "files": [
+  "🧪️tests/🎚️mode/🟦️.ts",
+  "🧪️tests/🎛️dashboard/🎚️parameters/🟦️.ts",
+  "🧪️tests/🎛️dashboard/🟦️.ts",
+  "🧪️tests/🎭️sessions/🟦️.ts",
+  "🧪️tests/🏗️proctor-build/🟦️.ts",
+  "🧪️tests/🏷️release-tags/🟦️.ts",
+  "🧪️tests/🐳️image/🟦️.ts",
+  "🧪️tests/🐾️pet-cast/🟦️.ts",
+  "🧪️tests/📦️resolution/🟦️.ts",
+  "🧪️tests/📰️host-document/🟦️.ts",
+  "🧪️tests/🟢️continuous/🟦️.ts",
+  "🧪️tests/🟢️continuous/🧾️manifests/🟦️.ts",
+  "🧪️tests/🧪️course/🟦️.ts",
+  "🧪️tests/🧪️deploy/🟦️.ts",
+  "🧪️tests/🧱️local-stack/🟦️.ts",
+  "🧪️tests/🧾️proctor-product/🟦️.ts",
+  "🧪️tests/🪢️presence/🟦️.ts"
+ ],
+ "shards": [
+  [
+   "🧪️tests/🎚️mode/🟦️.ts",
+   "🧪️tests/🎛️dashboard/🎚️parameters/🟦️.ts",
+   "🧪️tests/🎭️sessions/🟦️.ts",
+   "🧪️tests/🏷️release-tags/🟦️.ts",
+   "🧪️tests/🟢️continuous/🧾️manifests/🟦️.ts",
+   "🧪️tests/🧪️course/🟦️.ts"
+  ],
+  [
+   "🧪️tests/🏗️proctor-build/🟦️.ts",
+   "🧪️tests/📰️host-document/🟦️.ts",
+   "🧪️tests/🟢️continuous/🟦️.ts",
+   "🧪️tests/🧪️deploy/🟦️.ts",
+   "🧪️tests/🧱️local-stack/🟦️.ts",
+   "🧪️tests/🧾️proctor-product/🟦️.ts"
+  ],
+  [
+   "🧪️tests/🎛️dashboard/🟦️.ts",
+   "🧪️tests/🐳️image/🟦️.ts",
+   "🧪️tests/🐾️pet-cast/🟦️.ts",
+   "🧪️tests/📦️resolution/🟦️.ts",
+   "🧪️tests/🪢️presence/🟦️.ts"
+  ]
+ ]
+}

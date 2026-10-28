@@ -1,0 +1,16 @@
+[
+ "🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+ "🏗️build/🕸️graph/📥️inference/🎮️playground-targets/🟨️.mjs",
+ "🏗️build/📥️inputs/🟨️.mjs",
+ "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",
+ "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️closure-read-worker/🟨️.mjs",
+ "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📇️formats/🟦️.ts",
+ "🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts",
+ "🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json",
+ "🏗️build/👁️observation/🧪️tests/⚡️incremental/🟦️.ts",
+ "🏗️build/👁️observation/🧪️tests/📦️projects/🟦️.ts",
+ "🏗️build/👁️observation/🧪️tests/🧫️fixtures/📦️projects/🔣️.json",
+ "🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts",
+ "🏗️build/🧪️tests/🕸️graph/🌱️native-scope/🟦️.ts",
+ "🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+]

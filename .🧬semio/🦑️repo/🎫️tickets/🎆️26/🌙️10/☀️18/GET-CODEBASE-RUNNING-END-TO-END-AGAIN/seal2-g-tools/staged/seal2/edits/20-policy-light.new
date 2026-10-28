@@ -1,0 +1,7 @@
+  "coalesceMilliseconds": 0,
+  "light": {
+    "freshMilliseconds": 300000,
+    "promoteAfterMilliseconds": 1800000,
+    "refuseAfterMilliseconds": 86400000,
+    "refreshDebounceMilliseconds": 120000
+  },

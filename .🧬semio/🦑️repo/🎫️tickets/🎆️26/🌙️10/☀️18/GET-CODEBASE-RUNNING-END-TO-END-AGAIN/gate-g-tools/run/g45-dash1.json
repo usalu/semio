@@ -1,0 +1,28 @@
+{
+ "label": "g45-dash1",
+ "target": "@semio-tech/repo-dashboard-rs:build",
+ "started": "17:42:35",
+ "wall_s": 864.7,
+ "peak_tree_mb": 3053,
+ "peak_processes": 9,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 10.5,
+ "graph": {
+  "refreshing": [
+   "38"
+  ],
+  "inferring": [
+   "38"
+  ],
+  "published": [
+   "669",
+   "38",
+   "381"
+  ],
+  "processes": [
+   "2",
+   "1 action cache hit, 2 internal"
+  ]
+ }
+}

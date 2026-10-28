@@ -68,6 +68,7 @@
         "defaults": { "description": "Default values of inputs; the input stays available.", "type": "object", "additionalProperties": { "type": ["boolean", "string", "integer"] } },
         "positional": { "type": "array", "items": { "$ref": "#/$defs/Positional" } },
         "environment": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" } },
+        "priority": { "enum": ["interactive", "agent", "background"] },
         "annotations": { "$ref": "#/$defs/Annotations" }
       }
     },
@@ -80,13 +81,20 @@
     "Policy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "catalogue", "buildPolicy", "backends", "identity", "globals", "omittedFlags", "strip", "set", "flagTypes", "environment", "kinds", "limits", "tools", "excluded"],
+      "required": ["version", "catalogue", "buildPolicy", "backends", "identity", "priority", "globals", "omittedFlags", "strip", "set", "flagTypes", "environment", "kinds", "limits", "tools", "excluded"],
       "properties": {
         "$schema": { "type": "string" },
         "version": { "const": 1 },
         "catalogue": { "description": "Repository-relative path of the neutral operations catalogue.", "type": "string", "minLength": 1 },
         "buildPolicy": { "description": "Repository-relative path of the build policy that names the default tool.", "type": "string", "minLength": 1 },
         "backends": { "description": "Repository-relative path of the build backend registry; its ids replace the `{backends}` placeholder of the catalogue.", "type": "string", "minLength": 1 },
+        "priority": {
+          "description": "The lease priority class every call carries. `variable` is the variable the lease queue reads (`SEMIO_LEASE_PRIORITY`). A tool that names a `priority` exports it to the child; a tool that names none leaves the class to the child, which is `agent` inside an agent session (an agent's single run keeps its place in the queue). Fan-out tools declare `background`, so an agent's long suite queues behind an interactive rebuild.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["variable"],
+          "properties": { "variable": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" } }
+        },
         "identity": {
           "type": "object",
           "additionalProperties": false,

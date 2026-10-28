@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "receipt": "plan.receipt.json",
+        "witness": "planner-witness.json",
+        "preload": "world-witness.mjs",
+        "maximumReceiptBytes": 268435456,
+        "excluded": ["runtime.json", "plan.receipt.json", "planner-witness.json", "planner-input.json", "planner-output.json", "MODULE.bazel.lock"],
+        "excludedPrefixes": ["bazel-", "."],
+        "excludedSuffixes": [".tmp"]
+      }
+    },
+    "Implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "snapshot", "runner", "sha256", "loaderSha256"],
+      "properties": {
+        "version": { "const": 1 },
+        "snapshot": { "type": "string", "minLength": 1 },
+        "runner": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "loaderSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "Output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "identity", "sha256"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+        "identity": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^([a-f0-9]{64})?$" }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "key", "recordedAtMs", "witness", "implementation", "adapter", "scopes", "outputs"],
+      "properties": {
+        "version": { "const": 1 },
+        "key": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "recordedAtMs": { "type": "integer", "minimum": 0 },
+        "witness": { "type": "object" },
+        "implementation": { "$ref": "#/definitions/Implementation" },
+        "adapter": { "$ref": "#/definitions/Implementation" },
+        "scopes": { "type": "object", "additionalProperties": { "$ref": "#/definitions/Implementation" } },
+        "outputs": { "type": "array", "maxItems": 4096, "items": { "$ref": "#/definitions/Output" } }
+      }
+    }
+  }
+}

@@ -1,0 +1,1244 @@
+{
+  "policy": {
+    "generatedDirectory": "🗑️generated",
+    "oversizedFileBytes": 5242880,
+    "oversizedFolderBytes": 10485760,
+    "liveWriterSeconds": 600
+  },
+  "cases": [
+    {
+      "id": "open-ticket-keeps-a-tracked-subtree-and-a-fresh-generated-folder",
+      "description": "The 17:16 loss: an open ticket with a tracked 11 MiB subtree and a fresh generated folder loses nothing.",
+      "request": {
+        "scope": "closed",
+        "selection": "oversized"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/OPEN-WITH-TRACKED-SUBTREE",
+          "manifest": "open",
+          "entries": [
+            {
+              "path": "🪓️monolith-split/a/one.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": true
+            },
+            {
+              "path": "🪓️monolith-split/a/two.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": true
+            },
+            {
+              "path": "🗑️generated/lane/log.bin",
+              "kind": "file",
+              "bytes": 11534336,
+              "ageSeconds": 5,
+              "tracked": false
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [],
+        "skips": [
+          {
+            "ticket": "🎆️26/🌙️10/☀️18/OPEN-WITH-TRACKED-SUBTREE",
+            "reason": "not-closed"
+          }
+        ]
+      }
+    },
+    {
+      "id": "open-ticket-keeps-old-oversized-generated-output",
+      "description": "An open ticket is never purged, however old and large its generated output.",
+      "request": {
+        "scope": "closed",
+        "selection": "oversized"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/OPEN-OLD-GENERATED",
+          "manifest": "open",
+          "entries": [
+            {
+              "path": "🗑️generated/big/blob.bin",
+              "kind": "file",
+              "bytes": 12582912,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/huge.log",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [],
+        "skips": [
+          {
+            "ticket": "🎆️26/🌙️10/☀️18/OPEN-OLD-GENERATED",
+            "reason": "not-closed"
+          }
+        ]
+      }
+    },
+    {
+      "id": "closed-ticket-oversized-removes-only-oversized-generated-output",
+      "description": "A closed ticket loses generated files above 5 MiB and generated folders above 10 MiB, never authored inputs.",
+      "request": {
+        "scope": "closed",
+        "selection": "oversized"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/CLOSED-RETENTION",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "📥️authored-inputs/large.json",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "📥️authored-inputs/snapshots/source.txt",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "📥️authored-inputs/🗑️generated/authored.tex",
+              "kind": "file",
+              "bytes": 11534336,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "📓️large-research.md",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "📜️script.ts",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "config.json",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "large.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": ".cache.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/large.log",
+              "kind": "file",
+              "bytes": 5242881,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/exact.bin",
+              "kind": "file",
+              "bytes": 5242880,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/huge/blob.bin",
+              "kind": "file",
+              "bytes": 10485761,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/huge/small.log",
+              "kind": "file",
+              "bytes": 10,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/small/file.bin",
+              "kind": "file",
+              "bytes": 1048576,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/exact-directory/a.bin",
+              "kind": "file",
+              "bytes": 5242880,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/exact-directory/b.bin",
+              "kind": "file",
+              "bytes": 5242880,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/over-directory/a.bin",
+              "kind": "file",
+              "bytes": 5242880,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/over-directory/b.bin",
+              "kind": "file",
+              "bytes": 5242880,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/over-directory/c.bin",
+              "kind": "file",
+              "bytes": 1,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [
+          {
+            "path": "🎆️26/🌙️10/☀️18/CLOSED-RETENTION/🗑️generated/huge",
+            "kind": "directory",
+            "bytes": 10485771
+          },
+          {
+            "path": "🎆️26/🌙️10/☀️18/CLOSED-RETENTION/🗑️generated/large.log",
+            "kind": "file",
+            "bytes": 5242881
+          },
+          {
+            "path": "🎆️26/🌙️10/☀️18/CLOSED-RETENTION/🗑️generated/over-directory",
+            "kind": "directory",
+            "bytes": 10485761
+          }
+        ],
+        "skips": []
+      }
+    },
+    {
+      "id": "closed-ticket-selection-generated-removes-the-whole-folder",
+      "description": "Selection generated (repo clean) removes the whole generated folder and still keeps everything outside it.",
+      "request": {
+        "scope": "closed",
+        "selection": "generated"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/CLOSED-RETENTION",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "📥️authored-inputs/large.json",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "📥️authored-inputs/snapshots/source.txt",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "📥️authored-inputs/🗑️generated/authored.tex",
+              "kind": "file",
+              "bytes": 11534336,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "📓️large-research.md",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "📜️script.ts",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "config.json",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "large.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": ".cache.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/large.log",
+              "kind": "file",
+              "bytes": 5242881,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/exact.bin",
+              "kind": "file",
+              "bytes": 5242880,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/huge/blob.bin",
+              "kind": "file",
+              "bytes": 10485761,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/huge/small.log",
+              "kind": "file",
+              "bytes": 10,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/small/file.bin",
+              "kind": "file",
+              "bytes": 1048576,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/exact-directory/a.bin",
+              "kind": "file",
+              "bytes": 5242880,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/exact-directory/b.bin",
+              "kind": "file",
+              "bytes": 5242880,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/over-directory/a.bin",
+              "kind": "file",
+              "bytes": 5242880,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/over-directory/b.bin",
+              "kind": "file",
+              "bytes": 5242880,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/over-directory/c.bin",
+              "kind": "file",
+              "bytes": 1,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [
+          {
+            "path": "🎆️26/🌙️10/☀️18/CLOSED-RETENTION/🗑️generated",
+            "kind": "directory",
+            "bytes": 42991629
+          }
+        ],
+        "skips": []
+      }
+    },
+    {
+      "id": "closed-ticket-keeps-non-generated-oversized-subtrees",
+      "description": "Tracked and untracked oversized subtrees outside the generated folder survive a closed ticket purge.",
+      "request": {
+        "scope": "closed",
+        "selection": "oversized"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/CLOSED-AUTHORED",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "📥️inputs/a.bin",
+              "kind": "file",
+              "bytes": 8388608,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "📥️inputs/b.bin",
+              "kind": "file",
+              "bytes": 8388608,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🪓️monolith-split/x.bin",
+              "kind": "file",
+              "bytes": 11534336,
+              "ageSeconds": 86400,
+              "tracked": true
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [],
+        "skips": []
+      }
+    },
+    {
+      "id": "live-writer-window-boundary",
+      "description": "A generated file younger than 600 s keeps the whole folder; exactly 600 s old does not.",
+      "request": {
+        "scope": "closed",
+        "selection": "oversized"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/YOUNG-WRITER",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated/old.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/new.log",
+              "kind": "file",
+              "bytes": 1,
+              "ageSeconds": 599,
+              "tracked": false
+            }
+          ]
+        },
+        {
+          "id": "🎆️26/🌙️10/☀️18/EXACT-WINDOW",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated/old.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/new.log",
+              "kind": "file",
+              "bytes": 1,
+              "ageSeconds": 600,
+              "tracked": false
+            }
+          ]
+        },
+        {
+          "id": "🎆️26/🌙️10/☀️18/FUTURE-MTIME",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated/old.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/skewed.log",
+              "kind": "file",
+              "bytes": 1,
+              "ageSeconds": -30,
+              "tracked": false
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [
+          {
+            "path": "🎆️26/🌙️10/☀️18/EXACT-WINDOW/🗑️generated/old.bin",
+            "kind": "file",
+            "bytes": 6291456
+          }
+        ],
+        "skips": [
+          {
+            "ticket": "🎆️26/🌙️10/☀️18/FUTURE-MTIME",
+            "reason": "live-writer"
+          },
+          {
+            "ticket": "🎆️26/🌙️10/☀️18/YOUNG-WRITER",
+            "reason": "live-writer"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tracked-files-are-never-removed",
+      "description": "A tracked oversized file stays; its untracked oversized sibling goes; a folder holding a tracked file is kept whole.",
+      "request": {
+        "scope": "closed",
+        "selection": "oversized"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/TRACKED-INSIDE",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated/tracked.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": true
+            },
+            {
+              "path": "🗑️generated/untracked.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/mixed/tracked.txt",
+              "kind": "file",
+              "bytes": 20,
+              "ageSeconds": 86400,
+              "tracked": true
+            },
+            {
+              "path": "🗑️generated/mixed/big.bin",
+              "kind": "file",
+              "bytes": 11534336,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/mixed/sub/blob.bin",
+              "kind": "file",
+              "bytes": 11534336,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/mixed/small.txt",
+              "kind": "file",
+              "bytes": 10,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [
+          {
+            "path": "🎆️26/🌙️10/☀️18/TRACKED-INSIDE/🗑️generated/mixed/big.bin",
+            "kind": "file",
+            "bytes": 11534336
+          },
+          {
+            "path": "🎆️26/🌙️10/☀️18/TRACKED-INSIDE/🗑️generated/mixed/sub",
+            "kind": "directory",
+            "bytes": 11534336
+          },
+          {
+            "path": "🎆️26/🌙️10/☀️18/TRACKED-INSIDE/🗑️generated/untracked.bin",
+            "kind": "file",
+            "bytes": 6291456
+          }
+        ],
+        "skips": []
+      }
+    },
+    {
+      "id": "tracked-files-block-selection-generated-folders",
+      "description": "With selection generated a folder holding a tracked file is kept, every other sibling and subfolder goes.",
+      "request": {
+        "scope": "closed",
+        "selection": "generated"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/TRACKED-INSIDE",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated/mixed/tracked.txt",
+              "kind": "file",
+              "bytes": 20,
+              "ageSeconds": 86400,
+              "tracked": true
+            },
+            {
+              "path": "🗑️generated/mixed/loose.txt",
+              "kind": "file",
+              "bytes": 10,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/mixed/sub/blob.bin",
+              "kind": "file",
+              "bytes": 3,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/other/file.txt",
+              "kind": "file",
+              "bytes": 1,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [
+          {
+            "path": "🎆️26/🌙️10/☀️18/TRACKED-INSIDE/🗑️generated/mixed/loose.txt",
+            "kind": "file",
+            "bytes": 10
+          },
+          {
+            "path": "🎆️26/🌙️10/☀️18/TRACKED-INSIDE/🗑️generated/mixed/sub",
+            "kind": "directory",
+            "bytes": 3
+          },
+          {
+            "path": "🎆️26/🌙️10/☀️18/TRACKED-INSIDE/🗑️generated/other",
+            "kind": "directory",
+            "bytes": 1
+          }
+        ],
+        "skips": []
+      }
+    },
+    {
+      "id": "boundary-sizes",
+      "description": "Exactly 5 MiB and exactly 10 MiB stay; one byte more goes.",
+      "request": {
+        "scope": "closed",
+        "selection": "oversized"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/BOUNDARIES",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated/file-exact.bin",
+              "kind": "file",
+              "bytes": 5242880,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/file-over.bin",
+              "kind": "file",
+              "bytes": 5242881,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/dir-exact/a.bin",
+              "kind": "file",
+              "bytes": 5242880,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/dir-exact/b.bin",
+              "kind": "file",
+              "bytes": 5242880,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/dir-over/a.bin",
+              "kind": "file",
+              "bytes": 5242880,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/dir-over/b.bin",
+              "kind": "file",
+              "bytes": 5242880,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/dir-over/c.bin",
+              "kind": "file",
+              "bytes": 1,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [
+          {
+            "path": "🎆️26/🌙️10/☀️18/BOUNDARIES/🗑️generated/dir-over",
+            "kind": "directory",
+            "bytes": 10485761
+          },
+          {
+            "path": "🎆️26/🌙️10/☀️18/BOUNDARIES/🗑️generated/file-over.bin",
+            "kind": "file",
+            "bytes": 5242881
+          }
+        ],
+        "skips": []
+      }
+    },
+    {
+      "id": "generated-root-shapes",
+      "description": "A missing generated folder is nothing to do; a regular file or a symbolic link in its place is skipped and its target stays.",
+      "request": {
+        "scope": "closed",
+        "selection": "oversized"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/NO-GENERATED",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "📓️report.md",
+              "kind": "file",
+              "bytes": 11534336,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        },
+        {
+          "id": "🎆️26/🌙️10/☀️18/FILE-ROOT",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated",
+              "kind": "file",
+              "bytes": 11534336,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        },
+        {
+          "id": "🎆️26/🌙️10/☀️18/SYMLINK-ROOT",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated",
+              "kind": "symlink",
+              "target": "external"
+            }
+          ]
+        },
+        {
+          "id": "🎆️26/🌙️10/☀️18/EMPTY-ROOT",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated",
+              "kind": "directory"
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [],
+        "skips": [
+          {
+            "ticket": "🎆️26/🌙️10/☀️18/FILE-ROOT",
+            "reason": "not-directory"
+          },
+          {
+            "ticket": "🎆️26/🌙️10/☀️18/SYMLINK-ROOT",
+            "reason": "symlink-root"
+          }
+        ]
+      }
+    },
+    {
+      "id": "symbolic-links-inside-generated-are-never-followed",
+      "description": "A link to an outside folder and one to an outside file are not followed, counted or removed through.",
+      "request": {
+        "scope": "closed",
+        "selection": "oversized"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/INNER-LINKS",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated/link-dir",
+              "kind": "symlink",
+              "target": "external"
+            },
+            {
+              "path": "🗑️generated/link-file.bin",
+              "kind": "symlink",
+              "target": "external/blob.bin"
+            },
+            {
+              "path": "🗑️generated/real.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [
+          {
+            "path": "🎆️26/🌙️10/☀️18/INNER-LINKS/🗑️generated/real.bin",
+            "kind": "file",
+            "bytes": 6291456
+          }
+        ],
+        "skips": []
+      }
+    },
+    {
+      "id": "manifest-states",
+      "description": "Only status closed qualifies: open, an unknown status, an unreadable document and a missing document are all skipped.",
+      "request": {
+        "scope": "closed",
+        "selection": "oversized"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/STATUS-CLOSED",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated/a.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        },
+        {
+          "id": "🎆️26/🌙️10/☀️18/STATUS-OPEN",
+          "manifest": "open",
+          "entries": [
+            {
+              "path": "🗑️generated/a.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        },
+        {
+          "id": "🎆️26/🌙️10/☀️18/STATUS-CLOSING",
+          "manifest": "closing",
+          "entries": [
+            {
+              "path": "🗑️generated/a.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        },
+        {
+          "id": "🎆️26/🌙️10/☀️18/MANIFEST-INVALID",
+          "manifest": "invalid",
+          "entries": [
+            {
+              "path": "🗑️generated/a.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        },
+        {
+          "id": "🎆️26/🌙️10/☀️18/MANIFEST-MISSING",
+          "manifest": "missing",
+          "entries": [
+            {
+              "path": "🗑️generated/a.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [
+          {
+            "path": "🎆️26/🌙️10/☀️18/STATUS-CLOSED/🗑️generated/a.bin",
+            "kind": "file",
+            "bytes": 6291456
+          }
+        ],
+        "skips": [
+          {
+            "ticket": "🎆️26/🌙️10/☀️18/MANIFEST-INVALID",
+            "reason": "not-closed"
+          },
+          {
+            "ticket": "🎆️26/🌙️10/☀️18/MANIFEST-MISSING",
+            "reason": "not-closed"
+          },
+          {
+            "ticket": "🎆️26/🌙️10/☀️18/STATUS-CLOSING",
+            "reason": "not-closed"
+          },
+          {
+            "ticket": "🎆️26/🌙️10/☀️18/STATUS-OPEN",
+            "reason": "not-closed"
+          }
+        ]
+      }
+    },
+    {
+      "id": "scope-ticket-purges-only-the-named-closed-ticket",
+      "description": "A named closed ticket is purged and its closed neighbour is left alone.",
+      "request": {
+        "scope": "ticket",
+        "selection": "oversized",
+        "ticket": "🎆️26/🌙️10/☀️18/NAMED"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/NAMED",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated/a.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        },
+        {
+          "id": "🎆️26/🌙️10/☀️18/NEIGHBOUR",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated/a.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [
+          {
+            "path": "🎆️26/🌙️10/☀️18/NAMED/🗑️generated/a.bin",
+            "kind": "file",
+            "bytes": 6291456
+          }
+        ],
+        "skips": []
+      }
+    },
+    {
+      "id": "scope-ticket-refuses-an-open-ticket",
+      "description": "Naming an open ticket explicitly still removes nothing.",
+      "request": {
+        "scope": "ticket",
+        "selection": "oversized",
+        "ticket": "🎆️26/🌙️10/☀️18/NAMED-OPEN"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/NAMED-OPEN",
+          "manifest": "open",
+          "entries": [
+            {
+              "path": "🗑️generated/a.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [],
+        "skips": [
+          {
+            "ticket": "🎆️26/🌙️10/☀️18/NAMED-OPEN",
+            "reason": "not-closed"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hidden-ticket-folders-are-not-discovered",
+      "description": "A dot-prefixed folder is no ticket for the all-closed scope.",
+      "request": {
+        "scope": "closed",
+        "selection": "oversized"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/.hidden",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated/a.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        },
+        {
+          "id": "🎆️26/🌙️10/☀️18/VISIBLE",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated/a.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [
+          {
+            "path": "🎆️26/🌙️10/☀️18/VISIBLE/🗑️generated/a.bin",
+            "kind": "file",
+            "bytes": 6291456
+          }
+        ],
+        "skips": []
+      }
+    },
+    {
+      "id": "two-tickets-one-live-writer",
+      "description": "A live writer in one closed ticket does not hold back another closed ticket.",
+      "request": {
+        "scope": "closed",
+        "selection": "oversized"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/BUSY",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated/a.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "🗑️generated/lane.log",
+              "kind": "file",
+              "bytes": 1,
+              "ageSeconds": 3,
+              "tracked": false
+            }
+          ]
+        },
+        {
+          "id": "🎆️26/🌙️10/☀️18/QUIET",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated/a.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [
+          {
+            "path": "🎆️26/🌙️10/☀️18/QUIET/🗑️generated/a.bin",
+            "kind": "file",
+            "bytes": 6291456
+          }
+        ],
+        "skips": [
+          {
+            "ticket": "🎆️26/🌙️10/☀️18/BUSY",
+            "reason": "live-writer"
+          }
+        ]
+      }
+    },
+    {
+      "id": "unknown-tracking-fails-closed",
+      "description": "Where git cannot say what is tracked, nothing is removed.",
+      "request": {
+        "scope": "closed",
+        "selection": "oversized"
+      },
+      "git": false,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/NO-GIT",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "🗑️generated/a.bin",
+              "kind": "file",
+              "bytes": 6291456,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [],
+        "skips": [
+          {
+            "ticket": "🎆️26/🌙️10/☀️18/NO-GIT",
+            "reason": "tracked-unknown"
+          }
+        ]
+      }
+    },
+    {
+      "id": "nested-generated-names-are-authored-content",
+      "description": "A folder named generated deeper inside the ticket is never the generated output root.",
+      "request": {
+        "scope": "closed",
+        "selection": "oversized"
+      },
+      "git": true,
+      "tickets": [
+        {
+          "id": "🎆️26/🌙️10/☀️18/NESTED-NAME",
+          "manifest": "closed",
+          "entries": [
+            {
+              "path": "📥️inputs/🗑️generated/a.bin",
+              "kind": "file",
+              "bytes": 12582912,
+              "ageSeconds": 86400,
+              "tracked": false
+            },
+            {
+              "path": "📥️inputs/🗑️generated/b.bin",
+              "kind": "file",
+              "bytes": 12582912,
+              "ageSeconds": 86400,
+              "tracked": false
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "removals": [],
+        "skips": []
+      }
+    }
+  ]
+}

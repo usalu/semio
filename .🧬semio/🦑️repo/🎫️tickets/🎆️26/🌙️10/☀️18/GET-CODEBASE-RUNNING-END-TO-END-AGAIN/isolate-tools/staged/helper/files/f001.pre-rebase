@@ -1,0 +1,33 @@
+/** 🧰️ Shared fixtures, issued invocations and one-time module warm-up for the build graph behaviour groups. */
+import storageSchema from "../../../📥️inputs/💾️storage/🧬️schema/🔣️.json";
+import {mkdtemp,rm} from "node:fs/promises";
+import {readFileSync} from "node:fs";
+import {dirname,join,resolve} from "node:path";
+import {tmpdir} from "node:os";
+import {spyOn,beforeAll} from "bun:test";
+import {createRequire} from "node:module";
+import fixture from "../../🧫️fixtures/🕸️graph/🔣️.json";
+import {createNativeBuildCallerCapabilitiesV1} from "../../../📥️caller/🟦️.ts";
+import {readBuildGraphV1} from "../../../🕸️graph/🟦️.ts";
+import {privateRepositoryWorkspaceV1,type PrivateRepositoryWorkspaceV1} from "../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import {createIssuedResourceControlV1,createScriptProcessEnvelope,withScriptProcessEnvelope,withScriptInvocationSignalV1,acknowledgeScriptInvocationSignalStopV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+
+const require=createRequire(import.meta.url),Ajv=require("ajv/dist/2020").default;
+export const datasetSchema=storageSchema.definitions.InferenceDataset;
+/** 🧭️ Declares the bounded Nx namespace of the repository (`nx.json` `cacheDirectory`) when the run carries none: the repository's patched Nx refuses to read that cache directory without `SEMIO_NX_FIXED_STORAGE` and `NX_CACHE_DIRECTORY`, so a law that loads Nx as its independent oracle names the same namespace under a bare `bun test ./file` as under the suite runner; a run that already declares either variable keeps its own. */
+export function declareNxOracleNamespaceV1(root:string,environment:NodeJS.ProcessEnv=process.env):void{const declared=JSON.parse(readFileSync(join(root,"nx.json"),"utf8")).cacheDirectory;if(typeof declared!=="string"||environment.SEMIO_NX_FIXED_STORAGE!==undefined||environment.NX_CACHE_DIRECTORY!==undefined)return;const cache=resolve(root,declared);environment.NX_CACHE_DIRECTORY=cache;environment.SEMIO_NX_FIXED_STORAGE=dirname(dirname(cache));}
+declareNxOracleNamespaceV1(process.cwd());
+export const nxOracleRequireV1=createRequire(resolve(process.cwd(),".nx/installation/package.json")),independentGlobV1=Object.assign((patterns:string|string[],options:Record<string,unknown>)=>nxOracleRequireV1("glob").glob(patterns,{...options,nodir:true}),{sync:(patterns:string|string[],options:Record<string,unknown>)=>nxOracleRequireV1("glob").globSync(patterns,{...options,nodir:true})});
+export const graph=()=>readBuildGraphV1(structuredClone(fixture.graph));
+/** 🪪️ Runs a law inside one issued graph fixture Original; a law that opens native images passes a budget above their 10 s cleanup reserves (`reserveMilliseconds` of the native storage schema). */
+export const withGraphTestInvocationV1=(body:(invocation:any)=>Promise<void>,maximumElapsedMilliseconds=20000)=>withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"graph-fixture-publisher",maximumElapsedMilliseconds},createNativeBuildCallerCapabilitiesV1(process.cwd(),["show","projects"],"nx",process.env),Date.now()),body);
+export type CommandSourceControlV1={parent:import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation;invocation:import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation;phaseControl:import("@semio-tech/process/leases").ResourceLeaseControl;events:string[];arm(phase:string):void;continuations():number};
+/** 🎛️ Cancels through a real issued signal after the genuine progress publication and continuation finish. */
+export async function withCommandSourceControlV1(root:string,owner:string,maximumElapsedMilliseconds:number,reason:Error,body:(control:CommandSourceControlV1)=>Promise<void>):Promise<void>{
+ const routing=await import("@semio-tech/process/routing"),advance=routing.advanceScriptInvocation,controller=new AbortController(),events:string[]=[];let armed:string|undefined,continuations=0;
+ await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner,maximumElapsedMilliseconds},{workspaceRoot:root},Date.now()),original=>withScriptInvocationSignalV1(original,controller.signal,async invocation=>{const phaseControl=createIssuedResourceControlV1(invocation,"graph:command-source",0),observer=spyOn(routing,"advanceScriptInvocation").mockImplementation(async(actual,command,stage)=>{await advance(actual,command,stage);if(!Object.is(actual,invocation))return;events.push(command);if(armed===command){await invocation.control.yieldContinuation();continuations++;controller.abort(reason);}});try{await body({parent:original,invocation,phaseControl,events,arm:phase=>{armed=phase;},continuations:()=>continuations});}finally{observer.mockRestore();if(controller.signal.aborted)acknowledgeScriptInvocationSignalStopV1(invocation);}}));
+}
+beforeAll(async()=>{const root=await mkdtemp(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!),"graph-init-"));try{await require("../../../👁️observation/🟨️.mjs").observeInference({cachePath:join(root,"init.json"),key:"owned-test-initialization"},()=>null);}finally{await rm(root,{recursive:true,force:true});}});
+/** 🧫️ The private repository of this test process with its graph store provisioned once (graph profile: it also holds the observation staging files): one fact-store writer enters the private lease and graph images before the first timed test; an adopted repository was provisioned by its parent. @see ../../../../🧪️testing/🧫️private-repository/🟦️.ts */
+let privateGraphV1:Promise<PrivateRepositoryWorkspaceV1>|undefined;
+export const privateGraphWorkspaceV1=():Promise<PrivateRepositoryWorkspaceV1>=>privateGraphV1??=privateRepositoryWorkspaceV1("graph").then(async workspace=>{if(workspace.owned){const api=await import("../../../📥️inputs/💾️storage/🟨️.mjs");await workspace.invoke(original=>api.withRepositoryBuildGraphFactStoreV1(workspace.root,original,createIssuedResourceControlV1(original,"graph:private-open",0),async()=>{}),{owner:"graph-fixture-provisioning",maximumElapsedMilliseconds:150000});}return workspace;});

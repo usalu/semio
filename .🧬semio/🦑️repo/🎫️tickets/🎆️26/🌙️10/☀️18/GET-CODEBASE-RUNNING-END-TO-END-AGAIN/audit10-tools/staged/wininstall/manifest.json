@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📥️install/🔵️.ps1": {
+  "file": "00.ps1",
+  "base": "c0bcc39eba1756f44b6b4343be9fb1aa43f4947e202741e49bd44b1f145d975b",
+  "new": "43aeaa63df4f24545534f909f081e8672b3e2d4db324ca5c59fdaa9c734add17"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📥️install-contract/🟦️.ts": {
+  "file": "01.ts",
+  "base": "ad9ac03522d1207366e8b36449ebe7a3208a7c1daa81230adf3df8196a9d934f",
+  "new": "28091e5088d07cfb197ad15d445e06ec921d84b058b2bee9ac947a58161bdd9e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📥️install-contract/🥒️.feature": {
+  "file": "02.feature",
+  "base": "7c362c3713da75a5e290a824ce8ca90aac3911b82039845593b0ec6135eee772",
+  "new": "2e66fec5e927b94243c3f6d38f5be163a6aa58d4a1a9d8afc98e7b4c1f73d6b8"
+ }
+}

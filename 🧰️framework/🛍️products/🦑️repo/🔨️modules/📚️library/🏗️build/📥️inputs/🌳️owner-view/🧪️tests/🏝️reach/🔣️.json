@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "sharedRoot": "🧰️framework/🔨️modules",
+  "privateDirectory": "🛍️products",
+  "testDirectory": "/🧪️tests/",
+  "codeExtensions": [".ts", ".tsx", ".mts", ".mjs", ".js"],
+  "followedRust": "#\\[path|include_str!|include_bytes!|include!",
+  "exceptions": []
+}

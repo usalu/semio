@@ -1,0 +1,724 @@
+# 🏗️ Build system CI: proves that a fresh checkout reaches a green, cached, incremental build with zero manual setup on
+# Linux, macOS and Windows, with Bazel as the default implementation and Nx kept honest on a sample. Triggered by every pull
+# request, every push to the default branch (`main` and `⛳wip`) and by hand.
+#
+# Runners and timeouts: every runner image is pinned to a version (ubuntu-24.04, macos-26, windows-2025), never to a `-latest` alias, so that the migration
+# of an alias (ubuntu-latest moves to 26.04) is a reviewed change; a law (the workflow tests of the suite sweep) rejects an alias. Timeouts follow the policy of the
+# suite sweep: a shard has `maximumShardBudgetMinutes` plus the slack of one suite, a sweep job gets that plus 50 minutes of provisioning and never the hosted
+# maximum of 360, and every step that downloads or installs has its own limit of 30 minutes, so a hung download ends one step instead of holding a runner for hours.
+#
+# Language: the entry has no default language and refuses to run when none resolves, so the workflow sets SEMIO_LANGUAGE=en for
+# every job (runners may have no locale) and one smoke step runs in German (de).
+#
+# Contract: every build step is `repo ...` (the neutral entry); the implementation is the single value BUILD_TOOL
+# (`--tool=$BUILD_TOOL`). Nothing here calls bazel, nx, cargo, sudo or an installer, and no step knows an implementation's
+# flags, logs or directories. The only other program is the CI report (`$CI_REPORT`), which reads what `repo` printed
+# (CacheStatus, DryRunPlan, exported JUnit XML) and holds every implementation-specific judgement, with its own tests.
+#
+#   plan     - the revision range for `affected` (pull request: base..merge commit; push: before..sha; new branch: all).
+#   smoke    - per operating system: the launcher built from the checkout (it provisions the pinned runtime), `--help`, `preflight`, `tools setup`, `dependencies
+#              sync --all`, then the cache proof: empty the local cache, run one target (store grows), run it again (store
+#              unchanged, served from the cache).
+#   storage  - per operating system, after smoke: the native storage laws of the platform (`test-native-storage`): mounted sparse images on
+#              macOS, directory partitions on Linux and Windows, portable libc resolution and pinned system programs everywhere.
+#   host     - per operating system, after smoke: the suites that MUST really run on that kernel (`repo $CI_SUITES run --must-run`;
+#              the list is the closed policy of the suite sweep, `mustRun`): the lease store (sharing-violation retries on Windows,
+#              SQLite locking), the physical compiler file lock (flock on POSIX, `LockFileEx` on Windows, observed by an independent
+#              Python lock call), the process-tree termination (`taskkill /T` on Windows), the native storage, the in-process
+#              Windows boot clock against PowerShell (timings printed) and every other Windows-only law the Windows lanes left
+#              open (unit-cache compiler stand-in, tree-memory process table, PATHEXT, hard-linked toolchains, hook shell, ...).
+#              A suite that is skipped or missing here FAILS the job; blocking on every operating system.
+#   suites   - per operating system x route table x shard, after smoke: the closed route tables (process, caching, build) run
+#              suite by suite through the official `repo run` route (`repo $CI_SUITES run --shard`). The shard count of every
+#              table is part of the policy (a law checks that this matrix and the policy agree); a suite declared for other hosts
+#              (`platforms`) is reported SKIPPED, never green; the logs, timings and host memory samples of every suite are
+#              uploaded. Every row is blocking: each suite of the three tables carries an explicit platform verdict, a suite whose
+#              test files use a host-bound fact unconditionally (a POSIX program, a shell script, a symbolic link, permission bits,
+#              process control, a literal python3 command) is declared for the POSIX hosts only with its causes (`platformCauses`)
+#              and is reported SKIPPED on Windows, every other suite really runs there.
+#   devcontainer - one runner, after smoke: the actual development container builds, provisions every pinned tool inside it and
+#              runs the same must-run suites on the container's own mounts (atomic directory exchange, named volumes).
+#   devcontainer-suites - one runner per shard of the process and caching tables, after smoke: the route tables whose laws depend on
+#              mounts and kernel facts run inside the development container. The build table is library logic and runs on the
+#              plain Linux host only.
+#   affected - per operating system, after smoke: `repo affected` builds and tests only the projects changed in the
+#              range and their dependents (a dry run first prints the selection), reports the cache hit rate of the run
+#              and uploads the JUnit XML of every executed test.
+#   parity   - one runner, after smoke: Nx and the default implementation must select the same tasks for the same range,
+#              and the sample target must be green and cached under Nx.
+#   bench    - per operating system (linux, macos), after smoke, NOT blocking (continue-on-error): `repo bench run` measures the
+#              performance objectives (command line help, warm no-op, edit to rebuild per language, cache hit rate, graph,
+#              memory, concurrent agents) in a disposable copy with every implementation, prints percentiles with the host load,
+#              compares with the baseline of the last default-branch run on the same runner class and uploads the JSON and
+#              markdown report; only default-branch pushes store a new baseline. Objectives marked blocking in the table
+#              fail the step but never the workflow until the job loses continue-on-error.
+#
+# Caches. The shared remote cache is configured only by the repository variable SEMIO_REMOTE_CACHE_ENDPOINT (or a secret of
+# the same name) and the secrets SEMIO_REMOTE_CACHE_READ_TOKEN / SEMIO_REMOTE_CACHE_WRITE_TOKEN; with no endpoint it is off.
+# Pull requests (and forks, which get no secrets) read only: access read-only, upload off, read token. Only pushes to the
+# default branch write: access read-write, upload on, write token. Without an endpoint the local task cache travels through
+# the GitHub cache instead (restored always, saved only by the default branch); its directory is whatever `cache status`
+# prints for the selected implementation, so the workflow names no implementation path. The Bun store always travels; the launcher runtimes and the Go toolchain of the installer travel through the `repo-launcher` action and every other tool cache through ./.github/actions/tool-cache (saved only by the default branch).
+# Every action is pinned to a full commit SHA. No write permission, no credential left in the workspace.
+# The course release workflow (architecture-course.yml) is separate and untouched.
+
+name: build system
+
+on:
+  pull_request:
+  push:
+    branches: [main, "⛳wip"]
+  workflow_dispatch:
+    inputs:
+      tool:
+        description: Build implementation for smoke and affected
+        type: choice
+        options: [bazel, nx]
+        default: bazel
+      scope:
+        description: affected = what changed against the base and its dependents, all = every project
+        type: choice
+        options: [affected, all]
+        default: affected
+      base:
+        description: Revision to compare against (scope affected); empty means the default branch of the repository
+        type: string
+        default: ""
+      targets:
+        description: Comma list of targets to build and test
+        type: string
+        default: build,test
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-system-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NODE_VERSION: 24.15.0
+  BUILD_TOOL: ${{ inputs.tool || 'bazel' }}
+  TARGETS: ${{ inputs.targets || 'build,test' }}
+  PROOF_TARGET: "@teaching/architecture-course:test"
+  CI_REPORT: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️ci-report/📜️script.ts
+  CI_SUITES: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️ci-report/🗂️suites/📜️script.ts
+  CI: "true"
+  SEMIO_LANGUAGE: en
+  SEMIO_REMOTE_CACHE_ENDPOINT: ${{ vars.SEMIO_REMOTE_CACHE_ENDPOINT || secrets.SEMIO_REMOTE_CACHE_ENDPOINT }}
+  SEMIO_REMOTE_CACHE_INSTANCE: ${{ vars.SEMIO_REMOTE_CACHE_INSTANCE }}
+  SEMIO_REMOTE_CACHE_ACCESS: ${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && 'read-write' || 'read-only' }}
+  SEMIO_REMOTE_CACHE_UPLOAD: ${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && 'true' || 'false' }}
+  SEMIO_REMOTE_CACHE_TOKEN: ${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && secrets.SEMIO_REMOTE_CACHE_WRITE_TOKEN || secrets.SEMIO_REMOTE_CACHE_READ_TOKEN }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  plan:
+    name: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      range: ${{ steps.range.outputs.range }}
+    steps:
+      - name: Resolve the revision range of the affected selection
+        id: range
+        env:
+          EVENT: ${{ github.event_name }}
+          SCOPE: ${{ inputs.scope }}
+          PULL_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          DISPATCH_BASE: ${{ inputs.base }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          zero=0000000000000000000000000000000000000000
+          case "$EVENT" in
+            pull_request) range="--base=$PULL_BASE --head=HEAD" ;;
+            push) if [ -z "$PUSH_BEFORE" ] || [ "$PUSH_BEFORE" = "$zero" ]; then range="--all"; else range="--base=$PUSH_BEFORE --head=HEAD"; fi ;;
+            *) if [ "$SCOPE" = all ]; then range="--all"; else range="--base=${DISPATCH_BASE:-origin/$DEFAULT_BRANCH} --head=HEAD"; fi ;;
+          esac
+          echo "range=$range" >> "$GITHUB_OUTPUT"
+          echo "affected range: $range" >> "$GITHUB_STEP_SUMMARY"
+
+  smoke:
+    name: smoke (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux
+            os: ubuntu-24.04
+          - name: macos
+            os: macos-26
+          - name: windows
+            os: windows-2025
+    steps:
+      - name: Enable long paths before checkout (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          git config --system core.longpaths true
+          git config --system core.autocrlf false
+          New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force | Out-Null
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/repo-launcher
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Print the neutral build entry usage
+        run: repo --help
+      - name: Preflight
+        run: repo preflight
+      - name: Print the usage and run the preflight in German (no default language, so the German paths are exercised)
+        env:
+          SEMIO_LANGUAGE: de
+        run: |
+          repo --help
+          repo preflight
+      - name: Provision the build tool
+        run: repo tools setup "$BUILD_TOOL"
+        timeout-minutes: 30
+      - name: Compute the lockfile cache keys
+        id: keys
+        run: |
+          echo "bun=bun-store-${RUNNER_OS}-${RUNNER_ARCH}-${{ hashFiles('bun.lock', '*/bun.lock', 'package.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Restore the Bun store
+        id: bun-store
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/b/d/m/bun-cache
+          key: ${{ steps.keys.outputs.bun }}
+          restore-keys: bun-store-${{ runner.os }}-${{ runner.arch }}-
+      - name: Install the authored dependency scopes
+        run: repo dependencies sync --all
+        timeout-minutes: 30
+      - name: Report the remote cache contract and whether the endpoint answers
+        continue-on-error: true
+        run: repo --tool="$BUILD_TOOL" remote-cache status
+      - name: Prove the local cache
+        uses: ./.github/actions/cache-proof
+        with:
+          tool: ${{ env.BUILD_TOOL }}
+          target: ${{ env.PROOF_TARGET }}
+        timeout-minutes: 45
+      - name: Save the Bun store (default branch)
+        if: ${{ success() && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && steps.bun-store.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/b/d/m/bun-cache
+          key: ${{ steps.keys.outputs.bun }}
+
+  storage:
+    name: storage (${{ matrix.name }})
+    needs: [smoke]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux
+            os: ubuntu-24.04
+          - name: macos
+            os: macos-26
+          - name: windows
+            os: windows-2025
+    steps:
+      - name: Enable long paths before checkout (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          git config --system core.longpaths true
+          git config --system core.autocrlf false
+          New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force | Out-Null
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/repo-launcher
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Provision the build tool
+        run: repo tools setup "$BUILD_TOOL"
+        timeout-minutes: 30
+      - name: Restore the Bun store
+        uses: ./.github/actions/tool-cache
+        with:
+          mode: restore
+          name: bun-store
+          paths: .cache/b/d/m/bun-cache
+          hash: ${{ hashFiles('bun.lock', '*/bun.lock', 'package.json') }}
+      - name: Install the authored dependency scopes
+        run: repo dependencies sync --all
+        timeout-minutes: 30
+      - name: Native storage laws of this platform (images on macOS, directory partitions on Linux and Windows, libc and tool pinning everywhere)
+        run: repo --tool="$BUILD_TOOL" run @semio-tech/framework-process:test-native-storage
+
+  host:
+    name: host laws (${{ matrix.name }})
+    needs: [smoke]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux
+            os: ubuntu-24.04
+          - name: macos
+            os: macos-26
+          - name: windows
+            os: windows-2025
+    steps:
+      - name: Enable long paths before checkout (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          git config --system core.longpaths true
+          git config --system core.autocrlf false
+          New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force | Out-Null
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/repo-launcher
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Provision every pinned tool
+        run: repo tools setup all
+        timeout-minutes: 30
+      - name: Report where the host differs from the tool pins
+        continue-on-error: true
+        run: repo tools verify
+      - name: Restore the Bun store
+        uses: ./.github/actions/tool-cache
+        with:
+          mode: restore
+          name: bun-store
+          paths: .cache/b/d/m/bun-cache
+          hash: ${{ hashFiles('bun.lock', '*/bun.lock', 'package.json') }}
+      - name: Install the authored dependency scopes
+        run: repo dependencies sync --all
+        timeout-minutes: 30
+      - name: Run the suites that must really run on this operating system (a suite that is skipped or missing fails here)
+        run: |
+          mkdir -p "$RUNNER_TEMP/host-laws"
+          repo "$CI_SUITES" run --must-run --tool "$BUILD_TOOL" --out "$RUNNER_TEMP/host-laws" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Snapshot the build system state (leases, capacity, storage, graph)
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: |
+          mkdir -p "$RUNNER_TEMP/host-laws"
+          repo doctor --json > "$RUNNER_TEMP/host-laws/doctor.json"
+      - name: Upload the logs, timings and memory samples
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: host-laws-${{ matrix.name }}
+          path: ${{ runner.temp }}/host-laws
+          if-no-files-found: warn
+          retention-days: 14
+
+  devcontainer:
+    name: devcontainer (must-run suites)
+    needs: [smoke]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/devcontainer-suites
+        with:
+          script: ${{ env.CI_SUITES }}
+          selection: --must-run
+          tool: ${{ env.BUILD_TOOL }}
+      - name: Upload the logs, timings and memory samples
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: devcontainer-must-run
+          path: |
+            .ci-suites
+            ${{ runner.temp }}/native-devcontainer.log
+          if-no-files-found: warn
+          retention-days: 14
+
+  devcontainer-suites:
+    name: devcontainer suites (${{ matrix.table }} ${{ matrix.index }}/${{ matrix.count }})
+    needs: [smoke]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {table: process, index: 1, count: 2}
+          - {table: process, index: 2, count: 2}
+          - {table: caching, index: 1, count: 3}
+          - {table: caching, index: 2, count: 3}
+          - {table: caching, index: 3, count: 3}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/devcontainer-suites
+        with:
+          script: ${{ env.CI_SUITES }}
+          selection: --shard ${{ matrix.table }}:${{ matrix.index }}/${{ matrix.count }}
+          tool: ${{ env.BUILD_TOOL }}
+      - name: Upload the logs, timings and memory samples
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: devcontainer-suites-${{ matrix.table }}-${{ matrix.index }}of${{ matrix.count }}
+          path: |
+            .ci-suites
+            ${{ runner.temp }}/native-devcontainer.log
+          if-no-files-found: warn
+          retention-days: 14
+
+  suites:
+    name: suites (${{ matrix.name }} ${{ matrix.table }} ${{ matrix.index }}/${{ matrix.count }})
+    needs: [smoke]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: linux, os: ubuntu-24.04, table: process, index: 1, count: 2}
+          - {name: linux, os: ubuntu-24.04, table: process, index: 2, count: 2}
+          - {name: linux, os: ubuntu-24.04, table: caching, index: 1, count: 3}
+          - {name: linux, os: ubuntu-24.04, table: caching, index: 2, count: 3}
+          - {name: linux, os: ubuntu-24.04, table: caching, index: 3, count: 3}
+          - {name: linux, os: ubuntu-24.04, table: build, index: 1, count: 2}
+          - {name: linux, os: ubuntu-24.04, table: build, index: 2, count: 2}
+          - {name: macos, os: macos-26, table: process, index: 1, count: 2}
+          - {name: macos, os: macos-26, table: process, index: 2, count: 2}
+          - {name: macos, os: macos-26, table: caching, index: 1, count: 3}
+          - {name: macos, os: macos-26, table: caching, index: 2, count: 3}
+          - {name: macos, os: macos-26, table: caching, index: 3, count: 3}
+          - {name: macos, os: macos-26, table: build, index: 1, count: 2}
+          - {name: macos, os: macos-26, table: build, index: 2, count: 2}
+          - {name: windows, os: windows-2025, table: process, index: 1, count: 2}
+          - {name: windows, os: windows-2025, table: process, index: 2, count: 2}
+          - {name: windows, os: windows-2025, table: caching, index: 1, count: 3}
+          - {name: windows, os: windows-2025, table: caching, index: 2, count: 3}
+          - {name: windows, os: windows-2025, table: caching, index: 3, count: 3}
+          - {name: windows, os: windows-2025, table: build, index: 1, count: 2}
+          - {name: windows, os: windows-2025, table: build, index: 2, count: 2}
+    steps:
+      - name: Enable long paths before checkout (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          git config --system core.longpaths true
+          git config --system core.autocrlf false
+          New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force | Out-Null
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/repo-launcher
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Preflight
+        run: repo preflight
+      - name: Provision every pinned tool
+        run: repo tools setup all
+        timeout-minutes: 30
+      - name: Report where the host differs from the tool pins
+        continue-on-error: true
+        run: repo tools verify
+      - name: Compute the lockfile cache keys
+        id: keys
+        run: |
+          echo "bun=bun-store-${RUNNER_OS}-${RUNNER_ARCH}-${{ hashFiles('bun.lock', '*/bun.lock', 'package.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Restore the Bun store
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/b/d/m/bun-cache
+          key: ${{ steps.keys.outputs.bun }}
+          restore-keys: bun-store-${{ runner.os }}-${{ runner.arch }}-
+      - name: Install the authored dependency scopes
+        run: repo dependencies sync --all
+        timeout-minutes: 30
+      - name: Run the suites of this shard through the official route (a suite declared for other hosts is reported SKIPPED, not passed)
+        env:
+          SHARD: ${{ matrix.table }}:${{ matrix.index }}/${{ matrix.count }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/suites"
+          repo "$CI_SUITES" run --shard "$SHARD" --tool "$BUILD_TOOL" --out "$RUNNER_TEMP/suites" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Snapshot the build system state (leases, capacity, storage, graph)
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: |
+          mkdir -p "$RUNNER_TEMP/suites"
+          repo doctor --json > "$RUNNER_TEMP/suites/doctor.json"
+      - name: Upload the logs, timings and memory samples
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: suites-${{ matrix.name }}-${{ matrix.table }}-${{ matrix.index }}of${{ matrix.count }}
+          path: ${{ runner.temp }}/suites
+          if-no-files-found: warn
+          retention-days: 14
+
+  affected:
+    name: affected (${{ matrix.name }})
+    needs: [plan, smoke]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux
+            os: ubuntu-24.04
+          - name: macos
+            os: macos-26
+          - name: windows
+            os: windows-2025
+    env:
+      PLAN_RANGE: ${{ needs.plan.outputs.range }}
+    steps:
+      - name: Enable long paths before checkout (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          git config --system core.longpaths true
+          git config --system core.autocrlf false
+          New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force | Out-Null
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          filter: blob:none
+      - uses: ./.github/actions/repo-launcher
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Preflight
+        run: repo preflight
+      - name: Provision the build tool
+        run: repo tools setup "$BUILD_TOOL"
+        timeout-minutes: 30
+      - name: Compute the cache keys and the report locations
+        id: keys
+        run: |
+          echo "bun=bun-store-${RUNNER_OS}-${RUNNER_ARCH}-${{ hashFiles('bun.lock', '*/bun.lock', 'package.json') }}" >> "$GITHUB_OUTPUT"
+          echo "disk=disk-${BUILD_TOOL}-${RUNNER_OS}-${RUNNER_ARCH}" >> "$GITHUB_OUTPUT"
+          echo "SEMIO_BUILD_TEST_RESULTS_DIR=$RUNNER_TEMP/test-results" >> "$GITHUB_ENV"
+      - name: Restore the Bun store
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/b/d/m/bun-cache
+          key: ${{ steps.keys.outputs.bun }}
+          restore-keys: bun-store-${{ runner.os }}-${{ runner.arch }}-
+      - name: Install the authored dependency scopes
+        run: repo dependencies sync --all
+        timeout-minutes: 30
+      - name: Locate the local cache of the build tool
+        id: cache-dir
+        run: |
+          repo --tool="$BUILD_TOOL" cache status > "$RUNNER_TEMP/cache-location.out"
+          directory="$(repo "$CI_REPORT" cache-directory --status "$RUNNER_TEMP/cache-location.out")"
+          echo "directory=$directory" >> "$GITHUB_OUTPUT"
+      - name: Restore the local cache (no remote cache configured)
+        if: ${{ env.SEMIO_REMOTE_CACHE_ENDPOINT == '' && steps.cache-dir.outputs.directory != '' }}
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.cache-dir.outputs.directory }}
+          key: ${{ steps.keys.outputs.disk }}-${{ github.sha }}
+          restore-keys: ${{ steps.keys.outputs.disk }}-
+      - name: Use the whole workspace when the base revision is not part of the clone
+        run: |
+          range="$PLAN_RANGE"
+          base="${range#--base=}"
+          base="${base%% *}"
+          if [ "$base" != "$range" ] && ! git rev-parse --verify --quiet "${base}^{commit}" > /dev/null; then
+            echo "::warning::base revision $base is not in the clone (rewritten history?); selecting every project"
+            range="--all"
+          fi
+          echo "AFFECTED_RANGE=$range" >> "$GITHUB_ENV"
+      - name: Select what is affected
+        run: |
+          repo --tool="$BUILD_TOOL" affected --targets="$TARGETS" $AFFECTED_RANGE --dry-run > "$RUNNER_TEMP/plan.out"
+          repo "$CI_REPORT" plan --plan "$RUNNER_TEMP/plan.out" --targets "$TARGETS" --label "$BUILD_TOOL ${{ matrix.name }} $AFFECTED_RANGE" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Record the cache before the run
+        run: repo --tool="$BUILD_TOOL" cache status > "$RUNNER_TEMP/cache-before.out"
+      - name: Build and test what is affected
+        run: repo --tool="$BUILD_TOOL" affected --targets="$TARGETS" $AFFECTED_RANGE
+      - name: Report the cache hit rate
+        if: ${{ !cancelled() }}
+        run: |
+          repo --tool="$BUILD_TOOL" cache status > "$RUNNER_TEMP/cache-after.out"
+          repo "$CI_REPORT" cache-delta --tool "$BUILD_TOOL" --before "$RUNNER_TEMP/cache-before.out" --after "$RUNNER_TEMP/cache-after.out" --label "$BUILD_TOOL ${{ matrix.name }}" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Summarize the test results
+        if: ${{ !cancelled() }}
+        run: repo "$CI_REPORT" tests --dir "$SEMIO_BUILD_TEST_RESULTS_DIR" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Upload the test results (JUnit XML)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-results-${{ matrix.name }}
+          path: ${{ runner.temp }}/test-results
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Save the local cache (default branch, no remote cache configured)
+        if: ${{ success() && env.SEMIO_REMOTE_CACHE_ENDPOINT == '' && steps.cache-dir.outputs.directory != '' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.cache-dir.outputs.directory }}
+          key: ${{ steps.keys.outputs.disk }}-${{ github.sha }}
+
+  parity:
+    name: parity (nx sample)
+    needs: [plan, smoke]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      PLAN_RANGE: ${{ needs.plan.outputs.range }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          filter: blob:none
+      - uses: ./.github/actions/repo-launcher
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Preflight
+        run: repo preflight
+      - name: Provision every build tool
+        run: repo tools setup all
+        timeout-minutes: 30
+      - name: Verify every tool against its pin
+        run: repo tools verify
+      - name: Compute the lockfile cache keys
+        id: keys
+        run: |
+          echo "bun=bun-store-${RUNNER_OS}-${RUNNER_ARCH}-${{ hashFiles('bun.lock', '*/bun.lock', 'package.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Restore the Bun store
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/b/d/m/bun-cache
+          key: ${{ steps.keys.outputs.bun }}
+          restore-keys: bun-store-${{ runner.os }}-${{ runner.arch }}-
+      - name: Install the authored dependency scopes
+        run: repo dependencies sync --all
+        timeout-minutes: 30
+      - name: Use the whole workspace when the base revision is not part of the clone
+        run: |
+          range="$PLAN_RANGE"
+          base="${range#--base=}"
+          base="${base%% *}"
+          if [ "$base" != "$range" ] && ! git rev-parse --verify --quiet "${base}^{commit}" > /dev/null; then
+            echo "::warning::base revision $base is not in the clone (rewritten history?); selecting every project"
+            range="--all"
+          fi
+          echo "AFFECTED_RANGE=$range" >> "$GITHUB_ENV"
+      - name: Both implementations must select the same tasks
+        run: |
+          repo --tool=nx affected --targets="$TARGETS" $AFFECTED_RANGE --dry-run > "$RUNNER_TEMP/plan-first.out"
+          repo --tool=bazel affected --targets="$TARGETS" $AFFECTED_RANGE --dry-run > "$RUNNER_TEMP/plan-second.out"
+          repo "$CI_REPORT" parity --first "$RUNNER_TEMP/plan-first.out" --second "$RUNNER_TEMP/plan-second.out" --targets "$TARGETS" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Prove the local cache under nx on the sample target
+        uses: ./.github/actions/cache-proof
+        with:
+          tool: nx
+          target: ${{ env.PROOF_TARGET }}
+        timeout-minutes: 45
+
+  bench:
+    name: bench (${{ matrix.name }})
+    needs: [smoke]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux
+            os: ubuntu-24.04
+          - name: macos
+            os: macos-26
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Name the report files (the runner context is not available in a job-level env)
+        run: |
+          echo "BENCH_BASELINE=$RUNNER_TEMP/bench-baseline.json" >> "$GITHUB_ENV"
+          echo "BENCH_REPORT=$RUNNER_TEMP/bench-report.json" >> "$GITHUB_ENV"
+          echo "BENCH_MARKDOWN=$RUNNER_TEMP/bench-report.md" >> "$GITHUB_ENV"
+      - uses: ./.github/actions/repo-launcher
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Preflight
+        run: repo preflight
+      - name: Provision every build tool
+        run: repo tools setup all
+        timeout-minutes: 30
+      - name: Compute the cache keys
+        id: keys
+        run: |
+          echo "bun=bun-store-${RUNNER_OS}-${RUNNER_ARCH}-${{ hashFiles('bun.lock', '*/bun.lock', 'package.json') }}" >> "$GITHUB_OUTPUT"
+          echo "baseline=bench-baseline-${RUNNER_OS}-${RUNNER_ARCH}" >> "$GITHUB_OUTPUT"
+      - name: Restore the Bun store
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/b/d/m/bun-cache
+          key: ${{ steps.keys.outputs.bun }}
+          restore-keys: bun-store-${{ runner.os }}-${{ runner.arch }}-
+      - name: Install the authored dependency scopes
+        run: repo dependencies sync --all
+        timeout-minutes: 30
+      - name: Restore the baseline of this runner class
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.BENCH_BASELINE }}
+          key: ${{ steps.keys.outputs.baseline }}-${{ github.sha }}
+          restore-keys: ${{ steps.keys.outputs.baseline }}-
+      - name: List the performance objectives
+        run: repo bench list
+      - name: Prepare the disposable copy
+        run: repo incremental prepare --fresh
+      - name: Measure the objectives and compare with the baseline
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          DEFAULT_REF: refs/heads/${{ github.event.repository.default_branch }}
+        run: |
+          args=(--slo=all --file="$BENCH_REPORT" --markdown="$BENCH_MARKDOWN")
+          if [ -f "$BENCH_BASELINE" ]; then args+=(--baseline="$BENCH_BASELINE"); fi
+          if [ "$EVENT" = push ] && [ "$REF" = "$DEFAULT_REF" ]; then args+=(--save-baseline="$BENCH_BASELINE.next"); fi
+          repo bench run "${args[@]}"
+      - name: Show the report
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f "$BENCH_MARKDOWN" ]; then cat "$BENCH_MARKDOWN" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Upload the reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: bench-${{ matrix.name }}
+          path: |
+            ${{ env.BENCH_REPORT }}
+            ${{ env.BENCH_MARKDOWN }}
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Promote the new baseline (default branch)
+        id: promote
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+        run: |
+          if [ -f "$BENCH_BASELINE.next" ]; then mv "$BENCH_BASELINE.next" "$BENCH_BASELINE"; echo "promoted=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Save the baseline (default branch)
+        if: ${{ steps.promote.outputs.promoted == 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.BENCH_BASELINE }}
+          key: ${{ steps.keys.outputs.baseline }}-${{ github.sha }}

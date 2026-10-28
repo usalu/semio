@@ -24,7 +24,8 @@
  * pets' time — calm pets that walk after a choice, a ladder and a rope — set the client's test seam `data-pets-tempo="8"` before the client
  * starts, and the mischief spec `data-pets-tempo="1"` (a prank within a minute, a copy out long enough for the hand to
  * reach it); everything else the learner's hand does runs at the wall clock, because the hand's timing (a hold, the
- * leak of a pet's warmth, the speed of a circle) is the learner's.
+ * leak of a pet's warmth, the speed of a circle) is the learner's. A spec that lets a pet fall watches the fall from before the hand lets go (the harness needs a
+ * few frames for each call, on a loaded host a second, and a fall is over sooner) and tries again when another pet's head broke the fall: the casts and their places are random.
  * @see ../../../🐾️pets/🔣️.json — the ensemble whose casts, gear and states are expected on screen
  * @see ../../🎭️e2e/🚶️learner/🟦️.ts — the learner these specs drive
  * @see ../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🐾️pets/🟦️.tsx — the quiz's glue to the pets
@@ -32,7 +33,45 @@
  * @see https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html — why `still` and `off` exist
  * @see https://www.w3.org/WAI/WCAG22/Understanding/pointer-gestures.html — why the settings offer every deed of the hand */
 import {QUIZZES, card, expect, layoutQuiet, pane, primary, test, way, openQuizGrid} from "../../🎭️e2e/🚶️learner/🟦️.ts";
-import { ANSWER_MS, APPEAR_MS, bodies, eventually, type Body, CARD_PARTS, carry, choosePets, CIRCLE_LAP_MS, CIRCLE_LAPS, CIRCLE_POINTS, circled, circleRound, CONTROLS, CURSOR, DEEDS, DROP_HEIGHT, EDGES, enterWithPets, expectCast, expectMoving, expectPerched, floorSpot, framesPass, FRONT_LEAST, HOME, inOrder, instrumented, type Instruments, KINDS, LANDING_MS, layer, LIVELY_MS, middleOf, misplaced, overControls, OVERLAP_SLACK, paceTo, pets, PLAY_LABEL, reachable, RECAST_MS, RELEASE_DEPTH, said, seenBoxes, takenTargets, trailOf } from "./🧰️pet-kit/🟦️.ts";
+import { ANSWER_MS, APPEAR_MS, bodies, eventually, type Body, CARD_PARTS, carry, choosePets, CIRCLE_LAP_MS, CIRCLE_LAPS, CIRCLE_POINTS, circled, circleRound, CONTROLS, CURSOR, DEEDS, DROP_HEIGHT, EDGES, enterWithPets, expectCast, expectMoving, expectPerched, floorSpot, framesPass, FRONT_LEAST, HOME, inOrder, instrumented, type Instruments, KINDS, LANDING_MS, layer, LIVELY_MS, middleOf, misplaced, overControls, OVERLAP_SLACK, paceTo, pets, PLAY_LABEL, reachable, RECAST_MS, RELEASE_DEPTH, said, seenBoxes, takenTargets, trailOf, TEMPO } from "./🧰️pet-kit/🟦️.ts";
+
+/** 🔂️ How often a spec that lets a pet fall tries again when another pet's head broke the fall or the pet was not seen in front of the card: the casts and their places are random, a host that is busy sees fewer frames of a fall. */
+const FALL_ATTEMPTS = 5;
+
+/** 📐️ The room a fall keeps clear of the other pets' sides, in pixels, beside half the width of the falling pet. */
+const FALL_MARGIN = 24;
+
+/** 🪂️ A pet seen in the air or under its parachute in front of a card. */
+interface Falling {
+  readonly x: number;
+  readonly y: number;
+  readonly footing: string;
+}
+
+/** 🪤️ In the page: arms a watch, before the hand lets go, for the pet `id` to pass in the air or under its parachute in front of the card `card` within `area`, away from every control, and leaves its answer (`null` when the pets' time `budget` ran out first) as `window.petWalkFall`. The pets' time counts only while the pet is no longer in the hand, and one frame carries at most 125 ms of it, as the pacer does. */
+function watchFall({ id, area, card: cardId, budget, attribute }: { readonly id: string; readonly area: { readonly x: number; readonly y: number; readonly width: number; readonly height: number }; readonly card: string; readonly budget: number; readonly attribute: string }): void {
+  (window as unknown as { petWalkFall: Promise<Falling | null> }).petWalkFall = new Promise<Falling | null>((resolve) => {
+    const tempo = Math.min(Math.max(Number(document.documentElement.getAttribute(attribute) ?? "1") || 1, 1 / 8), 8);
+    let ran = 0;
+    let last = performance.now();
+    const look = (time: number): void => {
+      const step = Math.min(Math.max(0, time - last) * tempo, 125);
+      last = Math.max(last, time);
+      const now = (window as unknown as { petWalk: Instruments }).petWalk.bodies().find((body) => body.id === id);
+      if (now !== undefined && now.footing !== "hand") ran += step;
+      if (now !== undefined && ["air", "chute"].includes(now.footing)) {
+        const x = (now.left + now.right) / 2;
+        const y = (now.top + now.bottom) / 2;
+        const element = document.elementFromPoint(x, y);
+        const inside = x > area.x + 4 && x < area.x + area.width - 4 && y > area.y + 4 && y < area.y + area.height - 4;
+        if (inside && element?.closest(`[data-layered-card="${cardId}"]`) != null && element.closest("a[href], button, input, select, textarea, summary, label") === null) return resolve({ x, y, footing: now.footing });
+      }
+      if (ran >= budget) resolve(null);
+      else window.requestAnimationFrame(look);
+    };
+    window.requestAnimationFrame(look);
+  });
+}
 
 test("pets live on the home screen as decoration: hidden from assistive technology, never a hit target of their own, standing on what the cards show", async ({ device }) => {
   const learner = await device("en");
@@ -114,7 +153,7 @@ test("a pet picked up hangs in the hand, and let go high above the page it opens
         pet = await reachable(page, parachuted);
       }).toPass({ timeout: RECAST_MS });
     });
-  const held = pet!;
+  let held = pet!;
   const canopy = page.locator(`.pet-layer svg.pet[data-pet="${held.id}"] [data-pet-tool="chute"] > g > path`);
   await expect(canopy).toHaveCount(1);
   await expect(canopy).toHaveAttribute("d", KINDS[held.id]!.canopy!.d!);
@@ -122,20 +161,35 @@ test("a pet picked up hangs in the hand, and let go high above the page it opens
   const edges = (await page.evaluate(seenBoxes, EDGES)).filter((edge) => edge.topped);
   const top = 70;
   const width = page.viewportSize()?.width ?? 1440;
-  const columns = Array.from({ length: Math.floor((width - 160) / 8) }, (_, index) => 80 + index * 8).map((x) => ({ x, floor: Math.min(...edges.filter((edge) => edge.left <= x && edge.right >= x && edge.top > top + 40).map((edge) => edge.top)) }));
-  const column = columns.reduce((best, candidate) => (candidate.floor > best.floor && candidate.floor < Infinity ? candidate : best));
-  const release = { x: column.x, y: Math.max(top, column.floor - DROP_HEIGHT) };
-  expect(column.floor - release.y, "a fall long enough for a parachute").toBeGreaterThan(200);
+  let column = { x: 0, floor: 0 };
+  let release = { x: 0, y: 0 };
+  for (let attempt = 1; ; attempt++) {
+    const reach = (held.right - held.left) / 2 + FALL_MARGIN;
+    const others = (await bodies(page)).filter((body) => body.id !== held.id);
+    const all = Array.from({ length: Math.floor((width - 160) / 8) }, (_, index) => 80 + index * 8).map((x) => ({ x, floor: Math.min(...edges.filter((edge) => edge.left <= x && edge.right >= x && edge.top > top + 40).map((edge) => edge.top)) }));
+    const clear = all.filter((candidate) => others.every((body) => candidate.x < body.left - reach || candidate.x > body.right + reach));
+    const pool = clear.some((candidate) => candidate.floor < Infinity) ? clear : all;
+    column = pool.reduce((best, candidate) => (candidate.floor > best.floor && candidate.floor < Infinity ? candidate : best));
+    release = { x: column.x, y: Math.max(top, column.floor - DROP_HEIGHT) };
+    expect(column.floor - release.y, "a fall long enough for a parachute").toBeGreaterThan(200);
 
-  await carry(page, held, release);
-  await expect(page.locator("html")).toHaveAttribute(CURSOR, "grabbing");
-  await eventually(page, () => trailOf(page, held.id).then((trail) => inOrder(trail, ["hang/hand"])), (seen) => seen === 1, { stageMs: ANSWER_MS, message: `${held.id} hangs in the hand` });
-  await eventually(page, async () => {
-    const body = (await bodies(page)).find((body) => body.id === held.id);
-    return body !== undefined && body.footing === "hand" && Math.abs(middleOf(body).x - release.x) < 32 && body.bottom < release.y + 120;
-  }, (reached) => reached, { stageMs: ANSWER_MS, message: `${held.id} reaches the high release column` });
-  await page.mouse.up();
-  await eventually(page, () => trailOf(page, held.id).then((trail) => inOrder(trail, ["hang/hand", "glide/chute"])), (seen) => seen === 2, { stageMs: ANSWER_MS, message: `${held.id} opens its parachute` });
+    const since = (await trailOf(page, held.id)).length;
+    await carry(page, held, release);
+    await expect(page.locator("html")).toHaveAttribute(CURSOR, "grabbing");
+    await eventually(page, () => trailOf(page, held.id).then((trail) => trail.slice(since).some((line) => line.startsWith("hang/hand"))), (seen) => seen, { stageMs: ANSWER_MS, message: `${held.id} hangs in the hand` });
+    await eventually(page, async () => {
+      const body = (await bodies(page)).find((body) => body.id === held.id);
+      return body !== undefined && body.footing === "hand" && Math.abs(middleOf(body).x - release.x) < 32 && body.bottom < release.y + 120;
+    }, (reached) => reached, { stageMs: ANSWER_MS, message: `${held.id} reaches the high release column` });
+    await page.mouse.up();
+    const fall = await eventually(page, () => trailOf(page, held.id).then((trail) => trail.slice(since)), (trail) => trail.some((line) => line.startsWith("glide/chute") || line.startsWith("slide/head")), { stageMs: ANSWER_MS, message: `${held.id} opens its parachute` });
+    if (fall.some((line) => line.startsWith("glide/chute"))) break;
+    expect(attempt, `another pet's head broke the fall of ${held.id} every time: ${fall.join(" → ")}`).toBeLessThan(FALL_ATTEMPTS);
+    await expectPerched(page, held.id, LANDING_MS);
+    await expect(async () => {
+      held = await reachable(page, (body) => body.id === held.id);
+    }).toPass({ timeout: RECAST_MS });
+  }
   await expectPerched(page, held.id, LANDING_MS);
   test.info().annotations.push({ type: "trail", description: `${held.id} let go at ${release.x}, ${release.y} above ${column.floor}: ${(await trailOf(page, held.id)).join(" → ")}` });
   expect(inOrder(await trailOf(page, held.id), ["hang/hand", "glide/chute", "idle/perch"]) >= 2, (await trailOf(page, held.id)).join(" → ")).toBe(true);
@@ -261,8 +315,8 @@ test("keyboard gestures reach the real stage: circle and countercircle change a 
   }
 });
 
-/** 📏️ How tall the window of the deeds spec is: the row of deeds exists only while a pet is on stage, and a pet needs a perch with room above it, so the window leaves more of it than a phone's height. */
-const DEED_HEIGHT = 1_200;
+/** 📏️ How tall the window of the deeds spec is: the row of deeds exists only while a pet is on stage, and a pet needs a perch with room above it. At 200 % text the preferences card is as tall as its content and, once that exceeds the room between the bar and the footer, as tall as the room itself (it scrolls inside): there is then no ground at all, whatever the window, and pets are right to stay away. A window tall enough for the card with its rows of deeds leaves a free band above the footer, so a pet stands there for good instead of by the luck of arriving while the card still opens. */
+const DEED_HEIGHT = 2_400;
 
 /** 🎡️ How much of the pets' time the deeds spec waits for a pet to stand on stage after the text doubled: the cast rotates every 60 to 120 seconds, so a wait of four rotations. */
 const CAST_WAIT_MS = 4 * 120_000;
@@ -294,16 +348,29 @@ for (const locale of ["en", "de"] as const) {
         await eventually(page, () => player.count(), (shown) => shown > 0, { stageMs: CAST_WAIT_MS, message: `${locale} ${width}: a pet is on stage, so the row of deeds is there` });
         try {
           await layoutQuiet(page);
-          await player.locator("span[id]").evaluate((label, name) => { label.textContent = name; }, longest);
-          await expect(player).toHaveAccessibleName(longest);
-          expect(await player.locator("span[id]").evaluate((label) => label.scrollWidth - label.clientWidth), "the longest authored name wraps inside its column").toBeLessThanOrEqual(1);
-          await expect(buttons).toHaveCount(8);
-          await expect(buttons).toHaveText(Object.values(DEEDS).map((deed) => deed.button[locale]));
-          expect(await buttons.evaluateAll((elements) => {
-            const boxes = elements.map((element) => element.getBoundingClientRect());
-            return boxes.flatMap((one, index) => boxes.slice(index + 1).flatMap((other, offset) => Math.min(one.right, other.right) - Math.max(one.left, other.left) > 0.5 && Math.min(one.bottom, other.bottom) - Math.max(one.top, other.top) > 0.5 ? [[index, index + offset + 1]] : []));
-          }), "the eight button hit areas never overlap").toEqual([]);
-          await player.evaluate((element) => { element.setAttribute("data-walk", "on"); for (const button of element.querySelectorAll("button")) button.setAttribute("data-walk", "on"); });
+          const problems = await player.evaluate(
+            (element, [name, texts]) => {
+              const label = element.querySelector("span[id]")!;
+              label.textContent = name;
+              const named = (element.getAttribute("aria-labelledby") ?? "").split(" ").map((id) => element.ownerDocument.getElementById(id)?.textContent ?? "").join(" ").trim();
+              const buttons = [...element.querySelectorAll("button")];
+              const boxes = buttons.map((button) => button.getBoundingClientRect());
+              const found: string[] = [];
+              if (named !== name) found.push(`the row is named ${JSON.stringify(named)}, not ${JSON.stringify(name)}`);
+              if (label.scrollWidth - label.clientWidth > 1) found.push("the longest authored name does not wrap inside its column");
+              const shown = buttons.map((button) => (button.textContent ?? "").replace(/\s+/g, " ").trim());
+              if (shown.length !== texts.length || shown.some((text, index) => text !== texts[index])) found.push(`the buttons read ${JSON.stringify(shown)}`);
+              const overlaps = boxes.flatMap((one, index) => boxes.slice(index + 1).flatMap((other, offset) => Math.min(one.right, other.right) - Math.max(one.left, other.left) > 0.5 && Math.min(one.bottom, other.bottom) - Math.max(one.top, other.top) > 0.5 ? [[index, index + offset + 1]] : []));
+              if (overlaps.length > 0) found.push(`the button hit areas overlap: ${JSON.stringify(overlaps)}`);
+              if (found.length === 0) {
+                element.setAttribute("data-walk", "on");
+                for (const button of buttons) button.setAttribute("data-walk", "on");
+              }
+              return found;
+            },
+            [longest, Object.values(DEEDS).map((deed) => deed.button[locale])] as const,
+          );
+          expect(problems, `${locale} ${width}: the row of deeds, checked in one step (the cast may re-form between two steps)`).toEqual([]);
           return true;
         } catch (failure) {
           if ((await player.count()) === 0) return false;
@@ -371,38 +438,32 @@ test("a control under a pet still receives its click: the card a falling pet pas
     host.petWalkClicked = 0;
     node.addEventListener("click", () => (host.petWalkClicked = (host.petWalkClicked ?? 0) + 1));
   });
-  let pet: Body | undefined;
-  await expect(async () => {
-    pet = await reachable(page, (body) => KINDS[body.id]?.gear.includes("parachute") === true).catch(() => reachable(page));
-  }).toPass({ timeout: RECAST_MS });
-  const fallen = pet!;
-  await carry(page, fallen, { x: front.x + front.width / 2, y: front.y + RELEASE_DEPTH });
-  await page.mouse.up();
-  let pressed: { readonly x: number; readonly y: number; readonly footing: string } | undefined;
-  await expect
-    .poll(
-      async () => {
-        const now = (await bodies(page)).find((body) => body.id === fallen.id);
-        if (now === undefined || !["air", "chute"].includes(now.footing)) return false;
-        const middle = middleOf(now);
-        const inside = middle.x > front.x + 4 && middle.x < front.x + front.width - 4 && middle.y > front.y + 4 && middle.y < front.y + front.height - 4;
-        const under = await page.evaluate(([x, y, id]) => {
-          const element = document.elementFromPoint(x, y);
-          return element?.closest(`[data-layered-card="${id}"]`) != null && element.closest("a[href], button, input, select, textarea, summary, label") === null;
-        }, [middle.x, middle.y, target] as const);
-        if (!inside || !under) return false;
-        await page.mouse.click(middle.x, middle.y);
-        pressed = { ...middle, footing: now.footing };
-        return true;
-      },
-      { message: `${fallen.id} falls in front of the card of ${target}`, timeout: ANSWER_MS, intervals: [20] },
-    )
-    .toBe(true);
+  let passing: Falling | null = null;
+  let fallen!: Body;
+  let since = 0;
+  for (let attempt = 1; passing === null; attempt++) {
+    let pet: Body | undefined;
+    await expect(async () => {
+      pet = await reachable(page, (body) => KINDS[body.id]?.gear.includes("parachute") === true).catch(() => reachable(page));
+    }).toPass({ timeout: RECAST_MS });
+    fallen = pet!;
+    since = (await trailOf(page, fallen.id)).length;
+    await carry(page, fallen, { x: front.x + front.width / 2, y: front.y + RELEASE_DEPTH });
+    await page.evaluate(watchFall, { id: fallen.id, area: front, card: target, budget: ANSWER_MS, attribute: TEMPO });
+    await page.mouse.up();
+    passing = await page.evaluate(() => (window as unknown as { petWalkFall: Promise<Falling | null> }).petWalkFall);
+    if (passing === null) {
+      expect(attempt, `${fallen.id} falls in front of the card of ${target} every time`).toBeLessThan(FALL_ATTEMPTS);
+      await expectPerched(page, fallen.id, LANDING_MS);
+    }
+  }
+  const pressed = passing!;
+  await page.mouse.click(pressed.x, pressed.y);
   await expect(pane(page, target)).toHaveAttribute("data-opened", "");
-  expect(await page.evaluate(() => (window as unknown as { petWalkClicked?: number }).petWalkClicked), `the card took the click at ${pressed?.x}, ${pressed?.y} in front of ${fallen.id} (${pressed?.footing})`).toBe(1);
+  expect(await page.evaluate(() => (window as unknown as { petWalkClicked?: number }).petWalkClicked), `the card took the click at ${pressed.x}, ${pressed.y} in front of ${fallen.id} (${pressed.footing})`).toBe(1);
   const after = await trailOf(page, fallen.id);
-  test.info().annotations.push({ type: "trail", description: `${fallen.id} in front of ${target} at ${pressed?.x}, ${pressed?.y} (${pressed?.footing}): ${after.join(" → ")}` });
-  expect(after.filter((line) => line.startsWith("hang/hand")), `${fallen.id} was picked up once, by the carry: ${after.join(" → ")}`).toHaveLength(1);
+  test.info().annotations.push({ type: "trail", description: `${fallen.id} in front of ${target} at ${pressed.x}, ${pressed.y} (${pressed.footing}): ${after.join(" → ")}` });
+  expect(after.slice(since).filter((line) => line.startsWith("hang/hand")), `${fallen.id} was picked up once, by the carry: ${after.slice(since).join(" → ")}`).toHaveLength(1);
   await expect(page.locator("html")).not.toHaveAttribute(CURSOR, "grabbing");
 });
 

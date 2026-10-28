@@ -1,0 +1,64 @@
+name: Run the Suite Sweep in the Repository Devcontainer
+description: >-
+  Build the actual development environment, provision every pinned tool inside it and run the suites the selection names
+  (`--must-run` or `--shard <table>:<index>/<count>`) through the official `repo run` route on the container's own mounts.
+  The report and the log of every suite are left in `.ci-suites` of the checkout (a bind mount), which the caller uploads.
+
+inputs:
+  script:
+    description: Path of the suite sweep script, relative to the workspace.
+    required: true
+  selection:
+    description: What to run, as the arguments of `run` (`--must-run` or `--shard process:1/2`).
+    required: true
+  tool:
+    description: Build implementation, passed to `--tool`.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Build and Exercise the Devcontainer
+      id: execution
+      uses: devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca
+      with:
+        configFile: .devcontainer/devcontainer.json
+        push: never
+        inheritEnv: false
+        env: |
+          SEMIO_LANGUAGE=en
+          SEMIO_BUILD_MODE=prototype
+          SEMIO_BUILD_BUDGET_MS=21600000
+          SEMIO_BUILD_TEST_RESULTS_DIR=/tmp/native-results
+          CI=true
+        runCmd: |
+          set -euo pipefail
+          run_gate() {
+            local gate="$1"
+            shift
+            if "$@" >"/tmp/native-$gate.log" 2>&1; then
+              printf "Passed: %s\n" "$gate"
+            else
+              local status=$?
+              tail -c 16384 "/tmp/native-$gate.log"
+              exit "$status"
+            fi
+          }
+          run_gate preflight repo preflight
+          run_gate tools-setup repo tools setup all
+          repo tools verify || printf "The container differs from the tool pins (see above)\n"
+          mkdir -p .ci-suites
+          repo "${{ inputs.script }}" run ${{ inputs.selection }} --tool "${{ inputs.tool }}" --out .ci-suites
+          printf "Suite sweep passed in the devcontainer\n"
+    - name: Retain and Check Actual Container Output
+      id: observed
+      if: ${{ always() && !cancelled() }}
+      shell: bash
+      env:
+        ACTUAL_OUTPUT: ${{ steps.execution.outputs.runCmdOutput }}
+      run: |
+        printf '%s\n' "$ACTUAL_OUTPUT" > "$RUNNER_TEMP/native-devcontainer.log"
+        for report in .ci-suites/*/report.md; do
+          if [ -f "$report" ]; then cat "$report" >> "$GITHUB_STEP_SUMMARY"; fi
+        done
+        case "$ACTUAL_OUTPUT" in *'Suite sweep passed in the devcontainer'*) ;; *) exit 1 ;; esac

@@ -5,13 +5,13 @@ import type{RepositoryToolingStoreV1}from"../../../../⚡️caching/💾️stora
 import{bunArchiveExecutable,bunDistribution}from"../../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🟦️.ts";
 import bunManifest from"../../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🧬️schema/🔣️.json" with {type:"json"};
 import hermeticSchema from"../../../🏃️execution/🧬️schema/🔒️hermetic.json" with {type:"json"};
-import{HERMETIC_TABLE_V1,hermeticInputsV1,hermeticSelectV1,hermeticToolchainV1,hermeticStrategiesV1}from"../../../🏃️execution/🔒️hermetic/🟦️.ts";
+import{HERMETIC_SERVICES_V1,HERMETIC_TABLE_V1,hermeticInputsV1,hermeticSelectV1,hermeticServiceV1,hermeticToolchainV1,hermeticStrategiesV1,type HermeticServiceV1}from"../../../🏃️execution/🔒️hermetic/🟦️.ts";
 import{hermeticDependenciesV1,type HermeticDependenciesV1,type HermeticModulesRowV1}from"../../../🏃️execution/🔒️hermetic/📦️dependencies/🟦️.ts";
 import{BAZEL_PATH_PLAN_V1}from"../📐️path-plan/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json" with {type:"json"};
 import type{BazelTaskV1}from"../📋️task-plan/🟦️.ts";
 import{createHash}from"node:crypto";
-import{chmod,lstat,mkdir,mkdtemp,readFile,readlink,rename,rm,symlink,writeFile}from"node:fs/promises";
+import{chmod,copyFile,link,lstat,mkdir,mkdtemp,readFile,readlink,rename,rm,stat,symlink,writeFile}from"node:fs/promises";
 import{dirname,join}from"node:path";
 export{BAZEL_HERMETIC_DEPENDENCIES,BAZEL_HERMETIC_RUNNER}from"./🏭️runner/🟦️.ts";
 
@@ -71,6 +71,12 @@ export function bazelExecutionFlagsV1(options:Readonly<{host:{platform:string;ar
  return Object.freeze({...flags,command:Object.freeze(command)});
 }
 
+/** 🛎️ Routes the actions of persistent services: their own mnemonic runs under a worker (after the remote pool when an executor is configured, before the sandbox and the isolated root) and is bound to the table's instance count; without workers the mnemonic keeps the hermetic strategies and the runner serves its single request like any other hermetic action. */
+export function bazelServiceFlagsV1(options:Readonly<{host:{platform:string};workers:boolean;remote:boolean}>):readonly string[]{
+ const names=hermeticStrategiesV1(options.host.platform).filter(name=>options.remote||name!=="remote"),mnemonic=HERMETIC_SERVICES_V1.mnemonic,list=[...names.filter(name=>name==="remote"),...(options.workers?["worker"]:[]),...names.filter(name=>name!=="remote")];
+ return Object.freeze([`--strategy=${mnemonic}=${list.join(",")}`,...(options.workers?[`--worker_max_instances=${mnemonic}=${HERMETIC_SERVICES_V1.instances}`]:[])]);
+}
+
 /** 🚩️ Reconciles the cache flags with a remote executor: Bazel refuses `--remote_executor` beside an HTTP `--remote_cache`, and the in-house executor serves the cache itself, so HTTP cache endpoints are dropped and the credential helper of the cache host is scoped to the executor host instead. */
 export function bazelExecutorCacheFlagsV1(flags:readonly string[],executorEndpoint:string):string[]{
  const host=new URL(executorEndpoint.replace(/^grpc(s?):/u,"http$1:")).hostname.replace(/^\[|\]$/gu,"")||"localhost";
@@ -95,22 +101,23 @@ export function bazelHermeticDecisionV1(task:BazelTaskV1,cache:{cache:boolean},i
 }
 
 /** 🏭️ What the generator derives for one hermetic action of a class: the declared environment values, the port replacements and the dependency rows with their content-addressed tree. */
-export interface BazelHermeticPlanV1{readonly inputEnv:Readonly<Record<string,string>>;readonly providers:Readonly<Record<string,string>>;readonly dependencies:HermeticDependenciesV1}
+export interface BazelHermeticPlanV1{readonly inputEnv:Readonly<Record<string,string>>;readonly providers:Readonly<Record<string,string>>;readonly dependencies:HermeticDependenciesV1;readonly service?:Omit<HermeticServiceV1,"id">}
 
 /** 🧬️ Derives the plan of one hermetic class member from its declared inputs: the environment values read now, the class's port replacements and the dependency selection of the installed generation; `undefined` keeps the task out of the hermetic classes because its host inputs or its installed dependencies cannot be declared. */
 export function bazelHermeticPlanV1(options:Readonly<{root:string;task:BazelTaskV1;class:string;values:readonly unknown[];declared:readonly string[];environment:Readonly<Record<string,string|undefined>>;check?:()=>void}>):BazelHermeticPlanV1|undefined{
  const row=HERMETIC_TABLE_V1.classes.find(entry=>entry.id===options.class);if(!row)throw new Error(`Unknown hermetic class: ${options.class}`);
  const host=hermeticInputsV1(options.values,options.environment,row.toolchain);if("refused" in host)return undefined;
  const dependencies=hermeticDependenciesV1({root:options.root,directories:[options.task.root==="."?"":options.task.root],names:[...row.packages,...host.packages],packages:row.dependencies==="packages",declared:options.declared,...(options.check?{check:options.check}:{})});
- return dependencies?{inputEnv:host.env,providers:row.providers as Readonly<Record<string,string>>,dependencies}:undefined;
+ const service=(options.task.definition.outputs??[]).length===0?hermeticServiceV1(options.class):undefined;
+ return dependencies?{inputEnv:host.env,providers:row.providers as Readonly<Record<string,string>>,dependencies,...(service?{service:{module:service.module,environment:service.environment,idleMilliseconds:service.idleMilliseconds}}:{})}:undefined;
 }
 
 /** 📋️ What the generator adds to one hermetic action's manifest beside its task: the declared input files, the alias of each input directory with the private root policy (the runner reads inputs through the aliases) and, for a class member, the class, the declared environment values, the port replacements and the `node_modules` rows. */
-export interface BazelHermeticManifestDetailsV1{readonly inputs:readonly string[];readonly class?:string;readonly inputEnv?:Readonly<Record<string,string>>;readonly providers?:Readonly<Record<string,string>>;readonly rows?:readonly HermeticModulesRowV1[];readonly aliases?:Readonly<Record<string,string>>}
+export interface BazelHermeticManifestDetailsV1{readonly inputs:readonly string[];readonly class?:string;readonly inputEnv?:Readonly<Record<string,string>>;readonly providers?:Readonly<Record<string,string>>;readonly rows?:readonly HermeticModulesRowV1[];readonly aliases?:Readonly<Record<string,string>>;readonly service?:Omit<HermeticServiceV1,"id">}
 
 /** 🗝️ Builds the closed, content-stable manifest the hermetic runner interprets; it holds no path, environment or implementation identity, only workspace-relative declarations. */
 export function bazelHermeticManifestV1(task:BazelTaskV1,args:readonly string[],details:BazelHermeticManifestDetailsV1={inputs:[]}):Record<string,unknown>{
- const execution=task.definition.execution,commands=(execution.commands??(execution.command===undefined?[]:[execution.command])) as string[],manifest={version:1,id:task.id,project:task.project,target:task.target,...(task.configuration?{configuration:task.configuration}:{}),root:task.root,...(execution.cwd===undefined?{}:{cwd:execution.cwd}),args:[...args],...(execution.forwardAllArgs===undefined?{}:{forwardAllArgs:execution.forwardAllArgs}),...(execution.parallel===undefined?{}:{parallel:execution.parallel}),commands,...(execution.env===undefined?{}:{env:{...execution.env}}),outputs:[...(task.definition.outputs??[])],inputs:[...details.inputs],...(details.aliases===undefined?{}:{aliases:{...details.aliases},scratch:BAZEL_PATH_PLAN_V1.hermeticRoot}),...(details.class===undefined?{}:{class:details.class,entry:HERMETIC_TABLE_V1.runtime.entry,markers:[...HERMETIC_TABLE_V1.runtime.markers],maximumElapsedMilliseconds:HERMETIC_TABLE_V1.runtime.maximumElapsedMilliseconds,providers:{...(details.providers??{})}}),...(details.inputEnv&&Object.keys(details.inputEnv).length?{inputEnv:{...details.inputEnv}}:{}),...(details.rows?.length?{nodeModules:details.rows.map(row=>({path:row.path,workspace:{...row.workspace},tree:{...row.tree},bin:{...row.bin}}))}:{})};
+ const execution=task.definition.execution,commands=(execution.commands??(execution.command===undefined?[]:[execution.command])) as string[],manifest={version:1,id:task.id,project:task.project,target:task.target,...(task.configuration?{configuration:task.configuration}:{}),root:task.root,...(execution.cwd===undefined?{}:{cwd:execution.cwd}),args:[...args],...(execution.forwardAllArgs===undefined?{}:{forwardAllArgs:execution.forwardAllArgs}),...(execution.parallel===undefined?{}:{parallel:execution.parallel}),commands,...(execution.env===undefined?{}:{env:{...execution.env}}),outputs:[...(task.definition.outputs??[])],inputs:[...details.inputs],...(details.aliases===undefined?{}:{aliases:{...details.aliases},scratch:BAZEL_PATH_PLAN_V1.hermeticRoot}),...(details.class===undefined?{}:{class:details.class,entry:HERMETIC_TABLE_V1.runtime.entry,markers:[...HERMETIC_TABLE_V1.runtime.markers],maximumElapsedMilliseconds:HERMETIC_TABLE_V1.runtime.maximumElapsedMilliseconds,providers:{...(details.providers??{})}}),...(details.service===undefined?{}:{service:{...details.service}}),...(details.inputEnv&&Object.keys(details.inputEnv).length?{inputEnv:{...details.inputEnv}}:{}),...(details.rows?.length?{nodeModules:details.rows.map(row=>({path:row.path,workspace:{...row.workspace},tree:{...row.tree},bin:{...row.bin}}))}:{})};
  if(validateJsonSchemaSubset(schema.definitions.Manifest,manifest,schema).length)throw new Error(`Closed hermetic task manifest required: ${task.id}`);
  return manifest;
 }
@@ -129,12 +136,12 @@ export function bazelHermeticModulesLabelV1(dependencies:Pick<HermeticDependenci
 export interface BazelExecutionSpawnV1{mnemonic:string;runner:string;commandArgs:readonly string[];environmentVariables:readonly {name:string;value:string}[];inputs:readonly {path:string;isTool?:boolean}[];platform?:{properties?:readonly {name:string;value:string}[]};targetLabel:string}
 
 /** 🚨️ Judges one logged hermetic spawn against what its action declared: an isolated runner, exactly the declared and tool inputs plus its dependency snapshots, the strict environment, no absolute argument and the platform's properties. Returns every violation; an empty list is a hermetic spawn. */
-export function bazelHermeticViolationsV1(spawn:BazelExecutionSpawnV1,expected:Readonly<{inputs:readonly string[];tool:string;properties:Readonly<Record<string,string>>;trees?:readonly string[]}>):string[]{
+export function bazelHermeticViolationsV1(spawn:BazelExecutionSpawnV1,expected:Readonly<{inputs:readonly string[];tool:string;properties:Readonly<Record<string,string>>;trees?:readonly string[];service?:true}>):string[]{
  const found:string[]=[],paths=spawn.inputs.map(input=>input.path),allowed=new Set([...expected.inputs,expected.tool]),tools=spawn.inputs.filter(input=>input.isTool).map(input=>input.path),pairs=(rows:readonly {name:string;value:string}[])=>JSON.stringify(rows.map(row=>[row.name,row.value]).sort());
- if(!/sandbox|remote/u.test(spawn.runner))found.push(`runner: ${spawn.runner}`);
- for(const path of paths)if(!allowed.has(path)&&!(expected.trees??[]).some(prefix=>path.startsWith(prefix))&&!/\.snapshot\/(snapshot\.json|files\/[a-f0-9]{32})$/u.test(path))found.push(`undeclared input: ${path}`);
+ if(!(expected.service?/sandbox|remote|worker/u:/sandbox|remote/u).test(spawn.runner))found.push(`runner: ${spawn.runner}`);
+ for(const path of paths)if(!allowed.has(path)&&!(expected.trees??[]).some(prefix=>path.startsWith(prefix))&&!/\.snapshot\/(snapshot\.json|files\/[a-f0-9]{32})$/u.test(path)&&!(expected.service&&/\.snapshot-\d+\.params$/u.test(path)))found.push(`undeclared input: ${path}`);
  for(const path of expected.inputs)if(!paths.includes(path))found.push(`missing input: ${path}`);
- if(JSON.stringify(tools)!==JSON.stringify([expected.tool]))found.push(`tool inputs: ${tools.join(",")||"none"}`);
+ if(JSON.stringify([...tools].sort())!==JSON.stringify((expected.service?[expected.tool,"hermetic-runner.mjs"]:[expected.tool]).sort()))found.push(`tool inputs: ${tools.join(",")||"none"}`);
  if(pairs(spawn.environmentVariables)!==pairs(Object.entries(contract.actionEnvironment).map(([name,value])=>({name,value}))))found.push(`environment: ${spawn.environmentVariables.map(row=>row.name).join(",")||"empty"}`);
  for(const argument of spawn.commandArgs)if(/^(\/|[A-Za-z]:[\\/])/u.test(argument))found.push(`absolute argument: ${argument}`);
  if(pairs(Object.entries(spawn.platform?.properties?.length?Object.fromEntries(spawn.platform.properties.map(row=>[row.name,row.value])):{}).map(([name,value])=>({name,value})))!==pairs(Object.entries(expected.properties).map(([name,value])=>({name,value}))))found.push("platform properties");
@@ -162,13 +169,28 @@ export function renderBazelExecutionBuildV1(plan:BazelExecutionPlanV1):string{
  return lines.join("\n");
 }
 
-/** 🔗️ Links each provisioned bun executable into the generated package at its toolchain path, replacing a link that points elsewhere. */
-export async function linkBazelToolchainsV1(workspace:string,tools:Readonly<Record<string,string>>):Promise<void>{
+/** 🔗️ Puts each provisioned bun executable at its toolchain path in the generated package, replacing what points or looks elsewhere. POSIX: a symbolic link. Windows: a symbolic link of a file needs a privilege (Developer Mode or an administrator), so the file is hard-linked (same volume, no privilege) and copied when the volumes differ; an entry that is already the same file or an up-to-date copy is kept. */
+export async function linkBazelToolchainsV1(workspace:string,tools:Readonly<Record<string,string>>,platform:NodeJS.Platform=process.platform,ports:Readonly<{link?:typeof link;copy?:typeof copyFile}>={}):Promise<void>{
  for(const[id,target]of Object.entries(tools)){
   const path=join(workspace,bazelBunToolPathV1(bazelExecutionPlatformByIdV1(id)));await mkdir(dirname(path),{recursive:true});
+  if(platform==="win32"){
+   if(await sameFileV1(path,target))continue;
+   await rm(path,{force:true});
+   try{await(ports.link??link)(target,path);}catch{await(ports.copy??copyFile)(target,path);await chmod(path,0o755);}
+   continue;
+  }
   try{if(await readlink(path)===target)continue;await rm(path,{force:true});}catch(error){if(!["ENOENT","EINVAL"].includes((error as NodeJS.ErrnoException).code??""))throw error;await rm(path,{force:true});}
   await symlink(target,path);
  }
+}
+
+/** 🟰️ Whether `path` is a regular file that is `target` itself (a hard link) or a copy that is as large as it and not older. */
+async function sameFileV1(path:string,target:string):Promise<boolean>{
+ try{
+  const [own,real]=await Promise.all([lstat(path,{bigint:true}),stat(target,{bigint:true})]);
+  if(!own.isFile())return false;
+  return(own.ino!==0n&&own.ino===real.ino&&own.dev===real.dev)||(own.size===real.size&&own.mtimeNs>=real.mtimeNs);
+ }catch{return false;}
 }
 
 const environmentLines=Object.entries(contract.actionEnvironment).map(([key,value])=>`${JSON.stringify(key)}: ${JSON.stringify(value)}`).join(", ");
@@ -184,10 +206,22 @@ def _hermetic_impl(ctx):
     output = ctx.actions.declare_directory(ctx.label.name + ".snapshot")
     snapshots = [dep[DefaultInfo].files.to_list()[0] for dep in ctx.attr.deps]
     modules = ctx.attr.modules[DefaultInfo].files.to_list()[0] if ctx.attr.modules else None
-    ctx.actions.run(executable = bun, tools = [bun], arguments = [ctx.file.runner.path, ctx.file.manifest.path, output.path] + (["--modules=" + modules.path] if modules else []) + [snapshot.path for snapshot in snapshots], inputs = depset([ctx.file.manifest, ctx.file.runner] + snapshots + ([modules] if modules else []), transitive = [src[DefaultInfo].files for src in ctx.attr.srcs]), outputs = [output], mnemonic = "${contract.toolchain.mnemonic}", progress_message = ctx.attr.identity, env = {${environmentLines}}, use_default_shell_env = False, execution_requirements = {"block-network": "1"}, toolchain = "//:${contract.toolchain.type}")
+    request = ctx.actions.args()
+    request.add_all([ctx.file.manifest.path, output.path])
+    if modules:
+        request.add("--modules=" + modules.path)
+    request.add_all([snapshot.path for snapshot in snapshots])
+    requirements = {"block-network": "1"}
+    tools = [bun]
+    if ctx.attr.worker:
+        request.use_param_file("@%s", use_always = True)
+        request.set_param_file_format("multiline")
+        requirements.update({"supports-workers": "1", "requires-worker-protocol": "json", "supports-worker-cancellation": "1"})
+        tools.append(ctx.file.runner)
+    ctx.actions.run(executable = bun, tools = tools, arguments = [ctx.file.runner.path, request], inputs = depset([ctx.file.manifest, ctx.file.runner] + snapshots + ([modules] if modules else []), transitive = [src[DefaultInfo].files for src in ctx.attr.srcs]), outputs = [output], mnemonic = ctx.attr.mnemonic if ctx.attr.mnemonic else "${contract.toolchain.mnemonic}", progress_message = ctx.attr.identity, env = {${environmentLines}}, use_default_shell_env = False, execution_requirements = requirements, toolchain = "//:${contract.toolchain.type}")
     return [DefaultInfo(files = depset([output]))]
 
-repo_hermetic_task = rule(implementation = _hermetic_impl, toolchains = ["//:${contract.toolchain.type}"], attrs = {"manifest": attr.label(allow_single_file = True), "runner": attr.label(allow_single_file = True), "srcs": attr.label_list(allow_files = True), "deps": attr.label_list(), "modules": attr.label(), "identity": attr.string(mandatory = True)})
+repo_hermetic_task = rule(implementation = _hermetic_impl, toolchains = ["//:${contract.toolchain.type}"], attrs = {"manifest": attr.label(allow_single_file = True), "runner": attr.label(allow_single_file = True), "srcs": attr.label_list(allow_files = True), "deps": attr.label_list(), "modules": attr.label(), "identity": attr.string(mandatory = True), "worker": attr.bool(default = False), "mnemonic": attr.string()})
 `;
 
 /** ⛓️ The Starlark rule that builds one dependency tree: a host-state action by design, because it reads the installed dependency stores by the absolute paths of its manifest; its output tree is what hermetic actions take as an input by content, so the stores never enter a hermetic action key. */

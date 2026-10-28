@@ -1,0 +1,3 @@
+import{readFileSync}from"node:fs";import{join}from"node:path";import{brotliDecompressSync}from"node:zlib";
+const[,,A,B,name]=process.argv;const load=d=>{const p=JSON.parse(readFileSync(join(d,"current.json"),"utf8")),m=JSON.parse(readFileSync(join(d,"m",p.manifest+".json"),"utf8"));return JSON.parse(brotliDecompressSync(readFileSync(join(d,"o",m.owners[name].fragment+".json.br"))).toString("utf8"));};
+const a=load(A),b=load(B);const walk=(x,y,path)=>{if(JSON.stringify(x)===JSON.stringify(y))return;if(x&&y&&typeof x==="object"&&typeof y==="object"){for(const k of new Set([...Object.keys(x),...Object.keys(y)]))walk(x[k],y[k],path+"/"+k);}else console.log(path,JSON.stringify(x)?.slice(0,200),"|",JSON.stringify(y)?.slice(0,200));};walk(a,b,"");

@@ -1,0 +1,67 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🔣️policy.json": {
+  "file": "f00",
+  "base": "4d31745bc041e377ae0f53ae3074af7ba064f3d3280a6f35a1520741898ff86c",
+  "new": "cef0ea13f3eb5d3b5deaaf60fcc686e98dee053c1e18d16bebc6fbbb9c8cfd92"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/🟦️.ts": {
+  "file": "f01",
+  "base": "41a10de4c253b500ed0921fe28ea0f1631c93b7b284389e14f87e199db5e8571",
+  "new": "7449e215580df9a4b9575244d0cf87debff68ba2c5fe16754f5f3cc3e8efccd4"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🧾️refusals/🔣️.json": {
+  "file": "f02",
+  "base": "bcb28487320787010fd627ea70058ecc86af8c8dedec4f2c051c63905e3a9607",
+  "new": "ebb72e2a8a730d7bad4207d8fadaf1b18a421ac7a5b926d34d4cf7dee134e3f8"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧬️schema/🧾️refusals.json": {
+  "file": "f03",
+  "base": "fbcba1856e7662ab1614745752c5e7b308c701e3710129d5f4569c27d4ff2098",
+  "new": "d5f332ca6e8506d844b8d853484cce65a8d3b6faab50bfbdebb710ad3f091af9"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧾️refusals/🟦️.ts": {
+  "file": "f04",
+  "base": "3551368dfb6bdd4b2ab952fbb008e85c3d3247576907c85c66f164a48420d7b7",
+  "new": "ad6a22455020ab0e3fda943a35124bc0888247f613307fce141d48f50915d0fc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🧪️tests/🐍️order.py": {
+  "file": "f05",
+  "base": null,
+  "new": "2a24619a6b5dc01f99f7274b376785c55aee94667138f35e2f3e7a8ec37e87a4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🧪️tests/🟦️.ts": {
+  "file": "f06",
+  "base": "c9316d14ddfc7ba98ab3dc57fa3edeed37b6c7d39c27679d588711007423485c",
+  "new": "c2bba45620daee938bdd8b9f9c033ee6eb8cbb8b7c34924455a8f6edc46e002c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🟦️.ts": {
+  "file": "f07",
+  "base": "07f83dc28a1e55a0d7772d4723430a52484d9b1ea36e22819da5075cff05a758",
+  "new": "933d02ac6655151fd65eaf435c46679cf54bc8793941ece5b5ac7323b7023a47"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🧪️tests/🐍️.py": {
+  "file": "f08",
+  "base": null,
+  "new": "74dc8c2f69a04d4c2d9248b5a048d7d1419dbe935906210553d98d974b7e016d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🧪️tests/🔣️.json": {
+  "file": "f09",
+  "base": "acf5f4d58fe309b29514ed5b15c4d092b84461802310e53c0d136c58856e675a",
+  "new": "2e3cd67079dd712d6601939bca5789b268bee356e5cb18ae5473afde6b6da4ce"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🧪️tests/🟦️.ts": {
+  "file": "f10",
+  "base": "07f87079f9f447b20a5e8a210628fe3831335f63cce51f110c716efdab416e67",
+  "new": "be564b3cd35a6ecea181ba323b9b3b328659dd5910c25abf5ef05476f0a40afa"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🧬️schema/🔣️.json": {
+  "file": "f11",
+  "base": "a25aff5d30ea150a64a8e4a51e634b30a2a4de3b074f8dc6888bcbcd6a1ed65c",
+  "new": "616ae1151ae012538b568db4bfd945af667d716fa992aa2e9cfdef9a5fe6d6c4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md": {
+  "file": "f12",
+  "base": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+  "new": "06eab2f3c1a702da04112f24daabaa483bfd6c9c8c1a9b37826acdb96db31825"
+ }
+}

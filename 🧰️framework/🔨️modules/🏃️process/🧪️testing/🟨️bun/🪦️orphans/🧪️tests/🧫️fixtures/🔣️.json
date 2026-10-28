@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "ceilings": [
+    {"environment": {}, "ceiling": 8192},
+    {"environment": {"SEMIO_TEST_OPEN_FILES_CEILING": "1024"}, "ceiling": 1024},
+    {"environment": {"SEMIO_TEST_OPEN_FILES_CEILING": "256"}, "ceiling": 256},
+    {"environment": {"SEMIO_TEST_OPEN_FILES_CEILING": "255"}, "ceiling": 8192},
+    {"environment": {"SEMIO_TEST_OPEN_FILES_CEILING": "abc"}, "ceiling": 8192},
+    {"environment": {"SEMIO_TEST_OPEN_FILES_CEILING": "1e3"}, "ceiling": 1000},
+    {"environment": {"SEMIO_TEST_OPEN_FILES_CEILING": "12.5"}, "ceiling": 8192},
+    {"environment": {"SEMIO_TEST_OPEN_FILES_CEILING": ""}, "ceiling": 8192}
+  ],
+  "orphans": {"opened": 400, "processes": 2}
+}

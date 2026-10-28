@@ -14,6 +14,7 @@ import { isExcludedTestPath, testFeatureFilename, testTaxonomy, type TestTaxonom
 import { SKIP_DIR_NAMES, testCollectionIndexes, testFixtureCollectionIndex } from "../🧭️case-discovery/🟦️.ts";
 import { breach } from "../🚨️breaches/🟦️.ts";
 import { runtimeParseTomlV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeNamespaceNamesV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧾️Contract
@@ -310,7 +311,7 @@ function fixtureSourceDependencies(path: string, source: string, taxonomy: TestT
       }
       if (ts.isCallExpression(node)) {
         const call = node.expression;
-        const fileReader = ts.isIdentifier(call) && (fileBinding(call) === 1 || call.text === "runtimeFileV1") || ts.isPropertyAccessExpression(call) && ts.isIdentifier(call.expression) && (fileBinding(call.expression) === 4 && readers.has(call.name.text) || call.expression.text === "Bun" && call.name.text === "file" && bound(call.expression) === undefined);
+        const fileReader = ts.isIdentifier(call) && (fileBinding(call) === 1 || call.text === "runtimeFileV1") || ts.isPropertyAccessExpression(call) && ts.isIdentifier(call.expression) && (fileBinding(call.expression) === 4 && readers.has(call.name.text) || runtimeNamespaceNamesV1().includes(call.expression.text) && call.name.text === "file" && bound(call.expression) === undefined);
         const target = fileReader ? readTarget(node.arguments[0]) : undefined;
         if (target) add(target, node.getStart(root));
       }

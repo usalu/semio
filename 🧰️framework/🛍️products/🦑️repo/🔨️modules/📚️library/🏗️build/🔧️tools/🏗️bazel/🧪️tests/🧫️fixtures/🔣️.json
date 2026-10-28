@@ -237,7 +237,7 @@
   },
   "controlWait": {
     "originalBudgetMilliseconds": 200,
-    "resource": "bazel-snapshot-restore",
+    "resource": "bazel-restore:output",
     "progress": [
       "publish",
       "continuation"

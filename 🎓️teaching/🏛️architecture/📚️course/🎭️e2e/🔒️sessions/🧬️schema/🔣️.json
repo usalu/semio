@@ -17,6 +17,155 @@
           "trace": { "type": "array", "items": { "type": "string" } }
         }
       }
+    },
+    "table": { "$ref": "#/definitions/Table" },
+    "arguments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["args", "projects", "workers", "rest"],
+        "properties": {
+          "args": { "$ref": "#/definitions/Words" },
+          "projects": { "$ref": "#/definitions/Words" },
+          "workers": { "type": ["string", "null"] },
+          "rest": { "$ref": "#/definitions/Words" }
+        }
+      }
+    },
+    "matches": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["pattern", "project", "matches"],
+        "properties": { "pattern": { "type": "string" }, "project": { "type": "string" }, "matches": { "type": "boolean" } }
+      }
+    },
+    "stacks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["topology", "requested", "split", "stacks"],
+        "properties": {
+          "topology": { "enum": ["dev", "rehearsal"] },
+          "requested": { "$ref": "#/definitions/Words" },
+          "split": { "type": "boolean" },
+          "stacks": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Stack" } }
+        }
+      }
+    },
+    "schedules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["topologies", "requested", "granted", "serial", "concurrent", "labels"],
+        "properties": {
+          "topologies": { "type": "array", "items": { "enum": ["dev", "rehearsal"] } },
+          "requested": { "$ref": "#/definitions/Words" },
+          "granted": { "type": "integer", "minimum": 1 },
+          "serial": { "type": "boolean" },
+          "concurrent": { "type": "boolean" },
+          "labels": { "$ref": "#/definitions/Words" }
+        }
+      }
+    },
+    "allocations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["parallel", "budget", "concurrent", "workers"],
+        "properties": {
+          "parallel": { "type": "array", "items": { "type": "array", "items": { "type": "boolean" } } },
+          "budget": { "type": "integer", "minimum": 1 },
+          "concurrent": { "type": "boolean" },
+          "workers": { "type": "array", "items": { "type": "array", "items": { "type": "integer", "minimum": 1 } } }
+        }
+      }
+    },
+    "budgets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["workers", "memoryMegabytes", "workerMegabytes", "stacksMegabytes", "budget"],
+        "properties": {
+          "workers": { "type": "integer", "minimum": 1 },
+          "memoryMegabytes": { "type": "integer", "minimum": 0 },
+          "workerMegabytes": { "type": "integer", "minimum": 1 },
+          "stacksMegabytes": { "type": "integer", "minimum": 0 },
+          "budget": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "waves": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["forwarded", "wave", "workers", "explicit", "args"],
+        "properties": {
+          "forwarded": { "$ref": "#/definitions/Words" },
+          "wave": { "$ref": "#/definitions/Wave" },
+          "workers": { "type": "integer", "minimum": 1 },
+          "explicit": { "type": ["string", "null"] },
+          "args": { "$ref": "#/definitions/Words" }
+        }
+      }
     }
+  },
+  "definitions": {
+    "Words": { "type": "array", "items": { "type": "string" } },
+    "Wave": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["shard", "parallel", "projects"],
+      "properties": { "shard": { "type": "string", "minLength": 1 }, "parallel": { "type": "boolean" }, "projects": { "$ref": "#/definitions/Words" } }
+    },
+    "Stack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "waves"],
+      "properties": { "label": { "type": "string", "minLength": 1 }, "waves": { "type": "array", "items": { "$ref": "#/definitions/Wave" } } }
+    },
+    "Table": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "warmup", "shards", "stacks"],
+      "properties": {
+        "version": { "const": 1 },
+        "warmup": { "type": "string", "minLength": 1 },
+        "shards": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "parallel", "projects"],
+            "properties": { "id": { "type": "string", "minLength": 1 }, "parallel": { "type": "boolean" }, "projects": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } } }
+          }
+        },
+        "stacks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["dev", "rehearsal"],
+          "properties": {
+            "dev": { "$ref": "#/definitions/Layout" },
+            "rehearsal": { "$ref": "#/definitions/Layout" }
+          }
+        }
+      }
+    },
+    "Layout": { "type": "array", "minItems": 1, "items": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } } }
   }
 }

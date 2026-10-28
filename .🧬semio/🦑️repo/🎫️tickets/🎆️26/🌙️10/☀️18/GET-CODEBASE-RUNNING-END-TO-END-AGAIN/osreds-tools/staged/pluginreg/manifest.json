@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🎚️config/🟦️.ts": {
+  "file": "f01.ts",
+  "base": "903d7764d9c50cd54c75d56808e5a74ca298d5bbd705c51a06b4ff6032843af1",
+  "new": "e7dd44ce90485dfef398b795399e85983e210b5e82491791da45012befec92a6"
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🎬️host-activation/🟦️.ts": {
+  "file": "f02.ts",
+  "base": "b1cf5f1d768994f11c8cd2f616880981259c6c70090002b541d60592487573ef",
+  "new": "98d64c65ea333fabd41e7c07a73f313223c6f9a162dbfd6b9c8295e990fd5cc8"
+ }
+}

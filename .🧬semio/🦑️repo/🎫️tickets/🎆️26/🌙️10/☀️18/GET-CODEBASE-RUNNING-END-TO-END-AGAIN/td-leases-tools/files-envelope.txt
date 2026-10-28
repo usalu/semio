@@ -1,0 +1,9 @@
+🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🧪️tests/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🧪️tests/🧫️declared/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json
+🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧪️tests/📋️claims/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧪️tests/📋️frontier/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧪️tests/📋️inventory/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧹️sweep/🧪️tests/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🔒️leases/🧪️tests/🎟️writer/🟦️.ts

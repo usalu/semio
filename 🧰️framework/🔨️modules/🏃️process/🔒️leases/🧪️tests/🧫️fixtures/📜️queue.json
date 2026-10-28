@@ -849,7 +849,7 @@
     }
   ],
   "schemaOwnershipHashes": {
-    "NamespaceTicket": "a6cdb4a0899e0a3dd3f02947a85d3d7a64b41b6b9e529587ad1f616d767820c0",
+    "NamespaceTicket": "b660ce57d09f623d246e166387a4020e64cf0223c6b0cd76bf4f9b7da55e411f",
     "RetirementPolicy": "42714eac219cfbde53adc2b76d2c9a60713c4e05e39f11dc1c4ad9ee88b27aff",
     "ClaimCustodyPolicy": "ac871debc61a4d150ce076a856b7e8f734df131b83f924c119d868507a1d049f",
     "ClaimRetentionPolicy": "5adb0fb229489d941e0f74c6a2bfb19765a28a3653df5e7caf4f21da0420f06a",

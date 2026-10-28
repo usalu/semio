@@ -1,0 +1,72 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🛂️acceptance/🧬️schema/🔣️.json": {
+  "file": "00.json",
+  "base": null,
+  "new": "07140af354efeff6d0546eae8617291cf46e47c1b2bf2dbf337154f479400fac"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🛂️acceptance/🎯️budgets/🔣️.json": {
+  "file": "01.json",
+  "base": null,
+  "new": "02eeb5eba5254a8aae904f6a53f5d9534ad55cf24ce51bd5cbda59b5bfb932cb"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🛂️acceptance/🟦️.ts": {
+  "file": "02.ts",
+  "base": null,
+  "new": "4db8812851828d912408ddc5939e57e24758e02c06468e1823b09469fd0ad751"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🛂️acceptance/🏃️runner/🟦️.ts": {
+  "file": "03.ts",
+  "base": null,
+  "new": "0847cc76640fc24869371b0e05280f4d698acf1a2199cedb797bf043e4c76ae7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🛂️acceptance/⌨️command/🟦️.ts": {
+  "file": "04.ts",
+  "base": null,
+  "new": "7e767765f198d5942c7d42d9fddb475c0b2044f77541d5ce1393a066d67e3624"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🛂️acceptance/🧪️tests/🟦️.ts": {
+  "file": "05.ts",
+  "base": null,
+  "new": "85d950e448ee100f8bab979e1324a791d005250c5dd13c0bf111fe4d70f4a131"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🛂️acceptance/🧪️tests/🐍️oracle/🐍️.py": {
+  "file": "06.py",
+  "base": null,
+  "new": "ed9b8d30da7adf5a9337e896550ce6142cfa5cb319a975095ff19b8afd15bb24"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🛂️acceptance/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "07.json",
+  "base": null,
+  "new": "3515f970fe4165fb6b4d2777d0e8f9b256607c1bc9f3840aae257b5d89af867c"
+ },
+ ".github/workflows/acceptance.yml": {
+  "file": "08.yml",
+  "base": null,
+  "new": "d5c1617bceab4bbd30bccdd19fdfdd0742572122cd36b420eef1e8d225a21c30"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/⌨️command/🟦️.ts": {
+  "file": "09.ts",
+  "base": "d6a166701ace7e616c75ddbe783b676da09dec9835df0b50058ceba8874518f6",
+  "new": "3ca0df32a89fcd2425c501896e8ff590c549bc7e76c412a4524248991c28f468"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🧪️tests/🟦️.ts": {
+  "file": "10.ts",
+  "base": "2d3098e0bfbc5af702828f68d8eea32972f5d6e319ca0c71d8a2a92d6acd8e55",
+  "new": "82edac309124108f3c319ead79bf8a4bcb0af6bf5d942c0195e87617c9924c04"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json": {
+  "file": "11.json",
+  "base": "492b1517f2e1dedb6dc94e57b11ddbee0434f6e8b8afd662aebb087e976e39bc",
+  "new": "e8a13d1e1f5a9498c6d618b7985f452e092c93fa1a147c2babcd46839072f18b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/README.md": {
+  "file": "12.md",
+  "base": "18b2c55a00c3d4582c5f2b368afb9f172bcd475f266765806407d4464fe6bf3d",
+  "new": "8eab5d398840ddbce8a98067869ffa8ae09caf2a8669d5b52a9800646e0e6bcf"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🧫️fixtures/📖️help/🔣️.json": {
+  "file": "13.json",
+  "base": "280d483706a3bb5c2df565be430db8200bd5c8ff7264005b75e87eda6ea49acb",
+  "new": "7193041556fa113c8719d0283fb327861c96e3e2bbffb58f0295c2c6d6d5de27"
+ }
+}

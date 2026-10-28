@@ -75,7 +75,8 @@
       "{workspaceRoot}/.github/actions/native-repo/action.yml",
       "{workspaceRoot}/.github/actions/devcontainer-repo/action.yml",
       "{workspaceRoot}/.github/workflows/dashboard.yml",
-      "{workspaceRoot}/.github/workflows/build-system.yml"
+      "{workspaceRoot}/.github/workflows/build-system.yml",
+      "{projectRoot}/📋️project.json"
     ]
   },
   "windowGate": {

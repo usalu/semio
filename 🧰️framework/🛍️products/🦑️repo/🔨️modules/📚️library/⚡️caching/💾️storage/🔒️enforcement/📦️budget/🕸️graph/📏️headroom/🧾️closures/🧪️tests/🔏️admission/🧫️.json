@@ -22,8 +22,8 @@
       "schema": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/🧬️schema/🔣️.json"
     },
     {
-      "owner": "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🟦️.ts",
-      "schema": "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🧬️schema/🔣️.json"
+      "owner": "🧰️framework/🔨️modules/⚙️runtime/🗣️language/🟦️.ts",
+      "schema": "🧰️framework/🔨️modules/⚙️runtime/🗣️language/🧬️schema/🔣️.json"
     }
   ],
   "entry": {

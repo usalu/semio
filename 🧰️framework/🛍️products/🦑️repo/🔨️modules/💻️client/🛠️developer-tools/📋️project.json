@@ -685,7 +685,7 @@
             "verb": "setup",
             "title": {
               "en": "Set Up Native Debugger",
-              "de": "Nativen Debugger Einrichten"
+              "de": "Nativen Debugger einrichten"
             },
             "description": {
               "en": "Verify full LLDB startup, or provision its fixed host packages. Linux repair requires root or noninteractive sudo; Windows machine LLVM requires an elevated host bootstrap. Existing usable LLDB installs nothing.",

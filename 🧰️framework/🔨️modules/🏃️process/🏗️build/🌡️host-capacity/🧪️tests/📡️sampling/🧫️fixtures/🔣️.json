@@ -6,7 +6,6 @@
    "swapUsage": "total = 2048.00M  used = 1365.25M  free = 682.75M  (encrypted)\n",
    "pressureLevel": "2\n",
    "expect": {
-    "availableBytes": 13119062016,
     "constrainedBytes": null,
     "swapUsedBytes": 1431568384,
     "swappedOutBytes": 202260480,
@@ -14,7 +13,9 @@
     "stallPercent": null,
     "openFiles": 8112,
     "openFilesMaximum": 245760,
-    "attachedImages": 2
+    "attachedImages": 2,
+    "availableBytes": 6746013696,
+    "compressedBytes": 4809179136
    },
    "filesTable": "kern.num_files: 8112\nkern.maxfiles: 245760\n",
    "imageInfo": "framework       : 704\ndriver          : 704\nimages          : 2\n================================================\nimage-path      : /Users/x/.cache/b/l/fixed.dmg\nimage-alias     : /Users/x/.cache/b/l/fixed.dmg\nshadow-path     : <none>\n/dev/disk4\tGUID_partition_scheme\t\n/dev/disk5s1\t41504653-0000-11AA-AA11-00306543ECAC\t/Users/x/.cache/b/l/m\n================================================\nimage-path      : /Users/x/.cache/b/o/fixed.dmg\nimage-alias     : /Users/x/.cache/b/o/fixed.dmg\nshadow-path     : <none>\n/dev/disk4\tGUID_partition_scheme\t\n/dev/disk5s1\t41504653-0000-11AA-AA11-00306543ECAC\t/Users/x/.cache/b/o/m\n================================================\n"
@@ -25,7 +26,6 @@
    "swapUsage": "total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)\n",
    "pressureLevel": "1\n",
    "expect": {
-    "availableBytes": 13119062016,
     "constrainedBytes": null,
     "swapUsedBytes": 0,
     "swappedOutBytes": 0,
@@ -33,7 +33,9 @@
     "stallPercent": null,
     "openFiles": 200000,
     "openFilesMaximum": 245760,
-    "attachedImages": 0
+    "attachedImages": 0,
+    "availableBytes": 6746013696,
+    "compressedBytes": 4809179136
    },
    "filesTable": "kern.num_files: 200000\nkern.maxfiles: 245760\nkern.maxfilesperproc: 122880\n",
    "imageInfo": "framework       : 704\ndriver          : 704\nimages          : 0\n================================================\n"
@@ -44,7 +46,6 @@
    "swapUsage": "total = 12.00G  used = 9.50G  free = 2.50G  (encrypted)\n",
    "pressureLevel": "4\n",
    "expect": {
-    "availableBytes": 13119062016,
     "constrainedBytes": null,
     "swapUsedBytes": 10200547328,
     "swappedOutBytes": 0,
@@ -52,7 +53,9 @@
     "stallPercent": null,
     "openFiles": null,
     "openFilesMaximum": null,
-    "attachedImages": null
+    "attachedImages": null,
+    "availableBytes": 6746013696,
+    "compressedBytes": 4809179136
    },
    "filesTable": "",
    "imageInfo": null
@@ -63,7 +66,6 @@
    "swapUsage": "total = 2.00G used = 1.50M free = 1.99G",
    "pressureLevel": "",
    "expect": {
-    "availableBytes": 540672,
     "constrainedBytes": null,
     "swapUsedBytes": 1572864,
     "swappedOutBytes": 65536,
@@ -71,7 +73,9 @@
     "stallPercent": null,
     "openFiles": 99,
     "openFilesMaximum": null,
-    "attachedImages": 3
+    "attachedImages": 3,
+    "availableBytes": 540672,
+    "compressedBytes": null
    },
    "filesTable": "kern.num_files: 99\n",
    "imageInfo": "image-path      : /Users/x/.cache/b/a/fixed.dmg\nimage-alias     : /Users/x/.cache/b/a/fixed.dmg\nshadow-path     : <none>\n/dev/disk4\tGUID_partition_scheme\t\n/dev/disk5s1\t41504653-0000-11AA-AA11-00306543ECAC\t/Users/x/.cache/b/a/m\n================================================\nimage-path      : /Users/x/.cache/b/b/fixed.dmg\nimage-alias     : /Users/x/.cache/b/b/fixed.dmg\nshadow-path     : <none>\n/dev/disk4\tGUID_partition_scheme\t\n/dev/disk5s1\t41504653-0000-11AA-AA11-00306543ECAC\t/Users/x/.cache/b/b/m\n================================================\nimage-path      : /Users/x/.cache/b/c/fixed.dmg\nimage-alias     : /Users/x/.cache/b/c/fixed.dmg\nshadow-path     : <none>\n/dev/disk4\tGUID_partition_scheme\t\n/dev/disk5s1\t41504653-0000-11AA-AA11-00306543ECAC\t/Users/x/.cache/b/c/m\n================================================\n"
@@ -94,7 +98,8 @@
     "stallPercent": 12.5,
     "openFiles": 19968,
     "openFilesMaximum": 1048576,
-    "attachedImages": null
+    "attachedImages": null,
+    "compressedBytes": null
    },
    "fileNr": "20480\t512\t1048576\n"
   },
@@ -114,7 +119,8 @@
     "stallPercent": null,
     "openFiles": 1000,
     "openFilesMaximum": 2000,
-    "attachedImages": null
+    "attachedImages": null,
+    "compressedBytes": null
    },
    "fileNr": "1000 0 2000\n"
   },
@@ -134,7 +140,8 @@
     "stallPercent": null,
     "openFiles": null,
     "openFilesMaximum": null,
-    "attachedImages": null
+    "attachedImages": null,
+    "compressedBytes": null
    },
    "fileNr": null
   }
@@ -156,7 +163,8 @@
     "stallPercent": 12.5,
     "openFiles": 5000,
     "openFilesMaximum": 245760,
-    "attachedImages": 4
+    "attachedImages": 4,
+    "compressedBytes": null
    },
    "previous": {
     "atMs": 0,
@@ -194,7 +202,8 @@
     "stallPercent": null,
     "openFiles": null,
     "openFilesMaximum": null,
-    "attachedImages": null
+    "attachedImages": null,
+    "compressedBytes": null
    },
    "previous": null,
    "expect": {
@@ -229,7 +238,8 @@
     "stallPercent": null,
     "openFiles": 240000,
     "openFilesMaximum": 245760,
-    "attachedImages": 40
+    "attachedImages": 40,
+    "compressedBytes": null
    },
    "previous": null,
    "expect": {
@@ -264,7 +274,8 @@
     "stallPercent": null,
     "openFiles": null,
     "openFilesMaximum": null,
-    "attachedImages": null
+    "attachedImages": null,
+    "compressedBytes": null
    },
    "previous": null,
    "expect": {
@@ -282,6 +293,114 @@
     "openFilesMaximum": null,
     "attachedImages": null
    }
+  },
+  {
+   "name": "compressor-quarter-of-ram-is-normal",
+   "platform": "darwin",
+   "cores": 10,
+   "totalMegabytes": 16384,
+   "atMs": 10000,
+   "load": 1,
+   "counters": {
+    "availableBytes": 8589934592,
+    "compressedBytes": 4294967296,
+    "constrainedBytes": null,
+    "swapUsedBytes": 0,
+    "swappedOutBytes": 0,
+    "pressureLevel": "normal",
+    "stallPercent": null,
+    "openFiles": null,
+    "openFilesMaximum": null,
+    "attachedImages": null
+   },
+   "previous": null,
+   "expect": {
+    "version": 1,
+    "atMs": 10000,
+    "platform": "darwin",
+    "cores": 10,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 8192,
+    "pressure": "normal",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": null,
+    "load": 1,
+    "openFiles": null,
+    "openFilesMaximum": null,
+    "attachedImages": null
+   }
+  },
+  {
+   "name": "compressor-over-35-percent-warns",
+   "platform": "darwin",
+   "cores": 10,
+   "totalMegabytes": 16384,
+   "atMs": 10000,
+   "load": 1,
+   "counters": {
+    "availableBytes": 8589934592,
+    "compressedBytes": 6442450944,
+    "constrainedBytes": null,
+    "swapUsedBytes": 0,
+    "swappedOutBytes": 0,
+    "pressureLevel": "normal",
+    "stallPercent": null,
+    "openFiles": null,
+    "openFilesMaximum": null,
+    "attachedImages": null
+   },
+   "previous": null,
+   "expect": {
+    "version": 1,
+    "atMs": 10000,
+    "platform": "darwin",
+    "cores": 10,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 8192,
+    "pressure": "warn",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": null,
+    "load": 1,
+    "openFiles": null,
+    "openFilesMaximum": null,
+    "attachedImages": null
+   }
+  },
+  {
+   "name": "compressor-over-55-percent-is-critical",
+   "platform": "darwin",
+   "cores": 10,
+   "totalMegabytes": 16384,
+   "atMs": 10000,
+   "load": 1,
+   "counters": {
+    "availableBytes": 8589934592,
+    "compressedBytes": 10737418240,
+    "constrainedBytes": null,
+    "swapUsedBytes": 0,
+    "swappedOutBytes": 0,
+    "pressureLevel": "normal",
+    "stallPercent": null,
+    "openFiles": null,
+    "openFilesMaximum": null,
+    "attachedImages": null
+   },
+   "previous": null,
+   "expect": {
+    "version": 1,
+    "atMs": 10000,
+    "platform": "darwin",
+    "cores": 10,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 8192,
+    "pressure": "critical",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": null,
+    "load": 1,
+    "openFiles": null,
+    "openFilesMaximum": null,
+    "attachedImages": null
+   }
   }
  ],
  "tree": {
@@ -292,5 +411,39 @@
    "200": 12,
    "999": null
   }
- }
+ },
+ "windows": [
+  {
+   "name": "task-manager-available-pagefile-and-cumulative-page-writes",
+   "json": "{\"availableBytes\":6442450944,\"pagesOutput\":2621440,\"pageFileUsedMegabytes\":1536}",
+   "expect": {
+    "availableBytes": 6442450944,
+    "compressedBytes": null,
+    "constrainedBytes": null,
+    "swapUsedBytes": 1610612736,
+    "swappedOutBytes": 10737418240,
+    "pressureLevel": null,
+    "stallPercent": null,
+    "openFiles": null,
+    "openFilesMaximum": null,
+    "attachedImages": null
+   }
+  },
+  {
+   "name": "no-page-file-reads-as-no-swap",
+   "json": "{\"availableBytes\":1073741824,\"pagesOutput\":null,\"pageFileUsedMegabytes\":null}",
+   "expect": {
+    "availableBytes": 1073741824,
+    "compressedBytes": null,
+    "constrainedBytes": null,
+    "swapUsedBytes": 0,
+    "swappedOutBytes": null,
+    "pressureLevel": null,
+    "stallPercent": null,
+    "openFiles": null,
+    "openFilesMaximum": null,
+    "attachedImages": null
+   }
+  }
+ ]
 }

@@ -28,3 +28,20 @@ test("Vitest execution requires owner tool/cache policy and preserves exact budg
     const esbuild=createRequire(import.meta.url)("esbuild"), bundle=await esbuild.build({entryPoints:[resolve(import.meta.dir,"../🟦️.ts")],bundle:true,write:false,platform:"node",format:"esm",external:["bun:sqlite"]});expect(bundle.outputFiles[0].text).not.toContain("🛍️products");
   }finally{rmSync(temp,{recursive:true,force:true});}
 });
+
+test("a policy that bounds maxWorkers bounds the Vitest worker processes unless the caller names its own", async () => {
+  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")), schema=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8")), validate=new (createRequire(import.meta.url)("ajv").default)({strict:true}).compile(schema),api=await import("../🟦️.ts");
+  for(const key of ["cwd","toolPath","cacheRoot","coverageDirectory"])fixture.policy[key]=resolve(fixture.policy[key]);
+  const unbounded=api.vitestArgumentsV1(fixture.policy,[],fixture.config,false);
+  expect(unbounded.some((value:string)=>value.startsWith("--maxWorkers"))).toBe(false);
+  for(const workers of [1,4,64]){
+    const policy={...fixture.policy,maxWorkers:workers};expect(validate(policy)).toBe(true);
+    const bounded=api.vitestArgumentsV1(policy,[],fixture.config,false),at=bounded.indexOf(`--maxWorkers=${workers}`);
+    expect(at).toBeGreaterThan(bounded.indexOf("--teardownTimeout"));expect(bounded.filter((value:string)=>value.startsWith("--maxWorkers"))).toHaveLength(1);
+    expect(bounded.filter((_value:string,index:number)=>index!==at)).toEqual(unbounded);
+    expect(api.vitestArgumentsV1(policy,["--maxWorkers","2"],fixture.config,false).filter((value:string)=>value.startsWith("--maxWorkers"))).toEqual(["--maxWorkers"]);
+    expect(api.vitestArgumentsV1(policy,["--maxWorkers=2"],fixture.config,false).filter((value:string)=>value.startsWith("--maxWorkers"))).toEqual(["--maxWorkers=2"]);
+  }
+  for(const workers of [0,65,1.5,"4"])expect(validate({...fixture.policy,maxWorkers:workers}),String(workers)).toBe(false);
+  expect(()=>api.readVitestPolicyV1({SEMIO_VITEST_POLICY:JSON.stringify({...fixture.policy,maxWorkers:0})})).toThrow();
+});

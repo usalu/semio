@@ -1,0 +1,5 @@
+🔌 Staged batch `providers` (lane peeredit2): command closures name script provider closures by reference to ONE providers project instead of listing their ~770-1,980 files, so a library edit inside a provider changes one project's groups instead of N product nodes; `closure-of` closures carry a declared role whose view follows exec-f's scheduling key policy (cargo lock owner: native, artifact command: scheduling, artifact sources and test discovery: whole).
+usage: python3 -I stage.py check|apply|revert [--root DIR]   (default root: walk up from this file to the directory holding 🧰️framework)
+check : exit 0 when every file is `base` or `applied`, 1 otherwise (prints each state).
+apply : every live file must hold its base hash (absent for new files) or already the new one, else exit 2 (drift: rebuild with `python3 -I ../../build.py providers <root>`); atomic replace that keeps the mode of the file it replaces (a new file gets 0666 minus the umask, never the 0600 of `mkstemp`).
+revert: every file must hold the new hash (or already base), else exit 2; restores base bytes, removes new files and the directories they emptied.

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "tickMilliseconds": 1000,
+  "stretch": {
+    "minimumBasisPoints": 10000,
+    "maximumBasisPoints": 80000
+  },
+  "announce": {
+    "thresholdBasisPoints": 12500,
+    "stepBasisPoints": 5000,
+    "everyMilliseconds": 60000
+  },
+  "probe": {
+    "platforms": ["win32"],
+    "cpuMilliseconds": 64,
+    "everyMilliseconds": 10000,
+    "smoothingBasisPoints": 3000
+  },
+  "messages": {
+    "stretched": {
+      "en": "Busy host: load ${load} on ${cores} cores, so the ${budget} s test budget counts at 1/${stretch} speed (${used} s of it used after ${wall} s; a hung test is still stopped after at most ${ceiling} s).",
+      "de": "Ausgelasteter Rechner: Last ${load} auf ${cores} Kernen, daher zählt das Testbudget von ${budget} s mit 1/${stretch} der Geschwindigkeit (${used} s davon nach ${wall} s verbraucht; ein hängender Test wird spätestens nach ${ceiling} s beendet)."
+    },
+    "expired": {
+      "en": "Budget of ${budget} s used up after ${wall} s on the wall clock (host stretch ${stretch}, ${used} s counted).",
+      "de": "Budget von ${budget} s nach ${wall} s Wanduhrzeit aufgebraucht (Rechnerdehnung ${stretch}, ${used} s gezählt)."
+    }
+  }
+}

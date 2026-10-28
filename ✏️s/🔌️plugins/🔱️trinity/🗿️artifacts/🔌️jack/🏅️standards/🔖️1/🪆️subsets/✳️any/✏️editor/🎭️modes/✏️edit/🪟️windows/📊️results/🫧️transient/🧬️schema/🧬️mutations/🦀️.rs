@@ -1,7 +1,7 @@
 //! 🧬️ Mutations of one Jack results-window execution state.
 
 use super::{JackResultsWindowTransient, JackResultsWindowTransientDiff};
-#[path = "📊️replace-query-result/🦀️.rs"]
+#[path = "📊️query-result/🦀️.rs"]
 mod replace_query_result;
 pub use replace_query_result::ReplaceQueryResult;
 

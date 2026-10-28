@@ -1,0 +1,122 @@
+{
+  "cases": [
+    {
+      "id": "authenticated-captured-entry",
+      "identity": "same",
+      "loader": "same",
+      "proof": "loaded",
+      "unpinned": "accepted",
+      "pinned": "accepted"
+    },
+    {
+      "id": "raw-entry",
+      "identity": "absent",
+      "loader": "absent",
+      "proof": "loaded",
+      "unpinned": "authentication",
+      "pinned": "authentication"
+    },
+    {
+      "id": "raw-source-identity",
+      "identity": "absent",
+      "loader": "same",
+      "proof": "loaded",
+      "unpinned": "authentication",
+      "pinned": "authentication"
+    },
+    {
+      "id": "raw-loader-identity",
+      "identity": "same",
+      "loader": "absent",
+      "proof": "loaded",
+      "unpinned": "authentication",
+      "pinned": "authentication"
+    },
+    {
+      "id": "changed-source",
+      "identity": "different",
+      "loader": "same",
+      "proof": "loaded",
+      "unpinned": "stale",
+      "pinned": "authentication"
+    },
+    {
+      "id": "changed-loader",
+      "identity": "same",
+      "loader": "different",
+      "proof": "loaded",
+      "unpinned": "stale",
+      "pinned": "authentication"
+    },
+    {
+      "id": "peer-saved-loader",
+      "identity": "same",
+      "loader": "same",
+      "proof": "peer-saved",
+      "unpinned": "stale",
+      "pinned": "authentication"
+    }
+  ],
+  "reply": {
+    "version": 1,
+    "answer": 42
+  },
+  "publication": {
+    "args": [
+      "--flag",
+      "😀"
+    ],
+    "environment": {
+      "SEMIO_LANGUAGE": "en"
+    },
+    "label": "repository:command",
+    "outputStyle": "stream-without-prefixes",
+    "progressStream": "stderr"
+  },
+  "projection": {
+    "parentMilliseconds": 10000,
+    "marker": "actual-command-α🙂",
+    "cases": [
+      {
+        "id": "narrowed-phase",
+        "kind": "narrowed",
+        "childMilliseconds": 5000,
+        "delayMilliseconds": 0,
+        "captureCalls": 1,
+        "launchCalls": 1,
+        "policyMilliseconds": 5000,
+        "refusal": null
+      },
+      {
+        "id": "inherited-parent",
+        "kind": "inherit",
+        "childMilliseconds": 0,
+        "delayMilliseconds": 0,
+        "captureCalls": 1,
+        "launchCalls": 1,
+        "policyMilliseconds": 10000,
+        "refusal": null
+      },
+      {
+        "id": "copied-control",
+        "kind": "copied",
+        "childMilliseconds": 5000,
+        "delayMilliseconds": 0,
+        "captureCalls": 0,
+        "launchCalls": 0,
+        "policyMilliseconds": null,
+        "refusal": "Live Original resource control issuance required"
+      },
+      {
+        "id": "expired-phase",
+        "kind": "expired",
+        "childMilliseconds": 10,
+        "delayMilliseconds": 25,
+        "captureCalls": 0,
+        "launchCalls": 0,
+        "policyMilliseconds": null,
+        "refusal": "Original resource loan deadline exhausted"
+      }
+    ]
+  }
+}

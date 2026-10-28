@@ -256,7 +256,7 @@ func WithRuntimeOnPath(environ []string, directories []string, fixed map[string]
 	return out
 }
 
-// 🔁️RunChild starts the runtime as a child that shares the console, forwards interrupts and settles with its exit code; a non-zero exit code is returned as ExitError. Windows hands over this way, and a caller that continues after the runtime finished (the help of the full command) selects it as its HandOff.
+// 🔁️RunChild starts the runtime as a child that shares the console, forwards interrupts and settles with its exit code; a non-zero exit code is returned as ExitError. Windows hands over this way (the runtime ends with the launcher through a job object), and a caller that continues after the runtime finished (the help of the full command) selects it as its HandOff.
 func RunChild(executable string, argv []string, env []string) error {
 	command := exec.Command(executable, argv[1:]...)
 	command.Stdin, command.Stdout, command.Stderr = os.Stdin, os.Stdout, os.Stderr
@@ -267,6 +267,8 @@ func RunChild(executable string, argv []string, env []string) error {
 	if err := command.Start(); err != nil {
 		return err
 	}
+	release := containChild(command.Process.Pid)
+	defer release()
 	done := make(chan struct{})
 	defer close(done)
 	go func() {
@@ -298,7 +300,7 @@ type Host struct {
 	Stdout  func(text string)
 	Stderr  func(text string)
 	Getwd   func() (string, error)
-	System  func() []string
+	System  func(OsLocale) []string
 	Target  func() (platform, arch string, musl bool)
 	HandOff func(executable string, argv []string, env []string) error
 	Provide func(ProvisionRequest) ProvisionRequest
@@ -349,7 +351,7 @@ func (s *speaker) choose() bool {
 	resolution, refusal := protocol.ResolveLanguage(s.registry.Languages, s.args, s.host.Env, s.host.System)
 	if refusal != nil {
 		s.refused = true
-		s.host.Stderr(s.registry.Refusal(refusal))
+		s.host.Stderr(protocol.Refuse(s.registry.Languages, refusal))
 		return false
 	}
 	s.language = resolution.Language

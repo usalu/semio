@@ -1,0 +1,433 @@
+{
+  "version": 1,
+  "description": "A light command must not load a heavy module group. Group match strings are path substrings of the loaded TypeScript or JavaScript modules and `except` strings remove the leaves a group would otherwise swallow by path alone (each exception has a row proving it loads no other module); `forbid` lists the groups a row may not load; a row with `expectViolations` is a negative control that must load them.",
+  "groups": [
+    {
+      "id": "graph",
+      "match": [
+        "/🏗️build/🕸️graph/",
+        "/⚡️caching/🕸️graph/"
+      ]
+    },
+    {
+      "id": "native-build",
+      "match": [
+        "/🏗️native-build/"
+      ]
+    },
+    {
+      "id": "test-harness",
+      "match": [
+        "/🧪️testing/🏖️sandbox/",
+        "/🧪️testing/🦀️cargo/🟦️.ts",
+        "/🧪️testing/🦀️cargo/🎯️exact/",
+        "/🧪️testing/🦀️laws/"
+      ]
+    },
+    {
+      "id": "cargo",
+      "match": [
+        "/📚️library/🏃️process/🦀️cargo/"
+      ]
+    },
+    {
+      "id": "caller",
+      "match": [
+        "/🏗️build/📥️caller/"
+      ]
+    },
+    {
+      "id": "invocation",
+      "match": [
+        "/🏗️build/🧭️invocation/"
+      ]
+    },
+    {
+      "id": "selection",
+      "match": [
+        "/🏗️build/🧭️selection/"
+      ]
+    },
+    {
+      "id": "resident",
+      "match": [
+        "/🏗️build/🏡️resident/"
+      ]
+    },
+    {
+      "id": "bootstrap",
+      "match": [
+        "/⚡️caching/🚀️bootstrap/"
+      ]
+    },
+    {
+      "id": "store-receipt",
+      "match": [
+        "/🏗️build/🧾️store-receipt/"
+      ]
+    },
+    {
+      "id": "tools",
+      "match": [
+        "/🏗️build/🔧️tools/"
+      ],
+      "except": [
+        "/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/📖️status/"
+      ]
+    },
+    {
+      "id": "revision",
+      "match": [
+        "/🏗️build/📥️inputs/🔏️revision/"
+      ]
+    },
+    {
+      "id": "routing",
+      "match": [
+        "/🏃️process/🧭️routing/"
+      ],
+      "except": [
+        "/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/"
+      ]
+    },
+    {
+      "id": "leases",
+      "match": [
+        "/🏃️process/🔒️leases/",
+        "/🏗️build/🔒️leases/"
+      ]
+    },
+    {
+      "id": "host-capacity",
+      "match": [
+        "/🏗️build/🌡️host-capacity/",
+        "/🏃️process/🏗️build/🌡️host-capacity/"
+      ]
+    },
+    {
+      "id": "sealed",
+      "match": [
+        "/🏗️build/🏛️sealed/"
+      ],
+      "except": [
+        "/🏗️build/🏛️sealed/🧭️mode/"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "id": "help",
+      "kind": "door",
+      "args": [
+        "repo",
+        "--help"
+      ],
+      "forbid": [
+        "graph",
+        "native-build",
+        "test-harness",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision",
+        "routing",
+        "leases",
+        "host-capacity",
+        "sealed"
+      ],
+      "maximumModules": 16,
+      "maximumBytes": 74000
+    },
+    {
+      "id": "command-help",
+      "kind": "door",
+      "args": [
+        "repo",
+        "run",
+        "--help"
+      ],
+      "forbid": [
+        "graph",
+        "native-build",
+        "test-harness",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision",
+        "routing",
+        "leases",
+        "host-capacity",
+        "sealed"
+      ],
+      "maximumModules": 16,
+      "maximumBytes": 74000
+    },
+    {
+      "id": "refusal",
+      "kind": "door",
+      "args": [
+        "repo",
+        "tools",
+        "status"
+      ],
+      "forbid": [
+        "graph",
+        "native-build",
+        "test-harness",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision",
+        "routing",
+        "leases",
+        "host-capacity",
+        "sealed"
+      ],
+      "maximumModules": 16,
+      "maximumBytes": 74000
+    },
+    {
+      "id": "unknown-command",
+      "kind": "door",
+      "args": [
+        "repo",
+        "nonsense"
+      ],
+      "forbid": [
+        "graph",
+        "native-build",
+        "test-harness",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision",
+        "routing",
+        "leases",
+        "host-capacity",
+        "sealed"
+      ],
+      "maximumModules": 16,
+      "maximumBytes": 74000
+    },
+    {
+      "id": "fleet-entry",
+      "kind": "import",
+      "module": "../../../🚢️fleet-status/⌨️command/🟦️.ts",
+      "forbid": [
+        "graph",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision"
+      ],
+      "maximumModules": 100,
+      "maximumBytes": 1250000
+    },
+    {
+      "id": "fleet-door",
+      "kind": "door",
+      "args": ["repo", "fleet", "status"],
+      "forbid": [
+        "graph",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision"
+      ],
+      "maximumModules": 110,
+      "maximumBytes": 1300000
+    },
+    {
+      "id": "bazel-status-leaf",
+      "kind": "import",
+      "module": "../../../🔧️tools/🏗️bazel/🧵️sessions/📖️status/🟦️.ts",
+      "forbid": [
+        "graph",
+        "native-build",
+        "test-harness",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision",
+        "routing",
+        "leases",
+        "host-capacity",
+        "sealed"
+      ],
+      "maximumModules": 5,
+      "maximumBytes": 24000
+    },
+    {
+      "id": "leases-entry",
+      "kind": "import",
+      "module": "../../../🔒️leases/⌨️command/🟦️.ts",
+      "forbid": [
+        "graph",
+        "native-build",
+        "test-harness",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision",
+        "routing"
+      ],
+      "maximumModules": 26,
+      "maximumBytes": 227200
+    },
+    {
+      "id": "capacity-entry",
+      "kind": "import",
+      "module": "../../../🌡️host-capacity/⌨️command/🟦️.ts",
+      "forbid": [
+        "graph",
+        "native-build",
+        "test-harness",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision",
+        "routing"
+      ],
+      "maximumModules": 22,
+      "maximumBytes": 175400
+    },
+    {
+      "id": "doctor-entry",
+      "kind": "import",
+      "module": "../../../🩺️doctor/⌨️command/🟦️.ts",
+      "forbid": [
+        "graph",
+        "test-harness",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "store-receipt"
+      ],
+      "maximumModules": 80,
+      "maximumBytes": 946000
+    },
+    {
+      "id": "caller-entry",
+      "kind": "import",
+      "module": "../../../📥️caller/🟦️.ts",
+      "forbid": [
+        "native-build",
+        "test-harness",
+        "cargo"
+      ],
+      "maximumModules": 60,
+      "maximumBytes": 764000
+    },
+    {
+      "id": "watchdog-leaf",
+      "kind": "import",
+      "module": "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts",
+      "forbid": [
+        "graph",
+        "native-build",
+        "test-harness",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision",
+        "routing",
+        "leases",
+        "host-capacity"
+      ],
+      "maximumModules": 2,
+      "maximumBytes": 14000
+    },
+    {
+      "id": "sealed-mode-leaf",
+      "kind": "import",
+      "module": "../../../🏛️sealed/🧭️mode/🟦️.ts",
+      "forbid": [
+        "graph",
+        "native-build",
+        "test-harness",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision",
+        "routing",
+        "leases",
+        "host-capacity",
+        "sealed"
+      ],
+      "maximumModules": 1,
+      "maximumBytes": 1500
+    },
+    {
+      "id": "negative-control-cargo-execution",
+      "kind": "import",
+      "module": "../../../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts",
+      "forbid": [
+        "native-build",
+        "test-harness",
+        "cargo"
+      ],
+      "expectViolations": [
+        "native-build",
+        "test-harness",
+        "cargo"
+      ]
+    }
+  ]
+}

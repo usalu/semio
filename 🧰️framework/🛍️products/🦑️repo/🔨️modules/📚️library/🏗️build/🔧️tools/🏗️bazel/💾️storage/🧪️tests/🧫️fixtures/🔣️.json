@@ -18,7 +18,7 @@
   "cache": {
     "productsMaximumLogicalBytes": 25768755200,
     "diskCacheMaximumBytes": 10307502080,
-    "serverIdleSeconds": 120,
+    "serverIdleSeconds": 600,
     "bazelrc": [
       "build --experimental_disk_cache_gc_idle_delay=10s",
       "build --experimental_disk_cache_gc_max_age=30d",

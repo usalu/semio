@@ -1,0 +1,12 @@
+{
+ "version": 1,
+ "files": 40,
+ "directories": 7,
+ "expected": {
+  "capture": {"rows": 117, "sha256": "e39bd008dbbe964478be096bbd12ac40723f38274546eff9386190f4a962915b"},
+  "records": [
+   {"round": 0, "value": 8, "rows": 1, "sha256": "42d7279f6250725b4c7deb18027eb13c9c60706c8216daf47c8e999989858d5b"},
+   {"round": 1, "value": 10, "rows": 1, "sha256": "9e66c054568a1da4feba99f44982ab4cab54da810604b0011b728b98e11b7164"}
+  ]
+ }
+}

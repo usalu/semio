@@ -1,0 +1,200 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/compile-units/v1",
+  "title": "Compile units: counted compiler capacity derived from the live host",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "shareBasisPoints": 5000,
+        "minimumShareBasisPoints": 5000,
+        "megabytesPerUnit": 2048,
+        "reserveMegabytes": 2048,
+        "pressureWarnDivisor": 2,
+        "fixedClasses": {
+          "bun-bundle": {
+            "maximumUnits": 4,
+            "minimumUnits": 2
+          },
+          "vite-dev-service": {
+            "maximumUnits": 2,
+            "minimumUnits": 1
+          }
+        },
+        "unitQuantileBasisPoints": 7500,
+        "minimumUnitMegabytes": 256,
+        "minimumUnitSamples": 8
+      }
+    },
+    "Pressure": {
+      "enum": [
+        "normal",
+        "warn",
+        "critical"
+      ]
+    },
+    "Reason": {
+      "enum": [
+        "share",
+        "needed",
+        "granted",
+        "memory",
+        "pressure-warn",
+        "pressure-critical"
+      ]
+    },
+    "Host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cores",
+        "availableMegabytes",
+        "pressure",
+        "grantedJobs",
+        "grantedMegabytes",
+        "unitMegabytes"
+      ],
+      "properties": {
+        "cores": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "availableMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "pressure": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Pressure"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "grantedJobs": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "grantedMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 16777216
+        },
+        "unitMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        }
+      }
+    },
+    "Intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "needed"
+      ],
+      "properties": {
+        "needed": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 1024
+        }
+      }
+    },
+    "Decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preferred",
+        "minimum",
+        "reason",
+        "budgetMegabytes"
+      ],
+      "properties": {
+        "preferred": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "minimum": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "reason": {
+          "$ref": "#/definitions/Reason"
+        },
+        "budgetMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 16777216
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "en": {
+          "planned": "[compile-units] {operation}: {preferred} of {cores} cores planned (at least {minimum} to start; {reason})",
+          "waiting": "[compile-units] {operation}: waiting {seconds}s for at least {minimum} free cores of {cores}",
+          "granted": "[compile-units] {operation}: {granted} of {cores} cores granted after {seconds}s; the build uses -j{granted}",
+          "reasons": {
+            "share": "one compile may use half of the host so others run beside it",
+            "needed": "the work cannot use more",
+            "granted": "the machine admission granted fewer jobs and its memory carries no more compile units",
+            "memory": "the free memory carries fewer compile units",
+            "pressure-warn": "memory pressure is raised",
+            "pressure-critical": "memory pressure is critical",
+            "fixed": "a fixed class gets a small counted slot"
+          },
+          "errors": {
+            "definitionRequired": "Closed compile units value required: {detail}",
+            "grantedMoreThanPlanned": "Granted compile units exceed the planned maximum"
+          }
+        },
+        "de": {
+          "planned": "[compile-units] {operation}: {preferred} von {cores} Kernen geplant (mindestens {minimum} zum Start; {reason})",
+          "waiting": "[compile-units] {operation}: wartet seit {seconds} s auf mindestens {minimum} freie Kerne von {cores}",
+          "granted": "[compile-units] {operation}: {granted} von {cores} Kernen nach {seconds} s zugeteilt; der Build nutzt -j{granted}",
+          "reasons": {
+            "share": "ein Kompilierlauf darf die Hälfte des Rechners nutzen, damit andere daneben laufen",
+            "needed": "die Arbeit kann nicht mehr nutzen",
+            "granted": "die Maschinen-Zulassung hat weniger Jobs erteilt und ihr Speicher trägt nicht mehr Kompiliereinheiten",
+            "memory": "der freie Speicher trägt weniger Compile-Einheiten",
+            "pressure-warn": "der Speicherdruck ist erhöht",
+            "pressure-critical": "der Speicherdruck ist kritisch",
+            "fixed": "eine feste Klasse erhält einen kleinen gezählten Platz"
+          },
+          "errors": {
+            "definitionRequired": "Geschlossener Compile-Einheiten-Wert erforderlich: {detail}",
+            "grantedMoreThanPlanned": "Zugeteilte Compile-Einheiten übersteigen das geplante Maximum"
+          }
+        }
+      }
+    },
+    "FixedClass": {
+      "enum": [
+        "bun-bundle"
+      ]
+    }
+  }
+}

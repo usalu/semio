@@ -1,10 +1,12 @@
+import {noticeLanguagesV1} from "../../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import { spawn } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, constants, mkdtempSync, openSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { serialize } from "node:v8";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { runtimeHostIdV1 } from "../../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🧭️selection/🟦️.ts";
+import {refuseBuildV1} from "../../../../../📖️texts/🟦️.ts";
 
 /** 🧊️ Freezes a declaration recursively. */
 const freeze = value => { if (value !== null && typeof value === "object") { for (const child of Object.values(value)) freeze(child); Object.freeze(value); } return value; };
@@ -15,13 +17,11 @@ export const GRAPH_FARM_POLICY_V1 = freeze(structuredClone(schema.$defs.Policy.c
 export const GRAPH_FARM_MESSAGES_V1 = freeze(structuredClone(schema.$defs.Messages.const));
 const P = GRAPH_FARM_POLICY_V1, MEGABYTE = 1048576;
 
-/** 🌐️ The languages of the process: the one the environment names, else every supported language in declared order (English first, German second); there is no default language. */
 export function selectGraphFarmLanguagesV1(environment) {
-  const named = P.languageEnvironment.map(name => environment[name]?.split(/[_.@-]/u)[0]?.toLowerCase()).find(value => P.languages.includes(value));
-  return named === undefined ? [...P.languages] : [named];
+  return [...noticeLanguagesV1(P.languages, environment)];
 }
 
-/** 🗣️ Renders one farm message as one line per language of the environment. */
+/** 💬️ Renders one farm message as one line per language of the environment. */
 export function renderGraphFarmMessagesV1(key, fields, environment) {
   return selectGraphFarmLanguagesV1(environment).map(language => {
     const template = GRAPH_FARM_MESSAGES_V1[language][key];
@@ -45,6 +45,41 @@ export function planGraphFarmV1({ projects, environment = {}, cores, policy = P 
   return workers < 2 ? { workers: 0, reason } : { workers, reason };
 }
 
+/** 🏠️ The worker pool the capacity grant this process already holds pays for: the declared number of workers (at most the jobs of the grant) with the megabytes of one job, or undefined when the process holds no grant (the capacity gate is off or this is no graph plan child). The host is still asked for more; this pool is what keeps a saturated host from leaving every project to the parent. */
+export function ownGrantPoolV1(environment, policy = P) {
+  let plan;
+  try { plan = JSON.parse(environment[policy.planEnvironment] ?? "null"); } catch { return undefined; }
+  const jobs = plan?.jobs, megabytes = plan?.memoryMegabytes;
+  if (!Number.isSafeInteger(jobs) || jobs < 1 || typeof megabytes !== "number" || !Number.isFinite(megabytes) || megabytes <= 0) return undefined;
+  return { source: "own", workers: Math.min(policy.ownWorkers, jobs), megabytes: Math.floor(megabytes / jobs) };
+}
+
+/** 🎟️ The worker pool a host answer admits: any grant of at least the declared minimum starts a pool of the granted jobs; a smaller or missing answer starts none. */
+export function grantedPoolV1(granted, policy = P) {
+  if (granted === undefined || !Number.isSafeInteger(granted.jobs) || granted.jobs < policy.minimumGrantedWorkers) return undefined;
+  return { source: "host", workers: granted.jobs, megabytes: granted.megabytes };
+}
+
+/** 🧭️ Chooses the pool that takes the next job among the pools that are ready and usable: a pool with an idle worker first (earliest), otherwise the one with the fewest jobs per worker (earliest on a tie); -1 when none can take it. */
+export function choosePoolV1(pools) {
+  let best = -1, ratio = Infinity;
+  for (let index = 0; index < pools.length; index++) {
+    const pool = pools[index];
+    if (!pool.ready || !pool.usable) continue;
+    if (pool.idle) return index;
+    const load = pool.pending / pool.width;
+    if (load < ratio) { ratio = load; best = index; }
+  }
+  return best;
+}
+
+/** ♻️ Whether a worker that just answered a job is replaced before the next one: `memory` when its resident set passed the declared share of its budget (a project that grew it is the last one it runs), `projects` when it served the declared number of jobs (what a long-lived process keeps for itself is bounded by its lifetime, not by the project); undefined keeps it. */
+export function recycleReasonV1({ rssMegabytes, jobs, megabytes }, policy = P) {
+  if (rssMegabytes > megabytes * policy.recycleMemoryRatio) return "memory";
+  if (jobs >= policy.recycleAfterProjects) return "projects";
+  return undefined;
+}
+
 /** 🧬️ The environment that bounds the heap of one worker process of the runtime in use; a runtime without such a switch gets none. */
 export function graphFarmRuntimeEnvironmentV1(runtime, workerMegabytes, policy = P) {
   const row = policy.runtime[runtime];
@@ -62,11 +97,31 @@ export async function awaitGrowingV1(promises) {
 /** 🚦️ Names the runtime that runs this process, so its heap switches can be chosen without naming a tool in the callers. */
 export function graphFarmRuntimeV1() { return runtimeHostIdV1(); }
 
+/** 🧹️ Creates a private directory of this process for the farm (`kind`: `staging`, `image` or `session`) under the temporary directory, named with the id of this process; the first call of a process for a directory first removes the farm directories there whose process is gone, since a parent killed before its farm closed (out of memory, a budget kill, a terminated build) leaves its snapshot copy, staging and session files behind and nothing else removes them. A directory whose process still runs, whose process id answers anything but "no such process", or whose name is not one the farm writes is kept. */
+export function createFarmTemporaryDirectoryV1(kind, { directory = realpathSync(tmpdir()), alive = farmProcessAliveV1, policy = P } = {}) {
+  const prefix = policy.temporaryDirectories.prefixes[kind];
+  if (typeof prefix !== "string") throw refuseBuildV1("invalid","graph.farm-directory-kind-required",{kind});
+  if (!reclaimedDirectoriesV1.has(directory)) {
+    reclaimedDirectoriesV1.add(directory);
+    const pattern = new RegExp(policy.temporaryDirectories.pattern, "u");
+    let names = [];
+    try { names = readdirSync(directory); } catch {}
+    for (const name of names) { const pid = Number(pattern.exec(name)?.groups?.pid); if (Number.isSafeInteger(pid) && pid > 0 && pid !== process.pid && !alive(pid)) { try { rmSync(join(directory, name), { recursive: true, force: true }); } catch {} } }
+  }
+  return mkdtempSync(join(directory, prefix + process.pid + "-"));
+}
+
+/** 🫀️ Whether a process id still names a process: only the answer "no such process" counts as gone, so a platform that cannot tell keeps the directory. */
+export function farmProcessAliveV1(pid) { try { process.kill(pid, 0); return true; } catch (error) { return error?.code !== "ESRCH"; } }
+
+const reclaimedDirectoriesV1 = new Set();
+
 /**
- * 🏊️ A pool of worker processes, each running one service module (`open(session, where)` once, then `run(job)` per job, one at a time). Every job ends as `{ reply }`, `{ failure }` (the service threw) or `{ lost }` (the process died or timed out on every attempt), so a caller decides what a failed job means; nothing is thrown except the abort reason of the signal.
+ * 🧵️ A pool of worker processes, each running one service module (`open(session, where)` once, then `run(job)` per job, one at a time). Every job ends as `{ reply }`, `{ failure }` (the service threw) or `{ lost }` (the process died or timed out on every attempt), so a caller decides what a failed job means; nothing is thrown except the abort reason of the signal.
  * A lost job is sent again to a fresh process up to `maximumAttempts` times; more than `maximumRestarts` lost processes disable the pool. `accept(identity)` decides whether a worker that announced its identity may serve; a refusal disables the pool. A worker that grew past its memory budget is replaced after its job; `retired(slot, generation)` tells the caller that a process is gone, so it can reclaim what that process left.
+ * With `auxiliaryFile` every worker reads that private regular file as descriptor 3 (opened read-only and without following links for each start, so no two workers share a file offset; a file is read in one pass, a pipe needs this process scheduled for every chunk) and the channel moves to descriptor 4.
  */
-export function createFarmV1({ entry, service, session, workers, megabytes, environment = process.env, signal, policy = P, accept = () => true, report = () => {}, retired = () => {}, spawnProcess = spawn, runtime = graphFarmRuntimeV1(), command = process.execPath, commandArguments = [] }) {
+export function createFarmV1({ entry, service, session, workers, megabytes, environment = process.env, signal, policy = P, accept = () => true, report = () => {}, retired = () => {}, spawnProcess = spawn, runtime = graphFarmRuntimeV1(), command = process.execPath, commandArguments = [], auxiliaryFile = undefined }) {
   if (!Number.isSafeInteger(workers) || workers < 1) throw Error("Graph farm of at least one worker required");
   const slots = Array.from({ length: workers }, (_, index) => ({ index, generation: 0, child: undefined, state: "empty", job: undefined, timer: undefined })), queue = [];
   const stats = { workers, jobs: 0, replies: 0, failures: 0, lost: 0, recycled: 0, started: 0, peakRssMegabytes: 0, queuedMilliseconds: 0, workedMilliseconds: 0, bootMilliseconds: 0 };
@@ -106,9 +161,12 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
     for (const job of queue.splice(0)) settle(job, { lost: "disabled: " + why });
   };
   const launch = slot => {
-    slot.state = "starting"; slot.generation++; stats.started++; slot.spawned = performance.now();
-    if (sessionFile === undefined) { sessionDirectory = mkdtempSync(join(tmpdir(), "semio-farm-session-")); sessionFile = join(sessionDirectory, "session.bin"); writeFileSync(sessionFile, serialize(session)); }
-    const child = spawnProcess(command, [...commandArguments, entry], { stdio: ["ignore", "inherit", "inherit", "ipc"], serialization: "json", env: childEnvironment });
+    slot.state = "starting"; slot.generation++; slot.served = 0; stats.started++; slot.spawned = performance.now();
+    if (sessionFile === undefined) { sessionDirectory = createFarmTemporaryDirectoryV1("session", { policy }); sessionFile = join(sessionDirectory, "session.bin"); writeFileSync(sessionFile, serialize(session)); }
+    let child, descriptor;
+    try { descriptor = auxiliaryFile === undefined ? undefined : openSync(auxiliaryFile, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0)); child = spawnProcess(command, [...commandArguments, entry], { stdio: descriptor === undefined ? ["ignore", "inherit", "inherit", "ipc"] : ["ignore", "inherit", "inherit", descriptor, "ipc"], serialization: "json", env: childEnvironment }); }
+    catch (error) { lose(slot, String(error?.message ?? error)); return; }
+    finally { if (descriptor !== undefined) closeSync(descriptor); }
     slot.child = child;
     slot.timer = setTimeout(() => lose(slot, "init timeout"), policy.initTimeoutMilliseconds);
     slot.timer.unref?.();
@@ -127,7 +185,9 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
         if (message.type === "result") {
           stats.replies++; stats.workedMilliseconds += performance.now() - job.dispatched; stats.peakRssMegabytes = Math.max(stats.peakRssMegabytes, message.rssMegabytes);
           settle(job, { reply: message.reply, slot: slot.index, generation: slot.generation });
-          if (message.rssMegabytes > megabytes) { stats.recycled++; report("recycled", { worker: slot.index, megabytes: Math.round(message.rssMegabytes) }); retire(slot, true); }
+          slot.served++;
+          const reason = recycleReasonV1({ rssMegabytes: message.rssMegabytes, jobs: slot.served, megabytes }, policy);
+          if (reason !== undefined) { stats.recycled++; report("recycled", { worker: slot.index, megabytes: Math.round(message.rssMegabytes), reason }); retire(slot, true); }
         } else { stats.failures++; settle(job, { failure: { name: message.name, message: message.message, code: message.code ?? null } }); }
         pump();
       }
@@ -155,6 +215,7 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
   const close = async () => {
     if (closed) return;
     closed = true;
+    signal?.removeEventListener("abort", abort);
     readyAccept(false);
     for (const job of queue.splice(0)) settle(job, { lost: "closed" });
     const exits = [];
@@ -168,13 +229,15 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
     await Promise.all(exits);
     if (sessionDirectory !== undefined) rmSync(sessionDirectory, { recursive: true, force: true });
   };
-  if (signal) { const abort = () => { void close(); }; if (signal.aborted) abort(); else signal.addEventListener("abort", abort, { once: true }); }
+  const abort = () => { void close(); };
+  if (signal) { if (signal.aborted) abort(); else signal.addEventListener("abort", abort, { once: true }); }
   for (const slot of slots) launch(slot);
   return Object.freeze({
     width: workers,
     ready,
     get idle() { return slots.some(slot => slot.state === "idle"); },
     get usable() { return !closed && disabled === undefined; },
+    get pending() { return queue.length + slots.filter(slot => slot.state === "busy").length; },
     stats: () => ({ ...stats, queuedMilliseconds: Math.round(stats.queuedMilliseconds), workedMilliseconds: Math.round(stats.workedMilliseconds), bootMilliseconds: Math.round(stats.bootMilliseconds), restarts, ...(disabled === undefined ? {} : { disabled }) }),
     run(payload, options = {}) {
       if (closed || disabled !== undefined) return Promise.resolve({ lost: closed ? "closed" : "disabled: " + disabled });

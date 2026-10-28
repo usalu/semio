@@ -1,0 +1,9 @@
+#!/bin/sh
+# Graph-free verification after the flip: laws, then the real tool through the pinned bun. usage: sh post-flip.sh
+cd /Users/ueli/Documents/semio || exit 2
+B="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build"
+for f in "$B/🏛️sealed/🧪️tests/🗂️store/🟦️.ts" "$B/🏛️sealed/🧪️tests/🚦️trampoline/🟦️.ts" "$B/🏛️sealed/🧪️tests/👥️processes/🟦️.ts" "$B/🏛️sealed/🧪️tests/🔀️interleavings/🟦️.ts" "$B/🚪️door/🧪️tests/🟦️.ts"; do bun test "./$f" 2>&1 | grep -E "^ *[0-9]+ (pass|fail)" | tr '\n' ' '; echo " $f" | cut -c1-90; done
+PB=$(ls .cache/b/t/m/bun/*/bun | head -1); D="$B/🚪️door/📜️script.ts"
+"$PB" "$D" repo 2>&1 | head -1 | cut -c1-80
+"$PB" "$D" leases status 2>&1 | head -1 | cut -c1-100
+"$PB" "$D" repo cache status 2>&1 | grep -E "implementation\]|complete" | cut -c1-160

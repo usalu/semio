@@ -3,7 +3,7 @@ import {existsSync,readdirSync,readFileSync,statSync} from "node:fs";
 import {join,relative} from "node:path";
 import {ciCacheDeltaV1,compareCiPlansV1,judgeCiCacheProofV1,readCiCacheStatusV1,readCiPlanV1,readCiTestResultsIndexV1,renderCiCacheDeltaV1,renderCiParityV1,renderCiPlanV1,renderCiProofV1,renderCiTestsV1,summarizeCiPlanV1,summarizeCiTestsV1,type CiToolV1} from "./🟦️.ts";
 import { isMainModuleV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
-import {resolveLanguageV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {CATALOG_LANGUAGES_V1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 
 const usage=`Usage: bun script.ts <command> [--lang en|de] ...

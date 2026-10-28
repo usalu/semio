@@ -17,6 +17,8 @@ import {openNativeImageStorageV1,retireNativeImageStorageV1} from "@semio-tech/p
 import {acquireNativeStorageV1,nativeStorageRetirementPortV1} from "@semio-tech/process/artifacts/native-build/storage";
 
 import {withRepositoryTestArtifactsV1,repositoryTestArtifactRootV1} from "@semio-tech/repo-test/storage";
+import{privateRepositoryWorkspaceV1}from"../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 const ajv=new Ajv({strict:true,allErrors:true}).addSchema(schema,"launch"),leases=new URL("../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",import.meta.url).href;
 
@@ -41,8 +43,8 @@ test("cache TestScript admits every branch through one original diagnostics call
 });
 
 test("isolated Cargo stores are removed on every owner settlement and swept only after their kernel claim is released",async()=>{
- await withBuildTestInvocationV1(original=>withRepositoryTestArtifactsV1(process.cwd(),original,artifactEntryControlV1(original,"test:artifact-entry",0),async artifactPhase=>{const artifacts=repositoryTestArtifactRootV1(process.cwd());const bounded=join(process.cwd(),fixture.diagnostics.directory),selected=relative(bounded,artifacts);expect(!isAbsolute(selected)&&selected!==".."&&!selected.startsWith("..\\")&&!selected.startsWith("../")).toBe(true);expect(lstatSync(artifacts).dev===lstatSync(bounded).dev).toBe(fixture.diagnostics.sameFilesystem);
- const parent=mkdtempSync(join(artifacts,"cl-")),directory=join(parent,"v"),leaseDirectory=join(process.cwd(),".cache/b/l/m/data");
+ await withBuildTestInvocationV1(original=>withRepositoryTestArtifactsV1(repository.root,original,artifactEntryControlV1(original,"test:artifact-entry",0),async artifactPhase=>{const artifacts=repositoryTestArtifactRootV1(repository.root);const bounded=join(process.cwd(),fixture.diagnostics.directory),selected=relative(bounded,artifacts);expect(!isAbsolute(selected)&&selected!==".."&&!selected.startsWith("..\\")&&!selected.startsWith("../")).toBe(true);expect(lstatSync(artifacts).dev===lstatSync(bounded).dev).toBe(fixture.diagnostics.sameFilesystem);
+ const parent=mkdtempSync(join(artifacts,"cl-")),directory=join(parent,"v"),leaseDirectory=join(repository.root,".cache/b/l/m/data");
  await withBuildTestInvocationV1(async original=>{
   const control=scriptCompilerAdmissionControlV1(original,"repo:cargo:isolated-law",60000),options={directory,leaseDirectory,filesystemBytes:33554432,maximumPhysicalBytes:34603008,control};const image=await openNativeImageStorageV1(options),policy={version:1 as const,root:image.root,leaseDirectory,capacityBytes:34603008,maximumWorkspaceBytes:8388608,maximumArtifactBytes:8388608};
   const storage=await acquireNativeStorageV1({policy,control,port:nativeStorageRetirementPortV1(image.port,async()=>{}),owner:"repo:cargo:isolated-law",kind:"compiler-workspace",bytes:8388608}),base=join(image.root,"cargo","prototype"),isolated=join(base,REPOSITORY_CARGO_LAUNCH_POLICY_V1.isolatedDirectory);
@@ -73,6 +75,6 @@ test("isolated Cargo stores are removed on every owner settlement and swept only
 },120000);
 
 test("isolated store refuses an invented reservation before any filesystem effect",async()=>{
- const control={signal:new AbortController().signal,remainingMilliseconds:()=>1000,publish:async()=>{},yieldContinuation:async()=>{}},base=join(process.env.SEMIO_TEST_ARTIFACT_DIR??process.cwd(),"invented-isolated");
+ const control={signal:new AbortController().signal,remainingMilliseconds:()=>1000,publish:async()=>{},yieldContinuation:async()=>{}},base=join(process.env.SEMIO_TEST_ARTIFACT_DIR??repository.root,"invented-isolated");
  await expect(withRepositoryCargoIsolatedStoreV1({storage:{} as never,base,control},async()=>{})).rejects.toThrow();expect(existsSync(base)).toBe(false);expect(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8")).toContain("isolatedDirectory");
 });

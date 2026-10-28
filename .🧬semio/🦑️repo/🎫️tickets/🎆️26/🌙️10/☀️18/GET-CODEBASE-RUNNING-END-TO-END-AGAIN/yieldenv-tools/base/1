@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "racyMilliseconds": 3000,
+        "maximumObservations": 1000000,
+        "maximumBytes": 268435456,
+        "concurrency": 128,
+        "progressObservations": 4096,
+        "config": "SEMIO_WORLD_WITNESS",
+        "kinds": {
+          "l": "lstat",
+          "L": "lstat with bigint times",
+          "s": "stat",
+          "S": "stat with bigint times",
+          "d": "directory listing, by the identity of the directory",
+          "f": "file read, by the identity of the file",
+          "r": "link target",
+          "p": "real path",
+          "a": "access, followed by the mode bits",
+          "e": "environment variable, by the digest of its value",
+          "E": "the whole environment minus authority and shell bookkeeping, by one digest",
+          "h": "host fact",
+          "g": "git index listing",
+  "i": "git ignore sources, by the digest of git's own answers about config, excludes file and info/exclude",
+          "x": "command output"
+        },
+        "volatileHostFacts": ["freemem", "loadavg", "uptime", "networkInterfaces"],
+        "hostProbes": [
+          {"program": "sysctl", "arguments": ["-n", "kern.bootsessionuuid"]},
+          {"program": "sysctl", "arguments": ["-n", "kern.boottime"]},
+          {"program": "hdiutil", "arguments": ["info", "-plist"]},
+          {"program": "mount", "arguments": []},
+          {"program": "ps", "arguments": ["-axo", "pid=,ppid="]},
+   {"program": "ps", "arguments": ["-o", "cputime=", "-p", "{pids}"]},
+   {"program": "ps", "arguments": ["-o", "etime=", "-p", "{pid}"]}
+        ],
+        "hostProbeDirectories": ["/bin", "/sbin", "/usr/bin", "/usr/sbin"],
+        "hostProbeFiles": ["/proc/stat", "/proc/1/stat", "/proc/sys/kernel/random/boot_id"],
+        "authorityEnvironment": ["SEMIO_SCRIPT_PROCESS_INVOCATION"],
+        "ignoredEnvironment": ["_", "OLDPWD", "PWD", "SHLVL", "SEMIO_REPO_PLAN_REUSE", "SEMIO_REPO_PROFILE", "SEMIO_REPO_SOURCE_MEMO", "SEMIO_LEASE_PRIORITY", "SEMIO_BUILD_GRAPH_PATH", "SEMIO_BUILD_GRAPH_DIGEST", "SEMIO_BUILD_GENERATION_PIN", "SEMIO_BUILD_INVOCATION_PID", "SEMIO_BUILD_REUSE_GRAPH", "SEMIO_HOST_CAPACITY_GRANT", "SEMIO_HOST_CAPACITY_PLAN", "SEMIO_BUILD_GRAPH_YIELD_TICKET", "SEMIO_BUILD_GRAPH_REQUESTED_AT", "SEMIO_BUILD_GRAPH_YIELD_ROUND"]
+      }
+    },
+    "Observation": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": [
+        { "type": "string", "minLength": 1, "maxLength": 3 },
+        { "type": "string", "minLength": 1 },
+        { "type": "string" }
+      ]
+    },
+    "Witness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "observations", "racy", "unstable", "tainted"],
+      "properties": {
+        "version": { "const": 1 },
+        "observations": { "type": "array", "maxItems": 1000000, "items": { "$ref": "#/definitions/Observation" } },
+        "racy": { "type": ["string", "null"], "minLength": 1 },
+        "unstable": { "type": "array", "maxItems": 64, "items": { "type": "string" } },
+        "tainted": { "type": "array", "maxItems": 64, "items": { "type": "string" } }
+      }
+    },
+    "Config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["out", "root", "workspace", "writable", "racyMilliseconds", "maximumObservations", "volatileHostFacts", "hostProbes", "hostProbeDirectories", "hostProbeFiles", "authorityEnvironment", "ignoredEnvironment"],
+      "properties": {
+        "out": { "type": "string", "minLength": 1 },
+        "root": { "type": "string", "minLength": 1 },
+        "workspace": { "type": "string", "minLength": 1 },
+        "writable": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "racyMilliseconds": { "type": "integer", "minimum": 0 },
+        "maximumObservations": { "type": "integer", "minimum": 1 },
+        "volatileHostFacts": { "type": "array", "items": { "type": "string" } },
+        "hostProbes": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["program", "arguments"], "properties": { "program": { "type": "string", "minLength": 1 }, "arguments": { "type": "array", "items": { "type": "string" } } } } },
+        "hostProbeDirectories": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "hostProbeFiles": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "authorityEnvironment": { "type": "array", "items": { "type": "string" } },
+        "ignoredEnvironment": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Messages": {
+      "const": {
+        "en": {
+          "reused": "[bazel] plan reused: {observations} observations of the world hold since {age} s, the planner was not started ({seconds} s)",
+          "replanned": "[bazel] planning again: {reason}",
+          "withheld": "[bazel] this plan cannot be reused later: {reason}",
+          "verifyFailed": "[bazel] plan reuse check FAILED: the reused plan and a complete plan differ in {names}; report this"
+        },
+        "de": {
+          "reused": "[bazel] Plan wiederverwendet: {observations} Beobachtungen der Welt gelten seit {age} s, der Planer wurde nicht gestartet ({seconds} s)",
+          "replanned": "[bazel] Plan wird neu erstellt: {reason}",
+          "withheld": "[bazel] Dieser Plan kann spaeter nicht wiederverwendet werden: {reason}",
+          "verifyFailed": "[bazel] Pruefung der Plan-Wiederverwendung FEHLGESCHLAGEN: der wiederverwendete und ein vollstaendiger Plan unterscheiden sich in {names}; bitte melden"
+        }
+      }
+    },
+    "Reasons": {
+      "const": {
+        "en": {
+          "absent": "no earlier plan of this selection in this slot",
+          "key": "selection, graph, implementation or environment changed",
+          "world": "{kind} {subject} changed",
+          "outputs": "the generated workspace changed",
+          "corrupt": "the earlier plan record is unreadable",
+          "racy": "{detail} was modified moments before the planner read it",
+          "unstable": "a fact changed while the planner ran: {detail}",
+          "tainted": "the planner read something that cannot be checked: {detail}",
+          "off": "plan reuse is switched off"
+        },
+        "de": {
+          "absent": "kein frueherer Plan dieser Auswahl in diesem Slot",
+          "key": "Auswahl, Graph, Implementierung oder Umgebung geaendert",
+          "world": "{kind} {subject} geaendert",
+          "outputs": "der erzeugte Arbeitsbereich wurde geaendert",
+          "corrupt": "der fruehere Plan ist nicht lesbar",
+          "racy": "{detail} wurde kurz vor dem Lesen durch den Planer geaendert",
+          "unstable": "ein Fakt aenderte sich waehrend der Planer lief: {detail}",
+          "tainted": "der Planer las etwas, das sich nicht pruefen laesst: {detail}",
+          "off": "Plan-Wiederverwendung ist ausgeschaltet"
+        }
+      }
+    }
+  }
+}

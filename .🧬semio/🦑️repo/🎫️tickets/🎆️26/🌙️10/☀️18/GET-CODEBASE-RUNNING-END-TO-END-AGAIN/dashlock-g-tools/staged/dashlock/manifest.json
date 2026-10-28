@@ -1,0 +1,57 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts": {
+  "file": "f00",
+  "base": "2866deaad76ea821cd843ae4fe4cc4cf67fb1120edbb936bfcef88add4e39d64",
+  "new": "15cba3bc620d67db9bd12c8b5d9acdb14cf547bbc8f2677d303b57f694b00810"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts": {
+  "file": "f01",
+  "base": "4ba8b7fc5a19838aac885094194605aba62e9ee74afe2aeb05555d0efeb380cd",
+  "new": "5650f4d388c50ed36e4fcbbe8d38d01da8f185d272b24c68a6b1b2ef5926dd66"
+ },
+ "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/📤️publication/🟦️.ts": {
+  "file": "f02",
+  "base": "2bdc9f6a8208b83ea3441e11fc25c516601cb26ec8b14c1fdedd09dd93b77078",
+  "new": "8312a4bde03b64686133582decc9d674dab822a92693b2a686cd89b3662cffc1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts": {
+  "file": "f03",
+  "base": "5b46fc062ba3e84c9b90f5aaebba97be6f919426c3f27b089b33ff34011c0ad6",
+  "new": "feb6603fd206a631e3669d776e38e6ffa3b2ced7573ab202993ede603c36aec0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🔣️.json": {
+  "file": "f04",
+  "base": "0ee6e62cb09cb72c33c47bf78a5c3af73a6621b725d65d1e075cfd039ecf22ee",
+  "new": "5b4aa25678f3f1436aa923fbe3e857b4f12c59c72a6fb3a8de67075bbb5ff8af"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📌️executable/🧪️tests/🟦️.ts": {
+  "file": "f05",
+  "base": "e5870890acc054077a43d09fd8a9056e9bcf9d0cc7c2cb128e99c851394084d9",
+  "new": "b52506cc85a90445aabc80db13a810f2e0454aea2a55a3d0678892dd28e8958f"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧊️digest/🧪️tests/🟦️.ts": {
+  "file": "f06",
+  "base": null,
+  "new": "c582dc1b700ad40e82aaa9bf4e905651bb2383985801ebbbf1b97663bd4cc856"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧊️digest/🧪️tests/🔣️.json": {
+  "file": "f07",
+  "base": null,
+  "new": "677b903c1c9817f15b64e125bfe922e535f3f10b511ce2405aa894f2f2e7a05d"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧊️digest/🧪️tests/🐍️model.py": {
+  "file": "f08",
+  "base": null,
+  "new": "ecd44679a7562b194404e8f3dcc63e4170f9a1f70c0337846cbb628b85ae9d4e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧪️tests/🟦️.ts": {
+  "file": "f09",
+  "base": null,
+  "new": "a61fd4a5b4d4266dd045039f26e52c839784b92b4c9856a9dff264333ce28042"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧪️tests/🐍️model.py": {
+  "file": "f10",
+  "base": null,
+  "new": "11c83e6fc991d2ce6750a0c70889f983b59fc6ea4b21c8472666064562dab651"
+ }
+}

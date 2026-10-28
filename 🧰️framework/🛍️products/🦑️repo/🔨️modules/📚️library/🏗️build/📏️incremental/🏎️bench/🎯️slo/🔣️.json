@@ -440,6 +440,46 @@
   "start-unobserved": {
    "en": "the rebuild start was not observed through a tool marker line, so the value is only a bound",
    "de": "der Start des Neubaus wurde nicht durch eine Werkzeugmarke beobachtet, der Wert ist nur eine Schranke"
+  },
+  "queueMs": {
+   "en": "time in queues",
+   "de": "Zeit in Warteschlangen"
+  },
+  "graphMs": {
+   "en": "graph preparation",
+   "de": "Graph-Vorbereitung"
+  },
+  "executeMs": {
+   "en": "tool execution",
+   "de": "Werkzeugausführung"
+  },
+  "executedActions": {
+   "en": "re-executed actions",
+   "de": "neu ausgeführte Aktionen"
+  },
+  "inferredProjects": {
+   "en": "re-inferred projects",
+   "de": "neu abgeleitete Projekte"
+  },
+  "count": {
+   "en": "count",
+   "de": "Anzahl"
+  },
+  "peer": {
+   "en": "peer edit",
+   "de": "Fremdänderung"
+  },
+  "overBudget": {
+   "en": "Over budget",
+   "de": "Über dem Budget"
+  },
+  "budget": {
+   "en": "Budget",
+   "de": "Budget"
+  },
+  "history": {
+   "en": "History",
+   "de": "Verlauf"
   }
  },
  "units": [
@@ -485,6 +525,61 @@
    "title": {
     "en": "Python package",
     "de": "Python-Paket"
+   }
+  },
+  {
+   "id": "product-dashboard",
+   "language": "rs",
+   "target": "@semio-tech/repo-dashboard-rs:build",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🦀️.rs",
+   "op": "private-body",
+   "title": {
+    "en": "One-line edit of the dashboard source",
+    "de": "Einzeilige Änderung der Quelle: Dashboard"
+   }
+  },
+  {
+   "id": "product-course",
+   "language": "ts",
+   "target": "@teaching/architecture-course:build",
+   "file": "🎓️teaching/🏛️architecture/📚️course/📚️course/🟦️.ts",
+   "op": "private-body",
+   "title": {
+    "en": "One-line edit of the architecture course source",
+    "de": "Einzeilige Änderung der Quelle: Architekturkurs"
+   }
+  },
+  {
+   "id": "product-print",
+   "language": "ts",
+   "target": "@semio-tech/print:build",
+   "file": "🧰️framework/🛍️products/📓️print/📦️artifacts/📖️pdf/🟦️.ts",
+   "op": "private-body",
+   "title": {
+    "en": "One-line edit of the print source",
+    "de": "Einzeilige Änderung der Quelle: Druck"
+   }
+  },
+  {
+   "id": "peer-unrelated",
+   "language": "ts",
+   "target": "@semio-tech/framework-graph:test",
+   "file": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/📜️script.ts",
+   "op": "comment",
+   "title": {
+    "en": "Peer edit of a unrelated plugin script",
+    "de": "Fremdänderung: fremdes Plugin-Skript"
+   }
+  },
+  {
+   "id": "peer-scheduling",
+   "language": "ts",
+   "target": "@semio-tech/framework-graph:test",
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts",
+   "op": "comment",
+   "title": {
+    "en": "Peer edit of a scheduling file of the build library",
+    "de": "Fremdänderung: Scheduling-Datei der Build-Bibliothek"
    }
   }
  ],
@@ -736,6 +831,222 @@
     "de": "Drei Agenten bauen dasselbe warme Ziel"
    },
    "workload": "warm-fanout",
+   "sessions": 3,
+   "runs": 1,
+   "warmup": 0
+  },
+  {
+   "id": "product-dashboard-cold",
+   "kind": "noop",
+   "title": {
+    "en": "First build of the dashboard on a fresh copy",
+    "de": "Erster Bau: Dashboard auf frischer Kopie"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/repo-dashboard-rs:build",
+   "runs": 1,
+   "warmup": 0,
+   "cold": true,
+   "memory": true
+  },
+  {
+   "id": "product-dashboard-noop",
+   "kind": "noop",
+   "title": {
+    "en": "Warm no-op build of the dashboard",
+    "de": "Warmer Leerlauf-Bau: Dashboard"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/repo-dashboard-rs:build",
+   "runs": 5,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-dashboard-edit",
+   "kind": "edit",
+   "title": {
+    "en": "One-line edit and rebuild of the dashboard",
+    "de": "Einzeilige Änderung und Neubau: Dashboard"
+   },
+   "lane": "oneshot",
+   "unit": "product-dashboard",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-dashboard-peer-unrelated",
+   "kind": "peer",
+   "title": {
+    "en": "Build of the dashboard after a peer edit of a unrelated plugin script",
+    "de": "Bau: Dashboard nach Fremdänderung: fremdes Plugin-Skript"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/repo-dashboard-rs:build",
+   "unit": "peer-unrelated",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-dashboard-peer-scheduling",
+   "kind": "peer",
+   "title": {
+    "en": "Build of the dashboard after a peer edit of a scheduling file of the build library",
+    "de": "Bau: Dashboard nach Fremdänderung: Scheduling-Datei der Build-Bibliothek"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/repo-dashboard-rs:build",
+   "unit": "peer-scheduling",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-course-cold",
+   "kind": "noop",
+   "title": {
+    "en": "First build of the architecture course on a fresh copy",
+    "de": "Erster Bau: Architekturkurs auf frischer Kopie"
+   },
+   "lane": "oneshot",
+   "target": "@teaching/architecture-course:build",
+   "runs": 1,
+   "warmup": 0,
+   "cold": true,
+   "memory": true
+  },
+  {
+   "id": "product-course-noop",
+   "kind": "noop",
+   "title": {
+    "en": "Warm no-op build of the architecture course",
+    "de": "Warmer Leerlauf-Bau: Architekturkurs"
+   },
+   "lane": "oneshot",
+   "target": "@teaching/architecture-course:build",
+   "runs": 5,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-course-edit",
+   "kind": "edit",
+   "title": {
+    "en": "One-line edit and rebuild of the architecture course",
+    "de": "Einzeilige Änderung und Neubau: Architekturkurs"
+   },
+   "lane": "oneshot",
+   "unit": "product-course",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-course-peer-unrelated",
+   "kind": "peer",
+   "title": {
+    "en": "Build of the architecture course after a peer edit of a unrelated plugin script",
+    "de": "Bau: Architekturkurs nach Fremdänderung: fremdes Plugin-Skript"
+   },
+   "lane": "oneshot",
+   "target": "@teaching/architecture-course:build",
+   "unit": "peer-unrelated",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-course-peer-scheduling",
+   "kind": "peer",
+   "title": {
+    "en": "Build of the architecture course after a peer edit of a scheduling file of the build library",
+    "de": "Bau: Architekturkurs nach Fremdänderung: Scheduling-Datei der Build-Bibliothek"
+   },
+   "lane": "oneshot",
+   "target": "@teaching/architecture-course:build",
+   "unit": "peer-scheduling",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-print-cold",
+   "kind": "noop",
+   "title": {
+    "en": "First build of the print on a fresh copy",
+    "de": "Erster Bau: Druck auf frischer Kopie"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/print:build",
+   "runs": 1,
+   "warmup": 0,
+   "cold": true,
+   "memory": true
+  },
+  {
+   "id": "product-print-noop",
+   "kind": "noop",
+   "title": {
+    "en": "Warm no-op build of the print",
+    "de": "Warmer Leerlauf-Bau: Druck"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/print:build",
+   "runs": 5,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-print-edit",
+   "kind": "edit",
+   "title": {
+    "en": "One-line edit and rebuild of the print",
+    "de": "Einzeilige Änderung und Neubau: Druck"
+   },
+   "lane": "oneshot",
+   "unit": "product-print",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-print-peer-unrelated",
+   "kind": "peer",
+   "title": {
+    "en": "Build of the print after a peer edit of a unrelated plugin script",
+    "de": "Bau: Druck nach Fremdänderung: fremdes Plugin-Skript"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/print:build",
+   "unit": "peer-unrelated",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-print-peer-scheduling",
+   "kind": "peer",
+   "title": {
+    "en": "Build of the print after a peer edit of a scheduling file of the build library",
+    "de": "Bau: Druck nach Fremdänderung: Scheduling-Datei der Build-Bibliothek"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/print:build",
+   "unit": "peer-scheduling",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-agents",
+   "kind": "concurrency",
+   "title": {
+    "en": "Three agents build the three products at once",
+    "de": "Drei Agenten bauen die drei Produkte gleichzeitig"
+   },
+   "workload": "product-agents",
    "sessions": 3,
    "runs": 1,
    "warmup": 0
@@ -1318,7 +1629,7 @@
    "id": "cache-second-run-build-min",
    "title": {
     "en": "Second run of build: every cacheable task restored",
-    "de": "Zweiter Lauf von build: jeder cachebare Task wiederhergestellt"
+    "de": "Zweiter Lauf von build: jede cachebare Task wiederhergestellt"
    },
    "probe": "cache-second-run-build",
    "metric": "hitRatio",
@@ -1341,7 +1652,7 @@
    "id": "cache-second-run-test-min",
    "title": {
     "en": "Second run of test: every cacheable task restored",
-    "de": "Zweiter Lauf von test: jeder cachebare Task wiederhergestellt"
+    "de": "Zweiter Lauf von test: jede cachebare Task wiederhergestellt"
    },
    "probe": "cache-second-run-test",
    "metric": "hitRatio",
@@ -1497,6 +1808,1593 @@
     "absolute": 250
    },
    "source": "conc-harness"
+  },
+  {
+   "id": "product-dashboard-cold-wall-max",
+   "title": {
+    "en": "First build of the dashboard, wall time",
+    "de": "Erster Bau: Dashboard, Laufzeit"
+   },
+   "probe": "product-dashboard-cold",
+   "metric": "wallMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 5000
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-cold-rss-max",
+   "title": {
+    "en": "First build of the dashboard, peak memory of the process tree",
+    "de": "Erster Bau: Dashboard, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-dashboard-cold",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-noop-wall-p50",
+   "title": {
+    "en": "Warm no-op of the dashboard, median wall time",
+    "de": "Warmer Leerlauf: Dashboard, Median der Laufzeit"
+   },
+   "probe": "product-dashboard-noop",
+   "metric": "wallMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 10000,
+   "gate": 10000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-noop-rss-max",
+   "title": {
+    "en": "Warm no-op of the dashboard, peak memory of the process tree",
+    "de": "Warmer Leerlauf: Dashboard, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-dashboard-noop",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 1610612736,
+   "gate": 1610612736,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-noop-executed-max",
+   "title": {
+    "en": "Warm no-op of the dashboard, re-executed actions",
+    "de": "Warmer Leerlauf: Dashboard, neu ausgeführte Aktionen"
+   },
+   "probe": "product-dashboard-noop",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-noop-queue-p50",
+   "title": {
+    "en": "Warm no-op of the dashboard, time in queues, median",
+    "de": "Warmer Leerlauf: Dashboard, Zeit in Warteschlangen, Median"
+   },
+   "probe": "product-dashboard-noop",
+   "metric": "queueMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-noop-graph-p50",
+   "title": {
+    "en": "Warm no-op of the dashboard, graph preparation, median",
+    "de": "Warmer Leerlauf: Dashboard, Graph-Vorbereitung, Median"
+   },
+   "probe": "product-dashboard-noop",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-noop-execute-p50",
+   "title": {
+    "en": "Warm no-op of the dashboard, tool execution, median",
+    "de": "Warmer Leerlauf: Dashboard, Werkzeugausführung, Median"
+   },
+   "probe": "product-dashboard-noop",
+   "metric": "executeMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-edit-green-p50",
+   "title": {
+    "en": "One-line edit of the dashboard, edit to green, median",
+    "de": "Einzeilige Änderung: Dashboard, Änderung bis grün, Median"
+   },
+   "probe": "product-dashboard-edit",
+   "metric": "greenMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 120000,
+   "gate": 120000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 1000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-edit-executed-max",
+   "title": {
+    "en": "One-line edit of the dashboard, re-executed actions",
+    "de": "Einzeilige Änderung: Dashboard, neu ausgeführte Aktionen"
+   },
+   "probe": "product-dashboard-edit",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-edit-rss-max",
+   "title": {
+    "en": "One-line edit of the dashboard, peak memory of the process tree",
+    "de": "Einzeilige Änderung: Dashboard, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-dashboard-edit",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-edit-queue-p50",
+   "title": {
+    "en": "One-line edit of the dashboard, time in queues, median",
+    "de": "Einzeilige Änderung: Dashboard, Zeit in Warteschlangen, Median"
+   },
+   "probe": "product-dashboard-edit",
+   "metric": "queueMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-edit-graph-p50",
+   "title": {
+    "en": "One-line edit of the dashboard, graph preparation, median",
+    "de": "Einzeilige Änderung: Dashboard, Graph-Vorbereitung, Median"
+   },
+   "probe": "product-dashboard-edit",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-edit-execute-p50",
+   "title": {
+    "en": "One-line edit of the dashboard, tool execution, median",
+    "de": "Einzeilige Änderung: Dashboard, Werkzeugausführung, Median"
+   },
+   "probe": "product-dashboard-edit",
+   "metric": "executeMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-peer-unrelated-executed-max",
+   "title": {
+    "en": "Dashboard after a peer edit of a unrelated plugin script, re-executed actions",
+    "de": "Dashboard nach Fremdänderung (fremdes Plugin-Skript), neu ausgeführte Aktionen"
+   },
+   "probe": "product-dashboard-peer-unrelated",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-peer-unrelated-graph-p50",
+   "title": {
+    "en": "Dashboard after a peer edit of a unrelated plugin script, graph preparation, median",
+    "de": "Dashboard nach Fremdänderung (fremdes Plugin-Skript), Graph-Vorbereitung, Median"
+   },
+   "probe": "product-dashboard-peer-unrelated",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 120000,
+   "gate": 120000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-peer-unrelated-inferred-max",
+   "title": {
+    "en": "Dashboard after a peer edit of a unrelated plugin script, re-inferred projects",
+    "de": "Dashboard nach Fremdänderung (fremdes Plugin-Skript), neu abgeleitete Projekte"
+   },
+   "probe": "product-dashboard-peer-unrelated",
+   "metric": "inferredProjects",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-peer-unrelated-rss-max",
+   "title": {
+    "en": "Dashboard after a peer edit of a unrelated plugin script, peak memory of the process tree",
+    "de": "Dashboard nach Fremdänderung (fremdes Plugin-Skript), Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-dashboard-peer-unrelated",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 2147483648,
+   "gate": 2147483648,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-peer-scheduling-executed-max",
+   "title": {
+    "en": "Dashboard after a peer edit of a scheduling file of the build library, re-executed actions",
+    "de": "Dashboard nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), neu ausgeführte Aktionen"
+   },
+   "probe": "product-dashboard-peer-scheduling",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-peer-scheduling-graph-p50",
+   "title": {
+    "en": "Dashboard after a peer edit of a scheduling file of the build library, graph preparation, median",
+    "de": "Dashboard nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), Graph-Vorbereitung, Median"
+   },
+   "probe": "product-dashboard-peer-scheduling",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 120000,
+   "gate": 120000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-peer-scheduling-inferred-max",
+   "title": {
+    "en": "Dashboard after a peer edit of a scheduling file of the build library, re-inferred projects",
+    "de": "Dashboard nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), neu abgeleitete Projekte"
+   },
+   "probe": "product-dashboard-peer-scheduling",
+   "metric": "inferredProjects",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-peer-scheduling-rss-max",
+   "title": {
+    "en": "Dashboard after a peer edit of a scheduling file of the build library, peak memory of the process tree",
+    "de": "Dashboard nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-dashboard-peer-scheduling",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 2147483648,
+   "gate": 2147483648,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-cold-wall-max",
+   "title": {
+    "en": "First build of the architecture course, wall time",
+    "de": "Erster Bau: Architekturkurs, Laufzeit"
+   },
+   "probe": "product-course-cold",
+   "metric": "wallMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 5000
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-cold-rss-max",
+   "title": {
+    "en": "First build of the architecture course, peak memory of the process tree",
+    "de": "Erster Bau: Architekturkurs, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-course-cold",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-noop-wall-p50",
+   "title": {
+    "en": "Warm no-op of the architecture course, median wall time",
+    "de": "Warmer Leerlauf: Architekturkurs, Median der Laufzeit"
+   },
+   "probe": "product-course-noop",
+   "metric": "wallMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 10000,
+   "gate": 10000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-noop-rss-max",
+   "title": {
+    "en": "Warm no-op of the architecture course, peak memory of the process tree",
+    "de": "Warmer Leerlauf: Architekturkurs, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-course-noop",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 1610612736,
+   "gate": 1610612736,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-noop-executed-max",
+   "title": {
+    "en": "Warm no-op of the architecture course, re-executed actions",
+    "de": "Warmer Leerlauf: Architekturkurs, neu ausgeführte Aktionen"
+   },
+   "probe": "product-course-noop",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-noop-queue-p50",
+   "title": {
+    "en": "Warm no-op of the architecture course, time in queues, median",
+    "de": "Warmer Leerlauf: Architekturkurs, Zeit in Warteschlangen, Median"
+   },
+   "probe": "product-course-noop",
+   "metric": "queueMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-noop-graph-p50",
+   "title": {
+    "en": "Warm no-op of the architecture course, graph preparation, median",
+    "de": "Warmer Leerlauf: Architekturkurs, Graph-Vorbereitung, Median"
+   },
+   "probe": "product-course-noop",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-noop-execute-p50",
+   "title": {
+    "en": "Warm no-op of the architecture course, tool execution, median",
+    "de": "Warmer Leerlauf: Architekturkurs, Werkzeugausführung, Median"
+   },
+   "probe": "product-course-noop",
+   "metric": "executeMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-edit-green-p50",
+   "title": {
+    "en": "One-line edit of the architecture course, edit to green, median",
+    "de": "Einzeilige Änderung: Architekturkurs, Änderung bis grün, Median"
+   },
+   "probe": "product-course-edit",
+   "metric": "greenMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 60000,
+   "gate": 60000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 1000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-edit-executed-max",
+   "title": {
+    "en": "One-line edit of the architecture course, re-executed actions",
+    "de": "Einzeilige Änderung: Architekturkurs, neu ausgeführte Aktionen"
+   },
+   "probe": "product-course-edit",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-edit-rss-max",
+   "title": {
+    "en": "One-line edit of the architecture course, peak memory of the process tree",
+    "de": "Einzeilige Änderung: Architekturkurs, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-course-edit",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-edit-queue-p50",
+   "title": {
+    "en": "One-line edit of the architecture course, time in queues, median",
+    "de": "Einzeilige Änderung: Architekturkurs, Zeit in Warteschlangen, Median"
+   },
+   "probe": "product-course-edit",
+   "metric": "queueMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-edit-graph-p50",
+   "title": {
+    "en": "One-line edit of the architecture course, graph preparation, median",
+    "de": "Einzeilige Änderung: Architekturkurs, Graph-Vorbereitung, Median"
+   },
+   "probe": "product-course-edit",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-edit-execute-p50",
+   "title": {
+    "en": "One-line edit of the architecture course, tool execution, median",
+    "de": "Einzeilige Änderung: Architekturkurs, Werkzeugausführung, Median"
+   },
+   "probe": "product-course-edit",
+   "metric": "executeMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-peer-unrelated-executed-max",
+   "title": {
+    "en": "Architecture course after a peer edit of a unrelated plugin script, re-executed actions",
+    "de": "Architekturkurs nach Fremdänderung (fremdes Plugin-Skript), neu ausgeführte Aktionen"
+   },
+   "probe": "product-course-peer-unrelated",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-peer-unrelated-graph-p50",
+   "title": {
+    "en": "Architecture course after a peer edit of a unrelated plugin script, graph preparation, median",
+    "de": "Architekturkurs nach Fremdänderung (fremdes Plugin-Skript), Graph-Vorbereitung, Median"
+   },
+   "probe": "product-course-peer-unrelated",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 120000,
+   "gate": 120000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-peer-unrelated-inferred-max",
+   "title": {
+    "en": "Architecture course after a peer edit of a unrelated plugin script, re-inferred projects",
+    "de": "Architekturkurs nach Fremdänderung (fremdes Plugin-Skript), neu abgeleitete Projekte"
+   },
+   "probe": "product-course-peer-unrelated",
+   "metric": "inferredProjects",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-peer-unrelated-rss-max",
+   "title": {
+    "en": "Architecture course after a peer edit of a unrelated plugin script, peak memory of the process tree",
+    "de": "Architekturkurs nach Fremdänderung (fremdes Plugin-Skript), Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-course-peer-unrelated",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 2147483648,
+   "gate": 2147483648,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-peer-scheduling-executed-max",
+   "title": {
+    "en": "Architecture course after a peer edit of a scheduling file of the build library, re-executed actions",
+    "de": "Architekturkurs nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), neu ausgeführte Aktionen"
+   },
+   "probe": "product-course-peer-scheduling",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-peer-scheduling-graph-p50",
+   "title": {
+    "en": "Architecture course after a peer edit of a scheduling file of the build library, graph preparation, median",
+    "de": "Architekturkurs nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), Graph-Vorbereitung, Median"
+   },
+   "probe": "product-course-peer-scheduling",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 120000,
+   "gate": 120000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-peer-scheduling-inferred-max",
+   "title": {
+    "en": "Architecture course after a peer edit of a scheduling file of the build library, re-inferred projects",
+    "de": "Architekturkurs nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), neu abgeleitete Projekte"
+   },
+   "probe": "product-course-peer-scheduling",
+   "metric": "inferredProjects",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-peer-scheduling-rss-max",
+   "title": {
+    "en": "Architecture course after a peer edit of a scheduling file of the build library, peak memory of the process tree",
+    "de": "Architekturkurs nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-course-peer-scheduling",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 2147483648,
+   "gate": 2147483648,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-cold-wall-max",
+   "title": {
+    "en": "First build of the print, wall time",
+    "de": "Erster Bau: Druck, Laufzeit"
+   },
+   "probe": "product-print-cold",
+   "metric": "wallMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 5000
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-cold-rss-max",
+   "title": {
+    "en": "First build of the print, peak memory of the process tree",
+    "de": "Erster Bau: Druck, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-print-cold",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-noop-wall-p50",
+   "title": {
+    "en": "Warm no-op of the print, median wall time",
+    "de": "Warmer Leerlauf: Druck, Median der Laufzeit"
+   },
+   "probe": "product-print-noop",
+   "metric": "wallMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 10000,
+   "gate": 10000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-noop-rss-max",
+   "title": {
+    "en": "Warm no-op of the print, peak memory of the process tree",
+    "de": "Warmer Leerlauf: Druck, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-print-noop",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 1610612736,
+   "gate": 1610612736,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-noop-executed-max",
+   "title": {
+    "en": "Warm no-op of the print, re-executed actions",
+    "de": "Warmer Leerlauf: Druck, neu ausgeführte Aktionen"
+   },
+   "probe": "product-print-noop",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-noop-queue-p50",
+   "title": {
+    "en": "Warm no-op of the print, time in queues, median",
+    "de": "Warmer Leerlauf: Druck, Zeit in Warteschlangen, Median"
+   },
+   "probe": "product-print-noop",
+   "metric": "queueMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-noop-graph-p50",
+   "title": {
+    "en": "Warm no-op of the print, graph preparation, median",
+    "de": "Warmer Leerlauf: Druck, Graph-Vorbereitung, Median"
+   },
+   "probe": "product-print-noop",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-noop-execute-p50",
+   "title": {
+    "en": "Warm no-op of the print, tool execution, median",
+    "de": "Warmer Leerlauf: Druck, Werkzeugausführung, Median"
+   },
+   "probe": "product-print-noop",
+   "metric": "executeMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-edit-green-p50",
+   "title": {
+    "en": "One-line edit of the print, edit to green, median",
+    "de": "Einzeilige Änderung: Druck, Änderung bis grün, Median"
+   },
+   "probe": "product-print-edit",
+   "metric": "greenMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 60000,
+   "gate": 60000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 1000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-edit-executed-max",
+   "title": {
+    "en": "One-line edit of the print, re-executed actions",
+    "de": "Einzeilige Änderung: Druck, neu ausgeführte Aktionen"
+   },
+   "probe": "product-print-edit",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-edit-rss-max",
+   "title": {
+    "en": "One-line edit of the print, peak memory of the process tree",
+    "de": "Einzeilige Änderung: Druck, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-print-edit",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-edit-queue-p50",
+   "title": {
+    "en": "One-line edit of the print, time in queues, median",
+    "de": "Einzeilige Änderung: Druck, Zeit in Warteschlangen, Median"
+   },
+   "probe": "product-print-edit",
+   "metric": "queueMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-edit-graph-p50",
+   "title": {
+    "en": "One-line edit of the print, graph preparation, median",
+    "de": "Einzeilige Änderung: Druck, Graph-Vorbereitung, Median"
+   },
+   "probe": "product-print-edit",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-edit-execute-p50",
+   "title": {
+    "en": "One-line edit of the print, tool execution, median",
+    "de": "Einzeilige Änderung: Druck, Werkzeugausführung, Median"
+   },
+   "probe": "product-print-edit",
+   "metric": "executeMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-peer-unrelated-executed-max",
+   "title": {
+    "en": "Print after a peer edit of a unrelated plugin script, re-executed actions",
+    "de": "Druck nach Fremdänderung (fremdes Plugin-Skript), neu ausgeführte Aktionen"
+   },
+   "probe": "product-print-peer-unrelated",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-peer-unrelated-graph-p50",
+   "title": {
+    "en": "Print after a peer edit of a unrelated plugin script, graph preparation, median",
+    "de": "Druck nach Fremdänderung (fremdes Plugin-Skript), Graph-Vorbereitung, Median"
+   },
+   "probe": "product-print-peer-unrelated",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 120000,
+   "gate": 120000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-peer-unrelated-inferred-max",
+   "title": {
+    "en": "Print after a peer edit of a unrelated plugin script, re-inferred projects",
+    "de": "Druck nach Fremdänderung (fremdes Plugin-Skript), neu abgeleitete Projekte"
+   },
+   "probe": "product-print-peer-unrelated",
+   "metric": "inferredProjects",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-peer-unrelated-rss-max",
+   "title": {
+    "en": "Print after a peer edit of a unrelated plugin script, peak memory of the process tree",
+    "de": "Druck nach Fremdänderung (fremdes Plugin-Skript), Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-print-peer-unrelated",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 2147483648,
+   "gate": 2147483648,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-peer-scheduling-executed-max",
+   "title": {
+    "en": "Print after a peer edit of a scheduling file of the build library, re-executed actions",
+    "de": "Druck nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), neu ausgeführte Aktionen"
+   },
+   "probe": "product-print-peer-scheduling",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-peer-scheduling-graph-p50",
+   "title": {
+    "en": "Print after a peer edit of a scheduling file of the build library, graph preparation, median",
+    "de": "Druck nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), Graph-Vorbereitung, Median"
+   },
+   "probe": "product-print-peer-scheduling",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 120000,
+   "gate": 120000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-peer-scheduling-inferred-max",
+   "title": {
+    "en": "Print after a peer edit of a scheduling file of the build library, re-inferred projects",
+    "de": "Druck nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), neu abgeleitete Projekte"
+   },
+   "probe": "product-print-peer-scheduling",
+   "metric": "inferredProjects",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-peer-scheduling-rss-max",
+   "title": {
+    "en": "Print after a peer edit of a scheduling file of the build library, peak memory of the process tree",
+    "de": "Druck nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-print-peer-scheduling",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 2147483648,
+   "gate": 2147483648,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-agents-makespan-max",
+   "title": {
+    "en": "Makespan of three agents on the three products",
+    "de": "Gesamtdauer dreier Agenten auf den drei Produkten"
+   },
+   "probe": "product-agents",
+   "metric": "makespanMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 1000
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-agents-wait-max",
+   "title": {
+    "en": "Longest wait of an agent for an unrelated product",
+    "de": "Längste Wartezeit eines Agenten auf ein fremdes Produkt"
+   },
+   "probe": "product-agents",
+   "metric": "maxUnrelatedWaitMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 1000,
+   "gate": 5000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 250
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-agents-speedup-min",
+   "title": {
+    "en": "Speed-up of three agents over serial runs",
+    "de": "Beschleunigung dreier Agenten gegenüber seriellen Läufen"
+   },
+   "probe": "product-agents",
+   "metric": "speedup",
+   "statistic": "min",
+   "direction": "higher",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 0.1
+   },
+   "source": "provisional"
   }
  ]
 }

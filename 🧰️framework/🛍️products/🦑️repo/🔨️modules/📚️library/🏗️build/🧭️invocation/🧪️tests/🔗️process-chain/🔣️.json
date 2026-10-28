@@ -1,0 +1,64 @@
+{
+ "version": 1,
+ "contract": {
+  "en": "One build run is a short chain of processes in which only the work that needs a process has one: a run that waits for the machine is one small front door; the graph planner is the second loader started from the snapshot the first one holds, never a second front door; a loader's memory does not grow with the number of its modules times the size of their import resolutions.",
+  "de": "Ein Build-Lauf ist eine kurze Kette von Prozessen, in der nur Arbeit, die einen Prozess braucht, einen hat: ein Lauf, der auf den Rechner wartet, ist eine kleine Vordertür; der Graph-Planer ist der zweite Lader, gestartet aus dem Image des ersten, nie eine zweite Vordertür; der Speicher eines Laders wächst nicht mit der Zahl seiner Module mal der Größe ihrer Importauflösungen."
+ },
+ "planner": {
+  "label": "build:graph-plan",
+  "arguments": [
+   "run",
+   "@scope/owner:build",
+   "--parallel=2"
+  ],
+  "environment": {
+   "SEMIO_BUILD_GRAPH_PLAN_OUT": "/tmp/chain-plan.json",
+   "CHAIN_MARKER": "kept"
+  },
+  "forbiddenArguments": [
+   "repo"
+  ],
+  "loaderProcesses": 1,
+  "refusals": {
+   "noAdoption": "build.closure.adopted-snapshot-required",
+   "digestMismatch": "build.closure.adopted-publication-bounded"
+  },
+  "endBudgetMilliseconds": 4000,
+  "endGraceMilliseconds": 15000
+ },
+ "loaderMemory": {
+  "modules": 300,
+  "declaredImports": 40,
+  "maximumResidentMegabytes": 400,
+  "measuredBeforeMegabytesAtLeast": 2000,
+  "agreementPercent": 40
+ },
+ "waiter": {
+  "target": "@semio-tech/print:build",
+  "fakeGrantMegabytes": 60000,
+  "maximumDoorResidentMegabytes": 100,
+  "maximumHeavyChildren": 0,
+  "observeMilliseconds": 4000,
+  "startTimeoutMilliseconds": 90000
+ },
+ "repoRunnerSpawnSites": {
+  "literal": "process.execPath,[\"repo\"",
+  "root": "🧰️framework/🛍️products/🦑️repo",
+  "sites": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🏃️action/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️child/🟦️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts"
+  ]
+ },
+ "run": {
+  "command": [
+   "cache",
+   "status"
+  ],
+  "maximumTreeResidentMegabytes": 1000,
+  "maximumHeavyProcesses": 2,
+  "maximumLoaderResidentMegabytes": 700,
+  "sampleMilliseconds": 250,
+  "timeoutMilliseconds": 240000
+ }
+}

@@ -1,4 +1,5 @@
 #!/usr/bin/env repo
+import {noticeLanguagesV1} from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {mkdir} from "node:fs/promises";
 import {join} from "node:path";
 import {BundleScript,ScriptRouter,scriptInvocationBudget,type ScriptCommand,type ScriptInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -27,7 +28,7 @@ function developerCommand(command:string):ScriptCommand {
 class DebuggersScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw new Error(developerMessageV1("invalid"));console.log(`[developer-tools] ${developerMessageV1("inventory")}`);const nativePath=await probeNativeDebuggerV1(this.repoRoot,this.invocation,createNativeDebuggerSetupHostV1(this.repoRoot,this.invocation));
-  for(const row of developerDebuggers(process.platform,program=>program.toLowerCase().includes("lldb")?nativePath??null:runtimeWhichV1(program,{PATH:process.env.PATH??process.env.Path??""}),process.env)){const language=process.env.SEMIO_LOCALE,title=language==="en"||language==="de"?row.title[language]:`${row.title.en} / ${row.title.de}`;console.log(`${row.profile}: ${title} — ${row.installed?developerMessageV1("available"):developerMessageV1("unavailable")} (${row.path??row.program})`);if(row.constraint&&row.installed)console.log(`  ${developerMessageV1("nativePath")}`);}
+  for(const row of developerDebuggers(process.platform,program=>program.toLowerCase().includes("lldb")?nativePath??null:runtimeWhichV1(program,{PATH:process.env.PATH??process.env.Path??""}),process.env)){const title=noticeLanguagesV1(["en","de"] as const).map(language=>row.title[language]).join(" / ");console.log(`${row.profile}: ${title} — ${row.installed?developerMessageV1("available"):developerMessageV1("unavailable")} (${row.path??row.program})`);if(row.constraint&&row.installed)console.log(`  ${developerMessageV1("nativePath")}`);}
  }
 }
 

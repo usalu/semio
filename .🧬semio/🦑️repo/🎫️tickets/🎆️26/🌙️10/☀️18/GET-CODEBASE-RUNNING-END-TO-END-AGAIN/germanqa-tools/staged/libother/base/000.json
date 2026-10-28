@@ -1,0 +1,548 @@
+{
+ "$schema": "../🧬️schema/🔣️.json",
+ "version": 1,
+ "roots": [
+  "🧰️framework"
+ ],
+ "processModules": [
+  "node:child_process",
+  "child_process"
+ ],
+ "extraCallees": [
+  {
+   "name": "runtimeSpawnV1",
+   "language": "ts",
+   "shape": "array",
+   "imported": false
+  },
+  {
+   "name": "runtimeSpawnSyncV1",
+   "language": "ts",
+   "shape": "array",
+   "imported": false
+  },
+  {
+   "name": "os.system",
+   "language": "python",
+   "shape": "shell-string"
+  },
+  {
+   "name": "os.popen",
+   "language": "python",
+   "shape": "shell-string"
+  },
+  {
+   "name": "syscall.Exec",
+   "language": "go",
+   "shape": "command"
+  }
+ ],
+ "commandFunnels": [
+  {
+   "name": "runOwnedCommand",
+   "language": "ts",
+   "argument": 0
+  },
+  {
+   "name": "captureOwnedCommandV1",
+   "language": "ts",
+   "argument": 0
+  },
+  {
+   "name": "runCmd",
+   "language": "ts",
+   "argument": 0
+  },
+  {
+   "name": "runCmdStatus",
+   "language": "ts",
+   "argument": 0
+  },
+  {
+   "name": "tryRun",
+   "language": "ts",
+   "argument": 0
+  },
+  {
+   "name": "ExecCommand",
+   "language": "go",
+   "argument": 0
+  },
+  {
+   "name": "ExecCommandContext",
+   "language": "go",
+   "argument": 1
+  },
+  {
+   "name": "spawn_inherit",
+   "language": "rust",
+   "argument": 0
+  }
+ ],
+ "interfaces": [
+  {
+   "glob": "🧰️framework/🔨️modules/⚙️runtime/**",
+   "kind": "runtime-port",
+   "reason": {
+    "en": "The runtime port: it starts the processes of every adapter of the hosting runtime.",
+    "de": "Der Runtime-Port: Er startet die Prozesse jedes Adapters der Hostlaufzeit."
+   }
+  },
+  {
+   "glob": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🦀️.rs",
+   "kind": "process-funnel",
+   "reason": {
+    "en": "spawn_command and run_tool are the Rust side of the tool port: registered programs are routed through the registry, every other program starts as given.",
+    "de": "spawn_command und run_tool sind die Rust-Seite des Werkzeug-Ports: Registrierte Programme laufen über die Registratur, jedes andere Programm startet wie angegeben."
+   }
+  },
+  {
+   "glob": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🚇️pty/**",
+   "kind": "terminal-host",
+   "reason": {
+    "en": "The pseudo-terminal host starts the program the user's terminal window runs; the program is user data.",
+    "de": "Der Pseudo-Terminal-Host startet das Programm, das das Terminalfenster der Nutzerin ausführt; das Programm sind Nutzerdaten."
+   }
+  },
+  {
+   "glob": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🚚️process-transport/**",
+   "kind": "plugin-host",
+   "reason": {
+    "en": "The plugin host starts the plugin executable it is asked to host; the program is the plugin.",
+    "de": "Der Plugin-Host startet das Plugin-Programm, das er hosten soll; das Programm ist das Plugin."
+   }
+  },
+  {
+   "glob": "🧰️framework/🔨️modules/🏃️process/📥️capture/**",
+   "kind": "process-funnel",
+   "reason": {
+    "en": "The owned process capture runs the command word of its request with bounded output; callers choose the program.",
+    "de": "Der Prozess-Mitschnitt führt das Kommandowort seiner Anfrage mit begrenzter Ausgabe aus; Aufrufer wählen das Programm."
+   }
+  },
+  {
+   "glob": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/**",
+   "kind": "process-funnel",
+   "reason": {
+    "en": "The test lane runner starts the test command of a lane inside its sandbox; the lane declares the program.",
+    "de": "Der Test-Lane-Runner startet den Testbefehl einer Lane in ihrer Sandbox; die Lane deklariert das Programm."
+   }
+  },
+  {
+   "glob": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/**",
+   "kind": "process-funnel",
+   "reason": {
+    "en": "The mutation inventory runner starts the command of a mutation request; the request declares the program.",
+    "de": "Der Mutations-Inventar-Runner startet den Befehl einer Mutationsanfrage; die Anfrage deklariert das Programm."
+   }
+  },
+  {
+   "glob": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/👹️daemon/**",
+   "kind": "process-funnel",
+   "reason": {
+    "en": "The daemon spawner keeps a long-lived command of the caller alive and tears its process tree down.",
+    "de": "Der Daemon-Starter hält einen langlebigen Befehl des Aufrufers am Leben und beendet seinen Prozessbaum."
+   }
+  },
+  {
+   "glob": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/📋️process-table/**",
+   "kind": "process-funnel",
+   "reason": {
+    "en": "The process table runs the platform's process listing command through an injectable runner.",
+    "de": "Die Prozesstabelle führt den Prozesslisten-Befehl der Plattform über einen austauschbaren Runner aus."
+   }
+  },
+  {
+   "glob": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔐️owner-only/**",
+   "kind": "process-funnel",
+   "reason": {
+    "en": "The owner-only guard runs the platform's permission tools through an injectable runner.",
+    "de": "Der Nur-Besitzer-Schutz führt die Berechtigungswerkzeuge der Plattform über einen austauschbaren Runner aus."
+   }
+  },
+  {
+   "glob": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🚪️gateway/**",
+   "kind": "process-funnel",
+   "reason": {
+    "en": "The stdio gateway starts the MCP server command its launch description names.",
+    "de": "Das Stdio-Gateway startet den MCP-Serverbefehl, den seine Startbeschreibung nennt."
+   }
+  },
+  {
+   "glob": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🔍️inventory-planning/**",
+   "kind": "process-funnel",
+   "reason": {
+    "en": "Generator preview commands are data of the generator contracts; the planner runs the declared command.",
+    "de": "Generator-Vorschaubefehle sind Daten der Generator-Verträge; der Planer führt den deklarierten Befehl aus."
+   }
+  },
+  {
+   "glob": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🚀️apply/🏁️transaction-run/🔧️transaction-steps/**",
+   "kind": "process-funnel",
+   "reason": {
+    "en": "Regeneration and verification commands are data of the generator contracts; the transaction step runs the declared command.",
+    "de": "Regenerierungs- und Prüfbefehle sind Daten der Generator-Verträge; der Transaktionsschritt führt den deklarierten Befehl aus."
+   }
+  },
+  {
+   "glob": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/**",
+   "kind": "process-funnel",
+   "reason": {
+    "en": "The acceptance orchestrator starts the commands of its job table.",
+    "de": "Der Abnahme-Orchestrator startet die Befehle seiner Jobtabelle."
+   }
+  }
+ ],
+ "exceptions": [
+  {
+   "path": "🧰️framework/🔨️modules/⚙️runtime/⚖️law/🟦️.ts",
+   "program": "git",
+   "count": 1,
+   "class": "layer-below-registry",
+   "reason": {
+    "en": "The runtime port sits below the tool registry (the registry imports its identity), so its law lists the tracked files with git itself.",
+    "de": "Der Runtime-Port liegt unter der Werkzeugregistratur (die Registratur importiert seine Identität); sein Gesetz listet die verfolgten Dateien daher selbst mit git auf."
+   }
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🟦️.ts",
+   "program": "mkfifo",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Creates the named pipe of the GNU make job server; there is no portable API.",
+    "de": "Legt die benannte Pipe des GNU-make-Jobservers an; es gibt keine portable API."
+   }
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🍎️mounted-image/✍️sealing/🟦️.ts",
+   "program": "<dynamic>",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Ad-hoc re-signs a mounted-image executable on macOS, where an unsigned binary is killed.",
+    "de": "Signiert eine Programmdatei des gemounteten Images unter macOS ad hoc neu, wo eine unsignierte Datei beendet wird."
+   }
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🖼️images/🟦️.ts",
+   "program": "/usr/bin/plutil",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Reads the property list of a disk image with the macOS tool.",
+    "de": "Liest die Property-List eines Disk-Images mit dem macOS-Werkzeug."
+   }
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+   "program": "ps",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Lists pid, parent and group of the running processes to find an owned child tree.",
+    "de": "Listet Pid, Eltern und Gruppe der laufenden Prozesse, um einen eigenen Kindbaum zu finden."
+   }
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+   "program": "taskkill",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Process-tree termination on Windows: taskkill is the operating system's only tool to end a tree.",
+    "de": "Prozessbaum-Beendigung unter Windows: taskkill ist das einzige Betriebssystemwerkzeug, das einen Baum beendet."
+   }
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧭️ancestry/🟦️.ts",
+   "program": "<dynamic>",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Reads the parent chain with one ps listing (POSIX) or one PowerShell CIM listing (Windows); the operating system is the only source of ancestry.",
+    "de": "Liest die Elternkette mit einer ps-Liste (POSIX) oder einer PowerShell-CIM-Liste (Windows); das Betriebssystem ist die einzige Quelle der Abstammung."
+   }
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧭️ancestry/🟦️.ts",
+   "program": "ps",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Lists pid, parent and group of the running processes to find an owned child tree.",
+    "de": "Listet Pid, Eltern und Gruppe der laufenden Prozesse, um einen eigenen Kindbaum zu finden."
+   }
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/📋️clipboard-and-osc52/🦀️.rs",
+   "program": "<dynamic>",
+   "count": 2,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Tries pbcopy, wl-copy, xclip and xsel in turn: the clipboard tool of the desktop is the operating system's.",
+    "de": "Probiert nacheinander pbcopy, wl-copy, xclip und xsel: Das Zwischenablage-Werkzeug des Desktops gehört dem Betriebssystem."
+   }
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/📋️clipboard-and-osc52/🦀️.rs",
+   "program": "Get-Clipboard",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Reads the Windows clipboard through PowerShell.",
+    "de": "Liest die Windows-Zwischenablage über PowerShell."
+   }
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/📋️clipboard-and-osc52/🦀️.rs",
+   "program": "clip",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Writes the Windows clipboard; the terminal has no portable clipboard API.",
+    "de": "Schreibt die Windows-Zwischenablage; das Terminal hat keine portable Zwischenablage-API."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏗️bootstrap/🦀️.rs",
+   "program": "<dynamic>",
+   "count": 1,
+   "class": "own-executable",
+   "reason": {
+    "en": "Re-runs the current executable to prove that a child holds no local credential state.",
+    "de": "Startet die aktuelle Programmdatei erneut, um zu belegen, dass ein Kind keinen lokalen Zugangsdatenzustand hält."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🔐️owner-only/🦀️.rs",
+   "program": "icacls",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Restricts a credential path to its owner; icacls is the Windows tool for ACLs.",
+    "de": "Beschränkt einen Zugangsdaten-Pfad auf seinen Besitzer; icacls ist das Windows-Werkzeug für ACLs."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🔐️owner-only/🦀️.rs",
+   "program": "powershell.exe",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Reads the DACL of a credential path as SDDL; Windows has no portable API for it.",
+    "de": "Liest die DACL eines Zugangsdaten-Pfads als SDDL; Windows hat dafür keine portable API."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🔐️owner-only/🦀️.rs",
+   "program": "whoami",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Asks Windows for the current account's SID to build the owner-only ACL.",
+    "de": "Fragt Windows nach der SID des aktuellen Kontos, um die Nur-Besitzer-ACL zu bauen."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts",
+   "program": "<dynamic>",
+   "count": 1,
+   "class": "generic-runner",
+   "reason": {
+    "en": "The raw MCP client helper starts the MCP binary a test names and reads its lines.",
+    "de": "Der rohe MCP-Client-Helfer startet die MCP-Binärdatei, die ein Test nennt, und liest ihre Zeilen."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs",
+   "program": "<dynamic>",
+   "count": 1,
+   "class": "own-executable",
+   "reason": {
+    "en": "Re-runs the current executable to prove that a child holds no local credential state.",
+    "de": "Startet die aktuelle Programmdatei erneut, um zu belegen, dass ein Kind keinen lokalen Zugangsdatenzustand hält."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🔁️task-operation-futures/🦀️.rs",
+   "program": "<dynamic>",
+   "count": 1,
+   "class": "own-executable",
+   "reason": {
+    "en": "The process-isolated law re-runs the current test executable for one law.",
+    "de": "Das prozessisolierte Gesetz startet die aktuelle Testdatei für ein Gesetz erneut."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧭️repo-cli/🚦️verbs/🧩️system-verbs/🦀️.rs",
+   "program": "<dynamic>",
+   "count": 1,
+   "class": "pending-route",
+   "reason": {
+    "en": "The micro-commit verb starts the runtime the native door located; it moves behind spawn_command with the repo-launcher set that makes the door resolve the runtime from the registry.",
+    "de": "Der Micro-Commit-Verb startet die Laufzeit, die die native Tür gefunden hat; er zieht mit dem Repo-Launcher-Set hinter spawn_command um, das die Tür die Laufzeit aus der Registratur auflösen lässt."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧭️cli/🌐️open/🦀️.rs",
+   "program": "<dynamic>",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Opens a URL or file with the desktop's opener (open, xdg-open, start).",
+    "de": "Öffnet eine URL oder Datei mit dem Öffner des Desktops (open, xdg-open, start)."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧵️executor/🐹️.go",
+   "program": "kill",
+   "count": 2,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Signals an owned process group; the shell builtin form is the only portable way to address a group.",
+    "de": "Signalisiert eine eigene Prozessgruppe; die Shell-Form ist der einzige portable Weg, eine Gruppe anzusprechen."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧵️executor/🐹️.go",
+   "program": "ps",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Lists pid, parent and group of the running processes to find an owned child tree.",
+    "de": "Listet Pid, Eltern und Gruppe der laufenden Prozesse, um einen eigenen Kindbaum zu finden."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧵️executor/🐹️.go",
+   "program": "taskkill",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Process-tree termination on Windows: taskkill is the operating system's only tool to end a tree.",
+    "de": "Prozessbaum-Beendigung unter Windows: taskkill ist das einzige Betriebssystemwerkzeug, das einen Baum beendet."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏃️contract-capture/🟦️.ts",
+   "program": "taskkill",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Process-tree termination on Windows: taskkill is the operating system's only tool to end a tree.",
+    "de": "Prozessbaum-Beendigung unter Windows: taskkill ist das einzige Betriebssystemwerkzeug, das einen Baum beendet."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+   "program": "taskkill",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Process-tree termination on Windows: taskkill is the operating system's only tool to end a tree.",
+    "de": "Prozessbaum-Beendigung unter Windows: taskkill ist das einzige Betriebssystemwerkzeug, das einen Baum beendet."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+   "program": "taskkill",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Process-tree termination on Windows: taskkill is the operating system's only tool to end a tree.",
+    "de": "Prozessbaum-Beendigung unter Windows: taskkill ist das einzige Betriebssystemwerkzeug, das einen Baum beendet."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts",
+   "program": "lsof",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Names the process that listens on a development port for the busy-port message; diagnostic only.",
+    "de": "Nennt den Prozess, der einen Entwicklungsport belegt, für die Port-belegt-Meldung; nur Diagnose."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts",
+   "program": "bash",
+   "count": 1,
+   "class": "shell-host",
+   "reason": {
+    "en": "Runs the native POSIX bootstrap script with the host's bash.",
+    "de": "Führt das native POSIX-Bootstrap-Skript mit der Bash des Rechners aus."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts",
+   "program": "powershell.exe",
+   "count": 1,
+   "class": "shell-host",
+   "reason": {
+    "en": "Runs the native Windows bootstrap script with the host's PowerShell.",
+    "de": "Führt das native Windows-Bootstrap-Skript mit der PowerShell des Rechners aus."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts",
+   "program": "reg.exe",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Reads the Windows registry value LongPathsEnabled for the setup readiness report.",
+    "de": "Liest den Windows-Registrywert LongPathsEnabled für den Bereitschaftsbericht des Setups."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/👷️worker/🟦️.ts",
+   "program": "taskkill",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Process-tree termination on Windows: taskkill is the operating system's only tool to end a tree.",
+    "de": "Prozessbaum-Beendigung unter Windows: taskkill ist das einzige Betriebssystemwerkzeug, das einen Baum beendet."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/🏃️runner/🟦️.ts",
+   "program": "taskkill",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Process-tree termination on Windows: taskkill is the operating system's only tool to end a tree.",
+    "de": "Prozessbaum-Beendigung unter Windows: taskkill ist das einzige Betriebssystemwerkzeug, das einen Baum beendet."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🚀️exec/🟦️.ts",
+   "program": "taskkill",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Process-tree termination on Windows: taskkill is the operating system's only tool to end a tree.",
+    "de": "Prozessbaum-Beendigung unter Windows: taskkill ist das einzige Betriebssystemwerkzeug, das einen Baum beendet."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🖥️cli/🟦️.ts",
+   "program": "<dynamic>",
+   "count": 1,
+   "class": "own-executable",
+   "reason": {
+    "en": "Runs the built repo client binary of this checkout with --json to read its GraphQL answer.",
+    "de": "Führt die gebaute Repo-Client-Binärdatei dieses Checkouts mit --json aus, um ihre GraphQL-Antwort zu lesen."
+   }
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🐚️unix-host/🐹️.go",
+   "program": "defaults",
+   "count": 1,
+   "class": "os-primitive",
+   "reason": {
+    "en": "Reads the macOS AppleLanguages preference for the launcher's message language.",
+    "de": "Liest die macOS-Einstellung AppleLanguages für die Meldungssprache des Launchers."
+   }
+  }
+ ]
+}

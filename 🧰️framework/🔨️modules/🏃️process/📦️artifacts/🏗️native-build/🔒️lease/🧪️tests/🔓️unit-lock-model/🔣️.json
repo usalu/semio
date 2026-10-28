@@ -1,0 +1,347 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "crossing-free",
+   "regime": "free",
+   "processes": [
+    {
+     "graph": [
+      "x",
+      "y"
+     ],
+     "dirty": [
+      "x"
+     ]
+    },
+    {
+     "graph": [
+      "x",
+      "y"
+     ],
+     "dirty": [
+      "y"
+     ]
+    }
+   ],
+   "deadlock": true,
+   "overlap": true,
+   "note": "two builds that see different units dirty share one directory: the real deadlock of ticket lockc-c"
+  },
+  {
+   "id": "crossing-directory",
+   "regime": "directory",
+   "processes": [
+    {
+     "graph": [
+      "x",
+      "y"
+     ],
+     "dirty": [
+      "x"
+     ]
+    },
+    {
+     "graph": [
+      "x",
+      "y"
+     ],
+     "dirty": [
+      "y"
+     ]
+    }
+   ],
+   "deadlock": false,
+   "overlap": false,
+   "note": "one custody per directory serialises them"
+  },
+  {
+   "id": "crossing-lanes",
+   "regime": "lanes",
+   "processes": [
+    {
+     "graph": [
+      "x",
+      "y"
+     ],
+     "dirty": [
+      "x"
+     ]
+    },
+    {
+     "graph": [
+      "x",
+      "y"
+     ],
+     "dirty": [
+      "y"
+     ]
+    }
+   ],
+   "deadlock": false,
+   "overlap": true,
+   "note": "a private directory each: no shared lock at all"
+  },
+  {
+   "id": "crossing-units",
+   "regime": "units",
+   "processes": [
+    {
+     "graph": [
+      "x",
+      "y"
+     ],
+     "dirty": [
+      "x"
+     ]
+    },
+    {
+     "graph": [
+      "x",
+      "y"
+     ],
+     "dirty": [
+      "y"
+     ]
+    }
+   ],
+   "deadlock": false,
+   "overlap": false,
+   "note": "unit custody with an exact estimate serialises exactly the conflicting pair"
+  },
+  {
+   "id": "crossing-units-underestimated",
+   "regime": "units",
+   "processes": [
+    {
+     "graph": [
+      "x",
+      "y"
+     ],
+     "dirty": [
+      "x"
+     ],
+     "mightDirty": []
+    },
+    {
+     "graph": [
+      "x",
+      "y"
+     ],
+     "dirty": [
+      "y"
+     ],
+     "mightDirty": []
+    }
+   ],
+   "deadlock": true,
+   "overlap": true,
+   "note": "an estimate that misses a dirty unit brings the deadlock back"
+  },
+  {
+   "id": "disjoint-free",
+   "regime": "free",
+   "processes": [
+    {
+     "graph": [
+      "x",
+      "s"
+     ],
+     "dirty": [
+      "x"
+     ]
+    },
+    {
+     "graph": [
+      "y",
+      "s"
+     ],
+     "dirty": [
+      "y"
+     ]
+    }
+   ],
+   "deadlock": false,
+   "overlap": true,
+   "note": "different crates over one shared fresh dependency: no cycle without custody"
+  },
+  {
+   "id": "disjoint-directory",
+   "regime": "directory",
+   "processes": [
+    {
+     "graph": [
+      "x",
+      "s"
+     ],
+     "dirty": [
+      "x"
+     ]
+    },
+    {
+     "graph": [
+      "y",
+      "s"
+     ],
+     "dirty": [
+      "y"
+     ]
+    }
+   ],
+   "deadlock": false,
+   "overlap": false,
+   "note": "the directory custody forbids the overlap that was safe"
+  },
+  {
+   "id": "disjoint-units",
+   "regime": "units",
+   "processes": [
+    {
+     "graph": [
+      "x",
+      "s"
+     ],
+     "dirty": [
+      "x"
+     ]
+    },
+    {
+     "graph": [
+      "y",
+      "s"
+     ],
+     "dirty": [
+      "y"
+     ]
+    }
+   ],
+   "deadlock": false,
+   "overlap": true,
+   "note": "unit custody keeps the overlap of different crates"
+  },
+  {
+   "id": "same-dirty-units",
+   "regime": "units",
+   "processes": [
+    {
+     "graph": [
+      "x"
+     ],
+     "dirty": [
+      "x"
+     ]
+    },
+    {
+     "graph": [
+      "x"
+     ],
+     "dirty": [
+      "x"
+     ]
+    }
+   ],
+   "deadlock": false,
+   "overlap": false,
+   "note": "two builds of the same dirty unit queue"
+  },
+  {
+   "id": "ring-free",
+   "regime": "free",
+   "processes": [
+    {
+     "graph": [
+      "x",
+      "y"
+     ],
+     "dirty": [
+      "x"
+     ]
+    },
+    {
+     "graph": [
+      "y",
+      "z"
+     ],
+     "dirty": [
+      "y"
+     ]
+    },
+    {
+     "graph": [
+      "z",
+      "x"
+     ],
+     "dirty": [
+      "z"
+     ]
+    }
+   ],
+   "deadlock": true,
+   "overlap": true,
+   "note": "three builds in a ring"
+  },
+  {
+   "id": "ring-units",
+   "regime": "units",
+   "processes": [
+    {
+     "graph": [
+      "x",
+      "y"
+     ],
+     "dirty": [
+      "x"
+     ]
+    },
+    {
+     "graph": [
+      "y",
+      "z"
+     ],
+     "dirty": [
+      "y"
+     ]
+    },
+    {
+     "graph": [
+      "z",
+      "x"
+     ],
+     "dirty": [
+      "z"
+     ]
+    }
+   ],
+   "deadlock": false,
+   "overlap": false,
+   "note": "unit custody breaks the ring"
+  }
+ ],
+ "sweep": {
+  "free": {
+   "pairs": 325,
+   "deadlocks": 24,
+   "overlaps": 325
+  },
+  "directory": {
+   "pairs": 325,
+   "deadlocks": 0,
+   "overlaps": 0
+  },
+  "lanes": {
+   "pairs": 325,
+   "deadlocks": 0,
+   "overlaps": 325
+  },
+  "units": {
+   "pairs": 325,
+   "deadlocks": 0,
+   "overlaps": 78
+  },
+  "units-under": {
+   "pairs": 325,
+   "deadlocks": 24,
+   "overlaps": 325
+  }
+ }
+}

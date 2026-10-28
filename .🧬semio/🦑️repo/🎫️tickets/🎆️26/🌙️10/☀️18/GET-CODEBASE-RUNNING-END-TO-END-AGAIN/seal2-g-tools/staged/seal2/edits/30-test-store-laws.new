@@ -1,0 +1,53 @@
+e live tree is not promoted");expect(w.notices.join("")).toContain("Der Arbeitsbaum wird nicht befoerdert");
+ setFixtureTreeV1(w.root,"B");
+ expect((await w.run()).status).toBe("promoted");
+},60_000);
+
+import{Database as LightModelDatabaseV1}from"bun:sqlite";
+import{readSealedCheckedV1,sealedCheckedOfV1,sealedLightActionV1,writeSealedCheckedV1}from"../../🟦️.ts";
+
+test("what a light command does with a snapshot equals the verdict of an independent SQL model over the whole grid, and it looks at the tree only when it must",()=>{
+ const light=policyData.light,db=new LightModelDatabaseV1(":memory:"),now=10_000_000_000_000;
+ const model=db.query(`select case
+   when min(?1,coalesce(?2,1e18))<?3 then 'run'
+   when not ?4 then 'run'
+   when ?5 then 'run'
+   when ?1>=?6 then 'promote'
+   else 'refresh' end action,
+  min(?1,coalesce(?2,1e18))>=?3 probed,
+  (min(?1,coalesce(?2,1e18))>=?3 and ?4 and not ?5 and ?1<?6 and not (?7 is not null and ?7<?8)) start`);
+ let cases=0;
+ try{
+  for(const age of[0,light.freshMilliseconds-1,light.freshMilliseconds,light.freshMilliseconds*3,light.promoteAfterMilliseconds-1,light.promoteAfterMilliseconds,light.refuseAfterMilliseconds+1])
+   for(const since of[null,0,light.freshMilliseconds-1,light.freshMilliseconds,light.freshMilliseconds*40])
+    for(const drifted of[false,true])for(const blocked of[false,true])for(const refreshedAge of[null,0,light.refreshDebounceMilliseconds-1,light.refreshDebounceMilliseconds]){
+     if(since===null&&refreshedAge!==null)continue;
+     const probes={drifted:0,blocked:0},plan=sealedLightActionV1({now,promotedAtMs:now-age,checked:since===null?undefined:{atMs:now-since,drifted:true,refreshedAtMs:refreshedAge===null?null:now-refreshedAge},drifted:()=>{probes.drifted++;return drifted;},blocked:()=>{probes.blocked++;return blocked;}});
+     const expected=model.get(age,since,light.freshMilliseconds,drifted?1:0,blocked?1:0,light.promoteAfterMilliseconds,refreshedAge,light.refreshDebounceMilliseconds)as{action:string;probed:number;start:number};
+     expect(plan.action,JSON.stringify({age,since,drifted,blocked,refreshedAge})).toBe(expected.action);
+     expect(plan.probed).toBe(Boolean(expected.probed));
+     expect(plan.start).toBe(Boolean(expected.start)&&Boolean(expected.probed));
+     expect(probes.drifted).toBe(expected.probed?1:0);expect(probes.blocked).toBe(expected.probed&&drifted?1:0);
+     cases++;
+    }
+ }finally{db.close();}
+ expect(cases).toBe(7*2*2*(1+4*4));
+});
+
+test("the light policy is ordered, its two messages exist in both languages with their placeholders, and the check record is closed, bound to one snapshot and written atomically",()=>{
+ const light=policyData.light;
+ expect(light.freshMilliseconds).toBeGreaterThan(0);expect(light.freshMilliseconds).toBeLessThan(light.promoteAfterMilliseconds);expect(light.promoteAfterMilliseconds).toBeLessThan(light.refuseAfterMilliseconds);expect(light.refreshDebounceMilliseconds).toBeGreaterThan(0);
+ const placeholders=(text:string)=>[...text.matchAll(/\{([A-Za-z]+)\}/gu)].map(match=>match[1]!).sort();
+ for(const[key,names]of Object.entries({stale:["digest","minutes","pid"],refused:["digest","hours","rows","variable"]}))for(const language of["en","de"] as const)expect(placeholders((policyData.texts as Record<string,Record<string,string>>)[key]![language]!),key+" "+language).toEqual(names);
+ const w=makeFixtureWorkspaceV1("A");
+ try{
+  const entry=sealedEntryOfV1(w,fixtureEntryV1),digest="a".repeat(64),record={version:1 as const,entry:fixtureEntryV1,digest,atMs:5,drifted:true,refreshedAtMs:null};
+  expect(readSealedCheckedV1(entry,digest)).toBeUndefined();
+  mkdirSync(entry.directory,{recursive:true});writeSealedCheckedV1(entry,record);
+  expect(readSealedCheckedV1(entry,digest)).toEqual(record);expect(readSealedCheckedV1(entry,"b".repeat(64))).toBeUndefined();
+  expect(sealedCheckedOfV1({...record,extra:1})).toBeUndefined();expect(sealedCheckedOfV1({...record,drifted:"yes"})).toBeUndefined();expect(sealedCheckedOfV1({...record,atMs:-1})).toBeUndefined();expect(sealedCheckedOfV1({...record,refreshedAtMs:2.5})).toBeUndefined();expect(sealedCheckedOfV1({...record,digest:"zz"})).toBeUndefined();
+  expect(readdirSync(entry.directory).filter(name=>name.endsWith(".tmp"))).toEqual([]);
+  writeFileSync(entry.checked,"{torn");expect(readSealedCheckedV1(entry,digest)).toBeUndefined();
+  const document=new Ajv({strict:false}).addSchema(schema,"seal").compile({$ref:"seal#/definitions/Checked"});expect(document(record)).toBe(true);expect(document({...record,atMs:"x"})).toBe(false);
+ }finally{rmSync(w,{recursive:true,force:true});}
+});

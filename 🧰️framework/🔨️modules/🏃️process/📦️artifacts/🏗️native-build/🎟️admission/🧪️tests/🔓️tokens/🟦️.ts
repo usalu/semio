@@ -42,16 +42,14 @@ async function drive(scheduler:string,scratch:string,units:number,tokens:number,
  return{finished,admitted,deadlocked};
 }
 
-for(const row of[{units:8,tokens:2},{units:12,tokens:3},{units:6,tokens:2}])test(`${row.units} refused-then-admitted units, ${row.tokens} tokens and a token-hoarding Cargo finish`,async()=>{
- if(process.platform==="win32")return;
+for(const row of[{units:8,tokens:2},{units:12,tokens:3},{units:6,tokens:2}])test.skipIf(process.platform==="win32")(`${row.units} refused-then-admitted units, ${row.tokens} tokens and a token-hoarding Cargo finish`,async()=>{
  const scratch=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR?resolve(process.env.SEMIO_TEST_ARTIFACT_DIR):tmpdir(),"tk-")),scheduler=await schedulerBinary(scratch);
  if(!scheduler)return;
  const result=await drive(scheduler,scratch,row.units,row.tokens,row.units,12000);
  expect(result.deadlocked,`${result.finished}/${row.units} finished`).toBe(false);expect(result.finished).toBe(row.units);expect(result.admitted).toBe(row.units);
 },60000);
 
-test("without a hoarding Cargo the same workload finishes too (the hoard is what the hand-back could not survive)",async()=>{
- if(process.platform==="win32")return;
+test.skipIf(process.platform==="win32")("without a hoarding Cargo the same workload finishes too (the hoard is what the hand-back could not survive)",async()=>{
  const scratch=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR?resolve(process.env.SEMIO_TEST_ARTIFACT_DIR):tmpdir(),"tk-")),scheduler=await schedulerBinary(scratch);
  if(!scheduler)return;
  const result=await drive(scheduler,scratch,10,3,0,12000);expect(result.deadlocked).toBe(false);expect(result.finished).toBe(10);

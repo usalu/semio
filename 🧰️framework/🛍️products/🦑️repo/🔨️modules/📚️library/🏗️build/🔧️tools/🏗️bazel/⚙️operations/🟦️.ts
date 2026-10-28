@@ -1,3 +1,4 @@
+import{sayBuildV1}from"../../../📖️texts/🟦️.ts";
 import {chmod,copyFile,lstat,mkdir,readdir,readFile,rename,rm,rmdir,stat,unlink,writeFile} from "node:fs/promises";
 import type {Dirent} from "node:fs";
 import {dirname,join} from "node:path";
@@ -195,7 +196,7 @@ export async function recordBazelBuildMetricsV1(root:string,layout:Layout,slot:s
    await writeFile(temporary,JSON.stringify(ledger)+"\n");
    await rename(temporary,file);
   });
- }catch(error){if(!phaseControl.signal.aborted)console.warn(`[bazel] cache activity not recorded: ${(error as Error).message}`);}
+ }catch(error){if(!phaseControl.signal.aborted)sayBuildV1("bazel.cacheActivityNotRecorded",{reason:(error as Error).message},"warn");}
 }
 
 /** 🌫️ The plan of an `affected` selection that touches nothing: a successful run without tasks, like every other tool. */

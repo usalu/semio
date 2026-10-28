@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "🏗️build/⌨️command/⚙️runtime/🧬️schema/🔣️.json",
+ "definitions": [
+  "Limits"
+ ],
+ "sources": [
+  "🏗️build/⌨️command/⚙️runtime/🟦️.ts"
+ ],
+ "exports": [
+  {
+   "source": "🏗️build/⌨️command/⚙️runtime/🧬️schema/🟦️.ts",
+   "name": "COMMAND_RUNTIME_LIMITS_V1",
+   "definition": "Limits"
+  }
+ ]
+}

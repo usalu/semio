@@ -1,0 +1,60 @@
+--- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🚪️command/🟦️.ts	2026-10-27 13:32:21
++++ /var/folders/pm/zdg449hs6r33w_2gtsn23byc0000gn/T/sm/meder/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🚪️command/🟦️.ts	2026-10-27 13:54:50
+@@ -1,4 +1,6 @@
++import {mkdtempSync,rmSync} from "node:fs";
+ import {lstat,readFile} from "node:fs/promises";
++import {tmpdir} from "node:os";
+ import {join} from "node:path";
+ import {GRAPH_MEMO_POLICY_V1,graphMemoEnabledV1,graphMemoKeyV1,openGraphMemoV1,renderGraphMemoTextV1,type GraphMemoEditPortsV1,type GraphMemoV1,type MemoAnswerV1,type MemoRowV1} from "../🟦️.ts";
+ import {canonicalRootV1} from "../../../../🏡️resident/📨️protocol/📍️endpoint/🟨️.mjs";
+@@ -23,26 +25,37 @@
+  return observationsHold(plain as never,64,new Set(),true,signal);
+ }
+ 
+-/** ✏️ The edit ports of one repository: rows by their position in a fact index and a frontier, both read from the immutable generation store (a retired document answers `undefined`), the frontier with the planner's own walk predicates.
++/** 🧫️ Runs a child process of the same invocation with extra environment (the planner child's launch with another marker); the memo asks its derivation child through it. */
++export type GraphMemoChildV1=(environment:Readonly<Record<string,string>>)=>Promise<void>;
++
++/** ✏️ The edit ports of one repository: rows by their position in a fact index and a frontier, both read from the immutable generation store (a retired document answers `undefined`), the frontier with the planner's own walk predicates; with a `child` runner also the derivation port, which asks the derived questions that read a stale row again in a child process (the planner's deriver, `🧮️derive`) and leaves the executor's heap alone.
++ * @see ../🧮️derive/🟦️.ts
+  * @see ../../../../🕸️graph/🟦️.ts `buildWalkDescendsV1` `graphMemberPredicateV1` */
+-export function graphMemoEditPortsV1(root:string):GraphMemoEditPortsV1{
++export function graphMemoEditPortsV1(root:string,child?:GraphMemoChildV1):GraphMemoEditPortsV1{
+  const store=async()=>{const [{createGenerationStoreV1,createNodeFilePortV1},{repositoryCachePartitionRootV1}]=await Promise.all([import("../../../../🕸️graph/🕰️generations/🟨️.mjs"),import("../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts")]);return createGenerationStoreV1({root:join(repositoryCachePartitionRootV1(root,"graph"),"generations"),fs:createNodeFilePortV1(),holds:async()=>true,resources:{facts:"graph-memo"}});};
+  return{
+   rows:async(index,ids)=>{const engine=await store();try{const view=await engine.readIndexView(index);return view?ids.map(id=>view.rows[id] as MemoRowV1):undefined;}catch{return undefined;}finally{engine.dropIndexes();}},
+   frontier:async digest=>{try{const [engine,{buildWalkDescendsV1,graphMemberPredicateV1}]=await Promise.all([store(),import("../../../../🕸️graph/🟦️.ts")]),frontier=await engine.readFrontier(digest);return frontier?{frontier,descend:buildWalkDescendsV1(),member:graphMemberPredicateV1()}:undefined;}catch{return undefined;}},
++  ...(child?{derive:async({index,stale,derived})=>{
++   const [engine,derivation]=await Promise.all([store(),import("../🧮️derive/🟦️.ts")]);
++   try{
++    const view=await engine.readIndexView(index);if(!view)return{held:false,reason:"missing"};
++    return await derivation.settleGraphMemoDerivationV1({index:view,stale,derived,ask:async suspects=>{const directory=mkdtempSync(join(tmpdir(),"semio-graph-derive-")),file=join(directory,"request.json");try{derivation.writeGraphMemoDeriveFileV1(file,{version:1,index,suspects:[...suspects]});await child({[GRAPH_MEMO_POLICY_V1.derive]:file});return derivation.readGraphMemoDeriveFileV1(derivation.graphMemoDeriveAnswerFileV1(file),"answer");}catch{return undefined;}finally{rmSync(directory,{recursive:true,force:true});}}});
++   }catch{return{held:false,reason:"error"};}finally{engine.dropIndexes();}
++  }} satisfies Partial<GraphMemoEditPortsV1>:{}),
+  };
+ }
+ 
+-/** 🧠️ Opens the graph memo of one command in this process: off when the switch says so or when this process does not run a captured implementation (the identity of the implementation is part of the key). The journal cursor is taken here, before any planner child starts. A sealed slice whose generation was superseded by another request's refresh is carried to the current generation when it is the same there; a relevant change is settled by re-checking the facts that read it with the planner's own check.
++/** 🧠️ Opens the graph memo of one command in this process: off when the switch says so or when this process does not run a captured implementation (the identity of the implementation is part of the key). The journal cursor is taken here, before any planner child starts. A sealed slice whose generation was superseded by another request's refresh is carried to the current generation when it is the same there; a relevant change is settled by re-checking the facts that read it with the planner's own check, and a stale support of derived facts by asking those questions again in a `child` process.
+  * @see ../🧳️carry/🟦️.ts
+  * @see ../🟦️.ts the policy, the lookup and `settleMemoEditsV1` */
+-export async function openGraphMemoForCommandV1(root:string,args:readonly string[],capabilities:Readonly<{tool?:string;buildMode?:string}>,signal?:AbortSignal,environment:Readonly<Record<string,string|undefined>>=process.env):Promise<GraphMemoV1|undefined>{
++export async function openGraphMemoForCommandV1(root:string,args:readonly string[],capabilities:Readonly<{tool?:string;buildMode?:string}>,signal?:AbortSignal,environment:Readonly<Record<string,string|undefined>>=process.env,child?:GraphMemoChildV1):Promise<GraphMemoV1|undefined>{
+  if(!graphMemoEnabledV1(environment))return undefined;
+  const implementation=import.meta.semioCapturedImplementationIdentity;
+  if(typeof implementation!=="string")return undefined;
+  const canonical=canonicalRootV1(root);
+  return openGraphMemoV1({root,directory:join(changeJournalDirectoryV1(canonical,environment),GRAPH_MEMO_POLICY_V1.directory),client:connectChangeJournalV1(canonical,environment),key:graphMemoKeyV1({root,args,tool:capabilities.tool,mode:capabilities.buildMode,implementation:implementation+":"+(import.meta.semioCapturedLoaderIdentity??""),environment}),...(signal?{signal}:{}),environment,
+-  holds:(rows,abort)=>memoFactsHoldV1(root,rows,abort),edit:graphMemoEditPortsV1(root),
++  holds:(rows,abort)=>memoFactsHoldV1(root,rows,abort),edit:graphMemoEditPortsV1(root,child),
+   carry:async(input,abort)=>{const [{carryGraphMemoPinV1},{repositoryCachePartitionRootV1}]=await Promise.all([import("../🧳️carry/🟦️.ts"),import("../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts")]);return carryGraphMemoPinV1({generations:join(repositoryCachePartitionRootV1(root,"graph"),"generations"),...input,...(abort?{signal:abort}:{})});}});
+ }
+ 
+@@ -57,6 +70,7 @@
+  const language=await memoLanguageV1(environment),lines=[renderGraphMemoTextV1("served",{projects:answer.projects,seconds:Math.round(answer.ageMilliseconds/1000),rows:answer.rows,rechecked:answer.rechecked},language)];
+  if(answer.carried)lines.push(renderGraphMemoTextV1("carried",{from:answer.carried.from,to:answer.carried.to,projects:answer.projects},language));
+  if(answer.edited)lines.push(renderGraphMemoTextV1("edited",{paths:answer.edited.paths,rows:answer.edited.rows},language));
++ if(answer.edited?.questions)lines.push(renderGraphMemoTextV1("derived",{questions:answer.edited.questions},language));
+  return lines.join("\n");
+ }
+ 

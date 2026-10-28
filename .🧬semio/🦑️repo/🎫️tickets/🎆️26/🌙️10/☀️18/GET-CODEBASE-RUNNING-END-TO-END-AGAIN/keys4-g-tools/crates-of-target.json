@@ -1,0 +1,96 @@
+{
+ "test-staged-payload-funding": [
+  "semio-framework-job",
+  "semio-framework-tool-run"
+ ],
+ "test-retained-pack-encoding": [
+  "semio-framework-pack"
+ ],
+ "test-window-utility-native": [
+  "semio-framework"
+ ],
+ "test-source-projection": [],
+ "test-directory-discovery": [],
+ "test-action-choices": [
+  "semio-framework-manifest-app-surface"
+ ],
+ "test-tool-run-actions": [
+  "semio-framework-tool-run-actions"
+ ],
+ "test-history-edit-actions": [
+  "semio-framework-time-travel-actions"
+ ],
+ "test-mutation-inputs": [
+  "semio-framework-manifest-mutation-inputs"
+ ],
+ "test-host-effect-invocation": [],
+ "test-snapshot-sqlite": [
+  "semio-framework-io-sqlite-snapshot"
+ ],
+ "test-snapshot-sqlite-native": [
+  "semio-framework-io-sqlite-snapshot"
+ ],
+ "test-core-modules": [
+  "semio-framework-hash",
+  "semio-framework-pixels",
+  "semio-framework-intrinsic-size",
+  "semio-framework-mesh-engine"
+ ],
+ "test-deflate-encoding": [
+  "semio-framework-deflate"
+ ],
+ "test-wire-retirement-source": [],
+ "test-wire-retirement-native": [
+  "semio-framework-action-bus"
+ ],
+ "test-package-descriptor-value-codec": [
+  "semio-framework-manifest-plugin"
+ ],
+ "test-artifact-kind-source": [],
+ "test-command-ingress-consumer": [],
+ "test-history-progress": [
+  "semio-framework-kernel-history"
+ ],
+ "test-snapshot-receiving-source": [],
+ "test-argument-retirement-native": [
+  "semio-framework-manifest-mutation-inputs"
+ ],
+ "test-original-factory-admission": [
+  "semio-framework"
+ ],
+ "test-original-factory-admission-source": [],
+ "dash:test-windows": [
+  "semio-framework-repo-dashboard-terminal-laws",
+  "semio-framework-repo-dashboard-source-view",
+  "semio-framework-ui-tui-core",
+  "semio-framework-ui-tui-vt",
+  "semio-framework-ui-tui-terminal",
+  "semio-framework-ui-tui-widgets",
+  "semio-framework-ui-tui-frame",
+  "semio-framework-ui-tui-engine",
+  "semio-framework-ui-tui-host",
+  "semio-framework-ui-tui-unit-laws",
+  "semio-framework-ui-tui-vt-laws",
+  "semio-framework-ui-tui-laws"
+ ],
+ "dash:test-unit": [
+  "semio-framework-repo-dashboard-core",
+  "semio-framework-repo-dashboard-launch",
+  "semio-framework-repo-dashboard-repo-domain",
+  "semio-framework-repo-dashboard-registry",
+  "semio-framework-repo-dashboard-inventory",
+  "semio-framework-repo-dashboard-wire",
+  "semio-framework-repo-dashboard-preferences",
+  "semio-framework-repo-dashboard-labels",
+  "semio-framework-repo-dashboard-feedback",
+  "semio-framework-repo-dashboard-keymap-editor",
+  "semio-framework-repo-dashboard-source-view",
+  "semio-framework-repo-dashboard-launcher",
+  "semio-framework-repo-dashboard-language-choice",
+  "semio-framework-repo-dashboard-daemon",
+  "semio-framework-repo-dashboard-terminal",
+  "semio-framework-repo-dashboard-terminal-laws",
+  "semio-framework-repo-dashboard-cli",
+  "semio-framework-repo-dashboard"
+ ]
+}

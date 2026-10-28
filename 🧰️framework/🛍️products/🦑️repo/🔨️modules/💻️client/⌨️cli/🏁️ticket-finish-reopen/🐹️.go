@@ -177,8 +177,8 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 		}
 		return err
 	}
-	if err := purgeOversizedTicketArtifacts(ticket.FolderPath); err != nil {
-		writeWarningf("Failed to purge oversized ticket artifacts: %v", err)
+	if _, err := purgeTicketGeneratedOutput(true, ticket.FolderPath); err != nil {
+		writeWarningf("Failed to purge oversized ticket generated output: %v", err)
 	}
 	ticketID := FormatTicketRelPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 	fileList := files

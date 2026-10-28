@@ -1,0 +1,34 @@
+{
+ "edits": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+   "name": "hint-stamped",
+   "old": "if(!scope&&verdict.kind===\"delta\"&&previous.frontier)hint={generation:first.pointer.generation,plan:verdict,live};",
+   "new": "if(verdict.kind===\"delta\"&&previous.frontier)hint={generation:first.pointer.generation,plan:verdict,live,atMs:now()};"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+   "name": "hint-age-gate",
+   "old": "const reuse=hint&&usable&&current.pointer.generation===hint.generation;",
+   "new": "const reuse=hint&&usable&&current.pointer.generation===hint.generation&&now()-hint.atMs<=P.hintMaximumAgeMilliseconds;"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+   "name": "policy-hint-age",
+   "old": "stampVerification:true,waitNoticeMilliseconds:20000,sweepWaitMilliseconds:120000,",
+   "new": "stampVerification:true,waitNoticeMilliseconds:20000,sweepWaitMilliseconds:120000,hintMaximumAgeMilliseconds:1000,"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧬️schema/🔣️.json",
+   "name": "schema-hint-age",
+   "old": "\"sweepWaitMilliseconds\": 120000",
+   "new": "\"sweepWaitMilliseconds\": 120000,\n    \"hintMaximumAgeMilliseconds\": 1000"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.d.mts",
+   "name": "type-hint-age",
+   "old": "readonly waitNoticeMilliseconds:number;",
+   "new": "readonly waitNoticeMilliseconds:number;readonly hintMaximumAgeMilliseconds:number;"
+  }
+ ]
+}

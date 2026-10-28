@@ -1,0 +1,12 @@
+{
+ "label": "g16-hot2",
+ "target": "@teaching/architecture-course:build",
+ "started": "01:30:10",
+ "wall_s": 35.2,
+ "peak_tree_mb": 2272,
+ "peak_processes": 6,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

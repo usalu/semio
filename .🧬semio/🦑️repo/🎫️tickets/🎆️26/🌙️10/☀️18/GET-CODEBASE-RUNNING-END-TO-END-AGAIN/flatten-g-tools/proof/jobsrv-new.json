@@ -1,0 +1,27 @@
+{
+ "baseline": {},
+ "codes": {
+  "0-check": 0,
+  "1-apply": 0,
+  "2-check": 0,
+  "3-revert": 0,
+  "4-check": 0
+ },
+ "apply": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🟦️.ts": "1290a7a5b1d78064e0dabc8e3a147b0cb99423d8a97ab0785e336fa7016ceff3",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧪️tests/🐍️oracle/🐍️.py": "7729814ec85adad83fe6d94ac2dab7d3a656f5f214c10c31c9e018e2daced990",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧪️tests/🚦️pool/🟦️.ts": "be86ac4b9a80a6e0fc221cf8a705a737cd64e6eb2d5accb3ecd6d7e9629cc5f5",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧪️tests/🟦️.ts": "38f3607713e00f0a44905a7ffb7a08bfd451a9e6f85ed8180a4f1365c1750663",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧪️tests/🦀️probe/🟦️.ts": "c097641e70abd0ffe6ce564e524dcf262c4fcad013ae7ed846e56c5bd1cd4498",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧪️tests/🧫️fixtures/🐍️outer.py": "a33a12e62193126dfee61076a54996873f1757892d5a771c4be73bb357171e9a",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧪️tests/🧫️fixtures/🐍️realise.py": "3df10387967752d596780a07fd13da4b68bec973e84b6ce0c01a71f5451625b0",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧪️tests/🧫️fixtures/🔣️.json": "2fe54e49d6fe35589e42861dd595aed9e7ee3f73db7d1a62eeb852360a760ae9",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧬️schema/🔣️.json": "c7a92d8a1e660c8f886041688e79fa991bff1e0b7269e876118b9f2f4db4f57e",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/🟦️.ts": "a07e1ed20e5019df936b76d15eff11a6ef8337b6ddf88d01d71f538143c89561",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts": "b5a581964333acc7ff2d44994c2d7ea55d04c94df14ff80ecb3f9398e29dfb0c",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts": "9ac9dda0f74b48b94f73d39334fce3c06236b13c2c725c3012adbc8fdb5b6ed6",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🟦️.ts": "5567208261eb1b357f4bdc86558877b3a33474670e3906bef3b568a72f7d9be6",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json": "41f6121723b123f28d62f53175be426b730777e3fa8f39d536b86359e9977900"
+ },
+ "revert": {}
+}

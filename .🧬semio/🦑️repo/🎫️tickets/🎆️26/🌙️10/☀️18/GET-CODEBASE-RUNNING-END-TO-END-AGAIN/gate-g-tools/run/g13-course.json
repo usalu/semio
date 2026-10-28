@@ -1,0 +1,31 @@
+{
+ "label": "g13-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "00:23:18",
+ "wall_s": 308.5,
+ "peak_tree_mb": 8647,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 5.2,
+ "graph": {
+  "inferring": [
+   "40"
+  ],
+  "refreshing": [
+   "40"
+  ],
+  "published": [
+   "594",
+   "42",
+   "103"
+  ],
+  "processes": [
+   "8",
+   "1 internal, 7 worker"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

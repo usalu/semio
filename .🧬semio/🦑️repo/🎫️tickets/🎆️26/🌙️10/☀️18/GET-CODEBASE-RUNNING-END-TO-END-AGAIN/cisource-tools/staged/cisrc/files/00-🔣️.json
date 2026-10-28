@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "hosts": [
+    {
+      "name": "linux",
+      "runner": "ubuntu-latest"
+    },
+    {
+      "name": "macos",
+      "runner": "macos-latest"
+    },
+    {
+      "name": "windows",
+      "runner": "windows-latest"
+    }
+  ],
+  "gates": [
+    {
+      "id": "filesystem-command-laws",
+      "command": "repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust/Cargo.toml --locked -p semio-framework-filesystem-workspace --lib -- --nocapture --test-threads=1"
+    },
+    {
+      "id": "explicit-language-choice",
+      "command": "repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml --locked -p semio-framework-repo-dashboard-preferences -p semio-framework-repo-dashboard-language-choice -p semio-framework-repo-dashboard-terminal-laws --lib language -- --nocapture --test-threads=1"
+    },
+    {
+      "id": "canonical-cold-lazy-launch",
+      "command": "repo run @semio-tech/repo-dashboard-rs:test-cold-start --skip-cache --output=stream"
+    },
+    {
+      "id": "terminal-editor-controller",
+      "command": "repo run @semio-tech/repo-dashboard-rs:test-windows --skip-cache --output=stream"
+    },
+    {
+      "id": "installed-journeys",
+      "command": "repo run @semio-tech/repo-dashboard-rs:test-journeys --skip-cache --output=stream"
+    },
+    {
+      "id": "installed-load",
+      "command": "repo run @semio-tech/repo-dashboard-rs:test-load --skip-cache --output=stream"
+    },
+    {
+      "id": "process-deadline",
+      "command": "repo run @semio-tech/repo-dashboard-rs:test-process-deadline --skip-cache --output=stream"
+    }
+  ],
+  "devcontainer": {
+    "runner": "ubuntu-latest",
+    "configuration": ".devcontainer/devcontainer.json",
+    "adapter": "devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca",
+    "gates": [
+      "filesystem-command-laws",
+      "explicit-language-choice",
+      "canonical-cold-lazy-launch",
+      "terminal-editor-controller",
+      "installed-journeys",
+      "installed-load",
+      "process-deadline"
+    ],
+    "completedEntry": "Human control plane: repo dashboard"
+  },
+  "sourceGate": {
+    "project": "@semio-tech/repo-dashboard-rs",
+    "target": "test-ci-source",
+    "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+    "selector": "ci-source",
+    "command": "repo ./📜️script.ts test ci-source",
+    "entry": "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🟦️.ts",
+    "inputs": [
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/bun.lock",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🧬️schema/🔣️.json",
+      "{workspaceRoot}/.github/actions/native-repo/action.yml",
+      "{workspaceRoot}/.github/actions/devcontainer-repo/action.yml",
+      "{workspaceRoot}/.github/workflows/dashboard.yml",
+      "{workspaceRoot}/.github/workflows/build-system.yml",
+      "{projectRoot}/📋️project.json"
+    ]
+  },
+  "windowGate": {
+    "id": "terminal-editor-controller",
+    "command": "repo run @semio-tech/repo-dashboard-rs:test-windows --skip-cache --output=stream"
+  }
+}

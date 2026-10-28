@@ -1,0 +1,32 @@
+{
+  "files": [
+    "♻️mit-bestand/📋️bericht/🔨️modules/✅️report-verification/🟦️.ts",
+    "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+    "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🎚️config/🟦️.ts"
+  ],
+  "buildModules": [
+    "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/🏗️builder/🌐️vite/🟦️.ts"
+  ],
+  "testIncludes": [
+    "🧪️tests/📖️assignment-pdfs/🟦️.ts",
+    "🧪️tests/🧩️curriculum/🟦️.ts",
+    "🧪️tests/🧪️course/🟦️.ts",
+    "🧪️tests/🧪️deploy/🟦️.ts",
+    "🧪️tests/🧱️local-stack/🟦️.ts",
+    "🧪️tests/🏗️proctor-build/🟦️.ts",
+    "🧪️tests/🧾️proctor-product/🟦️.ts",
+    "🧪️tests/🐳️image/🟦️.ts",
+    "🧪️tests/🪢️presence/🟦️.ts",
+    "🧪️tests/📰️host-document/🟦️.ts",
+    "🧪️tests/🐾️pet-cast/🟦️.ts",
+    "🧪️tests/🎛️dashboard/🟦️.ts",
+    "🧪️tests/🎛️dashboard/🎚️parameters/🟦️.ts",
+    "🧪️tests/🎭️sessions/🟦️.ts",
+    "🧪️tests/📦️resolution/🟦️.ts",
+    "🧪️tests/🏷️release-tags/🟦️.ts",
+    "🧪️tests/🎚️mode/🟦️.ts",
+    "🧪️tests/🟢️continuous/🟦️.ts",
+    "🧪️tests/🟢️continuous/🧾️manifests/🟦️.ts"
+  ],
+  "routingImport": "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
+}

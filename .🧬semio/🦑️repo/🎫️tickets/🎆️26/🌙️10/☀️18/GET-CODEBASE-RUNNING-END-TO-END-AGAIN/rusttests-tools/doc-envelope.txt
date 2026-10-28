@@ -1,0 +1,2 @@
+🪪 Staged batch `envelope` (lane rusttests): a declared test birth can carry the native build caller grant of the library suites (schema-first: `🧬️schema/🪪️envelope.json`, registered issuer, refused beneath a parent that does not carry exactly such a grant), and every envelope-only test file of the build library declares it, so a bare `bun test ./file` from the checkout gives the truth.
+Requires the td-leases batch `envelope` (helper `declareBuildTestEnvelopeV1`) and the td-misc batches `windows` and `consumption` landed (the bases of their files are the post-batch bytes).

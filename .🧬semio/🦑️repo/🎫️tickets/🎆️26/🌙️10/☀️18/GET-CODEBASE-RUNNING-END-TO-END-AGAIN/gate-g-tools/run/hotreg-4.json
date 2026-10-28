@@ -1,0 +1,20 @@
+{
+ "label": "hotreg-4",
+ "target": "@teaching/architecture-course:build",
+ "started": "23:45:42",
+ "wall_s": 418.5,
+ "peak_tree_mb": 2405,
+ "peak_processes": 7,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 5.0,
+ "graph": {
+  "processes": [
+   "8",
+   "7 disk cache hit, 1 internal"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

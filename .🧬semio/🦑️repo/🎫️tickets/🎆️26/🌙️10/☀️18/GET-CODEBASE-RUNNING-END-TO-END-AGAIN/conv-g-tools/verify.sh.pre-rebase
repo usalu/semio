@@ -1,0 +1,16 @@
+#!/bin/zsh
+# [conv-g] verifies the batch. usage: verify.sh static   (before apply: staged files only, no repo run)
+#                                      verify.sh suites   (after `stage.py apply`: the graph-free single-file suites of every touched module; exit 1 on any fail)
+HERE=${0:A:h}; cd /Users/ueli/Documents/semio
+BUN=${BUN:-/Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun}
+case ${1:-static} in
+static)
+  python3 -B "$HERE/make-staged.py" >/dev/null 2>&1 || true
+  python3 -I "$HERE/stage.py" check; python3 -B "$HERE/selftest.py" && python3 -B "$HERE/laws.py" "$BUN" 2>&1 | grep -v Deprecat ;;
+suites)
+  F="🧰️framework"; L="$F/🛍️products/🦑️repo/🔨️modules/📚️library"; B="$L/🏗️build"; A="$L/⚡️caching/🚀️bootstrap/🛠️tools"; P="$F/🔨️modules/🏃️process"
+  fail=0
+  run(){ local dir="$1" out; out=$(cd "$dir" && nice "$BUN" test --timeout 280000 ./🟦️.ts 2>&1); local pass=$(echo "$out" | grep -E "^ *[0-9]+ pass$" | tail -1 | tr -d ' ') nfail=$(echo "$out" | grep -E "^ *[0-9]+ fail$" | tail -1 | tr -d ' '); if [ -n "$pass" ] && { [ -z "$nfail" ] || [ "$nfail" = "0fail" ]; }; then echo "ok   $pass  ${dir##*/library/}"; else echo "FAIL ${pass:-nopass} ${nfail:-nofail}  $dir"; fail=1; fi; }
+  for d in "$B/🏛️sealed/🧪️tests/🗂️store" "$B/🏛️sealed/🧪️tests/🚦️trampoline" "$F/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🧪️tests" "$B/🏡️resident/📜️journal/🧪️tests" "$L/⚡️caching/💾️storage/🧾️ledger/🎚️machine/🧪️tests" "$L/⚡️caching/💾️storage/🧾️ledger/🧪️tests" "$A/🧹️retention/🎚️store-bound/🧪️tests" "$L/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests" "$L/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🧪️tests/🏊️pool-model" "$P/🏗️build/🟦️typescript/🧪️tests" "$P/🏗️build/🟦️typescript/🧪️tests/🔁️incremental" "$A/🔏️authorizers/🧪️tests/🧊️memo" "$B/📥️inputs/🔭️read-oracle/🧪️tests" "$B/🧾️ci-report/🗂️suites/🧪️tests" "$B/🕸️graph/🕰️generations/🌿️frontier-walk/🧪️tests" "$B/🕸️graph/🕰️generations/🧩️claims/🧪️tests" "$B/🕸️graph/🕰️generations/🛌️yield/🧪️tests" "$B/🕸️graph/🕰️generations/✂️cutoff/🧪️tests" "$B/🕸️graph/🎯️test-owners/🧪️tests" "$B/📥️inputs/🌳️owner-view/🧪️tests" "$B/🔭️witness/🧪️tests"; do run "$d"; done
+  exit $fail ;;
+esac

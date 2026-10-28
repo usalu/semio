@@ -3,6 +3,7 @@ const { dirname, isAbsolute, join, relative, resolve } = require("node:path");
 const { ownsPayload } = require("../📦️payload/🟨️.cjs");
 const { createHash } = require("node:crypto");
 const limits = Object.freeze({ ...require("./🧬️schema/🔣️.json").$defs.PhysicalLimits.const });
+const frontierReplayProtocol = Object.freeze({ ...require("./🧬️schema/🔣️.json").$defs.FrontierReplayProtocol.const });
 const slash = (path) => path.replaceAll("\\", "/");
 const churn = Object.freeze(require("../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧬️schema/🔣️.json").definitions.Protocol.const);
 /** 🧨️ A peer edit of an owner manifest, the ownership policy or the membership while this custody was open: the plain error carries the code, reason, path and layer rank the churn policy declares, so the step that owns the snapshot takes a new one. */
@@ -313,7 +314,7 @@ function observedOwnership(owner) {
 }
 /** ⚡️ Replays the complete original decision frontier and fences the final awaited continuation without rediscovering packages. */
 async function replayCurrentMembershipV1(owner, control, progress) {
-  let continuationFailed = false;
+  let continuationFailed = false, visited = 0;
   const observations = owner.observations, proof = new Map(), operations = nativeOperations(undefined, owner.root, owner.physical), read = path => {
     try { return fs.lstatSync(path, { bigint: true }); } catch (error) { if (error.code === "ENOENT") return undefined; throw error; }
   };
@@ -330,7 +331,8 @@ async function replayCurrentMembershipV1(owner, control, progress) {
         if (decision === "relist" && (JSON.stringify(projectListing(owner.root, record.path, operations.list(record.path))) !== JSON.stringify(record.list) || directoryStamp(read(record.path)) !== stamp)) return false;
         proof.set(record.path, { stamp, exact: decision === "relist" });
       }
-      try { await control.advance({ operation: "frontier", path: record.path, completedOperations: ++progress.completedOperations }); } catch (error) { continuationFailed = true; throw error; }
+      const completedOperations = ++progress.completedOperations;
+      if (++visited === observations.paths.size || completedOperations % (control.frontierBatchPaths ?? 1) === 0) try { await control.advance({ operation: "frontier", path: record.path, completedOperations }); } catch (error) { continuationFailed = true; throw error; }
       control.signal.throwIfAborted();
     }
     if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return false;
@@ -428,6 +430,7 @@ async function controlledOwnership(ownership, root, selection, control, verifyPu
   selection = ownershipSelection(selection);
   if (!control || !(control.signal instanceof AbortSignal) || typeof control.advance !== "function") throw Error("Original Bun workspace control required");
   if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw edited("Bun current ownership policy changed during verification");
+  if (control.frontierBatchPaths !== undefined && (!Number.isInteger(control.frontierBatchPaths) || control.frontierBatchPaths < 1 || control.frontierBatchPaths > frontierReplayProtocol.progressBatchPaths)) throw Error("Bounded Bun frontier continuation batch required");
   const owner = Object.assign(context(root), { ownership, computation, selection, verifyPublished }), operations = nativeOperations(owner.observations, owner.root, owner.physical), current = { owner, completedOperations: 0 };
   current.report = await drainControlledPlanV1(computation(owner, selection, verifyPublished), operations, control, current);
   if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw edited("Bun current ownership policy changed during verification");
@@ -444,7 +447,6 @@ async function publishCurrentOwnership(ownership, root, selection, control) {
   const validate = async () => {
     control.signal.throwIfAborted();
     if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw edited("Bun current ownership policy changed during publication");
-    await requireCurrentMembershipV1(owner, control, current);
     await control.advance({ operation: "membership", path: owner.root, completedOperations: ++current.completedOperations });
     control.signal.throwIfAborted();
     for (const [path, text] of owner.texts) {

@@ -11,9 +11,9 @@
   ],
   "rendering": [
     {"language": "en", "row": {"task": "@teaching/proctor:build:release", "bytes": 12, "droppedBytes": 1583191, "file": "/w/failures/t.tail.log", "text": "error: boom\n"}, "expect": "[bazel] task @teaching/proctor:build:release failed; last 12 bytes of its output (1583191 earlier bytes omitted), saved to /w/failures/t.tail.log:\nerror: boom\n"},
-    {"language": "de", "row": {"task": "@teaching/proctor:build:release", "bytes": 12, "droppedBytes": 1583191, "file": "/w/failures/t.tail.log", "text": "error: boom\n"}, "expect": "[bazel] Aufgabe @teaching/proctor:build:release fehlgeschlagen; letzte 12 Bytes ihrer Ausgabe (1583191 frühere Bytes ausgelassen), gesichert in /w/failures/t.tail.log:\nerror: boom\n"},
+    {"language": "de", "row": {"task": "@teaching/proctor:build:release", "bytes": 12, "droppedBytes": 1583191, "file": "/w/failures/t.tail.log", "text": "error: boom\n"}, "expect": "[bazel] Task @teaching/proctor:build:release fehlgeschlagen; letzte 12 Bytes ihrer Ausgabe (1583191 frühere Bytes ausgelassen), gesichert in /w/failures/t.tail.log:\nerror: boom\n"},
     {"language": "en", "row": {"task": "@a:b", "bytes": 3, "droppedBytes": 0, "file": "/w/f.tail.log", "text": "x\n\n"}, "expect": "[bazel] task @a:b failed; its complete output (3 bytes), saved to /w/f.tail.log:\nx\n\n"},
-    {"language": "de", "row": {"task": "@a:b", "bytes": 2, "droppedBytes": 0, "file": "/w/f.tail.log", "text": "ä"}, "expect": "[bazel] Aufgabe @a:b fehlgeschlagen; ihre vollständige Ausgabe (2 Bytes), gesichert in /w/f.tail.log:\nä\n"}
+    {"language": "de", "row": {"task": "@a:b", "bytes": 2, "droppedBytes": 0, "file": "/w/f.tail.log", "text": "ä"}, "expect": "[bazel] Task @a:b fehlgeschlagen; ihre vollständige Ausgabe (2 Bytes), gesichert in /w/f.tail.log:\nä\n"}
   ],
   "files": {
     "tasks": ["@b:two", "@a:one/with space", "@c:../escape"],

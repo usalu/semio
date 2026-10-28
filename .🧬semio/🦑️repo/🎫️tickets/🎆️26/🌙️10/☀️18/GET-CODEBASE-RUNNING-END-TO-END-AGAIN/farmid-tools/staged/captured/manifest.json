@@ -1,0 +1,117 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": {
+  "file": "00-🧭️script-inputs-🟨️.mjs",
+  "base": "7b025c7b77c0cfcefae057534f3c38fb140ad0ce29fa88fee99b38273f8b6f96",
+  "new": "be912fa8fd6e9f802976ee687e0e67c4e76e822b73027bfcec46d86015ad43ea"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs": {
+  "file": "01-🧬️source-analyses-🟨️.mjs",
+  "base": "502507eb2f57bbddb0072e7d2ccc7e0100b75bbfa8cbe543895b65803d85301d",
+  "new": "cb52badcd8699c4766d58578865b6fba32c4ebb213b7a2ed6657be8d6c4a7645"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs": {
+  "file": "02-🧱️project-assembly-🟨️.mjs",
+  "base": "9d591a374a26c89ccf8d4b826d056c1dba38332033900403c2281711be8221d3",
+  "new": "79cc425e0f7dc6170d53944da6f29e088b278371c2c438e31b0a180248ce848e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.d.mts": {
+  "file": "03-🧱️project-assembly-🟨️.d.mts",
+  "base": "21972cb97a13350bdc76ac1f4509528bc9f2c4a35aabbd4e6da42c1d7e6fad7c",
+  "new": "eabd9b0b02c8bafa55f3315b023d5d235c1864f1760c1f5189088939f7aeaa41"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔖️stamps/🧬️schema/🔣️.json": {
+  "file": "04-🧬️schema-🔣️.json",
+  "base": "e5f7baeb16709772baf7d8fdd57c38447a24f9e0ddde49cdb765acef1fe1ab19",
+  "new": "74ca4e7a9e3b24578785921096fbe2a047e56180aa96150e314d0ae9337c65eb"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🔖️output-stamps/🔣️.json": {
+  "file": "05-🔖️output-stamps-🔣️.json",
+  "base": "677a78bae1fc85cdf9033fae8a532b1a5e8e9c906e58a35682be849f9677346e",
+  "new": "15c9ece612bc5f64b6495aed792ec9e39ad3d5d9893e55a394ac77df8b896613"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.mjs": {
+  "file": "06-🏊️project-farm-🟨️.mjs",
+  "base": "78f8ebcf732315132c72209a797e4e8fc8c71e0e472b0832e5657f46211afa3c",
+  "new": "f3a178d293e50e187264d047197bde7b8342ba41843893b8e001783c4d17335c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🏊️pool/🟨️.mjs": {
+  "file": "07-🏊️pool-🟨️.mjs",
+  "base": "81728ed8e008d9b2de46d8c44e50fca50a83011acd7b6d4d709f0d753132bbee",
+  "new": "fbaa723289ab5d24e9cb3963c7e93c0abebc6451b549776f282443c5897258ef"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🏊️pool/🟨️.d.mts": {
+  "file": "08-🏊️pool-🟨️.d.mts",
+  "base": "e2c85d0fbd2cc995965613fbd7661ad29eb8a6641f75450abb81db4a1db257f2",
+  "new": "b5b949667890e26cee3b63dbce1eb6583d17817ec9a6d7020c5c47e1d0d54c44"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️service/🟨️.mjs": {
+  "file": "09-👷️service-🟨️.mjs",
+  "base": "d36e770bf80e3e68a90f93dd6f39f17383923d990da77831d6771e82bb99f2ca",
+  "new": "61213666c338f4cdc7963f787b95370e07a74114a0aede913fe8612365dec32b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🟦️.ts": {
+  "file": "10-🧪️tests-🟦️.ts",
+  "base": "92bf855e07391a36d85cdf99d349503e4b893ee786f7d5eba4aaae5ccc9158d6",
+  "new": "63494dcf1f9e3c0074434453929ef214be48cd39143d575666181f440cffadf3"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🔒️farm-close/🟦️.ts": {
+  "file": "11-🔒️farm-close-🟦️.ts",
+  "base": "f69b169369084cbc7f1aa13d2e8fd7aa08dd1e95902ca6b9bc13a637626dc367",
+  "new": "e03007b26052bbea33b239fed3f38c557642dc54e092f38dc45a9c02c662e920"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🟦️.ts": {
+  "file": "12-🚪️command-🟦️.ts",
+  "base": "aeee6d0efd66bc1090a7845789414d4afc69c7bcc47ac23cd5df639e4a5ed6a0",
+  "new": "e3363df7ef2186220749f84902682dbed0dc50392732203810c2a80f414da70b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/📥️entry/🟦️.ts": {
+  "file": "13-📥️entry-🟦️.ts",
+  "base": "8c17b253528ba43f2f7a8a3cc73de7d874b6e9d507ab1144b2d447998e45a03f",
+  "new": "8683b190deb32f3b49c7822b714191615c7ce85f48814d00a5ae08879c7e4cb4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🚪️entry/🟦️.ts": {
+  "file": "14-🚪️entry-🟦️.ts",
+  "base": "8515833039cfa47e3dd6c1981dc39736b629ee527833e7d20c23183a33a4ea47",
+  "new": "70a189c654ea6bd519c81d8c3e36fd2996c16dc3645529775295c09f7df2c173"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.d.mts": {
+  "file": "15-🏊️project-farm-🟨️.d.mts",
+  "base": null,
+  "new": "62afe8b23701a72479581dc9b8957749f5ef23e1b1fa9c0271ef1ecfb3e81dbc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🪆️captured/🟨️.mjs": {
+  "file": "16-🪆️captured-🟨️.mjs",
+  "base": null,
+  "new": "9635d01bc1bbadbe53a561287dbe1c40ee510b6980c0ec85ec1c1d988f831463"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🪆️captured/🟨️.d.mts": {
+  "file": "17-🪆️captured-🟨️.d.mts",
+  "base": null,
+  "new": "96bdccfb17f89fd9182f01b82fb8f59840d70b31682cc06cce8e7e5bec6f6cf9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🪆️captured/🟦️.ts": {
+  "file": "18-🪆️captured-🟦️.ts",
+  "base": null,
+  "new": "23766ab01c63aee223b0040c175184a4ce0fc35f10d9e61bc72437b7bb42898e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🧫️fixtures/🪆️captured-entry/🟨️.mjs": {
+  "file": "19-🪆️captured-entry-🟨️.mjs",
+  "base": null,
+  "new": "ec83f13292c0a46b20453f6b7cb4cc8a246b489dcc881a72befeaf57aa98d06c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🧫️fixtures/🪆️captured-service/🟨️.mjs": {
+  "file": "20-🪆️captured-service-🟨️.mjs",
+  "base": null,
+  "new": "942f707f313eae766832bf371950e2aee034b08deedc745b4275f641c30d6517"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🧫️fixtures/🪆️kernel-role/🟦️.ts": {
+  "file": "21-🪆️kernel-role-🟦️.ts",
+  "base": null,
+  "new": "d00b339e0e9b78461ad798abbd4f44502e062737daf58656c18af8736a777e81"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🧪️tests/🟦️.ts": {
+  "file": "22-🧪️tests-🟦️.ts",
+  "base": null,
+  "new": "14c8060d2454a02bae3890dfd8c99dedab546293f1e0a8f96f5c93bf1323fab2"
+ }
+}

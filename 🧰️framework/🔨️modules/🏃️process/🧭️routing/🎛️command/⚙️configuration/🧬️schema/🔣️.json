@@ -117,7 +117,7 @@
           "maximum": 9007199254740991
         },
         {
-          "const": "available-minus-quarter"
+          "const": "planned"
         }
       ]
     },

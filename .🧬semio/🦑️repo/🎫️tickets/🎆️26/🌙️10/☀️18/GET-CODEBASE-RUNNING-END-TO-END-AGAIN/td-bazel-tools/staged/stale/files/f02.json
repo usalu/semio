@@ -1,0 +1,108 @@
+{
+  "entry": "📜️script.ts",
+  "files": {
+    "📜️script.ts": "import common from './required.cjs'; import {readFile} from 'node:fs/promises'; import {value,extraURL,required,esmRequired} from './helper.ts'; import {readFileSync,writeFileSync} from 'node:fs'; export const result=value; export const lazy=()=>import('./lazy.ts'); export async function runCapturedBuildSourceV1(args,proof){if(import.meta.semioCapturedImplementationIdentity!==proof?.sha256)throw Error('Captured fixture implementation required');if(args[2]==='recheck')proof.recheck();if(args[2]==='foreign')await import(args[3]);writeFileSync(args[0],JSON.stringify({value,lazy:(await lazy()).lazy,cjsImport:common.value,esmContract:esmRequired(),requireContract:required(),assetContract:JSON.parse(await readFile(extraURL,'utf8')).value,asyncContract:JSON.parse(await readFile(new URL('./schema.json',import.meta.url),'utf8')).value,contract:JSON.parse(readFileSync(new URL('./schema.json',import.meta.url),'utf8')).value,url:import.meta.url,argument:args[1]}));}\n",
+    "helper.ts": "import {singleton} from './required.mjs';import schema from './schema.json'; export const value=schema.value;\nexport const ansi=\"\\x1b\";\nexport const extraURL=new URL('./extra.json',import.meta.url);\nimport {createRequire} from 'node:module'; export const required=()=>createRequire(import.meta.url)('./required.cjs').value;\nexport const esmRequired=()=>{const module=createRequire(import.meta.url)('./required.mjs');if(module.singleton!==singleton)throw Error('Captured ESM require instance differs');return module.value;};\n",
+    "schema.json": "{\"value\":1}\n",
+    "lazy.ts": "export const lazy=true;\n",
+    "extra.json": "{\"value\":1}\n",
+    "required.cjs": "exports.started=true;exports.value=require('./required-leaf.cjs').value;\n",
+    "required-leaf.cjs": "const fs=require('node:fs'),{createRequire}=require('node:module');exports.value=createRequire(__filename)('./required.cjs').started===true&&JSON.parse(fs.readFileSync(__dirname+'/extra.json','utf8')).value===1?1:0;\n",
+    "required.mjs": "export const value=1;export const singleton={};\n"
+  },
+  "mutation": {
+    "path": "schema.json",
+    "bytes": "{\"value\":2}\n"
+  },
+  "expectedFiles": [
+    "extra.json",
+    "helper.ts",
+    "lazy.ts",
+    "required-leaf.cjs",
+    "required.cjs",
+    "required.mjs",
+    "schema.json",
+    "📜️script.ts"
+  ],
+  "expectedChanged": true,
+  "argument": "space 🧪界 Grüße",
+  "bindings": [
+    {
+      "rule": "repo_task",
+      "kind": "work-action",
+      "inputs": [
+        "manifest",
+        "fingerprint",
+        "runner",
+        "source"
+      ]
+    },
+    {
+      "rule": "repo_launch",
+      "kind": "birth-launcher",
+      "inputs": [
+        "manifest",
+        "runner",
+        "source"
+      ]
+    }
+  ],
+  "descriptorCases": [
+    {
+      "change": "none",
+      "valid": true
+    },
+    {
+      "change": "digest",
+      "valid": false
+    },
+    {
+      "change": "extra",
+      "valid": false
+    },
+    {
+      "change": "path",
+      "valid": false
+    }
+  ],
+  "resultCases": [
+    {
+      "change": "none",
+      "valid": true
+    },
+    {
+      "change": "extra",
+      "valid": false
+    },
+    {
+      "change": "taskExtra",
+      "valid": false
+    },
+    {
+      "change": "label",
+      "valid": false
+    },
+    {
+      "change": "selectedType",
+      "valid": false
+    },
+    {
+      "change": "adapterMissing",
+      "valid": false
+    },
+    {
+      "change": "implementationMissing",
+      "valid": false
+    }
+  ],
+  "expectedImports": [
+    "helper.ts",
+    "lazy.ts",
+    "required-leaf.cjs",
+    "required.cjs",
+    "required.mjs",
+    "schema.json",
+    "📜️script.ts"
+  ],
+  "fixtureRoot": "temp/bazel-implementation"
+}

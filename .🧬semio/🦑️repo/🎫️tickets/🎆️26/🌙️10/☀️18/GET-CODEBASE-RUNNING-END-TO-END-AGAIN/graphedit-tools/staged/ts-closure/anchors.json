@@ -1,0 +1,30 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": [
+  [
+   "/** 🪁️ Joins the compiler's own program for each TypeScript project in `metadata.semio.closure.typescript` to the closure, records the generator targets whose outputs it reads and names the installed packages it resolved. */",
+   "/** 🪁️ Joins the compiler's own program for each TypeScript project in `metadata.semio.closure.typescript` to the closure, records the generator targets whose outputs it reads and names the installed packages it resolved. A program file joins by its physical identity alone (`requirePhysicalSourceV1`): its bytes are the derived program fact's support, so an edit that leaves the program as it was keeps the project's own facts (law `🧪️tests/🪁️program-reads`). */"
+  ],
+  [
+   "    readPhysicalSource(file);\n    names.push(closurePathNameV1(cache, workspaceRoot, file));",
+   "    requirePhysicalSourceV1(file);\n    names.push(closurePathNameV1(cache, workspaceRoot, file));"
+  ]
+ ],
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts": [
+  [
+   "let refused:string|null=null,reads:string[]=[];",
+   "let refused:string|null=null,reads:string[]=[],gates:string[]=[];"
+  ],
+  [
+   "requirePhysicalSourceV1:(path:string)=>{if(local(path)===refused||!require(\"node:fs\").lstatSync(path).isFile())throw Error(\"Ordinary command Source required\");}",
+   "requirePhysicalSourceV1:(path:string)=>{const name=local(path);gates.push(name);if(name===refused)throw Error(\"Ordinary compiler input refused: \"+name);if(!require(\"node:fs\").lstatSync(path).isFile())throw Error(\"Ordinary command Source required\");}"
+  ],
+  [
+   "refused=item.readFailure;reads=[];",
+   "refused=item.readFailure;reads=[];gates=[];"
+  ],
+  [
+   "expect(reads.some(path=>produced.some(value=>value.path===path)),item.id+\" produced bypasses ordinary Source reader\").toBe(false);",
+   "expect([...reads,...gates].some(path=>produced.some(value=>value.path===path)),item.id+\" produced bypasses ordinary Source reader and gate\").toBe(false);"
+  ]
+ ]
+}

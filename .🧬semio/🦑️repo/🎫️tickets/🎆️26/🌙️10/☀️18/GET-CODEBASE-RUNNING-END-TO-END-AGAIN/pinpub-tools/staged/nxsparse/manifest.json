@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts": {
+  "file": "f000",
+  "base": "fea106e62c39b01e5e9e0c2898fe51d6cdce3259a411172e4d973771fc7001ff",
+  "new": "eb79d89e9325544a3dc80cdfeb2a22b31c50727be918ce2e652b18b39e12b46f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🪶️sparse/🟦️.ts": {
+  "file": "f001",
+  "base": null,
+  "new": "db81b822f370db86303a9fa3a3e86c87ddf864fb0f602495128bbd18eaf451ca"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🪶️sparse/🔣️.json": {
+  "file": "f002",
+  "base": null,
+  "new": "17d4abedee94051dd9c85ab02f59424fef0ad45800dc591970a5743a46ce8612"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🪶️sparse/🐍️.py": {
+  "file": "f003",
+  "base": null,
+  "new": "989a8570c69fd8a2c7b97d48a5728626ce62cc92223f67d7008b85025a461efa"
+ }
+}

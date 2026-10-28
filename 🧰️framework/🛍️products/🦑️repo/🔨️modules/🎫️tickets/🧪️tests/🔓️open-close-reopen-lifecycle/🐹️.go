@@ -19,11 +19,6 @@ type clockVector struct {
 	Stamp string `json:"stamp"`
 }
 
-type purgeVector struct {
-	OversizedFile string `json:"oversizedFile"`
-	SmallFile     string `json:"smallFile"`
-}
-
 type lifecycleVectors struct {
 	RepoMetaDir string          `json:"repoMetaDir"`
 	Clock       clockVector     `json:"clock"`
@@ -31,7 +26,6 @@ type lifecycleVectors struct {
 	Close       json.RawMessage `json:"close"`
 	Reopen      json.RawMessage `json:"reopen"`
 	Change      json.RawMessage `json:"change"`
-	Purge       purgeVector     `json:"purge"`
 }
 
 type world struct {
@@ -256,40 +250,6 @@ func fileInputsAreNormalisedBeforeTheyAreRecorded(ctx *host.Context) (host.Outco
 	}}, nil
 }
 
-func anOversizedArtifactIsPurged(ctx *host.Context) (host.Outcome, error) {
-	vectors, err := loadLifecycleVectors(ctx)
-	if err != nil {
-		return host.Outcome{}, err
-	}
-	current := newWorld(vectors)
-	outcome, err := openTicket(current, vectors)
-	if err != nil {
-		return host.Outcome{}, err
-	}
-	id, err := tickets.ParseTicketID(outcome.ID)
-	if err != nil {
-		return host.Outcome{}, err
-	}
-	folder := current.layout.TicketDir(id)
-	current.store.SeedSizedFile(tickets.JoinPath(folder, vectors.Purge.OversizedFile), tickets.OversizedFileBytes+1)
-	current.store.SeedSizedFile(tickets.JoinPath(folder, vectors.Purge.SmallFile), 128)
-	report, err := current.service.PurgeArtifacts(id)
-	if err != nil {
-		return host.Outcome{}, err
-	}
-	surviving := make([]string, 0)
-	for _, path := range current.store.Paths() {
-		if tickets.StoreIsFile(current.store, path) {
-			surviving = append(surviving, path)
-		}
-	}
-	return host.Outcome{Projection: map[string]any{
-		"removedFiles":       report.RemovedFiles,
-		"removedDirectories": report.RemovedDirectories,
-		"surviving":          surviving,
-	}}, nil
-}
-
 // endregion 🔖️Scenarios
 
 // region 🔖️Registration
@@ -302,8 +262,7 @@ func Adapter() *host.Adapter {
 		Subject("a-reopen-restores-the-important-document", aReopenRestoresTheImportantDocument).
 		Subject("a-change-renames-the-folder", aChangeRenamesTheFolder).
 		Subject("a-close-refuses-a-ticket-that-is-not-open", aCloseRefusesATicketThatIsNotOpen).
-		Subject("file-inputs-are-normalised-before-they-are-recorded", fileInputsAreNormalisedBeforeTheyAreRecorded).
-		Subject("an-oversized-artifact-is-purged", anOversizedArtifactIsPurged)
+		Subject("file-inputs-are-normalised-before-they-are-recorded", fileInputsAreNormalisedBeforeTheyAreRecorded)
 }
 
 // endregion 🔖️Registration

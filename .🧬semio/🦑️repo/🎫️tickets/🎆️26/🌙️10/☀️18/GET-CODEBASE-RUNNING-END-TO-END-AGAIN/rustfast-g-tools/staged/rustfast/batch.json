@@ -1,0 +1,158 @@
+{
+ "files": [
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🟦️.ts",
+   "edits": [
+    {
+     "old": "planningDigest:digest(unit),",
+     "new": "planningDigest:digest({...unit,dependencies:unit.dependencies.map((value:unknown)=>{const{index,...facts}=object(value);return{...facts,unit:ids[index]};}).sort((left:any,right:any)=>left.unit.localeCompare(right.unit)||left.extern_crate_name.localeCompare(right.extern_crate_name))}),"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts",
+   "edits": [
+    {
+     "old": "import {readdir,open} from \"node:fs/promises\";",
+     "new": "import {readdir,open,lstat} from \"node:fs/promises\";"
+    },
+    {
+     "old": "export function actualCargoCompilerPlanningPortV1():CargoCompilerPlanningPortV1{return{",
+     "new": "export function actualCargoCompilerPlanningPortV1(options:Readonly<{digests?:FileDigestMemoV1}>={}):CargoCompilerPlanningPortV1{return{"
+    },
+    {
+     "old": "async sourceInputs(manifest,control){const root=dirname(manifest),result:{path:string;digest:string;bytes:number}[]=[];const walk=async(directory:string):Promise<void>=>{checkResourceLeaseControl(control);for(const row of await readdir(requireMaterializedPathV1(directory),{withFileTypes:true})){if([\".git\",\"target\",\"node_modules\",\"dist\",\"🗑️generated\"].includes(row.name))continue;const path=requireMaterializedPathV1(join(directory,row.name));if(row.isSymbolicLink())throw Error(\"Foreign Cargo Source symlink cannot qualify immutable input\");if(row.isDirectory())await walk(path);else if(row.isFile()){const file=await open(path,\"r\"),hash=createHash(\"sha256\"),buffer=Buffer.alloc(65536);let bytes=0;try{for(;;){checkResourceLeaseControl(control);const part=await file.read(buffer,0,buffer.length,null);if(!part.bytesRead)break;hash.update(buffer.subarray(0,part.bytesRead));bytes+=part.bytesRead;}}finally{await file.close();}result.push({path,digest:hash.digest(\"hex\"),bytes});if(result.length>65536)throw Error(\"Foreign Cargo Source input inventory limit exceeded\");await control.publish({resource:\"cargo:foreign-source\",mode:\"shared\",elapsedMs:0});await control.yieldContinuation();}}};await walk(root);return result.sort((left,right)=>left.path.localeCompare(right.path));},",
+     "new": "async sourceInputs(manifest,control){let files=0;return foreignSourceInventoryV1(dirname(manifest),options.digests,{check:()=>checkResourceLeaseControl(control),tick:async()=>{if(++files%64===0){await control.publish({resource:\"cargo:foreign-source\",mode:\"shared\",elapsedMs:0});await control.yieldContinuation();}}});},"
+    },
+    {
+     "old": "/** ⏺️ Plans the exact selected Cargo invocation without dispatching its compiler or test bodies. */",
+     "new": "/** 🗂️ The no-follow stamp of one file: device, inode, size, mtime and ctime. */\nexport type FileStampV1=Readonly<{dev:string;ino:string;size:string;mtimeNs:string;ctimeNs:string}>;\n/** 📚️ Remembers file digests across invocations by stamp; the memo alone decides which stamps are too young to trust. @see ../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📖️admission/📚️foreign/🟦️.ts */\nexport interface FileDigestMemoV1 {open(directory:string,startedMs:number):Readonly<{recall(path:string,stamp:FileStampV1):string|undefined;remember(path:string,stamp:FileStampV1,digest:string):void;close():void}>}\nconst stampOfV1=(row:import(\"node:fs\").BigIntStats):FileStampV1=>Object.freeze({dev:String(row.dev),ino:String(row.ino),size:String(row.size),mtimeNs:String(row.mtimeNs),ctimeNs:String(row.ctimeNs)});\n/** 🧾️ Inventories every file of one foreign crate directory with its sha-256 and size: a file whose stamp the memo knows is not read, a file that changed while it was hashed is not remembered, a symlink refuses the walk. */\nexport async function foreignSourceInventoryV1(root:string,memo:FileDigestMemoV1|undefined,hooks:Readonly<{check():void;tick():Promise<void>}>,now:()=>number=Date.now):Promise<{path:string;digest:string;bytes:number}[]>{\n const book=memo?.open(root,now()),result:{path:string;digest:string;bytes:number}[]=[];\n try{\n  const walk=async(directory:string):Promise<void>=>{hooks.check();for(const row of await readdir(requireMaterializedPathV1(directory),{withFileTypes:true})){\n   if([\".git\",\"target\",\"node_modules\",\"dist\",\"🗑️generated\"].includes(row.name))continue;\n   const path=requireMaterializedPathV1(join(directory,row.name));\n   if(row.isSymbolicLink())throw Error(\"Foreign Cargo Source symlink cannot qualify immutable input\");\n   if(row.isDirectory()){await walk(path);continue;}\n   if(!row.isFile())continue;\n   const before=stampOfV1(await lstat(path,{bigint:true}));let digest=book?.recall(path,before),bytes=Number(before.size);\n   if(digest===undefined){const file=await open(path,\"r\"),hash=createHash(\"sha256\"),buffer=Buffer.alloc(65536);bytes=0;try{for(;;){hooks.check();const part=await file.read(buffer,0,buffer.length,null);if(!part.bytesRead)break;hash.update(buffer.subarray(0,part.bytesRead));bytes+=part.bytesRead;}}finally{await file.close();}digest=hash.digest(\"hex\");const after=stampOfV1(await lstat(path,{bigint:true}));if(after.ino===before.ino&&after.size===before.size&&after.mtimeNs===before.mtimeNs&&after.ctimeNs===before.ctimeNs)book?.remember(path,before,digest);}\n   result.push({path,digest,bytes});if(result.length>65536)throw Error(\"Foreign Cargo Source input inventory limit exceeded\");await hooks.tick();\n  }};\n  await walk(root);\n }finally{book?.close();}\n return result.sort((left,right)=>left.path.localeCompare(right.path));\n}\n\n/** ⏺️ Plans the exact selected Cargo invocation without dispatching its compiler or test bodies. */"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📖️admission/🟦️.ts",
+   "edits": [
+    {
+     "old": "/** 🔑️ Identity of one admission: the unit without its computed outputs, the policy and the toolchain. */\nexport function admissionMemoKeyV1(unit:AdmissionUnitV1,policy:unknown,toolchain:string):string{\n const rest=Object.fromEntries(Object.entries(unit).filter(([name])=>name!==\"sourceInputs\"&&name!==\"compilerCfg\"));\n return sha256V1(JSON.stringify(canonical([UNIT_CACHE_POLICY_V1.namespace,toolchain,policy,rest])));\n}\n",
+     "new": "/** 🧷️ The unit facts that decide an admission result. Run-specific facts (unit ids, dependency edges, planning and compilation digests, the configuration digest and the invoking process's paths) never enter the key, so two plans of one workspace share it. */\nexport const ADMISSION_KEYED_FIELDS_V1:readonly string[]=Object.freeze([\"packageId\",\"packageName\",\"packageVersion\",\"edition\",\"manifest\",\"sourceRoot\",\"provenance\",\"entry\",\"name\",\"kind\",\"operation\",\"platform\",\"roles\",\"profileName\",\"compilerProfile\",\"profileDigest\",\"compilerFlags\",\"compilerArguments\",\"features\",\"boundary\",\"support\",\"compiler\"]);\n/** 🌬️ The names a unit's compiler environment copies from the invoking process as paths; they are left out of the key and replaced by the current values when an admission is recalled. */\nexport const ADMISSION_VOLATILE_ENVIRONMENT_V1:readonly string[]=Object.freeze([\"PATH\",\"SystemRoot\",\"WINDIR\",\"PATHEXT\",\"RUSTUP_HOME\"]);\ntype EnvironmentV1=Readonly<Record<string,string|null>>|null;\n/** 🔑️ Identity of one admission: the keyed unit facts, the unit's compiler environment without its volatile names, the policy and the toolchain. */\nexport function admissionMemoKeyV1(unit:AdmissionUnitV1,policy:unknown,toolchain:string):string{\n const row=unit as Record<string,unknown>,environment=(row.compilerEnvironment??null) as EnvironmentV1;\n const rest={...Object.fromEntries(ADMISSION_KEYED_FIELDS_V1.map(name=>[name,row[name]??null])),environment:environment&&Object.fromEntries(Object.entries(environment).filter(([name])=>!ADMISSION_VOLATILE_ENVIRONMENT_V1.includes(name)))};\n return sha256V1(JSON.stringify(canonical([UNIT_CACHE_POLICY_V1.namespace,toolchain,policy,rest])));\n}\n/** 🌿️ A remembered compiler environment with the current values of the volatile names. */\nexport function admissionEnvironmentV1(remembered:EnvironmentV1,unit:AdmissionUnitV1):EnvironmentV1{\n const now=(unit as {compilerEnvironment?:EnvironmentV1}).compilerEnvironment;if(remembered===null||!now)return remembered;\n const result:Record<string,string|null>={...remembered};for(const name of ADMISSION_VOLATILE_ENVIRONMENT_V1)if(name in now)result[name]=now[name]!;else delete result[name];return result;\n}\n"
+    },
+    {
+     "old": "/** 📝️ The memo port the source admission calls once per unit. */\nexport function unitAdmissionMemoV1(root:string,toolchain:string){\n return Object.freeze({\n  recall(unit:AdmissionUnitV1,policy:unknown):Readonly<{inputs:AdmissionMemoV1[\"inputs\"];cfg:readonly string[];environment:AdmissionMemoV1[\"environment\"]}>|undefined{return recallAdmissionV1(root,admissionMemoKeyV1(unit,policy,toolchain));},\n  remember(unit:AdmissionUnitV1,policy:unknown,result:Readonly<{inputs:AdmissionMemoV1[\"inputs\"];cfg:readonly string[];environment:AdmissionMemoV1[\"environment\"];probed:readonly string[];startedMs:number}>):void{rememberAdmissionV1(root,admissionMemoKeyV1(unit,policy,toolchain),result);},\n });\n}\n",
+     "new": "/** 📝️ The memo port the source admission calls once per unit: a unit is remembered under the key it was recalled with, because its admission rewrites the very fields the key reads. */\nexport function unitAdmissionMemoV1(root:string,toolchain:string){\n const keys=new WeakMap<object,string>();\n return Object.freeze({\n  recall(unit:AdmissionUnitV1,policy:unknown):Readonly<{inputs:AdmissionMemoV1[\"inputs\"];cfg:readonly string[];environment:AdmissionMemoV1[\"environment\"]}>|undefined{const key=admissionMemoKeyV1(unit,policy,toolchain);keys.set(unit,key);const memo=recallAdmissionV1(root,key);return memo&&{inputs:memo.inputs,cfg:memo.cfg,environment:admissionEnvironmentV1(memo.environment,unit)};},\n  remember(unit:AdmissionUnitV1,policy:unknown,result:Readonly<{inputs:AdmissionMemoV1[\"inputs\"];cfg:readonly string[];environment:AdmissionMemoV1[\"environment\"];probed:readonly string[];startedMs:number}>):void{rememberAdmissionV1(root,keys.get(unit)??admissionMemoKeyV1(unit,policy,toolchain),result);},\n });\n}\n"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json",
+   "edits": [
+    {
+     "old": "\"stamps\": \"m\", \"admissions\": \"a\",",
+     "new": "\"stamps\": \"m\", \"admissions\": \"a\", \"foreign\": \"f\","
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts",
+   "edits": [
+    {
+     "old": "function unescapeDepPath(text:string):string{",
+     "new": "/** 🧩️ Names the parts of a first-level key by short digests (toolchain, arguments, source, externs, environment), so two compilations of one crate that disagree on the key are explained by the part that differs.\n * @see ./🧪️tests/🧩️parts/🟦️.ts */\nexport function unitKeyPartsV1(input:Parameters<typeof unitKeyV1>[0]):string{\n const part=(value:unknown)=>sha256V1(JSON.stringify(value)).slice(0,8);\n return[\"toolchain:\"+part(input.toolchain),\"args:\"+part(input.normalized),\"source:\"+part(input.sourceSha256),\"externs:\"+part(input.externs.map(row=>[row.name,row.sha256])),\"environment:\"+part(input.environment)].join(\" \");\n}\n\nfunction unescapeDepPath(text:string):string{"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts",
+   "edits": [
+    {
+     "old": "toolchainIdentityV1,unitKeyV1,UNIT_CACHE_POLICY_V1} from \"./🔏️key/🟦️.ts\";",
+     "new": "toolchainIdentityV1,unitKeyPartsV1,unitKeyV1,UNIT_CACHE_POLICY_V1} from \"./🔏️key/🟦️.ts\";"
+    },
+    {
+     "old": " let key:string;\n",
+     "new": " let key:string,parts=\"\";\n"
+    },
+    {
+     "old": "key=unitKeyV1({toolchain:toolchainIdentityV1(settings.root,settings.inner,environment),normalized:normalizeRustcArgumentsV1(args,digests,settings.laneRoot),sourceSha256:sourceSha,externs:unit.externs.map(row=>({name:row.flags+row.name,sha256:row.path===\"\"?\"builtin\":digests.get(row.path)!})),environment:keyEnvironmentV1(environment,settings.laneRoot)});",
+     "new": "const keyInput={toolchain:toolchainIdentityV1(settings.root,settings.inner,environment),normalized:normalizeRustcArgumentsV1(args,digests,settings.laneRoot),sourceSha256:sourceSha,externs:unit.externs.map(row=>({name:row.flags+row.name,sha256:row.path===\"\"?\"builtin\":digests.get(row.path)!})),environment:keyEnvironmentV1(environment,settings.laneRoot)};key=unitKeyV1(keyInput);parts=unitKeyPartsV1(keyInput);"
+    },
+    {
+     "old": "event(\"miss\",key,Date.now()-compiled,waited);",
+     "new": "event(\"miss\",key,Date.now()-compiled,waited,parts);"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/⏱️timing/🟦️.ts",
+   "edits": [
+    {
+     "old": "import schema from\"./🧬️schema/🔣️.json\" with { type: \"json\" };",
+     "new": "import {appendFileSync,mkdirSync,renameSync,statSync} from \"node:fs\";\nimport {dirname} from \"node:path\";\nimport schema from\"./🧬️schema/🔣️.json\" with { type: \"json\" };"
+    },
+    {
+     "old": "export const cargoTimingPolicyV1=Object.freeze({...schema.definitions.Policy.const});",
+     "new": "export const cargoTimingPolicyV1=Object.freeze({...schema.definitions.Policy.const});\n/** 📒️ Formats one phase mark of a Cargo launch as a ledger line: a closed phase and point, finite times.\n * @see ./🧪️tests/📒️ledger/🟦️.ts */\nexport function cargoTimingLedgerRowV1(pid:number,command:string,phase:string,point:string,atMs:number,elapsedMs:number):string{\n cargoTimingEventV1(phase,point,atMs,elapsedMs,null);if(!Number.isSafeInteger(pid)||pid<1)throw Error(\"Actual process id required\");\n return JSON.stringify({version:1,atMs,pid,command:command.slice(0,64),phase,point,elapsedMs})+\"\\n\";\n}\n/** 📥️ Appends ledger lines; a ledger at or above `maximumBytes` first moves to `<file>.1` (one generation), and a ledger that cannot be written costs nothing. */\nexport function appendCargoTimingLedgerV1(file:string,rows:string,maximumBytes:number=cargoTimingPolicyV1.maximumLogBytes):void{\n if(!rows)return;\n try{mkdirSync(dirname(file),{recursive:true});try{if(statSync(file).size>=maximumBytes)renameSync(file,file+\".1\");}catch{}appendFileSync(file,rows);}catch{}\n}"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/⏱️timing/🧬️schema/🔣️.json",
+   "edits": [
+    {
+     "old": "\"phase\":{\"enum\":[\"store\",\"inputs\",\"graph\",\"source\",\"writer\",\"profile\",\"capacity\",\"scheduler\",\"child\"]}",
+     "new": "\"phase\":{\"enum\":[\"store\",\"inputs\",\"graph\",\"source\",\"writer\",\"profile\",\"capacity\",\"scheduler\",\"child\",\"consume\"]}"
+    },
+    {
+     "old": "\"Phase\":{\"enum\":[\"store\",\"inputs\",\"graph\",\"source\",\"writer\",\"profile\",\"capacity\",\"scheduler\",\"child\"]}",
+     "new": "\"Phase\":{\"enum\":[\"store\",\"inputs\",\"graph\",\"source\",\"writer\",\"profile\",\"capacity\",\"scheduler\",\"child\",\"consume\"]}"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts",
+   "edits": [
+    {
+     "old": "import{cargoTimingPolicyV1,cargoTimingEventV1,cargoResourceWaitEventV1}from\"../⏱️timing/🟦️.ts\";",
+     "new": "import{cargoTimingPolicyV1,cargoTimingEventV1,cargoResourceWaitEventV1,cargoTimingLedgerRowV1,appendCargoTimingLedgerV1}from\"../⏱️timing/🟦️.ts\";"
+    },
+    {
+     "old": "import {unitAdmissionMemoV1} from \"../../../⚡️caching/🦀️cargo/🗃️unit-cache/📖️admission/🟦️.ts\";",
+     "new": "import {unitAdmissionMemoV1} from \"../../../⚡️caching/🦀️cargo/🗃️unit-cache/📖️admission/🟦️.ts\";\nimport {foreignDigestMemoV1} from \"../../../⚡️caching/🦀️cargo/🗃️unit-cache/📖️admission/📚️foreign/🟦️.ts\";"
+    },
+    {
+     "old": "const mark=(phase:string,point:string)=>{if(!timing||timingEvents>=cargoTimingPolicyV1.maximumPhaseEvents||cargoTimingBytes>=cargoTimingPolicyV1.maximumLogBytes)return;const value=clock();timingEvents++;emit(\"phase\",cargoTimingEventV1(phase,point,value.at,value.elapsed,value.remaining));};\n ",
+     "new": "const began=performance.now(),pending:string[]=[];let ledger:string|undefined;const record=(phase:string,point:string)=>{try{const row=cargoTimingLedgerRowV1(process.pid,label,phase,point,Date.now(),Math.floor(performance.now()-began));if(ledger)appendCargoTimingLedgerV1(ledger,row);else pending.push(row);}catch{}};const mark=(phase:string,point:string)=>{record(phase,point);if(!timing||timingEvents>=cargoTimingPolicyV1.maximumPhaseEvents||cargoTimingBytes>=cargoTimingPolicyV1.maximumLogBytes)return;const value=clock();timingEvents++;emit(\"phase\",cargoTimingEventV1(phase,point,value.at,value.elapsed,value.remaining));};\n "
+    },
+    {
+     "old": "mark(\"store\",\"ready\");",
+     "new": "ledger=join(store.root,\"timing\",\"cargo-phases.jsonl\");try{requireNativeStoragePathV1(store.root,ledger);appendCargoTimingLedgerV1(ledger,pending.splice(0).join(\"\"));}catch{ledger=undefined;}mark(\"store\",\"ready\");"
+    },
+    {
+     "old": "checkResourceLeaseControl(control);await store.storage.recheck();const success=execution.kind===\"capture\"",
+     "new": "mark(\"consume\",\"begin\");checkResourceLeaseControl(control);await store.storage.recheck();const success=execution.kind===\"capture\""
+    },
+    {
+     "old": "if(execution.kind===\"stream\")return execution.status;if(options.output!==\"capture\")",
+     "new": "if(execution.kind===\"stream\"){mark(\"consume\",\"end\");return execution.status;}if(options.output!==\"capture\")"
+    },
+    {
+     "old": "checkScriptInvocation(invocation);return value;",
+     "new": "checkScriptInvocation(invocation);mark(\"consume\",\"end\");return value;"
+    },
+    {
+     "old": "actualCargoCompilerPlanningPortV1())",
+     "new": "actualCargoCompilerPlanningPortV1({digests:foreignDigestMemoV1(unitCacheRootV1(store.root))}))"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🟦️.ts",
+   "edits": [
+    {
+     "old": "for(const changed of[{...unit,kind:\"binary\"},{...unit,id:\"b\"}])",
+     "new": "for(const changed of[{...unit,kind:\"binary\"},{...unit,packageName:\"b\"}])"
+    }
+   ]
+  }
+ ]
+}

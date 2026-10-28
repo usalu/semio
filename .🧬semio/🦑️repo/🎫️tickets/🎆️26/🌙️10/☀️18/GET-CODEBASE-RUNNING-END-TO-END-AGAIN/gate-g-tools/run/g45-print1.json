@@ -1,0 +1,31 @@
+{
+ "label": "g45-print1",
+ "target": "@semio-tech/print-rs:test",
+ "started": "17:57:00",
+ "wall_s": 2441.5,
+ "peak_tree_mb": 8231,
+ "peak_processes": 6,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "340"
+  ],
+  "inferring": [
+   "335"
+  ],
+  "published": [
+   "670",
+   "340",
+   "904"
+  ],
+  "processes": [
+   "8",
+   "1 action cache hit, 3 internal, 3 local, 2 worker"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

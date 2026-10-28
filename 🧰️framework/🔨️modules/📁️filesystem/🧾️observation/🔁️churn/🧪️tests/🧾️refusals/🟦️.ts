@@ -39,7 +39,7 @@ test("the class table is closed under its schema: one disposition per class, a d
   expect(row.describe.en,row.id).not.toBe(row.describe.de);
   expect(row.describe.en!.length,row.id).toBeGreaterThan(20);
  }
- for(const required of ["source-read","source-owner-generation","bun-ownership","cargo-workspace-topology","stale-loaded-implementation","moved-format-stamp","half-edited-module","escaped-concurrent-edit","retries-exhausted","lockfile-frozen","own-output-or-store-custody"])expect(ids.has(required),required).toBe(true);
+ for(const required of ["source-read","source-owner-generation","bun-ownership","cargo-workspace-topology","stale-loaded-implementation","moved-format-stamp","half-edited-module","escaped-concurrent-edit","retries-exhausted","filesystem-race","lockfile-frozen","own-output-or-store-custody"])expect(ids.has(required),required).toBe(true);
  for(const constructor of table.constructors)expect(constructor.length).toBeGreaterThan(3);
 });
 

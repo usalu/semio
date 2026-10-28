@@ -1,0 +1,31 @@
+{
+ "label": "g7-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "23:35:14",
+ "wall_s": 181.0,
+ "peak_tree_mb": 8187,
+ "peak_processes": 9,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "inferring": [
+   "39"
+  ],
+  "refreshing": [
+   "39"
+  ],
+  "published": [
+   "584",
+   "39",
+   "59"
+  ],
+  "processes": [
+   "5",
+   "3 action cache hit, 1 internal, 4 worker"
+  ],
+  "actions": [
+   "5"
+  ]
+ }
+}

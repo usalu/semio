@@ -61,7 +61,7 @@ test.skipIf(!["darwin","linux"].includes(process.platform))("a session whose loc
    const result=await collectIncrementalV1(store,{dryRun:false,volumeBytes:10_000,needBytes:()=>1,satisfied:()=>false,progress:done=>progress.push(done),report:{language:"de",write:line=>lines.push(line)}});
    expect(existsSync(live)).toBe(true);expect(existsSync(fresh)).toBe(true);expect(existsSync(old)).toBe(false);expect(existsSync(incrementalLockPathV1(old))).toBe(false);expect(existsSync(dirname(old))).toBe(false);
    expect(result.held).toBe(1);expect(result.removed.map(row=>row.path)).toEqual([old]);expect(progress.length).toBeGreaterThan(0);
-   expect(lines.some(line=>line.includes("Inkrementell-Sitzungen:"))).toBe(true);
+   expect(lines.some(line=>line.includes("Inkrementsitzungen:"))).toBe(true);
   }finally{holder.kill();}
  }finally{rmSync(store,{recursive:true,force:true});}
 });
@@ -85,7 +85,7 @@ test("reclaiming before a reservation refuses removes superseded sessions, keeps
   const lines:string[]=[];
   await reclaimUnitStorageV1(store,1,{report:{language:"de",write:line=>lines.push(line)}});
   expect(existsSync(superseded)).toBe(false);expect(existsSync(other)).toBe(true);
-  expect(lines.some(line=>line.includes("Inkrementell-Sitzung"))).toBe(true);
+  expect(lines.some(line=>line.includes("Inkrementsitzung"))).toBe(true);
   const { tryClaimV1 } = await import("../../../🔒️lock/🟦️.ts");
   const claim=tryClaimV1(join(store,"u","k"),"gc");
   try{expect(claim).toBeDefined();expect(await reclaimUnitStorageV1(store,1)).toBe(0);}finally{claim?.release();}

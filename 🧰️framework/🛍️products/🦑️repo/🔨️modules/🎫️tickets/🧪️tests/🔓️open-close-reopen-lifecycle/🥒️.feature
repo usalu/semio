@@ -58,11 +58,3 @@ Feature: A ticket opens, closes, reopens and changes without anything on disk
     Given the lifecycle vectors shared://🔓️open-close-reopen-lifecycle/🔓️lifecycle.json
     When the close request's file identifiers are normalised
     Then every implementation projects the same de-duplicated, ordered list
-
-  @id-an-oversized-artifact-is-purged
-  @level-quick
-  @mode-conformance
-  Scenario: A closed ticket loses its oversized artifacts but never its document
-    Given the lifecycle vectors shared://🔓️open-close-reopen-lifecycle/🔓️lifecycle.json
-    When a ticket folder holding an oversized file and a small one is purged
-    Then every implementation projects the same removed paths and the same surviving paths

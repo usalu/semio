@@ -13,7 +13,7 @@ export const REPO_PROFILE_LEGEND_V1=Object.freeze({
  phase:Object.freeze({en:"Phase name",de:"Name der Phase"}),
  start:Object.freeze({en:"Milliseconds from process start to the phase start",de:"Millisekunden vom Prozessstart bis zum Phasenbeginn"}),
  duration:Object.freeze({en:"Milliseconds from phase start to phase end",de:"Millisekunden vom Phasenbeginn bis zum Phasenende"}),
- self:Object.freeze({en:"Duration minus the time covered by nested phases",de:"Dauer abzueglich der von verschachtelten Phasen abgedeckten Zeit"}),
+ self:Object.freeze({en:"Duration minus the time covered by nested phases",de:"Dauer abzüglich der von verschachtelten Phasen abgedeckten Zeit"}),
  detail:Object.freeze({en:"Optional neutral detail such as a program name or a count",de:"Optionales neutrales Detail wie ein Programmname oder eine Anzahl"}),
 });
 
@@ -100,9 +100,12 @@ export function repoProfileV1(){
 /** 🧪️ Drops the shared profile so a test can create another one. */
 export function resetRepoProfileV1(){shared=undefined;}
 /** ⏲️ Times one body as a phase of the process wide profile; a disabled profile costs one function call. */
-export function profilePhaseV1(phase,body,detail){return repoProfileV1().phase(phase,body,detail);}
+let lastPhase;
+export function profilePhaseV1(phase,body,detail){lastPhase=phase;return repoProfileV1().phase(phase,body,detail);}
 /** 📍️ Records a zero length marker in the process wide profile. */
-export function profileMarkV1(phase,detail){repoProfileV1().mark(phase,detail);}
+export function profileMarkV1(phase,detail){lastPhase=phase;repoProfileV1().mark(phase,detail);}
+/** 🧭️ The name of the phase or marker started last, also while the profile is off; the front door names it when it says what it works on. */
+export function profileCurrentPhaseV1(){return lastPhase;}
 
 /** 🏷️ Names a child process event after its program: the base name, lower case, with every character outside `a-z0-9-` folded to `-`, so `/usr/bin/vm_stat` becomes `spawn.vm-stat` and `C:\\tools\\Python3.11.exe` becomes `spawn.python3-11-exe`. */
 export function repoProfileSpawnLabelV1(command){

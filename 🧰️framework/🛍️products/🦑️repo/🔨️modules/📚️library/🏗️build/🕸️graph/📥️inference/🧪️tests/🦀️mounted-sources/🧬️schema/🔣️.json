@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:rust-mounted-sources-corpus:v1",
+  "title": "Rust Mounted Sources Corpus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "description",
+    "cases"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "mechanism",
+          "crate",
+          "files",
+          "flavor",
+          "resolved",
+          "outside"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mechanism": {
+            "type": "string",
+            "minLength": 1
+          },
+          "crate": {
+            "type": "string",
+            "minLength": 1
+          },
+          "files": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "flavor": {
+            "enum": [
+              "named",
+              "dependency"
+            ]
+          },
+          "resolved": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "reason": {
+            "enum": [
+              "build-script",
+              "macro-mount",
+              "conditional-mount",
+              "dynamic-include",
+              "no-entries",
+              "unparsable"
+            ]
+          },
+          "outside": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "emitters": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "resolved": {
+                  "const": true
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "expected"
+              ],
+              "not": {
+                "required": [
+                  "reason"
+                ]
+              }
+            },
+            "else": {
+              "required": [
+                "reason"
+              ],
+              "not": {
+                "required": [
+                  "expected"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

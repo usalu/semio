@@ -25,7 +25,8 @@
           "arguments": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
           "sdk": { "type": "boolean" },
           "environment": { "type": "object", "additionalProperties": { "type": "string" } },
-          "after": { "type": "string", "minLength": 1 }
+          "after": { "type": "string", "minLength": 1 },
+          "preparation": { "description": "Work done once beneath this birth before the file starts: `target-execution` prepares the inventory of all emitted targets and hands its path and sha256 to the file as SEMIO_TARGET_EXECUTION_INVENTORY_FILE and SEMIO_TARGET_EXECUTION_INVENTORY_SHA256, then verifies that every consumed fact and the producer still hold.", "enum": ["target-execution"] }
         }
       }
     }

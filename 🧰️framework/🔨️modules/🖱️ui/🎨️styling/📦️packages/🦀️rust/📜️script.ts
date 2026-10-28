@@ -40,7 +40,7 @@ class FontsScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { rest } = resolveTestLevel(segments);
+    const { rest } = resolveTestLevel(segments, "quick");
     await runVitestV1(readVitestPolicyV1(process.env,this.root), rest, "../../🧪️tests/🎚️config/🟦️.ts", process.env);
   }
 }

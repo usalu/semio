@@ -9,6 +9,21 @@ messages = schema["$defs"]["Messages"]["const"]
 sha = lambda data: hashlib.sha256(data if isinstance(data, bytes) else data.encode("utf-8")).hexdigest()
 
 
+def language_oracle():
+    """🗣️ The independent oracle of the one language protocol (`⚙️runtime/🗣️language`) and the protocol it reads."""
+    import importlib.util
+    import os
+    root = os.path.dirname(os.path.abspath(__file__))
+    while not os.path.isdir(os.path.join(root, "🧰️framework")):
+        root = os.path.dirname(root)
+    folder = os.path.join(root, "🧰️framework", "🔨️modules", "⚙️runtime", "🗣️language")
+    spec = importlib.util.spec_from_file_location("language_oracle", os.path.join(folder, "🧪️tests", "🐍️.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    with open(os.path.join(folder, "🔣️.json"), encoding="utf-8") as handle:
+        return module, json.load(handle)
+
+
 def plan(projects, environment, cores):
     text = environment.get(policy["workersEnvironment"])
     text = None if text is None else text.strip().lower()
@@ -31,14 +46,8 @@ def plan(projects, environment, cores):
 
 
 def languages(environment):
-    for name in policy["languageEnvironment"]:
-        value = environment.get(name)
-        if value is None:
-            continue
-        head = re.split(r"[_.@-]", value)[0].lower()
-        if head in policy["languages"]:
-            return [head]
-    return list(policy["languages"])
+    oracle, protocol = language_oracle()
+    return oracle.notices(protocol, policy["languages"], environment)
 
 
 def render(key, fields, environment):
@@ -55,6 +64,46 @@ def runtime(name, megabytes):
     elif name == "node":
         environment["NODE_OPTIONS"] = "--max-old-space-size=" + str(int(megabytes * row["ramFactor"]))
     return environment
+
+
+def own_grant(environment):
+    try:
+        plan = json.loads(environment.get(policy["planEnvironment"], "null"))
+    except ValueError:
+        return None
+    if not isinstance(plan, dict):
+        return None
+    jobs, megabytes = plan.get("jobs"), plan.get("memoryMegabytes")
+    if isinstance(jobs, bool) or not isinstance(jobs, int) or jobs < 1 or isinstance(megabytes, bool) or not isinstance(megabytes, (int, float)) or megabytes <= 0:
+        return None
+    return {"source": "own", "workers": min(policy["ownWorkers"], jobs), "megabytes": int(megabytes // jobs)}
+
+
+def granted_pool(granted):
+    if granted is None or granted["jobs"] < policy["minimumGrantedWorkers"]:
+        return None
+    return {"source": "host", "workers": granted["jobs"], "megabytes": granted["megabytes"]}
+
+
+def choose(pools):
+    ready = [(index, pool) for index, pool in enumerate(pools) if pool["ready"] and pool["usable"]]
+    for index, pool in ready:
+        if pool["idle"]:
+            return index
+    best, ratio = -1, None
+    for index, pool in ready:
+        load = pool["pending"] / pool["width"]
+        if ratio is None or load < ratio:
+            best, ratio = index, load
+    return best
+
+
+def recycle(row):
+    if row["rssMegabytes"] > row["megabytes"] * policy["recycleMemoryRatio"]:
+        return "memory"
+    if row["jobs"] >= policy["recycleAfterProjects"]:
+        return "projects"
+    return None
 
 
 def tree():
@@ -97,6 +146,10 @@ elif command == "messages":
     out = [[render(row["key"], row["fields"], environment) for environment in ({}, {"LANG": "de_DE.UTF-8"}, {"LANG": "en_GB"})] for row in fixture["messages"]]
 elif command == "runtime":
     out = [runtime(row["runtime"], row["megabytes"]) for row in fixture["runtime"]]
+elif command == "pools":
+    out = {"own": [own_grant(row["environment"]) for row in fixture["pools"]["own"]], "granted": [granted_pool(row["granted"]) for row in fixture["pools"]["granted"]], "choose": [choose(row["pools"]) for row in fixture["pools"]["choose"]]}
+elif command == "recycle":
+    out = [recycle(row) for row in fixture["recycle"]]
 elif command == "tree":
     out = tree()
 else:

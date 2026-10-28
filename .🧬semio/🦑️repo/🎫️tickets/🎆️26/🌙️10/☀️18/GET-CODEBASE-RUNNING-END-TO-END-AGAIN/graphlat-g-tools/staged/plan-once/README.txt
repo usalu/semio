@@ -1,0 +1,3 @@
+batch plan-once (graphlat-g): the builder of a closure-scoped delta refresh planned twice (membership frontier walk + verification of all 75k facts, 10-30 s each on the live store); the hint that hands the plan to build() was dropped whenever the refresh had a scope (always for `run`/`build` slices and for coverage-stamped refreshes).
+edit: 🕰️generations/🟨️.mjs refresh(): hint also with a scope. law: 🕰️generations/🧪️tests/🪞️plan-once (red before: walks 2 / passes 2; moved-generation safety law green both ways).
+files: edits.json (anchor + base sha256 in BASE.txt), tree/ (new law only; symlinks are removed by `sh mirror-links.sh remove`).

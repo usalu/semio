@@ -33,7 +33,7 @@
   "progress": {
     "label": "artifact-rust:fixture:build",
     "intervalMs": 1,
-    "pattern": "^\\[artifact-rust:fixture:build\\] running elapsedMs=[0-9]+$"
+    "pattern": "^\\[artifact-rust:fixture:build\\] (?:still running after|läuft seit) [0-9]+ s$"
   },
   "reportExecutionBudgetMs": 10000
 }

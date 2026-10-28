@@ -101,7 +101,7 @@
    "kind": "terminal-host",
    "reason": {
     "en": "The pseudo-terminal host starts the program the user's terminal window runs; the program is user data.",
-    "de": "Der Pseudo-Terminal-Host startet das Programm, das das Terminalfenster der Nutzerin ausführt; das Programm sind Nutzerdaten."
+    "de": "Der Pseudo-Terminal-Host startet das Programm, das das Terminalfenster des Nutzers ausführt; das Programm sind Nutzerdaten."
    }
   },
   {
@@ -157,7 +157,7 @@
    "kind": "process-funnel",
    "reason": {
     "en": "The owner-only guard runs the platform's permission tools through an injectable runner.",
-    "de": "Der Nur-Besitzer-Schutz führt die Berechtigungswerkzeuge der Plattform über einen austauschbaren Runner aus."
+    "de": "Der Nur-Eigentümer-Schutz führt die Berechtigungswerkzeuge der Plattform über einen austauschbaren Runner aus."
    }
   },
   {
@@ -216,7 +216,7 @@
   },
   {
    "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🍎️mounted-image/✍️sealing/🟦️.ts",
-   "program": "codesign",
+   "program": "<dynamic>",
    "count": 1,
    "class": "os-primitive",
    "reason": {
@@ -321,7 +321,7 @@
    "class": "os-primitive",
    "reason": {
     "en": "Restricts a credential path to its owner; icacls is the Windows tool for ACLs.",
-    "de": "Beschränkt einen Zugangsdaten-Pfad auf seinen Besitzer; icacls ist das Windows-Werkzeug für ACLs."
+    "de": "Beschränkt einen Zugangsdaten-Pfad auf seinen Eigentümer; icacls ist das Windows-Werkzeug für ACLs."
    }
   },
   {
@@ -341,7 +341,7 @@
    "class": "os-primitive",
    "reason": {
     "en": "Asks Windows for the current account's SID to build the owner-only ACL.",
-    "de": "Fragt Windows nach der SID des aktuellen Kontos, um die Nur-Besitzer-ACL zu bauen."
+    "de": "Fragt Windows nach der SID des aktuellen Kontos, um die Nur-Eigentümer-ACL zu bauen."
    }
   },
   {
@@ -381,7 +381,7 @@
    "class": "pending-route",
    "reason": {
     "en": "The micro-commit verb starts the runtime the native door located; it moves behind spawn_command with the repo-launcher set that makes the door resolve the runtime from the registry.",
-    "de": "Der Micro-Commit-Verb startet die Laufzeit, die die native Tür gefunden hat; er zieht mit dem Repo-Launcher-Set hinter spawn_command um, das die Tür die Laufzeit aus der Registratur auflösen lässt."
+    "de": "Das Micro-Commit-Verb startet die Laufzeit, die die native Tür gefunden hat; er zieht mit dem Repo-Launcher-Set hinter spawn_command um, das die Tür die Laufzeit aus der Registratur auflösen lässt."
    }
   },
   {

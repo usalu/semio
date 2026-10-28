@@ -25,13 +25,17 @@
   "semio.graph-inferrer.owner-discovery/1": {
    "owner-discovery/candidates": "050d09a68a8f03d7490fb0988c76516815f9ae40988adb68ed41784979940f5f"
   },
-  "semio.graph-inferrer.project-assembly/1": {
+  "semio.graph-inferrer.project-assembly/2": {
    "project-assembly/authored-inputs": "9add7e93dcb009ead9070c1375934a67dd7b04c52721e1b04140e3ccd6b7d805",
    "project-assembly/runs-tests": "cd0aa4f54dec36ee96e0d25d98494412f06c51ee9fea469e4b752711e82ebd99",
    "project-assembly/target-inputs": "327f97781fb71290cd3d328742dd4482285cb0aa5ee2ba7b118d6cd77d43e5ff"
   },
-  "semio.graph-inferrer.script-inputs/1": {
-   "script-inputs/lock-inputs": "b6e1492f95cc621afa833d5d937e6d7c409ff6421fd2f858510dc77672a683f7"
+  "semio.graph-inferrer.script-inputs/2": {
+   "script-inputs/lock-inputs": "b6e1492f95cc621afa833d5d937e6d7c409ff6421fd2f858510dc77672a683f7",
+   "script-inputs/target-sources-owner-wrapped": "46b340c976d1fd622f6e2d2fcb9aee9c424aa282c95fe204a3f11d3a986a6fd3",
+   "script-inputs/target-sources-plain": "46b340c976d1fd622f6e2d2fcb9aee9c424aa282c95fe204a3f11d3a986a6fd3",
+   "script-inputs/target-sources-router-slice": "c7dd52459526a9191eb85d3f29e36a9e3f35ecb80ef03b1e201c5e9c2a060e63",
+   "script-inputs/target-sources-tsconfig-paths": "64abd4b1f0e978e2f8c5d924073621d7e2ce8d51bc4a0c19acccdd24419a81b0"
   },
   "semio.graph-inferrer.source-analyses/1": {
    "source-analyses/command": "4a72265d7a8b13793a8cc3632a817c66cd2461279de4a64fcf78ec254b0bd26d",
@@ -862,6 +866,121 @@
    },
    "id": "source-analyses/rust",
    "inferrer": "source-analyses"
+  },
+  {
+   "args": [
+    {
+     "options": {
+      "command": "repo ./📜️script.ts test",
+      "cwd": "pkg",
+      "forwardAllArgs": false
+     }
+    },
+    "{ws}",
+    {
+     "$scripts": true
+    },
+    "pkg"
+   ],
+   "call": "targetScriptSources",
+   "files": {
+    "package.json": "{\"name\":\"fixture-root\",\"private\":true}\n",
+    "pkg/a.ts": "import '../shared/b.ts';\nexport const a = 1;\n",
+    "pkg/shared/b.ts": "export const b = 1;\n",
+    "pkg/unrelated.ts": "export const unrelated = 1;\n",
+    "pkg/📜️script.ts": "import './a.ts';\n",
+    "tools/driver/lib.ts": "export const lib = 1;\n",
+    "tools/driver/📜️script.ts": "import './lib.ts';\n"
+   },
+   "id": "script-inputs/target-sources-plain",
+   "inferrer": "script-inputs"
+  },
+  {
+   "args": [
+    {
+     "options": {
+      "command": "repo ./📜️script.ts test",
+      "cwd": "pkg",
+      "forwardAllArgs": false
+     }
+    },
+    "{ws}",
+    {
+     "$scripts": true
+    },
+    "pkg"
+   ],
+   "call": "targetScriptSources",
+   "files": {
+    "package.json": "{\"name\":\"fixture-root\",\"private\":true}\n",
+    "pkg/cmd/other.ts": "import '../shared/only-other.ts';\nexport class OtherScript {}\n",
+    "pkg/cmd/test.ts": "import '../shared/b.ts';\nexport class TestScript {}\n",
+    "pkg/shared/b.ts": "export const b = 1;\n",
+    "pkg/shared/only-other.ts": "export const other = 1;\n",
+    "pkg/📜️script.ts": "import { ScriptRouter } from '../tools/router.ts';\nimport { TestScript } from './cmd/test.ts';\nimport { OtherScript } from './cmd/other.ts';\nconst router = new ScriptRouter().register('test', TestScript).register('other', OtherScript);\nexport default router;\n",
+    "tools/driver/lib.ts": "export const lib = 1;\n",
+    "tools/driver/📜️script.ts": "import './lib.ts';\n",
+    "tools/router.ts": "export class ScriptRouter { register(name: string, command: unknown) { return this; } }\n"
+   },
+   "id": "script-inputs/target-sources-router-slice",
+   "inferrer": "script-inputs"
+  },
+  {
+   "args": [
+    {
+     "options": {
+      "command": "repo ./📜️script.ts test",
+      "cwd": "pkg",
+      "forwardAllArgs": false
+     }
+    },
+    "{ws}",
+    {
+     "$scripts": true
+    },
+    "pkg"
+   ],
+   "call": "targetScriptSources",
+   "files": {
+    "libs/x.ts": "export const x = 1;\n",
+    "libs2/x.ts": "export const x2 = 1;\n",
+    "package.json": "{\"name\":\"fixture-root\",\"private\":true}\n",
+    "pkg/📜️script.ts": "import '@alias/x';\n",
+    "tools/driver/lib.ts": "export const lib = 1;\n",
+    "tools/driver/📜️script.ts": "import './lib.ts';\n",
+    "tsconfig.json": "{\"compilerOptions\":{\"baseUrl\":\".\",\"paths\":{\"@alias/*\":[\"./libs/*\"]}}}\n"
+   },
+   "id": "script-inputs/target-sources-tsconfig-paths",
+   "inferrer": "script-inputs"
+  },
+  {
+   "args": [
+    {
+     "options": {
+      "command": "repo \"tools/driver/📜️script.ts\" owner-command --cwd \"pkg\" -- repo \"{ws}/pkg/📜️script.ts\" test",
+      "cwd": ".",
+      "forwardAllArgs": false,
+      "ownerArguments": true
+     }
+    },
+    "{ws}",
+    {
+     "$scripts": true
+    },
+    "pkg"
+   ],
+   "call": "targetScriptSources",
+   "files": {
+    "package.json": "{\"name\":\"fixture-root\",\"private\":true}\n",
+    "pkg/a.ts": "import '../shared/b.ts';\nexport const a = 1;\n",
+    "pkg/shared/b.ts": "export const b = 1;\n",
+    "pkg/unrelated.ts": "export const unrelated = 1;\n",
+    "pkg/📜️script.ts": "import './a.ts';\n",
+    "tools/driver/lib.ts": "export const lib = 1;\n",
+    "tools/driver/📜️script.ts": "import './lib.ts';\n"
+   },
+   "id": "script-inputs/target-sources-owner-wrapped",
+   "inferrer": "script-inputs"
   }
  ],
  "unprobed": {

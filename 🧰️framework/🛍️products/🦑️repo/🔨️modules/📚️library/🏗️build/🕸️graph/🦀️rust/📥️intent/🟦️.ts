@@ -7,6 +7,7 @@ export interface RustBuildIntentV1 {
  package:string;
  scope:"package"|"library"|"binary";
  binary?:string;
+ sourcesRecord?:string;
  features?:string[];
  defaultFeatures?:boolean;
  target?:string;
@@ -16,13 +17,14 @@ export interface RustBuildIntentV1 {
 /** 🎟️ Admits bounded declarative compiler selection before any Cargo preparation or graph graft. */
 export function readRustBuildIntentV1(value:unknown):RustBuildIntentV1{
  const fail=():never=>{throw Error("Invalid selected Cargo build intent");};
- if(!value||typeof value!=="object"||Array.isArray(value))return fail();const row=value as Record<string,unknown>,allowed=new Set(["version","manifest","package","scope","binary","features","defaultFeatures","target","fallback"]),name=(value:unknown)=>typeof value==="string"&&value.length>=1&&value.length<=128&&/^[A-Za-z0-9_][A-Za-z0-9_-]*$/u.test(value)&&!/[\u0000-\u0020]/u.test(value);
+ if(!value||typeof value!=="object"||Array.isArray(value))return fail();const row=value as Record<string,unknown>,allowed=new Set(["version","manifest","package","scope","binary","sourcesRecord","features","defaultFeatures","target","fallback"]),name=(value:unknown)=>typeof value==="string"&&value.length>=1&&value.length<=128&&/^[A-Za-z0-9_][A-Za-z0-9_-]*$/u.test(value)&&!/[\u0000-\u0020]/u.test(value);
  if(Object.keys(row).some(key=>!allowed.has(key))||row.version!==1||typeof row.manifest!=="string"||row.manifest.length<10||row.manifest.length>256||/^(?:\/|[A-Za-z]:)/u.test(row.manifest)||/[\\:\u0000-\u0020]/u.test(row.manifest)||row.manifest.split("/").some(part=>!part||part==="."||part==="..")||row.manifest.split("/").at(-1)!=="Cargo.toml"||!name(row.package)||!["package","library","binary"].includes(row.scope as string))return fail();
  if(row.scope==="binary"?!name(row.binary):Object.hasOwn(row,"binary"))return fail();
+ if(Object.hasOwn(row,"sourcesRecord")&&(row.scope!=="binary"||typeof row.sourcesRecord!=="string"||row.sourcesRecord.length>160||!/^[A-Za-z0-9_][A-Za-z0-9_-]*\.sources\.json$/u.test(row.sourcesRecord)))return fail();
  if(Object.hasOwn(row,"target")&&!name(row.target)||Object.hasOwn(row,"defaultFeatures")&&typeof row.defaultFeatures!=="boolean")return fail();
  if(Object.hasOwn(row,"features")&&(!Array.isArray(row.features)||row.features.length<1||row.features.length>128||new Set(row.features).size!==row.features.length||row.features.some(feature=>typeof feature!=="string"||feature.length<1||feature.length>128||!/^[A-Za-z0-9_][A-Za-z0-9_./?-]*$/u.test(feature)||/[\u0000-\u0020]/u.test(feature))))return fail();
  if(Object.hasOwn(row,"fallback")){const fallback=row.fallback as Record<string,unknown>;if(!fallback||typeof fallback!=="object"||Array.isArray(fallback)||Object.keys(fallback).sort().join(",")!=="adapters,kind"||fallback.kind!=="bounded-cargo"||!Array.isArray(fallback.adapters)||fallback.adapters.length<1||fallback.adapters.length>fallbackAdapters.length||new Set(fallback.adapters).size!==fallback.adapters.length||fallback.adapters.some(adapter=>!fallbackAdapters.includes(adapter)))return fail();}
- return {version:1,manifest:row.manifest,package:row.package as string,scope:row.scope as RustBuildIntentV1["scope"],...(Object.hasOwn(row,"binary")?{binary:row.binary as string}:{}),...(Object.hasOwn(row,"features")?{features:[...row.features as string[]]}:{}),...(Object.hasOwn(row,"defaultFeatures")?{defaultFeatures:row.defaultFeatures as boolean}:{}),...(Object.hasOwn(row,"target")?{target:row.target as string}:{}),...(Object.hasOwn(row,"fallback")?{fallback:{kind:"bounded-cargo" as const,adapters:[...(row.fallback as {adapters:RustBuildFallbackAdapterV1[]}).adapters]}}:{})};
+ return {version:1,manifest:row.manifest,package:row.package as string,scope:row.scope as RustBuildIntentV1["scope"],...(Object.hasOwn(row,"binary")?{binary:row.binary as string}:{}),...(Object.hasOwn(row,"sourcesRecord")?{sourcesRecord:row.sourcesRecord as string}:{}),...(Object.hasOwn(row,"features")?{features:[...row.features as string[]]}:{}),...(Object.hasOwn(row,"defaultFeatures")?{defaultFeatures:row.defaultFeatures as boolean}:{}),...(Object.hasOwn(row,"target")?{target:row.target as string}:{}),...(Object.hasOwn(row,"fallback")?{fallback:{kind:"bounded-cargo" as const,adapters:[...(row.fallback as {adapters:RustBuildFallbackAdapterV1[]}).adapters]}}:{})};
 }
 
 /** 📤️ Projects admitted package, deliverable, feature and triple facts without granting Cargo storage controls. */

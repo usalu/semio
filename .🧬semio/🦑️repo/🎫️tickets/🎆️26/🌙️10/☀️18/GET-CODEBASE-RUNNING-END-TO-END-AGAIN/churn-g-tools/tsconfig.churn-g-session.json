@@ -1,0 +1,1 @@
+{"extends": "../../../../../../../../🧰️framework/🛍️products/🦑️repo/tsconfig.json", "compilerOptions": {"noEmit": true, "incremental": false, "skipLibCheck": true, "composite": false}, "include": [], "files": ["../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts"]}

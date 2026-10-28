@@ -1,0 +1,202 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Bazel action environment",
+  "description": "🛡️ Schema-first contract of the environment channel from a Bazel build to its action processes (`runtime.json` beside the immutable implementation, outside every action key). An action receives ONLY (1) the names of a class listed in `Policy.classes` (host essentials, locale, temporary directories, terminal switches, the toolchain families the build runs, and the repository's own SEMIO_ variables) minus every name that matches `Policy.denied` (a credential-like name), plus (2) every variable the build DECLARES for a task as an `env` input row (the build author's explicit grant, which also wins over `denied`). Every other ambient variable of the shell, the desktop, the agent or the session never reaches an action. Names are compared case-insensitively (Windows). / Schema-first Vertrag des Umgebungskanals von einem Bazel-Build zu seinen Aktionsprozessen (`runtime.json` neben der unveränderlichen Implementierung, außerhalb jedes Aktionsschlüssels). Eine Aktion erhält NUR (1) die Namen einer Klasse aus `Policy.classes` (Host-Grundlagen, Sprache, temporäre Verzeichnisse, Terminal-Schalter, die Werkzeugfamilien, die der Build ausführt, und die eigenen SEMIO_-Variablen des Repositorys) ohne jeden Namen, der `Policy.denied` trifft (ein Name, der nach Zugangsdaten aussieht), plus (2) jede Variable, die der Build für eine Task als `env`-Eingabezeile DEKLARIERT (die ausdrückliche Freigabe der Build-Autorin, die auch gegen `denied` gewinnt). Jede andere Umgebungsvariable der Shell, des Desktops, des Agenten oder der Sitzung erreicht eine Aktion nie. Namen werden ohne Beachtung der Gross-/Kleinschreibung verglichen (Windows).",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "description": "Authored values. `classes`: allowed names and name prefixes per family, each with its reason in English and German. `declared.file`: the record, written beside the workspace while the build graph is held, of the names the task graph declares; the run phase reads it and never the released graph. `denied`: regular expressions over the upper-case name; a name that one of them matches is withheld although a class allows it (a credential-like name), unless the build declares it. / Autorisierte Werte. `classes`: erlaubte Namen, Namenspraefixe und Namenssuffixe je Familie, jeweils mit Begründung auf Englisch und Deutsch. `declared.file`: die Aufzeichnung der vom Task-Graphen deklarierten Namen, neben dem Arbeitsbereich geschrieben, solange der Build-Graph gehalten wird; die Laufphase liest sie und nie den freigegebenen Graphen. `denied`: reguläre Ausdrücke über den grossgeschriebenen Namen; ein Name, den einer trifft, wird zurückgehalten, obwohl eine Klasse ihn erlaubt (ein Name, der nach Zugangsdaten aussieht), ausser der Build deklariert ihn.",
+      "const": {
+        "version": 1,
+        "classes": [
+          {
+            "id": "host",
+            "names": ["PATH", "HOME", "USER", "LOGNAME", "SHELL", "TZ", "SOURCE_DATE_EPOCH"],
+            "prefixes": [],
+            "suffixes": [],
+            "reason": {
+              "en": "Every spawned tool finds its programs, its home and its identity here.",
+              "de": "Jedes gestartete Werkzeug findet hier seine Programme, sein Heimatverzeichnis und seine Identität."
+            }
+          },
+          {
+            "id": "temporary",
+            "names": ["TMPDIR", "TMP", "TEMP"],
+            "prefixes": [],
+            "suffixes": [],
+            "reason": {
+              "en": "The build issues the temporary directories of its storage partition through these names.",
+              "de": "Der Build gibt die temporären Verzeichnisse seiner Speicherpartition über diese Namen aus."
+            }
+          },
+          {
+            "id": "locale",
+            "names": ["LANG", "LANGUAGE"],
+            "prefixes": ["LC_"],
+            "suffixes": [],
+            "reason": {
+              "en": "Tools and the repository choose their language and sort order from the locale.",
+              "de": "Werkzeuge und das Repository wählen Sprache und Sortierung aus der Locale."
+            }
+          },
+          {
+            "id": "terminal",
+            "names": ["TERM", "COLORTERM", "NO_COLOR", "FORCE_COLOR", "CLICOLOR", "CLICOLOR_FORCE"],
+            "prefixes": [],
+            "suffixes": [],
+            "reason": {
+              "en": "Output styling switches; they carry no session identity.",
+              "de": "Schalter für die Ausgabegestaltung; sie tragen keine Sitzungsidentität."
+            }
+          },
+          {
+            "id": "environment-kind",
+            "names": ["CI", "GITHUB_ACTIONS", "DEVCONTAINER", "REMOTE_CONTAINERS", "CODESPACES"],
+            "prefixes": [],
+            "suffixes": [],
+            "reason": {
+              "en": "The repository detects its hosting environment from these names to choose its storage and output defaults.",
+              "de": "Das Repository erkennt seine Umgebung an diesen Namen, um Speicher- und Ausgabe-Voreinstellungen zu wählen."
+            }
+          },
+          {
+            "id": "repository",
+            "names": [],
+            "prefixes": ["SEMIO_", "NX_"],
+            "suffixes": [],
+            "reason": {
+              "en": "The repository's own build variables: the script process envelope, the generation pin, the capacity grant, the control socket, the build mode, the language and every switch a nested `repo` invocation inside an action reads.",
+              "de": "Die eigenen Build-Variablen des Repositorys: die Skript-Prozesshülle, der Generations-Pin, die Kapazitätsfreigabe, der Steuer-Socket, der Build-Modus, die Sprache und jeder Schalter, den ein verschachtelter `repo`-Aufruf in einer Aktion liest."
+            }
+          },
+          {
+            "id": "rust",
+            "names": ["MAKEFLAGS", "MFLAGS"],
+            "prefixes": ["CARGO", "RUST"],
+            "suffixes": [],
+            "reason": {
+              "en": "Cargo, rustup and rustc configuration: toolchain, flags, target and cache directories, job limits.",
+              "de": "Cargo-, rustup- und rustc-Konfiguration: Toolchain, Flags, Ziel- und Cache-Verzeichnisse, Jobgrenzen."
+            }
+          },
+          {
+            "id": "native-toolchain",
+            "names": ["SDKROOT", "DEVELOPER_DIR", "MACOSX_DEPLOYMENT_TARGET", "IPHONEOS_DEPLOYMENT_TARGET", "CC", "CXX", "CPP", "AR", "LD", "NM", "RANLIB", "STRIP", "CFLAGS", "CXXFLAGS", "CPPFLAGS", "LDFLAGS", "ARFLAGS", "CPATH", "C_INCLUDE_PATH", "CPLUS_INCLUDE_PATH", "LIBRARY_PATH", "LD_LIBRARY_PATH", "INCLUDE", "LIB", "LIBPATH", "LIBCLANG_PATH", "LLVM_CONFIG_PATH", "PROTOC", "PROTOC_INCLUDE", "SSL_CERT_FILE", "SSL_CERT_DIR", "CURL_CA_BUNDLE", "REQUESTS_CA_BUNDLE"],
+            "prefixes": ["CC_", "CXX_", "CFLAGS_", "CXXFLAGS_", "AR_", "TARGET_CC", "TARGET_CXX", "TARGET_AR", "TARGET_CFLAGS", "HOST_CC", "HOST_CXX", "HOST_AR", "HOST_CFLAGS", "BINDGEN_", "PKG_CONFIG", "OPENSSL_", "CMAKE", "CTEST_"],
+            "suffixes": ["_LIB_DIR", "_LIB_DIRS", "_INCLUDE_DIR", "_USE_PKG_CONFIG", "_NO_PKG_CONFIG", "_NO_VENDOR", "_STATIC"],
+            "reason": {
+              "en": "C and C++ compilers, linkers, SDK roots, certificate locations and build-script inputs that crates, CMake and native tools read.",
+              "de": "C- und C++-Compiler, Linker, SDK-Wurzeln, Zertifikatsorte und Build-Skript-Eingaben, die Crates, CMake und native Werkzeuge lesen."
+            }
+          },
+          {
+            "id": "javascript",
+            "names": ["NODE", "NODE_ENV", "NODE_OPTIONS", "NODE_PATH", "NODE_EXTRA_CA_CERTS", "NODE_USE_SYSTEM_CA", "NODE_DISABLE_COMPILE_CACHE", "NODE_NO_WARNINGS", "WATCHPACK_POLLING", "CHOKIDAR_USEPOLLING"],
+            "prefixes": ["BUN_", "VITE_", "VITEST_", "STORYBOOK_", "PLAYWRIGHT_"],
+            "suffixes": [],
+            "reason": {
+              "en": "Bun, Node, Vite, Vitest, Storybook and Playwright configuration of the TypeScript products.",
+              "de": "Bun-, Node-, Vite-, Vitest-, Storybook- und Playwright-Konfiguration der TypeScript-Produkte."
+            }
+          },
+          {
+            "id": "go",
+            "names": ["GOROOT", "GOPATH", "GOCACHE", "GOFLAGS", "GOWORK", "GOTOOLCHAIN", "GOMAXPROCS", "GOMODCACHE", "GOENV", "GOOS", "GOARCH", "GOEXPERIMENT", "GOTMPDIR"],
+            "prefixes": ["CGO_"],
+            "suffixes": [],
+            "reason": {
+              "en": "Go toolchain configuration of the launcher and the command line tools.",
+              "de": "Go-Toolchain-Konfiguration des Launchers und der Kommandozeilenwerkzeuge."
+            }
+          },
+          {
+            "id": "python-dotnet",
+            "names": ["VIRTUAL_ENV", "NUGET_PACKAGES", "NUGET_HTTP_CACHE_PATH"],
+            "prefixes": ["PYTHON", "DOTNET_"],
+            "suffixes": [],
+            "reason": {
+              "en": "Python and .NET toolchain classes of the native toolchain policy.",
+              "de": "Python- und .NET-Toolchain-Klassen der nativen Toolchain-Richtlinie."
+            }
+          },
+          {
+            "id": "package-manager",
+            "names": ["NPM_EXECPATH", "NPM_NODE_EXECPATH", "NPM_COMMAND", "NPM_CONFIG_USER_AGENT"],
+            "prefixes": [],
+            "suffixes": [],
+            "reason": {
+              "en": "Bun announces itself to the scripts it runs through these names; tools detect their package manager from them.",
+              "de": "Bun meldet sich den Skripten, die es startet, über diese Namen; Werkzeuge erkennen daran ihren Paketmanager."
+            }
+          },
+          {
+            "id": "git",
+            "names": ["GIT_OPTIONAL_LOCKS", "GIT_CONFIG_GLOBAL", "GIT_CONFIG_SYSTEM", "GIT_CONFIG_NOSYSTEM", "GIT_TERMINAL_PROMPT", "GIT_DIR", "GIT_WORK_TREE", "GIT_CEILING_DIRECTORIES"],
+            "prefixes": [],
+            "suffixes": [],
+            "reason": {
+              "en": "How the repository's read-only git queries locate and lock the checkout.",
+              "de": "Wie die lesenden Git-Abfragen des Repositorys den Checkout finden und sperren."
+            }
+          },
+          {
+            "id": "directories",
+            "names": ["XDG_CACHE_HOME", "XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_RUNTIME_DIR"],
+            "prefixes": [],
+            "suffixes": [],
+            "reason": {
+              "en": "Standard per-user directories; the desktop session variables of the same prefix are not listed.",
+              "de": "Standardverzeichnisse je Nutzer; die Desktop-Sitzungsvariablen desselben Präfixes sind nicht aufgeführt."
+            }
+          },
+          {
+            "id": "graphics",
+            "names": [],
+            "prefixes": ["WGPU_", "VK_", "MESA_", "LIBGL_"],
+            "suffixes": [],
+            "reason": {
+              "en": "Rendering backend selection of the wgpu tests; no display or session variable.",
+              "de": "Auswahl des Rendering-Backends der wgpu-Tests; keine Anzeige- oder Sitzungsvariable."
+            }
+          },
+          {
+            "id": "windows",
+            "names": ["SYSTEMROOT", "SYSTEMDRIVE", "WINDIR", "COMSPEC", "PATHEXT", "USERPROFILE", "USERNAME", "USERDOMAIN", "APPDATA", "LOCALAPPDATA", "PROGRAMDATA", "PROGRAMFILES", "PROGRAMFILES(X86)", "PROGRAMW6432", "COMMONPROGRAMFILES", "COMMONPROGRAMFILES(X86)", "COMMONPROGRAMW6432", "ALLUSERSPROFILE", "PUBLIC", "HOMEDRIVE", "HOMEPATH", "COMPUTERNAME", "OS", "NUMBER_OF_PROCESSORS", "PROCESSOR_ARCHITECTURE", "PROCESSOR_IDENTIFIER", "PROCESSOR_LEVEL", "PROCESSOR_REVISION", "VISUALSTUDIOVERSION", "UCRTVERSION", "UNIVERSALCRTSDKDIR"],
+            "prefixes": ["VSCMD_", "VCTOOLS", "VCINSTALL", "VSINSTALL", "WINDOWSSDK", "WINDOWSLIBPATH"],
+            "suffixes": [],
+            "reason": {
+              "en": "The Windows system and Visual Studio variables without which no process can start or link.",
+              "de": "Die Windows-System- und Visual-Studio-Variablen, ohne die kein Prozess starten oder linken kann."
+            }
+          }
+        ],
+        "denied": {
+          "patterns": [
+            "(^|_)(TOKEN|SECRET|PASSWORD|PASSWD|PASSPHRASE|CREDENTIALS?|COOKIES?|AUTH|AUTHORIZATION|BEARER|SIGNATURE)(_|$)",
+            "(^|_)(PRIVATE|SECRET|SIGNING|API|ACCESS|ENCRYPTION|MASTER)_?KEYS?(_|$)",
+            "_KEYS?$"
+          ],
+          "reason": {
+            "en": "A credential-like name is withheld even inside an allowed class (for example CARGO_REGISTRY_TOKEN, SEMIO_SERVICE_TOKEN, BUN_AUTH_TOKEN, SSH_AUTH_SOCK); a task that needs one declares it as an `env` input.",
+            "de": "Ein Name, der nach Zugangsdaten aussieht, wird auch innerhalb einer erlaubten Klasse zurückgehalten (zum Beispiel CARGO_REGISTRY_TOKEN, SEMIO_SERVICE_TOKEN, BUN_AUTH_TOKEN, SSH_AUTH_SOCK); eine Task, die einen braucht, deklariert ihn als `env`-Eingabe."
+          }
+        },
+        "declared": {
+          "file": "declared-environment.json"
+        }
+      }
+    },
+    "Messages": {
+      "type": "object",
+      "description": "Refusal text in English and German; `{path}` is replaced by the record path. / Ablehnungstext auf Englisch und Deutsch; `{path}` wird durch den Pfad der Aufzeichnung ersetzt.",
+      "const": {
+        "en": {
+          "missing": "The declared environment record {path} is missing or malformed: the plan was made by an older build; plan again with SEMIO_REPO_PLAN_REUSE=off."
+        },
+        "de": {
+          "missing": "Die Aufzeichnung der deklarierten Umgebung {path} fehlt oder ist fehlerhaft: der Plan stammt von einem älteren Build; mit SEMIO_REPO_PLAN_REUSE=off neu planen."
+        }
+      }
+    }
+  }
+}

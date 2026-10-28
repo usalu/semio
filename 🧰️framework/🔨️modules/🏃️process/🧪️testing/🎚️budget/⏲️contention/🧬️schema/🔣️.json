@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/testing/budget/contention.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "tickMilliseconds", "stretch", "announce", "probe", "messages"],
+  "properties": {
+    "version": { "const": 1 },
+    "tickMilliseconds": { "type": "integer", "minimum": 1, "maximum": 60000 },
+    "stretch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimumBasisPoints", "maximumBasisPoints"],
+      "properties": {
+        "minimumBasisPoints": { "const": 10000 },
+        "maximumBasisPoints": { "type": "integer", "minimum": 10000, "maximum": 640000 }
+      }
+    },
+    "announce": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["thresholdBasisPoints", "stepBasisPoints", "everyMilliseconds"],
+      "properties": {
+        "thresholdBasisPoints": { "type": "integer", "minimum": 10000, "maximum": 640000 },
+        "stepBasisPoints": { "type": "integer", "minimum": 1, "maximum": 640000 },
+        "everyMilliseconds": { "type": "integer", "minimum": 1000, "maximum": 3600000 }
+      }
+    },
+    "probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platforms", "cpuMilliseconds", "everyMilliseconds", "smoothingBasisPoints"],
+      "properties": {
+        "platforms": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "cpuMilliseconds": { "type": "integer", "minimum": 8, "maximum": 1000 },
+        "everyMilliseconds": { "type": "integer", "minimum": 1000, "maximum": 600000 },
+        "smoothingBasisPoints": { "type": "integer", "minimum": 1, "maximum": 10000 }
+      }
+    },
+    "messages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stretched", "expired"],
+      "properties": {
+        "stretched": { "$ref": "#/definitions/Text" },
+        "expired": { "$ref": "#/definitions/Text" }
+      }
+    }
+  },
+  "definitions": {
+    "Text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "type": "string", "minLength": 1 },
+        "de": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

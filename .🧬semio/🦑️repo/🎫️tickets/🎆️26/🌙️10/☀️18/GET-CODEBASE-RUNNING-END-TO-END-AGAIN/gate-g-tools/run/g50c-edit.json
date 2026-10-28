@@ -1,0 +1,17 @@
+{
+ "label": "g50c-edit",
+ "target": "@teaching/architecture-course:build",
+ "started": "01:55:51",
+ "wall_s": 820.8,
+ "peak_tree_mb": 2801,
+ "peak_processes": 9,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 694.3,
+ "graph": {
+  "processes": [
+   "2",
+   "6 action cache hit, 2 internal"
+  ]
+ }
+}

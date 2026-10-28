@@ -2,7 +2,8 @@
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { observedSourceAnalysisV1, observedRequireResolve } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { memoizedObservedComputationV1, observedSourceAnalysisV1, observedRequireResolve } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { INFERENCE_LIMITS_V1 } from "../🧬️schema/🟨️.mjs";
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "source-analyses";
@@ -31,12 +32,15 @@ export function readTaxonomyProjectionV1(path) {
 }
 
 /** 🦀️ Tokenizes module syntax without interpreting strings and comments as declarations. */
+const RUST_RAW_PATTERN_V1 = /(?:b|c)?r(#+)?"/y, RUST_CHARACTER_PATTERN_V1 = /(?:b)?'(?:\\(?:u\{[0-9a-fA-F_]+\}|x[0-9a-fA-F]{2}|.)|[^'\\\n])'/uy, RUST_IDENTIFIER_PATTERN_V1 = /(?:r#)?[\p{ID_Start}_][\p{ID_Continue}]*/uy, UNICODE_WHITESPACE_V1 = /\s/u, RAW_IDENTIFIER_PREFIX_V1 = /^r#/;
+
 function rustInputTokens(source) {
-  const tokens = [], rawPattern = /(?:b|c)?r(#+)?"/y, characterPattern = /(?:b)?'(?:\\(?:u\{[0-9a-fA-F_]+\}|x[0-9a-fA-F]{2}|.)|[^'\\\n])'/uy, identifierPattern = /(?:r#)?[\p{ID_Start}_][\p{ID_Continue}]*/uy;
+  const unescapeRustString = (body) => body.replace(/\\(?:\r?\n\s*|u\{([0-9a-fA-F_]+)\}|x([0-9a-fA-F]{2})|(.))/gsu, (_, brace, hex, plain) => brace !== undefined ? String.fromCodePoint(parseInt(brace.replaceAll("_", ""), 16)) : hex !== undefined ? String.fromCharCode(parseInt(hex, 16)) : plain === undefined ? "" : ({ n: "\n", r: "\r", t: "\t", 0: "\0" })[plain] ?? plain);
+  const tokens = [], rawPattern = RUST_RAW_PATTERN_V1, characterPattern = RUST_CHARACTER_PATTERN_V1, identifierPattern = RUST_IDENTIFIER_PATTERN_V1;
   const match = (pattern, at) => { pattern.lastIndex = at; return pattern.exec(source); };
   for (let i = 0; i < source.length;) {
     const char = source[i], code = source.charCodeAt(i);
-    if (code === 32 || code >= 9 && code <= 13 || code > 127 && /\s/u.test(char)) { i++; continue; }
+    if (code === 32 || code >= 9 && code <= 13 || code > 127 && UNICODE_WHITESPACE_V1.test(char)) { i++; continue; }
     if (char === "/" && source[i + 1] === "/") { const end = source.indexOf("\n", i); i = end < 0 ? source.length : end; continue; }
     if (char === "/" && source[i + 1] === "*") {
       let depth = 1; i += 2;
@@ -57,8 +61,7 @@ function rustInputTokens(source) {
       const start = char === '"' ? i : i + 1; i = start + 1;
       while (i < source.length && source[i] !== '"') { i += source[i] === "\\" ? 2 : 1; }
       const literal = source.slice(start, ++i);
-      try { tokens.push({ text: JSON.parse(literal), string: true }); }
-      catch { tokens.push({ text: literal.slice(1, -1), string: true }); }
+      tokens.push({ text: unescapeRustString(literal.slice(1, -1)), string: true });
       continue;
     }
     const character = (char === "'" || char === "b") && match(characterPattern, i);
@@ -70,7 +73,7 @@ function rustInputTokens(source) {
   return tokens;
 }
 
-/** 🧾️ Retains only module mounts and include expressions, independently of a file's location; the mounts and includes that only exist under `#[cfg(test)]` (an item or module under `cfg(test)` or `cfg(all(test, …))`, the indexes of its includes, or a whole `#![cfg(test)]` file, which the compiler still reads but never expands) are marked, so a consumer that compiles without that configuration leaves them out. */
+/** 🧾️ Retains only module mounts and include expressions, independently of a file's location; the mounts and includes that only exist under `#[cfg(test)]` (an item or module under `cfg(test)` or `cfg(all(test, …))`, the indexes of its includes, or a whole `#![cfg(test)]` file, which the compiler still reads but never expands) are marked, so a consumer that compiles without that configuration leaves them out. A `macro_rules!` body is refused only when it can mount a file (`mod name;` or a `#[path]` attribute): an inline `mod name { … }` it emits reads no file; an `include*!` inside `quote!` is code the crate emits into its consumers, counted as `emitted` and never an input of the crate itself. */
 function rustSourceReferences(source) {
   const tokens = rustInputTokens(source), pairs = new Map(), stack = [], includes = [];
   for (let i = 0; i < tokens.length; i++) {
@@ -92,9 +95,13 @@ function rustSourceReferences(source) {
     }
     throw new Error("Dynamic Rust include requires explicit source inputs");
   };
+  const quoted = [];
+  for (let i = 0; i < tokens.length - 2; i++) if (tokens[i].identifier && ["quote", "quote_spanned", "parse_quote", "parse_quote_spanned"].includes(tokens[i].text) && tokens[i + 1].text === "!" && pairs.get(i + 2) !== undefined) quoted.push([i + 2, pairs.get(i + 2)]);
+  let emitted = 0;
   const places = [];
   for (let i = 0; i < tokens.length - 3; i++) {
     if (!tokens[i].identifier || !["include", "include_str", "include_bytes"].includes(tokens[i].text) || tokens[i + 1].text !== "!") continue;
+    if (quoted.some(([from, to]) => i > from && i < to)) { emitted++; continue; }
     const end = pairs.get(i + 2);
     if (end !== undefined) { places.push(i); includes.push(literal(i + 3, tokens[end - 1]?.text === "," ? end - 1 : end)); }
   }
@@ -107,6 +114,18 @@ function rustSourceReferences(source) {
       return [gated, close + 1];
     }
     return [text === "test" && tokens[i + 1]?.text !== "=", tokens[i + 1]?.text === "=" ? i + 3 : i + 1];
+  };
+  const emitsMount = (from, to) => {
+    for (let at = from; at < to; at++) {
+      if (tokens[at].string) continue;
+      const named = tokens[at].text === "mod" && tokens[at + 1]?.text === "$" ? at + 2 : at + 1;
+      if (tokens[at].text === "mod" && tokens[named]?.identifier && tokens[named + 1]?.text === ";") return true;
+      if (tokens[at].text === "#" && (tokens[at + 1]?.text === "[" || tokens[at + 1]?.text === "!" && tokens[at + 2]?.text === "[")) {
+        const open = tokens[at + 1].text === "[" ? at + 1 : at + 2;
+        if (tokens[open + 1]?.text === "path" && tokens[open + 2]?.text === "=") return true;
+      }
+    }
+    return false;
   };
   const gated = [];
   let fileTest = false;
@@ -125,27 +144,27 @@ function rustSourceReferences(source) {
       }
       if (tokens[i]?.text === "pub") { i++; if (tokens[i]?.text === "(") i = (pairs.get(i) ?? i) + 1; }
       if (tokens[i]?.text === "mod" && tokens[i + 1]?.identifier) {
-        const name = tokens[i + 1].text.replace(/^r#/, ""), boundary = i + 2;
+        const name = tokens[i + 1].text.replace(RAW_IDENTIFIER_PREFIX_V1, ""), boundary = i + 2;
         if (tokens[boundary]?.text === "{") {
           const close = pairs.get(boundary);
           if (close !== undefined) { modules.push({ name, path, ...(test ? { test } : {}), modules: scope(boundary + 1, close) }); if (test) gated.push([first, close]); i = close + 1; continue; }
         }
         if (tokens[boundary]?.text === ";") { modules.push({ name, path, ...(test ? { test } : {}) }); if (test) gated.push([first, boundary]); i = boundary + 1; continue; }
       }
-      const macro = tokens[i]?.text === "macro_rules";
+      const macro = tokens[i]?.text === "macro_rules", bodyFrom = i;
       while (i < end && tokens[i].text !== ";" && tokens[i].text !== "{") { if (pairs.has(i)) i = pairs.get(i); i++; }
-      if (macro && tokens.slice(i, pairs.get(i) ?? i).some((token) => !token.string && token.text === "mod")) throw new Error("Generated Rust modules require conservative source inputs");
+      if (macro && emitsMount(bodyFrom, tokens[i]?.text === "{" ? pairs.get(i) ?? i : i)) throw new Error("Generated Rust modules require conservative source inputs");
       i = (pairs.get(i) ?? i) + 1;
       if (test) gated.push([first, i]);
     }
     return modules;
   };
   const modules = scope(0, tokens.length, true), testIncludes = places.flatMap((place, index) => (gated.some(([from, to]) => place >= from && place <= to) ? [index] : []));
-  return { includes, modules, ...(testIncludes.length ? { testIncludes } : {}), ...(fileTest ? { fileTest } : {}) };
+  return { includes, modules, ...(emitted ? { emitted } : {}), ...(testIncludes.length ? { testIncludes } : {}), ...(fileTest ? { fileTest } : {}) };
 }
 
 /** 🪶️ Bounds parsed source facts by serialized bytes plus per-entry bookkeeping. */
-export function createRustSourceCache(limit = 16 * 1024 * 1024) {
+export function createRustSourceCache(limit = INFERENCE_LIMITS_V1.rustSourceCacheBytes) {
   if (!Number.isSafeInteger(limit) || limit < 1) throw new Error("Rust source cache requires a positive byte budget");
   return { entries: new Map(), bytes: 0, limit, hits: 0, misses: 0 };
 }
@@ -157,10 +176,15 @@ let sourceAnalysesV1;
 /** 🪪️ Names the exact evaluated module URL and its originally bound implementation revision. */
 export function sourceAnalysisOwnerIdentityV1(url,revision){return createHash("sha256").update(JSON.stringify([url,revision])).digest("hex");}
 
-/** 🧬️ Binds structural parsers to their evaluated implementation and compiler bytes. */
+const compilerRevisionsV1=new Map();
+/** 🔩️ The revision the module parsers carry, bound to the bytes of the TypeScript compiler they use, as every caller records it: resolved and read once per process, and the facts of that read are replayed into each receiving project, so the rows of a project never depend on which project of the same process asked first (a farm worker infers in a fresh process). */
+function compilerRevisionV1(stamp){return memoizedObservedComputationV1(compilerRevisionsV1,stamp,()=>createHash("sha256").update(stamp).update(readPhysicalSource(observedRequireResolve(fileURLToPath(revisionIdentity.url),"typescript"))).digest("hex"));}
+
+/** 📖️ Binds structural parsers to their evaluated implementation and compiler bytes. */
 export function prepareSourceAnalysesV1(){
+  const stamp=inferrerStampV1("source-analyses"),revision=compilerRevisionV1(stamp);
   if(!sourceAnalysesV1){
-    const commandParser=loaded.commandSourceImports,urlParser=loaded.commandUrlReferences,runtimeParser=loaded.runtimeModuleSourceImports,moduleParser=loaded.moduleSourceImports,productionParser=loaded.productionModuleSourceImports,compiler=observedRequireResolve(fileURLToPath(revisionIdentity.url),"typescript"),stamp=inferrerStampV1("source-analyses"),stampRevision=createHash("sha256").update(stamp).digest("hex"),revision=createHash("sha256").update(stamp).update(readPhysicalSource(compiler)).digest("hex");
+    const commandParser=loaded.commandSourceImports,urlParser=loaded.commandUrlReferences,runtimeParser=loaded.runtimeModuleSourceImports,moduleParser=loaded.moduleSourceImports,productionParser=loaded.productionModuleSourceImports,stampRevision=createHash("sha256").update(stamp).digest("hex");
     const owner=sourceAnalysisOwnerIdentityV1(revisionIdentity.url,stamp),identity=role=>`build:${role}:v1:${owner}`;
     sourceAnalysesV1={
       command:register({id:identity("command-imports"),revision,analyze:(path,bytes)=>commandParser(path,bytes.toString("utf8"))}),
@@ -174,7 +198,7 @@ export function prepareSourceAnalysesV1(){
   return sourceAnalysesV1;
 }
 
-/** 🪶️ Parses one source's references through the bounded in-process cache keyed by its content digest. */
+/** 🔬️ Parses one source's references through the bounded in-process cache keyed by its content digest. */
 function boundedRustReferences(source, cache) {
   const digest = createHash("sha256").update(source).digest("hex");
   let entry = cache.entries.get(digest);
@@ -184,7 +208,7 @@ function boundedRustReferences(source, cache) {
     let references;
     try { references = rustSourceReferences(source.toString("utf8")); }
     catch (error) { references = { error: error.message }; }
-    entry = { references, bytes: Buffer.byteLength(JSON.stringify(references)) + 192 };
+    entry = { references, bytes: Buffer.byteLength(JSON.stringify(references)) + INFERENCE_LIMITS_V1.entryOverheadBytes };
     if (entry.bytes <= cache.limit) {
       while (cache.bytes + entry.bytes > cache.limit) {
         const key = cache.entries.keys().next().value;

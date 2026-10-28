@@ -1,0 +1,98 @@
+--- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🟦️.ts	2026-10-27 13:32:21
++++ /var/folders/pm/zdg449hs6r33w_2gtsn23byc0000gn/T/sm/meder/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🟦️.ts	2026-10-27 13:54:50
+@@ -10,8 +10,8 @@
+ 
+ /** 🧠️ The declared constants of the graph memo; the schema file is their single source. */
+ export const GRAPH_MEMO_POLICY_V1=Object.freeze(JSON.parse(JSON.stringify(schema.definitions.Policy.const)) as Readonly<{
+- version:1;directory:string;switch:string;sidecar:string;expect:string;requestedAt:string;recordSuffix:string;planSuffix:string;relevanceSuffix:string;recheckSuffix:string;stampSuffix:string;editSuffix:string;maximumRecordBytes:number;maximumPlanBytes:number;maximumRelevanceBytes:number;maximumRecheckBytes:number;maximumStampBytes:number;maximumEditBytes:number;maximumEditPaths:number;maximumEditRows:number;maximumRows:number;leafSymlinkCheckConcurrency:number;
+- argumentsDenied:readonly string[];stamped:readonly string[];following:readonly string[];environmentPrefixes:readonly string[];environmentDenied:readonly string[];relevance:Readonly<Record<string,"path"|"analysis"|"link"|"resolve"|"text"|"none">>;texts:Readonly<Record<string,Readonly<Record<"served"|"refused"|"carried"|"edited",string>>>>;carry:Readonly<{shared:readonly string[]}>;
++ version:1;directory:string;switch:string;sidecar:string;derive:string;expect:string;requestedAt:string;recordSuffix:string;planSuffix:string;relevanceSuffix:string;recheckSuffix:string;stampSuffix:string;editSuffix:string;maximumRecordBytes:number;maximumPlanBytes:number;maximumRelevanceBytes:number;maximumRecheckBytes:number;maximumStampBytes:number;maximumEditBytes:number;maximumEditPaths:number;maximumEditRows:number;maximumDerivedQuestions:number;maximumRows:number;leafSymlinkCheckConcurrency:number;
++ argumentsDenied:readonly string[];stamped:readonly string[];following:readonly string[];environmentPrefixes:readonly string[];environmentDenied:readonly string[];relevance:Readonly<Record<string,"path"|"analysis"|"link"|"resolve"|"text"|"none">>;texts:Readonly<Record<string,Readonly<Record<"served"|"refused"|"carried"|"edited"|"derived",string>>>>;carry:Readonly<{shared:readonly string[]}>;
+ }>);
+ /** 📝️ One fact row of a graph generation: what a computation read and what it saw. */
+ export type MemoRowV1=Readonly<{kind:string;path:string;fact:unknown}>;
+@@ -22,7 +22,7 @@
+ /** 🚫️ Why a memo could not serve (or be sealed). */
+ export type MemoReasonV1=typeof schema.definitions.Reason.enum[number];
+ /** 🎯️ What a lookup answers: the planned slice and the pin of this invocation, or the reason it is planned again. */
+-export type MemoAnswerV1=Readonly<{hit:true;plan:string;pin:string|undefined;projects:number;ageMilliseconds:number;rows:number;rechecked:number;carried?:Readonly<{from:number;to:number}>;edited?:Readonly<{paths:number;rows:number}>}>|Readonly<{hit:false;reason:MemoReasonV1;detail?:string}>;
++export type MemoAnswerV1=Readonly<{hit:true;plan:string;pin:string|undefined;projects:number;ageMilliseconds:number;rows:number;rechecked:number;carried?:Readonly<{from:number;to:number}>;edited?:Readonly<{paths:number;rows:number;questions:number}>}>|Readonly<{hit:false;reason:MemoReasonV1;detail?:string}>;
+ 
+ const sha256=(data:string|Uint8Array):string=>createHash("sha256").update(data).digest("hex");
+ const fold=(path:string):string=>/^[\u0000-\u007f]*$/u.test(path)?path.toLowerCase():path.normalize("NFC").toLowerCase();
+@@ -37,7 +37,7 @@
+ }
+ 
+ /** 🗣️ Renders one memo text in a language of the table; an unknown language reads the English one. */
+-export function renderGraphMemoTextV1(key:"served"|"refused"|"carried"|"edited",fields:Readonly<Record<string,string|number>>,language:string):string{
++export function renderGraphMemoTextV1(key:"served"|"refused"|"carried"|"edited"|"derived",fields:Readonly<Record<string,string|number>>,language:string):string{
+  const table=GRAPH_MEMO_POLICY_V1.texts[language]??GRAPH_MEMO_POLICY_V1.texts.en!;
+  return table[key].replace(/\{(\w+)\}/gu,(_,name:string)=>String(fields[name]??""));
+ }
+@@ -259,13 +259,16 @@
+  return undefined;
+ }
+ 
+-/** 🔌️ The ports an edit settlement reads: the rows of the sealed generation's fact index by position and its frontier with the planner's walk predicates (`undefined` when that generation is no longer retained). */
++/** 🧮️ What asking derived questions again answers: held (every answer is the recorded one, `questions` asked) or why not. */
++export type MemoDerivationV1=Readonly<{held:true;questions:number}>|Readonly<{held:false;reason:string}>;
++/** 🔌️ The ports an edit settlement reads: the rows of the sealed generation's fact index by position and its frontier with the planner's walk predicates (`undefined` when that generation is no longer retained), and `derive`, which settles rows that do not hold and derived facts the journal names by asking the derived questions that read them again (without it they refuse). */
+ export type GraphMemoEditPortsV1=Readonly<{
+  rows:(index:string,ids:readonly number[],signal?:AbortSignal)=>Promise<readonly MemoRowV1[]|undefined>;
+  frontier:(digest:string,signal?:AbortSignal)=>Promise<MemoFrontierV1|undefined>;
++ derive?:(input:Readonly<{index:string;stale:readonly number[];derived:readonly MemoRowV1[]}>,signal?:AbortSignal)=>Promise<MemoDerivationV1>;
+ }>;
+-/** 📋️ What an edit settlement answers: held, with the number of changed paths, the rows it re-checked and the new stamps of the stamped directories it listed again, or the first path that does not hold. */
+-export type MemoEditOutcomeV1=Readonly<{held:true;paths:number;rows:number;stamps:ReadonlyMap<string,readonly[number,number]>}>|Readonly<{held:false;path:string}>;
++/** 📋️ What an edit settlement answers: held, with the number of changed paths, the rows it re-checked, the derived questions it asked again and the new stamps of the stamped directories it listed again, or the first path that does not hold. */
++export type MemoEditOutcomeV1=Readonly<{held:true;paths:number;rows:number;questions:number;stamps:ReadonlyMap<string,readonly[number,number]>}>|Readonly<{held:false;path:string}>;
+ 
+ /** 🧺️ Every journal row that is relevant by itself (the rule of {@link classifyMemoChangesV1}, without stopping at the first) and, for every stamped directory, the first row that only says 'modified' directly inside it. */
+ export function collectMemoChangesV1(relevance:MemoRelevanceV1,rows:readonly ChangeRowV1[]):Readonly<{changed:readonly ChangeRowV1[];pending:ReadonlyMap<string,ChangeRowV1>}>{
+@@ -278,7 +281,7 @@
+  return{changed,pending};
+ }
+ 
+-/** ✏️ Settles the relevant journal rows of a sealed memo with the planner's own checks instead of the planner: a row naming an entry re-checks the rows that name it (and proves a directory with relevant entries below it, or a frontier directory, to be the same directory, and a member to keep its mode); a row directly inside a strict or stamped directory, and a stamped directory whose stamp moved (`listed`), re-checks the rows that read its children and, for a frontier directory, lists it again with the walk predicates. A path the memo cannot explain, a touched path that became a symbolic link (the journal cannot see behind it), a row the check cannot verify, a retired generation and more than `maximumEditPaths` paths or `maximumEditRows` rows refuse. When everything holds, a stamped directory listed again gets the stamp it had before the checks, if it still has it and lies outside the racy window. */
++/** ✏️ Settles the relevant journal rows of a sealed memo with the planner's own checks instead of the planner: a row naming an entry re-checks the rows that name it (and proves a directory with relevant entries below it, or a frontier directory, to be the same directory, and a member to keep its mode); a row directly inside a strict or stamped directory, and a stamped directory whose stamp moved (`listed`), re-checks the rows that read its children and, for a frontier directory, lists it again with the walk predicates. A row that does not hold, and a derived fact a touched path names, are settled by the `derive` port (the planner's cutoff: the derived questions that read them are asked again; a row a project holds itself refuses there). A path the memo cannot explain, a touched path that became a symbolic link (the journal cannot see behind it), an unsettled row, a retired generation and more than `maximumEditPaths` paths or `maximumEditRows` rows refuse. When everything holds, a stamped directory listed again gets the stamp it had before the checks, if it still has it and lies outside the racy window. */
+ export async function settleMemoEditsV1(input:Readonly<{root:string;relevance:MemoRelevanceV1;edits:MemoEditIndexV1;changed:readonly ChangeRowV1[];listed:ReadonlyMap<string,string>;index:string;frontier:string|null;ports:GraphMemoEditPortsV1;holds:(rows:readonly MemoRowV1[],signal?:AbortSignal)=>Promise<boolean>;now:()=>number;signal?:AbortSignal}>):Promise<MemoEditOutcomeV1>{
+  const {root,relevance,edits,signal}=input,policy=GRAPH_MEMO_POLICY_V1,groups=new Map<string,Set<number>>(),listed=new Map(input.listed),identity=new Map<string,string>(),listing=new Map<string,string>(),members=new Map<string,string>(),touched=new Map<string,string>();
+  const refuse=(path:string):MemoEditOutcomeV1=>({held:false,path});
+@@ -308,15 +311,25 @@
+   const failed=memoFrontierHoldsV1(root,frontier,{identity:identity.keys(),listing:listing.keys(),members:members.keys()});
+   if(failed!==undefined)return refuse(identity.get(failed)??listing.get(failed)??members.get(failed)??failed);
+  }
++ let questions=0;
+  if(all.size){
+   const ids=[...all],rows=await input.ports.rows(input.index,ids,signal);
+   if(!rows||rows.length!==ids.length)return refuse(groups.keys().next().value!);
+-  const byId=new Map(ids.map((id,at)=>[id,rows[at]!]));
+-  for(const [path,set] of groups)if(set.size&&!await input.holds([...set].map(id=>byId.get(id)!),signal))return refuse(path);
++  const byId=new Map(ids.map((id,at)=>[id,rows[at]!])),stale:number[]=[],derived=new Map<number,MemoRowV1>();let first:string|undefined;
++  for(const [path,set] of groups){
++   const plain:number[]=[];
++   for(const id of set){const row=byId.get(id)!;if(row.kind!=="derived")plain.push(id);else if(!derived.has(id)){derived.set(id,row);first??=path;}}
++   if(plain.length&&!await input.holds(plain.map(id=>byId.get(id)!),signal))for(const id of plain)if(!stale.includes(id)&&!await input.holds([byId.get(id)!],signal)){stale.push(id);first??=path;}
++  }
++  if(first!==undefined){
++   const settled=input.ports.derive?await input.ports.derive({index:input.index,stale,derived:[...derived.values()]},signal):undefined;
++   if(!settled?.held)return refuse(first);
++   questions=settled.questions;
++  }
+  }
+  const stamps=new Map<string,readonly[number,number]>(),at=input.now();
+  for(const [directory,[mtimeMs,ino]] of before){try{const status=lstatSync(join(root,directory));if(status.isDirectory()&&status.mtimeMs===mtimeMs&&status.ino===ino&&at-mtimeMs>=GENERATION_POLICY_V1.racyMilliseconds)stamps.set(directory,[mtimeMs,ino]);}catch{}}
+- return{held:true,paths:new Set([...input.changed.map(row=>row[2]),...input.listed.values()]).size,rows:all.size,stamps};
++ return{held:true,paths:new Set([...input.changed.map(row=>row[2]),...input.listed.values()]).size,rows:all.size,questions,stamps};
+ }
+ 
+ /** ⚖️ What a stretch of journal rows means for a relevance: the first row that is relevant by itself (it names an entry some fact read, an ancestor of one or a frontier directory; it lies directly inside a strict directory, except for the modification of a directory; it adds, removes or renames a name directly inside a stamped directory), and for every stamped directory the first row that only says 'modified' directly inside it, which the stamp of that directory must still confirm because the kind of a row is advisory. */
+@@ -435,7 +448,7 @@
+      if(edited?.held&&edited.stamps.size){const table=stampFile(),next=table&&restampMemoStampsV1(table,edited.stamps,insensitive);if(next){stamps=sha256(next);if(!existsSync(named(directory,stamps,policy.stampSuffix)))atomic(named(directory,stamps,policy.stampSuffix),next);}}
+      atomic(recordFile,JSON.stringify({...served,cursor:formatChangeCursorV1(answer.cursor),relevance:{...served.relevance,stamps}}));
+     }catch{}
+-    return{hit:true,plan:planBytes.toString("utf8"),pin,projects:record.projects,ageMilliseconds:Math.max(0,at-record.sealedAtMs),rows:record.relevance.rows,rechecked,...(moved?{carried:{from:record.pointer.generation,to:pointer.generation}}:{}),...(edited?.held?{edited:{paths:edited.paths,rows:edited.rows}}:{})};
++    return{hit:true,plan:planBytes.toString("utf8"),pin,projects:record.projects,ageMilliseconds:Math.max(0,at-record.sealedAtMs),rows:record.relevance.rows,rechecked,...(moved?{carried:{from:record.pointer.generation,to:pointer.generation}}:{}),...(edited?.held?{edited:{paths:edited.paths,rows:edited.rows,questions:edited.questions}}:{})};
+    }catch(error){signal?.throwIfAborted();return miss("error",error instanceof Error?error.message:String(error));}
+   },
+   async seal(input){

@@ -1,6 +1,6 @@
 //! 🎫️ The ticket domain of the semio repository: the dated id and path scheme, the
 //! `🎫️ticket.json` document codec, the open/close/reopen/change lifecycle, the important-document
-//! transaction, artifact purging, search, plan/spec source resolution and issue synchronisation.
+//! transaction, generated-output purging, search, plan/spec source resolution and issue synchronisation.
 //!
 //! Every filesystem touch goes through [`TicketStore`], every issue mutation through the
 //! `IssueTracker` port of `🧩️providers`, every clock read through [`Clock`] and every emission
@@ -120,6 +120,10 @@ pub use search::*;
 #[cfg(test)]
 #[path = "./🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "./🧪️tests/🧹️purge-generated/🦀️.rs"]
+mod purge_generated_tests;
 
 //#endregion 🧪️Tests
 

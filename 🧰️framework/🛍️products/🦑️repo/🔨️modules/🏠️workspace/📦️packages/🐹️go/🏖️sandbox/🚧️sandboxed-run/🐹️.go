@@ -2,7 +2,7 @@
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
-// 🚧️sandboxed-run runs a test binary against a temporary repository it owns and fails the run when anything resolved or still holds the checkout the binary was started in.
+// 🚧️sandboxed-run runs a test binary against a temporary repository it owns and fails the run when anything resolved or still holds the root of the checkout the binary was started in.
 
 // #endregion 🧲️Header
 
@@ -12,12 +12,19 @@ import (
 	fmt "fmt"
 	os "os"
 	filepath "path/filepath"
+	runtime "runtime"
 	strings "strings"
 
 	workspace "github.com/usalu/semio/repo/workspace"
 )
 
 // #region 🚧️Sandboxed Run
+
+// 🎚️GuardEnv names the environment variable that lowers the root guard from aborting at the first touch of the real checkout root to reporting every touch at the end of the run (`report`), which is how a maintainer lists all offenders at once.
+const GuardEnv = "SEMIO_SANDBOX_GUARD"
+
+// 🧺️ScratchEnv names the environment variable that keeps the issued scratch directory below the checkout (`keep`) instead of relocating it, for a harness whose tests need the scratch to be the issued one.
+const ScratchEnv = "SEMIO_SANDBOX_SCRATCH"
 
 var (
 	origin string
@@ -39,12 +46,18 @@ func Root() string {
 	return root
 }
 
-// 🧰️Run runs a test binary (its scratch directory, which the issued test environment places below the checkout, is owned too) against a root it owns: a temporary git repository is bound as the workspace root and working directory, every resolution is observed, and the run fails when anything resolved or still holds the checkout the binary was started in. The held callback names extra roots the caller keeps, and it may be nil.
+// 🧰️Run runs a test binary against a root it owns: a temporary git repository is bound as the workspace root and working directory, every resolution is observed, and the run aborts when anything resolves the root of the checkout the binary was started in (`SEMIO_SANDBOX_GUARD=report` collects every offender instead) and fails when anything still holds it; an issued scratch directory below the checkout is replaced by one outside it (see RelocateScratch), and repositories below the checkout are roots of their own and pass. The held callback names extra roots the caller keeps, and it may be nil.
 func Run(name string, held func() map[string]string, run func() int) int {
 	cwd, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 2
+	}
+	checkout := workspace.ResolveRepoRoot(cwd)
+	if os.Getenv(ScratchEnv) != "keep" {
+		if restore := RelocateScratch(checkout, ScratchBases()...); restore != nil {
+			defer restore()
+		}
 	}
 	repository, err := os.MkdirTemp("", name+"-sandbox-")
 	if err != nil {
@@ -57,11 +70,9 @@ func Run(name string, held func() map[string]string, run func() int) int {
 		return 2
 	}
 	origin = workspace.CanonicalPath(cwd)
-	checkout := workspace.ResolveRepoRoot(cwd)
 	guard := NewGuard(checkout)
-	guard.Own(repository)
-	if scratch := os.TempDir(); workspace.CanonicalPath(scratch) != workspace.CanonicalPath(checkout) {
-		guard.Own(scratch)
+	if os.Getenv(GuardEnv) != "report" {
+		guard.AbortOnTouch()
 	}
 	defer workspace.ObserveRootResolution(guard.Observe)()
 	workspace.SetRootDir(repository)
@@ -82,6 +93,62 @@ func Run(name string, held func() map[string]string, run func() int) int {
 		}
 	}
 	return code
+}
+
+// 🗑️scratchEnvironment lists the variables through which `os.TempDir` finds the scratch directory on Unix (`TMPDIR`) and Windows (`TMP`, `TEMP`).
+var scratchEnvironment = []string{"TMPDIR", "TMP", "TEMP"}
+
+// 📍️ScratchBases lists the directories, in order of preference, below which a scratch directory outside the checkout is created: the per-user cache directory, then the shared temporary directories of Unix.
+func ScratchBases() []string {
+	bases := []string{}
+	if cache, err := os.UserCacheDir(); err == nil {
+		bases = append(bases, cache)
+	}
+	if runtime.GOOS != "windows" {
+		bases = append(bases, "/tmp", "/var/tmp")
+	}
+	return bases
+}
+
+// 🧹️RelocateScratch moves the scratch directory of this process out of the checkout when the issued one lies inside it, because a test directory below a checkout resolves to the checkout as soon as it carries no `.git` of its own. It creates a fresh directory below the first base that lies outside the checkout, has no repository above it and accepts a write, points the scratch variables at it and returns the function that removes it and restores the variables, or nil when the scratch already lies outside or no base qualifies (the guard then remains the defence).
+func RelocateScratch(checkout string, bases ...string) func() {
+	if !PathWithin(checkout, os.TempDir()) {
+		return nil
+	}
+	for _, base := range bases {
+		if base == "" || PathWithin(checkout, base) {
+			continue
+		}
+		scratch, err := os.MkdirTemp(base, "sg-")
+		if err != nil {
+			continue
+		}
+		probe := filepath.Join(scratch, "probe")
+		if os.WriteFile(probe, nil, 0o600) != nil || os.Remove(probe) != nil || !SameDirectory(workspace.ResolveRepoRoot(scratch), scratch) {
+			os.RemoveAll(scratch)
+			continue
+		}
+		previous := map[string]*string{}
+		for _, variable := range scratchEnvironment {
+			if value, set := os.LookupEnv(variable); set {
+				previous[variable] = &value
+			} else {
+				previous[variable] = nil
+			}
+			os.Setenv(variable, scratch)
+		}
+		return func() {
+			for variable, value := range previous {
+				if value == nil {
+					os.Unsetenv(variable)
+				} else {
+					os.Setenv(variable, *value)
+				}
+			}
+			os.RemoveAll(scratch)
+		}
+	}
+	return nil
 }
 
 // #endregion 🚧️Sandboxed Run

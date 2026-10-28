@@ -52,10 +52,11 @@ def verdict(f,boot):
     if fam=="leaked-image":
         detach=[("detach-image",f["key"])]
         if f["backing"]=="absent":return "act","backing-removed",detach
-        if f["location"]!="scratch":return "keep","owned",[]
+        stale=f["location"]=="workspace" and "attachment" in f
+        if f["location"]!="scratch" and not stale:return "keep","owned",[]
         if not f["idle"]:return "keep","live",[]
         if f["lease"]=="unavailable":return "keep","unleased",[]
-        return ("act","abandoned",detach) if f["lease"]=="free" else ("keep","live",[])
+        return ("act","stale-attachment" if stale else "abandoned",detach) if f["lease"]=="free" else ("keep","live",[])
     if fam=="image-receipt":
         if f["state"]=="unreadable":return "refuse","unreadable-receipt",[]
         if f["state"]=="absent":return "keep","unpublished",[]

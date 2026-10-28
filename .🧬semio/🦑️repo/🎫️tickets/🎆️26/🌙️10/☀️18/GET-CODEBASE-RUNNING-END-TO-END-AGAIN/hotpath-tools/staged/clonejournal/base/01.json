@@ -1,0 +1,12 @@
+{
+ "version": "1",
+ "sources": [
+  {
+   "platform": "any",
+   "architecture": "any",
+   "sha256": "ae00e3f04e3ca4855a2103c3ff22c8f8e11d10e2f8dbd5309a2cf8393d05e456",
+   "source": "🦀️.rs",
+   "bytes": 33355
+  }
+ ]
+}

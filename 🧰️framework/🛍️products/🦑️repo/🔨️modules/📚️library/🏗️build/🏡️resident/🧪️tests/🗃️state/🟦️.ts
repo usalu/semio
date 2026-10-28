@@ -134,6 +134,7 @@ describe("state against naive oracles under random edits",()=>{
  test("verify mode proves by stat: a silent content change is found, an unchanged owner is not rehashed",async()=>{
   const ctx=setup("state-verify-",{racyWindowMilliseconds:0});roots.push(ctx.root);const{root,state}=ctx;
   state.setTrust("verify");
+  expect(state.since(state.cursor())).toMatchObject({complete:false,reason:"trust"});
   const key=await state.taskKey("o1:build"),hashed=state.stats.hashCalls;
   expect(await state.taskKey("o1:build")).toBe(key);
   expect(state.stats.hashCalls).toBe(hashed);

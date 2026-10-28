@@ -8,7 +8,7 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { get, plain, repository, semio, sleep } from "../🧰️support/🟦️.ts";
 
 const instance = process.env.SEMIO_SMOKE_INSTANCE ?? "v1-smoke";
-const env = { SEMIO_DASHBOARD_INSTANCE: instance, SEMIO_LOCALE: "en" };
+const env = { SEMIO_DASHBOARD_INSTANCE: instance, SEMIO_LANGUAGE: "en" };
 const run = (args: string[], timeoutMs = 120_000) => semio(args, { cwd: repository, env, timeoutMs });
 
 /** 🔬️ Starts the named instance and proves that it is not the daemon an instance-less client reaches. */
@@ -17,7 +17,7 @@ async function isolation(): Promise<string | undefined> {
   if (started.code !== 0) return `the instance daemon did not start: ${started.stderr}${started.stdout}`;
   const pid = (text: string): string | undefined => /daemon pid (\d+)/.exec(text)?.[1];
   const mine = pid((await run(["daemon", "status"], 30_000)).stdout);
-  const shared = await semio(["daemon", "status"], { cwd: repository, env: { SEMIO_LOCALE: "en" }, timeoutMs: 30_000 });
+  const shared = await semio(["daemon", "status"], { cwd: repository, env: { SEMIO_LANGUAGE: "en" }, timeoutMs: 30_000 });
   if (!mine) return "the instance daemon reports no pid";
   return pid(shared.stdout) === mine ? `the instance ${instance} answers as the daemon of the workspace itself (pid ${mine}): no isolation` : undefined;
 }

@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🟦️.ts": {
+  "file": "f01",
+  "base": "e3363df7ef2186220749f84902682dbed0dc50392732203810c2a80f414da70b",
+  "new": "18f9a671d57e62e761d40d20e920575939be50db4a9a06636ca29f1932e945eb"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧬️schema/🔣️.json": {
+  "file": "f02",
+  "base": "1b52aac576d4f46cce86e81df7d8c87bea679ad15e3d102fdab1b9d3b0779b27",
+  "new": "0065506348ef600fa3ce6d8be5b996b544d05b17ebf6ada894d1935c986616cf"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔣️.json": {
+  "file": "f03",
+  "base": "936bc88555d843debcea91978236f95d85e843a7a5fae41554846d2c1179e873",
+  "new": "59bdcf9e25138e43bb401145537fa2fa4a009cb29498ea1d350dfe46812e6e72"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/🧪️tests/🟦️.ts": {
+  "file": "f04",
+  "base": "b4838331d79b5d21cd97eb97132e1230c6ba509b0f82366c1c97d8d2747d0cd2",
+  "new": "5dade87c3f5200a9d73e10561f9f61ce2acae69105e3294580e147c77f9f1250"
+ }
+}

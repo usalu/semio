@@ -1,0 +1,63 @@
+# result-ts2-g (wave 1026g, executor ts2-g): warm TypeScript typecheck in Bazel + vitest ownership walk
+
+STATUS 10:12 FINAL (graph-free; frozen for the 10:30 window): ENGINE + WORKER + SERVICE ROUTING + VITEST MEMO LANDED, all laws green graph-free, real Bazel 8.4.2 proofs green on scratch output bases (2 real-Bazel laws). NOT run through the official graph (my edits are in the build library, so the next official run regenerates the graph once; rule: only when `leases status` WAITING < 4 and one at a time). No git command, no sub-agent, no ticket tool. One brief violation, own process: a `pkill -f` of my own runaway `find` at 09:00.
+
+FOR coordinator: all edits are under `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**`, `…/🧪️testing/**` and `🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/**`: they change the graph inference digest like any build-library edit (one regeneration). Every hermetic action key changes once (new runner text).
+FOR bzsrv-g / ram-g: the service worker policy is in `🔒️hermetic/🔣️.json` `services` (mnemonic `RepoHermeticService`, 2 instances, engine heap bound 2 GiB, idle release 120 s); see "Memory" below. Bazel's worker RSS right after a cold check on bun is ~4 GB for seconds (macOS keeps freed pages mapped), then falls to 0.7-1.5 GB after the forced collection the engine performs after every cold check.
+FOR keys-g: `runtime.inputs` of the hermetic table gained the engine module and the table file (declared inputs of every hermetic action).
+
+## Answer 1: `course:typecheck` after a one-line edit (decision: persistent worker, measured)
+Method: `C/ts2-g-tools/proto.mjs` runs the real 3,023-file course program (live tree, virtual edits, nothing written) through (a) a cold `createProgram`+`getPreEmitDiagnostics` and (b) the engine (builder program kept in memory, SourceFiles reused while byte-equal, module resolutions redone on every check), in ONE process on the SAME frozen file contents, 22 edit steps (comment, body, export, error, error fixed, mid-module body/export/error, API break and restore, JSON key, delete and restore a file, ambient global, tsconfig option on/off, `paths` change). Machine load 20-37; CPU seconds are the stable column.
+| step | cold `tsc` (CPU-s) | engine, node | engine, **bun** (what a worker runs) |
+|---|---|---|---|
+| first check | 26-31 (node), **41 (bun), 3.9 GB** | 30 | 36 |
+| no-op | 24-26 | 1.3 | 0.7 |
+| leaf comment / body / export / error | 25-30 | 1.1-1.4 | 0.4-1.1 |
+| mid-module body | 29 | 1.3 | 0.3-0.8 |
+| mid-module export / error (13 importers) | 29-35 | 4.6-5.7 | 3.2-4.9 |
+| API break (re-export renamed) / restored | 32-34 | 3.8-4.6 | 2.7-3.6 |
+| JSON key rename / restored | 25-27 | 1.9-2.1 | - |
+| tsconfig option on / off, global-affecting | 28-29 | 17-21 | - |
+**Equality: 22 of 22 steps `same:true`** (`C/🗑️generated/ts2-g/both.jsonl`: sorted `file(line):TScode` lists equal, including 4-7 live errors of the tree). The cold hermetic action that runs today is **bun**, not node: 41 CPU-s and 3.87 GB peak (node: 26.6 CPU-s, 2.06 GB; `C/ts2-g-tools/cold-bun.sh`), worse than ts-g's node numbers.
+Why a worker and not the alternatives (measured / from ts-g):
+- warm tsbuildinfo (the route every other typecheck takes): 6-7 CPU-s (ts-g), needs host state, so the action cannot be hermetic/remote; engine in a worker: 0.4-1.4 CPU-s for body/export edits, 3-5 for a widely imported module, same hermetic action.
+- per-package typecheck actions: signature edit 95 CPU-s and a missed `declare global` (ts-g) - rejected, not built.
+- heap cap / vitest `--changed`: rejected by ts-g.
+Soundness: (1) the engine law (below); (2) module resolutions are redone on every check (`hasInvalidatedResolutions` always true) because a file created outside the root set must flip a failed import (law step `nested-created`, with a teeth test that an engine keeping resolutions is told apart); (3) the compiler's own `shouldCreateNewSourceFile` flag and options changes are honoured; (4) any failure or cancellation drops the program; (5) the service can only make a check faster: if it cannot answer (no worker, no connection, engine error, switches it does not own such as `--listFiles`) the provider runs the cold compiler exactly as before.
+
+## What landed
+Engine (self-contained, imports only `node:path`):
+- NEW `🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🔁️incremental/🟦️.ts`: `createTypeScriptCheckEngineV1` (retention: 2 programs, 2 GiB collected heap, 120 s idle; collects after every cold check and above the bound; releases everything when still above), `typeScriptCheckSwitchesAdmittedV1`, `createHermeticServiceV1` (the module the worker imports; resolves `typescript` from the requesting project's own dependency tree, one engine per compiler module).
+- Law `🧪️tests/🔁️incremental/{🟦️.ts,🔣️.json}` (11 tests): the 27-step corpus (ts-g's 22 + 5 new steps for files created/retyped/deleted outside the root set) with FOUR oracles per step - hand-written expected lists, cold `tsc` CLI, compiler API, the engine (exit code equal to the CLI's) - plus teeth tests (a `--noCheck` warm check and an engine that keeps resolutions are both told apart), retention/LRU, cancellation drops the program, heap bound releases and says why, switch admission, unusable invocation = exit 1 with the compiler's TS5083, service routing.
+Worker (runner, rules, routing):
+- `🔧️tools/🏗️bazel/🏃️execution/🏭️runner/🍞️bun/🟦️.ts`: the runner is now one `execute()` plus either the ordinary single run (also through an `@flagfile`) or `--persistent_worker` (JSON protocol: sequential requests, cancel kills the whole process group, stdout carries only responses). Worker mode requires aliased inputs and NO outputs; the private root, staged inputs (stat signature size/mtime/ctime/inode, removal follows the manifest), `node_modules` links and dependency-snapshot files persist between requests; any failure or cancellation removes the root and the state; a manifest `service` is imported once per content digest and served on an authenticated loopback socket (token, path must stay inside the active root, socket close cancels); idle timer releases the engine. Single-run behaviour unchanged (all 16 existing execution tests + path-plan + shim tests pass).
+- `🏃️execution/🟦️.ts`: Starlark `repo_hermetic_task` gets `worker` and `mnemonic` attributes (flagfile + `supports-workers`/json/cancellation only for workers, runner becomes a tool), `bazelServiceFlagsV1` (`--strategy=RepoHermeticService=[remote,]worker,sandboxed,local` and `--worker_max_instances`), manifest `service`, plan `service` (only for output-free members), judge accepts `worker` + params file + runner tool for service actions.
+- Schema+table: `🔒️hermetic-classes.json` `services` / `Engine` / class `service`; `🔒️hermetic/🔣️.json` `services` (mnemonic, instances 2, engine `typescript-check`), class `ts-typecheck.service`, `runtime.inputs` += engine + table; `🔒️hermetic/🟦️.ts` `hermeticServiceV1`, `HERMETIC_SERVICES_V1`; `🔧️tools/🏗️bazel/🏃️execution/🧬️schema/🔣️.json` `Manifest.service`.
+- Generator `📜️script.ts`: action `service`, BUILD attributes `worker = True`, `mnemonic = "RepoHermeticService"`, manifest `service`, flags added to the Bazel command line next to the hermetic flags.
+- Provider `🏗️build/🏃️execution/🔒️hermetic/🔌️providers/🔷️typescript/🟦️.ts`: asks the service (address in `SEMIO_HERMETIC_TYPESCRIPT_CHECK`, name read from the table) and falls back to the cold compiler.
+- Tests: `🏃️execution/🧪️tests/👷️worker/🟦️.ts` (10: worker persistence/edit/removal/snapshots, failure drops state, cancel, token and path refusal, outputs refused, idle release, flagfile equals worker; table closure + engine/provider/runner agreement, flags vs an independent Python implementation on 12 rows, manifest/BUILD/Starlark, judge) and **two real-Bazel laws**: `…/👷️worker/🔒️real-bazel/🟦️.ts` (production Starlark + runner + flags: both actions run in one worker - exec log says `worker` - the second action sees the first's service state `served 1,2`, the next Bazel invocation the same worker `3,4` and the edited input; a wrong expectation fails the action; without workers the same actions run as ordinary sandboxed processes) and the extended `🔒️classes` law (production generator, `@teaching/architecture-course` fixture class members, real typescript): typecheck runs in a worker, `typecheck-bad` fails with TS2322 from the service, `typecheck-env` proves the address exists only for the worker, local strategy and remote refusal unchanged.
+Vitest ownership walk:
+- `🧪️testing/📦️workspace-exports/🟦️.ts` + NEW `🧠️memo/🟦️.ts`: time-sliced yield (20 ms, first operation yields; was one `setImmediate` per operation = 50 % of the CPU) and a validated memo of the last walk (default directory under the OS temp dir, `cache: null` disables): after a walk whose observed tree was settled (no directory or manifest changed within 5 s before the walk began) the memo stores the physical stamp of every listed directory, the identity of every other observed path, the digest of every manifest read and the aliases; a later call proves the same tree by one `lstat` per directory and one digest per manifest and otherwise walks. Keyed by workspace, owner and the digest of the walk implementation + policy. Progress and cancellation are reported per check exactly like the walk.
+- Law `🧠️memo/🧪️tests/🟦️.ts` (4): 19-step edit corpus (export retargeted, member added/removed/renamed, hidden and output directories, unrelated file, name collision, scope declaration widened, content edits that must NOT invalidate), memo answer == fresh walk at every step, answered from the memo exactly when nothing observed changed, `fast-glob` as independent oracle for the member list; torn file / other implementation / other workspace / manifest edit that leaves directories untouched; settle window; per-advance cancellation with event-loop turn. Existing helper tests (40) still green.
+
+## Numbers (before / after)
+Vitest ownership walk, live tree under load 37 (`C/ts2-g-tools/walk-memo.ts`, `walk-floor.ts`):
+| | CPU-s | wall | operations |
+|---|---|---|---|
+| before (per-operation yield) | 5.5-6.0 | 8-20 s | 130,200 |
+| walk with the sliced yield | 3.0-4.0 | 4-8 s | 130,200 |
+| validated memo hit (25,786 directories + 140 manifests + 145 other states) | **0.18-0.23** | **0.35-0.5 s** | 26,071 checks |
+Course typecheck, one-line leaf edit, same program: cold hermetic action (bun) 41 CPU-s / 3.9 GB / 43 s wall (load 25) -> engine on a warm worker 0.4-1.4 CPU-s in the compiler plus the action envelope (runner stat-staging of ~5k inputs, `bun exec repo ./📜️script.ts typecheck` chain, loopback call), not yet measured through the official graph (see Open).
+
+## Memory (coordination with bzsrv-g's worker policy)
+- Bazel keeps the global `--experimental_total_worker_memory_limit_mb` (30 % of host RAM) + `--experimental_shrink_worker_pool`; the service mnemonic is bound to 2 instances (`services.instances`; the 3 hermetic typecheck projects are the only members).
+- The engine measures the COLLECTED heap, not RSS: macOS/JSC keep freed pages in RSS for 10-20 s (4.0 GB right after the first course check, 0.5-0.8 GB after 20 s idle with the heap at 0.96 GB, measured `bun-idle.log`). Cold checks are followed by a collection; above 2 GiB heap after collection the engine drops all programs. One course program holds ~1 GB heap.
+- Worker RSS belongs to the Bazel server's process tree, which bzsrv-g attaches to the capacity grant, so the grant sees it.
+
+## Open / next
+1. Official before/after through the graph: `bun repo --tool=bazel run @teaching/architecture-course:typecheck` cold, then after a one-line edit of a course source (and a library file); and `course:test` startup. Not run: my edits stale the graph (regeneration 60-120 min) and `leases status` WAITING was 4 at 09:00.
+2. A real-Bazel measurement of the action envelope on the real course (runner staging of ~5k files by stat signature, `bun exec` chain ~1-2 s, node_modules link rows) - the engine itself is measured, the envelope is not.
+3. `--workers=off` / remote executor: service actions keep working as ordinary hermetic actions (proved: flagfile run, `typecheck-env`); with a remote executor the strategy list starts with `remote`.
+4. Windows: `detached` process group kill uses `taskkill /T /F`; not run on Windows.
+5. The large-program harness cannot create files (the ambient-global steps are vacuous there); the fixture corpus covers `declare global`.
+6. `bazelHermeticViolationsV1` tool-input expectation for service actions assumes `hermetic-runner.mjs` is a tool (it is, in the Starlark rule).

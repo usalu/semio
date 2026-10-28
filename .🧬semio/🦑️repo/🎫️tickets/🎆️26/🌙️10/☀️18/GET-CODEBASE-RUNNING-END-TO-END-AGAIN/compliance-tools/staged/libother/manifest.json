@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts": {
+  "file": "000.ts",
+  "base": "fd9204914d138d81738849e8ce1274b306f42c3ea11f08fbc2aceaf38ec4d9bf",
+  "new": "684685beffbb17e6cc235260ca676621841e40f2f4c09ea41877f007eb4a87e9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts": {
+  "file": "001.ts",
+  "base": "24ed2b60779eaf934ecec9deac5a2cb51312e6cf23a1ae9c4152fdb110864e49",
+  "new": "bdc5568fcfc35b3f206aaaf7e34a6dff52da1570aa045bca206ce0d8ac77dc99"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️closure-read-worker/🟨️.mjs": {
+  "file": "002.mjs",
+  "base": "1259170b18173f2ebc66fe74587143cdf2aba0dadcfd8002fbe76b16c35d0475",
+  "new": "acd12f1270036052791a813a9d1d9c1e25c91f2038f8ae6aba267210c4ef594e"
+ }
+}

@@ -1,0 +1,24 @@
+{
+ "target": "test-wire-retirement-source",
+ "tag": "r1",
+ "declared": 30,
+ "rows": [
+  {
+   "leg": "bun-wire-retirement",
+   "kind": "tool",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": false,
+   "clean": false,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 1,
+   "tail": "      at testWireRetirementFixture (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎯️action-bus/🧹️wire-retirement/🧪️tests/🔬️wire-retirement/🟦️.ts:17:68) |  | Bun v1.4.2 (macOS arm64) | ",
+   "notes": [
+    "profiles:1",
+    "rules:8",
+    "capacity:600"
+   ]
+  }
+ ]
+}

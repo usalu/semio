@@ -1,0 +1,14 @@
+import{readFileSync}from"node:fs";
+const R="/Users/ueli/Documents/semio/",L=R+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/";
+const inference=await import(L+"🕸️graph/📥️inference/🟨️.mjs");await inference.libraryBootstrap;inference.prepareSourceAnalysesV1();
+const obs=await import(L+"👁️observation/🟨️.mjs");const G=await import(L+"🕸️graph/🕰️generations/🟨️.mjs");
+const dir=process.argv[2],c=JSON.parse(readFileSync(dir+"/current.json","utf8")),m=JSON.parse(readFileSync(dir+"/m/"+c.manifest+".json","utf8"));
+const idx=G.unpackFactIndexV1(readFileSync(dir+"/x/"+m.factIndex+".facts.br"),1<<29);
+const only=new Set(Object.entries(m.owners).filter(([,r])=>r.tag).map(([n])=>n));
+const sel=G.selectFactClassesV1(idx,only);
+const hold=async rows=>{const plain=rows.filter(r=>r.kind!=="closure"&&r.kind!=="field"&&r.kind!=="digest"&&r.kind!=="derived");return plain.length===0||obs.observationsHold(plain,64,new Set(),true);};
+const{stale}=await G.staleFactRowsV1(idx,sel.ids,hold,{});
+const kinds={};for(const id of stale)kinds[idx.rows[id].kind]=(kinds[idx.rows[id].kind]??0)+1;
+console.log("generation",c.generation,"checked",sel.ids.length,"stale",stale.size,JSON.stringify(kinds));
+for(const id of [...stale].slice(0,6))console.log(idx.rows[id].kind,idx.rows[id].path.replace(R,"").slice(-100));
+console.log("tagged owners made stale",G.staleConsumersV1(idx,sel.classes,stale).size);

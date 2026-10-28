@@ -1,0 +1,39 @@
+{
+ "name": "jobsrv",
+ "code": "jobsrv-g-tools/staged",
+ "lane": "jobsrv-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "jobsrv-rust",
+   "lang": "en",
+   "kind": "replace",
+   "old": "`1 of 10 cores admitted` also bounds rustc threads.",
+   "new": "`1 of 10 cores admitted` also bounds rustc threads, and Cargo's own job pool is handed on: build scripts and the compiler wrapper never run more compile jobs than the grant. A pool that Cargo or another parent made is an anonymous PIPE named by descriptors, not by the environment (a launcher fifo or a Windows semaphore is pure environment and always worked); the `/bin/sh` stand-in of a build script now passes an OPEN pair on under the same numbers, and an unreachable pool (stale numbers, missing fifo, a disabled pool) is replaced by an empty first-party fifo (`bin/jobserver-empty` in the unit-cache root) with `-j1` and `NUM_JOBS=1`, so the command runs serially on its own slot instead of inventing a private pool (`cc` made `NUM_JOBS`, rustc 32 slots) and prints `[repo cargo] the job-token pool named by <variable> cannot be reached by this process (<reason>); the command runs on its own single job slot instead of starting more jobs than were admitted`. Measured with a counting compiler (4 crates x 8 C files, most compile jobs at once, plain Cargo / before / after): Cargo's own pipe, grant 4: 4 / 16 / 4; outer pipe, grant 3: 3 / 6 / 3; the same pipe on other descriptor numbers: 3 / 9 / 3; an outer fifo: 3 / 3 / 3; wall time unchanged (26-35 s). Not run on Linux, Windows or through the Rust `semio-build-scheduler`."
+  },
+  {
+   "id": "jobsrv-rust",
+   "lang": "de",
+   "kind": "replace",
+   "old": "`1 of 10 cores admitted` begrenzt auch die rustc-Threads.",
+   "new": "`1 of 10 cores admitted` begrenzt auch die rustc-Threads, und der Job-Pool von Cargo selbst wird weitergereicht: Build-Skripte und der Compiler-Wrapper starten nie mehr Compile-Jobs, als zugesagt sind. Einen Pool, den Cargo oder ein anderer Elternprozess anlegte, benennen anonyme PIPE-Deskriptoren statt der Umgebung (ein Launcher-Fifo oder ein Windows-Semaphor ist reine Umgebung und funktionierte immer); der `/bin/sh`-Stellvertreter eines Build-Skripts reicht ein OFFENES Paar jetzt unter denselben Nummern weiter, und ein unerreichbarer Pool (veraltete Nummern, fehlender Fifo, ein abgeschalteter Pool) wird durch einen leeren eigenen Fifo (`bin/jobserver-empty` im Unit-Cache-Wurzelordner) mit `-j1` und `NUM_JOBS=1` ersetzt, sodass der Befehl seriell auf seinem eigenen Slot läuft, statt einen privaten Pool zu erfinden (`cc` bildete `NUM_JOBS`, rustc 32 Slots), und gibt `[repo cargo] Der in <Variable> genannte Job-Token-Pool ist für diesen Prozess nicht erreichbar (<Grund>); der Befehl läuft auf seinem eigenen einzelnen Job-Slot, statt mehr Jobs zu starten als zugelassen wurden` aus. Gemessen mit einem zählenden Compiler (4 Crates x 8 C-Dateien, meiste Compile-Jobs gleichzeitig, reines Cargo / vorher / nachher): Cargos eigene Pipe, Zusage 4: 4 / 16 / 4; äußere Pipe, Zusage 3: 3 / 6 / 3; dieselbe Pipe auf anderen Deskriptornummern: 3 / 9 / 3; ein äußerer Fifo: 3 / 3 / 3; Wanduhr unverändert (26-35 s). Nicht gelaufen unter Linux, Windows oder durch den Rust-`semio-build-scheduler`."
+  },
+  {
+   "id": "jobsrv-row",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "| `The runtime registry declares contract N, this launcher implements contract M. Rebuild and reinstall the launcher with: …` | the installed Go launcher is older than the registry; run the printed installer once (`🚀️launcher/📥️install`); there is one install location. |",
+   "where": "after",
+   "block": "| `[repo cargo] the job-token pool named by <variable> cannot be reached by this process (<reason>); the command runs on its own single job slot …` | the build script or compiler wrapper inherited a job pool it cannot open (stale descriptor numbers, a vanished fifo, a disabled pool); it runs serially on its own implicit slot, which can only be slower, never wrong. Start the build from `repo cargo` (its launcher pool is a fifo and always reachable) and not from a shell that kept a stale `MAKEFLAGS` or `CARGO_MAKEFLAGS`. `bin/jobserver-empty` is a FIFO inside the cache root: a recursive `cp -R` or rsync of the cache copies it as a FIFO. |"
+  },
+  {
+   "id": "jobsrv-row",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "| `Die Laufzeitregistratur deklariert Vertrag N, dieser Launcher setzt Vertrag M um. Baue den Launcher neu und installiere ihn mit: …` | der installierte Go-Launcher ist älter als die Registratur; den ausgegebenen Installer einmal ausführen (`🚀️launcher/📥️install`); es gibt genau einen Installationsort. |",
+   "where": "after",
+   "block": "| `[repo cargo] Der in <Variable> genannte Job-Token-Pool ist für diesen Prozess nicht erreichbar (<Grund>); der Befehl läuft auf seinem eigenen einzelnen Job-Slot …` | das Build-Skript oder der Compiler-Wrapper erbte einen Job-Pool, den er nicht öffnen kann (veraltete Deskriptornummern, ein verschwundener Fifo, ein abgeschalteter Pool); er läuft seriell auf seinem eigenen impliziten Slot, was nur langsamer, nie falsch sein kann. Den Build aus `repo cargo` starten (sein Launcher-Pool ist ein Fifo und stets erreichbar) und nicht aus einer Shell, die ein veraltetes `MAKEFLAGS` oder `CARGO_MAKEFLAGS` behalten hat. `bin/jobserver-empty` ist ein FIFO im Cache-Wurzelordner: ein rekursives `cp -R` oder rsync des Caches kopiert ihn als FIFO. |"
+  }
+ ]
+}

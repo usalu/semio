@@ -1,0 +1,58 @@
+name: Verify the Repository Devcontainer
+description: Build the actual development environment and run its native dashboard acceptance gates.
+inputs:
+  budget-ms:
+    description: Build budget in milliseconds handed to the container as SEMIO_BUILD_BUDGET_MS; keep it below the timeout of the calling job (default 150 minutes for the 180 minute dashboard job).
+    required: false
+    default: "9000000"
+
+runs:
+  using: composite
+  steps:
+    - name: Build and Exercise the Devcontainer
+      id: execution
+      uses: devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca
+      with:
+        configFile: .devcontainer/devcontainer.json
+        push: never
+        inheritEnv: false
+        env: |
+          SEMIO_LANGUAGE=en
+          SEMIO_BUILD_MODE=prototype
+          SEMIO_BUILD_BUDGET_MS=${{ inputs.budget-ms }}
+          RUST_MIN_STACK=134217728
+          SEMIO_TEST_ARTIFACT_DIR=/tmp/dashboard-artifacts
+          SEMIO_BUILD_TEST_RESULTS_DIR=/tmp/dashboard-results
+          CI=true
+        runCmd: |
+          set -euo pipefail
+          run_gate() {
+            local gate="$1"
+            shift
+            if "$@" >"/tmp/dashboard-$gate.log" 2>&1; then
+              printf "Passed: %s\n" "$gate"
+            else
+              local status=$?
+              tail -c 16384 "/tmp/dashboard-$gate.log"
+              exit "$status"
+            fi
+          }
+          run_gate preflight repo preflight
+          run_gate filesystem-command-laws repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust/Cargo.toml --locked -p semio-framework-filesystem-workspace --lib -- --nocapture --test-threads=1
+          run_gate explicit-language-choice repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml --locked -p semio-framework-repo-dashboard-preferences -p semio-framework-repo-dashboard-language-choice -p semio-framework-repo-dashboard-terminal-laws --lib language -- --nocapture --test-threads=1
+          run_gate canonical-cold-lazy-launch repo run @semio-tech/repo-dashboard-rs:test-cold-start --skip-cache --output=stream
+          run_gate terminal-editor-controller repo run @semio-tech/repo-dashboard-rs:test-windows --skip-cache --output=stream
+          run_gate installed-journeys repo run @semio-tech/repo-dashboard-rs:test-journeys --skip-cache --output=stream
+          run_gate installed-load repo run @semio-tech/repo-dashboard-rs:test-load --skip-cache --output=stream
+          run_gate process-deadline repo run @semio-tech/repo-dashboard-rs:test-process-deadline --skip-cache --output=stream
+          run_gate help repo --help
+          tail -c 16384 /tmp/dashboard-help.log
+    - name: Retain and Check Actual Container Output
+      id: observed
+      if: ${{ always() && !cancelled() }}
+      shell: bash
+      env:
+        ACTUAL_OUTPUT: ${{ steps.execution.outputs.runCmdOutput }}
+      run: |
+        printf '%s\n' "$ACTUAL_OUTPUT" > "$RUNNER_TEMP/dashboard-devcontainer.log"
+        case "$ACTUAL_OUTPUT" in *'Human control plane: repo dashboard'*) ;; *) exit 1 ;; esac

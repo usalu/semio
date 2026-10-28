@@ -1,7 +1,7 @@
+import {noticeLanguagesV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import { createHash, randomBytes } from "node:crypto";
 import { resolve } from "node:path";
 import { acquireQueuedResourceLease, type LeaseWait, type ResourceLease, type ResourceLeaseControl } from "../../../../🔒️leases/🟦️.ts";
-import { leaseLanguageV1 } from "../../../../🔒️leases/🧭️order/🟦️.ts";
 import { readLeaseQueuesV1 } from "../../../../🔒️leases/📋️status/🟦️.ts";
 import { systemAncestryV1 } from "../../../../🪪️agent-sessions/🧭️ancestry/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
@@ -33,7 +33,7 @@ export function cargoCustodyHoldersV1(directory: string, resource: string): read
 
 function say(directory: string, resource: string, buildDirectory: string, profile: string, seconds: number): void {
   const holder = cargoCustodyHoldersV1(directory, resource)[0];
-  process.stderr.write(messages.waiting[leaseLanguageV1()].replace("{directory}", buildDirectory).replace("{profile}", profile).replace("{pid}", String(holder ?? "?")).replace("{seconds}", String(seconds)) + "\n");
+  process.stderr.write(noticeLanguagesV1(["en", "de"] as const).map((language) => messages.waiting[language].replace("{directory}", buildDirectory).replace("{profile}", profile).replace("{pid}", String(holder ?? "?")).replace("{seconds}", String(seconds))).join("\n") + "\n");
 }
 
 function join(key: string, entry: EntryV1, signal: AbortSignal): Promise<CargoCustodyV1> {

@@ -1,0 +1,20 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "🏗️build/👁️observation/🧬️schema/🔣️.json",
+ "definitions": [
+  "limits"
+ ],
+ "sources": [
+  "🏗️build/👁️observation/🟨️.mjs"
+ ],
+ "container": "$defs",
+ "exports": [
+  {
+   "source": "🏗️build/👁️observation/🟨️.mjs",
+   "name": "OBSERVATION_LIMITS_V1",
+   "definition": "limits"
+  }
+ ],
+ "minimumNumber": 60
+}

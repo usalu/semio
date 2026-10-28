@@ -1,0 +1,67 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/♻️pressure/🟦️.ts": {
+  "file": "f000",
+  "base": "76797bafe481f741a7f74e3a9ca20456af8d0918d48e426ef3c0d6cb654157fb",
+  "new": "7cf155e55dea91148904ffdf77dc2ff38160413af7fb85d10a32765d9dba4c3c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🟦️.ts": {
+  "file": "f001",
+  "base": "40d1040314c77a62a2351626dbd3b35b83cd4dbb490cc78c8285a99abfe5a229",
+  "new": "fff6a1fa0ee9b9c6c0d1fc4219ac4c7b52533bcb30452244a6eb7d26c6bfc9e6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts": {
+  "file": "f002",
+  "base": "162ca4e2255baf5f7715d1a0f2b120aa5bc63bc60b7b4f94779a9f3c22f6dda7",
+  "new": "5aba30ecb68a9882bdff8b67c8031a22d3a42cd30bc19fa964381571f80bddcc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts": {
+  "file": "f003",
+  "base": "15ff2d1165ba89398fc14ddc9eaa3e6ccf3212872969069968ef604a7d38e7a4",
+  "new": "9d01a26e10b4b4483e544291f4ed521ee5369e49223a92240caf55227da96b95"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🎛️operation/🟦️.ts": {
+  "file": "f004",
+  "base": "eb1d7ae06b6cac62c699ab98952b4e19141bd6f3c7f491ed856ba48706e377ec",
+  "new": "93919ddca48146fa776163a4c9e8d26d72ae3c94dfcfc9ec0857b8c8868d63a6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🏦️funded/🟦️.ts": {
+  "file": "f005",
+  "base": "253ec63eb394a5b471e9471934c4c55c79fc803150f0bbd441d92f67a3549432",
+  "new": "30c60a5b071c2dde43bc85fd54ff66da6ab158b6384199c8063f9c05b4de0c37"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/📜️script.ts": {
+  "file": "f006",
+  "base": "08d2b0ea856ccea1882c0dac9f9c685f1af018b6b2a86f1e65ce9332e9426db6",
+  "new": "550c80aceb77064018ee4c0c434fb7a8014ee5708cc95ca5b00221427e464e7d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/🟦️.ts": {
+  "file": "f007",
+  "base": "437593ebdd8b064e52828cb7adfec10018fd469e21f03fdc7a51024288d2ff0e",
+  "new": "6344f9b12eea85b3f0ce9f6f5d4fed27d0f48cf2c3028a2f25362dccd161fdab"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️store/🟦️.ts": {
+  "file": "f008",
+  "base": "53139271eaf4f714c47b2a5335ee3a313f5560e6f6978e7edefe7a5ef98a151d",
+  "new": "4726271a3fb65e9014b95212cbc3ab26fb7b3de5bfb01aea4f9c91e591bbd1d6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts": {
+  "file": "f009",
+  "base": "82a350f08eb19a215a9e4333713c40177f8df3e919bb302ec9b06e02250dbe99",
+  "new": "044f564e7f07744523ba0e8ff918d570f85f0d5a7878829b1795dea344992b41"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📥️purpose/🟦️.ts": {
+  "file": "f010",
+  "base": "ddd7e50f6aeba51beb250f3a08e6cefb3e78267d8f21f655f7b345662e570caf",
+  "new": "6d4e17c94a29178f27446a20249ec096dd251d9c2d9dd92695f86e1044f7a444"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🗄️persistent-state/🟦️.ts": {
+  "file": "f011",
+  "base": "f02abfa8c842321af1fa563d31306fd2988fc278e01f6fee9940e2a980db0bad",
+  "new": "940223ee176af8652f42abe8a769625e2e083a84a3d579d57d06a344a6bf560a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts": {
+  "file": "f012",
+  "base": "e2e9f4c81c4274518063999f60d4664f73b0521d3a528874eb4419f098adc807",
+  "new": "660ab0a77fa0e03b5ca0bfddd5abba2096b2e0b50d29e7e237010bfa33a3e589"
+ }
+}

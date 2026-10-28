@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Graph module limits / Grenzen des Graph-Moduls",
+  "definitions": {
+    "Limits": {
+      "description": "EN: The strides, caps and the observation sweep of the graph module. DE: Die Schrittweiten, Obergrenzen und der Beobachtungs-Sweep des Graph-Moduls.",
+      "const": {
+        "invocationCheckStride": 1024,
+        "discoveryProgressStride": 128,
+        "sweepMinimumBlocks": 24576,
+        "sweepBlocksPerHeader": 6,
+        "ownerRowListMaximum": 50000,
+        "reasonCharacters": 200,
+        "snapshotReadChunkBytes": 65536
+      }
+    },
+    "LimitsDescriptions": {
+      "const": {
+        "en": {
+          "invocationCheckStride": "After how many visited values a deep walk checks its invocation for cancellation.",
+          "discoveryProgressStride": "After how many discovered files the discovery reports progress.",
+          "sweepMinimumBlocks": "The fewest observation blocks that must exist before the sweep of superseded blocks runs.",
+          "sweepBlocksPerHeader": "The blocks one header is expected to hold; with the minimum it decides whether the sweep is worth its cost.",
+          "ownerRowListMaximum": "The most files whose stamp one owner folds into its content stamp; an owner with more has no stamp.",
+          "reasonCharacters": "The most characters of the reason a failed prefetch reports.",
+          "snapshotReadChunkBytes": "The size of one read while a retained graph snapshot is staged (64 KiB)."
+        },
+        "de": {
+          "invocationCheckStride": "Nach wie vielen besuchten Werten ein tiefer Durchlauf seinen Aufruf auf Abbruch prueft.",
+          "discoveryProgressStride": "Nach wie vielen entdeckten Dateien die Entdeckung Fortschritt meldet.",
+          "sweepMinimumBlocks": "Die wenigsten Beobachtungsbloecke, die existieren muessen, bevor der Sweep abgeloester Bloecke laeuft.",
+          "sweepBlocksPerHeader": "Die Bloecke, die ein Kopf erwartungsgemaess haelt; entscheidet mit dem Minimum, ob sich der Sweep lohnt.",
+          "ownerRowListMaximum": "Die meisten Dateien, deren Stempel ein Eigentuemer in seinen Inhaltsstempel faltet; ein Eigentuemer mit mehr hat keinen Stempel.",
+          "reasonCharacters": "Die meisten Zeichen des Grundes, den ein fehlgeschlagener Vorabruf meldet.",
+          "snapshotReadChunkBytes": "Die Groesse eines Lesevorgangs, waehrend ein behaltener Graph-Schnappschuss bereitgestellt wird (64 KiB)."
+        }
+      }
+    }
+  }
+}

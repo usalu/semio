@@ -4,6 +4,8 @@ import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { createRequire } from "node:module";
+import{privateRepositoryWorkspaceV1}from"../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 /** 🔁️ Compares persistent graph reloads under native Bun and Node after implementation, policy and helper edits. */
 export async function testGraphRevision(workspace: string, output: string): Promise<void> {
@@ -39,7 +41,7 @@ const schemaPath=join(library,fixture.installationSchema), originalSchema=readFi
 const taxonomy=join(library,"🔣️taxonomy.json"), before=readFileSync(taxonomy,"utf8"); writeFileSync(taxonomy,"{"); await assert.rejects(run("invalid-taxonomy")); writeFileSync(taxonomy,before); await run("taxonomy");
 assert.deepEqual(results,fixture.expected); console.log(JSON.stringify(results));
 `);
-      const result = await runTool(runtime,[join(directory, "📜️script.ts")],directory,AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]),true,{ ...process.env, SEMIO_WORKSPACE_ROOT: directory, REPO_ROOT: directory, NODE_PATH: join(workspace, "node_modules") },{version:1,directory:output,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program});
+      const result = await runTool(runtime,[join(directory, "📜️script.ts")],directory,AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]),true,{ ...process.env, SEMIO_WORKSPACE_ROOT: directory, REPO_ROOT: directory, NODE_PATH: join(workspace, "node_modules") },{version:1,directory:output,leaseDirectory:repositoryCargoPreparationStorageV1(repository.root).leaseDirectory,program:repositoryCargoPreparationStorageV1(repository.root).program});
       results.push(JSON.parse(result.trim()));
     }
     assert.deepEqual(results[0], results[1]);

@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🟦️.ts": {
+  "file": "000.ts",
+  "base": "0d789cf67c9597d50b1e493011aadd7ae93fdb314a055d248b1d1bbd921f8ca3",
+  "new": "a8c86426025fca6bbddcffabb051498a5812e4710b509291dff73911b3c2a787"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌌️universe/🟦️.ts": {
+  "file": "001.ts",
+  "base": "1af7c9afd9d584c4588569f6184462a1384c8d13f2e7d3bc9616936757a4715c",
+  "new": "7741b351d31342e1c05acb0a198cb7e7da5324cd2a04f75cee38ff1bb2eb9edc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🔌️port/🟦️.ts": {
+  "file": "002.ts",
+  "base": "dca51294357250fd9526f05dadcded6d28e10d496989761d2b61342c5216c51f",
+  "new": "95b6844f3e89144fad324535ac02fafa06e67e86528fdc945570a3a54cd69c7b"
+ }
+}

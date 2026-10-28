@@ -4,7 +4,7 @@ export const component: "script-inputs";
 export function wire(registry: ScriptInputsValueV1): void;
 export function createScriptInputCache(context?: ScriptInputsValueV1): ScriptInputsValueV1;
 export function scriptProviderPortsV1(text: string): readonly string[];
-export function scriptProviderImportsV1(cache: ScriptInputsValueV1, ports: readonly string[]): readonly { readonly path: string; readonly source: boolean }[];
+export function designatedPortsV1(cache: ScriptInputsValueV1, ports: readonly string[]): readonly string[];
 export function buildImportResourceV1(containing: string, specifier: string): { readonly specifier: string; readonly suffix: string; readonly source: boolean };
 export function declaredInputPatternV1(input: ScriptInputsValueV1, projectRoot: string): ScriptInputsValueV1;
 export function declaredModuleGlobsV1(inputs: ScriptInputsValueV1, workspaceRoot: string, projectRoot: string, environment: ScriptInputsValueV1): ScriptInputsValueV1;
@@ -13,6 +13,7 @@ export function relativeScriptInputs(entries: ScriptInputsValueV1, workspaceRoot
 export function withoutSchedulingV1(closure: readonly ScriptInputsValueV1[]): ScriptInputsValueV1[];
 export function nativeCommandInputs(workspaceRoot: string, scripts: ScriptInputsValueV1): Promise<ScriptInputsValueV1>;
 export function targetScriptSources(target: ScriptInputsValueV1, workspaceRoot: string, scripts: ScriptInputsValueV1, projectRoot?: string, nativeManifest?: ScriptInputsValueV1): Promise<ScriptInputsValueV1>;
+export function ownerCommandChildV1(options: ScriptInputsValueV1, bound: ScriptInputsValueV1): { readonly cwd: string; readonly command: string } | undefined;
 export function targetScriptClosure(target: ScriptInputsValueV1, workspaceRoot: string, scripts: ScriptInputsValueV1, projectRoot?: string): Promise<ScriptInputsValueV1>;
 export function nativeLockInputs(command: ScriptInputsValueV1): ScriptInputsValueV1;
 export function nativeTargetCommandInputs(target: ScriptInputsValueV1, workspaceRoot: string, fallback: ScriptInputsValueV1, scripts: ScriptInputsValueV1, projectRoot?: string): Promise<ScriptInputsValueV1>;
@@ -26,4 +27,7 @@ export function registerClosureQueryV1(name: string, query: ScriptInputsValueV1)
 export function bindClosureScriptsV1(workspaceRoot: string, scripts: ScriptInputsValueV1): void;
 export function resetClosureEntriesV1(): void;
 export function closureApiV1(scripts: ScriptInputsValueV1, workspaceRoot: string): ScriptInputsValueV1;
+export function derivedWalkAnswerV1(value: unknown): string;
+export function expandedCommandInputsV1<T>(value: T, workspaceRoot: string, scripts?: ScriptInputsValueV1): Promise<T>;
+export function resolveCommandWalkV1(workspaceRoot: string, entries: readonly string[], cache: ScriptInputsValueV1): Promise<{ readonly value: readonly string[]; readonly rows: readonly ScriptInputsValueV1[]; readonly derived: readonly { readonly row: ScriptInputsValueV1; readonly support: readonly ScriptInputsValueV1[] }[] }>;
 export function yieldInferenceV1(context: ScriptInputsValueV1, phase: string, index: number, force?: boolean): Promise<void>;

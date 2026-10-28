@@ -2,7 +2,7 @@
 use super::{GisTerrainWindowConfig, GisTerrainWindowConfigDiff};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🧬️Leaves
-#[path = "🎥️set-camera/🦀️.rs"]
+#[path = "🎥️camera/🦀️.rs"]
 mod set_camera;
 pub use set_camera::SetCamera;
 //#endregion 🧬️Leaves

@@ -13,7 +13,7 @@ export type NativeBootTargetV1=
  |Readonly<{kind:"server";scope:string;root:string;paths:readonly string[]}>
  |Readonly<{kind:"swap";scope:string;directory:string;intent:string;writerFree:()=>boolean|Promise<boolean>}>
  |Readonly<{kind:"record";scope:string;final:string;temporary:string}>
- |Readonly<{kind:"images";scope:string;workspace:string;roots:readonly string[];now:()=>number;roster:()=>Promise<readonly Readonly<{imagePath:string}>[]>;lease:(imagePath:string)=>Promise<"free"|"held"|"unavailable">}>;
+ |Readonly<{kind:"images";scope:string;workspace:string;roots:readonly string[];now:()=>number;roster:()=>Promise<readonly Readonly<{imagePath:string;mounts?:readonly string[];owners?:boolean|null}>[]>;lease:(imagePath:string)=>Promise<"free"|"held"|"unavailable">}>;
 
 /** 🕰️ Fixes the boot identity the facts are judged against. */
 export type NativeBootClockV1=Readonly<{bootSession:string;bootEpochMs:number}>;
@@ -79,11 +79,12 @@ const within=(path:string,root:string)=>path===root||path.startsWith(root.endsWi
 async function images(target:Extract<NativeBootTargetV1,{kind:"images"}>):Promise<readonly NativeBootFactV1[]>{
  const rows=await target.roster(),limits=protocol.leakedImages;if(rows.length>limits.maximumImages)throw Error("Bounded kernel image roster required");
  const facts:NativeBootFactV1[]=[];
- for(const{imagePath}of rows){
+ for(const{imagePath,mounts,owners}of rows){
   const key=createHash("sha256").update(imagePath).digest("hex"),row=stat(imagePath),present=!!row&&row.isFile()&&!row.isSymbolicLink(),location=within(imagePath,target.workspace)?"workspace":target.roots.some(root=>within(imagePath,root))?"scratch":"other";
-  if(present&&location!=="scratch")continue;
+  const attachment=mounts===undefined?undefined:mounts.length===0?"unmounted" as const:owners===false?"noowners" as const:undefined,stale=location==="workspace"&&attachment!==undefined;
+  if(present&&location!=="scratch"&&!stale)continue;
   const idle=present&&target.now()-Number(row!.mtimeMs)>=limits.idleMilliseconds;
-  facts.push({family:"leaked-image",scope:target.scope,key,backing:present?"present":"absent",location,idle,lease:present&&location==="scratch"&&idle?await target.lease(imagePath):"unavailable"});
+  facts.push({family:"leaked-image",scope:target.scope,key,backing:present?"present":"absent",location,idle,lease:present&&(location==="scratch"||stale)&&idle?await target.lease(imagePath):"unavailable",...(stale?{attachment}:{})});
  }
  return facts;
 }

@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts": {
+  "file": "f000",
+  "base": "5ad434f6f252e87e0b42e20402d6ad60a5811d6f65751e5ef4c0bd22c7b7f46e",
+  "new": "3aecc9924e5dcc7bf48ab4b1981a963a003b1b1debb891ba7133f766781cff4d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🧪️tests/🧹️supersede/🟦️.ts": {
+  "file": "f001",
+  "base": "4313361c03260f9bac4cd9dc8154fdafa55d558f585244368165a83c19d5aa66",
+  "new": "215e801a627eb760fb65c975bc5b76c9c4694c13460699b5430dc55eec242d9c"
+ }
+}

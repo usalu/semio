@@ -18,9 +18,15 @@ const intlLanguage = (value: string): string | null => {
   try { const language = new Intl.Locale(head.replaceAll("_", "-")).language; return supported.includes(language) ? language : null; } catch { return null; }
 };
 
-const resolve = (chain: { systemVariables: string[]; choices: {language:string;name:string}[] }, environment: Record<string, string>): string | null => {
-  for (const name of chain.systemVariables) { const named = environment[name] === undefined ? null : intlLanguage(environment[name]!); if (named) return named; }
-  return null;
+const protocol = read("../../../../../../🔨️modules/⚙️runtime/🗣️language/🔣️.json");
+const shared = read("../../../../../../🔨️modules/⚙️runtime/🗣️language/🧪️tests/🔣️.json");
+
+const resolve = (environment: Record<string, string>): string | null => {
+  const explicit = environment[protocol.explicitVariable];
+  if (explicit) return intlLanguage(explicit.trim());
+  for (const entry of (environment[protocol.preferenceListVariable] ?? "").split(protocol.preferenceListSeparator)) { const named = entry ? intlLanguage(entry) : null; if (named) return named; }
+  const name = protocol.environmentOrder.find((candidate: string) => environment[candidate]);
+  return name === undefined ? null : intlLanguage(environment[name]!);
 };
 
 test("Ajv independently validates the shipped language chain and refuses every invalid declaration", () => {
@@ -35,8 +41,10 @@ test("Intl.Locale independently negotiates the system values of the shared vecto
 });
 
 test("an independent resolver follows the declared chain for every shared environment", () => {
-  for (const row of vectors.resolve) expect(resolve(declaration, row.environment), JSON.stringify(row)).toBe(row.expected);
-  for (const row of vectors.choiceOrders) expect(resolve(row.declaration, {}), JSON.stringify(row)).toBe(row.expected);
+  const rows = shared.resolve.filter((row: { args: string[]; os: string[] }) => row.args.length === 0 && row.os.length === 0);
+  expect(rows.length).toBeGreaterThanOrEqual(15);
+  for (const row of rows) expect(resolve(row.environment), JSON.stringify(row)).toBe(row.expected?.language ?? null);
+  for (const row of vectors.choiceOrders) expect(resolve({}), JSON.stringify(row)).toBe(row.expected);
 });
 
 test("the dashboard holds no default language in code", () => {

@@ -142,10 +142,10 @@
     },
     {
       "id": "leaf-transient",
-      "fdStable": false,
+      "fdStable": true,
       "namespaceStable": true,
       "completed": true,
-      "accepted": false
+      "accepted": true
     },
     {
       "id": "grow-eof",

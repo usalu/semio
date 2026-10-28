@@ -1,0 +1,11 @@
+{
+  "processTable": "  4 0 120\r\n 100 4 20480\r\n 200 100 10240\r\n 300 100 5120\r\n 400 1 99999\r\n\r\n",
+  "trees": {"100": 35, "200": 10, "300": 5, "400": 97, "999": null},
+  "cgroupV1": {
+    "limited": {"membership": "4:cpu,cpuacct:/docker/abc\n3:memory:/docker/abc\n", "files": {"/sys/fs/cgroup/cpu,cpuacct/docker/abc/cpu.cfs_quota_us": "200000\n", "/sys/fs/cgroup/cpu,cpuacct/docker/abc/cpu.cfs_period_us": "100000\n", "/sys/fs/cgroup/cpu,cpuacct/cpu.cfs_quota_us": "-1\n", "/sys/fs/cgroup/cpu,cpuacct/cpu.cfs_period_us": "100000\n"}, "logical": 10, "cores": 2},
+    "rounded": {"membership": "2:cpu:/job\n", "files": {"/sys/fs/cgroup/cpu/job/cpu.cfs_quota_us": "150000\n", "/sys/fs/cgroup/cpu/job/cpu.cfs_period_us": "100000\n"}, "logical": 10, "cores": 2},
+    "unlimited": {"membership": "4:cpu,cpuacct:/docker/abc\n", "files": {"/sys/fs/cgroup/cpu,cpuacct/docker/abc/cpu.cfs_quota_us": "-1\n", "/sys/fs/cgroup/cpu,cpuacct/docker/abc/cpu.cfs_period_us": "100000\n"}, "logical": 6, "cores": 6},
+    "aboveHost": {"membership": "4:cpu,cpuacct:/\n", "files": {"/sys/fs/cgroup/cpu,cpuacct/cpu.cfs_quota_us": "1600000\n", "/sys/fs/cgroup/cpu,cpuacct/cpu.cfs_period_us": "100000\n"}, "logical": 8, "cores": 8},
+    "noCpuRow": {"membership": "3:memory:/docker/abc\n", "files": {}, "logical": 4, "cores": 4}
+  }
+}

@@ -23,7 +23,7 @@ const scratch=()=>{const directory=mkdtempSync(join(tmpdir(),"bazel-snapshot-"))
 test("snapshot corpus is closed and its content addresses are verified by an independent implementation",()=>{
  expect(new Ajv({strict:false}).validate(corpusSchema,corpus)).toBe(true);
  for(const file of corpus.files)expect(sha(bytesOf(file)),file.path).toBe(file.sha256);
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I","-c","import base64,hashlib,json,sys\nrows=json.loads(sys.stdin.read())\nprint(json.dumps([hashlib.sha256((r['text'].encode() if 'text' in r else base64.b64decode(r['base64']))).hexdigest() for r in rows['files']]+[hashlib.sha256(d.encode()).hexdigest()[:rows['hex']] for d in ['','lib','lib/src','deep/x/y/z']]))"],{stdin:new TextEncoder().encode(JSON.stringify({files:corpus.files,hex:corpus.alias.hexLength})),stdout:"pipe",stderr:"pipe"});
  expect(result.exitCode,result.stderr.toString()).toBe(0);
  const values=JSON.parse(result.stdout.toString()) as string[];
@@ -132,7 +132,7 @@ test("a path that escapes the checkout is refused before anything is written",as
 
 test("two directories that share an alias are refused",async()=>{
  const{directory,checkout,space}=scratch();
- try{await expect(captureBazelSourceSnapshotV1({...request(checkout,space),alias:()=>"same"})).rejects.toThrow("alias collision");}
+ try{await expect(captureBazelSourceSnapshotV1({...request(checkout,space),alias:()=>"same"})).rejects.toThrow("source-alias-collision");}
  finally{rmSync(directory,{recursive:true,force:true});}
 });
 

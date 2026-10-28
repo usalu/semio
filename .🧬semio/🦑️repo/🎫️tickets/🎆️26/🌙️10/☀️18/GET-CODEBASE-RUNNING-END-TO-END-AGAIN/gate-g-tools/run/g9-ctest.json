@@ -1,0 +1,31 @@
+{
+ "label": "g9-ctest",
+ "target": "@teaching/architecture-course:test",
+ "started": "23:53:14",
+ "wall_s": 85.4,
+ "peak_tree_mb": 4973,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "inferring": [
+   "13"
+  ],
+  "refreshing": [
+   "13"
+  ],
+  "published": [
+   "588",
+   "13",
+   "25"
+  ],
+  "processes": [
+   "10",
+   "2 action cache hit, 5 disk cache hit, 2 internal, 3 local"
+  ],
+  "actions": [
+   "10"
+  ]
+ }
+}

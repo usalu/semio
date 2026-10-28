@@ -1,0 +1,260 @@
+# 🐹 Go CI: every Go project of the repository is tested by its official `repo run` route on the operating systems it ships on, and the launcher (the one
+# Go program every user starts) is tested on Linux, macOS and Windows.
+#
+#   launcher - per operating system: `@semio-tech/repo-launcher-go:test`, the language-agnostic launcher laws (route vectors, root contract, runtime provisioning,
+#              resident protocol) plus, on Windows only, the five Windows laws (job object that ends the runtime with the launcher, final-path root spelling equal to Bun's, pipe
+#              owner check, transient rename retry, nonce). Blocking everywhere. Windows additionally records evidence that only a real Windows host gives (root spelling end to
+#              end, the installer replacing a running launcher, rename over an open file under Bun, the cost of the process snapshot); those steps never fail the job, they print what
+#              was measured into the job summary so that the open questions of the Windows review get an answer from the first runs.
+#   modules  - per operating system and group: every other `repo-*-go` project (wildcard, so a new Go project joins by its name) and the three TypeScript projects that run Go
+#              modules (`repo-client`, `repo-mcp`, `repo-coordinator`). Linux and macOS are blocking; Windows is advisory (`continue-on-error`) until the first green run proves
+#              the modules there, then the flag goes away.
+#
+# Contract as in build-system.yml: every build step is `repo ...`, the implementation is the single value BUILD_TOOL, no step names an installer or a Go command, and the
+# Go build cache is the repository's own (`go` area of the cache ledger), restored and saved through ./.github/actions/tool-cache. Every action is pinned to a commit.
+
+name: go
+
+on:
+  pull_request:
+  push:
+    branches: [main, "⛳wip"]
+  workflow_dispatch:
+    inputs:
+      tool:
+        description: Build implementation
+        type: choice
+        options: [bazel, nx]
+        default: bazel
+
+permissions:
+  contents: read
+
+concurrency:
+  group: go-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NODE_VERSION: 24.15.0
+  BUILD_TOOL: ${{ inputs.tool || 'bazel' }}
+  CI: "true"
+  SEMIO_LANGUAGE: en
+  GO_BUILD_CACHE: .🧬semio/🦑️repo/⚡️cache/go
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  launcher:
+    name: launcher (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: linux, os: ubuntu-24.04}
+          - {name: macos, os: macos-26}
+          - {name: windows, os: windows-2025}
+    steps:
+      - name: Enable long paths before checkout (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          git config --system core.longpaths true
+          git config --system core.autocrlf false
+          New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force | Out-Null
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/repo-launcher
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Restore the Go build cache
+        uses: ./.github/actions/tool-cache
+        with:
+          mode: restore
+          name: go-build
+          paths: ${{ env.GO_BUILD_CACHE }}
+          hash: ${{ hashFiles('go.work', '🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json') }}
+      - name: Preflight
+        run: repo preflight
+      - name: Provision the build tool
+        timeout-minutes: 30
+        run: repo tools setup "$BUILD_TOOL"
+      - name: Restore the Bun store
+        uses: ./.github/actions/tool-cache
+        with:
+          mode: restore
+          name: bun-store
+          paths: .cache/b/d/m/bun-cache
+          hash: ${{ hashFiles('bun.lock', '*/bun.lock', 'package.json') }}
+      - name: Install the authored dependency scopes
+        timeout-minutes: 30
+        run: repo dependencies sync --all
+      - name: Name the result folders
+        run: |
+          echo "SEMIO_BUILD_TEST_RESULTS_DIR=$RUNNER_TEMP/test-results" >> "$GITHUB_ENV"
+          echo "SEMIO_TEST_ARTIFACT_DIR=$RUNNER_TEMP/test-artifacts" >> "$GITHUB_ENV"
+      - name: Launcher laws of this host (Windows adds the job object, final-path root, pipe owner and transient rename laws)
+        run: repo --tool="$BUILD_TOOL" run @semio-tech/repo-launcher-go:test --skip-cache --output=stream
+      - name: "Windows evidence: the checkout spelled with another case reaches the same resident service and the same state directory"
+        if: ${{ runner.os == 'Windows' && !cancelled() }}
+        continue-on-error: true
+        timeout-minutes: 10
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $first = (Get-Location).Path
+          $swapped = $first.Substring(0, 1).ToLowerInvariant() + $first.Substring(1).ToUpperInvariant()
+          $state = Join-Path $env:LOCALAPPDATA 'semio\repo'
+          $count = { @(Get-ChildItem -LiteralPath $state -Directory -ErrorAction SilentlyContinue).Count }
+          try {
+            repo service start
+            if ($LASTEXITCODE -ne 0) { throw "service start exited with $LASTEXITCODE" }
+            $before = & $count
+            Push-Location -LiteralPath $swapped
+            try {
+              repo service status
+              if ($LASTEXITCODE -ne 0) { throw "service status from the other spelling exited with $LASTEXITCODE" }
+            } finally {
+              Pop-Location
+            }
+            $after = & $count
+            "root spelling: first=$first other=$swapped state directories before=$before after=$after" | Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
+            if ($after -ne $before) { throw "the other spelling created a second state directory" }
+          } finally {
+            repo service stop
+          }
+      - name: "Windows evidence: the installer replaces a launcher that is running"
+        if: ${{ runner.os == 'Windows' && !cancelled() }}
+        continue-on-error: true
+        timeout-minutes: 10
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $directory = Join-Path $env:RUNNER_TEMP 'repo-launcher\bin'
+          $installer = Join-Path $env:GITHUB_WORKSPACE "🧰️framework\🛍️products\🦑️repo\🔨️modules\🚀️launcher\📥️install\🔵️.ps1"
+          $holder = Start-Process -PassThru -WindowStyle Hidden -FilePath (Get-Command repo).Source -ArgumentList @('tools', 'exec', '--light', 'node', '--', '-e', 'setTimeout(()=>{},90000)')
+          try {
+            Start-Sleep -Seconds 5
+            & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -Destination $directory
+            $code = $LASTEXITCODE
+            $aside = @(Get-ChildItem -LiteralPath $directory -Filter 'repo.exe.old-*' -ErrorAction SilentlyContinue).Count
+            "installer while the launcher runs: exit=$code moved-aside copies=$aside" | Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
+            if ($code -ne 0) { throw "the installer exited with $code" }
+            if ($aside -lt 1) { throw "no moved-aside copy of the running launcher" }
+          } finally {
+            & taskkill.exe /T /F /PID $holder.Id | Out-Null
+          }
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -Destination $directory
+          $left = @(Get-ChildItem -LiteralPath $directory -Filter 'repo.exe.old-*' -ErrorAction SilentlyContinue).Count
+          "installer once the launcher stopped: exit=$LASTEXITCODE moved-aside copies left=$left" | Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
+          if ($left -ne 0) { throw "a moved-aside copy survived the next install" }
+      - name: "Windows evidence: rename over an open file under Bun, and what the process snapshot costs"
+        if: ${{ runner.os == 'Windows' && !cancelled() }}
+        continue-on-error: true
+        timeout-minutes: 10
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $probe = "const fs=require('node:fs'),path=require('node:path'),os=require('node:os');const d=fs.mkdtempSync(path.join(os.tmpdir(),'rn-'));const t=path.join(d,'t'),s=path.join(d,'s');fs.writeFileSync(t,'old');fs.writeFileSync(s,'new');const h=fs.openSync(t,'r');let r='renamed';try{fs.renameSync(s,t)}catch(e){r=e.code}fs.closeSync(h);console.log('rename over an open file under Bun '+process.versions.bun+' on '+process.platform+': '+r)"
+          repo tools exec bun -- -e $probe | Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
+          $snapshot = Measure-Command { Get-CimInstance Win32_Process | Out-Null }
+          $start = Measure-Command { repo --version | Out-Null }
+          "process snapshot through CIM: $([int]$snapshot.TotalMilliseconds) ms; repo --version: $([int]$start.TotalMilliseconds) ms" | Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
+      - name: Save the Go build cache (default branch)
+        uses: ./.github/actions/tool-cache
+        with:
+          mode: save
+          name: go-build
+          paths: ${{ env.GO_BUILD_CACHE }}
+          hash: ${{ hashFiles('go.work', '🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json') }}
+      - name: Upload the test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: go-launcher-${{ matrix.name }}
+          path: |
+            ${{ runner.temp }}/test-results
+            ${{ runner.temp }}/test-artifacts
+          if-no-files-found: ignore
+          retention-days: 14
+
+  modules:
+    name: modules (${{ matrix.name }} ${{ matrix.group }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ matrix.minutes }}
+    continue-on-error: ${{ matrix.advisory }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: linux, os: ubuntu-24.04, group: services, minutes: 90, advisory: false, projects: "@semio-tech/repo-*-go,!@semio-tech/repo-launcher-go"}
+          - {name: linux, os: ubuntu-24.04, group: clients, minutes: 120, advisory: false, projects: "@semio-tech/repo-client,repo-mcp,@semio-tech/repo-coordinator"}
+          - {name: macos, os: macos-26, group: services, minutes: 90, advisory: false, projects: "@semio-tech/repo-*-go,!@semio-tech/repo-launcher-go"}
+          - {name: macos, os: macos-26, group: clients, minutes: 120, advisory: false, projects: "@semio-tech/repo-client,repo-mcp,@semio-tech/repo-coordinator"}
+          - {name: windows, os: windows-2025, group: services, minutes: 120, advisory: true, projects: "@semio-tech/repo-*-go,!@semio-tech/repo-launcher-go"}
+          - {name: windows, os: windows-2025, group: clients, minutes: 150, advisory: true, projects: "@semio-tech/repo-client,repo-mcp,@semio-tech/repo-coordinator"}
+    steps:
+      - name: Enable long paths before checkout (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          git config --system core.longpaths true
+          git config --system core.autocrlf false
+          New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force | Out-Null
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/repo-launcher
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Restore the Go build cache
+        uses: ./.github/actions/tool-cache
+        with:
+          mode: restore
+          name: go-build
+          paths: ${{ env.GO_BUILD_CACHE }}
+          hash: ${{ hashFiles('go.work', '🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json') }}
+      - name: Preflight
+        run: repo preflight
+      - name: Provision the build tool
+        timeout-minutes: 30
+        run: repo tools setup "$BUILD_TOOL"
+      - name: Restore the Bun store
+        uses: ./.github/actions/tool-cache
+        with:
+          mode: restore
+          name: bun-store
+          paths: .cache/b/d/m/bun-cache
+          hash: ${{ hashFiles('bun.lock', '*/bun.lock', 'package.json') }}
+      - name: Install the authored dependency scopes
+        timeout-minutes: 30
+        run: repo dependencies sync --all
+      - name: Name the result folders
+        run: |
+          echo "SEMIO_BUILD_TEST_RESULTS_DIR=$RUNNER_TEMP/test-results" >> "$GITHUB_ENV"
+          echo "SEMIO_TEST_ARTIFACT_DIR=$RUNNER_TEMP/test-artifacts" >> "$GITHUB_ENV"
+      - name: Test the Go projects of this group through the official route
+        env:
+          PROJECTS: ${{ matrix.projects }}
+        run: repo --tool="$BUILD_TOOL" run-many --projects="$PROJECTS" --targets=test --skip-cache --parallel=2 --output=stream
+      - name: Save the Go build cache (default branch)
+        uses: ./.github/actions/tool-cache
+        with:
+          mode: save
+          name: go-build
+          paths: ${{ env.GO_BUILD_CACHE }}
+          hash: ${{ hashFiles('go.work', '🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json') }}
+      - name: Upload the test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: go-modules-${{ matrix.name }}-${{ matrix.group }}
+          path: |
+            ${{ runner.temp }}/test-results
+            ${{ runner.temp }}/test-artifacts
+          if-no-files-found: ignore
+          retention-days: 14

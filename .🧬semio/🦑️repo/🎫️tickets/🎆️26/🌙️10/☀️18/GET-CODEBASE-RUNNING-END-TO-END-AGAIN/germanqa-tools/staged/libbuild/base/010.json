@@ -1,0 +1,3400 @@
+{
+ "version": 1,
+ "labels": {
+  "title": {
+   "en": "Performance objectives",
+   "de": "Leistungsziele"
+  },
+  "name": {
+   "en": "Name",
+   "de": "Name"
+  },
+  "list": {
+   "en": "Objectives",
+   "de": "Ziele"
+  },
+  "probes": {
+   "en": "Probes",
+   "de": "Messungen"
+  },
+  "slos": {
+   "en": "Objectives",
+   "de": "Ziele"
+  },
+  "host": {
+   "en": "Host",
+   "de": "Rechner"
+  },
+  "platform": {
+   "en": "Platform",
+   "de": "Plattform"
+  },
+  "cpus": {
+   "en": "Cores",
+   "de": "Kerne"
+  },
+  "memory": {
+   "en": "Memory",
+   "de": "Arbeitsspeicher"
+  },
+  "load": {
+   "en": "Load per core",
+   "de": "Last je Kern"
+  },
+  "hostClass": {
+   "en": "Host class",
+   "de": "Rechnerklasse"
+  },
+  "probe": {
+   "en": "Probe",
+   "de": "Messung"
+  },
+  "slo": {
+   "en": "Objective",
+   "de": "Ziel"
+  },
+  "tool": {
+   "en": "Implementation",
+   "de": "Implementierung"
+  },
+  "lane": {
+   "en": "Lane",
+   "de": "Pfad"
+  },
+  "oneshot": {
+   "en": "one-shot",
+   "de": "Einzelaufruf"
+  },
+  "resident": {
+   "en": "resident service",
+   "de": "residenter Dienst"
+  },
+  "neutral": {
+   "en": "neutral",
+   "de": "neutral"
+  },
+  "metric": {
+   "en": "Metric",
+   "de": "Messgröße"
+  },
+  "statistic": {
+   "en": "Statistic",
+   "de": "Statistik"
+  },
+  "value": {
+   "en": "Value",
+   "de": "Wert"
+  },
+  "goal": {
+   "en": "Goal",
+   "de": "Ziel"
+  },
+  "gate": {
+   "en": "Gate",
+   "de": "Schwelle"
+  },
+  "samples": {
+   "en": "Samples",
+   "de": "Stichproben"
+  },
+  "status": {
+   "en": "Status",
+   "de": "Status"
+  },
+  "reason": {
+   "en": "Reason",
+   "de": "Grund"
+  },
+  "tolerance": {
+   "en": "Tolerance",
+   "de": "Toleranz"
+  },
+  "enforcement": {
+   "en": "Enforcement",
+   "de": "Durchsetzung"
+  },
+  "advisory": {
+   "en": "advisory",
+   "de": "beratend"
+  },
+  "blocking": {
+   "en": "blocking",
+   "de": "verbindlich"
+  },
+  "pass": {
+   "en": "pass",
+   "de": "erfüllt"
+  },
+  "warn": {
+   "en": "goal missed",
+   "de": "Ziel verfehlt"
+  },
+  "fail": {
+   "en": "fail",
+   "de": "verletzt"
+  },
+  "unproven": {
+   "en": "unproven",
+   "de": "unbewiesen"
+  },
+  "recorded": {
+   "en": "recorded",
+   "de": "erfasst"
+  },
+  "improved": {
+   "en": "improved",
+   "de": "verbessert"
+  },
+  "same": {
+   "en": "same",
+   "de": "gleich"
+  },
+  "regressed": {
+   "en": "regressed",
+   "de": "verschlechtert"
+  },
+  "inconclusive": {
+   "en": "inconclusive",
+   "de": "nicht aussagekräftig"
+  },
+  "incomparable": {
+   "en": "incomparable",
+   "de": "nicht vergleichbar"
+  },
+  "new": {
+   "en": "new",
+   "de": "neu"
+  },
+  "missing": {
+   "en": "missing",
+   "de": "fehlt"
+  },
+  "comparison": {
+   "en": "Comparison with the baseline",
+   "de": "Vergleich mit der Referenz"
+  },
+  "baseline": {
+   "en": "Baseline",
+   "de": "Referenz"
+  },
+  "current": {
+   "en": "Current",
+   "de": "Aktuell"
+  },
+  "delta": {
+   "en": "Change",
+   "de": "Änderung"
+  },
+  "relative": {
+   "en": "Relative",
+   "de": "Relativ"
+  },
+  "summary": {
+   "en": "Summary",
+   "de": "Zusammenfassung"
+  },
+  "series": {
+   "en": "Series",
+   "de": "Reihen"
+  },
+  "quiet": {
+   "en": "quiet",
+   "de": "ruhig"
+  },
+  "busy": {
+   "en": "busy",
+   "de": "ausgelastet"
+  },
+  "saturated": {
+   "en": "saturated",
+   "de": "überlastet"
+  },
+  "unknown": {
+   "en": "unknown",
+   "de": "unbekannt"
+  },
+  "runs": {
+   "en": "Runs",
+   "de": "Läufe"
+  },
+  "warmup": {
+   "en": "Warm-up",
+   "de": "Aufwärmläufe"
+  },
+  "kind": {
+   "en": "Kind",
+   "de": "Art"
+  },
+  "unit": {
+   "en": "Unit",
+   "de": "Einheit"
+  },
+  "source": {
+   "en": "Source",
+   "de": "Quelle"
+  },
+  "progress": {
+   "en": "Measured",
+   "de": "Gemessen"
+  },
+  "started": {
+   "en": "Started",
+   "de": "Gestartet"
+  },
+  "finished": {
+   "en": "Finished",
+   "de": "Beendet"
+  },
+  "startKinds": {
+   "en": "Start observed by",
+   "de": "Start beobachtet durch"
+  },
+  "marker": {
+   "en": "tool marker",
+   "de": "Werkzeugmarke"
+  },
+  "first-output": {
+   "en": "first output",
+   "de": "erste Ausgabe"
+  },
+  "exit": {
+   "en": "process exit",
+   "de": "Prozessende"
+  },
+  "inflated": {
+   "en": "inflated by host load",
+   "de": "durch Rechnerlast überhöht"
+  },
+  "blockingFailed": {
+   "en": "blocking objectives failed",
+   "de": "verbindliche Ziele verletzt"
+  },
+  "blockingRegressed": {
+   "en": "blocking objectives regressed",
+   "de": "verbindliche Ziele verschlechtert"
+  },
+  "notes": {
+   "en": "Notes",
+   "de": "Hinweise"
+  },
+  "note-load": {
+   "en": "Times on a saturated host are upper bounds: a missed gate there stays unproven, a met goal stays met.",
+   "de": "Zeiten auf einem überlasteten Rechner sind obere Schranken: eine verfehlte Schwelle bleibt dort unbewiesen, ein erreichtes Ziel bleibt erreicht."
+  },
+  "note-percentile": {
+   "en": "Percentiles interpolate linearly between ranks (inclusive method); p95 needs 20 samples, p99 needs 100.",
+   "de": "Perzentile interpolieren linear zwischen den Rängen (inklusive Methode); p95 braucht 20 Stichproben, p99 braucht 100."
+  },
+  "note-start": {
+   "en": "Edit to rebuild start ends at the first tool marker line. Without a marker the value is only a bound (first output line: lower, process exit: upper) and the objective stays unproven unless the bound already decides it.",
+   "de": "Von der Änderung bis zum Start des Neubaus zählt bis zur ersten Werkzeugmarke. Ohne Marke ist der Wert nur eine Schranke (erste Ausgabezeile: untere, Prozessende: obere) und das Ziel bleibt unbewiesen, solange die Schranke es nicht entscheidet."
+  },
+  "note-marks": {
+   "en": "! marks a blocking objective, * a value inflated by host load.",
+   "de": "! kennzeichnet ein verbindliches Ziel, * einen durch Rechnerlast überhöhten Wert."
+  },
+  "note-recorded": {
+   "en": "Objectives without goal and gate only record the value; the baseline comparison guards them.",
+   "de": "Ziele ohne Zielwert und Schwelle erfassen nur den Wert; der Vergleich mit der Referenz schützt sie."
+  },
+  "cold": {
+   "en": "cold",
+   "de": "kalt"
+  },
+  "target": {
+   "en": "Target",
+   "de": "Ziel"
+  },
+  "workload": {
+   "en": "Workload",
+   "de": "Arbeitslast"
+  },
+  "sessions": {
+   "en": "Sessions",
+   "de": "Sitzungen"
+  },
+  "file": {
+   "en": "File",
+   "de": "Datei"
+  },
+  "language": {
+   "en": "Language",
+   "de": "Sprache"
+  },
+  "edit": {
+   "en": "edit to rebuild",
+   "de": "Änderung bis Neubau"
+  },
+  "cache": {
+   "en": "cache hit rate",
+   "de": "Cache-Trefferquote"
+  },
+  "graph": {
+   "en": "graph",
+   "de": "Graph"
+  },
+  "noop": {
+   "en": "warm no-op",
+   "de": "warmer Leerlauf"
+  },
+  "cli-help": {
+   "en": "command line help",
+   "de": "Kommandozeilenhilfe"
+  },
+  "concurrency": {
+   "en": "concurrent agents",
+   "de": "gleichzeitige Agenten"
+  },
+  "nx": {
+   "en": "Nx",
+   "de": "Nx"
+  },
+  "bazel": {
+   "en": "Bazel",
+   "de": "Bazel"
+  },
+  "ms": {
+   "en": "ms",
+   "de": "ms"
+  },
+  "bytes": {
+   "en": "bytes",
+   "de": "Bytes"
+  },
+  "ratio": {
+   "en": "ratio",
+   "de": "Verhältnis"
+  },
+  "wallMs": {
+   "en": "wall time",
+   "de": "Laufzeit"
+  },
+  "startMs": {
+   "en": "edit to rebuild start",
+   "de": "Änderung bis Start des Neubaus"
+  },
+  "greenMs": {
+   "en": "edit to green",
+   "de": "Änderung bis grün"
+  },
+  "peakRssBytes": {
+   "en": "peak resident memory",
+   "de": "Speicherspitze"
+  },
+  "hitRatio": {
+   "en": "cache hit ratio",
+   "de": "Cache-Trefferquote"
+  },
+  "makespanMs": {
+   "en": "makespan",
+   "de": "Gesamtdauer"
+  },
+  "maxUnrelatedWaitMs": {
+   "en": "longest wait for an unrelated project",
+   "de": "längste Wartezeit auf ein fremdes Projekt"
+  },
+  "speedup": {
+   "en": "speed-up over serial",
+   "de": "Beschleunigung gegenüber seriell"
+  },
+  "no-samples": {
+   "en": "no samples",
+   "de": "keine Stichproben"
+  },
+  "too-few-samples": {
+   "en": "too few samples for the statistic",
+   "de": "zu wenige Stichproben für die Statistik"
+  },
+  "probe-failed": {
+   "en": "the measured command failed",
+   "de": "der gemessene Befehl ist fehlgeschlagen"
+  },
+  "unavailable": {
+   "en": "not available",
+   "de": "nicht verfügbar"
+  },
+  "not-cold": {
+   "en": "the copy was not freshly prepared (use --prepare)",
+   "de": "die Kopie ist nicht frisch vorbereitet (--prepare verwenden)"
+  },
+  "host-saturated": {
+   "en": "the host is saturated",
+   "de": "der Rechner ist überlastet"
+  },
+  "service-unavailable": {
+   "en": "the resident service is not part of this checkout",
+   "de": "der residente Dienst ist nicht Teil dieses Checkouts"
+  },
+  "unsupported": {
+   "en": "not supported here",
+   "de": "hier nicht unterstützt"
+  },
+  "host-class": {
+   "en": "another host class",
+   "de": "andere Rechnerklasse"
+  },
+  "schema": {
+   "en": "another report version",
+   "de": "andere Berichtsversion"
+  },
+  "start-unobserved": {
+   "en": "the rebuild start was not observed through a tool marker line, so the value is only a bound",
+   "de": "der Start des Neubaus wurde nicht durch eine Werkzeugmarke beobachtet, der Wert ist nur eine Schranke"
+  },
+  "queueMs": {
+   "en": "time in queues",
+   "de": "Zeit in Warteschlangen"
+  },
+  "graphMs": {
+   "en": "graph preparation",
+   "de": "Graph-Vorbereitung"
+  },
+  "executeMs": {
+   "en": "tool execution",
+   "de": "Werkzeugausführung"
+  },
+  "executedActions": {
+   "en": "re-executed actions",
+   "de": "neu ausgeführte Aktionen"
+  },
+  "inferredProjects": {
+   "en": "re-inferred projects",
+   "de": "neu abgeleitete Projekte"
+  },
+  "count": {
+   "en": "count",
+   "de": "Anzahl"
+  },
+  "peer": {
+   "en": "peer edit",
+   "de": "Fremdänderung"
+  },
+  "overBudget": {
+   "en": "Over budget",
+   "de": "Über dem Budget"
+  },
+  "budget": {
+   "en": "Budget",
+   "de": "Budget"
+  },
+  "history": {
+   "en": "History",
+   "de": "Verlauf"
+  }
+ },
+ "units": [
+  {
+   "id": "ts",
+   "language": "ts",
+   "target": "@semio-tech/framework-graph:test",
+   "file": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📜️script.ts",
+   "op": "private-body",
+   "title": {
+    "en": "TypeScript package",
+    "de": "TypeScript-Paket"
+   }
+  },
+  {
+   "id": "rust",
+   "language": "rs",
+   "target": "@teaching/proctor:build",
+   "file": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/🦀️.rs",
+   "op": "private-body",
+   "title": {
+    "en": "Rust crate",
+    "de": "Rust-Crate"
+   }
+  },
+  {
+   "id": "go",
+   "language": "go",
+   "target": "@semio-tech/repo-move-go:test",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🐹️go/🐹️.go",
+   "op": "private-body",
+   "title": {
+    "en": "Go module",
+    "de": "Go-Modul"
+   }
+  },
+  {
+   "id": "python",
+   "language": "py",
+   "target": "@semio-tech/ui-styling-py:test",
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/🎨️styling/__init__.py",
+   "op": "private-body",
+   "title": {
+    "en": "Python package",
+    "de": "Python-Paket"
+   }
+  },
+  {
+   "id": "product-dashboard",
+   "language": "rs",
+   "target": "@semio-tech/repo-dashboard-rs:build",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🦀️.rs",
+   "op": "private-body",
+   "title": {
+    "en": "One-line edit of the dashboard source",
+    "de": "Einzeilige Änderung der Quelle: Dashboard"
+   }
+  },
+  {
+   "id": "product-course",
+   "language": "ts",
+   "target": "@teaching/architecture-course:build",
+   "file": "🎓️teaching/🏛️architecture/📚️course/📚️course/🟦️.ts",
+   "op": "private-body",
+   "title": {
+    "en": "One-line edit of the architecture course source",
+    "de": "Einzeilige Änderung der Quelle: Architekturkurs"
+   }
+  },
+  {
+   "id": "product-print",
+   "language": "ts",
+   "target": "@semio-tech/print:build",
+   "file": "🧰️framework/🛍️products/📓️print/📦️artifacts/📖️pdf/🟦️.ts",
+   "op": "private-body",
+   "title": {
+    "en": "One-line edit of the print source",
+    "de": "Einzeilige Änderung der Quelle: Druck"
+   }
+  },
+  {
+   "id": "peer-unrelated",
+   "language": "ts",
+   "target": "@semio-tech/framework-graph:test",
+   "file": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/📜️script.ts",
+   "op": "comment",
+   "title": {
+    "en": "Peer edit of a unrelated plugin script",
+    "de": "Fremdänderung: fremdes Plugin-Skript"
+   }
+  },
+  {
+   "id": "peer-scheduling",
+   "language": "ts",
+   "target": "@semio-tech/framework-graph:test",
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts",
+   "op": "comment",
+   "title": {
+    "en": "Peer edit of a scheduling file of the build library",
+    "de": "Fremdänderung: Scheduling-Datei der Build-Bibliothek"
+   }
+  }
+ ],
+ "probes": [
+  {
+   "id": "cli-help",
+   "kind": "cli-help",
+   "title": {
+    "en": "repo --help",
+    "de": "repo --help"
+   },
+   "runs": 100,
+   "warmup": 3
+  },
+  {
+   "id": "noop-run-oneshot",
+   "kind": "noop",
+   "title": {
+    "en": "Warm no-op run, one-shot",
+    "de": "Warmer Leerlauf run, Einzelaufruf"
+   },
+   "lane": "oneshot",
+   "target": "@teaching/proctor:build",
+   "runs": 30,
+   "warmup": 2
+  },
+  {
+   "id": "noop-test-oneshot",
+   "kind": "noop",
+   "title": {
+    "en": "Warm no-op test, one-shot",
+    "de": "Warmer Leerlauf test, Einzelaufruf"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/framework-graph:test",
+   "runs": 30,
+   "warmup": 2
+  },
+  {
+   "id": "noop-run-resident",
+   "kind": "noop",
+   "title": {
+    "en": "Warm no-op run, resident service",
+    "de": "Warmer Leerlauf run, residenter Dienst"
+   },
+   "lane": "resident",
+   "target": "@teaching/proctor:build",
+   "runs": 30,
+   "warmup": 2
+  },
+  {
+   "id": "noop-test-resident",
+   "kind": "noop",
+   "title": {
+    "en": "Warm no-op test, resident service",
+    "de": "Warmer Leerlauf test, residenter Dienst"
+   },
+   "lane": "resident",
+   "target": "@semio-tech/framework-graph:test",
+   "runs": 30,
+   "warmup": 2
+  },
+  {
+   "id": "edit-ts-oneshot",
+   "kind": "edit",
+   "title": {
+    "en": "Edit and rebuild, TypeScript package, one-shot",
+    "de": "Ändern und neu bauen, TypeScript-Paket, Einzelaufruf"
+   },
+   "lane": "oneshot",
+   "unit": "ts",
+   "runs": 10,
+   "warmup": 1
+  },
+  {
+   "id": "edit-ts-resident",
+   "kind": "edit",
+   "title": {
+    "en": "Edit and rebuild, TypeScript package, resident service",
+    "de": "Ändern und neu bauen, TypeScript-Paket, residenter Dienst"
+   },
+   "lane": "resident",
+   "unit": "ts",
+   "runs": 20,
+   "warmup": 1
+  },
+  {
+   "id": "edit-rust-oneshot",
+   "kind": "edit",
+   "title": {
+    "en": "Edit and rebuild, Rust crate, one-shot",
+    "de": "Ändern und neu bauen, Rust-Crate, Einzelaufruf"
+   },
+   "lane": "oneshot",
+   "unit": "rust",
+   "runs": 10,
+   "warmup": 1
+  },
+  {
+   "id": "edit-rust-resident",
+   "kind": "edit",
+   "title": {
+    "en": "Edit and rebuild, Rust crate, resident service",
+    "de": "Ändern und neu bauen, Rust-Crate, residenter Dienst"
+   },
+   "lane": "resident",
+   "unit": "rust",
+   "runs": 20,
+   "warmup": 1
+  },
+  {
+   "id": "edit-go-oneshot",
+   "kind": "edit",
+   "title": {
+    "en": "Edit and rebuild, Go module, one-shot",
+    "de": "Ändern und neu bauen, Go-Modul, Einzelaufruf"
+   },
+   "lane": "oneshot",
+   "unit": "go",
+   "runs": 10,
+   "warmup": 1
+  },
+  {
+   "id": "edit-go-resident",
+   "kind": "edit",
+   "title": {
+    "en": "Edit and rebuild, Go module, resident service",
+    "de": "Ändern und neu bauen, Go-Modul, residenter Dienst"
+   },
+   "lane": "resident",
+   "unit": "go",
+   "runs": 20,
+   "warmup": 1
+  },
+  {
+   "id": "edit-python-oneshot",
+   "kind": "edit",
+   "title": {
+    "en": "Edit and rebuild, Python package, one-shot",
+    "de": "Ändern und neu bauen, Python-Paket, Einzelaufruf"
+   },
+   "lane": "oneshot",
+   "unit": "python",
+   "runs": 10,
+   "warmup": 1
+  },
+  {
+   "id": "edit-python-resident",
+   "kind": "edit",
+   "title": {
+    "en": "Edit and rebuild, Python package, resident service",
+    "de": "Ändern und neu bauen, Python-Paket, residenter Dienst"
+   },
+   "lane": "resident",
+   "unit": "python",
+   "runs": 20,
+   "warmup": 1
+  },
+  {
+   "id": "graph-scope-warm",
+   "kind": "graph",
+   "title": {
+    "en": "Graph of the selected scope, warm",
+    "de": "Graph des gewählten Umfangs, warm"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/framework-graph:test",
+   "runs": 10,
+   "warmup": 1
+  },
+  {
+   "id": "graph-scope-cold",
+   "kind": "graph",
+   "title": {
+    "en": "Graph of the selected scope, cold",
+    "de": "Graph des gewählten Umfangs, kalt"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/framework-graph:test",
+   "runs": 1,
+   "warmup": 0,
+   "cold": true
+  },
+  {
+   "id": "cache-second-run-build",
+   "kind": "cache",
+   "title": {
+    "en": "Second run of build, cache hits",
+    "de": "Zweiter Lauf von build, Cache-Treffer"
+   },
+   "target": "@teaching/proctor:build",
+   "runs": 3,
+   "warmup": 0
+  },
+  {
+   "id": "cache-second-run-test",
+   "kind": "cache",
+   "title": {
+    "en": "Second run of test, cache hits",
+    "de": "Zweiter Lauf von test, Cache-Treffer"
+   },
+   "target": "@semio-tech/framework-graph:test",
+   "runs": 3,
+   "warmup": 0
+  },
+  {
+   "id": "mem-noop-run",
+   "kind": "noop",
+   "title": {
+    "en": "Peak memory of a warm no-op run",
+    "de": "Speicherspitze eines warmen Leerlaufs"
+   },
+   "lane": "oneshot",
+   "target": "@teaching/proctor:build",
+   "runs": 5,
+   "warmup": 1,
+   "memory": true
+  },
+  {
+   "id": "mem-edit-ts",
+   "kind": "edit",
+   "title": {
+    "en": "Peak memory of a TypeScript edit and rebuild",
+    "de": "Speicherspitze von Ändern und Neubau in TypeScript"
+   },
+   "lane": "oneshot",
+   "unit": "ts",
+   "runs": 3,
+   "warmup": 1,
+   "memory": true
+  },
+  {
+   "id": "concurrency-disjoint",
+   "kind": "concurrency",
+   "title": {
+    "en": "Three agents on disjoint projects",
+    "de": "Drei Agenten auf getrennten Projekten"
+   },
+   "workload": "disjoint-projects",
+   "sessions": 3,
+   "runs": 1,
+   "warmup": 0
+  },
+  {
+   "id": "concurrency-warm-fanout",
+   "kind": "concurrency",
+   "title": {
+    "en": "Three agents build the same warm target",
+    "de": "Drei Agenten bauen dasselbe warme Ziel"
+   },
+   "workload": "warm-fanout",
+   "sessions": 3,
+   "runs": 1,
+   "warmup": 0
+  },
+  {
+   "id": "product-dashboard-cold",
+   "kind": "noop",
+   "title": {
+    "en": "First build of the dashboard on a fresh copy",
+    "de": "Erster Bau: Dashboard auf frischer Kopie"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/repo-dashboard-rs:build",
+   "runs": 1,
+   "warmup": 0,
+   "cold": true,
+   "memory": true
+  },
+  {
+   "id": "product-dashboard-noop",
+   "kind": "noop",
+   "title": {
+    "en": "Warm no-op build of the dashboard",
+    "de": "Warmer Leerlauf-Bau: Dashboard"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/repo-dashboard-rs:build",
+   "runs": 5,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-dashboard-edit",
+   "kind": "edit",
+   "title": {
+    "en": "One-line edit and rebuild of the dashboard",
+    "de": "Einzeilige Änderung und Neubau: Dashboard"
+   },
+   "lane": "oneshot",
+   "unit": "product-dashboard",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-dashboard-peer-unrelated",
+   "kind": "peer",
+   "title": {
+    "en": "Build of the dashboard after a peer edit of a unrelated plugin script",
+    "de": "Bau: Dashboard nach Fremdänderung: fremdes Plugin-Skript"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/repo-dashboard-rs:build",
+   "unit": "peer-unrelated",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-dashboard-peer-scheduling",
+   "kind": "peer",
+   "title": {
+    "en": "Build of the dashboard after a peer edit of a scheduling file of the build library",
+    "de": "Bau: Dashboard nach Fremdänderung: Scheduling-Datei der Build-Bibliothek"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/repo-dashboard-rs:build",
+   "unit": "peer-scheduling",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-course-cold",
+   "kind": "noop",
+   "title": {
+    "en": "First build of the architecture course on a fresh copy",
+    "de": "Erster Bau: Architekturkurs auf frischer Kopie"
+   },
+   "lane": "oneshot",
+   "target": "@teaching/architecture-course:build",
+   "runs": 1,
+   "warmup": 0,
+   "cold": true,
+   "memory": true
+  },
+  {
+   "id": "product-course-noop",
+   "kind": "noop",
+   "title": {
+    "en": "Warm no-op build of the architecture course",
+    "de": "Warmer Leerlauf-Bau: Architekturkurs"
+   },
+   "lane": "oneshot",
+   "target": "@teaching/architecture-course:build",
+   "runs": 5,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-course-edit",
+   "kind": "edit",
+   "title": {
+    "en": "One-line edit and rebuild of the architecture course",
+    "de": "Einzeilige Änderung und Neubau: Architekturkurs"
+   },
+   "lane": "oneshot",
+   "unit": "product-course",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-course-peer-unrelated",
+   "kind": "peer",
+   "title": {
+    "en": "Build of the architecture course after a peer edit of a unrelated plugin script",
+    "de": "Bau: Architekturkurs nach Fremdänderung: fremdes Plugin-Skript"
+   },
+   "lane": "oneshot",
+   "target": "@teaching/architecture-course:build",
+   "unit": "peer-unrelated",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-course-peer-scheduling",
+   "kind": "peer",
+   "title": {
+    "en": "Build of the architecture course after a peer edit of a scheduling file of the build library",
+    "de": "Bau: Architekturkurs nach Fremdänderung: Scheduling-Datei der Build-Bibliothek"
+   },
+   "lane": "oneshot",
+   "target": "@teaching/architecture-course:build",
+   "unit": "peer-scheduling",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-print-cold",
+   "kind": "noop",
+   "title": {
+    "en": "First build of the print on a fresh copy",
+    "de": "Erster Bau: Druck auf frischer Kopie"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/print:build",
+   "runs": 1,
+   "warmup": 0,
+   "cold": true,
+   "memory": true
+  },
+  {
+   "id": "product-print-noop",
+   "kind": "noop",
+   "title": {
+    "en": "Warm no-op build of the print",
+    "de": "Warmer Leerlauf-Bau: Druck"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/print:build",
+   "runs": 5,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-print-edit",
+   "kind": "edit",
+   "title": {
+    "en": "One-line edit and rebuild of the print",
+    "de": "Einzeilige Änderung und Neubau: Druck"
+   },
+   "lane": "oneshot",
+   "unit": "product-print",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-print-peer-unrelated",
+   "kind": "peer",
+   "title": {
+    "en": "Build of the print after a peer edit of a unrelated plugin script",
+    "de": "Bau: Druck nach Fremdänderung: fremdes Plugin-Skript"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/print:build",
+   "unit": "peer-unrelated",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-print-peer-scheduling",
+   "kind": "peer",
+   "title": {
+    "en": "Build of the print after a peer edit of a scheduling file of the build library",
+    "de": "Bau: Druck nach Fremdänderung: Scheduling-Datei der Build-Bibliothek"
+   },
+   "lane": "oneshot",
+   "target": "@semio-tech/print:build",
+   "unit": "peer-scheduling",
+   "runs": 3,
+   "warmup": 0,
+   "memory": true
+  },
+  {
+   "id": "product-agents",
+   "kind": "concurrency",
+   "title": {
+    "en": "Three agents build the three products at once",
+    "de": "Drei Agenten bauen die drei Produkte gleichzeitig"
+   },
+   "workload": "product-agents",
+   "sessions": 3,
+   "runs": 1,
+   "warmup": 0
+  }
+ ],
+ "slos": [
+  {
+   "id": "cli-help-p50",
+   "title": {
+    "en": "Command line help, median",
+    "de": "Kommandozeilenhilfe, Median"
+   },
+   "probe": "cli-help",
+   "metric": "wallMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 100,
+   "gate": 250,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 25
+   },
+   "source": "boot-fast"
+  },
+  {
+   "id": "cli-help-p95",
+   "title": {
+    "en": "Command line help, 95th percentile",
+    "de": "Kommandozeilenhilfe, 95. Perzentil"
+   },
+   "probe": "cli-help",
+   "metric": "wallMs",
+   "statistic": "p95",
+   "direction": "lower",
+   "goal": 200,
+   "gate": 400,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 25
+   },
+   "source": "cli-latency"
+  },
+  {
+   "id": "cli-help-p99",
+   "title": {
+    "en": "Command line help, 99th percentile",
+    "de": "Kommandozeilenhilfe, 99. Perzentil"
+   },
+   "probe": "cli-help",
+   "metric": "wallMs",
+   "statistic": "p99",
+   "direction": "lower",
+   "goal": null,
+   "gate": 1000,
+   "tools": [
+    "neutral"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 50
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "noop-run-oneshot-p50",
+   "title": {
+    "en": "Warm no-op run, one-shot, median",
+    "de": "Warmer Leerlauf run, Einzelaufruf, Median"
+   },
+   "probe": "noop-run-oneshot",
+   "metric": "wallMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 300,
+   "gate": 1000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 25
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "noop-test-oneshot-p50",
+   "title": {
+    "en": "Warm no-op test, one-shot, median",
+    "de": "Warmer Leerlauf test, Einzelaufruf, Median"
+   },
+   "probe": "noop-test-oneshot",
+   "metric": "wallMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 300,
+   "gate": 1000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 25
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "noop-run-resident-p95",
+   "title": {
+    "en": "Warm no-op run, resident service, 95th percentile",
+    "de": "Warmer Leerlauf run, residenter Dienst, 95. Perzentil"
+   },
+   "probe": "noop-run-resident",
+   "metric": "wallMs",
+   "statistic": "p95",
+   "direction": "lower",
+   "goal": 300,
+   "gate": 300,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 25
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "noop-test-resident-p95",
+   "title": {
+    "en": "Warm no-op test, resident service, 95th percentile",
+    "de": "Warmer Leerlauf test, residenter Dienst, 95. Perzentil"
+   },
+   "probe": "noop-test-resident",
+   "metric": "wallMs",
+   "statistic": "p95",
+   "direction": "lower",
+   "goal": 300,
+   "gate": 300,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 25
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "edit-ts-oneshot-start-p50",
+   "title": {
+    "en": "Edit to rebuild start, TypeScript package, one-shot, median",
+    "de": "Änderung bis Start des Neubaus, TypeScript-Paket, Einzelaufruf, Median"
+   },
+   "probe": "edit-ts-oneshot",
+   "metric": "startMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 500,
+   "gate": 2000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 50
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "edit-ts-oneshot-green-p50",
+   "title": {
+    "en": "Edit to green, TypeScript package, one-shot, median",
+    "de": "Änderung bis grün, TypeScript-Paket, Einzelaufruf, Median"
+   },
+   "probe": "edit-ts-oneshot",
+   "metric": "greenMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 250
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "edit-ts-resident-start-p95",
+   "title": {
+    "en": "Edit to rebuild start, TypeScript package, resident service, 95th percentile",
+    "de": "Änderung bis Start des Neubaus, TypeScript-Paket, residenter Dienst, 95. Perzentil"
+   },
+   "probe": "edit-ts-resident",
+   "metric": "startMs",
+   "statistic": "p95",
+   "direction": "lower",
+   "goal": 500,
+   "gate": 500,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 50
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "edit-ts-resident-green-p50",
+   "title": {
+    "en": "Edit to green, TypeScript package, resident service, median",
+    "de": "Änderung bis grün, TypeScript-Paket, residenter Dienst, Median"
+   },
+   "probe": "edit-ts-resident",
+   "metric": "greenMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 250
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "edit-rust-oneshot-start-p50",
+   "title": {
+    "en": "Edit to rebuild start, Rust crate, one-shot, median",
+    "de": "Änderung bis Start des Neubaus, Rust-Crate, Einzelaufruf, Median"
+   },
+   "probe": "edit-rust-oneshot",
+   "metric": "startMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 500,
+   "gate": 2000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 50
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "edit-rust-oneshot-green-p50",
+   "title": {
+    "en": "Edit to green, Rust crate, one-shot, median",
+    "de": "Änderung bis grün, Rust-Crate, Einzelaufruf, Median"
+   },
+   "probe": "edit-rust-oneshot",
+   "metric": "greenMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 250
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "edit-rust-resident-start-p95",
+   "title": {
+    "en": "Edit to rebuild start, Rust crate, resident service, 95th percentile",
+    "de": "Änderung bis Start des Neubaus, Rust-Crate, residenter Dienst, 95. Perzentil"
+   },
+   "probe": "edit-rust-resident",
+   "metric": "startMs",
+   "statistic": "p95",
+   "direction": "lower",
+   "goal": 500,
+   "gate": 500,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 50
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "edit-rust-resident-green-p50",
+   "title": {
+    "en": "Edit to green, Rust crate, resident service, median",
+    "de": "Änderung bis grün, Rust-Crate, residenter Dienst, Median"
+   },
+   "probe": "edit-rust-resident",
+   "metric": "greenMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 250
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "edit-go-oneshot-start-p50",
+   "title": {
+    "en": "Edit to rebuild start, Go module, one-shot, median",
+    "de": "Änderung bis Start des Neubaus, Go-Modul, Einzelaufruf, Median"
+   },
+   "probe": "edit-go-oneshot",
+   "metric": "startMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 500,
+   "gate": 2000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 50
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "edit-go-oneshot-green-p50",
+   "title": {
+    "en": "Edit to green, Go module, one-shot, median",
+    "de": "Änderung bis grün, Go-Modul, Einzelaufruf, Median"
+   },
+   "probe": "edit-go-oneshot",
+   "metric": "greenMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 250
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "edit-go-resident-start-p95",
+   "title": {
+    "en": "Edit to rebuild start, Go module, resident service, 95th percentile",
+    "de": "Änderung bis Start des Neubaus, Go-Modul, residenter Dienst, 95. Perzentil"
+   },
+   "probe": "edit-go-resident",
+   "metric": "startMs",
+   "statistic": "p95",
+   "direction": "lower",
+   "goal": 500,
+   "gate": 500,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 50
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "edit-go-resident-green-p50",
+   "title": {
+    "en": "Edit to green, Go module, resident service, median",
+    "de": "Änderung bis grün, Go-Modul, residenter Dienst, Median"
+   },
+   "probe": "edit-go-resident",
+   "metric": "greenMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 250
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "edit-python-oneshot-start-p50",
+   "title": {
+    "en": "Edit to rebuild start, Python package, one-shot, median",
+    "de": "Änderung bis Start des Neubaus, Python-Paket, Einzelaufruf, Median"
+   },
+   "probe": "edit-python-oneshot",
+   "metric": "startMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 500,
+   "gate": 2000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 50
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "edit-python-oneshot-green-p50",
+   "title": {
+    "en": "Edit to green, Python package, one-shot, median",
+    "de": "Änderung bis grün, Python-Paket, Einzelaufruf, Median"
+   },
+   "probe": "edit-python-oneshot",
+   "metric": "greenMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 250
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "edit-python-resident-start-p95",
+   "title": {
+    "en": "Edit to rebuild start, Python package, resident service, 95th percentile",
+    "de": "Änderung bis Start des Neubaus, Python-Paket, residenter Dienst, 95. Perzentil"
+   },
+   "probe": "edit-python-resident",
+   "metric": "startMs",
+   "statistic": "p95",
+   "direction": "lower",
+   "goal": 500,
+   "gate": 500,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 50
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "edit-python-resident-green-p50",
+   "title": {
+    "en": "Edit to green, Python package, resident service, median",
+    "de": "Änderung bis grün, Python-Paket, residenter Dienst, Median"
+   },
+   "probe": "edit-python-resident",
+   "metric": "greenMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 250
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "graph-scope-warm-p50",
+   "title": {
+    "en": "Graph of the selected scope, warm, median",
+    "de": "Graph des gewählten Umfangs, warm, Median"
+   },
+   "probe": "graph-scope-warm",
+   "metric": "wallMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 300,
+   "gate": 2000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 50
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "graph-scope-cold-max",
+   "title": {
+    "en": "Graph of the selected scope, cold",
+    "de": "Graph des gewählten Umfangs, kalt"
+   },
+   "probe": "graph-scope-cold",
+   "metric": "wallMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": 300000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 1000
+   },
+   "source": "graph-speed"
+  },
+  {
+   "id": "cache-second-run-build-min",
+   "title": {
+    "en": "Second run of build: every cacheable task restored",
+    "de": "Zweiter Lauf von build: jeder cachebare Task wiederhergestellt"
+   },
+   "probe": "cache-second-run-build",
+   "metric": "hitRatio",
+   "statistic": "min",
+   "direction": "higher",
+   "goal": 1,
+   "gate": 1,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "cache-second-run-test-min",
+   "title": {
+    "en": "Second run of test: every cacheable task restored",
+    "de": "Zweiter Lauf von test: jeder cachebare Task wiederhergestellt"
+   },
+   "probe": "cache-second-run-test",
+   "metric": "hitRatio",
+   "statistic": "min",
+   "direction": "higher",
+   "goal": 1,
+   "gate": 1,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "user-goal"
+  },
+  {
+   "id": "mem-noop-run-max",
+   "title": {
+    "en": "Peak memory of a warm no-op run",
+    "de": "Speicherspitze eines warmen Leerlaufs"
+   },
+   "probe": "mem-noop-run",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 536870912,
+   "gate": 1073741824,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 16777216
+   },
+   "source": "hot-cache"
+  },
+  {
+   "id": "mem-edit-ts-max",
+   "title": {
+    "en": "Peak memory of a TypeScript edit and rebuild",
+    "de": "Speicherspitze von Ändern und Neubau in TypeScript"
+   },
+   "probe": "mem-edit-ts",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 16777216
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "concurrency-disjoint-wait-max",
+   "title": {
+    "en": "Longest wait of an agent for an unrelated project",
+    "de": "Längste Wartezeit eines Agenten auf ein fremdes Projekt"
+   },
+   "probe": "concurrency-disjoint",
+   "metric": "maxUnrelatedWaitMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 1000,
+   "gate": 5000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 250
+   },
+   "source": "conc-harness"
+  },
+  {
+   "id": "concurrency-disjoint-makespan-max",
+   "title": {
+    "en": "Makespan of three agents on disjoint projects",
+    "de": "Gesamtdauer dreier Agenten auf getrennten Projekten"
+   },
+   "probe": "concurrency-disjoint",
+   "metric": "makespanMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 1000
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "concurrency-warm-fanout-makespan-max",
+   "title": {
+    "en": "Makespan of three agents on one warm target",
+    "de": "Gesamtdauer dreier Agenten auf einem warmen Ziel"
+   },
+   "probe": "concurrency-warm-fanout",
+   "metric": "makespanMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 1000
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "concurrency-warm-fanout-wait-max",
+   "title": {
+    "en": "Longest wait of an agent on one warm target",
+    "de": "Längste Wartezeit eines Agenten auf einem warmen Ziel"
+   },
+   "probe": "concurrency-warm-fanout",
+   "metric": "maxUnrelatedWaitMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 1000,
+   "gate": 5000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 250
+   },
+   "source": "conc-harness"
+  },
+  {
+   "id": "product-dashboard-cold-wall-max",
+   "title": {
+    "en": "First build of the dashboard, wall time",
+    "de": "Erster Bau: Dashboard, Laufzeit"
+   },
+   "probe": "product-dashboard-cold",
+   "metric": "wallMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 5000
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-cold-rss-max",
+   "title": {
+    "en": "First build of the dashboard, peak memory of the process tree",
+    "de": "Erster Bau: Dashboard, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-dashboard-cold",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-noop-wall-p50",
+   "title": {
+    "en": "Warm no-op of the dashboard, median wall time",
+    "de": "Warmer Leerlauf: Dashboard, Median der Laufzeit"
+   },
+   "probe": "product-dashboard-noop",
+   "metric": "wallMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 10000,
+   "gate": 10000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-noop-rss-max",
+   "title": {
+    "en": "Warm no-op of the dashboard, peak memory of the process tree",
+    "de": "Warmer Leerlauf: Dashboard, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-dashboard-noop",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 1610612736,
+   "gate": 1610612736,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-noop-executed-max",
+   "title": {
+    "en": "Warm no-op of the dashboard, re-executed actions",
+    "de": "Warmer Leerlauf: Dashboard, neu ausgeführte Aktionen"
+   },
+   "probe": "product-dashboard-noop",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-noop-queue-p50",
+   "title": {
+    "en": "Warm no-op of the dashboard, time in queues, median",
+    "de": "Warmer Leerlauf: Dashboard, Zeit in Warteschlangen, Median"
+   },
+   "probe": "product-dashboard-noop",
+   "metric": "queueMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-noop-graph-p50",
+   "title": {
+    "en": "Warm no-op of the dashboard, graph preparation, median",
+    "de": "Warmer Leerlauf: Dashboard, Graph-Vorbereitung, Median"
+   },
+   "probe": "product-dashboard-noop",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-noop-execute-p50",
+   "title": {
+    "en": "Warm no-op of the dashboard, tool execution, median",
+    "de": "Warmer Leerlauf: Dashboard, Werkzeugausführung, Median"
+   },
+   "probe": "product-dashboard-noop",
+   "metric": "executeMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-edit-green-p50",
+   "title": {
+    "en": "One-line edit of the dashboard, edit to green, median",
+    "de": "Einzeilige Änderung: Dashboard, Änderung bis grün, Median"
+   },
+   "probe": "product-dashboard-edit",
+   "metric": "greenMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 120000,
+   "gate": 120000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 1000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-edit-executed-max",
+   "title": {
+    "en": "One-line edit of the dashboard, re-executed actions",
+    "de": "Einzeilige Änderung: Dashboard, neu ausgeführte Aktionen"
+   },
+   "probe": "product-dashboard-edit",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-edit-rss-max",
+   "title": {
+    "en": "One-line edit of the dashboard, peak memory of the process tree",
+    "de": "Einzeilige Änderung: Dashboard, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-dashboard-edit",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-edit-queue-p50",
+   "title": {
+    "en": "One-line edit of the dashboard, time in queues, median",
+    "de": "Einzeilige Änderung: Dashboard, Zeit in Warteschlangen, Median"
+   },
+   "probe": "product-dashboard-edit",
+   "metric": "queueMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-edit-graph-p50",
+   "title": {
+    "en": "One-line edit of the dashboard, graph preparation, median",
+    "de": "Einzeilige Änderung: Dashboard, Graph-Vorbereitung, Median"
+   },
+   "probe": "product-dashboard-edit",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-edit-execute-p50",
+   "title": {
+    "en": "One-line edit of the dashboard, tool execution, median",
+    "de": "Einzeilige Änderung: Dashboard, Werkzeugausführung, Median"
+   },
+   "probe": "product-dashboard-edit",
+   "metric": "executeMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-peer-unrelated-executed-max",
+   "title": {
+    "en": "Dashboard after a peer edit of a unrelated plugin script, re-executed actions",
+    "de": "Dashboard nach Fremdänderung (fremdes Plugin-Skript), neu ausgeführte Aktionen"
+   },
+   "probe": "product-dashboard-peer-unrelated",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-peer-unrelated-graph-p50",
+   "title": {
+    "en": "Dashboard after a peer edit of a unrelated plugin script, graph preparation, median",
+    "de": "Dashboard nach Fremdänderung (fremdes Plugin-Skript), Graph-Vorbereitung, Median"
+   },
+   "probe": "product-dashboard-peer-unrelated",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 120000,
+   "gate": 120000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-peer-unrelated-inferred-max",
+   "title": {
+    "en": "Dashboard after a peer edit of a unrelated plugin script, re-inferred projects",
+    "de": "Dashboard nach Fremdänderung (fremdes Plugin-Skript), neu abgeleitete Projekte"
+   },
+   "probe": "product-dashboard-peer-unrelated",
+   "metric": "inferredProjects",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-peer-unrelated-rss-max",
+   "title": {
+    "en": "Dashboard after a peer edit of a unrelated plugin script, peak memory of the process tree",
+    "de": "Dashboard nach Fremdänderung (fremdes Plugin-Skript), Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-dashboard-peer-unrelated",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 2147483648,
+   "gate": 2147483648,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-peer-scheduling-executed-max",
+   "title": {
+    "en": "Dashboard after a peer edit of a scheduling file of the build library, re-executed actions",
+    "de": "Dashboard nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), neu ausgeführte Aktionen"
+   },
+   "probe": "product-dashboard-peer-scheduling",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-peer-scheduling-graph-p50",
+   "title": {
+    "en": "Dashboard after a peer edit of a scheduling file of the build library, graph preparation, median",
+    "de": "Dashboard nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), Graph-Vorbereitung, Median"
+   },
+   "probe": "product-dashboard-peer-scheduling",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 120000,
+   "gate": 120000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-dashboard-peer-scheduling-inferred-max",
+   "title": {
+    "en": "Dashboard after a peer edit of a scheduling file of the build library, re-inferred projects",
+    "de": "Dashboard nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), neu abgeleitete Projekte"
+   },
+   "probe": "product-dashboard-peer-scheduling",
+   "metric": "inferredProjects",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-dashboard-peer-scheduling-rss-max",
+   "title": {
+    "en": "Dashboard after a peer edit of a scheduling file of the build library, peak memory of the process tree",
+    "de": "Dashboard nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-dashboard-peer-scheduling",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 2147483648,
+   "gate": 2147483648,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-cold-wall-max",
+   "title": {
+    "en": "First build of the architecture course, wall time",
+    "de": "Erster Bau: Architekturkurs, Laufzeit"
+   },
+   "probe": "product-course-cold",
+   "metric": "wallMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 5000
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-cold-rss-max",
+   "title": {
+    "en": "First build of the architecture course, peak memory of the process tree",
+    "de": "Erster Bau: Architekturkurs, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-course-cold",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-noop-wall-p50",
+   "title": {
+    "en": "Warm no-op of the architecture course, median wall time",
+    "de": "Warmer Leerlauf: Architekturkurs, Median der Laufzeit"
+   },
+   "probe": "product-course-noop",
+   "metric": "wallMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 10000,
+   "gate": 10000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-noop-rss-max",
+   "title": {
+    "en": "Warm no-op of the architecture course, peak memory of the process tree",
+    "de": "Warmer Leerlauf: Architekturkurs, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-course-noop",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 1610612736,
+   "gate": 1610612736,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-noop-executed-max",
+   "title": {
+    "en": "Warm no-op of the architecture course, re-executed actions",
+    "de": "Warmer Leerlauf: Architekturkurs, neu ausgeführte Aktionen"
+   },
+   "probe": "product-course-noop",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-noop-queue-p50",
+   "title": {
+    "en": "Warm no-op of the architecture course, time in queues, median",
+    "de": "Warmer Leerlauf: Architekturkurs, Zeit in Warteschlangen, Median"
+   },
+   "probe": "product-course-noop",
+   "metric": "queueMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-noop-graph-p50",
+   "title": {
+    "en": "Warm no-op of the architecture course, graph preparation, median",
+    "de": "Warmer Leerlauf: Architekturkurs, Graph-Vorbereitung, Median"
+   },
+   "probe": "product-course-noop",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-noop-execute-p50",
+   "title": {
+    "en": "Warm no-op of the architecture course, tool execution, median",
+    "de": "Warmer Leerlauf: Architekturkurs, Werkzeugausführung, Median"
+   },
+   "probe": "product-course-noop",
+   "metric": "executeMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-edit-green-p50",
+   "title": {
+    "en": "One-line edit of the architecture course, edit to green, median",
+    "de": "Einzeilige Änderung: Architekturkurs, Änderung bis grün, Median"
+   },
+   "probe": "product-course-edit",
+   "metric": "greenMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 60000,
+   "gate": 60000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 1000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-edit-executed-max",
+   "title": {
+    "en": "One-line edit of the architecture course, re-executed actions",
+    "de": "Einzeilige Änderung: Architekturkurs, neu ausgeführte Aktionen"
+   },
+   "probe": "product-course-edit",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-edit-rss-max",
+   "title": {
+    "en": "One-line edit of the architecture course, peak memory of the process tree",
+    "de": "Einzeilige Änderung: Architekturkurs, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-course-edit",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-edit-queue-p50",
+   "title": {
+    "en": "One-line edit of the architecture course, time in queues, median",
+    "de": "Einzeilige Änderung: Architekturkurs, Zeit in Warteschlangen, Median"
+   },
+   "probe": "product-course-edit",
+   "metric": "queueMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-edit-graph-p50",
+   "title": {
+    "en": "One-line edit of the architecture course, graph preparation, median",
+    "de": "Einzeilige Änderung: Architekturkurs, Graph-Vorbereitung, Median"
+   },
+   "probe": "product-course-edit",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-edit-execute-p50",
+   "title": {
+    "en": "One-line edit of the architecture course, tool execution, median",
+    "de": "Einzeilige Änderung: Architekturkurs, Werkzeugausführung, Median"
+   },
+   "probe": "product-course-edit",
+   "metric": "executeMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-peer-unrelated-executed-max",
+   "title": {
+    "en": "Architecture course after a peer edit of a unrelated plugin script, re-executed actions",
+    "de": "Architekturkurs nach Fremdänderung (fremdes Plugin-Skript), neu ausgeführte Aktionen"
+   },
+   "probe": "product-course-peer-unrelated",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-peer-unrelated-graph-p50",
+   "title": {
+    "en": "Architecture course after a peer edit of a unrelated plugin script, graph preparation, median",
+    "de": "Architekturkurs nach Fremdänderung (fremdes Plugin-Skript), Graph-Vorbereitung, Median"
+   },
+   "probe": "product-course-peer-unrelated",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 120000,
+   "gate": 120000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-peer-unrelated-inferred-max",
+   "title": {
+    "en": "Architecture course after a peer edit of a unrelated plugin script, re-inferred projects",
+    "de": "Architekturkurs nach Fremdänderung (fremdes Plugin-Skript), neu abgeleitete Projekte"
+   },
+   "probe": "product-course-peer-unrelated",
+   "metric": "inferredProjects",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-peer-unrelated-rss-max",
+   "title": {
+    "en": "Architecture course after a peer edit of a unrelated plugin script, peak memory of the process tree",
+    "de": "Architekturkurs nach Fremdänderung (fremdes Plugin-Skript), Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-course-peer-unrelated",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 2147483648,
+   "gate": 2147483648,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-peer-scheduling-executed-max",
+   "title": {
+    "en": "Architecture course after a peer edit of a scheduling file of the build library, re-executed actions",
+    "de": "Architekturkurs nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), neu ausgeführte Aktionen"
+   },
+   "probe": "product-course-peer-scheduling",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-peer-scheduling-graph-p50",
+   "title": {
+    "en": "Architecture course after a peer edit of a scheduling file of the build library, graph preparation, median",
+    "de": "Architekturkurs nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), Graph-Vorbereitung, Median"
+   },
+   "probe": "product-course-peer-scheduling",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 120000,
+   "gate": 120000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-course-peer-scheduling-inferred-max",
+   "title": {
+    "en": "Architecture course after a peer edit of a scheduling file of the build library, re-inferred projects",
+    "de": "Architekturkurs nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), neu abgeleitete Projekte"
+   },
+   "probe": "product-course-peer-scheduling",
+   "metric": "inferredProjects",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-course-peer-scheduling-rss-max",
+   "title": {
+    "en": "Architecture course after a peer edit of a scheduling file of the build library, peak memory of the process tree",
+    "de": "Architekturkurs nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-course-peer-scheduling",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 2147483648,
+   "gate": 2147483648,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-cold-wall-max",
+   "title": {
+    "en": "First build of the print, wall time",
+    "de": "Erster Bau: Druck, Laufzeit"
+   },
+   "probe": "product-print-cold",
+   "metric": "wallMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 5000
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-cold-rss-max",
+   "title": {
+    "en": "First build of the print, peak memory of the process tree",
+    "de": "Erster Bau: Druck, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-print-cold",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-noop-wall-p50",
+   "title": {
+    "en": "Warm no-op of the print, median wall time",
+    "de": "Warmer Leerlauf: Druck, Median der Laufzeit"
+   },
+   "probe": "product-print-noop",
+   "metric": "wallMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 10000,
+   "gate": 10000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-noop-rss-max",
+   "title": {
+    "en": "Warm no-op of the print, peak memory of the process tree",
+    "de": "Warmer Leerlauf: Druck, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-print-noop",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 1610612736,
+   "gate": 1610612736,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-noop-executed-max",
+   "title": {
+    "en": "Warm no-op of the print, re-executed actions",
+    "de": "Warmer Leerlauf: Druck, neu ausgeführte Aktionen"
+   },
+   "probe": "product-print-noop",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-noop-queue-p50",
+   "title": {
+    "en": "Warm no-op of the print, time in queues, median",
+    "de": "Warmer Leerlauf: Druck, Zeit in Warteschlangen, Median"
+   },
+   "probe": "product-print-noop",
+   "metric": "queueMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-noop-graph-p50",
+   "title": {
+    "en": "Warm no-op of the print, graph preparation, median",
+    "de": "Warmer Leerlauf: Druck, Graph-Vorbereitung, Median"
+   },
+   "probe": "product-print-noop",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-noop-execute-p50",
+   "title": {
+    "en": "Warm no-op of the print, tool execution, median",
+    "de": "Warmer Leerlauf: Druck, Werkzeugausführung, Median"
+   },
+   "probe": "product-print-noop",
+   "metric": "executeMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-edit-green-p50",
+   "title": {
+    "en": "One-line edit of the print, edit to green, median",
+    "de": "Einzeilige Änderung: Druck, Änderung bis grün, Median"
+   },
+   "probe": "product-print-edit",
+   "metric": "greenMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 60000,
+   "gate": 60000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 1000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-edit-executed-max",
+   "title": {
+    "en": "One-line edit of the print, re-executed actions",
+    "de": "Einzeilige Änderung: Druck, neu ausgeführte Aktionen"
+   },
+   "probe": "product-print-edit",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-edit-rss-max",
+   "title": {
+    "en": "One-line edit of the print, peak memory of the process tree",
+    "de": "Einzeilige Änderung: Druck, Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-print-edit",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-edit-queue-p50",
+   "title": {
+    "en": "One-line edit of the print, time in queues, median",
+    "de": "Einzeilige Änderung: Druck, Zeit in Warteschlangen, Median"
+   },
+   "probe": "product-print-edit",
+   "metric": "queueMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-edit-graph-p50",
+   "title": {
+    "en": "One-line edit of the print, graph preparation, median",
+    "de": "Einzeilige Änderung: Druck, Graph-Vorbereitung, Median"
+   },
+   "probe": "product-print-edit",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-edit-execute-p50",
+   "title": {
+    "en": "One-line edit of the print, tool execution, median",
+    "de": "Einzeilige Änderung: Druck, Werkzeugausführung, Median"
+   },
+   "probe": "product-print-edit",
+   "metric": "executeMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 500
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-peer-unrelated-executed-max",
+   "title": {
+    "en": "Print after a peer edit of a unrelated plugin script, re-executed actions",
+    "de": "Druck nach Fremdänderung (fremdes Plugin-Skript), neu ausgeführte Aktionen"
+   },
+   "probe": "product-print-peer-unrelated",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-peer-unrelated-graph-p50",
+   "title": {
+    "en": "Print after a peer edit of a unrelated plugin script, graph preparation, median",
+    "de": "Druck nach Fremdänderung (fremdes Plugin-Skript), Graph-Vorbereitung, Median"
+   },
+   "probe": "product-print-peer-unrelated",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 120000,
+   "gate": 120000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-peer-unrelated-inferred-max",
+   "title": {
+    "en": "Print after a peer edit of a unrelated plugin script, re-inferred projects",
+    "de": "Druck nach Fremdänderung (fremdes Plugin-Skript), neu abgeleitete Projekte"
+   },
+   "probe": "product-print-peer-unrelated",
+   "metric": "inferredProjects",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-peer-unrelated-rss-max",
+   "title": {
+    "en": "Print after a peer edit of a unrelated plugin script, peak memory of the process tree",
+    "de": "Druck nach Fremdänderung (fremdes Plugin-Skript), Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-print-peer-unrelated",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 2147483648,
+   "gate": 2147483648,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-peer-scheduling-executed-max",
+   "title": {
+    "en": "Print after a peer edit of a scheduling file of the build library, re-executed actions",
+    "de": "Druck nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), neu ausgeführte Aktionen"
+   },
+   "probe": "product-print-peer-scheduling",
+   "metric": "executedActions",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 0,
+   "gate": 0,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0,
+    "absolute": 0
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-peer-scheduling-graph-p50",
+   "title": {
+    "en": "Print after a peer edit of a scheduling file of the build library, graph preparation, median",
+    "de": "Druck nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), Graph-Vorbereitung, Median"
+   },
+   "probe": "product-print-peer-scheduling",
+   "metric": "graphMs",
+   "statistic": "p50",
+   "direction": "lower",
+   "goal": 120000,
+   "gate": 120000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2000
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-print-peer-scheduling-inferred-max",
+   "title": {
+    "en": "Print after a peer edit of a scheduling file of the build library, re-inferred projects",
+    "de": "Druck nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), neu abgeleitete Projekte"
+   },
+   "probe": "product-print-peer-scheduling",
+   "metric": "inferredProjects",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.2,
+    "absolute": 2
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-print-peer-scheduling-rss-max",
+   "title": {
+    "en": "Print after a peer edit of a scheduling file of the build library, peak memory of the process tree",
+    "de": "Druck nach Fremdänderung (Scheduling-Datei der Build-Bibliothek), Speicherspitze des Prozessbaums"
+   },
+   "probe": "product-print-peer-scheduling",
+   "metric": "peakRssBytes",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 2147483648,
+   "gate": 2147483648,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "blocking",
+   "tolerance": {
+    "relative": 0.15,
+    "absolute": 67108864
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-agents-makespan-max",
+   "title": {
+    "en": "Makespan of three agents on the three products",
+    "de": "Gesamtdauer dreier Agenten auf den drei Produkten"
+   },
+   "probe": "product-agents",
+   "metric": "makespanMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 1000
+   },
+   "source": "provisional"
+  },
+  {
+   "id": "product-agents-wait-max",
+   "title": {
+    "en": "Longest wait of an agent for an unrelated product",
+    "de": "Längste Wartezeit eines Agenten auf ein fremdes Produkt"
+   },
+   "probe": "product-agents",
+   "metric": "maxUnrelatedWaitMs",
+   "statistic": "max",
+   "direction": "lower",
+   "goal": 1000,
+   "gate": 5000,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 250
+   },
+   "source": "product-budget"
+  },
+  {
+   "id": "product-agents-speedup-min",
+   "title": {
+    "en": "Speed-up of three agents over serial runs",
+    "de": "Beschleunigung dreier Agenten gegenüber seriellen Läufen"
+   },
+   "probe": "product-agents",
+   "metric": "speedup",
+   "statistic": "min",
+   "direction": "higher",
+   "goal": null,
+   "gate": null,
+   "tools": [
+    "nx",
+    "bazel"
+   ],
+   "enforcement": "advisory",
+   "tolerance": {
+    "relative": 0.25,
+    "absolute": 0.1
+   },
+   "source": "provisional"
+  }
+ ]
+}

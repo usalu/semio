@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "toolchains": {
+    "javascript": {},
+    "cargo": {
+      "activatedBy": [
+        "deps-cargo"
+      ]
+    },
+    "tex": {
+      "activatedBy": [
+        "deps-tectonic",
+        "deps-tex"
+      ]
+    },
+    "trunk": {
+      "activatedBy": [
+        "deps-trunk"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "no-dependencies",
+      "targets": {
+        "build": {},
+        "test": {
+          "dependsOn": []
+        }
+      },
+      "expect": []
+    },
+    {
+      "id": "own-provisioner",
+      "targets": {
+        "build": {
+          "dependsOn": [
+            "fonts",
+            "deps-tectonic",
+            "generate"
+          ]
+        }
+      },
+      "expect": [
+        "tex"
+      ]
+    },
+    {
+      "id": "foreign-provisioner",
+      "targets": {
+        "build-zwischenbericht": {
+          "dependsOn": [
+            "@semio-tech/print:fonts",
+            "@semio-tech/print:deps-tectonic",
+            "@semio-tech/print:deps-tex"
+          ]
+        }
+      },
+      "expect": [
+        "tex"
+      ]
+    },
+    {
+      "id": "object-form",
+      "targets": {
+        "test": {
+          "dependsOn": [
+            {
+              "target": "deps-trunk",
+              "projects": "self"
+            }
+          ]
+        }
+      },
+      "expect": [
+        "trunk"
+      ]
+    },
+    {
+      "id": "two-tools",
+      "targets": {
+        "a": {
+          "dependsOn": [
+            "deps-tex"
+          ]
+        },
+        "b": {
+          "dependsOn": [
+            "deps-cargo"
+          ]
+        }
+      },
+      "expect": [
+        "cargo",
+        "tex"
+      ]
+    },
+    {
+      "id": "near-miss-names",
+      "targets": {
+        "a": {
+          "dependsOn": [
+            "deps-tectonic-extra",
+            "xdeps-tex",
+            "tex"
+          ]
+        }
+      },
+      "expect": []
+    },
+    {
+      "id": "caret-prefix-is-not-a-name",
+      "targets": {
+        "a": {
+          "dependsOn": [
+            "^build",
+            "^deps-tex"
+          ]
+        }
+      },
+      "expect": []
+    }
+  ]
+}

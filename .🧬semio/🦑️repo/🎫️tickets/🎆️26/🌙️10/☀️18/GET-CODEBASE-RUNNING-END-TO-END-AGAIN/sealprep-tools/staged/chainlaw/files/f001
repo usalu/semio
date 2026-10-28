@@ -1,0 +1,274 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "semio:build/process-chain-corpus",
+ "title": "Process chain law corpus",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "contract",
+  "planner",
+  "loaderMemory",
+  "waiter",
+  "repoRunnerSpawnSites",
+  "run"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "contract": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "en",
+    "de"
+   ],
+   "properties": {
+    "en": {
+     "type": "string",
+     "minLength": 1
+    },
+    "de": {
+     "type": "string",
+     "minLength": 1
+    }
+   }
+  },
+  "planner": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "label",
+    "arguments",
+    "environment",
+    "forbiddenArguments",
+    "loaderProcesses",
+    "refusals",
+    "endBudgetMilliseconds",
+    "endGraceMilliseconds"
+   ],
+   "properties": {
+    "label": {
+     "type": "string"
+    },
+    "arguments": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "minItems": 1
+    },
+    "environment": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "forbiddenArguments": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "loaderProcesses": {
+     "const": 1
+    },
+    "refusals": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "noAdoption",
+      "digestMismatch"
+     ],
+     "properties": {
+      "noAdoption": {
+       "type": "string"
+      },
+      "digestMismatch": {
+       "type": "string"
+      }
+     }
+    },
+    "endBudgetMilliseconds": {
+     "type": "integer",
+     "minimum": 1000
+    },
+    "endGraceMilliseconds": {
+     "type": "integer",
+     "minimum": 1000
+    }
+   }
+  },
+  "loaderMemory": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "modules",
+    "declaredImports",
+    "maximumResidentMegabytes",
+    "measuredBeforeMegabytesAtLeast",
+    "agreementPercent"
+   ],
+   "properties": {
+    "modules": {
+     "type": "integer",
+     "minimum": 50
+    },
+    "declaredImports": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "maximumResidentMegabytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "measuredBeforeMegabytesAtLeast": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "agreementPercent": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 100
+    }
+   }
+  },
+  "waiter": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "target",
+    "fakeGrantMegabytes",
+    "maximumDoorResidentMegabytes",
+    "maximumHeavyChildren",
+    "observeMilliseconds",
+    "startTimeoutMilliseconds",
+    "maximumHeavyChildResidentMegabytes",
+    "sealed"
+   ],
+   "properties": {
+    "target": {
+     "type": "string"
+    },
+    "fakeGrantMegabytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "maximumDoorResidentMegabytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "maximumHeavyChildren": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "observeMilliseconds": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "startTimeoutMilliseconds": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "maximumHeavyChildResidentMegabytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "sealed": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "maximumHeavyChildren"
+     ],
+     "properties": {
+      "maximumHeavyChildren": {
+       "type": "integer",
+       "minimum": 0
+      }
+     }
+    }
+   }
+  },
+  "repoRunnerSpawnSites": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "literal",
+    "root",
+    "sites"
+   ],
+   "properties": {
+    "literal": {
+     "type": "string",
+     "minLength": 1
+    },
+    "root": {
+     "type": "string"
+    },
+    "sites": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "uniqueItems": true
+    }
+   }
+  },
+  "run": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "command",
+    "maximumTreeResidentMegabytes",
+    "maximumHeavyProcesses",
+    "maximumLoaderResidentMegabytes",
+    "sampleMilliseconds",
+    "timeoutMilliseconds",
+    "sealed"
+   ],
+   "properties": {
+    "command": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "minItems": 1
+    },
+    "maximumTreeResidentMegabytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "maximumHeavyProcesses": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "maximumLoaderResidentMegabytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "sampleMilliseconds": {
+     "type": "integer",
+     "minimum": 50
+    },
+    "timeoutMilliseconds": {
+     "type": "integer",
+     "minimum": 1000
+    },
+    "sealed": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "maximumHeavyProcesses"
+     ],
+     "properties": {
+      "maximumHeavyProcesses": {
+       "type": "integer",
+       "minimum": 1
+      }
+     }
+    }
+   }
+  }
+ }
+}

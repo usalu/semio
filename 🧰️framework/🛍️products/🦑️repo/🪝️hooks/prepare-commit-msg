@@ -36,8 +36,9 @@ compose_resolve_repo_cli() {
       return
     fi
   fi
-  if [ -n "$HOME" ] && [ -x "$HOME/.local/bin/repo" ]; then
-    echo "$HOME/.local/bin/repo"
+  LAUNCHER_CLI="${XDG_DATA_HOME:-$HOME/.local/share}/semio/launcher/bin/repo"
+  if [ -n "$HOME" ] && [ -x "$LAUNCHER_CLI" ]; then
+    echo "$LAUNCHER_CLI"
     return
   fi
   REPO_CLI=$(command -v repo 2>/dev/null) || return

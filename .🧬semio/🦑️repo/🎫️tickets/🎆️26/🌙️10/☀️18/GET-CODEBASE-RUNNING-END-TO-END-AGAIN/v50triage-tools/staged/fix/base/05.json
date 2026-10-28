@@ -1,0 +1,232 @@
+{
+  "version": 1,
+  "domains": [
+    {
+      "id": "leases",
+      "contract": {
+        "en": "Resource leases: who may hold a named resource, in which order and for how long. The bytes an action produces never depend on which holder ran first.",
+        "de": "Ressourcen-Leases: wer eine benannte Ressource in welcher Reihenfolge und wie lange halten darf. Die Bytes, die eine Aktion erzeugt, hängen nie davon ab, welcher Halter zuerst lief."
+      },
+      "prefixes": [
+        "🧰️framework/🔨️modules/🏃️process/🔒️leases/",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/"
+      ],
+      "ports": [
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/🟦️.ts"
+      ]
+    },
+    {
+      "id": "capacity",
+      "contract": {
+        "en": "Host and compiler capacity: when and how many processes may start. An action produces the same bytes whether it waited for capacity or not.",
+        "de": "Host- und Compiler-Kapazität: wann und wie viele Prozesse starten dürfen. Eine Aktion erzeugt dieselben Bytes, ob sie auf Kapazität gewartet hat oder nicht."
+      },
+      "prefixes": [
+        "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/",
+        "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/"
+      ],
+      "ports": [
+        "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json",
+        "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts"
+      ]
+    },
+    {
+      "id": "store-custody",
+      "contract": {
+        "en": "Custody of the repository cache stores and native cache images (open, reserve, collect, retire, ledger) and of the sealed graph generations' pins, claims and coverage stamps. It decides where bytes live and who builds them, never what they are; whatever derives, encodes or digests a graph fact stays keyed.",
+        "de": "Obhut der Repository-Cache-Speicher und nativen Cache-Images (öffnen, reservieren, einsammeln, ausmustern, Ledger) und der Pins, Anspruchslisten und Abdeckungsstempel der versiegelten Graph-Generationen. Sie bestimmt, wo Bytes liegen und wer sie baut, nie was sie sind; was einen Graph-Fakt ableitet, kodiert oder verdaut, bleibt im Schlüssel."
+      },
+      "prefixes": [
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/",
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/💾️cache/",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔭️coverage/",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧷️pin/",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/"
+      ],
+      "nativeKeyed": [
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/"
+      ],
+      "ports": [
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧬️schema/🔣️.json",
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🟦️.ts"
+      ]
+    },
+    {
+      "id": "process-supervision",
+      "contract": {
+        "en": "Supervision of the process an action runs in: invocation envelope, deadlines, watchdog, termination, recorded process state, agent sessions.",
+        "de": "Überwachung des Prozesses, in dem eine Aktion läuft: Aufruf-Hülle, Fristen, Watchdog, Beendigung, aufgezeichneter Prozesszustand, Agent-Sitzungen."
+      },
+      "prefixes": [
+        "🧰️framework/🔨️modules/🏃️process/🪓️termination/",
+        "🧰️framework/🔨️modules/🏃️process/💾️state/",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/💾️state/",
+        "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/"
+      ],
+      "ports": [
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts"
+      ]
+    },
+    {
+      "id": "retry-observation",
+      "contract": {
+        "en": "Bounded retry of file observations that peers change under a running build: which failure counts as a race and the texts that name it. It only decides when to read again; the retry loop, the protocol and the settle window that decide which bytes a capture accepts stay keyed.",
+        "de": "Begrenzte Wiederholung von Datei-Beobachtungen, die Peers während eines Laufs ändern: welcher Fehler als Wettlauf gilt und die Texte, die ihn benennen. Sie entscheidet nur, wann erneut gelesen wird; Wiederholungsschleife, Protokoll und das Beruhigungsfenster, das über die Bytes einer Erfassung entscheidet, bleiben im Schlüssel."
+      },
+      "prefixes": [
+        "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🌊️races/",
+        "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧾️refusals/"
+      ],
+      "ports": [
+        "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧾️refusals/🟦️.ts",
+        "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🌊️races/🟦️.ts"
+      ]
+    },
+    {
+      "id": "unit-cache-lanes",
+      "contract": {
+        "en": "Cargo unit-cache lanes: which lane a process enters, how many idle lanes the pool keeps and when it trims them, which lane files retention publishes to the shared ledger. It decides where cached units live, never what a unit is; the unit key, the lane layout and the ledger name rules stay keyed.",
+        "de": "Cargo-Unit-Cache-Bahnen: welche Bahn ein Prozess betritt, wie viele ruhende Bahnen der Pool hält und wann er sie ausdünnt, welche Bahn-Dateien die Aufbewahrung im gemeinsamen Hauptbuch veröffentlicht. Sie bestimmt, wo Einheiten liegen, nie was eine Einheit ist; Einheitenschlüssel, Bahn-Layout und Hauptbuch-Namensregeln bleiben im Schlüssel."
+      },
+      "prefixes": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/"
+      ],
+      "ports": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts"
+      ]
+    },
+    {
+      "id": "progress-reporting",
+      "contract": {
+        "en": "Progress lines and refusal texts shown to humans in English and German; no action output is derived from them.",
+        "de": "Fortschrittszeilen und Ablehnungstexte für Menschen auf Englisch und Deutsch; keine Aktionsausgabe wird aus ihnen abgeleitet."
+      },
+      "prefixes": [
+        "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/",
+        "🧰️framework/🔨️modules/🏃️process/📖️texts/",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/"
+      ],
+      "ports": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🟦️.ts"
+      ]
+    },
+    {
+      "id": "process-launch",
+      "contract": {
+        "en": "Launching a run: the build door with its restart, the graph slice an invocation loads and the kernel entry under the inherited grant. They decide which process starts, with which slice and grant, never what an action computes; the loader, captured-source execution and child output capture stay keyed.",
+        "de": "Start eines Laufs: Build-Tür samt Neustart, der vom Aufruf geladene Graph-Ausschnitt und der Kern-Eintritt unter der geerbten Zusage. Sie entscheiden, welcher Prozess mit welchem Ausschnitt startet, nie was eine Aktion berechnet; Lader, Ausführung erfassten Quelltexts und Erfassung der Kindausgabe bleiben im Schlüssel."
+      },
+      "prefixes": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/📥️entry/"
+      ],
+      "ports": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🔄️restart/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/📥️entry/🟦️.ts"
+      ]
+    }
+  ],
+  "keyed": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+      "reason": {
+        "en": "The generation store packs, unpacks and publishes the fact index: its code decides the bytes of every stored document.",
+        "de": "Der Generationsspeicher packt, entpackt und veröffentlicht den Fakten-Index: sein Code bestimmt die Bytes jedes gespeicherten Dokuments."
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🌍️environment/",
+      "reason": {
+        "en": "Reads the manifest field that other projects' edges depend on: it derives a fact.",
+        "de": "Liest das Manifestfeld, von dem die Kanten anderer Projekte abhängen: es leitet einen Fakt ab."
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/✂️cutoff/",
+      "reason": {
+        "en": "Decides which derived rows survive a generation: it shapes the facts.",
+        "de": "Entscheidet, welche abgeleiteten Zeilen eine Generation überleben: es formt die Fakten."
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧮️fact-codec/",
+      "reason": {
+        "en": "The byte identity of every stored document and the identity of a fact.",
+        "de": "Die Byte-Identität jedes gespeicherten Dokuments und die Identität eines Fakts."
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🌊️json-stream/",
+      "reason": {
+        "en": "Writes the expanded graph as exact JSON text: it produces output bytes.",
+        "de": "Schreibt den expandierten Graphen als exakten JSON-Text: es erzeugt Ausgabe-Bytes."
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/",
+      "reason": {
+        "en": "Digests the data files of a generation and decides which facts a loaded generation describes.",
+        "de": "Verdaut die Datendateien einer Generation und entscheidet, welche Fakten eine geladene Generation beschreibt."
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧬️schema/",
+      "reason": {
+        "en": "Declares the constants and the layout of the stored documents.",
+        "de": "Deklariert die Konstanten und das Layout der gespeicherten Dokumente."
+      }
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts",
+      "reason": {
+        "en": "The churn protocol: its settle window and retry bounds decide which bytes a source capture accepts.",
+        "de": "Das Churn-Protokoll: Beruhigungsfenster und Wiederholungsgrenzen bestimmen, welche Bytes eine Quellerfassung annimmt."
+      }
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/📸️snapshot/",
+      "reason": {
+        "en": "Observes a tree as one state: it decides when a captured tree counts as stable.",
+        "de": "Beobachtet einen Baum als einen Zustand: es entscheidet, wann ein erfasster Baum als stabil gilt."
+      }
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧬️schema/🔣️.json",
+      "reason": {
+        "en": "The churn protocol constants, among them the settle window of every source capture.",
+        "de": "Die Churn-Protokollkonstanten, darunter das Beruhigungsfenster jeder Quellerfassung."
+      }
+    }
+  ]
+}

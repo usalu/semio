@@ -1,0 +1,30 @@
+{
+ "extends": "../../../../../../../../tsconfig.json",
+ "include": [],
+ "compilerOptions": {
+  "noEmit": true,
+  "rootDir": "../../../../../../../.."
+ },
+ "files": [
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udd12\ufe0fleases/\ud83d\udcc1\ufe0fphysical/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udd12\ufe0fleases/\ud83d\udcc1\ufe0fphysical/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udd12\ufe0fleases/\ud83d\udcc1\ufe0fphysical/\ud83e\uddea\ufe0ftests/\ud83e\ude9f\ufe0fwindows/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udd12\ufe0fleases/\ud83d\udcc1\ufe0fphysical/\ud83e\uddea\ufe0ftests/\ud83d\udcc2\ufe0fdescriptors/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udd12\ufe0fleases/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udd12\ufe0fleases/\u267b\ufe0fretirement/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udd12\ufe0fleases/\ud83e\ude9f\ufe0fwindows/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udd12\ufe0fleases/\ud83e\ude9f\ufe0fwindows/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udd12\ufe0fleases/\ud83e\udded\ufe0forder/\ud83e\uddea\ufe0ftests/\ud83e\ude9f\ufe0fregistry-root/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\ude93\ufe0ftermination/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\ude93\ufe0ftermination/\ud83e\uddea\ufe0ftests/\ud83e\ude9f\ufe0ftaskkill/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udce6\ufe0fartifacts/\ud83c\udfd7\ufe0fnative-build/\ud83d\udcbe\ufe0fstorage/\ud83c\udf10\ufe0fplatform/\ud83e\udd7e\ufe0fboot/\ud83e\ude79\ufe0frecovery/\ud83d\udd70\ufe0fclock/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udce6\ufe0fartifacts/\ud83c\udfd7\ufe0fnative-build/\ud83d\udcbe\ufe0fstorage/\ud83c\udf10\ufe0fplatform/\ud83e\udd7e\ufe0fboot/\ud83e\ude79\ufe0frecovery/\ud83d\udd70\ufe0fclock/\ud83e\ude9f\ufe0fnative/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udce6\ufe0fartifacts/\ud83c\udfd7\ufe0fnative-build/\ud83d\udcbe\ufe0fstorage/\ud83c\udf10\ufe0fplatform/\ud83e\udd7e\ufe0fboot/\ud83e\ude79\ufe0frecovery/\ud83d\udd70\ufe0fclock/\ud83e\ude9f\ufe0fnative/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfd7\ufe0fbuild/\ud83e\ude7a\ufe0fpreflight/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfd7\ufe0fbuild/\ud83e\ude7a\ufe0fpreflight/\ud83d\udc8a\ufe0fremedies/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfd7\ufe0fbuild/\ud83e\ude7a\ufe0fpreflight/\ud83d\udc8a\ufe0fremedies/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfc3\ufe0fprocess/\ud83e\udd80\ufe0fcargo/\ud83d\udd23\ufe0fpolicy/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfc3\ufe0fprocess/\ud83e\udd80\ufe0fcargo/\ud83d\udd23\ufe0fpolicy/\ud83e\uddea\ufe0ftests/\ud83e\ude9f\ufe0fnextest/\ud83d\udfe6\ufe0f.ts",
+  "../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfd7\ufe0fbuild/\ud83d\udd27\ufe0ftools/\ud83c\udfd7\ufe0fbazel/\ud83c\udfc3\ufe0fexecution/\ud83e\uddea\ufe0ftests/\ud83e\ude9f\ufe0ftaskkill/\ud83d\udfe6\ufe0f.ts"
+ ]
+}

@@ -1,0 +1,16 @@
+{
+ "label": "g27-print2",
+ "target": "@semio-tech/print-rs:test",
+ "started": "08:03:20",
+ "wall_s": 65.5,
+ "peak_tree_mb": 4125,
+ "peak_processes": 4,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "inferring": [
+   "2"
+  ]
+ }
+}

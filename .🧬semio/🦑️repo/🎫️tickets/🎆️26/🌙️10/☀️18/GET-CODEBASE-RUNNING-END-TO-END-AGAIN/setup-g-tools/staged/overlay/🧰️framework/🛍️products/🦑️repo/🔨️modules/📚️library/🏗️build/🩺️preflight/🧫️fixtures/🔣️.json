@@ -1,0 +1,192 @@
+{
+  "requirements": {
+    "architectures": [
+      "x64",
+      "arm64"
+    ],
+    "minimumAvailableBytes": 8589934592,
+    "tools": [
+      "cc",
+      "pkg-config"
+    ],
+    "exchange": true
+  },
+  "facts": {
+    "platform": "linux",
+    "architecture": "x64",
+    "availableBytes": 8589934592,
+    "tools": [
+      "cc",
+      "pkg-config"
+    ],
+    "exchange": "supported",
+    "caseSensitive": "yes"
+  },
+  "cases": [
+    {
+      "id": "boundary",
+      "patch": {},
+      "problems": []
+    },
+    {
+      "id": "unprivileged-is-sufficient",
+      "patch": {
+        "tools": [
+          "pkg-config",
+          "cc"
+        ]
+      },
+      "problems": []
+    },
+    {
+      "id": "physical-capacity",
+      "patch": {
+        "availableBytes": 8589934591
+      },
+      "problems": [
+        "available bytes 8589934591 are below required 8589934592"
+      ]
+    },
+    {
+      "id": "architecture",
+      "patch": {
+        "architecture": "ia32"
+      },
+      "problems": [
+        "architecture ia32 is not one of x64, arm64"
+      ]
+    },
+    {
+      "id": "exchange",
+      "patch": {
+        "exchange": "unsupported"
+      },
+      "problems": [
+        "atomic or journaled directory swap is unsupported by the host or the workspace filesystem"
+      ]
+    },
+    {
+      "id": "unprobed-exchange",
+      "patch": {
+        "exchange": "unprobed"
+      },
+      "problems": [
+        "atomic or journaled directory swap is unsupported by the host or the workspace filesystem"
+      ]
+    },
+    {
+      "id": "case-insensitive",
+      "patch": {
+        "caseSensitive": "no"
+      },
+      "problems": [
+        "a case-sensitive workspace filesystem is required for directory-backed partitions"
+      ]
+    },
+    {
+      "id": "missing-tools",
+      "patch": {
+        "tools": []
+      },
+      "problems": [
+        "missing executable: cc",
+        "missing executable: pkg-config"
+      ]
+    }
+  ],
+  "neutral": [
+    {
+      "id": "darwin-not-probed",
+      "platform": "darwin",
+      "facts": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "availableBytes": 8589934592,
+        "tools": [
+          "cc",
+          "hdiutil",
+          "developer-tools",
+          "rust"
+        ],
+        "exchange": "unprobed",
+        "caseSensitive": "unprobed"
+      },
+      "problems": []
+    }
+  ],
+  "accepted": [
+    [
+      "preflight"
+    ]
+  ],
+  "rejected": [
+    [],
+    [
+      "preflight",
+      "--scope",
+      "@teaching/architecture-course"
+    ],
+    [
+      "preflight",
+      "--scope=@teaching/architecture-course"
+    ],
+    [
+      "preflight",
+      "--skip-checks"
+    ]
+  ],
+  "windows": [
+    {
+      "id": "windows-directory-host",
+      "platform": "win32",
+      "facts": {
+        "platform": "win32",
+        "architecture": "x64",
+        "availableBytes": 8589934592,
+        "tools": [
+          "msvc-linker",
+          "rust"
+        ],
+        "exchange": "supported",
+        "caseSensitive": "yes"
+      },
+      "problems": []
+    },
+    {
+      "id": "windows-swap-unprobed",
+      "platform": "win32",
+      "facts": {
+        "platform": "win32",
+        "architecture": "x64",
+        "availableBytes": 8589934592,
+        "tools": [
+          "msvc-linker",
+          "rust"
+        ],
+        "exchange": "unprobed",
+        "caseSensitive": "yes"
+      },
+      "problems": [
+        "atomic or journaled directory swap is unsupported by the host or the workspace filesystem"
+      ]
+    },
+    {
+      "id": "windows-case-sensitivity-unavailable",
+      "platform": "win32",
+      "facts": {
+        "platform": "win32",
+        "architecture": "x64",
+        "availableBytes": 8589934592,
+        "tools": [
+          "msvc-linker",
+          "rust"
+        ],
+        "exchange": "supported",
+        "caseSensitive": "no"
+      },
+      "problems": [
+        "a case-sensitive workspace filesystem is required for directory-backed partitions"
+      ]
+    }
+  ]
+}

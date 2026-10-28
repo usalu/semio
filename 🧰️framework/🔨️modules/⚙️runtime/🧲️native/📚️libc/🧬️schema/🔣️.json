@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "darwin": "/usr/lib/libSystem.B.dylib",
+        "probeSymbol": "getpid",
+        "linux": {
+          "x64": ["libc.so.6", "libc.musl-x86_64.so.1"],
+          "arm64": ["libc.so.6", "libc.musl-aarch64.so.1"],
+          "riscv64": ["libc.so.6", "libc.musl-riscv64.so.1"]
+        }
+      }
+    },
+    "Distribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "platform", "arch", "loadable", "expected"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "platform": {"enum": ["darwin", "linux", "win32", "freebsd"]},
+        "arch": {"enum": ["x64", "arm64", "riscv64", "ia32", "ppc64"]},
+        "loadable": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "expected": {"anyOf": [{"type": "string", "minLength": 1}, {"enum": [null, "unsupported-platform", "unsupported-architecture", "missing"]}]}
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["distributions"],
+      "properties": {
+        "distributions": {"type": "array", "items": {"$ref": "#/definitions/Distribution"}}
+      }
+    }
+  }
+}

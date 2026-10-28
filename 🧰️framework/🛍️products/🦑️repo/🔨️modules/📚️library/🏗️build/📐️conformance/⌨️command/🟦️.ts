@@ -2,7 +2,7 @@ import {mkdir,mkdtemp,readFile,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {advanceScriptInvocation,checkScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {resolveLanguageV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import scenarios from "../📋️scenarios/🔣️.json" with {type:"json"};
 import {buildBackendAlternationV1,buildBackendDriverUrlV1,buildBackendIdsV1,buildBackendRowV1} from "../../🔌️backends/🟦️.ts";
 import {conformanceIssuesV1,renderConformanceReportV1,type ConformanceSetV1} from "../🟦️.ts";

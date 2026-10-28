@@ -1,0 +1,52 @@
+/** 🚏️ The words after the last script token of a command: the inner command of a process-module wrapper (`repo wrapper.ts command … -- repo ./📜️script.ts test-x`) or the whole command of a plain one; `undefined` without a script token. */
+export function innerCommandWordsV1(command: string): readonly string[] | undefined {
+  const tokens = commandTokensV1(command), index = tokens.findLastIndex((token) => /script\.ts$/u.test(token));
+  return index < 0 ? undefined : tokens.slice(index + 1);
+}
+
+/** 🧲️ The index just after the balanced closing bracket that matches the opener at `from - 1`: strings, template literals and comments are skipped; `undefined` when it never closes. */
+function balancedEndV1(source: string, from: number, open: string, close: string): number | undefined {
+  let depth = 1, at = from;
+  for (; at < source.length && depth > 0; at++) {
+    const character = source[at]!;
+    if (character === open) depth++;
+    else if (character === close) depth--;
+    else if (character === "\"" || character === "'" || character === "`") {
+      for (at++; at < source.length && source[at] !== character; at++) if (source[at] === "\\") at++;
+    } else if (character === "/" && source[at + 1] === "/") while (at < source.length && source[at] !== "\n") at++;
+    else if (character === "/" && source[at + 1] === "*") at = source.indexOf("*/", at + 2) + 1 || source.length;
+  }
+  return depth === 0 ? at : undefined;
+}
+
+/** 🪪️ The name of the class a router registers under a command word (`.register("word", Class)`). */
+export function routerClassNameV1(source: string, word: string): string | undefined {
+  return new RegExp(`register\\(\\s*"${word.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}"\\s*,\\s*(\\w+)`, "u").exec(source)?.[1];
+}
+
+/** 📃️ The text of a class declaration, cut at its balanced closing brace. */
+export function routerClassBodyV1(source: string, name: string): string | undefined {
+  const head = new RegExp(`class\\s+${name}\\b[^{]*\\{`, "u").exec(source);
+  const end = head ? balancedEndV1(source, head.index + head[0].length, "{", "}") : undefined;
+  return head && end !== undefined ? source.slice(head.index, end) : undefined;
+}
+
+/** 🌿️ The `if (segments[0] === "word")` branch of a class body: the braces of the branch, or its line when it has none; `undefined` when the body has no such branch. */
+export function routerBranchV1(body: string, word: string): string | undefined {
+  const head = new RegExp(`if\\s*\\(\\s*segments\\[0\\]\\s*===\\s*"${word.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}"[^)]*\\)\\s*(\\{)?`, "u").exec(body);
+  if (!head) return undefined;
+  const end = head[1] ? balancedEndV1(body, head.index + head[0].length, "{", "}") : body.indexOf("\n", head.index);
+  return end === undefined ? undefined : body.slice(head.index, end < 0 ? body.length : end);
+}
+
+/** 🍱️ The text of the top-level `const NAME = [ … ]` arrays of a source that the given text mentions: a router branch names its packages through a shared list. */
+export function routerConstantsV1(source: string, text: string): string {
+  let extra = "";
+  for (const match of source.matchAll(/^(?:export\s+)?const\s+(\w+)\s*(?::[^=\n]+)?=\s*\[/gmu)) {
+    if (!new RegExp(`\\b${match[1]}\\b`, "u").test(text)) continue;
+    const end = balancedEndV1(source, match.index! + match[0].length, "[", "]");
+    if (end !== undefined) extra += `\n${source.slice(match.index!, end)}`;
+  }
+  return extra;
+}
+

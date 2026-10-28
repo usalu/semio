@@ -1,0 +1,20 @@
+{
+ "label": "g22-prof3",
+ "target": "@teaching/architecture-course:build",
+ "started": "02:15:59",
+ "wall_s": 60.5,
+ "peak_tree_mb": 2277,
+ "peak_processes": 4,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "8",
+   "1 internal, 7 worker"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

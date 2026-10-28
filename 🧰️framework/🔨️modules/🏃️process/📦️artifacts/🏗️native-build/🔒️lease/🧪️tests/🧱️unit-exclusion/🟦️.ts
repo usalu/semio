@@ -34,19 +34,18 @@ fn main() {
 }
 `};
 
-test("concurrent pinned Cargo runs on one shared build directory never overlap in one unit, as judged by an independent interval oracle",async()=>{
- if(!cargo||!existsSync(cargo)||!python){console.log("[skip] pinned nightly Cargo or Python unavailable");return;}
+test.skipIf(!cargo||!existsSync(cargo)||!python)("concurrent pinned Cargo runs on one shared build directory never overlap in one unit, as judged by an independent interval oracle",async()=>{
  const work=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??realpathSync(process.env.TMPDIR??"/tmp"),"ue-")));
  for(const [name,text] of Object.entries(files)){mkdirSync(dirname(join(work,name)),{recursive:true});writeFileSync(join(work,name),text);}
  const log=join(work,"log.txt");writeFileSync(log,"");
- const variants=["a","b","a","b"],runs=variants.map((variant,index)=>new Promise<number>(accept=>{setTimeout(()=>{const child=spawn(cargo,["-Zunstable-options","-C",work,"build"],{env:{...process.env,PATH:join(dirname(cargo))+":"+(process.env.PATH??""),RUSTUP_TOOLCHAIN:"",CHURN_LOG:log,CHURN_VARIANT:variant},stdio:"ignore"});child.once("close",code=>accept(code??1));},index*700);}));
+ const variants=["a","b","a","b"],runs=variants.map((variant,index)=>new Promise<number>(accept=>{setTimeout(()=>{const child=spawn(cargo!,["-Zunstable-options","-C",work,"build"],{env:{...process.env,PATH:join(dirname(cargo!))+":"+(process.env.PATH??""),RUSTUP_TOOLCHAIN:"",RUSTC:join(dirname(cargo!),"rustc"),RUSTC_WRAPPER:"",CHURN_LOG:log,CHURN_VARIANT:variant},stdio:"ignore"});child.once("close",code=>accept(code??1));},index*700);}));
  expect(await Promise.all(runs)).toEqual([0,0,0,0]);
  const final=join(work,"final.txt");writeFileSync(final,Bun.spawnSync([join(work,"t/debug/churn_probe")]).stdout);
- const run=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),log,String(variants.length),final]),report=JSON.parse(run.stdout.toString().split("\n")[0]!);
+ const run=Bun.spawnSync([python!,"-I",join(here,"🐍️.py"),log,String(variants.length),final]),report=JSON.parse(run.stdout.toString().split("\n")[0]!);
  expect(run.exitCode,run.stdout.toString()).toBe(0);
  expect(report.overlaps).toBe(0);expect(report.unfinished).toBe(0);expect(report.runs).toBeGreaterThanOrEqual(2);
  expect(report.finalVariants.length).toBe(1);expect(report.finalParts).toBe(6);
  const overlapping=join(work,"overlap.txt");writeFileSync(overlapping,"start 1 a 100\nstart 2 b 150\nend 1 a 200\nend 2 b 250\n");
- expect(Bun.spawnSync([python,"-I",join(here,"🐍️.py"),overlapping,"2"]).exitCode).toBe(1);
+ expect(Bun.spawnSync([python!,"-I",join(here,"🐍️.py"),overlapping,"2"]).exitCode).toBe(1);
  const own=readFileSync(log,"utf8").trim().split("\n");expect(own.length).toBe(report.runs*2);
 },120000);

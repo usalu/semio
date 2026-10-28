@@ -1,0 +1,2 @@
+# yieldenv-tools superseded (2026-10-27 02:02)
+The planner-env strip of the three graph-yield variables was reversed by hand: the parent verifies the env ENUMERATION digest against its own (unstripped) environment, so the strip broke reuse with `E * changed: SEMIO_BUILD_GRAPH_YIELD_TICKET`. Since ignoredenv-tools, ignoredEnvironment names leave no `e` row and stay out of the digest, so the three names are declared there instead (witness schema). Do NOT run `edit.py revert` here (its base files predate grantenv/ignoredenv).

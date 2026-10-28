@@ -14,7 +14,7 @@ export const component = "bootstrap";
 let LIBRARY_ROOT, LIBRARY_URL, RUNTIME_COMPONENT_MODULE, NATIVE_HOST_MODULE, COMPONENT_DEPLOYMENT_MODULE, INSTALLATION_IDENTITY_MODULE, INSTALLATION_IDENTITY_SCHEMA, BROWSER_SESSION_MODULE, PLAYGROUND_COMPOSITION_MODULE, SOURCE_INPUT_MODULE, COMMAND_INPUT_MODULE, PROJECT_INPUT_MODULE, BUILD_MODE_MODULE, readPhysicalSource;
 export let libraryBootstrap;
 
-/** 🔁️ Loads a captured image through the roots its ComputedImportSites row declares; otherwise evicts Bun's canonical module entry and retains Node's revision-specific ESM identity. */
+/** 📖️ Loads a captured image through the roots its ComputedImportSites row declares; otherwise evicts Bun's canonical module entry and retains Node's revision-specific ESM identity. */
 export async function importRevision(source, revision) {
   const url = new URL(source);
   if (import.meta.semioCapturedPhysicalSources) return import(fileURLToPath(url));
@@ -83,6 +83,7 @@ export function wire(registry) {
     loaded.readSourceInputContract = source.readSourceInputContract;
     loaded.relativeSourceInputs = source.relativeSourceInputs;
     loaded.relativeSourceInputsAsyncV1 = source.relativeSourceInputsAsyncV1;
+    source.sourceImportProviderV1();
     return importRevision(new URL(`./${NATIVE_HOST_MODULE}`, LIBRARY_URL),createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT,NATIVE_HOST_MODULE))).digest("hex"));
   }).then(async nativeHost => {
     loaded.admitPlaygroundNativeHostV1 = nativeHost.admitPlaygroundNativeHostV1;

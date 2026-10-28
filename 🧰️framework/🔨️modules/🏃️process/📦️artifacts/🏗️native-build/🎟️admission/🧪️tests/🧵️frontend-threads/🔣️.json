@@ -1,0 +1,164 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "zero-separate",
+   "args": [
+    "-Z",
+    "threads=0",
+    "a.rs"
+   ],
+   "tokens": 3,
+   "note": "0 means every core: becomes the grant",
+   "expected": [
+    "-Z",
+    "threads=3",
+    "a.rs"
+   ]
+  },
+  {
+   "id": "zero-joined",
+   "args": [
+    "-Zthreads=0",
+    "a.rs"
+   ],
+   "tokens": 3,
+   "note": "the joined spelling",
+   "expected": [
+    "-Zthreads=3",
+    "a.rs"
+   ]
+  },
+  {
+   "id": "larger-capped",
+   "args": [
+    "-Z",
+    "threads=8"
+   ],
+   "tokens": 3,
+   "note": "a count above the grant is capped",
+   "expected": [
+    "-Z",
+    "threads=3"
+   ]
+  },
+  {
+   "id": "smaller-kept",
+   "args": [
+    "-Z",
+    "threads=2"
+   ],
+   "tokens": 3,
+   "note": "a count below the grant stays",
+   "expected": [
+    "-Z",
+    "threads=2"
+   ]
+  },
+  {
+   "id": "equal-kept",
+   "args": [
+    "-Z",
+    "threads=3"
+   ],
+   "tokens": 3,
+   "note": "a count equal to the grant stays",
+   "expected": [
+    "-Z",
+    "threads=3"
+   ]
+  },
+  {
+   "id": "no-grant",
+   "args": [
+    "-Z",
+    "threads=0"
+   ],
+   "tokens": null,
+   "note": "without a grant nothing changes",
+   "expected": [
+    "-Z",
+    "threads=0"
+   ]
+  },
+  {
+   "id": "zero-grant",
+   "args": [
+    "-Z",
+    "threads=0"
+   ],
+   "tokens": 0,
+   "note": "a grant of 0 is no grant",
+   "expected": [
+    "-Z",
+    "threads=0"
+   ]
+  },
+  {
+   "id": "one-token",
+   "args": [
+    "-Z",
+    "threads=0",
+    "-C",
+    "opt-level=0"
+   ],
+   "tokens": 1,
+   "note": "one token gives one thread",
+   "expected": [
+    "-Z",
+    "threads=1",
+    "-C",
+    "opt-level=0"
+   ]
+  },
+  {
+   "id": "other-z-flags-kept",
+   "args": [
+    "-C",
+    "opt-level=0",
+    "-Z",
+    "macro-backtrace"
+   ],
+   "tokens": 1,
+   "note": "other -Z flags are not touched",
+   "expected": [
+    "-C",
+    "opt-level=0",
+    "-Z",
+    "macro-backtrace"
+   ]
+  },
+  {
+   "id": "non-numeric-kept",
+   "args": [
+    "-Z",
+    "threads=x",
+    "-Z",
+    "threads=0"
+   ],
+   "tokens": 2,
+   "note": "a non-numeric value stays, the next flag is still bounded",
+   "expected": [
+    "-Z",
+    "threads=x",
+    "-Z",
+    "threads=2"
+   ]
+  },
+  {
+   "id": "source-named-threads",
+   "args": [
+    "-C",
+    "opt-level=0",
+    "threads=0.rs"
+   ],
+   "tokens": 2,
+   "note": "a source file called like the option is not an option",
+   "expected": [
+    "-C",
+    "opt-level=0",
+    "threads=0.rs"
+   ]
+  }
+ ]
+}

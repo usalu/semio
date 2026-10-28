@@ -15,6 +15,7 @@ import {createRequire} from "node:module";
 import Ajv from "ajv";
 import fg from "fast-glob";
 import { nxGraphSealHolds, writeNxGraphSeal, nxGraphSourceMembershipV2 } from "../🟦️.ts";
+import{testNxToolkitDirectoryV1}from"../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 
 type Mutation = { kind: "none" } | { kind: "write"; path: string; content: string } | {kind:"directory"|"delete";path:string} | {kind:"rename";path:string;destination:string};
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "./🧫️fixtures/🔣️.json"), "utf8")) as { schemaVersion: number; workspace: { files: Record<string, string>; observedFile: string; tracked:string[] }; scenarios: { id: string; mutation: Mutation; holds: boolean }[] };
@@ -79,7 +80,7 @@ test("a seal is refused for another process's receipts or a graph older than the
 
 test("verified immutable whole graph readers preserve the portable custody corpus and refuse a foreign owner",async()=>{
  const identity=process.env.SEMIO_NX_TOOLING_IDENTITY;if(!identity||!/^[a-f0-9]{64}$/u.test(identity))throw Error("Actual incoming immutable SDK identity required");
- const sdk=createRequire(join(process.cwd(),".cache/b/t/m/nx",identity,"package.json")),frozen=await sdk("nx/src/utils/workspace-context").loadSemioGraphAuthorizersV1();expect(frozen.toolingIdentity).toBe(identity);
+ const sdk=createRequire(join(testNxToolkitDirectoryV1(identity),"package.json")),frozen=await sdk("nx/src/utils/workspace-context").loadSemioGraphAuthorizersV1();expect(frozen.toolingIdentity).toBe(identity);
  for(const scenario of fixture.scenarios)await ownedWorkspace(async({root,data,pid,startedAt,environment,signal})=>{
   const membership=await frozen.authorizers.nxGraphSourceMembershipV2(root,signal);expect(membership).toEqual(await nxGraphSourceMembershipV2(root,signal));
   await expect(frozen.authorizers.writeNxGraphSeal(root,data,pid,startedAt,membership.digest,environment,signal)).rejects.toThrow("Original live native graph namespace");expect(await writeNxGraphSeal(root,data,pid,startedAt,membership.digest,environment,signal),scenario.id).toBe(true);expect(validate(JSON.parse(readFileSync(join(data,"semio-graph-seal.json"),"utf8"))),JSON.stringify(validate.errors)).toBe(true);

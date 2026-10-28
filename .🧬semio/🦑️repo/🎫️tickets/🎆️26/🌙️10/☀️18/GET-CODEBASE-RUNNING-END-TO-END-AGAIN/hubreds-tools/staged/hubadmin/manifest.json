@@ -1,0 +1,17 @@
+{
+ "🌎️hub/🔨️modules/🛡️admin/🏗️builder/🌐️vite/🟦️.ts": {
+  "file": "f01.ts",
+  "base": "bc4af5b435ee81ace336acb4f77e42d10b05e4b8c6a9f54f6f033cbfbbb1262d",
+  "new": "0ecb13d3d8df5301303e18b78482c654a6ebf404877f04334fdbfc607ae632c0"
+ },
+ "🌎️hub/🔨️modules/🛡️admin/🧪️tests/🎚️config/🟦️.ts": {
+  "file": "f02.ts",
+  "base": "5b4dc248e82fde10c586812351b3c8c93c831e736d2c07b5bd052426b3efcfda",
+  "new": "74313b9db3fd417b91198ba2cd73d23c97a4d2141e6c0d1a6760a665ef0dc1c9"
+ },
+ "🌎️hub/🔨️modules/🛡️admin/🧪️tests/🧪️build-config/🟦️.ts": {
+  "file": "f03.ts",
+  "base": null,
+  "new": "344156ffa53e0c3b956a3dc05c5e640edf2249a67cef202aa813cef9e752963e"
+ }
+}

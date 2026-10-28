@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🟦️.ts": {
+  "file": "00.ts",
+  "base": "cdd9d5b0d8abb64b161a6520439a6c41b30e2adb80bd9b81ea1f947fa6140759",
+  "new": "0d789cf67c9597d50b1e493011aadd7ae93fdb314a055d248b1d1bbd921f8ca3"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "01.ts",
+  "base": "563c2f05def18dfe5decadd2d8a27c064f9bc1e507955460ba14928b9111b088",
+  "new": "7459dde346d0bbe9c72868530b2ffa6aaf50018978fbf3d9d48977bd82a05b1b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧬️schema/🔣️.json": {
+  "file": "02.json",
+  "base": "21642ae81fe2146ac41843570d522f584dac2275bbb15f6f44f69753fdbdd6d0",
+  "new": "f66a79a780bef636556bc2125bd57e33e4364487523a4bf9dc2650d966e98f45"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🧪️tests/🗝️parts/🟦️.ts": {
+  "file": "03.ts",
+  "base": null,
+  "new": "d0b08412c61727c6a766010cc0fdfea582def606747845ad464ef5d660e842b5"
+ }
+}

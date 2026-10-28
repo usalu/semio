@@ -1,0 +1,1265 @@
+{
+ "version": 1,
+ "workspace": {
+  "files": {
+   "after/src/a.txt": "after source a\n",
+   "after/src/b.txt": "after source b\n",
+   "app/src/a.txt": "app source a\n",
+   "app/src/b.txt": "app source b\n",
+   "app/test/t.txt": "app test one\n",
+   "badtest/src/a.txt": "badtest source a\n",
+   "badtest/src/b.txt": "badtest source b\n",
+   "broken/src/a.txt": "broken source a\n",
+   "broken/src/b.txt": "broken source b\n",
+   "core/src/a.txt": "core source a\n",
+   "core/src/b.txt": "core source b\n",
+   "edge/src/a.txt": "edge source a\n# note one\n",
+   "edge/src/b.txt": "edge source b\n",
+   "multi/src/a.txt": "multi source a\n",
+   "multi/src/b.txt": "multi source b\n",
+   "p1/src/a.txt": "p1 source a\n",
+   "p1/src/b.txt": "p1 source b\n",
+   "p2/src/a.txt": "p2 source a\n",
+   "p2/src/b.txt": "p2 source b\n",
+   "p3/src/a.txt": "p3 source a\n",
+   "p3/src/b.txt": "p3 source b\n",
+   "shared/src/a.txt": "shared source a\n",
+   "shared/src/b.txt": "shared source b\n",
+   "sibling/src/a.txt": "sibling source a\n",
+   "sibling/src/b.txt": "sibling source b\n",
+   "slow/src/a.txt": "slow source a\n",
+   "slow/src/b.txt": "slow source b\n",
+   "user/src/a.txt": "user source a\n",
+   "user/src/b.txt": "user source b\n",
+   "util/src/a.txt": "util source a\n",
+   "util/src/b.txt": "util source b\n"
+  },
+  "projects": [
+   {
+    "name": "core",
+    "dependsOn": [],
+    "targets": {
+     "build": {
+      "cache": true,
+      "kind": "build",
+      "reads": [
+       "core/src/**"
+      ],
+      "outputs": [
+       "core/out/core.txt"
+      ],
+      "action": {
+       "mode": "emit"
+      }
+     }
+    }
+   },
+   {
+    "name": "util",
+    "dependsOn": [],
+    "targets": {
+     "build": {
+      "cache": true,
+      "kind": "build",
+      "reads": [
+       "util/src/**"
+      ],
+      "outputs": [
+       "util/out/util.txt"
+      ],
+      "action": {
+       "mode": "emit"
+      }
+     }
+    }
+   },
+   {
+    "name": "app",
+    "dependsOn": [
+     "core",
+     "util"
+    ],
+    "targets": {
+     "build": {
+      "cache": true,
+      "kind": "build",
+      "reads": [
+       "app/src/**"
+      ],
+      "outputs": [
+       "app/out/app.txt"
+      ],
+      "action": {
+       "mode": "emit"
+      },
+      "dependsOn": [
+       "core:build",
+       "util:build"
+      ]
+     },
+     "test": {
+      "cache": true,
+      "kind": "test",
+      "reads": [
+       "app/test/**"
+      ],
+      "outputs": [
+       "app/out/test-report.txt"
+      ],
+      "action": {
+       "mode": "emit",
+       "report": true
+      },
+      "dependsOn": [
+       "app:build"
+      ]
+     },
+     "lint": {
+      "cache": false,
+      "kind": "check",
+      "reads": [
+       "app/src/**"
+      ],
+      "outputs": [],
+      "action": {
+       "mode": "emit"
+      }
+     }
+    }
+   },
+   {
+    "name": "sibling",
+    "dependsOn": [],
+    "targets": {
+     "build": {
+      "cache": true,
+      "kind": "build",
+      "reads": [
+       "sibling/src/**"
+      ],
+      "outputs": [
+       "sibling/out/sibling.txt"
+      ],
+      "action": {
+       "mode": "emit"
+      }
+     }
+    }
+   },
+   {
+    "name": "edge",
+    "dependsOn": [],
+    "targets": {
+     "build": {
+      "cache": true,
+      "kind": "build",
+      "reads": [
+       "edge/src/**"
+      ],
+      "outputs": [
+       "edge/out/edge.txt"
+      ],
+      "action": {
+       "mode": "emit",
+       "normalize": true
+      }
+     }
+    }
+   },
+   {
+    "name": "user",
+    "dependsOn": [
+     "edge"
+    ],
+    "targets": {
+     "build": {
+      "cache": true,
+      "kind": "build",
+      "reads": [
+       "user/src/**"
+      ],
+      "outputs": [
+       "user/out/user.txt"
+      ],
+      "action": {
+       "mode": "emit"
+      },
+      "dependsOn": [
+       "edge:build"
+      ]
+     }
+    }
+   },
+   {
+    "name": "multi",
+    "dependsOn": [],
+    "targets": {
+     "build": {
+      "cache": true,
+      "kind": "build",
+      "reads": [
+       "multi/src/**"
+      ],
+      "outputs": [
+       "multi/out/a.txt",
+       "multi/out/nested/b.txt"
+      ],
+      "action": {
+       "mode": "emit"
+      }
+     }
+    }
+   },
+   {
+    "name": "broken",
+    "dependsOn": [],
+    "targets": {
+     "build": {
+      "cache": true,
+      "kind": "build",
+      "reads": [
+       "broken/src/**"
+      ],
+      "outputs": [],
+      "action": {
+       "mode": "fail"
+      }
+     }
+    }
+   },
+   {
+    "name": "after",
+    "dependsOn": [
+     "broken"
+    ],
+    "targets": {
+     "build": {
+      "cache": true,
+      "kind": "build",
+      "reads": [
+       "after/src/**"
+      ],
+      "outputs": [
+       "after/out/after.txt"
+      ],
+      "action": {
+       "mode": "emit"
+      },
+      "dependsOn": [
+       "broken:build"
+      ]
+     }
+    }
+   },
+   {
+    "name": "badtest",
+    "dependsOn": [],
+    "targets": {
+     "test": {
+      "cache": true,
+      "kind": "test",
+      "reads": [
+       "badtest/src/**"
+      ],
+      "outputs": [],
+      "action": {
+       "mode": "fail"
+      }
+     }
+    }
+   },
+   {
+    "name": "slow",
+    "dependsOn": [],
+    "targets": {
+     "build": {
+      "cache": true,
+      "kind": "build",
+      "reads": [
+       "slow/src/**"
+      ],
+      "outputs": [
+       "slow/out/slow.txt"
+      ],
+      "action": {
+       "mode": "sleep",
+       "milliseconds": 3000
+      }
+     }
+    }
+   },
+   {
+    "name": "shared",
+    "dependsOn": [],
+    "targets": {
+     "build": {
+      "cache": true,
+      "kind": "build",
+      "reads": [
+       "shared/src/**"
+      ],
+      "outputs": [
+       "shared/out/shared.txt"
+      ],
+      "action": {
+       "mode": "sleep",
+       "milliseconds": 1500
+      }
+     }
+    }
+   },
+   {
+    "name": "p1",
+    "dependsOn": [],
+    "targets": {
+     "build": {
+      "cache": true,
+      "kind": "build",
+      "reads": [
+       "p1/src/**"
+      ],
+      "outputs": [
+       "p1/out/p1.txt"
+      ],
+      "action": {
+       "mode": "sleep",
+       "milliseconds": 500
+      }
+     }
+    }
+   },
+   {
+    "name": "p2",
+    "dependsOn": [],
+    "targets": {
+     "build": {
+      "cache": true,
+      "kind": "build",
+      "reads": [
+       "p2/src/**"
+      ],
+      "outputs": [
+       "p2/out/p2.txt"
+      ],
+      "action": {
+       "mode": "sleep",
+       "milliseconds": 500
+      }
+     }
+    }
+   },
+   {
+    "name": "p3",
+    "dependsOn": [],
+    "targets": {
+     "build": {
+      "cache": true,
+      "kind": "build",
+      "reads": [
+       "p3/src/**"
+      ],
+      "outputs": [
+       "p3/out/p3.txt"
+      ],
+      "action": {
+       "mode": "sleep",
+       "milliseconds": 500
+      }
+     }
+    }
+   }
+  ]
+ },
+ "scenarios": [
+  {
+   "id": "plan-closure",
+   "capability": "plan",
+   "title": {
+    "en": "A plan lists exactly the dependency closure with its edges.",
+    "de": "Ein Plan nennt genau den Abhängigkeitsabschluss mit seinen Kanten."
+   },
+   "steps": [
+    {
+     "step": "plan",
+     "target": "app:test",
+     "tasks": [
+      "core:build",
+      "util:build",
+      "app:build",
+      "app:test"
+     ],
+     "edges": {
+      "app:test": [
+       "app:build"
+      ],
+      "app:build": [
+       "core:build",
+       "util:build"
+      ],
+      "core:build": [],
+      "util:build": []
+     }
+    }
+   ],
+   "evidence": [
+    {
+     "suite": "parity",
+     "id": "fw-graph-generate"
+    }
+   ]
+  },
+  {
+   "id": "run-cold",
+   "capability": "run",
+   "title": {
+    "en": "A cold run executes exactly the closure, in dependency order, with correct outputs, and nothing else.",
+    "de": "Ein kalter Lauf führt genau den Abschluss in Abhängigkeitsreihenfolge mit korrekten Ausgaben aus, sonst nichts."
+   },
+   "steps": [
+    {
+     "step": "run",
+     "targets": [
+      "app:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "core:build",
+       "util:build",
+       "app:build"
+      ],
+      "ordered": true,
+      "outputs": [
+       {
+        "task": "core:build",
+        "path": "core/out/core.txt",
+        "state": "expected"
+       },
+       {
+        "task": "util:build",
+        "path": "util/out/util.txt",
+        "state": "expected"
+       },
+       {
+        "task": "app:build",
+        "path": "app/out/app.txt",
+        "state": "expected"
+       },
+       {
+        "task": "sibling:build",
+        "path": "sibling/out/sibling.txt",
+        "state": "absent"
+       }
+      ]
+     }
+    }
+   ],
+   "evidence": [
+    {
+     "suite": "parity",
+     "id": "fw-graph-test"
+    }
+   ]
+  },
+  {
+   "id": "cache-restore",
+   "capability": "cache-restore",
+   "title": {
+    "en": "A second identical run executes nothing and restores every output.",
+    "de": "Ein zweiter identischer Lauf führt nichts aus und stellt alle Ausgaben wieder her."
+   },
+   "steps": [
+    {
+     "step": "run",
+     "targets": [
+      "app:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "core:build",
+       "util:build",
+       "app:build"
+      ]
+     }
+    },
+    {
+     "step": "run",
+     "targets": [
+      "app:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [],
+      "outputs": [
+       {
+        "task": "app:build",
+        "path": "app/out/app.txt",
+        "state": "expected"
+       }
+      ]
+     }
+    }
+   ],
+   "evidence": [
+    {
+     "suite": "incremental",
+     "id": "fw-ts-comment"
+    },
+    {
+     "suite": "bazel-contract",
+     "id": "cache"
+    }
+   ]
+  },
+  {
+   "id": "restore-deleted-output",
+   "capability": "cache-restore",
+   "title": {
+    "en": "Deleted outputs come back from the cache without executing.",
+    "de": "Gelöschte Ausgaben kommen aus dem Cache zurück, ohne auszuführen."
+   },
+   "steps": [
+    {
+     "step": "run",
+     "targets": [
+      "app:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "core:build",
+       "util:build",
+       "app:build"
+      ]
+     }
+    },
+    {
+     "step": "delete",
+     "paths": [
+      "core/out/core.txt",
+      "app/out/app.txt"
+     ]
+    },
+    {
+     "step": "run",
+     "targets": [
+      "app:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [],
+      "outputs": [
+       {
+        "task": "core:build",
+        "path": "core/out/core.txt",
+        "state": "expected"
+       },
+       {
+        "task": "app:build",
+        "path": "app/out/app.txt",
+        "state": "expected"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "invalidation",
+   "capability": "invalidation",
+   "title": {
+    "en": "Editing one input re-executes exactly the task that reads it and what depends on its output.",
+    "de": "Das Ändern einer Eingabe führt genau die lesende Task und ihre Abhängigen neu aus."
+   },
+   "steps": [
+    {
+     "step": "run",
+     "targets": [
+      "app:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "core:build",
+       "util:build",
+       "app:build"
+      ]
+     }
+    },
+    {
+     "step": "edit",
+     "file": "core/src/a.txt",
+     "op": "append-line"
+    },
+    {
+     "step": "run",
+     "targets": [
+      "app:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "core:build",
+       "app:build"
+      ],
+      "outputs": [
+       {
+        "task": "core:build",
+        "path": "core/out/core.txt",
+        "state": "changed"
+       },
+       {
+        "task": "util:build",
+        "path": "util/out/util.txt",
+        "state": "unchanged"
+       },
+       {
+        "task": "app:build",
+        "path": "app/out/app.txt",
+        "state": "expected"
+       }
+      ]
+     }
+    }
+   ],
+   "evidence": [
+    {
+     "suite": "incremental",
+     "id": "fw-ts-body"
+    }
+   ]
+  },
+  {
+   "id": "early-cutoff",
+   "capability": "early-cutoff",
+   "title": {
+    "en": "A change that leaves a task's output identical does not re-execute its dependents.",
+    "de": "Eine Änderung, die die Ausgabe einer Task unverändert lässt, führt deren Abhängige nicht erneut aus."
+   },
+   "steps": [
+    {
+     "step": "run",
+     "targets": [
+      "user:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "edge:build",
+       "user:build"
+      ]
+     }
+    },
+    {
+     "step": "edit",
+     "file": "edge/src/a.txt",
+     "op": "append-comment"
+    },
+    {
+     "step": "run",
+     "targets": [
+      "user:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "edge:build"
+      ],
+      "outputs": [
+       {
+        "task": "edge:build",
+        "path": "edge/out/edge.txt",
+        "state": "unchanged"
+       },
+       {
+        "task": "user:build",
+        "path": "user/out/user.txt",
+        "state": "unchanged"
+       }
+      ]
+     }
+    }
+   ],
+   "evidence": [
+    {
+     "suite": "incremental",
+     "id": "fw-ts-comment"
+    }
+   ]
+  },
+  {
+   "id": "uncached-always-runs",
+   "capability": "uncached",
+   "title": {
+    "en": "A task that declares no cache executes on every run.",
+    "de": "Eine Task ohne Cache wird bei jedem Lauf ausgeführt."
+   },
+   "steps": [
+    {
+     "step": "run",
+     "targets": [
+      "app:lint"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "app:lint"
+      ]
+     }
+    },
+    {
+     "step": "run",
+     "targets": [
+      "app:lint"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "app:lint"
+      ]
+     }
+    }
+   ],
+   "evidence": [
+    {
+     "suite": "bazel-contract",
+     "id": "uncached"
+    }
+   ]
+  },
+  {
+   "id": "outputs-nested",
+   "capability": "outputs",
+   "title": {
+    "en": "Several declared outputs, including nested ones, are captured and restored together.",
+    "de": "Mehrere deklarierte Ausgaben, auch verschachtelte, werden gemeinsam erfasst und wiederhergestellt."
+   },
+   "steps": [
+    {
+     "step": "run",
+     "targets": [
+      "multi:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "multi:build"
+      ],
+      "outputs": [
+       {
+        "task": "multi:build",
+        "path": "multi/out/a.txt",
+        "state": "expected"
+       },
+       {
+        "task": "multi:build",
+        "path": "multi/out/nested/b.txt",
+        "state": "expected"
+       }
+      ]
+     }
+    },
+    {
+     "step": "delete",
+     "paths": [
+      "multi/out/a.txt",
+      "multi/out/nested/b.txt"
+     ]
+    },
+    {
+     "step": "run",
+     "targets": [
+      "multi:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [],
+      "outputs": [
+       {
+        "task": "multi:build",
+        "path": "multi/out/a.txt",
+        "state": "expected"
+       },
+       {
+        "task": "multi:build",
+        "path": "multi/out/nested/b.txt",
+        "state": "expected"
+       }
+      ]
+     }
+    }
+   ],
+   "evidence": [
+    {
+     "suite": "parity",
+     "id": "fw-graph-generate"
+    }
+   ]
+  },
+  {
+   "id": "failure-isolation",
+   "capability": "failure-isolation",
+   "title": {
+    "en": "A failing task fails the run, its dependents do not execute and independent tasks still finish.",
+    "de": "Eine fehlgeschlagene Task lässt den Lauf scheitern, ihre Abhängigen laufen nicht, unabhängige Tasks werden beendet."
+   },
+   "steps": [
+    {
+     "step": "run",
+     "targets": [
+      "after:build",
+      "sibling:build"
+     ],
+     "expect": {
+      "exit": "nonzero",
+      "executed": [
+       "broken:build",
+       "sibling:build"
+      ],
+      "outputs": [
+       {
+        "task": "sibling:build",
+        "path": "sibling/out/sibling.txt",
+        "state": "expected"
+       },
+       {
+        "task": "after:build",
+        "path": "after/out/after.txt",
+        "state": "absent"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "failure-not-cached",
+   "capability": "failure-isolation",
+   "title": {
+    "en": "A failed task is never cached: it executes again on the next run.",
+    "de": "Eine fehlgeschlagene Task wird nie zwischengespeichert: sie läuft beim nächsten Lauf erneut."
+   },
+   "steps": [
+    {
+     "step": "run",
+     "targets": [
+      "broken:build"
+     ],
+     "expect": {
+      "exit": "nonzero",
+      "executed": [
+       "broken:build"
+      ]
+     }
+    },
+    {
+     "step": "run",
+     "targets": [
+      "broken:build"
+     ],
+     "expect": {
+      "exit": "nonzero",
+      "executed": [
+       "broken:build"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "test-results",
+   "capability": "test-results",
+   "title": {
+    "en": "A passing test is cached, a failing test fails the run and is not cached.",
+    "de": "Ein bestandener Test wird zwischengespeichert, ein fehlgeschlagener lässt den Lauf scheitern und wird nicht zwischengespeichert."
+   },
+   "steps": [
+    {
+     "step": "run",
+     "targets": [
+      "app:test"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "core:build",
+       "util:build",
+       "app:build",
+       "app:test"
+      ],
+      "outputs": [
+       {
+        "task": "app:test",
+        "path": "app/out/test-report.txt",
+        "state": "expected"
+       }
+      ]
+     }
+    },
+    {
+     "step": "run",
+     "targets": [
+      "app:test"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": []
+     }
+    },
+    {
+     "step": "run",
+     "targets": [
+      "badtest:test"
+     ],
+     "expect": {
+      "exit": "nonzero",
+      "executed": [
+       "badtest:test"
+      ]
+     }
+    },
+    {
+     "step": "run",
+     "targets": [
+      "badtest:test"
+     ],
+     "expect": {
+      "exit": "nonzero",
+      "executed": [
+       "badtest:test"
+      ]
+     }
+    }
+   ],
+   "evidence": [
+    {
+     "suite": "incremental",
+     "id": "test-body"
+    }
+   ]
+  },
+  {
+   "id": "affected-closure",
+   "capability": "affected",
+   "title": {
+    "en": "Changed files select their projects and everything that depends on them, no more.",
+    "de": "Geänderte Dateien wählen ihre Projekte und alle Abhängigen, nicht mehr."
+   },
+   "steps": [
+    {
+     "step": "affected",
+     "files": [
+      "core/src/a.txt"
+     ],
+     "projects": [
+      "core",
+      "app"
+     ]
+    },
+    {
+     "step": "affected",
+     "files": [
+      "sibling/src/a.txt"
+     ],
+     "projects": [
+      "sibling"
+     ]
+    }
+   ],
+   "evidence": [
+    {
+     "suite": "incremental",
+     "id": "fw-ts-unrelated"
+    }
+   ]
+  },
+  {
+   "id": "cancellation",
+   "capability": "cancellation",
+   "title": {
+    "en": "Cancelling stops the running task promptly and publishes nothing; the next run completes.",
+    "de": "Abbrechen stoppt die laufende Task zügig und veröffentlicht nichts; der nächste Lauf wird abgeschlossen."
+   },
+   "steps": [
+    {
+     "step": "cancel",
+     "targets": [
+      "slow:build"
+     ],
+     "afterStart": "slow:build",
+     "settled": "slow:build"
+    },
+    {
+     "step": "run",
+     "targets": [
+      "slow:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "slow:build"
+      ],
+      "outputs": [
+       {
+        "task": "slow:build",
+        "path": "slow/out/slow.txt",
+        "state": "expected"
+       }
+      ]
+     }
+    }
+   ],
+   "evidence": [
+    {
+     "suite": "bazel-contract",
+     "id": "cancellation"
+    }
+   ]
+  },
+  {
+   "id": "progress",
+   "capability": "progress",
+   "title": {
+    "en": "The run reports a start and an end for every task it executes.",
+    "de": "Der Lauf meldet für jede ausgeführte Task einen Start und ein Ende."
+   },
+   "steps": [
+    {
+     "step": "run",
+     "targets": [
+      "app:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "core:build",
+       "util:build",
+       "app:build"
+      ],
+      "events": "covers-executed"
+     }
+    }
+   ]
+  },
+  {
+   "id": "parallelism-bounded",
+   "capability": "parallelism",
+   "title": {
+    "en": "Independent tasks overlap when allowed and never exceed the bound.",
+    "de": "Unabhängige Tasks überlappen, wenn erlaubt, und überschreiten die Grenze nie."
+   },
+   "steps": [
+    {
+     "step": "run",
+     "targets": [
+      "p1:build",
+      "p2:build",
+      "p3:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "p1:build",
+       "p2:build",
+       "p3:build"
+      ],
+      "minConcurrent": 2
+     },
+     "options": {
+      "parallel": 3
+     }
+    }
+   ]
+  },
+  {
+   "id": "serial-bound",
+   "capability": "parallelism",
+   "title": {
+    "en": "With a bound of one, tasks never overlap.",
+    "de": "Mit der Grenze eins überlappen Tasks nie."
+   },
+   "steps": [
+    {
+     "step": "run",
+     "targets": [
+      "p1:build",
+      "p2:build",
+      "p3:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "p1:build",
+       "p2:build",
+       "p3:build"
+      ],
+      "maxConcurrent": 1
+     },
+     "options": {
+      "parallel": 1
+     }
+    }
+   ]
+  },
+  {
+   "id": "concurrent-disjoint",
+   "capability": "concurrent-invocations",
+   "title": {
+    "en": "Two simultaneous invocations on disjoint targets both succeed.",
+    "de": "Zwei gleichzeitige Aufrufe mit verschiedenen Zielen gelingen beide."
+   },
+   "steps": [
+    {
+     "step": "concurrent",
+     "runs": [
+      [
+       "p1:build"
+      ],
+      [
+       "p2:build"
+      ]
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "p1:build",
+       "p2:build"
+      ]
+     }
+    }
+   ],
+   "evidence": [
+    {
+     "suite": "concurrency",
+     "id": "disjoint-projects"
+    }
+   ]
+  },
+  {
+   "id": "single-flight",
+   "capability": "single-flight",
+   "title": {
+    "en": "Two simultaneous invocations of one target execute its body once.",
+    "de": "Zwei gleichzeitige Aufrufe desselben Ziels führen dessen Rumpf einmal aus."
+   },
+   "steps": [
+    {
+     "step": "concurrent",
+     "runs": [
+      [
+       "shared:build"
+      ],
+      [
+       "shared:build"
+      ]
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "shared:build"
+      ],
+      "startsOnce": [
+       "shared:build"
+      ]
+     }
+    }
+   ],
+   "evidence": [
+    {
+     "suite": "concurrency",
+     "id": "same-target-cold"
+    }
+   ]
+  },
+  {
+   "id": "remote-cache",
+   "capability": "remote-cache",
+   "title": {
+    "en": "A fresh checkout with an empty local cache restores everything from the shared cache.",
+    "de": "Ein frischer Checkout mit leerem lokalem Cache stellt alles aus dem gemeinsamen Cache wieder her."
+   },
+   "steps": [
+    {
+     "step": "run",
+     "targets": [
+      "app:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "core:build",
+       "util:build",
+       "app:build"
+      ]
+     },
+     "options": {
+      "remote": "read-write"
+     }
+    },
+    {
+     "step": "fresh-checkout"
+    },
+    {
+     "step": "run",
+     "targets": [
+      "app:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [],
+      "outputs": [
+       {
+        "task": "app:build",
+        "path": "app/out/app.txt",
+        "state": "expected"
+       }
+      ]
+     },
+     "options": {
+      "remote": "read-write"
+     }
+    }
+   ]
+  },
+  {
+   "id": "run-record",
+   "capability": "run-record",
+   "title": {
+    "en": "The backend's own record names the restored tasks of a cached run.",
+    "de": "Die eigene Aufzeichnung des Backends nennt die wiederhergestellten Tasks eines zwischengespeicherten Laufs."
+   },
+   "steps": [
+    {
+     "step": "run",
+     "targets": [
+      "app:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [
+       "core:build",
+       "util:build",
+       "app:build"
+      ]
+     }
+    },
+    {
+     "step": "run",
+     "targets": [
+      "app:build"
+     ],
+     "expect": {
+      "exit": "zero",
+      "executed": [],
+      "restored": [
+       "core:build",
+       "util:build",
+       "app:build"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

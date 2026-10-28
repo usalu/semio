@@ -1,0 +1,108 @@
+{
+ "name": "status",
+ "code": "gate runs g23-g42 (measurements)",
+ "lane": "docs4",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "e88fdd1b3edd95f1a46291cd1f2304ae9f06f3616faeeaa8a56826552197e872",
+ "needs": [],
+ "edits": [
+  {
+   "id": "status-head",
+   "lang": "en",
+   "kind": "replace",
+   "old": "Measured 10-26 on a 32 GB Mac with 20 agents (load 17-65), 16 GB simulated by policy; absolute seconds are 2-4x an idle host.",
+   "new": "Measured 10-26 and 10-27 (gate runs g23-g42) on a 32 GB / 10-core Mac with about 20 agents (load 11-65), 16 GB simulated by policy; absolute seconds are 2-4x an idle host, and `product.py` rounds wall times up to 5 s steps."
+  },
+  {
+   "id": "status-head",
+   "lang": "de",
+   "kind": "replace",
+   "old": "Gemessen am 26.10. auf einem Mac mit 32 GB und 20 Agenten (Last 17-65), 16 GB per Policy simuliert; absolute Sekunden sind 2-4x einer ruhigen Maschine.",
+   "new": "Gemessen am 26.10. und 27.10. (Tor-Läufe g23-g42) auf einem Mac mit 32 GB / 10 Kernen und rund 20 Agenten (Last 11-65), 16 GB per Policy simuliert; absolute Sekunden sind 2-4x einer ruhigen Maschine, und `product.py` rundet Wanduhrzeiten auf 5-s-Schritte auf."
+  },
+  {
+   "id": "status-table",
+   "lang": "en",
+   "kind": "replace",
+   "old": "- The G34 group (plan walk, memo stamps, journal place, runtime rows without a child) is live since 10:35; the verdict of gate run g34 is pending, so the first hot runs after it are not measured yet.",
+   "new": "- Targets of wave 1026g, measured 10-27 on the latest gate logs (g34-g42; `product.py`, peak = resident memory of the whole process tree):\n\n| Target | 10-26 | 10-27 and verdict |\n|---|---|---|\n| Course hot no-op under 10 s and 1.5 GB | 60-83 s | 10.0-10.1 s at 0.9-1.3 GB (memo served, plan reused): at target |\n| Course one-line edit under 60 s | 506 s | 25-50 s, the revert 35-40 s: met |\n| Rust (print) one-line edit under 2 min | 2,637 s | 85.5 s, the revert 15 s, served from the memo; the first edit after a landing 161 s: met |\n| Print hot no-op | 420-560 s | 10-15 s at 1.6 GB, 550 projects served from the memo: met |\n| Dashboard no-op | 140-240 s | 10.0 s at 1.15 GB, 20-25 s the run after a landing, 95-470 s the first after a library landing: met |\n| Peer edits without re-execution | never measured | a library landing still re-infers 38-355 owners: not met |\n| Graph after a peer edit under 2 min, builder under 2 GB | 307 s | one project 30-40 s; a 355-owner refresh peaks at 10.3 GB (14-16 GB before the fixed graph child heap): not met |\n| Three agents on 16 GB | never measured | not run yet |\n| Disk budget with lock-aware GC | none | budgets and sweeps landed (C1, memo 1 GiB), steady state not measured |\n"
+  },
+  {
+   "id": "status-table",
+   "lang": "de",
+   "kind": "replace",
+   "old": "- Die G34-Gruppe (Plan-Lauf, Memo-Stempel, Ort des Journals, Laufzeit-Zeilen ohne Kind) ist seit 10:35 live; das Urteil des Tor-Laufs g34 steht aus, die ersten heißen Läufe danach sind also noch nicht gemessen.",
+   "new": "- Ziele der Welle 1026g, gemessen am 27.10. an den neuesten Tor-Logs (g34-g42; `product.py`, Spitze = residenter Speicher des ganzen Prozessbaums):\n\n| Ziel | 26.10. | 27.10. und Urteil |\n|---|---|---|\n| Kurs, heißer No-op unter 10 s und 1,5 GB | 60-83 s | 10,0-10,1 s bei 0,9-1,3 GB (Memo geliefert, Plan wiederverwendet): am Ziel |\n| Kurs, Ein-Zeilen-Änderung unter 60 s | 506 s | 25-50 s, das Zurücksetzen 35-40 s: erreicht |\n| Rust (print), Ein-Zeilen-Änderung unter 2 min | 2.637 s | 85,5 s, das Zurücksetzen 15 s, aus dem Memo geliefert; die erste Änderung nach einer Landung 161 s: erreicht |\n| print, heißer No-op | 420-560 s | 10-15 s bei 1,6 GB, 550 Projekte aus dem Memo geliefert: erreicht |\n| Dashboard-No-op | 140-240 s | 10,0 s bei 1,15 GB, 20-25 s der Lauf nach einer Landung, 95-470 s der erste nach einer Bibliothekslandung: erreicht |\n| Peer-Änderungen ohne Neuausführung | nie gemessen | eine Bibliothekslandung leitet weiter 38-355 Eigner neu ab: nicht erreicht |\n| Graph nach einer Peer-Änderung unter 2 min, Erbauer unter 2 GB | 307 s | ein Projekt 30-40 s; ein Refresh von 355 Eignern gipfelt bei 10,3 GB (vorher 14-16 GB, bevor die Halde des Graph-Kindes fest wurde): nicht erreicht |\n| Drei Agenten auf 16 GB | nie gemessen | noch nicht gelaufen |\n| Plattenbudget mit lock-bewusstem GC | keines | Budgets und Aufräum-Läufe gelandet (C1, Memo 1 GiB), Dauerzustand nicht gemessen |\n"
+  },
+  {
+   "id": "status-open",
+   "lang": "en",
+   "kind": "replace",
+   "old": "- Met since 10-27 (see \"Measuring a build\"): the hot Bazel no-op of the line below is measurable now and takes 10 s at 1.1-1.6 GB for the architecture course (graph memo served, plan reused); a one-line course edit 30 s and a one-line print edit 105 s (targets 60 s and 2 min); the dashboard Rust build 140-190 s. Not met: a hot print no-op under 10 s (20-45 s).",
+   "new": "- Not met or not shown today: peer edits (a landing re-infers owners and the graph builder reaches 10.3 GB on 355), the three-agent scenario, a steady-state disk measurement, a hot run on a Windows or Linux host."
+  },
+  {
+   "id": "status-open",
+   "lang": "de",
+   "kind": "replace",
+   "old": "- Erreicht seit 27.10. (siehe „Einen Build messen“): der heiße Bazel-No-op der Zeile darunter ist jetzt messbar und dauert für den Architektur-Kurs 10 s bei 1,1-1,6 GB (Graph-Memo geliefert, Plan wiederverwendet); eine Ein-Zeilen-Änderung des Kurses 30 s und eine Ein-Zeilen-Änderung von print 105 s (Ziele 60 s und 2 min); der Rust-Build des Dashboards 140-190 s. Nicht erreicht: ein heißer print-No-op unter 10 s (20-45 s).",
+   "new": "- Heute nicht erreicht oder nicht gezeigt: Peer-Änderungen (eine Landung leitet Eigner neu ab, und der Graph-Erbauer erreicht bei 355 10,3 GB), das Szenario mit drei Agenten, eine Dauermessung der Platte, ein heißer Lauf auf einem Windows- oder Linux-Rechner."
+  },
+  {
+   "id": "status-baseline",
+   "lang": "en",
+   "kind": "replace",
+   "old": "- Not met or not shown (first honest baseline, bench2-g, 10-26 18:54-19:36, quiet window, 32 GB / 10-core Mac, Bazel, before the evening batches): a hot course no-op takes 60 / 77 / 83 s (target 10 s) and none of it is Bazel (0.4-0.5 s, 0 actions re-executed): graph freshness 9-27 s, tool-setup (Bazel slot, planner, implementation capture) 32-48 s, dependency verification 5-6 s, admission 3-7 s, capacity wait 0-19 s (every hot run asked for 7168 MB, 10x its measured footprint of 0.67-0.73 GiB; RSS 2.1-2.25 GiB). A one-line course edit takes 506 s instead of 60 s (graph 307 s for one re-inferred project, tool-setup 85 s, execution 60 s: 1 action executed, 6 cache hits) and peaks at a footprint of 3.0 GiB (RSS 5.1 GiB). The dashboard prime failed after 909 s with `Refusing to wait` behind the lease of a human's running dashboard. Not measured: peer edits, the revert of an edit, print, the 3-agent scenario. Also not met: graph builder under 2 GB (index views 1.7 GB, native discovery; the index-chunk batch reaches 2.9 GB peak, pending gate) and graph generation under 2 min after a larger peer edit. Re-measure with `repo bench compare` on reports of the same host class.",
+   "new": "- Baseline of 10-26 (bench2-g, quiet window 18:54-19:36, before the evening batches; re-measure with `repo bench compare` on reports of the same host class): a hot course no-op took 60 / 77 / 83 s and none of it was Bazel (graph freshness 9-27 s, tool-setup 32-48 s, dependency verification 5-6 s, admission 3-7 s, capacity wait 0-19 s), a one-line course edit 506 s (graph 307 s for one project, tool-setup 85 s, execution 60 s), and the dashboard prime failed after 909 s with `Refusing to wait` behind a human's dashboard. The graph memo and plan reuse removed freshness and tool-setup from a hot run, the quiet grant the capacity wait."
+  },
+  {
+   "id": "status-baseline",
+   "lang": "de",
+   "kind": "replace",
+   "old": "- Nicht erreicht oder nicht gezeigt (erste ehrliche Basislinie, bench2-g, 26.10. 18:54-19:36, ruhiges Fenster, Mac mit 32 GB / 10 Kernen, Bazel, vor den Abend-Paketen): ein heißer Kurs-No-op braucht 60 / 77 / 83 s (Ziel 10 s) und nichts davon ist Bazel (0,4-0,5 s, 0 Aktionen neu ausgeführt): Aktualität des Graphen 9-27 s, Tool-Setup (Bazel-Slot, Planer, Erfassung der Implementierung) 32-48 s, Prüfung der Abhängigkeiten 5-6 s, Zulassung 3-7 s, Kapazitätswartezeit 0-19 s (jeder heiße Lauf forderte 7168 MB an, das 10-fache seines gemessenen Fußabdrucks von 0,67-0,73 GiB; RSS 2,1-2,25 GiB). Eine Ein-Zeilen-Änderung am Kurs braucht 506 s statt 60 s (Graph 307 s für ein neu abgeleitetes Projekt, Tool-Setup 85 s, Ausführung 60 s: 1 Aktion ausgeführt, 6 Cache-Treffer) und erreicht einen Fußabdruck von 3,0 GiB (RSS 5,1 GiB). Der Dashboard-Prime scheiterte nach 909 s mit `Refusing to wait` hinter dem Lease des laufenden Dashboards eines Menschen. Nicht gemessen: Peer-Änderungen, das Zurücknehmen einer Änderung, Print, das 3-Agenten-Szenario. Ebenfalls nicht erreicht: Graph-Erbauer unter 2 GB (Index-Sichten 1,7 GB, native Entdeckung; das Index-Chunk-Paket erreicht 2,9 GB Spitze, wartet auf das Tor) und Graph-Generation unter 2 min nach einer größeren Peer-Änderung. Neu messen mit `repo bench compare` auf Berichten derselben Rechnerklasse.",
+   "new": "- Basislinie vom 26.10. (bench2-g, ruhiges Fenster 18:54-19:36, vor den Abend-Paketen; neu messen mit `repo bench compare` auf Berichten derselben Rechnerklasse): ein heißer Kurs-No-op brauchte 60 / 77 / 83 s und nichts davon war Bazel (Aktualität des Graphen 9-27 s, Tool-Setup 32-48 s, Prüfung der Abhängigkeiten 5-6 s, Zulassung 3-7 s, Kapazitätswartezeit 0-19 s), eine Ein-Zeilen-Änderung des Kurses 506 s (Graph 307 s für ein Projekt, Tool-Setup 85 s, Ausführung 60 s), und der Dashboard-Prime scheiterte nach 909 s mit `Refusing to wait` hinter dem Dashboard eines Menschen. Das Graph-Memo und die Plan-Wiederverwendung nahmen Aktualität und Tool-Setup aus einem heißen Lauf, die ruhige Zusage die Kapazitätswartezeit."
+  },
+  {
+   "id": "status-pending",
+   "lang": "en",
+   "kind": "replace",
+   "old": "- Pending gate: cache-key narrowing (keys2-g, undeclared-g), route fixes (route2-g), native-storage guard (store-g), index chunks (gram2-g), Nx fixes (nxfix-g), e2e worker rows (e2eperf-g), sealed default (self-g).",
+   "new": "- Pending gate: the graph closure classifier (backlog group D3), the Nx fixes (E1), fleet status (F1) and the sealed default (the flip, last); deferred: the managed-parent guard (store-g). Landed since the list of 10-26: cache-key narrowing, route fixes, index chunks and graph memory (D1), the platform and test tables (A1), hygiene (B1), disk budgets and Cargo job tokens (C1)."
+  },
+  {
+   "id": "status-pending",
+   "lang": "de",
+   "kind": "replace",
+   "old": "- Wartet auf das Tor: Schlüssel-Verengung (keys2-g, undeclared-g), Routing-Korrekturen (route2-g), Wächter für den nativen Speicher (store-g), Index-Chunks (gram2-g), Nx-Korrekturen (nxfix-g), E2E-Worker-Zeilen (e2eperf-g), versiegelter Standard (self-g).",
+   "new": "- Wartet auf das Tor: der Klassifizierer der Graph-Abschlüsse (Backlog-Gruppe D3), die Nx-Korrekturen (E1), der Flottenstatus (F1) und der versiegelte Standard (das Umlegen, zuletzt); zurückgestellt: der Wächter für den verwalteten Elternteil (store-g). Seit der Liste vom 26.10. gelandet: Schlüssel-Verengung, Routing-Korrekturen, Index-Chunks und Graph-Speicher (D1), die Plattform- und Test-Tabellen (A1), Hygiene (B1), Plattenbudgets und Cargo-Job-Token (C1)."
+  },
+  {
+   "id": "measured-line",
+   "lang": "en",
+   "kind": "replace",
+   "old": "- **Measured 10-27** (32 GB Mac, load 11-55, 16 GB budget simulated by policy): architecture course hot no-op 10.0-10.1 s at 1.07-1.58 GB (memo served, plan reused), one-line edit 30.5 s, revert 45-50 s; print hot no-op 20-45 s, one-line edit 105 s, revert 20 s; dashboard build 140-190 s, plan reused.",
+   "new": "- **Measured 10-27** (32 GB Mac, load 11-55, 16 GB budget simulated by policy; gate runs g34-g42): architecture course hot no-op 10.0-10.1 s at 0.9-1.3 GB (memo served, plan reused), one-line edit 25-50 s, revert 35-40 s; print hot no-op 10-15 s at 1.6 GB (550 projects served from the memo), one-line edit 85.5 s, revert 15 s (served from the memo), the first edit after a landing 161 s; dashboard no-op 10.0 s at 1.15 GB, 20-25 s the run after a landing. The first run after a library landing re-infers owners (dashboard 38 in 95 s, print 355 in 600 s at a 10.3 GB peak)."
+  },
+  {
+   "id": "measured-line",
+   "lang": "de",
+   "kind": "replace",
+   "old": "- **Gemessen 27.10.** (Mac mit 32 GB, Last 11-55, 16-GB-Budget per Policy simuliert): Architektur-Kurs heißer No-op 10,0-10,1 s bei 1,07-1,58 GB (Memo geliefert, Plan wiederverwendet), Ein-Zeilen-Änderung 30,5 s, Zurücksetzen 45-50 s; print heißer No-op 20-45 s, Ein-Zeilen-Änderung 105 s, Zurücksetzen 20 s; Dashboard-Build 140-190 s, Plan wiederverwendet.",
+   "new": "- **Gemessen 27.10.** (Mac mit 32 GB, Last 11-55, 16-GB-Budget per Policy simuliert; Tor-Läufe g34-g42): Architektur-Kurs heißer No-op 10,0-10,1 s bei 0,9-1,3 GB (Memo geliefert, Plan wiederverwendet), Ein-Zeilen-Änderung 25-50 s, Zurücksetzen 35-40 s; print heißer No-op 10-15 s bei 1,6 GB (550 Projekte aus dem Memo geliefert), Ein-Zeilen-Änderung 85,5 s, Zurücksetzen 15 s (aus dem Memo geliefert), die erste Änderung nach einer Landung 161 s; Dashboard-No-op 10,0 s bei 1,15 GB, 20-25 s der Lauf nach einer Landung. Der erste Lauf nach einer Bibliothekslandung leitet Eigner neu ab (Dashboard 38 in 95 s, print 355 in 600 s bei 10,3 GB Spitze)."
+  },
+  {
+   "id": "builder-row",
+   "lang": "en",
+   "kind": "replace",
+   "old": "target 2 GB not met |",
+   "new": "target 2 GB not met; a refresh of 355 owners peaks at 10.3 GB of process tree since the graph child's heap is fixed at 2 GiB (14-16 GB before) |"
+  },
+  {
+   "id": "builder-row",
+   "lang": "de",
+   "kind": "replace",
+   "old": "Ziel 2 GB nicht erreicht |",
+   "new": "Ziel 2 GB nicht erreicht; ein Refresh von 355 Eignern gipfelt bei 10,3 GB Prozessbaum, seit die Halde des Graph-Kindes auf 2 GiB festliegt (vorher 14-16 GB) |"
+  }
+ ]
+}

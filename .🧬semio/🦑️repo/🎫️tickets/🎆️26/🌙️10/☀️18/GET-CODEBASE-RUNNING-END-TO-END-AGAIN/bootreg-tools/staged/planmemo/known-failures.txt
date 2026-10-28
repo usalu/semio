@@ -1,0 +1,37 @@
+FAIL  :: Cargo execution preserves exact owner policy and separates compilation from assertions
+FAIL  :: Cargo keeps capture and output controls on Nextest execution with independent CLI authorities
+FAIL  :: Cargo lease cancellation and process timeout release exact ownership
+FAIL  :: Cargo refuses an empty selected snapshot suite with the independent Nextest status
+FAIL  :: Cargo retains failed build stdout without admitting invalid metadata
+FAIL  :: Cargo tests hold the shared compiler lease through list and assertion termination
+FAIL  :: Kernel package executes neutral target selections through its exact bounded Cargo driver
+FAIL  :: actual Cargo admission phase: lint-after-run
+FAIL  :: actual Cargo admission phase: lint-after-store
+FAIL  :: actual Cargo admission phase: lint-cancelled
+FAIL  :: actual Cargo admission phase: lint-copied
+FAIL  :: actual Cargo admission phase: lint-expired
+FAIL  :: actual Cargo admission phase: lint-foreign
+FAIL  :: actual Cargo admission phase: lint-issued-phase
+FAIL  :: actual Cargo admission phase: lint-policy-cap
+FAIL  :: actual Cargo admission phase: tests-after-run
+FAIL  :: actual Cargo admission phase: tests-after-store
+FAIL  :: actual Cargo admission phase: tests-cancelled
+FAIL  :: actual Cargo admission phase: tests-copied
+FAIL  :: actual Cargo admission phase: tests-expired
+FAIL  :: actual Cargo admission phase: tests-foreign
+FAIL  :: actual Cargo admission phase: tests-issued-phase
+FAIL  :: actual Cargo admission phase: tests-policy-cap
+FAIL  :: actual exact Cargo bounded native laws retain issued storage through compiler and receipt
+FAIL  :: dependency preparation uses exact Cargo compiler selection while libtest output stays in assertions
+FAIL  :: generated budget child callbacks pass their actual received Original to the first phase boundary
+FAIL  :: generic Cargo test command requires its exact actual owner phase without receiving or renewing
+FAIL  :: isolated Cargo stores are removed on every owner settlement and swept only after their kernel claim is released
+FAIL  :: neutral actual preparation rejects unissued carried phases in genuine failed children
+FAIL  :: neutral missing and fabricated compiler admission cannot create captures or execute a producer
+FAIL  :: proc-macro exact laws discover controlled compiler runtime: admitted
+FAIL  :: proc-macro exact laws discover controlled compiler runtime: cancelled
+FAIL  :: proc-macro exact laws discover controlled compiler runtime: failed
+FAIL  :: proc-macro exact laws discover controlled compiler runtime: multiline
+FAIL  :: proc-macro exact laws discover controlled compiler runtime: relative
+FAIL  :: repository Cargo capture consumes actual JSON inside Original compiler and target custody
+FAIL  :: shell Cargo writers use awaited Original launcher and issued generated capture

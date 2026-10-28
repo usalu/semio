@@ -1,0 +1,57 @@
+{
+ "name": "test-run",
+ "code": "td-misc + td-graph findings (live): the root bunfig, the a1 recipe, what a bare red means",
+ "lane": "docs5",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "85cf39438347e94d0607db0d27d9bfa75e2bc58d1ebaf0e11e9a08515016bc74",
+ "needs": [],
+ "pending": [],
+ "edits": [
+  {
+   "id": "single-file",
+   "lang": "en",
+   "kind": "replace",
+   "old": "`nice -n 10 bun test ./<file>` from the module directory, always with `./`",
+   "new": "`nice -n 10 bun test ./<repo-relative file>` from the checkout root, always with `./`"
+  },
+  {
+   "id": "single-file",
+   "lang": "de",
+   "kind": "replace",
+   "old": "`nice -n 10 bun test ./<Datei>` im Modulverzeichnis, immer mit `./`",
+   "new": "`nice -n 10 bun test ./<Datei relativ zum Repo>` in der Checkout-Wurzel, immer mit `./`"
+  },
+  {
+   "id": "run-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- **Platform verdicts**: every suite of the three route tables (220: process 67, caching 102, build 51) has an explicit `platforms` verdict derived from evidence in its test files, with its reasons in `platformCauses` (six causes: `posix-program`, `posix-shell-script`, `python3-command`, `symlink`, `permission-bits`, `posix-process-control`; closed rules in `🗂️suites/🖥️platforms/🔣️.json`, an independent Python reading as the oracle). 147 suites are Windows-capable (process 54 of 67, caching 68 of 102, build 25 of 51), 73 are POSIX-only (darwin, linux). A POSIX-only suite on Windows prints `SKIPPED, not passed` (exit 0) and counts as skipped, never passed, and its project target is uncacheable (`live`) so a skip is never replayed as a pass. In `.github/workflows/build-system.yml` no row is advisory any more and the `suites` job has no `continue-on-error`: every Windows-capable suite blocks. After adding a suite or a platform-specific test re-derive the verdicts with `python3 -I .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/tag.py`. Eight suites that the CI policy already requires on Windows still carry unconditioned POSIX facts (`descriptor-lifetime`, `process-tree-termination`, `build-facets`, `native-storage`, `leases`, `cargo-unit-cache-processes`, `build-inputs-revision`, `build-bazel-execution`): the first Windows run decides whether they get gates or leave `mustRun`. The evidence is static; it cannot see path separators in expectations, CRLF, the 256-character limit or a missing tool.",
+   "where": "after",
+   "block": "- **Running one test file correctly** (lanes td-misc and td-graph, 10-27): the truth about a file is `bun test ./<repo-relative file>` started in the checkout root. The root `bunfig.toml` preloads the runtime pin (`🚀️launcher/📌️runtime-pin`, Bun 1.4.2) and the orphan guard (`🧪️testing/🟨️bun/🪦️orphans`). A run started inside the test's own directory gets no root `bunfig.toml`, so it runs on the ambient Bun (1.3.14 on the reference Mac) without either and shows failures that are no defect: another `require.resolve` error text (the output-stamps law reads 3/1 from its folder and 4/0 from the root), an FFI `strlen` TypeError, the 60 s self-check timeout of the sealed store law. A failure list made by a script that does `cd <dir> && bun test ./🟦️.ts` (`backlog-tools/live-laws.sh`, the source of `a1-laws.txt`) is a list of leads, not of verdicts; such a script also concatenates the digits of every `N pass` / `N fail` line, so a suite that runs a nested fixture (ci-report) reads `516 pass 10 fail` instead of `16 pass 0 fail`. Judge a file by its failure SET before and after a change, never by counts. A red root run is one of four things: `Original parent Script process invocation required` means the file is envelope-only (declare its birth, next bullet, or run its suite route); a path error, a missing directory or a refused socket means the wrong artifact directory (the bullet after next); `Required original cache consumer unavailable` and its kin mean the file needs the official runner envelope; anything else is a defect of the test or of the product.\n"
+  },
+  {
+   "id": "run-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- **Plattform-Urteile**: jede Suite der drei Routing-Tabellen (220: process 67, caching 102, build 51) hat ein ausdrückliches `platforms`-Urteil, abgeleitet aus Belegen in ihren Testdateien, mit den Gründen in `platformCauses` (sechs Ursachen: `posix-program`, `posix-shell-script`, `python3-command`, `symlink`, `permission-bits`, `posix-process-control`; geschlossene Regeln in `🗂️suites/🖥️platforms/🔣️.json`, ein unabhängiges Python-Lesen als Orakel). 147 Suiten sind Windows-fähig (process 54 von 67, caching 68 von 102, build 25 von 51), 73 nur POSIX (darwin, linux). Eine reine POSIX-Suite gibt unter Windows `SKIPPED, not passed` aus (Exit 0) und zählt als übersprungen, nie als bestanden, und ihr Projekt-Target ist nicht cachebar (`live`), damit ein Überspringen nie als Bestehen wiedergegeben wird. In `.github/workflows/build-system.yml` ist keine Zeile mehr beratend und der Job `suites` hat kein `continue-on-error`: jede Windows-fähige Suite blockiert. Nach dem Hinzufügen einer Suite oder eines plattformspezifischen Tests die Urteile mit `python3 -I .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/tag.py` neu ableiten. Acht Suiten, die die CI-Policy schon unter Windows verlangt, tragen noch unbedingte POSIX-Fakten (`descriptor-lifetime`, `process-tree-termination`, `build-facets`, `native-storage`, `leases`, `cargo-unit-cache-processes`, `build-inputs-revision`, `build-bazel-execution`): der erste Windows-Lauf entscheidet, ob sie Gates bekommen oder `mustRun` verlassen. Der Beleg ist statisch; er sieht keine Pfadtrenner in Erwartungen, CRLF, das 256-Zeichen-Limit oder ein fehlendes Werkzeug.",
+   "where": "after",
+   "block": "- **Eine Testdatei richtig ausführen** (Spuren td-misc und td-graph, 27.10.): die Wahrheit über eine Datei ist `bun test ./<Datei relativ zum Repo>`, gestartet in der Checkout-Wurzel. Die `bunfig.toml` der Wurzel lädt die Laufzeit-Festlegung (`🚀️launcher/📌️runtime-pin`, Bun 1.4.2) und den Waisenwächter (`🧪️testing/🟨️bun/🪦️orphans`) vor. Ein Lauf im eigenen Verzeichnis des Tests bekommt keine `bunfig.toml` der Wurzel, läuft also auf dem Bun der Umgebung (1.3.14 auf dem Referenz-Mac) ohne beides und zeigt Fehler, die kein Defekt sind: einen anderen Fehlertext von `require.resolve` (das Output-Stamps-Gesetz meldet 3/1 aus seinem Ordner und 4/0 aus der Wurzel), einen FFI-TypeError bei `strlen`, die 60-s-Selbstprüfung des Gesetzes zum versiegelten Store. Eine Fehlerliste von einem Skript, das `cd <dir> && bun test ./🟦️.ts` ausführt (`backlog-tools/live-laws.sh`, die Quelle von `a1-laws.txt`), ist eine Liste von Hinweisen, kein Urteil; ein solches Skript hängt außerdem die Ziffern jeder Zeile `N pass` / `N fail` aneinander, sodass eine Suite mit verschachtelter Fixture-Ausführung (ci-report) `516 pass 10 fail` statt `16 pass 0 fail` liest. Beurteile eine Datei nach der Fehlermenge vor und nach einer Änderung, nie nach Zahlen. Ein roter Lauf aus der Wurzel ist eines von vier Dingen: `Original parent Script process invocation required` heißt, die Datei geht nur mit Umschlag (ihre Geburt deklarieren, nächster Punkt, oder ihre Suite-Route nutzen); ein Pfadfehler, ein fehlendes Verzeichnis oder ein abgelehnter Socket heißt, das Artefaktverzeichnis ist falsch (der übernächste Punkt); `Required original cache consumer unavailable` und Verwandtes heißt, die Datei braucht den Umschlag des offiziellen Läufers; alles andere ist ein Defekt des Tests oder des Produkts."
+  },
+  {
+   "id": "run-row",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "| ENFILE, `Too many open files in system`, `kern.num_files` near 245,760 | the host file table is full. The 20:07 incident of 10-26 (122,880 descriptors = `kern.maxfilesperproc`, killing measured runs) was `bun test <path>` WITHOUT `./` (the 17:43 one has the same signature): bun reads such an operand as a FILTER, scans the whole checkout (465,000 files, 40 s, 2 GB), holds every directory open and runs no test. Find it with `ps` (a `bun test` with a bare path), stop that pid, never `pkill`; write `./path` or an absolute path. The owned runners now refuse it before any process starts (`[tests] bun test <operand> reads the operand as a filter, not as a path … Prefix it with ./`; also for `./` or `.` naming the checkout); `SEMIO_TEST_OPERAND_GUARD=off` lifts the guard. It cannot see a plain `bun test` typed in a shell or spawned by your own tool. Other ENFILE causes are transient and commands retry (`busy`). |",
+   "where": "after",
+   "block": "| `Original parent Script process invocation required` from a bare `bun test ./file` | the file needs the process birth that the official runner hands down; this is no defect of the code. Run its suite route (`bun repo run <project>:test-<suite>`) or, once the file declares its birth (\"Declaring a test envelope\"), run it bare from the checkout root. A file that also reads `SEMIO_TEST_ARTIFACT_DIR` needs a directory too (\"Where scratch and artifact directories live\"). |"
+  },
+  {
+   "id": "run-row",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "| ENFILE, `Too many open files in system`, `kern.num_files` nahe 245.760 | die Dateitabelle des Rechners ist voll. Der Vorfall vom 26.10. um 20:07 (122.880 Deskriptoren = `kern.maxfilesperproc`, er tötete gemessene Läufe) war `bun test <Pfad>` OHNE `./` (der von 17:43 hat dieselbe Signatur): bun liest einen solchen Operanden als FILTER, durchsucht den ganzen Checkout (465.000 Dateien, 40 s, 2 GB), hält jedes Verzeichnis offen und führt keinen Test aus. Mit `ps` finden (ein `bun test` mit bloßem Pfad), diese pid beenden, nie `pkill`; `./Pfad` oder einen absoluten Pfad schreiben. Die eigenen Läufer lehnen es jetzt ab, bevor ein Prozess startet (`[tests] bun test <Operand> liest den Operanden als Filter, nicht als Pfad … Stelle ./ voran`; auch für `./` oder `.`, die den Checkout nennen); `SEMIO_TEST_OPERAND_GUARD=off` hebt den Wächter auf. Ein einfaches `bun test` in der Shell oder aus einem eigenen Werkzeug sieht er nicht. Andere ENFILE-Ursachen sind vorübergehend, Befehle wiederholen (`busy`). |",
+   "where": "after",
+   "block": "| `Original parent Script process invocation required` bei einem `bun test ./file` ohne Elternprozess | die Datei braucht die Prozessgeburt, die der offizielle Läufer weiterreicht; das ist kein Defekt des Codes. Nutze ihre Suite-Route (`bun repo run <project>:test-<suite>`) oder, sobald die Datei ihre Geburt deklariert („Einen Test-Umschlag deklarieren“), führe sie ohne Elternprozess aus der Checkout-Wurzel aus. Eine Datei, die zusätzlich `SEMIO_TEST_ARTIFACT_DIR` liest, braucht auch ein Verzeichnis („Wo Scratch- und Artefaktverzeichnisse liegen“). |"
+  }
+ ]
+}

@@ -1,0 +1,344 @@
+{
+ "countLines": [
+  [
+   "bun test v1.4.2 (abcdef)",
+   "",
+   "a.test.ts:",
+   "(pass) first",
+   "(skip) second",
+   "(fail) third",
+   "",
+   "\u001b[32m 12 pass\u001b[0m",
+   "\u001b[33m 3 skip\u001b[0m",
+   "\u001b[31m 1 fail\u001b[0m",
+   "Ran 16 tests across 1 file. [12.00ms]",
+   "12 passed",
+   "  7 pass",
+   "  2 skip",
+   "  0 fail"
+  ],
+  [],
+  [
+   "   5 pass  ",
+   "1 failed",
+   "fail 4",
+   "  0 fail"
+  ]
+ ],
+ "samples": [
+  [],
+  [
+   {
+    "atMs": 1,
+    "availableMegabytes": 9000,
+    "totalMegabytes": 16000,
+    "swapMegabytes": null,
+    "pressure": null,
+    "treeMegabytes": null
+   }
+  ],
+  [
+   {
+    "atMs": 1,
+    "availableMegabytes": 9000,
+    "totalMegabytes": 16000,
+    "swapMegabytes": 0,
+    "pressure": "normal",
+    "treeMegabytes": 0
+   },
+   {
+    "atMs": 2,
+    "availableMegabytes": 3000,
+    "totalMegabytes": 16000,
+    "swapMegabytes": 512,
+    "pressure": "warn",
+    "treeMegabytes": 1500
+   },
+   {
+    "atMs": 3,
+    "availableMegabytes": 5000,
+    "totalMegabytes": 16000,
+    "swapMegabytes": 128,
+    "pressure": "normal",
+    "treeMegabytes": 400
+   }
+  ]
+ ],
+ "verdicts": [
+  {
+   "name": "all passed",
+   "enforce": true,
+   "rows": [
+    [
+     "process",
+     "leases"
+    ],
+    [
+     "build",
+     "build-host-capacity"
+    ]
+   ],
+   "unrouted": [],
+   "outcomes": [
+    {
+     "table": "process",
+     "suite": "leases",
+     "status": "passed",
+     "exitCode": 0,
+     "wallMs": 1000,
+     "tests": {
+      "pass": 3,
+      "skip": 0,
+      "fail": 0
+     },
+     "memory": {
+      "samples": 2,
+      "minimumAvailableMegabytes": 4000,
+      "peakUsedMegabytes": 6000,
+      "peakSwapMegabytes": null,
+      "peakTreeMegabytes": 120,
+      "worstPressure": "normal"
+     },
+     "log": "logs/leases.log"
+    },
+    {
+     "table": "build",
+     "suite": "build-host-capacity",
+     "status": "passed",
+     "exitCode": 0,
+     "wallMs": 1000,
+     "tests": {
+      "pass": 2,
+      "skip": 1,
+      "fail": 0
+     },
+     "memory": {
+      "samples": 2,
+      "minimumAvailableMegabytes": 4000,
+      "peakUsedMegabytes": 6000,
+      "peakSwapMegabytes": null,
+      "peakTreeMegabytes": 120,
+      "worstPressure": "normal"
+     },
+     "log": "logs/build-host-capacity.log"
+    }
+   ]
+  },
+  {
+   "name": "a skipped suite is not a pass when it must run",
+   "enforce": true,
+   "rows": [
+    [
+     "process",
+     "leases"
+    ]
+   ],
+   "unrouted": [],
+   "outcomes": [
+    {
+     "table": "process",
+     "suite": "leases",
+     "status": "skipped",
+     "exitCode": 0,
+     "wallMs": 1000,
+     "tests": {
+      "pass": 0,
+      "skip": 0,
+      "fail": 0
+     },
+     "memory": {
+      "samples": 0,
+      "minimumAvailableMegabytes": null,
+      "peakUsedMegabytes": null,
+      "peakSwapMegabytes": null,
+      "worstPressure": null,
+      "peakTreeMegabytes": null
+     },
+     "log": "logs/leases.log"
+    }
+   ]
+  },
+  {
+   "name": "a skipped suite does not fail a sweep",
+   "enforce": false,
+   "rows": [
+    [
+     "process",
+     "leases"
+    ]
+   ],
+   "unrouted": [],
+   "outcomes": [
+    {
+     "table": "process",
+     "suite": "leases",
+     "status": "skipped",
+     "exitCode": 0,
+     "wallMs": 1000,
+     "tests": {
+      "pass": 0,
+      "skip": 0,
+      "fail": 0
+     },
+     "memory": {
+      "samples": 0,
+      "minimumAvailableMegabytes": null,
+      "peakUsedMegabytes": null,
+      "peakSwapMegabytes": null,
+      "worstPressure": null,
+      "peakTreeMegabytes": null
+     },
+     "log": "logs/leases.log"
+    }
+   ]
+  },
+  {
+   "name": "failed timed out unrouted",
+   "enforce": false,
+   "rows": [
+    [
+     "process",
+     "a"
+    ],
+    [
+     "process",
+     "b"
+    ],
+    [
+     "process",
+     "c"
+    ]
+   ],
+   "unrouted": [
+    {
+     "table": "caching",
+     "suite": "d"
+    }
+   ],
+   "outcomes": [
+    {
+     "table": "process",
+     "suite": "a",
+     "status": "failed",
+     "exitCode": 1,
+     "wallMs": 1000,
+     "tests": {
+      "pass": 1,
+      "skip": 0,
+      "fail": 1
+     },
+     "memory": {
+      "samples": 0,
+      "minimumAvailableMegabytes": null,
+      "peakUsedMegabytes": null,
+      "peakSwapMegabytes": null,
+      "worstPressure": null,
+      "peakTreeMegabytes": null
+     },
+     "log": "logs/a.log"
+    },
+    {
+     "table": "process",
+     "suite": "b",
+     "status": "timeout",
+     "exitCode": null,
+     "wallMs": 1000,
+     "tests": {
+      "pass": 0,
+      "skip": 0,
+      "fail": 0
+     },
+     "memory": {
+      "samples": 0,
+      "minimumAvailableMegabytes": null,
+      "peakUsedMegabytes": null,
+      "peakSwapMegabytes": null,
+      "worstPressure": null,
+      "peakTreeMegabytes": null
+     },
+     "log": "logs/b.log"
+    },
+    {
+     "table": "process",
+     "suite": "c",
+     "status": "passed",
+     "exitCode": 0,
+     "wallMs": 1000,
+     "tests": {
+      "pass": 0,
+      "skip": 0,
+      "fail": 0
+     },
+     "memory": {
+      "samples": 2,
+      "minimumAvailableMegabytes": 4000,
+      "peakUsedMegabytes": 6000,
+      "peakSwapMegabytes": null,
+      "peakTreeMegabytes": 120,
+      "worstPressure": "normal"
+     },
+     "log": "logs/c.log"
+    },
+    {
+     "table": "caching",
+     "suite": "d",
+     "status": "unrouted",
+     "exitCode": null,
+     "wallMs": 1000,
+     "tests": {
+      "pass": 0,
+      "skip": 0,
+      "fail": 0
+     },
+     "memory": {
+      "samples": 0,
+      "minimumAvailableMegabytes": null,
+      "peakUsedMegabytes": null,
+      "peakSwapMegabytes": null,
+      "worstPressure": null,
+      "peakTreeMegabytes": null
+     },
+     "log": null
+    }
+   ]
+  },
+  {
+   "name": "a planned suite that never ran",
+   "enforce": true,
+   "rows": [
+    [
+     "process",
+     "a"
+    ],
+    [
+     "process",
+     "b"
+    ]
+   ],
+   "unrouted": [],
+   "outcomes": [
+    {
+     "table": "process",
+     "suite": "a",
+     "status": "passed",
+     "exitCode": 0,
+     "wallMs": 1000,
+     "tests": {
+      "pass": 0,
+      "skip": 0,
+      "fail": 0
+     },
+     "memory": {
+      "samples": 0,
+      "minimumAvailableMegabytes": null,
+      "peakUsedMegabytes": null,
+      "peakSwapMegabytes": null,
+      "worstPressure": null,
+      "peakTreeMegabytes": null
+     },
+     "log": "logs/a.log"
+    }
+   ]
+  }
+ ]
+}

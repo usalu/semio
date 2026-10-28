@@ -1,0 +1,9 @@
+{
+  "rustcArguments": [
+    ["--crate-name", "serde", "--edition=2021", "--cfg", "feature=\"std\"", "--cfg", "feature=\"derive\"", "src\\lib.rs"],
+    ["--crate-name", "a b", "-C", "metadata=a b", "--out-dir", "C:\\Users\\dev one\\target\\debug\\deps"],
+    ["--check-cfg", "cfg(feature, values(\"a\", \"b\"))", "--emit=dep-info,metadata"],
+    ["--crate-name", "ünï", "--cfg", "x=\"\"", "", "--", "last"]
+  ],
+  "exitStatuses": [0, 1, 101]
+}

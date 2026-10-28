@@ -17,7 +17,7 @@ for(const row of corpus.space)test("space data directory of "+row.root+" instanc
 for(const row of corpus.map)test("map cache of "+row.provider,()=>{expect(getMapCacheDir(native(row.root),row.provider)).toBe(native(row.expected));});
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

@@ -1,0 +1,22 @@
+{
+  "rows": [
+    { "text": "repo tools exec --light bun -- --version", "words": ["repo", "tools", "exec", "--light", "bun", "--", "--version"], "listed": true },
+    { "text": "repo tools exec bun -- --version", "words": ["repo", "tools", "exec", "bun", "--", "--version"], "listed": true },
+    { "text": "repo tools exec --light node -- --version", "words": ["repo", "tools", "exec", "--light", "node", "--", "--version"], "listed": true },
+    { "text": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\"", "words": ["repo", "tools", "exec", "--light", "node", "--", "-p", "process.platform.concat(process.arch)"], "listed": true },
+    { "text": "repo tools exec --light node -- -p \"process.platform\"", "words": ["repo", "tools", "exec", "--light", "node", "--", "-p", "process.platform"], "listed": false },
+    { "text": "repo tools exec --light bun -- --version --extra", "words": ["repo", "tools", "exec", "--light", "bun", "--", "--version", "--extra"], "listed": false },
+    { "text": "repo tools exec --cwd=x bun -- --version", "words": ["repo", "tools", "exec", "--cwd=x", "bun", "--", "--version"], "listed": false },
+    { "text": "repo tools exec --light cargo -- --version", "words": ["repo", "tools", "exec", "--light", "cargo", "--", "--version"], "listed": false },
+    { "text": "repo tools exec --light bun --version", "words": ["repo", "tools", "exec", "--light", "bun", "--version"], "listed": false },
+    { "text": "repo tools list", "words": ["repo", "tools", "list"], "listed": false },
+    { "text": "repo tools exec --light bun -- --version; rm -rf x", "words": null, "listed": false },
+    { "text": "repo tools exec --light bun -- --version $HOME", "words": null, "listed": false },
+    { "text": "repo tools exec --light node -- -p 'process.platform'", "words": null, "listed": false },
+    { "text": "repo tools exec --light node -- -p \"`id`\"", "words": null, "listed": false },
+    { "text": "repo tools exec --light node -- -p \"$HOME\"", "words": null, "listed": false },
+    { "text": "repo tools exec --light node -- -p \"process.platform", "words": null, "listed": false },
+    { "text": "repo tools exec --light bun -- --version | cat", "words": null, "listed": false },
+    { "text": "repo tools exec --light bun -- --version > out", "words": null, "listed": false }
+  ]
+}

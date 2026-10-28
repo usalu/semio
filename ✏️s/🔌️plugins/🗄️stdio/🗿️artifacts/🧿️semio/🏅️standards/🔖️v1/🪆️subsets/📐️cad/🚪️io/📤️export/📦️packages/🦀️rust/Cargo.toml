@@ -29,7 +29,6 @@ semio-s-artifact-stdio-semio-cad = { workspace = true }
 semio-s-artifact-stdio-dwg-model = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
 semio-s-artifact-stdio-step = { workspace = true }
-semio-s-artifact-stdio-step-snapshot = { workspace = true }
 # /🧩️ Capability Dependencies
 
 [dev-dependencies]

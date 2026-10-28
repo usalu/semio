@@ -1,0 +1,31 @@
+{
+ "label": "g29-dash",
+ "target": "@semio-tech/repo-dashboard-rs:build",
+ "started": "08:39:38",
+ "wall_s": 191.3,
+ "peak_tree_mb": 6807,
+ "peak_processes": 7,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "4"
+  ],
+  "inferring": [
+   "4"
+  ],
+  "published": [
+   "615",
+   "6",
+   "34"
+  ],
+  "processes": [
+   "3",
+   "1 internal, 2 worker"
+  ],
+  "actions": [
+   "3"
+  ]
+ }
+}

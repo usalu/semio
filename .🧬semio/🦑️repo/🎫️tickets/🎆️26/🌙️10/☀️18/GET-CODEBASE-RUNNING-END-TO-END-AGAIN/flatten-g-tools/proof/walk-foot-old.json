@@ -1,0 +1,24 @@
+{
+ "baseline": {},
+ "codes": {
+  "0-check": 0,
+  "1-apply": 0,
+  "2-check": 0,
+  "3-revert": 0,
+  "4-check": 0
+ },
+ "apply": {
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts": "221475191ccdbd732fe411b8026724e78a85c36d26b0c7b09c3f4b6c9c96499a",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts": "481c500d93de339c393ffa5c2bf1ec2ef93a4b9f11bb7db5f9290a66de9383cb",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts": "d4686092e283585035b2a3e86ae3644cc6cccff67090d29fe97b1f5913ff09e0",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📡️sampling/🐧️linux/🟦️.ts": "64c4277439d480391d095f97ed664c41248150c57d1789deb445d5e350f8a91f",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔬️footprint/🐍️oracle/🐍️.py": "45b9a12f8044d648185460ef918b6a53e01900c7352f4f2600c3d9247d2df33c",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔬️footprint/🟦️.ts": "301fe7521d7dad106277419ee054eb4ca017d6fa653fd6db97b0724068560b75",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔬️footprint/🧫️fixtures/🔣️.json": "2479313efe997ee8e8124d2c9ec0fec8e0fe91009219105dc580cd3649bf97d1",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪟️windows/🟦️.ts": "175e0799dac2a226628ca5fff8e03f33fd11adddc7cee351fc691bbb8ace42a9",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json": "91fc4c09b58ce1d8fddeb3687bdcb0bed95895ab815eed40734dc227ea715229",
+  "🧰️framework/🛍️products/🦑️repo/README.md": "87be4698409bb4a305fe0936e841e7633e4a535bac5316a20fc39b028444172d",
+  "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md": "648a488524489fbdeae6cd5d00e714c785924ce8fe4f51e297663fffc436e026"
+ },
+ "revert": {}
+}

@@ -116,6 +116,22 @@
         "-p",
         "selected"
       ]
+    },
+    {
+      "intent": {
+        "version": 1,
+        "manifest": "crate/Cargo.toml",
+        "package": "selected",
+        "scope": "binary",
+        "binary": "main",
+        "sourcesRecord": "main.sources.json"
+      },
+      "arguments": [
+        "-p",
+        "selected",
+        "--bin",
+        "main"
+      ]
     }
   ],
   "rejected": [
@@ -271,6 +287,37 @@
           "build-script-run"
         ]
       }
+    },
+    {
+      "version": 1,
+      "manifest": "crate/Cargo.toml",
+      "package": "selected",
+      "scope": "package",
+      "sourcesRecord": "main.sources.json"
+    },
+    {
+      "version": 1,
+      "manifest": "crate/Cargo.toml",
+      "package": "selected",
+      "scope": "binary",
+      "binary": "main",
+      "sourcesRecord": "nested/main.sources.json"
+    },
+    {
+      "version": 1,
+      "manifest": "crate/Cargo.toml",
+      "package": "selected",
+      "scope": "binary",
+      "binary": "main",
+      "sourcesRecord": "main.json"
+    },
+    {
+      "version": 1,
+      "manifest": "crate/Cargo.toml",
+      "package": "selected",
+      "scope": "binary",
+      "binary": "main",
+      "sourcesRecord": true
     }
   ],
   "routes": [
@@ -478,7 +525,8 @@
       "scope": "binary",
       "binary": "semio",
       "cacheClass": "driver-owned",
-      "cacheReason": "freshness-owned-by-driver"
+      "cacheReason": "freshness-owned-by-driver",
+      "sourcesRecord": "semio.sources.json"
     }
   ],
   "fallbackTarget": {

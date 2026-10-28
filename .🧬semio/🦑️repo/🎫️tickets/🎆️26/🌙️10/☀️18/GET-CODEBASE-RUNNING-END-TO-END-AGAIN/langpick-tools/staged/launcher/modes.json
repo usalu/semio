@@ -1,0 +1,9 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go": "0o644",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🐚️unix-host/🐹️.go": "0o644",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🗂️runtime-registry/🐹️.go": "0o644",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🗣️language/🐹️.go": "0o644",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🪟️windows-host/🐹️.go": "0o644",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗣️language-contract/🐹️.go": "0o644",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧰️harness/🐹️.go": "0o644"
+}

@@ -1,0 +1,7 @@
+🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧭️ancestry/🪟️native/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧭️ancestry/🪟️native/🧪️tests/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧭️ancestry/🪟️native/🧪️tests/🐍️oracle/🐍️.py
+🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧭️ancestry/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧬️schema/🔣️.json
+🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json

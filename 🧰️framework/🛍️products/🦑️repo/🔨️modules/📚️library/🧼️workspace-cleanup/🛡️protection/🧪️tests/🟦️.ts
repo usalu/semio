@@ -44,7 +44,7 @@ for(const row of corpus.boundary)test("ticket boundary "+row.path,()=>{expect(cl
 for(const row of corpus.folderFor)test("ticket folder for "+row.path,()=>{const found=cleanTicketFolderForPath(root,absolute(row.path));expect(found===undefined?null:relativeOf(found)).toBe(row.expected);});
 for(const row of corpus.generatedRoot)test("generated ticket root of "+row.path,()=>{const found=cleanTicketGeneratedOutputTicketRoot(root,absolute(row.path));expect(found===undefined?null:relativeOf(found)).toBe(row.expected);});
 for(const row of corpus.closed)test("manifest closed at "+row.path,()=>{expect(cleanTicketManifestIsClosed(absolute(row.path),view)).toBe(row.expected);});
-for(const row of corpus.protection)test("removal protection: "+row.name,()=>{expect(protectedRelative(cleanRemovalProtection(root,row.candidate==="."||row.candidate.startsWith("..")?resolve(root,row.candidate):row.candidate,view,row.allowed===null?undefined:absolute(row.allowed)))).toEqual(sorted(row.expected));});
+for(const row of corpus.protection)test("removal protection: "+row.name,()=>{expect(protectedRelative(cleanRemovalProtection(root,row.candidate==="."||row.candidate.startsWith("..")?resolve(root,row.candidate):row.candidate,view))).toEqual(sorted(row.expected));});
 for(const row of corpus.protectionDefects)test.failing("removal protection defect: "+row.name,()=>{expect(protectedRelative(cleanRemovalProtection(root,row.candidate,view))).toEqual(sorted(row.expected));});
 for(const row of corpus.generated)test("open ticket generated output protection: "+row.name,()=>{expect(protectedRelative(cleanOpenTicketGeneratedOutputProtection(root,row.candidate,view))).toEqual(sorted(row.expected));});
 test("projection drops protected rows, keeps eligible siblings and reports every protected path",()=>{
@@ -78,7 +78,7 @@ test("native image paths are the backing files, their receipt directory and its 
 });
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

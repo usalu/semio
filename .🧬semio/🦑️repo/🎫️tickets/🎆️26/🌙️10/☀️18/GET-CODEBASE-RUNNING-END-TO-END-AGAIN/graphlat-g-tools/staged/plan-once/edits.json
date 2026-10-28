@@ -1,0 +1,10 @@
+{
+ "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+ "edits": [
+  {
+   "name": "hint-with-scope",
+   "old": "if(!scope&&verdict.kind===\"delta\"&&previous.frontier)hint={generation:first.pointer.generation,plan:verdict,live};",
+   "new": "if(verdict.kind===\"delta\"&&previous.frontier)hint={generation:first.pointer.generation,plan:verdict,live};"
+  }
+ ]
+}

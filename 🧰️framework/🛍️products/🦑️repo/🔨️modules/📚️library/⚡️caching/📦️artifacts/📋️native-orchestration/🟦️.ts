@@ -20,7 +20,8 @@ import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️proc
 import { runRepositoryCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { repositoryCargoArtifactBuildPolicyV1, buildRepositoryCargoArtifacts } from "../🏗️native-build/🟦️.ts";
 import { artifactRustCargoArguments } from "../🎛️native-input/🟦️.ts";
-import {withRepositoryCompilerStoreV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {withRepositoryCompilerLaneV1,withRepositoryCompilerStoreV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {focusFromCargoArgumentsV1} from "../../🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {requireRepositoryCargoExecutionV1} from "../../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts";
 import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
@@ -32,7 +33,9 @@ export class CargoRelayScript extends BundleScript {
     const budgetMs = Number(process.env[CARGO_RELAY_BUDGET_ENV] ?? 0);
     try {
       const control=scriptCompilerAdmissionControlV1(this.invocation,"cargo:relay",scriptInvocationBudget(this.invocation,budgetMs));
-      process.exitCode = await withRepositoryCompilerStoreV1(this.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),control,process.env,(store,control)=>withRepositoryCargoInputsV1({invocation:this.invocation,consumption:repositoryCargoConsumptionV1(args,"artifact"),workspace:this.repoRoot,cwd:process.cwd(),manifest:cargoInvocationManifestV1(args,process.cwd()),args,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),control,storage:store.storage,environment:store.environment},input=>cargoStreamingStatus([...input.selections[0]!.arguments],process.cwd(),input.environment,{invocation:this.invocation,control:input.control,storage:store.storage,sourceBoundary:store.sourceBoundary,policy:{...repositoryCargoArtifactBuildPolicyV1(process.cwd(),this.repoRoot,store.environment),buildDirectory:store.buildDirectory,captureDirectory:store.captureDirectory,budgetMs:scriptInvocationBudget(this.invocation,budgetMs)}})));
+      const manifest=cargoInvocationManifestV1(args,process.cwd()),focus=focusFromCargoArgumentsV1(args),mode=readBuildMode(process.env.SEMIO_BUILD_MODE),compiles=["build","rustc","check","run","clippy","test","bench","doc"].includes(args[0]??"");
+      const withStore=<T,>(body:Parameters<typeof withRepositoryCompilerStoreV1<T>>[4])=>compiles?withRepositoryCompilerLaneV1(this.repoRoot,mode,control,process.env,{crates:focus.length?focus:[manifest],unitCache:["build","check","test","run","bench"].includes(args[0]??"")},body):withRepositoryCompilerStoreV1(this.repoRoot,mode,control,process.env,body);
+      process.exitCode = await withStore((store,control)=>withRepositoryCargoInputsV1({invocation:this.invocation,consumption:repositoryCargoConsumptionV1(args,"artifact"),workspace:this.repoRoot,cwd:process.cwd(),manifest,args,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),control,storage:store.storage,environment:store.environment},input=>cargoStreamingStatus([...input.selections[0]!.arguments],process.cwd(),input.environment,{invocation:this.invocation,control:input.control,storage:store.storage,sourceBoundary:store.sourceBoundary,policy:{...repositoryCargoArtifactBuildPolicyV1(process.cwd(),this.repoRoot,store.environment),buildDirectory:store.buildDirectory,captureDirectory:store.captureDirectory,budgetMs:scriptInvocationBudget(this.invocation,budgetMs)}})));
     } catch (error) {
       console.error(error instanceof Error ? error.message : String(error));
       process.exitCode = 1;

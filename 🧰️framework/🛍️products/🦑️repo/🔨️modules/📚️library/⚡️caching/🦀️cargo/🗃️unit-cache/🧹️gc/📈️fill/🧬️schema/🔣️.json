@@ -98,7 +98,7 @@
       "const": {
         "rate": {
           "en": "[repo cache] fill rate over the last {minutes} min: {rate} GiB/h on the image ({free} GiB free); busiest profiles: {profiles}",
-          "de": "[repo cache] Füllrate der letzten {minutes} Min.: {rate} GiB/Std. im Image ({free} GiB frei); aktivste Profile: {profiles}"
+          "de": "[repo cache] Füllrate der letzten {minutes} min: {rate} GiB/h im Image ({free} GiB frei); aktivste Profile: {profiles}"
         },
         "none": {
           "en": "[repo cache] fill rate: not enough samples yet",

@@ -1420,14 +1420,14 @@
     {
       "manifest": "🧰️framework/Cargo.toml",
       "native": 28,
-      "wasm": 50,
-      "digest": "2c51c384fb319b446de089f738cf1365a2bc6ae5d9838b09fdf86ce667e28461"
+      "wasm": 51,
+      "digest": "71f08ea62d05518fc6f576c02299dc24f58d462326594223249db23c04e91cd7"
     },
     {
       "manifest": "Cargo.toml",
       "native": 29,
-      "wasm": 51,
-      "digest": "039b8cfb5087175c39c2c5c115739136d0a8f692df9aab5b28ee0958bd742a65"
+      "wasm": 52,
+      "digest": "1611b90a229a07f43a7d8f4fb66e11260944d3dfc88a1e55d7ead8cb8259c7b6"
     }
   ],
   "rendering": [
@@ -2058,7 +2058,7 @@
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
-      "function": "withCargoWorkspaceSelectionV1"
+      "function": "withCargoWorkspaceSelectionOnceV1"
     }
   ],
   "entryProducers": [

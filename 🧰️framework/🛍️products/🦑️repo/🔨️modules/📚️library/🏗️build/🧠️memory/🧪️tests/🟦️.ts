@@ -106,6 +106,16 @@ async function run(scenario:typeof fixture.governor[number]){
  return{scenario:scenario.name,starts,finished,completed:settled.filter(value=>typeof value==="number"),rejected,expectRejected:scenario.abortAtMilliseconds===undefined?0:scenario.tasks.length-scenario.workers,collections,durationMilliseconds:time.clock,messages:unique,lines:lines.map(row=>row.text),stats:governor.stats()};
 }
 
+test("the graph child heap is the declared size and equals the independent model",()=>{
+ const directory=mkdtempSync(join(tmpdir(),"memory-child-heap-"));
+ try{
+  const expected=oracle(["expect",written(directory,"fixture.json",fixture)]),bytes=memory.graphChildHeapBytesV1();
+  expect(expected.childHeap).toEqual({bytes,grantIndependent:true});
+  expect(bytes).toBe(moduleSchema.definitions.Policy.const.childHeapMegabytes*MEGABYTE);
+  expect(memory.graphChildHeapBytesV1({...memory.GRAPH_MEMORY_POLICY_V1,childHeapMegabytes:1024})).toBe(1024*MEGABYTE);
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});
+
 test("the governor keeps the laws of every scenario, checked by the independent model",async()=>{
  const directory=mkdtempSync(join(tmpdir(),"memory-trace-"));
  try{
@@ -172,4 +182,12 @@ test("interned results cost a fraction of the memory of the same parsed results"
  expect(plain.length).toBe(shared.length);
  expect(plainBytes).toBeGreaterThan(20*MEGABYTE);
  expect(sharedBytes).toBeLessThan(plainBytes/4);
+});
+
+test("a governor leaves no abort listener on a long-lived signal once disposed: a stage that runs a chunk of projects per call must not keep the environment of every chunk alive through the listener",async()=>{
+ const listeners=new Set<unknown>(),signal={aborted:false,reason:undefined,throwIfAborted(){},addEventListener:(_type:string,listener:unknown)=>listeners.add(listener),removeEventListener:(_type:string,listener:unknown)=>listeners.delete(listener)} as unknown as AbortSignal;
+ const governors=Array.from({length:5},()=>memory.createMemoryGovernorV1({budgetBytes:1<<30,workers:2,signal,sample:()=>0,collect:()=>{}}));
+ expect(listeners.size).toBe(5);
+ for(const governor of governors){expect(await governor.run(async()=>7)).toBe(7);governor.dispose();}
+ expect(listeners.size).toBe(0);
 });

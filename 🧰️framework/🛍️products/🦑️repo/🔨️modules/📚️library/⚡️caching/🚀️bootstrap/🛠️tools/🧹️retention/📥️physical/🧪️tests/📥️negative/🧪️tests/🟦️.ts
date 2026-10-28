@@ -5,6 +5,7 @@ import ts from"typescript";
 import{readFile}from"node:fs/promises";
 import corpus from"../🔣️.json";
 import schema from"../🧬️schema.json";
+const repository=await privateRepositoryWorkspaceV1();
 test("retention negative operations leave accepted parent frames through strict received purpose results",async()=>{
  const source=await readFile(new URL("../../🟦️.ts",import.meta.url),"utf8"),ast=ts.createSourceFile("retention.ts",source,ts.ScriptTarget.Latest,true),direct:string[]=[],db=new Database(":memory:");
  try{expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);const visit=(node:import("typescript").Node)=>{if(ts.isAwaitExpression(node)&&/^await expect\((?:owner|storeOwner)\.withRepositoryCacheStore(?:Queued)?MaintenanceV1/u.test(node.getText(ast)))direct.push(node.getText(ast));ts.forEachChild(node,visit);};visit(ast);db.exec("create table cases(purpose text primary key,waited integer)");for(const row of corpus.cases)db.query("insert into cases values(?,?)").run(row.purpose,Number(row.waited));expect(db.query("select count(*) cases,sum(waited) waits from cases").get()).toEqual({cases:8,waits:2});expect(direct).toEqual([]);
@@ -16,8 +17,9 @@ import{join}from"node:path";
 import{observeRetentionNegativePurposeV1}from"../🟦️.ts";
 import{withBuildTestInvocationV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import{repositoryCachePartitionRootV1}from"../../../../../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import{privateRepositoryWorkspaceV1}from"../../../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 test("retention negative receiver retains actual strict wire and rejected request status without physical effects",async()=>withBuildTestInvocationV1(async original=>{
- const workspace=join(repositoryCachePartitionRootV1(process.cwd(),"products"),"tr-negative-proof");expect(existsSync(workspace)).toBe(false);for(const purpose of["queued-invalid-0","queued-invalid-1","queued-invalid-2"])await observeRetentionNegativePurposeV1(original,workspace,purpose);expect(existsSync(workspace)).toBe(false);expect(original.control.signal.aborted).toBe(false);
+ const workspace=join(repositoryCachePartitionRootV1(repository.root,"products"),"tr-negative-proof");expect(existsSync(workspace)).toBe(false);for(const purpose of["queued-invalid-0","queued-invalid-1","queued-invalid-2"])await observeRetentionNegativePurposeV1(original,workspace,purpose);expect(existsSync(workspace)).toBe(false);expect(original.control.signal.aborted).toBe(false);
 }));
 
 test("retention negative receiver closes partial readers while preserving undefined and frozen setup failures",async()=>withBuildTestInvocationV1(async original=>{

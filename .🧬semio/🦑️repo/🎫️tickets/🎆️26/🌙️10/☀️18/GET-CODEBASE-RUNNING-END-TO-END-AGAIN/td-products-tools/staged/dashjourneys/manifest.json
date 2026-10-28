@@ -1,0 +1,27 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🦀️.rs": {
+  "file": "f00.rs",
+  "base": "ff2f9398e74dde86cbf4f60843e187ee66ac6ad80591cae6be9ced7af2a753ad",
+  "new": "cfae697196b1d2a2e4c33c990ffafb5aaa83034fc34bdecdd95efb1e991b189f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🧰️steps/🦀️.rs": {
+  "file": "f01.rs",
+  "base": "c5c22dc610cbeb0483084757a5ba5ee2b926ed3ff3c15c6b8df5c3a2ef930f3f",
+  "new": "cda47148c1328a6a3491741be66840eb40fa5b90c91b7ad11e3022b44b2c6ea0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🟦️.ts": {
+  "file": "f02.ts",
+  "base": "0630ea63d18c014362b13dd291890b5b1d575a89471b3f00800449089197753b",
+  "new": "27204874a56270d65d3975e1a602cfcb01f971f2e1c2c220199e312b32bd467f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧫️fixtures/🧭️journeys/🔣️.json": {
+  "file": "f03.json",
+  "base": "8dec1d438b966f19c8d8a43df8543b3c78a623d2a15eba07d5bfef09927723fb",
+  "new": "afface0de09b972b4d3e26a3b2bec8d8d1bc3cf58d69d9f9c6bdb49dc00a510b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🧭️journeys/🔣️.json": {
+  "file": "f04.json",
+  "base": "005fc4a7c745d92a84d02caf74d4eba118a7c3229b29d0c8db1df9e9638ebf81",
+  "new": "e52283b1712e1bbf3cba1eb5b142ef4ad396b882028b7ead72c5400949c819cb"
+ }
+}

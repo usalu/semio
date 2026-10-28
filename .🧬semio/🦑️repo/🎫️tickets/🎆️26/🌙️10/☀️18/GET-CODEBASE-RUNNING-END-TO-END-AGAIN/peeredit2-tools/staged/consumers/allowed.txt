@@ -1,0 +1,50 @@
+(unnamed)
+Cargo manifest inference projects the workspace sentinel before strict Source inventory admission
+Nx projects exactly the common graph into its independent task graph implementation
+actual Cargo adapters forward selected argv and explicit preparation environment artifact-selected-packages
+actual Cargo adapters forward selected argv and explicit preparation environment command-explicit-storage
+actual Cargo adapters forward selected argv and explicit preparation environment streaming-explicit-storage
+actual fresh Hub Cargo consumers asynchronously prepare controlled current inputs before capture
+authored data producers retain freshness-only matched input authority
+canonical Nx inference delegates every owned command without eager or special test preparation
+canonical selected native callers preserve compiler argv and keep full setup explicit
+closure digest moves exactly when an imported module changes
+command closure follows workspace package specifiers and agrees with esbuild and Bun's bundler
+configured command sources preserve every recipe through read-only production source inference and Nx inputs
+current Cargo relay physical authority retains cancellation through publication
+declared TypeScript projects preserve exact command roles and generated producer dependencies
+declared generated compile outputs preserve producer task ordering without materialized Source
+extensionless generated compile imports require unique exact authored file candidates
+freshness inputs and explicit runtime entries preserve actual command import demand
+invalid generated import diagnostics retain bounded importer and physical request identity
+keyed code imports the lane scheduling modules only through their ports
+literal module inputs a target declares contribute their own import closure
+literal new URL references to existing files join the closure with the imports of the modules they name
+neutral selected scope SDK refuses unauthenticated control and absent live graph before SDK effects
+neutral selected scope actual issued metadata child drains after its caller returns
+neutral selected scope actual metadata reader retains the required issued child and descriptor owner
+neutral selected scope bounds record bytes and refuses linked or invalid closure records
+neutral selected scope captures caller request before actual metadata waits
+neutral selected scope captures private policy independently of public schema DATA
+neutral selected scope frozen Source consumers await retained reader operations
+neutral selected scope native ledger retains genuine accepted descendants before release
+neutral selected scope reads exact closure DATA only from the managed graph namespace
+neutral selected scope refuses copied retired and cancelled phases before caller DATA or Source IO
+neutral selected scope shared descriptor owner joins a real cancelled opening
+policy facets retain six physical owners and ordinary lint scheduling in both backends
+private Nx dependency projection preserves portable authority with indexed provenance
+private Nx engine digest affects real native task hashes while invocation staging does not
+private Nx engine named inputs preserve real native hash plans and reduce projection bytes
+private engine references load explicit plugin files without full workspace package inference
+project implicit dependencies outside the published slice are dropped, equal to Nx's own workspace validity check
+records that read the same closure share its fact blocks: small headers, identical rows, a bad block recomputes and heals
+runtime module facts remain bound to the admitted parser and compiler revision
+selected Rust aggregate scheduling stays invariant across selectable modes
+selected graph admission agrees with independent Nx task prerequisites
+selected resource ownership agrees with independent Nx prerequisite edges
+source input contracts expand only demanded normalized own groups
+test: every file the target reads is declared or inferred
+the law is sensitive: removing a runtime-read input or the declared closure exposes the stale-green gap
+the private Nx engine is one runtime digest of its closure equal to an independent Python digest of the same files
+the private Nx engine names only real npm packages as external dependencies and follows workspace packages into their Source files (independent realpath oracle)
+typed owner transport prepares only at actual current Cargo consumption

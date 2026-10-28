@@ -1,0 +1,12 @@
+{
+ "label": "g37-print3",
+ "target": "@semio-tech/print-rs:test",
+ "started": "11:51:55",
+ "wall_s": 20.1,
+ "peak_tree_mb": 1601,
+ "peak_processes": 3,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "platform",
+    "mode",
+    "path",
+    "sources",
+    "compiled",
+    "digest",
+    "bytes",
+    "permissions"
+  ],
+  "properties": {
+    "version": {
+      "const": 4
+    },
+    "platform": {
+      "enum": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roots",
+        "manifests",
+        "digest"
+      ],
+      "properties": {
+        "roots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "manifests": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[0-9]+:[a-f0-9]{40}$"
+        }
+      }
+    },
+    "compiled": {
+      "description": "🧾️ What the installed executable was compiled from: the files of its own Cargo dep-info (relative to the installation root) and when that build started. The installation is behind its sources as soon as one of them is missing or was written, replaced or re-linked at or after `builtAtMs`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "builtAtMs",
+        "sources"
+      ],
+      "properties": {
+        "builtAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "bytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "permissions": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 511
+    }
+  },
+  "definitions": {
+    "SourceInputProtocol": {
+      "const": {
+        "rootFiles": [
+          "rust-toolchain.toml",
+          ".cargo/config.toml"
+        ],
+        "selectedWorkspaceLock": "Cargo.lock",
+        "dependencyWorkspaceLocks": false
+      }
+    },
+    "SourceSignatureProtocol": {
+      "const": {
+        "metadataFields": [
+          "dev",
+          "ino",
+          "size",
+          "mtimeNs",
+          "ctimeNs"
+        ],
+        "contentReads": 0
+      }
+    },
+    "ExecutableRetentionProtocol": {
+      "const": {
+        "keepNewest": 2
+      }
+    },
+    "PackageOwner": {
+      "const": {
+        "project": "@semio-tech/repo-dashboard-rs",
+        "workspaceRelative": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "installationRelative": "../../../../../🎛️dashboard/📦️packages/🦀️rust"
+      }
+    },
+    "CompiledSourceProtocol": {
+      "const": {
+        "record": "semio.sources.json",
+        "changedAt": [
+          "mtimeMs",
+          "ctimeMs"
+        ]
+      }
+    }
+  }
+}

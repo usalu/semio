@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧰️support/🟦️.ts": {
+  "file": "f000",
+  "base": "8bc09e5fc62c39bb2297462dfbc6373bdfe89081444b5c0ea08733ea88a07768",
+  "new": "7083be324e36fcf8c4d639066551d8f33b1f828c2d1944d4adc89cb47e925952"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts": {
+  "file": "f001",
+  "base": "74e7d9cfd072618e15be881435ea44691f15adb3e0278b2e97772548d62ea76c",
+  "new": "25a2bea983b9bb34626cb7fe2b9e99722bf7b4bdbbc6c33a91ccf103580a1b13"
+ }
+}

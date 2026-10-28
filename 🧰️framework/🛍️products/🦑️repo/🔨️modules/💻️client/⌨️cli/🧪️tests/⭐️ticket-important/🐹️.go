@@ -2,7 +2,7 @@
 
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 
-// Ticket important documents, lifecycle, and generated output retention.
+// Ticket important documents, lifecycle, and generated output purge at close.
 
 // #endregion 🧲️Header
 
@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
@@ -366,64 +367,11 @@ func writeSparseTicketArtifact(t *testing.T, path string, size int64) {
 	}
 }
 
-// 🛟️ TestTicketGeneratedOutputRetention checks the language-neutral generated-only lifecycle boundary.
-func TestTicketGeneratedOutputRetention(t *testing.T) {
-	data, err := os.ReadFile(moduleFixturePath("..", "..", "🎫️tickets", "🧪️tests", "🧫️fixtures", "🔓️open-close-reopen-lifecycle", "🔓️lifecycle.json"))
-	if err != nil { t.Fatal(err) }
-	var fixture struct { Purge struct { Retention []struct { Path string; Bytes int64; Retained bool } } }
-	if err := json.Unmarshal(data, &fixture); err != nil { t.Fatal(err) }
-	if len(fixture.Purge.Retention) != 16 { t.Fatalf("retention vectors = %d", len(fixture.Purge.Retention)) }
-	root := t.TempDir()
-	for _, row := range fixture.Purge.Retention {
-		writeSparseTicketArtifact(t, filepath.Join(root, filepath.FromSlash(row.Path)), row.Bytes)
-	}
-	if err := purgeOversizedTicketArtifacts(root); err != nil {
-		t.Fatal(err)
-	}
-	for _, row := range fixture.Purge.Retention {
-		info, err := os.Stat(filepath.Join(root, filepath.FromSlash(row.Path)))
-		if row.Retained && (err != nil || info.Size() != row.Bytes) {
-			t.Errorf("required retained artifact %s: %v", row.Path, err)
-		}
-		if !row.Retained && !os.IsNotExist(err) {
-			t.Errorf("generated artifact still exists: %s", row.Path)
-		}
-	}
-}
-// 🧭️ TestTicketGeneratedOutputRoots preserves authored data with missing, non-directory and symbolic generated roots.
-func TestTicketGeneratedOutputRoots(t *testing.T) {
-	for _, mode := range []string{"absent", "file", "symlink"} {
-		t.Run(mode, func(t *testing.T) {
-			root, external := t.TempDir(), t.TempDir()
-			authored := filepath.Join(root, "📥️authored-inputs", "source.json")
-			outside := filepath.Join(external, "blob.bin")
-			writeSparseTicketArtifact(t, authored, 11<<20)
-			writeSparseTicketArtifact(t, outside, 11<<20)
-			output := filepath.Join(root, "🗑️generated")
-			if mode == "file" {
-				writeSparseTicketArtifact(t, output, 11<<20)
-			}
-			if mode == "symlink" {
-				if err := os.Symlink(external, output); err != nil {
-					t.Skipf("platform does not permit symbolic directory: %v", err)
-				}
-			}
-			err := purgeOversizedTicketArtifacts(root)
-			if (mode == "file") != (err != nil) {
-				t.Fatalf("generated root %s: %v", mode, err)
-			}
-			for _, path := range []string{authored, outside} {
-				info, err := os.Stat(path)
-				if err != nil || info.Size() != 11<<20 {
-					t.Fatalf("retained source %s: %v", path, err)
-				}
-			}
-		})
-	}
-}
-
 func TestFinishTicketPurgesOversizedArtifacts(t *testing.T) {
 	tmpDir, ticketJSON := setupTicketDir(t)
+	if output, err := exec.Command("git", "-C", tmpDir, "init", "-q").CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v\n%s", err, output)
+	}
 	oldRoot := rootDir
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
@@ -451,6 +399,13 @@ func TestFinishTicketPurgesOversizedArtifacts(t *testing.T) {
 	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "🗑️generated", ".cache.bin"), 5*mib+1)
 	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "🗑️generated", "huge-dir", "blob.bin"), 10*mib+1)
 	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "🗑️generated", "small-dir", "small.bin"), 1*mib)
+	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "authored-large.bin"), 6*mib)
+	old := time.Now().Add(-2 * time.Hour)
+	for _, path := range []string{"🗑️generated/large.bin", "🗑️generated/exact-5mb.bin", "🗑️generated/.cache.bin", "🗑️generated/huge-dir/blob.bin", "🗑️generated/small-dir/small.bin"} {
+		if err := os.Chtimes(filepath.Join(ticketDir, filepath.FromSlash(path)), old, old); err != nil {
+			t.Fatal(err)
+		}
+	}
 
 	testFile := "changed.txt"
 	if err := os.WriteFile(filepath.Join(tmpDir, testFile), []byte("x"), 0644); err != nil {
@@ -482,61 +437,6 @@ func TestFinishTicketPurgesOversizedArtifacts(t *testing.T) {
 	assertNotExists(filepath.Join(ticketDir, "🗑️generated", "huge-dir"))
 	assertExists(filepath.Join(ticketDir, "🗑️generated", "exact-5mb.bin"))
 	assertExists(filepath.Join(ticketDir, "🗑️generated", "small-dir", "small.bin"))
+	assertExists(filepath.Join(ticketDir, "authored-large.bin"))
 	assertExists(ticketJSON)
-}
-
-func TestPurgeAllOversizedTicketArtifacts(t *testing.T) {
-	tmpDir := t.TempDir()
-	oldRoot := rootDir
-	rootDir = tmpDir
-	defer func() { rootDir = oldRoot }()
-
-	now := time.Now().UTC()
-	year := now.Year() % 100
-	month := int(now.Month())
-	day := now.Day()
-	slug := "TEST-TICKET"
-	ticketDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎫️tickets", FormatYearDir(year), FormatMonthDir(month), FormatDayDir(day), slug)
-	if err := os.MkdirAll(ticketDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-	ticketJSON := filepath.Join(ticketDir, "🎫️ticket.json")
-	if err := os.WriteFile(ticketJSON, []byte(`{"title":"Test Ticket","goal":"TEST/GOAL"}`), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	ticket := &Ticket{
-		Year:       year,
-		Month:      month,
-		Day:        day,
-		Slug:       slug,
-		Title:      "Test Ticket",
-		Status:     TicketStatusOpen,
-		FolderPath: ticketDir,
-		JsonPath:   ticketJSON,
-	}
-	if err := SaveTicket(ticket); err != nil {
-		t.Fatal(err)
-	}
-
-	const mib = 1024 * 1024
-	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "🗑️generated", "large.bin"), 5*mib+1)
-	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "🗑️generated", "huge-dir", "blob.bin"), 10*mib+1)
-
-	count, err := PurgeAllOversizedTicketArtifacts()
-	if err != nil {
-		t.Fatalf("PurgeAllOversizedTicketArtifacts failed: %v", err)
-	}
-	if count != 1 {
-		t.Fatalf("purged ticket count = %d, want 1", count)
-	}
-	if _, err := os.Stat(filepath.Join(ticketDir, "🗑️generated", "large.bin")); !os.IsNotExist(err) {
-		t.Fatalf("expected deleted large.bin")
-	}
-	if _, err := os.Stat(filepath.Join(ticketDir, "🗑️generated", "huge-dir")); !os.IsNotExist(err) {
-		t.Fatalf("expected deleted huge-dir")
-	}
-	if _, err := os.Stat(ticketJSON); err != nil {
-		t.Fatalf("expected kept ticket.json: %v", err)
-	}
 }

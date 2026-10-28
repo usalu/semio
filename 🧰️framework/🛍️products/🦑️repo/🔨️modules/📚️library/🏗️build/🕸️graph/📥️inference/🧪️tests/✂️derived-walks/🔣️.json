@@ -1,0 +1,247 @@
+{
+ "version": 1,
+ "entry": "tools/entry.mjs",
+ "files": {
+  "tools/entry.mjs": "import \"./m0.mjs\";\nimport \"./m1.mjs\";\nimport \"./m2.mjs\";\nimport \"./m3.mjs\";\nimport \"./m4.mjs\";\nimport \"./m5.mjs\";\nexport const entry = 1;\n",
+  "tools/extra.mjs": "export const extra = 1;\n",
+  "tools/other.mjs": "export const other = 1;\n",
+  "tools/m0.mjs": "import \"./m1.mjs\";\nexport const m0 = 0;\n",
+  "tools/m1.mjs": "import \"./m2.mjs\";\nexport const m1 = 1;\n",
+  "tools/m2.mjs": "import \"./m3.mjs\";\nexport const m2 = 2;\n",
+  "tools/m3.mjs": "import \"./m4.mjs\";\nexport const m3 = 3;\n",
+  "tools/m4.mjs": "import \"./m5.mjs\";\nexport const m4 = 4;\n",
+  "tools/m5.mjs": "import \"./m6.mjs\";\nexport const m5 = 5;\n",
+  "tools/m6.mjs": "import \"./m7.mjs\";\nexport const m6 = 6;\n",
+  "tools/m7.mjs": "import \"./m8.mjs\";\nexport const m7 = 7;\n",
+  "tools/m8.mjs": "import \"./m9.mjs\";\nexport const m8 = 8;\n",
+  "tools/m9.mjs": "import \"./m10.mjs\";\nexport const m9 = 9;\n",
+  "tools/m10.mjs": "import \"./m11.mjs\";\nexport const m10 = 10;\n",
+  "tools/m11.mjs": "import \"./m12.mjs\";\nexport const m11 = 11;\n",
+  "tools/m12.mjs": "import \"./m13.mjs\";\nexport const m12 = 12;\n",
+  "tools/m13.mjs": "import \"./m14.mjs\";\nexport const m13 = 13;\n",
+  "tools/m14.mjs": "import \"./m15.mjs\";\nexport const m14 = 14;\n",
+  "tools/m15.mjs": "import \"./m16.mjs\";\nexport const m15 = 15;\n",
+  "tools/m16.mjs": "import \"./m17.mjs\";\nexport const m16 = 16;\n",
+  "tools/m17.mjs": "import \"./m18.mjs\";\nexport const m17 = 17;\n",
+  "tools/m18.mjs": "import \"./m19.mjs\";\nexport const m18 = 18;\n",
+  "tools/m19.mjs": "import \"./m20.mjs\";\nexport const m19 = 19;\n",
+  "tools/m20.mjs": "import \"./m21.mjs\";\nexport const m20 = 20;\n",
+  "tools/m21.mjs": "import \"./m22.mjs\";\nexport const m21 = 21;\n",
+  "tools/m22.mjs": "import \"./m23.mjs\";\nexport const m22 = 22;\n",
+  "tools/m23.mjs": "import \"./m24.mjs\";\nexport const m23 = 23;\n",
+  "tools/m24.mjs": "import \"./m25.mjs\";\nexport const m24 = 24;\n",
+  "tools/m25.mjs": "import \"./m26.mjs\";\nexport const m25 = 25;\n",
+  "tools/m26.mjs": "import \"./m27.mjs\";\nexport const m26 = 26;\n",
+  "tools/m27.mjs": "import \"./m28.mjs\";\nexport const m27 = 27;\n",
+  "tools/m28.mjs": "import \"./m29.mjs\";\nexport const m28 = 28;\n",
+  "tools/m29.mjs": "import \"./m30.mjs\";\nexport const m29 = 29;\n",
+  "tools/m30.mjs": "import \"./m31.mjs\";\nexport const m30 = 30;\n",
+  "tools/m31.mjs": "import \"./m32.mjs\";\nexport const m31 = 31;\n",
+  "tools/m32.mjs": "import \"./m33.mjs\";\nexport const m32 = 32;\n",
+  "tools/m33.mjs": "import \"./m34.mjs\";\nexport const m33 = 33;\n",
+  "tools/m34.mjs": "import \"./m35.mjs\";\nexport const m34 = 34;\n",
+  "tools/m35.mjs": "import \"./m36.mjs\";\nexport const m35 = 35;\n",
+  "tools/m36.mjs": "import \"./m37.mjs\";\nexport const m36 = 36;\n",
+  "tools/m37.mjs": "import \"./m38.mjs\";\nexport const m37 = 37;\n",
+  "tools/m38.mjs": "import \"./m39.mjs\";\nexport const m38 = 38;\n",
+  "tools/m39.mjs": "import \"./m40.mjs\";\nexport const m39 = 39;\n",
+  "tools/m40.mjs": "import \"./m41.mjs\";\nexport const m40 = 40;\n",
+  "tools/m41.mjs": "import \"./m42.mjs\";\nexport const m41 = 41;\n",
+  "tools/m42.mjs": "import \"./m43.mjs\";\nexport const m42 = 42;\n",
+  "tools/m43.mjs": "import \"./m44.mjs\";\nexport const m43 = 43;\n",
+  "tools/m44.mjs": "import \"./m45.mjs\";\nexport const m44 = 44;\n",
+  "tools/m45.mjs": "import \"./m46.mjs\";\nexport const m45 = 45;\n",
+  "tools/m46.mjs": "import \"./m47.mjs\";\nexport const m46 = 46;\n",
+  "tools/m47.mjs": "import \"./m48.mjs\";\nexport const m47 = 47;\n",
+  "tools/m48.mjs": "import \"./m49.mjs\";\nexport const m48 = 48;\n",
+  "tools/m49.mjs": "import \"./m50.mjs\";\nexport const m49 = 49;\n",
+  "tools/m50.mjs": "import \"./m51.mjs\";\nexport const m50 = 50;\n",
+  "tools/m51.mjs": "import \"./m52.mjs\";\nexport const m51 = 51;\n",
+  "tools/m52.mjs": "import \"./m53.mjs\";\nexport const m52 = 52;\n",
+  "tools/m53.mjs": "import \"./m54.mjs\";\nexport const m53 = 53;\n",
+  "tools/m54.mjs": "import \"./m55.mjs\";\nexport const m54 = 54;\n",
+  "tools/m55.mjs": "import \"./m56.mjs\";\nexport const m55 = 55;\n",
+  "tools/m56.mjs": "import \"./m57.mjs\";\nexport const m56 = 56;\n",
+  "tools/m57.mjs": "import \"./m58.mjs\";\nexport const m57 = 57;\n",
+  "tools/m58.mjs": "import \"./m59.mjs\";\nexport const m58 = 58;\n",
+  "tools/m59.mjs": "export const m59 = 59;\n"
+ },
+ "steps": [
+  {
+   "name": "first derivation: the walk is named by one fact",
+   "edit": {},
+   "same": true,
+   "closureSize": 61
+  },
+  {
+   "name": "a comment in the middle of the chain: the answer is the same",
+   "edit": {
+    "tools/m30.mjs": "import \"./m31.mjs\";\n// a comment\nexport const m30 = 30;\n"
+   },
+   "same": true,
+   "closureSize": 61
+  },
+  {
+   "name": "an import of a file the walk already reaches: the answer is the same",
+   "edit": {
+    "tools/m10.mjs": "import \"./m11.mjs\";\nimport \"./m40.mjs\";\nexport const m10 = 10;\n"
+   },
+   "same": true,
+   "closureSize": 61
+  },
+  {
+   "name": "a specifier rewritten to the same file: the answer is the same",
+   "edit": {
+    "tools/m20.mjs": "import \"../tools/m21.mjs\";\nexport const m20 = 20;\n"
+   },
+   "same": true,
+   "closureSize": 61
+  },
+  {
+   "name": "an import of a new file: the answer moves",
+   "edit": {
+    "tools/m50.mjs": "import \"./m51.mjs\";\nimport \"./extra.mjs\";\nexport const m50 = 50;\n"
+   },
+   "same": false,
+   "closureSize": 62
+  },
+  {
+   "name": "the import removed again: the answer returns to the first",
+   "edit": {
+    "tools/m50.mjs": "import \"./m51.mjs\";\nexport const m50 = 50;\n"
+   },
+   "same": true,
+   "closureSize": 61
+  },
+  {
+   "name": "the chain is cut: the answer moves",
+   "edit": {
+    "tools/m5.mjs": "export const m5 = 5;\n"
+   },
+   "same": false,
+   "closureSize": null
+  }
+ ],
+ "program": {
+  "files": {
+   "package.json": "{}\n",
+   "proj/tsconfig.json": "{\"compilerOptions\": {\"module\": \"esnext\", \"moduleResolution\": \"bundler\", \"target\": \"esnext\", \"noEmit\": true, \"allowImportingTsExtensions\": true, \"types\": []}, \"include\": [\"src/**/*.ts\"]}",
+   "proj/src/s0.ts": "import \"./s1\";\nexport const s0 = 0;\n",
+   "proj/src/s1.ts": "import \"./s2\";\nexport const s1 = 1;\n",
+   "proj/src/s2.ts": "import \"./s3\";\nexport const s2 = 2;\n",
+   "proj/src/s3.ts": "import \"./s4\";\nexport const s3 = 3;\n",
+   "proj/src/s4.ts": "import \"./s5\";\nexport const s4 = 4;\n",
+   "proj/src/s5.ts": "import \"./s6\";\nexport const s5 = 5;\n",
+   "proj/src/s6.ts": "import \"./s7\";\nexport const s6 = 6;\n",
+   "proj/src/s7.ts": "import \"./s8\";\nexport const s7 = 7;\n",
+   "proj/src/s8.ts": "import \"./s9\";\nexport const s8 = 8;\n",
+   "proj/src/s9.ts": "import \"./s10\";\nexport const s9 = 9;\n",
+   "proj/src/s10.ts": "import \"./s11\";\nexport const s10 = 10;\n",
+   "proj/src/s11.ts": "import \"./s12\";\nexport const s11 = 11;\n",
+   "proj/src/s12.ts": "import \"./s13\";\nexport const s12 = 12;\n",
+   "proj/src/s13.ts": "import \"./s14\";\nexport const s13 = 13;\n",
+   "proj/src/s14.ts": "import \"./s15\";\nexport const s14 = 14;\n",
+   "proj/src/s15.ts": "import \"./s16\";\nexport const s15 = 15;\n",
+   "proj/src/s16.ts": "import \"./s17\";\nexport const s16 = 16;\n",
+   "proj/src/s17.ts": "import \"./s18\";\nexport const s17 = 17;\n",
+   "proj/src/s18.ts": "import \"./s19\";\nexport const s18 = 18;\n",
+   "proj/src/s19.ts": "import \"./s20\";\nexport const s19 = 19;\n",
+   "proj/src/s20.ts": "import \"./s21\";\nexport const s20 = 20;\n",
+   "proj/src/s21.ts": "import \"./s22\";\nexport const s21 = 21;\n",
+   "proj/src/s22.ts": "import \"./s23\";\nexport const s22 = 22;\n",
+   "proj/src/s23.ts": "import \"./s24\";\nexport const s23 = 23;\n",
+   "proj/src/s24.ts": "import \"./s25\";\nexport const s24 = 24;\n",
+   "proj/src/s25.ts": "import \"./s26\";\nexport const s25 = 25;\n",
+   "proj/src/s26.ts": "import \"./s27\";\nexport const s26 = 26;\n",
+   "proj/src/s27.ts": "import \"./s28\";\nexport const s27 = 27;\n",
+   "proj/src/s28.ts": "import \"./s29\";\nexport const s28 = 28;\n",
+   "proj/src/s29.ts": "import \"./s30\";\nexport const s29 = 29;\n",
+   "proj/src/s30.ts": "import \"./s31\";\nexport const s30 = 30;\n",
+   "proj/src/s31.ts": "import \"./s32\";\nexport const s31 = 31;\n",
+   "proj/src/s32.ts": "import \"./s33\";\nexport const s32 = 32;\n",
+   "proj/src/s33.ts": "import \"./s34\";\nexport const s33 = 33;\n",
+   "proj/src/s34.ts": "import \"./s35\";\nexport const s34 = 34;\n",
+   "proj/src/s35.ts": "import \"./s36\";\nexport const s35 = 35;\n",
+   "proj/src/s36.ts": "import \"./s37\";\nexport const s36 = 36;\n",
+   "proj/src/s37.ts": "import \"./s38\";\nexport const s37 = 37;\n",
+   "proj/src/s38.ts": "import \"./s39\";\nexport const s38 = 38;\n",
+   "proj/src/s39.ts": "import \"./s40\";\nexport const s39 = 39;\n",
+   "proj/src/s40.ts": "import \"./s41\";\nexport const s40 = 40;\n",
+   "proj/src/s41.ts": "import \"./s42\";\nexport const s41 = 41;\n",
+   "proj/src/s42.ts": "import \"./s43\";\nexport const s42 = 42;\n",
+   "proj/src/s43.ts": "import \"./s44\";\nexport const s43 = 43;\n",
+   "proj/src/s44.ts": "import \"./s45\";\nexport const s44 = 44;\n",
+   "proj/src/s45.ts": "import \"./s46\";\nexport const s45 = 45;\n",
+   "proj/src/s46.ts": "import \"./s47\";\nexport const s46 = 46;\n",
+   "proj/src/s47.ts": "import \"./s48\";\nexport const s47 = 47;\n",
+   "proj/src/s48.ts": "import \"./s49\";\nexport const s48 = 48;\n",
+   "proj/src/s49.ts": "import \"./s50\";\nexport const s49 = 49;\n",
+   "proj/src/s50.ts": "import \"./s51\";\nexport const s50 = 50;\n",
+   "proj/src/s51.ts": "import \"./s52\";\nexport const s51 = 51;\n",
+   "proj/src/s52.ts": "import \"./s53\";\nexport const s52 = 52;\n",
+   "proj/src/s53.ts": "import \"./s54\";\nexport const s53 = 53;\n",
+   "proj/src/s54.ts": "import \"./s55\";\nexport const s54 = 54;\n",
+   "proj/src/s55.ts": "import \"./s56\";\nexport const s55 = 55;\n",
+   "proj/src/s56.ts": "import \"./s57\";\nexport const s56 = 56;\n",
+   "proj/src/s57.ts": "import \"./s58\";\nexport const s57 = 57;\n",
+   "proj/src/s58.ts": "import \"./s59\";\nexport const s58 = 58;\n",
+   "proj/src/s59.ts": "import \"./s60\";\nexport const s59 = 59;\n",
+   "proj/src/s60.ts": "import \"./s61\";\nexport const s60 = 60;\n",
+   "proj/src/s61.ts": "import \"./s62\";\nexport const s61 = 61;\n",
+   "proj/src/s62.ts": "import \"./s63\";\nexport const s62 = 62;\n",
+   "proj/src/s63.ts": "import \"./s64\";\nexport const s63 = 63;\n",
+   "proj/src/s64.ts": "import \"./s65\";\nexport const s64 = 64;\n",
+   "proj/src/s65.ts": "import \"./s66\";\nexport const s65 = 65;\n",
+   "proj/src/s66.ts": "import \"./s67\";\nexport const s66 = 66;\n",
+   "proj/src/s67.ts": "import \"./s68\";\nexport const s67 = 67;\n",
+   "proj/src/s68.ts": "import \"./s69\";\nexport const s68 = 68;\n",
+   "proj/src/s69.ts": "export const s69 = 69;\n",
+   "proj/src/extra.ts": "export const extra = 1;\n",
+   "proj/📜️script.ts": "export const run = 1;\n"
+  },
+  "steps": [
+   {
+    "name": "first derivation of the program",
+    "edit": {},
+    "same": true
+   },
+   {
+    "name": "a comment",
+    "edit": {
+     "proj/src/s30.ts": "import \"./s31\";\n// comment\nexport const s30 = 30;\n"
+    },
+    "same": true
+   },
+   {
+    "name": "an import of a file the program already reaches",
+    "edit": {
+     "proj/src/s10.ts": "import \"./s11\";\nimport \"./s40\";\nexport const s10 = 10;\n"
+    },
+    "same": true
+   },
+   {
+    "name": "a new file in the include set",
+    "edit": {
+     "proj/src/added.ts": "export const added = 1;\n"
+    },
+    "same": false
+   },
+   {
+    "name": "the file removed again",
+    "edit": {
+     "proj/src/added.ts": null
+    },
+    "same": true
+   },
+   {
+    "name": "an import of a file the include set does not name",
+    "edit": {
+     "proj/lib/outside.ts": "export const outside = 1;\n",
+     "proj/src/s50.ts": "import \"./s51\";\nimport \"../lib/outside\";\nexport const s50 = 50;\n"
+    },
+    "same": false
+   }
+  ],
+  "projectRoot": "proj"
+ }
+}

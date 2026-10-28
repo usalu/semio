@@ -1,0 +1,627 @@
+{
+  "cases": [
+    {
+      "name": "ten idle cores plenty of memory",
+      "host": {
+        "cores": 10,
+        "availableMegabytes": 15000,
+        "pressure": "normal",
+        "grantedJobs": null,
+        "grantedMegabytes": null,
+        "unitMegabytes": 2048
+      },
+      "intent": {
+        "needed": null
+      },
+      "expect": {
+        "preferred": 5,
+        "minimum": 3,
+        "reason": "share",
+        "budgetMegabytes": null
+      }
+    },
+    {
+      "name": "four cores",
+      "host": {
+        "cores": 4,
+        "availableMegabytes": 15000,
+        "pressure": "normal",
+        "grantedJobs": null,
+        "grantedMegabytes": null,
+        "unitMegabytes": 2048
+      },
+      "intent": {
+        "needed": null
+      },
+      "expect": {
+        "preferred": 2,
+        "minimum": 1,
+        "reason": "share",
+        "budgetMegabytes": null
+      }
+    },
+    {
+      "name": "single core host",
+      "host": {
+        "cores": 1,
+        "availableMegabytes": 15000,
+        "pressure": "normal",
+        "grantedJobs": null,
+        "grantedMegabytes": null,
+        "unitMegabytes": 2048
+      },
+      "intent": {
+        "needed": null
+      },
+      "expect": {
+        "preferred": 1,
+        "minimum": 1,
+        "reason": "share",
+        "budgetMegabytes": null
+      }
+    },
+    {
+      "name": "three cores",
+      "host": {
+        "cores": 3,
+        "availableMegabytes": null,
+        "pressure": null,
+        "grantedJobs": null,
+        "grantedMegabytes": null,
+        "unitMegabytes": 2048
+      },
+      "intent": {
+        "needed": null
+      },
+      "expect": {
+        "preferred": 1,
+        "minimum": 1,
+        "reason": "share",
+        "budgetMegabytes": null
+      }
+    },
+    {
+      "name": "work needs two",
+      "host": {
+        "cores": 10,
+        "availableMegabytes": 15000,
+        "pressure": "normal",
+        "grantedJobs": null,
+        "grantedMegabytes": null,
+        "unitMegabytes": 2048
+      },
+      "intent": {
+        "needed": 2
+      },
+      "expect": {
+        "preferred": 2,
+        "minimum": 1,
+        "reason": "needed",
+        "budgetMegabytes": null
+      }
+    },
+    {
+      "name": "machine admission granted three jobs",
+      "host": {
+        "cores": 10,
+        "availableMegabytes": 15000,
+        "pressure": "normal",
+        "grantedJobs": 3,
+        "grantedMegabytes": 6144,
+        "unitMegabytes": 2048
+      },
+      "intent": {
+        "needed": null
+      },
+      "expect": {
+        "preferred": 3,
+        "minimum": 2,
+        "reason": "granted",
+        "budgetMegabytes": 6144
+      }
+    },
+    {
+      "name": "memory carries three units",
+      "host": {
+        "cores": 10,
+        "availableMegabytes": 8192,
+        "pressure": "normal",
+        "grantedJobs": null,
+        "grantedMegabytes": null,
+        "unitMegabytes": 2048
+      },
+      "intent": {
+        "needed": null
+      },
+      "expect": {
+        "preferred": 3,
+        "minimum": 2,
+        "reason": "memory",
+        "budgetMegabytes": null
+      }
+    },
+    {
+      "name": "memory below the reserve still makes progress with one unit",
+      "host": {
+        "cores": 10,
+        "availableMegabytes": 1000,
+        "pressure": "normal",
+        "grantedJobs": null,
+        "grantedMegabytes": null,
+        "unitMegabytes": 2048
+      },
+      "intent": {
+        "needed": null
+      },
+      "expect": {
+        "preferred": 1,
+        "minimum": 1,
+        "reason": "memory",
+        "budgetMegabytes": null
+      }
+    },
+    {
+      "name": "raised pressure halves",
+      "host": {
+        "cores": 10,
+        "availableMegabytes": 15000,
+        "pressure": "warn",
+        "grantedJobs": null,
+        "grantedMegabytes": null,
+        "unitMegabytes": 2048
+      },
+      "intent": {
+        "needed": null
+      },
+      "expect": {
+        "preferred": 3,
+        "minimum": 2,
+        "reason": "pressure-warn",
+        "budgetMegabytes": null
+      }
+    },
+    {
+      "name": "critical pressure one core",
+      "host": {
+        "cores": 10,
+        "availableMegabytes": 15000,
+        "pressure": "critical",
+        "grantedJobs": null,
+        "grantedMegabytes": null,
+        "unitMegabytes": 2048
+      },
+      "intent": {
+        "needed": null
+      },
+      "expect": {
+        "preferred": 1,
+        "minimum": 1,
+        "reason": "pressure-critical",
+        "budgetMegabytes": null
+      }
+    },
+    {
+      "name": "sixty four cores",
+      "host": {
+        "cores": 64,
+        "availableMegabytes": 200000,
+        "pressure": "normal",
+        "grantedJobs": null,
+        "grantedMegabytes": null,
+        "unitMegabytes": 2048
+      },
+      "intent": {
+        "needed": null
+      },
+      "expect": {
+        "preferred": 32,
+        "minimum": 16,
+        "reason": "share",
+        "budgetMegabytes": null
+      }
+    },
+    {
+      "name": "memory and pressure: memory binds first then warn halves",
+      "host": {
+        "cores": 16,
+        "availableMegabytes": 12288,
+        "pressure": "warn",
+        "grantedJobs": null,
+        "grantedMegabytes": null,
+        "unitMegabytes": 2048
+      },
+      "intent": {
+        "needed": null
+      },
+      "expect": {
+        "preferred": 3,
+        "minimum": 2,
+        "reason": "pressure-warn",
+        "budgetMegabytes": null
+      }
+    },
+    {
+      "name": "unknown facts give the share",
+      "host": {
+        "cores": 10,
+        "availableMegabytes": null,
+        "pressure": null,
+        "grantedJobs": null,
+        "grantedMegabytes": null,
+        "unitMegabytes": 2048
+      },
+      "intent": {
+        "needed": null
+      },
+      "expect": {
+        "preferred": 5,
+        "minimum": 3,
+        "reason": "share",
+        "budgetMegabytes": null
+      }
+    },
+    {
+      "name": "one granted job whose memory carries four measured units",
+      "host": {
+        "cores": 10,
+        "availableMegabytes": 15000,
+        "pressure": "normal",
+        "grantedJobs": 1,
+        "grantedMegabytes": 2908,
+        "unitMegabytes": 700
+      },
+      "intent": {
+        "needed": null
+      },
+      "expect": {
+        "preferred": 4,
+        "minimum": 2,
+        "reason": "granted",
+        "budgetMegabytes": 2908
+      }
+    },
+    {
+      "name": "one granted job at the authored unit footprint stays one core",
+      "host": {
+        "cores": 10,
+        "availableMegabytes": 15000,
+        "pressure": "normal",
+        "grantedJobs": 1,
+        "grantedMegabytes": 2048,
+        "unitMegabytes": 2048
+      },
+      "intent": {
+        "needed": null
+      },
+      "expect": {
+        "preferred": 1,
+        "minimum": 1,
+        "reason": "granted",
+        "budgetMegabytes": 2048
+      }
+    },
+    {
+      "name": "eight granted jobs whose memory carries fewer units keep the share and a budget for it",
+      "host": {
+        "cores": 10,
+        "availableMegabytes": 15000,
+        "pressure": "normal",
+        "grantedJobs": 8,
+        "grantedMegabytes": 5734,
+        "unitMegabytes": 2048
+      },
+      "intent": {
+        "needed": null
+      },
+      "expect": {
+        "preferred": 5,
+        "minimum": 3,
+        "reason": "share",
+        "budgetMegabytes": 10240
+      }
+    },
+    {
+      "name": "a measured small unit lets free memory carry more units",
+      "host": {
+        "cores": 10,
+        "availableMegabytes": 5000,
+        "pressure": "normal",
+        "grantedJobs": null,
+        "grantedMegabytes": null,
+        "unitMegabytes": 600
+      },
+      "intent": {
+        "needed": null
+      },
+      "expect": {
+        "preferred": 4,
+        "minimum": 2,
+        "reason": "memory",
+        "budgetMegabytes": null
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "zero cores",
+      "host": {
+        "cores": 0,
+        "availableMegabytes": 1,
+        "pressure": "normal",
+        "grantedJobs": null,
+        "grantedMegabytes": null,
+        "unitMegabytes": 2048
+      }
+    },
+    {
+      "name": "unknown pressure",
+      "host": {
+        "cores": 4,
+        "availableMegabytes": 1,
+        "pressure": "fine",
+        "grantedJobs": null,
+        "grantedMegabytes": null,
+        "unitMegabytes": 2048
+      }
+    },
+    {
+      "name": "extra fact",
+      "host": {
+        "cores": 4,
+        "availableMegabytes": 1,
+        "pressure": "normal",
+        "grantedJobs": null,
+        "load": 1,
+        "grantedMegabytes": null,
+        "unitMegabytes": 2048
+      }
+    },
+    {
+      "name": "missing granted jobs",
+      "host": {
+        "cores": 4,
+        "availableMegabytes": 1,
+        "pressure": "normal"
+      }
+    },
+    {
+      "name": "missing unit megabytes",
+      "host": {
+        "cores": 4,
+        "availableMegabytes": 1,
+        "pressure": "normal",
+        "grantedJobs": null,
+        "grantedMegabytes": null
+      }
+    },
+    {
+      "name": "zero unit megabytes",
+      "host": {
+        "cores": 4,
+        "availableMegabytes": 1,
+        "pressure": "normal",
+        "grantedJobs": 1,
+        "grantedMegabytes": 2048,
+        "unitMegabytes": 0
+      }
+    },
+    {
+      "name": "missing granted megabytes",
+      "host": {
+        "cores": 4,
+        "availableMegabytes": 1,
+        "pressure": "normal",
+        "grantedJobs": 1,
+        "unitMegabytes": 2048
+      }
+    }
+  ],
+  "requests": [
+    {
+      "name": "minimum above maximum",
+      "value": {
+        "kind": "available",
+        "maximumParallelism": 2,
+        "minimumParallelism": 3
+      },
+      "accepted": false,
+      "schemaAccepts": true
+    },
+    {
+      "name": "minimum zero",
+      "value": {
+        "kind": "available",
+        "maximumParallelism": 2,
+        "minimumParallelism": 0
+      },
+      "accepted": false,
+      "schemaAccepts": false
+    },
+    {
+      "name": "minimum within maximum",
+      "value": {
+        "kind": "available",
+        "maximumParallelism": 4,
+        "minimumParallelism": 2
+      },
+      "accepted": true,
+      "schemaAccepts": true
+    },
+    {
+      "name": "maximum alone",
+      "value": {
+        "kind": "available",
+        "maximumParallelism": 4
+      },
+      "accepted": true,
+      "schemaAccepts": true
+    }
+  ],
+  "queues": [
+    {
+      "name": "two halves run side by side",
+      "cores": 10,
+      "requests": [
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          5
+        ]
+      ],
+      "expect": [
+        5,
+        5
+      ]
+    },
+    {
+      "name": "a third waits for its minimum",
+      "cores": 9,
+      "requests": [
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "expect": [
+        4,
+        4
+      ]
+    },
+    {
+      "name": "small requests all fit",
+      "cores": 3,
+      "requests": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "expect": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "head blocks the tail",
+      "cores": 6,
+      "requests": [
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "expect": [
+        4
+      ]
+    },
+    {
+      "name": "minimum smaller than preferred takes what is free",
+      "cores": 7,
+      "requests": [
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          5
+        ]
+      ],
+      "expect": [
+        5
+      ]
+    }
+  ],
+  "fixed": [
+    {
+      "fixed": "bun-bundle",
+      "cores": 1,
+      "expect": {
+        "kind": "available",
+        "maximumParallelism": 1,
+        "minimumParallelism": 1
+      }
+    },
+    {
+      "fixed": "bun-bundle",
+      "cores": 2,
+      "expect": {
+        "kind": "available",
+        "maximumParallelism": 1,
+        "minimumParallelism": 1
+      }
+    },
+    {
+      "fixed": "bun-bundle",
+      "cores": 3,
+      "expect": {
+        "kind": "available",
+        "maximumParallelism": 1,
+        "minimumParallelism": 1
+      }
+    },
+    {
+      "fixed": "bun-bundle",
+      "cores": 4,
+      "expect": {
+        "kind": "available",
+        "maximumParallelism": 2,
+        "minimumParallelism": 2
+      }
+    },
+    {
+      "fixed": "bun-bundle",
+      "cores": 10,
+      "expect": {
+        "kind": "available",
+        "maximumParallelism": 4,
+        "minimumParallelism": 2
+      }
+    },
+    {
+      "fixed": "bun-bundle",
+      "cores": 64,
+      "expect": {
+        "kind": "available",
+        "maximumParallelism": 4,
+        "minimumParallelism": 2
+      }
+    }
+  ]
+}

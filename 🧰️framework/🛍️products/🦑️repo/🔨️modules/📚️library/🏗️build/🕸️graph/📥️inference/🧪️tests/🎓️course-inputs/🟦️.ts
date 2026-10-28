@@ -1,6 +1,6 @@
 /** 🎓️ Contract: nothing a cached course target (`test`, `typecheck`, `check`) reads lies outside its declared inputs plus the command closure the inference derives. The read sets come from third-party oracles (esbuild's metafile for module imports, the TypeScript compiler's own program for `tsc`, the repository's proctor manifest closure for Rust) and from a recorded file-system trace of the vitest run; an independent Python implementation recomputes the same law with its own glob translator and import scanner. The scenario lives in `./🔣️.json` as language-agnostic data.
  * @see ./🐍️.py */
-import {expect,test} from "bun:test";
+import {afterAll,afterEach,expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {existsSync,readdirSync,readFileSync,writeFileSync,mkdtempSync,rmSync,realpathSync} from "node:fs";
 import {createRequire} from "node:module";
@@ -11,7 +11,7 @@ import {buildSchedulingPrefixesV1} from "../../../../📥️source/🔏️closur
 import fixture from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
 
-const inference=await import("../../🟨️.mjs"),{cacheInternals,createScriptInputCache,libraryBootstrap}=inference as any;
+const inference=await import("../../🟨️.mjs"),{cacheInternals,createScriptInputCache,libraryBootstrap}=inference as any,{expandedCommandInputsV1}=await import("../../🧭️script-inputs/🟨️.mjs") as any;
 await libraryBootstrap;
 const workspace=resolve(import.meta.dirname,"../../../../../../../../../..");
 const require=createRequire(join(workspace,"package.json"));
@@ -36,7 +36,7 @@ const declaredInputs=(inputs:readonly unknown[]):Set<string>=>{
 
 const esbuildReads=async(entries:readonly string[],specifiers?:readonly string[]):Promise<Set<string>>=>{
  const present=entries.filter(entry=>inInventory.has(entry)),sliced=specifiers&&present.length?{contents:specifiers.map(specifier=>`import ${JSON.stringify(specifier)};`).join("\n"),resolveDir:dirname(join(workspace,present[0]!)),sourcefile:"router-command.ts"}:undefined;
- const result=await require("esbuild").build({...(sliced?{stdin:sliced}:{entryPoints:present.map(entry=>join(workspace,entry))}),absWorkingDir:workspace,bundle:true,write:false,platform:"node",format:"esm",metafile:true,logLevel:"silent",outdir:join(tmpdir(),"course-inputs-law"),loader:{".json":"json"},define:{"import.meta.vitest":"undefined"},plugins:[{name:"workspace-only",setup(build:any){build.onResolve({filter:/^[^./]/},(args:any)=>/^(?:@semio-tech|@teaching)\//u.test(args.path)?undefined:{path:args.path,external:true});}}]});
+ const result=await require("esbuild").build({...(sliced?{stdin:sliced}:{entryPoints:present.map(entry=>join(workspace,entry))}),absWorkingDir:workspace,bundle:true,write:false,platform:"node",format:"esm",metafile:true,logLevel:"silent",outdir:join(tmpdir(),"course-inputs-law"),loader:{".json":"json"},define:{"import.meta.vitest":"undefined"},plugins:[{name:"workspace-only",setup(build:any){build.onLoad({filter:/json[\\/][^\\/]+\.ts$/},(args:any)=>({contents:readFileSync(args.path,"utf8"),loader:"ts"}));build.onResolve({filter:/^[^./]/},(args:any)=>/^(?:@semio-tech|@teaching)\//u.test(args.path)?undefined:{path:args.path,external:true});}}]});
  return new Set([...Object.keys(result.metafile.inputs).map(path=>posix(relative(workspace,resolve(workspace,path)))).filter(path=>!path.startsWith("..")&&!path.split("/").includes("node_modules")),...(sliced?present:[])]);
 };
 const vitestEntries=(config:string)=>{const text=readFileSync(join(workspace,config),"utf8"),block=/include:\s*\[(.*?)\]/su.exec(text)?.[1]??"";return[config,...[...block.matchAll(/"([^"]+)"/gu)].map(match=>posix(normalize(join(fixture.site,match[1]!))))];};
@@ -44,7 +44,9 @@ const nearestTsconfig=(path:string)=>{let directory=dirname(path);while(director
 const workspaceManifests=()=>{const root=join(workspace,fixture.workspaces),base=dirname(root),members=JSON.parse(readFileSync(root,"utf8")).workspaces as string[];return[fixture.workspaces,posix(join(dirname(fixture.workspaces),"bun.lock")),...members.map(member=>posix(relative(workspace,join(base,member,"package.json")))).filter(path=>inInventory.has(path))];};
 const tscReads=(config:string):Set<string>=>{
  const ts=require("typescript") as typeof import("typescript"),path=join(workspace,config),read=ts.readConfigFile(path,ts.sys.readFile),parsed=ts.parseJsonConfigFileContent(read.config,ts.sys,dirname(path),undefined,path);
- const program=ts.createProgram({rootNames:parsed.fileNames,options:{...parsed.options,noEmit:true,incremental:false,tsBuildInfoFile:undefined}});
+ const options={...parsed.options,noEmit:true,incremental:false,tsBuildInfoFile:undefined},host=ts.createCompilerHost(options),parse=host.getSourceFile.bind(host),installed=(file:string)=>(host.realpath?.(file)??file).split(/[\\/]/u).includes("node_modules");
+ host.getSourceFile=(file,language,...rest)=>installed(file)?ts.createSourceFile(file,"",language):parse(file,language,...rest);
+ const program=ts.createProgram({rootNames:parsed.fileNames,options,host});
  return new Set([config,...program.getSourceFiles().map(file=>posix(relative(workspace,realpathSync(file.fileName)))).filter(file=>!file.startsWith("..")&&!file.split("/").includes("node_modules")&&!file.startsWith(".cache/"))]);
 };
 const rustReads=async(spec:{package:string;pattern:string})=>{
@@ -70,15 +72,18 @@ const readsOf=async(spec:{reads:readonly any[]}):Promise<Set<string>>=>{
 
 test("course input law fixture is closed",()=>{expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);});
 
+afterEach(()=>{Bun.gc(true);});
+afterAll(()=>{require("esbuild").stop();});
+
 const python=testPythonV1();
 test("python3 is available for the independent implementation",()=>{expect(python).toBeString();});
 
 const results:Record<string,{closure:string[];declared:Set<string>;reads:Set<string>}>={};
 for(const [name,spec] of Object.entries(fixture.targets)){
  test(`${name}: every file the target reads is declared or inferred`,async()=>{
-  const target=manifest.targets[name],sources=await cacheInternals.targetScriptSources(target,workspace,createScriptInputCache(),fixture.project);
-  const declared=declaredInputs(target.inputs??["default"]),inferred=new Set(strip(sources.closure??[])),reads=await readsOf(spec as any);
-  results[name]={closure:sources.closure??[],declared,reads};
+  const target=manifest.targets[name],cache=createScriptInputCache(),sources=await cacheInternals.targetScriptSources(target,workspace,cache,fixture.project),closure=await expandedCommandInputsV1(sources.closure??[],workspace,cache) as string[];
+  const declared=declaredInputs(target.inputs??["default"]),inferred=new Set(strip(closure)),reads=await readsOf(spec as any);
+  results[name]={closure,declared,reads};
   const gap=[...reads].filter(path=>!path.includes("/🤖️generated/")&&!declared.has(path)&&!inferred.has(path)).sort();
   expect(gap).toEqual([]);
  },600_000);
@@ -87,8 +92,8 @@ for(const [name,spec] of Object.entries(fixture.targets)){
 test("the law is sensitive: removing a runtime-read input or the declared closure exposes the stale-green gap",async()=>{
  const target=manifest.targets.test,row=results.test!;
  const without=declaredInputs((target.inputs as unknown[]).filter(input=>input!=="proctorTestReads"&&input!=="workspaceManifests"));
- const sources=await cacheInternals.targetScriptSources({...target,metadata:undefined},workspace,createScriptInputCache(),fixture.project);
- const inferred=new Set(strip(sources.closure??[])),gap=[...row.reads].filter(path=>!without.has(path)&&!inferred.has(path));
+ const cache=createScriptInputCache(),sources=await cacheInternals.targetScriptSources({...target,metadata:undefined},workspace,cache,fixture.project);
+ const inferred=new Set(strip(await expandedCommandInputsV1(sources.closure??[],workspace,cache) as string[])),gap=[...row.reads].filter(path=>!without.has(path)&&!inferred.has(path));
  expect(gap).toContain("🎓️teaching/🛂️proctor/🧪️tests/🧫️fixtures/📚️catalog/🔣️.json");
  expect(gap).toContain("🎓️teaching/package.json");
  expect(gap.some(path=>path.includes("⚡️energy/"))).toBe(true);

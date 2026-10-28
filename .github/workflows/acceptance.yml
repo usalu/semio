@@ -1,0 +1,106 @@
+# 🛂️ Build acceptance: every night and by hand, `repo bench acceptance` runs the acceptance scenarios of one product through the official route on a fresh macOS runner
+# and fails the job when a blocking budget is broken. The budgets are the declared table of the bench module (`🎯️budgets`), not a number in this file: a hot no-op of the
+# architecture course answers in 10 s with at most 1.5 GB for the whole process tree, a one-line edit of the course is green in 60 s, a Rust edit in 120 s, the dashboard
+# no-op answers in 10 s, and edits of other agents' files cause 0 re-executions. Every scenario is measured on the official route (hot no-op three times, a one-line edit
+# and its byte-exact revert, a peer-edit stage) with the exact wall clock and the physical footprint of the process tree, in English (SEMIO_LANGUAGE); the JSON report and
+# the markdown report are uploaded and the markdown is the job summary.
+#
+# Rows. One job per product (`product:<id>` of the scenario selection), so that a product that cannot run on the hosted runner is red on its own and never hides the others.
+# The course row is blocking. The dashboard and print rows are advisory (`continue-on-error`) until their first green nightly run: both compile Rust, print adds the TeX
+# toolchain, and the hosted macOS runner has 7 GB of memory and 3 cores, below what their cold builds were measured with (print peaked near 9 GB on a 32 GB Mac); flip
+# `advisory` to false in one line each after the first green run. The repository variable SEMIO_ACCEPTANCE_RUNNER names a larger macOS runner for all rows (the budgets are
+# judged on whatever host ran them, and the report states the host class).
+# Scope. The scenarios edit and restore tracked source files of the checkout, which is why the step passes `--in-place`: the checkout of a job is private to it. A cancelled job
+# restores every edit before it stops, and a killed one leaves a journal that the next run on the same checkout applies first.
+# Triggers. Schedule and manual dispatch only: the first cold build of a product takes up to an hour and must not run on pull requests. `schedule` only fires for the workflow
+# file on the default branch.
+# Every action is pinned to a full commit SHA. No write permission, no credential left in the workspace.
+
+name: acceptance
+
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: acceptance-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: 24.15.0
+  BUILD_TOOL: bazel
+  CI: "true"
+  SEMIO_LANGUAGE: en
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  acceptance:
+    name: acceptance (macos, ${{ matrix.product }})
+    runs-on: ${{ vars.SEMIO_ACCEPTANCE_RUNNER || 'macos-26' }}
+    timeout-minutes: ${{ matrix.minutes }}
+    continue-on-error: ${{ matrix.advisory }}
+    env:
+      SEMIO_BUILD_BUDGET_MS: ${{ matrix.budget }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {product: course, minutes: 120, budget: "5400000", advisory: false}
+          - {product: dashboard, minutes: 180, budget: "9000000", advisory: true}
+          - {product: print, minutes: 240, budget: "12600000", advisory: true}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/repo-launcher
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Report the free disk space
+        continue-on-error: true
+        run: df -h "$GITHUB_WORKSPACE" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Preflight
+        run: repo preflight
+      - name: Provision the build tool
+        timeout-minutes: 30
+        run: repo tools setup "$BUILD_TOOL"
+      - name: Provision the native toolchains (Rust, TeX, browsers)
+        timeout-minutes: 45
+        run: repo tools setup toolchains
+      - name: Restore the Bun store
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/b/d/m/bun-cache
+          key: bun-store-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('bun.lock', '*/bun.lock', 'package.json') }}
+          restore-keys: bun-store-${{ runner.os }}-${{ runner.arch }}-
+      - name: Install the authored dependency scopes
+        timeout-minutes: 30
+        run: repo dependencies sync --all
+      - name: Name the report files
+        run: |
+          echo "ACCEPTANCE_REPORT=$RUNNER_TEMP/acceptance-report.json" >> "$GITHUB_ENV"
+          echo "ACCEPTANCE_MARKDOWN=$RUNNER_TEMP/acceptance-report.md" >> "$GITHUB_ENV"
+      - name: Measure the acceptance targets of the product (fails when a blocking budget is broken)
+        env:
+          SCENARIO: product:${{ matrix.product }}
+        run: repo bench acceptance --in-place --scenario="$SCENARIO" --file="$ACCEPTANCE_REPORT" --markdown="$ACCEPTANCE_MARKDOWN"
+      - name: Show the report
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f "$ACCEPTANCE_MARKDOWN" ]; then cat "$ACCEPTANCE_MARKDOWN" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Upload the reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: acceptance-macos-${{ matrix.product }}
+          path: |
+            ${{ env.ACCEPTANCE_REPORT }}
+            ${{ env.ACCEPTANCE_MARKDOWN }}
+          if-no-files-found: warn
+          retention-days: 30

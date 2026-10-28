@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/filesystem/observation/changes",
+  "title": "Workspace change journal: log records, service state, cursors, refusals and policy (v1)",
+  "description": "One append-only log of file change batches per workspace and user, written by exactly one service and read by any number of processes. Records carry a contiguous sequence number inside an epoch; a cursor is (epoch, sequence). A reader fences by writing a file into the fence directory and waiting for its record, so every change made before the fence is in the log at or before the fence record. Whatever the journal cannot vouch for is a refusal and the consumer walks the tree itself. All documents are closed. Texts exist per language; no language is a default.",
+  "definitions": {
+    "Language": {"type": "string", "enum": ["en", "de"]},
+    "Epoch": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+    "Path": {"type": "string", "minLength": 1, "maxLength": 4096, "not": {"pattern": "^/|(^|/)\\.\\.?(/|$)|\\u0000|\\\\"}},
+    "ChangeRow": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": [{"type": "string", "enum": ["a", "m", "r", "n"]}, {"type": "integer", "enum": [0, 1]}, {"$ref": "#/definitions/Path"}],
+      "description": "[kind, isDirectory, path]: added, modified, removed, renamed. Kinds are advisory; every row means the path may have changed, and a directory row of kind a, r or n also means its whole subtree."
+    },
+    "BatchRecord": {
+      "type": "object", "additionalProperties": false, "required": ["s", "t", "r"],
+      "properties": {"s": {"type": "integer", "minimum": 1}, "t": {"type": "integer", "minimum": 0}, "r": {"type": "array", "items": {"$ref": "#/definitions/ChangeRow"}}}
+    },
+    "LostRecord": {
+      "type": "object", "additionalProperties": false, "required": ["s", "t", "l"],
+      "properties": {"s": {"type": "integer", "minimum": 1}, "t": {"type": "integer", "minimum": 0}, "l": {"type": "array", "minItems": 2, "maxItems": 2, "items": [{"type": "string", "minLength": 1, "maxLength": 64}, {"type": "string", "maxLength": 4096}]}},
+      "description": "[reason, scope]: events under the scope (empty: everywhere) may be missing from the log."
+    },
+    "Record": {"oneOf": [{"$ref": "#/definitions/BatchRecord"}, {"$ref": "#/definitions/LostRecord"}]},
+    "Cursor": {
+      "type": "object", "additionalProperties": false, "required": ["epoch", "seq"],
+      "properties": {"epoch": {"$ref": "#/definitions/Epoch"}, "seq": {"type": "integer", "minimum": 0}}
+    },
+    "Refusal": {
+      "type": "string",
+      "enum": ["disabled", "no-service", "starting", "stale", "untrusted", "excluded", "epoch", "floor", "gap", "lost", "fence-timeout", "overflow", "cancelled"],
+      "description": "disabled: switched off; no-service: no service is running; starting: the service was just started; stale: its heartbeat stopped; untrusted: the watcher cannot vouch (portable backend, failed canary, watch limit); excluded: the root lies in a region the watcher never reports; epoch: the service restarted since the cursor was taken; floor: the log no longer reaches back to the cursor; gap: the log is not contiguous or unreadable after the cursor; lost: the watcher reported missing events under a root; fence-timeout: the fence record did not arrive; overflow: more changes than a consumer can use; cancelled."
+    },
+    "State": {
+      "type": "object", "additionalProperties": false, "required": ["version", "epoch", "instance", "pid", "startedAt", "root", "fence", "exclude", "backend", "trust", "ready"],
+      "properties": {
+        "version": {"const": 1}, "epoch": {"$ref": "#/definitions/Epoch"}, "instance": {"type": "string", "minLength": 1, "maxLength": 64},
+        "pid": {"type": "integer", "minimum": 1}, "startedAt": {"type": "integer", "minimum": 0},
+        "root": {"type": "string", "minLength": 1}, "fence": {"$ref": "#/definitions/Path"},
+        "exclude": {"type": "object", "additionalProperties": false, "required": ["rooted", "names"], "properties": {"rooted": {"type": "array", "items": {"$ref": "#/definitions/Path"}}, "names": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 255}}}},
+        "backend": {"type": "string", "enum": ["fsevents", "inotify", "rdcw", "portable", "poll", "none"]},
+        "trust": {"type": "string", "enum": ["exact", "verify", "none"]},
+        "ready": {"type": "boolean"}, "reason": {"type": "string", "maxLength": 256}
+      }
+    },
+    "Policy": {
+      "const": {
+        "version": 1,
+        "segmentBytes": 1048576,
+        "segmentsKept": 16,
+        "maximumRowsPerRecord": 65536,
+        "maximumRowsPerAnswer": 200000,
+        "heartbeatMilliseconds": 1000,
+        "heartbeatStaleMilliseconds": 5000,
+        "activityMilliseconds": 5000,
+        "idleShutdownMilliseconds": 7200000,
+        "fenceTimeoutMilliseconds": 1500,
+        "fencePollMilliseconds": 1,
+        "startTimeoutMilliseconds": 8000,
+        "startPollMilliseconds": 20,
+        "unavailableMilliseconds": 60000,
+        "watcherLatencyMilliseconds": 5,
+        "maximumResidentBytes": 52428800,
+        "tailChunkBytes": 65536,
+        "texts": {
+          "en": {
+            "disabled": "The change journal is switched off; the tree is walked.",
+            "no-service": "No change journal service is running; the tree is walked.",
+            "starting": "The change journal service was just started; the tree is walked this time.",
+            "stale": "The change journal service stopped answering; the tree is walked.",
+            "untrusted": "The file watcher cannot vouch for every change ({detail}); the tree is walked.",
+            "excluded": "{path} lies where the file watcher never reports changes; the tree is walked.",
+            "epoch": "The change journal service restarted since the last run; the tree is walked.",
+            "floor": "The change journal no longer reaches back to the last run; the tree is walked.",
+            "gap": "The change journal has a gap after the last run; the tree is walked.",
+            "lost": "The file watcher lost events under {path} ({detail}); the tree is walked.",
+            "fence-timeout": "The change journal did not confirm the current state in time; the tree is walked.",
+            "overflow": "More than {count} files changed since the last run; the tree is walked.",
+            "cancelled": "The change journal request was cancelled."
+          },
+          "de": {
+            "disabled": "Das Änderungsjournal ist ausgeschaltet; der Baum wird durchlaufen.",
+            "no-service": "Es läuft kein Änderungsjournal-Dienst; der Baum wird durchlaufen.",
+            "starting": "Der Änderungsjournal-Dienst wurde gerade gestartet; der Baum wird diesmal durchlaufen.",
+            "stale": "Der Änderungsjournal-Dienst antwortet nicht mehr; der Baum wird durchlaufen.",
+            "untrusted": "Der Dateibeobachter kann nicht für jede Änderung einstehen ({detail}); der Baum wird durchlaufen.",
+            "excluded": "{path} liegt dort, wo der Dateibeobachter keine Änderungen meldet; der Baum wird durchlaufen.",
+            "epoch": "Der Änderungsjournal-Dienst wurde seit dem letzten Lauf neu gestartet; der Baum wird durchlaufen.",
+            "floor": "Das Änderungsjournal reicht nicht mehr bis zum letzten Lauf zurück; der Baum wird durchlaufen.",
+            "gap": "Das Änderungsjournal hat nach dem letzten Lauf eine Lücke; der Baum wird durchlaufen.",
+            "lost": "Der Dateibeobachter hat Ereignisse unter {path} verloren ({detail}); der Baum wird durchlaufen.",
+            "fence-timeout": "Das Änderungsjournal hat den aktuellen Stand nicht rechtzeitig bestätigt; der Baum wird durchlaufen.",
+            "overflow": "Mehr als {count} Dateien haben sich seit dem letzten Lauf geändert; der Baum wird durchlaufen.",
+            "cancelled": "Die Anfrage an das Änderungsjournal wurde abgebrochen."
+          }
+        }
+      }
+    }
+  }
+}

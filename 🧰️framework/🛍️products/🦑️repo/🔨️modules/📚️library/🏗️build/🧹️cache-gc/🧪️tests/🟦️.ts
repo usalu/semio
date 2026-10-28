@@ -277,7 +277,7 @@ test("a mounted-looking nested partition is measured through its root and the re
 
 test("the command refuses unknown, repeated and misplaced options in both languages and honors the language",async()=>{
  for(const[args,english]of[
-  [["clear"],"Expected repo cache status [--deep]|gc"],
+  [["clear"],"Expected repo cache status [--deep] [--budget=<size>]|gc"],
   [["gc","--deep"],"Unknown cache option: --deep"],
   [["status","--bogus"],"Unknown cache option: --bogus"],
   [["status","--json","--json"],"Repeated cache option: --json"],
@@ -333,7 +333,7 @@ test("the default status walks nothing: unmeasured sizes are unknown, recorded o
  expect(second.roots.find(row=>row.id==="repository")!.usedBytes).toBe(deep.roots.find(row=>row.id==="repository")!.usedBytes);
  const lines:string[]=[],code=await runCacheLedgerCommandV1(["status","--lang=de"],{workspace,environment:{SEMIO_LANGUAGE:"en"},write:line=>lines.push(line),ledger,partitions},later);
  expect(code).toBe(0);
- expect(lines.some(line=>line.includes("(vor 3 Std. erfasst)"))).toBe(true);
+ expect(lines.some(line=>line.includes("(vor 3 h erfasst)"))).toBe(true);
  expect(lines.some(line=>line.startsWith("Als erfasst oder nicht gemessen"))).toBe(true);
 });
 

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "noteCount": 47,
+  "dependenciesSynopsis": "dependencies sync|lock --all|--scope <owner> | ensure",
+  "scopedSubcommands": [
+    { "operation": "dependencies", "subcommand": "ensure", "flags": [], "examples": ["repo dependencies ensure"], "excludedExamples": ["repo dependencies lock --all", "repo dependencies sync --all"] },
+    { "operation": "dependencies", "subcommand": "sync", "flags": ["--all", "--scope"], "examples": ["repo dependencies sync --all"], "excludedExamples": ["repo dependencies ensure"] },
+    { "operation": "dependencies", "subcommand": "lock", "flags": ["--all", "--scope"], "examples": ["repo dependencies lock --all"], "excludedExamples": ["repo dependencies sync --all"] },
+    { "operation": "cache", "subcommand": "status", "flags": ["--area", "--budget", "--json", "--deep", "--tasks"], "examples": ["repo cache status", "repo cache status --tasks --tool=bazel"], "excludedExamples": ["repo cache clear"] },
+    { "operation": "cache", "subcommand": "gc", "flags": ["--dry-run", "--area", "--budget", "--json"], "examples": ["repo cache gc --dry-run", "repo cache gc --dry-run --budget=40GiB"], "excludedExamples": ["repo cache clear"] },
+    { "operation": "cache", "subcommand": "dedupe", "flags": ["--dry-run", "--area", "--json"], "examples": ["repo cache dedupe --dry-run"], "excludedExamples": ["repo cache clear"] },
+    { "operation": "cache", "subcommand": "verify", "flags": ["--deep", "--json"], "examples": ["repo cache verify --deep"], "excludedExamples": ["repo cache clear"] },
+    { "operation": "remote-cache", "subcommand": "serve", "flags": ["--port", "--host", "--directory", "--max-bytes", "--read-only", "--tls-certificate", "--tls-key"], "examples": ["repo remote-cache serve", "repo remote-cache serve --host 0.0.0.0 --tls-certificate cert.pem --tls-key key.pem"], "excludedExamples": ["repo remote-cache status", "repo remote-cache gc --dry-run"] },
+    { "operation": "capacity", "subcommand": "status", "flags": ["--json"], "examples": ["repo capacity status"], "excludedExamples": ["repo capacity run --memory=6144 -- repo tools exec bun -- test ./some.test.ts"] },
+    { "operation": "capacity", "subcommand": "run", "flags": ["--operation", "--memory", "--cpu", "--jobs"], "examples": ["repo capacity run --memory=6144 -- repo tools exec bun -- test ./some.test.ts"], "excludedExamples": ["repo capacity status"] },
+    { "operation": "incremental", "subcommand": "discard", "flags": ["--root"], "examples": ["repo incremental discard"], "excludedExamples": ["repo incremental list", "repo incremental run --scenario=fw-ts-comment"] },
+    { "operation": "concurrency", "subcommand": "list", "flags": [], "examples": ["repo concurrency list"], "excludedExamples": ["repo concurrency run --workloads=disjoint-projects --sessions=3"] },
+    { "operation": "incremental", "subcommand": "prepare", "flags": ["--root", "--fresh"], "examples": ["repo incremental prepare --fresh"], "excludedExamples": ["repo incremental list"] }
+  ]
+}

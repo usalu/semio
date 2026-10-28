@@ -57,6 +57,17 @@ export function exchangeNativeDirectoriesV1(first:string,second:string,port:Nati
  return Object.freeze(after);
 }
 
+/** 🔠️ Reports whether a partition holds case-sensitive content or was declared fold-safe because its Windows host cannot set the per-directory flag without the optional WSL feature. */
+export function nativeDirectoryCaseModeV1(directory:string):"sensitive"|"fold-safe"{return readNativeDirectoryAnchorFileV1(directory).caseFold?"fold-safe":"sensitive";}
+const foldKey=(name:string,map:(text:string)=>string)=>[...name.normalize("NFC")].map(char=>{const folded=map(char);return[...folded].length===1?folded:char;}).join("");
+/** 🪞️ Groups the names a case-folding filesystem would merge: names equal after Unicode normalization and simple lower or upper case mapping; deliberately a superset of what NTFS or APFS merges, so a fold-safe partition never admits a pair that could alias. */
+export function nativeDirectoryFoldCollisionsV1(names:readonly string[]):readonly(readonly string[])[]{
+ const classes=new Map<string,Set<string>>(),parent=new Map<string,string>(),find=(name:string):string=>{let root=name;while(parent.get(root)!==root)root=parent.get(root)!;return root;};
+ for(const name of names)parent.set(name,name);
+ for(const map of[(text:string)=>text.toLowerCase(),(text:string)=>text.toUpperCase()])for(const name of names){const key=foldKey(name,map),seen=classes.get(key)??new Set<string>();for(const other of seen)parent.set(find(name),find(other));seen.add(name);classes.set(key,seen);}
+ const groups=new Map<string,string[]>();for(const name of names){const root=find(name),group=groups.get(root)??[];if(!group.includes(name))group.push(name);groups.set(root,group);}
+ return Object.freeze([...groups.values()].filter(group=>group.length>1).map(group=>Object.freeze([...group].sort())).sort((a,b)=>a[0]!<b[0]!?-1:1));
+}
 /** 🔠️ Proves that two names differing only by case stay distinct beneath the directory. */
 export function probeNativeDirectoryCaseSensitivityV1(directory:string):boolean{
  const base=join(directory,".case-"+randomBytes(4).toString("hex"));mkdirSync(base,{mode:0o700});
@@ -101,18 +112,20 @@ export function createNativeDirectoryMeterV1(input:Readonly<{root:string;filesys
  }});
 }
 
+/** 🪪️ The immutable partition anchor: its envelope, its empty placeholder and, only when the host cannot make the volume case sensitive, the declared case-folding mode. */
+export type NativeDirectoryAnchorV1=Readonly<{filesystemBytes:number;maximumPhysicalBytes:number;underlying:NativeDirectoryIdentityV1;caseFold?:"insensitive"}>;
 /** 📜️ Serializes the immutable partition anchor that stands in for the former image file and names its empty placeholder. */
-export function nativeDirectoryAnchorBytesV1(input:Readonly<{filesystemBytes:number;maximumPhysicalBytes:number;underlying:NativeDirectoryIdentityV1}>):Buffer{
- const row={version:1,kind:protocol.kind,filesystemBytes:input.filesystemBytes,maximumPhysicalBytes:input.maximumPhysicalBytes,underlying:{dev:input.underlying.dev,ino:input.underlying.ino,mode:input.underlying.mode}};
+export function nativeDirectoryAnchorBytesV1(input:NativeDirectoryAnchorV1):Buffer{
+ const row={version:1,kind:protocol.kind,filesystemBytes:input.filesystemBytes,maximumPhysicalBytes:input.maximumPhysicalBytes,underlying:{dev:input.underlying.dev,ino:input.underlying.ino,mode:input.underlying.mode},...(input.caseFold?{caseFold:input.caseFold}:{})};
  if(validateJsonSchemaSubset(schema.definitions.Anchor,row,schema).length)throw Error("Closed directory anchor required");return Buffer.from(JSON.stringify(row)+"\n");
 }
 /** 📖️ Admits only canonical bounded anchor bytes. */
-export function readNativeDirectoryAnchorV1(bytes:Uint8Array):Readonly<{filesystemBytes:number;maximumPhysicalBytes:number;underlying:NativeDirectoryIdentityV1}>{
+export function readNativeDirectoryAnchorV1(bytes:Uint8Array):NativeDirectoryAnchorV1{
  if(bytes.byteLength>protocol.maximumAnchorBytes)throw Error("Bounded directory anchor required");const text=new TextDecoder("utf-8",{fatal:true}).decode(bytes),row=JSON.parse(text);
- if(validateJsonSchemaSubset(schema.definitions.Anchor,row,schema).length||nativeDirectoryAnchorBytesV1(row).toString()!==text)throw Error("Canonical directory anchor required");return Object.freeze({filesystemBytes:row.filesystemBytes,maximumPhysicalBytes:row.maximumPhysicalBytes,underlying:readNativeDirectoryIdentityV1(row.underlying)});
+ if(validateJsonSchemaSubset(schema.definitions.Anchor,row,schema).length||nativeDirectoryAnchorBytesV1(row).toString()!==text)throw Error("Canonical directory anchor required");return Object.freeze({filesystemBytes:row.filesystemBytes,maximumPhysicalBytes:row.maximumPhysicalBytes,underlying:readNativeDirectoryIdentityV1(row.underlying),...(row.caseFold?{caseFold:row.caseFold as "insensitive"}:{})});
 }
 /** 📎️ Reads the anchor beside a partition directory without following links. */
-export function readNativeDirectoryAnchorFileV1(directory:string):Readonly<{filesystemBytes:number;maximumPhysicalBytes:number;underlying:NativeDirectoryIdentityV1}>{
+export function readNativeDirectoryAnchorFileV1(directory:string):NativeDirectoryAnchorV1{
  const layout=nativeDirectoryLayoutV1(directory),row=lstatSync(layout.anchor);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||row.size<1||row.size>protocol.maximumAnchorBytes)throw Error("Single bounded directory anchor required");
  const descriptor=openSync(layout.anchor,constants.O_RDONLY|(constants.O_NOFOLLOW??0));try{return readNativeDirectoryAnchorV1(readFileSync(descriptor));}finally{closeSync(descriptor);}
 }
@@ -138,11 +151,11 @@ export function nativeDirectoryMappingV1(directory:string,port?:NativeDirectoryP
 
 /** 🌱️ Creates the volume and the anchor beside the empty root placeholder; nothing is attached. */
 export function allocateNativeDirectoryV1(input:Readonly<{directory:string;filesystemBytes:number;maximumPhysicalBytes:number}>,probe:(directory:string)=>boolean=probeNativeDirectoryCaseSensitivityV1,port:NativeDirectoryPlatformPortV1=nativeDirectorySystemPortV1()):void{
- const layout=nativeDirectoryLayoutV1(input.directory),underlying=observeNativeDirectoryIdentityV1(layout.root),bytes=nativeDirectoryAnchorBytesV1({filesystemBytes:input.filesystemBytes,maximumPhysicalBytes:input.maximumPhysicalBytes,underlying});
+ const layout=nativeDirectoryLayoutV1(input.directory),underlying=observeNativeDirectoryIdentityV1(layout.root);let caseFold:"insensitive"|undefined;
  if(readdirSync(layout.root).length)throw Error("Empty original placeholder directory required");
  mkdirSync(layout.volume,{mode:underlying.mode&0o7777});
- try{port.prepareVolume(layout.volume);if(!probe(layout.volume))throw Error(port.kind==="journaled"?protocol.refusals.caseUnverified:protocol.refusals.caseInsensitive);}catch(error){rmSync(layout.volume,{recursive:true,force:true});throw error;}
- const descriptor=openSync(layout.anchor,constants.O_WRONLY|constants.O_CREAT|constants.O_EXCL|(constants.O_NOFOLLOW??0),0o600);let failed=false,failure:unknown;
+ try{port.prepareVolume(layout.volume);if(!probe(layout.volume))throw Error(port.kind==="journaled"?protocol.refusals.caseUnverified:protocol.refusals.caseInsensitive);}catch(error){if(port.kind==="journaled"&&(protocol.foldSafeRefusals as readonly string[]).some(key=>(protocol.refusals as Readonly<Record<string,string>>)[key]===(error as Error)?.message))caseFold="insensitive";else{rmSync(layout.volume,{recursive:true,force:true});throw error;}}
+ const bytes=nativeDirectoryAnchorBytesV1({filesystemBytes:input.filesystemBytes,maximumPhysicalBytes:input.maximumPhysicalBytes,underlying,...(caseFold?{caseFold}:{})}),descriptor=openSync(layout.anchor,constants.O_WRONLY|constants.O_CREAT|constants.O_EXCL|(constants.O_NOFOLLOW??0),0o600);let failed=false,failure:unknown;
  try{if(writeSync(descriptor,bytes)!==bytes.length)throw Error("Complete anchor write required");fsyncSync(descriptor);}catch(error){failed=true;failure=error;}
  try{closeSync(descriptor);}catch(error){if(!failed)throw error;}if(failed)throw failure;
  port.flush(input.directory);

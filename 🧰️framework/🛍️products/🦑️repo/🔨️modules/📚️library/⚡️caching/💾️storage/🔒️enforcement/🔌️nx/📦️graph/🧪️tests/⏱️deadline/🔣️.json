@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "budgetMilliseconds": 240000,
+ "testTimeoutMilliseconds": 300000,
+ "settleMilliseconds": 90000,
+ "foreignWatcher": "not-a-watcher-identity",
+ "refusal": "Original native watcher namespace required",
+ "designs": {
+  "before": {"enrollment": "caller-frame", "holder": "parked", "bind": "plain"},
+  "after": {"enrollment": "owner-frame", "holder": "abort-aware", "bind": "atomic"}
+ },
+ "scenarios": [
+  {"name": "a bind refused after it acquired its namespace inside a nested store scope", "nested": true, "refused": true, "cancelled": false},
+  {"name": "a namespace acquired inside a nested store scope and left to its owner", "nested": true, "refused": false, "cancelled": false},
+  {"name": "a namespace held inside a nested store scope while the Original is cancelled", "nested": true, "refused": false, "cancelled": true},
+  {"name": "a namespace acquired in its owner scope and left to its owner", "nested": false, "refused": false, "cancelled": false}
+ ]
+}

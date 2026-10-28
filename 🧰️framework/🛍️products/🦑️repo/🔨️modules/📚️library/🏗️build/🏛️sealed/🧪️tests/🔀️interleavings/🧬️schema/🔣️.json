@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:sealed-interleavings-corpus:v1",
+  "title": "Sealed promotion interleaving corpus",
+  "description": "Language-agnostic scenarios of the promotion protocol: tree labels (valid or broken), the initial store and tree, a number of processes, a schedule of tokens (advance a process by one gate, edit the tree, crash a process) and the observables every implementation must reach.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "cases"],
+  "properties": {
+    "version": { "const": 1 },
+    "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Case" } }
+  },
+  "definitions": {
+    "Label": { "type": "string", "pattern": "^[A-Z]$" },
+    "Result": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "label"],
+          "properties": {
+            "status": { "enum": ["fresh", "served", "promoted", "refreshed", "blocked", "busy", "none"] },
+            "label": { "oneOf": [{ "$ref": "#/definitions/Label" }, { "type": "null" }] }
+          }
+        }
+      ]
+    },
+    "Token": {
+      "oneOf": [
+        { "type": "array", "minItems": 2, "maxItems": 2, "items": [{ "const": "p" }, { "type": "integer", "minimum": 0 }] },
+        { "type": "array", "minItems": 2, "maxItems": 2, "items": [{ "const": "crash" }, { "type": "integer", "minimum": 0 }] },
+        { "type": "array", "minItems": 2, "maxItems": 2, "items": [{ "const": "edit" }, { "$ref": "#/definitions/Label" }] }
+      ]
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "trees", "initial", "processes", "tokens", "expected"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "trees": { "type": "object", "propertyNames": { "$ref": "#/definitions/Label" }, "additionalProperties": { "enum": ["valid", "broken"] } },
+        "initial": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["current", "tree"],
+          "properties": { "current": { "oneOf": [{ "$ref": "#/definitions/Label" }, { "type": "null" }] }, "tree": { "$ref": "#/definitions/Label" } }
+        },
+        "processes": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "tokens": { "type": "array", "items": { "$ref": "#/definitions/Token" } },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["current", "blocked", "captures", "results", "lockFree"],
+          "properties": {
+            "current": { "oneOf": [{ "$ref": "#/definitions/Label" }, { "type": "null" }] },
+            "blocked": { "oneOf": [{ "$ref": "#/definitions/Label" }, { "type": "null" }] },
+            "captures": { "type": "object", "propertyNames": { "$ref": "#/definitions/Label" }, "additionalProperties": { "type": "integer", "minimum": 1 } },
+            "results": { "type": "array", "items": { "$ref": "#/definitions/Result" } },
+            "lockFree": { "const": true }
+          }
+        }
+      }
+    }
+  }
+}

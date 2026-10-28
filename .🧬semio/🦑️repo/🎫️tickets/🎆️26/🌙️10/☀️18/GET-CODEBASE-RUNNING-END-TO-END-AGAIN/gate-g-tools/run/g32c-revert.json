@@ -1,0 +1,20 @@
+{
+ "label": "g32c-revert",
+ "target": "@teaching/architecture-course:build",
+ "started": "10:01:42",
+ "wall_s": 50.4,
+ "peak_tree_mb": 2647,
+ "peak_processes": 7,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "2",
+   "1 internal, 1 worker"
+  ],
+  "actions": [
+   "2"
+  ]
+ }
+}

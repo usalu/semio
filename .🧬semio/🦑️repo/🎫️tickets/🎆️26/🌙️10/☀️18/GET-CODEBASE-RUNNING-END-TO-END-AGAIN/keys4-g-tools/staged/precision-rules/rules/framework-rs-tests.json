@@ -1,0 +1,45 @@
+{
+ "id": "framework-rs-tests",
+ "evidence": "static",
+ "description": "Each framework umbrella test runs the class its script router registers under the command word: the Cargo packages that class names (test targets and path-dependency closure included), the TypeScript tests it runs (import closure) and the files and directories it names, plus what bun reads at start. Listed here are only the targets whose every leg ran clean under the read oracle (keys4-g evidence); the others keep the default key.",
+ "select": {
+  "project": "@semio-tech/framework-rs",
+  "targets": [
+   "test-source-projection",
+   "test-directory-discovery",
+   "test-host-effect-invocation",
+   "test-artifact-kind-source",
+   "test-original-factory-admission-source",
+   "test-deflate-encoding",
+   "test-history-progress",
+   "test-snapshot-sqlite-native"
+  ]
+ },
+ "replaces": [
+  "default",
+  "^default",
+  "nativeSources",
+  "^nativeSources",
+  "nativeTestSources",
+  "^nativeTestSources",
+  "reads"
+ ],
+ "reads": [
+  {
+   "router": {
+    "source": "🧰️framework/📦️packages/🦀️rust/📜️script.ts",
+    "bases": [
+     "🧰️framework"
+    ]
+   }
+  },
+  {
+   "globs": [
+    "{workspaceRoot}/bunfig.toml",
+    "{workspaceRoot}/tsconfig.json",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/**/*",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/**/*"
+   ]
+  }
+ ]
+}

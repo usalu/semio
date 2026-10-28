@@ -1,0 +1,20 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🧬️schema/🔣️.json",
+ "definitions": [
+  "Policy"
+ ],
+ "sources": [
+  "🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🟦️.ts",
+  "🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🔌️port/🟦️.ts"
+ ],
+ "minimumNumber": 250,
+ "allow": [
+  {
+   "source": "🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🟦️.ts",
+   "value": 10000,
+   "reason": "The scale of a basis-point ratio (10000 basis points are one whole), not the stop timeout."
+  }
+ ]
+}

@@ -1,3 +1,4 @@
+import {noticeLanguagesV1} from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import type{NativeImageMaintenanceCustodyV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{openRepositoryProductsLayoutV1,productsChargePolicyV1}from"./📐️layout/🟦️.ts";
 import{readNativeCallerAuthorityV1}from"../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
@@ -11,11 +12,11 @@ import {repositoryCachePartitionRootDataV1} from "../📂️paths/🟦️.ts";
 import {dirname,join} from "node:path";
 import {lstatSync,mkdirSync,writeFileSync} from "node:fs";
 import {repositoryCacheBudgetV1,type RepositoryCachePartitionIdV1} from "../🟦️.ts";
+import {requireRepositoryWorkspaceRootV1} from "../🧭️root/🟦️.ts";
 import {openNativePlatformStorageV1,requireNativePlatformImageCloseV1,withNativePlatformChildStorageV1,withNativePlatformFundedChildStorageV1,retireNativePlatformFundedChildStorageV1,withNativePlatformMaintenanceChildStorageV1,withNativePlatformDisposableChildStorageV1,requireNativeStoragePathV1,type NativeImageStorageV1,type NativeDisposableImageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 import {checkResourceLeaseControl,leaseStoreFreeRatioV1,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {formatResourceLeaseSweepFailureV1,formatResourceLeaseSweepV1,resourceLeaseSweepModeV1,sweepResourceLeaseStoreV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/♻️retirement/🧹️sweep/🟦️.ts";
 import {resourceLeaseRetirementIdlePolicyV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/♻️retirement/🟦️.ts";
-import {leaseLanguageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🧭️order/🟦️.ts";
 import{requireIssuedResourceControlRefinementV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import parentSchema from"./📂️parents/🧬️schema/🔣️.json"with{type:"json"};
 import type{NativeStorageChildFundingV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌱️birth/🟦️.ts";
@@ -59,16 +60,16 @@ async function openRepositoryLeasePartitionV1(workspace:string,control:ResourceL
  try{const directory=repositoryLeaseDirectoryV1(workspace);await image.recheck();requireNativeStoragePathV1(image.root,directory);const stamp=requireNativeStoragePathV1(image.root,join(directory,parentSchema.definitions.Protocol.const.leaseRetirementStamp));
   if(lstatSync(directory,{throwIfNoEntry:false})===undefined)return image;
   const ratio=leaseStoreFreeRatioV1(directory);if(leaseRetirementFreshV1(stamp,Date.now(),resourceLeaseSweepModeV1(ratio).pressure?resourceLeaseRetirementIdlePolicyV1.pressureSweepIntervalMilliseconds:undefined))return image;
-  touchLeaseRetirementV1(stamp);const language=leaseLanguageV1();
-  try{const sweep=await sweepResourceLeaseStoreV1(directory,control,{freeRatio:ratio});if(sweep.cancelled||sweep.pressure&&sweep.databases+sweep.queues+sweep.claims+sweep.stores>0)for(const line of formatResourceLeaseSweepV1(language,sweep))process.stderr.write(sweepNoticeV1(line));}
-  catch(error){process.stderr.write(sweepNoticeV1(formatResourceLeaseSweepFailureV1(language,error)));}
+  touchLeaseRetirementV1(stamp);const languages=noticeLanguagesV1(["en","de"] as const);
+  try{const sweep=await sweepResourceLeaseStoreV1(directory,control,{freeRatio:ratio});if(sweep.cancelled||sweep.pressure&&sweep.databases+sweep.queues+sweep.claims+sweep.stores>0)for(const language of languages)for(const line of formatResourceLeaseSweepV1(language,sweep))process.stderr.write(sweepNoticeV1(line));}
+  catch(error){for(const language of languages)process.stderr.write(sweepNoticeV1(formatResourceLeaseSweepFailureV1(language,error)));}
   await image.recheck();return image;
  }catch(error){try{await image.close();}catch(closing){if(!Object.is(error,closing))throw new AggregateError([error,closing],"Lease image opening and actual close failed");}throw error;}
 }
 
 /** 🎟️ Opens one authored partition once, without any inactive publication recovery; the composition that recovers hands in how the lease image underneath a hosted partition is opened. */
 export async function openRepositoryCachePartitionAttemptV1(workspace:string,id:RepositoryCachePartitionIdV1,control:ResourceLeaseControl,openLeases:()=>Promise<NativeImageStorageV1>):Promise<NativeImageStorageV1>{
- checkResourceLeaseControl(control);const budget=repositoryCacheBudgetV1(workspace),declaration=budget.partitions[id];if(!declaration||declaration.capacityBytes%1048576||declaration.capacityBytes<34603008)throw Error("Finite generated cache partition required");
+ checkResourceLeaseControl(control);requireRepositoryWorkspaceRootV1(workspace);const budget=repositoryCacheBudgetV1(workspace),declaration=budget.partitions[id];if(!declaration||declaration.capacityBytes%1048576||declaration.capacityBytes<34603008)throw Error("Finite generated cache partition required");
  if(id==="leases")return openRepositoryLeasePartitionV1(workspace,control);
  const ambient=ambientLeases.getStore(),shared=ambient!==undefined&&ambient.workspace===workspace,leases=shared?ambient.image:await openLeases();let image:NativeImageStorageV1|undefined;try{const leaseDirectory=repositoryLeaseDirectoryV1(workspace);await leases.recheck();requireNativeStoragePathV1(leases.root,leaseDirectory);mkdirSync(leaseDirectory,{recursive:true});mkdirSync(dirname(declaration.directory),{recursive:true});const open=()=>openNativePlatformStorageV1({directory:declaration.directory,leaseDirectory,filesystemBytes:declaration.filesystemBytes,maximumPhysicalBytes:declaration.capacityBytes,control});image=id==="products"?await openRepositoryProductsLayoutV1(workspace,control,open):await open();const admitted=image,scope:PartitionOwner={id,image:admitted,leases,sharedLeases:shared,control,live:true,accepting:true,failed:false,sequence:0,pending:new Set(),outcomes:new Set()};const partition=Object.freeze({...admitted,close:()=>closePartition(scope)});partitionOwners.set(partition,scope);return partition;}catch(error){const errors:unknown[]=[error];for(const owned of[image,...(shared?[]:[leases])])try{await owned?.close();}catch(closeError){if(!errors.some(value=>Object.is(value,closeError)))errors.push(closeError);}if(errors.length===1)throw errors[0];throw new AggregateError(errors,"Partition admission and complete dependency close failed");}
 }

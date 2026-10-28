@@ -1,0 +1,12 @@
+{
+ "label": "hotreg-3",
+ "target": "@teaching/architecture-course:build",
+ "started": "22:27:03",
+ "wall_s": 9.9,
+ "peak_tree_mb": 1022,
+ "peak_processes": 3,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

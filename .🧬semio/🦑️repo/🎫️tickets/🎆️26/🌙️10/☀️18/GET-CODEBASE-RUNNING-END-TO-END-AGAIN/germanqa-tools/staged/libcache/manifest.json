@@ -1,0 +1,112 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧬️schema/🔣️.json": {
+  "file": "000.json",
+  "base": "2f302b74ab136f544b2cfc000d195489a01c1e54fed6416b7dc07e5ceea8f639",
+  "new": "96e3ac02ce3da1cca99ad48660c6cd57ff823f55ea7c4a28c7e305e540ba3a12"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🎚️machine/🔣️policy.json": {
+  "file": "001.json",
+  "base": "7bb39a2936a89ebe3ab1ddc2d70c5d149a14c9d4118682ddf62fea5b501254f2",
+  "new": "cb323e63720d2578f645e9bdfe3d84f9f26f9a11927be77e74cc45b3694778d8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🎚️machine/🧪️tests/🟦️.ts": {
+  "file": "002.ts",
+  "base": "fcb4fa7d3efea2b7c2579956d2c1a5769c8c1fe9880fb687e8abc7e46d0df75b",
+  "new": "48171e4d60fb9fae7147667d67632bae42c17d3b1d7036f02c82ddded999fecb"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/📖️texts/🔣️.json": {
+  "file": "003.json",
+  "base": "fbe1886c9df029cb44d1ab2615b56cf0470e12f7304698361372541795f553c9",
+  "new": "76db74338aee3a4ab563f78d53cc4a62e68156123a34c4215e5448022cfcbd52"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🔣️policy.json": {
+  "file": "004.json",
+  "base": "12bfcfd776b6144e994dcf740414df4f51d8a4a1dde9da25495facff6b644d3a",
+  "new": "2eef54fa6bf1dae4650388ebadd3b2a6103ea0a861f6f55268c5dd6a1c3361cc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "005.json",
+  "base": "37081143a938b1a116baad7ec4516b85e5ef8372429527be11d6872c6640960d",
+  "new": "8b2245c2a7a7b483c3e4d005e2266c38c209574b8c87ff973841165e7a2bc5f1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json": {
+  "file": "006.json",
+  "base": "603d655ed2bc4c6451dae2c86ee02b5e8667f07bfb704cb0bc24513f2b24f64b",
+  "new": "64bbe0c5bab8b5d8860775749856ec2fe867d53303fdef789904df2bdb091b16"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/🔣️.json": {
+  "file": "007.json",
+  "base": "0634ea66bfcf9ae05e58e6acc9f87e5bff66b62a8c50370c56d22994ba8aeeea",
+  "new": "a416fcf6b646cce6ca80e8aa32fd506f11a498b441221f04d34c0f80a2b7daa0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧪️tests/🔑️key-parts/🧬️schema/🔣️.json": {
+  "file": "008.json",
+  "base": "21bdfa85c677955a847cc8b564c3daa1c4cbbcb5664c9211ed8cf195d5098a86",
+  "new": "12bc32a69272c1295015daa61bc2fec60a5003a43dcc21ba8bd4112e81f02b17"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧬️schema/🔣️.json": {
+  "file": "009.json",
+  "base": "fe069b6d926d4d34a73e3fcf4bee114d02ad5a71201ce788688750b9747cc0ff",
+  "new": "d096c4031f416019c3ec0592b2eabd6b8ce9de92b37f25e8bcf994a222381493"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📖️texts/🔣️.json": {
+  "file": "010.json",
+  "base": "84cd5fbd434dae0860ec9eadc877e11b424aa38a2a661768d9512e629b187daf",
+  "new": "efbe0dda37e13d4abd03a9b5808fc45b3bc4217a55ac5514afd7970c684a1f98"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🚦️concurrent/🧬️schema/🔣️.json": {
+  "file": "011.json",
+  "base": "8e2cbc731b1458c67f11fdf2a0289cf166be6a7f02033422a93168b99aac036a",
+  "new": "c1497c1a31f115797a74991ba4a6793c4a6b711d048ffeb26e45666ef15bccc9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🔣️.json": {
+  "file": "012.json",
+  "base": "3fc9af09fb35134b57bc087fb57ee7df22a0d87b4510e48728c2352c3f525f17",
+  "new": "6772a4724cbd9d4e2183bd639758ffd4ede14408366086bd086c00d48cf9cac7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🧬️schema/🔣️.json": {
+  "file": "013.json",
+  "base": "7b4a21535478558d3d0b7577b53ce9836f498f7d187d0b5b1f95d3331ff808bb",
+  "new": "1db521266b5b7c9679c778272ac94184524f277ae063bffad958c22882bdca35"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🔣️.json": {
+  "file": "014.json",
+  "base": "f64aa43a28b794cfe839a26e4780187ef504adc28bb7d42ffeb89540bed1d772",
+  "new": "ee856609d41f20cda10959e56f2cf703b78fedd81db30fa4667654bf38adb5ee"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧭️sites/🧬️schema/🔣️.json": {
+  "file": "015.json",
+  "base": "1760f8a40d18d5132123201f00c5d1a90af7127306a3899cf258f75059102fc2",
+  "new": "b2db1d2f1d2e108e3ae3ce04942b884db48f181590920837cf8e720ea14d399b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json": {
+  "file": "016.json",
+  "base": "af8f75c5879862fe0dcb88f31bc9c126d78a4716177b8cfa08636bf2bec8510b",
+  "new": "867e2e5677c36e6ef539edc434fc957ac8394eb9899be7fbc10481538a5dc7eb"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🌱️incremental/🧪️tests/🟦️.ts": {
+  "file": "017.ts",
+  "base": "ad487dc660b21186280330b3a99d2a77ada6175bd03c57da230ca2006f2e695b",
+  "new": "5ae047832335de343231950cb9ced5953cc76c84afcf85509798b7c2562cf583"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🌱️incremental/🧬️schema/🔣️.json": {
+  "file": "018.json",
+  "base": "2a20da864918aa7d49c3518943622c0067fab6af76e4280554a34d8a5390790b",
+  "new": "e74c339c5dda6d0390284e22045e5679aa3cc94908da5f8e11f0588e0537fb31"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/📈️fill/🧪️tests/🟦️.ts": {
+  "file": "019.ts",
+  "base": "2488883fefca52ff0cec8446433e72b98710b9e0d7cb212e577df5c1eaa30897",
+  "new": "328e45c6fa636501f417083d31ce8f82baa767b5e9046baaab5637b549bc98cf"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/📈️fill/🧬️schema/🔣️.json": {
+  "file": "020.json",
+  "base": "99c08301928e239a2e6037704baca85400fdcdfbb93a09aec9a90fbb63030b40",
+  "new": "709de77fc992bec7264e8572662d57e6e5d132c8dd29f6d86db29dcd97cb98da"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧬️schema/🔣️.json": {
+  "file": "021.json",
+  "base": "c19c1514350ffa76deea364135304efbc036516d0f16d33c04eefe9712eed325",
+  "new": "9a12f8dfeb9cdd04cb7564a5438525be065cfceb995fc438451941c0298b3bb1"
+ }
+}

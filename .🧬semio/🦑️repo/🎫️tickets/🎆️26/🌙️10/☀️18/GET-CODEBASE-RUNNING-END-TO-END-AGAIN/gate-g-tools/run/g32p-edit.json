@@ -1,0 +1,20 @@
+{
+ "label": "g32p-edit",
+ "target": "@semio-tech/print-rs:test",
+ "started": "10:02:53",
+ "wall_s": 161.0,
+ "peak_tree_mb": 2913,
+ "peak_processes": 4,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "3",
+   "1 internal, 2 local"
+  ],
+  "actions": [
+   "3"
+  ]
+ }
+}

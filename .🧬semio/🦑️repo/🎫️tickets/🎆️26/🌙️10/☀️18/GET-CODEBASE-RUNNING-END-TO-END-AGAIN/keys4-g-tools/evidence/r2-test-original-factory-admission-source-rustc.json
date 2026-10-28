@@ -1,0 +1,12 @@
+{
+ "target": "test-original-factory-admission-source",
+ "closureCrates": 54,
+ "workspaceFilesRead": 690,
+ "declared": 2040,
+ "undeclared": [
+  "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs",
+  "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🧪️tests/🦀️.rs",
+  "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🧪️tests/🧫️fixtures/🔣️.json"
+ ],
+ "probeErrors": []
+}

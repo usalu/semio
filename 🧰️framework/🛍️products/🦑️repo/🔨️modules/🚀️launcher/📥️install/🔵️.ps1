@@ -8,6 +8,7 @@
 # `powershell -NoProfile -ExecutionPolicy Bypass -File "🧰️framework\🛍️products\🦑️repo\🔨️modules\🚀️launcher\📥️install\🔵️.ps1" [-Destination <directory>]`
 # The default destination is %LOCALAPPDATA%\semio\launcher\bin; put it on PATH. Environment: SEMIO_GO_ROOT (user cache of the toolchain, default %LOCALAPPDATA%\semio\go), SEMIO_GO_MIRROR (https or loopback http directory that holds the pinned archive).
 # Der Launcher baut sich aus dem Checkout; das gepinnte Go holt sich das Skript bei Bedarf selbst (nur https, SHA-256 vor dem Entpacken).
+# A running `repo.exe` (the launcher stays the parent of every build on Windows) cannot be overwritten or deleted, only renamed: the old file moves aside as `repo.exe.old-<id>` and the next install removes such copies once nothing runs them. The new file takes the name with the launcher's own transient-rename retry (10…1280 ms, Defender or the indexer may hold a fresh executable); if it still cannot, the old launcher is moved back, so the destination never stays without `repo.exe`.
 # Saved as UTF-8 with BOM: Windows PowerShell 5.1 decodes a BOM-less script with the ANSI code page and would turn every emoji path literal into a different path.
 #
 #endregion 🧲️Header
@@ -91,16 +92,31 @@ function Save-PinnedGoArchive {
     }
 }
 
+<#
+.SYNOPSIS
+🔒️ Creates the named mutex that serialises the toolchain install: the machine-wide `Global\` name first, so every session of the user excludes each other, and the `Local\` name of the own session when the account may not create the machine-wide one.
+.LINK
+https://learn.microsoft.com/dotnet/api/system.threading.mutex
+#>
+function New-InstallMutex {
+    param([string]$Name)
+    try { return [Threading.Mutex]::new($false, "Global\$Name") } catch [UnauthorizedAccessException] { return [Threading.Mutex]::new($false, "Local\$Name") }
+}
+
 function Install-PinnedGo {
     param($Pin, [string]$Target)
     $version = $Pin.version
     $parent = Split-Path -Parent $Target
     New-Item -ItemType Directory -Path $parent -Force | Out-Null
-    $mutex = [Threading.Mutex]::new($false, "Global\semio-go-$version")
+    $mutex = New-InstallMutex "semio-go-$version"
     $held = $false
     $partial = Join-Path $parent (".partial-" + [Guid]::NewGuid().ToString("N").Substring(0, 12))
     try {
-        try { $held = $mutex.WaitOne([TimeSpan]::FromMinutes(15)) } catch [Threading.AbandonedMutexException] { $held = $true }
+        try { $held = $mutex.WaitOne(0) } catch [Threading.AbandonedMutexException] { $held = $true }
+        if (-not $held) {
+            Write-Say "Waiting for another process that installs the Go toolchain…" "Warte auf einen anderen Prozess, der die Go-Toolchain installiert…"
+            try { $held = $mutex.WaitOne([TimeSpan]::FromMinutes(15)) } catch [Threading.AbandonedMutexException] { $held = $true }
+        }
         if (-not $held) { Stop-Say "Another process has been installing the Go toolchain for 15 minutes." "Ein anderer Prozess installiert seit 15 Minuten die Go-Toolchain." }
         if (Test-PinnedGo -Path (Join-Path $Target "bin\go.exe") -Version $version) { return }
         New-Item -ItemType Directory -Path $partial -Force | Out-Null
@@ -171,8 +187,18 @@ try {
 
     New-Item -ItemType Directory -Path $Destination -Force | Out-Null
     $target = Join-Path $Destination "repo.exe"
+    Get-ChildItem -LiteralPath $Destination -Filter "repo.exe.old-*" -File | ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force -ErrorAction SilentlyContinue }
     Copy-Item -LiteralPath (Join-Path $work "repo.exe") -Destination "$target.partial" -Force
-    Move-Item -LiteralPath "$target.partial" -Destination $target -Force
+    $aside = $null
+    if (Test-Path -LiteralPath $target) { $aside = "$target.old-" + [Guid]::NewGuid().ToString("N").Substring(0, 12); Move-Item -LiteralPath $target -Destination $aside }
+    for ($attempt = 0; ; $attempt++) {
+        try { Move-Item -LiteralPath "$target.partial" -Destination $target; break }
+        catch {
+            if ($attempt -lt 8) { Start-Sleep -Milliseconds ([int](10 * [Math]::Pow(2, $attempt))); continue }
+            if ($aside) { Move-Item -LiteralPath $aside -Destination $target }
+            throw
+        }
+    }
     Write-Host "[semio] Installed the repo launcher: $target"
     Write-Host "[semio] Repo-Launcher installiert: $target"
     if (($env:Path -split ";") -notcontains $Destination) {

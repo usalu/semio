@@ -1,0 +1,11 @@
+{
+  "facts": [
+    { "name": "equal inode", "present": 77, "recorded": 77, "holds": true },
+    { "name": "moved inode", "present": 78, "recorded": 77, "holds": false },
+    { "name": "Windows scan (unknown inode) against an NTFS file id", "present": 281474976710913, "recorded": 0, "holds": true },
+    { "name": "equal POSIX mode", "present": 33188, "recorded": 33188, "holds": true },
+    { "name": "moved POSIX mode", "present": 33261, "recorded": 33188, "holds": false },
+    { "name": "Windows scan (unknown mode) against libuv's 0o100666", "present": 33206, "recorded": 0, "holds": true },
+    { "name": "an unknown present fact never contradicts", "present": 0, "recorded": 77, "holds": true }
+  ]
+}

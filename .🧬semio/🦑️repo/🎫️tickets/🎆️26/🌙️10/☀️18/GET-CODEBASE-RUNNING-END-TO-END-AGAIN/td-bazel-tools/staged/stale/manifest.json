@@ -1,0 +1,42 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️control/🟦️.ts": {
+  "file": "f00.ts",
+  "base": "706566971f825c5ea3d7e768aa3b1e1cf85355d6eac0e145731f18b18cfeb57b",
+  "new": "b5726e07d0361eb184804067d33cb83d26e36204018b5c58e119ee447f35ed21"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/🧪️tests/🟦️.ts": {
+  "file": "f01.ts",
+  "base": "90a7438dd966d87072a46bf7ff884619ccb4ef7b0d2d92174ae5b50a6bbe4ce0",
+  "new": "8fbbfd7c5bde1c9930a78262903fa6b1b3adc7cb418ce95e05a61fda89870404"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🔏️implementation/🔣️.json": {
+  "file": "f02.json",
+  "base": "0fe881cbdb7b49c3acb81383b57e4598a040b579d56ae17391b40d7a534f904f",
+  "new": "35ea13aaf7f1b5447e4343b36b6f38f977287ad09749f1f993df5da51a362556"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🔏️implementation/🟦️.ts": {
+  "file": "f03.ts",
+  "base": "e45cb877fef55a83fc11556aab3411a7b5ead4bfd1d78a456fdbfed0386e013f",
+  "new": "e0897e433e4a50e318f517f4eaf284afe7eb3e6f0991c43a45a62f7580b83585"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️paths/🟦️.ts": {
+  "file": "f04.ts",
+  "base": "c9c3ac2377e73ad3e8bcd0fcb8fb5a8d3e15e1bdb77ea741c3a54297696ad7fc",
+  "new": "30e8463b5b881aab383ad30e247a9895f864ae859b72725c535f3d2d2263a25c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/🟦️.ts": {
+  "file": "f05.ts",
+  "base": "a7881eed07d56cee3e7f474c3414c5ae1c49e965b69ec5d69da2fe367724c893",
+  "new": "2a878704d6e803b5b1e2f11fb140c1c90f8b9ff9867819da878948f3c282f90c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📸️snapshot/🧪️tests/🔒️planned/🔣️.json": {
+  "file": "f06.json",
+  "base": "76dad06848ff1b6c645e8e13f9d6e6d6db66cb7b880b5af198cc718c17cc90a2",
+  "new": "0d3cd5a78b3ceef2da8ec842f36fe455b506957a749c70b40bb89e095228ac51"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📸️snapshot/🧪️tests/🔒️planned/🟦️.ts": {
+  "file": "f07.ts",
+  "base": "048061cb0e488ddfcba89c36d772d997a93e486fe60bb49b3b420e71c49246f2",
+  "new": "cf99332ec98b4ed92788053c6bc6a96764d0cd2f5590e16727c20e8876ad6e55"
+ }
+}

@@ -1,0 +1,494 @@
+{
+  "version": 1,
+  "suites": [
+    {
+      "id": "build-command-line",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "⌨️command",
+        "📤️arguments",
+        "⚙️operations",
+        "🚪️door",
+        "🚀️bootstrap/⌨️cli",
+        "🚀️bootstrap/🧪️tests",
+        "🧭️invocation",
+        "🟢️readiness",
+        "⏱️profile",
+        "📖️texts"
+      ]
+    },
+    {
+      "id": "build-parsers",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🚀️bootstrap/📦️parsers"
+      ]
+    },
+    {
+      "id": "build-tool-setup",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🧰️tool-setup",
+        "🧰️tool-registry",
+        "🛠️cmake",
+        "🟦️typescript",
+        "🔌️backends"
+      ]
+    },
+    {
+      "id": "build-doctor-preflight",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🩺️doctor",
+        "🩺️preflight",
+        "🧾️ci-report",
+        "🪪️agent-sessions",
+        "📐️conformance",
+        "🪞️parity",
+        "🧾️store-receipt"
+      ]
+    },
+    {
+      "id": "build-targets-selection",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🎯️targets",
+        "🧭️selection",
+        "🎚️mode",
+        "🧩️units",
+        "🧷️format-stamps"
+      ]
+    },
+    {
+      "id": "build-resident",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🏡️resident"
+      ]
+    },
+    {
+      "id": "build-workers",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "👷️workers",
+        "🧵️workers"
+      ]
+    },
+    {
+      "id": "build-leases-command",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🔒️leases"
+      ]
+    },
+    {
+      "id": "build-host-capacity",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🌡️host-capacity"
+      ]
+    },
+    {
+      "id": "build-memory",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🧠️memory"
+      ]
+    },
+    {
+      "id": "build-caller-birth",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "📥️caller"
+      ]
+    },
+    {
+      "id": "build-observation",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "👁️observation"
+      ]
+    },
+    {
+      "id": "build-incremental",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "📏️incremental"
+      ]
+    },
+    {
+      "id": "build-incremental-bench",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "📏️incremental/🏎️bench"
+      ]
+    },
+    {
+      "id": "build-incremental-concurrent",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "📏️incremental/🤝️concurrent"
+      ]
+    },
+    {
+      "id": "build-remote-cache",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🌐️remote-cache"
+      ]
+    },
+    {
+      "id": "build-remote-execution",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🌐️remote-execution"
+      ]
+    },
+    {
+      "id": "build-execution",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🏃️execution"
+      ]
+    },
+    {
+      "id": "build-cache-gc",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🧹️cache-gc"
+      ]
+    },
+    {
+      "id": "build-reporting",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "📊️reporting"
+      ]
+    },
+    {
+      "id": "build-storybook",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "📖️storybook"
+      ]
+    },
+    {
+      "id": "build-inputs-storage",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "📥️inputs/💾️storage"
+      ]
+    },
+    {
+      "id": "build-inputs-selected",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "📥️inputs/🎯️selected",
+        "📥️inputs/🎯️precision",
+        "📥️inputs/📋️data",
+        "📥️inputs/📂️membership"
+      ]
+    },
+    {
+      "id": "build-inputs-revision",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "📥️inputs",
+        "📥️inputs/🔏️revision",
+        "📥️inputs/🦀️resolution",
+        "📥️inputs/🧊️stable-file",
+        "📥️inputs/🧮️digest",
+        "📥️inputs/🪶️lean-inventory",
+        "📥️inputs/🧪️tests"
+      ]
+    },
+    {
+      "id": "build-source-closure",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "📥️source"
+      ]
+    },
+    {
+      "id": "build-bazel-sessions",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🔧️tools/🏗️bazel/🧵️sessions"
+      ]
+    },
+    {
+      "id": "build-bazel-execution",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🔧️tools/🏗️bazel/🏃️execution",
+        "🔧️tools/🏗️bazel/🎬️executor",
+        "🔧️tools/🏗️bazel/🎬️scopes",
+        "🔧️tools/🏗️bazel/🎯️affected",
+        "🔧️tools/🏗️bazel/⚙️operations",
+        "🔧️tools/🏗️bazel/🧭️commands"
+      ]
+    },
+    {
+      "id": "build-bazel-evidence",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🔧️tools/🏗️bazel/👁️evidence",
+        "🔧️tools/🏗️bazel/🚦️test-classes",
+        "🔧️tools/🏗️bazel/🧾️test-results",
+        "🔧️tools/🏗️bazel/🪵️failure-tail"
+      ]
+    },
+    {
+      "id": "build-bazel-snapshots",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🔧️tools/🏗️bazel/📐️path-plan",
+        "🔧️tools/🏗️bazel/📸️snapshot",
+        "🔧️tools/🏗️bazel/🔁️probe"
+      ]
+    },
+    {
+      "id": "build-bazel-host",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🔧️tools/🏗️bazel/🌡️host-capacity",
+        "🔧️tools/🏗️bazel/💾️storage",
+        "🔧️tools/🏗️bazel/👷️workers",
+        "🔧️tools/🏗️bazel/🧰️toolchains",
+        "🔧️tools/🏗️bazel/🐹️go",
+        "🔧️tools/🏗️bazel/🦀️cargo"
+      ]
+    },
+    {
+      "id": "build-bazel-contracts",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🔧️tools/🏗️bazel",
+        "🔧️tools/🏗️bazel/🧪️tests"
+      ]
+    },
+    {
+      "id": "build-nx-tool",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🔧️tools",
+        "🔧️tools/🧶️nx",
+        "🔧️tools/🐙️semio",
+        "🔧️tools/💾️storage"
+      ]
+    },
+    {
+      "id": "build-fleet-status",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🚢️fleet-status"
+      ]
+    },
+    {
+      "id": "build-generation-claims",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🕸️graph/🕰️generations/🧩️claims"
+      ]
+    },
+    {
+      "id": "build-generation-pin",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🕸️graph/🕰️generations/🧷️pin"
+      ]
+    },
+    {
+      "id": "build-generation-coverage",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🕸️graph/🕰️generations/🔭️coverage"
+      ]
+    },
+    {
+      "id": "build-generation-facts",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🕸️graph/🕰️generations/🧮️fact-codec",
+        "🕸️graph/🕰️generations/🧪️tests/🧮️fact-index"
+      ]
+    },
+    {
+      "id": "build-graph-test-owners",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🕸️graph/🎯️test-owners"
+      ]
+    },
+    {
+      "id": "build-generation-load",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🕸️graph/🕰️generations/🔌️load",
+        "🕸️graph/🕰️generations/🌊️json-stream",
+        "🕸️graph/🕰️generations/🌍️environment"
+      ]
+    },
+    {
+      "id": "build-generations",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🕸️graph/🕰️generations"
+      ]
+    },
+    {
+      "id": "build-graph-protocol",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🕸️graph",
+        "🕸️graph/🧪️tests",
+        "🕸️graph/🗂️generation-files",
+        "🕸️graph/🚪️admission",
+        "🕸️graph/⏱️phases",
+        "🕸️graph/🔁retry"
+      ]
+    },
+    {
+      "id": "build-graph-owners",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🕸️graph/🧭️file-owner",
+        "🕸️graph/🧾️collect-errors",
+        "🕸️graph/🧾️registry-consistency"
+      ]
+    },
+    {
+      "id": "build-graph-rust",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🕸️graph/🦀️rust"
+      ]
+    },
+    {
+      "id": "build-inference",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🕸️graph/📥️inference",
+        "🕸️graph/📥️inference/🧪️tests"
+      ]
+    },
+    {
+      "id": "build-inference-projects",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🕸️graph/📥️inference/📦️project-nodes",
+        "🕸️graph/📥️inference/🔎️owner-discovery",
+        "🕸️graph/📥️inference/🔖️stamps"
+      ]
+    },
+    {
+      "id": "build-inference-policy",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🕸️graph/📥️inference/🎯️target-policy",
+        "🕸️graph/📥️inference/🏭️generator-outputs",
+        "🕸️graph/📥️inference/🕸️dependency-edges",
+        "🕸️graph/📥️inference/🦀️native-manifests"
+      ]
+    },
+    {
+      "id": "build-inference-script-inputs",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🕸️graph/📥️inference/🧭️script-inputs",
+        "🕸️graph/📥️inference/🪢️revision-graph"
+      ]
+    },
+    {
+      "id": "build-workspace-graph-laws",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🧪️tests/🕸️graph"
+      ]
+    },
+    {
+      "id": "build-workspace-phase-laws",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🧪️tests/🎟️phase",
+        "🧪️tests/🎯️source-roster",
+        "🧪️tests/🏗️native"
+      ]
+    },
+    {
+      "id": "build-workspace-laws",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "🧪️tests"
+      ]
+    },
+    {
+      "id": "build-sealed",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🏛️sealed"
+      ]
+    },
+    {
+      "id": "build-route-table",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🗂️suites"
+      ]
+    }
+  ],
+  "codeSuites": [],
+  "helpers": []
+}

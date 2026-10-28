@@ -1,7 +1,9 @@
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import Ajv2020 from "ajv/dist/2020";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 test("Node readline independently decodes the native control leader vectors", async () => {
   const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/⌨️controls/🔣️.json",import.meta.url),"utf8"));
@@ -34,26 +36,33 @@ test("Ajv independently validates the shared dashboard protocol vectors", () => 
 });
 
 
+/** 🧮️ Runs Nx's own `createTaskGraph` in a child whose workspace is a private empty directory, so the oracle never loads the repository's bounded Nx namespace. */
+async function nxTaskGraphOracle(nodes:Record<string,unknown>,calls:readonly{projects:readonly string[];targets:readonly string[];overrides:Record<string,string>}[]):Promise<{tasks:string[];overrides:unknown}[]>{
+  const root=mkdtempSync(join(tmpdir(),"nx-oracle-"));
+  try{
+    writeFileSync(join(root,"nx.json"),"{}");
+    const source="const fs=require('node:fs'),input=JSON.parse(fs.readFileSync(0,'utf8')),{createTaskGraph}=require(process.argv[1]),graph={nodes:input.nodes,dependencies:Object.fromEntries(Object.keys(input.nodes).map(name=>[name,[]]))};process.stdout.write(JSON.stringify(input.calls.map(call=>{const tasks=createTaskGraph(graph,{},call.projects,call.targets,undefined,call.overrides).tasks,ids=Object.keys(tasks);return{tasks:ids,overrides:ids.length?tasks[ids[0]].overrides:null};})));";
+    const environment=Object.fromEntries(Object.entries(process.env).filter(([name])=>!name.startsWith("NX_")&&!name.startsWith("SEMIO_NX_")));
+    const child=Bun.spawn([process.execPath,"-e",source,Bun.resolveSync("nx/src/tasks-runner/create-task-graph.js",import.meta.dir)],{cwd:root,env:{...environment,NX_WORKSPACE_ROOT_PATH:root,NX_DAEMON:"false"},stdin:new Blob([JSON.stringify({nodes,calls})]),stdout:"pipe",stderr:"pipe"});
+    const output=await new Response(child.stdout).text();expect(await child.exited,await new Response(child.stderr).text()).toBe(0);
+    return JSON.parse(output);
+  }finally{rmSync(root,{recursive:true,force:true});}
+}
+
 test("Nx independently schedules every inferred command discovery vector", async () => {
-  const {createTaskGraph} = await import("nx/src/tasks-runner/create-task-graph.js");
   const {graph,expected} = JSON.parse(readFileSync(new URL("../🧫️fixtures/🌳️inferred-targets/🔣️.json",import.meta.url),"utf8"));
-  type ProjectData=Parameters<typeof createTaskGraph>[0]["nodes"][string]["data"];
-  const reference={nodes:Object.fromEntries(Object.entries<ProjectData>(graph.projects).map(([name,data])=>[name,{name,type:"lib" as const,data}])),dependencies:Object.fromEntries(Object.keys(graph.projects).map(name=>[name,[]]))};
-  const tasks = expected.flatMap((id:string) => { const split=id.lastIndexOf(":"); return Object.keys(createTaskGraph(reference,{},[id.slice(0,split)],[id.slice(split+1)],undefined,{}).tasks); }).sort();
-  expect(tasks).toEqual(expected);
+  const nodes=Object.fromEntries(Object.entries<unknown>(graph.projects).map(([name,data])=>[name,{name,type:"lib",data}]));
+  const results=await nxTaskGraphOracle(nodes,expected.map((id:string)=>{const split=id.lastIndexOf(":");return{projects:[id.slice(0,split)],targets:[id.slice(split+1)],overrides:{}};}));
+  expect(results.flatMap(result=>result.tasks).sort()).toEqual(expected);
 });
 
 test("Nx independently schedules every configured renderer language selection", async () => {
   const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🗣️launch-axes/🔣️.json",import.meta.url),"utf8"));
-  const {createTaskGraph}=await import("nx/src/tasks-runner/create-task-graph.js");
+  const project="@semio-tech/framework-os-dev";
   const targets=Object.fromEntries(fixture.renderers.map((row:{target:string})=>[row.target,{executor:"nx:run-commands",options:{command:"bun fixture"}}]));
-  const graph={nodes:{"@semio-tech/framework-os-dev":{name:"@semio-tech/framework-os-dev",type:"lib" as const,data:{root:"dev",targets}}},dependencies:{"@semio-tech/framework-os-dev":[]}};
-  for(const row of fixture.renderers)for(const locale of fixture.locales)for(const terminology of fixture.terminologies){
-    const expected={SEMIO_LOCKED_LOCALE:locale,SEMIO_LOCKED_TERMINOLOGY:terminology};
-    const tasks=createTaskGraph(graph,{},["@semio-tech/framework-os-dev"],[row.target],undefined,expected).tasks;
-    expect(Object.keys(tasks)).toEqual([`@semio-tech/framework-os-dev:${row.target}`]);
-    expect(tasks[Object.keys(tasks)[0]!].overrides).toEqual(expected);
-  }
+  const rows=fixture.renderers.flatMap((row:{target:string})=>fixture.locales.flatMap((locale:string)=>fixture.terminologies.map((terminology:string)=>({target:row.target,expected:{SEMIO_LOCKED_LOCALE:locale,SEMIO_LOCKED_TERMINOLOGY:terminology}}))));
+  const results=await nxTaskGraphOracle({[project]:{name:project,type:"lib",data:{root:"dev",targets}}},rows.map((row:{target:string;expected:Record<string,string>})=>({projects:[project],targets:[row.target],overrides:row.expected})));
+  rows.forEach((row:{target:string;expected:Record<string,string>},index:number)=>{expect(results[index]!.tasks).toEqual([`${project}:${row.target}`]);expect(results[index]!.overrides).toEqual(row.expected);});
 });
 
 test("Ajv independently validates every dashboard declaration of the registry workspace vector and the workspace root", () => {

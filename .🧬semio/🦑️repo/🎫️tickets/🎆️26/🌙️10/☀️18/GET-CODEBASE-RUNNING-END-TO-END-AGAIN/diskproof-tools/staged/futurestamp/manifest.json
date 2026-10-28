@@ -1,0 +1,27 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧬️schema/🔣️.json": {
+  "file": "f000",
+  "base": "884f566ca1ce216edca391e22ff398c0802d3bff49469a4ad63da865b54565b9",
+  "new": "580b278e03b4066f6cd72d14936116a83abc89ba089dc7e92eaf192b85a0b969"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🟦️.ts": {
+  "file": "f001",
+  "base": "2c076af073d5685cb3332dae92e31703dd387125cb0fcfa9a6d8cce999151094",
+  "new": "c6f95fbafc6a76d3b7f9d46bf5e60c0542cd34b48b9748e28fc6addcef7bae0c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🏃️runner/🟦️.ts": {
+  "file": "f002",
+  "base": "5952e39020b26ffce2bb48bb16df91d2fd8d725bfbe975448b21946369792a41",
+  "new": "8335935d64c845e7d39c1cd8286edcc74810fecd93b2bddcae114b6a963e220d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/👯️dedupe/🟦️.ts": {
+  "file": "f003",
+  "base": "fbd1a8e5e35d2c2e697c316067491aaa2e61561b5b63d7a5878a2747b72e757b",
+  "new": "ad832ad72dc1a07a977ae314f9d96ed0eab03262c0b308df8b29da7eba05b164"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🧪️tests/⏳️future/🟦️.ts": {
+  "file": "f004",
+  "base": null,
+  "new": "cd8fc89ec2b4cbe9cb224bf516bdea47513e9e438c8102ee4edfd8313118317d"
+ }
+}

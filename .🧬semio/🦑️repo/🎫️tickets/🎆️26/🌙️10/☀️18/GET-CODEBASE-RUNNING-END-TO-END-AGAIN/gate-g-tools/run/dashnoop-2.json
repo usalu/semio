@@ -1,0 +1,12 @@
+{
+ "label": "dashnoop-2",
+ "target": "@semio-tech/repo-dashboard-rs:build",
+ "started": "00:52:54",
+ "wall_s": 6.9,
+ "peak_tree_mb": 1130,
+ "peak_processes": 4,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

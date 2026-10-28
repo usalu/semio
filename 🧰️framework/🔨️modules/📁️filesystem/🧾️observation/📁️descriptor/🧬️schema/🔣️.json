@@ -1453,12 +1453,12 @@
           "x64": {
             "nofollow": 131072,
             "directory": 65536,
-            "library": "/lib/x86_64-linux-gnu/libc.so.6"
+            "library": "libc.so.6"
           },
           "arm64": {
             "nofollow": 32768,
             "directory": 16384,
-            "library": "/lib/aarch64-linux-gnu/libc.so.6"
+            "library": "libc.so.6"
           }
         },
         "specialFile": "refuse",

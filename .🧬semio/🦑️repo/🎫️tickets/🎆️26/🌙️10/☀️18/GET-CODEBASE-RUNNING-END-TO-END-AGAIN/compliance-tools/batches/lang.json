@@ -1,0 +1,1154 @@
+{
+ "title": "🗣️ Staged batch `cp-lang` (lane compliance): the English-only prose literals that grew since HEAD (process, caching, bootstrap, cargo, Bazel, witness, graph memo, command closure, sealed layer) become catalog messages in English and German; the language-law allowlist follows the files.",
+ "files": [
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/📖️texts/🔣️.json",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🔁️incremental/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🧠️memo/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📖️texts/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/🎚️store-bound/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/⏱️timing/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/👁️witness/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🧪️tests/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📸️snapshot/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📸️snapshot/🧪️tests/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.mjs",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧮️derive/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🐧️linux/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🧪️tests/🔗️process-chain/🔣️.json",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🧪️tests/✍️writer/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/🪢️link-less/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🧪️tests/🔁️incremental/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🏃️run/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧭️ancestry/🪟️native/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🏊️pool/🟨️.mjs",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+  "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🟨️.mjs",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚢️fleet-status/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🪪️native-birth/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏃️contract-capture/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔌️backend/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🪆️captured/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/🧪️tests/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🧪️tests/🏷️loader-identity/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🧪️tests/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🧪️tests/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧬️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/📤️promotion/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/📥️execution/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🔁️promoter/🟦️.ts"
+ ],
+ "manual": [
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts",
+   "add_import": "import {refuseProcessV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🔨️modules/🏃️process/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts",
+   "old": "throw Error(\"empty process table\")",
+   "new": "throw refuseProcessV1(\"invalid\",\"capacity.empty-process-table\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts",
+   "old": "const legacy=pages(\"Pages free\")",
+   "new": "const settled=pages(\"Pages free\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts",
+   "old": "pages(\"File-backed pages\")+pages(\"Pages purgeable\"):legacy,compressed",
+   "new": "pages(\"File-backed pages\")+pages(\"Pages purgeable\"):settled,compressed",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts",
+   "old": "Math.min(legacy,reclaimable)",
+   "new": "Math.min(settled,reclaimable)",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🔁️incremental/🟦️.ts",
+   "add_import": "import {refuseProcessV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🔨️modules/🏃️process/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🔁️incremental/🟦️.ts",
+   "old": "throw new Error(\"Retained TypeScript programs must be an integer from 1 to \"+retentionPolicy.maximumRetainedPrograms)",
+   "new": "throw refuseProcessV1(\"invalid\",\"typescript.retained-programs-range\",{maximum:retentionPolicy.maximumRetainedPrograms})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🔁️incremental/🟦️.ts",
+   "old": "new Error(\"TypeScript check cancelled\")",
+   "new": "refuseProcessV1(\"cancelled\",\"typescript.check-cancelled\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🔁️incremental/🟦️.ts",
+   "old": "throw new Error(`TypeScript check switches not admitted by the engine: ${args.join(\" \")}`)",
+   "new": "throw refuseProcessV1(\"unsupported\",\"typescript.check-switches-not-admitted\",{switches:args.join(\" \")})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts",
+   "add_import": "import {refuseProcessV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🔨️modules/🏃️process/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts",
+   "old": "throw Error(\"Offered Cargo compiler writer custody was never entered\")",
+   "new": "throw refuseProcessV1(\"invalid\",\"nativeBuild.writer-custody-not-entered\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🧠️memo/🟦️.ts",
+   "add_import": "import {refuseProcessV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🔨️modules/🏃️process/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🧠️memo/🟦️.ts",
+   "old": "throw Error(\"Resolved Cargo metadata with a workspace root and packages required\")",
+   "new": "throw refuseProcessV1(\"invalid\",\"nativeBuild.metadata-incomplete\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+   "add_import": "import {refuseProcessV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🔨️modules/🏃️process/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+   "old": "throw Error(\"Explicit absolute publication lease directory required\")",
+   "new": "throw refuseProcessV1(\"invalid\",\"publication.lease-directory-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📖️texts/🔣️.json",
+   "json_add": {
+    "messages": {
+     "capacity.empty-process-table": {
+      "en": "The process table is empty",
+      "de": "Die Prozesstabelle ist leer"
+     },
+     "nativeBuild.metadata-incomplete": {
+      "en": "Resolved Cargo metadata with a workspace root and packages required",
+      "de": "Aufgelöste Cargo-Metadaten mit Workspace-Wurzel und Paketen sind erforderlich"
+     },
+     "nativeBuild.writer-custody-not-entered": {
+      "en": "Offered Cargo compiler writer custody was never entered",
+      "de": "Die angebotene Schreiber-Obhut des Cargo-Compilers wurde nie betreten"
+     },
+     "publication.lease-directory-required": {
+      "en": "Explicit absolute publication lease directory required",
+      "de": "Ein ausdrücklich angegebenes absolutes Lease-Verzeichnis für die Veröffentlichung ist erforderlich"
+     },
+     "typescript.check-cancelled": {
+      "en": "TypeScript check cancelled",
+      "de": "TypeScript-Prüfung abgebrochen"
+     },
+     "typescript.check-switches-not-admitted": {
+      "en": "TypeScript check switches not admitted by the engine: {switches}",
+      "de": "Die Engine lässt diese TypeScript-Prüfschalter nicht zu: {switches}"
+     },
+     "typescript.retained-programs-range": {
+      "en": "Retained TypeScript programs must be an integer from 1 to {maximum}",
+      "de": "Die Zahl der behaltenen TypeScript-Programme muss eine ganze Zahl von 1 bis {maximum} sein"
+     }
+    }
+   }
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts",
+   "add_import": "import {refuseCachingV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts",
+   "old": "throw Error(\"Cargo step admission requires a compiler configuration view\")",
+   "new": "throw refuseCachingV1(\"invalid\",\"compiler.configuration-view-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts",
+   "old": "throw Error(\"A Cargo step selecting another configuration requires its own input scope\")",
+   "new": "throw refuseCachingV1(\"invalid\",\"compiler.other-configuration-needs-scope\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts",
+   "old": "Promise.reject(Error(\"Live issued Cargo configuration view required\"))",
+   "new": "Promise.reject(refuseCachingV1(\"invalid\",\"compiler.live-configuration-view-required\"))",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts",
+   "add_import": "import {refuseCachingV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts",
+   "old": "throw Error(\"Lane provenance file changed while it was retained: \"+basename(destination))",
+   "new": "throw refuseCachingV1(\"stale\",\"lane.provenance-changed\",{file:basename(destination)})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts",
+   "old": "throw Error(\"Lane provenance file changed while it was retained: \"+basename(source))",
+   "new": "throw refuseCachingV1(\"stale\",\"lane.provenance-changed\",{file:basename(source)})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+   "add_import": "import {refuseBootstrapV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+   "old": "throw Error(\"Dashboard executable sources record required\")",
+   "new": "throw refuseBootstrapV1(\"invalid\",\"dashboard.sources-record-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/🎚️store-bound/🟦️.ts",
+   "add_import": "import {refuseBootstrapV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/🎚️store-bound/🟦️.ts",
+   "old": "throw Error(\"Closed current immutable tooling cohort required\")",
+   "new": "throw refuseBootstrapV1(\"invalid\",\"tools.cohort-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/⏱️timing/🟦️.ts",
+   "add_import": "import {refuseProcessV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🔨️modules/🏃️process/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/⏱️timing/🟦️.ts",
+   "old": "throw Error(\"Actual process id required\")",
+   "new": "throw refuseProcessV1(\"invalid\",\"cargoTiming.process-id-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/👁️witness/🟦️.ts",
+   "add_import": "import {refuseBuildV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/👁️witness/🟦️.ts",
+   "old": "throw Error(\"Bounded Cargo preparation record required\")",
+   "new": "throw refuseBuildV1(\"invalid\",\"cargo.preparation-record-bounded\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🧪️tests/🟦️.ts",
+   "old": "foreignOwners = [join(owner, \"..\", \"⚡️caching\", \"🚀️bootstrap\", \"🔌️nx-plugin\", \"🧮️engine-digest\")]",
+   "new": "foreignOwners = [join(owner, \"..\", \"⚡️caching\", \"🚀️bootstrap\", \"🔌️nx-plugin\", \"🧮️engine-digest\"), join(owner, \"..\", \"🗂️workspaces\", \"🦀️cargo\", \"🛠️preparation\", \"👁️witness\")]",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/🔣️.json",
+   "json_add": {
+    "messages": {
+     "compiler.configuration-view-required": {
+      "en": "Cargo step admission requires a compiler configuration view",
+      "de": "Die Zulassung eines Cargo-Schritts erfordert eine Compiler-Konfigurationsansicht"
+     },
+     "compiler.live-configuration-view-required": {
+      "en": "Live issued Cargo configuration view required",
+      "de": "Eine aktuell ausgestellte Cargo-Konfigurationsansicht ist erforderlich"
+     },
+     "compiler.other-configuration-needs-scope": {
+      "en": "A Cargo step selecting another configuration requires its own input scope",
+      "de": "Ein Cargo-Schritt, der eine andere Konfiguration wählt, braucht seinen eigenen Eingabebereich"
+     },
+     "lane.provenance-changed": {
+      "en": "Lane provenance file changed while it was retained: {file}",
+      "de": "Die Herkunftsdatei der Lane hat sich während der Aufbewahrung geändert: {file}"
+     }
+    }
+   }
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📖️texts/🔣️.json",
+   "json_add": {
+    "messages": {
+     "dashboard.sources-record-required": {
+      "en": "Dashboard executable sources record required",
+      "de": "Der Quellenbeleg der Dashboard-Programmdatei ist erforderlich"
+     },
+     "tools.cohort-required": {
+      "en": "Closed current immutable tooling cohort required",
+      "de": "Eine geschlossene, aktuelle, unveränderliche Werkzeuggruppe ist erforderlich"
+     }
+    }
+   }
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📖️texts/🔣️.json",
+   "json_add": {
+    "messages": {
+     "cargoTiming.process-id-required": {
+      "en": "Actual process id required",
+      "de": "Eine tatsächliche Prozess-ID ist erforderlich"
+     }
+    }
+   }
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🔣️.json",
+   "json_add": {
+    "messages": {
+     "cargo.preparation-record-bounded": {
+      "en": "Bounded Cargo preparation record required",
+      "de": "Ein begrenzter Cargo-Vorbereitungsbeleg ist erforderlich"
+     }
+    }
+   }
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "add_import": "import {refuseBuildV1,sayBuildV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "old": "throw Error(\"git ls-files failed\")",
+   "new": "throw refuseBuildV1(\"failed\",\"bazel.git-ls-files-failed\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "old": "reject(Error(\"git answer exceeds 1 MiB\"))",
+   "new": "reject(refuseBuildV1(\"refused\",\"bazel.git-answer-too-large\",{limit:\"1 MiB\"}))",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "old": "reject(Error(\"git answer exceeds 16 MiB\"))",
+   "new": "reject(refuseBuildV1(\"refused\",\"bazel.git-answer-too-large\",{limit:\"16 MiB\"}))",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "old": "reject(Error(\"Bazel source inventory exceeds 64 MiB\"))",
+   "new": "reject(refuseBuildV1(\"refused\",\"bazel.source-inventory-too-large\",{limit:\"64 MiB\"}))",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "old": "new Error(`Bazel source entry unreadable (${kind}): ${path}`)",
+   "new": "refuseBuildV1(\"failed\",\"bazel.source-entry-unreadable\",{kind,path})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "old": "throw new Error(\"Closed Bazel fingerprint plan required: \"+label)",
+   "new": "throw refuseBuildV1(\"invalid\",\"bazel.fingerprint-plan-invalid\",{label})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "old": "console.warn(\"[bazel] plan reuse unavailable, planning completely: \"+String((error as Error)?.message??error).slice(0,300))",
+   "new": "sayBuildV1(\"bazel.plan-reuse-unavailable\",{reason:String((error as Error)?.message??error).slice(0,300)},\"warn\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "old": "console.warn(\"[bazel] the planner failed under the world witness, planning again without it: \"+String((error as Error)?.message??error).slice(0,300))",
+   "new": "sayBuildV1(\"bazel.planner-failed-under-witness\",{reason:String((error as Error)?.message??error).slice(0,300)},\"warn\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "old": "console.warn(\"[bazel] plan record failed: \"+String((error as Error)?.message??error).slice(0,300))",
+   "new": "sayBuildV1(\"bazel.plan-record-failed\",{reason:String((error as Error)?.message??error).slice(0,300)},\"warn\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "old": "console.warn(`[bazel] idle servers not reaped: ${(error as Error).message}`)",
+   "new": "sayBuildV1(\"bazel.idle-servers-not-reaped\",{reason:(error as Error).message},\"warn\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📸️snapshot/🟦️.ts",
+   "add_import": "import {refuseBuildV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📸️snapshot/🟦️.ts",
+   "old": "throw Error(`Bazel source alias collision: ${name}: ${known} and ${folder}`)",
+   "new": "throw refuseBuildV1(\"invalid\",\"bazel.source-alias-collision\",{name,known,folder})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📸️snapshot/🟦️.ts",
+   "old": "throw Error(\"Bounded Bazel source snapshot plan required\")",
+   "new": "throw refuseBuildV1(\"invalid\",\"bazel.snapshot-plan-bounded\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📸️snapshot/🟦️.ts",
+   "old": "throw Error(\"Closed Bazel source snapshot plan required\")",
+   "new": "throw refuseBuildV1(\"invalid\",\"bazel.snapshot-plan-closed\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📸️snapshot/🧪️tests/🟦️.ts",
+   "old": ".rejects.toThrow(\"alias collision\")",
+   "new": ".rejects.toThrow(\"source-alias-collision\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🟦️.ts",
+   "add_import": "import {refuseBuildV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🟦️.ts",
+   "old": "throw Error(\"Non-negative Bazel server budget required\")",
+   "new": "throw refuseBuildV1(\"invalid\",\"bazel.server-budget-invalid\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.mjs",
+   "add_import": "import {refuseBuildV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.mjs",
+   "old": "throw Error(\"Declared language and message required\")",
+   "new": "throw refuseBuildV1(\"invalid\",\"witness.language-and-message-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.mjs",
+   "old": "throw Error(\"Bounded world witness required\")",
+   "new": "throw refuseBuildV1(\"invalid\",\"witness.bounded-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.mjs",
+   "old": "throw Error(\"Closed world witness required\")",
+   "new": "throw refuseBuildV1(\"invalid\",\"witness.closed-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.mjs",
+   "old": "throw Error(\"Closed world observation required\")",
+   "new": "throw refuseBuildV1(\"invalid\",\"witness.observation-closed-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+   "old": "throw new Error(`Duplicate script provider group ${name}`)",
+   "new": "throw refuseBuildV1(\"invalid\",\"assembly.duplicate-script-provider-group\",{name})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+   "old": "/**\n * @param {Record<string, any>} json\n * @param {string} root\n * @param {string} projectDir\n */\nexport async function projectWithDefaults",
+   "new": "/**\n * The project configuration completed with its declared defaults, inferred inputs and targets.\n * @param {Record<string, any>} json\n * @param {string} root\n * @param {string} projectDir\n */\nexport async function projectWithDefaults",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧮️derive/🟦️.ts",
+   "add_import": "import {refuseBuildV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧮️derive/🟦️.ts",
+   "old": "throw Error(`Expected ${GRAPH_MEMO_POLICY_V1.derive} / Erwartet ${GRAPH_MEMO_POLICY_V1.derive}`)",
+   "new": "throw refuseBuildV1(\"usage\",\"memo.derive-variable-required\",{variable:GRAPH_MEMO_POLICY_V1.derive})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧮️derive/🟦️.ts",
+   "old": "throw Error(`Closed derivation request required: ${file} / Geschlossene Ableitungsanfrage erforderlich: ${file}`)",
+   "new": "throw refuseBuildV1(\"invalid\",\"memo.derive-request-invalid\",{file})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🐧️linux/🟦️.ts",
+   "add_import": "import {refuseBuildV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🐧️linux/🟦️.ts",
+   "old": "throw new Error(`Landlock can only allow: the plan refuses ${rule.path}`)",
+   "new": "throw refuseBuildV1(\"unsupported\",\"landlock.allow-only\",{path:rule.path})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🟦️.ts",
+   "add_import": "import {refuseBuildV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🟦️.ts",
+   "old": "throw Error(\"Adopted captured command snapshot required\")",
+   "new": "throw refuseBuildV1(\"invalid\",\"closure.adopted-snapshot-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🟦️.ts",
+   "old": "throw Error(\"Bounded adopted command publication required\")",
+   "new": "throw refuseBuildV1(\"invalid\",\"closure.adopted-publication-bounded\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🧪️tests/🔗️process-chain/🔣️.json",
+   "old": "\"noAdoption\": \"Adopted captured command snapshot required\"",
+   "new": "\"noAdoption\": \"build.closure.adopted-snapshot-required\"",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🧪️tests/🔗️process-chain/🔣️.json",
+   "old": "\"digestMismatch\": \"Bounded adopted command publication required\"",
+   "new": "\"digestMismatch\": \"build.closure.adopted-publication-bounded\"",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🔣️.json",
+   "json_add": {
+    "messages": {
+     "assembly.duplicate-script-provider-group": {
+      "en": "Duplicate script provider group {name}",
+      "de": "Doppelte Anbietergruppe für Skripte {name}"
+     },
+     "bazel.fingerprint-plan-invalid": {
+      "en": "Closed Bazel fingerprint plan required: {label}",
+      "de": "Ein geschlossener Bazel-Fingerabdruckplan ist erforderlich: {label}"
+     },
+     "bazel.git-answer-too-large": {
+      "en": "git answer exceeds {limit}",
+      "de": "Die Antwort von git überschreitet {limit}"
+     },
+     "bazel.git-ls-files-failed": {
+      "en": "git ls-files failed",
+      "de": "git ls-files ist fehlgeschlagen"
+     },
+     "bazel.plan-record-failed": {
+      "en": "[bazel] plan record failed: {reason}",
+      "de": "[bazel] Der Planbeleg konnte nicht geschrieben werden: {reason}"
+     },
+     "bazel.plan-reuse-unavailable": {
+      "en": "[bazel] plan reuse unavailable, planning completely: {reason}",
+      "de": "[bazel] Planwiederverwendung nicht verfügbar, es wird vollständig geplant: {reason}"
+     },
+     "bazel.server-budget-invalid": {
+      "en": "Non-negative Bazel server budget required",
+      "de": "Ein nicht negatives Bazel-Serverbudget ist erforderlich"
+     },
+     "bazel.snapshot-plan-bounded": {
+      "en": "Bounded Bazel source snapshot plan required",
+      "de": "Ein begrenzter Bazel-Quellabbildplan ist erforderlich"
+     },
+     "bazel.snapshot-plan-closed": {
+      "en": "Closed Bazel source snapshot plan required",
+      "de": "Ein geschlossener Bazel-Quellabbildplan ist erforderlich"
+     },
+     "bazel.source-alias-collision": {
+      "en": "Bazel source alias collision: {name}: {known} and {folder}",
+      "de": "Kollision von Bazel-Quellaliasen: {name}: {known} und {folder}"
+     },
+     "bazel.source-entry-unreadable": {
+      "en": "Bazel source entry unreadable ({kind}): {path}",
+      "de": "Bazel-Quelleintrag nicht lesbar ({kind}): {path}"
+     },
+     "bazel.source-inventory-too-large": {
+      "en": "Bazel source inventory exceeds {limit}",
+      "de": "Das Bazel-Quellenverzeichnis überschreitet {limit}"
+     },
+     "closure.adopted-publication-bounded": {
+      "en": "Bounded adopted command publication required",
+      "de": "Eine begrenzte Veröffentlichung des übernommenen Befehls ist erforderlich"
+     },
+     "closure.adopted-snapshot-required": {
+      "en": "Adopted captured command snapshot required",
+      "de": "Ein übernommenes erfasstes Befehlsabbild ist erforderlich"
+     },
+     "landlock.allow-only": {
+      "en": "Landlock can only allow: the plan refuses {path}",
+      "de": "Landlock kann nur erlauben: der Plan verweigert {path}"
+     },
+     "memo.derive-request-invalid": {
+      "en": "Closed derivation request required: {file}",
+      "de": "Eine geschlossene Ableitungsanfrage ist erforderlich: {file}"
+     },
+     "memo.derive-variable-required": {
+      "en": "Expected {variable}",
+      "de": "Erwartet: {variable}"
+     },
+     "witness.bounded-required": {
+      "en": "Bounded world witness required",
+      "de": "Ein begrenzter Weltnachweis ist erforderlich"
+     },
+     "witness.closed-required": {
+      "en": "Closed world witness required",
+      "de": "Ein geschlossener Weltnachweis ist erforderlich"
+     },
+     "witness.language-and-message-required": {
+      "en": "Declared language and message required",
+      "de": "Eine deklarierte Sprache und Nachricht sind erforderlich"
+     },
+     "witness.observation-closed-required": {
+      "en": "Closed world observation required",
+      "de": "Eine geschlossene Weltbeobachtung ist erforderlich"
+     }
+    }
+   }
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🧪️tests/✍️writer/🟦️.ts",
+   "old": "String(item).includes(\"Offered Cargo compiler writer custody was never entered\")",
+   "new": "String(item).includes(\"nativeBuild.writer-custody-not-entered\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/🪢️link-less/🟦️.ts",
+   "old": ".toThrow(\"changed while it was retained\")",
+   "new": ".toThrow(\"lane.provenance-changed\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🧪️tests/🔁️incremental/🟦️.ts",
+   "old": ".rejects.toThrow(\"not admitted\")",
+   "new": ".rejects.toThrow(\"check-switches-not-admitted\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🏃️run/🟦️.ts",
+   "old": "throw new Error(`Unknown test suite: ${run.suite}`)",
+   "new": "throw refuseProcessV1(\"invalid\",\"script.suite-unknown\",{suite:run.suite,known:table.suites.map(row=>row.id).join(\", \")})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+   "old": "throw Error(`A dependency input of a group holding project references cannot be projected for Nx: ${key}:${name}`)",
+   "new": "throw refuseBuildV1(\"invalid\",\"nx.dependency-input-not-projectable\",{key,name})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🔣️.json",
+   "json_add": {
+    "messages": {
+     "nx.dependency-input-not-projectable": {
+      "en": "A dependency input of a group holding project references cannot be projected for Nx: {key}:{name}",
+      "de": "Eine Abhängigkeitseingabe einer Gruppe mit Projektverweisen kann nicht für Nx projiziert werden: {key}:{name}"
+     }
+    }
+   }
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🟦️.ts",
+   "add_import": "import {refuseProcessV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🔨️modules/🏃️process/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🟦️.ts",
+   "old": "throw Error(\"Closed test budget contention policy required\")",
+   "new": "throw refuseProcessV1(\"invalid\",\"testing.contention-policy-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🟦️.ts",
+   "old": "throw Error(\"Invalid test command budget\")",
+   "new": "throw refuseProcessV1(\"invalid\",\"testing.command-budget-invalid\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🟦️.ts",
+   "old": "throw Error(\"Stretch of at least one required\")",
+   "new": "throw refuseProcessV1(\"invalid\",\"testing.stretch-invalid\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts",
+   "add_import": "import {refuseProcessV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🔨️modules/🏃️process/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts",
+   "old": "throw Error(\"Finite closed build test envelope required\")",
+   "new": "throw refuseProcessV1(\"invalid\",\"testing.envelope-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts",
+   "old": "throw Error(\"One test process receives one birth: \"+exact.owner+\" declares another envelope than the one \"+declared.owner+\" declared\")",
+   "new": "throw refuseProcessV1(\"invalid\",\"testing.birth-single\",{owner:exact.owner,declared:declared.owner})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts",
+   "old": "throw Error(\"Build test envelope declared after the first callback: \"+exact.owner)",
+   "new": "throw refuseProcessV1(\"invalid\",\"testing.envelope-late\",{owner:exact.owner})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts",
+   "old": "Promise.reject(Error(\"Registered build test grant issuer required: \"+grant.kind+\" for \"+envelope.owner))",
+   "new": "Promise.reject(refuseProcessV1(\"invalid\",\"testing.grant-issuer-required\",{kind:grant.kind,owner:envelope.owner}))",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts",
+   "old": "differ=()=>Error(\"Inherited build test capabilities differ from the declared envelope of \"+envelope.owner)",
+   "new": "differ=()=>refuseProcessV1(\"invalid\",\"testing.capabilities-differ\",{owner:envelope.owner})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧭️ancestry/🪟️native/🟦️.ts",
+   "add_import": "import {refuseProcessV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🔨️modules/🏃️process/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧭️ancestry/🪟️native/🟦️.ts",
+   "old": "throw Error(\"Process snapshot refused\")",
+   "new": "throw refuseProcessV1(\"refused\",\"agentSessions.process-snapshot-refused\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧭️ancestry/🪟️native/🟦️.ts",
+   "old": "throw Error(\"Empty process snapshot\")",
+   "new": "throw refuseProcessV1(\"invalid\",\"agentSessions.process-snapshot-empty\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+   "old": "throw Error(\"Dashboard artifact changed during installation\")",
+   "new": "throw refuseBootstrapV1(\"stale\",\"dashboard.artifact-changed\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🟦️.ts",
+   "old": "throw Error(\"Authenticated captured build command entry required\")",
+   "new": "throw refuseBuildV1(\"invalid\",\"closure.command-entry-authentication-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🏊️pool/🟨️.mjs",
+   "add_import": "import {refuseBuildV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🏊️pool/🟨️.mjs",
+   "old": "throw Error(\"Declared graph farm temporary directory kind required: \" + kind)",
+   "new": "throw refuseBuildV1(\"invalid\",\"graph.farm-directory-kind-required\",{kind})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+   "add_import": "import {refuseBuildV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+   "old": "throw Error(\"Canonical command closure reference required: \"+JSON.stringify(input).slice(0,256))",
+   "new": "throw refuseBuildV1(\"invalid\",\"graph.command-closure-reference-required\",{input:JSON.stringify(input).slice(0,256)})",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+   "old": "/**\n * @param {string[]} configFiles\n * @param {unknown} options\n * @param {{ workspaceRoot: string }} context\n */\n/** 🛡️ Admits",
+   "new": "/** 🛡️ Admits",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "add_import": "import {refuseBuildV1} from \"{FROM}\";",
+   "from_rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🟦️.ts"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "old": "throw Error(\"Generator contracts of the parent inference required\")",
+   "new": "throw refuseBuildV1(\"invalid\",\"graph.generator-contracts-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚢️fleet-status/🟦️.ts",
+   "old": "throw Error(`Unknown fleet text ${key}`)",
+   "new": "throw Error(`fleet-text-unknown:${key}`)",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🪪️native-birth/🟦️.ts",
+   "old": "throw Error(\"Checkout holding MODULE.bazel required for a bare library test\")",
+   "new": "throw Error(\"library-test-checkout-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🪆️captured/🟦️.ts",
+   "old": ".toBe(\"Generator contracts of the parent inference required\")",
+   "new": ".toBe(\"invalid build.graph.generator-contracts-required {}\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/🧪️tests/🟦️.ts",
+   "old": "fault.message===\"Authenticated captured build command entry required\"&&fault.code===undefined",
+   "new": "fault.message===\"invalid build.closure.command-entry-authentication-required {}\"",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🧪️tests/🏷️loader-identity/🟦️.ts",
+   "old": "expect(error.message).toBe(\"Authenticated captured build command entry required\")",
+   "new": "expect(error.message).toBe(\"invalid build.closure.command-entry-authentication-required {}\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🧪️tests/🏷️loader-identity/🟦️.ts",
+   "old": "expect(error.code).toBeUndefined()",
+   "new": "expect(error.code).toBe(\"invalid\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🧪️tests/🟦️.ts",
+   "old": ".toThrow(\"Closed test budget contention policy required\")",
+   "new": ".toThrow(\"testing.contention-policy-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🧪️tests/🟦️.ts",
+   "old": ".toThrow(\"Invalid test command budget\")",
+   "new": ".toThrow(\"testing.command-budget-invalid\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🧪️tests/🟦️.ts",
+   "old": ".toThrow(\"Stretch of at least one required\")",
+   "new": ".toThrow(\"testing.stretch-invalid\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🧪️tests/🟦️.ts",
+   "old": ".toContain(\"Finite closed build test envelope required\")",
+   "new": ".toContain(\"testing.envelope-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🧪️tests/🟦️.ts",
+   "old": ".toContain(\"One test process receives one birth\")",
+   "new": ".toContain(\"testing.birth-single\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🧪️tests/🟦️.ts",
+   "old": ".toContain(\"Registered build test grant issuer required: native-build-caller\")",
+   "new": ".toContain(\"testing.grant-issuer-required\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🧪️tests/🟦️.ts",
+   "old": ".toContain(\"Inherited build test capabilities differ from the declared envelope of test:declared-writer\")",
+   "new": ".toContain(\"testing.capabilities-differ\")",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📖️texts/🔣️.json",
+   "json_add": {
+    "messages": {
+     "agentSessions.process-snapshot-empty": {
+      "en": "Empty process snapshot",
+      "de": "Leeres Prozessabbild"
+     },
+     "agentSessions.process-snapshot-refused": {
+      "en": "Process snapshot refused",
+      "de": "Prozessabbild abgelehnt"
+     },
+     "testing.birth-single": {
+      "en": "One test process receives one birth: {owner} declares another envelope than the one {declared} declared",
+      "de": "Ein Testprozess erhält genau eine Geburt: {owner} deklariert eine andere Hülle als die von {declared} deklarierte"
+     },
+     "testing.capabilities-differ": {
+      "en": "Inherited build test capabilities differ from the declared envelope of {owner}",
+      "de": "Die geerbten Fähigkeiten des Build-Tests weichen von der deklarierten Hülle von {owner} ab"
+     },
+     "testing.command-budget-invalid": {
+      "en": "Invalid test command budget",
+      "de": "Ungültiges Budget des Testbefehls"
+     },
+     "testing.contention-policy-required": {
+      "en": "Closed test budget contention policy required",
+      "de": "Eine geschlossene Konkurrenzrichtlinie des Testbudgets ist erforderlich"
+     },
+     "testing.envelope-late": {
+      "en": "Build test envelope declared after the first callback: {owner}",
+      "de": "Die Hülle des Build-Tests wurde nach dem ersten Rückruf deklariert: {owner}"
+     },
+     "testing.envelope-required": {
+      "en": "Finite closed build test envelope required",
+      "de": "Eine endliche, geschlossene Hülle des Build-Tests ist erforderlich"
+     },
+     "testing.grant-issuer-required": {
+      "en": "Registered build test grant issuer required: {kind} for {owner}",
+      "de": "Ein registrierter Aussteller der Build-Test-Berechtigung ist erforderlich: {kind} für {owner}"
+     },
+     "testing.stretch-invalid": {
+      "en": "Stretch of at least one required",
+      "de": "Eine Dehnung von mindestens eins ist erforderlich"
+     }
+    }
+   }
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📖️texts/🔣️.json",
+   "json_add": {
+    "messages": {
+     "dashboard.artifact-changed": {
+      "en": "Dashboard artifact changed during installation",
+      "de": "Das Dashboard-Artefakt hat sich während der Installation geändert"
+     }
+    }
+   }
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🔣️.json",
+   "json_add": {
+    "messages": {
+     "closure.command-entry-authentication-required": {
+      "en": "Authenticated captured build command entry required",
+      "de": "Ein beglaubigter erfasster Build-Befehlseintrag ist erforderlich"
+     },
+     "graph.command-closure-reference-required": {
+      "en": "Canonical command closure reference required: {input}",
+      "de": "Ein kanonischer Verweis auf den Befehlsabschluss ist erforderlich: {input}"
+     },
+     "graph.farm-directory-kind-required": {
+      "en": "Declared graph farm temporary directory kind required: {kind}",
+      "de": "Eine deklarierte Art des temporären Graph-Farm-Verzeichnisses ist erforderlich: {kind}"
+     },
+     "graph.generator-contracts-required": {
+      "en": "Generator contracts of the parent inference required",
+      "de": "Die Generatorverträge der übergeordneten Inferenz sind erforderlich"
+     }
+    }
+   }
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🟦️.ts",
+   "old": "throw Error(\"Declared sealed implementation text required: \"+key)",
+   "new": "throw Error(\"sealed-text-undeclared:\"+key)",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🟦️.ts",
+   "old": "throw Error(\"Sealed implementation text placeholder required: \"+name)",
+   "new": "throw Error(\"sealed-text-placeholder-missing:\"+name)",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🟦️.ts",
+   "old": "throw Error(\"workspace root with paired build and package markers was not found\")",
+   "new": "throw Error(sealedTextV1(sealedLanguagesV1(),\"workspaceRootMissing\"))",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/📤️promotion/🟦️.ts",
+   "old": "throw Error(\"Closed blocked record required\")",
+   "new": "throw Error(sealedTextV1(sealedLanguagesV1(environment,policy),\"blockedRecordInvalid\",{},policy))",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/📥️execution/🟦️.ts",
+   "old": "throw Error(\"Bounded captured command publication required\")",
+   "new": "throw Error(sealedTextV1(sealedLanguagesV1(environment),\"commandPublicationBounded\"))",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🔁️promoter/🟦️.ts",
+   "old": "import{sealedEntryOfV1,sealedPolicyV1}from\"../🟦️.ts\";",
+   "new": "import{sealedEntryOfV1,sealedLanguagesV1,sealedPolicyV1,sealedTextV1}from\"../🟦️.ts\";",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🔁️promoter/🟦️.ts",
+   "old": "throw Error(\"Bounded admitted compiler image required\")",
+   "new": "throw Error(sealedTextV1(sealedLanguagesV1(),\"compilerImageBounded\"))",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🔁️promoter/🟦️.ts",
+   "old": "throw Error(\"Bounded admitted compiler closure required\")",
+   "new": "throw Error(sealedTextV1(sealedLanguagesV1(),\"compilerClosureBounded\"))",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🔣️.json",
+   "json_add": {
+    "texts": {
+     "blockedRecordInvalid": {
+      "en": "[implementation] The record of the blocked promotion is not closed.",
+      "de": "[implementation] Der Beleg der blockierten Befoerderung ist nicht geschlossen."
+     },
+     "commandPublicationBounded": {
+      "en": "[implementation] The captured command exceeds the bound of its publication.",
+      "de": "[implementation] Der erfasste Befehl ueberschreitet die Grenze seiner Veroeffentlichung."
+     },
+     "compilerClosureBounded": {
+      "en": "[implementation] The admitted compiler closure exceeds its bound.",
+      "de": "[implementation] Der zugelassene Compiler-Abschluss ueberschreitet seine Grenze."
+     },
+     "compilerImageBounded": {
+      "en": "[implementation] The admitted compiler image exceeds its bound.",
+      "de": "[implementation] Das zugelassene Compiler-Abbild ueberschreitet seine Grenze."
+     },
+     "workspaceRootMissing": {
+      "en": "[implementation] No workspace root with paired build and package markers was found.",
+      "de": "[implementation] Es wurde keine Workspace-Wurzel mit zusammengehoerigen Build- und Paketmarken gefunden."
+     }
+    }
+   },
+   "indent": 2
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧬️schema/🔣️.json",
+   "old": "\"selfCheckEnded\", \"stale\", \"refused\", \"unpromoted\"],",
+   "new": "\"selfCheckEnded\", \"stale\", \"refused\", \"unpromoted\", \"blockedRecordInvalid\", \"commandPublicationBounded\", \"compilerClosureBounded\", \"compilerImageBounded\", \"workspaceRootMissing\"],",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧬️schema/🔣️.json",
+   "old": "        \"unpromoted\": { \"$ref\": \"#/definitions/Text\" }\n",
+   "new": "        \"unpromoted\": { \"$ref\": \"#/definitions/Text\" },\n        \"blockedRecordInvalid\": { \"$ref\": \"#/definitions/Text\" },\n        \"commandPublicationBounded\": { \"$ref\": \"#/definitions/Text\" },\n        \"compilerClosureBounded\": { \"$ref\": \"#/definitions/Text\" },\n        \"compilerImageBounded\": { \"$ref\": \"#/definitions/Text\" },\n        \"workspaceRootMissing\": { \"$ref\": \"#/definitions/Text\" }\n",
+   "count": "any",
+   "optional": true
+  }
+ ],
+ "emoji": [
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🏊️pool/🟨️.mjs",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚢️fleet-status/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🟦️.ts"
+ ],
+ "allowlist": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🗣️language-catalogs/🔒️allowlist/🔣️.json",
+ "verify": []
+}

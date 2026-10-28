@@ -1,0 +1,155 @@
+{
+ "version": 1,
+ "workspace": "/ws",
+ "owners": {
+  "founded-file": {
+   "kind": "unavailable",
+   "config": "a/x.ts",
+   "rows": [
+    {
+     "kind": "file",
+     "path": "/ws/a/x.ts",
+     "fact": {
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size": 1,
+      "mtimeMs": 1,
+      "ctimeMs": 1,
+      "ino": 1
+     }
+    },
+    {
+     "kind": "stamp",
+     "path": "inferrer:x",
+     "fact": "x/1"
+    }
+   ]
+  },
+  "unfounded": {
+   "kind": "unavailable",
+   "config": "a/y.ts",
+   "rows": [
+    {
+     "kind": "file",
+     "path": "/ws/a/other.ts",
+     "fact": {
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size": 1,
+      "mtimeMs": 1,
+      "ctimeMs": 1,
+      "ino": 1
+     }
+    },
+    {
+     "kind": "stamp",
+     "path": "inferrer:x",
+     "fact": "x/1"
+    }
+   ]
+  },
+  "founded-digest": {
+   "kind": "unavailable",
+   "config": "a/z.ts",
+   "rows": [
+    {
+     "kind": "digest",
+     "path": "a/z.ts",
+     "fact": {
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "size": 1,
+      "mtimeMs": 1
+     }
+    }
+   ]
+  },
+  "tagged": {
+   "kind": "unavailable",
+   "config": "a/t.ts",
+   "tag": "tests-v2",
+   "rows": [
+    {
+     "kind": "stamp",
+     "path": "inferrer:x",
+     "fact": "x/1"
+    }
+   ]
+  },
+  "outside": {
+   "kind": "unavailable",
+   "config": "../out/side.ts",
+   "rows": [
+    {
+     "kind": "stamp",
+     "path": "inferrer:x",
+     "fact": "x/1"
+    }
+   ]
+  },
+  "project": {
+   "kind": "project",
+   "config": "a/p.json",
+   "rows": [
+    {
+     "kind": "stamp",
+     "path": "inferrer:x",
+     "fact": "x/1"
+    }
+   ]
+  },
+  "boundary": {
+   "kind": "unavailable",
+   "config": "x.ts",
+   "rows": [
+    {
+     "kind": "file",
+     "path": "/ws/ax.ts",
+     "fact": {
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size": 1,
+      "mtimeMs": 1,
+      "ctimeMs": 1,
+      "ino": 1
+     }
+    }
+   ]
+  },
+  "shared-a": {
+   "kind": "unavailable",
+   "config": "s/a.ts",
+   "rows": [
+    {
+     "kind": "file",
+     "path": "/ws/s/a.ts",
+     "fact": {
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size": 1,
+      "mtimeMs": 1,
+      "ctimeMs": 1,
+      "ino": 1
+     }
+    }
+   ]
+  },
+  "shared-b": {
+   "kind": "unavailable",
+   "config": "s/b.ts",
+   "rows": [
+    {
+     "kind": "file",
+     "path": "/ws/s/a.ts",
+     "fact": {
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size": 1,
+      "mtimeMs": 1,
+      "ctimeMs": 1,
+      "ino": 1
+     }
+    }
+   ]
+  }
+ },
+ "unfounded": [
+  "boundary",
+  "shared-b",
+  "unfounded"
+ ]
+}

@@ -1,0 +1,22 @@
+{
+ ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/e2e-f-tools/retry.sh": {
+  "file": "retry.sh",
+  "base": "319c7254aad8aea7e0edd70bd5c66da08763416bb7e2996a7cf383576c9167e5",
+  "new": "7a9b260841d3b4fb98343493b93571958df16e8fda023593b697b14a51918739"
+ },
+ ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/course-d-tools/focus.sh": {
+  "file": "focus.sh",
+  "base": "5a7ab422b0169add6eb93b51c74059031bccecc510c12d3b27b790c07ac10b0d",
+  "new": "9ed491bba0281b308171f2be2eafbe486eda742223296cf911459d16dd6f7680"
+ },
+ ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/e2e-f-tools/specs-finished.pattern": {
+  "file": "specs-finished.pattern",
+  "base": null,
+  "new": "e0fb2755b69f3cc0fb3e71edba4b66db5b4addd10ee888239946af7da72fee8a"
+ },
+ ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/e2e-f-tools/tests/test_retry.py": {
+  "file": "test_retry.py",
+  "base": null,
+  "new": "33aff06eb194534b09e94319964815131d0fe8e7491d8da1ea9d1d373fef11df"
+ }
+}

@@ -12,6 +12,7 @@
         "racyMilliseconds": 2000,
         "progressFiles": 1024,
         "manifest": "snapshot.json",
+        "plan": "snapshot.plan.json",
         "temporary": "snapshot-tmp",
         "fileMode": 420,
         "executableMode": 493,
@@ -88,6 +89,38 @@
           "maxItems": 1048576,
           "items": {
             "$ref": "#/definitions/Row"
+          }
+        }
+      }
+    },
+    "Plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "files",
+        "real"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "files": {
+          "type": "array",
+          "maxItems": 1048576,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          }
+        },
+        "real": {
+          "type": "array",
+          "maxItems": 1048576,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
           }
         }
       }

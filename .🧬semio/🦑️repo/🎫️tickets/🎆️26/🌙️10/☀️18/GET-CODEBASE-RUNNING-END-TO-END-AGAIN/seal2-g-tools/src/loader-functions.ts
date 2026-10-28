@@ -1,0 +1,80 @@
+/** 🔀️ Points every read of a built-in `fs` or `module` import of a captured module at the captured reader. A module that does not even quote a built-in name is returned as it is. Any other module is first rewritten by one pattern over the shapes a printer writes (`from "fs"`, `import "fs"`, `import("fs")`, `require("fs")`); that result stands when it made exactly as many changes as the scan counted imports of those names and the scan of the result finds none left. Otherwise the module is read token by token (comments, templates and strings are skipped) and must give exactly the counted number of changes. The function is stringified into the loader, so it stands alone.
+ * @see https://developer.mozilla.org/docs/Web/JavaScript/Reference/Lexical_grammar the lexical grammar the tokens follow */
+export function redirectCapturedBuiltinReadsV1(source:string,commonJs:boolean,parser:{scan(text:string):{imports:readonly{path:string}[]}},targets:ReadonlyMap<string,string>):string{
+ const names=[...targets.keys()].join("|");
+ if(!new RegExp("[\"'\\x60](?:"+names+")[\"'\\x60]").test(source))return source;
+ const expected=parser.scan(source).imports.filter(row=>targets.has(row.path)).length;let count=0;
+ const quick=source.replace(new RegExp("(\\b(?:from|import))(\\s*)([\"'])("+names+")\\3|(\\b(?:import"+(commonJs?"":"|require|__require")+"))(\\s*\\(\\s*)([\"'])("+names+")\\7","g"),(_match,a,b,_quote,name,c,d,_second,other)=>{count++;return name!==undefined?a+b+JSON.stringify(targets.get(name)):c+d+JSON.stringify(targets.get(other));});
+ if(count===expected&&!parser.scan(quick).imports.some(row=>targets.has(row.path)))return count?quick:source;
+ const changes:{start:number;end:number;value:string}[]=[],length=source.length;let previous:string|number="",prior:string|number="",at=0;
+ while(at<length){
+  const code=source.charCodeAt(at);
+  if(code===32||code>8&&code<14||code>127&&/\s/.test(source[at]!)){at++;continue;}
+  if(code===47){
+   const next=source.charCodeAt(at+1);
+   if(next===47){at=source.indexOf("\n",at+2);if(at<0)break;continue;}
+   if(next===42){const end=source.indexOf("*/",at+2);if(end<0)throw Error("Closed compiler comment required");at=end+2;continue;}
+  }
+  if(code===96){at++;while(at<length){const c=source.charCodeAt(at);if(c===92){at+=2;continue;}at++;if(c===96)break;}prior=previous;previous=-1;continue;}
+  if(code===34||code===39){
+   const start=at++;
+   while(at<length){const c=source.charCodeAt(at);if(c===92){at+=2;continue;}at++;if(c===code)break;}
+   if(at-start<20){const value=source.slice(start,at).slice(1,-1);if(targets.has(value)&&(previous==="from"||previous==="import"||previous===40&&(prior==="import"||!commonJs&&(prior==="require"||prior==="__require"))))changes.push({start,end:at,value:JSON.stringify(targets.get(value))});}
+   prior=previous;previous=-1;continue;
+  }
+  if(code>64&&code<91||code>96&&code<123||code===95||code===36){
+   const start=at++;
+   while(at<length){const c=source.charCodeAt(at);if(!(c>64&&c<91||c>96&&c<123||c>47&&c<58||c===95||c===36))break;at++;}
+   const size=at-start;prior=previous;previous=size===4||size===6||size===7||size===9?source.slice(start,at):-2;continue;
+  }
+  prior=previous;previous=code;at++;
+ }
+ if(changes.length!==expected)throw Error("Closed compiler builtin-read import coverage refused");
+ if(!changes.length)return source;
+ let result=source;for(const change of changes.reverse())result=result.slice(0,change.start)+change.value+result.slice(change.end);
+ if(parser.scan(result).imports.some(row=>targets.has(row.path)))throw Error("Mutable compiler builtin read remained");
+ return result;
+}
+
+/** ✂️ Splits the text of a canonical snapshot (`{version,root,entry,files:[{path,sha256,base64,imports}]}` as `JSON.stringify` writes it) into its structure and the byte spans of its base64 payloads, without decoding a payload: the structure is the same text with every payload emptied, the spans index the payloads in `encoded`. A text that is not exactly canonical gives nothing, and the caller reads it the eager way. The function is stringified into the loader, so it stands alone. */
+export function splitCapturedSnapshotV1(encoded:Buffer):{text:string;spans:readonly(readonly[number,number])[]}|undefined{
+ const pieces:string[]=[],spans:(readonly[number,number])[]=[],open=Buffer.from(',"base64":"'),next=Buffer.from('}},{"path":"');let from=0,at=0;
+ for(;;){
+  const key=encoded.indexOf(open,at);if(key<0)break;
+  const start=key+open.length,end=encoded.indexOf(34,start);
+  if(end<0||encoded.toString("latin1",end,end+12)!=='","imports":')return undefined;
+  pieces.push(encoded.toString("utf8",from,start));spans.push([start,end]);from=end;
+  const boundary=encoded.indexOf(next,end);if(boundary<0)break;at=boundary;
+ }
+ if(!spans.length)return undefined;
+ pieces.push(encoded.toString("utf8",from));
+ return{text:pieces.join(""),spans};
+}
+
+/** 🗃️ Admits the images of a parsed snapshot under the closed rules of the loader (a closed row, a relative path without escapes, a declared hash, bounded sizes, unique names, closed import maps) and returns the table the loader reads from. Given the byte spans of the payloads the table is lazy: every row is checked now except what needs its bytes, and a payload is decoded, checked against its declared hash and size and kept when a module or a read asks for it for the first time, so a command pays for the files it uses and not for the closure it carries; the whole text was authenticated by its digest before. Without spans every payload is decoded and checked now. The function is stringified into the loader, so it stands alone. */
+export function admitCapturedImagesV1(value:{root:string;files:{path:string;sha256:string;base64:string;imports:Record<string,string>}[]},encoded:Buffer,spans:readonly(readonly[number,number])[]|undefined,limits:{maximumFileBytes:number;maximumSourceBytes:number},hash:(bytes:Uint8Array)=>string,path:{join(...parts:string[]):string;isAbsolute(value:string):boolean},check:()=>void):{images:{has(name:string):boolean;get(name:string):Buffer|undefined;keys():Iterable<string>;[Symbol.iterator]():Iterator<[string,Buffer]>};resolutions:Map<string,Record<string,string>>}{
+ const resolutions=new Map<string,Record<string,string>>(),rows=new Map<string,number>(),decoded=new Map<string,Buffer>(),eager=new Map<string,Buffer>();let total=0;
+ const decode=(name:string,index:number):Buffer=>{
+  const row=value.files[index]!,[start,end]=spans![index]!,text=encoded.toString("latin1",start,end),bytes=Buffer.from(text,"base64");
+  if(bytes.toString("base64")!==text||hash(bytes)!==row.sha256)throw Error("Immutable implementation image changed");
+  decoded.set(name,bytes);return bytes;
+ };
+ for(let index=0;index<value.files.length;index++){
+  const row=value.files[index]!;check();
+  if(!row||Object.keys(row).length!==4||!Object.keys(row).every(key=>key==="base64"||key==="imports"||key==="path"||key==="sha256")||typeof row.path!=="string"||path.isAbsolute(row.path)||row.path.includes(":")||row.path.includes(String.fromCharCode(92))||row.path.includes(String.fromCharCode(0))||row.path.split("/").some(part=>!part||part==="."||part==="..")||typeof row.base64!=="string"||!/^[a-f0-9]{64}$/.test(row.sha256??""))throw Error("Closed immutable implementation image required");
+  const name=path.join(value.root,row.path);
+  if(spans){
+   const[start,end]=spans[index]!,length=end-start,size=length%4?-1:length/4*3-(encoded[end-1]===61?1:0)-(encoded[end-2]===61?1:0);total+=size;
+   if(size<0||size>limits.maximumFileBytes||total>limits.maximumSourceBytes||name.length>256||rows.has(name))throw Error("Immutable implementation image changed");
+   rows.set(name,index);
+  }else{
+   const bytes=Buffer.from(row.base64,"base64");total+=bytes.length;
+   if(bytes.toString("base64")!==row.base64||bytes.length>limits.maximumFileBytes||total>limits.maximumSourceBytes||name.length>256||eager.has(name)||hash(bytes)!==row.sha256)throw Error("Immutable implementation image changed");
+   eager.set(name,bytes);
+  }
+  if(!row.imports||typeof row.imports!=="object"||Array.isArray(row.imports))throw Error("Closed captured import resolution required");
+  resolutions.set(name,row.imports);if(!spans)row.base64="";
+ }
+ if(!spans)return{images:eager as never,resolutions};
+ return{images:{has:name=>rows.has(name),get:name=>{const bytes=decoded.get(name);if(bytes)return bytes;const index=rows.get(name);return index===undefined?undefined:decode(name,index);},keys:()=>rows.keys(),[Symbol.iterator]:()=>decoded.entries()},resolutions};
+}

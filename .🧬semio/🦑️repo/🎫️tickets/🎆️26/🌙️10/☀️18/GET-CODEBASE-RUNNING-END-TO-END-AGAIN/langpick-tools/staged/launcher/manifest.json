@@ -1,0 +1,37 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go": {
+  "file": "000.go",
+  "base": "9327ac7afcd8134bd1fb87731d568023ff4e1edf1d60012d52b83490e5e0b321",
+  "new": "7f278aa078a0aed342fd6c727a0a71961b0dfc39e44f1d0dfc8be2f4579344b5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🐚️unix-host/🐹️.go": {
+  "file": "001.go",
+  "base": "908b5693fb4c889863c54eb1d6d72496a590d2610129e895c702fb0638781343",
+  "new": "4960c5619ec59814e7265e6356e37cca06943a1a6f5f7683d5dd77f6804256da"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🗂️runtime-registry/🐹️.go": {
+  "file": "002.go",
+  "base": "bd7ac1e51d46637e0e8219dd03edb362e9125e9cbb1ebb4d721b6782ec684b18",
+  "new": "747b2aea23ad34e2d4a47a15591f46e022a0e04bc6cce2f37dcc8c7ed7c7d5dc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🗣️language/🐹️.go": {
+  "file": "003.go",
+  "base": "19a326585f4cf063024104d01b9ba81a01a3da15bf6fd1b10fb7250b42448135",
+  "new": "65ea09091fe1be661ba018cd42e2a88d229d730dc5e5d7936ce61d6a83cc2a01"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🪟️windows-host/🐹️.go": {
+  "file": "005.go",
+  "base": "d96268be52d79141559dd0a496eff98873d3426d2367490b5eb5f3d278caee90",
+  "new": "fd6778e66824a5d49f2e8f00a32f523a43e18097bbc9298d923d58e703b13edc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗣️language-contract/🐹️.go": {
+  "file": "006.go",
+  "base": "49207b1eaaf17dfd9d16e8f234fc77b8685b64ce4f4d6e56cb2ed92623e0532b",
+  "new": "89a57a5cf5d1bf239901a0bda26e6f1c22e185857c30ca4dd2c545466324af1f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧰️harness/🐹️.go": {
+  "file": "007.go",
+  "base": "831423c4f3267e7cd52da2fe2af483f34f8710b22d9660b7efa22a66d925662a",
+  "new": "75244fbed22b664d99b0f9102e7de1c5f5fa42b3bc311cb5fa8f60abb1601b64"
+ }
+}

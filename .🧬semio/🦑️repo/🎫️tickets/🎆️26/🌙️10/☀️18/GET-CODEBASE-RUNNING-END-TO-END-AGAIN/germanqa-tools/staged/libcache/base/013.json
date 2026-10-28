@@ -1,0 +1,690 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:dependencies/generation-receipt/v1",
+  "title": "Dependency generation receipt",
+  "description": "Schema-first contract of the content-addressed receipt that lets ordinary commands prove an unchanged dependency generation by stat and bounded reads, falling back to the complete ownership and provider walk on any mismatch. The receipt is keyed only by what determines the generation (lockfiles, manifests, installer configuration, pinned runtime, platform, topology, provider observations) and by the declared walk protocol stamp, never by the bytes of the code that performs the install or the verification.",
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "purpose": "dependency-generation-receipt",
+        "directory": "generation",
+        "receiptSuffix": ".receipt.json",
+        "frontierSuffix": ".frontier.ndjson",
+        "executionSuffix": ".execution.ndjson",
+        "maximumReceiptBytes": 4194304,
+        "maximumEvidenceBytes": 67108864,
+        "maximumRows": 524288,
+        "maximumSourceFileBytes": 8388608,
+        "maximumRelist": 4096,
+        "maximumScan": 65536,
+        "settleMilliseconds": 5000,
+        "checkWork": 256,
+        "progressWork": 4096,
+        "decodedRowsRetainMilliseconds": 30000,
+        "stampFields": [
+          "dev",
+          "ino",
+          "mode",
+          "nlink",
+          "size",
+          "mtimeNs",
+          "ctimeNs"
+        ],
+        "anchorFields": [
+          "dev",
+          "ino",
+          "mode"
+        ],
+        "projectionDigestUnits": 32,
+        "walkStamp": "semio.dependency-generation-walk/2",
+        "producer": {
+          "scopeFiles": {
+            "$manager": "producerInputs.scopeFiles"
+          },
+          "ambientHomeFiles": {
+            "$manager": "producerInputs.ambientHomeFiles"
+          },
+          "ambientConfigFiles": {
+            "$manager": "producerInputs.ambientConfigFiles"
+          },
+          "ambientConfigFallback": "{{producerInputs.ambientConfigFallback}}",
+          "storeRoleFiles": {
+            "$manager": "storeRoleFiles"
+          },
+          "maximumFileBytes": 1048576,
+          "environmentPrefixes": {
+            "$manager": "producerInputs.environmentPrefixes"
+          },
+          "environmentNames": [
+            "HTTP_PROXY",
+            "HTTPS_PROXY",
+            "ALL_PROXY",
+            "NO_PROXY",
+            "NODE_EXTRA_CA_CERTS",
+            "NODE_TLS_REJECT_UNAUTHORIZED",
+            "SSL_CERT_FILE",
+            "SSL_CERT_DIR"
+          ],
+          "environmentIgnored": {
+            "$manager": "producerInputs.environmentIgnored"
+          }
+        },
+        "mismatchClasses": [
+          "receipt-invalid",
+          "evidence-invalid",
+          "protocol-changed",
+          "runtime-changed",
+          "configuration-changed",
+          "conditions-open",
+          "binding-changed",
+          "ready-changed",
+          "input-changed",
+          "manifest-changed",
+          "membership-changed",
+          "membership-churn",
+          "provider-changed",
+          "unreadable",
+          "sha-changed"
+        ],
+        "tiers": [
+          {
+            "name": "protocol",
+            "cost": "O(1)",
+            "covers": "the declared walk protocol stamp of this schema; never the bytes, paths or timestamps of the code that performs the walk, the installation or the verification"
+          },
+          {
+            "name": "runtime",
+            "cost": "O(1)",
+            "covers": "{{id}} version and revision, node version, platform, architecture, installer recipe"
+          },
+          {
+            "name": "producer",
+            "cost": "O(config files)",
+            "covers": "{{producerFileLabel}} files every installer level could read, and the environment variables that select registries, caches or transport"
+          },
+          {
+            "name": "bindings",
+            "cost": "O(bindings)",
+            "covers": "Source endpoint links, physical generation ancestry, ready receipts"
+          },
+          {
+            "name": "inputs",
+            "cost": "O(manifests)",
+            "covers": "manifests, locks, configuration, patches and their ancestry"
+          },
+          {
+            "name": "membership",
+            "cost": "O(directories)",
+            "covers": "workspace topology by directory stamps with projection-digest relisting"
+          },
+          {
+            "name": "execution",
+            "cost": "O(observations)",
+            "covers": "provider resolution by replaying every recorded physical observation"
+          }
+        ],
+        "languages": [
+          "en",
+          "de"
+        ],
+        "texts": {
+          "en": {
+            "stale": "The dependency generation receipt of scope {scope} is stale: {reason}",
+            "absent": "No dependency generation receipt exists for scope {path}.",
+            "receipt-invalid": "The dependency generation receipt {path} cannot be read or is not sealed correctly.",
+            "evidence-invalid": "A sealed evidence file of the dependency generation receipt is missing or damaged: {detail}.",
+            "protocol-changed": "The dependency generation protocol changed: the receipt was sealed with {detail}, this tool declares {expected}.",
+            "runtime-changed": "The tool runtime changed ({detail}).",
+            "runtime-changed.manager": "The package manager version changed.",
+            "runtime-changed.revision": "The Bun revision changed.",
+            "runtime-changed.node": "The Node version changed.",
+            "runtime-changed.platform": "The platform changed.",
+            "runtime-changed.arch": "The CPU architecture changed.",
+            "runtime-changed.sha256": "The installer recipe or resolution profile declared in the schema changed.",
+            "configuration-changed": "The installer configuration changed: {path}.",
+            "conditions-open": "Ambient resolution conditions are set (NODE_OPTIONS, BUN_OPTIONS, --conditions or --preserve-symlinks).",
+            "binding-changed": "The node_modules links of scope {path} changed: {detail}.",
+            "ready-changed": "The ready receipt of scope {path} changed.",
+            "input-changed": "An installer input changed: {path}.",
+            "input-changed.bytes": "An installer input changed its content: {path}.",
+            "input-changed.identity": "An installer input was replaced, moved or removed: {path}.",
+            "input-changed.appeared": "An installer input appeared that the receipt recorded as missing: {path}.",
+            "manifest-changed": "A workspace manifest changed: {path}.",
+            "manifest-changed.bytes": "A workspace manifest changed its content: {path}.",
+            "manifest-changed.unreadable": "A workspace manifest is no longer readable: {path}.",
+            "membership-changed": "The workspace layout changed at {path}.",
+            "membership-changed.state": "The workspace layout changed at {path}: an entry was added, replaced or removed.",
+            "membership-changed.directory": "A directory of the workspace layout disappeared: {path}.",
+            "membership-changed.listing": "The workspace layout changed in {path}: a package, link or directory was added or removed.",
+            "membership-churn": "More than {limit} directories changed since the receipt, the first at {path}.",
+            "provider-changed": "A provider observation changed: {path}.",
+            "provider-changed.identity": "A provider file or directory changed: {path}.",
+            "provider-changed.target": "A provider link now points elsewhere: {path}.",
+            "unreadable": "The receipt could not be checked: {detail}.",
+            "sha-changed": "The combined read of the scope no longer equals the receipt.",
+            "seal": "The replayed walk no longer equals the completed walk."
+          },
+          "de": {
+            "stale": "Der Abhängigkeits-Generationsbeleg des Bereichs {scope} ist veraltet: {reason}",
+            "absent": "Für den Bereich {path} existiert kein Abhängigkeits-Generationsbeleg.",
+            "receipt-invalid": "Der Abhängigkeits-Generationsbeleg {path} ist nicht lesbar oder nicht korrekt versiegelt.",
+            "evidence-invalid": "Eine versiegelte Nachweisdatei des Abhängigkeits-Generationsbelegs fehlt oder ist beschädigt: {detail}.",
+            "protocol-changed": "Das Protokoll der Abhängigkeitsgeneration hat sich geändert: Der Beleg wurde mit {detail} versiegelt, dieses Werkzeug deklariert {expected}.",
+            "runtime-changed": "Die Werkzeug-Laufzeit hat sich geändert ({detail}).",
+            "runtime-changed.manager": "Die Version des Paketmanagers hat sich geändert.",
+            "runtime-changed.revision": "Die Bun-Revision hat sich geändert.",
+            "runtime-changed.node": "Die Node-Version hat sich geändert.",
+            "runtime-changed.platform": "Die Plattform hat sich geändert.",
+            "runtime-changed.arch": "Die CPU-Architektur hat sich geändert.",
+            "runtime-changed.sha256": "Das im Schema deklarierte Installationsrezept oder Auflösungsprofil hat sich geändert.",
+            "configuration-changed": "Die Installer-Konfiguration hat sich geändert: {path}.",
+            "conditions-open": "Ambiente Auflösungsbedingungen sind gesetzt (NODE_OPTIONS, BUN_OPTIONS, --conditions oder --preserve-symlinks).",
+            "binding-changed": "Die node_modules-Verknüpfungen des Bereichs {path} haben sich geändert: {detail}.",
+            "ready-changed": "Der Bereitschaftsbeleg des Bereichs {path} hat sich geändert.",
+            "input-changed": "Eine Installer-Eingabe hat sich geändert: {path}.",
+            "input-changed.bytes": "Eine Installer-Eingabe hat ihren Inhalt geändert: {path}.",
+            "input-changed.identity": "Eine Installer-Eingabe wurde ersetzt, verschoben oder entfernt: {path}.",
+            "input-changed.appeared": "Eine Installer-Eingabe ist aufgetaucht, die der Beleg als fehlend festgehalten hatte: {path}.",
+            "manifest-changed": "Ein Workspace-Manifest hat sich geändert: {path}.",
+            "manifest-changed.bytes": "Ein Workspace-Manifest hat seinen Inhalt geändert: {path}.",
+            "manifest-changed.unreadable": "Ein Workspace-Manifest ist nicht mehr lesbar: {path}.",
+            "membership-changed": "Die Workspace-Struktur hat sich bei {path} geändert.",
+            "membership-changed.state": "Die Workspace-Struktur hat sich bei {path} geändert: Ein Eintrag wurde hinzugefügt, ersetzt oder entfernt.",
+            "membership-changed.directory": "Ein Verzeichnis der Workspace-Struktur ist verschwunden: {path}.",
+            "membership-changed.listing": "Die Workspace-Struktur hat sich in {path} geändert: Ein Paket, eine Verknüpfung oder ein Verzeichnis wurde hinzugefügt oder entfernt.",
+            "membership-churn": "Seit dem Beleg haben sich mehr als {limit} Verzeichnisse geändert, das erste bei {path}.",
+            "provider-changed": "Eine Anbieter-Beobachtung hat sich geändert: {path}.",
+            "provider-changed.identity": "Eine Anbieter-Datei oder ein Anbieter-Verzeichnis hat sich geändert: {path}.",
+            "provider-changed.target": "Eine Anbieter-Verknüpfung zeigt jetzt woandershin: {path}.",
+            "unreadable": "Der Beleg konnte nicht geprüft werden: {detail}.",
+            "sha-changed": "Das kombinierte Lesen des Bereichs entspricht nicht mehr dem Beleg.",
+            "seal": "Der wiederholte Durchlauf entspricht nicht mehr dem abgeschlossenen Durchlauf."
+          }
+        }
+      }
+    },
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "Location": {
+      "type": "string",
+      "pattern": "^[wsa]:.+$",
+      "maxLength": 2048
+    },
+    "Scope": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "MismatchClass": {
+      "enum": [
+        "receipt-invalid",
+        "evidence-invalid",
+        "protocol-changed",
+        "runtime-changed",
+        "configuration-changed",
+        "conditions-open",
+        "binding-changed",
+        "ready-changed",
+        "input-changed",
+        "manifest-changed",
+        "membership-changed",
+        "membership-churn",
+        "provider-changed",
+        "unreadable",
+        "sha-changed"
+      ]
+    },
+    "Evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "sha256",
+        "bytes",
+        "rows"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}\\.(frontier|execution)\\.ndjson$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manager",
+        "revision",
+        "node",
+        "platform",
+        "arch",
+        "sha256"
+      ],
+      "properties": {
+        "revision": {
+          "type": "string"
+        },
+        "node": {
+          "type": "string"
+        },
+        "platform": {
+          "type": "string"
+        },
+        "arch": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "manager": {
+          "type": "string"
+        }
+      }
+    },
+    "Source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind",
+        "dev",
+        "ino",
+        "mode",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/Location"
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory",
+            "missing"
+          ]
+        },
+        "dev": {
+          "type": "string"
+        },
+        "ino": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ProducerFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/Location"
+        },
+        "kind": {
+          "enum": [
+            "missing",
+            "file",
+            "other"
+          ]
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ProducerVariable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "sha256"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "Producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files",
+        "environment"
+      ],
+      "properties": {
+        "files": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/ProducerFile"
+          }
+        },
+        "environment": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "$ref": "#/$defs/ProducerVariable"
+          }
+        }
+      }
+    },
+    "Input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "sources"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "sources": {
+          "type": "array",
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/$defs/Source"
+          }
+        }
+      }
+    },
+    "Text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "Binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "pairs",
+        "observationSha256"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "pairs": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "target"
+            ],
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/Location"
+              },
+              "target": {
+                "$ref": "#/$defs/Location"
+              }
+            }
+          }
+        },
+        "observationSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "Ready": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "generation",
+        "location",
+        "fingerprint"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "generation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "location": {
+          "$ref": "#/$defs/Location"
+        },
+        "fingerprint": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "scope",
+        "walkStamp",
+        "runtime",
+        "producer",
+        "recipeSha256",
+        "ownershipSha256",
+        "required",
+        "inputs",
+        "membership",
+        "bindings",
+        "ready",
+        "execution",
+        "scopeReadSha256",
+        "sha256"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "dependency-generation-receipt"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "walkStamp": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "runtime": {
+          "$ref": "#/$defs/Runtime"
+        },
+        "producer": {
+          "$ref": "#/$defs/Producer"
+        },
+        "recipeSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "ownershipSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "required": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/Scope"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/Input"
+          }
+        },
+        "membership": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "frontier",
+            "texts"
+          ],
+          "properties": {
+            "frontier": {
+              "$ref": "#/$defs/Evidence"
+            },
+            "texts": {
+              "type": "array",
+              "maxItems": 65536,
+              "items": {
+                "$ref": "#/$defs/Text"
+              }
+            }
+          }
+        },
+        "bindings": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/Binding"
+          }
+        },
+        "ready": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/Ready"
+          }
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "evidence",
+            "scopes",
+            "runtimeSha256"
+          ],
+          "properties": {
+            "evidence": {
+              "$ref": "#/$defs/Evidence"
+            },
+            "scopes": {
+              "type": "array",
+              "maxItems": 4096,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "scope",
+                  "sha256"
+                ],
+                "properties": {
+                  "scope": {
+                    "$ref": "#/$defs/Scope"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              }
+            },
+            "runtimeSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "scopeReadSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "FrontierRows": {
+      "description": "Newline-delimited JSON arrays. Directory row: [\"d\",path,dev,ino,mode,mtimeNs,ctimeNs,settled,projectionDigest,prunedDigest,relevant]. prunedDigest is the projection digest without the child directories whose subtree holds no package.json and no symlink; relevant is 1 when the directory itself holds such an entry or any child directory that does. A listing that differs only by such irrelevant directories keeps the receipt valid. State row: [\"s\",path,kind,dev,ino,mode] or [\"s\",path,\"missing\"]. Paths are posix relative to the workspace.",
+      "type": "array"
+    },
+    "ExecutionRows": {
+      "description": "Newline-delimited JSON arrays: [\"o\",location,kind,anchor,stamp,target,full] with kind one of l,d,f,x,m and anchor/stamp as colon-joined decimal fields or null.",
+      "type": "array"
+    }
+  }
+}

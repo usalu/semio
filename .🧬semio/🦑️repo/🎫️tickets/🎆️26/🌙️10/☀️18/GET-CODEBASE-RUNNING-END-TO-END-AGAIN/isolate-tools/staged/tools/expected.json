@@ -1,0 +1,206 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📥️purpose/📜️script.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📬️task-child/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": [
+   "actual immutable Nx task children retain their producer cache namespace in both daemon modes",
+   "actual immutable forked task executor holds its own challenged toolkit lease"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": [
+   "finite actual Nx toolkit use refuses physical SQLite retirement until its owned body settles"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 1,
+  "fails": [
+   "(unnamed)",
+   "bounded SDK descriptors preserve primary failures while closing actual files",
+   "bounded SDK descriptors preserve real read and post-stat failures over close failures",
+   "bounded SDK descriptors reject real replacement shortening and post-read mutation"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🛂️sdk-fences/🟦️.ts": {
+  "mode": "env",
+  "pass": 1,
+  "fails": [
+   "(unnamed)",
+   "SDK revalidation authenticates private facts without Source scans and keeps five physical fences",
+   "SDK revalidation drains detached Error and undefined failures before retiring real loans",
+   "SDK revalidation facts require actual shared custody and reject copied or escaped identities",
+   "SDK revalidation final quote fence follows successful detached copy drainage",
+   "SDK revalidation rejects Source mutation at every retained physical boundary"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📥️data/🟦️.ts": {
+  "mode": "env",
+  "pass": 1,
+  "fails": [
+   "(unnamed)",
+   "actual compiler admits bounded sibling schema and literal JSON only as DATA"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🧊️memo/🟦️.ts": {
+  "mode": "env",
+  "pass": 2,
+  "fails": [
+   "(unnamed)",
+   "the source memo answers exactly what a full capture answers after every kind of edit"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 11,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 6,
+  "fails": [
+   "(unnamed)",
+   "complete managed publication tasks drain serially under actual registry custody: awaited-reentrancy",
+   "complete managed publication tasks drain serially under actual registry custody: callback-and-writer-failure",
+   "complete managed publication tasks drain serially under actual registry custody: detached-success",
+   "complete managed publication tasks drain serially under actual registry custody: detached-writer-failure"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/📜️script.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️negative/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️workspace/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📤️copy/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "actual destination parent retains current enforcing-prefix walks before each remaining awaited directory",
+   "actual destination reuses current root facts within the same synchronous span",
+   "actual destination root-only callers retain the production clone continuation cadence",
+   "actual layered derivative materialization admits exact source tree directory capacity",
+   "actual layered derivative materialization bounds concurrent writers and preserves independent bytes and inodes",
+   "actual layered derivative materialization bounds immutable initial data and rejects writable or aliased files",
+   "actual layered derivative materialization drains accepted destination operations preserving undefined callback failure",
+   "actual layered derivative materialization refuses unlisted initial destinations against SQLite byte roster",
+   "actual layered derivative materialization retains destination modes and exact nonroot entry capacity",
+   "actual layered derivative materialization streams destination rosters and refuses first unknown final name"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 9,
+  "fails": [
+   "(unnamed)",
+   "actual pinned SDK compiler runtimes keep disabled caches and funded temporary paths",
+   "bounded SDK descriptors preserve primary failures while closing actual files",
+   "bounded SDK descriptors preserve real read and post-stat failures over close failures",
+   "bounded SDK descriptors reject real replacement shortening and post-read mutation",
+   "complete physical SDK capture hashes files concurrently within the fixed worker bound and drains failures",
+   "derivative clone anchors source parents once while preserving physical copy and shared inodes",
+   "derivative clone destination lifecycle drains accepted work and refuses foreign membership",
+   "derivative clone rooted ancestry refuses an earlier symlink before a destination write",
+   "derivative clone store prefix remains current before any child operation",
+   "derivative namespace reader observes each physical row once with bounded parallelism",
+   "derivative reader completion preserves the original body failure across rechecks",
+   "sealed SDK capture authenticates one complete physical namespace without a preliminary hash pass",
+   "sealed SDK source verification preserves bounded parallel hashes and drains exact failures",
+   "unsealed derivative publication preserves genuine phase through EX seal and owner SH copy"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 4,
+  "fails": [
+   "(unnamed)",
+   "authorizer file capacity follows source schema without widening byte or resolution authority",
+   "captured authorizer bytes survive later Source edits and match independent esbuild and Node",
+   "captured compiler origins retain physical Source identity across emitted runtime contexts",
+   "captured entry roles execute only the explicit program and retain inert imported guards",
+   "captured workspace CJS bindings preserve owned policy baseline and current checks",
+   "declared authorizer runtime companions enter captured identity without discovering neighboring data",
+   "immutable authorizer sources agree with independent esbuild closure and Ajv",
+   "release authorizer compiler consumes exact funded snapshot bytes in actual Node"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 1,
+  "fails": [
+   "(unnamed)",
+   "one actual Original settles private physical refusal recovery and drain outcomes"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️negative/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 1,
+  "fails": [
+   "(unnamed)",
+   "retention negative receiver closes partial readers while preserving undefined and frozen setup failures",
+   "retention negative receiver retains actual strict wire and rejected request status without physical effects"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 13,
+  "fails": [
+   "(unnamed)",
+   "managed tooling crash recovery authenticates the complete current lease implementation closure",
+   "managed tooling crash witness cannot block authenticated retirement after genuine exclusive custody",
+   "private toolkit cleanup retains arbitrary primary through genuine stopped cleanup controls",
+   "queued cache maintenance waits under its original grant and drains before releasing real EX",
+   "quiescent tools retirement uses genuine whole-image custody while ordinary readers retain exact source guards",
+   "selected tools activation refuses changed or foreign current target",
+   "selected tools binary read proof retains full sealed ownership",
+   "selected tools census seed is exact declared DATA",
+   "selected tools copied read inventory binds complete actual material",
+   "selected tools derivative index read verifies exact sealed entries",
+   "selected tools derivative read workers retain honest terminal outcomes",
+   "selected tools derivative tree read keeps exact parents and lifetime",
+   "selected tools diagnostic input binds exact ticket bytes",
+   "selected tools diagnostic launch freshly calls fixed owner",
+   "selected tools directory close retains arbitrary primary",
+   "selected tools fixed owner composes current custody and retains whole row",
+   "selected tools fixed postorder retains unknowns row and private custody",
+   "selected tools funded Native read projection preserves genuine custody",
+   "selected tools helper Root0 worker",
+   "selected tools helper lifetime drains Root0 failures",
+   "selected tools intent remains bounded closed and detached",
+   "selected tools object read proof retains shared and changed material",
+   "selected tools plan derives candidates from actual current custody",
+   "selected tools plan helper saves only fresh fixed issuer commands",
+   "selected tools read context has no effect authority and preserves ordinary checks",
+   "selected tools read custody keeps exact private store identity",
+   "selected tools read descriptors preserve each distinct close failure",
+   "selected tools role generation retirement integrity is privately non-runnable",
+   "selected tools role maintenance binding is exact physical preservation only",
+   "selected tools role producer containers match actual Source",
+   "selected tools role staging is preserved opaque producer DATA",
+   "selected tools witness census binds full current bytes and roster",
+   "tooling storage planning charges captured derivative images rather than a cold installer floor"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📦️generation/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 2,
+  "fails": []
+ }
+}

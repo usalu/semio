@@ -329,8 +329,8 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-humidistat-zone-refuses-an-absent-zone | 💧️humidistat/🏙️change-zone | ⛔️refuses |
       | change-humidistat-humidifying-setpoint-schedule-repoints-humidifying | 💧️humidistat/☔️change-humidifying-setpoint-schedule | ✅️repoints |
       | change-humidistat-humidifying-setpoint-schedule-refuses-an-absent-one | 💧️humidistat/☔️change-humidifying-setpoint-schedule | ⛔️refuses |
-      | change-humidistat-dehumidifying-setpoint-schedule-repoints-drying | 💧️humidistat/🏝️change-dehumidifying-setpoint-schedule | ✅️repoints |
-      | change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one | 💧️humidistat/🏝️change-dehumidifying-setpoint-schedule | ⛔️refuses |
+      | change-humidistat-dehumidifying-setpoint-schedule-repoints-drying | 💧️humidistat/🏝️dehumidify-setpoint-schedule | ✅️repoints |
+      | change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one | 💧️humidistat/🏝️dehumidify-setpoint-schedule | ⛔️refuses |
       | change-humidistat-humidifying-throttle-range-widens-the-band | 💧️humidistat/🌧️change-humidifying-throttle-range | ✅️widens |
       | change-humidistat-humidifying-throttle-range-refuses-a-zero-band | 💧️humidistat/🌧️change-humidifying-throttle-range | ⛔️refuses |
       | change-humidistat-dehumidifying-throttle-range-widens-the-band | 💧️humidistat/🧻️change-dehumidifying-throttle-range | ✅️widens |
@@ -625,8 +625,8 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-glazing-material-conductivity-refuses | 🥂️window-layer/🟠️change-glazing-conductivity | ⛔️refuses |
       | change-glazing-material-solar-transmittance-applies | 🥂️window-layer/🟡️change-glazing-solar-transmittance | ✅️applies |
       | change-glazing-material-solar-transmittance-refuses | 🥂️window-layer/🟡️change-glazing-solar-transmittance | ⛔️refuses |
-      | change-glazing-material-visible-transmittance-applies | 🥂️window-layer/🥽️change-glazing-visible-transmittance | ✅️applies |
-      | change-glazing-material-visible-transmittance-refuses | 🥂️window-layer/🥽️change-glazing-visible-transmittance | ⛔️refuses |
+      | change-glazing-material-visible-transmittance-applies | 🥂️window-layer/🥽️glazing-visible-transmittance | ✅️applies |
+      | change-glazing-material-visible-transmittance-refuses | 🥂️window-layer/🥽️glazing-visible-transmittance | ⛔️refuses |
       | change-glazing-material-infrared-emissivity-applies | 🥂️window-layer/🩻️change-glazing-infrared-emissivity | ✅️applies |
       | change-glazing-material-infrared-emissivity-refuses | 🥂️window-layer/🩻️change-glazing-infrared-emissivity | ⛔️refuses |
       | rename-glazing-material-applies | 🥂️window-layer/🟢️rename-glazing | ✅️applies |
@@ -936,8 +936,8 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-humidistat-zone-refuses-an-absent-zone | 💧️humidistat/🏙️change-zone | ⛔️refuses |
       | change-humidistat-humidifying-setpoint-schedule-repoints-humidifying | 💧️humidistat/☔️change-humidifying-setpoint-schedule | ✅️repoints |
       | change-humidistat-humidifying-setpoint-schedule-refuses-an-absent-one | 💧️humidistat/☔️change-humidifying-setpoint-schedule | ⛔️refuses |
-      | change-humidistat-dehumidifying-setpoint-schedule-repoints-drying | 💧️humidistat/🏝️change-dehumidifying-setpoint-schedule | ✅️repoints |
-      | change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one | 💧️humidistat/🏝️change-dehumidifying-setpoint-schedule | ⛔️refuses |
+      | change-humidistat-dehumidifying-setpoint-schedule-repoints-drying | 💧️humidistat/🏝️dehumidify-setpoint-schedule | ✅️repoints |
+      | change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one | 💧️humidistat/🏝️dehumidify-setpoint-schedule | ⛔️refuses |
       | change-humidistat-humidifying-throttle-range-widens-the-band | 💧️humidistat/🌧️change-humidifying-throttle-range | ✅️widens |
       | change-humidistat-humidifying-throttle-range-refuses-a-zero-band | 💧️humidistat/🌧️change-humidifying-throttle-range | ⛔️refuses |
       | change-humidistat-dehumidifying-throttle-range-widens-the-band | 💧️humidistat/🧻️change-dehumidifying-throttle-range | ✅️widens |
@@ -1232,8 +1232,8 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-glazing-material-conductivity-refuses | 🥂️window-layer/🟠️change-glazing-conductivity | ⛔️refuses |
       | change-glazing-material-solar-transmittance-applies | 🥂️window-layer/🟡️change-glazing-solar-transmittance | ✅️applies |
       | change-glazing-material-solar-transmittance-refuses | 🥂️window-layer/🟡️change-glazing-solar-transmittance | ⛔️refuses |
-      | change-glazing-material-visible-transmittance-applies | 🥂️window-layer/🥽️change-glazing-visible-transmittance | ✅️applies |
-      | change-glazing-material-visible-transmittance-refuses | 🥂️window-layer/🥽️change-glazing-visible-transmittance | ⛔️refuses |
+      | change-glazing-material-visible-transmittance-applies | 🥂️window-layer/🥽️glazing-visible-transmittance | ✅️applies |
+      | change-glazing-material-visible-transmittance-refuses | 🥂️window-layer/🥽️glazing-visible-transmittance | ⛔️refuses |
       | change-glazing-material-infrared-emissivity-applies | 🥂️window-layer/🩻️change-glazing-infrared-emissivity | ✅️applies |
       | change-glazing-material-infrared-emissivity-refuses | 🥂️window-layer/🩻️change-glazing-infrared-emissivity | ⛔️refuses |
       | rename-glazing-material-applies | 🥂️window-layer/🟢️rename-glazing | ✅️applies |

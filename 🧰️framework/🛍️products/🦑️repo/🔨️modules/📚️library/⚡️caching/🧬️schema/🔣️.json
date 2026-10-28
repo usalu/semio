@@ -103,6 +103,25 @@
       },
       "uniqueItems": true
     },
+    "runtimeStateDirectories": {
+      "description": "Workspace-relative directories that hold runtime state of earlier or older processes (captures, leases, build targets), never an input: every project negates them. They must be ignored by version control and never tracked (a law checks it with git); the command store itself lives in `.cache/command`.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[^/].*[^/]$" }
+    },
+    "ownerViews": {
+      "description": "Owner trees whose subtrees stay private to the tasks of the owning project: its dependents key the shared part of the owner glob only, so an edit inside a private subtree (the products under the framework owner) never re-keys a dependent. A framework module cannot depend on a product (dependency-direction law); a task of the owner that reads a private subtree adds the named input `ownerPrivate`.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["owner", "private"],
+        "properties": {
+          "owner": { "type": "string" },
+          "private": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+        }
+      }
+    },
     "toolchains": {
       "type": "object",
       "additionalProperties": {
@@ -135,6 +154,14 @@
           },
           "commands": {
             "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "activatedBy": {
+            "description": "Names of provisioning targets (`deps-tectonic`): a project whose targets depend on one of them hashes this toolchain.",
+            "type": "array",
+            "uniqueItems": true,
             "items": {
               "type": "string"
             }

@@ -378,6 +378,9 @@ func requireToolchainRoot(t *testing.T) string {
 		t.Fatalf("the canonical dispatcher needs bun on PATH: %v", err)
 	}
 	t.Setenv("SEMIO_TOOLCHAIN_ROOT", root)
+	previous := repoExecutable
+	repoExecutable = func() (string, error) { return "bun", nil }
+	t.Cleanup(func() { repoExecutable = previous })
 	provideScriptEnvelope(t, "client-test:canonical-go-test-dispatch", 2*time.Minute)
 	return root
 }

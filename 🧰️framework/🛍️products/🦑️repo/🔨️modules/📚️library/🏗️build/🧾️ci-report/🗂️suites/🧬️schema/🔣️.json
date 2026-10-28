@@ -1,0 +1,573 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/repo/build/ci-report/suites.json",
+  "title": "CiSuitesV1",
+  "description": "Closed contracts of the suite sweep of the continuous integration: the policy that shards the three route tables over the hosts and names the suites that must really run on a host, the plan of one shard, the outcome rows of a run and the report. Tool-neutral: the only implementation word is the `Tool` of the neutral entry.",
+  "definitions": {
+    "Host": {
+      "enum": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    "Table": {
+      "enum": [
+        "process",
+        "caching",
+        "build"
+      ]
+    },
+    "Tool": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,31}$"
+    },
+    "Suite": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "maxLength": 64
+    },
+    "Text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "TableRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "project",
+        "projectFile",
+        "shards"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Table"
+        },
+        "project": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "projectFile": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "shards": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        }
+      }
+    },
+    "MustRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "table",
+        "suite",
+        "proves"
+      ],
+      "properties": {
+        "table": {
+          "$ref": "#/definitions/Table"
+        },
+        "suite": {
+          "$ref": "#/definitions/Suite"
+        },
+        "proves": {
+          "$ref": "#/definitions/Text"
+        }
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "maximumShardBudgetMinutes",
+        "suiteSlackMinutes",
+        "sampleSeconds",
+        "tables",
+        "mustRun"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "maximumShardBudgetMinutes": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 330
+        },
+        "suiteSlackMinutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+        "sampleSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120
+        },
+        "tables": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/definitions/TableRow"
+          }
+        },
+        "mustRun": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "all",
+            "darwin",
+            "linux",
+            "win32"
+          ],
+          "properties": {
+            "all": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/definitions/MustRun"
+              }
+            },
+            "darwin": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/definitions/MustRun"
+              }
+            },
+            "linux": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/definitions/MustRun"
+              }
+            },
+            "win32": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/definitions/MustRun"
+              }
+            }
+          }
+        }
+      }
+    },
+    "PlanRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "table",
+        "suite",
+        "project",
+        "target",
+        "budgetMs",
+        "runsHere"
+      ],
+      "properties": {
+        "table": {
+          "$ref": "#/definitions/Table"
+        },
+        "suite": {
+          "$ref": "#/definitions/Suite"
+        },
+        "project": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^test-[a-z][a-z0-9-]*$"
+        },
+        "budgetMs": {
+          "type": "integer",
+          "minimum": 1000
+        },
+        "runsHere": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "host",
+        "label",
+        "rows",
+        "unrouted"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "host": {
+          "$ref": "#/definitions/Host"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PlanRow"
+          }
+        },
+        "unrouted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Unrouted"
+          }
+        }
+      }
+    },
+    "Counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pass",
+        "skip",
+        "fail"
+      ],
+      "properties": {
+        "pass": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "skip": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fail": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "samples",
+        "minimumAvailableMegabytes",
+        "peakUsedMegabytes",
+        "peakTreeMegabytes",
+        "peakSwapMegabytes",
+        "worstPressure"
+      ],
+      "properties": {
+        "samples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minimumAvailableMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "peakUsedMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "peakSwapMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "worstPressure": {
+          "enum": [
+            "normal",
+            "warn",
+            "critical",
+            null
+          ]
+        },
+        "peakTreeMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "Status": {
+      "enum": [
+        "passed",
+        "skipped",
+        "failed",
+        "timeout",
+        "unrouted"
+      ]
+    },
+    "Outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "table",
+        "suite",
+        "status",
+        "exitCode",
+        "wallMs",
+        "tests",
+        "memory",
+        "log"
+      ],
+      "properties": {
+        "table": {
+          "$ref": "#/definitions/Table"
+        },
+        "suite": {
+          "$ref": "#/definitions/Suite"
+        },
+        "status": {
+          "$ref": "#/definitions/Status"
+        },
+        "exitCode": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "wallMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tests": {
+          "$ref": "#/definitions/Counts"
+        },
+        "memory": {
+          "$ref": "#/definitions/Memory"
+        },
+        "log": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^logs/[a-z0-9-]+\\.log$"
+        }
+      }
+    },
+    "Violation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "table",
+        "suite",
+        "reason"
+      ],
+      "properties": {
+        "table": {
+          "$ref": "#/definitions/Table"
+        },
+        "suite": {
+          "$ref": "#/definitions/Suite"
+        },
+        "reason": {
+          "enum": [
+            "skipped",
+            "failed",
+            "timeout",
+            "unrouted",
+            "missing",
+            "not-declared"
+          ]
+        }
+      }
+    },
+    "Report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "host",
+        "label",
+        "tool",
+        "ok",
+        "outcomes",
+        "unobserved",
+        "violations",
+        "totals"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "host": {
+          "$ref": "#/definitions/Host"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "tool": {
+          "$ref": "#/definitions/Tool"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "outcomes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Outcome"
+          }
+        },
+        "violations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Violation"
+          }
+        },
+        "totals": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "passed",
+            "skipped",
+            "failed",
+            "timeout",
+            "unrouted",
+            "wallMs",
+            "tests"
+          ],
+          "properties": {
+            "passed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "skipped": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "failed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "timeout": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unrouted": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "wallMs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tests": {
+              "$ref": "#/definitions/Counts"
+            }
+          }
+        },
+        "unobserved": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "host",
+              "tree"
+            ]
+          }
+        }
+      }
+    },
+    "Sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "atMs",
+        "availableMegabytes",
+        "totalMegabytes",
+        "treeMegabytes",
+        "swapMegabytes",
+        "pressure"
+      ],
+      "properties": {
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "availableMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalMegabytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "swapMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "pressure": {
+          "enum": [
+            "normal",
+            "warn",
+            "critical",
+            null
+          ]
+        },
+        "treeMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "Unrouted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "table",
+        "suite"
+      ],
+      "properties": {
+        "table": {
+          "$ref": "#/definitions/Table"
+        },
+        "suite": {
+          "$ref": "#/definitions/Suite"
+        }
+      }
+    }
+  }
+}

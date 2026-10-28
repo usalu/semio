@@ -1,0 +1,20 @@
+{
+ "label": "g50-mcp",
+ "target": "repo-mcp:test",
+ "started": "01:54:28",
+ "wall_s": 82.8,
+ "peak_tree_mb": 3053,
+ "peak_processes": 6,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "4",
+   "1 action cache hit, 2 internal, 2 local"
+  ],
+  "actions": [
+   "4"
+  ]
+ }
+}

@@ -1,0 +1,94 @@
+{
+ "target": "test-core-modules",
+ "tag": "c1",
+ "declared": 1358,
+ "rows": [
+  {
+   "leg": "cargo-core",
+   "crate": "semio-framework-hash",
+   "test": "lib:semio_framework_hash",
+   "kind": "cargo",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 8,
+   "tail": " | test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.60s |  | ",
+   "notes": [
+    "profiles:2",
+    "rules:933",
+    "capacity:600"
+   ]
+  },
+  {
+   "leg": "cargo-core",
+   "crate": "semio-framework-pixels",
+   "test": "lib:semio_framework_pixels",
+   "kind": "cargo",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 2,
+   "tail": " | test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s |  | ",
+   "notes": [
+    "profiles:2",
+    "rules:933",
+    "capacity:600"
+   ]
+  },
+  {
+   "leg": "cargo-core",
+   "crate": "semio-framework-intrinsic-size",
+   "test": "lib:semio_framework_intrinsic_size",
+   "kind": "cargo",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 15,
+   "tail": " | test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.25s |  | ",
+   "notes": [
+    "profiles:2",
+    "rules:933",
+    "capacity:600"
+   ]
+  },
+  {
+   "leg": "cargo-core",
+   "crate": "semio-framework-mesh-engine",
+   "test": "lib:semio_framework_mesh_engine",
+   "kind": "cargo",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": false,
+   "clean": false,
+   "learned": [
+    "🧰️framework/🔨️modules/🏗️mesh-engine/🌲️canonical/📥️decode/🧪️tests/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb",
+    "🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🧊️gltf-codec/🧊️single-triangle-embedded.glb",
+    "🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🎨️attributes/🔣️.json",
+    "🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🥽️scene-mesh-kinds/🔣️.json",
+    "🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🧊️gltf-codec/✅️expected-single-triangle.json",
+    "🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🧊️gltf-codec/🔺️single-triangle-embedded.gltf",
+    "🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🧊️gltf-codec/🔗️external-buffer.gltf",
+    "🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🧹️metadata/🔣️.json"
+   ],
+   "rounds": 8,
+   "seconds": 41,
+   "tail": " | test result: FAILED. 44 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.67s |  | ",
+   "notes": [
+    "profiles:2",
+    "rules:933",
+    "capacity:600",
+    "profiles:2"
+   ]
+  }
+ ]
+}

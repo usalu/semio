@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "lanes": [
+    {"id": "s1", "crates": ["print-tests"], "fileBytes": 1000, "sessionBytes": 3000},
+    {"id": "s2", "crates": ["course"], "fileBytes": 1000, "sessionBytes": 0},
+    {"id": "s3", "crates": ["dashboard"], "fileBytes": 1000, "sessionBytes": 0}
+  ],
+  "cases": [
+    {"id": "sessions do not evict the lane that keeps them", "quotaBytes": 3600, "expect": []},
+    {"id": "the files still bound the idle lanes, least recently used first", "quotaBytes": 2500, "expect": ["s1"]}
+  ]
+}

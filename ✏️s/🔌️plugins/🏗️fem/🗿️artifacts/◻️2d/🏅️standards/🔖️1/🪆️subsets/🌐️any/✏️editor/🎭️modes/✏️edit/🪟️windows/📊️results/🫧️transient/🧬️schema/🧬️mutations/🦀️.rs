@@ -6,7 +6,7 @@ use super::FemResultsWindowTransient;
 
 use super::FemResultsWindowTransientDiff;
 
-#[path = "⏱️set-playback-clock/🦀️.rs"]
+#[path = "⏱️playback-clock/🦀️.rs"]
 mod set_playback_clock;
 pub use set_playback_clock::SetPlaybackClock;
 

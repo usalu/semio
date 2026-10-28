@@ -110,7 +110,8 @@
             "maximumRuntimeBytes": 1048576,
             "maximumHandshakeMilliseconds": 10000,
             "readChunkBytes": 65536,
-            "cooperativeCancellationRole": "execution"
+            "cooperativeCancellationRole": "execution",
+            "waitingEvent": "waiting"
           }
         },
         "ParameterGrants": {
@@ -298,7 +299,7 @@
         "serverIdleSeconds": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 300
+          "maximum": 1800
         },
         "moduleSetupMilliseconds": {
           "type": "integer",
@@ -880,7 +881,7 @@
     "Policy": {
       "const": {
         "version": 1,
-        "serverIdleSeconds": 120,
+        "serverIdleSeconds": 600,
         "moduleSetupMilliseconds": 120000,
         "terminationReceiptMilliseconds": 5000,
         "maximumControlMessageBytes": 65536
@@ -1473,6 +1474,10 @@
             "hexLength": 10
           }
         },
+        "fingerprints": {
+          "plan": ".fingerprint.json",
+          "value": ".input"
+        },
         "kinds": {
           "task": {
             "sandbox": false,
@@ -1499,18 +1504,40 @@
         }
       }
     },
+    "FingerprintPlan": {
+      "description": "What the planner leaves per fingerprinted task: the head (host identity, implementation, declared environment, runtime answers) and the paths without a declarable label whose identities the publisher hashes after every plan, fresh or reused.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "head", "cached", "files"],
+      "properties": {
+        "version": { "const": 1 },
+        "head": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "cached": { "type": "boolean" },
+        "files": { "type": "array", "maxItems": 1048576, "items": { "type": "string", "minLength": 1, "maxLength": 1024 } }
+      }
+    },
     "ActionPolicy": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "version",
         "sources",
+        "fingerprints",
         "kinds",
         "uncached"
       ],
       "properties": {
         "version": {
           "const": 1
+        },
+        "fingerprints": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["plan", "value"],
+          "properties": {
+            "plan": { "type": "string", "pattern": "^\\.[a-z][a-z.]*$" },
+            "value": { "type": "string", "pattern": "^\\.[a-z]+$" }
+          }
         },
         "sources": {
           "type": "object",
@@ -2141,6 +2168,43 @@
           }
         }
       ]
+    },
+    "Limits": {
+      "description": "EN: The traversal, batch, byte, text and throttle limits of the Bazel script. DE: Die Durchlauf-, Stapel-, Byte-, Text- und Drosselgrenzen des Bazel-Skripts.",
+      "const": {
+        "sourceIdentityDepth": 64,
+        "sourceIdentityEntries": 1000000,
+        "classifyBatch": 256,
+        "immutableInputBytes": 25165824,
+        "writeChunkBytes": 65536,
+        "scopeReasonCharacters": 200,
+        "planReasonCharacters": 300,
+        "cacheCollectionThrottleMilliseconds": 120000
+      }
+    },
+    "LimitsDescriptions": {
+      "const": {
+        "en": {
+          "sourceIdentityDepth": "The deepest directory nesting the identity of a source tree walks.",
+          "sourceIdentityEntries": "The most entries the identity of a source tree visits.",
+          "classifyBatch": "How many paths are classified at once while the inputs of a plan are expanded.",
+          "immutableInputBytes": "The most bytes of one immutable input the script writes: a snapshot, an overlay or the loader (24 MiB).",
+          "writeChunkBytes": "The size of one write while an immutable input is written (64 KiB).",
+          "scopeReasonCharacters": "The most characters of the reason an out-of-date implementation scope reports.",
+          "planReasonCharacters": "The most characters of the reason a failed plan reuse or planner reports.",
+          "cacheCollectionThrottleMilliseconds": "How long after a cache collection another one of the same kind is answered with the earlier result."
+        },
+        "de": {
+          "sourceIdentityDepth": "Die tiefste Verzeichnisverschachtelung, die die Identität eines Quellbaums durchläuft.",
+          "sourceIdentityEntries": "Die meisten Einträge, die die Identität eines Quellbaums besucht.",
+          "classifyBatch": "Wie viele Pfade gleichzeitig klassifiziert werden, während die Eingaben eines Plans entfaltet werden.",
+          "immutableInputBytes": "Die meisten Bytes einer unveränderlichen Eingabe, die das Skript schreibt: ein Schnappschuss, ein Overlay oder der Lader (24 MiB).",
+          "writeChunkBytes": "Die Größe eines Schreibvorgangs, während eine unveränderliche Eingabe geschrieben wird (64 KiB).",
+          "scopeReasonCharacters": "Die meisten Zeichen des Grundes, den ein veralteter Implementierungs-Scope meldet.",
+          "planReasonCharacters": "Die meisten Zeichen des Grundes, den eine fehlgeschlagene Plan-Wiederverwendung oder ein fehlgeschlagener Planer meldet.",
+          "cacheCollectionThrottleMilliseconds": "Wie lange nach einer Cache-Sammlung eine weitere derselben Art mit dem früheren Ergebnis beantwortet wird."
+        }
+      }
     }
   }
 }

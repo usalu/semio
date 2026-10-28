@@ -63,8 +63,7 @@ test("a process tree shares the custody of its root and an own-process second le
  }finally{for(const child of children)if(child.process.exitCode===null)child.process.kill("SIGKILL");await Promise.all(children.map(child=>child.done));rmSync(work,{recursive:true,force:true});}
 },120000);
 
-test("a queued custody wait under a real issued admission control completes once the holder releases (the control signal is the lease signal)",async()=>{
- if(!process.env.SEMIO_SCRIPT_PROCESS_INVOCATION){console.log("[skip] needs the repo exec envelope");return;}
+test.skipIf(!process.env.SEMIO_SCRIPT_PROCESS_INVOCATION)("a queued custody wait under a real issued admission control completes once the holder releases (the control signal is the lease signal)",async()=>{
  const work=scratch(),leases=join(work,"l"),script=worker(work),children:Child[]=[];mkdirSync(leases);
  try{
   await receiveScriptProcessInvocation(process.env,async original=>{
@@ -84,17 +83,16 @@ const probe={
  "t/Cargo.toml":'[package]\nname = "t"\nversion = "0.1.0"\nedition = "2021"\n[dependencies]\nx = { path = "../x" }\ny = { path = "../y" }\n',"t/src/lib.rs":"pub fn f() -> u32 { 1 }\n",
 };
 const prepare=():string=>{const work=scratch();for(const [name,text] of Object.entries(probe)){mkdirSync(dirname(join(work,name)),{recursive:true});writeFileSync(join(work,name),text);}return work;};
-const cargoEnvironment=(work:string,variant:"a"|"b"|"base",target:string)=>({...process.env,PATH:dirname(cargo!)+":"+(process.env.PATH??""),RUSTUP_TOOLCHAIN:"",CARGO_TARGET_DIR:join(work,target),CARGO_BUILD_BUILD_DIR:join(work,"b"),XVAR:variant==="a"?"1":"0",YVAR:variant==="b"?"1":"0"});
+const cargoEnvironment=(work:string,variant:"a"|"b"|"base",target:string)=>({...process.env,PATH:dirname(cargo!)+":"+(process.env.PATH??""),RUSTUP_TOOLCHAIN:"",RUSTC:join(dirname(cargo!),"rustc"),RUSTC_WRAPPER:"",CARGO_TARGET_DIR:join(work,target),CARGO_BUILD_BUILD_DIR:join(work,"b"),XVAR:variant==="a"?"1":"0",YVAR:variant==="b"?"1":"0"});
 const baseline=(work:string)=>new Promise<number>(accept=>{spawn(cargo!,["build","-p","t"],{cwd:work,env:cargoEnvironment(work,"base","t-base"),stdio:"ignore"}).once("close",code=>accept(code??1));});
 
-test("two Cargo processes with opposite freshness views on one build directory sleep for ever without the lease (negative control) and finish one after the other with it, as judged by an independent interval oracle",async()=>{
- if(!cargo||!existsSync(cargo)||!python){console.log("[skip] pinned nightly Cargo or Python unavailable");return;}
+test.skipIf(!cargo||!existsSync(cargo)||!python)("two Cargo processes with opposite freshness views on one build directory sleep for ever without the lease (negative control) and finish one after the other with it, as judged by an independent interval oracle",async()=>{
  const work=prepare(),log=join(work,"log.txt");writeFileSync(log,"");
  try{
   let deadlocked=false;
   for(let round=0;round<14&&!deadlocked;round++){
    expect(await baseline(work)).toBe(0);
-   const pair=(["a","b"] as const).map(variant=>spawn("sh",["-c",'read go; exec "$@"',"sh",cargo,"build","-p","t"],{cwd:work,env:cargoEnvironment(work,variant,"t-"+variant),stdio:["pipe","ignore","ignore"]}));
+   const pair=(["a","b"] as const).map(variant=>spawn("sh",["-c",'read go; exec "$@"',"sh",cargo!,"build","-p","t"],{cwd:work,env:cargoEnvironment(work,variant,"t-"+variant),stdio:["pipe","ignore","ignore"]}));
    for(const child of pair)child.stdin!.write("go\n");
    const exits=pair.map(child=>new Promise<number>(accept=>child.once("close",code=>accept(code??1))));
    const outcome=await Promise.race([Promise.all(exits).then(()=>"finished"),Bun.sleep(25000).then(()=>"asleep")]);
@@ -105,21 +103,21 @@ test("two Cargo processes with opposite freshness views on one build directory s
   writeFileSync(script,`import {acquireCargoBuildLeaseV1} from ${JSON.stringify(lease)};import {appendFileSync} from "node:fs";
 const [leases,work,variant,log,cargo]=process.argv.slice(2),note=(what)=>appendFileSync(log,what+" "+process.pid+" "+variant+" "+process.hrtime.bigint()+"\\n");
 const held=await acquireCargoBuildLeaseV1({directory:leases,buildDirectory:work+"/b",targetDirectory:work+"/t-"+variant,args:[],signal:new AbortController().signal});
-try{note("start");const child=Bun.spawn([cargo,"build","-p","t"],{cwd:work,env:{...process.env,PATH:cargo.replace(/\\/cargo$/,"")+":"+process.env.PATH,RUSTUP_TOOLCHAIN:"",CARGO_TARGET_DIR:work+"/t-"+variant,CARGO_BUILD_BUILD_DIR:work+"/b",XVAR:variant==="a"?"1":"0",YVAR:variant==="b"?"1":"0"},stdout:"ignore",stderr:"ignore"});process.exitCode=await child.exited;note("end");}finally{held.release();}
+try{note("start");const child=Bun.spawn([cargo,"build","-p","t"],{cwd:work,env:{...process.env,PATH:cargo.replace(/\\/cargo$/,"")+":"+process.env.PATH,RUSTUP_TOOLCHAIN:"",RUSTC:cargo.slice(0,-5)+"rustc",RUSTC_WRAPPER:"",CARGO_TARGET_DIR:work+"/t-"+variant,CARGO_BUILD_BUILD_DIR:work+"/b",XVAR:variant==="a"?"1":"0",YVAR:variant==="b"?"1":"0"},stdout:"ignore",stderr:"ignore"});process.exitCode=await child.exited;note("end");}finally{held.release();}
 `);
   for(let round=0;round<3;round++){
    expect(await baseline(work)).toBe(0);writeFileSync(log,"");
-   const pair=(["a","b"] as const).map(variant=>spawn("sh",["-c",'read go; exec "$@"',"sh",process.execPath,script,leases,work,variant,log,cargo],{cwd:work,stdio:["pipe","ignore","inherit"]}));
+   const pair=(["a","b"] as const).map(variant=>spawn("sh",["-c",'read go; exec "$@"',"sh",process.execPath,script,leases,work,variant,log,cargo!],{cwd:work,stdio:["pipe","ignore","inherit"]}));
    for(const child of pair)child.stdin!.write("go\n");
    const exits=pair.map(child=>new Promise<number>(accept=>child.once("close",code=>accept(code??1))));
    const outcome=await Promise.race([Promise.all(exits),Bun.sleep(90000).then(()=>"asleep" as const)]);
    if(outcome==="asleep")for(const child of pair)child.kill("SIGKILL");
    expect(outcome,"leased Cargo processes must never sleep for ever").toEqual([0,0]);
-   const run=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),log]),report=JSON.parse(run.stdout.toString().split("\n")[0]!);
+   const run=Bun.spawnSync([python!,"-I",join(here,"🐍️.py"),log]),report=JSON.parse(run.stdout.toString().split("\n")[0]!);
    expect(run.exitCode,run.stdout.toString()).toBe(0);expect(report).toEqual({runs:2,unfinished:0,overlaps:0});
   }
   const overlapping=join(work,"overlap.txt");writeFileSync(overlapping,"start 1 a 100\nstart 2 b 150\nend 1 a 200\nend 2 b 250\n");
-  expect(Bun.spawnSync([python,"-I",join(here,"🐍️.py"),overlapping]).exitCode).toBe(1);
+  expect(Bun.spawnSync([python!,"-I",join(here,"🐍️.py"),overlapping]).exitCode).toBe(1);
  }finally{rmSync(work,{recursive:true,force:true});}
 },600000);
 

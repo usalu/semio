@@ -31,8 +31,14 @@ for(const row of corpus.pressure)test(`claim sweep pressure: ${row.id}`,()=>{
  const expected=oracle.query("select case when ?1<?2 then min(?3,?4) else ?3 end as interval").get(row.freeRatio,row.gate.claimSweepPressureFreeRatio,row.gate.claimSweepIntervalMilliseconds,row.gate.claimSweepPressureIntervalMilliseconds) as {interval:number};
  expect(claimSweepIntervalV1(row.gate,row.freeRatio)).toBe(expected.interval);expect(expected.interval).toBe(row.expectIntervalMilliseconds);
 });
-test("the free ratio of a real lease store is a fraction and an absent store counts as free",()=>{
- const ratio=leaseStoreFreeRatioV1(root);expect(ratio).toBeGreaterThan(0);expect(ratio).toBeLessThanOrEqual(1);expect(leaseStoreFreeRatioV1(join(root,"absent"))).toBe(1);
+test("the free ratio of a real lease store is a fraction and a store that cannot be measured is unknown, never free",()=>{
+ const ratio=leaseStoreFreeRatioV1(root);expect(ratio).toBeGreaterThan(0);expect(ratio).toBeLessThanOrEqual(1);expect(leaseStoreFreeRatioV1(join(root,"absent"))).toBeUndefined();
+});
+test("an unknown free ratio sweeps claims at the pressure rate, exactly like a full disk",()=>{
+ for(const row of corpus.pressure){
+  const full=oracle.query("select case when ?1<?2 then min(?3,?4) else ?3 end as interval").get(0,row.gate.claimSweepPressureFreeRatio,row.gate.claimSweepIntervalMilliseconds,row.gate.claimSweepPressureIntervalMilliseconds) as {interval:number};
+  expect(claimSweepIntervalV1(row.gate,undefined),row.id).toBe(full.interval);expect(claimSweepIntervalV1(row.gate,undefined)).toBe(claimSweepIntervalV1(row.gate,0));
+ }
 });
 
 let counter=0;

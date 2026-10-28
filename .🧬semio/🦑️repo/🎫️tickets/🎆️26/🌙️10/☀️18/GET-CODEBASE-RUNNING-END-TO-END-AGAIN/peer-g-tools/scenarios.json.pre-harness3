@@ -1,0 +1,26 @@
+{
+ "version": 1,
+ "scenarios": {
+  "p1": {
+   "about": "unrelated peer edit: a root document and another product's source (outside the build closure), reverted 25 s later",
+   "files": ["CITATION.cff", "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/📜️script.ts"],
+   "line": "# [peer-g] %d\n",
+   "trigger": "Verifying graph facts|^graph: |build:graph-plan|Inferring projects|^\\[bazel\\] |^Analyzing|^Loading",
+   "holdSeconds": 25
+  },
+  "p2": {
+   "about": "comment-only edit of a TS source inside the course closure, reverted 25 s later",
+   "files": ["🎓️teaching/🏛️architecture/📚️course/📚️course/🟦️.ts"],
+   "line": "// [peer-g] %d\n",
+   "trigger": "Verifying graph facts|^graph: |build:graph-plan|Inferring projects|^\\[bazel\\] |^Analyzing|^Loading",
+   "holdSeconds": 25
+  },
+  "p3": {
+   "about": "comment-only edit of a scheduling leaf of the build tooling library while the build runs (live baseline), reverted 25 s later",
+   "files": ["🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts"],
+   "line": "// [peer-g] %d\n",
+   "trigger": "Verifying graph facts|^graph: |build:graph-plan|Inferring projects|^\\[bazel\\] |^Analyzing|^Loading",
+   "holdSeconds": 25
+  }
+ }
+}

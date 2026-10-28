@@ -1,0 +1,10 @@
+[
+{
+"old": "        \"valid\": true,\n            \"compiled\": [],\n            \"closure\": [],\n            \"dependencies\": [],\n            \"error\": \"Ordinary command Source required\",\n            \"sourceRefusal\": true\n          }\n        ],\n        \"actual\": {\n          \"manifest\": \"🧰️framework/🛍️products/💻️os/",
+"new": "        \"valid\": true,\n            \"compiled\": [],\n            \"closure\": [],\n            \"dependencies\": [],\n            \"error\": \"Ordinary compiler input refused: runtime.js\",\n            \"sourceRefusal\": true\n          }\n        ],\n        \"actual\": {\n          \"manifest\": \"🧰️framework/🛍️products/💻️os/"
+},
+{
+"old": "🦀️rust/📋️project.json\",\n      \"target\": \"test\",\n      \"expected\": \"compile\"\n    }\n  ],\n  \"semant",
+"new": "🦀️rust/📋️project.json\",\n      \"target\": \"test\",\n      \"expected\": \"compile\"\n    },\n    {\n      \"manifest\": \"✏️s/🧑‍💻dev/📋️project.json\",\n      \"target\": \"generate\",\n      \"expected\": \"freshness\"\n    },\n    {\n      \"manifest\": \"✏️s/🧑‍💻dev/📋️project.json\",\n      \"target\": \"typecheck\",\n      \"expected\": \"compile\"\n    }\n  ],\n  \"semant"
+}
+]

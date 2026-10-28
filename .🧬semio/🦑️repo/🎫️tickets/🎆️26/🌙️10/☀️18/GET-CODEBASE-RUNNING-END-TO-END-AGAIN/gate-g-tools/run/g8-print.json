@@ -1,0 +1,31 @@
+{
+ "label": "g8-print",
+ "target": "@semio-tech/print-rs:test",
+ "started": "23:39:14",
+ "wall_s": 562.4,
+ "peak_tree_mb": 10955,
+ "peak_processes": 9,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 10.0,
+ "graph": {
+  "inferring": [
+   "519"
+  ],
+  "refreshing": [
+   "521"
+  ],
+  "published": [
+   "585",
+   "521",
+   "191"
+  ],
+  "processes": [
+   "8",
+   "1 action cache hit, 2 internal, 3 local, 3 worker"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

@@ -203,7 +203,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       return;
     }
     if (segments[0] === "shared-artifact-addressing") {
-      const { testContentIdOracle, testSharedArtifactAddressingOracle } = await import("@semio-tech/framework-os/modules/store/testing/artifact-addressing");
+      const { testContentIdOracle, testSharedArtifactAddressingOracle } = await import("../../../../../💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/🧪️testing/🪪️artifact-addressing/🟦️.ts");
       testSharedArtifactAddressingOracle();
       testContentIdOracle();
       if (segments[1] === "oracle") return;
@@ -240,7 +240,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
     
     
     if (segments[0] === "snapshot-read-retirement") {
-      const { testSnapshotReadRetirement } = await import("@semio-tech/framework-os/modules/store/testing/snapshot-read-retirement");
+      const { testSnapshotReadRetirement } = await import("../../../../../💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/🧪️testing/♻️snapshot-read-retirement/🟦️.ts");
       testSnapshotReadRetirement();
       runCmd(runtimeExecutableV1(), [this.root + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", this.root + "/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/♻️snapshot-read-retirement/🟦️.ts"], { cwd: this.root });
       if (segments[1] === "native") {
@@ -364,7 +364,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       return;
     }
     if (segments[0] === "owned-document-closure") {
-      const { testOwnedDocumentClosureOracle } = await import("@semio-tech/framework-os/modules/store/composition/closure/testing/unit");
+      const { testOwnedDocumentClosureOracle } = await import("../../../../../💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️testing/🔬️unit/🟦️.ts");
       testOwnedDocumentClosureOracle();
       runCmd(runtimeExecutableV1(), [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🟦️.ts")], { cwd: this.root });
       if (segments[1] === "native") {
@@ -584,7 +584,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       const { testVideoRenderProgramContract } = await import("../../../../../../🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🧪️testing/🎞️video-render-program/🟦️.ts");
       const { testVideoRenderJobContract } = await import("../../../../../../🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🧪️testing/🧵️video-render-job/🟦️.ts");
       const { testRasterVideoAvcPcmContract } = await import("../../../../../../📦️packages/🟦️typescript/🖌️raster/🎥️video/🧪️testing/🔬️unit/🟦️.ts");
-      const { testVideoRenderHostContract } = await import("@semio-tech/framework-os/modules/renderer/engine/elements/VideoRenderHost/testing/unit");
+      const { testVideoRenderHostContract } = await import("../../../../../💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎥️VideoRenderHost/🧪️testing/🔬️unit/🟦️.ts");
       testVideoRenderProgramContract();
       testVideoRenderJobContract();
       testRasterVideoAvcPcmContract();
@@ -637,7 +637,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
     
     
     if (segments[0] === "window-action-context") {
-      const { testWindowActionContextOracle } = await import("@semio-tech/framework-os/modules/renderer/engine/testing/window-action-context");
+      const { testWindowActionContextOracle } = await import("../../../../../💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️testing/🔬️window-action-context/🟦️.ts");
       testWindowActionContextOracle();
       if (segments[1] === "oracle") return;
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");

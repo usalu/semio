@@ -1,0 +1,197 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "plain modules",
+   "source": "mod a;\nmod b;\npub mod c;\n",
+   "references": {
+    "includes": [],
+    "modules": [
+     {
+      "name": "a"
+     },
+     {
+      "name": "b"
+     },
+     {
+      "name": "c"
+     }
+    ]
+   }
+  },
+  {
+   "name": "path attribute with escapes",
+   "source": "#[path = \"sub\\\\dir/x.rs\"]\nmod x;\n",
+   "references": {
+    "includes": [],
+    "modules": [
+     {
+      "name": "x",
+      "path": "sub\\dir/x.rs"
+     }
+    ]
+   }
+  },
+  {
+   "name": "path attribute plain",
+   "source": "#[path = \"sub/dir/y.rs\"]\nmod y;\n",
+   "references": {
+    "includes": [],
+    "modules": [
+     {
+      "name": "y",
+      "path": "sub/dir/y.rs"
+     }
+    ]
+   }
+  },
+  {
+   "name": "include macro plain",
+   "source": "const A: &str = include_str!(\"data/a.txt\");\nconst B: &[u8] = include_bytes!(\"data/b.bin\");\n",
+   "references": {
+    "includes": [
+     "data/a.txt",
+     "data/b.bin"
+    ],
+    "modules": []
+   }
+  },
+  {
+   "name": "include macro with escape",
+   "source": "const A: &str = include_str!(\"data/\\u{61}\\\".txt\");\n",
+   "references": {
+    "includes": [
+     "data/\\u{61}\\\".txt"
+    ],
+    "modules": []
+   }
+  },
+  {
+   "name": "unterminated or raw newline in a string",
+   "source": "mod z;\nconst S: &str = \"line one\nline two\";\nmod after;\n",
+   "references": {
+    "includes": [],
+    "modules": [
+     {
+      "name": "z"
+     },
+     {
+      "name": "after"
+     }
+    ]
+   }
+  },
+  {
+   "name": "raw strings",
+   "source": "const R: &str = r#\"mod hidden;\"#;\nmod shown;\n",
+   "references": {
+    "includes": [],
+    "modules": [
+     {
+      "name": "shown"
+     }
+    ]
+   }
+  },
+  {
+   "name": "byte and c strings",
+   "source": "const B: &[u8] = b\"mod nope;\";\nconst C: &CStr = c\"mod nope2;\";\nmod yes;\n",
+   "references": {
+    "includes": [],
+    "modules": [
+     {
+      "name": "yes"
+     }
+    ]
+   }
+  },
+  {
+   "name": "characters and lifetimes",
+   "source": "fn f<'a>(x: &'a str) -> char { 'm' }\nmod real;\n",
+   "references": {
+    "includes": [],
+    "modules": [
+     {
+      "name": "real"
+     }
+    ]
+   }
+  },
+  {
+   "name": "comments",
+   "source": "// mod commented;\n/* mod blocked; */\nmod live;\n",
+   "references": {
+    "includes": [],
+    "modules": [
+     {
+      "name": "live"
+     }
+    ]
+   }
+  },
+  {
+   "name": "nested modules",
+   "source": "mod outer {\n    mod inner;\n    #[path = \"deep/q.rs\"] mod q;\n}\n",
+   "references": {
+    "includes": [],
+    "modules": [
+     {
+      "name": "outer",
+      "modules": [
+       {
+        "name": "inner"
+       },
+       {
+        "name": "q",
+        "path": "deep/q.rs"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "test only modules",
+   "source": "#[cfg(test)]\nmod tests;\nmod prod;\n",
+   "references": {
+    "includes": [],
+    "modules": [
+     {
+      "name": "tests",
+      "test": true
+     },
+     {
+      "name": "prod"
+     }
+    ]
+   }
+  },
+  {
+   "name": "unicode strings and whitespace",
+   "source": "const S: &str = \"é東 x\";　mod uni;\n",
+   "references": {
+    "includes": [],
+    "modules": [
+     {
+      "name": "uni"
+     }
+    ]
+   }
+  },
+  {
+   "name": "raw identifiers",
+   "source": "mod r#type;\nmod r#match;\n",
+   "references": {
+    "includes": [],
+    "modules": [
+     {
+      "name": "type"
+     },
+     {
+      "name": "match"
+     }
+    ]
+   }
+  }
+ ]
+}

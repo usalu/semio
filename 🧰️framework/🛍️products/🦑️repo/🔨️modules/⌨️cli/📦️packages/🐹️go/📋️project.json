@@ -37,7 +37,7 @@
             "verb": "build",
             "title": {
               "en": "Build Go Repository Commands",
-              "de": "Go-Repository-Befehle Bauen"
+              "de": "Go-Repository-Befehle bauen"
             },
             "description": {
               "en": "Build the current Go implementation used by repository tasks in the dashboard.",
@@ -91,7 +91,7 @@
             "verb": "test",
             "title": {
               "en": "Test Native Repository Entrypoint",
-              "de": "Nativen Repository-Einstieg Testen"
+              "de": "Nativen Repository-Einstieg testen"
             },
             "description": {
               "en": "Validate neutral native routing vectors against the independent SQLite oracle.",

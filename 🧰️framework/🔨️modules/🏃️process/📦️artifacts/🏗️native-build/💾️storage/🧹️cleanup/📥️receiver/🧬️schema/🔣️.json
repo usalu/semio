@@ -12,11 +12,11 @@
         "concurrentChangeAttempts": 6,
         "orphanNotice": {
           "en": "Funded child without a creator claim ignored (a retirement stopped half way): {path}",
-          "de": "Finanziertes Kind ohne Erzeuger-Beleg ignoriert (eine Stilllegung blieb auf halbem Weg stehen): {path}"
+          "de": "Finanziertes Kind ohne Erzeuger-Anspruch ignoriert (eine Stilllegung blieb auf halbem Weg stehen): {path}"
         },
         "foreignMountRefusal": {
-          "en": "Foreign native image mounted inside the parent, not funded by it and not a sibling race: mount {mount}, backing image {image}, device {device}, owner {owner}. Detach it with `/usr/bin/hdiutil detach {device}` (a test sandbox must live outside every managed native parent).",
-          "de": "Fremdes natives Abbild im Elternteil eingehaengt, weder von ihm finanziert noch ein Geschwister-Wettlauf: Einhaengepunkt {mount}, Abbilddatei {image}, Geraet {device}, Besitzer {owner}. Mit `/usr/bin/hdiutil detach {device}` aushaengen (eine Test-Sandbox muss ausserhalb jedes verwalteten nativen Elternteils liegen)."
+          "en": "Foreign native image mounted inside the parent, not funded by it and not a sibling race: mount {mount}, backing image {image}, device {device}, owner {owner}. Detach the device {device} (a test sandbox must live outside every managed native parent).",
+          "de": "Fremdes natives Image im Elternteil eingehängt, weder von ihm finanziert noch ein Geschwister-Wettlauf: Einhängepunkt {mount}, Image-Datei {image}, Gerät {device}, Eigentümer {owner}. Das Gerät {device} aushängen (eine Test-Sandbox muss außerhalb jedes verwalteten nativen Elternteils liegen)."
         },
         "concurrentChangeBackoffMilliseconds": 250,
         "concurrentChangePatterns": [

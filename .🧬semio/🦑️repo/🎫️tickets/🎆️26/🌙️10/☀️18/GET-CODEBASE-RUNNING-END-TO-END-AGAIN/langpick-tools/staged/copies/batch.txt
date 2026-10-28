@@ -1,0 +1,1 @@
+🧹️ Every language picker copy (16 in TypeScript/JavaScript) becomes a call of the one protocol: a command resolves (and refuses), a notice is written in the chosen language or in every offered one; the retired variables SEMIO_DASHBOARD_LOCALE and SEMIO_LOCALE and the schema copies of the variable order (`languageEnvironment`, `systemVariables`, `fallback`) are gone.

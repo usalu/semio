@@ -1,0 +1,16 @@
+[
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📋️project.json",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📋️project.json",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🏗️build/🔣️.json",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⌨️usage/🦀️.rs",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🌐️labels/🦀️.rs",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🔬️unit/🔗️open-ready/🦀️.rs",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧫️fixtures/🌐️open/🔣️.json",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/🏛️core/🐹️.go",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🦀️.rs",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust/📋️project.json",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json",
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🎚️config/🔣️.json"
+]

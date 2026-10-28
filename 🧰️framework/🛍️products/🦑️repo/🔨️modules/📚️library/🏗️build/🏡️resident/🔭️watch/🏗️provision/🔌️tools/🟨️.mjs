@@ -1,4 +1,5 @@
 /** 🔌 Binds the watcher provisioning to the tool registry: resolution through `resolveToolV1`, compilation through `runToolV1("cargo")`, the binary kept under the tools partition. Loads only where the tool interface exists. */
+import {existsSync,lstatSync} from "node:fs";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {ensureWatcherV1} from "../🟨️.mjs";
@@ -6,11 +7,17 @@ import {findToolV1,resolveToolV1,runToolV1,systemToolHostV1,toolRootV1,TOOL_REGI
 
 const here=dirname(fileURLToPath(import.meta.url)),rust=join(here,"..","..","🦀️rust");
 
+/** 🗻 Whether the tools partition may be written: a partition backed by an image (its `image.json` receipt) is writable only while the image is mounted, i.e. its root lies on another device than the partition directory; a write into the bare mount point would block every later mount of the image. */
+export function toolsPartitionWritableV1(root){
+ const image=join(root,TOOL_REGISTRY_V1.partitions.tools),partition=dirname(image);
+ return!existsSync(join(partition,"image.json"))||existsSync(image)&&lstatSync(image).dev!==lstatSync(partition).dev;
+}
+
 /** 🔌 The path of the watcher for a worktree, building it once when no installed copy matches the pinned source. */
 export async function ensureResidentWatcherV1(root=toolRootV1(),{signal,progress,environment=process.env}={}){
  const entry=findToolV1("repo-watch",TOOL_REGISTRY_V1),host=systemToolHostV1(root,environment);
  return(await ensureWatcherV1({
-  sourcePath:join(rust,"🦀️.rs"),pinPath:join(rust,"🔣️.json"),outputRoot:join(root,TOOL_REGISTRY_V1.partitions.tools,"repo-watch"),signal,progress,
+  sourcePath:join(rust,"🦀️.rs"),pinPath:join(rust,"🔣️.json"),outputRoot:join(root,TOOL_REGISTRY_V1.partitions.tools,"repo-watch"),writable:()=>toolsPartitionWritableV1(root),signal,progress,
   locate:async()=>resolveToolV1(entry,host,TOOL_REGISTRY_V1).command??undefined,
   compile:async({directory,signal:cancel})=>{
    await runToolV1("cargo",["build","--release","--manifest-path",join(directory,"Cargo.toml"),"--target-dir",join(directory,"target")],{cwd:directory,root,env:environment,signal:cancel,label:"repo-watch:compile",caller:import.meta.url});

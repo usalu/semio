@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "ceilingBasisPoints": 15000,
+  "unlistedCeilingMegabytes": 3072,
+  "files": [
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🧪️tests/🔌️sdk-surface/🟦️.ts",
+      "megabytes": 1500,
+      "reason": "measured peak 1169 MB (was 2633 MB): the TypeScript program checks the 273 facades only (not every file of the program, same 0 diagnostics) and the fresh loader processes follow the worker policy (3 at most)"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/🚧️boundary/🟦️.ts",
+      "megabytes": 1300,
+      "reason": "measured peak 1005 MB (was 4433 MB): the bundles of every General router and export, built 40 entries at a time instead of all at once, so the esbuild process holds one batch of outputs"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📦️compiler-init/🟦️.ts",
+      "megabytes": 900,
+      "reason": "measured peak 622 MB (was 6188 MB): the authorizer compile gives the three captured-source texts to the bundler once, not to one Bun.Transpiler per file (1378 files, about 3 MB of define text each, never released)"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧠️retention/🟦️.ts",
+      "megabytes": 1300,
+      "reason": "measured peak 1240 MB: the oversize cases write, read, parse and serialise a result above the retained image bound (32 MB) twice each in one process; the allocator keeps those pages (heap 75 MB after collection)"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🎓️course-inputs/🟦️.ts",
+      "megabytes": 2200,
+      "reason": "measured peak 1929 MB (was 3782 MB): the script-input closure of the course targets (1.4 GB, the inference itself) plus one TypeScript program of the course"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🔌️providers/🟦️.ts",
+      "megabytes": 1300,
+      "reason": "measured peak 1040 MB: esbuild bundles the designated provider modules (650 MB in the esbuild process) beside the closure inference"
+    }
+  ]
+}

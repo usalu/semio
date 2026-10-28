@@ -1,0 +1,51 @@
+{
+ "files": {
+  "package.json": "{\"name\":\"fixture-root\",\"private\":true}\n",
+  "tools/driver/📜️script.ts": "import './lib.ts';\n",
+  "tools/driver/lib.ts": "import '../shared/clock.ts';\nexport const lib = 1;\n",
+  "tools/shared/clock.ts": "export const clock = 1;\n",
+  "pkg/📜️script.ts": "import './cmd/test.ts';\n",
+  "pkg/cmd/test.ts": "import '../shared/a.ts';\nimport '../deep/b.ts';\nexport const test = 1;\n",
+  "pkg/shared/a.ts": "export const a = 1;\n",
+  "pkg/deep/b.ts": "import '../deep2/c.ts';\nexport const b = 1;\n",
+  "pkg/deep2/c.ts": "export const c = 1;\n",
+  "pkg/unrelated.ts": "export const unrelated = 1;\n"
+ },
+ "driver": "tools/driver/📜️script.ts",
+ "child": "pkg/📜️script.ts",
+ "projectRoot": "pkg",
+ "driverClosure": [
+  "tools/driver/lib.ts",
+  "tools/driver/📜️script.ts",
+  "tools/shared/clock.ts"
+ ],
+ "childClosure": [
+  "pkg/cmd/test.ts",
+  "pkg/deep/b.ts",
+  "pkg/deep2/c.ts",
+  "pkg/shared/a.ts",
+  "pkg/📜️script.ts"
+ ],
+ "wrapped": [
+  {
+   "name": "absolute child path (what the assembly writes)",
+   "cwd": ".",
+   "command": "repo \"tools/driver/📜️script.ts\" owner-command --cwd \"pkg\" -- repo \"{ws}/pkg/📜️script.ts\" test"
+  },
+  {
+   "name": "child path relative to the owner directory",
+   "cwd": ".",
+   "command": "repo \"tools/driver/📜️script.ts\" owner-command --cwd \"pkg\" -- repo \"./📜️script.ts\" test"
+  }
+ ],
+ "notWrapped": [
+  {
+   "name": "owner-command word without a child",
+   "command": "repo \"tools/driver/📜️script.ts\" owner-command --cwd \"pkg\""
+  },
+  {
+   "name": "child is no script (a plain runtime command)",
+   "command": "repo \"tools/driver/📜️script.ts\" owner-command --cwd \"pkg\" -- bun test ./pkg/cmd/test.ts"
+  }
+ ]
+}

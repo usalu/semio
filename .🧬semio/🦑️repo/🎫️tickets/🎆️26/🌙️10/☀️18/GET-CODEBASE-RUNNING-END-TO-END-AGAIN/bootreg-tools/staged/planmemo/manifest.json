@@ -1,0 +1,42 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts": {
+  "file": "00.ts",
+  "base": "eabd990d850ee8e2a6a7bffc85dc8d6dbca3a622b7eaee170c571fde4d1db27d",
+  "new": "3894d6044d3f3ddb8a60b935b747c6736eb834ef3689d5c5d5c697ba55ec5dcf"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts": {
+  "file": "01.ts",
+  "base": "f657133031b252627f10d487d3d249b2ce6f78c8918a7b51994e113b7abf6d72",
+  "new": "389b048e0a58ed57e0445de799a42960bff3eee042684c3f0fd2de500d89f9cd"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts": {
+  "file": "02.ts",
+  "base": "1cecb2a7081d10ac5b9410cb0039f930485431f260a2246c573fe50790a4fcf4",
+  "new": "d7d3299ca8163e2713f8e62e945d22ca20d39761f9cc8946b229e49cb36b7630"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json": {
+  "file": "03.json",
+  "base": "884bb4ef33f0fa95f2eb2746e267b110f8262c71a62412b61d56f79ce33b5a9e",
+  "new": "af8f75c5879862fe0dcb88f31bc9c126d78a4716177b8cfa08636bf2bec8510b"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🧠️memo/🟦️.ts": {
+  "file": "04.ts",
+  "base": null,
+  "new": "acaad76900954ecb045ffe9b29b99e48529bd85adc4c3b807a84356588d1761a"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🧠️memo/🧬️schema/🔣️.json": {
+  "file": "05.json",
+  "base": null,
+  "new": "db66703a505833b1be80f22dd656230c84651a70b1dcb3f2f963d24e93e2876a"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🧠️memo/🧪️tests/🟦️.ts": {
+  "file": "06.ts",
+  "base": null,
+  "new": "f9934d9f6989405218a51d758af7a20db468607fc32de76658da320244907f1f"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🧠️memo/🧪️tests/🔣️.json": {
+  "file": "07.json",
+  "base": null,
+  "new": "eafc6fe72bf299ef7ee5f81f3dfe828f585084e6a80b89811aadf255379f3b81"
+ }
+}

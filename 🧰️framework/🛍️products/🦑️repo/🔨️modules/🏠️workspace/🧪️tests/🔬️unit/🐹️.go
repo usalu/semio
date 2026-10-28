@@ -17,8 +17,17 @@ import (
 // 🧭️FixtureOrigin is the directory of the module under test. The external sandbox `TestMain` assigns it from `sandbox.Origin`, because this package cannot import the sandbox without a cycle.
 var FixtureOrigin string
 
+// 🧱️fenceRoot gives a test directory a `.git` marker so root discovery ends in it even when the directory lies inside a checkout.
+func fenceRoot(t *testing.T, dir string) string {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Join(dir, ".git"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return dir
+}
+
 func TestRepoMetaDirUsesSemioRoot(t *testing.T) {
-	root := t.TempDir()
+	root := CanonicalPath(fenceRoot(t, t.TempDir()))
 	previous := GetRootDir()
 	SetRootDir(root)
 	t.Cleanup(func() { SetRootDir(previous) })
@@ -229,8 +238,8 @@ func TestStatutePathIdValueRoundTrip(t *testing.T) {
 }
 
 func TestSetRootDirResetsGitignoreCache(t *testing.T) {
-	tmpDirA := t.TempDir()
-	tmpDirB := t.TempDir()
+	tmpDirA := fenceRoot(t, t.TempDir())
+	tmpDirB := fenceRoot(t, t.TempDir())
 	oldRoot := GetRootDir()
 	defer func() { SetRootDir(oldRoot) }()
 	SetRootDir(tmpDirA)
@@ -273,7 +282,7 @@ func TestBuildBinaryArtifactsGitIgnored(t *testing.T) {
 }
 
 func TestSetRootDirCanonicalizesToRepoRoot(t *testing.T) {
-	repoRoot := t.TempDir()
+	repoRoot := CanonicalPath(t.TempDir())
 	nested := filepath.Join(repoRoot, "a", "b", "c")
 	if err := os.MkdirAll(filepath.Join(repoRoot, ".git"), 0755); err != nil {
 		t.Fatalf("mkdir .git: %v", err)

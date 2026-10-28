@@ -11,7 +11,7 @@ import fixtureSchema from "./🧬️schema.json";
 import {bazelPlatformProfileV1,bazelPlatformRulesV1} from "../../🌐️platform/🟦️.ts";
 
 const binary=process.env.SEMIO_TEST_BAZEL_BINARY,adapter=readFileSync(join(import.meta.dir,"../../📜️script.ts"),"utf8");
-const starlark=/const STARLARK_RULES=(?:bazelResourceSetsV1\([^)]*\)\+)?`([\s\S]*?)`;/u.exec(adapter)![1]!;
+const api=await import("../../📜️script.ts"),starlark=api.bazelStarlarkRulesV1(true),rules=api.bazelStarlarkRulesV1();
 
 test("the fixture and every rendered profile validate against their closed schemas",()=>{
  const ajv=new Ajv({strict:true});
@@ -37,7 +37,7 @@ test("six OS and CPU pairs render the authored flags, environment, launcher exte
 
 test("every Bazel action runs Bun directly: no shell, no genrule, JSON-quoted Windows paths, platform facts from one place",()=>{
  for(const token of fixture.forbiddenShell)expect(starlark.toLowerCase(),token).not.toContain(token.toLowerCase());
- const runs=starlark.split("ctx.actions.run(").length-1;expect(runs).toBeGreaterThan(0);expect(starlark.split("executable = ctx.attr.bun").length-1).toBe(runs);
+ const runs=starlark.split("ctx.actions.run(").length-1,toolchain=starlark.split('bun = ctx.toolchains["//:bun_toolchain_type"].bun').length-1,direct=starlark.split("executable = bun,").length-1;expect(runs).toBeGreaterThan(0);expect(toolchain).toBeGreaterThan(0);expect(direct).toBe(toolchain);expect(starlark.split("executable = ctx.attr.runtime").length-1+direct).toBe(runs);
  expect(adapter).toContain("quote=(value:string)=>JSON.stringify(value)");
  expect(adapter).toContain("bazelPlatformRulesV1(process.platform).launcherExtension");
  expect(adapter).not.toContain('process.platform==="win32"?".exe":""');expect(adapter).not.toContain('process.platform==="win32"?"junction":"dir"');expect(adapter).not.toContain('process.platform==="darwin"?{LANG');
@@ -59,8 +59,8 @@ test.skipIf(!binary)("the real Bazel binary knows every rendered flag, parses Wi
   for(const platform of ["darwin","linux","win32"])for(const flag of bazelPlatformRulesV1(platform).startup)expect(known(startupNames,flag),`${platform} startup ${flag}`).toBe(true);
   for(const platform of ["darwin","linux","win32"])for(const flag of bazelPlatformRulesV1(platform).command)expect(known(commandNames,flag),`${platform} command ${flag}`).toBe(true);
   const windowsBun=fixture.buildRender.bun.win32,query=join(base,"q");mkdirSync(query,{recursive:true});
-  writeFileSync(join(query,"MODULE.bazel"),'module(name = "xplat_query", version = "0.0.0")\n');writeFileSync(join(query,"tasks.bzl"),starlark);
-  writeFileSync(join(query,"BUILD.bazel"),`load(":tasks.bzl", "repo_launch", "repo_task")\nrepo_task(name = "task", bun = ${JSON.stringify(windowsBun)}, identity = "p:t", source_identity = "x")\nrepo_launch(name = "launch", bun = ${JSON.stringify(windowsBun)}, source_identity = "x", extension = ".exe")\n`);
+  writeFileSync(join(query,"MODULE.bazel"),'module(name = "xplat_query", version = "0.0.0")\n');writeFileSync(join(query,"tasks.bzl"),rules);
+  writeFileSync(join(query,"BUILD.bazel"),`load(":tasks.bzl", "repo_launch", "repo_task")\nrepo_task(name = "task", runtime = ${JSON.stringify(windowsBun)}, identity = "p:t", source_identity = "x", mnemonic = "RepoTask")\nrepo_launch(name = "launch", runtime = ${JSON.stringify(windowsBun)}, source_identity = "x", extension = ".exe")\n`);
   const listed=run([...common("q1"),"query","//:all","--output=build","--lockfile_mode=off"],query,environment);
   expect(listed.code,listed.out.slice(-600)).toBe(0);expect(listed.out).toContain(JSON.stringify(windowsBun));expect(listed.out).toContain('extension = ".exe"');
   const profile=bazelPlatformProfileV1({platform:process.platform,arch:process.arch,container:false,outputBase:join(base,"b"),bun:process.execPath,longPaths:process.platform==="win32"?"enabled":"unprobed",closure:{alias:{units:0,bytes:0},real:{units:0,bytes:0}}});
@@ -68,10 +68,10 @@ test.skipIf(!binary)("the real Bazel binary knows every rendered flag, parses Wi
   const root=join(base,"w");mkdirSync(join(root,"src/🧰️framework"),{recursive:true});
   writeFileSync(join(root,"MODULE.bazel"),'module(name = "xplat_build", version = "0.0.0")\n');writeFileSync(join(root,"tasks.bzl"),starlark);
   writeFileSync(join(root,"src/🧰️framework/🟦️.txt"),"emoji input\n");writeFileSync(join(root,"manifest.json"),"{}\n");writeFileSync(join(root,"fingerprint.txt"),"f\n");writeFileSync(join(root,"implementation.json"),"{}\n");
-  writeFileSync(join(root,"runner.ts"),'import {copyFileSync,mkdirSync,readFileSync,writeFileSync} from "node:fs";const [,,mode,manifest,out]=process.argv.slice(2);if(mode==="birth-launcher")copyFileSync(process.execPath,out);else{mkdirSync(out+"/🧪️d",{recursive:true});writeFileSync(out+"/🧪️d/📜️result.txt",readFileSync(manifest,"utf8")+"emoji");}\n');
+  writeFileSync(join(root,"runner.ts"),'import {copyFileSync,mkdirSync,readFileSync,writeFileSync} from "node:fs";import {createInterface} from "node:readline";const [,,mode,...rest]=process.argv.slice(2),work=(args:string[])=>{const [manifest,out]=args[0]!.startsWith("@")?readFileSync(args[0]!.slice(1),"utf8").split("\\n"):args;mkdirSync(out+"/🧪️d",{recursive:true});writeFileSync(out+"/🧪️d/📜️result.txt",readFileSync(manifest,"utf8")+"emoji");};if(mode==="birth-launcher")copyFileSync(process.execPath,rest[1]!);else if(rest.includes("--persistent_worker"))for await(const line of createInterface({input:process.stdin})){if(!line.trim())continue;const request=JSON.parse(line);work(request.arguments);process.stdout.write(JSON.stringify({exitCode:0,output:"",requestId:request.requestId??0})+"\\n");}else work(rest);\n');
   symlinkSync(join(root,"src"),join(root,"s"),profile.sourceLink);
   const bun=JSON.stringify(process.execPath);
-  writeFileSync(join(root,"BUILD.bazel"),`load(":tasks.bzl", "repo_launch", "repo_task")\nrepo_task(name = "task", srcs = ["s/🧰️framework/🟦️.txt"], manifest = "manifest.json", fingerprint = "fingerprint.txt", runner = "runner.ts", source = "implementation.json", source_identity = "x", bun = ${bun}, identity = "p:t", cache = True, host_state = "task")\nrepo_launch(name = "launch", manifest = "manifest.json", runner = "runner.ts", source = "implementation.json", source_identity = "x", bun = ${bun}, extension = ${JSON.stringify(profile.launcherExtension)}, uncached_reason = "launcher", host_state = "launcher")\n`);
+  writeFileSync(join(root,"BUILD.bazel"),`load(":tasks.bzl", "repo_launch", "repo_task")\nrepo_task(name = "task", srcs = ["s/🧰️framework/🟦️.txt"], manifest = "manifest.json", fingerprint = "fingerprint.txt", runner = "runner.ts", source = "implementation.json", source_identity = "x", runtime = ${bun}, identity = "p:t", mnemonic = "RepoTask", cache = True, host_state = "task")\nrepo_launch(name = "launch", manifest = "manifest.json", runner = "runner.ts", source = "implementation.json", source_identity = "x", runtime = ${bun}, extension = ${JSON.stringify(profile.launcherExtension)}, uncached_reason = "launcher", host_state = "launcher")\n`);
   const startup=[...common("b"),...profile.startup],options=["--lockfile_mode=off","--incompatible_strict_action_env",`--disk_cache=${join(base,"cache")}`,...profile.command],build=()=>run([...startup,"build","//:task","//:launch",...options],root,profile.environment);
   const cold=build();expect(cold.code,cold.out.slice(-800)).toBe(0);expect(cold.out).toMatch(/\d+ processes?: .*\b(?:local|processwrapper-sandbox|linux-sandbox|darwin-sandbox|windows-sandbox)\b/u);
   const info=run([...startup,"info","bazel-bin"],root,profile.environment).stdout.trim().split("\n").at(-1)!;

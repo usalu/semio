@@ -2,11 +2,11 @@
 import {expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {spawnSync} from "node:child_process";
-import {mkdtempSync,readFileSync,rmSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import Ajv from "ajv";
-import {NX_DAEMON_SLOTS_EXHAUSTED_KEY_V1,acquireNxDaemonSlotV1,countNxDaemonSlotsV1,decideNxDaemonV1,nxDaemonIdleV1,nxDaemonLimitsV1,nxDaemonResourceHeldV1,nxDaemonSlotResourceV1,nxDaemonYieldRequestedV1,nxDaemonYieldV1} from "../🟦️.ts";
+import {NX_DAEMON_SLOTS_EXHAUSTED_KEY_V1,acquireNxDaemonSlotV1,countNxDaemonSlotsV1,decideNxDaemonV1,nxDaemonIdleV1,nxDaemonLimitsV1,nxDaemonResidentDirectoryV1,nxDaemonResourceHeldV1,nxDaemonRetireV1,nxDaemonSlotResourceV1,nxDaemonYieldRequestedV1,nxDaemonYieldV1,readNxDaemonResidentV1,removeNxDaemonResidentV1,writeNxDaemonResidentV1} from "../🟦️.ts";
 import {nxGraphYieldResourceV1} from "../../../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts";
 import {acquireResourceLease} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
@@ -18,12 +18,40 @@ const signal=new AbortController().signal;
 
 fixture.limits.forEach((row:any,index:number)=>test("limits: "+row.name,()=>{
  const found=nxDaemonLimitsV1(row.environment,row.memoryGiB*fixture.GiB);
- const seen={finite:found.finite,watch:found.watch,idleMilliseconds:found.idleMilliseconds,drainMilliseconds:found.drainMilliseconds};expect(seen).toEqual(row.expected);expect(seen).toEqual(model.limits[index]);
+ const seen={finite:found.finite,watch:found.watch,idleMilliseconds:found.idleMilliseconds,drainMilliseconds:found.drainMilliseconds,residentMegabytes:found.residentBytes/1048576};expect(seen).toEqual(row.expected);expect(seen).toEqual(model.limits[index]);
 }));
 fixture.decisions.forEach((row:any,index:number)=>test("decision: "+row.name,()=>{
  const found=decideNxDaemonV1(row.input);expect(found).toEqual(row.expected);expect(found).toEqual(model.decisions[index]);expect(validate(found)).toBe(true);
 }));
 fixture.idle.forEach((row:any,index:number)=>test("idle: "+row.name,()=>{expect(nxDaemonIdleV1(row.state)).toBe(row.expected);expect(row.expected).toBe(model.idle[index]);}));
+
+fixture.retire.forEach((row:any,index:number)=>test("retire: "+row.name,()=>{expect(nxDaemonRetireV1(row.state)).toBe(row.expected);expect(row.expected).toBe(model.retire[index]);}));
+
+test("the resident-memory census of a checkout equals the independent model: dead, stale, misnamed and schema-invalid records are not counted",async()=>{
+ const root=mkdtempSync(join(artifacts,"nx-daemon-resident-")),leases=join(root,"lease"),directory=nxDaemonResidentDirectoryV1(leases),section=fixture.resident;
+ try{
+  mkdirSync(directory,{recursive:true});
+  for(const row of section.records)writeFileSync(join(directory,row.file),JSON.stringify({version:1,pid:row.pid,kind:row.kind,rssBytes:row.rssBytes,atMs:row.atMs}));
+  writeFileSync(join(directory,"700.json"),"{broken");writeFileSync(join(directory,"note.txt"),"x");
+  const alive=new Map<number,boolean>(section.records.map((row:any)=>[row.pid,row.alive])),found=await readNxDaemonResidentV1(leases,section.now,pid=>alive.get(pid)??false);
+  expect(found.daemons.map(row=>row.pid)).toEqual(section.expectedPids);expect(found.totalBytes).toBe(section.expectedTotalBytes);
+  expect({pids:found.daemons.map(row=>row.pid),totalBytes:found.totalBytes}).toEqual({pids:model.resident.pids,totalBytes:model.resident.totalBytes});
+  expect((await readNxDaemonResidentV1(join(root,"nothing"),section.now)).totalBytes).toBe(0);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("a daemon publishes its resident memory atomically, the writer clears records of dead daemons, and the record is withdrawn at the end",async()=>{
+ const root=mkdtempSync(join(artifacts,"nx-daemon-resident-write-")),leases=join(root,"lease"),directory=nxDaemonResidentDirectoryV1(leases);
+ try{
+  await writeNxDaemonResidentV1(leases,{version:1,pid:4242,kind:"finite",rssBytes:111,atMs:1000},()=>true);
+  await writeNxDaemonResidentV1(leases,{version:1,pid:4243,kind:"watch",rssBytes:222,atMs:1000},pid=>pid===4243);
+  expect(readdirSync(directory).sort()).toEqual(["4243.json"]);
+  await writeNxDaemonResidentV1(leases,{version:1,pid:4243,kind:"watch",rssBytes:333,atMs:2000},pid=>pid===4243);
+  expect((await readNxDaemonResidentV1(leases,2000,()=>true)).totalBytes).toBe(333);expect(readdirSync(directory).some(name=>name.endsWith(".tmp"))).toBe(false);
+  await removeNxDaemonResidentV1(leases,4243);expect(existsSync(join(directory,"4243.json"))).toBe(false);expect((await readNxDaemonResidentV1(leases,2000,()=>true)).totalBytes).toBe(0);
+  await removeNxDaemonResidentV1(leases,4243);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
 
 fixture.yield.forEach((row:any,index:number)=>test("yield: "+row.name,()=>{expect(nxDaemonYieldV1(row.state)).toBe(row.expected);expect(row.expected).toBe(model.yield[index]);}));
 
@@ -72,6 +100,11 @@ test("source: finite daemons idle out through the pure rule and the timer is cle
  expect(service).toContain("nxDaemonIdleV1({kind,openRequests:activity.open+attachedClients(),lastActivity:activity.last");expect(service).toContain("otherLeaseHoldersV1(repositoryLeaseDirectoryV1(birth.repositoryRoot),nxGraphNamespaceResourceV1(birth.directory))");
  expect(service).toContain("idleTimer.unref()");expect(service).toContain("finally{clearInterval(idleTimer);");
  expect(service).toContain("activity.open++;activity.last=Date.now();");expect(service).toContain("activity.open--;activity.last=Date.now();");
+});
+test("source: the daemon publishes its resident memory on every tick, retires once idle over its budget and withdraws the record with the service",()=>{
+ expect(service).toContain("writeNxDaemonResidentV1(leaseDirectory,{version:1,pid:process.pid,kind,rssBytes,atMs:Date.now()})");
+ expect(service).toContain("nxDaemonRetireV1({kind,openRequests:activity.open+attachedClients(),residentBytes,limitBytes:limits.residentBytes})");
+ expect(service).toContain("removeNxDaemonResidentV1(leaseDirectory,process.pid)");expect(service.indexOf("removeNxDaemonResidentV1(leaseDirectory")).toBeGreaterThan(service.indexOf("finally{clearInterval(idleTimer);"));
 });
 test("source: a finite daemon yields to an eviction only while idle and ends within its drain deadline",()=>{
  expect(service).toContain("nxDaemonYieldRequestedV1(repositoryLeaseDirectoryV1(birth.repositoryRoot),birth.directory,original.control.signal)");

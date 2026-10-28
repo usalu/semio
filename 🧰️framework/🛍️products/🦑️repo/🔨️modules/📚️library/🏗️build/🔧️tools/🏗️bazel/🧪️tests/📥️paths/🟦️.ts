@@ -148,7 +148,7 @@ test.skipIf(!python)("the generated workspace names aliased sources for host-sta
 
 const binary=process.env.SEMIO_TEST_BAZEL_BINARY;
 
-test.skipIf(!binary)("real Bazel: aliased sources of a deep emoji checkout build, hit the disk cache and keep every created path within the computed budget",async()=>{
+test.skipIf(!binary)("real Bazel: aliased sources of a deep emoji checkout build, hit the disk cache, keep every path they create within the computed budget and every external repository path within the host limit",async()=>{
  const directory=mkdtempSync(join(tmpdir(),"bzlpath-")),base=join(directory,"base"),install=join(directory,"install"),disk=join(directory,"disk"),space=join(directory,"workspace");
  const bazel=(args:string[])=>spawnSync(binary!,[`--output_base=${base}`,`--install_base=${install}`,"--nosystem_rc","--nohome_rc",`--bazelrc=${join(process.cwd(),".bazelrc")}`,"--max_idle_secs=60",...args],{cwd:space,encoding:"utf8",timeout:240000,env:{...process.env,...(process.platform==="darwin"?{LANG:"en_US.UTF-8",LC_ALL:"en_US.UTF-8"}:{})}});
  try{
@@ -159,8 +159,8 @@ test.skipIf(!binary)("real Bazel: aliased sources of a deep emoji checkout build
   const flags=["--lockfile_mode=off",`--disk_cache=${disk}`,"--sandbox_debug"],cold=bazel(["build",...flags,"//:gen"]);expect(cold.status,cold.stderr).toBe(0);
   const bin=bazel(["info","bazel-bin"]).stdout.trim().split("\n").at(-1)!,output=readFileSync(join(bin,"out.txt"),"utf8");for(const path of paths)expect(output).toContain(path);
   expect(bazel(["clean"]).status).toBe(0);const warm=bazel(["build",...flags,"//:gen"]);expect(warm.status,warm.stderr).toBe(0);expect(warm.stderr).toMatch(/[1-9]\d* disk cache hit/u);
-  const longest=(root:string):number=>{let best=0;const visit=(path:string)=>{for(const entry of readdirSync(path,{withFileTypes:true})){const full=join(path,entry.name);best=Math.max(best,units(relative(base,full)));if(entry.isDirectory()&&!entry.isSymbolicLink())visit(full);}};visit(root);return best;};
+  const longest=(root:string,skip?:string):number=>{let best=0;const visit=(path:string)=>{for(const entry of readdirSync(path,{withFileTypes:true})){const full=join(path,entry.name);if(full===skip)continue;best=Math.max(best,units(relative(base,full)));if(entry.isDirectory()&&!entry.isSymbolicLink())visit(full);}};if(existsSync(root))visit(root);return best;};
   const closure=bazelPathClosureV1(sources,sources),computed=bazelPathBudgetV1({platform:process.platform as "darwin",arch:process.arch as "arm64",outputBase:base,longPaths:"unprobed",closure}),sandboxed=computed.families.find(family=>family.name==="sandbox-source");
-  const created=longest(base)+1+units(base);expect(created).toBeLessThanOrEqual(Math.max(...computed.families.map(family=>family.units)));if(sandboxed&&existsSync(join(base,"sandbox")))expect(created).toBeLessThanOrEqual(sandboxed.units);
+  const external=join(base,"external"),created=longest(base,external)+1+units(base);expect(created).toBeLessThanOrEqual(Math.max(...computed.families.map(family=>family.units)));if(sandboxed&&existsSync(join(base,"sandbox")))expect(created).toBeLessThanOrEqual(sandboxed.units);expect(longest(external)+1+units(base)).toBeLessThanOrEqual(computed.limitUnits);
  }finally{spawnSync(binary!,[`--output_base=${base}`,`--install_base=${install}`,"--nosystem_rc","--nohome_rc","shutdown"],{cwd:space,timeout:120000});rmSync(directory,{recursive:true,force:true});}
 },900000);

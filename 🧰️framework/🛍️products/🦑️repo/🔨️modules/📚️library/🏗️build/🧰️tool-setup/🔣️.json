@@ -7,6 +7,7 @@
       "node",
       "rustup",
       "rust",
+      "node-native-core",
       "go",
       "uv",
       "python-main",
@@ -162,6 +163,38 @@
       ],
       "setup": {
         "kind": "rust"
+      }
+    },
+    {
+      "id": "node-native-core",
+      "summary": {
+        "en": "Native core that gives Node the system calls the repository tools bind (built once from the pinned Rust toolchain).",
+        "de": "Nativer Kern, der Node die Systemaufrufe gibt, die die Repository-Werkzeuge binden (einmal mit der gepinnten Rust-Toolchain gebaut)."
+      },
+      "pin": {
+        "format": "regex",
+        "file": "🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🧬️schema/🔣️.json",
+        "pattern": "\"Protocol\"[\\s\\S]*?\"version\":\\s*(\\d+)"
+      },
+      "probe": {
+        "mode": "hook",
+        "arguments": [],
+        "pattern": ""
+      },
+      "locate": [
+        {
+          "kind": "hook"
+        }
+      ],
+      "setup": {
+        "kind": "script",
+        "script": "🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🏗️addon/🛠️prepare/📜️script.ts",
+        "prepare": [
+          "prepare"
+        ],
+        "verify": [
+          "verify"
+        ]
       }
     },
     {
@@ -521,7 +554,7 @@
       "id": "wasm-bindgen",
       "summary": {
         "en": "wasm-bindgen generates the bindings; it must equal the locked crate.",
-        "de": "wasm-bindgen erzeugt die Bindings; es muss dem gesperrten Crate entsprechen."
+        "de": "wasm-bindgen erzeugt die Bindings; es muss der gesperrten Crate entsprechen."
       },
       "pin": {
         "format": "regex",
@@ -801,7 +834,7 @@
       },
       "installer": {
         "en": "The pinned installer for {tool} is missing for the host {host}.",
-        "de": "Das gepinnte Installationsprogramm für {tool} fehlt für den Host {host}."
+        "de": "Das gepinnte Installationsprogramm für {tool} fehlt für den Rechner {host}."
       },
       "running": {
         "en": "Running Bun {found} ({path}); pinned Bun {pin}.",
@@ -818,7 +851,37 @@
       "progress": {
         "en": "{tool}: {received} of {bytes} bytes ({percent} %).",
         "de": "{tool}: {received} von {bytes} Bytes ({percent} %)."
+      },
+      "warm": {
+        "en": "Preparing {step}: {summary}",
+        "de": "Bereite {step} vor: {summary}"
+      },
+      "warmed": {
+        "en": "{step} is ready.",
+        "de": "{step} ist bereit."
+      },
+      "warmFailed": {
+        "en": "{step} could not be prepared ({reason}); it is built on the first compile instead.",
+        "de": "{step} konnte nicht vorbereitet werden ({reason}); es wird stattdessen beim ersten Kompilieren gebaut."
       }
     }
-  }
+  },
+  "steps": [
+    {
+      "id": "compiler-helpers",
+      "kind": "cargo-helpers",
+      "summary": {
+        "en": "The memory-admitting rustc scheduler and the unit-cache compiler wrapper (a native executable on Windows) that every Cargo build starts with.",
+        "de": "Der rustc-Scheduler mit Speicherzulassung und der Compiler-Wrapper des Unit-Caches (unter Windows eine native Programmdatei), mit denen jeder Cargo-Build beginnt."
+      },
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "configuration": "prototype",
+      "timeoutSeconds": 1200,
+      "optional": true
+    }
+  ]
 }

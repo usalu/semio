@@ -1,0 +1,26 @@
+{
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🟦️.ts": {
+  "base": "2d7e864e25eb382b71b7ba106b7028e18788ea15b1870060a70bf4ed8dfae35d",
+  "new": "550e77e78a1bfb3033686ddd7d19cd14522d031091d54413dcb82cb1bdfe2d4d"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🧬️schema/🔣️.json": {
+  "base": "c6aa1ece53215d1e4ea7b72816fef0766c179bc1ad8416ffa1e85d5196b20cfa",
+  "new": "7b43d2a125a18d180df0592fd13ab8009e1823b2fafea0f80d12548122ecf215"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🟦️.ts": {
+  "base": "e60223a1960d994aa96cb617b32df1764e1132a0d9d490fc03ddf453259f3c2f",
+  "new": "bf57d069bc1411b982b1f41d7df23d002837ab230206e2b73100a7d11322a84c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🧪️tests/🟦️.ts": {
+  "base": "b49037eeb6dd04b2c067a7425cf5cf0ceefe589e8af52488845877094172932b",
+  "new": "3e1059261a542d223e4309cc166c39aa9ccc5892371314f8ac7fc40894ffab9b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🧪️tests/🌊️burst/🟦️.ts": {
+  "base": null,
+  "new": "27a899fe2b68d2dea0e51f8664d328ef95f680124aca14a3df3bd489f8d6ca01"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🧪️tests/🟦️.ts": {
+  "base": "9d283a73b78d5d052d0e6b737218620bfdc4c41d0f69872f062db02d63e09777",
+  "new": "fa0dcf3d56cef54eb224b0841ced1f169b82da9349bc11b91238c2e0589ee552"
+ }
+}

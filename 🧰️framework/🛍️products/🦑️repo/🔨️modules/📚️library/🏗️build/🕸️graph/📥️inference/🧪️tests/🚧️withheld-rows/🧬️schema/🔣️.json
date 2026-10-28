@@ -1,0 +1,61 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/schema/withheld-rows-law.json",
+ "type": "object",
+ "required": [
+  "version",
+  "files",
+  "target",
+  "failing",
+  "scenarios"
+ ],
+ "additionalProperties": false,
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "files": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "string"
+   }
+  },
+  "target": {
+   "type": "object"
+  },
+  "failing": {
+   "type": "string"
+  },
+  "scenarios": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "required": [
+     "name",
+     "edit",
+     "holds",
+     "resolves"
+    ],
+    "additionalProperties": false,
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "edit": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "holds": {
+      "type": "boolean"
+     },
+     "resolves": {
+      "type": "boolean"
+     }
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,41 @@
+{
+ "name": "guard-go",
+ "code": "none (guard-g edits are live, outside the library)",
+ "lane": "guard-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "guard-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- Census (route-g, 10-26): of 353 build-library files 270 were green in official mode; the 83 others are classed (52 stale expectations, 16 birth or Nx gated, 7 real defects, 5 peer, 2 load); fixes for them are pending gate (route2-g).",
+   "where": "after",
+   "block": "- **Go tests cannot touch the real checkout**: the sandbox guard of the Go test route (`🏠️workspace/📦️packages/🐹️go/🏖️sandbox`) compares roots by identity (same file, so links, case folding and Unicode normalisation agree): a test that resolves or binds the checkout root ITSELF aborts at the first resolution, naming the test, before it can write anything (the default; `SEMIO_SANDBOX_GUARD=report` lists all offenders, only for modules already fixed). A directory below the checkout with its own `.git` is a root of its own and passes (`BindRoot` and the fixture repository run a real `git init`, so git itself no longer answers for the enclosing checkout). The official route used to issue TMPDIR below the checkout, where a test directory without a `.git` resolved to the REAL checkout and wrote fixture tickets and sessions into it; `RelocateScratch` now moves such a scratch directory out (user cache directory, `/tmp`, `/var/tmp`, with no repository above it; `SEMIO_SANDBOX_SCRATCH=keep` opts out and `SEMIO_TEST_ARTIFACT_DIR` is untouched). 33 Go modules audited: 21 run under the sandbox, 8 never resolve a root, the launcher tests read the checkout read-only. Open: about 40 direct `SetRootDir(t.TempDir())` sites in the cli, hooks, move, tree, codebase and graphql tests rely on the relocation, not on a fence of their own; two graphql autofix tests are red independently of the guard."
+  },
+  {
+   "id": "guard-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- Zählung (route-g, 26.10.): von 353 Dateien der Build-Bibliothek waren 270 im offiziellen Modus grün; die 83 übrigen sind eingeordnet (52 veraltete Erwartungen, 16 geburts- oder Nx-gesteuert, 7 echte Defekte, 5 Peers, 2 Last); die Korrekturen warten auf das Tor (route2-g).",
+   "where": "after",
+   "block": "- **Go-Tests können den echten Checkout nicht anfassen**: der Sandbox-Wächter der Go-Testroute (`🏠️workspace/📦️packages/🐹️go/🏖️sandbox`) vergleicht Wurzeln nach Identität (dieselbe Datei, sodass Links, Groß-/Kleinschreibung und Unicode-Normalisierung übereinstimmen): ein Test, der die Wurzel des Checkouts SELBST auflöst oder bindet, bricht bei der ersten Auflösung ab und nennt den Test, bevor er etwas schreiben kann (Standard; `SEMIO_SANDBOX_GUARD=report` listet alle Verursacher, nur für bereits korrigierte Module). Ein Verzeichnis unterhalb des Checkouts mit eigenem `.git` ist eine eigene Wurzel und besteht (`BindRoot` und das Fixture-Repository führen ein echtes `git init` aus, sodass Git selbst nicht mehr für den umgebenden Checkout antwortet). Die offizielle Route stellte TMPDIR früher unterhalb des Checkouts aus, wo ein Testverzeichnis ohne `.git` zum ECHTEN Checkout aufgelöst wurde und Fixture-Tickets und Sitzungen hineinschrieb; `RelocateScratch` verlegt ein solches Scratch-Verzeichnis jetzt hinaus (Nutzer-Cache-Verzeichnis, `/tmp`, `/var/tmp`, ohne Repository darüber; `SEMIO_SANDBOX_SCRATCH=keep` verzichtet darauf, `SEMIO_TEST_ARTIFACT_DIR` bleibt unberührt). 33 Go-Module geprüft: 21 laufen unter der Sandbox, 8 lösen nie eine Wurzel auf, die Launcher-Tests lesen den Checkout nur lesend. Offen: rund 40 direkte Stellen `SetRootDir(t.TempDir())` in den Tests von cli, hooks, move, tree, codebase und graphql verlassen sich auf die Verlegung statt auf einen eigenen Zaun; zwei graphql-Autofix-Tests sind unabhängig vom Wächter rot."
+  },
+  {
+   "id": "guard-row",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "| `The runtime registry declares contract N, this launcher implements contract M. Rebuild and reinstall the launcher with: …` | the installed Go launcher is older than the registry; run the printed installer once (`🚀️launcher/📥️install`); there is one install location. |",
+   "where": "after",
+   "block": "| `FAIL: tests touched the real repository root <path>: …` (Go tests) | a Go test resolved or bound the real checkout (the abort names the test). Make the test use a root it owns (`sandbox.BindRoot`, a fixture repository), never make it pass with `SEMIO_SANDBOX_SCRATCH=keep`; fixture tickets or sessions in `git status` of `.🧬semio` are the sign that an older test wrote through. |"
+  },
+  {
+   "id": "guard-row",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "| `Die Laufzeitregistratur deklariert Vertrag N, dieser Launcher setzt Vertrag M um. Baue den Launcher neu und installiere ihn mit: …` | der installierte Go-Launcher ist älter als die Registratur; den ausgegebenen Installer einmal ausführen (`🚀️launcher/📥️install`); es gibt genau einen Installationsort. |",
+   "where": "after",
+   "block": "| `FAIL: tests touched the real repository root <Pfad>: …` (Go-Tests) | ein Go-Test hat den echten Checkout aufgelöst oder gebunden (der Abbruch nennt den Test). Den Test eine Wurzel nutzen lassen, die ihm gehört (`sandbox.BindRoot`, ein Fixture-Repository), ihn nie mit `SEMIO_SANDBOX_SCRATCH=keep` zum Bestehen bringen; Fixture-Tickets oder -Sitzungen im `git status` von `.🧬semio` zeigen, dass ein älterer Test durchgeschrieben hat. |"
+  }
+ ]
+}

@@ -1,0 +1,22 @@
+/** Graph-free official-envelope runner for the process module. usage: bun proc-run.ts suite <id> | file <module-relative-test-file> [-t pattern]; env VF_TMPDIR overrides TMPDIR, VF_WALL seconds */
+import {spawn} from "node:child_process";
+import {mkdirSync,rmSync,openSync,closeSync} from "node:fs";
+import {createBuildBootstrapCapabilitiesV1} from "/private/tmp/m/oc/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️child/🟦️.ts";
+import {issueRepositoryScriptProvidersV1} from "/private/tmp/m/oc/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔌️providers/🟦️.ts";
+import {pinnedRustToolchainV1} from "/private/tmp/m/oc/🧰️framework/🔨️modules/🏃️process/🧪️testing/🧰️toolchain/📌️pinned/🟦️.ts";
+import {createScriptProcessEnvelope,scriptProcessEnvironment} from "/private/tmp/m/oc/🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+const root="/private/tmp/m/oc",mod=root+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/";
+const [mode,target,...rest]=process.argv.slice(2),wall=Number(process.env.VF_WALL??600)*1000;
+const art="/private/tmp/claude-501/vf/art-"+process.pid;rmSync(art,{recursive:true,force:true});mkdirSync(art,{recursive:true});
+const base:NodeJS.ProcessEnv={LANG:"en_US.UTF-8",...process.env,SEMIO_WORKSPACE_ROOT:root,SEMIO_BUILD_MODE:"prototype",SEMIO_BUILD_TOOL:"semio"};
+if(mode==="file")base.SEMIO_TEST_ARTIFACT_DIR=art;
+Object.assign(base,pinnedRustToolchainV1(undefined,base).environment);issueRepositoryScriptProvidersV1(base);delete base.SEMIO_SCRIPT_STALL_MS;
+const tmp=process.env.VF_TMPDIR??"/private/tmp/claude-501/vft";if(tmp.includes("/.cache/b/")&&!/sandbox|toolchains|suites/u.test(String(target))&&process.env.VF_ALLOW_MANAGED!=="1")throw Error("VF_TMPDIR inside a managed native parent mounts images there: only for sandbox/suites reproductions (VF_ALLOW_MANAGED=1 to force)");mkdirSync(tmp,{recursive:true});base.TMPDIR=tmp;
+const capabilityBase={...base};delete capabilityBase.SEMIO_TEST_ARTIFACT_DIR;
+const capabilities={...await createBuildBootstrapCapabilitiesV1(root,["run","@semio-tech/repo-lib:test-build-workspace-graph-laws"],capabilityBase),...(mode==="file"?{artifacts:art}:{})};
+const envelope=createScriptProcessEnvelope({version:1,owner:"optcache:suite-run",maximumElapsedMilliseconds:wall},capabilities,Date.now());
+const env=scriptProcessEnvironment(envelope,base) as NodeJS.ProcessEnv;
+const args=mode==="suite"?["./📜️script.ts","test",target!]:["test","--timeout","120000",...rest,(target!.startsWith("/")?target!:mod+target!)];
+const cwd=mode==="suite"?mod.slice(0,-1):root;
+const child=spawn("nice",["-n","10","bun",...args],{cwd,env,stdio:["ignore","inherit","inherit"]});
+child.on("close",code=>{try{rmSync(art,{recursive:true,force:true});}catch{}process.exit(code??1);});

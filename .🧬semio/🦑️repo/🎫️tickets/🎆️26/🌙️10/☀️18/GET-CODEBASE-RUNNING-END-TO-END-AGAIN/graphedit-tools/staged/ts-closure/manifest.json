@@ -1,0 +1,32 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": {
+  "file": "00.mjs",
+  "base": "287d772894570a7497977c864a4f3d6e06b62a2ed3332f7f2e744c9a68be850d",
+  "new": "2474f743c405c5faa1b04a73320acb0b405b06ebe4d0dfba22368baaf058796a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts": {
+  "file": "01.ts",
+  "base": "34820e7987d48cebfad1a11c7e06f7eb85eb9fc46283f7b272d5b27b79da746f",
+  "new": "bb40bd208e137e324961546f2a68bc7b81f08848b511631df711b3f2fcbc291d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🧪️tests/🪁️program-reads/🟦️.ts": {
+  "file": "02.ts",
+  "base": null,
+  "new": "37e1884624b1c02ef08fd64f9957b83cf50d385e6c870aea9c008b666b5059a9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🧪️tests/🪁️program-reads/🔣️.json": {
+  "file": "03.json",
+  "base": null,
+  "new": "3535d26d84472374138fc622d43ba848c67e8c3f2646e22650aa768a1057a044"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🧪️tests/🪁️program-reads/🧬️schema/🔣️.json": {
+  "file": "04.json",
+  "base": null,
+  "new": "f10b34bb5a19e1a8b17f88743796042c28e64e7baaff6cefffe8657a1f13bb7c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🧪️tests/🪁️program-reads/🐍️oracle/🐍️.py": {
+  "file": "05.py",
+  "base": null,
+  "new": "d8419d88cd942d1e04cc153161146fabbcf4c8612bf3c6063f913ffe98b4962c"
+ }
+}

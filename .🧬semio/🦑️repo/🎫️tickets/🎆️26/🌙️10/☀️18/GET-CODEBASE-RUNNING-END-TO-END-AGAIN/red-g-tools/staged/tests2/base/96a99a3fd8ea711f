@@ -1,0 +1,63 @@
+import{test,expect}from"bun:test";
+import Ajv from"ajv";
+import{mkdtempSync,readFileSync,rmSync,writeFileSync}from"node:fs";
+import{join,resolve}from"node:path";
+import{captureOwnedCommandV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
+import{testScratchRootV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import{testPythonV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import{aggregatedProcessTestFilesV1,discoverProcessTestFilesV1,expandProcessTestSuiteV1,type ProcessTestSuiteV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🟦️.ts";
+import processSchema from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🧬️schema/🔣️json/🟦️.ts";
+import{cachingTestCoverageV1,cachingTestRootV1,readCachingTestTableV1}from"../🟦️.ts";
+import table from"../🔣️.json"with{type:"json"};
+import fixture from"./🧫️fixtures/🔣️.json"with{type:"json"};
+
+const processSuites=resolve(import.meta.dir,"../../../../../../../🔨️modules/🏃️process/🧪️testing/🗂️suites"),coverageOracle=join(processSuites,"🧪️tests/🐍️oracle/🐍️.py"),schemaPath=join(processSuites,"🧬️schema/🔣️.json"),classOracle=join(import.meta.dir,"🐍️oracle/🐍️.py"),fixturePath=join(import.meta.dir,"🧫️fixtures/🔣️.json"),project=resolve(cachingTestRootV1,"📋️project.json");
+const python=():string=>{const found=testPythonV1()??Bun.which("python3")??Bun.which("python");if(!found)throw Error("Independent Python oracle required");return found;};
+const sorted=(rows:readonly string[]):string[]=>[...rows].sort();
+const ask=async(script:string,args:readonly string[]):Promise<unknown>=>JSON.parse(await captureOwnedCommandV1(python(),[script,...args],cachingTestRootV1,{output:{maximumBytes:4194304,maximumLines:16}}));
+const withFile=async<T>(value:unknown,use:(path:string)=>Promise<T>):Promise<T>=>{const scratch=mkdtempSync(join(testScratchRootV1("caching-suites"),"table-")),path=join(scratch,"value.json");try{writeFileSync(path,JSON.stringify(value));return await use(path);}finally{rmSync(scratch,{recursive:true,force:true});}};
+const spawns=(source:string):boolean=>fixture.spawnTokens.some(token=>source.includes(token));
+const levelOf=(suite:ProcessTestSuiteV1):string|undefined=>Object.entries(fixture.levels).find(([,budget])=>budget===suite.budgetMs)?.[0];
+
+test("the caching route table is a closed document that Ajv and the module validator both admit",()=>{
+ const ajv=new Ajv({strict:true});ajv.addSchema(processSchema);
+ expect(ajv.validate({$ref:processSchema.$id+"#/definitions/Table"},table),JSON.stringify(ajv.errors)).toBe(true);
+ expect(readCachingTestTableV1().suites.length).toBe(table.suites.length);
+ expect(()=>readCachingTestTableV1({...table,suites:[...table.suites,table.suites[0]]})).toThrow();
+});
+
+test("every test file of the caching module belongs to exactly one suite, agreeing with the independent Python oracle",async()=>{
+ const declared=readCachingTestTableV1(),found=discoverProcessTestFilesV1(cachingTestRootV1),coverage=cachingTestCoverageV1(declared);
+ expect({...coverage}).toEqual({unrouted:[],duplicated:[],filtered:[],missing:[],staleHelpers:[]});
+ const independent=await withFile(table,path=>ask(coverageOracle,[cachingTestRootV1,path,schemaPath]))as Record<string,string[]>;
+ expect(sorted(independent.discovered!)).toEqual(sorted(found));
+ for(const key of Object.keys(coverage))expect(sorted(independent[key]!),key).toEqual(sorted(coverage[key as keyof typeof coverage]));
+});
+
+test("no caching test file imports another test file, so each file receives its own process birth",async()=>{
+ const found=discoverProcessTestFilesV1(cachingTestRootV1),independent=await withFile(table,path=>ask(coverageOracle,[cachingTestRootV1,path,schemaPath]))as Record<string,string[]>;
+ expect(aggregatedProcessTestFilesV1(cachingTestRootV1,found)).toEqual([]);
+ expect(independent.aggregated).toEqual([]);
+});
+
+test("every suite has a project target and every route target names a declared suite",()=>{
+ const declared=readCachingTestTableV1(),known=new Set([...declared.suites.map(suite=>suite.id),...declared.codeSuites]),targets=(JSON.parse(readFileSync(project,"utf8"))as{targets:Record<string,{options?:{command?:string;cwd?:string}}>}).targets,pattern=/📜️script\.ts test(?: (\S+))?(?: \S+)*$/u,routed=new Map<string,string[]>();
+ for(const[name,target]of Object.entries(targets)){const match=pattern.exec(target.options?.command??"");if(match&&match[1]!==undefined&&(target.options?.cwd===undefined||target.options.cwd.endsWith("⚡️caching")))routed.set(match[1],[...(routed.get(match[1])??[]),name]);}
+ expect(sorted([...known].filter(id=>!routed.has(id)))).toEqual([]);
+ expect(sorted([...routed.keys()].filter(id=>!known.has(id)))).toEqual([]);
+});
+
+test("budget classes follow the independent oracle on every vector and cover every process-spawning file of the module",async()=>{
+ const base=mkdtempSync(join(testScratchRootV1("caching-suites"),"vectors-"));
+ try{
+  const names=fixture.vectors.map((row,index)=>{const name="vector"+index+".ts";writeFileSync(join(base,name),row.source);return name;});
+  const independent=await withFile(names,async path=>JSON.parse(await captureOwnedCommandV1(python(),[classOracle,base,path,fixturePath],base,{output:{maximumBytes:65536,maximumLines:16}}))as string[]);
+  expect(sorted(independent)).toEqual(sorted(names.filter((_,index)=>fixture.vectors[index]!.spawns)));
+  fixture.vectors.forEach(row=>expect(spawns(row.source),row.name).toBe(row.spawns));
+ }finally{rmSync(base,{recursive:true,force:true});}
+ const declared=readCachingTestTableV1(),found=discoverProcessTestFilesV1(cachingTestRootV1),rows=declared.suites.map(suite=>({suite,files:expandProcessTestSuiteV1(suite,found,declared)}));
+ for(const{suite}of rows)expect(levelOf(suite),suite.id+" budget "+suite.budgetMs).toBeDefined();
+ const inModule=rows.map(row=>({...row,files:row.files.filter(file=>!file.startsWith(".."))})),all=inModule.flatMap(row=>row.files),oracle=await withFile(all,path=>ask(classOracle,[cachingTestRootV1,path,fixturePath]))as string[],spawning=new Set(oracle);
+ expect(sorted(all.filter(file=>spawns(readFileSync(join(cachingTestRootV1,file),"utf8"))))).toEqual(sorted(oracle));
+ for(const row of inModule){const starts=row.files.filter(file=>spawning.has(file));if(starts.length)expect(row.suite.budgetMs,row.suite.id+" starts processes in "+starts.join(", ")).toBeGreaterThanOrEqual(fixture.levels.quick);}
+});

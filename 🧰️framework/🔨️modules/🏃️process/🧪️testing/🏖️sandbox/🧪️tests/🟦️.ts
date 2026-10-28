@@ -16,6 +16,7 @@ import {
   type GuardContextV1, type GuardViolationKindV1, type ScanLanguageV1, type TestSandboxProtocolV1,
 } from "../🟦️.ts";
 
+const fixtureBaseV1=():string=>safeTemporaryDirectoryV1()??tmpdir();
 process.env.SEMIO_AGENT_SESSION_DIRECTORY = mkdtempSync(join(tmpdir(), "sb-sessions-"));
 delete process.env.SEMIO_AGENT_SESSION;
 const declared = protocol as unknown as TestSandboxProtocolV1, law = compileLawV1(declared), root = join(import.meta.dir, "..");
@@ -94,7 +95,7 @@ describe("sandbox parent", () => {
     expect(declared.layout.idCharacters).toBe(8);
   });
   test("a deep temporary directory moves the sandbox parent to the short host base; a short one and an explicit parent stay", () => {
-    const saved = process.env.TMPDIR, deep = mkdtempSync(join(tmpdir(), "d-")), long = join(deep, "x".repeat(declared.layout.maximumRootLength));
+    const saved = process.env.TMPDIR, deep = mkdtempSync(join(fixtureBaseV1(), "d-")), long = join(deep, "x".repeat(declared.layout.maximumRootLength));
     mkdirSync(long, { recursive: true });
     try {
       process.env.TMPDIR = long;
@@ -120,7 +121,7 @@ def host(path):
         current=os.path.dirname(current)
 print(json.dumps([host(path) for path in paths]))`;
   test("a temporary directory inside a managed native parent never hosts the sandbox parent: the products partition cannot verify a test image nested in it", () => {
-    const saved = process.env.TMPDIR, base = realpathSync(mkdtempSync(join(tmpdir(), "mp-"))), partition = join(base, "p"), plain = join(base, "q");
+    const saved = process.env.TMPDIR, base = realpathSync(mkdtempSync(join(fixtureBaseV1(), "mp-"))), partition = join(base, "p"), plain = join(base, "q");
     const inside = join(partition, "m", "tmp"), beside = join(plain, "m", "tmp"), directoryPartition = join(base, "r");
     for (const directory of [inside, beside, join(directoryPartition, "m", "tmp")]) mkdirSync(directory, { recursive: true });
     writeFileSync(join(partition, "fixed.dmg"), ""); writeFileSync(join(directoryPartition, "fixed.dir"), "");
@@ -145,7 +146,7 @@ print(json.dumps([host(path) for path in paths]))`;
     } finally { if (saved === undefined) delete process.env.TMPDIR; else process.env.TMPDIR = saved; rmSync(base, { recursive: true, force: true }); }
   });
   test("a preset artifact directory inside a managed native parent is refused in both languages, and the inherited temporary directory is replaced", () => {
-    const base = realpathSync(mkdtempSync(join(tmpdir(), "mp-"))), partition = join(base, "p"), inside = join(partition, "m", "tmp", "art"), outside = join(base, "free");
+    const base = realpathSync(mkdtempSync(join(fixtureBaseV1(), "mp-"))), partition = join(base, "p"), inside = join(partition, "m", "tmp", "art"), outside = join(base, "free");
     mkdirSync(inside, { recursive: true }); mkdirSync(outside, { recursive: true });
     writeFileSync(join(partition, "fixed.dmg"), "");
     try {

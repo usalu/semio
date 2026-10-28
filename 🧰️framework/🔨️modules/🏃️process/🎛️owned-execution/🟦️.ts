@@ -1,11 +1,13 @@
+import {noticeLanguagesV1} from "../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import{readOwnedCommandAuxiliaryInputV1,publishOwnedAuxiliaryInputV1,type OwnedCommandAuxiliaryInputV1}from"./📥️auxiliary/🟦️.ts";
 export type{OwnedCommandAuxiliaryInputV1}from"./📥️auxiliary/🟦️.ts";
 import {captureOwnedCommandBodyV1,writeOwnedCommandOutputV1} from "./📥️capture/🟦️.ts";
 import {resultStreamV1} from "../🏗️build/📤️output/🟦️.ts";
+import {bunTestCeilingV1} from "../🧪️testing/🟨️bun/🧯️ceiling/🟦️.ts";
 import {routeRegisteredCommandV1} from "../🧰️tools/🔌️funnel/🟦️.ts";
 import {tmpdir} from "node:os";
 import {prepareTestCommandV1,testProtocolMessageV1} from "../🧪️testing/🚦️protocol/🟦️.ts";
-export {withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,readOwnedCommandChannelTerminalV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,type OwnedCommandChannelV1,type OwnedCommandTerminalV1,writeOwnedCommandOutputV1,type OwnedCommandOutputSinkV1,captureOwnedCommandResultV1,readOwnedCommandCaptureV1,type OwnedCommandCaptureV1,type OwnedCommandCaptureOptionsV1,type OwnedCommandInputV1} from "./📥️capture/🟦️.ts";
+export {withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,readOwnedCommandChannelTerminalV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,type OwnedCommandChannelV1,type OwnedCommandTerminalV1,writeOwnedCommandOutputV1,type OwnedCommandOutputSinkV1,captureOwnedCommandResultV1,readOwnedCommandCaptureV1,type OwnedCommandCaptureV1,type OwnedCommandCaptureOptionsV1,type OwnedCommandSpawnHookV1,type OwnedCommandInputV1} from "./📥️capture/🟦️.ts";
 import { terminateOwnedChildTree } from "../🪓️termination/🟦️.ts";
 import { checkResourceLeaseControl, type ResourceLeaseControl } from "../🔒️leases/🟦️.ts";
 import { StringDecoder } from "node:string_decoder";
@@ -14,6 +16,7 @@ import { settleOwnedChildV1 } from "./🏁️settlement/🟦️.ts";
 import { OwnedCommandFailure } from "./📪️outcome/🟦️.ts";
 import stdoutDestination from "./🧬️schema/📤️stdout.json" with { type: "json" };
 import outputSchema from "./🧬️schema/📬️output.json" with { type: "json" };
+import heartbeat from "./🧬️schema/📣️heartbeat.json" with { type: "json" };
 import processBudgetSchema from "../⏱️budget/🧬️schema/🔣️.json" with { type: "json" };
 import {Transform} from "node:stream";
 import{requireIssuedResourceControlV1}from"../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
@@ -56,10 +59,15 @@ export async function captureOwnedCommandV1(command: string, args: readonly stri
 }
 
 /** ⏱️ Keeps long native queue waits observable until the owning operation completes. */
-export function startNativeProgress(label: string, intervalMs = 10_000, output: (line: string) => void = (line) => { process.stderr.write(line + "\n"); }): () => void {
-  const started = Date.now(),
-    progress = setInterval(() => output(`[${label}] running elapsedMs=${Date.now() - started}`), intervalMs);
+export function startNativeProgress(label: string, intervalMs = 10_000, output: (line: string) => void = (line) => { process.stderr.write(line + "\n"); }, environment: Readonly<Record<string, string | undefined>> = process.env): () => void {
+  const started = Date.now(), languages = nativeProgressLanguagesV1(environment),
+    progress = setInterval(() => { const seconds = String(Math.round((Date.now() - started) / 1000)); for (const language of languages) output(heartbeat.const.labels[language].running.replace("{label}", () => label).replace("{seconds}", seconds)); }, intervalMs);
   return () => clearInterval(progress);
+}
+
+/** 🌐️ The languages a heartbeat is written in: the one the language protocol chooses, English and German when it chooses none. */
+export function nativeProgressLanguagesV1(environment: Readonly<Record<string, string | undefined>>): readonly ("en" | "de")[] {
+  return noticeLanguagesV1(heartbeat.const.languages as readonly ("en" | "de")[], environment);
 }
 
 /** ⌛️ Checks one monotonic command deadline in intervals within the native timer range. */
@@ -84,6 +92,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
   if(auxiliary){if(!options.control)throw Error("Actual Original auxiliary input control required");requireIssuedResourceControlV1(options.control);if(options.signal!==undefined&&options.signal!==options.control.signal)throw Error("Same Original auxiliary input signal required");}
   const commandSignal=auxiliary?options.control!.signal:options.signal;
   if (commandSignal?.aborted) {if(auxiliary)throw commandSignal.reason;throw new Error(`${label} stopped: cancelled`);}
+  const ceiling = bunTestCeilingV1(command, args, cwd, options.env ?? process.env);
   const routed = routeRegisteredCommandV1(command, args, cwd, options.env ?? process.env), child = spawn(routed.command, [...routed.arguments], { cwd, env: routed.environment as NodeJS.ProcessEnv, detached: process.platform !== "win32", stdio: [options.input === undefined ? "inherit" : "pipe", options.stdout === "ignore" && options.output === undefined && !options.outputConsumer ? "ignore" : "pipe", "pipe", ...(auxiliary?["pipe" as const]:[])], windowsHide: true });
   let stopped = "", closed = false, publicationRefused = false, publicationFailure: unknown, interruptPublication!: () => void;
   const pending = new Set<Promise<void>>(), interrupted = new Promise<void>(accept => { interruptPublication = accept; });
@@ -92,6 +101,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     interruptPublication();
     if (!closed) terminateOwnedChildTree(child);
   };
+  const release = ceiling !== undefined && child.pid !== undefined ? ceiling(child.pid, terminate) : undefined;
   const abort = (): void => terminate(commandSignal?.reason instanceof ProgressDeadlineExpiredV1 ? commandSignal.reason.message : "cancelled");
   const observe = (stream: NodeJS.ReadableStream,source:OwnedCommandStreamV1): void => {
     const decoder = new StringDecoder("utf8");
@@ -175,6 +185,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     if (status.signal !== null || status.code !== 0) throw new OwnedCommandFailure(label, { version: 1, status: status.code, signal: status.signal });
     if(deliveryFailed)throw deliveryFailure;
   } finally {
+    if (release) release();
     for(const stream of deliveryStreams)stream.off("error",deliveryRefused);
     commandSignal?.removeEventListener("abort", abort);
     stopProgress();

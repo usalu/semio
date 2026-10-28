@@ -1,0 +1,131 @@
+{
+  "$schema": "./.nx/installation/node_modules/nx/schemas/nx-schema.json",
+  "cli": {
+    "packageManager": "bun"
+  },
+  "useDaemonProcess": true,
+  "defaultBase": "⛳wip",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
+    "sharedGlobals": [
+      {
+        "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
+      },
+      {
+        "runtime": "repo tools exec --light bun -- --version"
+      },
+      {
+        "env": "SEMIO_BUILD_MODE"
+      }
+    ],
+    "schemaSources": [
+      "sharedGlobals",
+      "{workspaceRoot}/**/🧬️schema/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts"
+    ],
+    "production": [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+      "!{projectRoot}/**/🧪️tests/**/*",
+      "!{projectRoot}/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*",
+      "!{projectRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*",
+      "!{projectRoot}/**/?(*.)+(stories|story|mdx).[cmjtshx]?([sx])?(.snap)?",
+      "!{projectRoot}/.storybook/**"
+    ],
+    "testSourceExclusions": [
+      "!{workspaceRoot}/**/🧪️tests/**/*",
+      "!{workspaceRoot}/**/*.feature",
+      "!{workspaceRoot}/**/*.stories.{ts,tsx}"
+    ],
+    "schedulingSourceExclusions": [
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/💾️state/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📖️texts/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/💾️state/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/💾️cache/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🔒️leases/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🪓️termination/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🌊️races/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧾️refusals/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/📥️entry/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔭️coverage/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧷️pin/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/**/*"
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/rustfmt.toml",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/📜️script.ts"
+    ],
+    "go": [
+      "{projectRoot}/**/*.go",
+      "{projectRoot}/go.mod",
+      "{projectRoot}/go.sum",
+      "{workspaceRoot}/go.work",
+      "{workspaceRoot}/go.work.sum"
+    ],
+    "uv": [
+      "{projectRoot}/**/*.py",
+      "{projectRoot}/pyproject.toml",
+      "{projectRoot}/uv.lock"
+    ],
+    "dotnet": [
+      "{projectRoot}/**/*.cs",
+      "{projectRoot}/**/*.csproj"
+    ],
+    "nativeSources": [
+      "production"
+    ],
+    "nativeTestSources": [
+      "default"
+    ]
+  },
+  "pluginsConfig": {
+    "@nx/js": {
+      "analyzePackageJson": false,
+      "analyzeSourceFiles": false,
+      "analyzeLockfile": false
+    },
+    "@repo/emoji-project-json": {
+      "dependencyResolutionAuthority": {
+        "module": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+        "export": "dependencyResolutionAuthority"
+      }
+    }
+  },
+  "plugins": [
+    {
+      "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "include": [
+        "📋️project.json"
+      ],
+      "options": {}
+    }
+  ],
+  "cacheDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/nx/artifacts",
+  "maxCacheSize": "3GB",
+  "analytics": false
+}

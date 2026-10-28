@@ -1,0 +1,52 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🧬️schema/🔣️.json": {
+  "file": "00.json",
+  "base": "c1c887a2eec5cff68a9270df9f2cdfda9a6e32cd5dd49c7a9f3836a71b5462da",
+  "new": "f157e4513583b13639b2a2af1be8f79d16cfff7a038b639e63847b8ba9c47624"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts": {
+  "file": "01.ts",
+  "base": "0a165e909fb512bde7a679fdb2392cd96b01c7f787f89448d10750c5730a85a0",
+  "new": "ba6416e9e36637de4a80d84c5b2f0e64ad36b3074a878a17ca530d457a74d43d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧬️schema/🔣️.json": {
+  "file": "02.json",
+  "base": null,
+  "new": "4eada61151a3c6d53f63eddb4ff60b06538b139b2b5b8eed0e5ff59b338cfe04"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs": {
+  "file": "03.mjs",
+  "base": "cbeb814f9c30362e30e7d79e5761466ec77d42e4173013dbb4a742c28e382ffd",
+  "new": "8f5d9e8cc086efed7f1a861968872832b25b1a996e14f5e17e3b8e9d5aa291a9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/⚙️runtime/🧬️schema/🔣️.json": {
+  "file": "04.json",
+  "base": null,
+  "new": "41ab326dd66dd8288596228e9c15af0a5256b13f9b8803af52f5d9c06529a9cb"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/⚙️runtime/🧬️schema/🟦️.ts": {
+  "file": "05.ts",
+  "base": null,
+  "new": "76e3c4de12ecb97ece910b749bc3eef3dba490f8766bf3511fb7e5969a3de52c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/⚙️runtime/🟦️.ts": {
+  "file": "06.ts",
+  "base": "ac065a6927cd92703cc31869f9c6e54b324b93506cc5a2355cf0f40310127fc4",
+  "new": "3d6e3b1d3fee5109ca0e97b49379248d3d8cc290b83be2060c4310ea061eb5de"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🎯️precision/🔣️.json": {
+  "file": "07.json",
+  "base": null,
+  "new": "8a2ce9a1947b48addaed61eef2fdc084e482d255dfeef640cf5e4c9f450303b8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/📥️inputs/🔣️.json": {
+  "file": "08.json",
+  "base": null,
+  "new": "f7f629cad629eed5fc84de7adacdaa3221f6ba26f6daf8c759c7673791f23bda"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/⌨️command-runtime/🔣️.json": {
+  "file": "09.json",
+  "base": null,
+  "new": "86e356a76608a872ba10211d2273d24cac4fad5095020d1d29cedec2ea8f52cc"
+ }
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "semio.framework.process.test-budget-contention/v1",
+  "ratios": [
+    { "ratio": 0, "stretch": 1 },
+    { "ratio": 0.2, "stretch": 1 },
+    { "ratio": 1, "stretch": 1 },
+    { "ratio": 1.5, "stretch": 1.5 },
+    { "ratio": 5, "stretch": 5 },
+    { "ratio": 8, "stretch": 8 },
+    { "ratio": 70, "stretch": 8 },
+    { "ratio": -3, "stretch": 1 },
+    { "ratio": null, "stretch": 1 }
+  ],
+  "clocks": [
+    { "name": "an idle host stops at the exact wall budget", "budget": 300000, "work": 297000, "cores": 10, "trace": [[0, 2]], "expiry": 300000, "survives": true },
+    { "name": "a load equal to the cores stretches nothing", "budget": 300000, "work": 297000, "cores": 10, "trace": [[0, 10]], "expiry": 300000, "survives": true },
+    { "name": "a host five times oversubscribed counts a fifth per wall second", "budget": 300000, "work": 297000, "cores": 10, "trace": [[0, 50]], "expiry": 1500000, "survives": true },
+    { "name": "the stretch is bounded so a hung test is still stopped", "budget": 300000, "work": 297000, "cores": 10, "trace": [[0, 5000]], "expiry": 2400000, "survives": false },
+    { "name": "load that falls after 100 s", "budget": 300000, "work": 297000, "cores": 10, "trace": [[0, 50], [100000, 5]], "expiry": 380000, "survives": true },
+    { "name": "load that rises after 100 s", "budget": 300000, "work": 297000, "cores": 10, "trace": [[0, 5], [100000, 50]], "expiry": 1100000, "survives": true },
+    { "name": "a load spike in the middle", "budget": 60000, "work": 59000, "cores": 4, "trace": [[0, 1], [10000, 20], [40000, 1]], "expiry": 84000, "survives": true },
+    { "name": "a short budget on an idle host", "budget": 100, "work": 99, "cores": 10, "trace": [[0, 0]], "expiry": 100, "survives": true },
+    { "name": "a single core machine at load three", "budget": 15000, "work": 14000, "cores": 1, "trace": [[0, 3]], "expiry": 45000, "survives": true }
+  ],
+  "probes": [
+    { "name": "a probing platform smooths a measurement per interval", "steps": [[0, 4], [1000, 8], [10000, 2], [20000, 2]], "answers": [4, 4, 3.4, 2.98] }
+  ]
+}

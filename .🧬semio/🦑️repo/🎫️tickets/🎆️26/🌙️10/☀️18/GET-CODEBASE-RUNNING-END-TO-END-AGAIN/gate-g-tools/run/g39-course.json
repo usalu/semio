@@ -1,0 +1,31 @@
+{
+ "label": "g39-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "12:18:56",
+ "wall_s": 125.7,
+ "peak_tree_mb": 5705,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "2"
+  ],
+  "inferring": [
+   "2"
+  ],
+  "published": [
+   "641",
+   "3",
+   "50"
+  ],
+  "processes": [
+   "8",
+   "1 internal, 7 local"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

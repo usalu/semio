@@ -1,0 +1,23 @@
+{
+ "name": "mirror",
+ "code": "none (ticket tooling mirror-tools/, exists)",
+ "lane": "mirror-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "staging-mirror",
+   "lang": "en",
+   "kind": "replace",
+   "old": "a graph-free verify script and laws with an independent oracle; the lane hands it over",
+   "new": "a graph-free verify script and laws with an independent oracle, run on a mirror of the tree and never through a symlink farm or the live guide (two write-through incidents on 10-26, one of them into this file): `python3 -I .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/mirror-tools/mirror.py create <lane>-<what> [--batch <stage dir or command>]` makes a copy-on-write copy with no symlink into the live tree (`run`, `diff`, `list`, `drop` follow; names of at most 8 characters; drop only your own), on macOS writes below the live repository are denied and on every platform a guard exits 97 when a live file or directory listing changed; the lane hands it over"
+  },
+  {
+   "id": "staging-mirror",
+   "lang": "de",
+   "kind": "replace",
+   "old": "ein Verifikationsskript ohne Graph und Gesetze mit unabhängigem Orakel; die Bahn übergibt mit",
+   "new": "ein Verifikationsskript ohne Graph und Gesetze mit unabhängigem Orakel, ausgeführt auf einem Spiegel des Baums und nie über eine Symlink-Farm oder den lebenden Führer (zwei Durchschreib-Vorfälle am 26.10., einer davon in diese Datei): `python3 -I .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/mirror-tools/mirror.py create <Bahn>-<Was> [--batch <Stage-Ordner oder Befehl>]` legt eine Copy-on-Write-Kopie ohne Symlink in den lebenden Baum an (`run`, `diff`, `list`, `drop` folgen; Namen mit höchstens 8 Zeichen; nur eigene löschen), unter macOS sind Schreibzugriffe unterhalb des lebenden Repositorys verboten und auf jeder Plattform beendet ein Wächter mit Exit 97, wenn sich eine lebende Datei oder ein Verzeichnislisting änderte; die Bahn übergibt mit"
+  }
+ ]
+}

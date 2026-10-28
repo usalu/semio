@@ -1,0 +1,40 @@
+{
+ "name": "capacity",
+ "code": "quietfc round 1+2 (live)",
+ "lane": "docs4",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "7b768aa704cb715daea331a3c60713677f3d915c4269d1fd9a93231de873fa50",
+ "needs": [],
+ "edits": [
+  {
+   "id": "quiet-200",
+   "lang": "en",
+   "kind": "replace",
+   "old": " A class that learned 200% of its default (7168 MB) no longer waits for the full grant on a hot no-op.",
+   "new": " What a quiet run may grow into is bounded (next bullets), so a hot no-op never waits for a size no run of its class ever used: a hot course no-op holds the 2048 MB quiet reservation and finishes in 10 s at 1.1-1.6 GB."
+  },
+  {
+   "id": "quiet-200",
+   "lang": "de",
+   "kind": "replace",
+   "old": " Eine Klasse, die 200 % ihres Standards (7168 MB) gelernt hat, wartet bei einem heißen No-op nicht mehr auf die volle Zusage.",
+   "new": " Was ein ruhiger Lauf wachsen darf, ist begrenzt (nächste Punkte), ein heißer No-op wartet also nie auf eine Größe, die kein Lauf seiner Klasse je brauchte: ein heißer Kurs-No-op hält die ruhige Reservierung von 2048 MB und endet nach 10 s bei 1,1-1,6 GB."
+  },
+  {
+   "id": "grown-row",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "| `[capacity] run: forecast quiet because the earlier run of its class finished 90s ago …` followed by `waiting …` | a hot no-op after a finished run of its class holds only the small quiet reservation (1500 to 2048 MB, not the 5632 to 7168 MB of a busy class) and passes the soft stops (raised memory pressure, load, open files, attached images); critical pressure, swap or a real memory shortage still hold it. A class whose last run ended more than 30 minutes ago is asked for the full grant again: run the build twice. To plan as a smaller machine on a bigger host: `SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES=16384 SEMIO_HOST_CAPACITY_CORES=8` (it only shrinks; a malformed value means the real host). |",
+   "where": "after",
+   "block": "| `[capacity] run: reservation grown from 2048 MB to 4823 MB of the 8190 MB it asked for, after 0s: nothing else of ours is running and only that much memory is free (…); the run goes on` | not a hang: a quiet run (or any run that is the only one running) needed more than the host has free right now, so it is admitted at the largest size that fits and goes on; it never waits for memory on itself. With peers running the same run waits in the fair queue (`… waiting 12s to grow the reservation from … MB to … MB`) and grows when the memory is free. The size it asks for is bounded by what its own class measured (else its declared ceiling, else 8192 MB), never by 200% of the default. A wait of many minutes beside 10 GB of spare memory is a defect: report the class and `bun repo capacity status`. |"
+  },
+  {
+   "id": "grown-row",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "| `[capacity] run: ruhig prognostiziert, weil der frühere Lauf seiner Klasse vor 90 s endete …` gefolgt von `waiting …` | ein heißer No-op nach einem beendeten Lauf seiner Klasse hält nur die kleine ruhige Reservierung (1500 bis 2048 MB statt der 5632 bis 7168 MB einer beschäftigten Klasse) und passiert die weichen Sperren (erhöhter Speicherdruck, Last, offene Dateien, eingehängte Images); kritischer Druck, Swap oder ein echter Speichermangel halten ihn weiter. Endete der letzte Lauf einer Klasse vor mehr als 30 Minuten, wird wieder die volle Zusage verlangt: den Build zweimal starten. Um auf einem größeren Rechner wie ein kleinerer zu planen: `SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES=16384 SEMIO_HOST_CAPACITY_CORES=8` (verkleinert nur; ein fehlerhafter Wert heißt der echte Rechner). |",
+   "where": "after",
+   "block": "| `[capacity] run: Reservierung nach 0 s von 2048 MB auf 4823 MB der angefragten 8190 MB vergroessert: nichts anderes von uns laeuft und mehr Speicher ist nicht frei (…); der Lauf geht weiter` | kein Hänger: ein ruhiger Lauf (oder jeder Lauf, der als einziger läuft) brauchte mehr, als der Rechner gerade frei hat, wird deshalb mit der größten passenden Größe zugelassen und läuft weiter; er wartet nie auf sich selbst um Speicher. Laufen Peers, wartet derselbe Lauf in der fairen Warteschlange (`… wartet seit 12 s darauf, die Reservierung von … MB auf … MB zu vergroessern`) und wächst, sobald der Speicher frei ist. Die Größe, die er anfragt, ist durch das begrenzt, was seine eigene Klasse gemessen hat (sonst ihre erklärte Obergrenze, sonst 8192 MB), nie durch 200 % des Standards. Eine Wartezeit von vielen Minuten neben 10 GB freiem Speicher ist ein Mangel: Klasse und `bun repo capacity status` melden. |"
+  }
+ ]
+}

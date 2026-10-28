@@ -1,0 +1,24 @@
+{
+ "target": "test-original-factory-admission",
+ "tag": "r1",
+ "declared": 2025,
+ "rows": [
+  {
+   "leg": "bun-admission",
+   "kind": "bun",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 9,
+   "tail": " 0 fail |  55 expect() calls | Ran 2 tests across 1 file. [344.00ms] | ",
+   "notes": [
+    "profiles:4",
+    "rules:1302",
+    "capacity:600"
+   ]
+  }
+ ]
+}

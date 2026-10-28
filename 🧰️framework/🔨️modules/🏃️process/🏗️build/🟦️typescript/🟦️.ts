@@ -16,6 +16,9 @@ export type TypeScriptCheckOptions = Readonly<{ workspace: string; stateRoot: st
 /** 🧾️ Admits only finite diagnostic switches while keeping output, project and state configuration authored. */
 export function readTypeScriptCheckArgumentsV1(value:readonly string[]):readonly string[]{if(!Array.isArray(value)||value.length>schema.definitions.Arguments.maxItems)throw Error("Closed TypeScript diagnostic arguments required");const captured=[...value];if(validateJsonSchemaSubset(schema.definitions.Arguments,captured,schema).length)throw Error("Closed TypeScript diagnostic arguments required");return Object.freeze(captured);}
 
+/** 🔁️ The compiler command line of one warm check: no output, the authored project, the admitted diagnostic switches and the incremental state file the check owns; the state only speeds the check up, its diagnostics equal those of a cold `tsc --noEmit -p` (law `🧪️tests/🔁️incremental`). */
+export function typeScriptCheckCommandV1(compiler:string,project:string,args:readonly string[],stateFile:string):string[]{return [compiler,"--noEmit","-p",project,...args,"--incremental","true","--tsBuildInfoFile",stateFile];}
+
 /** 🧯️ Disables independent process bytecode stores before the compiler child is born. */
 export function typeScriptCheckEnvironmentV1(mode:BuildMode,environment:Readonly<Record<string,string|undefined>>):Readonly<Record<string,string|undefined>>{const captured=buildModeEnvironment(mode,{...environment,...schema.definitions.CompilerEnvironment.const});delete captured.NODE_COMPILE_CACHE;return Object.freeze(captured);}
 
@@ -38,7 +41,7 @@ export async function typecheckProject(options: TypeScriptCheckOptions): Promise
   const args = readTypeScriptCheckArgumentsV1(options.args??[]);
   await withCompilerState({ root: options.stateRoot, owner: options.owner, compiler: `typescript:${version}`, configuration: JSON.stringify([relative(options.workspace, project), args]), mode, control,storage,storageControl,files: ["state.tsbuildinfo"], environment, capacity:{kind:"exact",parallelism:1} }, async (directory, compilerEnvironment,actualControl) => {
     await advanceScriptInvocation(options.invocation, "typecheck", "running");
-    await runOwnedCommand(process.execPath, [compiler, "--noEmit", "-p", project, ...args, "--incremental", "true", "--tsBuildInfoFile", join(directory, "state.tsbuildinfo")], options.cwd, options.owner, typecheckBudgetMillisecondsV1(options.timeoutMs, compilerAdmissionBudgetV1(actualControl)), { ...options.execution, env: typeScriptCheckEnvironmentV1(mode, compilerEnvironment), signal:actualControl.signal });
+    await runOwnedCommand(process.execPath, typeScriptCheckCommandV1(compiler, project, args, join(directory, "state.tsbuildinfo")), options.cwd, options.owner, typecheckBudgetMillisecondsV1(options.timeoutMs, compilerAdmissionBudgetV1(actualControl)), { ...options.execution, env: typeScriptCheckEnvironmentV1(mode, compilerEnvironment), signal:actualControl.signal });
   });
   await advanceScriptInvocation(options.invocation, "typecheck", "complete");
   });

@@ -1,0 +1,20 @@
+{
+ "version": 1,
+ "backend": "seatbelt",
+ "strength": "kernel-enforced",
+ "allowed": 1229,
+ "learned": [],
+ "rounds": [
+  {
+   "exit": 0,
+   "tail": "",
+   "seconds": 100.3,
+   "denied": [],
+   "notes": [],
+   "round": 0,
+   "backend": "seatbelt"
+  }
+ ],
+ "passed": true,
+ "clean": true
+}

@@ -77,7 +77,7 @@ export function remoteExecutionHandlersV1(content:RemoteExecutionContentV1,sched
   [`${CAPS}/GetCapabilities`]:async()=>({
    cache_capabilities:{digest_functions:["SHA256"],action_cache_update_capabilities:{update_enabled:true},max_batch_total_size_bytes:limits.maximumBatchBytes,symlink_absolute_path_strategy:"ALLOWED"},
    execution_capabilities:{digest_function:"SHA256",digest_functions:["SHA256"],exec_enabled:true},
-   low_api_version:{major:2,minor:0},high_api_version:{major:2,minor:3},
+   low_api_version:{major:2,minor:1},high_api_version:{major:2,minor:3},
   }),
   [`${EXEC}/Execute`]:async function*(request:ProtobufMessageV1,call:{signal:AbortSignal}){
    checkFunction(request.digest_function);

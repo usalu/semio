@@ -75,14 +75,15 @@ test("an in-memory SQLite CASE table agrees with the publication and ticket deci
 test("an in-memory SQLite CASE table agrees with the leaked image decisions",()=>{
  const db=new Database(":memory:");
  try{
-  db.exec("CREATE TABLE l(name TEXT,backing TEXT,location TEXT,idle INT,lease TEXT)");const insert=db.prepare("INSERT INTO l VALUES(?,?,?,?,?)");
+  db.exec("CREATE TABLE l(name TEXT,backing TEXT,location TEXT,idle INT,lease TEXT,attachment TEXT)");const insert=db.prepare("INSERT INTO l VALUES(?,?,?,?,?,?)");
   const rows=corpus.plans.flatMap(row=>row.observation.facts.filter(f=>f.family==="leaked-image").map(f=>({name:row.name,f:f as Record<string,any>})));
-  for(const{name,f}of rows)insert.run(name,f.backing,f.location,Number(f.idle),f.lease);
+  for(const{name,f}of rows)insert.run(name,f.backing,f.location,Number(f.idle),f.lease,f.attachment??null);
   const reasons=db.query(`SELECT name, CASE
     WHEN backing='absent' THEN 'backing-removed'
-    WHEN location<>'scratch' THEN 'owned'
+    WHEN location<>'scratch' AND NOT (location='workspace' AND attachment IS NOT NULL) THEN 'owned'
     WHEN idle=0 THEN 'live'
     WHEN lease='unavailable' THEN 'unleased'
+    WHEN lease='free' AND attachment IS NOT NULL THEN 'stale-attachment'
     WHEN lease='free' THEN 'abandoned'
     ELSE 'live' END AS reason FROM l`).all() as{name:string;reason:string}[];
   expect(reasons.length).toBe(rows.length);expect(rows.length).toBeGreaterThanOrEqual(8);

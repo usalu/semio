@@ -1,0 +1,9 @@
+{
+ "extends": "../../../../../../../../🧰️framework/🛍️products/🦑️repo/tsconfig.json",
+ "compilerOptions": {"noEmit": true, "incremental": false, "skipLibCheck": true},
+ "files": [
+  "/private/tmp/noop2g/stage/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+  "/private/tmp/noop2g/stage/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🟦️.ts"
+ ],
+ "include": []
+}

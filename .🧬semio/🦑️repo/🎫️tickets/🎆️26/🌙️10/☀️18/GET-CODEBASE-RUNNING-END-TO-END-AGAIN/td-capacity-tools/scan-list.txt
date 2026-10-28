@@ -1,0 +1,10 @@
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/⛓️cpu-last/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🔒️exclusive-writer/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🚪️gate/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🔐️inheritance/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🧭️liveness/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🛟️custodian/🧪️tests/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🪆️scope/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🛟️custodian/🧪️tests/⏱️deadline/🟦️.ts

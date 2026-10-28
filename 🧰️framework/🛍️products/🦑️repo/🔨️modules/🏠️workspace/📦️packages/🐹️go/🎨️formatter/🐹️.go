@@ -69,9 +69,9 @@ func IsIdeConfigurationPath(path string) bool {
 	return false
 }
 
-var ideInventoryBoundaryDirectories = []string{".git", "node_modules", ".venv"}
+var ideInventoryBoundaryDirectories = []string{".git", "node_modules", ".venv", ".lake"}
 
-var ideInventoryExcludedRoots = []string{".cache", ".nx", ".pytest_cache", ".ruff_cache", "storybook-static", "test-results", ".🧬semio/🦑️repo/🎫️tickets", ".🧬semio/🦑️repo/⚡️cache", ".🧬semio/🦑️repo/🧹️tmp", ".repo/cache", "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/dist", "✏️s/🔌️plugins/🏭️process/dist", "✏️s/🔌️plugins/🪵️sourcing/dist"}
+var ideInventoryExcludedRoots = []string{".cache", ".nx", ".pytest_cache", ".ruff_cache", "storybook-static", "test-results", ".🧬semio/🦑️repo/🎫️tickets", ".🧬semio/🦑️repo/⚡️cache", ".🧬semio/🦑️repo/🧹️tmp", ".🧬semio/🌐hub", ".🧬semio/🎓️teaching", ".🧬semio/🔗space", ".🧬semio/🗺️map", ".repo/cache", "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/dist", "✏️s/🔌️plugins/🏭️process/dist", "✏️s/🔌️plugins/🪵️sourcing/dist"}
 
 // 🧹️ IdeConfigurationPaths visits active physical owners without entering generated or historical files.
 func IdeConfigurationPaths(root string, scope string) ([]string, error) {

@@ -151,22 +151,40 @@ pub fn ticket_change(invocation: &mut Invocation<'_>) -> Result<(), CliError> {
     invocation.graphql("mutation TicketChange($input: TicketChangeInput!) { ticketChange(input: $input) { id slug status parent } }", json!({ "input": input }))
 }
 
+/// 🧹️ Plans, and only with `--apply` performs, the removal of oversized `🗑️generated` output of closed tickets.
+///
+/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🧬️schema/🔣️.json (PurgePolicy)
 pub fn ticket_purge_artifacts(invocation: &mut Invocation<'_>) -> Result<(), CliError> {
     let context = invocation.context();
-    if invocation.flag("all") || invocation.args().is_empty() {
-        let tickets_dir = semio_framework_repo_workspace::tickets_dir_for_root(context.root());
-        let mut purged = 0;
-        for folder in semio_framework_repo_tickets::ticket_folder_roots(&tickets_dir) {
-            semio_framework_repo_tickets::purge_oversized_artifacts(&folder).map_err(CliError::Message)?;
-            purged += 1;
-        }
-        invocation.println(&format!("Purged oversized artifacts in {purged} ticket folders"));
-        return Ok(());
+    let apply = invocation.flag("apply");
+    let options = semio_framework_repo_tickets::PurgeOptions {
+        root: context.root().to_path_buf(),
+        tickets_dir: semio_framework_repo_workspace::tickets_dir_for_root(context.root()),
+        selection: semio_framework_repo_tickets::PurgeSelection::Oversized,
+        apply,
+        now: std::time::SystemTime::now(),
+        tracked: &semio_framework_repo_tickets::GitTrackedFiles,
+    };
+    let plan = if invocation.args().is_empty() {
+        semio_framework_repo_tickets::purge_closed_ticket_generated_output(&options)
+    } else {
+        let id = semio_framework_repo_tickets::TicketId::parse(&invocation.arg(0)).map_err(|error| CliError::Message(error.message))?;
+        let ticket = context.with_tickets(semio_framework_repo_providers::McpClientKind::Generic, |service| service.read(&id)).map_err(|error| CliError::Message(error.message))?;
+        semio_framework_repo_tickets::purge_ticket_generated_output(&options, &[std::path::PathBuf::from(&ticket.folder_path)])
     }
-    let id = semio_framework_repo_tickets::TicketId::parse(&invocation.arg(0)).map_err(|error| CliError::Message(error.message))?;
-    let ticket = context.with_tickets(semio_framework_repo_providers::McpClientKind::Generic, |service| service.read(&id)).map_err(|error| CliError::Message(error.message))?;
-    semio_framework_repo_tickets::purge_oversized_artifacts(std::path::Path::new(&ticket.folder_path)).map_err(CliError::Message)?;
-    invocation.println(&format!("Purged oversized artifacts in {}", ticket.folder_path));
+    .map_err(CliError::Message)?;
+    let freed: u64 = plan.removals.iter().map(|removal| removal.bytes).sum();
+    for removal in &plan.removals {
+        invocation.println(&format!("{} {} ({} bytes)", if apply { "removed / entfernt" } else { "would remove / würde entfernen" }, removal.path, removal.bytes));
+    }
+    for skip in &plan.skips {
+        invocation.println(&format!("skipped / übersprungen {}: {}", skip.ticket, skip.reason));
+    }
+    invocation.println(&if apply {
+        format!("Removed {} paths ({freed} bytes) / {} Pfade entfernt ({freed} Bytes)", plan.removals.len(), plan.removals.len())
+    } else {
+        format!("Dry run: {} paths ({freed} bytes) would be removed; repeat with --apply / Probelauf: {} Pfade ({freed} Bytes) würden entfernt; mit --apply wiederholen", plan.removals.len(), plan.removals.len())
+    });
     Ok(())
 }
 

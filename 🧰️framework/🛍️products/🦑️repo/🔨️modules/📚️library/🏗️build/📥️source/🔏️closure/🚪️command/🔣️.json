@@ -4,25 +4,57 @@
       "id": "authenticated-captured-entry",
       "identity": "same",
       "loader": "same",
-      "accepted": true
+      "proof": "loaded",
+      "unpinned": "accepted",
+      "pinned": "accepted"
     },
     {
       "id": "raw-entry",
       "identity": "absent",
       "loader": "absent",
-      "accepted": false
+      "proof": "loaded",
+      "unpinned": "authentication",
+      "pinned": "authentication"
+    },
+    {
+      "id": "raw-source-identity",
+      "identity": "absent",
+      "loader": "same",
+      "proof": "loaded",
+      "unpinned": "authentication",
+      "pinned": "authentication"
+    },
+    {
+      "id": "raw-loader-identity",
+      "identity": "same",
+      "loader": "absent",
+      "proof": "loaded",
+      "unpinned": "authentication",
+      "pinned": "authentication"
     },
     {
       "id": "changed-source",
       "identity": "different",
       "loader": "same",
-      "accepted": false
+      "proof": "loaded",
+      "unpinned": "stale",
+      "pinned": "authentication"
     },
     {
       "id": "changed-loader",
       "identity": "same",
       "loader": "different",
-      "accepted": false
+      "proof": "loaded",
+      "unpinned": "stale",
+      "pinned": "authentication"
+    },
+    {
+      "id": "peer-saved-loader",
+      "identity": "same",
+      "loader": "same",
+      "proof": "peer-saved",
+      "unpinned": "stale",
+      "pinned": "authentication"
     }
   ],
   "reply": {

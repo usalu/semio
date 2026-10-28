@@ -1,0 +1,20 @@
+{
+ "label": "g43c-edit",
+ "target": "@teaching/architecture-course:build",
+ "started": "14:45:36",
+ "wall_s": 133.5,
+ "peak_tree_mb": 3266,
+ "peak_processes": 7,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "2",
+   "1 internal, 1 worker"
+  ],
+  "actions": [
+   "2"
+  ]
+ }
+}

@@ -1,0 +1,493 @@
+{
+  "version": 1,
+  "packageRouting": {
+    "cases": [
+      {
+        "platform": "posix",
+        "root": "/workspace/repo",
+        "package": "packages/space owner",
+        "command": "repo --cwd \"../..\" repo --tool=bazel run fixture:test -- \"two words\" \"\"",
+        "arguments": [
+          "--tool=bazel",
+          "run",
+          "fixture:test",
+          "--",
+          "two words",
+          ""
+        ]
+      },
+      {
+        "platform": "win32",
+        "root": "C:\\workspace\\repo",
+        "package": "packages/space owner",
+        "command": "repo --cwd \"../..\" repo run fixture:test -- \"literal$()\"",
+        "arguments": [
+          "run",
+          "fixture:test",
+          "--",
+          "literal$()"
+        ]
+      },
+      {
+        "platform": "posix",
+        "root": "/workspace/🧪 repo",
+        "package": "a/b/c",
+        "command": "repo --cwd \"../../..\" repo --tool=nx run fixture:test --skip-cache",
+        "arguments": [
+          "--tool=nx",
+          "run",
+          "fixture:test",
+          "--skip-cache"
+        ]
+      }
+    ],
+    "sourceCaller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts"
+  },
+  "scripts": {
+    "repo": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo",
+    "setup": "repo run workspace:setup",
+    "dashboard": "repo run @semio-tech/repo-dashboard-rs:run --output=stream",
+    "dashboard:install": "repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream"
+  },
+  "postCreateCommand": [
+    "bash",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh",
+    "setup"
+  ],
+  "contexts": [
+    {
+      "environment": {
+        "SEMIO_WORKSPACE_ROOT": "/repo/selected",
+        "REPO_ROOT": "/repo/hint"
+      },
+      "expected": "/repo/selected"
+    },
+    {
+      "environment": {
+        "REPO_ROOT": "/repo/hint"
+      },
+      "expected": "/repo/hint"
+    }
+  ],
+  "editorCommands": [
+    {
+      "labels": {
+        "en": "🛠️ Build Tools · Set Up All",
+        "de": "🛠️ Build-Werkzeuge · Alle Einrichten"
+      },
+      "args": "tools setup all",
+      "group": "0_setup",
+      "order": 20.1
+    },
+    {
+      "labels": {
+        "en": "🛠️ Build Tools · Set Up Nx",
+        "de": "🛠️ Build-Werkzeuge · Nx Einrichten"
+      },
+      "args": "tools setup nx",
+      "group": "0_setup",
+      "order": 20.2
+    },
+    {
+      "labels": {
+        "en": "🛠️ Build Tools · Set Up Bazel",
+        "de": "🛠️ Build-Werkzeuge · Bazel Einrichten"
+      },
+      "args": "tools setup bazel",
+      "group": "0_setup",
+      "order": 20.3
+    },
+    {
+      "labels": {
+        "en": "🕸️ Build Graph · Inspect",
+        "de": "🕸️ Build-Graph · Anzeigen"
+      },
+      "args": "graph",
+      "group": "4_build",
+      "order": 20.4
+    },
+    {
+      "labels": {
+        "en": "🧩️ Build Projects · List",
+        "de": "🧩️ Build-Projekte · Auflisten"
+      },
+      "args": "show projects",
+      "group": "4_build",
+      "order": 20.5
+    },
+    {
+      "labels": {
+        "en": "🎯️ Build Tasks · List",
+        "de": "🎯️ Build-Aufgaben · Auflisten"
+      },
+      "args": "show targets",
+      "group": "4_build",
+      "order": 20.6
+    },
+    {
+      "labels": {
+        "en": "🧪️ Build Tools · Bazel End To End",
+        "de": "🧪️ Build-Werkzeuge · Bazel Vollständig Prüfen"
+      },
+      "args": "run workspace:test-build-tool-bazel --exclude-dependencies --skip-cache",
+      "group": "4_gate",
+      "order": 20.7
+    },
+    {
+      "labels": {
+        "en": "🧪️ Build Tools · Bazel Bootstrap",
+        "de": "🧪️ Build-Werkzeuge · Bazel Einrichtung Prüfen"
+      },
+      "args": "run workspace:test-build-tool-bazel-bootstrap --exclude-dependencies --skip-cache",
+      "group": "4_gate",
+      "order": 20.8
+    },
+    {
+      "labels": {
+        "en": "🧪️ Build Interface · Verify",
+        "de": "🧪️ Build-Schnittstelle · Prüfen"
+      },
+      "args": "run @semio-tech/repo-lib:test-build-surfaces --exclude-dependencies --skip-cache",
+      "group": "4_gate",
+      "order": 20.9
+    },
+    {
+      "labels": {
+        "en": "🧪️ Workspace Identity · All Languages",
+        "de": "🧪️ Workspace-Identität · Alle Sprachen"
+      },
+      "args": "run @semio-tech/framework-process:test-workspace --exclude-dependencies --skip-cache",
+      "group": "4_gate",
+      "order": 21
+    },
+    {
+      "labels": {
+        "en": "🏗️ Build Task · Run",
+        "de": "🏗️ Build-Aufgabe · Ausführen"
+      },
+      "args": "--tool=${input:repoBuildTool} run \"${input:repoBuildTask}\" --output=stream",
+      "group": "4_build",
+      "order": 21.1
+    },
+    {
+      "labels": {
+        "en": "🔎️ Build Task · Inspect Plan",
+        "de": "🔎️ Build-Aufgabe · Plan Anzeigen"
+      },
+      "args": "--tool=${input:repoBuildTool} run \"${input:repoBuildTask}\" --dry-run",
+      "group": "4_build",
+      "order": 21.2
+    },
+    {
+      "labels": {
+        "en": "🧩️ Build Project · Inspect",
+        "de": "🧩️ Build-Projekt · Anzeigen"
+      },
+      "args": "show project \"${input:repoBuildProject}\"",
+      "group": "4_build",
+      "order": 21.3
+    },
+    {
+      "labels": {
+        "en": "👁️ Build Sources · Watch",
+        "de": "👁️ Build-Quellen · Beobachten"
+      },
+      "args": "--tool=${input:repoBuildTool} watch --projects=\"${input:repoBuildProjects}\" -- repo run \"${input:repoBuildTask}\" --output=stream",
+      "group": "4_build",
+      "order": 21.4
+    },
+    {
+      "labels": {
+        "en": "🧹️ Build Cache · Reset",
+        "de": "🧹️ Build-Cache · Zurücksetzen"
+      },
+      "args": "--tool=${input:repoBuildTool} reset",
+      "group": "0_setup",
+      "order": 21.5
+    },
+    {
+      "labels": {
+        "en": "🧪️ Runtime Build Producer · Verify",
+        "de": "🧪️ Laufzeit-Build-Erzeuger · Prüfen"
+      },
+      "args": "run workspace:test-runtime-build-producer --exclude-dependencies --skip-cache",
+      "group": "4_gate",
+      "order": 21.6
+    }
+  ],
+  "environmentSources": [
+    "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+    "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📋️project.json",
+    "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧪️e2e/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🚦️goal-gate/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🏃️shard-execution/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
+  ],
+  "commandSources": [
+    "🧰️framework/🔨️modules/🚪️io/📦️codec/📦️packages/🦀️rust/package.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts",
+    "package.json",
+    "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+    "🌎️hub/🧪️testing/📖️source-readers/🟦️.ts",
+    "🌎️hub/🎛️commands/🚦️gate-commands/🟦️.ts",
+    "🌎️hub/🚀️local-relay/🛰️servers/🟦️.ts",
+    "🌎️hub/🚀️local-bootstrap/🧰️mcp-process-support/🟦️.ts",
+    "🌎️hub/🧪️tests/🪪️check-in-process/🟦️.ts",
+    "🌎️hub/🧪️tests/🔐️secure-local-smoke/🟦️.ts",
+    "🌎️hub/🧪️tests/🌐️relay-checks/🟦️.ts",
+    "🌎️hub/🧪️tests/📄️browser-document-open/🟦️.ts",
+    "🌎️hub/🧪️tests/🛡️admin-relay-checks/🟦️.ts",
+    "🌎️hub/🧪️tests/🔑️directory-authority-checks/🟦️.ts",
+    "🌎️hub/🧪️tests/🗺️open-plan-checks/🟦️.ts",
+    "🌎️hub/🧪️tests/📇️native-catalog-checks/🟦️.ts",
+    "🌎️hub/🧪️tests/🔗️execution-target-lease-checks/🟦️.ts",
+    "🌎️hub/🧪️tests/👤️browser-actor-checks/🟦️.ts",
+    "🌎️hub/🧪️tests/💡️inference-fixtures/🟦️.ts",
+    "🌎️hub/🧪️tests/🌍️gis-map-fixtures/🟦️.ts",
+    "🌎️hub/🧪️tests/🏛️trusted-catalog-fixtures/🟦️.ts",
+    "🌎️hub/🧪️tests/🏛️trusted-catalog-fixtures/🪪️browser-actor-and-opened-root-fixtures/🟦️.ts",
+    "🌎️hub/🧪️tests/🏛️trusted-catalog-fixtures/🗺️gis-retained-collaboration-and-publication-fixtures/🟦️.ts",
+    "🌎️hub/🧪️tests/🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures/🟦️.ts",
+    "🌎️hub/🧪️tests/📮️trusted-publication-fixtures/🟦️.ts",
+    "🌎️hub/🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts",
+    "🌎️hub/🏗️bootstrap/🧾️provenance/🌍️gis-browser-proof/🟦️.ts",
+    "🌎️hub/🏗️bootstrap/🧾️provenance/🧮️bootstrap-claims/🟦️.ts",
+    "🌎️hub/🏗️bootstrap/🧾️provenance/🗃️bootstrap-bundle/🟦️.ts",
+    "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🧱️materialized-bundle/🟦️.ts",
+    "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🗺️gis-proofs-and-staging/🟦️.ts",
+    "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🔄️rotation-and-current-pointer/🟦️.ts",
+    "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/📮️receipts-and-publication-child/🟦️.ts",
+    "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts",
+    "🌎️hub/🧪️tests/🎮️gis-map-process-support/🟦️.ts",
+    "🌎️hub/🧪️tests/🕹️gis-map-process/🟦️.ts",
+    "🌎️hub/🎛️commands/🏷️trusted-catalog/🟦️.ts",
+    "🌎️hub/🧪️tests/🎁️trusted-stdio-gis-bundle-check/🟦️.ts",
+    "🌎️hub/🎛️commands/🏗️build-and-dev/🟦️.ts",
+    "🌎️hub/🧪️tests/📣️directory-live-support/🟦️.ts",
+    "🌎️hub/🧪️tests/📰️event-page-checks/🟦️.ts",
+    "🌎️hub/🧪️tests/🏠️home-browser-checks/🟦️.ts",
+    "🌎️hub/🧪️tests/🧾️command-receipt-checks/🟦️.ts",
+    "🌎️hub/🧪️tests/🎫️invite-redemption-checks/🟦️.ts",
+    "🌎️hub/🧪️tests/🛂️space-administration-checks/🟦️.ts",
+    "🌎️hub/🧪️tests/🧬️space-artifact-creation-checks/🟦️.ts",
+    "🌎️hub/🧪️tests/🧭️space-journey-checks/🟦️.ts",
+    "🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/📜️script.ts",
+    "🌎️hub/🧩️compositions/🪐️space/🧪️testing/📜️script.ts",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📜️script.ts",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📇️catalog/📣️publisher/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts",
+    "🌎️hub/🔁️rebuild/🔣️.json",
+    "✏️s/🧑‍💻dev/🔁️rebuild/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔁️rebuild/🔣️.json",
+    "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🎚️config/🔣️.json",
+    "🌎️hub/🏗️bootstrap/🎭️actors/🟦️.ts",
+    "🌎️hub/🚀️local-bootstrap/👷️dev-owner/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts"
+  ],
+  "editorAnswers": [
+    {
+      "repoBuildTool": "nx",
+      "repoBuildTask": "@semio-tech/repo-lib:test-build-surfaces",
+      "repoBuildProject": "@semio-tech/repo-lib",
+      "repoBuildProjects": "@semio-tech/repo-*"
+    },
+    {
+      "repoBuildTool": "bazel",
+      "repoBuildTask": "@semio-tech/repo-lib:test-build-surfaces:release",
+      "repoBuildProject": "@semio-tech/repo-lib",
+      "repoBuildProjects": "@semio-tech/repo-lib,@semio-tech/os-*"
+    }
+  ],
+  "editorInputs": [
+    {
+      "id": "repoBuildTool",
+      "type": "pickString",
+      "description": "Build tool / Build-Werkzeug",
+      "options": [
+        "nx",
+        "bazel"
+      ]
+    },
+    {
+      "id": "repoBuildTask",
+      "type": "promptString",
+      "description": "Project:task[:configuration] / Projekt:Aufgabe[:Konfiguration]"
+    },
+    {
+      "id": "repoBuildProject",
+      "type": "promptString",
+      "description": "Build project / Build-Projekt"
+    },
+    {
+      "id": "repoBuildProjects",
+      "type": "promptString",
+      "description": "Project names or patterns separated by commas / Durch Komma getrennte Projektnamen oder Muster"
+    }
+  ],
+  "fixedBuildFiles": [
+    {
+      "id": "root-bazel-configuration",
+      "path": ".bazelrc"
+    },
+    {
+      "id": "root-bazel-version",
+      "path": ".bazelversion"
+    },
+    {
+      "id": "root-bazel-module",
+      "path": "MODULE.bazel"
+    }
+  ],
+  "ciDependencies": {
+    "path": ".github/workflows/architecture-course.yml",
+    "jobs": [
+      "site",
+      "proctor"
+    ],
+    "command": "repo dependencies sync --all",
+    "cases": [
+      {
+        "name": "complete-all",
+        "command": "repo dependencies sync --all",
+        "accepted": true
+      },
+      {
+        "name": "quoted-all",
+        "command": "repo dependencies sync \"--all\"",
+        "accepted": true
+      },
+      {
+        "name": "raw-installer",
+        "command": "bun install --frozen-lockfile --ignore-scripts",
+        "accepted": false
+      },
+      {
+        "name": "direct-nx",
+        "command": "bun nx run workspace:setup",
+        "accepted": false
+      },
+      {
+        "name": "root-subset",
+        "command": "repo dependencies sync --scope .",
+        "accepted": false
+      },
+      {
+        "name": "lock-refresh",
+        "command": "repo dependencies lock --scope .",
+        "accepted": false
+      },
+      {
+        "name": "foreign-scope",
+        "command": "repo dependencies sync --scope other",
+        "accepted": false
+      },
+      {
+        "name": "extra-argument",
+        "command": "repo dependencies sync --scope . --ignore-scripts",
+        "accepted": false
+      }
+    ]
+  },
+  "implicitExecutors": [
+    {
+      "name": "implicit-command",
+      "target": {
+        "options": {
+          "command": "repo ./📜️script.ts test",
+          "args": [
+            "literal value"
+          ],
+          "cwd": "{projectRoot}"
+        }
+      },
+      "accepted": true
+    },
+    {
+      "name": "implicit-sequential",
+      "target": {
+        "options": {
+          "commands": [
+            "first",
+            {
+              "command": "second",
+              "forwardAllArgs": false
+            }
+          ],
+          "parallel": false
+        }
+      },
+      "accepted": true
+    },
+    {
+      "name": "implicit-literal",
+      "target": {
+        "options": {
+          "program": "bun",
+          "args": [
+            "--version"
+          ]
+        }
+      },
+      "accepted": true
+    },
+    {
+      "name": "explicit-command",
+      "target": {
+        "executor": "repo:script",
+        "options": {
+          "command": "repo ./📜️script.ts build"
+        },
+        "configurations": {
+          "release": {
+            "args": [
+              "--release"
+            ]
+          }
+        }
+      },
+      "accepted": true
+    },
+    {
+      "name": "noop",
+      "target": {
+        "executor": "repo:noop"
+      },
+      "accepted": true
+    },
+    {
+      "name": "foreign-executor",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "echo wrong"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "name": "foreign-inference-default",
+      "target": {
+        "executor": "@nx/js:node",
+        "options": {
+          "command": "echo wrong"
+        }
+      },
+      "accepted": false
+    }
+  ],
+  "journalDataOwner": {
+    "owner": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts",
+    "retired": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🟦️.ts",
+    "exports": [
+      "nativeStorageSchemaV1",
+      "readNativeStorageDataV1"
+    ]
+  }
+}

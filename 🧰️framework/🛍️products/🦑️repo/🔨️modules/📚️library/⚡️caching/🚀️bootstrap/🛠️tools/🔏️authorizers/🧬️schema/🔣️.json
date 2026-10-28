@@ -552,6 +552,12 @@
         "maximumDeclaredBytes": 16777216
       }
     },
+    "MemoPolicy": {
+      "const": {
+        "maximumFileBytes": 4194304,
+        "concurrency": 24
+      }
+    },
     "RuntimeDataDiscoveryCase": {
       "type": "object",
       "additionalProperties": false,

@@ -1,0 +1,42 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts": {
+  "file": "00.ts",
+  "base": "c10fa3cf7effdb1ea2ba99f3f4acdd207564158a071efc069300a1e5fe4c9209",
+  "new": "0e3f97d163ee75606cb6bc4bc5cccb2040e6ca69d23be19f2928624bffb9ba1f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts": {
+  "file": "01.ts",
+  "base": "5ad434f6f252e87e0b42e20402d6ad60a5811d6f65751e5ef4c0bd22c7b7f46e",
+  "new": "df8b9fa67927f15595c567dba023c13add975b8de85aa35d63d129b9cc6f1e72"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts": {
+  "file": "02.ts",
+  "base": "7bfb9980640cda65f3ec2677082bf06d1ffda686a03fa344041744e6b1580067",
+  "new": "6e1cd3b33769393a465d46d631ae85cb8e57f96da0598493f33e660f6601e86a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🛂️acceptance/⌨️command/🟦️.ts": {
+  "file": "03.ts",
+  "base": "7e767765f198d5942c7d42d9fddb475c0b2044f77541d5ce1393a066d67e3624",
+  "new": "1f50ad7e5b9aa6e2982e573a984c55240fdbd1a96298ce177fe71d33efc0d6ea"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🛂️acceptance/🟦️.ts": {
+  "file": "04.ts",
+  "base": "4db8812851828d912408ddc5939e57e24758e02c06468e1823b09469fd0ad751",
+  "new": "55519a61dd4cec81d5c4c1a58e99c86936895833d771c28fe0fe6113fbe8ca42"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌡️host-capacity/🟦️.ts": {
+  "file": "05.ts",
+  "base": "1f4dafe7041be989006a3816c55d9c118af1ef3ceeaf62c74e6e6209f8d38898",
+  "new": "fac56b4ee296fd2ecfb2456246a3b5c443967abf4c42448f7bbee79f1662820e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧫️test-store-isolation/🟦️.ts": {
+  "file": "06.ts",
+  "base": "9632ffccd71c0fefcc317c4522bc5f8f5f662773ecb34fa4bd8c2248c53ea434",
+  "new": "687c052baf2e53387558d438deea60f36b0868c1106fd0f6e4c35a85432069d0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧫️test-store-isolation/🧪️tests/🟦️.ts": {
+  "file": "07.ts",
+  "base": "cf1578d3b9901c478e5a2b9898daef16b1dd9a7c7d8b30aef642f7ea79f65b81",
+  "new": "a231744e953115265897939f2dab7c59f6da57a0385e6e45657e650e029734d2"
+ }
+}

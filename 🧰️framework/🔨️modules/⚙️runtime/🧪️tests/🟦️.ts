@@ -1,3 +1,4 @@
+import {noticeLanguagesV1} from "../🗣️language/🟦️.ts";
 import Ajv from "ajv";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -7,7 +8,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { RuntimeAdapterV1, RuntimeFamilyV1, RuntimeIdV1 } from "../📋️contract/🟦️.ts";
 import { checkRuntimeLawV1, listRuntimeLawFilesV1, scanRuntimeLawSourceV1 } from "../⚖️law/🟦️.ts";
-import { RUNTIME_REGISTRY_V1, RuntimeCapabilityMissingV1, runtimeMessageV1, GlobV1, isHostRuntimeCommandV1, isMainModuleV1, loadRuntimeAdapterV1, runtimeAdapterNameV1, runtimeCommandNameV1, runtimeCommandNamesV1, runtimeIdentityV1, runtimeIdsV1, runtimeKeyV1, runtimeObserveSpawnV1, runtimeProgramV1, runtimeSourceUrlV1, runtimeSpawnSyncV1, runtimeSpawnV1, runtimeSupportV1, runtimeTestPreloadV1 } from "../🟦️.ts";
+import { RUNTIME_REGISTRY_V1, RuntimeCapabilityMissingV1, runtimeMessageV1, GlobV1, isHostRuntimeCommandV1, isMainModuleV1, loadRuntimeAdapterV1, runtimeAdapterNameV1, runtimeCommandNameV1, runtimeCommandNamesV1, runtimeIdentityV1, runtimeIdsV1, runtimeKeyV1, runtimeNamespaceNamesV1, runtimeObserveSpawnV1, runtimeProgramV1, runtimeSourceUrlV1, runtimeSpawnSyncV1, runtimeSpawnV1, runtimeSupportV1, runtimeTestPreloadV1 } from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import { describe, expect, test } from "../🧪️test/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
@@ -29,6 +30,8 @@ const every = await Promise.all(ids.map(id => loadRuntimeAdapterV1(id)));
 const adapters = every.filter(adapter => adapter.id === host || adapter.id === "node");
 const normalize = (value: unknown): string => JSON.stringify(value, (_key, item) => (typeof item === "bigint" ? `${item}n` : item instanceof Date ? `D:${item.toISOString()}` : item));
 const temporary = (): string => mkdtempSync(join(tmpdir(), "runtime-seam-"));
+const symlinks = ((): boolean => { const root = temporary(); try { symlinkSync("target", join(root, "probe")); return true; } catch { return false; } finally { rmSync(root, { recursive: true, force: true }); } })();
+const nativeProbe = process.platform === "darwin" ? { library: "/usr/lib/libSystem.B.dylib", pid: "getpid", errno: "__error" } : process.platform === "win32" ? { library: "ucrtbase.dll", pid: "_getpid", errno: "_errno" } : { library: "libc.so.6", pid: "getpid", errno: "__errno_location" };
 const installed = (): [string, string][] => {
   const found = new Map<string, string>();
   for (const row of RUNTIME_REGISTRY_V1.runtimes) { const path = adapters[0]!.which!(row.executable); if (path !== null) found.set(realpathSync(path), row.id); }
@@ -54,18 +57,12 @@ describe("registry and selection", () => {
       expect(row.en.length > 0 && row.de.length > 0, id).toBe(true);
       expect(placeholders(row.de), id).toEqual(placeholders(row.en));
     }
-    const saved = { ...process.env };
-    try {
-      for (const name of ["SEMIO_LANGUAGE", "LANGUAGE", "LC_ALL", "LC_MESSAGES", "LANG"]) delete process.env[name];
-      expect(runtimeMessageV1("bodyTooLarge", {})).toBe("The request body is too large. / Der Anfragekörper ist zu groß.");
-      process.env.SEMIO_LANGUAGE = "de";
-      expect(runtimeMessageV1("moduleNotFound", { specifier: "x", from: "y" })).toBe("Das Modul 'x' ist von 'y' aus nicht auffindbar.");
-      process.env.SEMIO_LANGUAGE = "en";
-      expect(runtimeMessageV1("syntax", { format: "TOML", detail: "toml.keyDefined", name: "a", position: "1:2" })).toBe("TOML syntax error: key a is already defined at 1:2");
-      process.env.SEMIO_LANGUAGE = "fr";
-      process.env.LANG = "de_CH.UTF-8";
-      expect(runtimeMessageV1("commandRequired", {})).toBe("Ein Befehl ist erforderlich.");
-    } finally { for (const name of ["SEMIO_LANGUAGE", "LANGUAGE", "LC_ALL", "LC_MESSAGES", "LANG"]) { if (saved[name] === undefined) delete process.env[name]; else process.env[name] = saved[name]; } }
+    const notice = (environment: Record<string, string>) => noticeLanguagesV1(["en", "de"] as const, environment);
+    expect(runtimeMessageV1("bodyTooLarge", {}, notice({}))).toBe("The request body is too large. / Der Anfragekörper ist zu groß.");
+    expect(runtimeMessageV1("moduleNotFound", { specifier: "x", from: "y" }, notice({ SEMIO_LANGUAGE: "de" }))).toBe("Das Modul 'x' ist von 'y' aus nicht auffindbar.");
+    expect(runtimeMessageV1("syntax", { format: "TOML", detail: "toml.keyDefined", name: "a", position: "1:2" }, notice({ SEMIO_LANGUAGE: "en" }))).toBe("TOML syntax error: key a is already defined at 1:2");
+    expect(runtimeMessageV1("commandRequired", {}, notice({ SEMIO_LANGUAGE: "fr", LANG: "de_CH.UTF-8" }))).toBe(`${(messages as Record<string, { en: string; de: string }>).commandRequired!.en} / Ein Befehl ist erforderlich.`);
+    expect(runtimeMessageV1("commandRequired", {}, notice({ LANG: "de_CH.UTF-8" }))).toBe("Ein Befehl ist erforderlich.");
   });
 
   test("the hosting runtime identifies itself and the capability refusal names runtime and family", () => {
@@ -102,8 +99,7 @@ describe("data formats", () => {
     try {
       for (const directory of ["a/b", ".hid/x", "a/.dot", "node_modules/m", "ln"]) mkdirSync(join(root, directory), { recursive: true });
       for (const file of ["a/f.ts", "a/b/g.ts", ".hid/x/h.ts", "a/.dot/i.ts", "a/.j.ts", "top.ts", "node_modules/m/k.ts"]) writeFileSync(join(root, file), "");
-      symlinkSync("../a", join(root, "ln/link"));
-      symlinkSync("nowhere", join(root, "broken"));
+      if (symlinks) { symlinkSync("../a", join(root, "ln/link")); symlinkSync("nowhere", join(root, "broken")); }
       const patterns = ["**/*.ts", "*.ts", "a/*", "a/**", "**", "*", "{a,.hid}/**/*.ts", "a/f.ts", "a", "ln/**", "*/*.ts", "**/b/*", "a/?.ts", "**/*.{ts,js}"];
       const optionSets = [{}, { dot: true }, { onlyFiles: false }, { onlyFiles: false, dot: true }, { followSymlinks: true }, { absolute: true }];
       for (const pattern of patterns) for (const options of optionSets) {
@@ -264,40 +260,51 @@ describe("process and system", () => {
       const facade = resolve(moduleRoot, "🟦️.ts");
       writeFileSync(join(root, "probe.ts"), `import { isMainModuleV1 } from ${JSON.stringify(facade)};\nconsole.log(JSON.stringify(isMainModuleV1(import.meta.url)));\n`);
       writeFileSync(join(root, "importer.ts"), `import "./probe.ts";\n`);
-      symlinkSync(join(root, "probe.ts"), join(root, "link.ts"));
+      if (symlinks) symlinkSync(join(root, "probe.ts"), join(root, "link.ts"));
       const run = (file: string): string => spawnSync(process.execPath, [join(root, file)], { encoding: "utf8" }).stdout.trim();
       expect(run("probe.ts")).toBe("true");
-      expect(run("link.ts")).toBe("true");
+      if (symlinks) expect(run("link.ts")).toBe("true");
       expect(run("importer.ts")).toBe("false");
       expect(typeof isMainModuleV1(import.meta.url)).toBe("boolean");
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
 });
 
+describe("host capabilities", () => {
+  test("a CI host can create symbolic links, so no symlink case of this file is left out there", () => {
+    if (process.env.CI !== undefined && process.env.CI !== "") expect(symlinks).toBe(true);
+    expect(typeof symlinks).toBe("boolean");
+  });
+});
+
 describe("native bindings", () => {
   test("a host with its own binding loads a system library, calls it and reads memory", () => {
     if (host !== "bun") return;
-    const bun = every.find(adapter => adapter.id === "bun")!, errno = process.platform === "darwin" ? "__error" : "__errno_location";
-    const library = bun.ffiOpen!(process.platform === "darwin" ? "/usr/lib/libSystem.B.dylib" : "libc.so.6", { getpid: { args: [], returns: "i32" }, [errno]: { args: [], returns: "ptr" } });
+    const bun = every.find(adapter => adapter.id === "bun")!, errno = nativeProbe.errno;
+    const library = bun.ffiOpen!(nativeProbe.library, { [nativeProbe.pid]: { args: [], returns: "i32" }, [errno]: { args: [], returns: "ptr" } });
     try {
-      expect(library.symbols.getpid!()).toBe(process.pid);
+      expect(library.symbols[nativeProbe.pid]!()).toBe(process.pid);
       expect(typeof bun.ffiRead!().i32(library.symbols[errno]!())).toBe("number");
       expect(typeof bun.ffiPointer!(Buffer.alloc(8))).toBe("number");
     } finally { library.close(); }
   });
 
-  test("the Node adapter routes every native call through the designated provider and refuses without one", () => {
+  test("the Node adapter uses the built-in core unless a provider is designated, refuses a core that cannot load and routes every call through a designated provider", () => {
     const node = every.find(adapter => adapter.id === "node")!;
-    const before = process.env.SEMIO_RUNTIME_NATIVE_PROVIDER;
+    const before = { provider: process.env.SEMIO_RUNTIME_NATIVE_PROVIDER, addon: process.env.SEMIO_RUNTIME_NATIVE_ADDON };
     delete process.env.SEMIO_RUNTIME_NATIVE_PROVIDER;
     try {
-      expect(() => node.ffiOpen!("x", {})).toThrow("SEMIO_RUNTIME_NATIVE_PROVIDER");
+      process.env.SEMIO_RUNTIME_NATIVE_ADDON = join(here, "missing-core.node");
+      expect(() => node.ffiOpen!("x", {})).toThrow("missing-core.node");
+      delete process.env.SEMIO_RUNTIME_NATIVE_ADDON;
       process.env.SEMIO_RUNTIME_NATIVE_PROVIDER = join(here, "🧫️fixtures/🧲️native-provider.cjs");
       const library = node.ffiOpen!("libfake", { add: { args: ["i32", "i32"], returns: "i32" } });
       expect(library.symbols.add!(2, 3)).toBe(5);
       expect(node.ffiRead!().i32(0)).toBe(7);
       expect(node.ffiCallback!(() => 1, { args: [], returns: "void" }).pointer).toBe(9);
-    } finally { if (before === undefined) delete process.env.SEMIO_RUNTIME_NATIVE_PROVIDER; else process.env.SEMIO_RUNTIME_NATIVE_PROVIDER = before; }
+    } finally {
+      for (const [name, value] of [["SEMIO_RUNTIME_NATIVE_PROVIDER", before.provider], ["SEMIO_RUNTIME_NATIVE_ADDON", before.addon]] as const) if (value === undefined) delete process.env[name]; else process.env[name] = value;
+    }
   });
 });
 
@@ -390,6 +397,7 @@ describe("command words and sources", () => {
     const name = runtimeCommandNameV1(), other = runtimeCommandNamesV1().find(word => word !== name);
     expect(runtimeCommandNamesV1()).toEqual(RUNTIME_REGISTRY_V1.runtimes.map(row => row.executable));
     expect(runtimeIdsV1()).toEqual(ids);
+    expect(runtimeNamespaceNamesV1()).toEqual(runtimeCommandNamesV1().map(word => word.charAt(0).toUpperCase() + word.slice(1)));
     expect(runtimeProgramV1(name)).toBe(process.execPath);
     expect(runtimeProgramV1("cargo")).toBe("cargo");
     if (other !== undefined) expect(runtimeProgramV1(other)).toBe(other);

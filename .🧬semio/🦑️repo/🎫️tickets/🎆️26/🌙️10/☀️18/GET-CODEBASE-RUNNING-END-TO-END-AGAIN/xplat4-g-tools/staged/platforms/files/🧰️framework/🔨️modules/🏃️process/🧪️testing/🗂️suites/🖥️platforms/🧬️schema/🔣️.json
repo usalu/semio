@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/testing/suites/platforms.json",
+  "title": "ProcessTestPlatformEvidenceV1",
+  "description": "The closed evidence rules that decide whether a suite of a route table can run on Windows: which host-bound facts a test file may not use unconditionally. A fact (a marker) found in a test whose header is skipped on the host, or in a test block that names the platform, does not count; a fact outside both counts as an unconditioned cause of the suite.",
+  "definitions": {
+    "Pattern": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024
+    },
+    "Cause": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "lineGate", "markers"],
+      "properties": {
+        "id": {"$ref": "#/definitions/CauseIdentifier"},
+        "lineGate": {
+          "description": "When true, a marker on a line that itself names the platform (a guard on the same line) does not count.",
+          "type": "boolean"
+        },
+        "markers": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {"$ref": "#/definitions/Pattern"}
+        }
+      }
+    },
+    "CauseIdentifier": {
+      "enum": [
+        "posix-program",
+        "posix-shell-script",
+        "python3-command",
+        "symlink",
+        "permission-bits",
+        "posix-process-control"
+      ]
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "header", "gatedModifier", "lineGate", "condition", "window", "causes"],
+      "properties": {
+        "version": {"const": 1},
+        "header": {"$ref": "#/definitions/Pattern"},
+        "gatedModifier": {"$ref": "#/definitions/Pattern"},
+        "lineGate": {"$ref": "#/definitions/Pattern"},
+        "condition": {"$ref": "#/definitions/Pattern"},
+        "window": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["linesBeforeWithoutHeader", "linesBeforeMarker"],
+          "properties": {
+            "linesBeforeWithoutHeader": {"type": "integer", "minimum": 0, "maximum": 100},
+            "linesBeforeMarker": {"type": "integer", "minimum": 0, "maximum": 100}
+          }
+        },
+        "causes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "items": {"$ref": "#/definitions/Cause"}
+        }
+      }
+    }
+  }
+}

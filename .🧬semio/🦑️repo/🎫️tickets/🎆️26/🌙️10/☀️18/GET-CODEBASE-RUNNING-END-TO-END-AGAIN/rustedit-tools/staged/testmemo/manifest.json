@@ -1,0 +1,27 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts": {
+  "file": "00.ts",
+  "base": "74ff26915bc7a00211a0447b0edc5af65f1808e162492da07b8c0a98510e3cd1",
+  "new": "27250ba5dd1617550c7a38b1088c3f5fd2ee8c135994dadaf33705ed09c1e8c4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts": {
+  "file": "01.ts",
+  "base": "fb345d6e96f9a7bf94f8057fc39bdcf0be4196a50042f1fc2f7900418e49a0ed",
+  "new": "7451a9cdf4d5c6ff81a149d312d667ad57054a94087bb4a3f649f02e68ad877b"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts": {
+  "file": "02.ts",
+  "base": "caf8560dfd5946379d87d16c2d0dda091cd9621a9429cf8dc37656f87fdf9e45",
+  "new": "37cab2239a732c48be59c6d0bc9c4be415d9c04c6095329409906099e0fd15f4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🧪️tests/🟦️.ts": {
+  "file": "03.ts",
+  "base": "9a8219bab08471943ff8aab95ad24fe75c04a3d9e885446023df173c6c440977",
+  "new": "9a660ff1d746ea21249aa20adad7f088b9e4b5c8d70f082fb116ea1e4f6aa371"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🧪️tests/🗃️memos/🟦️.ts": {
+  "file": "04.ts",
+  "base": null,
+  "new": "8500b568dca038debeec587664ad658b2657fe3c0b0a9e23b0b7088fea5c4566"
+ }
+}

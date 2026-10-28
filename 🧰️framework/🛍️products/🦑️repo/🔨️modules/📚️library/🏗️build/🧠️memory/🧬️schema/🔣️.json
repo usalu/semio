@@ -1,7 +1,7 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "title": "Graph memory governor / Speichergrenze des Graph-Aufbaus",
- "description": "EN: The managed memory of one graph construction is bounded by a budget: a new project inference starts only while the heap is within the budget (after one collection), never more than the worker count run at once, a budget exceeded by retained data degrades to one project at a time, equal long strings of results and stored documents are one instance. DE: Der verwaltete Speicher eines Graph-Aufbaus ist durch ein Budget begrenzt: eine neue Projektableitung startet nur, solange der Heap im Budget liegt (nach einer Speicherbereinigung), es laufen nie mehr Projekte als Arbeiter, ein durch gehaltene Daten überschrittenes Budget führt zu einem Projekt nach dem anderen, gleiche lange Zeichenketten von Ergebnissen und gespeicherten Dokumenten sind eine Instanz. EN: The language of every line is the one the environment names (SEMIO_LANGUAGE, dashboard locale, system locale); when none is named every supported language is printed, English first and German second, so there is no default language. DE: Die Sprache jeder Zeile ist die, die die Umgebung nennt; nennt sie keine, werden alle unterstützten Sprachen ausgegeben, zuerst Englisch, dann Deutsch, es gibt also keine Standardsprache.",
+ "description": "EN: The managed memory of one graph construction is bounded by a budget: a new project inference starts only while the heap is within the budget (after one collection), never more than the worker count run at once, a budget exceeded by retained data degrades to one project at a time, equal long strings of results and stored documents are one instance. DE: Der verwaltete Speicher eines Graph-Aufbaus ist durch ein Budget begrenzt: eine neue Projektableitung startet nur, solange der Heap im Budget liegt (nach einer Speicherbereinigung), es laufen nie mehr Projekte als Arbeiter, ein durch gehaltene Daten überschrittenes Budget führt zu einem Projekt nach dem anderen, gleiche lange Zeichenketten von Ergebnissen und gespeicherten Dokumenten sind eine Instanz. EN: The language of every line is the one the environment names (SEMIO_LANGUAGE, dashboard locale, system locale); when none is named every supported language is printed, English first and German second, so there is no default language. DE: Die Sprache jeder Zeile ist die, die die Umgebung nennt; nennt sie keine, werden alle unterstützten Sprachen ausgegeben, zuerst Englisch, dann Deutsch, es gibt also keine Standardsprache. EN: The graph child that plans a build is told a fixed JavaScriptCore memory size (childHeapMegabytes), never the capacity grant of the whole run: the grant pays for every process of the run, and a larger size only lets the child keep more garbage before it collects. DE: Dem Graph-Kindprozess, der einen Build plant, wird eine feste JavaScriptCore-Speichergröße genannt (childHeapMegabytes), nie die Kapazitätszusage des ganzen Laufs: die Zusage bezahlt jeden Prozess des Laufs, und eine größere Angabe lässt das Kind nur mehr Abfall halten, bevor es aufräumt.",
  "definitions": {
   "Policy": {
    "const": {
@@ -9,13 +9,6 @@
     "languages": [
      "en",
      "de"
-    ],
-    "languageEnvironment": [
-     "SEMIO_LANGUAGE",
-     "SEMIO_DASHBOARD_LOCALE",
-     "LC_ALL",
-     "LC_MESSAGES",
-     "LANG"
     ],
     "minimumBudgetMegabytes": 1024,
     "maximumBudgetMegabytes": 16384,
@@ -32,6 +25,8 @@
     "minimumInternedLength": 24,
     "maximumInternedCharacters": 67108864,
     "maximumCachedClosureEntries": 4194304,
+    "maximumParsedManifests": 256,
+    "childHeapMegabytes": 2048,
     "budgetEnvironment": "SEMIO_GRAPH_MEMORY_MB",
     "planEnvironment": "SEMIO_HOST_CAPACITY_PLAN"
    }

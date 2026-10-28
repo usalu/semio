@@ -55,6 +55,13 @@ describe("cli journeys", () => {
   test("Maximum editor performance data has exact UTF8 bytes and an independent SQLite plan",()=>{
     const vector=JSON.parse(readFileSync(join(import.meta.dir,"../🧫️fixtures/🧭️journeys/🔣️.json"),"utf8")).nativeEditor.performance,tail=vector.tail+"x".repeat(vector.removedAscii),available=vector.bytes-Buffer.byteLength(vector.prefix)-Buffer.byteLength(tail),repeats=Math.floor(available/Buffer.byteLength(vector.line)),padding=available-repeats*Buffer.byteLength(vector.line),text=vector.prefix+vector.line.repeat(repeats)+".".repeat(padding)+tail,db=new Database(":memory:");try{const oracle=db.query("SELECT cast((?1-length(cast(?2 AS blob))-length(cast(?3 AS blob)))/length(cast(?4 AS blob)) AS integer) repeats, (?1-length(cast(?2 AS blob))-length(cast(?3 AS blob)))%length(cast(?4 AS blob)) padding, length(cast(?5 AS blob)) inserted").get(vector.bytes,vector.prefix,tail,vector.line,vector.insert)as{repeats:number;padding:number;inserted:number};expect({repeats,padding}).toEqual({repeats:oracle.repeats,padding:oracle.padding});expect(Buffer.byteLength(text)).toBe(vector.bytes);expect(vector.bytes-vector.removedAscii+oracle.inserted).toBeLessThanOrEqual(vector.bytes);expect([vector.entries,vector.loadMilliseconds,vector.interactionMilliseconds]).toEqual([4096,5000,1000]);}finally{db.close();}
   });
+  test("Host time scale follows the shared vectors, a TypeScript model and an independent SQLite computation",()=>{
+    const vectors=JSON.parse(readFileSync(join(import.meta.dir,"../🧫️fixtures/🧭️journeys/🔣️.json"),"utf8")).hostScale,db=new Database(":memory:");
+    try{for(const entry of vectors.cases as {name:string;report:string|null;cores:number;scale:number}[]){
+      const load=typeof entry.report==="string"?Number.parseFloat(entry.report.replace(/^[{\s]+/,"").split(/\s+/)[0]!):Number.NaN,usable=Number.isFinite(load)&&load>=0,cores=Math.max(1,entry.cores),model=usable?Math.min(vectors.clamp.max,Math.max(vectors.clamp.min,load/cores)):1,sql=usable?(db.query("SELECT min(max(?1/?2,?3),?4) AS scale").get(load,cores,vectors.clamp.min,vectors.clamp.max) as {scale:number}).scale:1;
+      expect(model,entry.name).toBeCloseTo(entry.scale,9);expect(sql,entry.name).toBeCloseTo(entry.scale,9);
+    }}finally{db.close();}
+  });
   test("A listening server waits for a successful HTTP response", async () => {
     const ws = await workspace("http-readiness");
     const gate = join(ws.root, "http-ready");

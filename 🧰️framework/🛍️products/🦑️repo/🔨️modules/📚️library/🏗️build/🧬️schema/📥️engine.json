@@ -26,6 +26,9 @@
   "definitions": {
     "NamedInput": {
       "const": "__semioPrivateEngine"
+    },
+    "NativeNamedInput": {
+      "const": "__semioPrivateEngineNative"
     }
   }
 }

@@ -88,7 +88,7 @@ export function createScriptTerminationGuardV1(options:Readonly<{exit:(code:numb
  return(signal,code)=>{
   const end=():void=>{try{options.notice(scriptProcessWatchdogNoticeV1("terminating",{signal,seconds:Math.round(grace/1000)},options.languages()));}catch{}options.exit(code);};
   if(armed){end();return;}
-  armed=true;const timer=setTimeout(end,grace);timer.unref();
+  armed=true;try{options.notice(scriptProcessWatchdogNoticeV1("interrupted",{signal,seconds:Math.round(grace/1000)},options.languages()));}catch{}const timer=setTimeout(end,grace);timer.unref();
  };
 }
 

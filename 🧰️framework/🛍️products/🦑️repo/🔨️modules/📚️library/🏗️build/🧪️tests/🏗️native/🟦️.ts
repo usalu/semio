@@ -6,8 +6,14 @@ import { runOwnedCommand } from "@semio-tech/process/execution";
 import { readFileSync, mkdtempSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
+import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
+import {createIssuedResourceControlV1,createRequestedIssuedResourceControlV1} from "@semio-tech/process/routing";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "@semio-tech/process/artifacts/native-build/schema.json";
+import{declareLibraryBuildTestEnvelopeV1}from"../../../🧪️testing/🪪️native-birth/🟦️.ts";
+import{privateRepositoryWorkspaceV1}from"../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
+declareLibraryBuildTestEnvelopeV1({suite:"build-workspace-phase-laws"});
 const root=resolve(import.meta.dir,"../../../../../../../..");
 
 test("All Cargo workspaces consume selected inline profiles without authored manifest tables", async () => {
@@ -43,26 +49,26 @@ test("CMake owner loads independently of root audit code and owns direct Nx comm
  for(const target of fixture.cppTargets) expect(project.targets[target].options.command).toBe(`repo ./${fixture.cmakeEntry} cpp ${target.slice(4)}`);
 });
 
-test("Cargo synchronization reuses content-bound admission and observes manifest and lock changes",async()=>{
+test("Cargo synchronization reuses content-bound admission and observes manifest and lock changes",()=>withBuildTestInvocationV1(async original=>{
  const {withPreparedCargoDependencyPairV1}=await import("../../../🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts");
  const synchronizationSchema=(await import("../../../🗂️workspaces/🦀️cargo/🛠️preparation/🧾️synchronization/🧬️schema/🔣️.json")).default;
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR!,owner=mkdtempSync(join(output,"s-"));mkdirSync(join(owner,"kernel"));
  writeFileSync(join(owner,"Cargo.toml"),'[workspace]\nresolver="2"\nmembers=["kernel"]\n[workspace.metadata.semio.repository]\nschema-version=1\nowner-manifests=[]\nmember-manifests=["kernel/Cargo.toml"]\nexclude-patterns=[]\n');
  const packagePath=join(owner,"kernel/Cargo.toml");writeFileSync(packagePath,'[package]\nname="synchronized_kernel"\nversion="0.1.0"\nedition="2021"\n[lib]\npath="lib.rs"\n');writeFileSync(join(owner,"kernel/lib.rs"),"pub fn ready() {}\n");
  const commands:string[][]=[];
- const started=performance.now(),progress:string[]=[],controlFor=(signal:AbortSignal)=>({signal,remainingMilliseconds:()=>fixture.originalPreparationControl.maximumElapsedMilliseconds-(performance.now()-started),async publish(event:unknown){progress.push(JSON.stringify(event));await new Promise(done=>setImmediate(done));},async yieldContinuation(){progress.push("yield");await new Promise(done=>setImmediate(done));}});
- const identityFor=(control:ReturnType<typeof controlFor>)=>async(cwd:string,signal:AbortSignal)=>{expect(signal).toBe(control.signal);let output="";await runOwnedCommand("cargo",["--version"],cwd,"original-paired-cargo-identity",control.remainingMilliseconds(),{signal,output:fixture.originalPreparationControl.transport,stdout:"stderr",onLine:line=>{output+=line+"\n";},onProgress:async()=>{await control.publish({resource:"cargo-preparation:"+owner,mode:"exclusive",elapsedMs:performance.now()-started});await control.yieldContinuation();}});return output;};
- const preparationFor=(control:ReturnType<typeof controlFor>)=>({leaseControl:control,signal:control.signal,async advance(event:unknown){await control.publish(event);await control.yieldContinuation();},childBudget:(requested:number)=>Math.min(requested,control.remainingMilliseconds()),childOptions:(environment:Readonly<Record<string,string|undefined>>)=>({signal:control.signal,env:environment,output:fixture.originalPreparationControl.transport,onProgress:async()=>{await control.publish({resource:"cargo-preparation:"+owner,mode:"exclusive",elapsedMs:performance.now()-started});await control.yieldContinuation();}})});
+ const started=performance.now(),progress:string[]=[],baseControl=createIssuedResourceControlV1(original,"native:sync-preparation",fixture.originalPreparationControl.maximumElapsedMilliseconds),controlFor=(signal:AbortSignal)=>createRequestedIssuedResourceControlV1(baseControl,0,signal),publishFor=async(control:ReturnType<typeof controlFor>,event:unknown)=>{progress.push(JSON.stringify(event));await control.publish(event as never);},yieldFor=async(control:ReturnType<typeof controlFor>)=>{progress.push("yield");await control.yieldContinuation();};
+ const identityFor=(control:ReturnType<typeof controlFor>)=>async(cwd:string,signal:AbortSignal)=>{expect(signal).toBe(control.signal);let output="";await runOwnedCommand("cargo",["--version"],cwd,"original-paired-cargo-identity",Math.floor(control.remainingMilliseconds()!),{signal,output:fixture.originalPreparationControl.transport,stdout:"stderr",onLine:line=>{output+=line+"\n";},onProgress:async()=>{await publishFor(control,{resource:"cargo-preparation:"+owner,mode:"exclusive",elapsedMs:performance.now()-started});await yieldFor(control);}});return output;};
+ const preparationFor=(control:ReturnType<typeof controlFor>)=>({leaseControl:control,signal:control.signal,async advance(event:unknown){progress.push(JSON.stringify(event));await yieldFor(control);},childBudget:(requested:number)=>Math.min(requested,Math.floor(control.remainingMilliseconds()!)),childOptions:(environment:Readonly<Record<string,string|undefined>>)=>({signal:control.signal,env:environment,output:fixture.originalPreparationControl.transport,onProgress:async()=>{await publishFor(control,{resource:"cargo-preparation:"+owner,mode:"exclusive",elapsedMs:performance.now()-started});await yieldFor(control);}})});
  const run=async(argv:string[],cwd:string):Promise<void>=>{commands.push(argv);const result=spawnSync("cargo",argv,{cwd,encoding:"utf8"});expect(result.status,result.stderr).toBe(0);};
  const schemaOracle=new Ajv({strict:true}).compile(synchronizationSchema);
  for(let index=0;index<fixture.synchronization.actions.length;index++){
   const action=fixture.synchronization.actions[index];if(action==="manifest-changed")writeFileSync(packagePath,readFileSync(packagePath,"utf8").replace('version="0.1.0"','version="0.2.0"'));
   if(action==="lock-changed")writeFileSync(join(owner,"Cargo.lock"),readFileSync(join(owner,"Cargo.lock"),"utf8")+"\n# changed lock authority\n");
   if(action==="unrelated-owner"){mkdirSync(join(owner,"unrelated"));writeFileSync(join(owner,"unrelated/Cargo.toml"),'[workspace]\n[workspace.metadata.semio.repository]\nschema-version=99\n');writeFileSync(join(owner,"Cargo.toml"),readFileSync(join(owner,"Cargo.toml"),"utf8").replace("owner-manifests=[]","owner-manifests=[\"unrelated/Cargo.toml\"]"));}
-  const before=commands.length,control=controlFor(new AbortController().signal);await withPreparedCargoDependencyPairV1({version:1,directory:output,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program},owner,"Cargo.toml",control,run,identityFor(control),preparationFor(control),[],["synchronized_kernel"]);expect(commands.length-before).toBe(fixture.synchronization.commands[index]);
+  const before=commands.length,control=controlFor(new AbortController().signal);await withPreparedCargoDependencyPairV1({version:1,directory:output,leaseDirectory:repositoryCargoPreparationStorageV1(repository.root).leaseDirectory,program:repositoryCargoPreparationStorageV1(repository.root).program},owner,"Cargo.toml",control,run,identityFor(control),preparationFor(control),[],["synchronized_kernel"]);expect(commands.length-before).toBe(fixture.synchronization.commands[index]);
  }
  const receipts=readdirSync(output).filter(name=>name.endsWith(".sync.json"));expect(receipts.length).toBeGreaterThan(0);for(const name of receipts)expect(schemaOracle(JSON.parse(readFileSync(join(output,name),"utf8")))).toBe(true);
  expect(progress.length).toBeGreaterThan(0);expect(progress).toContain("yield");
  const oracle=spawnSync("cargo",["metadata","--locked","--no-deps","--format-version=1"],{cwd:owner,encoding:"utf8"});expect(oracle.status,oracle.stderr).toBe(0);expect(JSON.parse(oracle.stdout).packages[0].version).toBe("0.2.0");
-},120_000);
+}),120_000);
 

@@ -5,7 +5,7 @@
   "description": "One schema-first policy for every step that reads inputs other processes may edit at the same time. A step reads its inputs as a snapshot; when a concurrent edit is detected, the layer that owns the snapshot takes a new one and runs the step again, a bounded number of times with a growing pause, and says so in the declared languages. Only an edit that persists through every attempt of the widest layer fails, naming the path.",
   "definitions": {
     "Reason": {
-      "enum": ["bytes", "identity", "vanished", "appeared", "roster", "length", "ancestry", "output", "descriptor", "generation", "input"]
+      "enum": ["bytes", "identity", "vanished", "appeared", "roster", "length", "ancestry", "output", "descriptor", "generation", "input", "busy"]
     },
     "Profile": {
       "type": "object",
@@ -26,6 +26,7 @@
         "primaryFirstAggregates": ["Original physical body, drain and cleanup settlement failed"],
         "staleImplementationCodes": ["SEMIO_STALE_IMPLEMENTATION", "BUILD_AUTHORITY_CHANGED"],
         "languages": ["en", "de"],
+        "settleMilliseconds": 300,
         "profiles": {
           "read": {"rank": 1, "maximumAttempts": 6, "backoffMs": [10, 40, 160, 640, 2560]},
           "snapshot": {"rank": 2, "maximumAttempts": 5, "backoffMs": [250, 1000, 4000, 12000]},
@@ -43,7 +44,8 @@
             "output": "a compiler output changed",
             "descriptor": "its open descriptor no longer matched its path",
             "generation": "the shared generation it belongs to moved",
-            "input": "one of its inputs changed"
+            "input": "one of its inputs changed",
+            "busy": "it was busy or the machine ran out of file handles"
           },
           "de": {
             "bytes": "seine Bytes änderten sich",
@@ -56,7 +58,8 @@
             "output": "eine Compilerausgabe änderte sich",
             "descriptor": "der offene Deskriptor passte nicht mehr zum Pfad",
             "generation": "die geteilte Generation, zu der sie gehört, wechselte",
-            "input": "eine ihrer Eingaben änderte sich"
+            "input": "eine ihrer Eingaben änderte sich",
+            "busy": "sie war belegt oder der Maschine gingen die Dateihandles aus"
           }
         },
         "texts": {

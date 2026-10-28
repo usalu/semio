@@ -1,0 +1,31 @@
+{
+ "label": "g40-dash",
+ "target": "@semio-tech/repo-dashboard-rs:build",
+ "started": "12:42:18",
+ "wall_s": 356.8,
+ "peak_tree_mb": 7901,
+ "peak_processes": 6,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "38"
+  ],
+  "inferring": [
+   "38"
+  ],
+  "published": [
+   "645",
+   "38",
+   "115"
+  ],
+  "processes": [
+   "3",
+   "1 disk cache hit, 1 internal, 1 worker"
+  ],
+  "actions": [
+   "3"
+  ]
+ }
+}

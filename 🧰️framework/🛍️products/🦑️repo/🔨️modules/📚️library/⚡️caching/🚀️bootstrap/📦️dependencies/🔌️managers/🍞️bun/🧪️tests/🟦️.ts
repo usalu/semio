@@ -27,7 +27,7 @@ for(const row of corpus.cases)test("lock check: "+row.name,()=>{expect(JSON.pars
 test("the lock text reader accepts what Bun writes and refuses what it cannot read",()=>{expect(parseJsoncV1('{"a":[1,],}')).toEqual({a:[1]});expect(()=>parseJsoncV1("{")).toThrow();});
 test("a manager without a lock check refuses to answer",()=>{expect(()=>selectPackageManagerV1("javascript",{SEMIO_PACKAGE_MANAGER_JAVASCRIPT:"npm"}).checkLock("{}",new Map())).toThrow("bootstrap.dependencies.lock-check-required");});
 test("the independent Python model reaches the same verdicts",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

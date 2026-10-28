@@ -1,0 +1,17 @@
+{
+ "label": "g48p-edit",
+ "target": "@semio-tech/print-rs:test",
+ "started": "22:23:07",
+ "wall_s": 50.9,
+ "peak_tree_mb": 2815,
+ "peak_processes": 6,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "3",
+   "1 internal, 2 local"
+  ]
+ }
+}

@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+"""🗻️ usage: mkvectors.py <out.json> -> writes the language-agnostic vectors of the remote-file-system decision (mount tables as the kernel and the OS print them)."""
+import json, sys
+docker_virtiofs = "\n".join([
+ "36 29 0:34 / / rw,relatime master:1 - overlay overlay rw,lowerdir=/a,upperdir=/b,workdir=/c",
+ "40 36 0:38 / /proc rw,nosuid,nodev,noexec,relatime - proc proc rw",
+ "45 36 0:40 / /workspaces/semio rw,relatime - virtiofs mount rw",
+ "46 45 0:41 / /workspaces/semio/node_modules rw,relatime - tmpfs tmpfs rw",
+ ""])
+ext4 = "22 1 8:1 / / rw,relatime - ext4 /dev/sda1 rw,errors=remount-ro\n23 22 8:1 /home/dev/ws /workspaces/semio rw,relatime - ext4 /dev/sda1 rw,errors=remount-ro\n"
+wsl = "1 0 8:48 / / rw,relatime - ext4 /dev/sdd rw\n2 1 0:56 / /mnt/c rw,noatime - 9p C:\\134 rw,dirsync,aname=drvfs;path=C:\;uid=1000\n"
+base = "1 0 0:1 / / rw - ext4 /dev/vda rw\n"
+apfs = "/dev/disk3s1s1 on / (apfs, sealed, local, read-only, journaled)\n"
+vectors = [
+ {"name":"local ext4 with a bind mount of a local directory","platform":"linux","root":"/workspaces/semio/sub","mountinfo":ext4,"expect":None},
+ {"name":"docker desktop virtiofs bind mount","platform":"linux","root":"/workspaces/semio/sub","mountinfo":docker_virtiofs,"expect":{"type":"virtiofs","mount":"/workspaces/semio"}},
+ {"name":"a tmpfs nested in a virtiofs mount is local","platform":"linux","root":"/workspaces/semio/node_modules/x","mountinfo":docker_virtiofs,"expect":None},
+ {"name":"the root outside the virtiofs mount is the overlay","platform":"linux","root":"/workspaces/other","mountinfo":docker_virtiofs,"expect":None},
+ {"name":"a sibling that only shares the name prefix is not inside the mount","platform":"linux","root":"/workspaces/semio-two/x","mountinfo":docker_virtiofs,"expect":None},
+ {"name":"wsl drvfs over 9p","platform":"linux","root":"/mnt/c/Users/dev/semio","mountinfo":wsl,"expect":{"type":"9p","mount":"/mnt/c"}},
+ {"name":"wsl home on ext4","platform":"linux","root":"/home/dev/semio","mountinfo":wsl,"expect":None},
+ {"name":"fakeowner of the gRPC FUSE layer","platform":"linux","root":"/host_mnt/Users/dev/semio","mountinfo":"1 0 0:1 / / rw - overlay overlay rw\n2 1 0:9 / /host_mnt/Users rw - fakeowner fakeowner rw\n","expect":{"type":"fakeowner","mount":"/host_mnt/Users"}},
+ {"name":"fuse.grpcfuse","platform":"linux","root":"/run/host/ws","mountinfo":base+"2 1 0:9 / /run/host rw - fuse.grpcfuse grpcfuse rw\n","expect":{"type":"fuse.grpcfuse","mount":"/run/host"}},
+ {"name":"fuse.sshfs","platform":"linux","root":"/mnt/remote/ws","mountinfo":base+"2 1 0:9 / /mnt/remote rw - fuse.sshfs u@h:/ rw\n","expect":{"type":"fuse.sshfs","mount":"/mnt/remote"}},
+ {"name":"fuseblk is a local block device behind FUSE","platform":"linux","root":"/mnt/disk/ws","mountinfo":base+"2 1 8:17 / /mnt/disk rw - fuseblk /dev/sdb1 rw\n","expect":None},
+ {"name":"nfs4","platform":"linux","root":"/srv/nfs/ws","mountinfo":base+"2 1 0:50 / /srv/nfs rw - nfs4 h:/x rw\n","expect":{"type":"nfs4","mount":"/srv/nfs"}},
+ {"name":"cifs","platform":"linux","root":"/mnt/share/ws","mountinfo":base+"2 1 0:51 / /mnt/share rw - cifs //h/s rw\n","expect":{"type":"cifs","mount":"/mnt/share"}},
+ {"name":"the later row of the same mount point wins","platform":"linux","root":"/ws/x","mountinfo":base+"2 1 0:9 / /ws rw - virtiofs m rw\n3 1 8:2 / /ws rw - ext4 /dev/vdb rw\n","expect":None},
+ {"name":"octal escapes in the mount point","platform":"linux","root":"/mnt/my share/ws","mountinfo":base+"2 1 0:9 / /mnt/my\\040share rw - 9p drvfs rw\n","expect":{"type":"9p","mount":"/mnt/my share"}},
+ {"name":"no mountinfo is no answer","platform":"linux","root":"/ws","expect":None},
+ {"name":"apfs data volume","platform":"darwin","root":"/System/Volumes/Data/Users/dev/semio","mountTable":apfs+"/dev/disk3s5 on /System/Volumes/Data (apfs, local, journaled, nobrowse, protect, root data)\n","expect":None},
+ {"name":"smbfs share","platform":"darwin","root":"/Volumes/share/semio","mountTable":apfs+"//u@h/share on /Volumes/share (smbfs, nodev, nosuid, mounted by u)\n","expect":{"type":"smbfs","mount":"/Volumes/share"}},
+ {"name":"nfs mount with a space in its mount point","platform":"darwin","root":"/Volumes/my share/ws","mountTable":apfs+"h:/x on /Volumes/my share (nfs, nodev, nosuid)\n","expect":{"type":"nfs","mount":"/Volumes/my share"}},
+ {"name":"automounted home","platform":"darwin","root":"/System/Volumes/Data/home/dev/ws","mountTable":"/dev/disk3s5 on /System/Volumes/Data (apfs, local, journaled)\nmap auto_home on /System/Volumes/Data/home (autofs, automounted, nobrowse)\n","expect":{"type":"autofs","mount":"/System/Volumes/Data/home"}},
+ {"name":"macfuse","platform":"darwin","root":"/Volumes/fs/ws","mountTable":"/dev/disk3s5 on / (apfs, local)\nsshfs@macfuse0 on /Volumes/fs (macfuse, nodev, nosuid, synchronous, mounted by u)\n","expect":{"type":"macfuse","mount":"/Volumes/fs"}},
+ {"name":"an unknown type without the local flag is not trusted","platform":"darwin","root":"/Volumes/x/ws","mountTable":"/dev/disk3s5 on / (apfs, local)\nsomething on /Volumes/x (weirdfs, nobrowse)\n","expect":{"type":"weirdfs","mount":"/Volumes/x"}},
+ {"name":"exfat disk","platform":"darwin","root":"/Volumes/DISK/ws","mountTable":"/dev/disk3s5 on / (apfs, local)\n/dev/disk4s1 on /Volumes/DISK (exfat, local, nodev, nosuid, noowners)\n","expect":None},
+ {"name":"nfs mounted below the home directory, root named through the firmlink","platform":"darwin","root":"/System/Volumes/Data/Users/dev/mnt/ws","mountTable":apfs+"/dev/disk3s5 on /System/Volumes/Data (apfs, local, journaled)\nh:/x on /System/Volumes/Data/Users/dev/mnt (nfs, nodev, nosuid)\n","expect":{"type":"nfs","mount":"/System/Volumes/Data/Users/dev/mnt"}},
+ {"name":"nfs mounted below the home directory, root named by its plain path","platform":"darwin","root":"/Users/dev/mnt/ws","mountTable":apfs+"/dev/disk3s5 on /System/Volumes/Data (apfs, local, journaled)\nh:/x on /Users/dev/mnt (nfs, nodev, nosuid)\n","expect":{"type":"nfs","mount":"/Users/dev/mnt"}},
+ {"name":"the plain path of a root on the data volume is the data volume","platform":"darwin","root":"/private/var/folders/x","mountTable":apfs+"/dev/disk3s5 on /System/Volumes/Data (apfs, local, journaled)\nh:/x on /System/Volumes/Data/Users/dev/mnt (nfs, nodev, nosuid)\n","expect":None},
+ {"name":"UNC root","platform":"win32","root":"\\\\server\\share\\repo\\semio","expect":{"type":"unc","mount":"\\\\server\\share"}},
+ {"name":"UNC root with slashes","platform":"win32","root":"//server/share/repo","expect":{"type":"unc","mount":"//server/share"}},
+ {"name":"local fixed drive","platform":"win32","root":"C:\\repo","driveType":"3\r\n","expect":None},
+ {"name":"mapped network drive","platform":"win32","root":"Z:\\repo","driveType":"4\r\n","expect":{"type":"network-drive","mount":"Z:"}},
+ {"name":"drive type unknown","platform":"win32","root":"Z:\\repo","expect":None},
+ {"name":"other platforms say nothing","platform":"freebsd","root":"/ws","mountinfo":"2 1 0:9 / /ws rw - nfs h:/x rw\n","expect":None},
+]
+with open(sys.argv[1], "w", encoding="utf8") as handle:
+    json.dump({"vectors": vectors}, handle, ensure_ascii=False, indent=1)
+    handle.write("\n")

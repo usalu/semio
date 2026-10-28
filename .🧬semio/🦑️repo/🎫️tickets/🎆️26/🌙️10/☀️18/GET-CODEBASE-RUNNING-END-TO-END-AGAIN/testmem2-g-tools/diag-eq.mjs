@@ -1,0 +1,10 @@
+import{createRequire}from"node:module";import{readFileSync}from"node:fs";import{join,resolve}from"node:path";
+const ws="/Users/ueli/Documents/semio",require=createRequire(ws+"/package.json"),ts=require("typescript");
+const packageDir=ws+"/🧰️framework/📦️packages/🟦️typescript",manifest=JSON.parse(readFileSync(join(packageDir,"package.json"),"utf8"));
+const facades=Object.entries(manifest.exports).filter(([s])=>s!==".");
+const options={target:ts.ScriptTarget.ESNext,module:ts.ModuleKind.ESNext,moduleResolution:ts.ModuleResolutionKind.Bundler,allowImportingTsExtensions:true,resolveJsonModule:true,isolatedModules:true,esModuleInterop:true,jsx:ts.JsxEmit.ReactJSX,skipLibCheck:true,noEmit:true,types:[]};
+const roots=facades.map(([,t])=>join(packageDir,t)),program=ts.createProgram(roots,options),mine=new Set(roots.map(p=>resolve(p)));
+const text=d=>d.file.fileName+":"+d.start+":"+d.code+":"+ts.flattenDiagnosticMessageText(d.messageText,"\n");
+const full=program.getSemanticDiagnostics().concat(program.getSyntacticDiagnostics()).filter(d=>d.file&&mine.has(resolve(d.file.fileName))).map(text).sort();
+const per=roots.flatMap(r=>{const f=program.getSourceFile(r);return f?[...program.getSemanticDiagnostics(f),...program.getSyntacticDiagnostics(f)]:[]}).filter(d=>d.file&&mine.has(resolve(d.file.fileName))).map(text).sort();
+console.log("roots",roots.length,"full",full.length,"per-root",per.length,"equal",JSON.stringify(full)===JSON.stringify(per),"rss",Math.round(process.memoryUsage().rss/1048576));

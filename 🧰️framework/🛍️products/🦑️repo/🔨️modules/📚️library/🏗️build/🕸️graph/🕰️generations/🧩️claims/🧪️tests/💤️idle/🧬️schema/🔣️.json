@@ -1,0 +1,42 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "Idle builder cases",
+ "description": "Cases of the rule that lets a command build at once: the builder custody is free and no live running claim of its plan covers a wanted owner.",
+ "$ref": "#/definitions/Fixture",
+ "definitions": {
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["base", "implementation", "otherImplementation", "wanted", "cases"],
+   "properties": {
+    "base": {"type": "integer", "minimum": 0},
+    "implementation": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "otherImplementation": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "wanted": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+    "cases": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Case"}}
+   }
+  },
+  "Case": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["id", "builderHeld", "claims", "idle"],
+   "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "builderHeld": {"type": "boolean"},
+    "idle": {"type": "boolean"},
+    "claims": {"type": "array", "items": {"$ref": "#/definitions/Claim"}}
+   }
+  },
+  "Claim": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["state", "live", "plan", "owners"],
+   "properties": {
+    "state": {"enum": ["running", "done", "failed"]},
+    "live": {"type": "boolean", "description": "Whether the command that made the claim still holds the lease of the claim; only a running claim has a lease."},
+    "plan": {"enum": ["same", "base", "implementation"], "description": "same: the plan of the asking command; base: an older generation; implementation: another implementation digest."},
+    "owners": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+   }
+  }
+ }
+}

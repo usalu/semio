@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "skip": [".git", "target", "node_modules", "dist", "🗑️generated"],
+  "files": [
+    {"path": "Cargo.toml", "text": "[package]\nname = \"foreign\"\n"},
+    {"path": "src/lib.rs", "text": "pub mod inner;\npub fn a() -> u32 { 1 }\n"},
+    {"path": "src/inner/mod.rs", "text": "pub fn b() -> u32 { 2 }\n"},
+    {"path": "build.rs", "text": "fn main() {}\n"},
+    {"path": "README.md", "text": "# foreign\n"},
+    {"path": "target/debug/junk.rlib", "text": "skipped", "skipped": true},
+    {"path": ".git/HEAD", "text": "ref: refs/heads/main\n", "skipped": true},
+    {"path": "node_modules/x/index.js", "text": "skipped", "skipped": true}
+  ],
+  "rewrite": {"path": "src/lib.rs", "sameSizeText": "pub mod inner;\npub fn a() -> u32 { 7 }\n"},
+  "removed": "README.md"
+}

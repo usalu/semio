@@ -1,0 +1,14 @@
+{
+ "title": "🎭️ Staged batch `cp-fwmodules` (lane compliance): every docstring of the changed files starts with an emoji no other docstring of the file starts with.",
+ "files": [
+  "🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts",
+  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🧭️client/🟦️.ts",
+  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts"
+ ],
+ "emoji": [
+  "🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts",
+  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🧭️client/🟦️.ts",
+  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts"
+ ],
+ "manual": []
+}

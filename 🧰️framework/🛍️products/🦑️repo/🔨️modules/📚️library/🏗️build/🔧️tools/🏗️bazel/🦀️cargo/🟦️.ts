@@ -65,15 +65,15 @@ export const BAZEL_CARGO_RULE_V1=`def cargo_resources(os, inputs):
 
 def _cargo_impl(ctx):
     output = ctx.actions.declare_directory(ctx.label.name + ".cargo")
-    ctx.actions.run(executable = ctx.attr.bun, arguments = [ctx.file.runner.path, ctx.file.manifest.path, output.path], inputs = depset([ctx.file.manifest, ctx.file.runner], transitive = [src[DefaultInfo].files for src in ctx.attr.srcs]), outputs = [output], mnemonic = "RepoCargo", progress_message = ctx.attr.identity, execution_requirements = {"no-sandbox": "1", "no-remote-exec": "1"}, resource_set = cargo_resources, use_default_shell_env = True)
+    ctx.actions.run(executable = ctx.attr.runtime, arguments = [ctx.file.runner.path, ctx.file.manifest.path, output.path], inputs = depset([ctx.file.manifest, ctx.file.runner], transitive = [src[DefaultInfo].files for src in ctx.attr.srcs]), outputs = [output], mnemonic = "RepoCargo", progress_message = ctx.attr.identity, execution_requirements = {"no-sandbox": "1", "no-remote-exec": "1"}, resource_set = cargo_resources, use_default_shell_env = True)
     return [DefaultInfo(files = depset([output]))]
 
-repo_cargo = rule(implementation = _cargo_impl, attrs = {"manifest": attr.label(allow_single_file = True), "runner": attr.label(allow_single_file = True), "srcs": attr.label_list(allow_files = True), "bun": attr.string(mandatory = True), "identity": attr.string(mandatory = True)})
+repo_cargo = rule(implementation = _cargo_impl, attrs = {"manifest": attr.label(allow_single_file = True), "runner": attr.label(allow_single_file = True), "srcs": attr.label_list(allow_files = True), "runtime": attr.string(mandatory = True), "identity": attr.string(mandatory = True)})
 `;
 
 /** 🏗️ Renders the BUILD text of typed Cargo actions: one repo_cargo rule per action in label order, each naming its manifest, runner and source labels in sorted order. */
 export function renderBazelCargoBuildV1(input:{load:string;bun:string;runner:string;actions:readonly {label:string;id:string;manifest:string;srcs:readonly string[]}[]}):string{
  const quote=(value:string)=>JSON.stringify(value),order=(left:string,right:string)=>left<right?-1:left>right?1:0,lines=[`load(${quote(input.load)}, "repo_cargo")`,""];
- for(const action of [...input.actions].sort((left,right)=>order(left.label,right.label)))lines.push("repo_cargo(",`    name = ${quote(action.label)},`,`    manifest = ${quote(action.manifest)},`,`    runner = ${quote(input.runner)},`,"    srcs = ["+[...new Set(action.srcs)].sort(order).map(value=>`\n        ${quote(value)},`).join("")+"\n    ],",`    bun = ${quote(input.bun)},`,`    identity = ${quote(action.id)},`,")","");
+ for(const action of [...input.actions].sort((left,right)=>order(left.label,right.label)))lines.push("repo_cargo(",`    name = ${quote(action.label)},`,`    manifest = ${quote(action.manifest)},`,`    runner = ${quote(input.runner)},`,"    srcs = ["+[...new Set(action.srcs)].sort(order).map(value=>`\n        ${quote(value)},`).join("")+"\n    ],",`    runtime = ${quote(input.bun)},`,`    identity = ${quote(action.id)},`,")","");
  return lines.join("\n");
 }

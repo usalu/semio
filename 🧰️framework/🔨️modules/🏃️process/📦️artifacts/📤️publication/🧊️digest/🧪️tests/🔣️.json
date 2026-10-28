@@ -1,0 +1,10 @@
+{
+  "blockedMilliseconds": 2500,
+  "scenarios": [
+    {"name": "the same digest is rebuilt while a human runs it", "operations": [["build", "a"], ["run", "a"], ["build", "a"], ["build", "a"], ["stop", "a"]]},
+    {"name": "a new digest is published beside the running one and the old one is kept", "operations": [["build", "a"], ["run", "a"], ["build", "b"], ["retire", "a"], ["retire", "b"], ["stop", "a"], ["retire", "a"]]},
+    {"name": "many runners keep the digest until the last one ends", "operations": [["build", "a"], ["run", "a"], ["run", "a"], ["stop", "a"], ["retire", "a"], ["stop", "a"], ["retire", "a"]]},
+    {"name": "a damaged digest is repaired only when nobody runs it", "operations": [["build", "a"], ["damage", "a"], ["run", "a"], ["build", "a"], ["stop", "a"], ["build", "a"], ["build", "a"]]},
+    {"name": "retiring what was never built", "operations": [["retire", "z"], ["run", "z"], ["stop", "z"]]}
+  ]
+}

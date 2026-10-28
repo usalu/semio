@@ -1,0 +1,25 @@
+{
+ "name": "nxlock",
+ "code": "nxlock-g-tools/staged/nxlock (after nxfix-g core)",
+ "lane": "nxlock-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "nxlock-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "   - **Nx**: at most 2 finite daemons; on hosts up to 24 GiB they idle out after 2 min and retire above 1280 MB resident.",
+   "where": "after",
+   "block": "   - **Nx daemon start order**: the start lease `nx:daemon-startup:` (class `daemon-startup`, rank 8, taken last, nothing awaited while it is held) used to be held (rank 2) while the start requested native storage, graph pool and graph namespace, a hold-and-wait out of order, and the daemon service bound its namespace before the tooling and SDK leases. Now images, toolkit and namespace are opened first and the exclusive start lease comes last; the service binds after the tooling and SDK leases. `nx:daemon-slot:` is an inert class (only non-waiting try-locks request it): the order and hold-and-wait checks skip it, while the `build-graph:` pins stay in class `pin`. Proven by an independent Python rank model over the replayed acquisition sequences and single-file laws (order 75, component driver 21, graph startup 18, put-slots 14); the repo-wide Nx start path under peer load is not proven. Landing it changes lease-policy bytes, so lease-related tasks re-key once."
+  },
+  {
+   "id": "nxlock-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "   - **Nx**: höchstens 2 endliche Daemons; auf Rechnern bis 24 GiB enden sie nach 2 min Leerlauf und treten über 1280 MB resident ab.",
+   "where": "after",
+   "block": "   - **Startreihenfolge des Nx-Daemons**: das Start-Lease `nx:daemon-startup:` (Klasse `daemon-startup`, Rang 8, zuletzt genommen, währenddessen wird nichts erwartet) wurde früher (Rang 2) gehalten, während der Start nativen Speicher, Graph-Pool und Graph-Namensraum anforderte, ein Halten-und-Warten in falscher Reihenfolge, und der Daemon-Dienst band seinen Namensraum vor den Tooling- und SDK-Leases. Jetzt werden Abbilder, Toolkit und Namensraum zuerst geöffnet und das exklusive Start-Lease kommt zuletzt; der Dienst bindet nach den Tooling- und SDK-Leases. `nx:daemon-slot:` ist eine inerte Klasse (nur nicht wartende Try-Locks fordern sie an): die Reihenfolge- und die Halten-und-Warten-Prüfung überspringen sie, die `build-graph:`-Pins bleiben in der Klasse `pin`. Bewiesen durch ein unabhängiges Python-Rangmodell über die nachgespielten Erwerbsfolgen und Einzeldatei-Gesetze (Reihenfolge 75, Komponententreiber 21, Graph-Start 18, Put-Slots 14); der repo-weite Nx-Startpfad unter Peer-Last ist nicht bewiesen. Das Einspielen ändert Lease-Policy-Bytes, daher werden lease-bezogene Tasks einmal neu geschlüsselt."
+  }
+ ]
+}

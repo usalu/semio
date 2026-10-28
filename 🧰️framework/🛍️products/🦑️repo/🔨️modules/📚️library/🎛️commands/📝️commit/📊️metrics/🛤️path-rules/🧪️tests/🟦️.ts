@@ -18,7 +18,7 @@ for(const row of corpus.emoji)test("emoji: "+JSON.stringify(row.lang),()=>{expec
 test("the metrics byte ceiling is eight mebibytes",()=>{expect(MAX_METRICS_FILE_BYTES).toBe(8*1024*1024);});
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

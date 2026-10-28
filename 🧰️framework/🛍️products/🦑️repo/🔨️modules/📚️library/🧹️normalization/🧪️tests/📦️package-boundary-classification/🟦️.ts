@@ -2,11 +2,11 @@ import { testLevelAtLeast } from "../../../../../../../🔨️modules/🏃️pro
 import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 //#region 🔌️Adapters
 import Ajv from "ajv/dist/2020";
-import { beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { tmpdir } from "node:os";
-import { captureOwnedCommandV1 } from "@semio-tech/process/owned-execution";
+import { launchRepositoryCargoV1, readRepositoryCargoLaunchV1 } from "../../../🏃️process/🦀️cargo/🚪️launcher/🟦️.ts";
 import { createIssuedResourceControlV1 } from "@semio-tech/process/routing";
 import { withBuildTestInvocationV1 } from "@semio-tech/process/testing/invocation";
 import ts from "typescript";
@@ -571,21 +571,25 @@ function ecmaTypeScriptSemanticEvidence(rows: readonly { readonly id: string; re
 }
 
 const oracleRoot = resolve(import.meta.dir, "../../🔮️oracles/📦️package-boundary-classification");
-let rustOracleBinary = "";
+let rustOracleBinary = "", rustOracleDirectory = "";
 
-/** 🦀️ Compiles the independent `syn` oracle once through the repository's issued Cargo entry (a direct `cargo` is refused by the compiler ingress) and copies the binary out of the shared store. */
+/** 🦀️ Compiles the independent `syn` oracle once through the issued in-process Cargo launcher under the test's own invocation (a direct `cargo` is refused by the compiler ingress, and a nested `repo cargo` process is refused as an undeclared build selection inside an orchestrated action) and copies the binary out of the shared store inside the capture callback. */
 function buildRustOracle(): Promise<string> {
   return withBuildTestInvocationV1(async (original) => {
     const manifest = join(oracleRoot, "📦️packages/🦀️rust/Cargo.toml");
     let repository = dirname(manifest);
     while (!existsSync(join(repository, "package.json")) || !JSON.parse(readFileSync(join(repository, "package.json"), "utf8")).scripts?.repo) { if (dirname(repository) === repository) throw Error("The Rust oracle requires the repository that issues the compiler store"); repository = dirname(repository); }
     const control = createIssuedResourceControlV1(original, "law:package-body-rust-oracle", 900_000, AbortSignal.timeout(900_000));
-    const text = await captureOwnedCommandV1(process.execPath, ["repo", "cargo", "--store=shared", "--configuration=prototype", "--", "build", "--quiet", "--message-format=json", "--manifest-path", manifest], repository, { control, env: { ...process.env, SEMIO_BUILD_MODE: "prototype" }, output: { maximumBytes: 16777216, maximumLines: 65536 } });
-    const executable = text.split("\n").flatMap((line) => { try { const message = JSON.parse(line); return message.reason === "compiler-artifact" && message.target?.name === "semio-package-body-oracle" && typeof message.executable === "string" ? [message.executable as string] : []; } catch { return []; } }).at(-1);
-    if (!executable) throw Error("The Rust oracle build reported no executable");
-    const output = mkdtempSync(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir()), "rust-oracle-")), copy = join(output, "semio-package-body-oracle");
-    copyFileSync(executable, copy);
-    chmodSync(copy, 0o755);
+    const environment = { ...process.env, SEMIO_BUILD_MODE: "prototype" }, request = readRepositoryCargoLaunchV1(["--store=shared", "--configuration=prototype", "--", "build", "--quiet", "--message-format=json", "--manifest-path", manifest], environment);
+    const output = mkdtempSync(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir()), "rust-oracle-")), copy = join(output, "semio-package-body-oracle" + (process.platform === "win32" ? ".exe" : ""));
+    rustOracleDirectory = output;
+    await launchRepositoryCargoV1(original, control, repository, request, repository, environment, { maximumMilliseconds: 900_000, output: "capture", limits: { maximumBytes: 16777216, maximumLines: 65536 }, consume: async (result) => {
+      if (result.status !== 0 || result.signal !== null) throw Error("The Rust oracle build failed: " + result.stderr.slice(-2000));
+      const executable = result.stdout.split("\n").flatMap((line) => { try { const message = JSON.parse(line); return message.reason === "compiler-artifact" && message.target?.name === "semio-package-body-oracle" && typeof message.executable === "string" ? [message.executable as string] : []; } catch { return []; } }).at(-1);
+      if (!executable) throw Error("The Rust oracle build reported no executable");
+      copyFileSync(executable, copy);
+      chmodSync(copy, 0o755);
+    } });
     return copy;
   });
 }
@@ -613,6 +617,7 @@ function nativeOracle(row: (typeof vectors.glueRoleCases)[number], root: string)
 //#region 🧪️Classification
 describe("package boundary glue-content classification", () => {
   beforeAll(async () => { rustOracleBinary = await buildRustOracle(); }, 900_000);
+  afterAll(() => { if (rustOracleDirectory) rmSync(rustOracleDirectory, { recursive: true, force: true }); });
 
   test("fixture vectors satisfy the independent schema implementation", () => {
     expect(vectors["schemaVersion"]).toEqual(1);
@@ -688,7 +693,7 @@ describe("package boundary glue-content classification", () => {
     } finally {
       rmSync(control, { recursive: true, force: true });
     }
-  });
+  }, 120_000);
 
   test("captured fixed-source read failure preserves structural authority and reports both diagnostics", () => {
     for (const row of vectors.fixedScriptReadFailureCases) {

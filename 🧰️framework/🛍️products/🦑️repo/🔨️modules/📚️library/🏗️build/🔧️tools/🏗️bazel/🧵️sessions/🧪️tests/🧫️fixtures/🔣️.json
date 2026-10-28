@@ -13,13 +13,13 @@
     "floorMaximumMegabytes": 8192
    },
    "expected": {
-    "slots": 3,
+    "slots": 5,
     "services": 4,
-    "heapMegabytes": 2048,
-    "residentMegabytes": 2560,
-    "budgetMegabytes": 7864,
-    "cpuPerServer": 3,
-    "memoryPerServerMegabytes": 6117,
+    "heapMegabytes": 1536,
+    "residentMegabytes": 2048,
+    "budgetMegabytes": 10486,
+    "cpuPerServer": 2,
+    "memoryPerServerMegabytes": 3145,
     "limit": "memory"
    }
   },
@@ -35,13 +35,35 @@
     "floorMaximumMegabytes": 8192
    },
    "expected": {
-    "slots": 1,
+    "slots": 2,
     "services": 4,
-    "heapMegabytes": 2048,
-    "residentMegabytes": 2560,
-    "budgetMegabytes": 3686,
-    "cpuPerServer": 8,
-    "memoryPerServerMegabytes": 8602,
+    "heapMegabytes": 1536,
+    "residentMegabytes": 2048,
+    "budgetMegabytes": 4915,
+    "cpuPerServer": 4,
+    "memoryPerServerMegabytes": 3686,
+    "limit": "memory"
+   }
+  },
+  {
+   "name": "laptop 16 GB, 10 cores (ram-g floor 12.5 %: two servers)",
+   "host": {
+    "cores": 10,
+    "memoryMegabytes": 16384
+   },
+   "memory": {
+    "floorBasisPoints": 1250,
+    "floorMinimumMegabytes": 1536,
+    "floorMaximumMegabytes": 4096
+   },
+   "expected": {
+    "slots": 2,
+    "services": 4,
+    "heapMegabytes": 1536,
+    "residentMegabytes": 2048,
+    "budgetMegabytes": 5734,
+    "cpuPerServer": 5,
+    "memoryPerServerMegabytes": 4301,
     "limit": "memory"
    }
   },
@@ -59,11 +81,11 @@
    "expected": {
     "slots": 1,
     "services": 4,
-    "heapMegabytes": 768,
-    "residentMegabytes": 1280,
-    "budgetMegabytes": 1228,
+    "heapMegabytes": 1126,
+    "residentMegabytes": 1638,
+    "budgetMegabytes": 1638,
     "cpuPerServer": 4,
-    "memoryPerServerMegabytes": 2868,
+    "memoryPerServerMegabytes": 2458,
     "limit": "floor"
    }
   },
@@ -103,11 +125,11 @@
    "expected": {
     "slots": 6,
     "services": 4,
-    "heapMegabytes": 2048,
-    "residentMegabytes": 2560,
-    "budgetMegabytes": 36864,
+    "heapMegabytes": 1536,
+    "residentMegabytes": 2048,
+    "budgetMegabytes": 49152,
     "cpuPerServer": 5,
-    "memoryPerServerMegabytes": 14336,
+    "memoryPerServerMegabytes": 12288,
     "limit": "policy"
    }
   },
@@ -125,11 +147,11 @@
    "expected": {
     "slots": 2,
     "services": 4,
-    "heapMegabytes": 2048,
-    "residentMegabytes": 2560,
-    "budgetMegabytes": 17203,
+    "heapMegabytes": 1536,
+    "residentMegabytes": 2048,
+    "budgetMegabytes": 22937,
     "cpuPerServer": 2,
-    "memoryPerServerMegabytes": 20070,
+    "memoryPerServerMegabytes": 17203,
     "limit": "cores"
    }
   },
@@ -147,11 +169,11 @@
    "expected": {
     "slots": 1,
     "services": 4,
-    "heapMegabytes": 2048,
-    "residentMegabytes": 2560,
-    "budgetMegabytes": 17203,
+    "heapMegabytes": 1536,
+    "residentMegabytes": 2048,
+    "budgetMegabytes": 22937,
     "cpuPerServer": 1,
-    "memoryPerServerMegabytes": 40141,
+    "memoryPerServerMegabytes": 34407,
     "limit": "floor"
    }
   },
@@ -169,12 +191,12 @@
    "expected": {
     "slots": 6,
     "services": 4,
-    "heapMegabytes": 2048,
-    "residentMegabytes": 2560,
-    "budgetMegabytes": 17203,
+    "heapMegabytes": 1536,
+    "residentMegabytes": 2048,
+    "budgetMegabytes": 22937,
     "cpuPerServer": 2,
-    "memoryPerServerMegabytes": 6690,
-    "limit": "memory"
+    "memoryPerServerMegabytes": 5734,
+    "limit": "policy"
    }
   }
  ],
@@ -233,7 +255,7 @@
    ]
   },
   {
-   "name": "a slot that still keeps the package beats a never used slot",
+   "name": "a slot that only remembers the key is no better than any other used slot",
    "slots": [
     "s0",
     "s1",
@@ -263,10 +285,10 @@
    },
    "key": "0000000000000001",
    "expected": [
-    "s0",
     "s1",
     "s3",
-    "s2"
+    "s2",
+    "s0"
    ]
   },
   {
@@ -401,8 +423,8 @@
    "expected": [
     "s1",
     "s0",
-    "s2",
-    "s3"
+    "s3",
+    "s2"
    ]
   },
   {
@@ -434,6 +456,81 @@
     }
    },
    "key": "0000000000000001",
+   "expected": [
+    "s2",
+    "s3",
+    "s0",
+    "s1"
+   ]
+  },
+  {
+   "name": "a slot that once served the key but holds another selection now is an ordinary used slot",
+   "slots": [
+    "s0",
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "key": "0000000000000001",
+   "states": {
+    "s0": {
+     "version": 1,
+     "slot": "s0",
+     "key": "0000000000000002",
+     "keys": [
+      "0000000000000002",
+      "0000000000000001"
+     ],
+     "usedAt": 100
+    },
+    "s2": {
+     "version": 1,
+     "slot": "s2",
+     "key": "0000000000000003",
+     "keys": [
+      "0000000000000003"
+     ],
+     "usedAt": 10
+    }
+   },
+   "expected": [
+    "s1",
+    "s3",
+    "s2",
+    "s0"
+   ]
+  },
+  {
+   "name": "two selections that once shared a slot do not pull each other back onto it",
+   "slots": [
+    "s0",
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "key": "0000000000000002",
+   "states": {
+    "s0": {
+     "version": 1,
+     "slot": "s0",
+     "key": "0000000000000001",
+     "keys": [
+      "0000000000000001",
+      "0000000000000002"
+     ],
+     "usedAt": 100
+    },
+    "s1": {
+     "version": 1,
+     "slot": "s1",
+     "key": "0000000000000003",
+     "keys": [
+      "0000000000000003",
+      "0000000000000002"
+     ],
+     "usedAt": 200
+    }
+   },
    "expected": [
     "s2",
     "s3",
@@ -2511,8 +2608,8 @@
   {
    "id": "switch",
    "values": {},
-   "en": "the server restarts for a different selection",
-   "de": "der Server startet für eine andere Auswahl neu"
+   "en": "the package of the slot is replaced in place for a different selection, the server stays",
+   "de": "das Paket des Slots wird für eine andere Auswahl an Ort und Stelle ersetzt, der Server bleibt"
   },
   {
    "id": "fresh",
@@ -2527,7 +2624,7 @@
    {
     "slot": "s0",
     "key": "0000000000000001",
-    "path": "/bounded/products/bazel/workspaces/s0/0000000000000001"
+    "path": "/bounded/products/bazel/workspaces/s0/0000000000000000"
    }
   ],
   "refused": [

@@ -1,3 +1,4 @@
+import {noticeLanguagesV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import policyDocument from "./🔣️policy.json" with {type:"json"};
 import rulesDocument from "./📖️rules/🔣️.json" with {type:"json"};
@@ -136,12 +137,10 @@ export function doctorTextV1(language:DoctorLanguageV1,key:string,values:Readonl
  return fillDoctorV1(row[language],values);
 }
 
-/** 🗣️ Chooses the output languages: the request, then the environment, then the locale; when none resolves both languages are printed, because no language is assumed. */
+/** 🗣️ Chooses the output languages: the request, else the language protocol; when it chooses none both languages are printed, because no language is assumed. */
 export function resolveDoctorLanguagesV1(requested:string|undefined,environment:Readonly<Record<string,string|undefined>>):readonly DoctorLanguageV1[]{
- const tag=(value:string|undefined):DoctorLanguageV1|undefined=>{const head=value?.toLowerCase().split(/[._@:-]/u)[0];return head==="en"||head==="de"?head:undefined;};
- if(requested!==undefined){const chosen=tag(requested);if(!chosen||requested.length>2)throw Error(fillDoctorV1(TEXTS.errorValue!.en,{option:"--lang"})+"\n"+fillDoctorV1(TEXTS.errorValue!.de,{option:"--lang"}));return [chosen];}
- for(const value of [environment.SEMIO_LANGUAGE,environment.LANGUAGE,environment.LC_ALL,environment.LC_MESSAGES,environment.LANG]){const chosen=tag(value);if(chosen)return [chosen];}
- return ["en","de"];
+ if(requested!==undefined){const chosen=requested==="en"||requested==="de"?requested:undefined;if(!chosen)throw Error(fillDoctorV1(TEXTS.errorValue!.en,{option:"--lang"})+"\n"+fillDoctorV1(TEXTS.errorValue!.de,{option:"--lang"}));return [chosen];}
+ return noticeLanguagesV1(["en","de"] as const,environment);
 }
 
 /** ✂️ Shortens a process command line to what a person needs: launcher, runtime and script path collapse to `repo`, the rest is clipped. */

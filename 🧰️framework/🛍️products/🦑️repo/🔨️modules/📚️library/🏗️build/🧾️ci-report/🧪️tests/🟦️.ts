@@ -9,7 +9,7 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {CI_TEXT_KEYS_V1,ciCacheDeltaV1,ciPlanSelectionV1,ciTargetMatcherV1,ciTextV1,compareCiPlansV1,extractJsonObjectsV1,judgeCiCacheProofV1,readCiCacheStatusV1,readCiPlanV1,readCiTestResultsIndexV1,renderCiCacheDeltaV1,renderCiParityV1,renderCiPlanV1,renderCiProofV1,renderCiTestsV1,summarizeCiJUnitV1,summarizeCiPlanV1,summarizeCiTestsV1,type CiCacheStatusV1,type CiLanguageV1} from "../🟦️.ts";
 import {runCiReportV1} from "../📜️script.ts";
-import {resolveLanguageV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {CATALOG_LANGUAGES_V1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),check=(definition:string,value:unknown)=>{

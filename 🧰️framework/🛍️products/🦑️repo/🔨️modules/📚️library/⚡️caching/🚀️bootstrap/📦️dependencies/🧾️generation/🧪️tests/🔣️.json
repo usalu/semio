@@ -894,7 +894,7 @@
    "path": "w:bunfig.toml",
    "detail": "appeared",
    "en": "An installer input appeared that the receipt recorded as missing: w:bunfig.toml.",
-   "de": "Eine Installer-Eingabe ist aufgetaucht, die der Beleg als fehlend festgehalten hatte: w:bunfig.toml."
+   "de": "Eine Installer-Eingabe ist aufgetaucht, die die Quittung als fehlend festgehalten hatte: w:bunfig.toml."
   },
   {
    "class": "manifest-changed",
@@ -913,7 +913,7 @@
    "class": "protocol-changed",
    "detail": "semio.dependency-generation-walk/0",
    "en": "The dependency generation protocol changed: the receipt was sealed with semio.dependency-generation-walk/0, this tool declares semio.dependency-generation-walk/2.",
-   "de": "Das Protokoll der Abhängigkeitsgeneration hat sich geändert: Der Beleg wurde mit semio.dependency-generation-walk/0 versiegelt, dieses Werkzeug deklariert semio.dependency-generation-walk/2."
+   "de": "Das Protokoll der Abhängigkeitsgeneration hat sich geändert: Die Quittung wurde mit semio.dependency-generation-walk/0 versiegelt, dieses Werkzeug deklariert semio.dependency-generation-walk/2."
   },
   {
    "class": "configuration-changed",
@@ -925,12 +925,12 @@
    "class": "membership-churn",
    "path": "pkgs/a",
    "en": "More than 4096 directories changed since the receipt, the first at pkgs/a.",
-   "de": "Seit dem Beleg haben sich mehr als 4096 Verzeichnisse geändert, das erste bei pkgs/a."
+   "de": "Seit der Quittung haben sich mehr als 4096 Verzeichnisse geändert, das erste bei pkgs/a."
   },
   {
    "class": "sha-changed",
    "en": "The combined read of the scope no longer equals the receipt.",
-   "de": "Das kombinierte Lesen des Bereichs entspricht nicht mehr dem Beleg."
+   "de": "Das kombinierte Lesen des Bereichs entspricht nicht mehr der Quittung."
   }
  ]
 }

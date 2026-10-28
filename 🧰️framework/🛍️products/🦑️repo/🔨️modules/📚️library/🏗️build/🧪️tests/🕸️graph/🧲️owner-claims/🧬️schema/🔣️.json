@@ -1,7 +1,7 @@
 {
  "$schema": "http://json-schema.org/draft-07/schema#",
- "title": "Owner claim law fixture / Gesetz der Zuordnung von Fakten zu Besitzern",
- "description": "EN: Every owner claims the facts of its own inference plus every consumed fact of the part below its root or native root; a claimed fact is never repeated for the same content, unclaimed facts belong to the environment, row order is the order of the part. DE: Jeder Besitzer beansprucht die Fakten seiner eigenen Ableitung und jeden verbrauchten Fakt des Teils unterhalb seiner Wurzel oder nativen Wurzel; ein Fakt gleichen Inhalts wird nie wiederholt, unbeanspruchte Fakten gehören zur Umgebung, die Reihenfolge ist die des Teils.",
+ "title": "Owner claim law fixture / Gesetz der Zuordnung von Fakten zu Eigentümern",
+ "description": "EN: Every owner claims the facts of its own inference plus every consumed fact of the part below its root or native root; a claimed fact is never repeated for the same content, unclaimed facts belong to the environment, row order is the order of the part. DE: Jeder Eigentümer beansprucht die Fakten seiner eigenen Ableitung und jeden verbrauchten Fakt des Teils unterhalb seiner Wurzel oder nativen Wurzel; ein Fakt gleichen Inhalts wird nie wiederholt, unbeanspruchte Fakten gehören zur Umgebung, die Reihenfolge ist die des Teils.",
  "type": "object",
  "additionalProperties": false,
  "required": ["version", "worlds"],

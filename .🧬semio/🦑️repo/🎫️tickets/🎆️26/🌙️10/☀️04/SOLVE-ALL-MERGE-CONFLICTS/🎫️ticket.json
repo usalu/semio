@@ -3,12 +3,59 @@
   "emoji": "🔀",
   "status": "closed",
   "description": "Resolve every unmerged path by keeping valuable changes from both sides. Unmerged files: .claude/launch.json, .vscode/launch.json, .vscode/🧰launch.seed.jsonc, Cargo.lock, bun.lock, framework rust script.ts, 2d test config, ui oracle json, and repo library mjs. Do not discard unique configurations, dependencies, or code from either side.",
-  "summary": "Resolved all nine stash-pop conflicts by keeping both sides: launch configurations, oracle ids, Cargo packages, and bun workspaces are unions. Two shared launch commands now use the stashed targets because the upstream targets are not on this tree. Code keeps the stashed Cargo helpers and moduleSourceImports together with upstream seeding and the command-input hash gate.",
+  "summary": "Resolved all three current conflict blocks while preserving course build closure, Tailwind scans, memory-aware bilingual worker descriptions, and the 19-test union. Python contract, independent TypeScript AST, Ajv manifest validation, and scoped whitespace checks pass. Course tests were blocked before execution by unrelated @cto.af/linebreak lock drift. Git index remains unchanged under AGENTS.md prohibition of modifying git commands. See resolution-1028.md.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2766"
   },
   "goal": "🎯consistentrepohistory",
   "sessions": [
-    "⚪6be5f84b0acd4c409a8573a0468cd41c"
+    "⚪6be5f84b0acd4c409a8573a0468cd41c",
+    "cdf472ee-eec5-4075-9b2d-faf8d041b1c8"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-10-28 15:18:13",
+      "author": "",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Resolve all current merge conflicts, preserve both sides, verify results, and retain the git index per workspace instructions."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-28 15:20:27",
+      "author": "ueli",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "1e27248a0baa0f36a05fc7061b0c805de76c917a",
+      "summary": "Resolved all three current conflict blocks while preserving course build closure, Tailwind scans, memory-aware bilingual worker descriptions, and the 19-test union. Python contract, independent TypeScript AST, Ajv manifest validation, and scoped whitespace checks pass. Course tests were blocked before execution by unrelated @cto.af/linebreak lock drift. Git index remains unchanged under AGENTS.md prohibition of modifying git commands. See resolution-1028.md.",
+      "files": [
+        {
+          "path": "♻️mit-bestand/📋️bericht/🔨️modules/✅️report-verification/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🎚️config/🟦️.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/SOLVE-ALL-MERGE-CONFLICTS/check-1028.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/SOLVE-ALL-MERGE-CONFLICTS/check-1028.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/SOLVE-ALL-MERGE-CONFLICTS/merge-1028.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/SOLVE-ALL-MERGE-CONFLICTS/resolution-1028.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/SOLVE-ALL-MERGE-CONFLICTS/🎫️ticket.json"
+        }
+      ]
+    }
   ]
 }

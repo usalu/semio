@@ -1,0 +1,3 @@
+/** 📦️ Public `@semio-tech/repo-lib/storage/bootstrap/dashboard/installation` entry: explicit re-exports of the module that owns each member. */
+export { captureDashboardSources, changedDashboardSourceV1, currentDashboardV1, dashboardBuildDescendantsV1, dashboardInstalled, dashboardInvocation, dashboardPackageRoot, digestDashboardSources, installDashboard, installedDashboard, launchDashboard, mayRunStale, sayDashboardCurrentV1, staleDashboard, withInstalledDashboardV1 } from "../../../../../../⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
+export type { DashboardCompiledSources, DashboardExecutionOptions } from "../../../../../../⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";

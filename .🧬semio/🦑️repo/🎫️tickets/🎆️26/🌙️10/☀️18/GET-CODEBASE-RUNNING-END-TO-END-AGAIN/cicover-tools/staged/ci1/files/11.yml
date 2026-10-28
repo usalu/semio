@@ -1,0 +1,153 @@
+# 🛍️ Product CI: the products that gate a landing (architecture course with its proctor and libraries, print with its documents) are built and tested on the
+# hosted runners through the official `repo run-many` route, one row per product, group of projects and operating system. The dashboard has its own workflow
+# (dashboard.yml); the build system itself is proved by build-system.yml; Go by go.yml; the course release by architecture-course.yml (manual).
+#
+# Rows. A row names the projects and the targets that one `run-many` runs; projects with different target lists are different rows, because a project without the
+# target is refused. The Linux rows are blocking. macOS and Windows rows exist where the product runs on a developer machine (course, its libraries, print-rs) and
+# are advisory (`continue-on-error`) until their first green run; the proctor (a server) and the print documents (the TeX pipeline) run on Linux only.
+# Memory. The hosted Linux runner has 16 GB and the cold graph of print-rs peaks near 16 GB, the macOS runner has 7 GB: the heavy Linux rows take the label of the
+# repository variable SEMIO_LARGE_LINUX_RUNNER (a larger runner) when it is set and `ubuntu-24.04` otherwise; the capacity gate of `repo` queues work that does not fit.
+# Disk. Every row prints the free disk space after the checkout (the preflight floor is 8 GiB), so a disk-bound failure is visible in the log.
+# Caches. The Bun store, the launcher runtimes and, for the print rows, the TeX bundle and the font catalog travel through ./.github/actions/tool-cache; the remote task
+# cache is configured as in build-system.yml (read-only for pull requests, read-write for pushes to the default branch).
+
+name: products
+
+on:
+  pull_request:
+  push:
+    branches: [main, "⛳wip"]
+  workflow_dispatch:
+    inputs:
+      tool:
+        description: Build implementation
+        type: choice
+        options: [bazel, nx]
+        default: bazel
+
+permissions:
+  contents: read
+
+concurrency:
+  group: products-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NODE_VERSION: 24.15.0
+  BUILD_TOOL: ${{ inputs.tool || 'bazel' }}
+  CI: "true"
+  SEMIO_LANGUAGE: en
+  PRINT_TEX_CACHE: |
+    .🧬semio/🦑️repo/⚡️cache/tectonic
+    .🧬semio/🦑️repo/⚡️cache/print-fonts
+  SEMIO_REMOTE_CACHE_ENDPOINT: ${{ vars.SEMIO_REMOTE_CACHE_ENDPOINT || secrets.SEMIO_REMOTE_CACHE_ENDPOINT }}
+  SEMIO_REMOTE_CACHE_INSTANCE: ${{ vars.SEMIO_REMOTE_CACHE_INSTANCE }}
+  SEMIO_REMOTE_CACHE_ACCESS: ${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && 'read-write' || 'read-only' }}
+  SEMIO_REMOTE_CACHE_UPLOAD: ${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && 'true' || 'false' }}
+  SEMIO_REMOTE_CACHE_TOKEN: ${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && secrets.SEMIO_REMOTE_CACHE_WRITE_TOKEN || secrets.SEMIO_REMOTE_CACHE_READ_TOKEN }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  products:
+    name: ${{ matrix.product }} (${{ matrix.name }})
+    runs-on: ${{ matrix.large && vars.SEMIO_LARGE_LINUX_RUNNER || matrix.os }}
+    timeout-minutes: ${{ matrix.minutes }}
+    continue-on-error: ${{ matrix.advisory }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {product: course, name: linux, os: ubuntu-24.04, large: true, minutes: 120, advisory: false, family: course, setup: bazel, projects: "@teaching/architecture-course", targets: "typecheck,check,build,test"}
+          - {product: course, name: macos, os: macos-26, large: false, minutes: 120, advisory: true, family: course, setup: bazel, projects: "@teaching/architecture-course", targets: "typecheck,check,build,test"}
+          - {product: course, name: windows, os: windows-2025, large: false, minutes: 150, advisory: true, family: course, setup: bazel, projects: "@teaching/architecture-course", targets: "typecheck,check,build,test"}
+          - {product: course-libs, name: linux, os: ubuntu-24.04, large: false, minutes: 90, advisory: false, family: course, setup: bazel, projects: "@semio-tech/framework,@semio-tech/course-react,@semio-tech/pets,@semio-tech/pets-react,@semio-tech/ui-react", targets: "typecheck,test"}
+          - {product: course-libs, name: macos, os: macos-26, large: false, minutes: 90, advisory: true, family: course, setup: bazel, projects: "@semio-tech/framework,@semio-tech/course-react,@semio-tech/pets,@semio-tech/pets-react,@semio-tech/ui-react", targets: "typecheck,test"}
+          - {product: course-libs, name: windows, os: windows-2025, large: false, minutes: 120, advisory: true, family: course, setup: bazel, projects: "@semio-tech/framework,@semio-tech/course-react,@semio-tech/pets,@semio-tech/pets-react,@semio-tech/ui-react", targets: "typecheck,test"}
+          - {product: course-rust, name: linux, os: ubuntu-24.04, large: true, minutes: 120, advisory: false, family: course, setup: toolchains, projects: "@semio-tech/ui-contract-rs,@semio-tech/course-rs,@semio-tech/pets-rs,@semio-tech/ui-rs", targets: "test"}
+          - {product: framework-rust, name: linux, os: ubuntu-24.04, large: true, minutes: 120, advisory: false, family: course, setup: toolchains, projects: "@semio-tech/framework-server,@semio-tech/course,@semio-tech/framework-rs,@semio-tech/framework-actor-rs", targets: "test"}
+          - {product: ui-styling, name: linux, os: ubuntu-24.04, large: false, minutes: 90, advisory: false, family: course, setup: bazel, projects: "@semio-tech/ui-styling,@semio-tech/ui-styling-tokens", targets: "test"}
+          - {product: repo-rs-1, name: linux, os: ubuntu-24.04, large: true, minutes: 150, advisory: false, family: course, setup: toolchains, projects: "@semio-tech/repo-yaml-rs,@semio-tech/repo-languages-rs,@semio-tech/repo-cli-rs,@semio-tech/repo-graphql-rs,@semio-tech/repo-search-rs,@semio-tech/repo-hooks-rs,@semio-tech/repo-tickets-rs,@semio-tech/repo-workspace-rs", targets: "test"}
+          - {product: repo-rs-2, name: linux, os: ubuntu-24.04, large: true, minutes: 150, advisory: false, family: course, setup: toolchains, projects: "@semio-tech/repo-identity-rs,@semio-tech/repo-move-rs,@semio-tech/repo-providers-rs,@semio-tech/repo-coordinator-rs,@semio-tech/repo-events-rs,@semio-tech/repo-tree-rs,@semio-tech/ui-locale-rs", targets: "test"}
+          - {product: repo-rs-3, name: linux, os: ubuntu-24.04, large: true, minutes: 150, advisory: false, family: course, setup: toolchains, projects: "@semio-tech/repo-codebase-rs,@semio-tech/repo-contributors-rs,@semio-tech/repo-goals-rs,@semio-tech/repo-metrics-rs,@semio-tech/repo-model-rs,@semio-tech/repo-statutes-rs,@semio-tech/repo-test-runner-rs,@semio-tech/repo-todos-rs", targets: "test"}
+          - {product: proctor, name: linux, os: ubuntu-24.04, large: true, minutes: 150, advisory: false, family: course, setup: toolchains, projects: "@teaching/proctor", targets: "check,build,test"}
+          - {product: print-rs, name: linux, os: ubuntu-24.04, large: true, minutes: 150, advisory: false, family: print, setup: toolchains, projects: "@semio-tech/print-rs", targets: "test"}
+          - {product: print-rs, name: macos, os: macos-26, large: false, minutes: 150, advisory: true, family: print, setup: toolchains, projects: "@semio-tech/print-rs", targets: "test"}
+          - {product: print-rs, name: windows, os: windows-2025, large: false, minutes: 180, advisory: true, family: print, setup: toolchains, projects: "@semio-tech/print-rs", targets: "test"}
+          - {product: print, name: linux, os: ubuntu-24.04, large: true, minutes: 150, advisory: false, family: print, setup: toolchains, projects: "@semio-tech/print", targets: "check,build,test"}
+          - {product: presentation, name: linux, os: ubuntu-24.04, large: false, minutes: 60, advisory: false, family: print, setup: toolchains, projects: "@semio-tech/presentation,@semio-tech/presentation-react", targets: "test"}
+          - {product: bericht, name: linux, os: ubuntu-24.04, large: false, minutes: 120, advisory: false, family: print, setup: toolchains, projects: "@semio-tech/mit-bestand-bericht", targets: "check-generated,akteursnetz-validate,build-kompaktbericht,build-zwischenbericht,build-forschungsbericht,test"}
+          - {product: projektetage, name: linux, os: ubuntu-24.04, large: false, minutes: 120, advisory: false, family: print, setup: toolchains, projects: "@semio-tech/mit-bestand-praesentation-projektetage", targets: "build,test"}
+    steps:
+      - name: Enable long paths before checkout (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          git config --system core.longpaths true
+          git config --system core.autocrlf false
+          New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force | Out-Null
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/repo-launcher
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Report the free disk space
+        continue-on-error: true
+        run: df -h "$GITHUB_WORKSPACE" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Restore the TeX bundle and the font catalog
+        if: ${{ matrix.family == 'print' }}
+        uses: ./.github/actions/tool-cache
+        with:
+          mode: restore
+          name: print-tex
+          paths: ${{ env.PRINT_TEX_CACHE }}
+          hash: ${{ hashFiles('🧰️framework/🔨️modules/🏃️process/🧰️tools/🔣️.json') }}
+      - name: Preflight
+        run: repo preflight
+      - name: Provision the build tool
+        timeout-minutes: 30
+        run: repo tools setup "$BUILD_TOOL"
+      - name: Provision the native toolchains (Rust, TeX, browsers)
+        if: ${{ matrix.setup == 'toolchains' }}
+        timeout-minutes: 45
+        run: repo tools setup toolchains
+      - name: Restore the Bun store
+        uses: ./.github/actions/tool-cache
+        with:
+          mode: restore
+          name: bun-store
+          paths: .cache/b/d/m/bun-cache
+          hash: ${{ hashFiles('bun.lock', '*/bun.lock', 'package.json') }}
+      - name: Install the authored dependency scopes
+        timeout-minutes: 30
+        run: repo dependencies sync --all
+      - name: Name the result folders
+        run: |
+          echo "SEMIO_BUILD_TEST_RESULTS_DIR=$RUNNER_TEMP/test-results" >> "$GITHUB_ENV"
+          echo "SEMIO_TEST_ARTIFACT_DIR=$RUNNER_TEMP/test-artifacts" >> "$GITHUB_ENV"
+      - name: Run the targets of this row through the official route
+        env:
+          PROJECTS: ${{ matrix.projects }}
+          TARGETS: ${{ matrix.targets }}
+        run: repo --tool="$BUILD_TOOL" run-many --projects="$PROJECTS" --targets="$TARGETS" --parallel=1 --output=stream
+      - name: Save the TeX bundle and the font catalog (default branch)
+        if: ${{ matrix.family == 'print' }}
+        uses: ./.github/actions/tool-cache
+        with:
+          mode: save
+          name: print-tex
+          paths: ${{ env.PRINT_TEX_CACHE }}
+          hash: ${{ hashFiles('🧰️framework/🔨️modules/🏃️process/🧰️tools/🔣️.json') }}
+      - name: Upload the test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: products-${{ matrix.product }}-${{ matrix.name }}
+          path: |
+            ${{ runner.temp }}/test-results
+            ${{ runner.temp }}/test-artifacts
+          if-no-files-found: ignore
+          retention-days: 14

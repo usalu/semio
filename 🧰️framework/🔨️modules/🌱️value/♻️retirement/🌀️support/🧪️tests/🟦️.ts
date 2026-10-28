@@ -1,12 +1,12 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import {semioSchemaAjvV1} from "@semio-tech/schema-ts/oracles/validator";
+import Ajv2020 from "ajv/dist/2020.js";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 
 /** 🕸️ Independent finite graph reachability proves support even when edges cycle. */
 export function conjunctiveRetirementSupportVectorLawV1(): void {
-    const validate=semioSchemaAjvV1().compile(schema);
+    const validate=new Ajv2020({strict:true}).compile(schema);
     expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);
     const database=new Database(":memory:");
     try {

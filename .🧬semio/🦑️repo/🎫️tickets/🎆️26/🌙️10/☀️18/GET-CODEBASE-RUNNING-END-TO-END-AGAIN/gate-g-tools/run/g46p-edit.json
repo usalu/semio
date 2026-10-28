@@ -1,0 +1,20 @@
+{
+ "label": "g46p-edit",
+ "target": "@semio-tech/print-rs:test",
+ "started": "20:41:40",
+ "wall_s": 283.0,
+ "peak_tree_mb": 3257,
+ "peak_processes": 6,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "7",
+   "2 action cache hit, 2 internal, 5 local"
+  ],
+  "actions": [
+   "7"
+  ]
+ }
+}

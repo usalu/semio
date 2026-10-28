@@ -1,0 +1,28 @@
+{
+ "compilerOptions": {
+  "strict": true,
+  "noEmit": true,
+  "target": "ES2022",
+  "module": "ESNext",
+  "moduleResolution": "Bundler",
+  "allowImportingTsExtensions": true,
+  "resolveJsonModule": true,
+  "skipLibCheck": true,
+  "types": [
+   "node",
+   "bun"
+  ],
+  "lib": [
+   "ES2022",
+   "DOM"
+  ],
+  "noUncheckedIndexedAccess": false
+ },
+ "files": [
+  "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⚙️runtime/🧲️native/🧰️toolchain/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⚙️runtime/🧲️native/🧰️toolchain/🧪️tests/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🏗️addon/🛠️prepare/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🏗️addon/🛠️prepare/📜️script.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🏗️addon/🛠️prepare/🧪️tests/🟦️.ts"
+ ]
+}

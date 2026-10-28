@@ -1,0 +1,31 @@
+{
+ "label": "g50c-print",
+ "target": "@semio-tech/print-rs:test",
+ "started": "03:04:21",
+ "wall_s": 1136.0,
+ "peak_tree_mb": 10288,
+ "peak_processes": 11,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 50.3,
+ "graph": {
+  "refreshing": [
+   "355"
+  ],
+  "inferring": [
+   "351"
+  ],
+  "published": [
+   "711",
+   "356",
+   "701"
+  ],
+  "processes": [
+   "7",
+   "1 action cache hit, 1 disk cache hit, 2 internal, 2 local, 2 worker"
+  ],
+  "actions": [
+   "7"
+  ]
+ }
+}

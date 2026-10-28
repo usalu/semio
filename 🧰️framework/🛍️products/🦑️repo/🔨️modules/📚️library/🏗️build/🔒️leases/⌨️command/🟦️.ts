@@ -1,6 +1,6 @@
 import {join} from "node:path";
-import {describeHostReasonV1,hostCapacityDirectoryV1,readHostCapacityStatusV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
-import {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1} from "../../🌡️host-capacity/🟦️.ts";
+import {describeHostReasonV1,hostCapacityDirectoryV1,readHostCapacityStatusV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/📋️status/🟦️.ts";
+import {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1} from "../../🌡️host-capacity/🎛️control/🟦️.ts";
 import {runLeasesCommandV1,type LeaseAdmissionV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/📋️status/🟦️.ts";
 import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 

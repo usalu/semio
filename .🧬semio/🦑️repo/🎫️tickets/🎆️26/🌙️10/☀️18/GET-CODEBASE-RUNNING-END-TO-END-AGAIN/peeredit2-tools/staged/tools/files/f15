@@ -1,0 +1,68 @@
+"""🐍 Independent model of shared-closure references (stdlib only): reads the corpus and the real scheduling table, parses imports and `defineScriptProviderV1("…")` calls with its own regular expressions, and states, before and after every cumulative mutation, the bounded walk of each command, provider and tool command, the references a viewed command closure holds, the files of every provider group (port × view, transitive) and tool group (native view), the full closure of a command and which held facts change.
+usage: python3 -I 🐍️.py <corpus.json> <scheduling.json>"""
+import json, posixpath, re, sys
+
+IMPORT = re.compile(r'(?:import|export)\s+(?:[^"\';]*?\s+from\s+)?["\']([^"\']+)["\']')
+PORT = re.compile(r'(?<!function\s)\bdefineScriptProviderV1\s*\(\s*["\']([a-z0-9-]+)["\']')
+
+def main():
+    corpus, table = (json.load(open(path, encoding="utf-8")) for path in sys.argv[1:3])
+    prefixes = sorted({p for d in table["domains"] for p in d["prefixes"]})
+    keyed = [p for d in table["domains"] for p in d.get("nativeKeyed", [])]
+    views = {"scheduling": prefixes, "native": [p for p in prefixes if not any(k.startswith(p) or p.startswith(k) for k in keyed)]}
+    files = dict(corpus["files"])
+    def walk(entries):
+        roster, ports, pending = set(), set(), list(entries)
+        while pending:
+            path = pending.pop()
+            if path in roster or path not in files: continue
+            roster.add(path)
+            text = files[path]
+            for name in PORT.findall(text): ports.add(name)
+            for spec in IMPORT.findall(text):
+                if spec.startswith("."): pending.append(posixpath.normpath(posixpath.join(posixpath.dirname(path), spec)))
+        designation = json.loads(files[corpus["designation"]])["providers"]
+        return sorted(roster), sorted(p for p in ports if p in designation)
+    def view(roster, name): return [p for p in roster if not any(p.startswith(x) for x in views[name])]
+    def module(port):
+        designation = json.loads(files[corpus["designation"]])["providers"]
+        return posixpath.normpath(posixpath.join(posixpath.dirname(corpus["designation"]), designation[port]))
+    def transitive(ports):
+        out, pending, seen = [], list(ports), set(ports)
+        while pending:
+            port = pending.pop(0); roster, more = walk([module(port)]); out.append((port, roster, more))
+            for p in more:
+                if p not in seen: seen.add(p); pending.append(p)
+        return out
+    def state():
+        product, product_ports = walk([corpus["products"]["product"]["entry"]])
+        plain, plain_ports = walk([corpus["products"]["plain"]["entry"]])
+        designation = json.loads(files[corpus["designation"]])["providers"]
+        groups = {}
+        for port in sorted(designation):
+            for name in ("scheduling", "native"):
+                rows = transitive([port])
+                groups[port + ":" + name] = {"files": sorted({corpus["designation"], corpus["schemaCopy"]} | {f for _, roster, _ in rows for f in view(roster, name)}), "facts": [[p, view(r, name), m] for p, r, m in rows]}
+        whole = set(product)
+        if product_ports:
+            whole |= {corpus["designation"], corpus["schemaCopy"]}
+            for _, roster, _ in transitive(product_ports): whole |= set(roster)
+        srcs = sorted(set(view(product, "scheduling")) | {f for port in product_ports for f in groups[port + ":scheduling"]["files"]})
+        facts = {"product": [view(product, "scheduling"), product_ports], "productNative": [view(product, "native"), product_ports], "plain": [view(plain, "scheduling"), plain_ports]}
+        for key, group in groups.items(): facts[key] = group["facts"]
+        tools = {}
+        for name, tool in corpus["tools"].items():
+            roster, ports = walk(tool["entries"])
+            rows = [(None, roster, ports)] + transitive(ports)
+            facts["tool:" + name] = [[view(r, "native"), m] for _, r, m in rows]
+            tools[name] = sorted({f for _, r, _ in rows for f in view(r, "native")} | set(tool["resources"]) | ({corpus["designation"], corpus["schemaCopy"]} if ports else set()))
+        return {"product": {"own": view(product, "scheduling"), "ports": product_ports, "native": view(product, "native")}, "plain": {"own": view(plain, "scheduling"), "ports": plain_ports}, "groups": {k: g["files"] for k, g in groups.items()}, "tools": tools, "whole": sorted(whole), "srcs": srcs}, facts
+    states, verdicts = [], []
+    current, facts = state(); states.append(current)
+    for mutation in corpus["mutations"]:
+        files.update(mutation["edit"])
+        current, after = state(); states.append(current)
+        verdicts.append({h: after.get(h) != facts.get(h) for h in corpus["holders"]})
+        facts = after
+    print(json.dumps({"states": states, "verdicts": verdicts}, ensure_ascii=False))
+main()

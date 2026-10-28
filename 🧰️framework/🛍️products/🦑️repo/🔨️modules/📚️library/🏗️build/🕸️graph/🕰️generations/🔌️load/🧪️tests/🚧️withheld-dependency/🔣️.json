@@ -530,14 +530,14 @@
     {
       "name": "the full graph records the declaring file of every project before it withholds",
       "start": "export async function discoverBuildGraphV1(",
-      "end": "/** 🔌️ The identity of the one builder custody",
+      "end": "/** 🔌️ The generation namespace of the graph image",
       "before": "configs[name]??=file",
       "after": "withholdDanglingTestProjectsV1({"
     },
     {
       "name": "the full graph withholds before it indexes the owner of every file",
       "start": "export async function discoverBuildGraphV1(",
-      "end": "/** 🔌️ The identity of the one builder custody",
+      "end": "/** 🔌️ The generation namespace of the graph image",
       "before": "withholdDanglingTestProjectsV1({",
       "after": "const ownerOf=createProjectFileIndexV1(projects)"
     },

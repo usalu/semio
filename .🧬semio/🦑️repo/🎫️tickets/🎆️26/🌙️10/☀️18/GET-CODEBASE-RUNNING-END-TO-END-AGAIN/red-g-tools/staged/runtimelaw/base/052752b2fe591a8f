@@ -1,0 +1,44 @@
+import{lstatSync,readdirSync,readFileSync}from"node:fs";
+import{dirname,join,relative,resolve,sep}from"node:path";
+import{discoverProcessTestFilesV1,expandProcessTestSuiteV1,processTestCoverageV1,processTestProtocolV1,readProcessTestTableV1,type ProcessTestTableV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🟦️.ts";
+import table from"./🔣️.json"with{type:"json"};
+
+/** 🗂️ The module root every file of the build route table is relative to. */
+export const buildTestRootV1:string=resolve(import.meta.dir,"..");
+/** 📖️ Reads the closed build route table under the process module's route schema: every test file of the build library belongs to exactly one suite, every suite is run by the project target `test-<id>`, and each test file runs in its own process. @see ../../⚡️caching/🗂️suites/🟦️.ts */
+export function readBuildTestTableV1(value:unknown=table):ProcessTestTableV1{return readProcessTestTableV1(value);}
+/** ⚖️ Compares the build route table with the test files of the build library: unrouted, duplicated, name-filtered, missing and stale-helper entries. */
+export function buildTestCoverageV1(declared:ProcessTestTableV1=readBuildTestTableV1()):ReturnType<typeof processTestCoverageV1>{return processTestCoverageV1(buildTestRootV1,declared,discoverProcessTestFilesV1(buildTestRootV1));}
+/** 🧱️ Lists every source below a `🧪️tests` directory of the build root that no route discovers as a test file. */
+const pureCandidates=():readonly string[]=>{
+ const library=new Set(discoverProcessTestFilesV1(resolve(buildTestRootV1,"..")).map(file=>resolve(buildTestRootV1,"..",file))),found:string[]=[],walk=(directory:string,inside:boolean):void=>{
+  for(const name of readdirSync(directory).sort()){
+   const path=join(directory,name),status=lstatSync(path);
+   if(status.isSymbolicLink())continue;
+   if(status.isDirectory()){if(!processTestProtocolV1.skippedDirectories.includes(name))walk(path,inside||name===processTestProtocolV1.testDirectory);continue;}
+   if(inside&&name.endsWith(processTestProtocolV1.extension)&&!library.has(path))found.push(relative(buildTestRootV1,path).split(sep).join("/"));
+  }
+ };
+ walk(buildTestRootV1,false);
+ return found;
+};
+/** 🚫️ Lists every build test file that imports a test file of the whole library for its side effects, in-module or across modules: one process receives one Original birth, so such an import runs a file that another suite already routes. */
+export function buildTestAggregationV1(pure:boolean=false):readonly string[]{
+ const library=resolve(buildTestRootV1,".."),every=new Set(discoverProcessTestFilesV1(library)),rows:string[]=[];
+ for(const file of pure?pureCandidates():discoverProcessTestFilesV1(buildTestRootV1))for(const match of readFileSync(resolve(buildTestRootV1,file),"utf8").matchAll(/(?:^|[;{}])[ \t]*import\s*["']([^"']+)["']/gmu)){
+  if(!match[1]!.startsWith("."))continue;
+  const target=relative(library,resolve(buildTestRootV1,dirname(file),match[1]!)).split(sep).join("/");
+  if(every.has(target))rows.push(file+" -> "+target);
+ }
+ return rows.sort();
+}
+
+/** 🔗️ Lists the absolute files that another route table of the library runs below the build root: a second owner of a build test file. */
+export function buildTestForeignRoutesV1(foreign:Readonly<Record<string,Readonly<{root:string;table:ProcessTestTableV1}>>>):readonly string[]{
+ const rows:string[]=[];
+ for(const[name,{root,table:other}]of Object.entries(foreign)){
+  const found=discoverProcessTestFilesV1(root);
+  for(const suite of other.suites)for(const file of expandProcessTestSuiteV1(suite,found,other)){const absolute=resolve(root,file);if(absolute.startsWith(buildTestRootV1+sep))rows.push(name+":"+suite.id+" -> "+relative(buildTestRootV1,absolute).split(sep).join("/"));}
+ }
+ return rows.sort();
+}

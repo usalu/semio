@@ -1,0 +1,31 @@
+{
+ "label": "g23-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "06:57:03",
+ "wall_s": 237.8,
+ "peak_tree_mb": 5829,
+ "peak_processes": 8,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "inferring": [
+   "1"
+  ],
+  "refreshing": [
+   "1"
+  ],
+  "published": [
+   "603",
+   "1",
+   "85"
+  ],
+  "processes": [
+   "8",
+   "7 disk cache hit, 1 internal"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

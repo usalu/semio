@@ -10,7 +10,7 @@ import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦�
 import {validateJsonSchemaSubset} from "../../../../../../../📦️packages/🟦️typescript/🧬️schema/🟦️.ts";
 import preparationSchema from "../🛠️preparation/🧬️schema/🔣️.json" with { type: "json" };
 import preparationPolicy from "../🛠️preparation/📋️policy/🔣️.json" with { type: "json" };
-import {withRepositoryCompilerStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {withRepositoryCompilerLaneV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {compilerAdmissionBudgetV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {withRepositoryCargoInputsV1,repositoryCargoNetworkV1} from "../📥️dependencies/🟦️.ts";
 
@@ -45,7 +45,7 @@ export async function runRepositoryExactCargoLaws(options:RepositoryExactCargoLa
   const {mode,profile}=repositoryExactCargoProfileV1(Object.getOwnPropertyDescriptor(invocation.capabilities,"buildMode")?.value,[options.cargoArgs??[],...options.groups.map(group=>group.cargoArgs??[])]);
   await advanceScriptInvocation(invocation, "repository:exact-cargo-selection", "loading");
   const root=getWorkspaceRoot(),network=repositoryCargoNetworkV1(invocation,root);
-  return await withRepositoryCompilerStoreV1(root,mode,control,options.env??process.env,async (store,control)=>{
+  return await withRepositoryCompilerLaneV1(root,mode,control,options.env??process.env,{crates:options.groups.map(group=>group.package)},async (store,control)=>{
   const environment:Readonly<Record<string,string|undefined>>={...store.environment,CARGO_NET_OFFLINE:String(network.offline)},artifactDirectory=store.captureDirectory;
   const selected = options.manifestPath||options.manifestPaths ? [] : cargoRepositoryPackageSelections(root, options.groups.map(group => group.package));
   const manifestPaths = Object.fromEntries(options.groups.map((group, index) => [group.package, options.manifestPaths?.[group.package]??options.manifestPath ?? join(root, selected[index]!.manifest)]));

@@ -1,0 +1,614 @@
+{
+  "version": 1,
+  "suites": [
+    {
+      "id": "windows-conditional-retirement",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/💾️storage/🪟️conditional-retirement/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "descriptor-lifetime",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🔒️leases/📁️physical/🧪️tests/📂️descriptors/🟦️.ts"
+      ]
+    },
+    {
+      "id": "process-progress",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🟦️.ts"
+      ]
+    },
+    {
+      "id": "cargo-source-admission",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/📥️source/🎟️admission/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "resource-lease-waits",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🔒️leases/⏳️wait/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "resource-lease-fairness",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🔒️leases/⚖️fairness/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "resource-lease-standing",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🔒️leases/📈️standing/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "resource-lease-standing-live",
+      "budgetMs": 600000,
+      "typecheck": "none",
+      "files": [
+        "🔒️leases/📈️standing/🧪️tests/🚦️live/🟦️.ts"
+      ]
+    },
+    {
+      "id": "resource-lease-order",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🔒️leases/🧭️order/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "resource-lease-order-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🔒️leases/🧭️order/🧪️tests/📥️processes/🟦️.ts"
+      ]
+    },
+    {
+      "id": "resource-lease-order-component-driver",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🔒️leases/🧭️order/🧪️tests/🧩️component-driver/🟦️.ts"
+      ]
+    },
+    {
+      "id": "resource-lease-order-wait-for",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🔒️leases/🧭️order/🧪️tests/🕸️wait-for/🟦️.ts"
+      ]
+    },
+    {
+      "id": "agent-sessions",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🪪️agent-sessions/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "agent-sessions-adapters",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🪪️agent-sessions/🧪️tests/🔗️adapters/🟦️.ts"
+      ]
+    },
+    {
+      "id": "resource-lease-admission",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🔒️leases/🚪️admission/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "resource-lease-writer",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🔒️leases/🧪️tests/🎟️writer/🟦️.ts"
+      ],
+      "capabilities": {
+        "artifacts": true,
+        "command": "writer"
+      }
+    },
+    {
+      "id": "exact-cargo-storage",
+      "budgetMs": 300000,
+      "typecheck": "strict",
+      "files": [
+        "🧪️testing/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts",
+        "🧪️testing/🧰️toolchain/📌️pinned/🧪️tests/🟦️.ts",
+        "🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🍎️image/🟦️.ts"
+      ],
+      "testNamePattern": "actual exact Cargo bounded|Cargo execution|Declared command tails|Pinned Rust toolchain",
+      "typecheckFiles": [
+        "🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+        "🧪️testing/🦀️cargo/🎯️exact/🛠️preparation/🧪️tests/🟦️.ts",
+        "🧪️testing/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts",
+        "🧪️testing/🧰️toolchain/📌️pinned/🧪️tests/🟦️.ts",
+        "🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🍎️image/🟦️.ts"
+      ]
+    },
+    {
+      "id": "compiler-state",
+      "budgetMs": 300000,
+      "typecheck": "strict-indexed",
+      "files": [
+        "🏗️build/🟦️typescript/🧪️tests/🟦️.ts",
+        "🏗️build/🟦️typescript/🧪️tests/🔁️incremental/🟦️.ts"
+      ]
+    },
+    {
+      "id": "runtime-environment",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🏗️build/🎛️environment/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "native-cache-descriptors",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/💾️cache/🧪️tests/🟦️.ts"
+      ],
+      "testNamePattern": "neutral Core compiler descriptor refusals"
+    },
+    {
+      "id": "native-image-observation",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤫️silence/🧪️tests/🟦️.ts"
+      ],
+      "testNamePattern": "silence corpus|observation tolerates"
+    },
+    {
+      "id": "capture",
+      "budgetMs": 15000,
+      "typecheck": "strict",
+      "files": [
+        "📥️capture/🧪️tests/🟦️.ts",
+        "📥️capture/📥️invocation/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "command",
+      "budgetMs": 300000,
+      "typecheck": "strict",
+      "files": [
+        "🧭️routing/🎛️command/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "command-boundary",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🧭️routing/🎛️command/🧪️tests/🚧️boundary/🟦️.ts"
+      ]
+    },
+    {
+      "id": "command-cold",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🧭️routing/🎛️command/🧪️tests/❄️cold/🟦️.ts"
+      ]
+    },
+    {
+      "id": "managed-build-mode",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🏗️build/🧪️tests/🏗️managed/🟦️.ts"
+      ]
+    },
+    {
+      "id": "cargo-profile-policy",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🏗️build/🧪️tests/🏗️native/🟦️.ts"
+      ],
+      "testNamePattern": "Central Cargo profile policy"
+    },
+    {
+      "id": "native-build-mode",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🏗️build/🧪️tests/🏗️native/🟦️.ts"
+      ]
+    },
+    {
+      "id": "go-build-mode",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🐹️go-build/🧪️tests/🟦️.ts",
+        "../📁️filesystem/🛡️durability/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "compiler-capacity",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🏗️build/🎟️capacity/🧪️tests/🟦️.ts",
+        "🔒️leases/📦️bounded/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "compiler-capacity-inheritance",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🏗️build/🎟️capacity/🧪️tests/🔐️inheritance/🟦️.ts",
+        "🏗️build/🎟️capacity/🧪️tests/🪆️scope/🟦️.ts"
+      ]
+    },
+    {
+      "id": "compiler-capacity-custodian",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🏗️build/🎟️capacity/🛟️custodian/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "compiler-units",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🏗️build/🎟️capacity/🧮️units/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "native-queued-cancellation",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts"
+      ],
+      "testNamePattern": "queued exclusive compiler cancellation|unit graph compilation cancellation|native build plan is schema-first|profile mode selection|unlaned same-profile Cargo jobs|the original finite caller budget"
+    },
+    {
+      "id": "cargo-target-recipe",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/🎯️recipe/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "cargo-overlap",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🏎️overlap/🟦️.ts"
+      ]
+    },
+    {
+      "id": "native-artifacts",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/🧪️tests/🟦️.ts",
+        "📦️artifacts/🏗️native-build/🧾️receipt/🧪️tests/🟦️.ts",
+        "📦️artifacts/🏗️native-build/🎰️jobserver/🧪️tests/🟦️.ts",
+        "📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🟦️.ts",
+        "📦️artifacts/🏗️native-build/📈️telemetry/🧪️tests/🟦️.ts",
+        "📦️artifacts/🏗️native-build/🗃️stage-cache/🧪️tests/🟦️.ts",
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "native-storage-platform",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧪️tests/🟦️.ts",
+        "📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🧪️tests/🟦️.ts",
+        "💾️state/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "exact-cargo-laws",
+      "budgetMs": 15000,
+      "typecheck": "strict",
+      "files": [
+        "🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",
+        "🧪️testing/🦀️cargo/🎯️exact/🛠️preparation/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "owner-context",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "files": [
+        "📋️context/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "vitest-driver",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "files": [
+        "🧪️testing/🧪️vitest/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "cargo-test-leases",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🧪️testing/🦀️cargo/🔒️lease/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "cargo-profile",
+      "budgetMs": 300000,
+      "typecheck": "strict",
+      "files": [
+        "🧪️testing/🦀️cargo/🧪️tests/🎚️mode/🟦️.ts"
+      ],
+      "testNamePattern": "original Cargo policy preserves compiler mode",
+      "typecheckFiles": [
+        "🧪️testing/🦀️cargo/🧪️tests/🟦️.ts",
+        "🧪️testing/🦀️cargo/🧪️tests/🎚️mode/🟦️.ts"
+      ]
+    },
+    {
+      "id": "cargo-driver",
+      "budgetMs": 300000,
+      "typecheck": "strict",
+      "files": [
+        "🧪️testing/🦀️cargo/🧪️tests/🟦️.ts",
+        "🧪️testing/🦀️cargo/🧪️tests/🎚️mode/🟦️.ts"
+      ]
+    },
+    {
+      "id": "test-command",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "files": [
+        "🧪️testing/🎛️execution/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "workspace",
+      "budgetMs": 120000,
+      "typecheck": "none",
+      "files": [
+        "🧭️routing/🏠️workspace/🧪️tests/🟦️.ts",
+        "../../🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧪️tests/🌱️workspace-resolution/🟦️.ts"
+      ]
+    },
+    {
+      "id": "routing",
+      "budgetMs": 15000,
+      "typecheck": "strict",
+      "files": [
+        "🧭️routing/🧪️tests/🟦️.ts",
+        "🔌️providers/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "execution-budget",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "files": [
+        "⏱️budget/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "budget",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "files": [
+        "🧪️testing/🎚️budget/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "owned-execution",
+      "budgetMs": 120000,
+      "typecheck": "none",
+      "trees": [
+        "🎛️owned-execution"
+      ]
+    },
+    {
+      "id": "cargo-build-custody",
+      "budgetMs": 720000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🔐️custody/🟦️.ts"
+      ]
+    },
+    {
+      "id": "process-tree-termination",
+      "budgetMs": 120000,
+      "typecheck": "none",
+      "files": [
+        "🪓️termination/🧪️tests/🟦️.ts",
+        "🪓️termination/🧪️tests/🪟️taskkill/🟦️.ts"
+      ]
+    },
+    {
+      "id": "build-facets",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🏗️build/🌡️host-capacity",
+        "🏗️build/🗣️language",
+        "🏗️build/📤️output",
+        "🏗️build/🗃️state",
+        "🏗️build/🎚️mode",
+        "🏗️build/🧰️toolchains"
+      ]
+    },
+    {
+      "id": "module-basics",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "💾️state",
+        "📖️texts",
+        "📋️context",
+        "🧪️tests"
+      ]
+    },
+    {
+      "id": "native-storage",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "📦️artifacts/🏗️native-build/💾️storage"
+      ]
+    },
+    {
+      "id": "native-build",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "📦️artifacts/🏗️native-build"
+      ]
+    },
+    {
+      "id": "artifact-owners",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "📦️artifacts/💾️cache",
+        "📦️artifacts/📤️publication",
+        "📦️artifacts/🔢️checksum",
+        "📦️artifacts/🕸️wasm-build",
+        "📦️artifacts/🗃️archive",
+        "📦️artifacts/🗂️files",
+        "📦️packages"
+      ]
+    },
+    {
+      "id": "leases",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🔒️leases"
+      ],
+      "capabilities": {
+        "artifacts": true
+      }
+    },
+    {
+      "id": "testing",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🧪️testing"
+      ],
+      "capabilities": {
+        "artifacts": true
+      }
+    },
+    {
+      "id": "routing-owners",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🧭️routing"
+      ]
+    },
+    {
+      "id": "tools",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🧰️tools"
+      ]
+    },
+    {
+      "id": "cargo-workspace",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🦀️cargo-workspace"
+      ]
+    },
+    {
+      "id": "cargo-build-lease",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "function": {
+        "module": "📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🟦️.ts",
+        "export": "proveCargoBuildLeasesV1"
+      }
+    },
+    {
+      "id": "native-artifact-publication",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "function": {
+        "module": "📦️artifacts/🏗️native-build/🧪️tests/📦️publication/🟦️.ts",
+        "export": "testCargoArtifactPublication"
+      }
+    },
+    {
+      "id": "laws-runtime-termination",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../⚙️runtime/🧪️tests/🛑️termination/🟦️.ts"
+      ]
+    },
+    {
+      "id": "laws-io-control-retirement",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🚪️io/⏱️control/♻️retirement/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "laws-filesystem-observation",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🔒️busy/🟦️.ts",
+        "../📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🎲️fuzz/🟦️.ts",
+        "../📁️filesystem/🧾️observation/🧪️tests/🎛️control/🟦️.ts"
+      ]
+    }
+  ],
+  "codeSuites": [
+    "resource-leases",
+    "artifact-publication",
+    "artifact-files"
+  ],
+  "helpers": [
+    "🧪️testing/📥️invocation/🧪️tests/🧫️harness/🟦️.ts"
+  ]
+}

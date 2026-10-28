@@ -8,6 +8,7 @@ use serde_json::Value;
 use std::time::Duration;
 
 pub const SLOW: Duration = Duration::from_secs(25);
+pub const SCALE_ENVIRONMENT: &str = "SEMIO_TEST_TIME_SCALE";
 pub const ROWS: u16 = 34;
 pub const COLS: u16 = 120;
 
@@ -93,3 +94,21 @@ pub fn assert_repaint_consistent(term: &mut Terminal, volatile: &[&str]) {
     }
     assert!(differing.is_empty(), "the incrementally painted screen differs from a full repaint (stale cells):\n{}", differing.join("\n"));
 }
+
+/// 🧮 The one-minute figure of a load average report: Linux `0.52 0.58 0.59 1/467 12345`, macOS `{ 15.91 13.70 14.85 }`; `None` when it is no non-negative number.
+pub fn parse_load_average(report: &str) -> Option<f64> {
+    report.trim_start_matches(|character: char| character == '{' || character.is_whitespace()).split_whitespace().next()?.parse::<f64>().ok().filter(|load| load.is_finite() && *load >= 0.0)
+}
+
+/// ⚖️ How many times slower than a quiet host a host with `load` runnable tasks on `cores` logical cores answers: `load / cores` within 1..=16, 1 without a load figure.
+pub fn time_scale(load: Option<f64>, cores: usize) -> f64 { load.map_or(1.0, |load| (load / cores.max(1) as f64).clamp(1.0, 16.0)) }
+
+/// 🌡️ The scale of this host right now: `SEMIO_TEST_TIME_SCALE` (a number of at least 1) when set, else the load average of `/proc/loadavg` or `sysctl -n vm.loadavg` over the logical cores; 1 where the host reports none (Windows).
+pub fn host_scale() -> f64 {
+    if let Some(forced) = std::env::var(SCALE_ENVIRONMENT).ok().and_then(|text| text.trim().parse::<f64>().ok()).filter(|scale| scale.is_finite() && *scale >= 1.0) { return forced; }
+    let report = std::fs::read_to_string("/proc/loadavg").ok().or_else(|| std::process::Command::new("sysctl").args(["-n", "vm.loadavg"]).output().ok().filter(|answer| answer.status.success()).map(|answer| String::from_utf8_lossy(&answer.stdout).into_owned()));
+    time_scale(report.as_deref().and_then(parse_load_average), std::thread::available_parallelism().map_or(1, usize::from))
+}
+
+/// ⏱️ A quiet-host time budget stretched by the scale of this host: an interaction that must answer within one second on an idle machine may take `scale` seconds on a loaded one, the pass/fail question stays "does it stay responsive".
+pub fn scaled(budget: Duration) -> Duration { budget.mul_f64(host_scale()) }

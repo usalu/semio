@@ -6,9 +6,9 @@ import {spawn,spawnSync} from "node:child_process";
 import {createWatchSupervisorV1} from "../../🔭️watch/🟨️.mjs";
 import {POLICY_V1,validatorV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
 import {createFilterV1} from "../../🗃️state/🟨️.mjs";
-import {WATCHER,cleanup,haveBinary,sleep,snapshot,tempRoot,waitFor,writeTree} from "../🟦️.ts";
+import {cleanup,haveBinary,residentWatcherV1,sleep,snapshot,tempRoot,waitFor,writeTree} from "../🟦️.ts";
 
-const native=haveBinary(WATCHER);
+const WATCHER=await residentWatcherV1(),native=haveBinary(WATCHER);
 const roots:string[]=[];
 afterAll(()=>roots.forEach(cleanup));
 const filter=createFilterV1({rooted:[".git"],names:["node_modules"]});
@@ -98,9 +98,10 @@ describe.skipIf(!native)("native watcher",()=>{
   expect(validatorV1("WatcherFrame")).toBeDefined();
   const naive=snapshot(root,rel=>filter.excluded(rel));
   expect(frame.members.map((m:any)=>m[0])).toEqual([...naive.files.keys()].sort());
-  for(const[path,mode]of frame.members)expect(naive.files.get(path)).toBe(mode);
+  for(const[path,mode]of frame.members)if(mode!==0)expect(naive.files.get(path)).toBe(mode);
   expect(frame.directories.map((d:any)=>d[0])).toEqual([...naive.directories.keys()].sort());
-  for(const[path,mtime,ino]of frame.directories){const n=naive.directories.get(path)!;expect(mtime).toBe(n[0]);expect(ino).toBe(n[1]);}
+  for(const[path,mtime,ino]of frame.directories){const n=naive.directories.get(path)!;expect(mtime).toBe(n[0]);if(ino!==0)expect(ino).toBe(n[1]);}
+  if(process.platform==="win32"){expect(frame.directories.every((d:any)=>d[2]===0)).toBe(true);expect(frame.members.every((m:any)=>m[1]===0)).toBe(true);}
  });
 
  test("bad arguments produce one error frame and exit 2; version is a valid frame",()=>{

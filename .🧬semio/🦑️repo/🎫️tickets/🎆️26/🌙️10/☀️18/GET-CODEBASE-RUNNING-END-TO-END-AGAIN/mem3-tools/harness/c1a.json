@@ -1,0 +1,1 @@
+[{"suffix": "👁️observation/🟨️.mjs", "find": "value=row.kind+\"\\0\"+row.path+(row.kind===\"analysis\"?\"\\0\"+row.fact?.provider:\"\");observationIdentities.set(row,value);}", "replace": "value=row.kind+\"\\0\"+row.path+(row.kind===\"analysis\"?\"\\0\"+row.fact?.provider:\"\");}"}]

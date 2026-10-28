@@ -41,13 +41,13 @@ test("the digest is the identity of the contract, keyed by the project interpret
 });
 
 test("the adapter's action key takes the native toolchain digest for members only", async () => {
-  const source = await readFile(new URL("../../📜️script.ts", import.meta.url), "utf8"), tree = ts.createSourceFile("bazel.ts", source, ts.ScriptTarget.Latest, true), node = tree.statements.find(row => ts.isFunctionDeclaration(row) && row.name?.text === "taskFingerprint");
+  const source = await readFile(new URL("../../📜️script.ts", import.meta.url), "utf8"), tree = ts.createSourceFile("bazel.ts", source, ts.ScriptTarget.Latest, true), node = tree.statements.find(row => ts.isFunctionDeclaration(row) && row.name?.text === "bazelTaskFingerprintHeadV1");
   if (!node) throw Error("Bazel fingerprint implementation required");
-  const code = ts.transpileModule(node.getText(tree).replace(/^export /u, "") + ";return taskFingerprint;", {compilerOptions: {target: ts.ScriptTarget.ES2022}}).outputText;
+  const code = ts.transpileModule(node.getText(tree).replace(/^export /u, "") + ";return bazelTaskFingerprintHeadV1;", {compilerOptions: {target: ts.ScriptTarget.ES2022}}).outputText;
   const fingerprint = async (row: (typeof corpus.classes)[number], digest: string) => {
     const bindings = {runtimeIdentityV1, createHash, randomUUID, join, bazelCargoClassV1: () => undefined, bazelCargoToolchainDigestV1: async () => "cargo", bazelGoClassV1: () => false, bazelGoToolchainDigestV1: async () => "go", bazelNativeToolchainClassV1: native.bazelNativeToolchainClassV1, bazelNativeToolchainDigestV1: () => digest, process: {...process, env: {}}, bazelTaskInputsV1: () => [], issueBazelTaskEnvironmentV1: () => ({SEMIO_BUILD_MODE: "prototype"}), bazelTaskBaseEnvironmentV1: () => ({}), checkScriptInvocation: () => undefined, bazelSourceIdentityV1: async () => "source", captureOwnedCommandV1: async () => ""};
     const run = Function(...Object.keys(bindings), code)(...Object.values(bindings)), definition = {execution: {kind: row.kind, ...("command" in row ? {command: row.command} : {})}};
-    return run("/root", {}, {id: "p:" + row.target, project: row.project, target: row.target, root: row.root, args: [], definition}, ["a.txt"], new Map(), {control: {signal: new AbortController().signal}}, {}, true, "implementation", undefined) as Promise<string>;
+    return run("/root", {}, {id: "p:" + row.target, project: row.project, target: row.target, root: row.root, args: [], definition}, new Map(), {control: {signal: new AbortController().signal}}, {}, true, "implementation", undefined) as Promise<string>;
   };
   for (const row of corpus.classes.filter(candidate => candidate.kind === "command")) {
     const moved = (await fingerprint(row, "one")) !== (await fingerprint(row, "two"));

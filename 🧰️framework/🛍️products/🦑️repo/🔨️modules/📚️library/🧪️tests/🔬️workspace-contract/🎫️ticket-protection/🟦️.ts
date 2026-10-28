@@ -39,10 +39,10 @@ describe("active ticket clean protection", () => {
       expect(cleanRemovalProtection(root, vector.candidate, view).length === 0).toBe(vector.allowed);
     }
     const parent = fixture.tickets.find((ticket: { path: string }) => ticket.path.endsWith("/NESTED")).path;
-    const candidates = [{ kind: "gitignore" as const, path: parent, bytes: 99 }, { kind: "ticket-dir" as const, path: `${parent}/target`, bytes: 11 }];
+    const candidates = [{ kind: "gitignore" as const, path: parent, bytes: 99 }, { kind: "ticket-generated" as const, path: `${parent}/target`, bytes: 11 }];
     expect(cleanProjectRemovals(root, candidates, [], view).map((row) => row.path)).toEqual([`${parent}/target`]);
     const allowed = `${fixture.reopened}/target`;
-    expect(cleanProjectRemovals(root, [{ kind: "ticket-dir", path: allowed, bytes: 11 }], [], view)).toHaveLength(1);
+    expect(cleanProjectRemovals(root, [{ kind: "ticket-generated", path: allowed, bytes: 11 }], [], view)).toHaveLength(1);
     add(`${fixture.reopened}/🎫️ticket.json`, "file", '{"status":"open"}');
     expect(cleanRemovalProtection(root, allowed, view)).toContain(resolve(root, fixture.reopened));
     add(`${fixture.reopened}/🎫️ticket.json`, "file", '{"status":"closed"}');

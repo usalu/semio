@@ -25,6 +25,40 @@
       "python3"
      ],
      "ancestryDepth": 16,
+     "ancestry": {
+      "windows": {
+       "libraries": {
+        "kernel": "kernel32.dll",
+        "nt": "ntdll.dll"
+       },
+       "architectures": [
+        "x64",
+        "arm64"
+       ],
+       "pointerBytes": 8,
+       "snapshotProcesses": 2,
+       "queryLimitedInformation": 4096,
+       "invalidHandle": "18446744073709551615",
+       "entry": {
+        "bytes": 568,
+        "processId": 8,
+        "parentId": 32,
+        "name": 44,
+        "nameUnits": 260
+       },
+       "commandLine": {
+        "informationClass": 60,
+        "headerBytes": 16,
+        "capacityBytes": 65568
+       },
+       "fileTime": {
+        "ticksPerSecond": 10000000,
+        "microsecondTicks": 10,
+        "unixEpochTicks": "116444736000000000",
+        "maximumUnixSeconds": "253402300799"
+       }
+      }
+     },
      "connectionNameCharacters": 40,
      "digestCharacters": 8,
      "clients": [
@@ -157,7 +191,7 @@
      "capacitySession": "SESSION {id}  agent {agent}  {grants} grant(s), {reserved} MB reserved, {waiters} waiting  budget {percent}% (weight {weight})"
     },
     "de": {
-     "opened": "Agent-Sitzung {id} für Agent {agent} ({client}, {origin}) geöffnet: Cargo-Bahn {lane}, Testwurzel {tests}.",
+     "opened": "Agent-Sitzung {id} für Agent {agent} ({client}, {origin}) geöffnet: Cargo-Lane {lane}, Testwurzel {tests}.",
      "attached": "Agent-Sitzung {id} von Agent {agent} ({client}) wird verwendet.",
      "closed": "Agent-Sitzung {id} geschlossen: {released} Ressource(n) freigegeben, {kept} behalten.",
      "closeLive": "Agent-Sitzung {id} ist noch aktiv ({state}, Eigentümerprozess {pid}); mit --force schließen oder warten, bis ihr Prozessbaum beendet ist.",
@@ -176,7 +210,7 @@
      "field.origin": "Erkannt durch",
      "field.state": "Zustand",
      "field.owner": "Eigentümerprozess",
-     "field.lane": "Cargo-Bahn",
+     "field.lane": "Cargo-Lane",
      "field.bazel": "Bazel-Slot-Präferenz",
      "field.nx": "Nx-Daemon-Namensraum",
      "field.tests": "Test-Sandbox-Wurzel",
@@ -191,7 +225,7 @@
      "field.leases": "Gehaltene Leases",
      "field.grants": "Kapazitätszusagen",
      "field.sandboxes": "Test-Sandboxes",
-     "budget": "{percent}% von {live} aktiven Sitzung(en) (Gewicht {weight})",
+     "budget": "{percent} % von {live} aktiven Sitzung(en) (Gewicht {weight})",
      "capability": "{scopes}; Projekte: {projects}; läuft ab: {expires}",
      "everything": "alle",
      "never": "nie",
@@ -208,7 +242,7 @@
      "origin.default": "Standard",
      "ago": "vor {seconds} s",
      "capacityHeader": "Agent-Sitzungen mit Kapazität: {count}.",
-     "capacitySession": "SITZUNG {id}  Agent {agent}  {grants} Zusage(n), {reserved} MB reserviert, {waiters} wartend  Budget {percent}% (Gewicht {weight})"
+     "capacitySession": "SITZUNG {id}  Agent {agent}  {grants} Zusage(n), {reserved} MB reserviert, {waiters} wartend  Budget {percent} % (Gewicht {weight})"
     }
    }
   },

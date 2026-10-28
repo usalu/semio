@@ -1,0 +1,122 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts": {
+  "file": "00.ts",
+  "base": "c4a7bad641015de96b159945bd8158a3804598628f1e242e06ccbfef5391ad9f",
+  "new": "1203c58e43742088650a8c3d79155a4e3b571983ff4ddc3b13fe01d9a3a9b400"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🟦️.ts": {
+  "file": "01.ts",
+  "base": "5d91a7b99bed22d7ac8ec04dcc9e3ac93d17789118022d2caa6a28f2f1086cc3",
+  "new": "f8aa44c84f334295a98ad9342eca005ffa609fb92e775b296108102931a1111c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🚏️marks/🟦️.ts": {
+  "file": "02.ts",
+  "base": "03ff110b5f6c97e4eee2c6f80425a94e2d77a528989ccad376338710dbc4357d",
+  "new": "2109d1ea66a1c3a57bafffbe8eb28fdac1b129a96b0a7bf10265138c33e4df37"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌡️host-capacity/🟦️.ts": {
+  "file": "03.ts",
+  "base": "9896f0b42582875eb1424f6f0a79b157fea563c9fcb4ca39dd9c431ae7422913",
+  "new": "1f4dafe7041be989006a3816c55d9c118af1ef3ceeaf62c74e6e6209f8d38898"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "04.ts",
+  "base": "c5c98c536a3d7e0e16944b89dc38c672db7076e806ef1f3ac8d4123d457604b2",
+  "new": "4c505584ffd56fbfa5599d4a1cfead2879ae6cef095b8539da017ec385926c16"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🎬️executor/🟦️.ts": {
+  "file": "05.ts",
+  "base": "4456a7e5255ff2074581c4ff3f0886fd71154cebeaaf791e53cc38ca76b3ce28",
+  "new": "165057a73ce40ae9b1a52aa7db13222c7ff178a4ed75a822a24ae245d84ffeb8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json": {
+  "file": "06.json",
+  "base": "3c4486ead11809da945e5bdcfe860e608cef99ca2615fd9f40d1a356dd8bb93c",
+  "new": "a29899dd9e9a3b5a95c3abad88a7721b60315c7c820b856e499abc7258c49f6d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌡️host-capacity/🧪️tests/🧷️births/🟦️.ts": {
+  "file": "07.ts",
+  "base": null,
+  "new": "77a05ddd3071841bd8c94ccd6ca8df538208f5c349f61d03d63ec6cd6c0e99f8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️control/🟦️.ts": {
+  "file": "08.ts",
+  "base": "b5726e07d0361eb184804067d33cb83d26e36204018b5c58e119ee447f35ed21",
+  "new": "11e033a945175e18f24e68f02297fdab90f738097741c9e0dd00257055a608c9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌡️host-capacity/🧪️tests/🧷️births/🥒️.feature": {
+  "file": "09.feature",
+  "base": null,
+  "new": "40dcd23c5198824a4808d708888fae8bb7dc70fad453ecea8098a38f946e50e0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌡️host-capacity/🧪️tests/🚦️width/🟦️.ts": {
+  "file": "10.ts",
+  "base": null,
+  "new": "4a47e69651916aecc5c517982d36ed251ae01d0bc3f83a70386b1b0e4a2b5c30"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌡️host-capacity/🧪️tests/🚦️width/🥒️.feature": {
+  "file": "11.feature",
+  "base": null,
+  "new": "7e0e11b4821b9402daeb28ad8af929945e9d16c70593d3138d4855185d5236b0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌡️host-capacity/🧪️tests/🚦️width/🐍️oracle/🐍️.py": {
+  "file": "12.py",
+  "base": null,
+  "new": "1e486f5747eb33bef22016ad23f96fc96e07b94f564ac226b02083d13df6a272"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌡️host-capacity/🧪️tests/🚦️width/🧫️fixtures/🔣️.json": {
+  "file": "13.json",
+  "base": null,
+  "new": "0d39a36b5271f59340684524c55a2a8de676b567ebec2b5231f44d132e75d580"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🚪️gate/🟦️.ts": {
+  "file": "14.ts",
+  "base": "d762e0ed0ade145fdeb0f2d85717d12e05366ce058386276e5703b9aa014c339",
+  "new": "a8290d12bb196fc1bc66e334053e0cf12e840cdcf373296045cedd6aeb2fec7e"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/👥️agents/🟦️.ts": {
+  "file": "15.ts",
+  "base": "a50c8969e9adcd3aabd97daa625a2a5314801f6402669ca13a99d3d07c77233a",
+  "new": "594292620fb6ffb2d83b43faf2121f04f178bdd23d7a925499437b37be63e3b8"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/👥️agents/🥒️.feature": {
+  "file": "16.feature",
+  "base": "a5b028f0e8668b7e582829a46ce09830c6b3be5451d1d6a318ee39497a8b8628",
+  "new": "513a0688a739fe7feebcefc8e6458e9af94452ac5d0a11623faa6d7cde0f1871"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🤫️quiet/🟦️.ts": {
+  "file": "17.ts",
+  "base": null,
+  "new": "d2d543f0badb944103b18b3c57f730a86a586e158e3044b81a69401524103bff"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🤫️quiet/🥒️.feature": {
+  "file": "18.feature",
+  "base": null,
+  "new": "50698fb78c42e1aa50c06f906a96bd3f638e5a9709800263f51120cd67aa26ac"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🔼️upgrade-before-custody/🟦️.ts": {
+  "file": "19.ts",
+  "base": "bc91183e7c60815a25574343bdd4a3a343550aaa9935b78d3716ff9b24fc3f79",
+  "new": "bb03fc56cf2acaaf3a843218542c042aeec21b2f12d707f28b8b8ab2c4f18f8f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🤫️quiet/🟦️.ts": {
+  "file": "20.ts",
+  "base": null,
+  "new": "73fd8f0dfc14ebb2697cc4e190024453811bf7e6fc7c6a89fa370fc27d49e86f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🤫️quiet/🥒️.feature": {
+  "file": "21.feature",
+  "base": null,
+  "new": "6fb05f1c54f1125c6668f55f08d0679bfb065b3a4c367ceb4591895be58a1498"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🤫️quiet/🐍️oracle/🐍️.py": {
+  "file": "22.py",
+  "base": null,
+  "new": "10c6d30781b0b60a8c71625744e06af28b7ddcf1e7a8a33578cc2e975a2c8ae9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🤫️quiet/🧫️fixtures/🔣️.json": {
+  "file": "23.json",
+  "base": null,
+  "new": "1aa32cb4e514d6c2e14164f7d410fbf141c19e11cc8e0d88ad9e4aed25840098"
+ }
+}

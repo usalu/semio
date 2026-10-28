@@ -9,6 +9,7 @@ import (
 	fmt "fmt"
 	os "os"
 	filepath "path/filepath"
+	reflect "reflect"
 	strings "strings"
 	testing "testing"
 	time "time"
@@ -419,40 +420,56 @@ func writeSparseTicketArtifact(t *testing.T, path string, size int64) {
 	}
 }
 
-func TestFinishTicketPurgesOversizedArtifacts(t *testing.T) {
-	tmpDir, ticketJSON := setupTicketDir(t)
-	sandbox.BindRoot(t, tmpDir)
-
-	ticketDir := filepath.Dir(ticketJSON)
-	now := time.Now().UTC()
-	ticket := &model.Ticket{
-		Year:       now.Year() % 100,
-		Month:      int(now.Month()),
-		Day:        now.Day(),
-		Slug:       "TEST-TICKET",
-		Title:      "Test Ticket",
-		Status:     model.TicketStatusOpen,
-		FolderPath: ticketDir,
-		JsonPath:   ticketJSON,
-		Interactions: []model.Interaction{{
-			Kind: "ticket.open",
-			Date: "2026-01-01 00:00:00",
-		}},
-	}
-
-	const mib = 1024 * 1024
-	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "large.bin"), 5*mib+1)
-	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "exact-5mb.bin"), 5*mib)
-	writeSparseTicketArtifact(t, filepath.Join(ticketDir, ".cache.bin"), 5*mib+1)
-	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "huge-dir", "blob.bin"), 10*mib+1)
-	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "small-dir", "small.bin"), 1*mib)
-
-	testFile := "changed.txt"
-	if err := os.WriteFile(filepath.Join(tmpDir, testFile), []byte("x"), 0644); err != nil {
+func ageTicketArtifact(t *testing.T, path string) {
+	t.Helper()
+	old := time.Now().Add(-2 * time.Hour)
+	if err := os.Chtimes(path, old, old); err != nil {
 		t.Fatal(err)
 	}
+}
 
-	if err := FinishTicket(ticket, "Summary", []string{testFile}, true, false); err != nil {
+func finishableTicket(t *testing.T) (string, string, *model.Ticket) {
+	t.Helper()
+	tmpDir, ticketJSON := setupTicketDir(t)
+	sandbox.BindRoot(t, tmpDir)
+	now := time.Now().UTC()
+	ticket := &model.Ticket{
+		Year:         now.Year() % 100,
+		Month:        int(now.Month()),
+		Day:          now.Day(),
+		Slug:         "TEST-TICKET",
+		Title:        "Test Ticket",
+		Status:       model.TicketStatusOpen,
+		FolderPath:   filepath.Dir(ticketJSON),
+		JsonPath:     ticketJSON,
+		Interactions: []model.Interaction{{Kind: "ticket.open", Date: "2026-01-01 00:00:00"}},
+	}
+	if err := os.WriteFile(filepath.Join(tmpDir, "changed.txt"), []byte("x"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	return tmpDir, ticketJSON, ticket
+}
+
+func TestFinishTicketPurgesOnlyOversizedGeneratedOutput(t *testing.T) {
+	_, ticketJSON, ticket := finishableTicket(t)
+	ticketDir := filepath.Dir(ticketJSON)
+	generated := filepath.Join(ticketDir, TicketGeneratedDirectory)
+
+	const mib = 1024 * 1024
+	artifacts := map[string]int64{
+		filepath.Join(generated, "large.bin"):                5*mib + 1,
+		filepath.Join(generated, "exact-5mb.bin"):            5 * mib,
+		filepath.Join(generated, "huge-dir", "blob.bin"):     10*mib + 1,
+		filepath.Join(generated, "small-dir", "small.bin"):   1 * mib,
+		filepath.Join(ticketDir, "authored-large.bin"):       5*mib + 1,
+		filepath.Join(ticketDir, "authored-dir", "blob.bin"): 10*mib + 1,
+	}
+	for path, size := range artifacts {
+		writeSparseTicketArtifact(t, path, size)
+		ageTicketArtifact(t, path)
+	}
+
+	if err := FinishTicket(ticket, "Summary", []string{"changed.txt"}, true, false); err != nil {
 		t.Fatalf("FinishTicket failed: %v", err)
 	}
 	if ticket.Status != model.TicketStatusClosed {
@@ -472,65 +489,73 @@ func TestFinishTicketPurgesOversizedArtifacts(t *testing.T) {
 		}
 	}
 
-	assertNotExists(filepath.Join(ticketDir, "large.bin"))
-	assertNotExists(filepath.Join(ticketDir, ".cache.bin"))
-	assertNotExists(filepath.Join(ticketDir, "huge-dir"))
-	assertExists(filepath.Join(ticketDir, "exact-5mb.bin"))
-	assertExists(filepath.Join(ticketDir, "small-dir", "small.bin"))
+	assertNotExists(filepath.Join(generated, "large.bin"))
+	assertNotExists(filepath.Join(generated, "huge-dir"))
+	assertExists(filepath.Join(generated, "exact-5mb.bin"))
+	assertExists(filepath.Join(generated, "small-dir", "small.bin"))
+	assertExists(filepath.Join(ticketDir, "authored-large.bin"))
+	assertExists(filepath.Join(ticketDir, "authored-dir", "blob.bin"))
 	assertExists(ticketJSON)
 }
 
-func TestPurgeAllOversizedTicketArtifacts(t *testing.T) {
+func TestFinishTicketLeavesGeneratedOutputOfALiveWriterAlone(t *testing.T) {
+	_, ticketJSON, ticket := finishableTicket(t)
+	generated := filepath.Join(filepath.Dir(ticketJSON), TicketGeneratedDirectory)
+	const mib = 1024 * 1024
+	writeSparseTicketArtifact(t, filepath.Join(generated, "old.bin"), 6*mib)
+	ageTicketArtifact(t, filepath.Join(generated, "old.bin"))
+	writeSparseTicketArtifact(t, filepath.Join(generated, "lane.log"), 1)
+
+	if err := FinishTicket(ticket, "Summary", []string{"changed.txt"}, true, false); err != nil {
+		t.Fatalf("FinishTicket failed: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(generated, "old.bin")); err != nil {
+		t.Fatalf("a fresh writer must keep the whole generated folder: %v", err)
+	}
+}
+
+func TestPurgeClosedTicketsNeverTouchesAnOpenTicket(t *testing.T) {
 	tmpDir := t.TempDir()
 	sandbox.BindRoot(t, tmpDir)
-
-	now := time.Now().UTC()
-	year := now.Year() % 100
-	month := int(now.Month())
-	day := now.Day()
-	slug := "TEST-TICKET"
-	ticketDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎫️tickets", model.FormatYearDir(year), model.FormatMonthDir(month), model.FormatDayDir(day), slug)
-	if err := os.MkdirAll(ticketDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-	ticketJSON := filepath.Join(ticketDir, "🎫️ticket.json")
-	if err := os.WriteFile(ticketJSON, []byte(`{"title":"Test Ticket","goal":"TEST/GOAL"}`), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	ticket := &model.Ticket{
-		Year:       year,
-		Month:      month,
-		Day:        day,
-		Slug:       slug,
-		Title:      "Test Ticket",
-		Status:     model.TicketStatusOpen,
-		FolderPath: ticketDir,
-		JsonPath:   ticketJSON,
-	}
-	if err := SaveTicket(ticket); err != nil {
-		t.Fatal(err)
-	}
-
 	const mib = 1024 * 1024
-	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "large.bin"), 5*mib+1)
-	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "huge-dir", "blob.bin"), 10*mib+1)
+	folders := map[string]string{}
+	for slug, status := range map[string]string{"OPEN-TICKET": "open", "CLOSED-TICKET": "closed"} {
+		folder := filepath.Join(GetTicketsDir(), model.FormatYearDir(26), model.FormatMonthDir(10), model.FormatDayDir(18), slug)
+		if err := os.MkdirAll(folder, 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(folder, "🎫️ticket.json"), []byte(`{"status":"`+status+`"}`), 0644); err != nil {
+			t.Fatal(err)
+		}
+		for _, name := range []string{"🗑️generated/blob.bin", "🪓️monolith-split/blob.bin"} {
+			path := filepath.Join(folder, filepath.FromSlash(name))
+			writeSparseTicketArtifact(t, path, 11*mib)
+			ageTicketArtifact(t, path)
+		}
+		folders[slug] = folder
+	}
 
-	count, err := PurgeAllOversizedTicketArtifacts()
+	dry, err := PurgeClosedTicketGeneratedOutput(PurgeOptions{Root: workspace.GetRootDir(), TicketsDir: GetTicketsDir()})
 	if err != nil {
-		t.Fatalf("PurgeAllOversizedTicketArtifacts failed: %v", err)
+		t.Fatal(err)
 	}
-	if count != 1 {
-		t.Fatalf("purged ticket count = %d, want 1", count)
+	if len(dry.Removals) != 1 || len(dry.Skips) != 1 || dry.Skips[0].Reason != "not-closed" {
+		t.Fatalf("unexpected plan %+v", dry)
 	}
-	if _, err := os.Stat(filepath.Join(ticketDir, "large.bin")); !os.IsNotExist(err) {
-		t.Fatalf("expected deleted large.bin")
+	if _, err := os.Stat(filepath.Join(folders["CLOSED-TICKET"], "🗑️generated", "blob.bin")); err != nil {
+		t.Fatalf("a dry run removed a file: %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(ticketDir, "huge-dir")); !os.IsNotExist(err) {
-		t.Fatalf("expected deleted huge-dir")
+	if _, err := PurgeClosedTicketGeneratedOutput(PurgeOptions{Root: workspace.GetRootDir(), TicketsDir: GetTicketsDir(), Apply: true}); err != nil {
+		t.Fatal(err)
 	}
-	if _, err := os.Stat(ticketJSON); err != nil {
-		t.Fatalf("expected kept ticket.json: %v", err)
+	for _, kept := range []string{"OPEN-TICKET/🗑️generated/blob.bin", "OPEN-TICKET/🪓️monolith-split/blob.bin", "CLOSED-TICKET/🪓️monolith-split/blob.bin"} {
+		slug, rest, _ := strings.Cut(kept, "/")
+		if _, err := os.Stat(filepath.Join(folders[slug], filepath.FromSlash(rest))); err != nil {
+			t.Fatalf("expected kept: %s (%v)", kept, err)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(folders["CLOSED-TICKET"], "🗑️generated", "blob.bin")); !os.IsNotExist(err) {
+		t.Fatalf("expected the closed ticket's old generated blob to be removed")
 	}
 }
 
@@ -552,7 +577,7 @@ func TestResolvePlanSourceRefusesCursorPlanID(t *testing.T) {
 }
 
 func TestResolvePlanSourceKiroSpecID(t *testing.T) {
-	tmp := t.TempDir()
+	tmp := workspace.CanonicalPath(t.TempDir())
 	specDir := filepath.Join(tmp, ".kiro", "specs", "my-spec")
 	if err := os.MkdirAll(specDir, 0o755); err != nil {
 		t.Fatal(err)
@@ -796,11 +821,14 @@ func TestTicketDocumentsAreReadOnlyInTheCurrentSchema(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if ticket.Description != "" || len(ticket.Agents) != 0 {
-		t.Fatalf("a retired prompt or agents member must not be read: %+v", ticket)
+	if ticket.Description != "" {
+		t.Fatalf("a retired prompt member must not be read: %+v", ticket)
 	}
-	if len(ticket.Sessions) != 1 || ticket.Sessions[0] != "kept" {
-		t.Fatalf("only text session ids are read, got %v", ticket.Sessions)
+	if len(ticket.Agents) != 1 || ticket.Agents[0].Session != "agent-session" {
+		t.Fatalf("the durable agents member is read, got %+v", ticket.Agents)
+	}
+	if !reflect.DeepEqual(ticket.Sessions, []string{"kept", "agent-session"}) {
+		t.Fatalf("only text session ids and agent sessions are read, got %v", ticket.Sessions)
 	}
 	if len(ticket.Interactions) != 1 || ticket.Interactions[0].Date != "2026-02-11 20:37:49" {
 		t.Fatalf("interactions are read as written, got %+v", ticket.Interactions)

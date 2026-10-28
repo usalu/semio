@@ -154,35 +154,6 @@ def closed(folder):
     return isinstance(doc, dict) and doc.get("status") == "closed"
 
 
-def size_removals(folder, prefixes):
-    out = []
-
-    def node(a):
-        if under(a, prefixes):
-            return None
-        if os.path.islink(a) or os.path.isfile(a):
-            return (a, False, os.lstat(a).st_size, [])
-        kids = [k for k in (node(os.path.join(a, n)) for n in sorted(os.listdir(a))) if k]
-        return (a, True, sum(k[2] for k in kids), kids)
-
-    def visit(n):
-        for k in n[3]:
-            visit(k)
-        if not n[1] and n[2] > corpus["thresholds"]["ticketFile"]:
-            out.append({"kind": "ticket-file", "path": rel(n[0]), "bytes": n[2]})
-        elif n[1] and n[2] > corpus["thresholds"]["ticketDir"]:
-            out.append({"kind": "ticket-dir", "path": rel(n[0]), "bytes": n[2]})
-    tree = node(folder)
-    for k in (tree[3] if tree else []):
-        visit(k)
-    return sorted(out, key=lambda r: r["path"])
-
-
-for c in corpus["sizeRemovals"]:
-    if size_removals(os.path.join(root, *c["folder"].split("/")), absl(c["prefixes"])) != sorted(c["expected"], key=lambda r: r["path"]):
-        failures.append("size removals " + c["folder"])
-
-
 def gen_removals(folder, prefixes):
     out = []
     GEN = set(corpus_generated)
@@ -202,26 +173,6 @@ corpus_generated = ["🗑️generated", "🗑️temp", "🧾️runs", "🧪️ru
 for c in corpus["generatedRemovals"]:
     if gen_removals(os.path.join(root, *c["folder"].split("/")), absl(c["prefixes"])) != sorted(c["expected"], key=lambda r: r["path"]):
         failures.append("generated removals " + c["folder"])
-
-
-def open_oversized(folder, prefixes):
-    if closed(folder):
-        return []
-    out = []
-    for dp, dn, fn in os.walk(folder):
-        dn[:] = [d for d in dn if not intersects(os.path.join(dp, d), [p for p in prefixes if p != folder])]
-        for name in fn:
-            a = os.path.join(dp, name)
-            if intersects(a, [p for p in prefixes if p != folder]) or os.path.islink(a):
-                continue
-            if os.lstat(a).st_size > corpus["thresholds"]["openTicketFile"]:
-                out.append({"kind": "ticket-generated", "path": rel(a), "bytes": os.lstat(a).st_size})
-    return sorted(out, key=lambda r: r["path"])
-
-
-for c in corpus["openOversized"]:
-    if open_oversized(os.path.join(root, *c["folder"].split("/")), absl(c["prefixes"])) != sorted(c["expected"], key=lambda r: r["path"]):
-        failures.append("open oversized " + c["folder"])
 
 
 def build(prefixes):

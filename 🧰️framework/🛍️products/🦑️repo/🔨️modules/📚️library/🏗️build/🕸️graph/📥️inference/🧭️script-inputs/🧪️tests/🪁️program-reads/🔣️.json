@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "config": "tsconfig.json",
+  "files": {
+    "tsconfig.json": "{\"compilerOptions\":{\"strict\":true,\"module\":\"esnext\",\"moduleResolution\":\"bundler\",\"resolveJsonModule\":true,\"noEmit\":true,\"types\":[]},\"files\":[\"src/main.ts\"]}\n",
+    "src/main.ts": "import {util} from \"./util\";\nimport data from \"./data.json\";\nexport const main=():number=>util(data.n);\n",
+    "src/util.ts": "export const util=(n:number):number=>n+1;\n",
+    "src/data.json": "{\"n\":1}\n",
+    "src/extra.ts": "export const extra=2;\n",
+    "lib/deep/shape.ts": "export interface Shape{readonly n:number}\n"
+  },
+  "mutations": [
+    {"id": "body-edit-keeps-imports", "op": "write", "path": "src/util.ts", "text": "export const util=(n:number):number=>n+2;\n", "holds": true, "programChanges": false},
+    {"id": "comment-appended", "op": "append", "path": "src/main.ts", "text": "// reviewed\n", "holds": true, "programChanges": false},
+    {"id": "same-size-rewrite-keeps-mtime", "op": "rewrite-keep-times", "path": "src/util.ts", "text": "export const util=(n:number):number=>n+9;\n", "holds": true, "programChanges": false},
+    {"id": "atomic-save-new-inode", "op": "replace", "path": "src/util.ts", "text": "export const util=(n:number):number=>n*2;\n", "holds": true, "programChanges": false},
+    {"id": "json-resource-edited", "op": "write", "path": "src/data.json", "text": "{\"n\":2}\n", "holds": true, "programChanges": false},
+    {"id": "config-edited-same-program", "op": "write", "path": "tsconfig.json", "text": "{\"compilerOptions\":{\"strict\":false,\"module\":\"esnext\",\"moduleResolution\":\"bundler\",\"resolveJsonModule\":true,\"noEmit\":true,\"types\":[]},\"files\":[\"src/main.ts\"]}\n", "holds": true, "programChanges": false},
+    {"id": "import-added-changes-program", "op": "write", "path": "src/util.ts", "text": "import {extra} from \"./extra\";\nexport const util=(n:number):number=>n+extra;\n", "holds": true, "programChanges": true},
+    {"id": "deep-import-added-changes-program", "op": "write", "path": "src/main.ts", "text": "import {util} from \"./util\";\nimport data from \"./data.json\";\nimport type {Shape} from \"../lib/deep/shape\";\nexport const main=():number=>util(data.n);\nexport type Main=Shape;\n", "holds": true, "programChanges": true},
+    {"id": "unrelated-file-created", "op": "write", "path": "src/other.ts", "text": "export {};\n", "holds": true, "programChanges": false},
+    {"id": "unrelated-file-deleted", "op": "delete", "path": "src/extra.ts", "holds": true, "programChanges": false},
+    {"id": "program-file-deleted", "op": "delete", "path": "src/util.ts", "holds": false, "programChanges": true},
+    {"id": "program-file-becomes-symlink", "op": "symlink-file", "path": "src/util.ts", "holds": false, "programChanges": false},
+    {"id": "program-directory-becomes-symlink", "op": "symlink-directory", "path": "src", "holds": false, "programChanges": false},
+    {"id": "program-resource-becomes-directory", "op": "directory", "path": "src/data.json", "holds": false, "programChanges": false}
+  ]
+}

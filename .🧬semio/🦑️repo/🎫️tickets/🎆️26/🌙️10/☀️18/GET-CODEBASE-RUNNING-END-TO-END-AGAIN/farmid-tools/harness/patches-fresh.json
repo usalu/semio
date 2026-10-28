@@ -1,0 +1,22 @@
+[
+ {
+  "suffix": "📥️inputs/💾️storage/🟨️.mjs",
+  "find": "export async function withRepositoryBuildGraphFactStoreV1(workspace,invocation,phaseControl,body){return withGraphFactWriterV1(workspace,invocation,phaseControl,body);}",
+  "replace": "export async function withRepositoryBuildGraphFactStoreV1(workspace,invocation,phaseControl,body){return body({root:'/dev/null'},phaseControl);}"
+ },
+ {
+  "suffix": "👁️observation/📥️reuse/🟨️.mjs",
+  "find": "export async function inferenceInventoryReferencesHoldV1(root,value,control){",
+  "replace": "export async function inferenceInventoryReferencesHoldV1(root,value,control){return true;"
+ },
+ {
+  "suffix": "🏊️project-farm/🏊️pool/🧬️schema/🔣️.json",
+  "find": "\"minimumProjects\": 24",
+  "replace": "\"minimumProjects\": 1"
+ },
+ {
+  "suffix": "🏊️project-farm/🏊️pool/🧬️schema/🔣️.json",
+  "find": "\"recycleAfterProjects\": 96",
+  "replace": "\"recycleAfterProjects\": 1"
+ }
+]

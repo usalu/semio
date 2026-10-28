@@ -1,0 +1,10 @@
+{
+ "extends": "./🧰️framework/🛍️products/🦑️repo/tsconfig.json",
+ "compilerOptions": {"noEmit": true, "incremental": false, "skipLibCheck": true, "strict": true},
+ "files": [
+  "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+  "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🧪️tests/🕳️excluded-names/🟦️.ts",
+  "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🧪️tests/🕳️excluded-names/🧫️fixtures/🟦️.ts"
+ ],
+ "include": []
+}

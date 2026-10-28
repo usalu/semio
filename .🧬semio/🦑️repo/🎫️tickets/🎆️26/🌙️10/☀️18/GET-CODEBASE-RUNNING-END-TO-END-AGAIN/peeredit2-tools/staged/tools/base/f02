@@ -1,0 +1,509 @@
+import{refuseBuildV1}from"../../../📖️texts/🟦️.ts";
+import{applyBuildGeneratedTaskDependenciesV1,buildSourceContractGroupsV1}from"../../🚪️admission/🟦️.ts";
+import{buildSchedulingExclusionsInputV1,buildSchedulingPrefixesV1}from"../../../📥️source/🔏️closure/🗓️scheduling/🟦️.ts";
+/** 🧱️ Normalizes one project's targets and named inputs into its generated Build configuration. */
+import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import { checkScriptInvocation, requireIssuedResourceControlInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { declaredNativeOwnerCommandV1, bindBuildCommandV1 } from "../../../../🏗️build/📤️arguments/🟨️.mjs";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { observedSourceAnalysisV1, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { storeReceiptOutputV1 } from "../../../🧾️store-receipt/🟨️.mjs";
+import { withHostPlatformOutputsV1 } from "../../../🎯️host-platform/🟦️.ts";
+import { parserTypescriptV1 } from "../../../🚀️bootstrap/📦️parsers/🟨️.mjs";
+import { createHash } from "node:crypto";
+
+/** 🧭️ The workspace placeholder of an input path, compiled once. */
+const WORKSPACE_PLACEHOLDER_V1 = /^\{workspaceRoot\}\//u;
+import { lstatSync as rawLstatSync, mkdirSync as rawMkdirSync, readFileSync as rawReadFileSync, renameSync as rawRenameSync, writeFileSync as rawWriteFileSync } from "node:fs";
+import { brotliCompressSync, brotliDecompressSync, constants as zlibConstants } from "node:zlib";
+import { withBuildGraphOptionalPublicationV1 } from "../../../../🏗️build/📥️inputs/💾️storage/🟨️.mjs";
+import { observedTypeScriptHost } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { cargoManifestDirectoriesV1, deriveInputsV1, inputPrecisionDecisionV1, inputPrecisionLanguageV1, inputPrecisionTextV1, readInputPrecisionV1, selectRuleV1 } from "../../../📥️inputs/🎯️precision/🟦️.ts";
+import { ownerOfProjectV1, ownerViewV1 } from "../../../📥️inputs/🌳️owner-view/🟨️.mjs";
+import { cargoResolutionLanguageV1, cargoResolutionTextV1, readCargoResolutionPolicyV1, workspaceKeyViolationsV1 } from "../../../📥️inputs/🦀️resolution/🟦️.ts";
+import resolutionDocument from "../../../📥️inputs/🦀️resolution/🔣️.json" with { type: "json" };
+const resolutionPolicy = readCargoResolutionPolicyV1(resolutionDocument);
+const { existsSync, readFileSync, readdirSync } = observedFs;
+
+/** 🪓️ Broad project groups that a native target replaces with its Cargo module closure; every other authored input still reaches the hash. */
+const NATIVE_REPLACED_INPUTS = new Set(["default", "^default", "production", "^production", "nativeSources", "^nativeSources", "nativeTestSources", "^nativeTestSources"]);
+const CARGO_TEST_DRIVER = "/🏃️process/🧪️testing/🦀️cargo/";
+const NATIVE_COMMAND_DRIVERS = Object.freeze([CARGO_TEST_DRIVER, "/🏃️process/📦️artifacts/🏗️native-build/", "/🏃️process/📦️artifacts/🕸️wasm-build/"]);
+/** 🧷️ A command closure reaches a declared native driver when one of its sources lives inside a driver directory.
+ * @param {readonly unknown[]} sources */
+export function reachesNativeCommandDriverV1(sources) {
+  return sources.some((path) => typeof path === "string" && NATIVE_COMMAND_DRIVERS.some((driver) => path.includes(driver)));
+}
+const nativeCommandDriverNamesV1 = Object.freeze([...NATIVE_COMMAND_DRIVERS]);
+const inputKey = (input) => typeof input === "string" ? input : JSON.stringify(input);
+const distinctInputs = (inputs) => { const seen = new Set(); return inputs.filter((input) => { const key = inputKey(input); return !seen.has(key) && seen.add(key); }); };
+const generatedCommandKeys = new WeakMap();
+
+/** 🧾️ The inputs of a target that its manifest or the workspace defaults declared: generated Cargo targets repeat the shared native command inputs verbatim, and those are already represented by one interned group.
+ * @param {readonly unknown[]} policyInputs
+ * @param {readonly unknown[] | undefined} commandInputs */
+export function nativeAuthoredInputsV1(policyInputs, commandInputs) {
+  if (!Array.isArray(commandInputs)) return [...policyInputs];
+  let keys = generatedCommandKeys.get(commandInputs);
+  if (!keys) generatedCommandKeys.set(commandInputs, keys = new Set(Array.from(commandInputs, inputKey)));
+  return policyInputs.filter((input) => !keys.has(inputKey(input)));
+}
+
+/** 🧪️ A native target runs the crate's tests when its contract says so, or, without a contract, by its name or because its command reaches the Cargo test driver.
+ * @param {string} name
+ * @param {{ kind: string, scope?: string } | undefined} execution
+ * @param {boolean} reachesTestDriver whether the command closure reaches the Cargo test driver */
+export function nativeTargetRunsTestsV1(name, execution, reachesTestDriver) {
+  if (execution?.kind === "native") return execution.scope === "test";
+  return name.startsWith("test") || reachesTestDriver;
+}
+const cargoTestDriverNamesV1 = Object.freeze([CARGO_TEST_DRIVER]);
+
+/** 🧮️ A native target hashes its Cargo module closure, its command and lock sources, and every input its manifest or the workspace defaults add beyond the broad project groups that closure replaces.
+ * @param {boolean} runsTests
+ * @param {readonly unknown[]} generated
+ * @param {readonly unknown[]} declared */
+export function nativeTargetInputsV1(runsTests, generated, declared) {
+  return distinctInputs([runsTests ? "nativeTestSources" : "nativeSources", runsTests ? "^nativeTestSources" : "^nativeSources", ...generated, ...declared.filter((input) => !NATIVE_REPLACED_INPUTS.has(input))]);
+}
+
+/** 🏷️ Names this component as its roster entry does. */
+export const component = "project-assembly";
+
+/** 🌳️ The named inputs whose owner glob a private owner view splits: a task of the owning project that uses one of them also keys the private subtrees. */
+const OWNER_PRIVATE_USERS_V1 = new Set(["default", "production", "nativeTestSources"]);
+const PRECISION_FILES = ["🏗️build/📥️inputs/🎯️precision/🟦️.ts", "🏗️build/📥️inputs/🎯️precision/🧬️schema/🔣️.json"];
+const PRECISION_RULES = "🏗️build/📥️inputs/🎯️precision/🔣️.json";
+const precisionContexts = new WeakMap();
+
+/** 🦀️ What the walk of the Cargo manifests skips: the generated trees and the composition outputs. */
+const precisionManifestSkipV1 = () => ({ paths: ["compose", "temp/compose"], names: [".🧬semio", ...POLICY.generatedDirectories] });
+
+/** 🦀️ Lists the directory of every Cargo manifest the build discovers, skipping generated trees. */
+function precisionCargoManifestsV1(workspaceRoot) {
+  return cargoManifestDirectoriesV1((directory) => readdirSync(join(workspaceRoot, directory), { withFileTypes: true }).map((entry) => ({ name: entry.name, directory: entry.isDirectory(), file: entry.isFile(), link: entry.isSymbolicLink() })), precisionManifestSkipV1());
+}
+
+const precisionCrateMapsV1 = new WeakMap();
+/** 🚶️ The repository walks of one project's input precision as derived facts: the crate index and the TypeScript files a question selects are answered once per process by their closure entry, and the project records the digest of the answer instead of the directories the walk listed. */
+function precisionWalksV1(closures) {
+  return {
+    crateNames: async () => { const entries = await closures.derive({ fn: "crate-index", skip: precisionManifestSkipV1() }); let map = precisionCrateMapsV1.get(entries); if (!map) precisionCrateMapsV1.set(entries, map = new Map(entries)); return map; },
+    sourceRoots: (question) => closures.derive({ fn: "source-roots", question }),
+  };
+}
+
+/** 🔷️ The compiler side of the TypeScript program analysis: one file's imports resolved with the compiler's own module resolution under the tsconfig options (a fresh resolution cache per file, so the facts it consulted are all recorded), and the answer to any recorded fact, both through the observed file system so the enclosing inference depends on exactly what a derivation would have read. */
+function precisionProgramHostV1(workspaceRoot, scripts, documentOf, compilerOf) {
+  const prefix = `${workspaceRoot}/`, absolutePath = (path) => (isAbsolute(path) ? path : join(workspaceRoot, path)), relativePath = (path) => (path.startsWith(prefix) ? buildPath(path.slice(prefix.length)) : path), sha = (value) => createHash("sha256").update(value).digest("hex");
+  const programs = new Map();
+  let observed, analysis;
+  const sysOf = () => (observed ??= observedTypeScriptHost(compilerOf().sys));
+  const optionsOf = (tsconfig) => {
+    let options = programs.get(tsconfig);
+    if (!options) {
+      const compiler = compilerOf(), path = join(workspaceRoot, tsconfig), read = compiler.readConfigFile(path, compiler.sys.readFile);
+      options = compiler.parseJsonConfigFileContent(read.config, { ...compiler.sys, readDirectory: () => [] }, dirname(path), undefined, path).options;
+      programs.set(tsconfig, options);
+    }
+    return options;
+  };
+  const answer = (kind, path) => {
+    const sys = sysOf();
+    if (kind === "file") return sys.fileExists(path);
+    if (kind === "directory") return sys.directoryExists(path);
+    if (kind === "text") { const text = sys.readFile(path); return text === undefined ? "!missing" : sha(text); }
+    if (kind === "realpath") return sys.realpath?.(path) ?? null;
+    if (kind === "directories") return JSON.stringify(sys.getDirectories(path));
+    try { return sha(readFileSync(path)); } catch { return null; }
+  };
+  const receipts = precisionReceiptsV1(workspaceRoot);
+  return {
+    get compiler() { return compilerOf().version; },
+    fact: (kind, path) => answer(kind, absolutePath(path)),
+    imports: async (file, tsconfig) => {
+      const compiler = compilerOf(), options = optionsOf(tsconfig), base = sysOf(), facts = [], recorded = new Set(), source = join(workspaceRoot, file), resolved = new Set();
+      const record = (kind, path, value) => {
+        const fact = { kind, path: relativePath(path), value }, id = JSON.stringify(fact);
+        if (!recorded.has(id)) { recorded.add(id); facts.push(fact); }
+        return value;
+      };
+      const sys = {
+        ...base,
+        fileExists: (path) => record("file", path, base.fileExists(path)),
+        directoryExists: (path) => record("directory", path, base.directoryExists(path)),
+        readFile: (path, encoding) => { const text = base.readFile(path, encoding); record("text", path, text === undefined ? "!missing" : sha(text)); return text; },
+        realpath: base.realpath && ((path) => { const value = base.realpath(path); record("realpath", path, value ?? null); return value; }),
+        getDirectories: (path) => { const value = base.getDirectories(path); record("directories", path, JSON.stringify(value)); return value; },
+      };
+      const cache = compiler.createModuleResolutionCache(workspaceRoot, (value) => value, options);
+      for (const specifier of observedSourceAnalysisV1(analysis ??= prepareSourceAnalysesV1().module, source).imports) {
+        const hit = compiler.resolveModuleName(specifier, source, options, sys, cache).resolvedModule?.resolvedFileName;
+        if (hit && hit.startsWith(prefix) && !hit.includes("/node_modules/")) resolved.add(buildPath(hit.slice(prefix.length)));
+      }
+      return { resolved: [...resolved].sort(), facts };
+    },
+    receipts,
+    check: (phase, index) => yieldInferenceV1(scripts.context, phase, index),
+    report: (event) => {
+      const document = documentOf();
+      process.stderr.write(`[input-precision] ${inputPrecisionTextV1(document, event, inputPrecisionLanguageV1(document, process.env))}\n`);
+    },
+  };
+}
+
+/** 📇️ Keeps the program receipts as optional, recomputable graph cache leaves (`ip/<24 hex>.json`, brotli) under the graph data directory; they are read outside the observation because every fact they carry is re-checked through it. */
+function precisionReceiptsV1(workspaceRoot) {
+  const directory = () => join(workspaceDataDirectory(workspaceRoot), "ip"), leaf = (key) => join(directory(), `${createHash("sha256").update(key).digest("hex").slice(0, 24)}.json`);
+  return {
+    read: (key) => { try { return brotliDecompressSync(rawReadFileSync(leaf(key))).toString("utf8"); } catch { return undefined; } },
+    write: (key, image) => {
+      const target = leaf(key), bytes = brotliCompressSync(Buffer.from(image, "utf8"), { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 5, [zlibConstants.BROTLI_PARAM_SIZE_HINT]: image.length } });
+      let previous = 0;
+      try { previous = rawLstatSync(target).size; } catch {}
+      withBuildGraphOptionalPublicationV1(target, { peakBytes: bytes.byteLength, retainedDeltaBytes: Math.min(bytes.byteLength, bytes.byteLength - previous) }, () => {
+        const temporary = `${target}.${process.pid}.${Date.now()}.tmp`;
+        rawMkdirSync(directory(), { recursive: true });
+        rawWriteFileSync(temporary, bytes, { flag: "wx" });
+        rawRenameSync(temporary, target);
+      });
+    },
+  };
+}
+
+/** 🎯️ The input precision rules and the engine host of one graph construction. */
+function precisionContextV1(workspaceRoot, facts, scripts) {
+  const known = precisionContexts.get(scripts);
+  if (known) return known;
+  for (const file of PRECISION_FILES) readFileSync(join(LIBRARY_ROOT, file));
+  const rules = join(LIBRARY_ROOT, PRECISION_RULES), document = existsSync(rules) ? readInputPrecisionV1(JSON.parse(readFileSync(rules, "utf8"))) : undefined;
+  const local = (path) => join(workspaceRoot, path), cargo = { cache: new Map(), closures: new Map() };
+  let compiler, kinds, manifests;
+  const host = {
+    exists: (path) => existsSync(local(path)),
+    readText: (path) => { try { return readFileSync(local(path), "utf8"); } catch { return undefined; } },
+    listDirectory: (path) => { try { return readdirSync(local(path), { withFileTypes: true }).map((entry) => ({ name: entry.name, directory: entry.isDirectory() })); } catch { return []; } },
+    get kinds() { return kinds ??= JSON.parse(readFileSync(join(LIBRARY_ROOT, "🔣️taxonomy.json"), "utf8")).fileKinds; },
+    importClosure: async (entries) => (await relativeScriptInputs(entries.map(local), workspaceRoot, scripts)).map((path) => path.replace(WORKSPACE_PLACEHOLDER_V1, "")),
+    cargoManifests: () => manifests ??= precisionCargoManifestsV1(workspaceRoot),
+    cargoRoots: (crate) => nativeDependencyRoots(crate, workspaceRoot, true, cargo.cache, cargo.closures),
+    cargoSources: (root, named) => cargoSourcesOrRefuseV1(root, workspaceRoot, facts, named, !named),
+    cargoToolchain: POLICY.toolchains.cargo.files,
+    cargoIdentity: (directory) => (readToml(join(workspaceRoot, directory, "Cargo.toml")).package ? loaded.cargoLockInput(loaded.cargoManifestInputV1(directory||"."), workspaceRoot) : undefined),
+    program: precisionProgramHostV1(workspaceRoot, scripts, () => document, () => (compiler ??= parserTypescriptV1())),
+  };
+  const context = { document, host };
+  precisionContexts.set(scripts, context);
+  return context;
+}
+
+/** 🧪️ Appends the negations of a target class to a cached target, so a build or generate action keys on production sources only: a test, feature or story edit leaves its key unchanged, and the scheduling code of the declared scheduling domains (leases, capacity, store custody, supervision, retry, progress texts) never joins a key. A target keeps its full inputs when one of its own explicit inputs, or (when command closures are listed file by file) its command closure, selects an excluded path: it reads that path on purpose and a negation would hide the read from its key.
+ * @see ../../../🔣️policy.json */
+async function withoutExcludedSourcesV1(policy, exclusions, root, sourceRepresentation, closures, commandSourceGroups) {
+  const declared = WORKSPACE_POLICY.namedInputs[exclusions];
+  if (!Array.isArray(declared)) throw Error(`Target class exclusions name an undeclared input: ${exclusions}`);
+  const patterns = declared.filter((input) => typeof input === "string" && input.startsWith("!{workspaceRoot}/")).map((input) => input.slice("!{workspaceRoot}/".length));
+  const scheduling = Array.isArray(WORKSPACE_POLICY.namedInputs[buildSchedulingExclusionsInputV1]) && !excludedInputConflictV1(policy.inputs, WORKSPACE_POLICY.namedInputs, buildSchedulingPrefixesV1().map((prefix) => prefix + "**/*"), loaded.buildInputPathMatchesV1, root) ? [buildSchedulingExclusionsInputV1] : [];
+  const base = scheduling.length ? { ...policy, inputs: [...policy.inputs, ...scheduling] } : policy;
+  if (excludedInputConflictV1(policy.inputs, WORKSPACE_POLICY.namedInputs, patterns, loaded.buildInputPathMatchesV1, root)) return base;
+  if (sourceRepresentation === "source") for (const input of policy.inputs) {
+    const group = typeof input === "string" ? [...commandSourceGroups.values()].find((row) => row.name === input) : undefined;
+    if (group && await closures.query(group.inputs, "excludedPaths", patterns)) return base;
+  }
+  return { ...base, inputs: [...base.inputs, exclusions] };
+}
+
+/** 🎯️ Narrows one cached target's broad inherited inputs to what its input precision rule derives and records the rule as `metadata.semio.inputPrecision`; a `whole` or `assumed` rule keeps the inherited inputs and records why, and a rule that cannot bound its reads refuses the graph, so no whole-repository input returns silently. */
+async function preciseInputsV1(project, name, command, policy, root, workspaceRoot, facts, scripts, intern, closures) {
+  const { document, host: shared } = precisionContextV1(workspaceRoot, facts, scripts), host = closures.late ? Object.assign(Object.create(shared), precisionWalksV1(closures)) : shared, outputs = (policy.outputs ?? []).flatMap((output) => { const absolute = typeof output === "string" ? resolveOutputPath(output, root, workspaceRoot) : undefined; return absolute === undefined ? [] : [buildPath(relative(workspaceRoot, absolute))]; }), identity = { project, target: name, command, outputs };
+  const rule = document && selectRuleV1(document, identity);
+  if (!rule) return policy;
+  const metadata = { ...policy.metadata, semio: { ...policy.metadata?.semio, inputPrecision: inputPrecisionDecisionV1(rule) } };
+  if (rule.evidence === "whole" || rule.evidence === "assumed") return { ...policy, metadata };
+  let derived;
+  try { derived = await deriveInputsV1(document, rule, identity, host); }
+  catch (error) { if (error?.name === "InputPrecisionErrorV1") throw new Error(`Input precision rule ${rule.id} cannot bound ${project}:${name}: ${error.message}`, { cause: error }); throw error; }
+  return { ...policy, metadata, inputs: [...policy.inputs.filter((input) => !(typeof input === "string" && derived.drops.includes(input))), ...derived.patterns, ...derived.groups, ...(derived.markers ?? []), ...intern(derived.files.map((file) => `{workspaceRoot}/${file}`))] };
+}
+/** 🧾️ Gives a target whose output lives in the managed products store its receipt as the one restorable output; it replays when authored cacheable, because a hit is verified against the store and re-executes when the content or its links are gone. */
+function receiptedStoreTargetV1(policy, name, reason) {
+  return withCacheDecision({ ...policy, outputs: [storeReceiptOutputV1(name)] }, policy.cache ? "deterministic" : "managed-output", policy.cache ? "pure-function-of-inputs" : reason);
+}
+
+let closureApiV1, closureHandleOfV1, registerClosureQueryV1, workspaceDataDirectory, targetScriptSources,libraryBootstrap, nativeDependencyRoots, buildPath, LIBRARY_ROOT, readTaxonomyProjectionV1, readToml, POLICY, WORKSPACE_POLICY, PROJECT_BASENAME, cargoSourceInputs, cargoSourcesOrRefuseV1, createScriptInputCache, loaded, yieldInferenceV1, SOURCE_INPUT_MODULE, TAXONOMY, SCRIPT_BASENAME, goManifest, relativeScriptInputs, resolveOutputPath, exampleCollectionInputs, owned, withWasmTooling, withCacheDecision, cachedOutputsAdmittedV1, rootCommandTargets, cargoTargets, componentBuildTargets, printDocumentTargets, prepareSourceAnalysesV1, generatorContractInputs, generatorOutputOwners, genericCommandFallbackInputs, targetWithDefaults, targetPolicy, targetExecutionKindV1, targetExclusionsV1, excludedInputConflictV1, nativeTargetCommandInputs, targetScriptClosure, nativeLockInputs, genericTargetCommandInputs, outputRootInputs, generatorOutputCouplingInputs;
+
+/** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
+export function wire(registry) {
+  ({ libraryBootstrap, loaded } = registry.bootstrap);
+  ({ nativeDependencyRoots, readToml, cargoSourceInputs, cargoSourcesOrRefuseV1, goManifest } = registry.nativeManifests);
+  ({ buildPath, LIBRARY_ROOT, POLICY, WORKSPACE_POLICY, PROJECT_BASENAME, SOURCE_INPUT_MODULE, SCRIPT_BASENAME, exampleCollectionInputs, owned, workspaceDataDirectory } = registry.coordinates);
+  ({ readTaxonomyProjectionV1, TAXONOMY, prepareSourceAnalysesV1 } = registry.sourceAnalyses);
+  ({ targetScriptSources,createScriptInputCache, yieldInferenceV1, relativeScriptInputs, genericCommandFallbackInputs, nativeTargetCommandInputs, targetScriptClosure, nativeLockInputs, genericTargetCommandInputs, closureApiV1, closureHandleOfV1, registerClosureQueryV1 } = registry.scriptInputs);
+  registerClosureQueryV1("workspaceKeys", (value, command) => workspaceKeyViolationsV1(resolutionPolicy, value, command));
+  registerClosureQueryV1("excludedPaths", (value, patterns) => (Array.isArray(value) ? value : value?.closure ?? []).some((path) => typeof path === "string" && patterns.some((pattern) => loaded.buildInputPathMatchesV1(path.replace(WORKSPACE_PLACEHOLDER_V1, ""), pattern))));
+  ({ resolveOutputPath, generatorContractInputs, generatorOutputOwners, outputRootInputs, generatorOutputCouplingInputs } = registry.generatorOutputs);
+  ({ withWasmTooling, withCacheDecision, cachedOutputsAdmittedV1, targetWithDefaults, targetPolicy, targetExecutionKindV1, targetExclusionsV1, excludedInputConflictV1 } = registry.targetPolicy);
+  ({ rootCommandTargets, cargoTargets, componentBuildTargets, printDocumentTargets } = registry.componentTargets);
+}
+
+/** 👁️ Projects actual Cargo/Nx compilation and owner generator inputs for live source watching. */
+export async function nativeSourceWatchPlanV1(root, workspaceRoot) {
+  await libraryBootstrap;
+  const roots = nativeDependencyRoots(root, workspaceRoot), includes = new Set(), excludes = new Set(), files = new Set();
+  const taxonomyPath = join(workspaceRoot, buildPath(relative(workspaceRoot, join(LIBRARY_ROOT, "🔣️taxonomy.json"))));
+  const contracts = existsSync(taxonomyPath) ? readTaxonomyProjectionV1(taxonomyPath).generatorContracts : {};
+  for (const nativeRoot of roots) {
+    const manifest = readToml(join(workspaceRoot, nativeRoot, "Cargo.toml"));
+    let owner = resolve(workspaceRoot, nativeRoot);
+    if (manifest.package?.workspace) owner = resolve(owner, manifest.package.workspace);
+    else while (owner !== workspaceRoot && (!existsSync(join(owner, "Cargo.toml")) || !readToml(join(owner, "Cargo.toml")).workspace)) owner = dirname(owner);
+    for (const name of ["Cargo.toml", "Cargo.lock"]) {
+      const file = join(owner, name), local = buildPath(relative(workspaceRoot, file));
+      if (local.startsWith("../")) throw Error("Native watch workspace authority escapes repository");
+      includes.add(local);
+    }
+    for (const path of [...POLICY.toolchains.cargo.files, ...POLICY.toolchains.cargo.identity]) includes.add(path);
+    const projectPath = join(workspaceRoot, nativeRoot, PROJECT_BASENAME);
+    const project = existsSync(projectPath) ? JSON.parse(readFileSync(projectPath, "utf8")) : {};
+    for (const path of cargoSourceInputs(nativeRoot, workspaceRoot, new Map(), false) ?? []) files.add(path.replace(WORKSPACE_PLACEHOLDER_V1, ""));
+    const declarations = await projectInputs(project, nativeRoot, workspaceRoot, new Map(), createScriptInputCache(), "source");
+    const visit = (values, seen = new Set()) => {
+      for (const value of values) {
+        if (typeof value !== "string") continue;
+        if (declarations[value]) {
+          if (seen.has(value)) throw Error("Native watch named input cycle: " + value);
+          visit(declarations[value], new Set([...seen, value])); continue;
+        }
+        const negative = value.startsWith("!"), path = (negative ? value.slice(1) : value).replaceAll("{projectRoot}", nativeRoot).replace(WORKSPACE_PLACEHOLDER_V1, "");
+        if (path.includes("{") && /\{(?:workspaceRoot|projectRoot)\}/u.test(path)) throw Error("Unresolved native watch source coordinate");
+        if (isAbsolute(path) || path.split("/").includes("..") || path.includes("\\")) throw Error("Native watch source input escapes workspace");
+        (negative ? excludes : includes).add(path);
+      }
+    };
+    visit(declarations.nativeSources);
+  }
+  for (const contract of Object.values(contracts)) if (contract.nativeConsumers?.some(path => roots.includes(path))) {
+    for (const pattern of contract.inputPatterns ?? []) (pattern.startsWith("!") ? excludes : includes).add(pattern.replace(/^!/u, ""));
+  }
+  if (!includes.size) throw Error("Native source watch requires admitted compilation inputs");
+  const ordered = values => [...values].sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));
+  return { schema: "semio.framework.os.plugin.source-watch-plan/v1", includes: ordered(includes), excludes: ordered(excludes), files: ordered(files) };
+}
+
+/** 🧬️ Derives named task inputs from explicit relative source-graph contracts. */
+export async function declaredSourceInputs(json,workspaceRoot,context={},inputNames=[]) {
+  const groups={};
+  for(const name of buildSourceContractGroupsV1(json,WORKSPACE_POLICY.namedInputs,inputNames)){
+    const path=json.metadata.sourceInputs[name];
+    if(Object.hasOwn(json.namedInputs??{},name))throw Error(`Duplicate source input group ${name}`);
+    if(typeof path!=="string"||isAbsolute(path)||path.split(/[\\/]/).includes(".."))throw Error(`Invalid source input contract path ${path}`);
+    const contractPath=resolve(workspaceRoot,path),contract=loaded.readSourceInputContract(contractPath),sources=await loaded.relativeSourceInputsAsyncV1(contract,workspaceRoot,()=>yieldInferenceV1(context,"build:source-contracts",0));
+    groups[name]=[...new Set([contractPath,join(LIBRARY_ROOT,SOURCE_INPUT_MODULE),join(LIBRARY_ROOT,"🕸️dependencies/🟦️typescript/🔣️schema.json"),...sources.files])].map(file=>`{workspaceRoot}/${buildPath(relative(workspaceRoot,file))}`).concat([{externalDependencies:sources.externalDependencies}]);
+  }
+  return groups;
+}
+
+/**
+ * 🚧️ Nx plans a task's `!{workspaceRoot}/…` negations against the workspace positives of its expanded inputs; with none, a
+ * negation plans every other workspace file. A native source list names its files literally, so without a workspace positive
+ * (a workspace-root crate) it keeps only its project-rooted negations.
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️workspace-negation-closure/🟦️.ts
+ */
+function workspaceNegationClosed(inputs) {
+  return inputs.some((input) => typeof input === "string" && input.startsWith("{workspaceRoot}/")) ? inputs : inputs.filter((input) => typeof input !== "string" || !input.startsWith("!{workspaceRoot}/"));
+}
+
+/** 📥️ Shared command implementation and host identity are inputs of every script-backed task. */
+export async function projectInputs(json, root, workspaceRoot, facts, scripts=createScriptInputCache(), sourceRepresentation = "hash", sourceGroups,inputNames=[],commandGroups={}) {
+  const closures = closureApiV1(scripts, workspaceRoot);
+  return loaded.inferProjectInputs(json, root, workspaceRoot, facts, scripts, { POLICY, TAXONOMY, LIBRARY_ROOT, SCRIPT_BASENAME, cargoSourceInputs, goManifest, buildPath, relativeScriptInputs, closureOf: (entries, extras, role) => closures.closureOf(entries, extras, role), resolveOutputPath, exampleCollectionInputs, workspaceNegationClosed, declaredSourceInputs:sourceGroups===undefined?(json,root,namedInputs)=>declaredSourceInputs({...json,namedInputs:{...namedInputs,...Object.fromEntries(Object.keys(commandGroups).map(name=>[name,[]]))}},root,scripts.context,inputNames):()=>sourceGroups, owned, sourceRepresentation });
+}
+
+/**
+ * @param {Record<string, any>} json
+ * @param {string} root
+ * @param {string} projectDir
+ */
+export async function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = {}, facts, commandInputs, scripts=createScriptInputCache(), sourceGroups, sourceRepresentation = "hash", selectedTargets,inputNames=[]) {
+  const ownsScript = existsSync(join(projectDir, SCRIPT_BASENAME));
+  const nativeRoot = json.metadata?.nativeRoot ?? root;
+  if (json.metadata?.nativeRoot && (typeof nativeRoot !== "string" || isAbsolute(nativeRoot) || nativeRoot.split(/[\\/]/).some(part => ["", ".", ".."].includes(part)) || !existsSync(join(workspaceRoot, nativeRoot, "Cargo.toml")))) throw new Error(`Invalid native package root for ${json.name}: ${nativeRoot}`);
+  const nativeManifest=loaded.cargoManifestInputV1(nativeRoot);
+  const nativeProject = existsSync(join(workspaceRoot, nativeRoot, "Cargo.toml"));
+  const ownerPrivateView = typeof ownerViewV1 === "function" && root !== "." && TAXONOMY?.testDeliveryScopeDirectoryNames !== undefined && ownerOfProjectV1(root, TAXONOMY.testDeliveryScopeDirectoryNames) !== root && ownerViewV1(ownerOfProjectV1(root, TAXONOMY.testDeliveryScopeDirectoryNames), POLICY?.ownerViews) !== undefined;
+  const artifactTypeScript = json.tags?.includes("role:artifact") && json.tags.includes("language:typescript");
+  const commandSourceGroups = new Map();
+  const internCommandSources = (candidate) => {
+    const handle = closureHandleOfV1(candidate), inputs = handle ? [handle.marker] : candidate;
+    if (!Array.isArray(inputs) || !inputs.length) return [];
+    const key = JSON.stringify(inputs);
+    let group = commandSourceGroups.get(key);
+    if (!group) {
+      group = { name: `commandSources${commandSourceGroups.size}`, inputs };
+      commandSourceGroups.set(key, group);
+    }
+    return [group.name];
+  };
+  const declared = withWasmTooling({ ...(root === "." && ownsScript ? rootCommandTargets(join(projectDir, SCRIPT_BASENAME)) : {}), ...await cargoTargets(root, workspaceRoot, commandInputs,scripts), ...json.targets, ...componentBuildTargets(root, workspaceRoot), ...await printDocumentTargets(json, root, workspaceRoot, scripts, internCommandSources) }, ownsScript && json.targets?.wasm ? observedSourceAnalysisV1(prepareSourceAnalysesV1().script,join(projectDir,SCRIPT_BASENAME)).wasm : false);
+  for (const contract of Object.values(contracts)) {
+    if (contract.ownership !== "owned" || contract.ownerPath !== root) continue;
+    const name = contract.target.slice(contract.target.lastIndexOf(":") + 1), target = declared[name];
+    if (!target || contract.target !== `${json.name}:${name}`) throw new Error(`Generator target has no project owner: ${contract.target}`);
+    const discovery = generatorContractInputs(contract);
+    const producers = [...new Set(contract.outputRoots.flatMap((output) => output.producer && output.producer.target !== contract.target ? [output.producer.target] : []))].sort();
+    const inputs = [...(target.inputs ?? ["default", "^default"]), ...discovery.inputs, ...(producers.length ? [{ dependentTasksOutputFiles: "**/*" }] : [])];
+    const dependencies = [...discovery.dependsOn, ...producers];
+    declared[name] = { ...target, inputs, ...(dependencies.length ? { dependsOn: [...new Set([...(target.dependsOn ?? []), ...dependencies])] } : {}) };
+  }
+  for (const [target, outputs] of generatorOutputOwners(contracts, root, json.name, declared)) declared[target.slice(json.name.length + 1)] = { ...declared[target.slice(json.name.length + 1)], outputs };
+  const admitted=selectedTargets===undefined?declared:Object.fromEntries(Object.entries(declared).filter(([name])=>selectedTargets.includes(name)));
+  const normalized = {};
+  const genericFallback = genericCommandFallbackInputs(workspaceRoot);
+  const closures = closureApiV1(scripts, workspaceRoot);
+  const commandSourceMemo = new Map();
+  const commandSourcesOf = (candidate) => {
+    const key = JSON.stringify([candidate.executor, candidate.options, candidate.configurations]);
+    let sources = commandSourceMemo.get(key);
+    if (!sources) commandSourceMemo.set(key, sources = closures.nativeTargetCommandInputs(candidate, commandInputs, root));
+    return sources;
+  };
+  for (const [name, target] of Object.entries(admitted)) {
+    const inheritedBase=targetWithDefaults({ ...(POLICY.targetDefaults?.[name] ?? {}), ...target,...(target.cache===false&&target.inputs===undefined?{inputs:["default"]}:{}) }, root, ownsScript);
+    const inherited=inheritedBase.metadata?.semio?.hostPlatformOutputsV1?withHostPlatformOutputsV1(inheritedBase,process.platform):inheritedBase;
+    if(typeof inherited.options?.cwd==="string")inherited.options={...inherited.options,cwd:inherited.options.cwd.replaceAll("{projectRoot}",root).replaceAll("{workspaceRoot}",workspaceRoot)};
+    let policy = targetPolicy(name,inherited);
+    const execution = targetExecutionKindV1(target,`${json.name}:${name}`), orchestrator = execution === "orchestration" || target.metadata?.semio?.orchestrator === true;
+    if (execution === "native" && !nativeProject) throw Error(`Native execution contract requires a native project owner: ${json.name}:${name}`);
+    const nativePolicyTarget = execution !== "source" && !orchestrator && nativeProject && policy.executor !== "repo:noop" && (execution === "native" || typeof policy.options?.command === "string" && await closures.some(await commandSourcesOf({...policy,configurations:undefined}), nativeCommandDriverNamesV1));
+    const nativeTarget = execution !== "source" && !orchestrator && (nativePolicyTarget || nativeProject && /^(?:build|wasm|native|test|lint|check|verify)(?:-|$)/.test(name) || policy.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts"));
+    const artifactTarget = artifactTypeScript && /^(?:build|check|test)$/.test(name);
+    if(nativePolicyTarget){
+      const command=policy.options?.command;
+      if(typeof command!=="string"||!command.startsWith("repo "))throw Error(`Cargo owner test requires one script command: ${json.name}:${name}`);
+      const driver=buildPath(relative(workspaceRoot,join(LIBRARY_ROOT,"⚡️caching/🦀️cargo/📜️script.ts")));
+      const ownerCwd=policy.options?.cwd??root;
+      const boundCommand=bindBuildCommandV1(command,workspaceRoot,ownerCwd,root,[]).command;
+      policy.executor="repo:script";
+      let nativeOwnerCommand;try{nativeOwnerCommand=declaredNativeOwnerCommandV1(nativeManifest,ownerCwd,boundCommand);}catch(error){throw new Error(`Original discovered native command owner ${json.name}:${name}: ${error.message}`,{cause:error});}
+      policy.options={...policy.options,ownerArguments:true,cwd:".",nativeOwnerCommand,command:`repo ${JSON.stringify(driver)} native owner-command --manifest ${JSON.stringify(nativeManifest)} --cwd ${JSON.stringify(ownerCwd)} -- ${boundCommand}`};
+      const manifest=readToml(join(workspaceRoot,nativeRoot,"Cargo.toml"));let scope=resolve(workspaceRoot,nativeRoot);
+      if(manifest.package?.workspace)scope=resolve(scope,manifest.package.workspace);
+      else while(scope!==workspaceRoot && (!existsSync(join(scope,"Cargo.toml"))||!readToml(join(scope,"Cargo.toml")).workspace))scope=dirname(scope);
+      const config=buildPath(relative(workspaceRoot,join(scope,".config","nextest.toml")));
+      if(config.startsWith("../"))throw Error(`Cargo test policy escapes workspace: ${nativeRoot}`);
+      policy.cargoTestPolicyInputs=[`{workspaceRoot}/${config}`];
+    }
+    if (execution !== "source" && !orchestrator && !/ native owner-command /u.test(policy.options?.command??"") && await closures.targetClosureSome({...policy,configurations:undefined}, root, ["/🏃️process/🧪️testing/🧪️vitest/","/🏃️process/📋️context/"])) {
+      const command=policy.options?.command,ownerCwd=policy.options?.cwd??root;
+      if(typeof command!=="string"||!command.startsWith("repo "))throw Error(`Process owner requires one script command: ${json.name}:${name}`);
+      const driver=buildPath(relative(workspaceRoot,join(LIBRARY_ROOT,"🏃️process/🧭️routing/📥️owner-command/📜️script.ts")));
+      const bound=command.replace(/^repo\s+("[^"\n]+"|'[^'\n]+'|[^\s]+)/u,(_,source)=>`repo ${JSON.stringify(buildPath(resolve(workspaceRoot,ownerCwd,source.replace(/^["']|["']$/g,""))))}`);
+      policy.executor="repo:script";
+      policy.options={...policy.options,ownerArguments:true,cwd:".",command:`repo ${JSON.stringify(driver)} owner-command --cwd ${JSON.stringify(ownerCwd)} -- ${bound}`};
+    }
+    if (nativeTarget) {
+      const commandSources = await commandSourcesOf(policy);
+      const runsTests = nativeTargetRunsTestsV1(name, target.metadata?.semio?.execution, await closures.some(commandSources, cargoTestDriverNamesV1)), authored = nativeAuthoredInputsV1(policy.inputs ?? [], commandInputs);
+      policy.inputs = nativeTargetInputsV1(runsTests, [...internCommandSources(commandSources), ...nativeLockInputs(policy), ...(policy.cargoTestPolicyInputs ?? [])], runsTests ? [...(POLICY.targetDefaults?.test?.inputs ?? []), ...authored] : authored);
+      delete policy.cargoTestPolicyInputs;
+      const wholeKeys = await closures.query(commandSources, "workspaceKeys", policy.options?.command);
+      if (wholeKeys.length) throw new Error(cargoResolutionTextV1(resolutionPolicy, "workspaceKey", cargoResolutionLanguageV1(resolutionPolicy, process.env), { subject: `${json.name}:${name}`, keys: wholeKeys.join(", ") }));
+    }
+    if ((nativeTarget || policy.metadata?.semio?.componentStoreV1) && nativeProject && readToml(join(workspaceRoot, nativeRoot, "Cargo.toml")).package) {
+      const lockOwner = join(LIBRARY_ROOT, "🏗️build/📥️inputs/🔒️lock/📜️script.ts");
+      policy.inputs.push(...internCommandSources(await closures.closureOf([lockOwner], [`{workspaceRoot}/${buildPath(relative(workspaceRoot, join(dirname(lockOwner), "🔣️schema.json")))}`], "cargo-lock-owner")), loaded.cargoLockInput(nativeManifest, workspaceRoot));
+    }
+    if (artifactTarget) policy.inputs = [...new Set([...(name === "build" ? [] : ["default", "^default"]), "artifactSources", "artifactCommandSources", ...(target.inputs ?? [])])];
+    if (!nativeTarget && !artifactTarget && policy.cache) policy.inputs = [...(policy.inputs ?? ["default", "^default"]), ...internCommandSources(await closures.genericTargetCommandInputs(policy, root))];
+    if (artifactTarget && name === "build") policy = receiptedStoreTargetV1(policy, name, "outputs-are-store-links");
+    else if (artifactTarget) {
+      if (name === "test") policy.outputs = [];
+      if (policy.cache) policy = withCacheDecision(policy, "deterministic", "check-without-outputs");
+    }
+    if(policy.metadata?.semio?.wasmPackageSourceV1)policy = receiptedStoreTargetV1(policy, name, "outputs-in-managed-store");
+    const produced=await closures.generatedDependencies(inherited,root,nativeProject?nativeManifest:undefined);if(produced.length)policy=applyBuildGeneratedTaskDependenciesV1({name:json.name,targets:{[name]:policy}},{[name]:produced}).targets[name];
+    if (POLICY.serialTargets?.includes(name)) policy.parallelism = false;
+    if (policy.cache && policy.inputs) policy = await preciseInputsV1(json.name, name, inherited.options?.command ?? inherited.command, policy, root, workspaceRoot, facts, scripts, internCommandSources, closures);
+    if (ownerPrivateView && policy.cache && Array.isArray(policy.inputs) && policy.metadata?.semio?.inputPrecision === undefined && policy.inputs.some((input) => OWNER_PRIVATE_USERS_V1.has(input))) policy = { ...policy, inputs: [...policy.inputs, "ownerPrivate"] };
+    const exclusions = policy.cache && policy.inputs && !nativeTarget && root !== "." && policy.metadata?.semio?.inputPrecision === undefined ? targetExclusionsV1(name) : undefined;
+    if (exclusions) policy = await withoutExcludedSourcesV1(policy, exclusions, root, sourceRepresentation, closures, commandSourceGroups);
+    normalized[name] = loaded.targetBuildModes(name, cachedOutputsAdmittedV1(policy));
+  }
+  for (const contract of Object.values(contracts)) {
+    if (contract.ownership !== "owned" || contract.ownerPath !== root || !contract.checkTarget) continue;
+    const check = contract.checkTarget.slice(contract.checkTarget.lastIndexOf(":") + 1), target = normalized[check];
+    if (!target) continue;
+    const discovery = generatorContractInputs(contract);
+    normalized[check] = { ...target, cache: target.cache !== false, inputs: [...(target.inputs ?? ["default", "^default"]), ...discovery.inputs, ...contract.outputRoots.map((output) => outputRootInputs(output, workspaceRoot))], ...(discovery.dependsOn.length ? { dependsOn: [...new Set([...(target.dependsOn ?? []), ...discovery.dependsOn])] } : {}) };
+  }
+  for (const [name, target] of Object.entries(normalized)) {
+    if (target.cache !== true) continue;
+    const extra = generatorOutputCouplingInputs(name, target, declared, root, workspaceRoot);
+    if (extra.length) normalized[name] = { ...target, inputs: [...target.inputs, ...extra] };
+  }
+  const namedInputs = await projectInputs({ ...json, targets: normalized }, root, workspaceRoot, facts, scripts,sourceRepresentation,sourceGroups,inputNames,Object.fromEntries([...commandSourceGroups.values()].map(({name,inputs})=>[name,inputs])));
+  const symbolicGroups = Object.entries(namedInputs).filter(([, inputs]) => Array.isArray(inputs) && inputs.some(closureMarkerV1)).map(([name]) => [name, true]);
+  for (const { name, inputs } of commandSourceGroups.values()) {
+    if (Object.hasOwn(namedInputs, name)) throw new Error(`Duplicate command source group ${name}`);
+    if (inputs.some(closureMarkerV1)) { namedInputs[name] = inputs; symbolicGroups.push([name, false]); continue; }
+    namedInputs[name] = sourceRepresentation === "source" ? loaded.deduplicateProjectInputs(inputs, root) : loaded.compactSourceInputs(inputs, workspaceRoot, root);
+  }
+  if (json.metadata?.semio?.scriptProviders !== undefined) for (const [name, inputs] of await closures.scriptProviderGroups(root, json.metadata.semio.scriptProviders)) {
+    if (Object.hasOwn(namedInputs, name)) throw new Error(`Duplicate script provider group ${name}`);
+    const handle = closureHandleOfV1(inputs);
+    if (handle) { namedInputs[name] = [handle.marker]; symbolicGroups.push([name, false]); continue; }
+    namedInputs[name] = sourceRepresentation === "source" ? loaded.deduplicateProjectInputs(inputs, root) : loaded.compactSourceInputs(inputs, workspaceRoot, root);
+  }
+  const project = { ...json, name: json.name, root, namedInputs, targets: normalized };
+  return closures.late ? withClosureRecipesV1(project, symbolicGroups, closures) : project;
+}
+
+const closureMarkerV1 = (item) => item !== null && typeof item === "object" && !Array.isArray(item) && typeof item.closureRef === "string" && Object.keys(item).length === 1;
+
+/** 🏷️ Names, beside the project, the recipe of every command closure it refers to and the groups it left symbolic, so a record carries the question instead of the answer. */
+function withClosureRecipesV1(project, symbolicGroups, closures) {
+  const keys = new Set(), visit = (value) => { if (Array.isArray(value)) { for (const item of value) { if (closureMarkerV1(item)) keys.add(item.closureRef); else visit(item); } } else if (value !== null && typeof value === "object") for (const item of Object.values(value)) visit(item); };
+  visit(project.namedInputs); visit(project.targets);
+  const table = closures.table(keys);
+  if (!Object.keys(table.closureRecipes).length) return project;
+  return { ...project, ...table, symbolicGroups };
+}
+
+/** 🔓️ Answers the questions of a project record: every command closure it names is brought up to date (its observations join the owner, not the record), the symbolic lists become the files of the closure and the symbolic groups are compacted exactly as the direct inference compacts them. Returns the project without its recipes, the observations of the closures it used and the derived facts that stand for the walks those closures reused. */
+export async function resolveClosureRefsV1(project, workspaceRoot, scripts, sourceRepresentation = "hash") {
+  if (!project.closureRecipes) return { project, rows: [], derived: [] };
+  const { values, rows, derived } = await closureApiV1(scripts, workspaceRoot).resolve(Object.entries(project.closureRecipes)), root = project.root;
+  const bind = (value) => Array.isArray(value) ? value.flatMap((item) => closureMarkerV1(item) ? values.get(item.closureRef) : [bind(item)]) : value !== null && typeof value === "object" ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, bind(item)])) : value;
+  const { closureRecipes, closureInputs, symbolicGroups, ...rest } = project, bound = { ...rest, namedInputs: bind(rest.namedInputs), targets: bind(rest.targets) };
+  for (const [name, dedupe] of symbolicGroups ?? []) { if (!Array.isArray(bound.namedInputs[name])) throw refuseBuildV1("invalid", "assembly.symbolic-group-without-list", { name: JSON.stringify(name), project: String(root), record: JSON.stringify(symbolicGroups) }); const list = dedupe || sourceRepresentation === "source" ? loaded.deduplicateProjectInputs(bound.namedInputs[name], root) : bound.namedInputs[name]; bound.namedInputs[name] = sourceRepresentation === "source" ? list : loaded.compactSourceInputs(list, workspaceRoot, root); }
+  return { project: mergeCommandSourceGroupsV1(bound), rows, derived };
+}
+
+/** 🧮️ Groups made from different recipes can hold the same files; the direct inference names one group per distinct content in order of first use, so equal groups are merged and the survivors renumbered the same way. */
+function mergeCommandSourceGroupsV1(project) {
+  const names = Object.keys(project.namedInputs).filter((name) => /^commandSources\d+$/u.test(name)).sort((left, right) => Number(left.slice(14)) - Number(right.slice(14)));
+  const contents = new Map(), rename = new Map(), groups = [];
+  for (const name of names) {
+    const key = JSON.stringify(project.namedInputs[name]);
+    let merged = contents.get(key);
+    if (!merged) { merged = `commandSources${contents.size}`; contents.set(key, merged); groups.push([merged, project.namedInputs[name]]); }
+    rename.set(name, merged);
+  }
+  if (names.every((name) => rename.get(name) === name)) return project;
+  const rewrite = (value) => typeof value === "string" ? rename.get(value) ?? value : Array.isArray(value) ? value.map(rewrite) : value !== null && typeof value === "object" ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, rewrite(item)])) : value;
+  const kept = Object.fromEntries(Object.entries(project.namedInputs).filter(([name]) => !rename.has(name)));
+  return { ...project, namedInputs: { ...kept, ...Object.fromEntries(groups) }, targets: rewrite(project.targets) };
+}
+
+/** 🔎️ Queries source-project normalization through the same production stages without publishing graph facts. */
+export async function inferReadOnlyBuildProjectSourcesV1(json, root, workspaceRoot, invocation,phaseControl) {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);
+  await libraryBootstrap;checkResourceLeaseControl(phaseControl);
+  if(existsSync(join(workspaceRoot,json.metadata?.nativeRoot??root,"Cargo.toml")))throw Error("Read-only source project normalization requires a non-Cargo owner");
+  await advanceScriptInvocation(invocation,"build:project-sources","running");
+  const taxonomy=join(workspaceRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"),contracts=existsSync(taxonomy)?readTaxonomyProjectionV1(taxonomy).generatorContracts:{};
+  const result=await projectWithDefaults(json,root,join(workspaceRoot,root),workspaceRoot,contracts,new Map(),undefined,createScriptInputCache({workspaceRoot,invocation,phaseControl}),undefined,"source");
+  checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);
+  return result;
+}

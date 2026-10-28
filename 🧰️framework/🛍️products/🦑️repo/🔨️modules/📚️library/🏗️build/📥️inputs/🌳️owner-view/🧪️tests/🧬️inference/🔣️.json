@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "scopeNames": [
+    "📦️packages"
+  ],
+  "toolchains": {
+    "javascript": {
+      "files": [],
+      "environment": [],
+      "commands": []
+    },
+    "cargo": {
+      "files": [],
+      "environment": [],
+      "commands": []
+    },
+    "tex": {
+      "files": [
+        "tool/🔧️toolchain/🔣️.json",
+        "tool/📚️bundle/🔒️dependencies.json"
+      ],
+      "environment": [],
+      "commands": [],
+      "activatedBy": [
+        "deps-tectonic",
+        "deps-tex"
+      ]
+    }
+  },
+  "views": [
+    {
+      "owner": "fw",
+      "private": [
+        "🛍️products"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "umbrella-keeps-products-private",
+      "root": "fw/📦️packages/🟦️typescript",
+      "entries": [
+        [
+          "🔨️modules",
+          true
+        ],
+        [
+          "🛍️products",
+          true
+        ],
+        [
+          "🧪️tests",
+          true
+        ],
+        [
+          "node_modules",
+          true
+        ],
+        [
+          ".cache",
+          true
+        ],
+        [
+          "package.json",
+          false
+        ]
+      ],
+      "targets": {},
+      "sharedHas": [
+        "{workspaceRoot}/fw/🔨️modules/**/*.{ts,tsx,js,jsx,mjs,cjs,json,css,scss,html,svg,wit,sql}",
+        "{workspaceRoot}/fw/🧪️tests/**/*.{ts,tsx,js,jsx,mjs,cjs,json,css,scss,html,svg,wit,sql}",
+        "{workspaceRoot}/fw/*.{ts,tsx,js,jsx,mjs,cjs,json,css,scss,html,svg,wit,sql}"
+      ],
+      "sharedLacks": [
+        "products",
+        "node_modules",
+        ".cache"
+      ],
+      "ownerPrivate": [
+        "{workspaceRoot}/fw/🛍️products/**/*.{ts,tsx,js,jsx,mjs,cjs,json,css,scss,html,svg,wit,sql}"
+      ],
+      "tex": false
+    },
+    {
+      "id": "owner-without-view-keeps-one-glob",
+      "root": "plain/📦️packages/🟦️typescript",
+      "entries": [
+        [
+          "🔨️modules",
+          true
+        ],
+        [
+          "🛍️products",
+          true
+        ]
+      ],
+      "targets": {},
+      "sharedHas": [
+        "{workspaceRoot}/plain/**/*.{ts,tsx,js,jsx,mjs,cjs,json,css,scss,html,svg,wit,sql}"
+      ],
+      "sharedLacks": [],
+      "ownerPrivate": null,
+      "tex": false
+    },
+    {
+      "id": "provisioning-dependency-activates-tex",
+      "root": "plain/📦️packages/🟦️typescript",
+      "entries": [],
+      "targets": {
+        "build": {
+          "dependsOn": [
+            "fonts",
+            "deps-tectonic"
+          ]
+        }
+      },
+      "sharedHas": [
+        "{workspaceRoot}/tool/🔧️toolchain/🔣️.json",
+        "{workspaceRoot}/tool/📚️bundle/🔒️dependencies.json"
+      ],
+      "sharedLacks": [],
+      "ownerPrivate": null,
+      "tex": true
+    },
+    {
+      "id": "no-provisioning-dependency-no-tex",
+      "root": "plain/📦️packages/🟦️typescript",
+      "entries": [],
+      "targets": {
+        "build": {
+          "dependsOn": [
+            "fonts"
+          ]
+        }
+      },
+      "sharedHas": [],
+      "sharedLacks": [
+        "tool/🔧️toolchain/🔣️.json"
+      ],
+      "ownerPrivate": null,
+      "tex": false
+    }
+  ],
+  "runtimeState": [
+    "fw/🤖️generated/process"
+  ]
+}

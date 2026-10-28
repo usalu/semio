@@ -1,0 +1,466 @@
+{
+ "note": "Recorded 2026-10-26 16:55 from ~/Library/Caches/semio/host-capacity/estimates.json (gate-g row 4c): the classes of `repo --tool=bazel run @teaching/architecture-course:build` after the runs of 16:24 and 16:53, which executed the planner (busy) while holding at most 2.8 GB. Run 2 of the chain then waited 165+ s for 7168 MB. Absolute epoch milliseconds, local time CET. `policy` is the host capacity policy of the build library at that time (before the follow-up knobs).",
+ "leaf": "run:build:@teaching/architecture-course:build",
+ "lineage": [
+  "run",
+  "run:build",
+  "run:build:@teaching/architecture-course:build"
+ ],
+ "classes": {
+  "run": [
+   {
+    "atMs": 1793030010998,
+    "ratioBasisPoints": 6496,
+    "activeMilliseconds": 182663,
+    "peakAtMilliseconds": 150069
+   },
+   {
+    "atMs": 1793028938600,
+    "ratioBasisPoints": 10717,
+    "activeMilliseconds": 999286,
+    "peakAtMilliseconds": 240068
+   },
+   {
+    "atMs": 1793028266025,
+    "ratioBasisPoints": 7762,
+    "activeMilliseconds": 204991,
+    "peakAtMilliseconds": 120044
+   },
+   {
+    "atMs": 1793027961212,
+    "ratioBasisPoints": 21752,
+    "activeMilliseconds": 472563,
+    "peakAtMilliseconds": 285081
+   },
+   {
+    "atMs": 1793027522802,
+    "ratioBasisPoints": 16814,
+    "activeMilliseconds": 3568011,
+    "peakAtMilliseconds": 2520998
+   },
+   {
+    "atMs": 1793027424331,
+    "ratioBasisPoints": 7157,
+    "activeMilliseconds": 307500,
+    "peakAtMilliseconds": 90028
+   },
+   {
+    "atMs": 1793027284743,
+    "ratioBasisPoints": 16733,
+    "activeMilliseconds": 478964,
+    "peakAtMilliseconds": 120047
+   },
+   {
+    "atMs": 1793026804345,
+    "ratioBasisPoints": 14258,
+    "activeMilliseconds": 379740,
+    "peakAtMilliseconds": 210083
+   },
+   {
+    "atMs": 1793023444271,
+    "ratioBasisPoints": 15603,
+    "activeMilliseconds": 2672866,
+    "peakAtMilliseconds": 150043
+   },
+   {
+    "atMs": 1793020770975,
+    "ratioBasisPoints": 11646,
+    "activeMilliseconds": 561464,
+    "peakAtMilliseconds": 255029
+   },
+   {
+    "atMs": 1793020416374,
+    "ratioBasisPoints": 21987,
+    "activeMilliseconds": 2884248,
+    "peakAtMilliseconds": 735108
+   },
+   {
+    "atMs": 1793020180972,
+    "ratioBasisPoints": 20187,
+    "activeMilliseconds": 1431749,
+    "peakAtMilliseconds": 525086
+   },
+   {
+    "atMs": 1793019913904,
+    "ratioBasisPoints": 32263,
+    "activeMilliseconds": 243509,
+    "peakAtMilliseconds": 60046
+   },
+   {
+    "atMs": 1793018209267,
+    "ratioBasisPoints": 30483,
+    "activeMilliseconds": 204952,
+    "peakAtMilliseconds": 75025
+   }
+  ],
+  "run:build": [
+   {
+    "atMs": 1793030010998,
+    "ratioBasisPoints": 6496,
+    "activeMilliseconds": 182663,
+    "peakAtMilliseconds": 150069
+   },
+   {
+    "atMs": 1793028266025,
+    "ratioBasisPoints": 7762,
+    "activeMilliseconds": 204991,
+    "peakAtMilliseconds": 120044
+   },
+   {
+    "atMs": 1793027961212,
+    "ratioBasisPoints": 21752,
+    "activeMilliseconds": 472563,
+    "peakAtMilliseconds": 285081
+   },
+   {
+    "atMs": 1793027522802,
+    "ratioBasisPoints": 16814,
+    "activeMilliseconds": 3568011,
+    "peakAtMilliseconds": 2520998
+   },
+   {
+    "atMs": 1793027424331,
+    "ratioBasisPoints": 7157,
+    "activeMilliseconds": 307500,
+    "peakAtMilliseconds": 90028
+   },
+   {
+    "atMs": 1793027284743,
+    "ratioBasisPoints": 16733,
+    "activeMilliseconds": 478964,
+    "peakAtMilliseconds": 120047
+   },
+   {
+    "atMs": 1793026804345,
+    "ratioBasisPoints": 14258,
+    "activeMilliseconds": 379740,
+    "peakAtMilliseconds": 210083
+   },
+   {
+    "atMs": 1793020416374,
+    "ratioBasisPoints": 21987,
+    "activeMilliseconds": 2884248,
+    "peakAtMilliseconds": 735108
+   },
+   {
+    "atMs": 1793020180972,
+    "ratioBasisPoints": 20187,
+    "activeMilliseconds": 1431749,
+    "peakAtMilliseconds": 525086
+   },
+   {
+    "atMs": 1793019913904,
+    "ratioBasisPoints": 32263,
+    "activeMilliseconds": 243509,
+    "peakAtMilliseconds": 60046
+   },
+   {
+    "atMs": 1793018209267,
+    "ratioBasisPoints": 30483,
+    "activeMilliseconds": 204952,
+    "peakAtMilliseconds": 75025
+   },
+   {
+    "atMs": 1793017260307,
+    "ratioBasisPoints": 18742,
+    "activeMilliseconds": 1958795,
+    "peakAtMilliseconds": 1020117
+   },
+   {
+    "atMs": 1793015124222,
+    "ratioBasisPoints": 14897,
+    "activeMilliseconds": 731616,
+    "peakAtMilliseconds": 525079
+   },
+   {
+    "atMs": 1793012845022,
+    "ratioBasisPoints": 17712,
+    "activeMilliseconds": 356464,
+    "peakAtMilliseconds": 195036
+   },
+   {
+    "atMs": 1793012449849,
+    "ratioBasisPoints": 9408,
+    "activeMilliseconds": 442658,
+    "peakAtMilliseconds": 270126
+   },
+   {
+    "atMs": 1793010200820,
+    "ratioBasisPoints": 23125,
+    "activeMilliseconds": 270932,
+    "peakAtMilliseconds": 270058
+   }
+  ],
+  "run:build:@teaching/architecture-course:build": [
+   {
+    "atMs": 1793030010998,
+    "ratioBasisPoints": 6496,
+    "activeMilliseconds": 182663,
+    "peakAtMilliseconds": 150069
+   },
+   {
+    "atMs": 1793028266025,
+    "ratioBasisPoints": 7762,
+    "activeMilliseconds": 204991,
+    "peakAtMilliseconds": 120044
+   },
+   {
+    "atMs": 1793027424331,
+    "ratioBasisPoints": 7157,
+    "activeMilliseconds": 307500,
+    "peakAtMilliseconds": 90028
+   },
+   {
+    "atMs": 1793027284743,
+    "ratioBasisPoints": 16733,
+    "activeMilliseconds": 478964,
+    "peakAtMilliseconds": 120047
+   },
+   {
+    "atMs": 1793026804345,
+    "ratioBasisPoints": 14258,
+    "activeMilliseconds": 379740,
+    "peakAtMilliseconds": 210083
+   },
+   {
+    "atMs": 1793015124222,
+    "ratioBasisPoints": 14897,
+    "activeMilliseconds": 731616,
+    "peakAtMilliseconds": 525079
+   },
+   {
+    "atMs": 1793012845022,
+    "ratioBasisPoints": 17712,
+    "activeMilliseconds": 356464,
+    "peakAtMilliseconds": 195036
+   },
+   {
+    "atMs": 1793010200820,
+    "ratioBasisPoints": 23125,
+    "activeMilliseconds": 270932,
+    "peakAtMilliseconds": 270058
+   },
+   {
+    "atMs": 1793009923173,
+    "ratioBasisPoints": 24690,
+    "activeMilliseconds": 305778,
+    "peakAtMilliseconds": 285036
+   },
+   {
+    "atMs": 1793001625930,
+    "ratioBasisPoints": 6177,
+    "activeMilliseconds": 214724
+   },
+   {
+    "atMs": 1793001390527,
+    "ratioBasisPoints": 6392,
+    "activeMilliseconds": 179590
+   },
+   {
+    "atMs": 1793001086896,
+    "ratioBasisPoints": 9595,
+    "activeMilliseconds": 149738
+   },
+   {
+    "atMs": 1793000222910,
+    "ratioBasisPoints": 8984,
+    "activeMilliseconds": 361966
+   }
+  ],
+  "run:build:@teaching/architecture-course:build~busy": [
+   {
+    "atMs": 1793030010998,
+    "ratioBasisPoints": 11367,
+    "activeMilliseconds": 182663,
+    "peakAtMilliseconds": 150069
+   },
+   {
+    "atMs": 1793028266025,
+    "ratioBasisPoints": 13584,
+    "activeMilliseconds": 204991,
+    "peakAtMilliseconds": 120044
+   }
+  ]
+ },
+ "host": {
+  "note": "bench2-g q1 log: a 16 GB profile, 5686 MB spare above the 2048 MB floor, raised memory pressure, load 52.01, nothing running",
+  "totalMegabytes": 16384,
+  "availableMegabytes": 7734,
+  "load": 52.01,
+  "cores": 10
+ },
+ "policy": {
+  "version": 1,
+  "enabled": true,
+  "memory": {
+   "floorBasisPoints": 1250,
+   "floorMinimumMegabytes": 1536,
+   "floorMaximumMegabytes": 4096,
+   "budgetBasisPoints": 10000,
+   "rampMilliseconds": 60000,
+   "maximumRamping": 2,
+   "maximumQuiet": 4
+  },
+  "swap": {
+   "ceilingBasisPoints": 2500,
+   "outMegabytesPerSecond": 64
+  },
+  "pressure": {
+   "psiWarnPercent": 10,
+   "psiCriticalPercent": 30,
+   "availableWarnBasisPoints": 1500,
+   "availableCriticalBasisPoints": 600,
+   "compressedWarnBasisPoints": 3500,
+   "compressedCriticalBasisPoints": 5500
+  },
+  "load": {
+   "perCoreCeiling": 2,
+   "overrideAfterMilliseconds": 120000
+  },
+  "files": {
+   "ceilingBasisPoints": 8000
+  },
+  "attaches": {
+   "maximum": 32
+  },
+  "wait": {
+   "pollMilliseconds": 1000,
+   "progressMilliseconds": 5000,
+   "heartbeatMilliseconds": 15000,
+   "staleMilliseconds": 21600000,
+   "lockStaleMilliseconds": 10000,
+   "sampleMaximumAgeMilliseconds": 1000,
+   "maximumWaiters": 256,
+   "bypassMilliseconds": 30000,
+   "maximumBypasses": 6,
+   "agingMilliseconds": 300000,
+   "lendAfterMilliseconds": 5000,
+   "jitterBasisPoints": 0
+  },
+  "kinds": {
+   "test": {
+    "cpu": 1,
+    "megabytes": 1536
+   },
+   "check": {
+    "cpu": 1,
+    "megabytes": 4096
+   },
+   "generate": {
+    "cpu": 1,
+    "megabytes": 1024
+   },
+   "build": {
+    "cpu": 1,
+    "megabytes": 2048
+   },
+   "script": {
+    "cpu": 1,
+    "megabytes": 768
+   },
+   "service": {
+    "cpu": 1,
+    "megabytes": 2048
+   }
+  },
+  "operations": [
+   {
+    "name": "run",
+    "shape": "tasks",
+    "fixedMegabytes": 1536,
+    "cpu": 1,
+    "priority": "batch",
+    "forecast": true
+   },
+   {
+    "name": "run-many",
+    "shape": "tasks",
+    "fixedMegabytes": 1536,
+    "cpu": 1,
+    "priority": "batch",
+    "forecast": true
+   },
+   {
+    "name": "affected",
+    "shape": "tasks",
+    "fixedMegabytes": 1536,
+    "cpu": 1,
+    "priority": "batch",
+    "forecast": true
+   },
+   {
+    "name": "exec",
+    "shape": "tasks",
+    "fixedMegabytes": 1536,
+    "cpu": 1,
+    "priority": "batch"
+   },
+   {
+    "name": "watch",
+    "shape": "tasks",
+    "fixedMegabytes": 1536,
+    "cpu": 1,
+    "priority": "interactive"
+   },
+   {
+    "name": "cargo",
+    "shape": "tasks",
+    "kind": "build",
+    "fixedMegabytes": 1536,
+    "cpu": 1,
+    "priority": "batch"
+   },
+   {
+    "name": "show",
+    "shape": "fixed",
+    "fixedMegabytes": 5120,
+    "cpu": 2,
+    "priority": "batch"
+   },
+   {
+    "name": "graph",
+    "shape": "fixed",
+    "fixedMegabytes": 5120,
+    "cpu": 2,
+    "priority": "batch"
+   },
+   {
+    "name": "dependencies",
+    "shape": "fixed",
+    "fixedMegabytes": 6144,
+    "cpu": 2,
+    "priority": "batch"
+   },
+   {
+    "name": "command",
+    "shape": "fixed",
+    "fixedMegabytes": 2048,
+    "cpu": 1,
+    "priority": "batch"
+   }
+  ],
+  "estimates": {
+   "halfLifeMilliseconds": 259200000,
+   "quantileBasisPoints": 9000,
+   "marginBasisPoints": 2500,
+   "minimumSamples": 3,
+   "maximumSamples": 16,
+   "maximumClasses": 256,
+   "minimumRatioBasisPoints": 3000,
+   "maximumRatioBasisPoints": 20000,
+   "minimumMegabytes": 512,
+   "quickMilliseconds": 120000,
+   "maximumShareBasisPoints": 5000,"fallbackCeilingMegabytes":8192,
+   "defaultRampMilliseconds": 300000,
+   "maximumRampMilliseconds": 1800000,
+   "phaseReferenceMegabytes": 1024,
+   "rebuildPriorMegabytes": 4096,
+   "rebuildShareBasisPoints": 5000,
+   "maximumRebuildSlots": 4,
+   "quietReferenceMegabytes": 2048,
+   "quietShareBasisPoints": 8000,
+   "quietMinimumSamples": 2,
+   "quietMaximumMegabytes": 4096
+  }
+ }
+}

@@ -2,7 +2,8 @@ import{runtimeActorCargoArgumentsV1}from"../../../../../🔍️discovery/🕸️
 import"@semio-tech/process/routing";
 import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
 import{createIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{mkdtempSync,mkdirSync,writeFileSync,rmSync,readFileSync}from"node:fs";
+import{mkdtempSync,mkdirSync,writeFileSync,rmSync,readFileSync,realpathSync}from"node:fs";
+import{tmpdir}from"node:os";
 import{join,dirname,resolve}from"node:path";
 import{test,expect}from"bun:test";
 import{createHash}from"node:crypto";
@@ -13,17 +14,19 @@ import TOML from"@iarna/toml";
 import schema from"../../📋️constraints/🧬️schema/🔣️.json"with{type:"json"};
 import data from"../../📋️constraints/🔣️.json"with{type:"json"};
 import corpus from"./🔣️.json"with{type:"json"};
+import{declareLibraryBuildTestEnvelopeV1}from"../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"build-targets-selection"});
 
 /** 📋️ Historical package constraints remain exact closed DATA after their Cargo selector tables retire. */
 test("neutral consumed Cargo profile policy preserves every actual workspace constraint inventory",async()=>{
  const policy=await import("../../🟦️.ts"),read=policy.cargoProfileConstraintsForOwnerV1;expect(typeof read).toBe("function");if(typeof read!=="function")throw Error("Actual canonical profile constraint owner required");const database=new Database(":memory:");database.exec("create table owners(path text primary key,native integer,wasm integer);create table rows(origin text,name text,level text,primary key(origin,name))");
- try{for(const owner of corpus.owners){const actual=read(owner.manifest)as readonly Readonly<{package:string;optLevel:string;origin:string}>[],rows=actual.map(value=>({origin:value.origin,name:value.package,level:value.optLevel})).sort((a,b)=>a.origin.localeCompare(b.origin)||a.name.localeCompare(b.name));expect(createHash("sha256").update(JSON.stringify(rows)).digest("hex"),owner.manifest).toBe(owner.digest);database.exec("delete from rows");for(const row of rows)database.query("insert into rows values(?,?,?)").run(row.origin,row.name,row.level);const counts=database.query("select sum(origin='native') native,sum(origin='wasm') wasm from rows").get()as{native:number|null;wasm:number|null};expect({native:counts.native??0,wasm:counts.wasm??0}).toEqual({native:owner.native,wasm:owner.wasm});database.query("insert into owners values(?,?,?)").run(owner.manifest,owner.native,owner.wasm);expect(Object.isFrozen(actual)&&actual.every(Object.isFrozen)).toBe(true);}expect(database.query("select count(*) count from owners").get()).toEqual({count:238});expect(database.query("select native,wasm,count(*) count from owners group by native,wasm order by native,wasm").all()).toEqual([{native:0,wasm:0,count:95},{native:28,wasm:50,count:1},{native:29,wasm:4,count:6},{native:29,wasm:38,count:135},{native:29,wasm:51,count:1}]);expect(()=>read("../Cargo.toml")).toThrow();expect(()=>read("unregistered/Cargo.toml")).toThrow();}finally{database.close();}
+ try{for(const owner of corpus.owners){const actual=read(owner.manifest)as readonly Readonly<{package:string;optLevel:string;origin:string}>[],rows=actual.map(value=>({origin:value.origin,name:value.package,level:value.optLevel})).sort((a,b)=>a.origin.localeCompare(b.origin)||a.name.localeCompare(b.name));expect(createHash("sha256").update(JSON.stringify(rows)).digest("hex"),owner.manifest).toBe(owner.digest);database.exec("delete from rows");for(const row of rows)database.query("insert into rows values(?,?,?)").run(row.origin,row.name,row.level);const counts=database.query("select sum(origin='native') native,sum(origin='wasm') wasm from rows").get()as{native:number|null;wasm:number|null};expect({native:counts.native??0,wasm:counts.wasm??0}).toEqual({native:owner.native,wasm:owner.wasm});database.query("insert into owners values(?,?,?)").run(owner.manifest,owner.native,owner.wasm);expect(Object.isFrozen(actual)&&actual.every(Object.isFrozen)).toBe(true);}expect(database.query("select count(*) count from owners").get()).toEqual({count:238});expect(database.query("select native,wasm,count(*) count from owners group by native,wasm order by native,wasm").all()).toEqual([{native:0,wasm:0,count:95},{native:28,wasm:51,count:1},{native:29,wasm:4,count:6},{native:29,wasm:38,count:135},{native:29,wasm:52,count:1}]);expect(()=>read("../Cargo.toml")).toThrow();expect(()=>read("unregistered/Cargo.toml")).toThrow();}finally{database.close();}
 });
 
 /** 🧊️ Imported schema and policy values are public DATA, never mutable private policy. */
 test("neutral consumed Cargo profile constraints resist public DATA mutation",async()=>{
  const{cargoProfileConstraintsForOwnerV1}=await import("../../🟦️.ts");expect(new Ajv({strict:true}).validate(schema,data)).toBe(true);const before=cargoProfileConstraintsForOwnerV1("Cargo.toml"),group=data.owners["Cargo.toml"],limit=schema.definitions.Protocol.const.maximumPackageRows;
- try{data.owners["Cargo.toml"]="isolated";schema.definitions.Protocol.const.maximumPackageRows=0;expect(cargoProfileConstraintsForOwnerV1("Cargo.toml")).toBe(before);expect(before.length).toBe(80);}finally{data.owners["Cargo.toml"]=group;schema.definitions.Protocol.const.maximumPackageRows=limit;}
+ try{data.owners["Cargo.toml"]="isolated";schema.definitions.Protocol.const.maximumPackageRows=0;expect(cargoProfileConstraintsForOwnerV1("Cargo.toml")).toBe(before);expect(before.length).toBe(81);}finally{data.owners["Cargo.toml"]=group;schema.definitions.Protocol.const.maximumPackageRows=limit;}
 });
 
 /** 🎚️ Two-intent selector bytes describe supported TOML values and preserve distinct host override semantics. */
@@ -40,7 +43,7 @@ test("neutral consumed Cargo selectors refuse every unissued view before effects
 
 /** 🧭️ Real controlled Source reads retain actual nearest/explicit workspace selection through callback settlement. */
 registerBuildTestLawV1("neutral consumed Cargo workspace selection uses bounded actual Original Source custody","sdk-fence",async original=>{
- const api=await import("../../../../../🗂️workspaces/🦀️cargo/🟦️.ts"),hold=Reflect.get(api,"withCargoWorkspaceSelectionV1");expect(typeof hold).toBe("function");if(typeof hold!=="function")throw Error("Actual bounded workspace selection owner required");const sink=resolve(process.cwd(),".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated");
+ const api=await import("../../../../../🗂️workspaces/🦀️cargo/🟦️.ts"),hold=Reflect.get(api,"withCargoWorkspaceSelectionV1");expect(typeof hold).toBe("function");if(typeof hold!=="function")throw Error("Actual bounded workspace selection owner required");const sink=realpathSync(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir());
  for(const row of corpus.workspaceSelection){const root=mkdtempSync(join(sink,"cps-")),database=new Database(":memory:");try{database.exec("create table owners(path text primary key)");for(const file of row.files){mkdirSync(dirname(join(root,file.path)),{recursive:true});writeFileSync(join(root,file.path),file.text);const parsed=TOML.parse(file.text)as{workspace?:unknown};expect(Bun.TOML.parse(file.text)).toEqual(parsed);if(parsed.workspace)database.query("insert into owners values(?)").run(file.path);}const leaf=TOML.parse(row.files.find(file=>file.path===row.manifest)!.text)as{package:{workspace?:string}},start=leaf.package.workspace===undefined?dirname(row.manifest):join(dirname(row.manifest),leaf.package.workspace),selected=database.query("select path from owners where path='Cargo.toml' or ?1=substr(path,1,length(path)-11) or ?1 like substr(path,1,length(path)-11)||'/%' order by length(path) desc limit 1").get(start)as{path:string};expect(selected.path).toBe(row.expected);await hold(root,row.manifest,createIssuedResourceControlV1(original,"profile:workspace-selection",0),async(view:{scope:{manifest:string};recheck():Promise<void>})=>{expect(view.scope.manifest).toBe(row.expected);await view.recheck();});}finally{database.close();rmSync(root,{recursive:true,force:true});}}
 });
 

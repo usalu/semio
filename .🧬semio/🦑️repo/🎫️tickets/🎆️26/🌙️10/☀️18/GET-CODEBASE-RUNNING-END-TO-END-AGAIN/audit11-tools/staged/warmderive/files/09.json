@@ -1,0 +1,116 @@
+{
+ "version": 1,
+ "$comment": "EN: The adversarial corpus of the warm program reuse: a project whose program is `app/src/main.ts` plus what it imports, edited step by step; after every step the warm deriver (reused programs, guarded) must answer exactly what a cold derivation answers, `armed` says whether the guard may let TypeScript reuse the previous program, and `unguarded` names the steps an always-armed deriver answers wrongly. DE: Das gegnerische Korpus der warmen Programmwiederverwendung: ein Projekt, dessen Programm `app/src/main.ts` und was es importiert ist, Schritt für Schritt bearbeitet; nach jedem Schritt muss der warme Ableiter (wiederverwendete Programme, bewacht) genau antworten, was eine kalte Ableitung antwortet, `armed` sagt, ob die Wache TypeScript das vorige Programm wiederverwenden lassen darf, und `unguarded` nennt die Schritte, die ein immer bewaffneter Ableiter falsch beantwortet.",
+ "projects": [
+  "{projectRoot}/tsconfig.json"
+ ],
+ "projectRoot": "app",
+ "files": {
+  "app/tsconfig.json": "{\"compilerOptions\":{\"module\":\"esnext\",\"moduleResolution\":\"bundler\",\"target\":\"es2022\",\"types\":[],\"noLib\":true},\"files\":[\"src/main.ts\"]}\n",
+  "app/src/main.ts": "import { b } from \"./b\";\nimport { d } from \"./dir\";\nimport { p } from \"pkg\";\nexport const main = b + d + p;\n",
+  "app/src/b.ts": "export const b = 1;\n",
+  "app/src/c.ts": "export const c = 3;\n",
+  "app/src/dir/index.ts": "export const d = 2;\n",
+  "app/src/ref.d.ts": "declare const referenced: number;\n",
+  "app/src/lazy.ts": "export const lazy = 5;\n",
+  "app/node_modules/pkg/package.json": "{\"name\":\"pkg\",\"version\":\"1.0.0\",\"types\":\"index.d.ts\"}\n",
+  "app/node_modules/pkg/index.d.ts": "export declare const p: number;\n",
+  "app/node_modules/pkg/other.d.ts": "export declare const p: number;\nexport declare const other: number;\n",
+  "app/node_modules/pkg/extra.d.ts": "export declare const extra: number;\n",
+  "app/node_modules/tslib/package.json": "{\"name\":\"tslib\",\"version\":\"2.8.1\",\"types\":\"tslib.d.ts\"}\n",
+  "app/node_modules/tslib/tslib.d.ts": "export declare function __importDefault(module: unknown): unknown;\n"
+ },
+ "steps": [
+  {
+   "name": "comment edit",
+   "write": {
+    "app/src/main.ts": "import { b } from \"./b\";\nimport { d } from \"./dir\";\nimport { p } from \"pkg\";\nexport const main = b + d + p;\n// edited\n"
+   },
+   "armed": true
+  },
+  {
+   "name": "import of a file outside the program added",
+   "write": {
+    "app/src/main.ts": "import { b } from \"./b\";\nimport { c } from \"./c\";\nimport { d } from \"./dir\";\nimport { p } from \"pkg\";\nexport const main = b + c + d + p;\n"
+   },
+   "armed": true
+  },
+  {
+   "name": "that import removed again",
+   "write": {
+    "app/src/main.ts": "import { b } from \"./b\";\nimport { d } from \"./dir\";\nimport { p } from \"pkg\";\nexport const main = b + d + p;\n"
+   },
+   "armed": true
+  },
+  {
+   "name": "a new file shadows the directory an unchanged import resolves to",
+   "write": {
+    "app/src/dir.ts": "export const d = 4;\n"
+   },
+   "armed": false
+  },
+  {
+   "name": "the package's types entry moves",
+   "write": {
+    "app/node_modules/pkg/package.json": "{\"name\":\"pkg\",\"version\":\"1.0.0\",\"types\":\"other.d.ts\"}\n"
+   },
+   "armed": false
+  },
+  {
+   "name": "an imported file is deleted and its import removed",
+   "remove": [
+    "app/src/b.ts"
+   ],
+   "write": {
+    "app/src/main.ts": "import { d } from \"./dir\";\nimport { p } from \"pkg\";\nexport const main = d + p;\n"
+   },
+   "armed": false
+  },
+  {
+   "name": "a triple-slash reference added",
+   "write": {
+    "app/src/main.ts": "/// <reference path=\"./ref.d.ts\" />\nimport { d } from \"./dir\";\nimport { p } from \"pkg\";\nexport const main = d + p + referenced;\n"
+   },
+   "armed": true
+  },
+  {
+   "name": "a dynamic import added",
+   "write": {
+    "app/src/main.ts": "/// <reference path=\"./ref.d.ts\" />\nimport { d } from \"./dir\";\nimport { p } from \"pkg\";\nexport const main = d + p + referenced;\nexport const later = () => import(\"./lazy\");\n"
+   },
+   "armed": true
+  },
+  {
+   "name": "a package declaration file starts to import a sibling",
+   "write": {
+    "app/node_modules/pkg/other.d.ts": "export * from \"./extra\";\nexport declare const p: number;\nexport declare const other: number;\n"
+   },
+   "armed": true
+  },
+  {
+   "name": "the configuration names a second root file",
+   "write": {
+    "app/tsconfig.json": "{\"compilerOptions\":{\"module\":\"esnext\",\"moduleResolution\":\"bundler\",\"target\":\"es2022\",\"types\":[],\"noLib\":true},\"files\":[\"src/main.ts\",\"src/c.ts\"]}\n"
+   },
+   "armed": false
+  },
+  {
+   "name": "the same bytes saved again",
+   "write": {
+    "app/src/main.ts": "/// <reference path=\"./ref.d.ts\" />\nimport { d } from \"./dir\";\nimport { p } from \"pkg\";\nexport const main = d + p + referenced;\nexport const later = () => import(\"./lazy\");\n"
+   },
+   "armed": true
+  },
+  {
+   "name": "the configuration switches on importHelpers while every source keeps its bytes",
+   "armed": false,
+   "write": {
+    "app/tsconfig.json": "{\"compilerOptions\":{\"module\":\"esnext\",\"moduleResolution\":\"bundler\",\"target\":\"es2022\",\"types\":[],\"noLib\":true,\"importHelpers\":true},\"files\":[\"src/main.ts\",\"src/c.ts\"]}\n"
+   }
+  }
+ ],
+ "unguarded": [
+  "a new file shadows the directory an unchanged import resolves to",
+  "the package's types entry moves"
+ ]
+}

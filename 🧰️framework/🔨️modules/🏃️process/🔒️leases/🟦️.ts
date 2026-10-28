@@ -6,22 +6,28 @@ import { createHash, randomBytes } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
 import {beginLeaseOrderV1,classifyLeaseResourceV1,forgetLeaseV1,currentLeaseLineageV1,heldLeasesV1,holdsSharedInProcessV1,leaseOrderPolicyV1,leaseTaskIdV1,type LeaseOrderGuardV1} from "./🧭️order/🟦️.ts";
 export {LeaseOrderErrorV1,formatLeaseViolationV1,leaseInheritanceEnvironmentV1,leaseInvocationChainV1,otherLeaseHoldersV1,withLeaseTaskV1} from "./🧭️order/🟦️.ts";
-import {readIssuedResourceControlCapabilitiesV1,requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupDescendantV1,requireAcceptedPhysicalCleanupControlV1,checkAcceptedPhysicalCleanupV1,noteAcceptedPhysicalCleanupProgressV1,readAcceptedPhysicalCleanupV1,requireIssuedResourceControlRefinementV1,requireIssuedResourceControlDescendantV1,withAcceptedPhysicalCleanupOperationV1,closeAcceptedPhysicalCleanupChildrenV1} from "../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {readIssuedResourceControlCapabilitiesV1,requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupDescendantV1,requireAcceptedPhysicalCleanupControlV1,checkAcceptedPhysicalCleanupV1,noteAcceptedPhysicalCleanupProgressV1,readAcceptedPhysicalCleanupV1,requireIssuedResourceControlRefinementV1,requireIssuedResourceControlDescendantV1,withAcceptedPhysicalCleanupOperationV1,closeAcceptedPhysicalCleanupChildrenV1} from "./🦥️routing/🟦️.ts";
 import type {AcceptedPhysicalCleanupV1} from "../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
-import { appendFileSync, closeSync, lstatSync, openSync, statSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmdirSync, rmSync, statfsSync, unlinkSync, utimesSync, writeFileSync } from "node:fs";
+import { appendFileSync, closeSync, lstatSync, openSync, statSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmdirSync, rmSync, statfsSync, unlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { createRequire } from "node:module";
+import {leaseDatabaseUnopenableBusyV1,leaseFileBusyV1,leaseFilePortsV1,leaseRemovalOptionsV1,leaseUnopenablePausesV1,settleLeaseFileV1,type LeaseFilePortsV1} from "./🪟️windows/🟦️.ts";
 
 /** 🛑️ The refusal texts load when a refusal happens, never at startup: every entry that takes a lease stays inside its module budget. */
 const refuseProcessV1 = (...input: Parameters<typeof import("../📖️texts/🟦️.ts").refuseProcessV1>): ReturnType<typeof import("../📖️texts/🟦️.ts").refuseProcessV1> => (createRequire(import.meta.url)("../📖️texts/🟦️.ts") as typeof import("../📖️texts/🟦️.ts")).refuseProcessV1(...input);
 import {checkResourceLeaseControl,isSystemLeaseLinkV1,requireMaterializedPathV1,type LeaseWait,type ResourceAccess,type ResourceLeaseControl} from "./🎛️control/🟦️.ts";
-export {checkResourceLeaseControl,watchResourceLeaseControlDeadlineV1,requireMaterializedPathV1,type LeaseWait,type ResourceAccess,type ResourceLeaseControl} from "./🎛️control/🟦️.ts";
+export {checkResourceLeaseControl,watchResourceLeaseControlDeadlineV1,fenceMaterializedPathsV1,requireMaterializedPathV1,type LeaseWait,type ResourceAccess,type ResourceLeaseControl} from "./🎛️control/🟦️.ts";
 import { waitingDelayV1 as delay } from "../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import queueSchema from "./🧬️schema/📜️ticket.json" with { type: "json" };
 import {queueMayProceedV1,type QueueTicketV1} from "./⚖️fairness/🟦️.ts";
+import {currentLeasePriorityV1,leaseRealArrivalV1,leaseTicketArrivalV1,type LeasePriorityV1} from "./📈️standing/🟦️.ts";
+export {currentLeasePriorityV1,leasePriorityClassV1,leaseOvertakeWindowV1,leaseRealArrivalV1,leaseTicketArrivalV1,type LeasePriorityV1} from "./📈️standing/🟦️.ts";
+import {ensureLeaseYieldWatcherV1,observeLeaseHolderV1,type LeaseHolderNoticeV1} from "./📈️standing/🤝️yield/🟦️.ts";
+import {agentSessionAddressOfEnvironmentV1} from "../🪪️agent-sessions/🗄️store/🟦️.ts";
 import waitPolicySchema from "./⏳️wait/🧬️schema/📜️policy.json" with { type: "json" };
 import boundedSchema from "./📦️bounded/🧬️schema/🔣️.json" with {type:"json"};
 import {compileJsonSchemaSubset} from "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import { freeSpaceSyncV1 } from "../🆓️free-space/🟦️.ts";
 
 const retirementSchema=queueSchema.definitions.RetirementPolicy,custodySchema=queueSchema.definitions.ClaimCustodyPolicy,retentionSchema=queueSchema.definitions.ClaimRetentionPolicy,boundedContract=compileJsonSchemaSubset(boundedSchema);
 
@@ -65,8 +71,22 @@ async function waitForLeaseContinuation(options:LeaseOptions,started:number,cont
  });
  const pending=Promise.resolve().then(()=>{remaining(options,started);return continuation();});let failed=false,failure:unknown;
  try{await Promise.race([pending,interrupted]);remaining(options,started);}catch(error){failed=true;failure=error;}
- finally{void pending.catch(()=>undefined);options.signal.removeEventListener("abort",cancel);if(timer!==undefined)clearTimeout(timer);}
+ finally{const drained=await drainLeaseContinuation(pending,options.resource,failed?failure:undefined);if(drained.failed&&!failed){failed=true;failure=drained.failure;}options.signal.removeEventListener("abort",cancel);if(timer!==undefined)clearTimeout(timer);}
  if(failed)throw failure;
+}
+/** 🚰️ Waits for an accepted continuation to settle before the lease database may close, but at most `continuationDrainMilliseconds` after the wait ended: a continuation that settles inside the bound is joined (its outcome counts), one that does not is abandoned with its late outcome ignored and a notice in English and German, so a cancelled or expired wait never hangs on a callback that never returns. */
+async function drainLeaseContinuation(pending:Promise<void>,resource:string,reason:unknown):Promise<{failed:boolean;failure?:unknown}>{
+ const bound=waitPolicySchema.definitions.Policy.const.continuationDrainMilliseconds,late=Symbol("late");let timer:ReturnType<typeof setTimeout>|undefined;
+ try{
+  const outcome=await Promise.race([pending.then(()=>undefined,(error:unknown)=>({error})),new Promise<symbol>(done=>{timer=setTimeout(()=>done(late),bound);})]);
+  if(outcome===late){
+   void pending.catch(()=>undefined);
+   const messages=waitPolicySchema.definitions.Messages.const.drainAbandoned,text=String((reason as {message?:unknown}|undefined)?.message??reason??"").slice(0,200);
+   try{process.stderr.write((["en","de"] as const).map(language=>messages[language].replace("{resource}",resource.slice(-waitPolicy.maximumReportedResourceCharacters)).replace("{milliseconds}",String(bound)).replace("{reason}",text)).join("\n")+"\n");}catch{}
+   return{failed:false};
+  }
+  return outcome===undefined?{failed:false}:{failed:true,failure:(outcome as {error:unknown}).error};
+ }finally{if(timer!==undefined)clearTimeout(timer);}
 }
 
 async function waitProgress(options: LeaseOptions, progress: LeaseWait, started: number,cleanup?:CleanupLeaseScope): Promise<void> {
@@ -139,6 +159,18 @@ export function resourceLeaseMaximumPagesV1(maximumDatabaseBytes:number):number{
 
 /** 🗃️ Uses the hosting runtime's system SQLite through the owned runtime connection class. */
 function openDatabase(path: string, readonly=false,create=!readonly): Promise<LeaseDatabase> {return openResourceLeaseDatabaseV1(path,readonly,create);}
+/** 🪟️ Opens the database of one acquisition; a Windows host that reports the file unopenable only because a scanner or a retiring peer still holds it is retried on the declared pauses (a try-lock waits at most those pauses once), and a fault that outlasts them is explained like any other unopenable store. */
+async function openLeaseDatabaseWaitingV1(path:string,options:LeaseOptions,started:number,cleanup?:CleanupLeaseScope):Promise<LeaseDatabase>{
+ for(let attempt=0;;attempt++){
+  try{return await openDatabase(path);}
+  catch(error){
+   if(!leaseDatabaseUnopenableBusyV1(error))throw error;
+   if(attempt>=leaseUnopenablePausesV1.length)throw explainUnopenableLeaseV1(error,path);
+   const budget=remaining(options,started,cleanup);
+   await delay(Math.max(1,Math.min(leaseUnopenablePausesV1[attempt]!,budget)),undefined,{signal:options.signal}).catch(failure=>{options.signal.throwIfAborted();throw failure;});
+  }
+ }
+}
 
 /** 🛣️ Keeps lock identities on regular paths without following a substituted store. */
 function databasePath(directory: string, resource: string): string {
@@ -203,8 +235,8 @@ async function acquireUngatedResourceLease(options: LeaseOptions,started:number,
   remaining(options, started,cleanup);
   if(options.resource===retentionSchema.properties.resource.const&&options.maximumDatabaseBytes!==undefined&&options.maximumDatabaseBytes>retentionSchema.properties.maximumDatabaseBytes.const)throw Error("Fixed retirement catalog capacity required");const maximumDatabaseBytes=options.maximumDatabaseBytes??(options.resource===retentionSchema.properties.resource.const?retentionSchema.properties.maximumDatabaseBytes.const:undefined),maximumPages=maximumDatabaseBytes===undefined?undefined:resourceLeaseMaximumPagesV1(maximumDatabaseBytes),path=databasePath(options.directory,options.resource);
   if(maximumPages!==undefined){try{if(lstatSync(path).size>maximumDatabaseBytes!)throw Error("Original bootstrap SQLite exceeds capacity");}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}}
-  const database = await openDatabase(path);
-  let nextProgress = 0, acquired = false,failed=false,failure:unknown;
+  const database = await openLeaseDatabaseWaitingV1(path, options, started, cleanup);
+  let nextProgress = 0, acquired = false,failed=false,failure:unknown,unopenable=0;
   try {
     remaining(options,started,cleanup);database.exec("PRAGMA busy_timeout = 0; PRAGMA trusted_schema = OFF");
     for (;;) {
@@ -227,7 +259,7 @@ async function acquireUngatedResourceLease(options: LeaseOptions,started:number,
       } catch (error) {
         try { database.exec("ROLLBACK"); } catch {}
         const code = error as { code?: string; errcode?: number; errno?: number };
-        if (code.code !== "SQLITE_BUSY" && code.errcode !== 5 && code.errno !== 5) throw code.code === "SQLITE_CANTOPEN" ? explainUnopenableLeaseV1(error, path) : error;
+        if (code.code !== "SQLITE_BUSY" && code.errcode !== 5 && code.errno !== 5 && !(leaseDatabaseUnopenableBusyV1(error) && ++unopenable <= leaseUnopenablePausesV1.length)) throw code.code === "SQLITE_CANTOPEN" ? explainUnopenableLeaseV1(error, path) : error;
       }
       const elapsedMs = Date.now() - started;
       if (remaining(options, started,cleanup) <= 0) throw new Error(`Resource lease timed out: ${options.resource}`);
@@ -301,6 +333,7 @@ function runAdmissionGuardsV1(options:Pick<LeaseOptions,"directory"|"resource"|"
   for(const guard of [...guards])guard(admission);
 }
 function admitResourceLeaseV1(options:Pick<LeaseOptions,"directory"|"resource"|"mode">,lease:ResourceLease):ResourceLease{
+  if(options.mode==="exclusive")ensureLeaseYieldWatcherV1();
   try{runAdmissionGuardsV1(options,"admitted");}catch(error){finishResourceLeaseCleanupV1(true,error,[()=>lease.release()]);throw error;}
   return lease;
 }
@@ -309,7 +342,7 @@ async function acquireResourceLeaseBody(options:LeaseOptions,cleanup?:CleanupLea
  if(!cleanup&&options.timeoutMs!==0&&leaseOrderPolicyV1().gate.releaseWhileWaiting)return acquireWaitingOutsideGate(options,started);
  return acquireHoldingGate(options,started,cleanup);
 }
-/** 🚰️ Waits for a busy lease without holding the directory admission gate: each attempt takes the gate shared, tries once and gives the gate back, so retirement and every other opener are never blocked by a waiter. */
+/** 🐢️ Waits for a busy lease without holding the directory admission gate: each attempt takes the gate shared, tries once and gives the gate back, so retirement and every other opener are never blocked by a waiter. */
 async function acquireWaitingOutsideGate(options:LeaseOptions,started:number):Promise<ResourceLease>{
  const policy=leaseOrderPolicyV1().gate,tracked=trackedAcquisition.getStore(),guard=tracked&&tracked.resource===options.resource&&tracked.directory===resolve(options.directory)?tracked.guard:undefined;
  let nextProgress=0,poll=policy.pollInitialMilliseconds;
@@ -332,7 +365,7 @@ async function acquireHoldingGate(options:LeaseOptions,started:number,cleanup?:C
 }
 
 /** 🚦️ One waiter's place in a resource's arrival queue: `<directory>/<resource-hash>.queue/<arrivedAtMs>-<pid>-<owner>`. */
-export type QueuedLeaseOptions = LeaseOptions & { readonly owner: string; readonly sharedCohort?: boolean; readonly yielding?: boolean };
+export type QueuedLeaseOptions = LeaseOptions & { readonly owner: string; readonly sharedCohort?: boolean; readonly yielding?: boolean; readonly priority?: LeasePriorityV1 };
 
 /** 🎟️ Names one live request using the exact production ticket contract. */
 export function resourceQueueTicketV1(request:{readonly arrivedAtMs:number;readonly pid:number;readonly owner:string}):string{
@@ -379,13 +412,13 @@ export async function readResourceQueueClaimIdentityV1(directory:string,name:str
 /** 📊️ Reports immediate physical databases examined and safely retired in one bounded turn. */
 export type ResourceLeaseRetirementV1=Readonly<{examined:number;retired:number;allocatedBytes:number}>;
 /** ⏱️ Bounds one idle retirement slice: the idle clock, the probes per slice and the patience for the directory gate. */
-export type ResourceLeaseRetirementLimitsV1=Readonly<{idleMilliseconds?:number;nowMilliseconds?:number;maximumCandidates?:number;admissionPatienceMs?:number}>;
+export type ResourceLeaseRetirementLimitsV1=Readonly<{idleMilliseconds?:number;nowMilliseconds?:number;maximumCandidates?:number;admissionPatienceMs?:number;files?:Partial<LeaseFilePortsV1>}>;
 /** 💤️ A slice also reports the queue directories it removed, the entries it kept and whether the cursor wrapped (a full pass). */
 export type ResourceLeaseIdleRetirementV1=ResourceLeaseRetirementV1&Readonly<{queues:number;kept:number;complete:boolean}>;
 function databaseRejection(error:unknown):boolean{const value=error!==null&&typeof error==="object"?error as{code?:string;errcode?:number;errno?:number}:undefined;return ["SQLITE_ERROR","SQLITE_CORRUPT","SQLITE_NOTADB","SQLITE_SCHEMA"].includes(value?.code??"")||[1,11,17,26].includes((value?.errcode??value?.errno??-1)&255);}
 function recoverRetirementHeadroom(error:unknown,directory:string,headroom:ReturnType<typeof import("./📦️metadata/🟦️.ts").retainResourceQueueMetadataHeadroomV1>|undefined):void{if(!headroom)throw error;const code=error!==null&&typeof error==="object"?(error as NodeJS.ErrnoException).code:undefined;if(code!=="ENOSPC"&&!(code==="EFAULT"&&statfsSync(directory).bavail<8))throw error;headroom.recover();}
 async function retireResources(directory:string,control:ResourceLeaseControl,timeoutMs:number,resource?:string,limits:ResourceLeaseRetirementLimitsV1={}):Promise<ResourceLeaseIdleRetirementV1>{
- checkResourceLeaseControl(control);const started=Date.now(),options:LeaseOptions={directory,resource:"resource-retirement",mode:"exclusive",signal:control.signal,control,timeoutMs,...limits.admissionPatienceMs===undefined?{}:{admissionPatienceMs:limits.admissionPatienceMs}},idle=limits.idleMilliseconds??0,now=limits.nowMilliseconds??started,slice=Math.min(limits.maximumCandidates??Infinity,retirementSchema.properties.maximumCandidatesPerTurn.const),tolerated=(error:unknown)=>["ENOENT","ENOTEMPTY"].includes((error as NodeJS.ErrnoException|undefined)?.code??"");let gate:ResourceLease|undefined,catalog:ResourceLease|undefined,headroom:ReturnType<typeof import("./📦️metadata/🟦️.ts").retainResourceQueueMetadataHeadroomV1>|undefined,failed=false,failure:unknown;let examined=0,retired=0,allocatedBytes=0,queues=0,kept=0,complete=true;
+ checkResourceLeaseControl(control);const started=Date.now(),options:LeaseOptions={directory,resource:"resource-retirement",mode:"exclusive",signal:control.signal,control,timeoutMs,...limits.admissionPatienceMs===undefined?{}:{admissionPatienceMs:limits.admissionPatienceMs}},idle=limits.idleMilliseconds??0,ports:LeaseFilePortsV1=Object.freeze({...leaseFilePortsV1,...limits.files}),now=limits.nowMilliseconds??started,slice=Math.min(limits.maximumCandidates??Infinity,retirementSchema.properties.maximumCandidatesPerTurn.const),tolerated=(error:unknown)=>["ENOENT","ENOTEMPTY"].includes((error as NodeJS.ErrnoException|undefined)?.code??"")||leaseFileBusyV1(error,ports.platform);let gate:ResourceLease|undefined,catalog:ResourceLease|undefined,headroom:ReturnType<typeof import("./📦️metadata/🟦️.ts").retainResourceQueueMetadataHeadroomV1>|undefined,failed=false,failure:unknown;let examined=0,retired=0,allocatedBytes=0,queues=0,kept=0,complete=true;
  try{gate=await directoryAdmission(options,"exclusive",started,undefined,"resource-retirement");catalog=await acquireUnderAdmission({...options,resource:retentionSchema.properties.resource.const,timeoutMs:0,maximumDatabaseBytes:retentionSchema.properties.maximumDatabaseBytes.const},gate,started);if(lstatSync(join(directory,metadataSchema.properties.filename.const),{throwIfNoEntry:false}))headroom=(await import("./📦️metadata/🟦️.ts")).retainResourceQueueMetadataHeadroomV1(directory,catalog,control,requireResourceLeaseCustodyV1);const names=resource===undefined?await resourceLeaseRetirementNamesV1(directory,control):[resourceLeasePathV1(directory,resource).slice(resolve(directory).length+1)],admissionPath=resourceLeasePathV1(directory,admissionResource),catalogPath=resourceQueueCatalogPathV1(directory);
  const selected=[...new Set(names.flatMap(name=>/^[a-f0-9]{64}\.(sqlite|queue)$/u.test(name)?[name.slice(0,64)+".sqlite"]:[]))].sort(),prior=resource===undefined?readResourceLeaseContinuationV1(retirementCatalogDatabase(catalog,directory,control,gate),"resources"):"";let scanned=0,at=resource===undefined?resourceLeaseContinuationStartV1(selected,prior):0,last="";for(;at<selected.length;at++){const name=selected[at]!;if(examined>=slice)break;last=name;remaining(options,started);if(++scanned%resourceLeaseRetirementScanLimitsV1.entriesPerYield===0){if(scanned===resourceLeaseRetirementScanLimitsV1.entriesPerYield||scanned%resourceLeaseRetirementScanLimitsV1.entriesPerProgress===0)await control.publish({resource:"resource-retirement-scan:"+scanned,mode:"exclusive",elapsedMs:Math.max(0,Date.now()-started)});await control.yieldContinuation();remaining(options,started);}const path=join(directory,name);if(path===admissionPath||path===catalogPath)continue;
   const queue=path.replace(/\.sqlite$/u,".queue"),waiting=lstatSync(queue,{throwIfNoEntry:false});if(waiting&&(!waiting.isDirectory()||waiting.isSymbolicLink()||readdirSync(queue).length>0)){kept++;continue;}
@@ -393,7 +426,7 @@ async function retireResources(directory:string,control:ResourceLeaseControl,tim
   if(!candidate){if(waiting&&lstatSync(path,{throwIfNoEntry:false})===undefined){if(idle>0&&now-waiting.mtimeMs<idle)kept++;else{examined++;try{requireAdmission(gate,directory,true);rmdirSync(queue);queues++;}catch(error){if(!tolerated(error))throw error;}}}continue;}
   if(idle>0&&now-Math.max(candidate.file.mtimeMs,waiting?.mtimeMs??0)<idle){kept++;continue;}
   examined++;let database:LeaseDatabase|undefined,probeFailed=false,probeFailure:unknown;
-  try{requireAdmission(gate,directory,true);database=await openDatabase(path,false,false);remaining(options,started);database.exec("PRAGMA busy_timeout=0;PRAGMA trusted_schema=OFF");if(database.read("PRAGMA application_id")?.application_id!==APPLICATION_ID){kept++;continue;}database.exec("BEGIN EXCLUSIVE");const logical=readOwnedResourceLeaseV1(database,directory,path);if(logical===undefined||logical.startsWith(custodySchema.properties.resourcePrefix.const)||resource!==undefined&&logical!==resource){kept++;continue;}remaining(options,started);requireResourceLeaseCandidateV1(candidate);closeDatabase(database,gate);database=undefined;const remove=()=>{requireAdmission(gate!,directory,true);requireResourceLeaseCandidateV1(candidate);unlinkSync(path);};try{remove();}catch(error){recoverRetirementHeadroom(error,directory,headroom);remove();}retired++;allocatedBytes+=candidate.allocatedBytes;if(waiting)try{rmdirSync(queue);queues++;}catch(error){if(!tolerated(error))throw error;}
+  try{requireAdmission(gate,directory,true);database=await openDatabase(path,false,false);remaining(options,started);database.exec("PRAGMA busy_timeout=0;PRAGMA trusted_schema=OFF");if(database.read("PRAGMA application_id")?.application_id!==APPLICATION_ID){kept++;continue;}database.exec("BEGIN EXCLUSIVE");const logical=readOwnedResourceLeaseV1(database,directory,path);if(logical===undefined||logical.startsWith(custodySchema.properties.resourcePrefix.const)||resource!==undefined&&logical!==resource){kept++;continue;}remaining(options,started);requireResourceLeaseCandidateV1(candidate);closeDatabase(database,gate);database=undefined;const remove=()=>{requireAdmission(gate!,directory,true);requireResourceLeaseCandidateV1(candidate);ports.unlink(path);};const removal=await settleLeaseFileV1(()=>{try{remove();}catch(error){recoverRetirementHeadroom(error,directory,headroom);remove();}},ports,control.signal);if(!removal.settled){kept++;continue;}retired++;allocatedBytes+=candidate.allocatedBytes;if(waiting)try{rmdirSync(queue);queues++;}catch(error){if(!tolerated(error))throw error;}
   }catch(error){probeFailed=true;probeFailure=error;if(!resourceLeaseBusyV1(error)&&!databaseRejection(error))throw error;probeFailed=false;kept++;}finally{if(database)finishResourceLeaseCleanupV1(probeFailed,probeFailure,[()=>closeDatabase(database!,gate)]);}
   await control.yieldContinuation();checkResourceLeaseControl(control);
  }complete=resource!==undefined||at>=selected.length;if(resource===undefined){const after=at===selected.length?"":last;if(after!==prior){headroom?.recover();persistRetirementContinuation(catalog,directory,control,"resources",after,gate);}}return Object.freeze({examined,retired,allocatedBytes,queues,kept,complete});
@@ -421,14 +454,15 @@ export async function retireResourceQueueClaimsV1(directory:string,control:Resou
 const waitPolicy=waitPolicySchema.definitions.Policy.const;
 type QueuedTurn={readonly options:QueuedLeaseOptions;readonly queue:string;readonly ticket:string;readonly claim:ResourceLease;inner?:ResourceLease;consumed:boolean};
 const queuedTurns=new WeakMap<ResourceLease,QueuedTurn>();
-type QueueWaitInfo={version:1;position:number;queued:number;holderMode:"shared"|"exclusive";holderPid:number;holderSeconds:number;resource:string};
+type QueueWaitInfo={version:1;position:number;queued:number;holderMode:"shared"|"exclusive";holderPid:number;holderSeconds:number;resource:string}&Partial<LeaseHolderNoticeV1>;
+type QueueRow={pid:number;mode:"shared"|"exclusive";sharedCohort:boolean;yielding:boolean;priority:LeasePriorityV1};
 
-function parseQueueTicketRow(name:string,text:string):{pid:number;mode:"shared"|"exclusive";sharedCohort:boolean;yielding:boolean}|undefined{
+function parseQueueTicketRow(name:string,text:string):QueueRow|undefined{
   let row:Record<string,unknown>|undefined;try{row=JSON.parse(text);}catch{return undefined;}
-  if(row===null||typeof row!=="object"||!["mode,pid,sharedCohort,version","mode,pid,sharedCohort,version,yielding"].includes(Object.keys(row).sort().join(","))||row.version!==1||row.pid!==queueTicketRequest(name).pid||(row.mode!=="shared"&&row.mode!=="exclusive")||typeof row.sharedCohort!=="boolean"||"yielding" in row&&row.yielding!==true)return undefined;
-  return{pid:row.pid as number,mode:row.mode,sharedCohort:row.sharedCohort,yielding:row.yielding===true};
+  if(row===null||typeof row!=="object"||Object.keys(row).filter(key=>key!=="yielding"&&key!=="priority").sort().join(",")!=="mode,pid,sharedCohort,version"||row.version!==1||row.pid!==queueTicketRequest(name).pid||(row.mode!=="shared"&&row.mode!=="exclusive")||typeof row.sharedCohort!=="boolean"||"yielding" in row&&row.yielding!==true||"priority" in row&&row.priority!=="interactive"&&row.priority!=="background")return undefined;
+  return{pid:row.pid as number,mode:row.mode,sharedCohort:row.sharedCohort,yielding:row.yielding===true,priority:(row.priority as LeasePriorityV1|undefined)??"agent"};
 }
-function queueTicketRow(queue:string,name:string):{pid:number;mode:"shared"|"exclusive";sharedCohort:boolean;yielding:boolean}|undefined{
+function queueTicketRow(queue:string,name:string):QueueRow|undefined{
   let text:string;try{text=readFileSync(join(queue,name),"utf8");}catch{return undefined;}
   return parseQueueTicketRow(name,text);
 }
@@ -436,25 +470,33 @@ function queueTicketRow(queue:string,name:string):{pid:number;mode:"shared"|"exc
 function queueAheadV1(queue:string,name:string,now:number):QueueTicketV1|undefined{
   let text:string;try{text=readFileSync(join(queue,name),"utf8");}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;}
   const request=queueTicketRequest(name),row=parseQueueTicketRow(name,text);
-  return Object.freeze(row?{pid:row.pid,mode:row.mode,sharedCohort:row.sharedCohort,yielding:row.yielding,arrivedAtMs:request.arrivedAtMs}:{pid:request.pid,mode:"exclusive" as const,sharedCohort:false,yielding:false,arrivedAtMs:now});
+  return Object.freeze(row?{pid:row.pid,mode:row.mode,sharedCohort:row.sharedCohort,yielding:row.yielding,arrivedAtMs:leaseRealArrivalV1(row.priority,request.arrivedAtMs)}:{pid:request.pid,mode:"exclusive" as const,sharedCohort:false,yielding:false,arrivedAtMs:now});
 }
 function queueWaitInfo(options:QueuedLeaseOptions,queue:string,live:readonly string[],ticket:string,queued:number):QueueWaitInfo|undefined{
   const position=live.indexOf(ticket)+1;if(position<2)return undefined;
   const head=live[0]!,row=queueTicketRow(queue,head);if(!row)return undefined;
   const limit=waitPolicy.maximumReportedResourceCharacters,resource=options.resource.length>limit?"…"+options.resource.slice(-(limit-1)):options.resource;
-  return{version:1,position,queued:Math.max(queued,position),holderMode:row.mode,holderPid:row.pid,holderSeconds:Math.max(0,Math.floor((Date.now()-arrival(head))/1000)),resource};
+  return{version:1,position,queued:Math.max(queued,position),holderMode:row.mode,holderPid:row.pid,holderSeconds:Math.max(0,Math.floor((Date.now()-leaseRealArrivalV1(row.priority,arrival(head)))/1000)),resource};
+}
+/** 👀️ Adds the holder's state, phase, counters and time left to a queue notice and lets the waiter ask a stale or stuck holder to yield (never fails the wait). */
+async function observedQueueWait(options:QueuedLeaseOptions,queue:string,head:string,info:QueueWaitInfo):Promise<QueueWaitInfo>{
+  try{
+    const row=queueTicketRow(queue,head);if(!row)return info;
+    const notice=await observeLeaseHolderV1({directory:resolve(options.directory),resource:options.resource,headPid:row.pid,headMode:row.mode,headArrivalMs:leaseRealArrivalV1(row.priority,arrival(head))});
+    return notice?{...info,...notice}:info;
+  }catch{return info;}
 }
 /** 🪦️ Retires one predecessor ticket only when its independent kernel claim proves its requester gone. */
 async function reapQueueTicket(options:QueuedLeaseOptions,queue:string,name:string,pendingOptions:()=>LeaseOptions):Promise<boolean>{
   const sweepCatalog=await queueClaimCatalog(pendingOptions(),"shared",Date.now(),"queue-sweep");let retired:ResourceLease|undefined;
-  try{retired=await acquireResourceLease({...resourceQueueClaimV1(options.directory,options.resource,name),mode:"exclusive",signal:options.signal,control:options.control,timeoutMs:0,maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const});rmSync(join(queue,name),{force:true});return true;}
+  try{retired=await acquireResourceLease({...resourceQueueClaimV1(options.directory,options.resource,name),mode:"exclusive",signal:options.signal,control:options.control,timeoutMs:0,maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const});rmSync(join(queue,name),leaseRemovalOptionsV1());return true;}
   catch(error){if(!String(error).includes("Resource lease timed out"))throw error;return false;}
   finally{retired?.release();sweepCatalog.release();}
 }
 function wrapQueuedLease(lease:ResourceLease,turn:QueuedTurn):ResourceLease{
   const queued:ResourceLease={resource:lease.resource,mode:lease.mode,release(){
     if(turn.consumed)return;
-    try{lease.release();}finally{try{rmSync(join(turn.queue,turn.ticket),{force:true});}finally{turn.claim.release();}}
+    try{lease.release();}finally{try{rmSync(join(turn.queue,turn.ticket),leaseRemovalOptionsV1());}finally{turn.claim.release();}}
   }};
   originalLeases.set(queued,originalLeases.get(lease)!);queuedTurns.set(queued,turn);turn.inner=lease;return queued;
 }
@@ -480,13 +522,13 @@ async function acquireQueuedResourceLeaseBody(options: QueuedLeaseOptions,guard?
   const pendingOptions=():LeaseOptions=>({...options,timeoutMs:options.timeoutMs===undefined?undefined:Math.max(0,remaining(options,started))});
   if(options.control&&claimSweepDueV1(lastClaimSweep,resolve(options.directory),Date.now(),claimSweepIntervalV1(leaseOrderPolicyV1().gate,leaseStoreFreeRatioV1(options.directory)),options.timeoutMs))await retireResourceQueueClaimsV1(options.directory,options.control,0);
   remaining(options,started);
-  const ticket = resourceQueueTicketV1({arrivedAtMs:started,pid:process.pid,owner:options.owner});
+  const priority=options.priority??currentLeasePriorityV1(agentSessionAddressOfEnvironmentV1()!==undefined),ticket = resourceQueueTicketV1({arrivedAtMs:leaseTicketArrivalV1(priority,started),pid:process.pid,owner:options.owner});
   const admitted = resourceLeasePathV1(options.directory, options.resource, ticket);
   const queue = databasePath(options.directory, options.resource).replace(/\.sqlite$/u, ".queue");
   if (queue !== admitted.replace(/\.sqlite$/u, ".queue")) throw Error("Resource queue materialized path changed");
   const patience=leaseOrderPolicyV1().gate.admissionPatienceMilliseconds;
   const catalog=await queueClaimCatalog({...pendingOptions(),admissionPatienceMs:patience},"shared");let claim:ResourceLease;
-  try{claim=await acquireResourceLease({...pendingOptions(),admissionPatienceMs:patience,...resourceQueueClaimV1(options.directory,options.resource,ticket),mode:"shared",maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const});try{remaining(options,started);mkdirSync(queue,{recursive:true});writeFileSync(join(queue,ticket),JSON.stringify({version:1,pid:process.pid,mode:options.mode,sharedCohort:options.sharedCohort===true,...options.yielding===true?{yielding:true}:{}}),{flag:"wx"});}catch(error){claim.release();throw error;}}finally{catalog.release();}
+  try{claim=await acquireResourceLease({...pendingOptions(),admissionPatienceMs:patience,...resourceQueueClaimV1(options.directory,options.resource,ticket),mode:"shared",maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const});try{remaining(options,started);mkdirSync(queue,{recursive:true});writeFileSync(join(queue,ticket),JSON.stringify({version:1,pid:process.pid,mode:options.mode,sharedCohort:options.sharedCohort===true,...options.yielding===true?{yielding:true}:{},...priority==='agent'?{}:{priority}}),{flag:"wx"});}catch(error){claim.release();throw error;}}finally{catalog.release();}
   return awaitQueuedTurn(options,started,queue,ticket,claim,guard);
 }
 
@@ -498,10 +540,10 @@ export function claimSweepDueV1(sweeps:Map<string,number>,directory:string,nowMi
   if(intervalMilliseconds>0&&last!==undefined&&nowMilliseconds-last<intervalMilliseconds)return false;
   sweeps.set(directory,nowMilliseconds);return true;
 }
-/** 🌡️ The fraction of the lease store's filesystem that is still free; a store that cannot be measured counts as free. */
-export function leaseStoreFreeRatioV1(directory:string):number{try{const stat=statfsSync(directory);return stat.blocks>0?stat.bavail/stat.blocks:1;}catch{return 1;}}
-/** ⏰️ The sweep interval of the gate policy: the pressure interval while the free fraction of the lease store is below the policy ratio, the ordinary interval otherwise. */
-export function claimSweepIntervalV1(gate:Readonly<{claimSweepIntervalMilliseconds:number;claimSweepPressureFreeRatio:number;claimSweepPressureIntervalMilliseconds:number}>,freeRatio:number):number{return freeRatio<gate.claimSweepPressureFreeRatio?Math.min(gate.claimSweepIntervalMilliseconds,gate.claimSweepPressureIntervalMilliseconds):gate.claimSweepIntervalMilliseconds;}
+/** 🌡️ The fraction of the lease store's filesystem that is still free, or `undefined` when it cannot be measured (the call fails or reports no blocks); every caller treats an unmeasured store as under pressure, never as free. */
+export function leaseStoreFreeRatioV1(directory:string):number|undefined{const space=freeSpaceSyncV1(directory);return space?.totalBytes?space.availableBytes/space.totalBytes:undefined;}
+/** ⏰️ The sweep interval of the gate policy: the pressure interval while the free fraction of the lease store is below the policy ratio, the ordinary interval otherwise; an unknown fraction counts as nothing free, so a policy ratio of 0 still switches the pressure off. */
+export function claimSweepIntervalV1(gate:Readonly<{claimSweepIntervalMilliseconds:number;claimSweepPressureFreeRatio:number;claimSweepPressureIntervalMilliseconds:number}>,freeRatio:number|undefined):number{return (freeRatio??0)<gate.claimSweepPressureFreeRatio?Math.min(gate.claimSweepIntervalMilliseconds,gate.claimSweepPressureIntervalMilliseconds):gate.claimSweepIntervalMilliseconds;}
 /** 📬️ Whether an exclusive request is queued on a lease: only then can a further shared request of a holder be stuck behind a writer, so only then does it skip the queue; otherwise it queues normally and stays upgradeable. */
 function exclusiveTicketQueued(directory:string,resource:string):boolean{
   try{const queue=resourceLeasePathV1(directory,resource).replace(/\.sqlite$/u,".queue");for(const name of readdirSync(queue))if(queueTicketRow(queue,name)?.mode==="exclusive")return true;}catch{}
@@ -515,9 +557,9 @@ export async function upgradeQueuedResourceLease(lease:ResourceLease,limits:{rea
   const{sharedCohort:_cohort,timeoutMs:_timeout,...base}=turn.options,options:QueuedLeaseOptions=Object.freeze({...base,mode:"exclusive",...(limits.timeoutMs===undefined?{}:{timeoutMs:limits.timeoutMs})});
   const started=Date.now();remaining(options,started);forgetLeaseV1(lease);const guard=orderGuard(options,true);
   const name=join(turn.queue,turn.ticket),temporary=join(dirname(turn.queue),turn.ticket+".u");
-  try{writeFileSync(temporary,JSON.stringify({version:1,pid:process.pid,mode:"exclusive",sharedCohort:false}),{flag:"wx"});renameSync(temporary,name);}catch(error){rmSync(temporary,{force:true});throw error;}
+  try{const kept=queueTicketRow(turn.queue,turn.ticket)?.priority;writeFileSync(temporary,JSON.stringify({version:1,pid:process.pid,mode:"exclusive",sharedCohort:false,...kept===undefined||kept==="agent"?{}:{priority:kept}}),{flag:"wx"});const moved=await settleLeaseFileV1(()=>leaseFilePortsV1.rename(temporary,name));if(!moved.settled)throw moved.error;}catch(error){rmSync(temporary,leaseRemovalOptionsV1());throw error;}
   turn.consumed=true;
-  try{turn.inner.release();}catch(error){try{rmSync(name,{force:true});}finally{turn.claim.release();}throw error;}
+  try{turn.inner.release();}catch(error){try{rmSync(name,leaseRemovalOptionsV1());}finally{turn.claim.release();}throw error;}
   let upgraded:ResourceLease;try{upgraded=await awaitQueuedTurn(options,started,turn.queue,turn.ticket,turn.claim,guard);}catch(error){guard?.finish();throw error;}
   guard?.hold(upgraded);return admitResourceLeaseV1(options,upgraded);
 }
@@ -551,7 +593,7 @@ async function awaitQueuedTurn(options:QueuedLeaseOptions,started:number,queue:s
       await guard?.contention(elapsedMs);
       if (elapsedMs >= nextProgress) {
         runAdmissionGuardsV1(options,"waiting");
-        const progress = { resource: options.resource, mode: options.mode, elapsedMs },info=options.control?queueWaitInfo(options,queue,live,ticket,names.length):undefined,control=options.control;
+        const progress = { resource: options.resource, mode: options.mode, elapsedMs },waitInfo=queueWaitInfo(options,queue,live,ticket,names.length),info=waitInfo?await observedQueueWait(options,queue,live[0]!,waitInfo):undefined,control=options.control;
         await waitProgress(options, progress, started);
         if(info&&control)await waitForLeaseContinuation(options,started,()=>control.publish({resource:"lease-queue:"+JSON.stringify(info),mode:options.mode,elapsedMs:0}));
         nextProgress = elapsedMs + waitPolicy.progressIntervalMilliseconds;
@@ -561,7 +603,7 @@ async function awaitQueuedTurn(options:QueuedLeaseOptions,started:number,queue:s
       remaining(options, started);
     }
   } catch (error) {
-    try{rmSync(join(queue, ticket), { force: true });}finally{claim.release();}
+    try{rmSync(join(queue, ticket), leaseRemovalOptionsV1());}finally{claim.release();}
     throw error;
   }
 }

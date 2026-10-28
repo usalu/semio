@@ -1,0 +1,2 @@
+ let snapshot:number|undefined;
+ if(process.platform!=="win32")try{snapshot=openSync(store.snapshot(pointer.digest),"r");if(fstatSync(snapshot).size!==pointer.bytes){closeSync(snapshot);return live();}}catch{if(snapshot!==undefined)try{closeSync(snapshot);}catch{}return live();}

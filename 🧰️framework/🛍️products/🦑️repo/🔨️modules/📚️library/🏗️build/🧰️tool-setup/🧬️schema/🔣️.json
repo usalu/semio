@@ -8,6 +8,7 @@
     "version",
     "groups",
     "tools",
+    "steps",
     "messages"
   ],
   "properties": {
@@ -39,6 +40,12 @@
       "minItems": 1,
       "items": {
         "$ref": "#/definitions/Tool"
+      }
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Step"
       }
     },
     "messages": {
@@ -478,7 +485,10 @@
             "runtime",
             "running",
             "cancelled",
-            "progress"
+            "progress",
+            "warm",
+            "warmed",
+            "warmFailed"
           ],
           "properties": {
             "header": {
@@ -546,8 +556,70 @@
             },
             "progress": {
               "$ref": "#/definitions/Text"
+            },
+            "warm": {
+              "$ref": "#/definitions/Text"
+            },
+            "warmed": {
+              "$ref": "#/definitions/Text"
+            },
+            "warmFailed": {
+              "$ref": "#/definitions/Text"
             }
           }
+        }
+      }
+    },
+    "Step": {
+      "description": "A preparation that is not a pinned tool: it has no version to compare, runs only when the whole table is set up and, when optional, never fails the setup.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "summary",
+        "platforms",
+        "configuration",
+        "timeoutSeconds",
+        "optional"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "kind": {
+          "enum": [
+            "cargo-helpers"
+          ]
+        },
+        "summary": {
+          "$ref": "#/definitions/Text"
+        },
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "darwin",
+              "linux",
+              "win32"
+            ]
+          }
+        },
+        "configuration": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 7200
+        },
+        "optional": {
+          "type": "boolean"
         }
       }
     }

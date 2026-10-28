@@ -1,0 +1,38 @@
+ :: (unnamed)
+ :: Cargo execution preserves exact owner policy and separates compilation from assertions
+ :: Cargo keeps capture and output controls on Nextest execution with independent CLI authorities
+ :: Cargo lease cancellation and process timeout release exact ownership
+ :: Cargo refuses an empty selected snapshot suite with the independent Nextest status
+ :: Cargo retains failed build stdout without admitting invalid metadata
+ :: Cargo tests hold the shared compiler lease through list and assertion termination
+ :: Kernel package executes neutral target selections through its exact bounded Cargo driver
+ :: actual Cargo admission phase: lint-after-run
+ :: actual Cargo admission phase: lint-after-store
+ :: actual Cargo admission phase: lint-cancelled
+ :: actual Cargo admission phase: lint-copied
+ :: actual Cargo admission phase: lint-expired
+ :: actual Cargo admission phase: lint-foreign
+ :: actual Cargo admission phase: lint-issued-phase
+ :: actual Cargo admission phase: lint-policy-cap
+ :: actual Cargo admission phase: tests-after-run
+ :: actual Cargo admission phase: tests-after-store
+ :: actual Cargo admission phase: tests-cancelled
+ :: actual Cargo admission phase: tests-copied
+ :: actual Cargo admission phase: tests-expired
+ :: actual Cargo admission phase: tests-foreign
+ :: actual Cargo admission phase: tests-issued-phase
+ :: actual Cargo admission phase: tests-policy-cap
+ :: actual exact Cargo bounded native laws retain issued storage through compiler and receipt
+ :: dependency preparation uses exact Cargo compiler selection while libtest output stays in assertions
+ :: generated budget child callbacks pass their actual received Original to the first phase boundary
+ :: generic Cargo test command requires its exact actual owner phase without receiving or renewing
+ :: isolated Cargo stores are removed on every owner settlement and swept only after their kernel claim is released
+ :: neutral actual preparation rejects unissued carried phases in genuine failed children
+ :: neutral missing and fabricated compiler admission cannot create captures or execute a producer
+ :: proc-macro exact laws discover controlled compiler runtime: admitted
+ :: proc-macro exact laws discover controlled compiler runtime: cancelled
+ :: proc-macro exact laws discover controlled compiler runtime: failed
+ :: proc-macro exact laws discover controlled compiler runtime: multiline
+ :: proc-macro exact laws discover controlled compiler runtime: relative
+ :: repository Cargo capture consumes actual JSON inside Original compiler and target custody
+ :: shell Cargo writers use awaited Original launcher and issued generated capture

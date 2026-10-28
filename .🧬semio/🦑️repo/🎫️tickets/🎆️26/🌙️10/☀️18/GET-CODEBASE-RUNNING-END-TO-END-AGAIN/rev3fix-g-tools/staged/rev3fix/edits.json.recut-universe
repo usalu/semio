@@ -1,0 +1,288 @@
+{
+ "edits": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+   "old": "compactionGrowth:1.25,",
+   "new": "compactionGrowth:1.25,compactionDuplication:1.5,"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.d.mts",
+   "old": "readonly compactionGrowth:number;",
+   "new": "readonly compactionGrowth:number;readonly compactionDuplication:number;"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧬️schema/🔣️.json",
+   "old": "    \"compactionGrowth\": 1.25,\n",
+   "new": "    \"compactionGrowth\": 1.25,\n    \"compactionDuplication\": 1.5,\n"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+   "old": " return result.classes.length>P.compactionFactor*result.owners.length+P.compactionFloor&&result.classes.length>P.compactionGrowth*index.classes.length?refineFactIndexV1(result):result;\n",
+   "new": " const ids=result.classes.reduce((sum,cls)=>sum+cls.r.length,0);\n return result.classes.length>P.compactionFactor*result.owners.length+P.compactionFloor&&result.classes.length>P.compactionGrowth*index.classes.length||ids>P.compactionFloor&&ids>P.compactionDuplication*result.rows.length?refineFactIndexV1(result):result;\n"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+   "old": "prunes unreferenced rows and rebuilds the partition once classes outgrow the owners. */",
+   "new": "prunes unreferenced rows and rebuilds the partition once classes outgrow the owners or the class lists hold more than `compactionDuplication` times the rows (the duplication of an index patched generation after generation, which no comparison with the previous generation can see). */"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json",
+   "old": "\"metadata\": \"lane.json\", \"size\": \"lane.size\"",
+   "new": "\"metadata\": \"lane.json\", \"size\": \"lane.size\", \"destination\": \"lane.ledger\""
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts",
+   "old": "import {closeSync,constants,copyFileSync,createReadStream,existsSync,fsyncSync,linkSync,lstatSync,mkdirSync,openSync,readdirSync,renameSync,rmSync} from \"node:fs\";",
+   "new": "import {closeSync,constants,copyFileSync,fsyncSync,linkSync,lstatSync,mkdirSync,openSync,readFileSync,readSync,readdirSync,renameSync,rmSync,writeFileSync} from \"node:fs\";"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts",
+   "old": "async function digestV1(path:string):Promise<Readonly<{sha256:string;bytes:number}>>{\n const hash=createHash(\"sha256\");let bytes=0;\n for await(const chunk of createReadStream(path,{highWaterMark:rules.chunkBytes})){hash.update(chunk as Buffer);bytes+=(chunk as Buffer).length;}\n return{sha256:hash.digest(\"hex\"),bytes};\n}\n",
+   "new": "function digestV1(path:string):Readonly<{sha256:string;bytes:number}>{\n const hash=createHash(\"sha256\"),chunk=Buffer.allocUnsafe(rules.chunkBytes),descriptor=openSync(path,\"r\");let bytes=0;\n try{for(let read=readSync(descriptor,chunk,0,chunk.length,null);read>0;read=readSync(descriptor,chunk,0,chunk.length,null)){hash.update(chunk.subarray(0,read));bytes+=read;}}finally{closeSync(descriptor);}\n return{sha256:hash.digest(\"hex\"),bytes};\n}\n"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts",
+   "old": "async function entriesV1(directory:string,names:readonly string[]):Promise<RetainedEntryV1[]>{",
+   "new": "function entriesV1(directory:string,names:readonly string[]):RetainedEntryV1[]{"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts",
+   "old": "{name,sha256:\"\",bytes:size}:{name,...await digestV1(path)});",
+   "new": "{name,sha256:\"\",bytes:size}:{name,...digestV1(path)});"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts",
+   "old": "async function publishV1(source:string,destination:string,sha256:string):Promise<\"published\"|\"same\"|\"conflict\">{\n const temporary=join(dirname(destination),\".\"+basename(destination)+\".\"+randomBytes(4).toString(\"hex\")+\".tmp\");\n try{\n  copyFileSync(source,temporary,constants.COPYFILE_EXCL);\n  if((await digestV1(temporary)).sha256!==sha256)throw Error(\"Lane provenance file changed while it was retained: \"+basename(source));\n  const descriptor=openSync(temporary,\"r+\");try{fsyncSync(descriptor);}finally{closeSync(descriptor);}\n  try{linkSync(temporary,destination);return\"published\";}\n  catch(error){\n   const code=(error as NodeJS.ErrnoException).code;\n   if(code===\"EEXIST\")return(await digestV1(destination)).sha256===sha256?\"same\":\"conflict\";\n   if(![\"EPERM\",\"ENOTSUP\",\"EXDEV\",\"ENOSYS\",\"EACCES\"].includes(code??\"\"))throw error;\n   if(existsSync(destination))return(await digestV1(destination)).sha256===sha256?\"same\":\"conflict\";\n   renameSync(temporary,destination);return\"published\";\n  }\n }finally{rmSync(temporary,{force:true});}\n}\n",
+   "new": "/** 🔎️ What a name that is already taken means: the same receipt (`same`) or anything else, a file with other bytes or an entry that cannot be read (`conflict`). */\nfunction takenV1(destination:string,sha256:string):\"same\"|\"conflict\"{\n try{return digestV1(destination).sha256===sha256?\"same\":\"conflict\";}catch{return\"conflict\";}\n}\n\n/** 🪢️ The publication on a file system without hard links: the destination name is created exclusively from the verified temporary, so a name taken by a peer at any moment (whatever its bytes, even a link that leads nowhere) is never replaced, and the copy is read back; a copy that does not read back as the receipt is removed again, so no reader keeps a damaged receipt under a receipt name. */\nexport function publishWithoutLinkV1(temporary:string,destination:string,sha256:string):\"published\"|\"same\"|\"conflict\"{\n try{copyFileSync(temporary,destination,constants.COPYFILE_EXCL);}\n catch(error){if((error as NodeJS.ErrnoException).code===\"EEXIST\")return takenV1(destination,sha256);throw error;}\n if(digestV1(destination).sha256===sha256)return\"published\";\n rmSync(destination,{force:true});throw Error(\"Lane provenance file changed while it was retained: \"+basename(destination));\n}\n\nfunction publishV1(source:string,destination:string,sha256:string):\"published\"|\"same\"|\"conflict\"{\n const temporary=join(dirname(destination),\".\"+basename(destination)+\".\"+randomBytes(4).toString(\"hex\")+\".tmp\");\n try{\n  copyFileSync(source,temporary,constants.COPYFILE_EXCL);\n  if(digestV1(temporary).sha256!==sha256)throw Error(\"Lane provenance file changed while it was retained: \"+basename(source));\n  const descriptor=openSync(temporary,\"r+\");try{fsyncSync(descriptor);}finally{closeSync(descriptor);}\n  try{linkSync(temporary,destination);return\"published\";}\n  catch(error){\n   const code=(error as NodeJS.ErrnoException).code;\n   if(code===\"EEXIST\")return takenV1(destination,sha256);\n   if(![\"EPERM\",\"ENOTSUP\",\"EXDEV\",\"ENOSYS\",\"EACCES\"].includes(code??\"\"))throw error;\n   return publishWithoutLinkV1(temporary,destination,sha256);\n  }\n }finally{rmSync(temporary,{force:true});}\n}\n"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts",
+   "old": "export async function retainLaneOutputsV1(input:Readonly<{lane:string;shared:string;laneId:string;language:\"en\"|\"de\";report?:(line:string)=>void}>):Promise<RetentionSummaryV1>{",
+   "new": "export function retainLaneOutputsV1(input:Readonly<{lane:string;shared:string;laneId:string;language:\"en\"|\"de\";report?:(line:string)=>void}>):RetentionSummaryV1{"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts",
+   "old": "  const lane=await entriesV1(from,names),present=regularNamesV1(to).filter(name=>names.includes(name)),shared=await entriesV1(to,present),",
+   "new": "  const lane=entriesV1(from,names),present=regularNamesV1(to).filter(name=>names.includes(name)),shared=entriesV1(to,present),"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts",
+   "old": ":await publishV1(join(from,action.name)",
+   "new": ":publishV1(join(from,action.name)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts",
+   "old": "/** 🔗️ Runs `body` in a held lane, then publishes the lane's provenance",
+   "new": "/** 📝️ Records beside a lane which shared ledger receives its receipts, so whoever removes the lane while its holder is gone knows where they belong. Best effort: a lane without the record retains nothing when it is removed. */\nfunction recordDestinationV1(base:string,shared:string):void{\n try{const path=join(base,layout.destination),temporary=path+\".\"+randomBytes(3).toString(\"hex\");writeFileSync(temporary,shared);renameSync(temporary,path);}catch{}\n}\n\n/** 🧹️ The retention of a lane that a trimmer removes while its holder is gone (killed between its body and its own retention): the receipts the lane still holds are published into the shared ledger the holder recorded before the lane goes, so the removal cannot lose the provenance of a build that finished. The caller holds the lane's claim and has seen it idle. A lane without a record, a record that is not an absolute path and a failing retention retain nothing and never block the removal (the pool bound is the hard limit; a killed build is rebuilt by its next run); the names that conflict with the shared ledger are returned.\n * @see ../🏊️pool/🟦️.ts */\nexport function retainRemovedLaneV1(paths:Readonly<{id:string;base:string;build:string}>):readonly string[]{\n let shared:string;try{shared=readFileSync(join(paths.base,layout.destination),\"utf8\");}catch{return[];}\n if(!isAbsolute(shared))return[];\n try{return retainLaneOutputsV1({lane:paths.build,shared,laneId:paths.id,language:\"en\"}).conflicts;}catch{return[];}\n}\n\n/** 🔗️ Runs `body` in a held lane, then publishes the lane's provenance"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts",
+   "old": " let value!:T,bodyFailed=false,bodyFailure:unknown,retentionFailed=false,retentionFailure:unknown;\n try{value=await body();}catch(error){bodyFailed=true;bodyFailure=error;}\n try{await retainLaneOutputsV1(",
+   "new": " let value!:T,bodyFailed=false,bodyFailure:unknown,retentionFailed=false,retentionFailure:unknown;\n recordDestinationV1(dirname(input.lane.paths.build),input.shared);\n try{value=await body();}catch(error){bodyFailed=true;bodyFailure=error;}\n try{retainLaneOutputsV1("
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts",
+   "old": "/** 🗑️ Removes a whole lane or only its incremental directories. It takes the lane's own claim first, so it can never race an acquirer, and refuses while the claim is held or a live marker exists. */\nexport function removeLaneV1(root:string,id:string,scope:\"lane\"|\"incremental\",nowMs:number):boolean{",
+   "new": "/** 🗑️ Removes a whole lane or only its incremental directories. It takes the lane's own claim first, so it can never race an acquirer, and refuses while the claim is held or a live marker exists; `beforeRemoval` runs for a whole lane under that claim, once the lane is known to be idle and before anything is deleted (the retention of what a holder that is gone left behind). */\nexport function removeLaneV1(root:string,id:string,scope:\"lane\"|\"incremental\",nowMs:number,beforeRemoval?:(paths:ReturnType<typeof lanePathsV1>)=>void):boolean{"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts",
+   "old": "  if(scope===\"lane\")rmSync(paths.base,{recursive:true,force:true});else",
+   "new": "  if(scope===\"lane\"){beforeRemoval?.(paths);rmSync(paths.base,{recursive:true,force:true});}else"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts",
+   "old": "import {UNIT_CACHE_POLICY_V1} from \"../../🔏️key/🟦️.ts\";\n",
+   "new": "import {UNIT_CACHE_POLICY_V1} from \"../../🔏️key/🟦️.ts\";\nimport {retainRemovedLaneV1} from \"../📤️retention/🟦️.ts\";\n"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts",
+   "old": "/** 🧹️ Removes the idle lanes the pool must shed. Every removal takes the lane's own claim first, so a lane that was taken since the plan survives; returns what was removed. */\nexport function trimPoolV1(root:string,bounds:PoolBoundsV1,nowMs:number):Readonly<{removed:number;freedBytes:number}>{\n const lanes=readPoolV1(root,nowMs),size=new Map(lanes.map(lane=>[lane.id,lane.bytes??0]));let removed=0,freedBytes=0;\n for(const id of planPoolTrimV1(lanes,bounds))if(removeLaneV1(root,id,\"lane\",nowMs)){removed++;freedBytes+=size.get(id)!;}",
+   "new": "/** 🧹️ Removes the idle lanes the pool must shed. Every removal takes the lane's own claim first, so a lane that was taken since the plan survives, and publishes the receipts a holder that was killed before its own retention left in the lane (see `retainRemovedLaneV1`) before the lane goes; returns what was removed. */\nexport function trimPoolV1(root:string,bounds:PoolBoundsV1,nowMs:number,report?:PoolReportV1):Readonly<{removed:number;freedBytes:number}>{\n const lanes=readPoolV1(root,nowMs),size=new Map(lanes.map(lane=>[lane.id,lane.bytes??0]));let removed=0,freedBytes=0;\n const retain=(paths:ReturnType<typeof lanePathsV1>):void=>{const conflicts=retainRemovedLaneV1(paths);if(conflicts.length)report?.(\"retentionConflict\",{lane:paths.id,count:conflicts.length,names:conflicts.slice(0,4).join(\", \")});};\n for(const id of planPoolTrimV1(lanes,bounds))if(removeLaneV1(root,id,\"lane\",nowMs,retain)){removed++;freedBytes+=size.get(id)!;}"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts",
+   "old": "export type PoolReportV1=(kind:\"overflow\"|\"trimmed\"|\"poolBusy\",",
+   "new": "export type PoolReportV1=(kind:\"overflow\"|\"trimmed\"|\"poolBusy\"|\"retentionConflict\","
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts",
+   "old": "const trimmed=trimPoolV1(root,bounds,now());",
+   "new": "const trimmed=trimPoolV1(root,bounds,now(),options.report);"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧬️schema/🔣️.json",
+   "old": "        \"retryMilliseconds\": 40,\n",
+   "new": "        \"retryMilliseconds\": 40,\n        \"attempts\": 3,\n"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🟦️.ts",
+   "old": "  tryLock:()=>{if(library.symbols.flock!(held.at(-1)!.fd,protocol.exclusive|protocol.nonblocking)===0)return true;const pointer=library.symbols[errnoName]!();if(pointer===null||read.i32(pointer)!==protocol.contentionErrno[platform as\"darwin\"|\"linux\"])throw new PhysicalLockErrorV1(\"admission\");return false;},",
+   "new": "  tryLock:()=>{for(let attempt=0;attempt<protocol.attempts;attempt++){if(library.symbols.flock!(held.at(-1)!.fd,protocol.exclusive|protocol.nonblocking)===0)return true;const pointer=library.symbols[errnoName]!();if(pointer!==null&&read.i32(pointer)===protocol.contentionErrno[platform as\"darwin\"|\"linux\"])return false;}throw new PhysicalLockErrorV1(\"admission\");},"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🟦️.ts",
+   "old": "  tryLock:()=>{const row=rows.at(-1)!;if(range(row.handle,win.exclusive|win.failImmediately)!==0){row.locked=true;return true;}const code=Number(symbols.GetLastError!());if(code===win.contentionError)return false;throw new PhysicalLockErrorV1(\"admissionWindows\",code);},",
+   "new": "  tryLock:()=>{const row=rows.at(-1)!;let code=0;for(let attempt=0;attempt<schema.definitions.Protocol.const.attempts;attempt++){if(range(row.handle,win.exclusive|win.failImmediately)!==0){row.locked=true;return true;}code=Number(symbols.GetLastError!());if(code===win.contentionError)return false;}throw new PhysicalLockErrorV1(\"admissionWindows\",code);},"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🟦️.ts",
+   "old": "/** 🧱️ One host's kernel lock mechanism: `retain` opens and identifies a file, `tryLock` takes the exclusive lock on the file retained last (false = another holder),",
+   "new": "/** 🧱️ One host's kernel lock mechanism: `retain` opens and identifies a file, `tryLock` takes the exclusive lock on the file retained last (false = another holder; the failure code is read by a second foreign call, so a failure that is not the contention code is repeated up to `Protocol.attempts` times before it is refused),"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧪️tests/🪟️windows/🟦️.ts",
+   "old": "failLock:0,failOpen:0};",
+   "new": "failLock:0,failOpen:0,stuck:false};"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧪️tests/🪟️windows/🟦️.ts",
+   "old": "     if(state.failLock>0&&--state.failLock===0)return fail(5,0);\n",
+   "new": "     if(state.failLock>0&&--state.failLock===0)state.stuck=true;\n     if(state.stuck)return fail(5,0);\n"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json",
+   "old": "        \"bootToleranceMilliseconds\": 120000,\n",
+   "new": "        \"bootToleranceMilliseconds\": 120000,\n        \"bootFile\": \"boot.json\",\n"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts",
+   "old": "/** 🛑️ Why a grant offered by a replaced command cannot be taken over. */",
+   "new": "/** ⚓️ The boot instant of this boot, written once beside the grants: `bootAtMs` (the wall clock minus the uptime at the first reader, to the second) and the uptime of that reader. */\nexport type HostBootAnchorV1=Readonly<{bootAtMs:number;uptimeMs:number}>;\n\n/** 🕰️ Decides the anchor of the boot a process runs in. The instant a grant carries must not follow the wall clock (a step of the clock, by the user, a time service or a resumed virtual machine, moves `now - uptime` by the step wherever the uptime is monotonic, and made every running grant look like a grant of another boot): an anchor taken at an uptime that is not later than ours belongs to this boot and stays as it is; none, or one taken later than now (the uptime ran backwards, so the machine restarted since), is replaced by one taken from the wall clock and the uptime. A restart that is quicker than a heartbeat of the grants is also refused by their age. Pure and deterministic. */\nexport function hostBootAnchorV1(anchor:HostBootAnchorV1|undefined,wallMs:number,uptimeMs:number):HostBootAnchorV1{\n return anchor!==undefined&&uptimeMs>=anchor.uptimeMs?anchor:Object.freeze({bootAtMs:Math.round((wallMs-uptimeMs)/1000)*1000,uptimeMs});\n}\n\n/** 🛑️ Why a grant offered by a replaced command cannot be taken over. */"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts",
+   "old": "const bootAt=(now:number)=>Math.round((now-uptime()*1000)/1000)*1000;\n",
+   "new": "const bootAnchors=new Map<string,HostBootAnchorV1>();\nconst readBootAnchor=(value:unknown):HostBootAnchorV1|undefined=>{const row=value as Partial<HostBootAnchorV1>|undefined;return Number.isSafeInteger(row?.bootAtMs)&&Number.isSafeInteger(row?.uptimeMs)?{bootAtMs:row!.bootAtMs!,uptimeMs:row!.uptimeMs!}:undefined;};\n/** ⚓️ The boot instant of the grants in `directory`: read from the anchor of the boot (see `hostBootAnchorV1`), written when this is the first process of the boot, and kept for the life of this process, so the wall clock is read once and never moves it. */\nexport function hostBootAtV1(directory:string,nowMs:number,uptimeMs:number=Math.floor(uptime()*1000)):number{\n let anchor=bootAnchors.get(directory);\n if(anchor===undefined){\n  const path=join(directory,protocol.bootFile),stored=readBootAnchor(readJson(path));\n  anchor=hostBootAnchorV1(stored,nowMs,uptimeMs);\n  if(anchor!==stored)try{writeJson(path,anchor);}catch{}\n  bootAnchors.set(directory,anchor);\n }\n return anchor.bootAtMs;\n}\n"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts",
+   "old": " const rows:HostGrantV1[]=[],boot=bootAt(now);",
+   "new": " const rows:HostGrantV1[]=[],boot=hostBootAtV1(directory,now);"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts",
+   "old": "pidAlive:isHostCapacityV1(\"Grant\",inherited)&&alive((inherited as HostGrantV1).pid),nowMs:at,bootAtMs:bootAt(at),",
+   "new": "pidAlive:isHostCapacityV1(\"Grant\",inherited)&&alive((inherited as HostGrantV1).pid),nowMs:at,bootAtMs:hostBootAtV1(directory,at),"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts",
+   "old": "observedMegabytes:null,pid,bootAtMs:bootAt(at),",
+   "new": "observedMegabytes:null,pid,bootAtMs:hostBootAtV1(directory,at),"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts",
+   "old": "readJson,writeJson,remove,alive,bootAt,modified,delay,",
+   "new": "readJson,writeJson,remove,alive,bootAt:hostBootAtV1,modified,delay,"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🤝️handover/🟦️.ts",
+   "old": "pidAlive:alive(grant.pid),nowMs:at,bootAtMs:bootAt(at),",
+   "new": "pidAlive:alive(grant.pid),nowMs:at,bootAtMs:bootAt(directory,at),"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🤝️handover/🟦️.ts",
+   "old": "(\"Grant\",{...rest,pid,bootAtMs:bootAt(at)});",
+   "new": "(\"Grant\",{...rest,pid,bootAtMs:bootAt(directory,at)});"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/📋️contract/🟦️.ts",
+   "old": "bootAt:(now:number)=>number;",
+   "new": "bootAt:(directory:string,now:number)=>number;"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts",
+   "old": "import {decideHostHandoverV1,",
+   "new": "import {decideHostHandoverV1,hostBootAnchorV1,type HostBootAnchorV1,"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "old": "    async prefetch(request:GenerationPrefetchRequestV1){await markBuildCapacityPhaseV1(\"rebuild\");return prefetchStaleGenerationV1({root,invocation,phaseControl,registry,files:()=>state.files,request,release:()=>this.release(),language:resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language});},",
+   "new": "    async prefetch(request:GenerationPrefetchRequestV1){await upgradeBuildCapacityBeforeRebuildV1();return prefetchStaleGenerationV1({root,invocation,phaseControl,registry,files:()=>state.files,request,release:()=>this.release(),language:resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language,book:()=>markBuildCapacityPhaseV1(\"rebuild\")});},"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "old": "request:GenerationPrefetchRequestV1;release:()=>Promise<void>;language:\"en\"|\"de\"}):Promise<void> {",
+   "new": "request:GenerationPrefetchRequestV1;release:()=>Promise<void>;language:\"en\"|\"de\";book:()=>Promise<unknown>}):Promise<void> {"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "old": "    let begun=false;\n    try{\n      await prepareStaleProjectsV1({",
+   "new": "    let begun=false,booked=false;\n    try{\n      await prepareStaleProjectsV1({"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "old": "          checkScriptInvocation(invocation);\n          const roots=new Set(owners.map(",
+   "new": "          checkScriptInvocation(invocation);\n          if(!booked){booked=true;await input.book();}\n          const roots=new Set(owners.map("
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "old": "/** 🤝️ Prepares the stale projects of a pending refresh together with the commands that wait for the same graph, before the exclusive build: claims a chunk of them,",
+   "new": "/** 🤝️ Prepares the stale projects of a pending refresh together with the commands that wait for the same graph, before the exclusive build (the caller has asked for the capacity of the rebuild; the learned size is booked by `book` once a chunk is claimed, not while the run waits for a compute slot): claims a chunk of them,"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.mjs",
+   "old": "      for (const pool of pools) { await pool.farm.close(); pool.release(); rmSync(pool.base, { recursive: true, force: true }); }\n",
+   "new": "      const failures = [];\n      for (const pool of pools) { try { await pool.farm.close(); } catch (error) { failures.push(error); } finally { try { pool.release(); } finally { rmSync(pool.base, { recursive: true, force: true }); } } }\n"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.mjs",
+   "old": "      if (environment[policy.phasesEnvironment] === \"1\") write(\"[graph-farm] \" + JSON.stringify({ pools: stats, ...counts, adoptMilliseconds: Math.round(counts.adoptMilliseconds), projects, reason: plan.reason }));\n",
+   "new": "      if (environment[policy.phasesEnvironment] === \"1\") write(\"[graph-farm] \" + JSON.stringify({ pools: stats, ...counts, adoptMilliseconds: Math.round(counts.adoptMilliseconds), projects, reason: plan.reason }));\n      if (failures.length === 1) throw failures[0];\n      if (failures.length > 1) throw new AggregateError(failures, \"Closing the graph farm failed for \" + failures.length + \" pools\");\n"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🧭️liveness/🟦️.ts",
+   "name": "liveness port",
+   "old": "bootAt:()=>input.bootAtMs,",
+   "new": "bootAt:()=>input.bootAtMs,hostBootAtV1:()=>input.bootAtMs,"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "old": "/** 🔭️ Makes the git universe observable before it is asked for:",
+   "new": "/** 🙈️ The directories among `directories` (workspace relative, existing) that git does not ignore: the walk of the witness does not descend into a directory with an excluded name on its own, so a file that appears below one of them is part of the git universe without changing any identity the witness observes; the walk enters exactly these (a directory that git ignores keeps everything below it out of the universe, a tracked file below it is covered by the digest of the tracked listing). Git's own directory and the ticket folder are never in the universe. Where git cannot answer, every directory counts as not ignored. */\nasync function bazelNonIgnoredDirectoriesV1(root:string,directories:readonly string[],signal:AbortSignal):Promise<string[]>{\n const candidates=[...new Set(directories)].filter(path=>!path.split(\"/\").includes(\".git\")&&path!==\".🧬semio\"&&!path.startsWith(\".🧬semio/\"));\n if(!candidates.length)return[];\n const git=startToolV1(\"git\",[\"-c\",\"core.fsmonitor=false\",\"check-ignore\",\"-z\",\"--stdin\"],{cwd:root,stdio:[\"pipe\",\"pipe\",\"pipe\"],windowsHide:true}),chunks:Buffer[]=[];\n const cancel=()=>git.kill();signal.addEventListener(\"abort\",cancel,{once:true});\n try{\n  const code=await new Promise<number>((accept,reject)=>{git.stdout.on(\"data\",chunk=>chunks.push(chunk));git.stderr.resume();git.stdin.on(\"error\",()=>undefined);git.once(\"error\",reject);git.once(\"close\",code=>accept(code??-1));git.stdin.end(candidates.map(path=>path+\"/\\0\").join(\"\"));});\n  signal.throwIfAborted();if(code!==0&&code!==1)return candidates;\n  const ignored=new Set(Buffer.concat(chunks).toString().split(\"\\0\").filter(Boolean).map(path=>path.replace(/\\/$/u,\"\")));\n  return candidates.filter(path=>!ignored.has(path));\n }catch(error){signal.throwIfAborted();return candidates;}\n finally{signal.removeEventListener(\"abort\",cancel);}\n}\n\n/** 🔭️ Makes the git universe observable before it is asked for:"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "old": " const seen=new Set<string>();\n const walk=async(skip:(name:string)=>boolean)=>{const lane=async()=>{\n  while(pending.length){\n   checkScriptInvocation(invocation);const directory=pending.pop()!;if(seen.has(directory))continue;seen.add(directory);\n   if(directory.split(\"/\").some(part=>BAZEL_SOURCE_EXCLUDED_V1.has(part))||ignored.has(directory))continue;\n   let entries;try{entries=await readdir(join(root,directory),{withFileTypes:true});}catch{continue;}\n   for(const entry of entries){\n    if(entry.name===\".gitignore\")await lstat(join(root,directory,entry.name)).catch(()=>undefined);\n    if(entry.isDirectory()&&!BAZEL_SOURCE_EXCLUDED_V1.has(entry.name)&&!skip(entry.name))pending.push(slash(join(directory,entry.name)));\n   }\n   await invocation.control.yieldContinuation();\n  }\n };await Promise.all(Array.from({length:16},lane));};\n await walk(()=>false);\n if(whole){await lstat(join(root,\".gitignore\")).catch(()=>undefined);pending.push(\"\");await walk(name=>bazelUniversePrunesV1(whole,name));}\n",
+   "new": " const seen=new Set<string>(),reached=new Set<string>(),excluded:string[]=[],closed=new Set(ignored);\n const walk=async(skip:(name:string)=>boolean)=>{const lane=async()=>{\n  while(pending.length){\n   checkScriptInvocation(invocation);const directory=pending.pop()!;if(seen.has(directory))continue;seen.add(directory);\n   if(closed.has(directory))continue;\n   if(!reached.has(directory)&&directory.split(\"/\").some(part=>BAZEL_SOURCE_EXCLUDED_V1.has(part))){excluded.push(directory);continue;}\n   let entries;try{entries=await readdir(join(root,directory),{withFileTypes:true});}catch{continue;}\n   for(const entry of entries){\n    if(entry.name===\".gitignore\")await lstat(join(root,directory,entry.name)).catch(()=>undefined);\n    if(!entry.isDirectory())continue;const path=slash(join(directory,entry.name));\n    if(BAZEL_SOURCE_EXCLUDED_V1.has(entry.name))excluded.push(path);else if(!skip(entry.name)){reached.add(path);pending.push(path);}\n   }\n   await invocation.control.yieldContinuation();\n  }\n };\n await Promise.all(Array.from({length:16},lane));\n while(excluded.length){\n  const open=await witness.allow(\"git\",()=>bazelNonIgnoredDirectoriesV1(root,excluded.splice(0),invocation.control.signal));if(!open.length)break;\n  for(const path of await witness.allow(\"git\",()=>bazelIgnoredDirectoriesV1(root,open,invocation.control.signal)))closed.add(path);\n  for(const path of open){seen.delete(path);reached.add(path);pending.push(path);}\n  await Promise.all(Array.from({length:16},lane));\n }};\n await walk(()=>false);\n if(whole){await lstat(join(root,\".gitignore\")).catch(()=>undefined);pending.push(\"\");await walk(name=>bazelUniversePrunesV1(whole,name));}\n"
+  }
+ ],
+ "newFiles": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🌊️patch-drift/🟦️.ts",
+   "from": "files/patch-drift.ts"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/🪦️dead-holder/🟦️.ts",
+   "from": "files/dead-holder.ts"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/🪦️dead-holder/📥️worker/🟦️.ts",
+   "from": "files/dead-holder-worker.ts"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/🪢️link-less/🟦️.ts",
+   "from": "files/link-less.ts"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧪️tests/🔁️lock-attempts/🟦️.ts",
+   "from": "files/lock-attempts.ts"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/⚓️boot-anchor/🟦️.ts",
+   "from": "files/boot-anchor.ts"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🎟️prefetch-booking/🟦️.ts",
+   "from": "files/prefetch-booking.ts"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🔒️farm-close/🟦️.ts",
+   "from": "files/farm-close.ts"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🧪️tests/🙈️excluded-directory/🟦️.ts",
+   "from": "files/excluded-directory.ts"
+  }
+ ]
+}

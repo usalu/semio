@@ -1,0 +1,15 @@
+M	🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🟦️.ts
+M	🧰️framework/🔨️modules/⚙️runtime/🧬️schema/🗣️messages.json
+M	🧰️framework/🔨️modules/⚙️runtime/🧪️tests/🟦️.ts
+A	🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🦀️.rs
+A	🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🧬️schema/🔣️.json
+A	🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🧮️system/🟦️.ts
+A	🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🧮️system/🧪️tests/🟦️.ts
+A	🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🏗️addon/🟦️.ts
+A	🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🏗️addon/🧪️tests/🟦️.ts
+A	🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🧪️tests/🟦️.ts
+A	🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🧪️tests/🔣️.json
+A	🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🧪️tests/🐍️.py
+A	🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🧪️tests/🏃️corpus/🟦️.ts
+A	🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/🌐️cross-runtime/🟦️.ts
+A	🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/🌐️cross-runtime/📜️script.ts

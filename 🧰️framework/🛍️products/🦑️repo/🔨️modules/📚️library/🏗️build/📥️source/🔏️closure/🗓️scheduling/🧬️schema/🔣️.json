@@ -2,12 +2,13 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio:build:scheduling-domains:v1",
   "title": "Build Scheduling Domains",
-  "description": "The code that only schedules, admits, stores or reports an action and never computes the bytes of its outputs, as workspace-relative directory prefixes grouped in named domains. A captured implementation scope that opts into a domain keeps those files out of its action key: they travel in an unkeyed overlay beside the keyed snapshot. Everything that no domain names stays keyed (fail closed). The ports of a domain are the only modules of it that keyed code may import.",
+  "description": "The code that only schedules, admits, stores or reports an action and never computes the bytes of its outputs, as workspace-relative directory prefixes grouped in named domains. A captured implementation scope that opts into a domain keeps those files out of its action key: they travel in an unkeyed overlay beside the keyed snapshot. Everything that no domain names stays keyed (fail closed). The ports of a domain are the only modules of it that keyed code may import. Content islands (`keyed`) are named explicitly and may not overlap a scheduling prefix.",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "version",
-    "domains"
+    "domains",
+    "keyed"
   ],
   "properties": {
     "version": {
@@ -64,6 +65,17 @@
               "maxLength": 200
             }
           },
+          "nativeKeyed": {
+            "description": "Prefixes of this domain that stay keyed for the commands that compile Rust: they build the Cargo arguments, profile selectors and artifact capture, so an edit changes the bytes a native target writes even though the Bazel executor identity treats the domain as scheduling. Each must equal or lie inside one of the domain's prefixes.",
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "string",
+              "pattern": "^[^/].*/$",
+              "minLength": 2,
+              "maxLength": 200
+            }
+          },
           "ports": {
             "type": "array",
             "maxItems": 256,
@@ -71,6 +83,46 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 256
+            }
+          }
+        }
+      }
+    },
+    "keyed": {
+      "description": "Content islands: the files and directories that derive, encode, digest or accept the bytes an action's output depends on and sit next to scheduling code. No scheduling prefix may contain one or lie inside one, and no scheduling file may import one: whatever the table does not name as scheduling stays keyed, and this list makes the cases a reviewer found explicit, so a widened prefix is refused when the table is admitted.",
+      "type": "array",
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "reason"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 256
+          },
+          "reason": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "en",
+              "de"
+            ],
+            "properties": {
+              "en": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "de": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
             }
           }
         }

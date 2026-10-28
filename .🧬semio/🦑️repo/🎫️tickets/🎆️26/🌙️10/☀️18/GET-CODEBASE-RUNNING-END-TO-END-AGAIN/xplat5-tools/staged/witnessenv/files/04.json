@@ -1,0 +1,27 @@
+{
+  "volatile": [
+    { "platform": "win32", "name": "WT_SESSION", "source": "https://learn.microsoft.com/windows/terminal/tutorials/ssh (a new GUID per Windows Terminal tab)" },
+    { "platform": "win32", "name": "WT_PROFILE_ID", "source": "Windows Terminal profile GUID of the tab" },
+    { "platform": "win32", "name": "SESSIONNAME", "source": "Console or RDP-Tcp#N: changes with every remote desktop session" },
+    { "platform": "win32", "name": "ConEmuPID", "source": "ConEmu process id of the terminal host" },
+    { "platform": "win32", "name": "ConEmuHWND", "source": "ConEmu window handle" },
+    { "platform": "linux", "name": "SSH_AUTH_SOCK", "source": "https://man.openbsd.org/ssh-agent (a socket path per login)" },
+    { "platform": "linux", "name": "SSH_CONNECTION", "source": "https://man.openbsd.org/sshd (client and server address and port of the login)" },
+    { "platform": "linux", "name": "DBUS_SESSION_BUS_ADDRESS", "source": "https://dbus.freedesktop.org/doc/dbus-specification.html (a bus address per session)" },
+    { "platform": "linux", "name": "XDG_SESSION_ID", "source": "https://www.freedesktop.org/software/systemd/man/pam_systemd.html (a session id per login)" },
+    { "platform": "linux", "name": "INVOCATION_ID", "source": "https://www.freedesktop.org/software/systemd/man/systemd.exec.html (a new id per unit invocation)" },
+    { "platform": "linux", "name": "TMUX", "source": "https://github.com/tmux/tmux/wiki/FAQ (socket, server pid and session of the multiplexer)" },
+    { "platform": "linux", "name": "GNOME_TERMINAL_SCREEN", "source": "gnome-terminal object path of the tab" },
+    { "platform": "devcontainer", "name": "VSCODE_IPC_HOOK_CLI", "source": "https://code.visualstudio.com/docs/devcontainers/containers (a socket path per attached window)" },
+    { "platform": "devcontainer", "name": "VSCODE_GIT_IPC_HANDLE", "source": "a socket path per window" },
+    { "platform": "devcontainer", "name": "REMOTE_CONTAINERS_IPC", "source": "a socket path per attach" },
+    { "platform": "devcontainer", "name": "REMOTE_CONTAINERS_SOCKETS", "source": "the forwarded sockets of one attach" },
+    { "platform": "devcontainer", "name": "BROWSER", "source": "the path of the helper script of the attached server version" },
+    { "platform": "darwin", "name": "ITERM_SESSION_ID", "source": "https://iterm2.com/documentation-variables.html (a GUID per tab)" },
+    { "platform": "darwin", "name": "TERM_SESSION_ID", "source": "Terminal.app session id (already declared)" }
+  ],
+  "inputs": [
+    "PATH", "Path", "HOME", "USERPROFILE", "LANG", "TERM", "TERM_PROGRAM", "NODE_ENV", "CARGO_HOME", "XDG_RUNTIME_DIR", "XDG_CACHE_HOME", "LOCALAPPDATA",
+    "REMOTE_CONTAINERS", "DEVCONTAINER", "CODESPACES", "CI", "GITHUB_ACTIONS", "SEMIO_FIXTURE_VALUE", "SSH_ASKPASS", "DISPLAY", "TMPDIR", "TEMP"
+  ]
+}

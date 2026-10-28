@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "🧹️ Retention of the change journal state directories below the user cache (one `<id>/journal` per worktree and user, each holding the graph memo of up to the memo budget): a directory whose service no longer runs is removed once nothing in it changed for the abandoned age, or after the shorter quiet time when the worktree it was made for is gone (a dropped mirror, a removed clone).",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "abandonedAfterMilliseconds": 604800000,
+        "rootGoneQuietMilliseconds": 600000,
+        "identifier": "^[0-9a-f]{12}$",
+        "containers": "^(repo|semio-repo-[0-9]+)$",
+        "journalName": "journal"
+      }
+    },
+    "Messages": {
+      "const": {
+        "swept": {
+          "en": "[repo journal] removed {count} abandoned change journal state director(ies) ({freedMib} MiB) of worktrees that no longer run",
+          "de": "[repo journal] {count} verwaiste Änderungsjournal-Zustandsverzeichnis(se) ({freedMib} MiB) von nicht mehr laufenden Arbeitsverzeichnissen entfernt"
+        }
+      }
+    }
+  }
+}

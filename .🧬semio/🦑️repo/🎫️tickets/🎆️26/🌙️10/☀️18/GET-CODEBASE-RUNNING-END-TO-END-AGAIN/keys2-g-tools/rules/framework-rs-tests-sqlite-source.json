@@ -1,0 +1,44 @@
+{
+  "id": "framework-rs-tests-sqlite-source",
+  "evidence": "static",
+  "description": "Like framework-rs-tests; the SQLite snapshot source test also reads the plugin schema and the fixture of the sqlite artifact (learned by the read oracle: runtime paths no static read can see).",
+  "select": {
+    "project": "@semio-tech/framework-rs",
+    "targets": [
+      "test-snapshot-sqlite-source"
+    ]
+  },
+  "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "reads"
+  ],
+  "reads": [
+    {
+      "router": {
+        "source": "🧰️framework/📦️packages/🦀️rust/📜️script.ts",
+        "bases": [
+          "🧰️framework"
+        ]
+      }
+    },
+    {
+      "globs": [
+        "{workspaceRoot}/bunfig.toml",
+        "{workspaceRoot}/tsconfig.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/**/*"
+      ]
+    },
+    {
+      "globs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ]
+    }
+  ]
+}

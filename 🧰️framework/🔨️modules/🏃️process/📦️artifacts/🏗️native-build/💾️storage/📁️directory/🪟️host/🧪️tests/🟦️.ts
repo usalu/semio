@@ -96,8 +96,7 @@ test("LongPathsEnabled is read with the declared hive, key, value and flags and 
  expect(windows.longPaths.hive>>>0).toBe(0x80000002);
 });
 
-test("the real FFI binding is refused off Windows with a precise message",()=>{
- if(process.platform==="win32")return;
+test.skipIf(process.platform==="win32")("the real FFI binding is refused off Windows with a precise message",()=>{
  expect(()=>readNativeWindowsLongPathsEnabledV1()).toThrow("Actual Windows Bun registry receiver required");
 });
 

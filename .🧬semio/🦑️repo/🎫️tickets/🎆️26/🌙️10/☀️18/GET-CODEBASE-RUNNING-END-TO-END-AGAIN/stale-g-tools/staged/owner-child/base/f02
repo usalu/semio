@@ -1,0 +1,266 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "semio://repo/build/inference-stamps/v1",
+ "title": "Graph inference protocol stamps",
+ "description": "The declared, versioned protocol of the graph inference. Every inferrer carries one stamp; a record or generation fact names the stamp of each inferrer that took part in its output (the format of the persisted project record carries its own stamp in the observation schema), never the bytes of the code that ran. Bump the stamp of an inferrer when the output of its code changes for the same inputs: the law over the output corpus fails until the stamp and the corpus digest move together. `scope` says who consumes the stamp: `project` every valid project record, `native` the projects with a native target, `environment` only the cross-project edges, `all` every record and the environment. `sources` lists the workspace path fragments of the code the stamp covers; `none` lists the fragments of infrastructure that never changes an output. Data files that match neither stay content facts.",
+ "definitions": {
+  "Protocol": {
+   "const": {
+    "version": 1,
+    "scopes": [
+     "project",
+     "native",
+     "environment",
+     "all"
+    ],
+    "inferrers": {
+     "coordinates": {
+      "stamp": "semio.graph-inferrer.coordinates/1",
+      "scope": "project",
+      "sources": [
+       "🏗️build/🕸️graph/📥️inference/📍️coordinates/"
+      ]
+     },
+     "bootstrap": {
+      "stamp": "semio.graph-inferrer.bootstrap/1",
+      "scope": "project",
+      "sources": [
+       "🏗️build/🕸️graph/📥️inference/🔁️bootstrap/"
+      ]
+     },
+     "helpers": {
+      "stamp": "semio.graph-inferrer.helpers/1",
+      "scope": "project",
+      "sources": [
+       "🕸️dependencies/🟦️typescript/🟨️.mjs",
+       "🕸️dependencies/🧩️runtime/🟨️.mjs",
+       "🧑‍💻dev/⚙️engine/🧭️selection/🟨️.mjs",
+       "🎮️playground/🧩️composition/🟨️.mjs",
+       "🎮️playground/🖥️native-host/",
+       "📇️catalog/🚚️deployment/",
+       "🪪️identity/📁️installation/"
+      ]
+     },
+     "source-analyses": {
+      "stamp": "semio.graph-inferrer.source-analyses/1",
+      "scope": "project",
+      "sources": [
+       "🏗️build/🕸️graph/📥️inference/🧬️source-analyses/",
+       "⚡️caching/📥️inference/"
+      ]
+     },
+     "bun-lock": {
+      "stamp": "semio.graph-inferrer.bun-lock/1",
+      "scope": "project",
+      "sources": [
+       "🏗️build/🕸️graph/📥️inference/🧶️bun-lock/"
+      ]
+     },
+     "target-policy": {
+      "stamp": "semio.graph-inferrer.target-policy/3",
+      "scope": "project",
+      "sources": [
+       "🏗️build/🕸️graph/📥️inference/🎯️target-policy/",
+       "🏗️build/🎚️mode/",
+       "🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/",
+       "🏃️process/🧪️testing/🦀️cargo/🏃️execution/"
+      ]
+     },
+     "native-manifests": {
+      "stamp": "semio.graph-inferrer.native-manifests/1",
+      "scope": "native",
+      "sources": [
+       "🏗️build/🕸️graph/📥️inference/🦀️native-manifests/"
+      ]
+     },
+     "script-inputs": {
+      "stamp": "semio.graph-inferrer.script-inputs/1",
+      "scope": "project",
+      "sources": [
+       "🏗️build/🕸️graph/📥️inference/🧭️script-inputs/",
+       "🏗️build/📥️inputs/🟨️.mjs",
+       "🏗️build/📥️inputs/🧮️digest/🟨️.mjs",
+       "🏗️build/📥️inputs/🧮️digest/🔣️schema.json",
+       "🏗️build/📥️inputs/🔒️lock/",
+       "🏗️build/📤️arguments/"
+      ]
+     },
+     "generator-outputs": {
+      "stamp": "semio.graph-inferrer.generator-outputs/1",
+      "scope": "project",
+      "sources": [
+       "🏗️build/🕸️graph/📥️inference/🏭️generator-outputs/"
+      ]
+     },
+     "component-targets": {
+      "stamp": "semio.graph-inferrer.component-targets/1",
+      "scope": "project",
+      "sources": [
+       "🏗️build/🕸️graph/📥️inference/🧩️component-targets/"
+      ]
+     },
+     "playground-targets": {
+      "stamp": "semio.graph-inferrer.playground-targets/1",
+      "scope": "project",
+      "sources": [
+       "🏗️build/🕸️graph/📥️inference/🎮️playground-targets/"
+      ]
+     },
+     "project-assembly": {
+      "stamp": "semio.graph-inferrer.project-assembly/1",
+      "scope": "project",
+      "sources": [
+       "🏗️build/🕸️graph/📥️inference/🧱️project-assembly/"
+      ]
+     },
+     "owner-discovery": {
+      "stamp": "semio.graph-inferrer.owner-discovery/1",
+      "scope": "project",
+      "sources": [
+       "🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/"
+      ]
+     },
+     "project-nodes": {
+      "stamp": "semio.graph-inferrer.project-nodes/1",
+      "scope": "project",
+      "sources": [
+       "🏗️build/🕸️graph/📥️inference/📦️project-nodes/"
+      ]
+     },
+     "dependency-edges": {
+      "stamp": "semio.graph-inferrer.dependency-edges/1",
+      "scope": "environment",
+      "sources": [
+       "🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/"
+      ]
+     },
+     "observation": {
+      "stamp": "semio.graph-inferrer.observation/1",
+      "scope": "all",
+      "sources": [
+       "🏗️build/👁️observation/",
+       "🏗️build/📥️inputs/📋️data/",
+       "🏗️build/📥️inputs/🧮️digest/📥️read/",
+       "⚡️caching/🗃️records/",
+       "🧬️schema/✅️validator/"
+      ]
+     },
+     "graph-assembly": {
+      "stamp": "semio.graph-inferrer.graph-assembly/1",
+      "scope": "all",
+      "sources": [
+       "🏗️build/🕸️graph/🟦️.ts",
+       "🏗️build/🕸️graph/🚪️admission/",
+       "🏗️build/🕸️graph/🧭️file-owner/",
+       "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs",
+       "🏗️build/🧭️selection/",
+       "🏗️build/🧬️schema/"
+      ]
+     }
+    },
+    "none": [
+     "🏗️build/📥️inputs/💾️storage/",
+     "⚡️caching/💾️storage/",
+     "🏗️build/📥️source/🔏️closure/",
+     "🏗️build/📥️inputs/🔏️revision/",
+     "🏗️build/📥️inputs/🦀️resolution/",
+     "🏗️build/🕸️graph/📥️inference/♻️revision/",
+     "🏗️build/🕸️graph/📥️inference/🚦️invocation/",
+     "🏗️build/🕸️graph/📥️inference/🧰️internals/",
+     "🏗️build/🕸️graph/📥️inference/🪢️revision-graph/",
+     "🏗️build/🕸️graph/📥️inference/🗂️components/",
+     "🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+     "🏗️build/🕸️graph/📥️inference/🔖️stamps/",
+     "🏗️build/🕸️graph/🕰️generations/",
+     "🏗️build/🕸️graph/🗂️generation-files/",
+     "🏗️build/🕸️graph/🔁retry/",
+     "🏗️build/🧷️format-stamps/",
+     "🏗️build/🧠️memory/"
+    ]
+   }
+  },
+  "Id": {
+   "type": "string",
+   "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+  },
+  "Stamp": {
+   "type": "string",
+   "pattern": "^semio\\.graph-inferrer\\.[a-z][a-z0-9]*(?:-[a-z0-9]+)*/[1-9][0-9]*$"
+  },
+  "Fragments": {
+   "type": "array",
+   "minItems": 1,
+   "uniqueItems": true,
+   "items": {
+    "type": "string",
+    "minLength": 2,
+    "maxLength": 200
+   }
+  },
+  "Inferrer": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "stamp",
+    "scope",
+    "sources"
+   ],
+   "properties": {
+    "stamp": {
+     "$ref": "#/definitions/Stamp"
+    },
+    "scope": {
+     "enum": [
+      "project",
+      "native",
+      "environment",
+      "all"
+     ]
+    },
+    "sources": {
+     "$ref": "#/definitions/Fragments"
+    }
+   }
+  },
+  "Document": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "scopes",
+    "inferrers",
+    "none"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "scopes": {
+     "type": "array",
+     "items": {
+      "enum": [
+       "project",
+       "native",
+       "environment",
+       "all"
+      ]
+     },
+     "uniqueItems": true
+    },
+    "inferrers": {
+     "type": "object",
+     "minProperties": 1,
+     "propertyNames": {
+      "$ref": "#/definitions/Id"
+     },
+     "additionalProperties": {
+      "$ref": "#/definitions/Inferrer"
+     }
+    },
+    "none": {
+     "$ref": "#/definitions/Fragments"
+    }
+   }
+  }
+ }
+}

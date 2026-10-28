@@ -7,6 +7,7 @@ import corpus from "./🔣️.json";
 import schema from "./🧬️schema.json";
 import {createNativeBuildCallerCapabilitiesV1} from "../../../../📥️caller/🟦️.ts";
 import {createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {renderRepoErrorV1,type RepoErrorV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🚨️error/🟦️.ts";
 
 const executor=await import("../../🎬️executor/🟦️.ts"),api=await import("../../📜️script.ts"),modeOf=(task:{definition:{execution:{env?:Record<string,string>}}})=>task.definition.execution.env?.SEMIO_BUILD_MODE??null;
 
@@ -67,8 +68,10 @@ for(const row of corpus.authority)test(`Bazel task environment ${row.id}: the ca
  const root=process.cwd(),capabilities=createNativeBuildCallerCapabilitiesV1(root,["run","fixture:publish"],"bazel",{SEMIO_BUILD_MODE:row.caller}),task={id:"fixture:publish",project:"fixture",target:"publish",root:"fixture",label:"t_0000000000000000",dependencies:[],args:[],...(row.configuration===null?{}:{configuration:row.configuration}),definition:{execution:{kind:"command",command:"repo ./📜️script.ts publish"}}} as any;
  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"bazel:mode-axis",maximumElapsedMilliseconds:30000},capabilities,Date.now()),async invocation=>{
   if(row.refused){
-   expect(()=>executor.issueBazelTaskEnvironmentV1(root,invocation,task,{})).toThrow("Conflicting build modes");
-   expect(()=>executor.issueBazelTaskEnvironmentV1(root,invocation,task,{})).toThrow(corpus.refusals["Conflicting build modes"]);
+   const refusal=(()=>{try{executor.issueBazelTaskEnvironmentV1(root,invocation,task,{});}catch(error){return error as RepoErrorV1;}throw Error("A build mode refusal is required");})();
+   expect(refusal.key).toBe("build.bazel.build-modes-conflict");
+   expect(renderRepoErrorV1(refusal,"en")).toContain("Conflicting build modes");
+   expect(renderRepoErrorV1(refusal,"de")).toContain(corpus.refusals["Conflicting build modes"]);
    return;
   }
   expect(executor.issueBazelTaskEnvironmentV1(root,invocation,task,{}).SEMIO_BUILD_MODE).toBe(row.caller);

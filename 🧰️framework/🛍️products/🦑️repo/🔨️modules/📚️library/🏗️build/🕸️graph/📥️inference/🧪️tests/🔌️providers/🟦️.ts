@@ -1,13 +1,14 @@
-/** 🔌️ Law of provider-aware build inputs: a command whose closure defines framework script provider ports hashes the designation, its schema and the import closure of the designated module of every port it defines (every designated module when a port is defined by a name no literal states), never the modules of other ports, so editing a provider invalidates exactly the commands that can load it. The scenario lives in `./🔣️.json` as language-agnostic data; the real repository is checked against independent TypeScript-compiler and esbuild oracles. */
+/** 🔌️ Law of provider-aware build inputs: a command whose closure defines framework script provider ports names, for every designated port it defines (every designated port when a port is defined by a name no literal states), the providers project's group of that port, which holds the designation, its schema and the import closure of the designated module; the command's inputs expanded through those references hash exactly that, never the modules of other ports, so editing a provider invalidates exactly the commands that can load it (`🧭️script-inputs/🔌️provider-closures`). The scenario lives in `./🔣️.json` as language-agnostic data; the real repository is checked against independent TypeScript-compiler and esbuild oracles. */
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import { build } from "esbuild";
 import ts from "typescript";
 import { findWorkspaceRoot } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { cacheInternals, createScriptInputCache } from "../../🟨️.mjs";
+import { closureApiV1, closureHandleOfV1 } from "../../🧭️script-inputs/🟨️.mjs";
 import repositoryDesignation from "../../../../../🏃️process/🔌️providers/🔣️.json" with { type: "json" };
 import corpus from "./🔣️.json" with { type: "json" };
 import corpusSchema from "./🧬️schema/🔣️.json" with { type: "json" };
@@ -22,10 +23,26 @@ const prefix = "{workspaceRoot}/";
 const presentation = new Set<string>(JSON.parse(readFileSync(join(library, "🏗️build/🔣️policy.json"), "utf8")).presentationResources);
 const scheduling = buildSchedulingPrefixesV1();
 
-const inputsOf = async (directory: string, cache = createScriptInputCache()): Promise<readonly string[]> => {
+const providerGroups = new WeakMap<object, Map<string, Promise<Map<string, unknown[]>>>>();
+const providerGroupsOf = (cache: object, designation: string): Promise<Map<string, unknown[]>> => {
+  const known = providerGroups.get(cache) ?? new Map<string, Promise<Map<string, unknown[]>>>();
+  providerGroups.set(cache, known);
+  if (!known.has(designation)) known.set(designation, (async () => {
+    const api = closureApiV1(createScriptInputCache({ scriptProviderDesignation: designation, lateClosures: true }), workspace);
+    const handles = (await api.sharedClosureGroups(relative(workspace, dirname(designation)), basename(designation)) as [string, unknown][]).filter(([name]) => name.startsWith("scriptProvider:")).map(([name, list]) => [name, closureHandleOfV1(list)] as const);
+    const resolved = await api.resolve(handles.map(([, handle]) => [handle.key, handle.recipe]));
+    return new Map(handles.map(([name, handle]) => [name, resolved.values.get(handle.key) as unknown[]]));
+  })());
+  return known.get(designation)!;
+};
+
+const inputsOf = async (directory: string, cache = createScriptInputCache(), designation = designationPath): Promise<readonly string[]> => {
   const target = { options: { cwd: relative(workspace, directory), command: "repo ./📜️script.ts run" } };
   const declarations: unknown[] = await cacheInternals.genericTargetCommandInputs(target, workspace, [], cache);
-  return declarations.filter((input): input is string => typeof input === "string").map(input => input.slice(prefix.length));
+  const references = declarations.filter((input): input is { input: string; projects: string[] } => typeof (input as { input?: unknown })?.input === "string" && Array.isArray((input as { projects?: unknown }).projects));
+  const groups = references.length ? await providerGroupsOf(cache, designation) : new Map<string, unknown[]>();
+  const files = [...declarations, ...references.flatMap(reference => groups.get(reference.input) ?? [])].filter((input): input is string => typeof input === "string");
+  return [...new Set(files)].map(input => input.slice(prefix.length));
 };
 
 const hashOf = (inputs: readonly string[]): string => {
@@ -45,17 +62,20 @@ test("editing a designated provider module changes the input hash of exactly the
   const write = (name: string, content: string) => { mkdirSync(dirname(join(root, name)), { recursive: true }); writeFileSync(join(root, name), content); };
   const designation = (value: unknown) => write("designation.json", JSON.stringify(value));
   const cache = () => createScriptInputCache({ scriptProviderDesignation: join(root, "designation.json") });
-  const measure = async () => Object.fromEntries(await Promise.all(corpus.cases.map(async row => [row.id, await inputsOf(join(root, row.directory), cache())] as const)));
+  const measure = async () => Object.fromEntries(await Promise.all(corpus.cases.map(async row => [row.id, await inputsOf(join(root, row.directory), cache(), join(root, "designation.json"))] as const)));
   try {
     const specifier = relative(join(root, "loads"), loaderPath);
     for (const [name, content] of Object.entries(corpus.files)) write(name, content.replace("{loader}", specifier));
     designation(corpus.designation);
+    write("📋️project.json", JSON.stringify({ name: "@fixture/provider-inputs", metadata: { semio: { scriptProviders: "designation.json" } }, targets: {} }));
+    write("🧬️schema/🔣️.json", readFileSync(schemaPath, "utf8"));
     const baseline = await measure(), baselineHashes = Object.fromEntries(Object.entries(baseline).map(([id, inputs]) => [id, hashOf(inputs)]));
     for (const row of corpus.cases) {
       const inputs = baseline[row.id]!;
       for (const name of row.includes) expect(inputs, `${row.id} includes ${name}`).toContain(`${relativeRoot}/${name}`);
       for (const name of row.excludes) expect(inputs, `${row.id} excludes ${name}`).not.toContain(`${relativeRoot}/${name}`);
-      expect(inputs.includes(relative(workspace, schemaPath)), `${row.id} designation schema`).toBe(row.definesPorts);
+      expect(inputs.includes(`${relativeRoot}/🧬️schema/🔣️.json`), `${row.id} designation schema`).toBe(row.includes.includes("designation.json"));
+      expect(row.definesPorts || !row.includes.includes("designation.json"), `${row.id} names providers only when it defines ports`).toBe(true);
       expect(inputs.includes(relative(workspace, loaderPath)), `${row.id} loader`).toBe(row.importsLoader);
     }
     for (const edit of corpus.edits) {

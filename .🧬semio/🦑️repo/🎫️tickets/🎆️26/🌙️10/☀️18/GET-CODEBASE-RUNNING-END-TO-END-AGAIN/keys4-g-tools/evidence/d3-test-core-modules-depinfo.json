@@ -1,0 +1,24 @@
+{
+ "target": "test-core-modules",
+ "crates": [
+  "semio-framework-hash",
+  "semio-framework-pixels",
+  "semio-framework-intrinsic-size",
+  "semio-framework-mesh-engine"
+ ],
+ "closureCrates": 104,
+ "depInfoUnits": 129,
+ "workspaceFilesRead": 647,
+ "declared": 1358,
+ "undeclared": [
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/✂️span/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🚚️apply/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🦀️.rs"
+ ],
+ "closureWithoutUnits": []
+}

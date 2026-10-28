@@ -63,7 +63,7 @@
           "dashboard": {
             "title": {
               "en": "Verify Descriptor Lifetimes",
-              "de": "Dateideskriptor-Lebensdauer Prüfen"
+              "de": "Dateideskriptor-Lebensdauer prüfen"
             },
             "description": {
               "en": "Verify failure cleanup, descriptor custody and qualified POSIX kernel locks.",
@@ -107,7 +107,7 @@
           "dashboard": {
             "title": {
               "en": "Verify Process Progress",
-              "de": "Prozessfortschritt Prüfen"
+              "de": "Prozessfortschritt prüfen"
             },
             "description": {
               "en": "Verify localized source work, safe progress totals and original publisher authority.",
@@ -128,7 +128,7 @@
     },
     "test-routing": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "dependsOn": [],
       "inputs": [
         "default",
@@ -141,6 +141,15 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
         "command": "repo ./📜️script.ts test routing"
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
       }
     },
     "test-artifact-files": {
@@ -262,7 +271,7 @@
           "dashboard": {
             "title": {
               "en": "Verify Process Time Limits",
-              "de": "Prozesszeitlimits Prüfen"
+              "de": "Prozesszeitlimits prüfen"
             },
             "description": {
               "en": "Verify portable process limits and finite build preparation budgets.",
@@ -283,7 +292,7 @@
     },
     "test-test-command": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "dependsOn": [],
       "inputs": [
         "default",
@@ -296,6 +305,15 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
         "command": "repo ./📜️script.ts test test-command"
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
       }
     },
     "test-cargo-profile": {
@@ -667,7 +685,7 @@
           "dashboard": {
             "title": {
               "en": "Verify Cargo Source Admission",
-              "de": "Cargo-Quellcodezulassung Prüfen"
+              "de": "Cargo-Quellcodezulassung prüfen"
             },
             "description": {
               "en": "Verify compiler unit source boundaries, progress checkpoints and cancellation.",
@@ -683,7 +701,7 @@
     },
     "test-native-cache-descriptors": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "dependsOn": [],
       "inputs": [
         "{projectRoot}/📦️artifacts/💾️cache/**/*",
@@ -712,7 +730,7 @@
           "dashboard": {
             "title": {
               "en": "Verify Native Cache Descriptor Refusals",
-              "de": "Native Cache-Deskriptor-Ablehnungen Prüfen"
+              "de": "Native Cache-Deskriptor-Ablehnungen prüfen"
             },
             "description": {
               "en": "Verify strict descriptor custody with bounded process and path diagnostics.",
@@ -722,13 +740,18 @@
           "sourceInputObservation": "freshness",
           "runtimeSourceEntries": [
             "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🟦️.ts"
-          ]
+          ],
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
         }
       }
     },
     "test-native-image-observation": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "dependsOn": [],
       "inputs": [
         "{projectRoot}/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤫️silence/**/*",
@@ -764,12 +787,17 @@
           "dashboard": {
             "title": {
               "en": "Verify Native Image Observation",
-              "de": "Native Image-Beobachtung Prüfen"
+              "de": "Native Image-Beobachtung prüfen"
             },
             "description": {
               "en": "Verify rotating event log observation and cancellation.",
               "de": "Beobachtung rotierender Ereignisprotokolle und Abbruch prüfen."
             }
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
           }
         }
       }
@@ -806,7 +834,7 @@
           "dashboard": {
             "title": {
               "en": "Verify Runtime Environment",
-              "de": "Laufzeitumgebung Prüfen"
+              "de": "Laufzeitumgebung prüfen"
             },
             "description": {
               "en": "Verify compiler cache isolation in every build mode through the dashboard owner.",
@@ -1027,28 +1055,6 @@
         }
       }
     },
-    "test-compiler-headroom": {
-      "executor": "repo:script",
-      "cache": false,
-      "dependsOn": [],
-      "inputs": [
-        "{projectRoot}/**/*"
-      ],
-      "outputs": [],
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "repo ./📜️script.ts test compiler-headroom"
-      },
-      "metadata": {
-        "semio": {
-          "cache": {
-            "version": 1,
-            "class": "live",
-            "reason": "exercises-host-resources"
-          }
-        }
-      }
-    },
     "test-cargo-profile-policy": {
       "executor": "repo:script",
       "inputs": [
@@ -1066,7 +1072,7 @@
     },
     "test-workspace": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "dependsOn": [],
       "inputs": [
         "default",
@@ -1080,6 +1086,15 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
         "command": "repo ./📜️script.ts test workspace"
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
       }
     },
     "test-exact-cargo-storage": {
@@ -1148,6 +1163,58 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
         "command": "repo ./📜️script.ts test resource-lease-fairness"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-resource-lease-standing": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test resource-lease-standing"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-resource-lease-standing-live": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test resource-lease-standing-live"
       },
       "metadata": {
         "semio": {
@@ -1403,7 +1470,7 @@
           "dashboard": {
             "title": {
               "en": "Verify Windows Conditional Retirement",
-              "de": "Bedingte Windows-Bereinigung Prüfen"
+              "de": "Bedingte Windows-Bereinigung prüfen"
             },
             "description": {
               "en": "Verify kernel conditional retirement, immutable reader preservation and exact partial effects.",
@@ -1714,6 +1781,75 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
         "command": "repo ./📜️script.ts test cargo-workspace"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-laws-runtime-termination": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test laws-runtime-termination"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-laws-io-control-retirement": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test laws-io-control-retirement"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-laws-filesystem-observation": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test laws-filesystem-observation"
       },
       "metadata": {
         "semio": {

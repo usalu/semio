@@ -1,0 +1,55 @@
+{
+ "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+ "edits": [
+  {
+   "name": "import",
+   "old": "import { GRAPH_MEMORY_POLICY_V1, graphStringInternerV1, internJsonStringsV1 } from \"../🧠️memory/🟨️.mjs\";\n",
+   "new": "import { GRAPH_MEMORY_POLICY_V1, graphStringInternerV1, internJsonStringsV1 } from \"../🧠️memory/🟨️.mjs\";\nimport { createRowTableV1, factKeyV1 } from \"./🔢️row-table/🟨️.mjs\";\n"
+  },
+  {
+   "name": "factKey moved",
+   "old": "const observationKeys=new WeakMap();\nfunction factKeyV1(fact){\n if(fact===null||typeof fact!==\"object\")return typeof fact+String(fact);\n if(typeof fact.sha256===\"string\"&&fact.provider===undefined&&typeof fact.size===\"number\")return \"f\"+fact.size+\",\"+fact.mtimeMs+\",\"+fact.ctimeMs+\",\"+fact.ino+\",\"+fact.sha256;\n return JSON.stringify(fact);\n}\nfunction observationKeyV1(row){let key=observationKeys.get(row);if(key===undefined){key=row.kind+\"\\0\"+row.path+\"\\0\"+factKeyV1(row.fact);observationKeys.set(row,key);}return key;}\n",
+   "new": "function observationKeyV1(row){return row.kind+\"\\0\"+row.path+\"\\0\"+factKeyV1(row.fact);}\n"
+  },
+  {
+   "name": "retain",
+   "old": "for(const row of rows)target.set(observationKeyV1(row),row);",
+   "new": "for(const row of rows)target.set(rowTableV1.id(row),row);"
+  },
+  {
+   "name": "table",
+   "old": "const internedObservations=new Map(),INTERNED_OBSERVATIONS=4194304;",
+   "new": "const rowTableV1=createRowTableV1({factKey:factKeyV1});"
+  },
+  {
+   "name": "intern",
+   "old": "function internObservationsV1(rows){return rows.map(row=>{if(internedObservations.size>INTERNED_OBSERVATIONS)internedObservations.clear();const key=observationKeyV1(row),known=internedObservations.get(key);if(known)return known;if(typeof row.path===\"string\")row.path=graphStringInternerV1.share(row.path);internedObservations.set(key,row);return row;});}",
+   "new": "function internObservationsV1(rows){return rows.map(row=>rowTableV1.canonical(row.kind,row.path,row.fact,()=>{if(typeof row.path===\"string\")row.path=graphStringInternerV1.share(row.path);return row;}));}"
+  },
+  {
+   "name": "canonical",
+   "old": "function canonicalObservationV1(kind,path,fact){\n if(internedObservations.size>INTERNED_OBSERVATIONS)internedObservations.clear();\n const key=kind+\"\\0\"+path+\"\\0\"+factKeyV1(fact),known=internedObservations.get(key);if(known)return known;\n const row={kind,path:graphStringInternerV1.share(path),fact};observationKeys.set(row,key);internedObservations.set(key,row);return row;\n}\n",
+   "new": "function canonicalObservationV1(kind,path,fact){return rowTableV1.canonical(kind,path,fact,()=>({kind,path:graphStringInternerV1.share(path),fact}));}\n"
+  },
+  {
+   "name": "shared checks",
+   "old": "rows.every(row=>{const key=observationKeyV1(row),previous=checks.get(key);",
+   "new": "rows.every(row=>{const key=rowTableV1.id(row),previous=checks.get(key);"
+  },
+  {
+   "name": "nested checks",
+   "old": "rows.every(row=>{const key=observationKeyV1(row),known=checks.get(key);",
+   "new": "rows.every(row=>{const key=rowTableV1.id(row),known=checks.get(key);"
+  },
+  {
+   "name": "sizes",
+   "old": "interned:internedObservations.size",
+   "new": "interned:rowTableV1.size()"
+  },
+  {
+   "name": "release",
+   "old": " internedObservations.clear();verifiedBlocks.clear();",
+   "new": " rowTableV1.clear();verifiedBlocks.clear();"
+  }
+ ]
+}

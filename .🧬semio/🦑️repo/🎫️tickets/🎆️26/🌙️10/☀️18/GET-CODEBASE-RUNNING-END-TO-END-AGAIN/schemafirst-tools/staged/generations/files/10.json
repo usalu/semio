@@ -1,0 +1,27 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "🏗️build/🕸️graph/🕰️generations/🧬️schema/🔣️.json",
+ "definitions": [
+  "Policy"
+ ],
+ "sources": [
+  "🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+  "🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs"
+ ],
+ "exports": [
+  {
+   "source": "🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+   "name": "GENERATION_POLICY_V1",
+   "definition": "Policy"
+  }
+ ],
+ "minimumText": 8,
+ "allow": [
+  {
+   "source": "🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs",
+   "value": 1000,
+   "reason": "The divisor of a duration in milliseconds that is reported in seconds; it merely shares the value of hintMaximumAgeMilliseconds."
+  }
+ ]
+}

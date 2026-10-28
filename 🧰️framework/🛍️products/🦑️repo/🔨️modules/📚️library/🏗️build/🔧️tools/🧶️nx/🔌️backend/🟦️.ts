@@ -18,6 +18,7 @@ export const backend:BuildBackendV1=Object.freeze({
  },
  async prepareStorage(context:BackendContextV1,snapshotBytes:number){const {root,invocation,phase:phaseControl}=context;
   const {prepareNxGraphCacheStorageV1}=await import("../../../../⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts");await prepareNxGraphCacheStorageV1(root,invocation,phaseControl,snapshotBytes);
+  await (await import("../../../🧹️cache-gc/🚀️launch/🟦️.ts")).launchNxToolingCollectorIfPressedV1(root);
  },
  async cache(){return (await import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts")).nxBuildCacheToolV1();},
  async cacheProbe(context:Readonly<{root:string;invocation:import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation}>){const {root,invocation}=context;await (await import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts")).prepareNxToolingStorageV1(root,invocation,createIssuedResourceControlV1(invocation,"cache-verify:nx",0));return (await import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/🔁️probe/🟦️.ts")).nxCacheProbeV1(root);},

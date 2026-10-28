@@ -1,0 +1,32 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts": {
+  "file": "00.ts",
+  "base": "3894d6044d3f3ddb8a60b935b747c6736eb834ef3689d5c5d5c697ba55ec5dcf",
+  "new": "3dd397a2cf8f5cec4a88fbc9df94c6019293df4aab810cc21cb4cba81f348103"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts": {
+  "file": "01.ts",
+  "base": "4fcf50810d2c194dccff695afa3054e7c5743870bd6901e05e5f6ed117d0ad29",
+  "new": "3ee8463c2d6ed95e89edac578fe51203c6a79e6fa39049a73a59fae26d04fae7"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🪜️order/🟦️.ts": {
+  "file": "02.ts",
+  "base": "2488bac04c3ca9ee8138ae53c64da1ca9f4b9bdab0555388a55a5e8659a02c1d",
+  "new": "0d005f6b5f20e3eeedc65b27c83ee0325cbe409054fad519cce65a23fb348d50"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🧪️tests/🪜️steps/🔣️.json": {
+  "file": "03.json",
+  "base": "4885892dffaf2809225591cea604b4326866181d9b687087a867dfadce2f92df",
+  "new": "efb50ea3ecbdef2a74cd249afa45718c104030e95f738bc7d91fdc9a9fcbe975"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🧪️tests/🪜️steps/🟦️.ts": {
+  "file": "04.ts",
+  "base": "8ff3444a6e8981c71f91dc66a89454ed0710984784e2552c1c90151994a47416",
+  "new": "e9874b14ad22288f1f7439506262902595e97df989df59190d2f8b88f121a960"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/♻️cargo-metadata/🟦️.ts": {
+  "file": "05.ts",
+  "base": null,
+  "new": "a64d5c0e8b5299337c1681784a0b41de0a7bf23bee7f4604b37cccfe0467c269"
+ }
+}

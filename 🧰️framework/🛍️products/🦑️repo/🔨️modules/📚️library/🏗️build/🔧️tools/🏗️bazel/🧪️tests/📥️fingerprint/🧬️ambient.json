@@ -1,0 +1,41 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "rows"
+ ],
+ "properties": {
+  "rows": {
+   "type": "array",
+   "minItems": 2,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "ambient",
+     "sameAsFirst"
+    ],
+    "properties": {
+     "name": {
+      "type": "string",
+      "minLength": 1
+     },
+     "ambient": {
+      "type": "object",
+      "additionalProperties": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     },
+     "sameAsFirst": {
+      "type": "boolean"
+     }
+    }
+   }
+  }
+ }
+}

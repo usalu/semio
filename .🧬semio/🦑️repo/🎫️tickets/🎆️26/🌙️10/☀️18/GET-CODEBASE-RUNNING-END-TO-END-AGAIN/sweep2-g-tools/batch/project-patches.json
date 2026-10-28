@@ -1,0 +1,8 @@
+{
+ "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📋️project.json": [
+  [
+   "        \"command\": \"repo ./📜️script.ts test\"\n      }\n    },",
+   "        \"command\": \"repo ./📜️script.ts test\"\n      },\n      \"metadata\": {\n        \"semio\": {\n          \"closure\": {\n            \"resources\": [\n              \"{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🌐️.html\",\n              \"{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📤️distribution/🌐️.html\"\n            ]\n          }\n        }\n      }\n    },"
+  ]
+ ]
+}

@@ -4,6 +4,7 @@ import {homedir} from "node:os";
 import {join,resolve} from "node:path";
 import {acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {withArtifactRelativeDirectoryV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import type {VouchV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🪪️vouch/🟦️.ts";
 import type {RepositoryCacheStoreV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {repositoryLeaseDirectoryV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {readBunWorkspaceListingProjectionV1,type BunWorkspaceObservedOwnershipV1} from "../../../../../🗂️workspaces/🟦️bun/🟦️.ts";
@@ -13,7 +14,7 @@ import {concurrentProtocolV1} from "../../🚦️concurrent/🟦️.ts";
 import {requireCurrentFormatStampsV1,staleImplementationOfV1} from "../../../../../🏗️build/🧷️format-stamps/🟨️.mjs";
 import {captureGenerationReceiptV1,confirmGenerationWalkV1,describeGenerationMismatchV1,generationLocationV1,generationProtocolV1 as protocol,generationSha256V1,guardGenerationReplayV1,generationWalkOriginV1,parseGenerationReceiptV1,publishGenerationBestEffortV1,runGenerationWriterV1,verifyGenerationReceiptV1,type GenerationControlV1,type GenerationPublishOutcomeV1,type GenerationReplayResultV1,type GenerationProducerFileV1,type GenerationProducerV1,type GenerationProducerVariableV1,type GenerationReceiptV1,type GenerationRuntimeV1,type GenerationVerifyResultV1} from "../🟦️.ts";
 import { runtimeIdentityV1 } from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
-import {resolveLanguageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 
 const compareBytes=(left:string,right:string):number=>Buffer.compare(Buffer.from(left),Buffer.from(right));
 const scopeKey=(scope:string)=>generationSha256V1(scope).slice(0,16);
@@ -79,21 +80,22 @@ const receiptNames=(storeRoot:string,scope:string):string[]=>{
  const prefix=scopeKey(scope)+".";
  try{return readdirSync(join(storeRoot,protocol.directory)).filter(name=>name.startsWith(prefix)&&name.endsWith(protocol.receiptSuffix)).sort();}catch{return[];}
 };
-const portsOf=(workspace:string,context:JavascriptDependencyReadContextV1,control:ResourceLeaseControl,generation:GenerationControlV1,read:(name:string,maximumBytes:number)=>Uint8Array,receipt:GenerationReceiptV1,subject:JavascriptDependencyGenerationSubjectV1)=>Object.freeze({
- workspace,storeRoot:context.root,receipt,readEvidence:read,runtime:javascriptDependencyGenerationRuntimeV1,producer:()=>observeJavascriptDependencyGenerationProducerV1(workspace,context.root,receipt.required,subject.ambient),conditionsClosed:javascriptDependencyGenerationConditionsClosedV1,
+const portsOf=(workspace:string,context:JavascriptDependencyReadContextV1,control:ResourceLeaseControl,generation:GenerationControlV1,read:(name:string,maximumBytes:number)=>Uint8Array,receipt:GenerationReceiptV1,subject:JavascriptDependencyGenerationSubjectV1,recheck:boolean,vouched?:(paths:readonly string[])=>Promise<ReadonlySet<string>>)=>Object.freeze({
+ workspace,storeRoot:context.root,receipt,recheck,...(vouched?{vouched}:{}),readEvidence:read,runtime:javascriptDependencyGenerationRuntimeV1,producer:()=>observeJavascriptDependencyGenerationProducerV1(workspace,context.root,receipt.required,subject.ambient),conditionsClosed:javascriptDependencyGenerationConditionsClosedV1,
  project:(path:string)=>readBunWorkspaceListingProjectionV1(workspace,path),
  observeBindings:(_scope:string,pairs:readonly Readonly<{sourceDirectory:string;targetDirectory:string}>[])=>observeJavascriptDependencyBindingsReadV1(context,pairs,control),
  readReady:async(path:string)=>(await readJavascriptDependencyBindingReceiptReadV1(context,path,control)).fingerprint,control:generation,
 });
 
-/** 🪙️ Proves an unchanged generation by stamps and bounded reads under the caller's shared read custody; any doubt returns a typed mismatch for the complete walk. */
-export async function verifyJavascriptDependencyGenerationReceiptV1(workspace:string,context:JavascriptDependencyReadContextV1,control:ResourceLeaseControl,scope:string,subject:JavascriptDependencyGenerationSubjectV1=javascriptDependencyGenerationSubjectV1()):Promise<JavascriptDependencyGenerationVerifyV1>{
+/** 🪙️ Proves an unchanged generation by stamps and bounded reads under the caller's shared read custody; any doubt returns a typed mismatch for the complete walk. A `recheck` is the second look of a command at a receipt it has just verified completely: it replays every tier but the provider observations, which only an installer holding the store exclusively can move while this command holds it shared. */
+export async function verifyJavascriptDependencyGenerationReceiptV1(workspace:string,context:JavascriptDependencyReadContextV1,control:ResourceLeaseControl,scope:string,subject:JavascriptDependencyGenerationSubjectV1=javascriptDependencyGenerationSubjectV1(),options:Readonly<{recheck?:boolean;vouch?:(receiptSha256:string)=>Promise<VouchV1|undefined>}>={}):Promise<JavascriptDependencyGenerationVerifyV1>{
  const root=resolve(workspace),names=receiptNames(context.root,scope);let last:JavascriptDependencyGenerationVerifyV1={status:"absent"};
  for(const name of names){
   context.check(control);let receipt:GenerationReceiptV1;
   try{receipt=parseGenerationReceiptV1(readBounded(join(context.root,protocol.directory,name),protocol.maximumReceiptBytes));}catch{last=Object.freeze({status:"mismatch",class:"receipt-invalid",path:name});continue;}
   if(receipt.scope!==scope)continue;
-  const result=await verifyGenerationReceiptV1(portsOf(root,context,control,controlOf(context,control,"shared"),(evidence,maximum)=>{if(!evidenceName.test(evidence))throw Error("Sealed generation evidence required");try{return readBounded(join(context.root,protocol.directory,evidence),maximum);}catch{throw Error("Sealed generation evidence required");}},receipt,subject));
+  const vouch=options.vouch?await options.vouch(receipt.sha256):undefined,vouched=vouch?(paths:readonly string[])=>options.recheck===true?vouch.settled(paths,control.signal):Promise.resolve(vouch.skippable(paths)):undefined;
+  const result=await verifyGenerationReceiptV1(portsOf(root,context,control,controlOf(context,control,"shared"),(evidence,maximum)=>{if(!evidenceName.test(evidence))throw Error("Sealed generation evidence required");try{return readBounded(join(context.root,protocol.directory,evidence),maximum);}catch{throw Error("Sealed generation evidence required");}},receipt,subject,options.recheck===true,vouched));
   if(result.status==="match")return result;last=result;
  }
  return last;
@@ -147,7 +149,7 @@ async function replayJavascriptDependencyGenerationWalkUnguardedV1(workspace:str
  if(!observed)throw Error("Retained workspace topology required");
  const generation=controlOf(context,control,"shared",checkpoint),captured=await captureJavascriptDependencyGenerationReceiptV1(workspace,{root:context.root},generation,walk,observed,startedAtMs,subject);
  if(captured.status==="deferred")return Object.freeze({status:"deferred",reason:captured.reason,...(captured.path===undefined?{}:{path:captured.path})});
- const files=new Map(captured.files.map(file=>[file.name,file.bytes])),proof=await verifyGenerationReceiptV1(portsOf(resolve(workspace),context,control,generation,name=>{const bytes=files.get(name);if(!bytes)throw Error("Sealed generation evidence required");return bytes;},captured.receipt,subject));
+ const files=new Map(captured.files.map(file=>[file.name,file.bytes])),proof=await verifyGenerationReceiptV1(portsOf(resolve(workspace),context,control,generation,name=>{const bytes=files.get(name);if(!bytes)throw Error("Sealed generation evidence required");return bytes;},captured.receipt,subject,false));
  if(proof.status!=="match")return Object.freeze({status:"mismatch",class:proof.class,...(proof.path===undefined?{}:{path:proof.path})});
  return proof.sha256===walk.sha256?Object.freeze({status:"match",sha256:proof.sha256}):Object.freeze({status:"mismatch",class:"seal"});
 }
@@ -181,7 +183,7 @@ async function writeJavascriptDependencyGenerationReceiptV1(workspace:string,sto
  if((await verifyJavascriptDependencyGenerationReceiptV1(workspace,context,control,scope,subject)).status==="match")return "present";
  const captured=await captureJavascriptDependencyGenerationReceiptV1(workspace,store,generation,walk,observed,startedAtMs,subject);
  if(captured.status==="deferred"){console.error("[DATA] Store dependency generation receipt deferred "+JSON.stringify({version:1,purpose:"current-dependency-generation-receipt-deferral",scope,reason:captured.reason,...(captured.path===undefined?{}:{path:captured.path})}));return "deferred";}
- const files=new Map(captured.files.map(file=>[file.name,file.bytes])),proof=await verifyGenerationReceiptV1(portsOf(resolve(workspace),context,control,generation,name=>{const bytes=files.get(name);if(!bytes)throw Error("Sealed generation evidence required");return bytes;},captured.receipt,subject));
+ const files=new Map(captured.files.map(file=>[file.name,file.bytes])),proof=await verifyGenerationReceiptV1(portsOf(resolve(workspace),context,control,generation,name=>{const bytes=files.get(name);if(!bytes)throw Error("Sealed generation evidence required");return bytes;},captured.receipt,subject,false));
  if(proof.status!=="match"||proof.sha256!==walk.sha256){reportJavascriptDependencyGenerationMismatchV1(scope,proof.status==="mismatch"?proof:{class:"seal"});return "stale";}
  const receiptName=scopeKey(scope)+"."+captured.receipt.sha256+protocol.receiptSuffix,receiptBytes=Buffer.from(JSON.stringify(captured.receipt)+"\n"),all=[...captured.files,{name:receiptName,bytes:receiptBytes}];
  await writeJavascriptDependencyGenerationFilesV1(store.root,all,checkpoint,()=>control.yieldContinuation());

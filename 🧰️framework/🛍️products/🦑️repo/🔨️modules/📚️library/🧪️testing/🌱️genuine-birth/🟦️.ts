@@ -9,9 +9,10 @@ import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environ
 import { guardArgumentsV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import policy from "./🔣️.json" with { type: "json" };
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import {refuseBuildV1} from "../../🏗️build/📖️texts/🟦️.ts";
 
 /** 🌱️ Names one declared way of giving a test file a genuine Original process birth. */
-export type GenuineBirthV1 = Readonly<{ id: string; arguments: readonly string[]; sdk: boolean; environment: Readonly<Record<string, string>>; after?: string }>;
+export type GenuineBirthV1 = Readonly<{ id: string; arguments: readonly string[]; sdk: boolean; environment: Readonly<Record<string, string>>; after?: string; preparation?: "target-execution" }>;
 
 /** 📋️ Carries the complete authored birth ladder after closed schema admission. */
 export type GenuineBirthPolicyV1 = Readonly<{ version: 1; owner: string; maximumElapsedMilliseconds: number; childTimeoutMilliseconds: number; buildMode: "prototype" | "release"; artifactRoute: string; births: readonly GenuineBirthV1[] }>;
@@ -43,6 +44,17 @@ export function genuineTestNamePatternV1(name: string): string {
   return "^" + name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&") + "$";
 }
 
+/** 🧾️ Prepares the inventory of all emitted targets once beneath the birth, hands its path and sha256 to `run` and verifies afterwards that every consumed source fact and the producer still hold; a failing `run` skips the verification. */
+export async function withTargetExecutionInventoryV1(root: string, environment: NodeJS.ProcessEnv, original: ScriptInvocation, maximumElapsedMilliseconds: number, run: (inventory: Readonly<Record<string, string>>) => Promise<void>): Promise<void> {
+  const { targetExecutionPreparationControlV1, prepareTargetExecutionInventoryV1, verifyTargetExecutionInventoryV1 } = await import("../../🏗️build/🏃️execution/🧪️tests/📥️preparation/🟦️.ts");
+  const artifacts = environment.SEMIO_TEST_ARTIFACT_DIR;
+  if (artifacts === undefined) throw refuseBuildV1("missing", "testing.artifact-directory-required");
+  const control = targetExecutionPreparationControlV1(original, { version: 1, maximumElapsedMilliseconds }, () => performance.now()), output = join(artifacts, `execution-inventory-${process.pid}.json`);
+  const { digest } = await prepareTargetExecutionInventoryV1(root, output, control);
+  await run({ SEMIO_TARGET_EXECUTION_INVENTORY_FILE: output, SEMIO_TARGET_EXECUTION_INVENTORY_SHA256: digest });
+  await verifyTargetExecutionInventoryV1(output, digest, control);
+}
+
 /** 🧪️ Describes one test file run inside a genuine Original birth. */
 export type GenuineBunTestRequestV1 = Readonly<{ root: string; file: string; birth?: string; pattern?: string; environment?: NodeJS.ProcessEnv; signal?: AbortSignal }>;
 
@@ -68,12 +80,13 @@ export async function runGenuineBunTestV1(request: GenuineBunTestRequestV1): Pro
       onProgress: () => advanceScriptInvocation(original, label, "running"),
     });
   };
+  const start = (original: ScriptInvocation, extra: Readonly<Record<string, string | undefined>> = {}): Promise<void> => birth.preparation === undefined ? launch(original, extra) : withTargetExecutionInventoryV1(root, environment, original, declared.childTimeoutMilliseconds, inventory => launch(original, { ...extra, ...inventory }));
   await withScriptProcessEnvelope(envelope, async original => {
-    if (!birth.sdk) return launch(original);
+    if (!birth.sdk) return start(original);
     const { withRepositoryToolingStoreV1 } = await import("../../⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts"), { withNxToolingUseV1, nxToolingUseStorageV1 } = await import("../../⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts");
     return withRepositoryToolingStoreV1(root, original, createIssuedResourceControlV1(original, "fixture:tooling-store", 0), async (_store, phase) => {
       const toolkitRoot = await realpath(join(root, ".nx/installation")), identity = basename(toolkitRoot);
-      return withNxToolingUseV1(nxToolingUseStorageV1(root), { identity, toolkitRoot, invocation: original }, phase, () => launch(original, { SEMIO_NX_TOOLING_ROOT: toolkitRoot, SEMIO_NX_TOOLING_IDENTITY: identity }));
+      return withNxToolingUseV1(nxToolingUseStorageV1(root), { identity, toolkitRoot, invocation: original }, phase, () => start(original, { SEMIO_NX_TOOLING_ROOT: toolkitRoot, SEMIO_NX_TOOLING_IDENTITY: identity }));
     });
   });
 }

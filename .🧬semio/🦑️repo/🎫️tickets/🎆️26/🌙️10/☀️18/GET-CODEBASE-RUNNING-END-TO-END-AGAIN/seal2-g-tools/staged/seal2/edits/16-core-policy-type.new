@@ -1,0 +1,1 @@
+;readonly light:Readonly<{freshMilliseconds:number;promoteAfterMilliseconds:number;refuseAfterMilliseconds:number;refreshDebounceMilliseconds:number}>;readonly check:Readonly<{argument:string

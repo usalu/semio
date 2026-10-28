@@ -470,6 +470,13 @@
     "lost": 1,
     "recycled": 5
    }
+  },
+  {
+   "key": "own",
+   "fields": {
+    "workers": 1,
+    "megabytes": 2048
+   }
   }
  ],
  "runtime": [
@@ -1410,5 +1417,334 @@
    7,
    42
   ]
- }
+ },
+ "pools": {
+  "own": [
+   {
+    "name": "builder-grant-of-one-job-2048-mb",
+    "environment": {
+     "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"x\", \"jobs\": 1, \"cpu\": 1, \"memoryMegabytes\": 2048, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
+    },
+    "expect": {
+     "source": "own",
+     "workers": 1,
+     "megabytes": 2048
+    }
+   },
+   {
+    "name": "grant-of-four-jobs-still-one-own-worker-with-one-job-memory",
+    "environment": {
+     "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"x\", \"jobs\": 4, \"cpu\": 4, \"memoryMegabytes\": 8192, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
+    },
+    "expect": {
+     "source": "own",
+     "workers": 1,
+     "megabytes": 2048
+    }
+   },
+   {
+    "name": "no-plan-means-no-own-worker",
+    "environment": {},
+    "expect": null
+   },
+   {
+    "name": "plan-is-not-json",
+    "environment": {
+     "SEMIO_HOST_CAPACITY_PLAN": "{not json"
+    },
+    "expect": null
+   },
+   {
+    "name": "plan-without-jobs",
+    "environment": {
+     "SEMIO_HOST_CAPACITY_PLAN": "{\"memoryMegabytes\":2048}"
+    },
+    "expect": null
+   },
+   {
+    "name": "plan-with-zero-jobs",
+    "environment": {
+     "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"x\", \"jobs\": 0, \"cpu\": 0, \"memoryMegabytes\": 2048, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
+    },
+    "expect": null
+   },
+   {
+    "name": "plan-with-fractional-jobs",
+    "environment": {
+     "SEMIO_HOST_CAPACITY_PLAN": "{\"jobs\":1.5,\"memoryMegabytes\":2048}"
+    },
+    "expect": null
+   },
+   {
+    "name": "plan-with-zero-memory",
+    "environment": {
+     "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"x\", \"jobs\": 1, \"cpu\": 1, \"memoryMegabytes\": 0, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
+    },
+    "expect": null
+   },
+   {
+    "name": "plan-with-text-memory",
+    "environment": {
+     "SEMIO_HOST_CAPACITY_PLAN": "{\"jobs\":1,\"memoryMegabytes\":\"2048\"}"
+    },
+    "expect": null
+   },
+   {
+    "name": "plan-null",
+    "environment": {
+     "SEMIO_HOST_CAPACITY_PLAN": "null"
+    },
+    "expect": null
+   },
+   {
+    "name": "odd-memory-is-floored-per-job",
+    "environment": {
+     "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"x\", \"jobs\": 3, \"cpu\": 3, \"memoryMegabytes\": 7000, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
+    },
+    "expect": {
+     "source": "own",
+     "workers": 1,
+     "megabytes": 2333
+    }
+   }
+  ],
+  "granted": [
+   {
+    "name": "one-worker-grant-starts-a-pool",
+    "granted": {
+     "jobs": 1,
+     "megabytes": 3584
+    },
+    "expect": {
+     "source": "host",
+     "workers": 1,
+     "megabytes": 3584
+    }
+   },
+   {
+    "name": "nine-worker-grant",
+    "granted": {
+     "jobs": 9,
+     "megabytes": 2048
+    },
+    "expect": {
+     "source": "host",
+     "workers": 9,
+     "megabytes": 2048
+    }
+   },
+   {
+    "name": "zero-jobs-start-nothing",
+    "granted": {
+     "jobs": 0,
+     "megabytes": 2048
+    },
+    "expect": null
+   },
+   {
+    "name": "cancelled-wait-starts-nothing",
+    "granted": null,
+    "expect": null
+   }
+  ],
+  "choose": [
+   {
+    "name": "no-pool",
+    "pools": [],
+    "expect": -1
+   },
+   {
+    "name": "idle-worker-wins-over-earlier-loaded-pool",
+    "pools": [
+     {
+      "ready": true,
+      "usable": true,
+      "idle": false,
+      "pending": 1,
+      "width": 1
+     },
+     {
+      "ready": true,
+      "usable": true,
+      "idle": true,
+      "pending": 0,
+      "width": 3
+     }
+    ],
+    "expect": 1
+   },
+   {
+    "name": "earliest-idle-pool",
+    "pools": [
+     {
+      "ready": true,
+      "usable": true,
+      "idle": true,
+      "pending": 0,
+      "width": 1
+     },
+     {
+      "ready": true,
+      "usable": true,
+      "idle": true,
+      "pending": 0,
+      "width": 3
+     }
+    ],
+    "expect": 0
+   },
+   {
+    "name": "fewest-jobs-per-worker",
+    "pools": [
+     {
+      "ready": true,
+      "usable": true,
+      "idle": false,
+      "pending": 4,
+      "width": 1
+     },
+     {
+      "ready": true,
+      "usable": true,
+      "idle": false,
+      "pending": 6,
+      "width": 3
+     }
+    ],
+    "expect": 1
+   },
+   {
+    "name": "tie-takes-the-earliest",
+    "pools": [
+     {
+      "ready": true,
+      "usable": true,
+      "idle": false,
+      "pending": 2,
+      "width": 1
+     },
+     {
+      "ready": true,
+      "usable": true,
+      "idle": false,
+      "pending": 4,
+      "width": 2
+     }
+    ],
+    "expect": 0
+   },
+   {
+    "name": "unready-and-unusable-pools-are-skipped",
+    "pools": [
+     {
+      "ready": false,
+      "usable": true,
+      "idle": true,
+      "pending": 0,
+      "width": 1
+     },
+     {
+      "ready": true,
+      "usable": false,
+      "idle": true,
+      "pending": 0,
+      "width": 1
+     },
+     {
+      "ready": true,
+      "usable": true,
+      "idle": false,
+      "pending": 9,
+      "width": 1
+     }
+    ],
+    "expect": 2
+   },
+   {
+    "name": "nothing-ready",
+    "pools": [
+     {
+      "ready": false,
+      "usable": true,
+      "idle": false,
+      "pending": 0,
+      "width": 2
+     }
+    ],
+    "expect": -1
+   }
+  ]
+ },
+ "recycle": [
+  {
+   "rssMegabytes": 100,
+   "jobs": 1,
+   "megabytes": 2048
+  },
+  {
+   "rssMegabytes": 1228,
+   "jobs": 5,
+   "megabytes": 2048
+  },
+  {
+   "rssMegabytes": 1229,
+   "jobs": 5,
+   "megabytes": 2048
+  },
+  {
+   "rssMegabytes": 1230,
+   "jobs": 5,
+   "megabytes": 2048
+  },
+  {
+   "rssMegabytes": 2500,
+   "jobs": 1,
+   "megabytes": 2048
+  },
+  {
+   "rssMegabytes": 300,
+   "jobs": 95,
+   "megabytes": 2048
+  },
+  {
+   "rssMegabytes": 300,
+   "jobs": 96,
+   "megabytes": 2048
+  },
+  {
+   "rssMegabytes": 300,
+   "jobs": 500,
+   "megabytes": 2048
+  },
+  {
+   "rssMegabytes": 1229.4,
+   "jobs": 96,
+   "megabytes": 2048
+  },
+  {
+   "rssMegabytes": 0,
+   "jobs": 0,
+   "megabytes": 1
+  },
+  {
+   "rssMegabytes": 1,
+   "jobs": 1,
+   "megabytes": 1
+  },
+  {
+   "rssMegabytes": 700,
+   "jobs": 1,
+   "megabytes": 1000
+  },
+  {
+   "rssMegabytes": 600,
+   "jobs": 1,
+   "megabytes": 1000
+  },
+  {
+   "rssMegabytes": 601,
+   "jobs": 1,
+   "megabytes": 1000
+  }
+ ]
 }

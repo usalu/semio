@@ -17,21 +17,28 @@ import (
 	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
+// 🧷️The statute fixture the autofix cases repair stays unfixed: a fix that ran against the checkout instead of a repository of its own would repair the file in place and leave the shared language-agnostic contract (the blank line after the header region start) without its breach.
+func TestFixableStatuteFixtureStaysUnfixed(t *testing.T) {
+	original := readStatutesFixture(t, "🧪️file-fixable")
+	expected := readStatutesFixture(t, "🧪️file-fixable-expected")
+	if original == expected {
+		t.Fatal("the fixable fixture equals its expected text: an autofix repaired the checkout in place")
+	}
+	if !strings.HasPrefix(original, "// #region 🧲️Header\n\n") {
+		t.Fatalf("the fixable fixture lost the blank line after the header region start: %q", original[:min(len(original), 60)])
+	}
+	if strings.HasPrefix(expected, "// #region 🧲️Header\n\n") {
+		t.Fatalf("the expected text keeps the blank line after the header region start: %q", expected[:min(len(expected), 60)])
+	}
+}
+
 func TestFixApplyAutofixes(t *testing.T) {
 	original := readStatutesFixture(t, "🧪️file-fixable")
 	expectedContent := readStatutesFixture(t, "🧪️file-fixable-expected")
 
 	tmpDir := t.TempDir()
-	sandbox.BindRoot(t, tmpDir)
-
-	fixtureSrc := statutesFixtureDir + "/🧪️file-fixable/🟦️.tsx"
+	fixtureSrc := seedFixableTechnology(t, tmpDir, original)
 	srcAbs := filepath.Join(tmpDir, filepath.FromSlash(fixtureSrc))
-	if err := os.MkdirAll(filepath.Dir(srcAbs), 0o755); err != nil {
-		t.Fatalf("failed to create fixture dir: %v", err)
-	}
-	if err := os.WriteFile(srcAbs, []byte(original), 0o644); err != nil {
-		t.Fatalf("failed to write fixture copy: %v", err)
-	}
 
 	bundles := codebase.LoadBundles()
 	scope := workspace.Scope{Kind: workspace.ScopeFile, FilePath: fixtureSrc}
@@ -70,7 +77,7 @@ func TestFixApplyAutofixes(t *testing.T) {
 }
 
 func TestApplyAutofixesRunsFormatterAfterEdit(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := workspace.CanonicalPath(t.TempDir())
 	sandbox.BindRoot(t, tmpDir)
 
 	if err := workspace.WriteTextFile(filepath.Join(tmpDir, "package.json"), "{}\n"); err != nil {

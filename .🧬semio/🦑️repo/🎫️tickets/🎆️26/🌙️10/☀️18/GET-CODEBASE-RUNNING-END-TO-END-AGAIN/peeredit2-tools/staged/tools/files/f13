@@ -1,0 +1,275 @@
+{
+  "version": 1,
+  "designation": "lib/providers/🔣️.json",
+  "schemaCopy": "lib/providers/🧬️schema/🔣️.json",
+  "providersProject": "@fixture/script-providers",
+  "products": {
+    "product": {
+      "cwd": "app",
+      "entry": "app/📜️script.ts"
+    },
+    "plain": {
+      "cwd": "plain",
+      "entry": "plain/📜️script.ts"
+    }
+  },
+  "holders": [
+    "product",
+    "productNative",
+    "plain",
+    "tooling:scheduling",
+    "tooling:native",
+    "cargo:scheduling",
+    "cargo:native",
+    "tool:cargo-command",
+    "tool:cargo-lock-owner"
+  ],
+  "files": {
+    "app/own.ts": "import { util } from \"../lib/util.ts\";\nexport const own = util;\n",
+    "app/📜️script.ts": "import { defineScriptProviderV1 } from \"../lib/port.ts\";\nimport { own } from \"./own.ts\";\ndefineScriptProviderV1(\"tooling\");\nexport const script = own;\n",
+    "lib/cargo/provider.ts": "import { util } from \"../util.ts\";\nimport { args } from \"../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/args.ts\";\nexport const provider = util + args;\n",
+    "lib/chain/c0.ts": "import \"./c1.ts\";\nexport const c0 = 0;\n",
+    "lib/chain/c1.ts": "import \"./c2.ts\";\nexport const c1 = 1;\n",
+    "lib/chain/c10.ts": "import \"./c11.ts\";\nexport const c10 = 10;\n",
+    "lib/chain/c11.ts": "import \"./c12.ts\";\nexport const c11 = 11;\n",
+    "lib/chain/c12.ts": "import \"./c13.ts\";\nexport const c12 = 12;\n",
+    "lib/chain/c13.ts": "import \"./c14.ts\";\nexport const c13 = 13;\n",
+    "lib/chain/c14.ts": "import \"./c15.ts\";\nexport const c14 = 14;\n",
+    "lib/chain/c15.ts": "import \"./c16.ts\";\nexport const c15 = 15;\n",
+    "lib/chain/c16.ts": "import \"./c17.ts\";\nexport const c16 = 16;\n",
+    "lib/chain/c17.ts": "import \"./c18.ts\";\nexport const c17 = 17;\n",
+    "lib/chain/c18.ts": "import \"./c19.ts\";\nexport const c18 = 18;\n",
+    "lib/chain/c19.ts": "import \"./c20.ts\";\nexport const c19 = 19;\n",
+    "lib/chain/c2.ts": "import \"./c3.ts\";\nexport const c2 = 2;\n",
+    "lib/chain/c20.ts": "import \"./c21.ts\";\nexport const c20 = 20;\n",
+    "lib/chain/c21.ts": "import \"./c22.ts\";\nexport const c21 = 21;\n",
+    "lib/chain/c22.ts": "import \"./c23.ts\";\nexport const c22 = 22;\n",
+    "lib/chain/c23.ts": "export const c23 = 23;\n",
+    "lib/chain/c3.ts": "import \"./c4.ts\";\nexport const c3 = 3;\n",
+    "lib/chain/c4.ts": "import \"./c5.ts\";\nexport const c4 = 4;\n",
+    "lib/chain/c5.ts": "import \"./c6.ts\";\nexport const c5 = 5;\n",
+    "lib/chain/c6.ts": "import \"./c7.ts\";\nexport const c6 = 6;\n",
+    "lib/chain/c7.ts": "import \"./c8.ts\";\nexport const c7 = 7;\n",
+    "lib/chain/c8.ts": "import \"./c9.ts\";\nexport const c8 = 8;\n",
+    "lib/chain/c9.ts": "import \"./c10.ts\";\nexport const c9 = 9;\n",
+    "lib/port.ts": "export function defineScriptProviderV1(name: string): string { return name; }\n",
+    "lib/providers/📋️project.json": "{\n  \"name\": \"@fixture/script-providers\",\n  \"metadata\": {\n    \"semio\": {\n      \"scriptProviders\": \"\\ud83d\\udd23\\ufe0f.json\"\n    }\n  },\n  \"targets\": {}\n}\n",
+    "lib/providers/🔣️.json": "{\n  \"version\": 1,\n  \"providers\": {\n    \"tooling\": \"../tooling/provider.ts\",\n    \"cargo\": \"../cargo/provider.ts\"\n  }\n}\n",
+    "lib/run.ts": "import { util } from \"./util.ts\";\nexport const run = util;\n",
+    "lib/tooling/provider.ts": "import { defineScriptProviderV1 } from \"../port.ts\";\nimport { run } from \"../run.ts\";\nimport { lease } from \"../../🧰️framework/🔨️modules/🏃️process/🔒️leases/lease.ts\";\ndefineScriptProviderV1(\"cargo\");\nexport const provider = run + lease;\n",
+    "lib/util.ts": "import \"./chain/c0.ts\";\nexport const util = 1;\n",
+    "plain/📜️script.ts": "import { util } from \"../lib/util.ts\";\nexport const plain = util;\n",
+    "⚡️caching/🦀️cargo/args.ts": "export const flag = 1;\n",
+    "⚡️caching/🦀️cargo/📜️script.ts": "import { defineScriptProviderV1 } from \"../../lib/port.ts\";\nimport { util } from \"../../lib/util.ts\";\nimport { flag } from \"./args.ts\";\nimport { lease } from \"../../🧰️framework/🔨️modules/🏃️process/🔒️leases/lease.ts\";\ndefineScriptProviderV1(\"cargo\");\nexport const driver = util + flag + lease;\n",
+    "🏗️build/📥️inputs/🔒️lock/📜️script.ts": "import { util } from \"../../../lib/util.ts\";\nexport const lock = util;\n",
+    "🏗️build/📥️inputs/🔒️lock/🔣️schema.json": "{\"type\": \"object\"}\n",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/args.ts": "export const args = 1;\n",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/lease.ts": "import { queue } from \"./queue.ts\";\nexport const lease = queue;\n",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/queue.ts": "export const queue = 1;\n"
+  },
+  "mutations": [
+    {
+      "name": "comment-in-keyed-provider-module",
+      "kind": "no-roster-change",
+      "edit": {
+        "lib/run.ts": "import { util } from \"./util.ts\";\n// a comment\nexport const run = util;\n"
+      },
+      "changed": {
+        "product": false,
+        "productNative": false,
+        "plain": false,
+        "tooling:scheduling": false,
+        "tooling:native": false,
+        "cargo:scheduling": false,
+        "cargo:native": false,
+        "tool:cargo-command": false,
+        "tool:cargo-lock-owner": false
+      }
+    },
+    {
+      "name": "scheduling-module-joins-provider",
+      "kind": "scheduling-only",
+      "edit": {
+        "🧰️framework/🔨️modules/🏃️process/🔒️leases/lease.ts": "import { queue } from \"./queue.ts\";\nimport { more } from \"./more.ts\";\nexport const lease = queue + more;\n",
+        "🧰️framework/🔨️modules/🏃️process/🔒️leases/more.ts": "export const more = 1;\n"
+      },
+      "changed": {
+        "product": false,
+        "productNative": false,
+        "plain": false,
+        "tooling:scheduling": false,
+        "tooling:native": false,
+        "cargo:scheduling": false,
+        "cargo:native": false,
+        "tool:cargo-command": false,
+        "tool:cargo-lock-owner": false
+      }
+    },
+    {
+      "name": "keyed-module-joins-provider",
+      "kind": "keyed-provider",
+      "edit": {
+        "lib/run.ts": "import { util } from \"./util.ts\";\nimport { extra } from \"./extra.ts\";\n// a comment\nexport const run = util + extra;\n",
+        "lib/extra.ts": "export const extra = 1;\n"
+      },
+      "changed": {
+        "product": false,
+        "productNative": false,
+        "plain": false,
+        "tooling:scheduling": true,
+        "tooling:native": true,
+        "cargo:scheduling": false,
+        "cargo:native": false,
+        "tool:cargo-command": false,
+        "tool:cargo-lock-owner": false
+      }
+    },
+    {
+      "name": "keyed-module-joins-cargo-driver",
+      "kind": "keyed-tool",
+      "edit": {
+        "⚡️caching/🦀️cargo/args.ts": "import { more } from \"./more.ts\";\nexport const flag = more;\n",
+        "⚡️caching/🦀️cargo/more.ts": "export const more = 1;\n"
+      },
+      "changed": {
+        "product": false,
+        "productNative": false,
+        "plain": false,
+        "tooling:scheduling": false,
+        "tooling:native": false,
+        "cargo:scheduling": false,
+        "cargo:native": false,
+        "tool:cargo-command": true,
+        "tool:cargo-lock-owner": false
+      }
+    },
+    {
+      "name": "scheduling-module-joins-cargo-driver",
+      "kind": "scheduling-only",
+      "edit": {
+        "🧰️framework/🔨️modules/🏃️process/🔒️leases/queue.ts": "import { tail } from \"./tail.ts\";\nexport const queue = tail;\n",
+        "🧰️framework/🔨️modules/🏃️process/🔒️leases/tail.ts": "export const tail = 1;\n"
+      },
+      "changed": {
+        "product": false,
+        "productNative": false,
+        "plain": false,
+        "tooling:scheduling": false,
+        "tooling:native": false,
+        "cargo:scheduling": false,
+        "cargo:native": false,
+        "tool:cargo-command": false,
+        "tool:cargo-lock-owner": false
+      }
+    },
+    {
+      "name": "native-keyed-module-joins-nested-provider",
+      "kind": "native-keyed-provider",
+      "edit": {
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/args.ts": "import { flags } from \"./flags.ts\";\nexport const args = flags;\n",
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/flags.ts": "export const flags = 1;\n"
+      },
+      "changed": {
+        "product": false,
+        "productNative": false,
+        "plain": false,
+        "tooling:scheduling": false,
+        "tooling:native": true,
+        "cargo:scheduling": false,
+        "cargo:native": true,
+        "tool:cargo-command": true,
+        "tool:cargo-lock-owner": false
+      }
+    },
+    {
+      "name": "provider-drops-nested-port",
+      "kind": "keyed-provider",
+      "edit": {
+        "lib/tooling/provider.ts": "import { run } from \"../run.ts\";\nimport { lease } from \"../../🧰️framework/🔨️modules/🏃️process/🔒️leases/lease.ts\";\nexport const provider = run + lease;\n"
+      },
+      "changed": {
+        "product": false,
+        "productNative": false,
+        "plain": false,
+        "tooling:scheduling": true,
+        "tooling:native": true,
+        "cargo:scheduling": false,
+        "cargo:native": false,
+        "tool:cargo-command": false,
+        "tool:cargo-lock-owner": false
+      }
+    },
+    {
+      "name": "product-own-module-joins",
+      "kind": "product",
+      "edit": {
+        "app/own.ts": "import { util } from \"../lib/util.ts\";\nimport { mine } from \"./mine.ts\";\nexport const own = util + mine;\n",
+        "app/mine.ts": "export const mine = 1;\n"
+      },
+      "changed": {
+        "product": true,
+        "productNative": true,
+        "plain": false,
+        "tooling:scheduling": false,
+        "tooling:native": false,
+        "cargo:scheduling": false,
+        "cargo:native": false,
+        "tool:cargo-command": false,
+        "tool:cargo-lock-owner": false
+      }
+    },
+    {
+      "name": "product-defines-a-second-port",
+      "kind": "product",
+      "edit": {
+        "app/mine.ts": "import { defineScriptProviderV1 } from \"../lib/port.ts\";\ndefineScriptProviderV1(\"cargo\");\nexport const mine = 1;\n"
+      },
+      "changed": {
+        "product": true,
+        "productNative": true,
+        "plain": false,
+        "tooling:scheduling": false,
+        "tooling:native": false,
+        "cargo:scheduling": false,
+        "cargo:native": false,
+        "tool:cargo-command": false,
+        "tool:cargo-lock-owner": false
+      }
+    },
+    {
+      "name": "designation-names-a-new-port",
+      "kind": "designation",
+      "edit": {
+        "lib/providers/🔣️.json": "{\n  \"version\": 1,\n  \"providers\": {\n    \"tooling\": \"../tooling/provider.ts\",\n    \"cargo\": \"../cargo/provider.ts\",\n    \"unused\": \"../unused/provider.ts\"\n  }\n}\n",
+        "lib/unused/provider.ts": "export const provider = 1;\n"
+      },
+      "changed": {
+        "product": false,
+        "productNative": false,
+        "plain": false,
+        "tooling:scheduling": false,
+        "tooling:native": false,
+        "cargo:scheduling": false,
+        "cargo:native": false,
+        "tool:cargo-command": false,
+        "tool:cargo-lock-owner": false
+      }
+    }
+  ],
+  "tools": {
+    "cargo-command": {
+      "entries": [
+        "⚡️caching/🦀️cargo/📜️script.ts"
+      ],
+      "resources": []
+    },
+    "cargo-lock-owner": {
+      "entries": [
+        "🏗️build/📥️inputs/🔒️lock/📜️script.ts"
+      ],
+      "resources": [
+        "🏗️build/📥️inputs/🔒️lock/🔣️schema.json"
+      ]
+    }
+  }
+}

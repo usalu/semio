@@ -1,13 +1,22 @@
 import refusalSchema from "../🧬️schema/🧾️refusals.json" with {type:"json"};
 import {churnProtocolV1,concurrentEditV1,staleImplementationV1} from "../🟦️.ts";
+import {filesystemRaceOfTextV1} from "../🌊️races/🟦️.ts";
 
 const protocol=churnProtocolV1();
 const refusalTable=Object.freeze(refusalSchema.definitions.Table.const as unknown as Readonly<{classes:readonly Readonly<{id:string;disposition:"reobserve"|"reexec"|"fatal";messages:readonly Readonly<{text:string}>[]}>[]}>);
-const exhaustedPatterns=Object.freeze(Object.values(protocol.texts).map(table=>new RegExp(table.exhausted.split(/\{[a-z]+\}/u).map(part=>part.replace(/[.*+?^${}()|[\]\\]/gu,"\\$&")).join(".+?"),"u")));
-/** 🔎️ The refusal class of a text captured from a failed child's output, for a layer that sees the output and not the error: a declared message names its class, and the exhausted text of the policy names a retried edit whose narrower layers gave up (`reobserve`, so a wider layer may run the step again). `undefined` when the text names no class. */
-export function refusalClassOfTextV1(text:string):Readonly<{id:string;disposition:"reobserve"|"reexec"|"fatal";message:string}>|undefined{
+const exhaustedPatterns=Object.freeze(Object.values(protocol.texts).map(table=>{const parts=table.exhausted.split(/\{[a-z]+\}/u);return Object.freeze({literals:Object.freeze(parts.filter(part=>part!=="")),pattern:new RegExp(parts.map(part=>part.replace(/[.*+?^${}()|[\]\\]/gu,"\\$&")).join(".+?"),"u")});}));
+/** 📜️ The refusal class a text names by its own words: a declared message names its class, and the exhausted text of the policy names a retried edit whose narrower layers gave up (`reobserve`, so a wider layer may run the step again). The decision looks at the text alone and never at where it ends, so a layer that reads output line by line may decide each line when it arrives. `undefined` when the text names no class. */
+export function declaredRefusalClassOfTextV1(text:string):Readonly<{id:string;disposition:"reobserve"|"reexec"|"fatal";message:string}>|undefined{
  for(const row of refusalTable.classes)for(const message of row.messages)if(message.text!==""&&text.includes(message.text))return Object.freeze({id:row.id,disposition:row.disposition,message:message.text});
- for(const pattern of exhaustedPatterns){const found=pattern.exec(text);if(found)return Object.freeze({id:"retries-exhausted",disposition:"reobserve",message:found[0]});}
+ for(const {literals,pattern} of exhaustedPatterns){if(!literals.every(part=>text.includes(part)))continue;const found=pattern.exec(text);if(found)return Object.freeze({id:"retries-exhausted",disposition:"reobserve",message:found[0]});}
+ return;
+}
+
+/** 🔎️ The refusal class of a text captured from a failed child's output, for a layer that sees the output and not the error: the class the text names by its own words (`declaredRefusalClassOfTextV1`), else a filesystem error that ends the output (a read of a workspace path that a peer deleted, renamed or replaced, decided by the race table) is class `filesystem-race`, `reobserve`. `undefined` when the text names no class. */
+export function refusalClassOfTextV1(text:string):Readonly<{id:string;disposition:"reobserve"|"reexec"|"fatal";message:string}>|undefined{
+ const declared=declaredRefusalClassOfTextV1(text);if(declared)return declared;
+ const race=filesystemRaceOfTextV1(text);
+ if(race.disposition!=="none")return Object.freeze({id:"filesystem-race",disposition:"reobserve",message:race.path});
  return;
 }
 

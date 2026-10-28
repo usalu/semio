@@ -1,0 +1,12 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Chunked fact index law fixture / Gesetz des gestückelten Faktenindex",
+ "description": "EN: The chunked fact index builder equals the expanding one on seeded corpora with shared blocks, private rows, duplicates and empty owners; it holds many owners that share a block within a declared memory budget; the bulk patch path equals the per-owner path in the consumers of every row. DE: Der gestückelte Aufbau des Faktenindex gleicht dem ausdehnenden auf erzeugten Beständen mit gemeinsamen Blöcken, eigenen Zeilen, Duplikaten und leeren Besitzern; er hält viele Besitzer mit gemeinsamem Block in einem erklärten Speicherbudget; der Massenpfad der Änderung gleicht dem Einzelpfad in den Verbrauchern jeder Zeile.",
+ "type": "object", "additionalProperties": false, "required": ["version", "equality", "memory", "bulkPatch"],
+ "properties": {
+  "version": {"const": 1},
+  "equality": {"type": "object", "additionalProperties": false, "required": ["seeds"], "properties": {"seeds": {"type": "integer", "minimum": 1}}},
+  "memory": {"type": "object", "additionalProperties": false, "required": ["owners", "sharedRows", "privateRows", "budgetMegabytes"], "properties": {"owners": {"type": "integer", "minimum": 10}, "sharedRows": {"type": "integer", "minimum": 10}, "privateRows": {"type": "integer", "minimum": 0}, "budgetMegabytes": {"type": "integer", "minimum": 1}}},
+  "bulkPatch": {"type": "object", "additionalProperties": false, "required": ["seeds", "owners", "steps", "bulkRows"], "properties": {"seeds": {"type": "integer", "minimum": 1}, "owners": {"type": "integer", "minimum": 2}, "steps": {"type": "integer", "minimum": 1}, "bulkRows": {"type": "integer", "minimum": 1}}}
+ }
+}

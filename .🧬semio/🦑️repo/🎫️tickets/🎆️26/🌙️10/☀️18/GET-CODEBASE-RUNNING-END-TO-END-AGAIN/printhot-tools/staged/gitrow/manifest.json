@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "00.ts",
+  "base": "be8500254f16dbccfef941ef6052471f51f7f73aef4c42f48cff7c29137635f3",
+  "new": "061f412724618e31afa151776b6cbbd11bee326424c9a1e99089d4a38dc1e1a1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🧪️tests/🌌️whole/🧫️fixtures/🔣️.json": {
+  "file": "01.json",
+  "base": "b4e570769c10b38069131d0bb32879545a8234333a166a5c9718d1bd73df103b",
+  "new": "c57b66fa1862a8accb15ae756458d91cb037110f0b40886ac1de562f5ff32b11"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🧪️tests/🌌️whole/🟦️.ts": {
+  "file": "02.ts",
+  "base": "2daaea3087ecb6858661d2e16c450b57dce84859f0aa227ddb5b49b11cad8430",
+  "new": "a0fb97842f5b50e86e1c25d0cb9d579ebc4a4418ae7a33d60ea7a050a2942de4"
+ }
+}

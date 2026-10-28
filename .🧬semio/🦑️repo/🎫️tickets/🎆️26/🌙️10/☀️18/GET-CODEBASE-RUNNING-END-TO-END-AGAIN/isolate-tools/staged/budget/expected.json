@@ -1,0 +1,176 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️required/📦️child/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🧵️prepared-worker/👷️asset-publication/📜️script.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🧵️prepared-worker/🟦️.ts": {
+  "mode": "env",
+  "pass": 2,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/📐️layout/🍎️physical/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "actual native rebudget retains two reader fences and checkpoint current identity"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🔀️selected-state-recovery/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "selected state recovery retains a real image reader and busy writer without image EX"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🔁️revalidation/🍎️withdrawn-cleanup-recheck/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "withdrawn graph cleanup rechecks fresh shared capacity with retained real reader: false",
+   "withdrawn graph cleanup rechecks fresh shared capacity with retained real reader: true"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 14,
+  "fails": [
+   "(unnamed)",
+   "actual Nx pressure recovery preserves the same Original through close and queued recovery",
+   "actual graph headroom custody: corrupt-inventory",
+   "actual graph headroom custody: corrupt-publication",
+   "actual graph headroom custody: corrupt-snapshot",
+   "actual graph headroom custody: invalid-request",
+   "actual graph headroom custody: optional-queued",
+   "actual graph headroom custody: pressure",
+   "actual graph headroom custody: queued",
+   "actual graph headroom custody: queued-cancel",
+   "actual graph headroom custody: reader",
+   "actual graph headroom custody: selected",
+   "actual graph headroom custody: selected-refused"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/♻️groups/🟦️.ts": {
+  "mode": "env",
+  "pass": 1,
+  "fails": [
+   "(unnamed)",
+   "graph optional group retirement ancestor-changed",
+   "graph optional group retirement cancel-after-commit",
+   "graph optional group retirement complete",
+   "graph optional group retirement known-missing-pack",
+   "graph optional group retirement manifest-changed",
+   "graph optional group retirement member-changed",
+   "graph optional group retirement new-generation",
+   "graph optional group retirement new-member",
+   "graph optional group retirement unindexed-pack"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📁️census/🟦️.ts": {
+  "mode": "env",
+  "pass": 1,
+  "fails": [
+   "(unnamed)",
+   "closure census delegates root service ownership before application path access"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔢️batch/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "authenticated group windows preserve physical identities with bounded whole-proof work"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 4,
+  "fails": [
+   "(unnamed)",
+   "shared graph closure maintenance ancestor-replaced",
+   "shared graph closure maintenance busy-reader",
+   "shared graph closure maintenance busy-writer",
+   "shared graph closure maintenance cancel",
+   "shared graph closure maintenance corrupt",
+   "shared graph closure maintenance exact-task-missing",
+   "shared graph closure maintenance generation",
+   "shared graph closure maintenance hardlink",
+   "shared graph closure maintenance inference",
+   "shared graph closure maintenance key-reference",
+   "shared graph closure maintenance leaf-replaced",
+   "shared graph closure maintenance new-reference",
+   "shared graph closure maintenance optional-new-reference",
+   "shared graph closure maintenance optional-release",
+   "shared graph closure maintenance orphan",
+   "shared graph closure maintenance pack",
+   "shared graph closure maintenance publication-fallback",
+   "shared graph closure maintenance reference-replaced",
+   "shared graph closure maintenance referenced",
+   "shared graph closure maintenance symlink",
+   "shared graph closure maintenance unknown",
+   "shared graph closure reader remains an executable derived Source entry"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 1,
+  "fails": [
+   "(unnamed)",
+   "a pin sweeps the retained snapshots only when it adds bytes and the last inventory is missing, old or near the budget",
+   "actual bounded graph publication retains exact immutable bytes through original reader",
+   "synchronous fact publication requires live enforcing graph writer custody"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 8,
+  "fails": [
+   "(unnamed)",
+   "owned process probe captures exact bytes inside actual fixed diagnostics storage",
+   "the nx partition provisions its own mounted image and charges the artifact envelope"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️phase/🟦️.ts": {
+  "mode": "env",
+  "pass": 5,
+  "fails": [
+   "cache phase complete authored caller roster uses mandatory controls in actual call AST"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 2,
+  "fails": [
+   "(unnamed)",
+   "cache consumer actual shared owner holds its image through accepted detached work",
+   "cache consumer detached actual artifact waiter and Node reader drain before image release",
+   "cache consumer direct Core undefined failure retains actual child ledger",
+   "cache consumer failure preserves the actual child Original ledger after physical drainage",
+   "cache consumer positive79 artifact group drains Node and real SH before exact retirement",
+   "cache consumer private frames drain descendants and borrow exact retained outer stores"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🟦️.ts": {
+  "mode": "env",
+  "pass": 3,
+  "fails": [
+   "(unnamed)",
+   "canonical retirement refuses pending publication at admission detach and deletion",
+   "ordinary Native readers reject every pending publication before kernel commands",
+   "repository publication authenticates the real Original and phase without issuing authority"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🧵️prepared-worker/👷️graph-purpose/📜️script.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ }
+}

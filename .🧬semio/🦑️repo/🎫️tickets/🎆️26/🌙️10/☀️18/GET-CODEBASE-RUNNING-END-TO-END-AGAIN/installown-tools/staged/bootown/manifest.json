@@ -1,0 +1,72 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📥️install/🐚️.sh": {
+  "file": "000.sh",
+  "base": "f1d47fdd5001c658f0aa3516366522e49857c104565abd4e4fa27a05c330a015",
+  "new": "6274a752388ab102da9bbdaaad34d195c0dd754ee0d2b1b9ded1fec1ac657f70"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📥️install/🔵️.ps1": {
+  "file": "001.ps1",
+  "base": "43aeaa63df4f24545534f909f081e8672b3e2d4db324ca5c59fdaa9c734add17",
+  "new": "04a2259e0a22ffce81eabb00c8cc490ec7deece2c8bd75ae52b626f6d7509590"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📥️install-contract/🟦️.ts": {
+  "file": "002.ts",
+  "base": "28091e5088d07cfb197ad15d445e06ec921d84b058b2bee9ac947a58161bdd9e",
+  "new": "f51e88b1b31aa8d83b91f25747e2011eb513d8d312938ad9ce9065c897ca8157"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📥️install-contract/🥒️.feature": {
+  "file": "003.feature",
+  "base": "2e66fec5e927b94243c3f6d38f5be163a6aa58d4a1a9d8afc98e7b4c1f73d6b8",
+  "new": "416131b4742baf606b76af268c92c58f0bfeb76fd43db7faa8a9a26c8703240d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/README.md": {
+  "file": "004.md",
+  "base": "f724864fbd0609aabb2c6c7cdc714731d718448ed45209184260518ba8bfb4dc",
+  "new": "5254a99ffd0d04ced0350a7ef5069c417d0e5a949b7006cd36d7b93f01640cf0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts": {
+  "file": "005.ts",
+  "base": "3093435d52d7a294c911dcbb0a2f68eef526c0dabee9432dbf6b337a2658d4cf",
+  "new": "01db9cc5b4a363de08ef12bdc1886903a2ed402bc6b9dd2a15fa597a1f937cae"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧬️schema/🔣️.json": {
+  "file": "006.json",
+  "base": "5cd3488e7a281508f7b53e17ced596a24dd4d50cdf28b97ded5ea392d2ab547f",
+  "new": "90e2c56c637662385c7d821a5bf7b0e994b33f9e50c2f46e8b941dbe7ab76c18"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧫️fixtures/🔣️.json": {
+  "file": "007.json",
+  "base": "faa27bddcb87f1530b861c607ab4af03347b45f6854564357b5886433e347e26",
+  "new": "17f73354d0fd18971daeae135e21319f91839fb72f9417aff6cdf852552f168c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧪️tests/🟦️.ts": {
+  "file": "008.ts",
+  "base": "713b4471311888eaaab799d060794df9ac9e230f182425dde35f907d97f98aba",
+  "new": "c83d3c961240011463b139961ed01ec1fe9e9809f15ec79e100cc52337788fa1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧪️tests/🥒️.feature": {
+  "file": "009.feature",
+  "base": "c29552ab181deb5243bea1e58aa0fbb434e76c70365479010d0c1c5d1e48e807",
+  "new": "3f2883935eeb454a016675a07a7a827edf7cf3c6ef4527a40337a3c85af0dc97"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh": {
+  "file": "010.sh",
+  "base": "f6a9a3af393ba1462c4556ccc1ad11fc1b8238ac5decc658c4cb7ce2e60a0ae4",
+  "new": "8d0d8f91a8588067a83153d9a38af54f54bcd3bff9907a9ded300df2c422ce54"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1": {
+  "file": "011.ps1",
+  "base": "cf701bf75ce3bf3c1a711aebf85a21727f8517e560190300d77e19af9f443734",
+  "new": "fe625483f9c7cc276b547f6dfd8dd31dfb551c0289295313a5cf7b940ea08321"
+ },
+ ".github/actions/repo-launcher/action.yml": {
+  "file": "012.yml",
+  "base": "79155e5c1dfc42d4a3f7a32feeeeb833ed85062950a1097c6b05f6936cb02039",
+  "new": "2c090a43c2e1383e593794f5735876f4e663627f1b4b7f3eedf70c4f02216ec3"
+ },
+ "🧰️framework/🛍️products/🦑️repo/README.md": {
+  "file": "013.md",
+  "base": "793bfffe723002c81d0a5296978ee11cfcaed37f28411d560e52a2094ea445ed",
+  "new": "e1e94a70665520d91ed2c91f62ab3a46483128716ab511ae654a9a2ecffba33c"
+ }
+}

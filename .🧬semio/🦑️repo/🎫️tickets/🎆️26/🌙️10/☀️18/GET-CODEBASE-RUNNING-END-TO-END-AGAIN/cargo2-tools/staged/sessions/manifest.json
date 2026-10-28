@@ -1,0 +1,37 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts": {
+  "file": "00.ts",
+  "base": "ad6ead14d246991cfa7bb41d0395961ec736320ef97f83e183c85631bbdf8447",
+  "new": "7e44be7f13bae7f26fe302412106615f7e7823452248c76661c27510b21acbf0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts": {
+  "file": "01.ts",
+  "base": "dbaebcda0f3ee533faa2761956d140b175c408e8576a97e4802612966b889548",
+  "new": "195b94cffdac100db04266c83a9a0ff290d21636f5ce64eef2c0ce932bde51f7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json": {
+  "file": "02.json",
+  "base": "9070244c2e30685e0be37b2ac9ac58e78128f3412c1f740604aac7cee29ea7f8",
+  "new": "8297edddd7ba4b0b4ef5de4ec07eff158fbc512d49fb101d470df66b6c4be4dc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🧪️tests/🔐️pool-claims/🟦️.ts": {
+  "file": "03.ts",
+  "base": "8b18c79db52df005805ba4408ca28ed3eef7dee4c85729cb39c8ed4ad6c2862d",
+  "new": "5c3d8e166a2a35c4995853af48385ea3db8d6a2fae3202bbeeb653a2dbe5b522"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🧪️tests/🌱️sessions/🟦️.ts": {
+  "file": "04.ts",
+  "base": null,
+  "new": "dfa922193cf05323a6500c61e17a21f906b9580b30add49f62265ae5864f8650"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🧪️tests/🌱️sessions/🔣️.json": {
+  "file": "05.json",
+  "base": null,
+  "new": "e6b2eb962192e0aa1e605dc671770b80b2364923f920eeb38777733ee4485386"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🧪️tests/🌱️sessions/🐍️.py": {
+  "file": "06.py",
+  "base": null,
+  "new": "f88c2bbac2f8513fa1f1d4f8df24b76f2637a6801d8e7d6b581a374ab10e27fd"
+ }
+}

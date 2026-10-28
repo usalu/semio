@@ -7,6 +7,11 @@
       "typecheck": "none",
       "files": [
         "📦️artifacts/🏗️native-build/💾️storage/🪟️conditional-retirement/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -15,6 +20,11 @@
       "typecheck": "none",
       "files": [
         "🔒️leases/📁️physical/🧪️tests/📂️descriptors/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -23,6 +33,11 @@
       "typecheck": "none",
       "files": [
         "🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -31,6 +46,11 @@
       "typecheck": "none",
       "files": [
         "📦️artifacts/🏗️native-build/📥️source/🎟️admission/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -39,6 +59,11 @@
       "typecheck": "none",
       "files": [
         "🔒️leases/⏳️wait/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -47,6 +72,41 @@
       "typecheck": "none",
       "files": [
         "🔒️leases/⚖️fairness/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
+      ]
+    },
+    {
+      "id": "resource-lease-standing",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🔒️leases/📈️standing/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
+      ]
+    },
+    {
+      "id": "resource-lease-standing-live",
+      "budgetMs": 600000,
+      "typecheck": "none",
+      "files": [
+        "🔒️leases/📈️standing/🧪️tests/🚦️live/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -55,6 +115,11 @@
       "typecheck": "none",
       "files": [
         "🔒️leases/🧭️order/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -63,6 +128,11 @@
       "typecheck": "none",
       "files": [
         "🔒️leases/🧭️order/🧪️tests/📥️processes/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -71,6 +141,13 @@
       "typecheck": "none",
       "files": [
         "🔒️leases/🧭️order/🧪️tests/🧩️component-driver/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
       ]
     },
     {
@@ -79,6 +156,13 @@
       "typecheck": "none",
       "files": [
         "🔒️leases/🧭️order/🧪️tests/🕸️wait-for/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
       ]
     },
     {
@@ -86,7 +170,13 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
-        "🪪️agent-sessions/🧪️tests/🟦️.ts"
+        "🪪️agent-sessions/🧪️tests/🟦️.ts",
+        "🪪️agent-sessions/🧭️ancestry/🪟️native/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -95,6 +185,11 @@
       "typecheck": "none",
       "files": [
         "🪪️agent-sessions/🧪️tests/🔗️adapters/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -103,6 +198,11 @@
       "typecheck": "none",
       "files": [
         "🔒️leases/🚪️admission/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -115,7 +215,12 @@
       "capabilities": {
         "artifacts": true,
         "command": "writer"
-      }
+      },
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
     },
     {
       "id": "exact-cargo-storage",
@@ -133,6 +238,11 @@
         "🧪️testing/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts",
         "🧪️testing/🧰️toolchain/📌️pinned/🧪️tests/🟦️.ts",
         "🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🍎️image/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -140,7 +250,13 @@
       "budgetMs": 300000,
       "typecheck": "strict-indexed",
       "files": [
-        "🏗️build/🟦️typescript/🧪️tests/🟦️.ts"
+        "🏗️build/🟦️typescript/🧪️tests/🟦️.ts",
+        "🏗️build/🟦️typescript/🧪️tests/🔁️incremental/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -149,6 +265,11 @@
       "typecheck": "none",
       "files": [
         "🏗️build/🎛️environment/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -158,7 +279,14 @@
       "files": [
         "📦️artifacts/💾️cache/🧪️tests/🟦️.ts"
       ],
-      "testNamePattern": "neutral Core compiler descriptor refusals"
+      "testNamePattern": "neutral Core compiler descriptor refusals",
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
+      ]
     },
     {
       "id": "native-image-observation",
@@ -167,7 +295,16 @@
       "files": [
         "📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤫️silence/🧪️tests/🟦️.ts"
       ],
-      "testNamePattern": "silence corpus|observation tolerates"
+      "testNamePattern": "silence corpus|observation tolerates",
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "posix-program",
+        "symlink",
+        "permission-bits"
+      ]
     },
     {
       "id": "capture",
@@ -176,6 +313,11 @@
       "files": [
         "📥️capture/🧪️tests/🟦️.ts",
         "📥️capture/📥️invocation/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -184,6 +326,11 @@
       "typecheck": "strict",
       "files": [
         "🧭️routing/🎛️command/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -192,6 +339,11 @@
       "typecheck": "none",
       "files": [
         "🧭️routing/🎛️command/🧪️tests/🚧️boundary/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -200,6 +352,11 @@
       "typecheck": "none",
       "files": [
         "🧭️routing/🎛️command/🧪️tests/❄️cold/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -208,6 +365,11 @@
       "typecheck": "none",
       "files": [
         "🏗️build/🧪️tests/🏗️managed/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -217,7 +379,12 @@
       "files": [
         "🏗️build/🧪️tests/🏗️native/🟦️.ts"
       ],
-      "testNamePattern": "Central Cargo profile policy"
+      "testNamePattern": "Central Cargo profile policy",
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
     },
     {
       "id": "native-build-mode",
@@ -225,6 +392,11 @@
       "typecheck": "none",
       "files": [
         "🏗️build/🧪️tests/🏗️native/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -234,6 +406,11 @@
       "files": [
         "📦️artifacts/🐹️go-build/🧪️tests/🟦️.ts",
         "../📁️filesystem/🛡️durability/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -243,6 +420,11 @@
       "files": [
         "🏗️build/🎟️capacity/🧪️tests/🟦️.ts",
         "🔒️leases/📦️bounded/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -251,8 +433,12 @@
       "typecheck": "none",
       "files": [
         "🏗️build/🎟️capacity/🧪️tests/🔐️inheritance/🟦️.ts",
-        "🏗️build/🎟️capacity/🧪️tests/🪆️scope/🟦️.ts",
-        "../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🧪️tests/🟦️.ts"
+        "🏗️build/🎟️capacity/🧪️tests/🪆️scope/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -261,6 +447,11 @@
       "typecheck": "none",
       "files": [
         "🏗️build/🎟️capacity/🛟️custodian/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -268,18 +459,12 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
-        "🏗️build/🎟️capacity/🧮️units/🧪️tests/🟦️.ts",
-        "../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🔒️exclusive-writer/🟦️.ts",
-        "../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/⛓️cpu-last/🟦️.ts",
-        "../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🎟️capacity/🧪️tests/🟦️.ts"
-      ]
-    },
-    {
-      "id": "compiler-headroom",
-      "budgetMs": 300000,
-      "typecheck": "none",
-      "files": [
-        "../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/⏳️declared-wait/🟦️.ts"
+        "🏗️build/🎟️capacity/🧮️units/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -289,7 +474,12 @@
       "files": [
         "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts"
       ],
-      "testNamePattern": "queued exclusive compiler cancellation|unit graph compilation cancellation|native build plan is schema-first|profile mode selection|unlaned same-profile Cargo jobs|the original finite caller budget"
+      "testNamePattern": "queued exclusive compiler cancellation|unit graph compilation cancellation|native build plan is schema-first|profile mode selection|unlaned same-profile Cargo jobs|the original finite caller budget",
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
     },
     {
       "id": "cargo-target-recipe",
@@ -297,6 +487,11 @@
       "typecheck": "none",
       "files": [
         "📦️artifacts/🏗️native-build/🎯️recipe/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -305,6 +500,11 @@
       "typecheck": "none",
       "files": [
         "📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🏎️overlap/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -319,6 +519,11 @@
         "📦️artifacts/🏗️native-build/📈️telemetry/🧪️tests/🟦️.ts",
         "📦️artifacts/🏗️native-build/🗃️stage-cache/🧪️tests/🟦️.ts",
         "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -328,9 +533,12 @@
       "files": [
         "📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧪️tests/🟦️.ts",
         "📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🧪️tests/🟦️.ts",
-        "💾️state/🧪️tests/🟦️.ts",
-        "../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🟦️.ts",
-        "../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts"
+        "💾️state/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -340,6 +548,11 @@
       "files": [
         "🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",
         "🧪️testing/🦀️cargo/🎯️exact/🛠️preparation/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -348,6 +561,11 @@
       "typecheck": "none",
       "files": [
         "📋️context/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -356,6 +574,11 @@
       "typecheck": "none",
       "files": [
         "🧪️testing/🧪️vitest/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -364,6 +587,11 @@
       "typecheck": "none",
       "files": [
         "🧪️testing/🦀️cargo/🔒️lease/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -377,6 +605,11 @@
       "typecheckFiles": [
         "🧪️testing/🦀️cargo/🧪️tests/🟦️.ts",
         "🧪️testing/🦀️cargo/🧪️tests/🎚️mode/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -386,6 +619,11 @@
       "files": [
         "🧪️testing/🦀️cargo/🧪️tests/🟦️.ts",
         "🧪️testing/🦀️cargo/🧪️tests/🎚️mode/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -394,6 +632,13 @@
       "typecheck": "none",
       "files": [
         "🧪️testing/🎛️execution/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "posix-program"
       ]
     },
     {
@@ -403,6 +648,14 @@
       "files": [
         "🧭️routing/🏠️workspace/🧪️tests/🟦️.ts",
         "../../🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧪️tests/🌱️workspace-resolution/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "posix-program",
+        "symlink"
       ]
     },
     {
@@ -412,6 +665,13 @@
       "files": [
         "🧭️routing/🧪️tests/🟦️.ts",
         "🔌️providers/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
       ]
     },
     {
@@ -420,6 +680,11 @@
       "typecheck": "none",
       "files": [
         "⏱️budget/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -428,6 +693,11 @@
       "typecheck": "none",
       "files": [
         "🧪️testing/🎚️budget/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -436,6 +706,11 @@
       "typecheck": "none",
       "trees": [
         "🎛️owned-execution"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -444,6 +719,11 @@
       "typecheck": "none",
       "files": [
         "📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🔐️custody/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -451,7 +731,13 @@
       "budgetMs": 120000,
       "typecheck": "none",
       "files": [
-        "🪓️termination/🧪️tests/🟦️.ts"
+        "🪓️termination/🧪️tests/🟦️.ts",
+        "🪓️termination/🧪️tests/🪟️taskkill/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -463,7 +749,13 @@
         "🏗️build/🗣️language",
         "🏗️build/📤️output",
         "🏗️build/🗃️state",
-        "🏗️build/🎚️mode"
+        "🏗️build/🎚️mode",
+        "🏗️build/🧰️toolchains"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -475,6 +767,11 @@
         "📖️texts",
         "📋️context",
         "🧪️tests"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -483,6 +780,11 @@
       "typecheck": "none",
       "trees": [
         "📦️artifacts/🏗️native-build/💾️storage"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -491,6 +793,11 @@
       "typecheck": "none",
       "trees": [
         "📦️artifacts/🏗️native-build"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -505,6 +812,15 @@
         "📦️artifacts/🗃️archive",
         "📦️artifacts/🗂️files",
         "📦️packages"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command",
+        "symlink",
+        "permission-bits"
       ]
     },
     {
@@ -516,7 +832,12 @@
       ],
       "capabilities": {
         "artifacts": true
-      }
+      },
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
     },
     {
       "id": "testing",
@@ -527,7 +848,16 @@
       ],
       "capabilities": {
         "artifacts": true
-      }
+      },
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "posix-program",
+        "posix-shell-script",
+        "python3-command"
+      ]
     },
     {
       "id": "routing-owners",
@@ -535,6 +865,13 @@
       "typecheck": "none",
       "trees": [
         "🧭️routing"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
       ]
     },
     {
@@ -543,6 +880,13 @@
       "typecheck": "none",
       "trees": [
         "🧰️tools"
+      ],
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "posix-program"
       ]
     },
     {
@@ -551,6 +895,11 @@
       "typecheck": "none",
       "trees": [
         "🦀️cargo-workspace"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {
@@ -560,7 +909,12 @@
       "function": {
         "module": "📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🟦️.ts",
         "export": "proveCargoBuildLeasesV1"
-      }
+      },
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
     },
     {
       "id": "native-artifact-publication",
@@ -569,7 +923,53 @@
       "function": {
         "module": "📦️artifacts/🏗️native-build/🧪️tests/📦️publication/🟦️.ts",
         "export": "testCargoArtifactPublication"
-      }
+      },
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "laws-runtime-termination",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../⚙️runtime/🧪️tests/🛑️termination/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "laws-io-control-retirement",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🚪️io/⏱️control/♻️retirement/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "laws-filesystem-observation",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🔒️busy/🟦️.ts",
+        "../📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🎲️fuzz/🟦️.ts",
+        "../📁️filesystem/🧾️observation/🧪️tests/🎛️control/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
     }
   ],
   "codeSuites": [
@@ -578,6 +978,7 @@
     "artifact-files"
   ],
   "helpers": [
+    "🧪️testing/📥️invocation/🧪️tests/🧫️declared/🟦️.ts",
     "🧪️testing/📥️invocation/🧪️tests/🧫️harness/🟦️.ts"
   ]
 }

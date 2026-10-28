@@ -1,0 +1,510 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Read oracle",
+  "description": "🔭️ The tool independent request and report of the read oracle (which workspace files a command reads beyond its declared inputs) and the EN/DE texts of its document.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "policy",
+    "messages",
+    "windows"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "policy": {
+      "$ref": "#/definitions/Policy"
+    },
+    "messages": {
+      "$ref": "#/definitions/Messages"
+    },
+    "windows": {
+      "$ref": "#/definitions/WindowsPlan"
+    }
+  },
+  "definitions": {
+    "Language": {
+      "type": "string",
+      "enum": [
+        "en",
+        "de"
+      ]
+    },
+    "Path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!(?:.*/)?\\.\\.(?:/|$)).+$"
+    },
+    "RelativePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!(?:.*/)?\\.\\.(?:/|$))[^/\\\\:][^\\\\:]*$"
+    },
+    "Backend": {
+      "type": "string",
+      "enum": [
+        "seatbelt",
+        "landlock",
+        "mirror"
+      ]
+    },
+    "Strength": {
+      "type": "string",
+      "enum": [
+        "kernel-enforced",
+        "output-equivalence"
+      ]
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "language",
+        "root",
+        "cwd",
+        "allowed",
+        "ambient",
+        "names",
+        "command",
+        "environment",
+        "rounds",
+        "timeoutMs",
+        "backend",
+        "compare"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "language": {
+          "$ref": "#/definitions/Language"
+        },
+        "root": {
+          "$ref": "#/definitions/Path"
+        },
+        "cwd": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "allowed": {
+          "type": "array",
+          "maxItems": 200000,
+          "items": {
+            "$ref": "#/definitions/RelativePath"
+          }
+        },
+        "ambient": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/definitions/RelativePath"
+          }
+        },
+        "names": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "pattern": "^[^/\\\\]+$"
+          }
+        },
+        "command": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "type": "string",
+            "maxLength": 65536
+          }
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 65536
+          }
+        },
+        "rounds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "timeoutMs": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 21600000
+        },
+        "backend": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "seatbelt",
+            "landlock",
+            "mirror"
+          ]
+        },
+        "compare": {
+          "type": "string",
+          "enum": [
+            "output",
+            "exit"
+          ]
+        },
+        "maxProfiles": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        }
+      }
+    },
+    "Round": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "round",
+        "backend",
+        "exit",
+        "seconds",
+        "denied",
+        "notes",
+        "tail"
+      ],
+      "properties": {
+        "round": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "backend": {
+          "$ref": "#/definitions/Backend"
+        },
+        "exit": {
+          "type": "integer"
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "denied": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tail": {
+          "type": "string"
+        }
+      }
+    },
+    "Report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "backend",
+        "strength",
+        "allowed",
+        "learned",
+        "rounds",
+        "passed",
+        "clean"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "backend": {
+          "$ref": "#/definitions/Backend"
+        },
+        "strength": {
+          "$ref": "#/definitions/Strength"
+        },
+        "allowed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "learned": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rounds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Round"
+          }
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "clean": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "memoryLimitMegabytes",
+        "tailBytes",
+        "logOutputBytes",
+        "reasonCharacters",
+        "refusalCharacters",
+        "outputTailCharacters",
+        "flushWaitMilliseconds",
+        "markerCommandMilliseconds",
+        "markerPollMilliseconds",
+        "logLookbackMilliseconds",
+        "seatbeltCapacity",
+        "smallestCapacity",
+        "defaultTimeoutSeconds"
+      ],
+      "properties": {
+        "memoryLimitMegabytes": {
+          "type": "integer",
+          "minimum": 64,
+          "maximum": 65536,
+          "description": "EN: The memory the read oracle may hold before it aborts. DE: Der Speicher, den das Lese-Orakel belegen darf, bevor es abbricht."
+        },
+        "tailBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 16777216,
+          "description": "EN: The most bytes of the end of a command's output that are kept. DE: Die meisten Bytes vom Ende der Ausgabe eines Befehls, die behalten werden."
+        },
+        "logOutputBytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 1073741824,
+          "description": "EN: The most bytes of the macOS unified log that are read after a round (256 MiB). DE: Die meisten Bytes des macOS-Unified-Logs, die nach einer Runde gelesen werden (256 MiB)."
+        },
+        "reasonCharacters": {
+          "type": "integer",
+          "minimum": 20,
+          "maximum": 2000,
+          "description": "EN: The most characters of the reason a backend probe reports. DE: Die meisten Zeichen des Grundes, den die Pruefung eines Backends meldet."
+        },
+        "refusalCharacters": {
+          "type": "integer",
+          "minimum": 20,
+          "maximum": 2000,
+          "description": "EN: The most characters of the refusal a sandbox profile or the Landlock helper reports. DE: Die meisten Zeichen der Verweigerung, die ein Sandbox-Profil oder der Landlock-Helfer meldet."
+        },
+        "outputTailCharacters": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 100000,
+          "description": "EN: The most characters of a round's output that its report keeps. DE: Die meisten Zeichen der Ausgabe einer Runde, die ihr Bericht behaelt."
+        },
+        "flushWaitMilliseconds": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 600000,
+          "description": "EN: How long the oracle waits until the unified log shows the marker of the round. DE: Wie lange das Orakel wartet, bis das Unified Log die Markierung der Runde zeigt."
+        },
+        "markerCommandMilliseconds": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 600000,
+          "description": "EN: The timeout of the command that writes the marker into the unified log. DE: Das Zeitlimit des Befehls, der die Markierung in das Unified Log schreibt."
+        },
+        "markerPollMilliseconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 10000,
+          "description": "EN: The pause between two looks into the unified log for the marker. DE: Die Pause zwischen zwei Blicken ins Unified Log nach der Markierung."
+        },
+        "logLookbackMilliseconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60000,
+          "description": "EN: How far before the start of a round the unified log is read. DE: Wie weit vor dem Start einer Runde das Unified Log gelesen wird."
+        },
+        "seatbeltCapacity": {
+          "type": "integer",
+          "minimum": 24,
+          "maximum": 100000,
+          "description": "EN: The number of rules a macOS sandbox profile may hold before the plan is split into rounds. DE: Die Zahl der Regeln, die ein macOS-Sandbox-Profil halten darf, bevor der Plan in Runden geteilt wird."
+        },
+        "smallestCapacity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "EN: The fewest rules a round is split down to when the kernel refuses a profile. DE: Die wenigsten Regeln, auf die eine Runde geteilt wird, wenn der Kernel ein Profil verweigert."
+        },
+        "defaultTimeoutSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400,
+          "description": "EN: The default limit of a read oracle run on the command line, in seconds. DE: Die Standardgrenze eines Laufs des Lese-Orakels auf der Kommandozeile, in Sekunden."
+        }
+      }
+    },
+    "Text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1200
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1200
+        }
+      }
+    },
+    "Messages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "round",
+        "fallback",
+        "unavailable",
+        "memory",
+        "cancelled",
+        "profiles",
+        "clean",
+        "dirty",
+        "usage",
+        "traceMissing",
+        "outputDiffers",
+        "batchCommand",
+        "argumentUnexpected",
+        "argumentsRequired",
+        "requestRefused",
+        "seatbeltPlatform",
+        "seatbeltProbe",
+        "landlockPlatform"
+      ],
+      "properties": {
+        "round": {
+          "$ref": "#/definitions/Text"
+        },
+        "fallback": {
+          "$ref": "#/definitions/Text"
+        },
+        "unavailable": {
+          "$ref": "#/definitions/Text"
+        },
+        "memory": {
+          "$ref": "#/definitions/Text"
+        },
+        "cancelled": {
+          "$ref": "#/definitions/Text"
+        },
+        "profiles": {
+          "$ref": "#/definitions/Text"
+        },
+        "clean": {
+          "$ref": "#/definitions/Text"
+        },
+        "dirty": {
+          "$ref": "#/definitions/Text"
+        },
+        "usage": {
+          "$ref": "#/definitions/Text"
+        },
+        "traceMissing": {
+          "$ref": "#/definitions/Text"
+        },
+        "outputDiffers": {
+          "$ref": "#/definitions/Text"
+        },
+        "batchCommand": {
+          "$ref": "#/definitions/Text"
+        },
+        "argumentUnexpected": {
+          "$ref": "#/definitions/Text"
+        },
+        "argumentsRequired": {
+          "$ref": "#/definitions/Text"
+        },
+        "requestRefused": {
+          "$ref": "#/definitions/Text"
+        },
+        "seatbeltPlatform": {
+          "$ref": "#/definitions/Text"
+        },
+        "seatbeltProbe": {
+          "$ref": "#/definitions/Text"
+        },
+        "landlockPlatform": {
+          "$ref": "#/definitions/Text"
+        }
+      }
+    },
+    "WindowsPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summary",
+        "options"
+      ],
+      "properties": {
+        "summary": {
+          "$ref": "#/definitions/Text"
+        },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "strength",
+              "userland",
+              "text"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "strength": {
+                "type": "string",
+                "enum": [
+                  "read-trace",
+                  "enforcement",
+                  "output-equivalence",
+                  "partial-trace"
+                ]
+              },
+              "userland": {
+                "type": "boolean"
+              },
+              "text": {
+                "$ref": "#/definitions/Text"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

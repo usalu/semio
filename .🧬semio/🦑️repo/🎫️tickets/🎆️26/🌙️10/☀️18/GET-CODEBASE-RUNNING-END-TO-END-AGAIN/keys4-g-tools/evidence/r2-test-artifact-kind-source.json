@@ -1,0 +1,24 @@
+{
+ "target": "test-artifact-kind-source",
+ "tag": "r2",
+ "declared": 40,
+ "rows": [
+  {
+   "leg": "bun-artifact-kind",
+   "kind": "bun",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 0,
+   "tail": " 0 fail |  45 expect() calls | Ran 1 test across 1 file. [210.00ms] | ",
+   "notes": [
+    "profiles:1",
+    "rules:16",
+    "capacity:600"
+   ]
+  }
+ ]
+}

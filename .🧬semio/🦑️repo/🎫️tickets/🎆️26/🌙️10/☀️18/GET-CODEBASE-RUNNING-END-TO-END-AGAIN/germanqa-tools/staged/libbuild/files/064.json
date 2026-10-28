@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "id": "ci-suites",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "title": {
+      "en": "Suite sweep ({label}) on {host} with {tool}",
+      "de": "Suite-Durchlauf ({label}) auf {host} mit {tool}"
+    },
+    "totals": {
+      "en": "{passed} passed, {skipped} SKIPPED (not passed), {failed} failed, {timeout} timed out, {unrouted} without a target; tests {pass} pass, {skip} skip, {fail} fail; {minutes} min",
+      "de": "{passed} bestanden, {skipped} ÜBERSPRUNGEN (nicht bestanden), {failed} fehlgeschlagen, {timeout} abgelaufen, {unrouted} ohne Target; Tests {pass} bestanden, {skip} übersprungen, {fail} fehlgeschlagen; {minutes} Min"
+    },
+    "verdict-ok": {
+      "en": "Verdict: every selected suite ran and none failed.",
+      "de": "Urteil: Jede ausgewählte Suite lief und keine schlug fehl."
+    },
+    "verdict-failed": {
+      "en": "Verdict: {count} suite(s) failed the sweep.",
+      "de": "Urteil: {count} Suite(s) haben den Durchlauf nicht bestanden."
+    },
+    "header-suite": {
+      "en": "Suite",
+      "de": "Suite"
+    },
+    "header-status": {
+      "en": "Status",
+      "de": "Status"
+    },
+    "header-wall": {
+      "en": "Wall (s)",
+      "de": "Dauer (s)"
+    },
+    "header-tests": {
+      "en": "Tests pass/skip/fail",
+      "de": "Tests bestanden/übersprungen/fehlgeschlagen"
+    },
+    "header-memory": {
+      "en": "Peak host memory in use (MB)",
+      "de": "Höchster Rechnerspeicher in Benutzung (MB)"
+    },
+    "status-passed": {
+      "en": "passed",
+      "de": "bestanden"
+    },
+    "status-skipped": {
+      "en": "SKIPPED, not passed",
+      "de": "ÜBERSPRUNGEN, nicht bestanden"
+    },
+    "status-failed": {
+      "en": "failed",
+      "de": "fehlgeschlagen"
+    },
+    "status-timeout": {
+      "en": "timed out",
+      "de": "abgelaufen"
+    },
+    "status-unrouted": {
+      "en": "no target",
+      "de": "kein Target"
+    },
+    "violations": {
+      "en": "Suites that had to run on this host and did not:",
+      "de": "Suiten, die auf diesem Rechner laufen mussten und es nicht taten:"
+    },
+    "violation-skipped": {
+      "en": "{table}/{suite}: skipped (declared for other hosts)",
+      "de": "{table}/{suite}: übersprungen (für andere Rechner deklariert)"
+    },
+    "violation-failed": {
+      "en": "{table}/{suite}: failed",
+      "de": "{table}/{suite}: fehlgeschlagen"
+    },
+    "violation-timeout": {
+      "en": "{table}/{suite}: timed out",
+      "de": "{table}/{suite}: abgelaufen"
+    },
+    "violation-unrouted": {
+      "en": "{table}/{suite}: has no test target",
+      "de": "{table}/{suite}: hat kein Test-Target"
+    },
+    "violation-missing": {
+      "en": "{table}/{suite}: did not run",
+      "de": "{table}/{suite}: lief nicht"
+    },
+    "violation-not-declared": {
+      "en": "{table}/{suite}: is not a suite of the route table",
+      "de": "{table}/{suite}: ist keine Suite der Routentabelle"
+    },
+    "proves": {
+      "en": "Proves: {text}",
+      "de": "Beweist: {text}"
+    },
+    "memory-unavailable": {
+      "en": "not observed",
+      "de": "nicht beobachtet"
+    },
+    "sweep-start": {
+      "en": "Suite {position}/{count}: {table}/{suite}",
+      "de": "Suite {position}/{count}: {table}/{suite}"
+    },
+    "sweep-stop": {
+      "en": "Sweep cancelled before {table}/{suite}",
+      "de": "Durchlauf vor {table}/{suite} abgebrochen"
+    },
+    "refusal-shard": {
+      "en": "Shard {value} is not <table>:<index>/<count> of the policy",
+      "de": "Shard {value} ist nicht <Tabelle>:<Index>/<Anzahl> der Richtlinie"
+    },
+    "refusal-option": {
+      "en": "Unknown or incomplete option {option}",
+      "de": "Unbekannte oder unvollständige Option {option}"
+    },
+    "refusal-selection": {
+      "en": "Name either --shard or --must-run",
+      "de": "Entweder --shard oder --must-run angeben"
+    },
+    "refusal-document": {
+      "en": "Closed {document} required: {detail}",
+      "de": "Geschlossenes {document} erforderlich: {detail}"
+    },
+    "usage": {
+      "en": "Usage: script.ts plan|run|report ... (see the module README)",
+      "de": "Aufruf: script.ts plan|run|report ... (siehe README des Moduls)"
+    },
+    "header-tree": {
+      "en": "Peak memory of the sweep's process tree (MB)",
+      "de": "Höchster Speicher des Prozessbaums des Durchlaufs (MB)"
+    },
+    "unobserved": {
+      "en": "Never observed during the run: {kinds}",
+      "de": "Während des Durchlaufs nie beobachtet: {kinds}"
+    },
+    "kind-host": {
+      "en": "host memory",
+      "de": "Rechnerspeicher"
+    },
+    "kind-tree": {
+      "en": "memory of the process tree",
+      "de": "Speicher des Prozessbaums"
+    }
+  }
+}

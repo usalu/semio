@@ -157,15 +157,15 @@
       "const": {
         "idle": {
           "en": "{label} stopped: no progress for {minutes} min (idle window {window} min). Child CPU time, child output, declared waits and finished observation steps renew the window.",
-          "de": "{label} gestoppt: seit {minutes} Min. kein Fortschritt (Leerlauffenster {window} Min.). Kind-CPU-Zeit, Kind-Ausgabe, deklarierte Wartezeiten und abgeschlossene Beobachtungsschritte erneuern das Fenster."
+          "de": "{label} gestoppt: seit {minutes} min kein Fortschritt (Leerlauffenster {window} min). Kind-CPU-Zeit, Kind-Ausgabe, deklarierte Wartezeiten und abgeschlossene Beobachtungsschritte erneuern das Fenster."
         },
         "maximum": {
           "en": "{label} stopped: the maximum duration of {minutes} min derived from its declared cost ({units} unit(s)) is reached.",
-          "de": "{label} gestoppt: die aus den deklarierten Kosten ({units} Einheit(en)) abgeleitete Höchstdauer von {minutes} Min. ist erreicht."
+          "de": "{label} gestoppt: die aus den deklarierten Kosten ({units} Einheit(en)) abgeleitete Höchstdauer von {minutes} min ist erreicht."
         },
         "traceCreated": {
           "en": "[progress-deadline] {label}: idle window {window} min, maximum {minutes} min for {units} declared unit(s)",
-          "de": "[progress-deadline] {label}: Leerlauffenster {window} Min., Höchstdauer {minutes} Min. für {units} deklarierte Einheit(en)"
+          "de": "[progress-deadline] {label}: Leerlauffenster {window} min, Höchstdauer {minutes} min für {units} deklarierte Einheit(en)"
         },
         "traceWork": {
           "en": "[progress-deadline] child CPU time moved ({children} process(es), {cpu} ms): idle windows renewed",

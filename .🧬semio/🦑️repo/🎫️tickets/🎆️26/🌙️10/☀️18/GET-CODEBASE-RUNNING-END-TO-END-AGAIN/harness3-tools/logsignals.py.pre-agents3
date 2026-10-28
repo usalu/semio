@@ -1,0 +1,254 @@
+"""🔬 harness3: language-aware streaming reader of the build log rows the acceptance harnesses judge (graph memo, Bazel plan, capacity queue, restarts).
+
+`Signals().feed(at_ms, line)` keeps counters only (no line is stored beyond a few samples). `summary(expect=None)` returns plain data.
+`logsignals.py scan <log>...` prints one summary per log (a dry run of the parsers on recorded product logs).
+Every regex mirrors a message template of the product (EN and DE); `selftest.py` renders those templates from the product's own JSON and checks them.
+"""
+import json, re, sys
+
+DE_CAPACITY = re.compile(r"zugelassen|wartet|bemessen|prognostiziert|Reservierung|verf(?:ü|ue)gbar|Untergrenze|Job\(s\)")
+MB = r"(-?\d+) MB"
+CAPACITY = [
+    ("sized", "en", r"^\[capacity\] ([\w-]+): sized at (\d+)% of the default from (\d+) earlier run"),
+    ("sized", "de", r"^\[capacity\] ([\w-]+): auf (\d+)% des Standardwerts bemessen, aus (\d+) frueheren Laeufen"),
+    ("quiet", "en", r"^\[capacity\] ([\w-]+): forecast quiet .*?: (\d+) MB reserved now, the full (\d+) MB only if work has to run"),
+    ("quiet", "de", r"^\[capacity\] ([\w-]+): ruhig prognostiziert.*?: jetzt (\d+) MB reserviert, die vollen (\d+) MB nur, wenn Arbeit laufen muss"),
+    ("admitted", "en", r"^\[capacity\] admitted ([\w-]+): (\d+) job\(s\), (\d+) MB reserved \((\d+) MB available, (\d+) MB floor\)"),
+    ("admitted", "de", r"^\[capacity\] zugelassen ([\w-]+): (\d+) Job\(s\), (\d+) MB reserviert \((\d+) MB verf(?:ü|ue)gbar, Untergrenze (\d+) MB\)"),
+    ("reduced", "en", r"^\[capacity\] admitted ([\w-]+) with (\d+) of (\d+) job\(s\)"),
+    ("reduced", "de", r"^\[capacity\] ([\w-]+) mit (\d+) von (\d+) Job\(s\) zugelassen"),
+    ("override", "en", r"^\[capacity\] admitted ([\w-]+) after (\d+)s although"),
+    ("override", "de", r"^\[capacity\] ([\w-]+) nach (\d+) s zugelassen, obwohl"),
+    ("wait", "en", r"^\[capacity\] waiting (\d+)s for ([\w-]+): (.*?) \(need (\d+) MB; " + MB + r" spare above the (\d+) MB floor, load ([\d.]+); (\d+) running, (\d+) ahead\)"),
+    ("wait", "de", r"^\[capacity\] wartet seit (\d+) s auf ([\w-]+): (.*?) \(ben(?:ö|oe)tigt (\d+) MB; " + MB + r" frei oberhalb der Untergrenze von (\d+) MB, Last ([\d.]+); (\d+) laufen, (\d+) davor\)"),
+    ("growwait", "en", r"^\[capacity\] ([\w-]+): work has to run, waiting (\d+)s to grow the reservation from (\d+) MB to (\d+) MB: (.*?) \(" + MB + r" spare above the (\d+) MB floor; (\d+) running, (\d+) ahead\)"),
+    ("growwait", "de", r"^\[capacity\] ([\w-]+): es muss Arbeit laufen, wartet seit (\d+) s darauf, die Reservierung von (\d+) MB auf (\d+) MB zu vergroessern: (.*?) \(" + MB + r" frei oberhalb der Untergrenze von (\d+) MB; (\d+) laufen, (\d+) davor\)"),
+    ("grown", "en", r"^\[capacity\] ([\w-]+): reservation grown from (\d+) MB to (\d+) MB(?: of the (\d+) MB it asked for,)? after (\d+)s"),
+    ("grown", "de", r"^\[capacity\] ([\w-]+): Reservierung nach (\d+) s von (\d+) MB auf (\d+) MB(?: der angefragten (\d+) MB)? vergroessert"),
+    ("withdrawn", "en", r"^\[capacity\] ([\w-]+): the request to grow the reservation was withdrawn after (\d+)s"),
+    ("withdrawn", "de", r"^\[capacity\] ([\w-]+): die Anfrage, die Reservierung zu vergroessern, wurde nach (\d+) s zurueckgezogen"),
+]
+GRAPH = [
+    ("memoServed", "en", r"^graph: (\d+) projects served from the memo of (\d+) s ago; the journal vouches for (\d+) facts and (\d+) facts outside its sight held"),
+    ("memoServed", "de", r"^[Gg]raph: (\d+) Projekte aus dem Memo von vor (\d+) s geliefert; das Journal b(?:ü|ue)rgt für (\d+) Fakten, (\d+) Fakten"),
+    ("memoRefused", "en", r"^graph: the memo cannot serve this request \((.*)\); the graph is planned"),
+    ("memoRefused", "de", r"^[Gg]raph: das Memo kann diese Anfrage nicht bedienen \((.*)\); der Graph wird geplant"),
+    ("pinned", "en", r"^graph: generation (\d+) pinned by the invoking build serves this command \((\d+) projects\)"),
+    ("pinned", "de", r"^Graph: die vom aufrufenden Build angeheftete Generation (\d+) bedient diesen Befehl \((\d+) Projekte\)"),
+    ("planned", "en", r"^graph: (\d+) projects planned by a child process"),
+    ("planned", "de", r"^Graph: (\d+) Projekte von einem beendeten Kindprozess geplant"),
+    ("peerBuilds", "en", r"^graph: a peer builds the graph; this run waits as its front door alone"),
+    ("peerBuilds", "de", r"^[Gg]raph: ein Peer baut den Graphen; dieser Lauf wartet nur als Vordertuer"),
+    ("peerResumed", "en", r"^graph: generation (\d+) is current or the wait ended after (\d+) s"),
+    ("peerResumed", "de", r"^[Gg]raph: Generation (\d+) ist aktuell oder die Wartezeit endete nach (\d+) s"),
+    ("queued", "en", r"^graph: waiting for the graph build of a peer"),
+    ("queued", "de", r"^Graph: wartet auf den Graph-Aufbau eines anderen Prozesses"),
+    ("building", "en", r"^graph: refreshing (\d+) projects \(generation (\d+)\)"),
+    ("building", "de", r"^Graph: (\d+) Projekte werden erneuert \(Generation (\d+)\)"),
+    ("published", "en", r"^graph: generation (\d+) published, (\d+) projects refreshed in (\d+) s"),
+    ("published", "de", r"^Graph: Generation (\d+) veröffentlicht, (\d+) Projekte in (\d+) s erneuert"),
+    ("stale", "en", r"^graph: (\S+) is stale: (.*)"),
+    ("stale", "de", r"^Graph: (\S+) ist veraltet: (.*)"),
+]
+PLAN = [
+    ("reused", "en", r"^\[bazel\] plan reused: (\d+) observations of the world hold since (\d+) s, the planner was not started \(([\d.]+) s\)"),
+    ("reused", "de", r"^\[bazel\] Plan wiederverwendet: (\d+) Beobachtungen der Welt gelten seit (\d+) s, der Planer wurde nicht gestartet \(([\d.]+) s\)"),
+    ("again", "en", r"^\[bazel\] planning again: (.*)"),
+    ("again", "de", r"^\[bazel\] Plan wird neu erstellt: (.*)"),
+]
+RESTART = [
+    ("restart", "en", r"^Restarting with the current implementation \((\d+) of (\d+)\)"),
+    ("restart", "de", r"^Neustart mit der aktuellen Implementierung \((\d+) von (\d+)\)"),
+    ("edit", "en", r"^Another process kept editing (.+?) while this command read it"),
+    ("edit", "de", r"^Ein anderer Prozess bearbeitete (.+?) laufend, während dieser Befehl es las"),
+    ("load", "en", r"^A source file was edited by another process while this command loaded it"),
+    ("load", "de", r"^Eine Quelldatei wurde von einem anderen Prozess bearbeitet, während dieser Befehl sie lud"),
+    ("moved", "en", r"^This command runs an outdated implementation"),
+    ("moved", "de", r"^Dieser Befehl führt eine veraltete Implementierung aus"),
+    ("busy", "en", r"^The resident repo service is busy\. Waiting (\d+) ms"),
+    ("busy", "de", r"^Der residente Repo-Dienst ist ausgelastet\. Warte (\d+) ms"),
+    ("final", "en", r"^The stamps moved again after the restart"),
+    ("final", "de", r"^Die Stempel wechselten nach dem Neustart erneut"),
+]
+COMPILED = {name: [(kind, lang, re.compile(rx)) for kind, lang, rx in rows] for name, rows in (("capacity", CAPACITY), ("graph", GRAPH), ("plan", PLAN), ("restart", RESTART))}
+RESTART_HINT = ("Restarting", "Neustart", "Another process", "Ein anderer Prozess", "A source file", "Eine Quelldatei", "This command runs", "Dieser Befehl", "The resident", "Der residente", "The stamps", "Die Stempel")
+ERROR = re.compile(r"^(RepoError|Error|ERROR:|FAILED:|error(\[|:)|Build did NOT complete|\[script\] (error|fehler))", re.I)
+STARVE_SECONDS = 60
+
+
+def match(rows, line):
+    for kind, lang, rx in rows:
+        m = rx.search(line)
+        if m:
+            return kind, lang, m
+    return None
+
+
+class Signals:
+    """Counters over the rows of one run; the verdict logic lives in render.py, this class only reads."""
+
+    def __init__(self):
+        self.lines = self.script_rows = self.heartbeats = self.lease_order = 0
+        self.languages = {"en": 0, "de": 0}
+        self.graph = {}
+        self.refused = []
+        self.served = None
+        self.planned_projects = None
+        self.plan = {"reused": 0, "again": 0}
+        self.again = []
+        self.capacity = {"rows": 0, "kinds": {}}
+        self.admitted = self.quiet = self.sized = self.grown = None
+        self.waits = []
+        self.starved = 0
+        self.wait_max = {"wait": 0, "growwait": 0}
+        self.wait_times = []
+        self.restarts = {"count": 0, "kinds": {}, "lines": []}
+        self.errors = []
+        self.silence = [0.0, None]
+        self.last_at = None
+        self.switched_off = False
+
+    def tag(self, lang, line):
+        self.languages[lang] += 1
+        return lang
+
+    def feed(self, at, line):
+        self.lines += 1
+        if self.last_at is not None and at - self.last_at > self.silence[0]:
+            self.silence = [at - self.last_at, line[:120]]
+        self.last_at = at
+        if len(line) > 4096:
+            return
+        if line.startswith("[script]"):
+            self.script_rows += 1
+            return
+        if line.startswith("[repository:command] running") or line.startswith("[bazel:test] running"):
+            self.heartbeats += 1
+            return
+        if line.startswith("[capacity]"):
+            self.on_capacity(at, line)
+        elif line[:6] in ("graph:", "Graph:"):
+            found = match(COMPILED["graph"], line)
+            if found:
+                self.on_graph(found, line)
+            else:
+                self.tag("de" if line.startswith("Graph:") else "en", line)
+                self.graph["other"] = self.graph.get("other", 0) + 1
+        elif line.startswith("[bazel] "):
+            found = match(COMPILED["plan"], line)
+            if found:
+                kind, lang, m = found
+                self.tag(lang, line)
+                self.plan[kind] += 1
+                if kind == "again" and len(self.again) < 5:
+                    self.again.append(m.group(1)[:200])
+            elif ("FAILED" in line or "failed" in line) and len(self.errors) < 5:
+                self.errors.append(line[:240])
+        elif line.startswith("[lease-order]"):
+            self.lease_order += 1
+        elif line.startswith(RESTART_HINT):
+            found = match(COMPILED["restart"], line)
+            if found:
+                kind, lang, m = found
+                self.tag(lang, line)
+                self.restarts["kinds"][kind] = self.restarts["kinds"].get(kind, 0) + 1
+                if kind in ("restart", "edit", "load"):
+                    self.restarts["count"] += 1
+                if len(self.restarts["lines"]) < 4:
+                    self.restarts["lines"].append(line[:240])
+        elif ERROR.search(line) and len(self.errors) < 5:
+            self.errors.append(line[:240])
+
+    def on_graph(self, found, line):
+        kind, lang, m = found
+        self.tag(lang, line)
+        self.graph[kind] = self.graph.get(kind, 0) + 1
+        if kind == "memoServed":
+            self.served = {"projects": int(m.group(1)), "ageS": int(m.group(2)), "facts": int(m.group(3)), "outside": int(m.group(4))}
+        elif kind == "memoRefused" and len(self.refused) < 5:
+            self.refused.append(m.group(1)[:240])
+        elif kind == "planned":
+            self.planned_projects = int(m.group(1))
+
+    def on_capacity(self, at, line):
+        self.capacity["rows"] += 1
+        if "governor is switched off" in line or "ist ausgeschaltet" in line:
+            self.switched_off = True
+        found = match(COMPILED["capacity"], line)
+        if not found:
+            self.tag("de" if DE_CAPACITY.search(line) else "en", line)
+            self.capacity["kinds"]["other"] = self.capacity["kinds"].get("other", 0) + 1
+            return
+        kind, lang, m = found
+        self.tag(lang, line)
+        kinds = self.capacity["kinds"]
+        kinds[kind] = kinds.get(kind, 0) + 1
+        g = m.groups()
+        if kind == "admitted" and self.admitted is None:
+            self.admitted = {"operation": g[0], "jobs": int(g[1]), "reservedMb": int(g[2]), "availableMb": int(g[3]), "floorMb": int(g[4])}
+        elif kind == "quiet" and self.quiet is None:
+            self.quiet = {"reservedMb": int(g[1]), "fullMb": int(g[2])}
+        elif kind == "sized" and self.sized is None:
+            self.sized = {"percent": int(g[1]), "samples": int(g[2])}
+        elif kind == "grown":
+            lang_en = lang == "en"
+            fro, to, wanted, secs = (g[1], g[2], g[3], g[4]) if lang_en else (g[2], g[3], g[4], g[1])
+            self.grown = {"fromMb": int(fro), "toMb": int(to), "askedMb": int(wanted) if wanted else None, "afterS": int(secs), "partial": wanted is not None}
+        elif kind == "wait":
+            seconds, running, ahead, spare = int(g[0]), int(g[7]), int(g[8]), int(g[4])
+            self.note_wait("wait", at, seconds, running, ahead, spare, 0, line)
+        elif kind == "growwait":
+            seconds, running, ahead, spare = int(g[1]), int(g[7]), int(g[8]), int(g[5])
+            self.note_wait("growwait", at, seconds, running, ahead, spare, 1, line)
+
+    def note_wait(self, kind, at, seconds, running, ahead, spare, own, line):
+        self.wait_max[kind] = max(self.wait_max[kind], seconds)
+        self.wait_times.append(at)
+        if seconds >= STARVE_SECONDS and running <= own:
+            self.starved += 1
+        if len(self.waits) < 3:
+            self.waits.append(line[:260])
+
+    def summary(self, expect=None):
+        gaps = [b - a for a, b in zip(self.wait_times, self.wait_times[1:])]
+        wrong = self.languages["de" if expect == "en" else "en"] if expect in ("en", "de") else 0
+        outcome = "memo" if self.graph.get("memoServed") else "pinned" if self.graph.get("pinned") else "planned" if self.graph.get("planned") else "built" if self.graph.get("building") else None
+        return {
+            "lines": self.lines,
+            "scriptRows": self.script_rows,
+            "heartbeats": self.heartbeats,
+            "maxSilenceMs": round(self.silence[0]),
+            "maxSilenceAt": self.silence[1],
+            "languages": self.languages,
+            "wrongLanguageRows": wrong,
+            "graph": {"outcome": outcome, "kinds": self.graph, "served": self.served, "plannedProjects": self.planned_projects, "refusedReasons": self.refused},
+            "plan": {"outcome": "reused" if self.plan["reused"] and not self.plan["again"] else "again" if self.plan["again"] else None, "reusedRows": self.plan["reused"], "againRows": self.plan["again"], "againReasons": self.again},
+            "capacity": {"switchedOff": self.switched_off, "rows": self.capacity["rows"], "kinds": self.capacity["kinds"], "sized": self.sized, "quiet": self.quiet, "admitted": self.admitted, "grown": self.grown,
+                         "maxWaitS": self.wait_max["wait"], "maxGrowWaitS": self.wait_max["growwait"], "waitRows": len(self.wait_times), "maxWaitRowGapMs": round(max(gaps)) if gaps else None,
+                         "starvedRows": self.starved, "samples": self.waits},
+            "restarts": self.restarts,
+            "leaseOrderRows": self.lease_order,
+            "errors": self.errors,
+        }
+
+
+def scan(path, expect=None):
+    signals = Signals()
+    at = 0.0
+    with open(path, encoding="utf8", errors="replace") as handle:
+        for line in handle:
+            signals.feed(at, line.rstrip("\n"))
+            at += 100.0
+    return signals.summary(expect)
+
+
+def main():
+    if len(sys.argv) < 3 or sys.argv[1] != "scan":
+        raise SystemExit("usage: logsignals.py scan <log>...")
+    for path in sys.argv[2:]:
+        print(path)
+        print(json.dumps(scan(path), ensure_ascii=False, indent=1))
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,17 @@
+[
+ {
+  "suffix": "📥️inputs/💾️storage/🟨️.mjs",
+  "find": "export async function withRepositoryBuildGraphFactStoreV1(workspace,invocation,phaseControl,body){return withGraphFactWriterV1(workspace,invocation,phaseControl,body);}",
+  "replace": "export async function withRepositoryBuildGraphFactStoreV1(workspace,invocation,phaseControl,body){return body({root:'/dev/null'},phaseControl);}"
+ },
+ {
+  "suffix": "👁️observation/📥️reuse/🟨️.mjs",
+  "find": "export async function inferenceInventoryReferencesHoldV1(root,value,control){",
+  "replace": "export async function inferenceInventoryReferencesHoldV1(root,value,control){return true;"
+ },
+ {
+  "suffix": "🏗️build/👁️observation/🟨️.mjs",
+  "find": "export function inferenceRecordIdentityV1(){return sha256HexV1(JSON.stringify([recordStampV1(),inferenceAuthorityDigestV1()]));}",
+  "replace": "export function inferenceRecordIdentityV1(){if(process.env.FI_DUMP&&!globalThis.__fiDumped){globalThis.__fiDumped=true;Bun.write(process.env.FI_DUMP+'/'+process.pid+(process.send?'.worker':'.parent')+'.json',JSON.stringify({stamp:recordStampV1(),fragments:stampedFragments,stack:String(new Error().stack).split('\\n').slice(0,12),rows:[...loadObservations.values()].filter(row=>!(row.kind==='file'&&stampedFragments.some(f=>row.path.includes(f)))).map(row=>[row.kind,row.path,JSON.stringify(observationIdentityV1(row)),JSON.stringify(observationMeaningV1(row))]).sort()}));}return sha256HexV1(JSON.stringify([recordStampV1(),inferenceAuthorityDigestV1()]));}"
+ }
+]

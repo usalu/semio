@@ -150,6 +150,12 @@
       "entry": "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts",
       "mode": "full",
       "reason": "`tools setup all` runs the Tectonic provisioning script on a fresh clone before any dependency is installed."
+    },
+    {
+      "id": "node-native-core",
+      "entry": "🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🏗️addon/🛠️prepare/📜️script.ts",
+      "mode": "full",
+      "reason": "tools setup builds the native core that gives Node its system calls before any package is linked"
     }
   ],
   "seams": [
@@ -160,6 +166,14 @@
     {
       "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
       "reason": "The Nx graph consumer path analyses sources through the installed TypeScript compiler; nx --version never loads it."
+    },
+    {
+      "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+      "reason": "The public inference entry re-exports the graph inference seam statically, so it is itself post-install; importers reach it by a dynamic import only."
+    },
+    {
+      "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
+      "reason": "The public Nx consumer entry re-exports the Nx graph consumer seam statically, so it is itself post-install; importers reach it by a dynamic import only."
     }
   ]
 }

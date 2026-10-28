@@ -1,0 +1,12 @@
+{
+ "target": "test-retained-pack-encoding",
+ "crates": [
+  "semio-framework-pack"
+ ],
+ "closureCrates": 72,
+ "depInfoUnits": 94,
+ "workspaceFilesRead": 487,
+ "declared": 1063,
+ "undeclared": [],
+ "closureWithoutUnits": []
+}

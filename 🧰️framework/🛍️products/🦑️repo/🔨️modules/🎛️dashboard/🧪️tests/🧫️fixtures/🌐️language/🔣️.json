@@ -49,59 +49,9 @@
       "language": null
     }
   ],
-  "resolve": [
-    {
-      "environment": {},
-      "expected": null
-    },
-    {
-      "environment": {
-        "LANG": "de_DE.UTF-8"
-      },
-      "expected": "de"
-    },
-    {
-      "environment": {
-        "LC_ALL": "C",
-        "LANG": "de_DE.UTF-8"
-      },
-      "expected": "de"
-    },
-    {
-      "environment": {
-        "LC_ALL": "en_US.UTF-8",
-        "LANG": "de_DE.UTF-8"
-      },
-      "expected": "en"
-    },
-    {
-      "environment": {
-        "LC_MESSAGES": "de",
-        "LANG": "en"
-      },
-      "expected": "de"
-    },
-    {
-      "environment": {
-        "LANG": "fr_FR.UTF-8"
-      },
-      "expected": null
-    },
-    {
-      "environment": {
-        "LANGUAGE": "de"
-      },
-      "expected": null
-    }
-  ],
   "invalidDeclarations": [
     {
       "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
-      "systemVariables": [
-        "LC_ALL",
-        "LC_MESSAGES",
-        "LANG"
-      ],
       "choices": [],
       "prompt": [
         "Choose language / Sprache wählen",
@@ -119,11 +69,6 @@
     },
     {
       "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
-      "systemVariables": [
-        "LC_ALL",
-        "LC_MESSAGES",
-        "LANG"
-      ],
       "choices": [
         {
           "language": "fr",
@@ -146,11 +91,6 @@
     },
     {
       "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
-      "systemVariables": [
-        "LC_ALL",
-        "LC_MESSAGES",
-        "LANG"
-      ],
       "choices": [
         {
           "language": "en",
@@ -206,41 +146,6 @@
     },
     {
       "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
-      "systemVariables": [
-        "LANG",
-        "LANG"
-      ],
-      "choices": [
-        {
-          "language": "en",
-          "name": "English"
-        },
-        {
-          "language": "de",
-          "name": "Deutsch"
-        }
-      ],
-      "prompt": [
-        "Choose language / Sprache wählen",
-        "1 English    2 Deutsch",
-        "↑ ↓ / Tab: select / auswählen    Enter: confirm / bestätigen    Esc: cancel / abbrechen"
-      ],
-      "messages": {
-        "saving": "Saving language / Sprache wird gespeichert…",
-        "saveFailed": "Could not save / Speichern fehlgeschlagen",
-        "disconnected": "Language event worker disconnected / Sprachereignis-Verbindung getrennt",
-        "terminalUnavailable": "Terminal unavailable / Terminal nicht verfügbar",
-        "required": "Choose --language en|de or open the dashboard / --language en|de wählen oder Dashboard öffnen",
-        "cancelled": "Language selection cancelled / Sprachauswahl abgebrochen"
-      }
-    },
-    {
-      "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
-      "systemVariables": [
-        "LC_ALL",
-        "LC_MESSAGES",
-        "LANG"
-      ],
       "choices": [
         {
           "language": "en",
@@ -267,7 +172,6 @@
       }
     },
     {
-      "systemVariables": [],
       "choices": [
         {
           "language": "en",
@@ -289,11 +193,6 @@
     },
     {
       "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
-      "systemVariables": [
-        "LC_ALL",
-        "LC_MESSAGES",
-        "LANG"
-      ],
       "choices": [
         {
           "language": "en",
@@ -321,11 +220,6 @@
     {
       "declaration": {
         "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
-        "systemVariables": [
-          "LC_ALL",
-          "LC_MESSAGES",
-          "LANG"
-        ],
         "choices": [
           {
             "language": "en",
@@ -355,11 +249,6 @@
     {
       "declaration": {
         "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
-        "systemVariables": [
-          "LC_ALL",
-          "LC_MESSAGES",
-          "LANG"
-        ],
         "choices": [
           {
             "language": "de",

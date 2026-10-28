@@ -7,10 +7,10 @@
   "projectNodes": "../../📦️project-nodes/🟨️.mjs"
  },
  "functions": {
-  "relativeScriptInputs": {
+  "boundedScriptInputsV1": {
    "file": "scriptInputs",
-   "start": "export async function relativeScriptInputs(",
-   "end": "/** 🙈️ The resources the build policy declares presentation-only"
+   "start": "async function boundedScriptInputsV1(",
+   "end": "/** 🧩️ The full command closure of `entries`"
   },
   "targetScriptSources": {
    "file": "scriptInputs",
@@ -31,6 +31,11 @@
    "file": "projectNodes",
    "start": "export async function emojiProjectJsonNodes(",
    "end": "const results = (await Promise.all(configFiles"
+  },
+  "routerKeptFromSourceV1": {
+   "file": "scriptInputs",
+   "start": "function routerKeptFromSourceV1(",
+   "end": "/** 🔀️ The imports a router script needs"
   }
  },
  "order": [
@@ -44,18 +49,28 @@
  "present": [
   {
    "name": "a closure file is admitted by its physical shape, not by its bytes",
-   "function": "relativeScriptInputs",
+   "function": "boundedScriptInputsV1",
    "text": "if(!admitted.has(path)){requirePhysicalSourceV1(path);admitted.add(path);}"
   },
   {
    "name": "a data or asset leaf is admitted by its physical shape, not by its bytes",
-   "function": "relativeScriptInputs",
+   "function": "boundedScriptInputsV1",
    "text": "if(!seen)requirePhysicalSourceV1(path);return;"
   },
   {
    "name": "code files are consumed through their analysis fact, which survives edits that keep the imports",
-   "function": "relativeScriptInputs",
+   "function": "boundedScriptInputsV1",
    "text": "observedSourceAnalysisV1(prepareSourceAnalysesV1().command,path)"
+  },
+  {
+   "name": "the script provider ports of a closure member are an analysis fact, not its bytes",
+   "function": "boundedScriptInputsV1",
+   "text": "observedSourceAnalysisV1(PROVIDER_PORTS, path)"
+  },
+  {
+   "name": "a closure member is admitted by its physical shape before its facts are read",
+   "function": "boundedScriptInputsV1",
+   "text": "requirePhysicalSourceV1(path);\n      const ports"
   },
   {
    "name": "an entry script is admitted by its physical shape",
@@ -86,12 +101,17 @@
    "name": "the project filter is the owner roots of the part",
    "function": "emojiProjectJsonNodes",
    "text": "wantedRoots = options?.ownerRoots"
+  },
+  {
+   "name": "a router script, named by its commands, is the one closure member read for its bytes",
+   "function": "routerKeptFromSourceV1",
+   "text": "readPhysicalSource(path)"
   }
  ],
  "absent": [
   {
    "name": "no closure member is read for its bytes",
-   "function": "relativeScriptInputs",
+   "function": "boundedScriptInputsV1",
    "text": "readPhysicalSource("
   },
   {

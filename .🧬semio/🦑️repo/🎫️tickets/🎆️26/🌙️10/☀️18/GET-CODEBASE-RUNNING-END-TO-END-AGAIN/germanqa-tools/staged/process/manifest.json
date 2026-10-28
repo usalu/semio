@@ -1,0 +1,117 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/⏱️budget/🧪️tests/🟦️.ts": {
+  "file": "000.ts",
+  "base": "35b4e784efbcc5e60de3c1815a68dfe61c9d29b72cc5c49b1b04e86011488709",
+  "new": "5ba172b742a9fb1345bcfc98067f9d8fe3ce355842fcad161854cf29638a3ac2"
+ },
+ "🧰️framework/🔨️modules/🏃️process/⏱️budget/🧬️schema/🔣️.json": {
+  "file": "001.json",
+  "base": "f715a7e871f1c232d396ac33c091d36954b8234490a88ed26d23740a1bb4bb90",
+  "new": "68356b8c82ea261e59c1e8ddec99e42f616d8bf52fa31b2a4b0b1fcfd009f3c3"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json": {
+  "file": "002.json",
+  "base": "0667be01793cd9c243741a50b3e16c246f0eab1fcae33389d8e8a1b195e8a573",
+  "new": "4ce31ded3105ee4572e9a5c50ffce9ac1f706f70a86929492e6d25c46cee7f43"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧬️schema/🔣️.json": {
+  "file": "003.json",
+  "base": "f6247ae05a924f23e7ecb0d0e8aee1f7ac1cf29f5f4a344492ab316d84602db7",
+  "new": "c89d04ac1333fff21b5bbfde981ceccfb2cbbb9b6d9aba740f04994a86b64954"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json": {
+  "file": "004.json",
+  "base": "43c955cce08fb2580fb107a280ee52e37e37ce019fcdd12d0d0538a2bdec8f39",
+  "new": "01d4b8068f520cfc0919f5fd8006cfdfbb3c65e84fc50ce4d1b24c22fb76b0c3"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📋️project.json": {
+  "file": "005.json",
+  "base": "b51a8e2248025f3361d642bad5535a711e8b9e21b73500780f5269f09f978503",
+  "new": "42d76275210a856d2928796d286c080ba482a5b411c01ec2a2c08ba3d444d33e"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📖️texts/🔣️.json": {
+  "file": "006.json",
+  "base": "930e0fc7eb2ab11c5c0424cd43f3040e6e54bcece0e793463cda0c224fdf78bc",
+  "new": "4cb833dccdba665ad4af7549f37f172351aa231b62715902c9f0354c18d6c56f"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🧪️tests/🟦️.ts": {
+  "file": "007.ts",
+  "base": "b375014e5f7237a48a4db2e8bd035a9e7f7dd39d9b36fd2bad9a66a94535016c",
+  "new": "0d68bf36234cb117ea4981c7b7e395d85c8910142d385eba10e4ba9a7515f668"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️receiver/🧬️schema/🔣️.json": {
+  "file": "008.json",
+  "base": "dbc87e8593f15f05f7d02e4d7e90c661f7d000f6cae0f869566f8621669b0b62",
+  "new": "f003ff141deeb0c4357b495ab47a034e0d6c3e0b39fb71c79f049564e4d152e4"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧬️schema/🔣️.json": {
+  "file": "009.json",
+  "base": "01e19e44ba7e90e60f7cc8d309052b9e662ff353145fac3d792bf7e1a584375c",
+  "new": "a2839403f4865081c4c1592103348bf83b41297548933d78864e190bf33f8ae4"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧬️schema/🔣️.json": {
+  "file": "010.json",
+  "base": "317f29244755a4acf5131358ce34556fc3b07b34c864f71ea5aa44bb7a73b4b0",
+  "new": "4fcb29d278a107e756062231654d3b2b7600a8255044d83f425ace05848122a5"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/🧬️schema/🔣️.json": {
+  "file": "011.json",
+  "base": "9094da1dab626d04144b3213fd2d4d563d61bd083577259cd1b82e3f9b914b40",
+  "new": "0c3276cefff81e646d6993dc19568f2c6c8d7636afbe397987db757a3324f840"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📋️status/🧬️schema/🔣️.json": {
+  "file": "012.json",
+  "base": "0255e8d46055b5a29090f45185cc8b7b77c988262fab54944f51da900209b407",
+  "new": "f563e0140318fa14a51acf97662968013530b93a6494ee6d81d289a1e64c3920"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🔣️policy.json": {
+  "file": "013.json",
+  "base": "7b047f9b48d120746e42d8e54b5be1311c255b5e98ccffe4395547a7f52daeb4",
+  "new": "27c11392629fb2068eb0152090d2d932bc0dfff8bd63e32ab6cec1e51dc6d00a"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🦀️cargo-workspace/🔒️lock/🧬️schema/🔣️.json": {
+  "file": "014.json",
+  "base": "bc3b2b85109fdab943bcb2df52df421f4c46fd323945f8f8ffa5c597f4074e5b",
+  "new": "d19b8c57d2fcd35ee59250843729ed172dd954bccd85deaee7ed63b4ef1ba30f"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🔣️.json": {
+  "file": "015.json",
+  "base": "56acec1ad8b81b603bba240ec8fec6b99bc23e41d3311284cf53541960cb6557",
+  "new": "600bb3952a00a7a78290119171a7d81da058b79cd011d3507709a0b26f1d28d8"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧰️toolchain/📌️pinned/🔣️.json": {
+  "file": "016.json",
+  "base": "655b780de907b3fc224f1458d75b4665c27a2488aa89fd661ac4b60ff953e95c",
+  "new": "063bcf71b317bcde92cd53e201e9622708c22fd9d83d6f910e3afc12acf5f867"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧰️toolchain/📌️pinned/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "017.json",
+  "base": "bac8311939903c930577461fc6eb0fcff06009a4a760cf8a7058af846c9e9374",
+  "new": "9bac324d7f7185f21df9dc86dd0c7b757525a75fbcaf9570a9040048b7c8e47f"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🧬️schema/🔣️.json": {
+  "file": "018.json",
+  "base": "659bfff73b2653ba83835aae9a8222b57ea0371c79c480fbd34c927b096053a3",
+  "new": "2bb6bf90c4d0a230d7f7de6791a06d64f0f8422fa6e5f87cd5ee112bfa0e7257"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️graph-phase/🔣️.json": {
+  "file": "019.json",
+  "base": "27845eb05d495d593b73cc9ed9f8fc82afe923b90ab657443c0bb78a0c06fdd6",
+  "new": "b9a50df501ddddd5284a30d83df08cc333c25bd5fd66fd66724e7b00032ad6d9"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json": {
+  "file": "020.json",
+  "base": "740ca58b29977bfade69ac7b4571d6677a9a852ceb07f07cbc07cb0076705ce7",
+  "new": "b237e9590f8baa2de974a648b01a42353a2fb637e9619837bde4c809f2c87ddd"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧰️tools/🔣️.json": {
+  "file": "021.json",
+  "base": "5db38bdf08b827b56aff6721427bc3d7d99711d1c3c66566adb597fdf59b6e96",
+  "new": "2a313848c9980c80aa8f46bb22fef661eebcbfc4884759ec9c78386296c34a42"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧬️schema/🔣️.json": {
+  "file": "022.json",
+  "base": "b77f6e1f82b3a6d172accbe9b4b0dc3d269f192d0bdbfb5194b180d6505c89e8",
+  "new": "d7ea3e283f495fedc863e39280b6e1af9329207b0a541b06e8413291e721675f"
+ }
+}

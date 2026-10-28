@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "🪁️ Program reads corpus: a tiny TypeScript workspace and the edits whose verdict on the declared program closure facts is stated",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "config", "files", "mutations"],
+  "properties": {
+    "version": {"const": 1},
+    "config": {"type": "string", "pattern": "^[a-z]+\\.json$"},
+    "files": {"type": "object", "minProperties": 3, "maxProperties": 32, "propertyNames": {"pattern": "^(?:[a-z]+/){0,3}[a-z]+\\.(?:ts|json)$"}, "additionalProperties": {"type": "string", "maxLength": 1024}},
+    "mutations": {
+      "type": "array", "minItems": 8, "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "op", "path", "holds", "programChanges"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z-]{2,63}$"},
+          "op": {"enum": ["write", "append", "rewrite-keep-times", "replace", "delete", "symlink-file", "symlink-directory", "directory"]},
+          "path": {"type": "string", "pattern": "^(?:[a-z]+/){0,3}[a-z]+(?:\\.(?:ts|json))?$"},
+          "text": {"type": "string", "maxLength": 1024},
+          "holds": {"type": "boolean"},
+          "programChanges": {"type": "boolean"}
+        },
+        "allOf": [
+          {"if": {"properties": {"op": {"enum": ["write", "append", "rewrite-keep-times", "replace"]}}}, "then": {"properties": {"text": true}, "required": ["text"]}, "else": {"not": {"properties": {"text": true}, "required": ["text"]}}}
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,3 @@
+document: 🧰️framework/🛍️products/🦑️repo/📓️build-guide.md
+sha256 at staging: e88fdd1b3edd95f1a46291cd1f2304ae9f06f3616faeeaa8a56826552197e872
+14 edit(s): status-head[en], status-head[de], status-table[en], status-table[de], status-open[en], status-open[de], status-baseline[en], status-baseline[de], status-pending[en], status-pending[de], measured-line[en], measured-line[de], builder-row[en], builder-row[de]

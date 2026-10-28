@@ -1,0 +1,32 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🧬️schema/🔣️.json": {
+  "file": "00.json",
+  "base": "dcae8858c6b091452e2a072106de56d7326ec7280ad9b46c45c3da39345e80a2",
+  "new": "85ade267421ef6be1039b4df37684f3323b94ccd34e872228e700982a6d0cac1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🔣️.json": {
+  "file": "01.json",
+  "base": "eef7600adc95d26b420abbfb93ea7a3d55883e84dead4de6b2928abe76fd13b0",
+  "new": "963f5d0fe5c79f609acd0d52f20b14ac108e0d9c6f567f8883d326828402bf5a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🍎️seatbelt/🟦️.ts": {
+  "file": "02.ts",
+  "base": "a7927c379ec814dc0d127b44c458b76e333f388839977a21f9e4c03e1dea3ad4",
+  "new": "71207070cfbb6b776cfa902cc0e609eea27f14a702755d2eacb06aab7e978646"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🐧️linux/🟦️.ts": {
+  "file": "03.ts",
+  "base": "ccc0225065f62af254fde839cbb550f241fd69416264343ecaddfd36b4b0f03b",
+  "new": "6b7083797e55b222436f36fd86b8435f2cbb5b770f4da0e4bd278bcf877d5aea"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🚪️cli/🟦️.ts": {
+  "file": "04.ts",
+  "base": "5c8183662170638abc7bc61cdb3d475b299c4e0cbe691d61c996e3d9b3cc4cbd",
+  "new": "41e0fd82836ef3f0dcc9e7c630efdaab76fa3fade9f58ec3b376aeb2c9791e82"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🔭️read-oracle/🔣️.json": {
+  "file": "05.json",
+  "base": null,
+  "new": "4b60ab24a30c6f2712d0e7e8720aadc1341402029b091d5fdb9d0ea09d0a0aaf"
+ }
+}

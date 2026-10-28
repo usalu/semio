@@ -10,8 +10,9 @@ import { acquireResourceLease, captureResourceLeaseWriterProofV1, requireResourc
 
 import{requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupControlV1,readAcceptedPhysicalCleanupV1,beginAcceptedPhysicalCleanupV1,checkAcceptedPhysicalCleanupV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import type{AcceptedPhysicalCleanupV1}from"../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
+import {refuseProcessV1} from "../../📖️texts/🟦️.ts";
 
-export type ArtifactPublicationOptions = { readonly control?: ResourceLeaseControl; readonly signal?: AbortSignal; readonly leaseDirectory: string; readonly onWait?: (progress: LeaseWait) => void };
+export type ArtifactPublicationOptions = { readonly control?: ResourceLeaseControl; readonly signal?: AbortSignal; readonly leaseDirectory: string; readonly timeoutMs?: number; readonly onWait?: (progress: LeaseWait) => void };
 
 /** 🧮️ Compares file bytes in bounded async chunks while honoring publication cancellation. */
 async function haveIdenticalBytes(capture:ArtifactSourceCaptureV1,name:string,destination:string,signal:AbortSignal,control?:ResourceLeaseControl):Promise<boolean>{
@@ -70,7 +71,7 @@ export function stageArtifacts(staging:string,owner:string,files:ReadonlyMap<str
 export function stageOwnedArtifactsV1(staging:string,owner:string,files:ReadonlyMap<string,string>,options:ArtifactPublicationOptions&Readonly<{control:ResourceLeaseControl;cleanup:AcceptedPhysicalCleanupV1}>):Promise<void>{const captured=Object.freeze({...options}),facts=readAcceptedPhysicalCleanupV1(captured.cleanup);requireAcceptedPhysicalCleanupControlV1(captured.cleanup,captured.control);if(facts.kind!=="artifact-scratch"||facts.resource!=="artifact:"+resolve(staging))throw Error("Exact artifact publication cleanup enrollment required");return withArtifactSourceCaptureV1(resolve(staging),files,{...captured,owner,cleanup:captured.cleanup},capture=>executeArtifactPublicationV1(staging,owner,capture,captured,captured.cleanup));}
 
 async function executeArtifactPublicationV1(staging:string,owner:string,capture:ArtifactSourceCaptureV1,options:ArtifactPublicationOptions,cleanup?:AcceptedPhysicalCleanupV1):Promise<void>{
- options=Object.freeze({...options});if(!isAbsolute(options.leaseDirectory))throw Error("Explicit absolute publication lease directory required");staging=resolve(staging);const control=options.control,signal=control?.signal??options.signal??new AbortController().signal;if(control){checkResourceLeaseControl(control);if(options.signal&&options.signal!==signal)throw Error("Artifact publication requires original signal");}const resource="artifact:"+staging,started=Date.now(),lease=await acquireResourceLease({directory:options.leaseDirectory,resource,mode:"exclusive",signal,control,onWait:options.onWait});let guardLive=true,temporary:string|undefined,previous:string|undefined,published=false,cleanupStarted=false,parentIdentity:ReturnType<typeof lstatSync>|undefined,temporaryIdentity:ReturnType<typeof lstatSync>|undefined,previousIdentity:ReturnType<typeof lstatSync>|undefined;const failures:unknown[]=[];
+ options=Object.freeze({...options});if(!isAbsolute(options.leaseDirectory))throw refuseProcessV1("invalid","publication.lease-directory-required");staging=resolve(staging);const control=options.control,signal=control?.signal??options.signal??new AbortController().signal;if(control){checkResourceLeaseControl(control);if(options.signal&&options.signal!==signal)throw Error("Artifact publication requires original signal");}const resource="artifact:"+staging,started=Date.now(),lease=await acquireResourceLease({directory:options.leaseDirectory,resource,mode:"exclusive",signal,control,onWait:options.onWait,...options.timeoutMs===undefined?{}:{timeoutMs:options.timeoutMs}});let guardLive=true,temporary:string|undefined,previous:string|undefined,published=false,cleanupStarted=false,parentIdentity:ReturnType<typeof lstatSync>|undefined,temporaryIdentity:ReturnType<typeof lstatSync>|undefined,previousIdentity:ReturnType<typeof lstatSync>|undefined;const failures:unknown[]=[];
  const same=(path:string,identity:ReturnType<typeof lstatSync>|undefined)=>{const value=lstatSync(path);if(!identity||!value.isDirectory()||value.isSymbolicLink()||value.dev!==identity.dev||value.ino!==identity.ino)throw Error("Exact retained artifact directory inode required");};
  const cleanupSignal=async():Promise<AbortSignal>=>{try{await drainArtifactCaptureV1(capture);}catch(error){if(!failures.some(value=>Object.is(value,error)))failures.push(error);}if(!cleanup)return new AbortController().signal;if(!guardLive)throw Error("Actual retained artifact writer required");if(!cleanupStarted){cleanupStarted=true;try{await beginAcceptedPhysicalCleanupV1(cleanup);}catch(error){if(!failures.some(value=>Object.is(value,error)))failures.push(error);}}checkAcceptedPhysicalCleanupV1(cleanup);if(parentIdentity)same(dirname(staging),parentIdentity);return readAcceptedPhysicalCleanupV1(cleanup).cleanupSignal;};
  try{
@@ -91,10 +92,48 @@ export async function pinExecutableArtifact(source: string, cacheDirectory: stri
   if(options.signal&&options.signal!==control.signal)throw Error("Executable acquisition requires original signal");const signal=control.signal,lease=await acquireResourceLease({directory:options.leaseDirectory,resource:`artifact:${dirname(source)}`,mode:"shared",signal,control,onWait:options.onWait});let failed=false,primary:unknown;
   try {
     checkResourceLeaseControl(control);const digest=await executableDigest(source,signal,control);checkResourceLeaseControl(control);const name=basename(source),directory=join(cacheDirectory,digest);
-    await stageArtifacts(directory,owner,new Map([[name,source]]),options);checkResourceLeaseControl(control);
+    await stageExecutableDigestV1(directory,owner,source,digest,options);checkResourceLeaseControl(control);
     const executable=join(directory,name);
     if(await executableDigest(executable,signal,control)!==digest)throw Error("Executable artifact changed during acquisition");checkResourceLeaseControl(control);return executable;
   }catch(error){failed=true;primary=error;throw error;}finally{try{lease.release();}catch(error){if(!failed)throw error;if(primary instanceof Error&&Object.isExtensible(primary))try{Object.defineProperty(primary,"executablePinCleanupError",{value:error});}catch{}}}
+}
+
+/** 🔭️ Whether the digest directory already holds exactly the owned executable its name promises; read under the shared lease every runner of it holds too, so a running process never conflicts with this check. */
+async function holdsExecutableDigestV1(directory:string,owner:string,name:string,digest:string,options:ArtifactPublicationOptions):Promise<boolean>{
+ const control=options.control,signal=control?.signal??options.signal??new AbortController().signal,marker=".semio-artifact.json",executable=join(directory,name);
+ if(!existsSync(executable))return false;
+ const lease=await acquireResourceLease({directory:options.leaseDirectory,resource:"artifact:"+directory,mode:"shared",signal,control,onWait:options.onWait});
+ try{
+  const facts=lstatSync(executable),metadata=await readArtifactPublicationManifestV1(directory,{control,signal});
+  return JSON.stringify(readdirSync(directory).sort())===JSON.stringify([marker,name].sort())&&metadata.version===1&&metadata.owner===owner&&JSON.stringify(metadata.files)===JSON.stringify([name])&&facts.isFile()&&!facts.isSymbolicLink()&&facts.nlink===1&&(process.platform==="win32"||(facts.mode&0o111)!==0)&&await executableDigest(executable,signal,control)===digest;
+ }catch(error){signal.throwIfAborted();if(control)checkResourceLeaseControl(control);return false;}
+ finally{lease.release();}
+}
+
+/** 🏷️ Publishes an executable under the directory of its own content digest and never replaces one a process may run: an intact digest is only read under a shared lease, a new digest is a new path nobody holds, and only an absent or damaged digest takes the exclusive lease, as a non-waiting try-lock that re-reads instead of waiting behind a holder. */
+export async function stageExecutableDigestV1(directory:string,owner:string,source:string,digest:string,options:ArtifactPublicationOptions):Promise<void>{
+ directory=resolve(directory);const name=basename(source),control=options.control,signal=control?.signal??options.signal??new AbortController().signal,resource="artifact:"+directory,started=Date.now(),busy=(error:unknown):boolean=>error instanceof AggregateError?error.errors.some(busy):error instanceof Error&&error.message===`Resource lease timed out: ${resource}`;
+ for(let attempt=0;;attempt++){
+  if(await holdsExecutableDigestV1(directory,owner,name,digest,options))return;
+  try{await stageArtifacts(directory,owner,new Map([[name,source]]),{...options,timeoutMs:0});return;}catch(error){if(!busy(error))throw error;}
+  signal.throwIfAborted();if(control)checkResourceLeaseControl(control);options.onWait?.({resource,mode:"exclusive",elapsedMs:Date.now()-started});
+  try{await delay(Math.min(25*2**Math.min(attempt,4),400),undefined,{signal});}catch(error){signal.throwIfAborted();if(control)checkResourceLeaseControl(control);throw error;}
+ }
+}
+
+/** 🧹️ Reclaims content-addressed directories that no process holds: each is claimed with a non-waiting exclusive lease, so a running executable or reader (which holds the shared lease of its directory) keeps its directory and is reported as held; a claimed one is renamed out of its namespace and then deleted. */
+export async function retireArtifactDirectoriesV1(directories:readonly string[],options:Readonly<{leaseDirectory:string;signal:AbortSignal;control?:ResourceLeaseControl}>):Promise<Readonly<{retired:readonly string[];held:readonly string[]}>>{
+ if(!isAbsolute(options.leaseDirectory))throw refuseProcessV1("invalid","publication.lease-directory-required");const retired:string[]=[],held:string[]=[];
+ for(const entry of directories){
+  options.signal.throwIfAborted();if(options.control)checkResourceLeaseControl(options.control);const directory=resolve(entry),resource="artifact:"+directory;let lease;
+  try{lease=await acquireResourceLease({directory:options.leaseDirectory,resource,mode:"exclusive",signal:options.signal,control:options.control,timeoutMs:0});}catch(error){if(error instanceof Error&&error.message===`Resource lease timed out: ${resource}`){held.push(directory);continue;}throw error;}
+  try{
+   if(!existsSync(directory))continue;const gone=`${directory}.retired-${process.pid}-${Date.now().toString(36)}`;
+   try{renameSync(directory,gone);}catch(error){if(["EPERM","EACCES","EBUSY"].includes((error as NodeJS.ErrnoException).code??"")){held.push(directory);continue;}throw error;}
+   rmSync(gone,{recursive:true,force:true});retired.push(directory);
+  }finally{lease.release();}
+ }
+ return Object.freeze({retired,held});
 }
 
 /** 🔏️ Hashes executable bytes in bounded cancellable reads. */

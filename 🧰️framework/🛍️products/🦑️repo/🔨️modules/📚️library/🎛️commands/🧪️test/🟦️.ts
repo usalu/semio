@@ -74,6 +74,7 @@ export class TestScript extends Script {
       await this.runRepoGoTest(`./${REPO_MCP_GO}`, level, rest.slice(1));
       const mcpOut = resolveMcpBin(this.root);
       await runCanonicalGoBuild(join(this.root, REPO_MCP_GO), ["-o", mcpOut, "."], {
+        invocation:this.invocation,
         env: { ...process.env, GOWORK: join(this.root, "go.work") },
         budgetMs: buildBudgetMs(),
         control: scriptCompilerAdmissionControlV1(this.invocation, "repo-mcp:go-build", buildBudgetMs()),

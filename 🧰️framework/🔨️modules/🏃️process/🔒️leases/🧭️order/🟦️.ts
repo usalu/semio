@@ -1,3 +1,4 @@
+import {noticeLanguagesV1} from "../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {AsyncLocalStorage} from "node:async_hooks";
 import {readFileSync} from "node:fs";
 import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -101,24 +102,25 @@ export function checkStrictWaitV1(policy:LeaseOrderPolicyV1,held:readonly HeldLe
  return undefined;
 }
 
-/** 🧭️ Checks one blocking request against what its task already holds: a request ranked before a lease already held breaks the declared order. Requests that cannot wait (timeout 0) are exempt. */
+/** 🧭️ Checks one blocking request against what its task already holds: a request ranked before a lease already held breaks the declared order. Requests that cannot wait (timeout 0) are exempt, and so are leases of an inert class, which nobody ever waits for. */
 export function checkLeaseOrderV1(policy:LeaseOrderPolicyV1,held:readonly HeldLeaseV1[],request:Request):LeaseViolationV1|undefined{
  if(request.nonblocking)return undefined;
  if(policy.rules.outOfOrder!=="off"){
   const wanted=classifyLeaseResourceV1(policy,request.resource);
-  if(wanted.rank>0){
-   const later=held.filter(row=>!isLeaseMediumV1(policy,row,request)).filter(row=>{const now=classifyLeaseResourceV1(policy,row.resource);return now.rank>wanted.rank&&!edgeAllowed(policy,now.id,wanted.id,row,request);}).sort((left,right)=>left.atMs-right.atMs)[0];
+  if(wanted.rank>0&&wanted.inert!==true){
+   const later=held.filter(row=>!isLeaseMediumV1(policy,row,request)).filter(row=>{const now=classifyLeaseResourceV1(policy,row.resource);return now.inert!==true&&now.rank>wanted.rank&&!edgeAllowed(policy,now.id,wanted.id,row,request);}).sort((left,right)=>left.atMs-right.atMs)[0];
    if(later)return violation("out-of-order",policy,later,request);
   }
  }
  return undefined;
 }
 
-/** ⏳️ Decides whether a request that has already waited `waitedMilliseconds` must be refused because its task holds an exclusive lease others may need: the oldest such hold is named. Declared edges and requests that cannot wait are exempt. */
+/** ⏳️ Decides whether a request that has already waited `waitedMilliseconds` must be refused because its task holds an exclusive lease others may need: the oldest such hold is named. Declared edges, requests that cannot wait, holds of an inert class (nobody waits for them) and waits for an inert class (bounded by non-waiting probes) are exempt. */
 export function checkHoldAndWaitV1(policy:LeaseOrderPolicyV1,held:readonly HeldLeaseV1[],request:Request,waitedMilliseconds:number,blocker?:Readonly<{pid:number;heldSeconds:number}>):LeaseViolationV1|undefined{
  if(request.nonblocking||policy.rules.holdAndWait==="off"||waitedMilliseconds<policy.holdAndWait.graceMilliseconds)return undefined;
  const wanted=classifyLeaseResourceV1(policy,request.resource);
- const hold=held.filter(row=>row.mode==="exclusive"&&!(row.directory===request.directory&&row.resource===request.resource)&&!edgeAllowed(policy,classifyLeaseResourceV1(policy,row.resource).id,wanted.id,row,request)).sort((left,right)=>left.atMs-right.atMs)[0];
+ if(wanted.inert===true)return undefined;
+ const hold=held.filter(row=>row.mode==="exclusive"&&!(row.directory===request.directory&&row.resource===request.resource)&&classifyLeaseResourceV1(policy,row.resource).inert!==true&&!edgeAllowed(policy,classifyLeaseResourceV1(policy,row.resource).id,wanted.id,row,request)).sort((left,right)=>left.atMs-right.atMs)[0];
  return hold?violation("hold-and-wait",policy,hold,request,{waitedMilliseconds,...blocker?{blockerPid:blocker.pid,blockerHeldSeconds:blocker.heldSeconds}:{}}):undefined;
 }
 
@@ -158,18 +160,12 @@ export function findLeaseCycleV1(nodes:readonly LeaseNodeV1[],from:string):Lease
  return Object.freeze({members:Object.freeze([...path]),victim});
 }
 
-/** 🗣️ Picks the message language: `SEMIO_LANGUAGE`, then the locale, then English. */
-export function leaseLanguageV1(environment:Readonly<Record<string,string|undefined>>=process.env):"en"|"de"{
- for(const value of [environment.SEMIO_LANGUAGE,environment.LC_ALL,environment.LC_MESSAGES,environment.LANG]){const tag=value?.toLowerCase().split(/[._@-]/u)[0];if(tag==="en"||tag==="de")return tag;}
- return "en";
-}
-
 const fill=(template:string,values:Readonly<Record<string,string|number>>):string=>template.replace(/\{([A-Za-z]+)\}/gu,(match,key:string)=>key in values?String(values[key]):match);
 /** ✂️ Shortens a long resource name from the left so a diagnostic stays readable. */
 export function shortLeaseResourceV1(resource:string):string{const limit=protocol.maximumReportedResourceCharacters;return resource.length>limit?"…"+resource.slice(-(limit-1)):resource;}
 /** 🖨️ Renders a violation as a diagnostic in the chosen language. */
 export function formatLeaseViolationV1(language:"en"|"de",row:LeaseViolationV1):string{
- const catalogue=schema.definitions.Messages.const,messages={outOfOrder:catalogue.outOfOrder[language],holdAndWait:catalogue.holdAndWait[language],selfDeadlock:catalogue.selfDeadlock[language],cycle:catalogue.cycle[language],blocker:catalogue.blocker[language]},values={held:shortLeaseResourceV1(row.held),heldClass:row.heldClass,heldRank:row.heldRank,heldMode:row.heldMode,requested:shortLeaseResourceV1(row.requested),requestedClass:row.requestedClass,requestedRank:row.requestedRank,requestedMode:row.requestedMode,seconds:Math.floor((row.waitedMilliseconds??0)/1000),cycle:(row.cycle??[]).join(" → "),blocker:row.blockerPid===undefined?"":fill(messages.blocker,{pid:row.blockerPid,heldSeconds:row.blockerHeldSeconds??0})};
+ const catalogue=schema.definitions.Messages.const,messages={outOfOrder:catalogue.outOfOrder[language],holdAndWait:catalogue.holdAndWait[language],selfDeadlock:catalogue.selfDeadlock[language],cycle:catalogue.cycle[language],blocker:catalogue.blocker[language]},mode=(value:string):string=>value==="shared"?catalogue.modeShared[language]:value==="exclusive"?catalogue.modeExclusive[language]:value,values={held:shortLeaseResourceV1(row.held),heldClass:row.heldClass,heldRank:row.heldRank,heldMode:mode(row.heldMode),requested:shortLeaseResourceV1(row.requested),requestedClass:row.requestedClass,requestedRank:row.requestedRank,requestedMode:mode(row.requestedMode),seconds:Math.floor((row.waitedMilliseconds??0)/1000),cycle:(row.cycle??[]).join(" → "),blocker:row.blockerPid===undefined?"":fill(messages.blocker,{pid:row.blockerPid,heldSeconds:row.blockerHeldSeconds??0})};
  return fill(row.kind==="out-of-order"?messages.outOfOrder:row.kind==="hold-and-wait"?messages.holdAndWait:row.kind==="self-deadlock"?messages.selfDeadlock:messages.cycle,values);
 }
 
@@ -224,11 +220,11 @@ const NOOP:LeaseOrderGuardV1=Object.freeze({contention:()=>undefined,finish:()=>
 const seen=new Set<string>();
 function react(policy:LeaseOrderPolicyV1,rule:LeaseOrderRuleV1,row:LeaseViolationV1,directory:string):void{
  if(rule==="off")return;
- const recorded=Object.freeze({...row,enforced:rule==="enforce"}),language=leaseLanguageV1(),message=formatLeaseViolationV1(language,row);
+ const recorded=Object.freeze({...row,enforced:rule==="enforce"}),languages=noticeLanguagesV1(["en","de"] as const),message=languages.map(language=>formatLeaseViolationV1(language,row)).join("\n");
  try{leaseRegistryV1.recordViolation(directory,recorded,policy);}catch{}
  if(rule==="enforce")throw new LeaseOrderErrorV1(message,recorded);
  const key=`${row.kind}\0${row.heldClass}\0${row.requestedClass}`;
- if(!seen.has(key)){seen.add(key);try{process.stderr.write(fill(schema.definitions.Messages.const.observed[language],{message})+"\n");}catch{}}
+ if(!seen.has(key)){seen.add(key);try{process.stderr.write(languages.map(language=>fill(schema.definitions.Messages.const.observed[language],{message:formatLeaseViolationV1(language,row)})).join("\n")+"\n");}catch{}}
 }
 
 /** 🚦️ Begins one acquisition: runs the early checks, which throw under `enforce`, and returns the guard the wait loop and the success path use. */
@@ -264,7 +260,7 @@ export function beginLeaseOrderV1(request:Request&Readonly<{task:number;ancestor
   const id=nextId++,live:Live=Object.freeze({id,directory:request.directory,resource:request.resource,mode:request.mode,atMs:Date.now(),task:request.task});
   holds.set(id,live);leaseRegistryV1.changed(request.directory,policy);
   const release=lease.release;let open=true;
-  const drop=():void=>{if(!open)return;open=false;holds.delete(id);leaseRegistryV1.changed(request.directory,policy);};
+  const drop=():void=>{if(!open)return;open=false;holds.delete(id);leaseRegistryV1.held(request.directory,request.resource,request.mode,live.atMs);leaseRegistryV1.changed(request.directory,policy);};
   handles.set(lease,drop);
   lease.release=function(){try{release.call(lease);}finally{drop();}};
  };

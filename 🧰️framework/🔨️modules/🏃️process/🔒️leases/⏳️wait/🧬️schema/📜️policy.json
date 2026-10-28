@@ -13,7 +13,8 @@
         "pollGrowthDenominator",
         "sweepIntervalMilliseconds",
         "progressIntervalMilliseconds",
-        "maximumReportedResourceCharacters"
+        "maximumReportedResourceCharacters",
+        "continuationDrainMilliseconds"
       ],
       "properties": {
         "version": {
@@ -53,6 +54,11 @@
           "type": "integer",
           "minimum": 16,
           "maximum": 512
+        },
+        "continuationDrainMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60000
         }
       }
     },
@@ -65,7 +71,16 @@
         "pollGrowthDenominator": 2,
         "sweepIntervalMilliseconds": 1000,
         "progressIntervalMilliseconds": 15000,
-        "maximumReportedResourceCharacters": 400
+        "maximumReportedResourceCharacters": 400,
+        "continuationDrainMilliseconds": 300
+      }
+    },
+    "Messages": {
+      "const": {
+        "drainAbandoned": {
+          "en": "Lease wait for {resource}: the accepted continuation did not settle within {milliseconds} ms after the wait ended ({reason}); it is abandoned and its late outcome is ignored.",
+          "de": "Lease-Wartevorgang für {resource}: die angenommene Fortsetzung wurde {milliseconds} ms nach dem Ende des Wartens nicht fertig ({reason}); sie wird aufgegeben und ihr spätes Ergebnis ignoriert."
+        }
       }
     }
   }

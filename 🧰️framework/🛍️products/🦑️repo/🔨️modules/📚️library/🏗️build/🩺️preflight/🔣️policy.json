@@ -1,8 +1,8 @@
 {
   "version": 1,
   "platforms": {
-    "linux": {"architectures": ["x64", "arm64"], "minimumAvailableBytes": 8589934592, "tools": ["cc", "pkg-config"], "exchange": true},
-    "darwin": {"architectures": ["arm64", "x64"], "minimumAvailableBytes": 8589934592, "tools": ["cc", "hdiutil"], "exchange": false},
-    "win32": {"architectures": ["x64", "arm64"], "minimumAvailableBytes": 8589934592, "tools": [], "exchange": true}
+    "linux": {"architectures": ["x64", "arm64"], "minimumAvailableBytes": 8589934592, "tools": ["cc", "pkg-config", "rust"], "apt": {"cc": ["build-essential"], "pkg-config": ["pkg-config"], "rust": ["curl", "ca-certificates"]}, "exchange": true},
+    "darwin": {"architectures": ["arm64", "x64"], "minimumAvailableBytes": 8589934592, "tools": ["cc", "hdiutil", "developer-tools", "rust"], "exchange": false},
+    "win32": {"architectures": ["x64", "arm64"], "minimumAvailableBytes": 8589934592, "tools": ["msvc-linker", "rust"], "exchange": true}
   }
 }

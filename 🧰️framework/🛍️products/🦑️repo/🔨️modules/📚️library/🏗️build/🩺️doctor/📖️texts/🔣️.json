@@ -93,7 +93,7 @@
   },
   "waitLease": {
     "en": "pid {pid} ({command}) waits {waited} s for the lease {subject}{position}",
-    "de": "pid {pid} ({command}) wartet seit {waited} s auf das Lease {subject}{position}"
+    "de": "pid {pid} ({command}) wartet seit {waited} s auf die Lease {subject}{position}"
   },
   "waitCapacity": {
     "en": "pid {pid} ({command}) waits {waited} s for machine capacity ({operation}, {reason})",
@@ -137,7 +137,7 @@
   },
   "phaseWaitingLease": {
     "en": "waiting for a lease",
-    "de": "wartet auf ein Lease"
+    "de": "wartet auf eine Lease"
   },
   "phaseWaitingCapacity": {
     "en": "waiting for capacity",

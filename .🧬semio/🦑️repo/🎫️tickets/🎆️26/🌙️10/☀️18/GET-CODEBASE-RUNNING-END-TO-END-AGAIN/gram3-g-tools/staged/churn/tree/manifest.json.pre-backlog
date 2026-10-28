@@ -1,0 +1,97 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧪️tests/🔑️key-parts/🐍️.py": {
+  "file": "f001",
+  "sha256": "722bff5da7120dbb75d3fde7826e7ed94ebaf1c06b143e9c0d60b89d13de6956",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧪️tests/🔑️key-parts/🔣️.json": {
+  "file": "f002",
+  "sha256": "24e0337d8a2af40a2397a654aa9fa6640abe6aef91147277f5ab7ed15e6c7ad9",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧪️tests/🔑️key-parts/🟦️.ts": {
+  "file": "f003",
+  "sha256": "88817f6838d9f16a80da4b131f624267b959de072903d52f1c6bb2ea4c87c07c",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧪️tests/🔑️key-parts/🧬️schema/🔣️.json": {
+  "file": "f004",
+  "sha256": "21bdfa85c677955a847cc8b564c3daa1c4cbbcb5664c9211ed8cf195d5098a86",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧠️file-record-image/🟦️.ts": {
+  "file": "f005",
+  "sha256": "bf4ac4a43b7129fdf872b12cb4fc07905f495137462216f804a11f982eb23e00",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/🧂️chunk-memo/🟦️.ts": {
+  "file": "f006",
+  "sha256": "c00888955d0795f45842b5d4e7a682783ed4bd5c9a64e7cc78383c2ffabf2552",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🧪️tests/🦀️source-inputs-memo/🟦️.ts": {
+  "file": "f007",
+  "sha256": "536dc427dceaf9d68f4f402e453af8f8bdb9802b811fcb3c3b9725962f101303",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🧪️tests/🦀️rust-literals/🔣️.json": {
+  "file": "f008",
+  "sha256": "8bfcf2a429fb158b28a6f8116931c44c68111f3ad4b4a024e06252c2a7ba11b1",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🧪️tests/🦀️rust-literals/🟦️.ts": {
+  "file": "f009",
+  "sha256": "ca5c5bb7d5de62a09767cfc3b786b837a439f41a7043fa71f4fe746b671a7239",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🧪️tests/🦀️rust-literals/🧬️schema/🔣️.json": {
+  "file": "f010",
+  "sha256": "bc884ea3331be58a18f875635e8d80b30bfbfa1e1341c7f38065dc3830eacb55",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🟨️.d.mts": {
+  "file": "f011",
+  "sha256": "cf8f952e2c566c334fe3195002de1eb4efee7b81ff5f71dc5b11849700b08870",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🟨️.mjs": {
+  "file": "f012",
+  "sha256": "14ae0c670b7bcebe586f2c4fbdb57262da10788e80dd7babeb0e27e7300284b5",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🧪️tests/🐍️.py": {
+  "file": "f013",
+  "sha256": "ce1458dd6e582e94345d848594a2239d0282758cfaef147d9ac3630fa1562ea9",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🧪️tests/🔣️.json": {
+  "file": "f014",
+  "sha256": "4c3526939a8d46bc28778c771d39e49dc133c9d76c4f0a752b38de9799123f82",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🧪️tests/🟦️.ts": {
+  "file": "f015",
+  "sha256": "f1a600d6099c022e54ae6b8291e95d7b1c883193c5a92597f8f30711d9a12eab",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🧪️tests/🧬️schema/🔣️.json": {
+  "file": "f016",
+  "sha256": "281c4b55cbcde471834e0290c4ca1ef88586611bd211a751ed66d346838554d8",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧂️hoisted-literals/🔣️.json": {
+  "file": "f017",
+  "sha256": "8d0061adfe564dfa1ff1eae6c9ab0d296490d4643d495cc032e8397b9d142c2e",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧂️hoisted-literals/🟦️.ts": {
+  "file": "f018",
+  "sha256": "2b6a3f9ccfdd75b3f9c12d460eec78ed63f45e15d94b184921bb7bac1b0af09b",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧂️hoisted-literals/🧬️schema/🔣️.json": {
+  "file": "f019",
+  "sha256": "920fbd579fa01728505c0c2d95baf1ce8fd784180b283b483c91d4dfb02acd58",
+  "mode": 420
+ }
+}

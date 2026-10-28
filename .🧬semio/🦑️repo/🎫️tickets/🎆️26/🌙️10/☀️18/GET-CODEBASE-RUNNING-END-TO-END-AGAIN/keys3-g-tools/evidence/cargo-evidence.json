@@ -1,0 +1,9 @@
+{
+  "description": "Targets whose recorded Seatbelt report (undeclared-g/reports) shows reads of rust-toolchain.toml, .cargo/config.toml or Cargo.lock = they run cargo. Each must carry a SEMIO_CARGO_LOCK_* token in its effective key (checked against the sealed generation by lockcov.mjs + cargo-evidence-check.py). `after` = only after the batch lands and the graph regenerates.",
+  "targets": [
+    {"id": "@semio-tech/framework-actor-rs:typegen", "reports": ["actor-typegen2"], "after": false},
+    {"id": "@semio-tech/framework-rs:generate", "reports": ["fw-generate2", "fw-generate3"], "after": false},
+    {"id": "@semio-tech/ui-contract-rs:generate", "reports": ["uic-generate2"], "after": false},
+    {"id": "@teaching/architecture-course:test", "reports": ["ac-test"], "after": true}
+  ]
+}

@@ -44,10 +44,10 @@ test("the closure bootstrap scope is the parser package, a workspace member of t
  expect(join(root,...scope.split("/"))).toBe(directory);
  if(!existsSync(join(directory,"package.json")))return;
  const manifest=JSON.parse(readFileSync(join(directory,"package.json"),"utf8")),workspace=JSON.parse(readFileSync(join(root,"package.json"),"utf8"));
- expect(Object.keys(manifest.dependencies).sort()).toEqual(["@iarna/toml","typescript"]);
- for(const version of Object.values(manifest.dependencies) as string[])expect(version).toMatch(/^\d+\.\d+\.\d+$/u);
- expect(Bun.semver.satisfies(manifest.dependencies.typescript,workspace.devDependencies.typescript)).toBe(true);
- expect(manifest.dependencies["@iarna/toml"]).toBe(workspace.devDependencies["@iarna/toml"]);
+ expect(Object.keys(manifest.devDependencies).sort()).toEqual(["@iarna/toml","typescript"]);
+ for(const version of Object.values(manifest.devDependencies) as string[])expect(version).toMatch(/^\d+\.\d+\.\d+$/u);
+ expect(Bun.semver.satisfies(manifest.devDependencies.typescript,workspace.devDependencies.typescript)).toBe(true);
+ expect(manifest.devDependencies["@iarna/toml"]).toBe(workspace.devDependencies["@iarna/toml"]);
  expect(workspace.workspaces).toContain(scope);
 });
 

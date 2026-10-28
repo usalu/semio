@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts": {
+  "file": "f000",
+  "base": "fea2fcaac4fb50dde1dd89b5666121c15eefeb495d73479c848bd676478a3d23",
+  "new": "898ecb226fbde4cb988325098ab080576498e4132021bb1e35848c629ab4f668"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/📋️scope/🟦️.ts": {
+  "file": "f001",
+  "base": "4f48159ed7ab7271ba15e6b09c54876dc21d444c826a4981cf679c0d9c1ebef6",
+  "new": "d240134627d3dcbad26cb0c53bfcb0c08ddc36937a259d3b5fa81ed4066df2b4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json": {
+  "file": "f002",
+  "base": "72eac6c808e20b38d6ca3fac2849e8d27b5c0271a41494fc8a29c94609b72f14",
+  "new": "a6a258376e5712204f12955a8507e9215dddb91719c66fc48c6050710a6b3578"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/📖️source/🟦️.ts": {
+  "file": "f003",
+  "base": "9cebebc5e307051c0f0a72c73c48680693cd866b0ca1663c753ad30d70f4701c",
+  "new": "f716542cf168d483190186a3ccb8cd9717e425265f85b96f849cf20f7a21ee09"
+ }
+}

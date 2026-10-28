@@ -15,7 +15,10 @@ import (
 
 // 🧪️#endregion 🧬️Consolidated
 func TestMcpToolsSchemas(t *testing.T) {
-	s := CreateMcpServer(providers.McpClientGeneric, DefaultCommandTimeout)
+	s, err := CreateMcpServer(sandbox.Root(), providers.McpClientGeneric, DefaultCommandTimeout)
+	if err != nil {
+		t.Fatal(err)
+	}
 	tools := s.ListTools()
 	allowedTools := []string{
 		"ticket_open",
@@ -95,7 +98,11 @@ func TestRenderPromptTemplateUsesRepoMetaRoot(t *testing.T) {
 	}
 	sandbox.BindRoot(t, repoRoot)
 	t.Chdir(otherDir)
-	out, err := renderPromptTemplate("enhance", map[string]string{"prompt": "hello"})
+	repository, err := newMcpRepository(repoRoot)
+	if err != nil {
+		t.Fatalf("newMcpRepository failed: %v", err)
+	}
+	out, err := repository.renderPromptTemplate("enhance", map[string]string{"prompt": "hello"})
 	if err != nil {
 		t.Fatalf("renderPromptTemplate failed: %v", err)
 	}

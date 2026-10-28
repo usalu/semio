@@ -1,0 +1,26 @@
+{
+ "target": "test-tool-run-actions",
+ "tag": "c1",
+ "declared": 1875,
+ "rows": [
+  {
+   "leg": "cargo-tool-run-actions",
+   "crate": "semio-framework-tool-run-actions",
+   "test": "lib:semio_framework_tool_run_actions",
+   "kind": "cargo",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 2,
+   "tail": " | test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s |  | ",
+   "notes": [
+    "profiles:3",
+    "rules:1214",
+    "capacity:600"
+   ]
+  }
+ ]
+}

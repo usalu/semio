@@ -19,10 +19,12 @@ import {cargoWorkspaceForManifest,prepareCargoOwnersControlledV1} from "../../�
 import {acquireQueuedResourceLease,type ResourceLeaseControl} from "@semio-tech/process/leases";
 import {scriptInvocationBudget,createIssuedResourceControlV1,type ScriptInvocation} from "@semio-tech/process/routing";
 import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
+import{privateRepositoryWorkspaceV1}from"../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 type Hooks=Readonly<{advance?:(progress:CargoWorkspaceProgressV1)=>Promise<void>;childBudget?:(requested:number)=>number}>;
 const output=():string=>{const directory=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!directory)throw Error("Original preparation fixture artifact directory required");mkdirSync(directory,{recursive:true});return directory;};
-const storageIn=(directory:string)=>({...repositoryCargoPreparationStorageV1(process.cwd()),directory:join(directory,"cp"),leaseDirectory:join(directory,"cl")});
+const storageIn=(directory:string)=>({...repositoryCargoPreparationStorageV1(repository.root),directory:join(directory,"cp"),leaseDirectory:join(directory,"cl")});
 const preparationControl=(lease:ResourceLeaseControl,hooks:Hooks={}):CargoPreparationControlV1=>({signal:lease.signal,leaseControl:lease,childBudget:hooks.childBudget??(requested=>Math.min(requested,lease.remainingMilliseconds()??requested)),childOptions:()=>({signal:lease.signal,output:{maximumBytes:4096,maximumLines:20},onProgress:()=>{}}),async advance(progress){await hooks.advance?.(progress);await lease.yieldContinuation();}});
 const resourceOf=(root:string)=>`cargo-preparation:${root}`;
 

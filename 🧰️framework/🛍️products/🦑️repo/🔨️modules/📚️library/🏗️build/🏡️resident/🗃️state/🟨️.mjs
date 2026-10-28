@@ -120,7 +120,7 @@ export function createWorkspaceStateV1(options){
   return{files,dirs};
  };
 
- /** 📥 Applies one watcher batch: stat each distinct path once, update members and owners, append to the journal. */
+ /** 🌊️ Applies one watcher batch: stat each distinct path once, update members and owners, append to the journal. */
  const apply=async(rows,at=now())=>{
   stats.batches++;stats.events+=rows.length;
   const distinct=new Map();
@@ -212,9 +212,10 @@ export function createWorkspaceStateV1(options){
  const dirtyOwnersSince=from=>{const out=new Set();for(const owner of owners.values())if(owner.seq>from)out.add(owner.name);return out;};
  const cursor=()=>({instance,seq});
 
- /** 📖 Net membership changes after a cursor, folded in order; incomplete when the cursor is another instance, predates the journal, or a loss happened since. */
+ /** 📖 Net membership changes after a cursor, folded in order; incomplete when the cursor is another instance, predates the journal, a loss happened since, or the events are not exact (no watcher, a polling or degraded one): only an exact journal can prove that nothing changed. */
  const since=from=>{
   if(from.instance!==instance||from.seq<journalFloor)return{complete:false,reason:"cursor"};
+  if(trust!=="exact")return{complete:false,reason:"trust"};
   const net=new Map();
   for(const entry of journal){
    if(entry.seq<=from.seq)continue;

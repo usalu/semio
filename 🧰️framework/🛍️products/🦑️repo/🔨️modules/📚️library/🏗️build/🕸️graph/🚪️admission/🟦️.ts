@@ -41,6 +41,13 @@ export function buildRelativeImportProjectV1(owners:readonly {name:string;root:s
  let selected:{name:string;root:string}|undefined;for(const owner of owners)if(owner.root!==admissionSchema.$defs.relativeImportOwnership.const.workspaceRoot&&contains(owner.root,path)&&(!selected||owner.root.length>selected.root.length||owner.root.length===selected.root.length&&owner.name.localeCompare(selected.name)<0))selected=owner;return selected?.name;
 }
 
+/** 🗂️ {@link buildRelativeImportProjectV1} for many paths against one owner list: the deepest owner root that is the path or one of its ancestors is found by looking up the ancestors of the path (a constant number of steps per path) instead of scanning every owner; equal roots keep the smallest name, the workspace root owns nothing. */
+export function createRelativeImportResolverV1(owners:readonly {name:string;root:string}[]):(path:string)=>string|undefined{
+ const workspaceRoot=admissionSchema.$defs.relativeImportOwnership.const.workspaceRoot,named=new Map<string,string>();
+ for(const owner of owners){if(owner.root===workspaceRoot)continue;const known=named.get(owner.root);if(known===undefined||owner.name.localeCompare(known)<0)named.set(owner.root,owner.name);}
+ return path=>{for(let end=path.length;end>0;end=path.lastIndexOf("/",end-1)){const name=named.get(end===path.length?path:path.slice(0,end));if(name!==undefined)return name;}return undefined;};
+}
+
 /** 📥️ Applies authored roles to matching named inputs while retaining explicit compilation entries. */
 export function buildInputSourceRoleV1(selected:boolean,declared=false,observations:readonly unknown[]=[]):"compile"|"freshness"{
  const roles=admissionSchema.$defs.sourceInputObservation.const,allowed:readonly unknown[]=admissionSchema.$defs.sourceInputRole.enum;if(observations.some(value=>value!==undefined&&!allowed.includes(value)))throw Error("Closed target input observation role required");return (declared?roles.declaredEntry:selected&&(!observations.length||observations.some(value=>value!==roles.namedInputOnly))?roles.selectedTask:roles.namedInputOnly) as "compile"|"freshness";

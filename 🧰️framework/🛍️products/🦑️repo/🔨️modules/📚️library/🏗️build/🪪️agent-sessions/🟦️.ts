@@ -1,4 +1,5 @@
-import {agentSessionRegistryRootV1,agentSessionStoreV1,adoptAgentSessionV1,collectAgentSessionsIfDueV1,reclaimAgentSessionSandboxesV1,type AgentSessionReclaimV1,type AgentSessionV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
+import {reclaimAgentSessionSandboxesV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🏖️sandbox/🟦️.ts";
+import {agentSessionRegistryRootV1,agentSessionStoreV1,adoptAgentSessionV1,collectAgentSessionsIfDueV1,type AgentSessionReclaimV1,type AgentSessionV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 
 /** 🧹️ Releases what a gone session left on this host: its test sandboxes (images detached first) and its temp root; a live sandbox keeps the root. */
 export const agentSessionReclaimV1=(options:Readonly<{parent?:string;alive?:(pid:number)=>boolean}>={}):AgentSessionReclaimV1=>session=>reclaimAgentSessionSandboxesV1(session,{...options.parent===undefined?{}:{parent:options.parent},...options.alive===undefined?{}:{alive:options.alive}});

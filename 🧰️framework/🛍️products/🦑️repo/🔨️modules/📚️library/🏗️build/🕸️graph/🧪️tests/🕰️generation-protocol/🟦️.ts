@@ -1,4 +1,4 @@
-/** 🕰️ Contract: the repository glue of the graph generation keeps its protocol. Shared readers never take a writer, the builder queues on one generation scope, the facts resource is only the bounded lease handed to the store, documents stay inside the original store, and the partial inference keeps its order. The model is the fixture's ordered text laws, checked here against the graph source and in Python by `🐍️.py`. */
+/** 🕰️ Contract: the repository glue of the graph generation keeps its protocol. Shared readers never take a writer, every builder holds a slice claim under the one generation scope, the facts resource is only the bounded lease handed to the store, documents stay inside the original store, and the partial inference keeps its order. The model is the fixture's ordered text laws, checked here against the graph source and in Python by `🐍️.py`. */
 import {expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {readFileSync,readdirSync} from "node:fs";
@@ -20,7 +20,7 @@ for(const row of fixture.order)test("order: "+row.name,()=>{const text=body(row.
 for(const row of fixture.present)test("present: "+row.name,()=>{expect(body(row.function).includes(row.text)).toBe(true);});
 for(const row of fixture.absent)test("absent: "+row.name,()=>{expect(body(row.function).includes(row.text)).toBe(false);});
 test("the independent text model reaches the same verdict",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json"),graphPath]);
  expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

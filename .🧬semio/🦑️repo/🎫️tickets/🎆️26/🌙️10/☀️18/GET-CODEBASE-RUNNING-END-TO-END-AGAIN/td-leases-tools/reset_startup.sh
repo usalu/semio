@@ -1,0 +1,5 @@
+#!/bin/sh
+# ♻️ [td-leases] restores the live bytes of every file batch `startup` touches inside mirror $1 and removes the files it creates, so edit_startup.py can be replayed. usage: reset_startup.sh <mirror-root>
+M="$1"; L=/Users/ueli/Documents/semio; B="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build"; P="🧰️framework/🔨️modules/🏃️process"
+for r in "$P/📦️packages/🟦️typescript/package.json" "$B/🌡️host-capacity/🟦️.ts" "$B/🔒️leases/⌨️command/🟦️.ts" "$B/🌡️host-capacity/⌨️command/🟦️.ts" "$B/🩺️doctor/🔎️probes/🎫️capacity/🟦️.ts" "$B/🚪️door/🧪️tests/🚦️startup/🔣️.json" "$B/🚪️door/🧪️tests/🚦️startup/🟦️.ts" "$P/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts" "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts"; do cp "$L/$r" "$M/$r"; done
+rm -rf "$M/$P/📦️packages/🟦️typescript/🔒️leases/📈️standing" "$M/$P/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/📋️status" "$M/$B/🌡️host-capacity/🎛️control" "$M/$P/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🧬️schema"

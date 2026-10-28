@@ -1,0 +1,553 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/lease-status/v1",
+  "title": "Lease status: holders, waiters, wait-for graph and deadlock cycles",
+  "definitions": {
+    "Mode": {
+      "enum": [
+        "shared",
+        "exclusive"
+      ]
+    },
+    "Holder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resource",
+        "hash",
+        "mode",
+        "pid",
+        "task",
+        "sinceMs",
+        "heldSeconds",
+        "class",
+        "rank",
+        "source"
+      ],
+      "properties": {
+        "resource": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "mode": {
+          "enum": [
+            "shared",
+            "exclusive"
+          ]
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "task": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sinceMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heldSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "class": {
+          "type": "string"
+        },
+        "rank": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "enum": [
+            "registry",
+            "queue"
+          ]
+        },
+        "command": {
+          "type": "string"
+        },
+        "session": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{12}\\.[a-z][a-z0-9]{0,11}$"
+        },
+        "agent": {
+          "type": "string"
+        },
+        "standing": {
+          "$ref": "#/definitions/HolderStanding"
+        }
+      }
+    },
+    "Waiter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resource",
+        "hash",
+        "mode",
+        "pid",
+        "task",
+        "sinceMs",
+        "waitedSeconds",
+        "class",
+        "rank",
+        "source",
+        "blockers"
+      ],
+      "properties": {
+        "resource": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "mode": {
+          "enum": [
+            "shared",
+            "exclusive"
+          ]
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "task": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sinceMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "waitedSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "class": {
+          "type": "string"
+        },
+        "rank": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "enum": [
+            "registry",
+            "queue"
+          ]
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "queued": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "command": {
+          "type": "string"
+        },
+        "session": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{12}\\.[a-z][a-z0-9]{0,11}$"
+        },
+        "agent": {
+          "type": "string"
+        },
+        "priority": {
+          "enum": [
+            "interactive",
+            "agent",
+            "background"
+          ]
+        }
+      }
+    },
+    "Edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "resource"
+      ],
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "resource": {
+          "type": "string"
+        }
+      }
+    },
+    "Cycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "members",
+        "victim"
+      ],
+      "properties": {
+        "members": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "victim": {
+          "type": "string"
+        }
+      }
+    },
+    "AdmissionGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "operation",
+        "pid",
+        "jobs",
+        "reservedMegabytes",
+        "heldSeconds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "operation": {
+          "type": "string"
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "jobs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reservedMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observedMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "heldSeconds": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "AdmissionWaiter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "operation",
+        "pid",
+        "needMegabytes",
+        "waitedSeconds",
+        "reason",
+        "reasonText"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "operation": {
+          "type": "string"
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "needMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "waitedSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "type": "string"
+        },
+        "reasonText": {
+          "type": "string"
+        }
+      }
+    },
+    "Admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "floorMegabytes",
+        "headroomMegabytes",
+        "grants",
+        "waiters"
+      ],
+      "properties": {
+        "floorMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "headroomMegabytes": {
+          "type": "integer"
+        },
+        "grants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AdmissionGrant"
+          }
+        },
+        "waiters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AdmissionWaiter"
+          }
+        }
+      }
+    },
+    "Report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "directory",
+        "atMs",
+        "holders",
+        "waiters",
+        "waitFor",
+        "cycles",
+        "violations"
+      ],
+      "properties": {
+        "admission": {
+          "$ref": "#/definitions/Admission"
+        },
+        "version": {
+          "const": 1
+        },
+        "directory": {
+          "type": "string"
+        },
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "holders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Holder"
+          }
+        },
+        "waiters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Waiter"
+          }
+        },
+        "waitFor": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Edge"
+          }
+        },
+        "cycles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Cycle"
+          }
+        },
+        "violations": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "header": {
+          "en": "Leases in {directory}: {holders} held, {waiters} waiting, {cycles} deadlock cycles, {violations} recent order violations.",
+          "de": "Leases in {directory}: {holders} gehalten, {waiters} wartend, {cycles} Verklemmungszyklen, {violations} jüngste Reihenfolgeverletzungen."
+        },
+        "holder": {
+          "en": "HELD    {mode} {resource}  process {pid}  {seconds} s  [{class}]{command}",
+          "de": "GEHALTEN {mode} {resource}  Prozess {pid}  {seconds} s  [{class}]{command}"
+        },
+        "waiter": {
+          "en": "WAITING {mode} {resource}  process {pid}  {seconds} s{position}{behind}{command}",
+          "de": "WARTET   {mode} {resource}  Prozess {pid}  {seconds} s{position}{behind}{command}"
+        },
+        "position": {
+          "en": "  position {position} of {queued}",
+          "de": "  Position {position} von {queued}"
+        },
+        "behind": {
+          "en": "  waiting for {blockers}",
+          "de": "  wartet auf {blockers}"
+        },
+        "cycle": {
+          "en": "DEADLOCK {members}",
+          "de": "VERKLEMMUNG {members}"
+        },
+        "violation": {
+          "en": "ORDER   {message}",
+          "de": "REIHENFOLGE {message}"
+        },
+        "admissionHeader": {
+          "en": "Machine admission: {spare} MB spare above the {floor} MB floor, {grants} granted, {waiters} waiting.",
+          "de": "Rechner-Zulassung: {spare} MB frei oberhalb der Untergrenze von {floor} MB, {grants} zugesagt, {waiters} wartend."
+        },
+        "admissionGrant": {
+          "en": "GRANTED {operation}  process {pid}  {jobs} jobs  {reserved} MB reserved, {observed} MB used  {seconds} s",
+          "de": "ZUGESAGT {operation}  Prozess {pid}  {jobs} Jobs  {reserved} MB reserviert, {observed} MB belegt  {seconds} s"
+        },
+        "admissionWaiter": {
+          "en": "QUEUED  {operation}  process {pid}  needs {need} MB  {seconds} s  {reason}",
+          "de": "WARTET   {operation}  Prozess {pid}  braucht {need} MB  {seconds} s  {reason}"
+        },
+        "empty": {
+          "en": "No process holds or awaits a lease in {directory}.",
+          "de": "Kein Prozess hält oder erwartet ein Lease in {directory}."
+        },
+        "unnamed": {
+          "en": "(unnamed {hash})",
+          "de": "(unbenannt {hash})"
+        },
+        "directories": {
+          "en": "Lease directories with registered processes:",
+          "de": "Lease-Verzeichnisse mit registrierten Prozessen:"
+        },
+        "sessionTag": {
+          "en": "  session {session} ({agent})",
+          "de": "  Sitzung {session} ({agent})"
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "defaultViolations": 10,
+        "maximumQueueEntries": 2048
+      }
+    },
+    "HolderStanding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "unknown",
+            "progressing",
+            "silent",
+            "stuck",
+            "stale"
+          ]
+        },
+        "priority": {
+          "enum": [
+            "interactive",
+            "agent",
+            "background"
+          ]
+        },
+        "phase": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "done": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "silentSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "staleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "etaMinutes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "etaOverdue": {
+          "type": "boolean"
+        },
+        "implementationDigest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        },
+        "implementationAgeSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "parentPid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "chain": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "yieldRequest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "requesterPid",
+            "reason",
+            "ageSeconds"
+          ],
+          "properties": {
+            "requesterPid": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "reason": {
+              "enum": [
+                "stale",
+                "stuck"
+              ]
+            },
+            "ageSeconds": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}

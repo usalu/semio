@@ -2,6 +2,8 @@ import type {GenerationRowV1} from "../🟨️.mjs";
 export type EnvironmentExtractorV1="project-json"|"package-json"|"go-mod"|"cargo-package";
 export interface EnvironmentProjectV1{name:string;root:string;nativeRoot?:string;config?:string}
 export interface EnvironmentReadersV1{read(path:string):Promise<string|undefined>;stat(path:string):Promise<{size:number;mtimeMs:number}|undefined>}
+/** 🔏️ The digest of a JSON data file without the top level sections nothing of the graph reads. */
+export function sectionalDigestV1(text:string,ignore:readonly string[]):string;
 /** 🌍️ The value one manifest contributes to the environment, or null when the manifest does not exist. */
 export function extractEnvironmentFieldV1(extractor:EnvironmentExtractorV1,text:string|undefined):unknown;
 export function environmentRowHoldsV1(row:GenerationRowV1,readers:EnvironmentReadersV1):Promise<boolean>;

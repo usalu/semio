@@ -1,5 +1,6 @@
-import {readFileSync,statfsSync} from "node:fs";
+import {readFileSync} from "node:fs";
 import {dirname,join} from "node:path";
+import {nativeFreeSpaceSyncV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 /** 🔄️ The partitions whose image is sized elastically when it is created (`elastic` of the policy). */
 export type ElasticPartitionIdV1="graph"|"products"|"rust";
@@ -17,6 +18,6 @@ export function effectiveCapacityV1(directory:string,minimumBytes:number,rule:El
   return Number.isSafeInteger(receipt.maximumPhysicalBytes)&&(receipt.maximumPhysicalBytes as number)%1048576===0&&(receipt.maximumPhysicalBytes as number)>=minimumBytes?receipt.maximumPhysicalBytes as number:minimumBytes;
  }catch(error){
   if((error as NodeJS.ErrnoException)?.code!=="ENOENT")return minimumBytes;
-  try{const host=statfsSync(dirname(directory));return elasticCapacityV1(rule,minimumBytes,host.bavail*host.bsize);}catch{return minimumBytes;}
+  const host=nativeFreeSpaceSyncV1(dirname(directory));return host?elasticCapacityV1(rule,minimumBytes,host.availableBytes):minimumBytes;
  }
 }

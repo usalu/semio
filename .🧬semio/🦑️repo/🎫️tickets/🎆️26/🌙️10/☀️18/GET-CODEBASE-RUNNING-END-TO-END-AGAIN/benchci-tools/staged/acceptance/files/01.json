@@ -1,0 +1,880 @@
+{
+ "version": 1,
+ "labels": {
+  "title": {
+   "en": "Build acceptance report",
+   "de": "Abnahmebericht des Builds"
+  },
+  "started": {
+   "en": "Started",
+   "de": "Beginn"
+  },
+  "finished": {
+   "en": "Finished",
+   "de": "Ende"
+  },
+  "host": {
+   "en": "Host class",
+   "de": "Rechnerklasse"
+  },
+  "cpus": {
+   "en": "Cores",
+   "de": "Kerne"
+  },
+  "memory": {
+   "en": "Memory",
+   "de": "Speicher"
+  },
+  "load": {
+   "en": "Load per core",
+   "de": "Last je Kern"
+  },
+  "summary": {
+   "en": "Summary",
+   "de": "Zusammenfassung"
+  },
+  "pass": {
+   "en": "pass",
+   "de": "bestanden"
+  },
+  "fail": {
+   "en": "fail",
+   "de": "verletzt"
+  },
+  "unproven": {
+   "en": "unproven",
+   "de": "unbewiesen"
+  },
+  "blockingFailed": {
+   "en": "blocking budgets broken",
+   "de": "verbindliche Budgets verletzt"
+  },
+  "advisoryFailed": {
+   "en": "advisory budgets broken",
+   "de": "beratende Budgets verletzt"
+  },
+  "provenBlocking": {
+   "en": "blocking budgets proven",
+   "de": "verbindliche Budgets bewiesen"
+  },
+  "verdictPass": {
+   "en": "ACCEPTANCE PASS",
+   "de": "ABNAHME BESTANDEN"
+  },
+  "verdictFail": {
+   "en": "ACCEPTANCE FAIL",
+   "de": "ABNAHME VERLETZT"
+  },
+  "verdictUnproven": {
+   "en": "ACCEPTANCE UNPROVEN: no blocking budget was proven",
+   "de": "ABNAHME UNBEWIESEN: kein verbindliches Budget wurde bewiesen"
+  },
+  "budget": {
+   "en": "Budget",
+   "de": "Vorgabe"
+  },
+  "scenario": {
+   "en": "Scenario",
+   "de": "Szenario"
+  },
+  "run": {
+   "en": "Run",
+   "de": "Lauf"
+  },
+  "statistic": {
+   "en": "Statistic",
+   "de": "Statistik"
+  },
+  "value": {
+   "en": "Value",
+   "de": "Wert"
+  },
+  "maximum": {
+   "en": "Maximum",
+   "de": "Höchstwert"
+  },
+  "samples": {
+   "en": "Samples",
+   "de": "Stichproben"
+  },
+  "status": {
+   "en": "Status",
+   "de": "Urteil"
+  },
+  "enforcement": {
+   "en": "Enforcement",
+   "de": "Durchsetzung"
+  },
+  "blocking": {
+   "en": "blocking",
+   "de": "verbindlich"
+  },
+  "advisory": {
+   "en": "advisory",
+   "de": "beratend"
+  },
+  "notes": {
+   "en": "Notes",
+   "de": "Hinweise"
+  },
+  "runs": {
+   "en": "Runs",
+   "de": "Läufe"
+  },
+  "wall": {
+   "en": "Wall clock",
+   "de": "Laufzeit"
+  },
+  "footprint": {
+   "en": "Footprint",
+   "de": "Speicherbedarf"
+  },
+  "executed": {
+   "en": "Executed",
+   "de": "Ausgeführt"
+  },
+  "memo": {
+   "en": "From memo",
+   "de": "Aus Memo"
+  },
+  "exit": {
+   "en": "Exit code",
+   "de": "Exit-Code"
+  },
+  "inferred": {
+   "en": "Inferred",
+   "de": "Neu abgeleitet"
+  },
+  "outcomes": {
+   "en": "Scenarios",
+   "de": "Szenarien"
+  },
+  "restored": {
+   "en": "Restored byte for byte",
+   "de": "Byteidentisch zurückgesetzt"
+  },
+  "landed": {
+   "en": "Edit landed during the run",
+   "de": "Änderung traf während des Laufs ein"
+  },
+  "yes": {
+   "en": "yes",
+   "de": "ja"
+  },
+  "no": {
+   "en": "no",
+   "de": "nein"
+  },
+  "ran": {
+   "en": "ran",
+   "de": "gelaufen"
+  },
+  "skipped": {
+   "en": "skipped",
+   "de": "übersprungen"
+  },
+  "failed": {
+   "en": "failed",
+   "de": "fehlgeschlagen"
+  },
+  "invariantExit": {
+   "en": "Every official run exits with 0",
+   "de": "Jeder offizielle Lauf endet mit 0"
+  },
+  "invariantRestored": {
+   "en": "Edited files are restored byte for byte",
+   "de": "Geänderte Dateien werden byteidentisch zurückgesetzt"
+  },
+  "invariantLanded": {
+   "en": "The peer edit lands while the run executes",
+   "de": "Die fremde Änderung trifft ein, während der Lauf ausgeführt wird"
+  },
+  "prime": {
+   "en": "prime (not judged)",
+   "de": "Vorlauf (nicht beurteilt)"
+  },
+  "hot": {
+   "en": "hot",
+   "de": "heiß"
+  },
+  "control": {
+   "en": "control",
+   "de": "Grundlauf"
+  },
+  "peer": {
+   "en": "peer edit",
+   "de": "fremde Änderung"
+  },
+  "follow": {
+   "en": "follow-up",
+   "de": "Folgelauf"
+  },
+  "edit": {
+   "en": "edit",
+   "de": "Änderung"
+  },
+  "revert": {
+   "en": "revert",
+   "de": "Rücknahme"
+  },
+  "no-samples": {
+   "en": "no sample of this run exists",
+   "de": "von diesem Lauf gibt es keine Stichprobe"
+  },
+  "run-failed": {
+   "en": "the run failed, so it measures nothing",
+   "de": "der Lauf ist fehlgeschlagen und misst deshalb nichts"
+  },
+  "clock-grain": {
+   "en": "the recorded clock is a poll with a coarse grain; the value lies within one grain of the maximum",
+   "de": "die aufgezeichnete Uhr fragt nur grob ab; der Wert liegt innerhalb einer Stufe des Höchstwerts"
+  },
+  "host-saturated": {
+   "en": "the host was saturated; load only ever inflates times",
+   "de": "der Rechner war ausgelastet; Last bläht Zeiten nur auf"
+  },
+  "resident-only": {
+   "en": "only the resident set was observed, which over-reads shared pages",
+   "de": "nur der resident Speicher wurde beobachtet, der geteilte Seiten mehrfach zählt"
+  },
+  "not-landed": {
+   "en": "the edit did not land while the run was executing, so the pass proves nothing",
+   "de": "die Änderung traf nicht während des Laufs ein, der Erfolg beweist daher nichts"
+  },
+  "foreign-write": {
+   "en": "another writer changed the file during the stage; its change was left in place",
+   "de": "ein anderer Schreiber hat die Datei während der Stufe geändert; seine Änderung blieb bestehen"
+  },
+  "skipped-reason": {
+   "en": "skipped: edits need --in-place",
+   "de": "übersprungen: Änderungen brauchen --in-place"
+  },
+  "aborted": {
+   "en": "the run was cancelled",
+   "de": "der Lauf wurde abgebrochen"
+  },
+  "noteBounds": {
+   "en": "Values marked ≤ are upper bounds: the recorded clock rounds up to its grain.",
+   "de": "Mit ≤ markierte Werte sind obere Schranken: die aufgezeichnete Uhr rundet auf ihre Stufe auf."
+  },
+  "noteMeasure": {
+   "en": "Memory is the physical footprint of the whole process tree (macOS phys_footprint, Linux proportional set size, Windows private working set), sampled by the capacity governor's observer.",
+   "de": "Der Speicher ist der physische Bedarf des ganzen Prozessbaums (macOS phys_footprint, Linux proportionale Größe, Windows privater Arbeitssatz), gemessen vom Beobachter der Kapazitätssteuerung."
+  },
+  "noteMarks": {
+   "en": "! marks a blocking budget.",
+   "de": "! markiert ein verbindliches Budget."
+  },
+  "list": {
+   "en": "Acceptance scenarios and budgets",
+   "de": "Abnahmeszenarien und Budgets"
+  },
+  "name": {
+   "en": "Name",
+   "de": "Bezeichnung"
+  },
+  "source": {
+   "en": "Source",
+   "de": "Quelle"
+  },
+  "kind": {
+   "en": "Kind",
+   "de": "Art"
+  },
+  "noop": {
+   "en": "hot no-op",
+   "de": "heißer Leerlauf"
+  },
+  "quiet": {
+   "en": "quiet",
+   "de": "ruhig"
+  },
+  "busy": {
+   "en": "busy",
+   "de": "beschäftigt"
+  },
+  "saturated": {
+   "en": "saturated",
+   "de": "ausgelastet"
+  },
+  "unknown": {
+   "en": "unknown",
+   "de": "unbekannt"
+  }
+ },
+ "products": [
+  {
+   "id": "course",
+   "title": {
+    "en": "Architecture course",
+    "de": "Architekturkurs"
+   },
+   "target": "@teaching/architecture-course:build",
+   "edit": {
+    "file": "🎓️teaching/🏛️architecture/📚️course/📚️course/🟦️.ts",
+    "comment": "//"
+   }
+  },
+  {
+   "id": "print",
+   "title": {
+    "en": "Print (Rust)",
+    "de": "Druck (Rust)"
+   },
+   "target": "@semio-tech/print-rs:test",
+   "edit": {
+    "file": "🧰️framework/🛍️products/📓️print/🦀️.rs",
+    "comment": "//"
+   }
+  },
+  {
+   "id": "dashboard",
+   "title": {
+    "en": "Dashboard (Rust binary)",
+    "de": "Dashboard (Rust-Programm)"
+   },
+   "target": "@semio-tech/repo-dashboard-rs:build",
+   "edit": {
+    "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🦀️.rs",
+    "comment": "//"
+   }
+  }
+ ],
+ "peer": {
+  "trigger": "^[Gg]raph: |Verifying graph facts|build:graph-plan|Inferring projects|Assembling the graph",
+  "unrelated": [
+   {
+    "file": "CITATION.cff",
+    "comment": "#"
+   },
+   {
+    "file": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/📜️script.ts",
+    "comment": "//"
+   }
+  ],
+  "scheduling": [
+   {
+    "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts",
+    "comment": "//"
+   }
+  ]
+ },
+ "scenarios": [
+  {
+   "id": "course-noop",
+   "kind": "noop",
+   "product": "course",
+   "hot": 3,
+   "title": {
+    "en": "Architecture course: hot no-op x3",
+    "de": "Architekturkurs: heißer Leerlauf x3"
+   },
+   "timeoutMs": 5400000
+  },
+  {
+   "id": "print-noop",
+   "kind": "noop",
+   "product": "print",
+   "hot": 3,
+   "title": {
+    "en": "Print (Rust): hot no-op x3",
+    "de": "Druck (Rust): heißer Leerlauf x3"
+   },
+   "timeoutMs": 5400000
+  },
+  {
+   "id": "dashboard-noop",
+   "kind": "noop",
+   "product": "dashboard",
+   "hot": 3,
+   "title": {
+    "en": "Dashboard (Rust binary): hot no-op x3",
+    "de": "Dashboard (Rust-Programm): heißer Leerlauf x3"
+   },
+   "timeoutMs": 5400000
+  },
+  {
+   "id": "course-peer-unrelated",
+   "kind": "peer",
+   "product": "course",
+   "files": "unrelated",
+   "title": {
+    "en": "Architecture course: edit of an unrelated file of another agent",
+    "de": "Architekturkurs: Änderung einer fremden, unabhängigen Datei"
+   },
+   "timeoutMs": 5400000
+  },
+  {
+   "id": "print-peer-unrelated",
+   "kind": "peer",
+   "product": "print",
+   "files": "unrelated",
+   "title": {
+    "en": "Print (Rust): edit of an unrelated file of another agent",
+    "de": "Druck (Rust): Änderung einer fremden, unabhängigen Datei"
+   },
+   "timeoutMs": 5400000
+  },
+  {
+   "id": "dashboard-peer-unrelated",
+   "kind": "peer",
+   "product": "dashboard",
+   "files": "unrelated",
+   "title": {
+    "en": "Dashboard (Rust binary): edit of an unrelated file of another agent",
+    "de": "Dashboard (Rust-Programm): Änderung einer fremden, unabhängigen Datei"
+   },
+   "timeoutMs": 5400000
+  },
+  {
+   "id": "course-peer-scheduling",
+   "kind": "peer",
+   "product": "course",
+   "files": "scheduling",
+   "title": {
+    "en": "Architecture course: edit of a scheduling file of the build library",
+    "de": "Architekturkurs: Änderung einer Planungsdatei der Build-Bibliothek"
+   },
+   "timeoutMs": 5400000
+  },
+  {
+   "id": "course-edit",
+   "kind": "edit",
+   "product": "course",
+   "title": {
+    "en": "Architecture course: one-line edit and byte-exact revert",
+    "de": "Architekturkurs: einzeilige Änderung und byteidentische Rücknahme"
+   },
+   "timeoutMs": 5400000
+  },
+  {
+   "id": "print-edit",
+   "kind": "edit",
+   "product": "print",
+   "title": {
+    "en": "Print (Rust): one-line edit and byte-exact revert",
+    "de": "Druck (Rust): einzeilige Änderung und byteidentische Rücknahme"
+   },
+   "timeoutMs": 5400000
+  },
+  {
+   "id": "dashboard-edit",
+   "kind": "edit",
+   "product": "dashboard",
+   "title": {
+    "en": "Dashboard (Rust binary): one-line edit and byte-exact revert",
+    "de": "Dashboard (Rust-Programm): einzeilige Änderung und byteidentische Rücknahme"
+   },
+   "timeoutMs": 5400000
+  }
+ ],
+ "budgets": [
+  {
+   "id": "course-noop-wall",
+   "title": {
+    "en": "Architecture course: hot no-op wall clock",
+    "de": "Architekturkurs: heißer Leerlauf, Laufzeit"
+   },
+   "scenario": "course-noop",
+   "role": "hot",
+   "metric": "wallMs",
+   "statistic": "max",
+   "maximum": 10000,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: no-op < 10 s",
+   "slo": "product-course-noop-wall-p50"
+  },
+  {
+   "id": "course-noop-footprint",
+   "title": {
+    "en": "Architecture course: hot no-op physical footprint",
+    "de": "Architekturkurs: heißer Leerlauf, physischer Speicherbedarf"
+   },
+   "scenario": "course-noop",
+   "role": "hot",
+   "metric": "peakFootprintMb",
+   "statistic": "max",
+   "maximum": 1536,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: no-op < 1.5 GB for the whole process tree",
+   "slo": "product-course-noop-rss-max"
+  },
+  {
+   "id": "course-noop-executed",
+   "title": {
+    "en": "Architecture course: hot no-op re-executed actions",
+    "de": "Architekturkurs: heißer Leerlauf, erneut ausgeführte Aktionen"
+   },
+   "scenario": "course-noop",
+   "role": "hot",
+   "metric": "executedActions",
+   "statistic": "max",
+   "maximum": 0,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: 0 re-executions",
+   "slo": "product-course-noop-executed-max"
+  },
+  {
+   "id": "dashboard-noop-wall",
+   "title": {
+    "en": "Dashboard (Rust binary): hot no-op wall clock",
+    "de": "Dashboard (Rust-Programm): heißer Leerlauf, Laufzeit"
+   },
+   "scenario": "dashboard-noop",
+   "role": "hot",
+   "metric": "wallMs",
+   "statistic": "max",
+   "maximum": 10000,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: no-op < 10 s",
+   "slo": "product-dashboard-noop-wall-p50"
+  },
+  {
+   "id": "dashboard-noop-footprint",
+   "title": {
+    "en": "Dashboard (Rust binary): hot no-op physical footprint",
+    "de": "Dashboard (Rust-Programm): heißer Leerlauf, physischer Speicherbedarf"
+   },
+   "scenario": "dashboard-noop",
+   "role": "hot",
+   "metric": "peakFootprintMb",
+   "statistic": "max",
+   "maximum": 1536,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: no-op < 1.5 GB for the whole process tree",
+   "slo": "product-dashboard-noop-rss-max"
+  },
+  {
+   "id": "dashboard-noop-executed",
+   "title": {
+    "en": "Dashboard (Rust binary): hot no-op re-executed actions",
+    "de": "Dashboard (Rust-Programm): heißer Leerlauf, erneut ausgeführte Aktionen"
+   },
+   "scenario": "dashboard-noop",
+   "role": "hot",
+   "metric": "executedActions",
+   "statistic": "max",
+   "maximum": 1,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: 0 re-executions; the one allowed action is the freshness worker (`prototype is current`)",
+   "note": {
+    "en": "The dashboard build runs one worker action that reports `prototype is current` and builds nothing; the SLO table asks for 0 and is stricter than the product delivers today.",
+    "de": "Der Dashboard-Bau führt eine Worker-Aktion aus, die `prototype is current` meldet und nichts baut; die SLO-Tabelle verlangt 0 und ist strenger, als das Produkt heute liefert."
+   }
+  },
+  {
+   "id": "print-noop-wall",
+   "title": {
+    "en": "Print (Rust): hot no-op wall clock",
+    "de": "Druck (Rust): heißer Leerlauf, Laufzeit"
+   },
+   "scenario": "print-noop",
+   "role": "hot",
+   "metric": "wallMs",
+   "statistic": "max",
+   "maximum": 10000,
+   "enforcement": "advisory",
+   "source": "brief-wave-1026g targets: no-op < 10 s",
+   "slo": "product-print-noop-wall-p50",
+   "note": {
+    "en": "Print answers a hot no-op in 10-45 s today (gate runs g34-g45); it stays advisory until a quiet run holds 10 s.",
+    "de": "Druck beantwortet einen heißen Leerlauf heute in 10-45 s (Gate-Läufe g34-g45); bleibt beratend, bis ein ruhiger Lauf 10 s hält."
+   }
+  },
+  {
+   "id": "print-noop-footprint",
+   "title": {
+    "en": "Print (Rust): hot no-op physical footprint",
+    "de": "Druck (Rust): heißer Leerlauf, physischer Speicherbedarf"
+   },
+   "scenario": "print-noop",
+   "role": "hot",
+   "metric": "peakFootprintMb",
+   "statistic": "max",
+   "maximum": 1536,
+   "enforcement": "advisory",
+   "source": "brief-wave-1026g targets: no-op < 1.5 GB for the whole process tree",
+   "slo": "product-print-noop-rss-max"
+  },
+  {
+   "id": "print-noop-executed",
+   "title": {
+    "en": "Print (Rust): hot no-op re-executed actions",
+    "de": "Druck (Rust): heißer Leerlauf, erneut ausgeführte Aktionen"
+   },
+   "scenario": "print-noop",
+   "role": "hot",
+   "metric": "executedActions",
+   "statistic": "max",
+   "maximum": 0,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: 0 re-executions",
+   "slo": "product-print-noop-executed-max"
+  },
+  {
+   "id": "course-peer-unrelated-control-executed",
+   "title": {
+    "en": "Architecture course, unrelated edit: baseline before the edit, re-executed actions",
+    "de": "Architekturkurs, unabhängige-Änderung: Grundlauf vor der Änderung, erneut ausgeführte Aktionen"
+   },
+   "scenario": "course-peer-unrelated",
+   "role": "control",
+   "metric": "executedActions",
+   "statistic": "max",
+   "maximum": 0,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: peer edits cause 0 re-executions"
+  },
+  {
+   "id": "course-peer-unrelated-peer-executed",
+   "title": {
+    "en": "Architecture course, unrelated edit: run while the edit lands, re-executed actions",
+    "de": "Architekturkurs, unabhängige-Änderung: Lauf, während die Änderung eintrifft, erneut ausgeführte Aktionen"
+   },
+   "scenario": "course-peer-unrelated",
+   "role": "peer",
+   "metric": "executedActions",
+   "statistic": "max",
+   "maximum": 0,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: peer edits cause 0 re-executions",
+   "slo": "product-course-peer-unrelated-executed-max"
+  },
+  {
+   "id": "course-peer-unrelated-follow-executed",
+   "title": {
+    "en": "Architecture course, unrelated edit: run after the byte-exact restore, re-executed actions",
+    "de": "Architekturkurs, unabhängige-Änderung: Lauf nach der byteidentischen Rücknahme, erneut ausgeführte Aktionen"
+   },
+   "scenario": "course-peer-unrelated",
+   "role": "follow",
+   "metric": "executedActions",
+   "statistic": "max",
+   "maximum": 0,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: peer edits cause 0 re-executions"
+  },
+  {
+   "id": "print-peer-unrelated-control-executed",
+   "title": {
+    "en": "Print (Rust), unrelated edit: baseline before the edit, re-executed actions",
+    "de": "Druck (Rust), unabhängige-Änderung: Grundlauf vor der Änderung, erneut ausgeführte Aktionen"
+   },
+   "scenario": "print-peer-unrelated",
+   "role": "control",
+   "metric": "executedActions",
+   "statistic": "max",
+   "maximum": 0,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: peer edits cause 0 re-executions"
+  },
+  {
+   "id": "print-peer-unrelated-peer-executed",
+   "title": {
+    "en": "Print (Rust), unrelated edit: run while the edit lands, re-executed actions",
+    "de": "Druck (Rust), unabhängige-Änderung: Lauf, während die Änderung eintrifft, erneut ausgeführte Aktionen"
+   },
+   "scenario": "print-peer-unrelated",
+   "role": "peer",
+   "metric": "executedActions",
+   "statistic": "max",
+   "maximum": 0,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: peer edits cause 0 re-executions",
+   "slo": "product-print-peer-unrelated-executed-max"
+  },
+  {
+   "id": "print-peer-unrelated-follow-executed",
+   "title": {
+    "en": "Print (Rust), unrelated edit: run after the byte-exact restore, re-executed actions",
+    "de": "Druck (Rust), unabhängige-Änderung: Lauf nach der byteidentischen Rücknahme, erneut ausgeführte Aktionen"
+   },
+   "scenario": "print-peer-unrelated",
+   "role": "follow",
+   "metric": "executedActions",
+   "statistic": "max",
+   "maximum": 0,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: peer edits cause 0 re-executions"
+  },
+  {
+   "id": "dashboard-peer-unrelated-control-executed",
+   "title": {
+    "en": "Dashboard (Rust binary), unrelated edit: baseline before the edit, re-executed actions",
+    "de": "Dashboard (Rust-Programm), unabhängige-Änderung: Grundlauf vor der Änderung, erneut ausgeführte Aktionen"
+   },
+   "scenario": "dashboard-peer-unrelated",
+   "role": "control",
+   "metric": "executedActions",
+   "statistic": "max",
+   "maximum": 1,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: peer edits cause 0 re-executions"
+  },
+  {
+   "id": "dashboard-peer-unrelated-peer-executed",
+   "title": {
+    "en": "Dashboard (Rust binary), unrelated edit: run while the edit lands, re-executed actions",
+    "de": "Dashboard (Rust-Programm), unabhängige-Änderung: Lauf, während die Änderung eintrifft, erneut ausgeführte Aktionen"
+   },
+   "scenario": "dashboard-peer-unrelated",
+   "role": "peer",
+   "metric": "executedActions",
+   "statistic": "max",
+   "maximum": 1,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: peer edits cause 0 re-executions"
+  },
+  {
+   "id": "dashboard-peer-unrelated-follow-executed",
+   "title": {
+    "en": "Dashboard (Rust binary), unrelated edit: run after the byte-exact restore, re-executed actions",
+    "de": "Dashboard (Rust-Programm), unabhängige-Änderung: Lauf nach der byteidentischen Rücknahme, erneut ausgeführte Aktionen"
+   },
+   "scenario": "dashboard-peer-unrelated",
+   "role": "follow",
+   "metric": "executedActions",
+   "statistic": "max",
+   "maximum": 1,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: peer edits cause 0 re-executions"
+  },
+  {
+   "id": "course-peer-scheduling-control-executed",
+   "title": {
+    "en": "Architecture course, scheduling edit: baseline before the edit, re-executed actions",
+    "de": "Architekturkurs, Planungsdatei--Änderung: Grundlauf vor der Änderung, erneut ausgeführte Aktionen"
+   },
+   "scenario": "course-peer-scheduling",
+   "role": "control",
+   "metric": "executedActions",
+   "statistic": "max",
+   "maximum": 0,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: peer edits cause 0 re-executions"
+  },
+  {
+   "id": "course-peer-scheduling-peer-executed",
+   "title": {
+    "en": "Architecture course, scheduling edit: run while the edit lands, re-executed actions",
+    "de": "Architekturkurs, Planungsdatei--Änderung: Lauf, während die Änderung eintrifft, erneut ausgeführte Aktionen"
+   },
+   "scenario": "course-peer-scheduling",
+   "role": "peer",
+   "metric": "executedActions",
+   "statistic": "max",
+   "maximum": 0,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: peer edits cause 0 re-executions",
+   "slo": "product-course-peer-scheduling-executed-max"
+  },
+  {
+   "id": "course-peer-scheduling-follow-executed",
+   "title": {
+    "en": "Architecture course, scheduling edit: run after the byte-exact restore, re-executed actions",
+    "de": "Architekturkurs, Planungsdatei--Änderung: Lauf nach der byteidentischen Rücknahme, erneut ausgeführte Aktionen"
+   },
+   "scenario": "course-peer-scheduling",
+   "role": "follow",
+   "metric": "executedActions",
+   "statistic": "max",
+   "maximum": 0,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: peer edits cause 0 re-executions"
+  },
+  {
+   "id": "course-edit-wall",
+   "title": {
+    "en": "Architecture course: one-line edit to green",
+    "de": "Architekturkurs: einzeilige Änderung bis grün"
+   },
+   "scenario": "course-edit",
+   "role": "edit",
+   "metric": "wallMs",
+   "statistic": "max",
+   "maximum": 60000,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: TypeScript edit < 60 s",
+   "slo": "product-course-edit-green-p50"
+  },
+  {
+   "id": "course-revert-wall",
+   "title": {
+    "en": "Architecture course: byte-exact revert to green",
+    "de": "Architekturkurs: byteidentische Rücknahme bis grün"
+   },
+   "scenario": "course-edit",
+   "role": "revert",
+   "metric": "wallMs",
+   "statistic": "max",
+   "maximum": 60000,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: the byte-exact revert is bounded like the edit"
+  },
+  {
+   "id": "print-edit-wall",
+   "title": {
+    "en": "Print (Rust): one-line edit to green",
+    "de": "Druck (Rust): einzeilige Änderung bis grün"
+   },
+   "scenario": "print-edit",
+   "role": "edit",
+   "metric": "wallMs",
+   "statistic": "max",
+   "maximum": 120000,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: Rust edit < 120 s"
+  },
+  {
+   "id": "print-revert-wall",
+   "title": {
+    "en": "Print (Rust): byte-exact revert to green",
+    "de": "Druck (Rust): byteidentische Rücknahme bis grün"
+   },
+   "scenario": "print-edit",
+   "role": "revert",
+   "metric": "wallMs",
+   "statistic": "max",
+   "maximum": 120000,
+   "enforcement": "blocking",
+   "source": "brief-wave-1026g targets: the byte-exact revert is bounded like the edit"
+  },
+  {
+   "id": "dashboard-edit-wall",
+   "title": {
+    "en": "Dashboard (Rust binary): one-line edit to green",
+    "de": "Dashboard (Rust-Programm): einzeilige Änderung bis grün"
+   },
+   "scenario": "dashboard-edit",
+   "role": "edit",
+   "metric": "wallMs",
+   "statistic": "max",
+   "maximum": 120000,
+   "enforcement": "advisory",
+   "source": "brief-wave-1026g targets: Rust edit < 2 min",
+   "slo": "product-dashboard-edit-green-p50",
+   "note": {
+    "en": "No green measurement of a dashboard edit exists yet (a cargo build of the binary); advisory until the first nightly run holds the budget.",
+    "de": "Von einer Dashboard-Änderung (Cargo-Bau des Programms) gibt es noch keine grüne Messung; beratend, bis der erste nächtliche Lauf das Budget hält."
+   }
+  },
+  {
+   "id": "dashboard-revert-wall",
+   "title": {
+    "en": "Dashboard (Rust binary): byte-exact revert to green",
+    "de": "Dashboard (Rust-Programm): byteidentische Rücknahme bis grün"
+   },
+   "scenario": "dashboard-edit",
+   "role": "revert",
+   "metric": "wallMs",
+   "statistic": "max",
+   "maximum": 120000,
+   "enforcement": "advisory",
+   "source": "brief-wave-1026g targets: the byte-exact revert is bounded like the edit",
+   "note": {
+    "en": "No green measurement of a dashboard edit exists yet (a cargo build of the binary); advisory until the first nightly run holds the budget.",
+    "de": "Von einer Dashboard-Änderung (Cargo-Bau des Programms) gibt es noch keine grüne Messung; beratend, bis der erste nächtliche Lauf das Budget hält."
+   }
+  }
+ ]
+}

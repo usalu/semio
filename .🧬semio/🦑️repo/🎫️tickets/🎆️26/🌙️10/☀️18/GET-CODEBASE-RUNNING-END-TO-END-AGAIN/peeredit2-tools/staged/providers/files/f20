@@ -1,0 +1,498 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Repository Build Project",
+  "description": "Tool-independent project and task declarations projected by repository build backends.",
+  "type": "object",
+  "required": [
+    "name"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "root": {
+      "type": "string"
+    },
+    "sourceRoot": {
+      "type": "string"
+    },
+    "projectType": {
+      "enum": [
+        "application",
+        "library"
+      ]
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "implicitDependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "namedInputs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array"
+      }
+    },
+    "targets": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Task"
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "semio": {
+          "type": "object",
+          "properties": {
+            "scriptProviders": {
+              "description": "Declares this project the providers project: the file name of the script provider designation in its root. Every script provider closure becomes one of its named inputs per port and view, and every command closure read through a view names it by reference.",
+              "type": "string",
+              "pattern": "^[^/\\\\]+\\.json$"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ReadyDeclaration": {
+      "type": "object",
+      "description": "🟢️ A continuous task is ready after its visible output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>` and the exact ready address answers HTTP with a 2xx or 3xx status. The ready address is the printed match plus `path`, or with `printed` the whole printed address up to whitespace. `portEnv` names the environment value that carries the port of one run; `port` is its default and may stand alone.",
+      "properties": {
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "portEnv": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$"
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^[/?#][^\\s\\u0000]*$"
+        },
+        "printed": {
+          "type": "boolean"
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "port": true
+          },
+          "required": [
+            "port"
+          ]
+        },
+        {
+          "properties": {
+            "portEnv": true
+          },
+          "required": [
+            "portEnv"
+          ]
+        }
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/ReadyPrinted"
+        }
+      ],
+      "additionalProperties": false
+    },
+    "ReadyPrinted": {
+      "type": "object",
+      "description": "🖨️ A printed address leaves no room for `path`.",
+      "anyOf": [
+        {
+          "properties": {
+            "printed": {
+              "enum": [
+                false
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "path": false
+          }
+        }
+      ]
+    },
+    "LiteralArguments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "Task": {
+      "type": "object",
+      "properties": {
+        "executor": {
+          "enum": [
+            "repo:script",
+            "repo:noop"
+          ]
+        },
+        "command": {
+          "type": "string"
+        },
+        "options": {
+          "type": "object",
+          "properties": {
+            "args": {
+              "$ref": "#/$defs/LiteralArguments"
+            }
+          },
+          "allOf": [
+            {
+              "anyOf": [
+                {
+                  "properties": {
+                    "command": false
+                  },
+                  "type": "object"
+                },
+                {
+                  "properties": {
+                    "commands": false
+                  },
+                  "type": "object"
+                }
+              ]
+            }
+          ]
+        },
+        "configurations": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ExecutionConfiguration"
+          }
+        },
+        "defaultConfiguration": {
+          "$ref": "#/$defs/BuildMode"
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "inputs": {
+          "type": "array"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cache": {
+          "type": "boolean"
+        },
+        "continuous": {
+          "type": "boolean"
+        },
+        "parallelism": {
+          "type": "boolean"
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "semio": {
+              "type": "object",
+              "properties": {
+                "dashboard": {
+                  "type": "object",
+                  "properties": {
+                    "ready": {
+                      "$ref": "#/$defs/ReadyDeclaration"
+                    }
+                  }
+                },
+                "closure": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "modules": {
+                      "type": "array",
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "string",
+                        "pattern": "^!?\\{(?:projectRoot|workspaceRoot)\\}/"
+                      }
+                    },
+                    "typescript": {
+                      "type": "array",
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "string",
+                        "pattern": "^\\{(?:projectRoot|workspaceRoot)\\}/(?:[^*?{}\\[\\]]*/)?tsconfig(?:\\.[^/*?{}\\[\\]]+)?\\.json$"
+                      }
+                    },
+                    "resources": {
+                      "$ref": "#/$defs/SourceResourceEntries"
+                    }
+                  }
+                },
+                "sourceInputObservation": {
+                  "type": "string",
+                  "enum": [
+                    "compile",
+                    "freshness"
+                  ]
+                },
+                "runtimeSourceEntries": {
+                  "$ref": "#/$defs/RuntimeSourceEntries"
+                },
+                "buildMode": {
+                  "$ref": "#/$defs/BuildModeDeclaration"
+                }
+              }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "options": {
+                  "properties": {
+                    "command": false
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            {
+              "properties": {
+                "configurations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "commands": false
+                    }
+                  }
+                }
+              },
+              "type": "object"
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "options": {
+                  "properties": {
+                    "commands": false
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            {
+              "properties": {
+                "configurations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "command": false
+                    }
+                  }
+                }
+              },
+              "type": "object"
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "command": false
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "command": false,
+                    "commands": false
+                  }
+                },
+                "configurations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "commands": false
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "ExecutionConfiguration": {
+      "type": "object",
+      "properties": {
+        "kind": false,
+        "ownerArguments": false,
+        "nativeOwnerCommand": false,
+        "executor": false,
+        "inputs": false,
+        "outputs": false,
+        "dependsOn": false,
+        "cache": false,
+        "continuous": false,
+        "parallelism": false,
+        "metadata": false,
+        "defaultConfiguration": false,
+        "configurations": false,
+        "options": false,
+        "command": {
+          "type": "string"
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "command"
+                ],
+                "properties": {
+                  "command": {
+                    "type": "string"
+                  },
+                  "forwardAllArgs": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "parallel": {
+          "type": "boolean"
+        },
+        "forwardAllArgs": {
+          "type": "boolean"
+        },
+        "args": {
+          "$ref": "#/$defs/LiteralArguments"
+        }
+      },
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "command": false
+              },
+              "type": "object"
+            },
+            {
+              "properties": {
+                "commands": false
+              },
+              "type": "object"
+            }
+          ]
+        }
+      ]
+    },
+    "RuntimeSourceEntries": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "maxLength": 256,
+        "pattern": "^\\{(?:projectRoot|workspaceRoot)\\}/(?!.*//)(?!(?:[^/]+/)*\\.{1,2}(?:/|$))(?!.*\\.d\\.[cm]?[jt]sx?$)[^\\u0000-\\u001f\\u007f\\\\:*?\"<>|{}\\[\\]]+\\.[cm]?[jt]sx?$"
+      }
+    },
+    "BuildMode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    },
+    "BuildModeDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fixed": {
+          "$ref": "#/$defs/BuildMode"
+        },
+        "modes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/BuildMode"
+          }
+        }
+      }
+    },
+    "SourceResourceEntries": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "maxLength": 256,
+        "pattern": "^\\{(?:projectRoot|workspaceRoot)\\}/(?!.*//)(?!(?:[^/]+/)*\\.{1,2}(?:/|$))[^\\u0000-\\u001f\\u007f\\\\:*?\"<>|{}\\[\\]]+$"
+      }
+    }
+  }
+}

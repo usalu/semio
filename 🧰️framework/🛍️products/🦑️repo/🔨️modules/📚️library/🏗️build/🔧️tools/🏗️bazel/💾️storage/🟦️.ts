@@ -4,6 +4,7 @@ import schema from"../🧬️schema/🔣️.json" with { type: "json" };
 import{type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {isAbsolute,join} from "node:path";
 import {requireBazelSlotV1} from "../🧵️sessions/🟦️.ts";
+import {bazelServerDirectoryV1} from "../🧵️sessions/📖️status/🟦️.ts";
 import {bazelOutputRootV1} from "../📐️path-plan/🟦️.ts";
 import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import {withRepositoryCacheStoreV1,type RepositoryCacheStoreV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
@@ -24,7 +25,7 @@ export function requireBazelHostPathsV1(platform:string,layout:Readonly<Record<s
 /** 🛤️ Names every native Bazel cache writer inside its authored finite partition. */
 export function bazelCacheLayoutV1(roots:Readonly<{tools:string;dependencies:string;products:string}>){
  if(Object.values(roots).some(root=>!isAbsolute(root)))throw Error("Absolute Bazel storage roots required");
- const layout={version:1 as const,executable:join(roots.tools,"bazel/bin"),install:join(roots.tools,"bazel/install"),modules:join(roots.dependencies,"bazel/modules"),workspace:join(roots.products,"bazel/workspaces"),outputs:join(roots.products,"bazel/outputs"),actions:join(roots.products,"bazel/actions"),pool:join(roots.products,"bazel/pool"),server:join(roots.products,"bazel/outputs/server"),temporary:join(roots.products,"tmp")};if(Object.values(layout).some(value=>typeof value==="string"&&value.length>256))throw Error("Bazel storage path exceeds 256 characters");if(validateJsonSchemaSubset(schema.definitions.StorageLayout,layout,schema).length)throw Error("Closed Bazel cache layout required");requireBazelHostPathsV1(process.platform,layout);return Object.freeze(layout);
+ const layout={version:1 as const,executable:join(roots.tools,"bazel/bin"),install:join(roots.tools,"bazel/install"),modules:join(roots.dependencies,"bazel/modules"),workspace:join(roots.products,"bazel/workspaces"),outputs:join(roots.products,"bazel/outputs"),actions:join(roots.products,"bazel/actions"),pool:join(roots.products,"bazel/pool"),server:bazelServerDirectoryV1(roots.products),temporary:join(roots.products,"tmp")};if(Object.values(layout).some(value=>typeof value==="string"&&value.length>256))throw Error("Bazel storage path exceeds 256 characters");if(validateJsonSchemaSubset(schema.definitions.StorageLayout,layout,schema).length)throw Error("Closed Bazel cache layout required");requireBazelHostPathsV1(process.platform,layout);return Object.freeze(layout);
 }
 /** 🎟️ Retains authenticated executable, dependency and output backing until all original children settle. */
 export interface BazelStorageV1{readonly tools:RepositoryCacheStoreV1;readonly dependencies:RepositoryCacheStoreV1;readonly products:RepositoryCacheStoreV1;readonly paths:ReturnType<typeof bazelCacheLayoutV1>}

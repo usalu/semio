@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🛰️service/🔑️session/🟨️.mjs": {
+  "file": "00.mjs",
+  "base": "a684b53b50fc8a161cebac74e46f3c59ca9a78987ee4499014e39809eb036007",
+  "new": "37a7384d32d211f019ea8c4da8afb0446d7080f52cb5105bf03578ef9029a132"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🛰️service/🧪️tests/🟦️.ts": {
+  "file": "01.ts",
+  "base": "d7ec5dd6675842568d08c2cc3d1dca142f1f4cad4f4fbb646a9bcc92f720cac4",
+  "new": "292b353c006156d1c762c030155ab64a244689d85b3242963cbb7153b16547f6"
+ }
+}

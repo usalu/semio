@@ -1,0 +1,23 @@
+import {mkdirSync,rmSync,writeFileSync,appendFileSync,existsSync} from "node:fs";
+import {join} from "node:path";
+import {spawn} from "node:child_process";
+import {bazel,flagsFor,serverPid,shutdown,table} from "./probe.ts";
+const tools=import.meta.dir,S="/private/tmp/claude-501/-Users-ueli-Documents-semio/de5d5cb4-dca7-469c-b840-78655a0500ed/scratchpad/bz",root=join(S,"orphan2"),mode=process.argv[2]??"pidfile";
+rmSync(root,{recursive:true,force:true});const pkg=join(root,"w/s0/k");mkdirSync(pkg,{recursive:true});
+const BAZEL="/Users/ueli/Documents/semio/.cache/b/t/m/bazel/bin/45e9388abf21d110/bazel";
+writeFileSync(join(pkg,"MODULE.bazel"),'module(name="fx", version="0")\n');
+writeFileSync(join(pkg,"BUILD.bazel"),`genrule(name="slow",outs=["slow.out"],cmd="sleep 300; echo done > $@",tags=["no-sandbox","no-cache"])\n`);
+const flags=flagsFor(tools,join(root,"p"),"s0",1024);flags.startup=flags.startup.filter(value=>!value.startsWith("--max_idle_secs=")).concat(["--max_idle_secs=20"]);
+const base=flags.startup.find(value=>value.startsWith("--output_base="))!.slice(14),rows:Record<string,unknown>={mode};
+const alive=(pid:number)=>{try{process.kill(pid,0);return true;}catch{return false;}};
+const descendants=(r:number)=>{const t=table(),out:number[]=[],stack=[r];while(stack.length){const pid=stack.pop()!;for(const[child,row]of t)if(row.ppid===pid){out.push(child);stack.push(child);}}return out;};
+const client=spawn(BAZEL,[...flags.startup,"build",...flags.command,"--spawn_strategy=local","//:slow"],{cwd:pkg,stdio:"ignore",env:{...process.env,...flags.environment}});
+let server:number|undefined,sleeper:number|undefined;for(let i=0;i<150&&sleeper===undefined;i++){await Bun.sleep(200);server=serverPid(base);if(server)sleeper=descendants(server).find(pid=>table().get(pid)?.command.includes("sleep 300"));}
+rows.sleeperStarted=sleeper!==undefined;client.kill("SIGKILL");await Bun.sleep(3000);rows.sleeperAliveAfter3s=sleeper!==undefined&&alive(sleeper);
+const at=Date.now();
+if(mode==="pidfile")rmSync(join(base,"server/server.pid.txt"));else if(mode==="term")process.kill(server!,"SIGTERM");else if(mode==="int")process.kill(server!,"SIGINT");
+const gone=async(pid:number|undefined)=>{for(let i=0;i<150;i++){if(pid===undefined||!alive(pid))return Date.now()-at;await Bun.sleep(200);}return "still running";};
+rows.serverGoneMs=await gone(server);rows.sleeperGoneMs=await gone(sleeper);
+const out=join(tools,"..","🗑️generated","bzsrv-g");appendFileSync(join(out,"orphan2.jsonl"),JSON.stringify(rows)+"\n");console.log(JSON.stringify(rows));
+for(const pid of [sleeper,server])if(pid&&alive(pid))process.kill(pid,"SIGKILL");
+rmSync(root,{recursive:true,force:true});

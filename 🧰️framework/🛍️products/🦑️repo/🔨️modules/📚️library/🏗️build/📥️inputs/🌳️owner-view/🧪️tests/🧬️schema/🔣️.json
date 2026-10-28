@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Owner view corpus",
+  "description": "🌳️ Project roots with their owner, the policy rows of private owner subtrees and a file tree: the shared and private owner globs together must select what the plain owner glob selects.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "deliveryScopeNames", "views", "owners", "tree", "extensions"],
+  "properties": {
+    "version": { "const": 1 },
+    "deliveryScopeNames": { "type": "array", "items": { "type": "string" } },
+    "views": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["owner", "private"], "properties": { "owner": { "type": "string" }, "private": { "type": "array", "items": { "type": "string" } } } } },
+    "owners": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["root", "owner", "view"], "properties": { "root": { "type": "string" }, "owner": { "type": "string" }, "view": { "type": "boolean" } } } },
+    "tree": { "type": "array", "items": { "type": "string" } },
+    "extensions": { "type": "string" }
+  }
+}

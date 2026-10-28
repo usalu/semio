@@ -59,7 +59,7 @@ print(json.dumps(sorted(out)))`;
  expect(paths.length).toBeGreaterThan(10);
  expect(JSON.parse(run.stdout)).toEqual(actual);
  expect(actual).toEqual([]);
-});
+},180000);
 
 const leases=["acquireCargoBuildLeaseV1","acquireCargoTargetRecipeV1"],writerScopes=writers.filter(name=>name.startsWith("with"));
 function leasesInsideWriters(path:string):string[]{
@@ -102,9 +102,9 @@ print(json.dumps(sorted(out)))`;
  const run=spawnSync(testPythonV1()??"python3",["-I","-c",program,root,JSON.stringify(paths)],{encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);
  expect(JSON.parse(run.stdout)).toEqual(actual);
  expect(actual).toEqual([]);
-});
+},180000);
 
-const inputScopes=["withCargoCompilerInputsV1","withBuildInputs","withCargoInputs"],inputFiles=():string[]=>spawnSync("git",["ls-files","-z","--cached","--others","--exclude-standard","--","🧰️framework/*.ts"],{cwd:root,encoding:"utf8",maxBuffer:1<<28}).stdout.split("\0").filter(path=>path&&existsSync(join(root,path))&&!/\/🧪️tests\//u.test(path)&&/withCargoCompilerInputsV1|withBuildInputs|withCargoInputs/u.test(readFileSync(join(root,path),"utf8"))&&/acquireCargoBuildLeaseV1/u.test(readFileSync(join(root,path),"utf8")));
+const inputScopes=["withWriter","withBuildInputs","withCargoInputs"],inputFiles=():string[]=>spawnSync("git",["ls-files","-z","--cached","--others","--exclude-standard","--","🧰️framework/*.ts"],{cwd:root,encoding:"utf8",maxBuffer:1<<28}).stdout.split("\0").filter(path=>path&&existsSync(join(root,path))&&!/\/🧪️tests\//u.test(path)&&/withWriter|withBuildInputs|withCargoInputs/u.test(readFileSync(join(root,path),"utf8"))&&/acquireCargoBuildLeaseV1/u.test(readFileSync(join(root,path),"utf8")));
 function leasesInsideInputScopes(path:string,text:string=readFileSync(join(root,path),"utf8")):string[]{
  const source=ts.createSourceFile(path,text,ts.ScriptTarget.Latest,true),out:string[]=[],calls:{name:string;node:ts.CallExpression}[]=[],declarations=new Map<string,ts.Node[]>();
  const visit=(node:ts.Node):void=>{
@@ -165,17 +165,17 @@ for path in paths:
                 if any(low<=position<high for position in leases):out.add(path+": "+lease+" inside "+name)
 print(json.dumps(sorted(out)))`;
 
-test("the build lease is never taken inside an input scope that holds the shared writer custody (withCargoCompilerInputsV1, withBuildInputs, withCargoInputs, including the callbacks they receive by name): the shared build-directory custody is the outermost lease of every test, lint and exact-law path",()=>{
+test("the build lease is never taken inside an entered compiler writer (the writer an input scope offers through withWriter, or a port that holds it around its continuation: withBuildInputs, withCargoInputs; including the callbacks they receive by name): the build-directory custody follows the configuration and registry leases and precedes the writer on every test, lint and exact-law path",()=>{
  const paths=inputFiles(),actual=paths.flatMap(path=>leasesInsideInputScopes(path)).sort();
  const run=spawnSync(testPythonV1()??"python3",["-I","-c",inputScopeOracle,root,JSON.stringify(paths)],{encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);
  expect(paths.length).toBeGreaterThanOrEqual(2);
  expect(JSON.parse(run.stdout)).toEqual(actual);
  expect(actual).toEqual([]);
-});
+},180000);
 
-test("the input-scope detector flags the retired order, a lease taken in the callback of an input scope or in a callback passed by name, and accepts the hoisted order, identically in the oracle",()=>{
- const retired="async function a(){await withCargoCompilerInputsV1(x,port,async actual=>{const lease=await acquireCargoBuildLeaseV1(o);});}",named="async function b(){const execute=async(c)=>{const lease=await acquireCargoBuildLeaseV1(o);};await port.withBuildInputs(a,b,execute);}",hoisted="async function c(){const lease=await acquireCargoBuildLeaseV1(o);try{await withCargoCompilerInputsV1(x,port,async actual=>1);}finally{lease.release();}}";
- expect(leasesInsideInputScopes("retired.ts",retired)).toEqual(["retired.ts: acquireCargoBuildLeaseV1 inside withCargoCompilerInputsV1"]);
+test("the writer detector flags a lease taken inside an entered writer, in the callback of a writer-holding port or in a callback passed by name, and accepts the lease taken inside the input scope before its writer, identically in the oracle",()=>{
+ const retired="async function a(){await withCargoCompilerInputsV1(x,port,async actual=>{await actual.withWriter(async()=>{const lease=await acquireCargoBuildLeaseV1(o);});});}",named="async function b(){const execute=async(c)=>{const lease=await acquireCargoBuildLeaseV1(o);};await port.withBuildInputs(a,b,execute);}",hoisted="async function c(){await withCargoCompilerInputsV1(x,port,async actual=>{const lease=await acquireCargoBuildLeaseV1(o);try{await actual.withWriter(async()=>1);}finally{lease.release();}});}";
+ expect(leasesInsideInputScopes("retired.ts",retired)).toEqual(["retired.ts: acquireCargoBuildLeaseV1 inside withWriter"]);
  expect(leasesInsideInputScopes("named.ts",named)).toEqual(["named.ts: acquireCargoBuildLeaseV1 inside withBuildInputs"]);
  expect(leasesInsideInputScopes("hoisted.ts",hoisted)).toEqual([]);
  const dir=mkdtempSync(join(tmpdir(),"input-scope-"));try{const rows={"retired.ts":retired,"named.ts":named,"hoisted.ts":hoisted};for(const[name,text]of Object.entries(rows))writeFileSync(join(dir,name),text);const run=spawnSync(testPythonV1()??"python3",["-I","-c",inputScopeOracle,dir,JSON.stringify(Object.keys(rows))],{encoding:"utf8"});expect(run.status,run.stderr).toBe(0);expect(JSON.parse(run.stdout)).toEqual(Object.keys(rows).flatMap(name=>leasesInsideInputScopes(name,rows[name as keyof typeof rows])).sort());}finally{rmSync(dir,{recursive:true,force:true});}

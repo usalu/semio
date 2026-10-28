@@ -40,7 +40,7 @@
     },
     "tool-jobs.interactivity-p2a1-store-rejection-transfer": {
       "en": "[verify interactivity tool-jobs p2a1] Store rejection-transfer contract failed.",
-      "de": "[verify interactivity tool-jobs p2a1] Der Rejection-Transfer-Vertrag des Stores ist fehlgeschlagen."
+      "de": "[verify interactivity tool-jobs p2a1] Der Ablehnungs-Transfer-Vertrag des Stores ist fehlgeschlagen."
     },
     "tool-jobs.interactivity-p2a1-live-source-clean": {
       "en": "[verify interactivity tool-jobs p2a1] live-source clean; hostile-mutations={mutations}.",
@@ -192,7 +192,7 @@
     },
     "gates.zero-touch-closures": {
       "en": "[verify] zero-touch closures…",
-      "de": "[verify] Zero-Touch-Hüllen…"
+      "de": "[verify] Zero-Touch-Abschlüsse…"
     },
     "gates.package-language-purity": {
       "en": "[verify] package language purity…",
@@ -228,15 +228,15 @@
     },
     "gates.history-closure": {
       "en": "[verify] history closure…",
-      "de": "[verify] Hülle der Historie…"
+      "de": "[verify] Abschluss der Historie…"
     },
     "gates.history-closure-self-test-executed": {
       "en": "[verify] history-closure self-test executed no cases",
-      "de": "[verify] Der Selbsttest der Historien-Hülle hat keinen Fall ausgeführt"
+      "de": "[verify] Der Selbsttest des Historien-Abschlusses hat keinen Fall ausgeführt"
     },
     "gates.history-closure-breach": {
       "en": "[verify] {breaches} history-closure breach(es)",
-      "de": "[verify] {breaches} Verstoß/Verstöße gegen die Historien-Hülle"
+      "de": "[verify] {breaches} Verstoß/Verstöße gegen den Historien-Abschluss"
     },
     "gates.dsl-fixture-laws": {
       "en": "[verify] dsl fixture laws…",
@@ -788,7 +788,7 @@
     },
     "lanes.history-closure-closure-violation": {
       "en": "[verify history-closure] {findings} closure violation(s)",
-      "de": "[verify history-closure] {findings} Hüllenverletzung(en)"
+      "de": "[verify history-closure] {findings} Abschlussverletzung(en)"
     },
     "lanes.history-closure-passed": {
       "en": "[verify history-closure] passed.",
@@ -864,7 +864,7 @@
     },
     "lanes.zero-touch-zero-touch-closure": {
       "en": "[verify zero-touch] {breaches} zero-touch closure finding(s)",
-      "de": "[verify zero-touch] {breaches} Befund(e) bei Zero-Touch-Hüllen"
+      "de": "[verify zero-touch] {breaches} Befund(e) bei Zero-Touch-Abschlüssen"
     },
     "lanes.zero-touch-passed": {
       "en": "[verify zero-touch] passed.",

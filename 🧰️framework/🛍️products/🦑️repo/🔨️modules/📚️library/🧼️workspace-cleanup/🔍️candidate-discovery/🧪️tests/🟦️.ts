@@ -5,10 +5,10 @@ import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {afterAll} from "bun:test";
-import {closeSync,ftruncateSync,mkdirSync,mkdtempSync,openSync,realpathSync,rmSync,writeFileSync} from "node:fs";
+import {closeSync,ftruncateSync,mkdirSync,mkdtempSync,openSync,realpathSync,rmSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {relative,sep} from "node:path";
-import {CLEAN_BUILD_ARTIFACT_MAX_BYTES,CLEAN_OPEN_TICKET_OVERSIZED_FILE_MAX_BYTES,CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES,CLEAN_TICKET_DIR_MAX_BYTES,CLEAN_TICKET_FILE_MAX_BYTES,cleanBuildArtifactRemovals,cleanCollectMisplaced,cleanCollectRootTransient,cleanCollectRustIncrementalRemovals,cleanCollectWindowsIllegal,cleanDedupePreferDeepest,cleanDiscoverTicketFolders,cleanDiscoverTicketRoots,cleanGitignoredMapForTicketRoots,cleanOpenTicketOversizedFileRemovals,cleanOversizedIgnoredRemovals,cleanPathBytes,cleanTicketGeneratedOutputRemovals,cleanTicketSizeRemovals,cleanWalkDirs} from "../🟦️.ts";
+import {CLEAN_BUILD_ARTIFACT_MAX_BYTES,CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES,cleanBuildArtifactRemovals,cleanCollectMisplaced,cleanCollectRootTransient,cleanCollectRustIncrementalRemovals,cleanCollectWindowsIllegal,cleanDedupePreferDeepest,cleanDiscoverTicketFolders,cleanDiscoverTicketRoots,cleanGitignoredMapForTicketRoots,cleanOversizedIgnoredRemovals,cleanPathBytes,cleanTicketGeneratedOutputRemovals,cleanWalkDirs} from "../🟦️.ts";
 import type {CleanRemoval} from "../../🛡️protection/🟦️.ts";
 import corpus from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
@@ -28,7 +28,7 @@ const roots:string[]=[];
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
 const world=(skipSparse:boolean):string=>{const root=scratch();roots.push(root);for(const node of corpus.nodes){if(skipSparse&&"size" in node&&node.size!==undefined&&node.size>50*1024*1024)continue;make(root,node.path,node.kind==="directory"?"directory":node as {text?:string;size?:number});}return root;};
 const shared=world(sparse);
-test("the thresholds match the corpus",()=>{expect(CLEAN_TICKET_FILE_MAX_BYTES).toBe(corpus.thresholds.ticketFile);expect(CLEAN_TICKET_DIR_MAX_BYTES).toBe(corpus.thresholds.ticketDir);expect(CLEAN_BUILD_ARTIFACT_MAX_BYTES).toBe(corpus.thresholds.buildArtifact);expect(CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES).toBe(corpus.thresholds.oversizedIgnored);expect(CLEAN_OPEN_TICKET_OVERSIZED_FILE_MAX_BYTES).toBe(corpus.thresholds.openTicketFile);});
+test("the thresholds match the corpus",()=>{expect(CLEAN_BUILD_ARTIFACT_MAX_BYTES).toBe(corpus.thresholds.buildArtifact);expect(CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES).toBe(corpus.thresholds.oversizedIgnored);});
 for(const row of corpus.bytes)test("path bytes of "+row.path,()=>{expect(cleanPathBytes(absolute(shared,row.path))).toBe(row.expected);});
 test("the directory walk honours enter, skip and stop",()=>{
  const root=scratch();roots.push(root);for(const path of corpus.walk.tree)make(root,path,"directory");
@@ -46,9 +46,8 @@ test("ticket roots and ticket folders follow the canonical depth",()=>{
  expect(cleanDiscoverTicketRoots(shared).map(path=>posix(relative(shared,path))).sort()).toEqual([...corpus.ticketRoots].sort());
  expect(cleanDiscoverTicketFolders(absolute(shared,corpus.ticketRoots[0]!)).map(path=>posix(relative(shared,path))).sort()).toEqual([...corpus.ticketFolders].sort());
 });
-for(const[index,row]of corpus.sizeRemovals.entries())test("ticket size removals "+index+": "+row.folder,()=>{const root=world(sparse);expect(rowsOf(cleanTicketSizeRemovals(root,absolute(root,row.folder),row.prefixes.map(path=>absolute(root,path))))).toEqual(expectedRows(row.expected.filter(item=>!sparse||item.bytes<50*1024*1024)));});
-for(const[index,row]of corpus.generatedRemovals.entries())test("ticket generated removals "+index+": "+row.folder,()=>{expect(rowsOf(cleanTicketGeneratedOutputRemovals(shared,absolute(shared,row.folder),row.prefixes.map(path=>absolute(shared,path))))).toEqual(expectedRows(row.expected));});
-for(const[index,row]of corpus.openOversized.entries())test("open ticket oversized files "+index+": "+row.folder,()=>{expect(rowsOf(cleanOpenTicketOversizedFileRemovals(shared,absolute(shared,row.folder),row.prefixes.map(path=>absolute(shared,path))))).toEqual(sparse?[]:expectedRows(row.expected));});
+const agedGitWorld=():string=>{const root=world(sparse);for(const node of corpus.nodes){const target=absolute(root,node.path);if(node.kind==="directory")continue;const old=new Date(Date.now()-7_200_000);utimesSync(target,old,old);}git(root,"init","-q");return root;};
+for(const[index,row]of corpus.generatedRemovals.entries())test("ticket generated removals "+index+": "+row.folder,()=>{const root=agedGitWorld();expect(rowsOf(cleanTicketGeneratedOutputRemovals(root,absolute(root,row.folder),row.prefixes.map(path=>absolute(root,path))))).toEqual(expectedRows(row.expected));});
 test("build artifacts are Cargo target directories with a cache tag, skipping ticket trees and protected prefixes",()=>{
  expect(rowsOf(cleanBuildArtifactRemovals(shared,[]))).toEqual(expectedRows(corpus.build.expected));
  expect(rowsOf(cleanBuildArtifactRemovals(shared,corpus.build.protected.map(path=>absolute(shared,path))))).toEqual(expectedRows(corpus.build.expectedProtected));
@@ -62,8 +61,7 @@ test("ignored files above the size limit are listed with ticket files kept apart
 });
 test("ignored files of ASCII-named ticket folders are mapped to their folder",()=>{expect(ignoredMap(ignoredRepo(),corpus.git.asciiRoots)).toEqual(corpus.git.asciiMap);});
 test.failing("ignored files of emoji-named ticket folders are mapped to their folder",()=>{expect(ignoredMap(ignoredRepo(),corpus.git.ticketRoots)).toEqual(corpus.git.ignoredMap);});
-test("windows-illegal names are found on disk and in the index",()=>{
- if(process.platform==="win32")return;
+test.skipIf(process.platform==="win32")("windows-illegal names are found on disk and in the index",()=>{
  const root=scratch();roots.push(root);git(root,"init","-q");
  for(const[path,text]of Object.entries(corpus.illegal.files))make(root,path,{text});
  git(root,"add","--",...corpus.illegal.tracked);
@@ -85,7 +83,7 @@ test("rustc incremental caches over the limit are listed per profile or per idle
 });
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

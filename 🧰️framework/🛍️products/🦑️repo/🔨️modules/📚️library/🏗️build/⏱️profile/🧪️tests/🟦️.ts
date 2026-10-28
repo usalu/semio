@@ -78,3 +78,13 @@ test("Child process events are named after the program in a neutral spelling tha
   expect(repoProfileSpawnLabelV1(command),String(command)).toBe(label);expect(REPO_PROFILE_PHASE_PATTERN_V1.test(label),label).toBe(true);
  }
 });
+
+test("the profile names the phase started last also while it is off", async () => {
+  const { profileCurrentPhaseV1, profilePhaseV1, profileMarkV1 } = await import("../🟨️.mjs");
+  profilePhaseV1("lane.progress-first", () => 1);
+  expect(profileCurrentPhaseV1()).toBe("lane.progress-first");
+  await profilePhaseV1("lane.progress-second", async () => { await Bun.sleep(1); });
+  expect(profileCurrentPhaseV1()).toBe("lane.progress-second");
+  profileMarkV1("lane.progress-mark");
+  expect(profileCurrentPhaseV1()).toBe("lane.progress-mark");
+});

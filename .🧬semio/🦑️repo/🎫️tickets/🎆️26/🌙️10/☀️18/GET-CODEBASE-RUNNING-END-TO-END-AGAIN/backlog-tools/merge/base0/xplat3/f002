@@ -1,0 +1,47 @@
+import {expect,test} from "bun:test";
+import {chmodSync,mkdirSync,mkdtempSync,rmSync,unlinkSync,writeFileSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import {churnProtocolV1,filesystemBusyErrorV1,settleBusyFilesystemSyncV1} from "../../🟦️.ts";
+
+const error=(code:string)=>Object.assign(new Error(code),{code});
+const plan=churnProtocolV1().profiles.read;
+
+test("the sharing violations are busy on a Windows host only, vanished and unknown codes never", () => {
+ for(const code of["EBUSY","EPERM","EACCES"])expect(filesystemBusyErrorV1(error(code),"win32"),code).toBe(true);
+ expect(filesystemBusyErrorV1(error("EPERM"),"linux")).toBe(false);expect(filesystemBusyErrorV1(error("EPERM"),"darwin")).toBe(false);
+ for(const code of["ENOENT","ENOSPC","EIO"])expect(filesystemBusyErrorV1(error(code),"win32"),code).toBe(false);
+ expect(filesystemBusyErrorV1(null,"win32")).toBe(false);expect(filesystemBusyErrorV1({},"win32")).toBe(false);
+});
+
+test("a busy file is retried on the declared pauses of the read layer and then settles", () => {
+ const pauses:number[]=[];let calls=0;
+ const result=settleBusyFilesystemSyncV1("C:\\cache\\unit.lock",()=>{if(++calls<3)throw error("EPERM");return "released";},{platform:"win32",sleepSync:ms=>{pauses.push(ms);}});
+ expect(result).toEqual({settled:true,value:"released"});expect(calls).toBe(3);expect(pauses).toEqual(plan.backoffMs.slice(0,2));
+});
+
+test("a file that stays busy is returned as a failure after the declared attempts, reported once in every language, never thrown", () => {
+ const pauses:number[]=[],reports:string[]=[];let calls=0;
+ const result=settleBusyFilesystemSyncV1("C:\\cache\\unit.lock",()=>{calls++;throw error("EBUSY");},{platform:"win32",sleepSync:ms=>{pauses.push(ms);},report:text=>{reports.push(text);},environment:{}});
+ expect(result.settled).toBe(false);expect((result as {error:{code:string}}).error.code).toBe("EBUSY");
+ expect(calls).toBe(plan.maximumAttempts);expect(pauses).toEqual([...plan.backoffMs]);
+ expect(reports.length).toBe(1);expect(reports[0]).toContain("unit.lock");expect(reports[0]!.split("\n").length,"one line per declared language").toBe(churnProtocolV1().languages.length);
+});
+
+test("an error that is not busy is not retried and the report stays quiet", () => {
+ let calls=0;const reports:string[]=[];
+ const result=settleBusyFilesystemSyncV1("/cache/unit.lock",()=>{calls++;throw error("ENOSPC");},{platform:"win32",sleepSync:()=>{throw Error("must not sleep");},report:text=>{reports.push(text);}});
+ expect(result.settled).toBe(false);expect(calls).toBe(1);expect(reports).toEqual([]);
+});
+
+test.skipIf(process.platform==="win32")("a real permission refusal of this host (a read-only directory) is classified by the platform: busy under win32 rules, final under its own", () => {
+ const directory=mkdtempSync(join(tmpdir(),"busy-")),file=join(directory,"claim.lock");writeFileSync(file,"x");chmodSync(directory,0o500);
+ try{
+  let own=0,pauses=0;
+  const native=settleBusyFilesystemSyncV1(file,()=>{own++;unlinkSync(file);},{sleepSync:()=>{pauses++;}});
+  if(native.settled)return;
+  expect((native as {error:{code:string}}).error.code).toMatch(/^(EACCES|EPERM)$/u);expect(own).toBe(1);expect(pauses).toBe(0);
+  let windows=0;const retried=settleBusyFilesystemSyncV1(file,()=>{windows++;unlinkSync(file);},{platform:"win32",sleepSync:()=>{}});
+  expect(retried.settled).toBe(false);expect(windows).toBe(plan.maximumAttempts);
+ }finally{chmodSync(directory,0o700);rmSync(directory,{recursive:true,force:true});}
+});

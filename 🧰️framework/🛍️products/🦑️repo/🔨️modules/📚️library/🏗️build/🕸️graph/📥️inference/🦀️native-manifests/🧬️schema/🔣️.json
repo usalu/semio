@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:rust-source-set:v1",
+  "title": "Rust Source Set",
+  "description": "The Rust source set of one crate: the workspace-relative files a compilation of the crate reads (resolved), or the reason no static reading exists (unresolved). A key derived from an unresolved crate's directory alone is unsound because a path attribute can mount files outside it.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "root",
+        "resolved",
+        "files"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "root": {
+          "type": "string"
+        },
+        "resolved": {
+          "const": true
+        },
+        "files": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^\\{workspaceRoot\\}/"
+          }
+        },
+        "emitters": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^\\{workspaceRoot\\}/"
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "root",
+        "resolved",
+        "reason"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "root": {
+          "type": "string"
+        },
+        "resolved": {
+          "const": false
+        },
+        "reason": {
+          "enum": [
+            "no-manifest",
+            "build-script",
+            "no-entries",
+            "macro-mount",
+            "conditional-mount",
+            "dynamic-include",
+            "unparsable"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  ]
+}

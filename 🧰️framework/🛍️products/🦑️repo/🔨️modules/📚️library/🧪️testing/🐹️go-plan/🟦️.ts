@@ -16,7 +16,10 @@ import { buildBudgetMs, buildPreparationBudgetMs } from "../../../../../../🔨�
 import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { pinnedGoEnvironmentV1 } from "../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🟦️.ts";
 import { systemNativeToolPortV1 } from "../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🔌️port/🟦️.ts";
-import { repositoryCachePartitionRootV1 } from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import { repositoryCachePartitionRootV1, repositoryLeaseDirectoryV1, withRepositoryCommandCustodyV1 } from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import { openRepositoryCachePartitionV1 } from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts";
+import { requireNativeStoragePathV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
+import { withRepositoryCacheStoreV1 } from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
 import { repoToolCacheEnv } from "../../🏃️process/🌿️environment/🟦️.ts";
 
@@ -238,15 +241,20 @@ export async function runCanonicalGoTests(moduleRoot:string,args:string[],invoca
 }
 
 /** 🏗️Builds domain-owned Go sources through the same standard-toolchain projection used by tests. */
-export async function runCanonicalGoBuild(moduleRoot: string, args: string[], opts: { control: CompilerAdmissionControl; env?: NodeJS.ProcessEnv; budgetMs?: number }): Promise<void> {
-  const control = requestedCompilerAdmissionControlV1(opts.control, opts.budgetMs ?? buildBudgetMs());
-  const mode = readBuildMode((opts.env ?? process.env).SEMIO_BUILD_MODE), root = getWorkspaceRoot(), environment = await pinnedGoEnvironmentV1(repoToolCacheEnv(root, opts.env ?? process.env), repositoryCachePartitionRootV1(root, "tools"), systemNativeToolPortV1(root, (opts.env ?? process.env).CARGO_NET_OFFLINE === "true"), control.signal), plan = canonicalGoPlan(moduleRoot);
-  const captureDirectory = environment.SEMIO_TEST_ARTIFACT_DIR ? resolve(environment.SEMIO_TEST_ARTIFACT_DIR) : resolve(moduleRoot,"dist");
-  mkdirSync(captureDirectory,{recursive:true});
-  const temporary = mkdtempSync(join(captureDirectory,"go-overlay-")), overlay = join(temporary,"overlay.json");
-  writeFileSync(overlay, JSON.stringify({Replace:plan.replacements}));
-  try {
-    const { buildGoArtifactsV1 } = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🐹️go-build/🟦️.ts");
-    await buildGoArtifactsV1([`-overlay=${overlay}`,...args],{version:1,mode,cwd:resolve(moduleRoot),captureDirectory,leaseDirectory:join(root,".cache","b","l","m","data"),budgetMs:opts.budgetMs??buildBudgetMs()},{environment,control});
-  } finally { rmSync(temporary,{recursive:true,force:true}); }
+export async function runCanonicalGoBuild(moduleRoot: string, args: string[], opts: { invocation:ScriptInvocation; control: CompilerAdmissionControl; env?: NodeJS.ProcessEnv; budgetMs?: number }): Promise<void> {
+  requireIssuedResourceControlInvocationV1(opts.control,opts.invocation);const control=requestedCompilerAdmissionControlV1(opts.control,opts.budgetMs??buildBudgetMs()),root=getWorkspaceRoot(),leases=await openRepositoryCachePartitionV1(root,"leases",control);let failed=false,primary:unknown;
+  try{
+    await leases.recheck();checkResourceLeaseControl(control);const leaseDirectory=requireNativeStoragePathV1(leases.root,repositoryLeaseDirectoryV1(root));
+    await withRepositoryCommandCustodyV1(root,leases,()=>withRepositoryCacheStoreV1(root,"tools",opts.invocation,control,async(store,actual)=>{
+    const mode=readBuildMode((opts.env??process.env).SEMIO_BUILD_MODE),environment=await pinnedGoEnvironmentV1({...repoToolCacheEnv(root,opts.env??process.env),TMPDIR:store.environment.TMPDIR,TMP:store.environment.TMP,TEMP:store.environment.TEMP,GOCACHE:join(store.root,"go","cache"),GOMODCACHE:join(store.root,"go","mod")},store.root,systemNativeToolPortV1(root,(opts.env??process.env).CARGO_NET_OFFLINE==="true"),actual.signal),plan=canonicalGoPlan(moduleRoot),captureDirectory=environment.SEMIO_TEST_ARTIFACT_DIR?resolve(environment.SEMIO_TEST_ARTIFACT_DIR):resolve(moduleRoot,"dist");
+    mkdirSync(captureDirectory,{recursive:true});const temporary=mkdtempSync(join(captureDirectory,"go-overlay-")),overlay=join(temporary,"overlay.json");
+    try{
+      writeFileSync(overlay,JSON.stringify({Replace:plan.replacements}));
+      const { buildGoArtifactsV1 } = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🐹️go-build/🟦️.ts");
+      await buildGoArtifactsV1([`-overlay=${overlay}`,...args],{version:1,mode,cwd:resolve(moduleRoot),captureDirectory,leaseDirectory,budgetMs:opts.budgetMs??buildBudgetMs()},{environment,control:actual});
+      await leases.recheck();checkResourceLeaseControl(control);
+    }finally{rmSync(temporary,{recursive:true,force:true});}
+    }));
+  }catch(error){failed=true;primary=error;throw error;}
+  finally{try{await leases.close();}catch(error){if(failed)throw new AggregateError([primary,error],"Go build and lease partition close failed");throw error;}}
 }

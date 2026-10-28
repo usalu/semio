@@ -1,0 +1,102 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🎫️ticket-protection/🟦️.ts": {
+  "file": "f00",
+  "base": "25d323465d1526d08daeec16f47f772267ebfd2c867bbd888ffbbc708beef854",
+  "new": "984292018ce6576ed45829995c029415680b4be2e392ac8b1ba7140728fbee70"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🏪️managed-storage-protection/🟦️.ts": {
+  "file": "f01",
+  "base": "a2d5f89d9d3176bba8eee1e0d0ecc823c70002942167d7b2384d01386def8d40",
+  "new": "0317ad1e0059231e6ed02bd36b1cdeb6971d2caac547bd9a0e84bb284119ca7d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️root-clean-scaffold-source/🔣️.json": {
+  "file": "f02",
+  "base": "29a07f3861dcec8b84b21f0472747618f9bec29ad9f194b032dd8d7a9ce9c82c",
+  "new": "e5e3b9bba1bdbb83a64e873cd71d5eef9baa6708b8dff5e080dfbef3ee9cf02f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧹️clean-ticket-runs/🟦️.ts": {
+  "file": "f03",
+  "base": "9a432079511632cfb2178053c16342ce28de4b850ffabb26dbc8d01463ff8c62",
+  "new": "f2c059f26b8fd56efdd7b8de35b8c9bfa3de9d26773e523f6a7624d3e1404fff"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧹️ticket-generated-purge/🟦️.ts": {
+  "file": "f04",
+  "base": null,
+  "new": "7e4502f02407f1eb28e964f121b0b4013d01be1997d0b8eae6677d7dd5287332"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts": {
+  "file": "f05",
+  "base": "dc584ba07f40f1d513fdeedcc1ab27804d620743fb0a15c9c87c49ca6db5515f",
+  "new": "f51583f64723265ec60fa9c62ce80f83208d773d93279b5ef5e6f74fa3d47714"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🔍️candidate-discovery/🟦️.ts": {
+  "file": "f06",
+  "base": "d5b685e7132cee1b5f96c44608654ea8435fb1fb62fdbdab25f4ded65cb104b1",
+  "new": "c6ec974a9db83efadc0a256b37eea3c3349204fc88f371ec8457e9f4acb50711"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🔍️candidate-discovery/🧪️tests/🐍️.py": {
+  "file": "f07",
+  "base": "2eddf49d1ea2186e86b39ef902f213f88fadf04b099063fdca85b59674187b55",
+  "new": "882f40f6de9471a67ae3c682b5d58087dd836247dba24501056393a5058da1fa"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🔍️candidate-discovery/🧪️tests/🔣️.json": {
+  "file": "f08",
+  "base": "24a48221c03fe5cc7c5d108766e4cc2d9986ca47b8d304d302bf070dd030f6d8",
+  "new": "fde98a0bd0f020d2ca316f35b6a21294a7f75558cbe3710d2f4661f302625916"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🔍️candidate-discovery/🧪️tests/🟦️.ts": {
+  "file": "f09",
+  "base": "843b73ec65e51f9b07d95b0c67ff7a5c6a06212734afb342b9bdde00e03411e3",
+  "new": "f89016a1c09f06521550f93b888f6d572fbee32f9fe7bfd66f7a026dd99246ef"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🔍️candidate-discovery/🧪️tests/🧬️schema/🔣️.json": {
+  "file": "f10",
+  "base": "2d97761658a0fe459ee19a0eca6d2ddd48df9af70b478e8187debf87eaeb8f60",
+  "new": "5e1ee7a6d4a71946b05acbbfe1bb95d828cd9b8cf9e8bb8f27355cb400ab448b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🗑️removal/🟦️.ts": {
+  "file": "f11",
+  "base": "84dae56a335d3eacae8181db89aa0bd5a8b1b1a1ab1ae3da251aab281594ef82",
+  "new": "cc19e02b5ad692e89b8a522442614ba742e11e156bbe8ceb61f721c257453517"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🗑️removal/🧪️tests/🔣️.json": {
+  "file": "f12",
+  "base": "0d003ec37be350a4517ea9be72bfc4d985c68318fbd70955fdf910c01673e8f4",
+  "new": "3d1945e1613b09e39813018980cf9d2e93f866de2b5528bd2ddf3f295574729f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🗑️removal/🧪️tests/🟦️.ts": {
+  "file": "f13",
+  "base": "fe28c122bcc5423f5b2e091140295c9af2c659d3c2b05c38062eae729df7dabf",
+  "new": "de52cd9c3c30ddc4291c46d6ede5a535e43f34eb5835868416a97cca3dcc00ee"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🗑️removal/🧪️tests/🧬️schema/🔣️.json": {
+  "file": "f14",
+  "base": "c499337ac3fc0936af6c82ffb4b82f07c81afc58c5661f419507b4c4d6ae13e4",
+  "new": "0b611b8bdd14c043d5aa58476e500e7bd23efb3011185ad41fbdda0e4d52aec7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🛡️protection/🟦️.ts": {
+  "file": "f15",
+  "base": "8bb147f12ec43d261b5e682fe7130662730bb5555bbfdfb358552de153cbeb75",
+  "new": "78e05e1e5f9b22e8d1df08ef4ba72fd43e7f06168ed11b5ee76da936ba9c6c6c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🛡️protection/🧪️tests/🐍️.py": {
+  "file": "f16",
+  "base": "e7f2be4021e77ade36a79bea64188cfd8be4b036b70d666bcfc45f714fab58ea",
+  "new": "c88ea9f3ec4964b22189f3407cdb9e5312e742a85591b7a3f20eeb36cc577067"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🛡️protection/🧪️tests/🔣️.json": {
+  "file": "f17",
+  "base": "9114c7593c2531a06f831404345bc3368b8ab88fa9066f63268fa3a91479573e",
+  "new": "d8e1336be9c9e8eb3217133e19892f0e3d5233d55550c9a13f3a25847ed35388"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🛡️protection/🧪️tests/🟦️.ts": {
+  "file": "f18",
+  "base": "652267958cdf79331165243a57c99c520b6367cc433a63c9a82ddc5e8996330c",
+  "new": "d9acf1b871bd689d2581cb7d5904433fcbd02e39a627b19561d019931579e946"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🛡️protection/🧪️tests/🧬️schema/🔣️.json": {
+  "file": "f19",
+  "base": "2a81f609c933951ad6e90c5cfa9dbca430eb3bfcce1fe54451fb0658c52abcb9",
+  "new": "954b19c49d05427b283656379f437dc45ed10a389b666faf567f35cc1ca76cb6"
+ }
+}

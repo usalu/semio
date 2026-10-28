@@ -5,7 +5,7 @@
   "description": "The pinned JavaScript runtimes the repo launcher provisions, the repository implementation entries it starts through them, and the EN/DE texts it prints. Every runtime is an adapter: the launcher knows only this contract.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["$schema", "contract", "languages", "language", "routing", "selected", "runtimes", "implementation", "cache", "messages"],
+  "required": ["$schema", "contract", "languages", "language", "restart", "routing", "selected", "runtimes", "implementation", "cache", "messages"],
   "properties": {
     "$schema": { "type": "string" },
     "contract": { "const": 1 },
@@ -15,6 +15,12 @@
       "additionalProperties": false,
       "required": ["protocol"],
       "properties": { "protocol": { "$ref": "#/$defs/RelativePath" } }
+    },
+    "restart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy"],
+      "properties": { "policy": { "$ref": "#/$defs/RelativePath" } }
     },
     "routing": {
       "type": "object",

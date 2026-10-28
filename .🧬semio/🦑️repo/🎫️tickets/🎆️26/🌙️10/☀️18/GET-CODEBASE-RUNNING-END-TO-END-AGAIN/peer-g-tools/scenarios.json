@@ -1,0 +1,50 @@
+{
+ "version": 2,
+ "about": "Peer-edit scenarios of the acceptance target: edits to files of other agents during or between runs cause 0 re-executions and no failed run. Data only; scenario.py performs, render.py judges.",
+ "triggers": {
+  "graph": "^[Gg]raph: |Verifying graph facts|build:graph-plan|Inferring projects|Assembling the graph",
+  "bazel": "^\\[bazel\\] ",
+  "execute": "^(INFO: Analyzed|INFO: Found|\\[\\d+ / \\d+\\])"
+ },
+ "comments": {
+  ".ts": "// [peer-g] %d\n",
+  ".rs": "// [peer-g] %d\n",
+  ".mjs": "// [peer-g] %d\n",
+  ".cff": "# [peer-g] %d\n",
+  ".yml": "# [peer-g] %d\n",
+  ".yaml": "# [peer-g] %d\n",
+  ".toml": "# [peer-g] %d\n",
+  ".py": "# [peer-g] %d\n",
+  ".sh": "# [peer-g] %d\n",
+  ".md": "<!-- [peer-g] %d -->\n"
+ },
+ "scenarios": {
+  "p1": {
+   "about": "unrelated peer edit: a root document and another product's source (outside the build closure), reverted 25 s later",
+   "files": ["CITATION.cff", "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/📜️script.ts"],
+   "when": "graph",
+   "holdSeconds": 25,
+   "expect": {"kind": "unrelated", "maxExecuted": 0, "followupMaxExecuted": 0}
+  },
+  "p2": {
+   "about": "comment-only edit of a TS source inside the course closure, reverted 25 s later (one worker action is expected; the revert re-executes it too, see g32c-revert)",
+   "files": ["🎓️teaching/🏛️architecture/📚️course/📚️course/🟦️.ts"],
+   "when": "graph",
+   "holdSeconds": 25,
+   "expect": {"kind": "closure", "maxExecuted": 2, "followupMaxExecuted": 1}
+  },
+  "p3": {
+   "about": "comment-only edit of a scheduling leaf of the build tooling library (capacity consumption) while the build runs, reverted 25 s later; the run may restart itself (bounded) but must end green with 0 re-executions",
+   "files": ["🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts"],
+   "when": "graph",
+   "holdSeconds": 25,
+   "expect": {"kind": "library", "maxExecuted": 0, "followupMaxExecuted": 0}
+  }
+ },
+ "products": {
+  "course": "@teaching/architecture-course:build",
+  "print": "@semio-tech/print-rs:test",
+  "printbuild": "@semio-tech/print-rs:build",
+  "dashboard": "@semio-tech/repo-dashboard-rs:build"
+ }
+}

@@ -6,8 +6,9 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import policy from "../🔣️policy.json" with {type:"json"};
 import texts from "../📖️texts/🔣️.json" with {type:"json"};
 import fixtures from "./🧫️fixtures/🔣️.json" with {type:"json"};
+import commandRunner from "../../../../../../../../⚙️configuration/🏃️process/🔣️.json" with {type:"json"};
 import {cacheAreaBudgetBytesV1,cacheAreaDirectoryV1,cacheLedgerV1,cacheTextV1,classifyCachePathV1,formatCacheBytesV1,formatCacheReportV1,planCacheCollectionV1,readCacheLedgerV1,requireDeclaredCacheSegmentsV1,type CacheLanguageV1,type CacheReportV1,type CacheTargetV1} from "../🟦️.ts";
-import {resolveLanguageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {CATALOG_LANGUAGES_V1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 
 const clone=<T>(value:T):T=>JSON.parse(JSON.stringify(value));
@@ -54,6 +55,9 @@ test("the semantic closure refuses what the schema cannot see",()=>{
   ["nested overlap",document=>{const second=clone(document.areas.find((area:any)=>area.id==="nx-artifacts"));second.id="other";second.directory="nx/artifacts/deep";document.areas.push(second);}],
   ["share budget on a tree",document=>{document.areas.find((area:any)=>area.id==="go").budget={basisPoints:10};}],
   ["directory and pattern together",document=>{document.areas.find((area:any)=>area.id==="query-index").directory="q";}],
+  ["nested area with both a manager and a collection",document=>{document.areas.find((area:any)=>area.id==="compile-cache-rust").managed={owner:"nx"};}],
+  ["nested area with neither a manager nor a collection",document=>{delete document.areas.find((area:any)=>area.id==="compile-cache-rust").collect;}],
+  ["nested collection under a lease",document=>{const area=document.areas.find((area:any)=>area.id==="compile-cache-rust");area.collect.custody="lease";area.collect.lease="r";}],
   ["case-folded overlap",document=>{document.retirements.push({root:"repository",directory:"GO",quietMs:0,reason:{en:"x",de:"y"}});}]
  ];
  for(const[name,mutate]of refused){const document=clone(policy);mutate(document);expect(()=>readCacheLedgerV1(document),name).toThrow("Closed cache ledger required");}
@@ -63,7 +67,7 @@ test("budgets resolve exactly: explicit bytes, a share of the partition, and the
  const bytes=(id:string)=>cacheAreaBudgetBytesV1(ledger,ledger.areas.find(area=>area.id===id)!);
  expect(bytes("nx-artifacts")).toBe(3*1024**3);
  expect(bytes("bazel-actions")).toBe(Math.floor(budgetPolicy.partitions.products.maximumLogicalBytes*4000/10000));
- expect(bytes("cargo-home")).toBe(3*1024**3);expect(bytes("unit-cache")).toBe(24*1024**3);expect(bytes("cargo-store")).toBe(budgetPolicy.partitions.rust.maximumLogicalBytes-30*1024**3);
+ expect(bytes("cargo-home")).toBe(3*1024**3);expect(bytes("unit-cache")).toBe(24*1024**3);expect(bytes("cargo-store")).toBe(budgetPolicy.partitions.rust.maximumLogicalBytes-31*1024**3);
  expect(bytes("rust")).toBe(Math.min(budgetPolicy.partitions.rust.capacityBytes,budgetPolicy.partitions.rust.maximumLogicalBytes));
  expect(bytes("control")).toBeNull();
  const loose=ledger.areas.filter(area=>area.root==="repository"&&area.kind==="tree").reduce((sum,area)=>sum+(bytes(area.id)??0),0);
@@ -141,4 +145,14 @@ test("the status report renders the same in both languages from the same data",(
  const clean:CacheReportV1={...report,retired:[],undeclared:[]};
  expect(formatCacheReportV1("en",clean,ledger).at(-1)).toBe("Nothing retired or undeclared remains.");
  expect(formatCacheReportV1("de",clean,ledger).at(-1)).toBe("Es bleibt nichts Stillgelegtes oder Nicht-Deklariertes übrig.");
+});
+
+test("Law: the runtime state store of the command runner is a declared area of the storage ledger with a budget and a collector, never an undeclared entry that the disk budget does not see",()=>{
+ const store=commandRunner.store.split("/").filter(part=>part!==".."),root=store[0]!,name=store.slice(1).join("/");
+ expect(root,"the store lives directly in the native cache root").toBe(".cache");
+ const area=policy.areas.find(row=>row.root==="native"&&row.kind==="tree"&&row.directory===name);
+ expect(area,"an area for "+commandRunner.store).toBeDefined();
+ expect(area!.budget!.bytes).toBeGreaterThan(0);expect(area!.collect!.custody).toBe("quiet");expect(area!.collect!.unusedAgeMs).toBeGreaterThan(0);
+ expect(area!.purpose.en.length>0&&area!.purpose.de.length>0).toBe(true);
+ expect(classifyCachePathV1(ledger,"native",name+"/capture/x.log").kind,"classified as its area, not as undeclared").not.toBe("undeclared");
 });

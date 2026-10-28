@@ -1,0 +1,869 @@
+{
+ "scenarios": [
+  {
+   "id": "linux-all-on-path",
+   "platform": "linux",
+   "arch": "x64",
+   "env": {
+    "PATH": "/usr/local/bin:/usr/bin:/home/dev/.cargo/bin"
+   },
+   "home": "/home/dev",
+   "files": [
+    "/usr/bin/cc",
+    "/home/dev/.cargo/bin/rustc"
+   ],
+   "directories": [],
+   "commands": [],
+   "expected": [
+    {
+     "id": "cc",
+     "found": true,
+     "location": "/usr/bin/cc",
+     "how": "path"
+    },
+    {
+     "id": "rust",
+     "found": true,
+     "location": "/home/dev/.cargo/bin/rustc",
+     "how": "path"
+    }
+   ]
+  },
+  {
+   "id": "linux-rust-only-in-cargo-home",
+   "platform": "linux",
+   "arch": "arm64",
+   "env": {
+    "PATH": "/usr/bin"
+   },
+   "home": "/home/dev",
+   "files": [
+    "/usr/bin/cc",
+    "/home/dev/.cargo/bin/rustup"
+   ],
+   "directories": [],
+   "commands": [],
+   "expected": [
+    {
+     "id": "cc",
+     "found": true,
+     "location": "/usr/bin/cc",
+     "how": "path"
+    },
+    {
+     "id": "rust",
+     "found": true,
+     "location": "/home/dev/.cargo/bin/rustup",
+     "how": "cargo-home"
+    }
+   ]
+  },
+  {
+   "id": "linux-cargo-home-variable",
+   "platform": "linux",
+   "arch": "x64",
+   "env": {
+    "PATH": "/usr/bin",
+    "CARGO_HOME": "/opt/cargo"
+   },
+   "home": "/home/dev",
+   "files": [
+    "/usr/bin/cc",
+    "/opt/cargo/bin/rustc",
+    "/home/dev/.cargo/bin/rustc"
+   ],
+   "directories": [],
+   "commands": [],
+   "expected": [
+    {
+     "id": "cc",
+     "found": true,
+     "location": "/usr/bin/cc",
+     "how": "path"
+    },
+    {
+     "id": "rust",
+     "found": true,
+     "location": "/opt/cargo/bin/rustc",
+     "how": "cargo-home"
+    }
+   ]
+  },
+  {
+   "id": "linux-named-compiler-wins",
+   "platform": "linux",
+   "arch": "x64",
+   "env": {
+    "PATH": "/usr/bin",
+    "SEMIO_RUSTC": "/opt/rust/bin/rustc"
+   },
+   "home": "/home/dev",
+   "files": [
+    "/usr/bin/cc",
+    "/usr/bin/rustc",
+    "/opt/rust/bin/rustc"
+   ],
+   "directories": [],
+   "commands": [],
+   "expected": [
+    {
+     "id": "cc",
+     "found": true,
+     "location": "/usr/bin/cc",
+     "how": "path"
+    },
+    {
+     "id": "rust",
+     "found": true,
+     "location": "/opt/rust/bin/rustc",
+     "how": "environment"
+    }
+   ]
+  },
+  {
+   "id": "linux-named-compiler-missing-is-not-replaced",
+   "platform": "linux",
+   "arch": "x64",
+   "env": {
+    "PATH": "/usr/bin",
+    "SEMIO_RUSTC": "/opt/rust/bin/rustc"
+   },
+   "home": "/home/dev",
+   "files": [
+    "/usr/bin/cc",
+    "/usr/bin/rustc"
+   ],
+   "directories": [],
+   "commands": [],
+   "expected": [
+    {
+     "id": "cc",
+     "found": true,
+     "location": "/usr/bin/cc",
+     "how": "path"
+    },
+    {
+     "id": "rust",
+     "found": false,
+     "location": null,
+     "how": "none"
+    }
+   ]
+  },
+  {
+   "id": "linux-nothing-installed",
+   "platform": "linux",
+   "arch": "x64",
+   "env": {
+    "PATH": "/usr/bin::/bin"
+   },
+   "home": "/home/dev",
+   "files": [],
+   "directories": [],
+   "commands": [],
+   "expected": [
+    {
+     "id": "cc",
+     "found": false,
+     "location": null,
+     "how": "none"
+    },
+    {
+     "id": "rust",
+     "found": false,
+     "location": null,
+     "how": "none"
+    }
+   ]
+  },
+  {
+   "id": "linux-compiler-before-manager-in-one-directory",
+   "platform": "linux",
+   "arch": "x64",
+   "env": {
+    "PATH": "/usr/bin"
+   },
+   "home": "/home/dev",
+   "files": [
+    "/usr/bin/cc",
+    "/usr/bin/rustc",
+    "/usr/bin/rustup"
+   ],
+   "directories": [],
+   "commands": [],
+   "expected": [
+    {
+     "id": "cc",
+     "found": true,
+     "location": "/usr/bin/cc",
+     "how": "path"
+    },
+    {
+     "id": "rust",
+     "found": true,
+     "location": "/usr/bin/rustc",
+     "how": "path"
+    }
+   ]
+  },
+  {
+   "id": "darwin-ready",
+   "platform": "darwin",
+   "arch": "arm64",
+   "env": {
+    "PATH": "/usr/bin:/Users/dev/.cargo/bin"
+   },
+   "home": "/Users/dev",
+   "files": [
+    "/usr/bin/cc",
+    "/Users/dev/.cargo/bin/rustc"
+   ],
+   "directories": [
+    "/Library/Developer/CommandLineTools"
+   ],
+   "commands": [
+    {
+     "program": "/usr/bin/xcode-select",
+     "arguments": [
+      "-p"
+     ],
+     "status": 0,
+     "stdout": "/Library/Developer/CommandLineTools\n"
+    }
+   ],
+   "expected": [
+    {
+     "id": "cc",
+     "found": true,
+     "location": "/usr/bin/cc",
+     "how": "path"
+    },
+    {
+     "id": "developer-tools",
+     "found": true,
+     "location": "/Library/Developer/CommandLineTools",
+     "how": "developer-directory"
+    },
+    {
+     "id": "rust",
+     "found": true,
+     "location": "/Users/dev/.cargo/bin/rustc",
+     "how": "path"
+    }
+   ]
+  },
+  {
+   "id": "darwin-shim-without-developer-tools",
+   "platform": "darwin",
+   "arch": "x64",
+   "env": {
+    "PATH": "/usr/bin"
+   },
+   "home": "/Users/dev",
+   "files": [
+    "/usr/bin/cc"
+   ],
+   "directories": [],
+   "commands": [
+    {
+     "program": "/usr/bin/xcode-select",
+     "arguments": [
+      "-p"
+     ],
+     "status": 2,
+     "stdout": ""
+    }
+   ],
+   "expected": [
+    {
+     "id": "cc",
+     "found": true,
+     "location": "/usr/bin/cc",
+     "how": "path"
+    },
+    {
+     "id": "developer-tools",
+     "found": false,
+     "location": null,
+     "how": "none"
+    },
+    {
+     "id": "rust",
+     "found": false,
+     "location": null,
+     "how": "none"
+    }
+   ]
+  },
+  {
+   "id": "darwin-developer-dir-variable",
+   "platform": "darwin",
+   "arch": "arm64",
+   "env": {
+    "PATH": "/usr/bin",
+    "DEVELOPER_DIR": "/Applications/Xcode.app/Contents/Developer"
+   },
+   "home": "/Users/dev",
+   "files": [
+    "/usr/bin/cc"
+   ],
+   "directories": [
+    "/Applications/Xcode.app/Contents/Developer"
+   ],
+   "commands": [],
+   "expected": [
+    {
+     "id": "cc",
+     "found": true,
+     "location": "/usr/bin/cc",
+     "how": "path"
+    },
+    {
+     "id": "developer-tools",
+     "found": true,
+     "location": "/Applications/Xcode.app/Contents/Developer",
+     "how": "environment"
+    },
+    {
+     "id": "rust",
+     "found": false,
+     "location": null,
+     "how": "none"
+    }
+   ]
+  },
+  {
+   "id": "darwin-stale-developer-path",
+   "platform": "darwin",
+   "arch": "arm64",
+   "env": {
+    "PATH": "/usr/bin"
+   },
+   "home": "/Users/dev",
+   "files": [
+    "/usr/bin/cc"
+   ],
+   "directories": [],
+   "commands": [
+    {
+     "program": "/usr/bin/xcode-select",
+     "arguments": [
+      "-p"
+     ],
+     "status": 0,
+     "stdout": "/Library/Developer/CommandLineTools\n"
+    }
+   ],
+   "expected": [
+    {
+     "id": "cc",
+     "found": true,
+     "location": "/usr/bin/cc",
+     "how": "path"
+    },
+    {
+     "id": "developer-tools",
+     "found": false,
+     "location": null,
+     "how": "none"
+    },
+    {
+     "id": "rust",
+     "found": false,
+     "location": null,
+     "how": "none"
+    }
+   ]
+  },
+  {
+   "id": "darwin-selector-prints-nothing",
+   "platform": "darwin",
+   "arch": "arm64",
+   "env": {
+    "PATH": "/usr/bin"
+   },
+   "home": "/Users/dev",
+   "files": [
+    "/usr/bin/cc"
+   ],
+   "directories": [
+    "/Library/Developer/CommandLineTools"
+   ],
+   "commands": [
+    {
+     "program": "/usr/bin/xcode-select",
+     "arguments": [
+      "-p"
+     ],
+     "status": 0,
+     "stdout": ""
+    }
+   ],
+   "expected": [
+    {
+     "id": "cc",
+     "found": true,
+     "location": "/usr/bin/cc",
+     "how": "path"
+    },
+    {
+     "id": "developer-tools",
+     "found": false,
+     "location": null,
+     "how": "none"
+    },
+    {
+     "id": "rust",
+     "found": false,
+     "location": null,
+     "how": "none"
+    }
+   ]
+  },
+  {
+   "id": "windows-linker-on-path-case-insensitive-variable",
+   "platform": "win32",
+   "arch": "x64",
+   "env": {
+    "Path": "C:\\Windows\\System32;C:\\VS\\VC\\bin;C:\\Users\\dev\\.cargo\\bin"
+   },
+   "home": "C:\\Users\\dev",
+   "files": [
+    "C:\\VS\\VC\\bin\\link.exe",
+    "C:\\Users\\dev\\.cargo\\bin\\rustc.exe"
+   ],
+   "directories": [],
+   "commands": [],
+   "expected": [
+    {
+     "id": "msvc-linker",
+     "found": true,
+     "location": "C:\\VS\\VC\\bin\\link.exe",
+     "how": "path"
+    },
+    {
+     "id": "rust",
+     "found": true,
+     "location": "C:\\Users\\dev\\.cargo\\bin\\rustc.exe",
+     "how": "path"
+    }
+   ]
+  },
+  {
+   "id": "windows-build-tools-found-by-vswhere",
+   "platform": "win32",
+   "arch": "x64",
+   "env": {
+    "Path": "C:\\Windows\\System32",
+    "ProgramFiles(x86)": "C:\\Program Files (x86)"
+   },
+   "home": "C:\\Users\\dev",
+   "files": [
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe",
+    "C:\\Users\\dev\\.cargo\\bin\\rustup.exe"
+   ],
+   "directories": [
+    "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC"
+   ],
+   "commands": [
+    {
+     "program": "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe",
+     "arguments": [
+      "-latest",
+      "-products",
+      "*",
+      "-requires",
+      "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+      "-property",
+      "installationPath"
+     ],
+     "status": 0,
+     "stdout": "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\r\n"
+    }
+   ],
+   "expected": [
+    {
+     "id": "msvc-linker",
+     "found": true,
+     "location": "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools",
+     "how": "installer"
+    },
+    {
+     "id": "rust",
+     "found": true,
+     "location": "C:\\Users\\dev\\.cargo\\bin\\rustup.exe",
+     "how": "cargo-home"
+    }
+   ]
+  },
+  {
+   "id": "windows-arm64-asks-for-the-arm64-component",
+   "platform": "win32",
+   "arch": "arm64",
+   "env": {
+    "Path": "C:\\Windows\\System32",
+    "ProgramFiles(x86)": "C:\\Program Files (x86)"
+   },
+   "home": "C:\\Users\\dev",
+   "files": [
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe"
+   ],
+   "directories": [
+    "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC"
+   ],
+   "commands": [
+    {
+     "program": "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe",
+     "arguments": [
+      "-latest",
+      "-products",
+      "*",
+      "-requires",
+      "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+      "-property",
+      "installationPath"
+     ],
+     "status": 0,
+     "stdout": "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\r\n"
+    },
+    {
+     "program": "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe",
+     "arguments": [
+      "-latest",
+      "-products",
+      "*",
+      "-requires",
+      "Microsoft.VisualStudio.Component.VC.Tools.ARM64",
+      "-property",
+      "installationPath"
+     ],
+     "status": 0,
+     "stdout": "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\r\n"
+    }
+   ],
+   "expected": [
+    {
+     "id": "msvc-linker",
+     "found": true,
+     "location": "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools",
+     "how": "installer"
+    },
+    {
+     "id": "rust",
+     "found": false,
+     "location": null,
+     "how": "none"
+    }
+   ]
+  },
+  {
+   "id": "windows-arm64-component-missing",
+   "platform": "win32",
+   "arch": "arm64",
+   "env": {
+    "Path": "C:\\Windows\\System32",
+    "ProgramFiles(x86)": "C:\\Program Files (x86)"
+   },
+   "home": "C:\\Users\\dev",
+   "files": [
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe"
+   ],
+   "directories": [
+    "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC"
+   ],
+   "commands": [
+    {
+     "program": "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe",
+     "arguments": [
+      "-latest",
+      "-products",
+      "*",
+      "-requires",
+      "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+      "-property",
+      "installationPath"
+     ],
+     "status": 0,
+     "stdout": "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\r\n"
+    }
+   ],
+   "expected": [
+    {
+     "id": "msvc-linker",
+     "found": false,
+     "location": null,
+     "how": "none"
+    },
+    {
+     "id": "rust",
+     "found": false,
+     "location": null,
+     "how": "none"
+    }
+   ]
+  },
+  {
+   "id": "windows-install-without-c-tools",
+   "platform": "win32",
+   "arch": "x64",
+   "env": {
+    "Path": "C:\\Windows\\System32",
+    "ProgramFiles(x86)": "C:\\Program Files (x86)"
+   },
+   "home": "C:\\Users\\dev",
+   "files": [
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe"
+   ],
+   "directories": [],
+   "commands": [
+    {
+     "program": "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe",
+     "arguments": [
+      "-latest",
+      "-products",
+      "*",
+      "-requires",
+      "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+      "-property",
+      "installationPath"
+     ],
+     "status": 0,
+     "stdout": "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\r\n"
+    }
+   ],
+   "expected": [
+    {
+     "id": "msvc-linker",
+     "found": false,
+     "location": null,
+     "how": "none"
+    },
+    {
+     "id": "rust",
+     "found": false,
+     "location": null,
+     "how": "none"
+    }
+   ]
+  },
+  {
+   "id": "windows-vswhere-finds-nothing",
+   "platform": "win32",
+   "arch": "x64",
+   "env": {
+    "Path": "C:\\Windows\\System32",
+    "ProgramFiles(x86)": "C:\\Program Files (x86)"
+   },
+   "home": "C:\\Users\\dev",
+   "files": [
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe"
+   ],
+   "directories": [],
+   "commands": [
+    {
+     "program": "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe",
+     "arguments": [
+      "-latest",
+      "-products",
+      "*",
+      "-requires",
+      "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+      "-property",
+      "installationPath"
+     ],
+     "status": 0,
+     "stdout": ""
+    }
+   ],
+   "expected": [
+    {
+     "id": "msvc-linker",
+     "found": false,
+     "location": null,
+     "how": "none"
+    },
+    {
+     "id": "rust",
+     "found": false,
+     "location": null,
+     "how": "none"
+    }
+   ]
+  },
+  {
+   "id": "windows-vswhere-fails",
+   "platform": "win32",
+   "arch": "x64",
+   "env": {
+    "Path": "C:\\Windows\\System32",
+    "ProgramFiles(x86)": "C:\\Program Files (x86)"
+   },
+   "home": "C:\\Users\\dev",
+   "files": [
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe"
+   ],
+   "directories": [
+    "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC"
+   ],
+   "commands": [
+    {
+     "program": "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe",
+     "arguments": [
+      "-latest",
+      "-products",
+      "*",
+      "-requires",
+      "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+      "-property",
+      "installationPath"
+     ],
+     "status": 1,
+     "stdout": "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\r\n"
+    }
+   ],
+   "expected": [
+    {
+     "id": "msvc-linker",
+     "found": false,
+     "location": null,
+     "how": "none"
+    },
+    {
+     "id": "rust",
+     "found": false,
+     "location": null,
+     "how": "none"
+    }
+   ]
+  },
+  {
+   "id": "windows-vswhere-only-on-path",
+   "platform": "win32",
+   "arch": "x64",
+   "env": {
+    "Path": "C:\\Tools;C:\\Windows\\System32"
+   },
+   "home": "C:\\Users\\dev",
+   "files": [
+    "C:\\Tools\\vswhere.exe"
+   ],
+   "directories": [
+    "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC"
+   ],
+   "commands": [
+    {
+     "program": "C:\\Tools\\vswhere.exe",
+     "arguments": [
+      "-latest",
+      "-products",
+      "*",
+      "-requires",
+      "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+      "-property",
+      "installationPath"
+     ],
+     "status": 0,
+     "stdout": "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\r\n"
+    }
+   ],
+   "expected": [
+    {
+     "id": "msvc-linker",
+     "found": true,
+     "location": "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools",
+     "how": "installer"
+    },
+    {
+     "id": "rust",
+     "found": false,
+     "location": null,
+     "how": "none"
+    }
+   ]
+  },
+  {
+   "id": "windows-installation-variable",
+   "platform": "win32",
+   "arch": "x64",
+   "env": {
+    "Path": "C:\\Windows\\System32",
+    "VSINSTALLDIR": "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools"
+   },
+   "home": "C:\\Users\\dev",
+   "files": [],
+   "directories": [
+    "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC"
+   ],
+   "commands": [],
+   "expected": [
+    {
+     "id": "msvc-linker",
+     "found": true,
+     "location": "C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools",
+     "how": "environment"
+    },
+    {
+     "id": "rust",
+     "found": false,
+     "location": null,
+     "how": "none"
+    }
+   ]
+  },
+  {
+   "id": "windows-nothing-installed",
+   "platform": "win32",
+   "arch": "x64",
+   "env": {
+    "Path": "C:\\Windows\\System32"
+   },
+   "home": "C:\\Users\\dev",
+   "files": [],
+   "directories": [],
+   "commands": [],
+   "expected": [
+    {
+     "id": "msvc-linker",
+     "found": false,
+     "location": null,
+     "how": "none"
+    },
+    {
+     "id": "rust",
+     "found": false,
+     "location": null,
+     "how": "none"
+    }
+   ]
+  },
+  {
+   "id": "windows-cargo-home-variable-any-case",
+   "platform": "win32",
+   "arch": "x64",
+   "env": {
+    "Path": "C:\\Windows\\System32",
+    "cargo_home": "D:\\cargo"
+   },
+   "home": "C:\\Users\\dev",
+   "files": [
+    "D:\\cargo\\bin\\rustc.exe"
+   ],
+   "directories": [],
+   "commands": [],
+   "expected": [
+    {
+     "id": "msvc-linker",
+     "found": false,
+     "location": null,
+     "how": "none"
+    },
+    {
+     "id": "rust",
+     "found": true,
+     "location": "D:\\cargo\\bin\\rustc.exe",
+     "how": "cargo-home"
+    }
+   ]
+  }
+ ]
+}

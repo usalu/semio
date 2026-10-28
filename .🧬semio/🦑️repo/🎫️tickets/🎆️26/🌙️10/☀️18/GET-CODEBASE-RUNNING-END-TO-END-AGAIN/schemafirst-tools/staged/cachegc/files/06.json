@@ -1,0 +1,29 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "🏗️build/🧹️cache-gc/🧬️schema/🔣️.json",
+ "definitions": [
+  "Limits"
+ ],
+ "sources": [
+  "🏗️build/🧹️cache-gc/⌨️command/🟦️.ts",
+  "🏗️build/🧹️cache-gc/🚀️launch/🟦️.ts",
+  "🏗️build/🧹️cache-gc/🏃️runner/🟦️.ts",
+  "🏗️build/🧹️cache-gc/👯️dedupe/🟦️.ts"
+ ],
+ "exports": [
+  {
+   "source": "🏗️build/🧹️cache-gc/🧬️schema/🟦️.ts",
+   "name": "CACHE_GC_LIMITS_V1",
+   "definition": "Limits"
+  }
+ ],
+ "minimumNumber": 250,
+ "allow": [
+  {
+   "source": "🏗️build/🧹️cache-gc/🏃️runner/🟦️.ts",
+   "value": 512,
+   "reason": "The size of a disk block in bytes: a unit of the block count, not the stride of the deduplication."
+  }
+ ]
+}

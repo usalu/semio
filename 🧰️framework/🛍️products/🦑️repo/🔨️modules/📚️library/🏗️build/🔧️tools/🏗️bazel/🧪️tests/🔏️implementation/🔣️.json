@@ -103,5 +103,6 @@
     "required.mjs",
     "schema.json",
     "📜️script.ts"
-  ]
+  ],
+  "fixtureRoot": "temp/bazel-implementation"
 }

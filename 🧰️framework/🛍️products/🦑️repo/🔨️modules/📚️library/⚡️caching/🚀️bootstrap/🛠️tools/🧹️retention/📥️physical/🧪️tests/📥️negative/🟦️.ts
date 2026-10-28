@@ -13,10 +13,12 @@ import*as leases from"../../../../../../../../../../../🔨️modules/🏃️pro
 import schema from"./🧬️schema.json";
 import corpus from"./🔣️.json";
 import physical from"../🔣️.json";
+import{privateRepositoryWorkspaceV1}from"../../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 type Purpose=typeof corpus.cases[number]["purpose"];
 const ackPrefix="[TRACE] Retention negative receiver ",failurePrefix="[TRACE] Retention negative result ";
 function requirePurpose(value:string):Purpose{if(validateJsonSchemaSubset(schema.definitions.Purpose,value,schema).length)throw Error("Closed retention negative purpose required");return value as Purpose;}
-function requireWorkspace(workspace:string):void{if(resolve(workspace)!==workspace||workspace.length>256||dirname(workspace)!==repositoryCachePartitionRootV1(process.cwd(),"products")||!/^tr-[A-Za-z0-9_-]+$/u.test(basename(workspace)))throw Error("Exact products-funded private retention workspace required");}
+function requireWorkspace(workspace:string):void{if(resolve(workspace)!==workspace||workspace.length>256||dirname(workspace)!==repositoryCachePartitionRootV1(repository.root,"products")||!/^tr-[A-Za-z0-9_-]+$/u.test(basename(workspace)))throw Error("Exact products-funded private retention workspace required");}
 function acknowledgement(original:ScriptInvocation,workspace:string,purpose:Purpose){const envelope=readIssuedScriptProcessEnvelopeV1(original),wire=scriptInvocationEnvironment(original,process.env).SEMIO_SCRIPT_PROCESS_INVOCATION!;return{version:1,purpose,workspace,wireSha256:createHash("sha256").update(wire).digest("hex"),policy:envelope.policy,deadlineEpochMilliseconds:envelope.deadlineEpochMilliseconds,capabilities:envelope.capabilities};}
 /** 🧪️ Receives one exact negative operation without converting its failure into accepted success. */
 export async function runRetentionNegativePurposeV1(original:ScriptInvocation,workspace:string,value:string):Promise<never>{

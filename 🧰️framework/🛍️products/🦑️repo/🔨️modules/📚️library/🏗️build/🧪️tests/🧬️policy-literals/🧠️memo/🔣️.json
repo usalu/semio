@@ -1,0 +1,21 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧬️schema/🔣️.json",
+ "definitions": [
+  "Policy"
+ ],
+ "sources": [
+  "🏗️build/🧭️invocation/🕸️graph/🧠️memo/🟦️.ts",
+  "🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧮️derive/🟦️.ts",
+  "🏗️build/🧭️invocation/🕸️graph/🧠️memo/📤️relevance/🟦️.ts",
+  "🏗️build/🧭️invocation/🕸️graph/🟦️.ts"
+ ],
+ "exports": [
+  {
+   "source": "🏗️build/🧭️invocation/🕸️graph/🧠️memo/🟦️.ts",
+   "name": "GRAPH_MEMO_POLICY_V1",
+   "definition": "Policy"
+  }
+ ]
+}

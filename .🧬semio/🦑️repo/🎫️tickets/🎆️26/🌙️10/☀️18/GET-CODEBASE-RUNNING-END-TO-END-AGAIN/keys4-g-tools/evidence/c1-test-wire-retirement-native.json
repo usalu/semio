@@ -1,0 +1,26 @@
+{
+ "target": "test-wire-retirement-native",
+ "tag": "c1",
+ "declared": 1865,
+ "rows": [
+  {
+   "leg": "cargo-action-bus",
+   "crate": "semio-framework-action-bus",
+   "test": "lib:semio_framework_action_bus",
+   "kind": "cargo",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 3,
+   "tail": " | test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s |  | ",
+   "notes": [
+    "profiles:3",
+    "rules:1211",
+    "capacity:600"
+   ]
+  }
+ ]
+}

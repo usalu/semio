@@ -1,0 +1,8 @@
+{
+ "target": "test-deflate-encoding",
+ "closureCrates": 21,
+ "workspaceFilesRead": 318,
+ "declared": 367,
+ "undeclared": [],
+ "probeErrors": []
+}

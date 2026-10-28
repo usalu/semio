@@ -11,5 +11,8 @@ const dependencySourceIdentity=(captured=false)=>sha(JSON.stringify([...projecti
 /** 🧬️ Pins the engine named input to the exact schema bytes this implementation evaluated. */
 export const nxEngineNamedInputV1=engineSchema.definitions.NamedInput.const;
 
+/** 🦀️ Pins the engine named input of commands that compile Rust, which also keys the scheduling code that builds Cargo arguments, to the same schema bytes. */
+export const nxEngineNativeNamedInputV1=engineSchema.definitions.NativeNamedInput.const;
+
 /** 🔏️ Refuses the plugin root, its private leaves, schemas or contract owners changed after actual module evaluation. */
 export function nxBuildDependencySourceIdentityV1(){if(dependencySourceIdentity()!==loadedDependencySourceIdentity)throw Error("Loaded private Nx dependency Source changed");return loadedDependencySourceIdentity;}

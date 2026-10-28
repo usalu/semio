@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph:provider-closures:v1",
+  "title": "Script Provider Closure References",
+  "description": "How a command closure names the closures of the script providers it defines: the group name of one provider closure (prefix, port, separator, view), the views a provider closure is published in (each one of the command walk views, with whether its group carries the external packages of the provider's modules) and how the providers project is recognized (its configuration file next to the designation and the project metadata key that names the designation).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "group", "views", "project", "contract"],
+  "properties": {
+    "version": {"const": 1},
+    "group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prefix", "separator"],
+      "properties": {
+        "prefix": {"type": "string", "pattern": "^[a-zA-Z]+:$"},
+        "separator": {"const": ":"}
+      }
+    },
+    "views": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scheduling", "native"],
+      "properties": {
+        "scheduling": {"$ref": "#/definitions/View"},
+        "native": {"$ref": "#/definitions/View"}
+      }
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["basename", "metadata"],
+      "properties": {
+        "basename": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[^/\\\\]+\\.json$"},
+        "metadata": {"type": "string", "pattern": "^[a-z][a-zA-Z]*$"}
+      }
+    },
+    "contract": {"$ref": "#/definitions/Contract"}
+  },
+  "definitions": {
+    "View": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["packages", "contract"],
+      "properties": {
+        "packages": {"type": "boolean"},
+        "contract": {"$ref": "#/definitions/Contract"}
+      }
+    },
+    "Contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": {"type": "string", "minLength": 1, "maxLength": 600},
+        "de": {"type": "string", "minLength": 1, "maxLength": 600}
+      }
+    }
+  }
+}

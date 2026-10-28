@@ -1,0 +1,97 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📥️purpose/📜️script.ts": {
+  "file": "f000",
+  "base": "7839f96fd01ce154f8637a390f0aa17746a3586f147ce457506a81647b66b26c",
+  "new": "01fc10650a928cd669f1a120c00a1a5fd81f71c51df53d61437240e804689118"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📬️task-child/🟦️.ts": {
+  "file": "f001",
+  "base": "14d673a6c443bb27d268d142438069a810b96549e5d489e15b17bc95e1ed3e77",
+  "new": "4ce1fb05c0568058b1051f786e0fb6da6b8838d336dc1fc91a8aa4d771ee1008"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/🟦️.ts": {
+  "file": "f002",
+  "base": "a63c136575dd1831d36b81788bb9a7432ae42c53cf24887f6c903324e773dd33",
+  "new": "834778e0d3deb6c1effbf6b6a16fd7fe1feee21b3ffa0fbd948ccf25ed82a235"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📤️copy/🧪️tests/🟦️.ts": {
+  "file": "f003",
+  "base": "91864eb70de476c57309f58bdb6ed4c319d5a34d929599f8a56ada2bbe74c30e",
+  "new": "8eab5daa03ae451128999486fee3cb2a7e6c1a90921378b9400682c19a1be735"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🧪️tests/🟦️.ts": {
+  "file": "f004",
+  "base": "d840d9d0a333740608c9c4e1b251f210d912c0337034cec990f5307ec949b4f4",
+  "new": "722cba036b9488ec4ecee18193d75afe06050173ef31ca14c4fca59f7d7911da"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🛂️sdk-fences/🟦️.ts": {
+  "file": "f005",
+  "base": "1cd6a1f7a7253b21b2ae799f4cec1f1764d1de8c59f068a2566af27517cc066d",
+  "new": "1695bb21b9eaae2fb93051e5da9d2182c5ee0ec2cbb6b55435cbc3fc6ae4c3c7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🟦️.ts": {
+  "file": "f006",
+  "base": "bb6b36814fca9fb1c2385abc1c9a6083c15c67a5d04067c40b8aa965044520ce",
+  "new": "ce1fccbb6548dce29f734f44feadeab3af76744a30b68378c4825af87c5b1428"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📥️data/🟦️.ts": {
+  "file": "f007",
+  "base": "4a79ceb8d76e4caad873df87e4bf7838c5dd5766185d8c143fa1971da608178a",
+  "new": "df6b1240c5cf06cbcf86ff080176447b433058729b6e2402e7979962d5424b87"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts": {
+  "file": "f008",
+  "base": "1808f2909ef0cee09c6db3ed5ba7135ba1c8dfd6d14d0d4cff4d5b3f7954812b",
+  "new": "1ec54708b3d16ba044bcc03c737f30dd3109f9cbe9cc419c31c64f39481446ec"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🧊️memo/🟦️.ts": {
+  "file": "f009",
+  "base": "2efc0cbd2871ab4f7ed81786df17dc63eee8c3d29be4eebbd1124294218d6e3e",
+  "new": "9a7921b3e40ef380f116585335ef9d783ba8ece31cb7c3469a6e6b5c983ef85a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/🟦️.ts": {
+  "file": "f010",
+  "base": "d2efd164bd5fb7319a44d9ddc6f5be6e7a127afa65dbea7bc051b2fc52188e29",
+  "new": "476d8bb42da44e75359c4ea22a1b48d05ea3c6a8e202e378d8da421e6ecfca4e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts": {
+  "file": "f011",
+  "base": "c9ba29fbb24e3d80c15e217aefaa4292838c9ee0b3db53042467a5940bb529ba",
+  "new": "2beb000a4f28b0f0deea8336fb6a7b2a3d523ffa5272133b81c99652dea8374d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/📜️script.ts": {
+  "file": "f012",
+  "base": "d4e62a041ac5194c71b7210d0df73c710789777bfc6bc04dfcfc7aa5627c394a",
+  "new": "110268b72342d46c0bd6ea0d711cd25388b526f9495a547b65f0e371b751bad0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/🟦️.ts": {
+  "file": "f013",
+  "base": "484e25c9d28fb31f28be9434d2f5faeea643399a791b096230fea3469124f990",
+  "new": "2d0c2c0e9de4f27e0d8885f17adcede9030713a7c09d1579e58afe4b9f9d5ebb"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️negative/🟦️.ts": {
+  "file": "f014",
+  "base": "d58ea6b1dc6c63dac03aeb848d5662f7f71984a997f16f4240980ee599458902",
+  "new": "6beccf87c44287fc607a33721061a96f8f5cf2e30c16ef105f62263ef929c64b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️negative/🧪️tests/🟦️.ts": {
+  "file": "f015",
+  "base": "e0732a7768b558f18cfc6e6cad7ee1dc544d3bd66cfec04f8f03e0801325fb63",
+  "new": "8170600579fb36cfe76e1fe2e130f15cb8e4c13616247581425d96894661e8d5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️workspace/🟦️.ts": {
+  "file": "f016",
+  "base": "a28ea2d0a4f697b4c2f136b3d015392ac67738a68eeaa9b83a255827d92344d9",
+  "new": "037a0cfdece4c415e2a6641403a3c7fee547092986c674b75a96bb70de565ff0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts": {
+  "file": "f017",
+  "base": "b43df95994a4692b390273c6871854282899653e80410a87c137ac8f5e8d8b71",
+  "new": "65c3c1541de10dd495290787621253ccee91d4ef5187bf955d13db69facdb552"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📦️generation/🧪️tests/🟦️.ts": {
+  "file": "f018",
+  "base": "e7321516c513dfd3b254b4f3816d569f8ed2916f4d976d5d2437edc90dcfd5b3",
+  "new": "9215a94bf1e486f1868d236ea83ad5acfa4de212e02bce3bd6552615943d9079"
+ }
+}

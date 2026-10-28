@@ -13,6 +13,8 @@ import fixture from"./../🔣️.json";
 import receiptSchema from"./../../🧬️schema/📜️receipt.json";
 import corpus from"./🔣️.json";
 import schema from"./🧬️schema.json";
+import{privateRepositoryWorkspaceV1}from"../../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 const hash=(value:string)=>createHash("sha256").update(value).digest("hex");
 test("sealed Rust code reader preserves neutral receipt identity and refusals",()=>{
  expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);
@@ -26,7 +28,7 @@ registerBuildTestLawV1("sealed Rust code reader ownership excludes publication a
  const root=process.cwd(),text=await readFile(join(root,corpus.consumer),"utf8"),tree=ts.createSourceFile("history.ts",text,ts.ScriptTarget.Latest,true),owner=tree.statements.find(node=>ts.isImportDeclaration(node)&&node.importClause?.namedBindings?.getText(tree).includes("withRepositoryRustUnitCodeReaderV1"));
  if(!owner||!ts.isImportDeclaration(owner)||!ts.isStringLiteral(owner.moduleSpecifier))throw Error("Actual code-reader consumer required");
  expect(resolve(dirname(join(root,corpus.consumer)),owner.moduleSpecifier.text)).toBe(join(root,corpus.entry));
- let callbacks=0;await expect(withRepositoryRustUnitCodeReaderV1(root,original,control,{},async()=>{callbacks++;})).rejects.toThrow("Closed Rust compiler code receipt required");expect(callbacks).toBe(0);
+ let callbacks=0;await expect(withRepositoryRustUnitCodeReaderV1(repository.root,original,control,{},async()=>{callbacks++;})).rejects.toThrow("Closed Rust compiler code receipt required");expect(callbacks).toBe(0);
  const captured=await captureNxAuthorizerSourcesV1(root,corpus.entry,control.signal),contents=nxAuthorizerCapturedBytesV1(captured),paths=captured.manifest.sources.map(row=>row.path),bytes=[...contents.values()].reduce((n,row)=>n+row.byteLength,0),db=new Database(":memory:");
  try{expect(paths.length).toBeLessThanOrEqual(corpus.maximumFiles);expect(bytes).toBeLessThanOrEqual(corpus.maximumBytes);for(const forbidden of corpus.forbidden){expect(paths).not.toContain(forbidden);expect((db.query("select count(*) n from json_each(?) where value=?").get(JSON.stringify(paths),forbidden)as{n:number}).n).toBe(0);}
  const mode=Object.getOwnPropertyDescriptor(original.capabilities,"buildMode")?.value;if(mode!=="prototype"&&mode!=="release")throw Error("Original build mode required");const sink=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!sink)throw Error("Original ticket artifact sink required");await writeFile(join(sink,"rust-code-reader-source-"+mode+".json"),JSON.stringify({version:1,nativeBuild:false,files:paths.length,bytes,manifest:captured.manifest,digest:captured.digest},null,2)+"\n");

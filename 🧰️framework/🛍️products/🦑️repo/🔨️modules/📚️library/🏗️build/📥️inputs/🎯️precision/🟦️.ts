@@ -19,7 +19,8 @@ export type InputPrecisionReadV1 =
   | {readonly cargo: {readonly packages?: readonly string[]; readonly directories?: readonly string[]}}
   | {readonly script: {readonly source: string}}
   | {readonly dispatch: {readonly source: string; readonly after: readonly string[]}}
-  | {readonly program: {readonly tsconfig: string}}
+  | {readonly program: {readonly tsconfig: string; readonly entries?: readonly string[]}}
+  | {readonly router: {readonly source: string; readonly classes?: string; readonly bases?: readonly string[]}}
   | {readonly owner: "route"}
   | {readonly input: string};
 /** 🧾️ The decision a narrowed or assumed target records in `metadata.semio.inputPrecision`: which rule bounds its inputs and how well the rule is evidenced. */
@@ -39,7 +40,15 @@ export type InputPrecisionHostV1 = {
   readonly cargoSources: (crate: string, named: boolean) => readonly string[] | undefined;
   readonly cargoToolchain: readonly string[];
   readonly cargoIdentity?: (crateDirectory: string) => unknown;
+  readonly crateNames?: () => Promise<ReadonlyMap<string, string>>;
+  readonly sourceRoots?: (question: SourceRootsQuestionV1) => Promise<readonly string[]>;
 };
+/** 🚶️ The question of a repository walk that selects TypeScript files: the files that entry globs name, or that the include globs of a tsconfig select below its excludes. */
+export type SourceRootsQuestionV1 = {readonly mode: "entries"; readonly globs: readonly string[]} | {readonly mode: "include"; readonly include: readonly string[]; readonly exclude: readonly string[]};
+/** 📁️ What a repository walk skips: whole paths (below the workspace root) and directory names; symbolic links are always skipped. */
+export type ManifestWalkSkipV1 = {readonly paths: readonly string[]; readonly names: readonly string[]};
+/** 🌳️ The recipe of one repository walk a derived fact stands for: the crate index of the Cargo manifests, or the TypeScript files a question selects. */
+export type DerivedWalkV1 = {readonly fn: "crate-index"; readonly skip: ManifestWalkSkipV1} | {readonly fn: "source-roots"; readonly question: SourceRootsQuestionV1};
 /** 📤️ What a rule derives: patterns for the Nx globs, named groups to keep (the retained toolchain identity first), exact files for the command-source group, the groups it drops and what could not be resolved. */
 export type InputPrecisionResultV1 = {readonly rule: string; readonly drops: readonly string[]; readonly patterns: readonly string[]; readonly groups: readonly string[]; readonly files: readonly string[]; readonly unresolved: readonly string[]; readonly markers?: readonly unknown[]; readonly reads: readonly {readonly read: string; readonly patterns: number; readonly files: number}[]};
 
@@ -87,7 +96,10 @@ export function inputGlobRegExpV1(pattern: string): RegExp {
 export const globMatchesV1 = (pattern: string, path: string): boolean => inputGlobRegExpV1(pattern).test(path);
 const WHOLE = /^(?:\*\*\/\*|\*\*|\*)$/u;
 const REPOSITORY = /^(?:\*\*\/\*|\*\*)$/u;
-const bare = (pattern: string): string => pattern.replace(/^!?\{(?:workspaceRoot|projectRoot)\}\//u, "").replace(/^(?:\.\/)+/u, "");
+/** 🔤️ The prefixes of an input pattern that name its root and the shapes of a manifest header and a router branch, compiled once instead of once per call. */
+const ROOT_PREFIX_V1 = /^!?\{(?:workspaceRoot|projectRoot)\}\//u, DOT_SLASH_V1 = /^(?:\.\/)+/u, MANIFEST_HEADER_V1 = /^\s*\[([^\]]+)\]\s*$/u;
+const ROUTER_BRANCH_V1 = /^(\s*)if \(segments\[0\] === "([^"]+)"(?: && segments\[1\] === "([^"]+)")?/u;
+const bare = (pattern: string): string => pattern.replace(ROOT_PREFIX_V1, "").replace(DOT_SLASH_V1, "");
 /** 🌐️ Whether a workspace-relative input glob selects every file of the repository. */
 export const globSelectsRepositoryV1 = (pattern: string): boolean => REPOSITORY.test(bare(pattern));
 /** 📹️ The decision record of a rule. */
@@ -133,7 +145,7 @@ export function inputPrecisionTextV1(document: Pick<InputPrecisionDocumentV1, "m
   return (document.messages.texts[key][language] ?? fail(`Input precision message language missing: ${language}`)).replace(/\{(tsconfig|files|derived|reused|seconds)\}/gu, (_, name: keyof ProgramEventV1) => String(event[name]));
 }
 
-/** 🔤️ Splits a script command into its words, honoring single and double quotes. */
+/** 🌀️ Splits a script command into its words, honoring single and double quotes. */
 export function commandTokensV1(command: string): string[] {
   const tokens: string[] = [], pattern = /"([^"]*)"|'([^']*)'|(\S+)/gu;
   for (let match = pattern.exec(command); match; match = pattern.exec(command)) tokens.push(match[1] ?? match[2] ?? match[3]!);
@@ -172,7 +184,7 @@ export function kindPatternsV1(read: {readonly kinds: readonly string[]; readonl
 export function packageNameV1(manifest: string): string | undefined {
   let inside = false;
   for (const line of manifest.split(/\r?\n/u)) {
-    const header = /^\s*\[([^\]]+)\]\s*$/u.exec(line);
+    const header = MANIFEST_HEADER_V1.exec(line);
     if (header) {
       inside = header[1]!.trim() === "package";
       continue;
@@ -188,14 +200,39 @@ const indexes = new WeakMap<object, Map<string, string>>();
 export function crateIndexV1(host: Pick<InputPrecisionHostV1, "readText" | "cargoManifests">): ReadonlyMap<string, string> {
   const known = indexes.get(host);
   if (known) return known;
-  const index = new Map<string, string>();
-  for (const directory of host.cargoManifests()) {
-    if (directory.split("/").some((part) => part.startsWith("."))) continue;
-    const name = packageNameV1(host.readText(directory ? `${directory}/Cargo.toml` : "Cargo.toml") ?? "");
-    if (name && !index.has(name)) index.set(name, directory);
-  }
+  const index = crateNamesV1(host.cargoManifests(), host.readText);
   indexes.set(host, index);
   return index;
+}
+
+/** 📊️ Maps the crate names of the Cargo manifest directories (in the order given, the first directory of a name wins) to their directory; hidden trees never own a crate. */
+export function crateNamesV1(directories: readonly string[], readText: (path: string) => string | undefined): Map<string, string> {
+  const index = new Map<string, string>();
+  for (const directory of directories) {
+    if (directory.split("/").some((part) => part.startsWith("."))) continue;
+    const name = packageNameV1(readText(directory ? `${directory}/Cargo.toml` : "Cargo.toml") ?? "");
+    if (name && !index.has(name)) index.set(name, directory);
+  }
+  return index;
+}
+
+/** 🏗️ Every directory of the repository that holds a Cargo manifest, sorted: symbolic links, the skipped paths and the skipped directory names are not entered. */
+export function cargoManifestDirectoriesV1(list: (directory: string) => readonly {readonly name: string; readonly directory: boolean; readonly file: boolean; readonly link: boolean}[], skip: ManifestWalkSkipV1): string[] {
+  const found: string[] = [], paths = new Set(skip.paths), names = new Set(skip.names), walk = (directory: string): void => {
+    for (const entry of list(directory)) {
+      const path = directory ? `${directory}/${entry.name}` : entry.name;
+      if (entry.link || paths.has(path) || names.has(entry.name)) continue;
+      if (entry.directory) walk(path);
+      else if (entry.file && entry.name === "Cargo.toml") found.push(directory);
+    }
+  };
+  walk("");
+  return found.sort();
+}
+
+/** 🗄️ The crate index of a host: answered by its derived walk when it has one, otherwise by walking in place. */
+export async function crateIndexOfV1(host: Pick<InputPrecisionHostV1, "readText" | "cargoManifests" | "crateNames">): Promise<ReadonlyMap<string, string>> {
+  return host.crateNames ? host.crateNames() : crateIndexV1(host);
 }
 
 /** ⛓️ The sources of the crates in the given directories and every path dependency they compile with: Cargo compiles the test, bench and example targets of the named crates only, never those of their dependencies, and a dependency is compiled without `cfg(test)`. */
@@ -215,9 +252,60 @@ export function crateDirectoryPatternsV1(directories: readonly string[], host: P
 }
 
 /** 🔨️ The sources of the named crates and every path dependency they compile with. */
-export function cratePatternsV1(packages: readonly string[], host: Pick<InputPrecisionHostV1, "readText" | "cargoManifests" | "cargoRoots" | "cargoSources" | "cargoToolchain" | "cargoIdentity">): {patterns: string[]; files: string[]; markers: unknown[]} {
-  const index = crateIndexV1(host);
+export function cratePatternsV1(packages: readonly string[], host: Pick<InputPrecisionHostV1, "readText" | "cargoManifests" | "cargoRoots" | "cargoSources" | "cargoToolchain" | "cargoIdentity">, index: ReadonlyMap<string, string> = crateIndexV1(host)): {patterns: string[]; files: string[]; markers: unknown[]} {
   return crateDirectoryPatternsV1(packages.map((name) => index.get(name) ?? fail(`Unknown Cargo package: ${name}`)), host);
+}
+
+/** 🚏️ The words after the last script token of a command: the inner command of a process-module wrapper (`repo wrapper.ts command … -- repo ./📜️script.ts test-x`) or the whole command of a plain one; `undefined` without a script token. */
+export function innerCommandWordsV1(command: string): readonly string[] | undefined {
+  const tokens = commandTokensV1(command), index = tokens.findLastIndex((token) => /script\.ts$/u.test(token));
+  return index < 0 ? undefined : tokens.slice(index + 1);
+}
+
+/** 🧲️ The index just after the balanced closing bracket that matches the opener at `from - 1`: strings, template literals and comments are skipped; `undefined` when it never closes. */
+function balancedEndV1(source: string, from: number, open: string, close: string): number | undefined {
+  let depth = 1, at = from;
+  for (; at < source.length && depth > 0; at++) {
+    const character = source[at]!;
+    if (character === open) depth++;
+    else if (character === close) depth--;
+    else if (character === "\"" || character === "'" || character === "`") {
+      for (at++; at < source.length && source[at] !== character; at++) if (source[at] === "\\") at++;
+    } else if (character === "/" && source[at + 1] === "/") while (at < source.length && source[at] !== "\n") at++;
+    else if (character === "/" && source[at + 1] === "*") at = source.indexOf("*/", at + 2) + 1 || source.length;
+  }
+  return depth === 0 ? at : undefined;
+}
+
+/** 🪪️ The name of the class a router registers under a command word (`.register("word", Class)`). */
+export function routerClassNameV1(source: string, word: string): string | undefined {
+  return new RegExp(`register\\(\\s*"${word.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}"\\s*,\\s*(\\w+)`, "u").exec(source)?.[1];
+}
+
+/** 📃️ The text of a class declaration, cut at its balanced closing brace. */
+export function routerClassBodyV1(source: string, name: string): string | undefined {
+  const head = new RegExp(`class\\s+${name}\\b[^{]*\\{`, "u").exec(source);
+  const end = head ? balancedEndV1(source, head.index + head[0].length, "{", "}") : undefined;
+  return head && end !== undefined ? source.slice(head.index, end) : undefined;
+}
+
+/** 🌿️ The `if (segments[0] === "word")` branch of a class body: the braces of the branch, or its line when it has none; `undefined` when the body has no such branch. */
+export function routerBranchV1(body: string, word: string): string | undefined {
+  const head = new RegExp(`if\\s*\\(\\s*segments\\[0\\]\\s*===\\s*"${word.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}"[^)]*\\)\\s*(\\{)?`, "u").exec(body);
+  if (!head) return undefined;
+  const end = head[1] ? balancedEndV1(body, head.index + head[0].length, "{", "}") : body.indexOf("\n", head.index);
+  return end === undefined ? undefined : body.slice(head.index, end < 0 ? body.length : end);
+}
+
+/** 🍱️ The text of the top-level `const NAME = [ … ]` arrays of a source that the given text mentions: a router branch names its packages through a shared list. */
+export function routerConstantsV1(source: string, text: string): string {
+  let extra = "";
+  for (const match of source.matchAll(/^(?:export\s+)?const\s+(\w+)\s*(?::[^=\n]+)?=\s*\[/gmu)) {
+    if (!new RegExp(`\\b${match[1]}\\b`, "u").test(text)) continue;
+    const end = balancedEndV1(source, match.index! + match[0].length, "[", "]");
+    if (end !== undefined) extra += `\n${source.slice(match.index!, end)}`;
+  }
+  return extra;
 }
 
 /** 🔖️ What one dispatcher branch names: Cargo packages, repository path literals and TypeScript entry files. */
@@ -227,7 +315,7 @@ export type BranchFactsV1 = {readonly key: string; readonly subject?: string; re
 export function dispatchBranchesV1(source: string): BranchFactsV1[] {
   const lines = source.split("\n"), branches: BranchFactsV1[] = [];
   for (let index = 0; index < lines.length; index++) {
-    const head = /^(\s*)if \(segments\[0\] === "([^"]+)"(?: && segments\[1\] === "([^"]+)")?/u.exec(lines[index]!);
+    const head = ROUTER_BRANCH_V1.exec(lines[index]!);
     if (!head) continue;
     let end = index;
     if (lines[index]!.trimEnd().endsWith("{")) for (end = index + 1; end < lines.length && lines[end] !== `${head[1]}}`; end++);
@@ -345,7 +433,14 @@ export type ProgramHostV1 = {
 };
 
 const PROGRAM_PHASE = "build:input-precision";
-const PROGRAM_REPORT_MS = 5000;
+
+/** 🎟️ Admits the recipe of a derived repository walk against its closed schema. */
+export function readDerivedWalkV1(value: unknown): DerivedWalkV1 {
+  const failures = validateJsonSchemaSubset({$ref: "#/definitions/DerivedWalk"}, value, schema);
+  if (failures.length) fail(`Derived walk refused: ${failures.slice(0, 3).join("; ")}`);
+  return value as DerivedWalkV1;
+}
+const PROGRAM_REPORT_MS = schema.definitions.Limits.const.programReportMilliseconds;
 const programs = new WeakMap<object, Map<string, Promise<{patterns: string[]; files: string[]; roots: string[]}>>>();
 const sameFact = (left: ProgramFactV1["value"], right: ProgramFactV1["value"]): boolean => left === right;
 const readReceipt = (host: ProgramHostV1, key: string, tsconfig: string, chain: ProgramReceiptV1["chain"]): ProgramReceiptV1 | undefined => {
@@ -362,24 +457,9 @@ const readReceipt = (host: ProgramHostV1, key: string, tsconfig: string, chain: 
   return receipt.tsconfig === tsconfig && receipt.compiler === host.compiler && receipt.chain.length === chain.length && receipt.chain.every((row, index) => row.path === chain[index]!.path && sameFact(row.sha256, chain[index]!.sha256)) ? receipt : undefined;
 };
 
-/** ⌨️ The TypeScript program of a tsconfig: the include globs, the import closure of the files they select, the configuration chain and the package manifests that resolution reads. The import analysis is kept in a receipt keyed by tsconfig and compiler, and a file's entry is reused while its content digest and every fact its resolution consulted still hold, so a warm run derives nothing and an edit re-derives only the files it touches. Progress is reported and cancellation honoured per file; a cancelled or failed run writes no receipt. */
-export function programInputsV1(tsconfig: string, host: Pick<InputPrecisionHostV1, "readText" | "exists" | "listDirectory" | "program">): Promise<{patterns: string[]; files: string[]; roots: string[]}> {
-  const key = normalize(tsconfig);
-  let byConfig = programs.get(host);
-  if (!byConfig) programs.set(host, byConfig = new Map());
-  let known = byConfig.get(key);
-  if (!known) {
-    known = deriveProgramV1(key, host);
-    byConfig.set(key, known);
-    known.catch(() => byConfig!.delete(key));
-  }
-  return known;
-}
-
-async function deriveProgramV1(tsconfig: string, host: Pick<InputPrecisionHostV1, "readText" | "exists" | "listDirectory" | "program">): Promise<{patterns: string[]; files: string[]; roots: string[]}> {
-  const program = host.program ?? fail(`TypeScript program analysis missing: ${tsconfig}`);
-  const config = configuration(tsconfig, host), include = config.include ?? [`${config.directory ? `${config.directory}/` : ""}**/*`], exclude = config.exclude ?? [];
-  const isExcluded = excludesV1(exclude), roots = new Set<string>(config.files.filter((file) => host.exists(file)));
+/** 🗳️ The TypeScript files a tsconfig's include globs select: positive globs walked from their literal directory, excludes applied, vendored trees skipped; a pattern without wildcards names one file. */
+export function includeRootsV1(include: readonly string[], exclude: readonly string[], host: Pick<InputPrecisionHostV1, "listDirectory" | "exists">): string[] {
+  const isExcluded = excludesV1(exclude), roots = new Set<string>();
   for (const pattern of include) {
     const stop = pattern.search(/[*?{[]/u), base = stop < 0 ? pattern : pattern.slice(0, pattern.lastIndexOf("/", stop)), pending = [normalize(base)];
     if (stop < 0 && SOURCE.test(pattern) && host.exists(pattern)) roots.add(pattern);
@@ -393,7 +473,54 @@ async function deriveProgramV1(tsconfig: string, host: Pick<InputPrecisionHostV1
       }
     }
   }
-  const chain = unique([...config.chain, tsconfig]).map((path) => ({path, sha256: program.fact("digest", path) as string | null})), receiptKey = JSON.stringify(["input-precision-program", 1, tsconfig, program.compiler]);
+  return sorted([...roots]);
+}
+
+/** 🔭️ The TypeScript source files the entry globs select: positive globs walked from their literal directory, negations applied, hidden and vendored trees skipped; a pattern without wildcards names one file. */
+export function entryFilesV1(globs: readonly string[], host: Pick<InputPrecisionHostV1, "listDirectory" | "exists">): string[] {
+  const strip = (glob: string) => normalize(glob.replace(WORKSPACE, "")), excluded = excludesV1(globs.filter((glob) => glob.startsWith("!")).map((glob) => strip(glob.slice(1)))), found = new Set<string>();
+  for (const pattern of globs.filter((glob) => !glob.startsWith("!")).map(strip)) {
+    const stop = pattern.search(GLOB_CHARACTERS);
+    if (stop < 0) {
+      if (SOURCE.test(pattern) && host.exists(pattern) && !excluded(pattern)) found.add(pattern);
+      continue;
+    }
+    const pending = [normalize(pattern.slice(0, Math.max(0, pattern.lastIndexOf("/", stop))))];
+    while (pending.length) {
+      const directory = pending.pop()!;
+      for (const entry of host.listDirectory(directory)) {
+        const path = directory ? `${directory}/${entry.name}` : entry.name;
+        if (SKIPPED.has(entry.name) || entry.name.startsWith(".") || excluded(path)) continue;
+        if (entry.directory) pending.push(path);
+        else if (SOURCE.test(path) && globMatchesV1(pattern, path)) found.add(path);
+      }
+    }
+  }
+  return sorted([...found]);
+}
+
+/** ⌨️ The TypeScript program of a tsconfig: the include globs, the import closure of the files they select, the configuration chain and the package manifests that resolution reads. The import analysis is kept in a receipt keyed by tsconfig and compiler, and a file's entry is reused while its content digest and every fact its resolution consulted still hold, so a warm run derives nothing and an edit re-derives only the files it touches. Progress is reported and cancellation honoured per file; a cancelled or failed run writes no receipt. */
+export function programInputsV1(tsconfig: string, host: Pick<InputPrecisionHostV1, "readText" | "exists" | "listDirectory" | "program" | "sourceRoots">, entries?: readonly string[]): Promise<{patterns: string[]; files: string[]; roots: string[]}> {
+  const key = entries ? `${normalize(tsconfig)}\0${JSON.stringify(entries)}` : normalize(tsconfig), owner = host.program ?? host;
+  let byConfig = programs.get(owner);
+  if (!byConfig) programs.set(owner, byConfig = new Map());
+  let known = byConfig.get(key);
+  if (!known) {
+    known = deriveProgramV1(normalize(tsconfig), host, entries);
+    byConfig.set(key, known);
+    known.catch(() => byConfig!.delete(key));
+  }
+  return known;
+}
+
+async function deriveProgramV1(tsconfig: string, host: Pick<InputPrecisionHostV1, "readText" | "exists" | "listDirectory" | "program" | "sourceRoots">, entries?: readonly string[]): Promise<{patterns: string[]; files: string[]; roots: string[]}> {
+  const program = host.program ?? fail(`TypeScript program analysis missing: ${tsconfig}`);
+  const config = configuration(tsconfig, host), include = entries ? [] : config.include ?? [`${config.directory ? `${config.directory}/` : ""}**/*`], exclude = entries ? [] : config.exclude ?? [];
+  const isExcluded = excludesV1(exclude), ask = (question: SourceRootsQuestionV1): Promise<readonly string[]> => host.sourceRoots ? host.sourceRoots(question) : Promise.resolve(question.mode === "entries" ? entryFilesV1(question.globs, host) : includeRootsV1(question.include, question.exclude, host));
+  const roots = new Set<string>(entries ? await ask({mode: "entries", globs: entries}) : config.files.filter((file) => host.exists(file)));
+  if (entries && !roots.size) fail(`Program entries select no TypeScript file: ${tsconfig}`);
+  if (include.length) for (const file of await ask({mode: "include", include, exclude})) roots.add(file);
+  const chain = unique([...config.chain, tsconfig]).map((path) => ({path, sha256: program.fact("digest", path) as string | null})), receiptKey = JSON.stringify(["input-precision-program", 1, tsconfig, program.compiler, ...(entries ? [entries] : [])]);
   const prior = readReceipt(program, receiptKey, tsconfig, chain), known = new Map<string, ProgramFactV1["value"]>();
   const answer = (kind: ProgramFactV1["kind"], path: string): ProgramFactV1["value"] => {
     const id = `${kind}\0${path}`;
@@ -507,7 +634,7 @@ export async function deriveInputsV1(document: InputPrecisionDocumentV1, rule: I
     } else if ("cargo" in read) {
       const packages = read.cargo.packages ?? [], directories = read.cargo.directories ?? [];
       if (!packages.length && !directories.length) fail(`Cargo read names no package or directory: ${identity.project}:${identity.target}`);
-      for (const crate of [packages.length ? cratePatternsV1(packages, host) : {patterns: [], files: [], markers: []}, directories.length ? crateDirectoryPatternsV1(directories, host) : {patterns: [], files: [], markers: []}]) {
+      for (const crate of [packages.length ? cratePatternsV1(packages, host, await crateIndexOfV1(host)) : {patterns: [], files: [], markers: []}, directories.length ? crateDirectoryPatternsV1(directories, host) : {patterns: [], files: [], markers: []}]) {
         patterns.push(...crate.patterns);
         files.push(...crate.files);
         markers.push(...crate.markers);
@@ -517,7 +644,7 @@ export async function deriveInputsV1(document: InputPrecisionDocumentV1, rule: I
     } else if ("script" in read) {
       const source = normalize(read.script.source), text = host.readText(source) ?? fail(`Script source missing: ${read.script.source}`), facts = literalFactsV1(text);
       const resolved = resolveLiteralsV1(facts.paths, host, source.split("/").slice(0, -1).join("/")), entries = [source, ...resolved.resolved.filter((path) => SOURCE.test(path))];
-      const crates = facts.crates.length ? cratePatternsV1(facts.crates, host) : {patterns: [], files: [], markers: []}, crateDirs = resolved.resolved.filter((path) => host.exists(`${path}/Cargo.toml`)), directories = crateDirs.length ? crateDirectoryPatternsV1(crateDirs, host) : {patterns: [], files: [], markers: []};
+      const crates = facts.crates.length ? cratePatternsV1(facts.crates, host, await crateIndexOfV1(host)) : {patterns: [], files: [], markers: []}, crateDirs = resolved.resolved.filter((path) => host.exists(`${path}/Cargo.toml`)), directories = crateDirs.length ? crateDirectoryPatternsV1(crateDirs, host) : {patterns: [], files: [], markers: []};
       patterns.push(...crates.patterns, ...directories.patterns);
       markers.push(...crates.markers, ...directories.markers);
       files.push(...crates.files, ...directories.files, ...resolved.resolved.filter((path) => !SOURCE.test(path) && /\.[a-z]+$/u.test(path)), ...(entries.length ? await host.importClosure(entries) : []));
@@ -528,7 +655,7 @@ export async function deriveInputsV1(document: InputPrecisionDocumentV1, rule: I
       if (!read.dispatch.after.every((word, index) => words[index + 1] === word)) fail(`Dispatch routing words differ for ${words.join(" ")}: ${read.dispatch.after.join(" ")}`);
       if (!branches.length) fail(`Dispatch source has no branch for ${words.join(" ")}: ${read.dispatch.source}`);
       const resolved = resolveLiteralsV1(branches.flatMap((branch) => branch.paths), host, source.split("/").slice(0, -1).join("/")), crateDirectories = resolved.resolved.filter((path) => host.exists(`${path}/Cargo.toml`));
-      const crates = unique(branches.flatMap((branch) => branch.crates)), named = crates.length ? cratePatternsV1(crates, host) : {patterns: [], files: [], markers: []}, directories = crateDirectories.length ? crateDirectoryPatternsV1(crateDirectories, host) : {patterns: [], files: [], markers: []};
+      const crates = unique(branches.flatMap((branch) => branch.crates)), named = crates.length ? cratePatternsV1(crates, host, await crateIndexOfV1(host)) : {patterns: [], files: [], markers: []}, directories = crateDirectories.length ? crateDirectoryPatternsV1(crateDirectories, host) : {patterns: [], files: [], markers: []};
       patterns.push(...named.patterns, ...directories.patterns);
       markers.push(...named.markers, ...directories.markers);
       files.push(...named.files, ...directories.files);
@@ -537,11 +664,27 @@ export async function deriveInputsV1(document: InputPrecisionDocumentV1, rule: I
       files.push(...resolved.resolved.filter((path) => !SOURCE.test(path) && /\.[a-z]+$/u.test(path)), ...(entries.length ? await host.importClosure(entries) : []));
       unresolved.push(...resolved.unresolved);
       name = "dispatch";
+    } else if ("router" in read) {
+      const source = normalize(read.router.source), classes = normalize(read.router.classes ?? read.router.source), registrations = host.readText(source) ?? fail(`Router source missing: ${read.router.source}`), text = host.readText(classes) ?? fail(`Router class source missing: ${classes}`);
+      const inner = innerCommandWordsV1(identity.command ?? "") ?? fail(`Router read needs a script command: ${identity.project}:${identity.target}`), word = inner[0] ?? fail(`Router read needs a command word: ${identity.project}:${identity.target}`);
+      const className = routerClassNameV1(registrations, word) ?? fail(`Router source registers no command ${word}: ${read.router.source}`), classBody = routerClassBodyV1(text, className) ?? fail(`Router class ${className} not found in ${classes}`);
+      const branch = inner[1] === undefined ? undefined : routerBranchV1(classBody, inner[1]), body = `${branch ?? classBody}${routerConstantsV1(text, branch ?? classBody)}`, facts = literalFactsV1(body), index = await crateIndexOfV1(host);
+      const named = unique([...facts.crates, ...[...body.matchAll(/"([^"\\\n]+)"/gu)].map((match) => match[1]!).filter((literal) => index.has(literal))]);
+      const bases = unique([source.split("/").slice(0, -1).join("/"), classes.split("/").slice(0, -1).join("/"), ...(read.router.bases ?? [])]), resolutions = bases.map((base) => resolveLiteralsV1(facts.paths, host, base)), found = unique(resolutions.flatMap((row) => row.resolved));
+      const crateDirs = found.filter((path) => host.exists(`${path}/Cargo.toml`)), directories = found.filter((path) => !crateDirs.includes(path) && !/\.[a-z0-9]+$/u.test(path)), entries = found.filter((path) => SOURCE.test(path) && host.exists(path));
+      if (!named.length && !crateDirs.length && /\b(?:testCargo|captureCargo|runCargo|runRepositoryCargoTests)\b/u.test(body)) fail(`Router command ${word} runs Cargo without a literal package: ${identity.project}:${identity.target}`);
+      if (!named.length && !found.length) fail(`Router command ${word} names no package or path: ${identity.project}:${identity.target}`);
+      const crates = named.length ? cratePatternsV1(named, host, index) : {patterns: [], files: [], markers: []}, roots = crateDirs.length ? crateDirectoryPatternsV1(crateDirs, host) : {patterns: [], files: [], markers: []};
+      patterns.push(...crates.patterns, ...roots.patterns, ...directories.map((path) => `${WORKSPACE}${path}/**/*`));
+      markers.push(...crates.markers, ...roots.markers);
+      files.push(...crates.files, ...roots.files, ...found.filter((path) => !SOURCE.test(path) && !directories.includes(path) && !crateDirs.includes(path)), ...(entries.length ? await host.importClosure(entries) : []));
+      unresolved.push(...unique(resolutions.flatMap((row) => row.unresolved)).filter((path) => resolutions.every((row) => row.unresolved.includes(path))));
+      name = `router:${inner.slice(0, 2).join(" ")}`;
     } else if ("program" in read) {
-      const program = await programInputsV1(read.program.tsconfig, host);
+      const program = await programInputsV1(read.program.tsconfig, host, read.program.entries);
       patterns.push(...program.patterns);
       files.push(...program.files);
-      name = `program:${read.program.tsconfig}`;
+      name = `program:${read.program.tsconfig}${read.program.entries ? `[${read.program.entries.length}]` : ""}`;
     } else {
       const route = document.routes.filter((row) => row.words.length <= words.length - 1 && row.words.every((word, index) => words[index + 1] === word)).sort((left, right) => right.words.length - left.words.length)[0] ?? fail(`No owner route for ${identity.project}:${identity.target}`);
       patterns.push(`${WORKSPACE}${route.root}/**/*`);

@@ -200,7 +200,16 @@ fetch_pinned() {
 }
 
 version_at_least() {
-  [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | sed -n '1p')" = "$2" ]
+  awk -v actual="$1" -v required="$2" 'BEGIN {
+    actual_count = split(actual, actual_parts, ".")
+    required_count = split(required, required_parts, ".")
+    count = actual_count > required_count ? actual_count : required_count
+    for (i = 1; i <= count; i++) {
+      if (actual_parts[i] + 0 > required_parts[i] + 0) exit 0
+      if (actual_parts[i] + 0 < required_parts[i] + 0) exit 1
+    }
+    exit 0
+  }'
 }
 
 #endregion 🔖️PinnedDownloads
@@ -256,10 +265,19 @@ linux_package_manager() {
 
 linux_toolchain_packages() {
   case "$1" in
-  apt-get) printf '%s\n' build-essential pkg-config libpango1.0-dev libcairo2-dev fonts-liberation fonts-dejavu-extra uuid-dev curl ca-certificates git unzip xz-utils libicu-dev procps lldb lsof ;;
-  dnf) printf '%s\n' gcc gcc-c++ make pkgconf-pkg-config pango-devel cairo-devel liberation-serif-fonts dejavu-serif-fonts libuuid-devel curl ca-certificates git unzip xz tar libicu procps-ng findutils lldb lsof ;;
-  pacman) printf '%s\n' base-devel pkgconf pango cairo ttf-liberation ttf-dejavu util-linux-libs curl ca-certificates git unzip xz icu procps-ng lldb lsof ;;
-  zypper) printf '%s\n' gcc gcc-c++ make pkg-config pango-devel cairo-devel liberation-fonts dejavu-fonts libuuid-devel curl ca-certificates git unzip xz tar libicu-devel procps lldb python3-lldb lsof ;;
+  apt-get) printf '%s\n' build-essential pkg-config libpango1.0-dev libcairo2-dev fonts-liberation fonts-dejavu-extra uuid-dev curl ca-certificates git unzip xz-utils libicu-dev procps lldb lsof xdg-utils libvulkan1 ;;
+  dnf) printf '%s\n' gcc gcc-c++ make pkgconf-pkg-config pango-devel cairo-devel liberation-serif-fonts dejavu-serif-fonts libuuid-devel curl ca-certificates git unzip xz tar libicu-devel procps-ng findutils lldb lsof xdg-utils vulkan-loader ;;
+  pacman) printf '%s\n' base-devel pkgconf pango cairo ttf-liberation ttf-dejavu util-linux-libs curl ca-certificates git unzip xz icu procps-ng lldb lsof xdg-utils vulkan-icd-loader ;;
+  zypper) printf '%s\n' gcc gcc-c++ make pkg-config pango-devel cairo-devel liberation-fonts dejavu-fonts libuuid-devel curl ca-certificates git unzip xz tar libicu-devel procps lldb python3-lldb lsof xdg-utils libvulkan1 ;;
+  esac
+}
+
+linux_browser_packages() {
+  case "$1" in
+  dnf) printf '%s\n' nss nspr atk at-spi2-atk cups-libs libdrm libxkbcommon libXcomposite libXdamage libXfixes libXrandr mesa-libgbm alsa-lib libX11 libxcb libXext dbus-libs expat glib2 xorg-x11-server-Xvfb ;;
+  pacman) printf '%s\n' nss nspr at-spi2-core libcups libdrm libxkbcommon libxcomposite libxdamage libxfixes libxrandr mesa alsa-lib libx11 libxcb libxext dbus expat glib2 xorg-server-xvfb ;;
+  zypper) printf '%s\n' mozilla-nss mozilla-nspr libatk-1_0-0 libatk-bridge-2_0-0 libcups2 libdrm2 libxkbcommon0 libXcomposite1 libXdamage1 libXfixes3 libXrandr2 libgbm1 libasound2 libX11-6 libxcb1 libXext6 libdbus-1-3 libexpat1 libglib-2_0-0 xvfb-run xorg-x11-server-Xvfb ;;
+  *) return 1 ;;
   esac
 }
 
@@ -320,14 +338,14 @@ ensure_rust_toolchain() {
     row="$(host_pin rustup)" || return 1
     log "Installing rustup $(pin_field "$row" version)…"
     download="$(mktemp -d)"
-    fetch_pinned "$row" "$download/rustup-init" && chmod 755 "$download/rustup-init" && RUSTUP_INIT_SKIP_PATH_CHECK=yes "$download/rustup-init" -y --profile minimal --default-toolchain none || {
+    fetch_pinned "$row" "$download/rustup-init" && chmod 755 "$download/rustup-init" && RUSTUP_INIT_SKIP_PATH_CHECK=yes "$download/rustup-init" -y --no-modify-path --profile minimal --default-toolchain none || {
       rm -rf "$download"
       return 1
     }
     rm -rf "$download"
   fi
   log "Installing the rust-toolchain.toml toolchain…"
-  (cd "$REPO_ROOT" && rustup toolchain install) || return 1
+  (cd "$REPO_ROOT" && rustup toolchain install --no-self-update) || return 1
 }
 
 ensure_node() {
@@ -402,16 +420,24 @@ ensure_dotnet() {
 
 ensure_browser_libraries() {
   [ "$(uname -s)" = Linux ] || return 0
-  local cli="$REPO_ROOT/node_modules/playwright/cli.js"
-  [ -f "$cli" ] || {
-    log "Playwright is not installed; skipping the Chromium system libraries."
-    return 0
+  local manager packages=() package
+  manager="$(linux_package_manager)" || {
+    log "No supported package manager found for the Chromium system libraries."
+    return 1
   }
-  if [ "$(linux_package_manager || true)" != apt-get ]; then
-    log "Playwright installs the Chromium system libraries only through apt-get; install them with your package manager (https://playwright.dev/docs/browsers) before running browser tests."
-    return 0
+  if [ "$manager" = apt-get ]; then
+    local cli="$REPO_ROOT/node_modules/playwright/cli.js"
+    [ -f "$cli" ] || {
+      log "Playwright is not installed; skipping the Chromium system libraries."
+      return 0
+    }
+    run_privileged env "PATH=$PATH" node "$cli" install-deps chromium
+    return $?
   fi
-  run_privileged env "PATH=$PATH" node "$cli" install-deps chromium
+  while IFS= read -r package; do packages+=("$package"); done < <(linux_browser_packages "$manager")
+  [ "${#packages[@]}" -gt 0 ] || return 1
+  log "Installing the Chromium system libraries with $manager: ${packages[*]}"
+  install_linux_packages "$manager" "${packages[@]}"
 }
 #endregion 🔖️NativeToolchain
 

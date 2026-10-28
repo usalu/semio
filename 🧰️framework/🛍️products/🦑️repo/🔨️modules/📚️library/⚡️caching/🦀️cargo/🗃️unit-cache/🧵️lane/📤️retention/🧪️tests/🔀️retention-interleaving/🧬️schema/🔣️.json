@@ -1,0 +1,20 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "schema://repo.cargo/LaneRetentionInterleavingV1",
+ "title": "Totals of the exhaustive sweep of lane retention under concurrency: the rule and its two negative controls",
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["version", "rule", "releaseFirst", "unguarded"],
+ "properties": {
+  "version": { "const": 1 },
+  "rule": { "$ref": "#/definitions/Totals" },
+  "releaseFirst": { "$ref": "#/definitions/Totals" },
+  "unguarded": { "$ref": "#/definitions/Totals" }
+ },
+ "definitions": {
+  "Totals": {
+   "type": "object", "additionalProperties": false, "required": ["configs", "states", "lostStates", "lostFinal", "stuck"],
+   "properties": { "configs": { "type": "integer", "minimum": 1 }, "states": { "type": "integer", "minimum": 1 }, "lostStates": { "type": "integer", "minimum": 0 }, "lostFinal": { "type": "integer", "minimum": 0 }, "stuck": { "type": "integer", "minimum": 0 } }
+  }
+ }
+}

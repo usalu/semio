@@ -302,5 +302,9 @@
    "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0"
   },
   "paddingLines": 900
+ },
+ "registryShape": {
+  "contract": 1,
+  "schemaDigest": "7ac903b3dab98d3172a40fbdc9a21f15a7391ccd15b7d72d8fde47e86f72df4a"
  }
 }

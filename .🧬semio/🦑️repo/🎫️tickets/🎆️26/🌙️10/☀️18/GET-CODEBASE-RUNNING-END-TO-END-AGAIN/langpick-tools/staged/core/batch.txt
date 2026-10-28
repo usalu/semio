@@ -1,0 +1,1 @@
+🧱️ The protocol moves to the framework runtime (`⚙️runtime/🗣️language`, below every module that renders texts), gains its notice rule and every rule as data; Python oracle + cross-runtime law.

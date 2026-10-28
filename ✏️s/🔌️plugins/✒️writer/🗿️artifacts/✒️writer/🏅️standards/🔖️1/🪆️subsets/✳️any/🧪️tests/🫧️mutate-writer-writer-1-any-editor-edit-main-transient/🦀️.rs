@@ -14,11 +14,11 @@ use semio_repo_test_host::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-engagement-input" => Vector {
-            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/💬️set-engagement/✅️set/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/💬️set-engagement/✅️set/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/💬️set-engagement/✅️set/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/💬️set-engagement/✅️set/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/💬️set-engagement/✅️set/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/💬️engagement/✅️set/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/💬️engagement/✅️set/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/💬️engagement/✅️set/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/💬️engagement/✅️set/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/💬️engagement/✅️set/🎯️outcome/🔣️.json"),
             observable: true,
         },
         "set-editor-selection" => Vector {
@@ -30,11 +30,11 @@ fn vector(kind: &str) -> Result<Vector, String> {
             observable: true,
         },
         "set-lint-generation" => Vector {
-            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/🔍️set-lint-generation/✅️set/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/🔍️set-lint-generation/✅️set/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/🔍️set-lint-generation/✅️set/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/🔍️set-lint-generation/✅️set/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/🔍️set-lint-generation/✅️set/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/🔍️lint-gen/✅️set/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/🔍️lint-gen/✅️set/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/🔍️lint-gen/✅️set/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/🔍️lint-gen/✅️set/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/🔍️lint-gen/✅️set/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),

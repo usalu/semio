@@ -71,6 +71,14 @@
         ]
       }
     },
+    "RetentionPolicy": {
+      "const": {
+        "retainedPrograms": 2,
+        "maximumRetainedPrograms": 8,
+        "maximumHeapBytes": 2147483648,
+        "idleMilliseconds": 120000
+      }
+    },
     "CompilerEnvironment": {
       "const": {
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",

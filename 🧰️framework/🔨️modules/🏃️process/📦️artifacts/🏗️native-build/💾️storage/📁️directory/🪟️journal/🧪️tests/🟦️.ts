@@ -6,7 +6,7 @@ import {tmpdir} from "node:os";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import {activateNativeDirectoryV1,allocateNativeDirectoryV1,deactivateNativeDirectoryV1,exchangeNativeDirectoriesV1,nativeDirectoryProtocolV1,nativeDirectorySwapPendingV1,observeNativeDirectoryIdentityV1,observeNativeDirectoryStateV1,recoverNativeDirectoryV1,type NativeDirectoryIdentityV1} from "../../🟦️.ts";
-import {createNativeDirectoryJournaledPortV1,nativeDirectorySwapIntentBytesV1,readNativeDirectorySwapIntentV1} from "../🟦️.ts";
+import {createNativeDirectoryJournaledPortV1,moveNativeDirectoryWithRetryV1,nativeDirectorySwapIntentBytesV1,readNativeDirectorySwapIntentV1} from "../🟦️.ts";
 import type {NativeWindowsHostPortV1} from "../../🪟️host/🟦️.ts";
 
 const protocol=nativeDirectoryProtocolV1();
@@ -115,7 +115,7 @@ test("a crash before or after any host call is recovered by the next opener to t
 test("a refused rename rolls back, or leaves the receipt for recovery once the first rename is half-way",()=>{
  const base=scratch();try{
   for(const row of fixture.failures){
-   const p=partition(base,row.id),{host,log}=simulatedHost({failMoves:[row.call],error:row.error}),port=createNativeDirectoryJournaledPortV1(host);
+   const p=partition(base,row.id),{host,log}=simulatedHost({failMoves:row.call===1&&[5,32].includes(row.error)?Array.from({length:protocol.swap.retry.attempts},(_,index)=>index+1):[row.call],error:row.error}),port=createNativeDirectoryJournaledPortV1(host);
    let failure:Error|undefined;try{port.swap(join(p.directory,"m"),join(p.directory,"v"));}catch(error){failure=error as Error;}
    expect(failure?.message,row.id).toContain(protocol.refusals.windowsRename);expect(failure?.message,row.id).toContain(row.message);expect(failure!.message.includes(protocol.refusals.windowsOpenHandle),row.id).toBe(row.hint);
    if(row.restores){expect(names(p.directory),row.id).toEqual(["m","v"]);expect(holder(p.directory,p.placeholder,p.volume),row.id).toEqual({m:"placeholder",v:"volume"});expect(port.pending(p.directory),row.id).toBe(false);}
@@ -168,5 +168,20 @@ test("exchangeNativeDirectoriesV1 verifies the swap through the journaled port a
   expect(after.first).toEqual(p.volume);expect(after.second).toEqual(p.placeholder);expect(log.at(-1)).toBe("flush:p");expect(lstatSync(join(p.directory,"m")).isDirectory()).toBe(true);
   const lying=createNativeDirectoryJournaledPortV1(simulatedHost().host),p2=partition(base,"lying");
   expect(()=>exchangeNativeDirectoriesV1(join(p2.directory,"m"),join(p2.directory,"v"),{...lying,swap:()=>{}})).toThrow("Ambiguous directory exchange");
+ }finally{rmSync(base,{recursive:true,force:true});}
+});
+
+test("a sharing violation on the first rename is retried with a bounded backoff, any other error is not",()=>{
+ const base=scratch();try{
+  const retry=protocol.swap.retry;
+  for(const error of[32,5]){
+   const p=partition(base,"retry-"+error),{host}=simulatedHost({failMoves:[1,2],error}),slept:number[]=[];
+   const result=moveNativeDirectoryWithRetryV1(host,join(p.directory,"m"),join(p.directory,protocol.swap.temporary),ms=>slept.push(ms));
+   expect(result.ok,String(error)).toBe(true);expect(slept).toEqual([retry.backoffMilliseconds,retry.backoffMilliseconds*2]);
+  }
+  const stuck=partition(base,"stuck"),{host:always}=simulatedHost({failMoves:Array.from({length:20},(_,index)=>index+1),error:32}),sleeps:number[]=[];
+  expect(moveNativeDirectoryWithRetryV1(always,join(stuck.directory,"m"),join(stuck.directory,protocol.swap.temporary),ms=>sleeps.push(ms))).toEqual({ok:false,error:32});expect(sleeps.length).toBe(retry.attempts-1);
+  const absent=partition(base,"absent"),{host:missing}=simulatedHost({failMoves:[1],error:2}),none:number[]=[];
+  expect(moveNativeDirectoryWithRetryV1(missing,join(absent.directory,"m"),join(absent.directory,protocol.swap.temporary),ms=>none.push(ms)).ok).toBe(false);expect(none).toEqual([]);
  }finally{rmSync(base,{recursive:true,force:true});}
 });

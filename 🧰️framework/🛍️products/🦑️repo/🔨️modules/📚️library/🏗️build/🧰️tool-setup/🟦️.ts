@@ -2,7 +2,7 @@ import {existsSync, realpathSync} from "node:fs";
 import {homedir} from "node:os";
 import {delimiter, dirname, join} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {resolveLanguageV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import type {NativeToolV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
 import {pythonInterpreterDirectoryV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type: "json"};
@@ -29,6 +29,8 @@ export type ToolSetupKindV1 =
   | Readonly<{kind: "native"; tool: NativeToolV1}>
   | Readonly<{kind: "python"; interpreter: string}>
   | Readonly<{kind: "script"; script: string; prepare: readonly string[]; verify?: readonly string[]}>;
+/** 🔥️ One preparation of the table that is not a pinned tool. */
+export type ToolStepV1 = (typeof document.steps)[number];
 /** 🏓️ One row of the table. */
 export type ToolRowV1 = Omit<(typeof document.tools)[number], "pin" | "locate" | "setup"> & Readonly<{pin: ToolPinV1; locate: readonly ToolLocateV1[]; setup: ToolSetupKindV1}>;
 /** 🧾️ The authored table of every pinned tool: pins as pointers, probes, locations and provisioners. */
@@ -249,6 +251,44 @@ export async function setupToolsV1(rows: readonly ToolRowV1[], context: ToolCont
     reports.push(after);
   }
   return Object.freeze(reports);
+}
+
+/** 🪜️ The steps of the table that apply to a platform, in table order. */
+export function toolStepsV1(platform: NodeJS.Platform): readonly ToolStepV1[] {
+  return document.steps.filter(step => (step.platforms as readonly string[]).includes(platform));
+}
+
+/** 🔥️ What preparing one step needs from the machine: the preparer of its kind, which may take as long as the step allows. */
+export type ToolStepRunnerV1 = (step: ToolStepV1, signal: AbortSignal) => Promise<void>;
+
+/** 🌡️ Prepares the steps one after the other and says so in the resolved language; a cancelled signal stops between steps and inside a step, an optional step that fails is reported and the setup goes on, a required one fails the setup. */
+export async function warmToolStepsV1(steps: readonly ToolStepV1[], run: ToolStepRunnerV1, signal: AbortSignal, log: (line: string) => void, environment: Readonly<Record<string, string | undefined>> = process.env): Promise<readonly Readonly<{id: string; status: "ready" | "failed"; message?: string}>[]> {
+  const results: Readonly<{id: string; status: "ready" | "failed"; message?: string}>[] = [];
+  for (const step of steps) {
+    signal.throwIfAborted();
+    log(toolSetupMessageV1("warm", {step: step.id, summary: toolStepSummaryV1(step, environment)}, environment));
+    try {
+      await run(step, AbortSignal.any([signal, AbortSignal.timeout(step.timeoutSeconds * 1000)]));
+      log(toolSetupMessageV1("warmed", {step: step.id}, environment));
+      results.push(Object.freeze({id: step.id, status: "ready" as const}));
+    } catch (error) {
+      signal.throwIfAborted();
+      if (!step.optional) throw error;
+      const message = toolSetupMessageV1("warmFailed", {step: step.id, reason: String((error as Error)?.message ?? error).split("\n")[0]!.slice(0, 300)}, environment);
+      log(message);
+      results.push(Object.freeze({id: step.id, status: "failed" as const, message}));
+    }
+  }
+  return Object.freeze(results);
+}
+
+/** 🏷️ The summary of a step in the resolved language, or in every language when none resolves. */
+export function toolStepSummaryV1(step: ToolStepV1, environment: Readonly<Record<string, string | undefined>> = process.env): string {
+  try {
+    return step.summary[resolveLanguageV1(document.messages.languages, [], environment, () => []).language as "en" | "de"];
+  } catch {
+    return document.messages.languages.map(language => step.summary[language as "en" | "de"]).join(" / ");
+  }
 }
 
 /** 🏠️ The default home directory of a context. */

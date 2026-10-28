@@ -1,9 +1,10 @@
-import {existsSync,lstatSync,statSync,statfsSync} from "node:fs";
+import {existsSync,lstatSync,statSync} from "node:fs";
 import {dirname,join} from "node:path";
 import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import type {PartitionFactsV1} from "../../🟦️.ts";
 import {readJsonFileV1,type DoctorPortsV1} from "../../🔌️ports/🟦️.ts";
 import type {DoctorProbeV1} from "../📋️contract/🟦️.ts";
+import {nativeFreeSpaceSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 const BACKING="fixed.dmg",MOUNT="m",PUBLICATION=".publication";
 const entry=(path:string)=>{try{return lstatSync(path);}catch{return undefined;}};
@@ -19,7 +20,7 @@ function partition(ports:DoctorPortsV1,id:string,directory:string):PartitionFact
  if(directoryHost)state=inner?.isDirectory()?"directory":"absent";
  else if(inner?.isDirectory()&&inner.dev!==outer.dev){
   state="mounted";
-  try{const row=statfsSync(mount);capacityBytes=row.blocks*row.bsize;freeBytes=row.bavail*row.bsize;}catch{state="detached";}
+  const space=nativeFreeSpaceSyncV1(mount);if(space){capacityBytes=space.totalBytes??null;freeBytes=space.availableBytes;}else state="detached";
  }else state=backingEntry?"detached":"absent";
  const residue=["intent","receipt"].find(name=>existsSync(join(directory,PUBLICATION,name+".json"))) as "intent"|"receipt"|undefined;
  let age:number|null=null;
@@ -34,7 +35,7 @@ export const storageProbeV1:DoctorProbeV1=Object.freeze({
   const rows=Object.entries(budget.partitions).map(([id,row])=>partition(ports,id,join(ports.root,...row.directory.split("/"))));
   let host=join(ports.root,".cache");while(!existsSync(host)&&dirname(host)!==host)host=dirname(host);
   let hostFreeBytes:number|null=null,hostTotalBytes:number|null=null;
-  try{const row=statfsSync(host);hostFreeBytes=row.bavail*row.bsize;hostTotalBytes=row.blocks*row.bsize;}catch{}
+  const hostSpace=nativeFreeSpaceSyncV1(host);hostFreeBytes=hostSpace?.availableBytes??null;hostTotalBytes=hostSpace?.totalBytes??null;
   return {sections:{storage:{hostFreeBytes,hostTotalBytes,partitions:rows}}};
  },
 });

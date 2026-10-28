@@ -1,0 +1,28 @@
+{
+ "label": "g1-workspace-go2",
+ "target": "@semio-tech/repo-workspace-go:test",
+ "started": "18:41:31",
+ "wall_s": 198.0,
+ "peak_tree_mb": 3509,
+ "peak_processes": 6,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "0"
+  ],
+  "inferring": [
+   "0"
+  ],
+  "published": [
+   "573",
+   "1",
+   "54"
+  ],
+  "processes": [
+   "2",
+   "2 internal"
+  ]
+ }
+}

@@ -185,3 +185,22 @@ case ":$PATH:" in
 *":$destination:"*) ;;
 *) printf '[semio] Add to PATH: %s\n[semio] Zum PATH hinzufügen: %s\n' "$destination" "$destination" >&2 ;;
 esac
+physical() {
+  local path="$1" target
+  while [ -L "$path" ]; do
+    target="$(readlink "$path")"
+    case "$target" in
+    /*) path="$target" ;;
+    *) path="$(dirname "$path")/$target" ;;
+    esac
+  done
+  printf '%s/%s' "$(cd "$(dirname "$path")" && pwd -P)" "$(basename "$path")"
+}
+
+installed="$(physical "$destination/repo")"
+IFS=: read -r -a path_entries <<<"$PATH"
+for entry in "${path_entries[@]}"; do
+  [ -n "$entry" ] && [ -x "$entry/repo" ] || continue
+  [ "$(physical "$entry/repo")" = "$installed" ] && continue
+  printf '[semio] Another repo on PATH shadows or duplicates the launcher: %s/repo. Keep one copy: ln -sf "%s" "%s/repo"\n[semio] Ein anderes repo im PATH verdeckt oder dupliziert den Launcher: %s/repo. Nur eine Kopie behalten: ln -sf "%s" "%s/repo"\n' "$entry" "$installed" "$entry" "$entry" "$installed" "$entry" >&2
+done

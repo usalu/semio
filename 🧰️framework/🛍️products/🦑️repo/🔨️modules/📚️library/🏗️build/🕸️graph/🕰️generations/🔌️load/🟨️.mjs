@@ -1,8 +1,11 @@
 import{createHash}from"node:crypto";
+import{join}from"node:path";
+import{graphQueueRequestedAtV1,graphQueueYieldsV1,yieldGraphQueueV1}from"../🛌️yield/🟨️.mjs";
 import{GENERATION_POLICY_V1,canonicalJsonV1,compareCodePointsV1,createGenerationStoreV1,rowKeyV1}from"../🟨️.mjs";
 import{createGraphPhaseClockV1}from"../../⏱️phases/🟨️.mjs";
 import{decodeVerifiedScopeV1}from"../🔭️coverage/🟨️.mjs";
 import{readPinnedGenerationV1}from"../🧷️pin/🟨️.mjs";
+import{CUSTODY_POLICY_V1}from"../🔐️custody/🟨️.mjs";
 
 /** 🗣️ The bilingual texts of the graph generation; the schema file declares the same table and a law keeps both equal. */
 export const GENERATION_MESSAGES_V1=Object.freeze({
@@ -28,6 +31,8 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   reasonData:"the declared data file {path} changed",
   reasonAnalysis:"the source analysis of {path} changed",
   reasonFact:"the recorded {kind} fact of {path} changed",
+  reasonDerived:"the derived result of {path} changed",
+  cutoff:"graph: {questions} derived results asked again after {rows} stale facts: {held} unchanged, {changed} changed",
   reasonMembership:"the workspace file {path} was {change}",
   reasonMore:"graph: {count} more stale inputs are not listed",
   withheldDependency:"graph: {project} is withheld: {source} depends on projects that this graph snapshot does not contain ({target}), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of {project}",
@@ -35,18 +40,19 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   changeAdded:"added",
   changeRemoved:"removed",
   changeChanged:"changed",
+  merged:"graph: generation {generation} published, {computed} projects refreshed in {seconds} s and merged onto the generation a peer published meanwhile ({theirs} projects of peers kept)",
  }),
  de:Object.freeze({
   current:"Graph: Generation {generation} wird ohne Prüfung geliefert (Graph-Richtlinie current)",
   verified:"Graph: Generation {generation} geprüft, {checked} Fakten kontrolliert",
   waiting:"Graph: wartet auf den Graph-Aufbau eines anderen Prozesses ({seconds} s in der Warteschlange, Generation {generation} war beim Einreihen die neueste)",
   covered:"Graph: Generation {generation} wurde von einem anderen Prozess nach dem Beginn dieses Befehls versiegelt und deckt ihn bereits ab, nichts wird erneut geprüft",
-  pinned:"Graph: die vom aufrufenden Build angeheftete Generation {generation} bedient diesen Befehl ({count} Projekte), ohne Warteschlange und ohne Prüfung des Arbeitsbaums",
+  pinned:"Graph: die vom aufrufenden Build gepinnte Generation {generation} bedient diesen Befehl ({count} Projekte), ohne Warteschlange und ohne Prüfung des Arbeitsbaums",
   building:"Graph: {dirty} Projekte werden erneuert (Generation {generation})",
   published:"Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert",
   indexed:"Graph: Faktenindex der Generation {generation}: {rows} Fakten von {owners} Projekten, {expanded} MB entpackt ({percent} % der Grenze von {limit} MB), {packed} MB gepackt",
   swept:"Graph: {removed} überholte Beobachtungsblöcke entfernt ({megabytes} MB, {headers} Aufzeichnungen behalten ihre Blöcke)",
-  closure:"Graph: {count} Projekte der Hülle geprüft, kein weiteres Projekt gelesen",
+  closure:"Graph: {count} Projekte des Abschlusses geprüft, kein weiteres Projekt gelesen",
   cold:"Graph: keine brauchbare Generation ({reason}), die erste wird aufgebaut",
   stale:"Graph: Generation {generation} stammt von einer anderen Implementierung und wird geliefert (Graph-Richtlinie current)",
   planned:"Graph: {count} Projekte von einem beendeten Kindprozess geplant",
@@ -58,6 +64,8 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   reasonData:"die deklarierte Datendatei {path} hat sich geändert",
   reasonAnalysis:"die Quellanalyse von {path} hat sich geändert",
   reasonFact:"der aufgezeichnete Fakt {kind} von {path} hat sich geändert",
+  reasonDerived:"das abgeleitete Ergebnis von {path} hat sich geändert",
+  cutoff:"Graph: {questions} abgeleitete Ergebnisse nach {rows} veralteten Fakten erneut abgefragt: {held} unverändert, {changed} verändert",
   reasonMembership:"die Arbeitsbereichsdatei {path} wurde {change}",
   reasonMore:"Graph: {count} weitere veraltete Eingaben werden nicht aufgelistet",
   withheldDependency:"Graph: {project} wird zurückgehalten: {source} hängt von Projekten ab, die dieser Graph-Schnappschuss nicht enthält ({target}); sie wurden während des Graph-Aufbaus angelegt oder entfernt; den Befehl erneut ausführen, um sie aufzunehmen, oder sie aus den nativen Quellen von {project} entfernen",
@@ -65,10 +73,11 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   changeAdded:"hinzugefügt",
   changeRemoved:"entfernt",
   changeChanged:"geändert",
+  merged:"Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert und auf die Generation eines anderen Prozesses zusammengeführt ({theirs} Projekte anderer Prozesse übernommen)",
  }),
 });
 
-/** 🗣️ Renders one message in the language the caller resolved with the shared resolver. */
+/** 💬️ Renders one message in the language the caller resolved with the shared resolver. */
 export function renderGenerationMessageV1(key,fields,language){
  const template=GENERATION_MESSAGES_V1[language]?.[key];
  if(template===undefined)throw Error("Closed generation message required: "+key);
@@ -78,17 +87,17 @@ export function renderGenerationMessageV1(key,fields,language){
 /** 🚧️ The fields of the message that words one withheld project: the project, its declaring source, the projects it waits for and the start of the digest of the observed bytes. */
 function withheldFieldsV1(row){return{project:row.project??row.root,source:row.source,target:row.missing?.join(", ")??"",sha:row.sha256.slice(0,12)};}
 
-/** 🚧️ Words one withheld project in the language of the caller: the projects a test project waits for, or the source that does not parse. */
+/** 🕸️ Words one withheld project in the language of the caller: the projects a test project waits for, or the source that does not parse. */
 export function describeUnavailableProjectV1(row,language){return renderGenerationMessageV1(row.missing?"withheldDependency":"withheldSource",withheldFieldsV1(row),language);}
 
 /**
- * 🚧️ Withholds from one graph snapshot every test project that depends on a project the snapshot does not hold: its row (declaring file from `configs`, digest of that file from `digest`, English reason, the missing names) joins `unavailable` under the project root and the project leaves `projects`.
+ * 🌐️ Withholds from one graph snapshot every test project that depends on a project the snapshot does not hold: its row (declaring file from `configs`, digest of that file from `digest`, English reason, the missing names) joins `unavailable` under the project root and the project leaves `projects`.
  * Test inference reads project names from the live disk while the inventory is the snapshot of one run, so a project created or removed meanwhile is a dependency "not yet in this generation": only the test project waits and the next run finds the project. Returns the names withheld.
  */
 export function withholdDanglingTestProjectsV1({projects,configs,unavailable,dangling,digest}){
  for(const{source,root,missing}of dangling){
   const file=configs[source]??root;
-  unavailable.set(root,{root,project:source,source:file,sha256:digest(file),reason:renderGenerationMessageV1("withheldDependency",{project:source,source:file,target:missing.join(", ")},"en").slice(0,2048),missing:[...missing]});
+  unavailable.set(root,{root,project:source,source:file,sha256:digest(file),reason:renderGenerationMessageV1("withheldDependency",{project:source,source:file,target:missing.join(", ")},"en").slice(0,GENERATION_POLICY_V1.withheldReasonCharacters),missing:[...missing]});
   delete projects[source];
  }
  return dangling.map(row=>row.source);
@@ -126,8 +135,19 @@ export function implementationDigestV1(rows){
  return createHash("sha256").update(canonicalJsonV1(rows.map(row=>[row.kind,row.path,row.kind==="stamp"?row.fact:row.fact.sha256]).sort((a,b)=>compareCodePointsV1(a[1],b[1])||compareCodePointsV1(String(a[2]),String(b[2]))))).digest("hex");
 }
 
+/** 🪆️ The tasks an orchestrating target launches as nested runs (`metadata.semio.execution` of kind `orchestration`): the nested runs read the generation the build pins, so a slice needs their closure too. */
+const orchestrationChildrenV1=operation=>{const execution=operation?.metadata?.semio?.execution;return execution?.kind==="orchestration"&&Array.isArray(execution.children)?execution.children.map(child=>({project:child.project,target:child.target})):[];};
+
+/** 🪶️ The part of a fragment that {@link sliceClosureV1} reads: the targets of its edges, per target the input references and `projects` rows of its inputs, its `dependsOn` and its declared orchestration children, and the same of its named input groups. A closure of hundreds of projects keeps this instead of every parsed node while it is computed. */
+export function sliceViewV1(fragment){
+ const reads=inputs=>(Array.isArray(inputs)?inputs:[]).flatMap(input=>typeof input==="string"?input.startsWith("{")||input.startsWith("!")?[]:[input]:input&&typeof input==="object"&&(typeof input.input==="string"||input.projects!==undefined)?[Object.fromEntries(["input","projects","dependencies"].filter(key=>input[key]!==undefined).map(key=>[key,input[key]]))]:[]);
+ const targets={},named=fragment.node?.namedInputs;
+ for(const[name,operation]of Object.entries(fragment.node?.targets??{})){const children=orchestrationChildrenV1(operation);targets[name]={inputs:reads(operation?.inputs),dependsOn:operation?.dependsOn,...(children.length?{metadata:{semio:{execution:{kind:"orchestration",children}}}}:{})};}
+ return{edges:fragment.edges.map(edge=>({target:edge.target})),node:named&&typeof named==="object"?{targets,namedInputs:Object.fromEntries(Object.entries(named).map(([group,inputs])=>[group,reads(inputs)]))}:{targets}};
+}
+
 /**
- * 🍰️ The owners a selected scope needs, as a fixpoint over the generation: every admitted owner admits the owners it imports (its dependency edges, transitively); only the active targets follow the owners their `inputs` name as `projects` and their `dependsOn` (`^target` over the dependency edges, `project:target`, `target`, objects with `projects` and `dependencies`, `*` for the active target only). Catalog provider owners join when an active owner lies below one of their consumer roots.
+ * 🍰️ The owners a selected scope needs, as a fixpoint over the generation: every admitted owner admits the owners it imports (its dependency edges, transitively); only the active targets follow the owners their `inputs` name as `projects`, through their named input groups too (`group`, `^group` over the dependency edges, the group a `projects` row names on that owner), their `dependsOn` (`^target` over the dependency edges, `project:target`, `target`, objects with `projects` and `dependencies`, `*` for the active target only) and their declared orchestration children (a nested run is served from the generation the outer build pins, so its tasks belong to the slice). Catalog provider owners join when an active owner lies below one of their consumer roots.
  * `owners` maps every owner name to its root, `external` names the external nodes; `fragment(name)` yields `{edges, node}`. A task, a root or an edge to a name that is neither an owner nor an external node refuses with `GENERATION_UNKNOWN_OWNER`: a slice is never silently incomplete.
  */
 export async function sliceClosureV1({owners,fragment,selection,roots=[],providers=[],external=[]}){
@@ -143,11 +163,16 @@ export async function sliceClosureV1({owners,fragment,selection,roots=[],provide
   if(optional&&!(await get(name)).node?.targets?.[target])return;
   const set=active.get(name)??new Set();if(!set.has(target)){set.add(target);active.set(name,set);queue.push([name,target]);}
  };
+ const groups=new Set(),imported=async name=>[...new Set((await get(name)).edges.map(edge=>edge.target))].filter(value=>known.has(value));
+ const reach=async(name,inputs)=>{for(const input of Array.isArray(inputs)?inputs:[]){
+  if(typeof input==="string"){const group=input.startsWith("^")?input.slice(1):input;for(const owner of input.startsWith("^")?await imported(name):[name]){const key=owner+"\0"+group,values=(await get(owner)).node?.namedInputs?.[group];if(!Array.isArray(values)||groups.has(key))continue;groups.add(key);await reach(owner,values);}}
+  else if(input&&typeof input==="object"&&(typeof input.input==="string"||input.projects!==undefined))for(const owner of input.dependencies===true?await imported(name):input.projects===undefined?[name]:typeof input.projects==="string"?[input.projects]:Array.isArray(input.projects)?input.projects:[]){if(!known.has(owner))continue;await admit(owner);if(typeof input.input==="string")await reach(owner,[input.input]);}
+ }};
  if(selection.kind==="tasks")for(const row of selection.tasks)await task(row.project,row.target,false);else{for(const name of roots)await admit(name);for(const name of roots)for(const target of selection.targets??[])await task(name,target,true);}
  while(queue.length){
   const[name,target]=queue.shift(),row=await get(name),operation=row.node?.targets?.[target];if(!operation)continue;
   const dependencies=[...new Set(row.edges.map(edge=>edge.target))].filter(value=>known.has(value));
-  for(const input of Array.isArray(operation.inputs)?operation.inputs:[])if(input&&typeof input==='object'&&input.projects!==undefined)for(const value of typeof input.projects==='string'?[input.projects]:Array.isArray(input.projects)?input.projects:[])if(known.has(value))await admit(value);
+  await reach(name,operation.inputs);
   for(const dependency of Array.isArray(operation.dependsOn)?operation.dependsOn:[]){
    if(typeof dependency==="string"){
     if(dependency.startsWith("^"))for(const value of dependencies)await task(value,dependency.slice(1),true);
@@ -158,6 +183,7 @@ export async function sliceClosureV1({owners,fragment,selection,roots=[],provide
     for(const value of projects)await task(value,dependency.target,dependency.dependencies===true);
    }
   }
+  for(const child of orchestrationChildrenV1(operation))await task(child.project,child.target,false);
  }
  const inside=(root,path)=>root==="."||path===root||path.startsWith(root+"/");
  for(const provider of providers){
@@ -171,6 +197,9 @@ export async function sliceClosureV1({owners,fragment,selection,roots=[],provide
 /** 🪦️ The previous owners a build still knows: an owner whose config was removed is dropped by the generation, so it must neither stay a kept stub of the inference (its edges would be refreshed for an owner that no longer exists) nor a member of the graph context. */
 export function survivingStubsV1(stubs,removed){const gone=new Set(removed);return Object.fromEntries(Object.entries(stubs).filter(([name])=>!gone.has(name)));}
 
+/** 🔢️ The edges of one owner in the order of their canonical text, so the fragment of an owner does not depend on the order in which its files were visited (a discovery of all owners and of some of them publish the same bytes). */
+function orderedEdgesV1(edges){return edges.map(edge=>[canonicalJsonV1(edge),edge]).sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0).map(row=>row[1]);}
+
 /**
  * 🧩️ Shapes what one partial inference produced into the compute result of the store: every owner carries the facts of its own inference record plus the captured facts below its roots, edges go to their source owner, facts nobody consumed belong to the environment.
  * `workspaceRoot` makes row paths comparable (rows carry absolute paths); the root project never claims facts by path.
@@ -181,15 +210,15 @@ export function shapeComputeResultV1({workspaceRoot,part,stubs,separator="/",imp
  const prefix=root=>root==="."?undefined:workspaceRoot+separator+root.split("/").join(separator)+separator,prefixes=roots=>roots.filter(Boolean).map(prefix).filter(Boolean);
  const claimed=new Set(),owners=[],ordered=part.rows.map((row,at)=>[row.path,at]).sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:a[1]-b[1]);
  const under=entry=>{let low=0,high=ordered.length;while(low<high){const middle=(low+high)>>>1;if(ordered[middle][0]<entry)low=middle+1;else high=middle;}const found=[];for(;low<ordered.length&&ordered[low][0].startsWith(entry);low++)found.push(ordered[low][1]);return found;};
- const claim=(base,roots)=>{
-  const keys=new Set(base.map(rowKeyV1)),list=prefixes(roots);let rows=base;
-  if(list.length)for(const at of[...new Set(list.flatMap(under))].sort((a,b)=>a-b)){const row=part.rows[at],key=rowKeyV1(row);if(!keys.has(key)){keys.add(key);if(rows===base)rows=[...base];rows.push(row);}}
-  for(const key of keys)claimed.add(key);return rows;
+ const claimedRows=new WeakSet(),claimedLists=new WeakSet(),claim=(base,roots)=>{
+  const list=prefixes(roots),found=list.length?[...new Set(list.flatMap(under))].sort((a,b)=>a-b):[];let rows=base;
+  if(found.length){const wanted=new Map();for(const at of found){const row=part.rows[at],key=rowKeyV1(row);if(!wanted.has(key))wanted.set(key,row);}for(const row of base){if(!wanted.size)break;wanted.delete(rowKeyV1(row));}if(wanted.size){rows=[...base];for(const row of wanted.values())rows.push(row);}}
+  if(!claimedLists.has(rows)){claimedLists.add(rows);for(const row of rows)if(!claimedRows.has(row)){claimedRows.add(row);claimed.add(rowKeyV1(row));}}return rows;
  };
- for(const owner of part.owners)owners.push({name:owner.name,root:owner.root,kind:owner.unavailable?"unavailable":"project",node:owner.unavailable??owner.node,edges:edgesOf.get(owner.name)??[],targets:owner.unavailable?[]:Object.keys(owner.node?.targets??{}),...(owner.config?{config:owner.config}:{}),...(owner.nativeRoot?{nativeRoot:owner.nativeRoot}:{}),...(owner.tag?{tag:owner.tag}:{}),rows:[...claim(owner.nodeRows??[],[owner.root,owner.nativeRoot]),...implementation.all]});
- for(const owner of part.edgeOnly){const stub=stubs[owner.name];owners.push({name:owner.name,partial:"edges",edges:edgesOf.get(owner.name)??[],rows:claim([],[stub.root,stub.nativeRoot])});}
+ for(const owner of part.owners)owners.push({name:owner.name,root:owner.root,kind:owner.unavailable?"unavailable":"project",node:owner.unavailable??owner.node,edges:orderedEdgesV1(edgesOf.get(owner.name)??[]),targets:owner.unavailable?[]:Object.keys(owner.node?.targets??{}),...(owner.config?{config:owner.config}:{}),...(owner.nativeRoot?{nativeRoot:owner.nativeRoot}:{}),...(owner.tag?{tag:owner.tag}:{}),rows:[...claim(owner.nodeRows??[],[owner.root,owner.nativeRoot]),...implementation.all]});
+ for(const owner of part.edgeOnly){const stub=stubs[owner.name];owners.push({name:owner.name,partial:"edges",...(owner.streamed?{}:{edges:orderedEdgesV1(edgesOf.get(owner.name)??[])}),rows:claim([],[stub.root,stub.nativeRoot])});}
  const environment=[...part.env.rows,...part.rows.filter(row=>!claimed.has(rowKeyV1(row))),...implementation.all,...implementation.environment];
- return{owners,env:{digest:part.env.digest,rows:environment},global:{version:1,externalNodes:part.externalNodes??{},edges:other,unavailable:part.parseUnavailable??[]},replaceTags:part.replaceTags??[]};
+ return{owners,...(part.reEdge?{reEdge:async(name,fragment)=>orderedEdgesV1(await part.reEdge(name,fragment))}:{}),...(part.derived?.length?{derived:part.derived}:{}),env:{digest:part.env.digest,rows:environment},global:{version:1,externalNodes:part.externalNodes??{},edges:other,unavailable:part.parseUnavailable??[]},replaceTags:part.replaceTags??[]};
 }
 
 /** 🔍️ Names the exact input behind one stale reason of a plan: the stamp of an inferrer, an input file, a directory listing, a declared data file, a source analysis or a workspace file that appeared, vanished or changed. `current` maps stamp paths to the stamps this process carries. */
@@ -204,13 +233,14 @@ export function describeGenerationReasonV1(reason,{workspaceRoot,separator="/",c
   else if(kind==="digest"||kind==="field"){key="reasonData";fields={path:display(path)};}
   else if(kind==="readdir"||kind==="readdirNames"||kind==="directories"){key="reasonListing";fields={path:display(path)};}
   else if(kind==="analysis"){key="reasonAnalysis";fields={path:display(path)};}
+  else if(kind==="derived"){key="reasonDerived";let first=path;try{first=JSON.parse(path).roots?.[0]??path;}catch{}fields={path:display(String(first)).slice(0,GENERATION_POLICY_V1.pathDisplayCharacters)};}
   else{key="reasonFact";fields={kind,path:display(path)};}
  }
  const why=renderGenerationMessageV1(key,fields,language);
  return{project,key,fields,why,text:renderGenerationMessageV1("reason",{project,why},language)};
 }
 
-/** 📣️ Says why a build starts: the reason of a cold start, or the number of stale projects followed by the first stale inputs by name. */
+/** 📢️ Says why a build starts: the reason of a cold start, or the number of stale projects followed by the first stale inputs by name. */
 export function announceGenerationBuildV1(host,spec,rows){
  if(spec.cold){host.say("cold",{reason:spec.coldReason??"empty"});return;}
  host.say("building",{dirty:spec.owners.length,generation:spec.generation??0});
@@ -231,7 +261,7 @@ export function createGenerationProgressV1(clock){
  };
 }
 
-const needsBuild=async()=>({built:false,published:false,needsBuild:true,computed:0});
+const needsBuild=async(_body,pending)=>({built:false,published:false,needsBuild:true,computed:0,pending});
 
 /** 📦️ Expands fixed project/UTF8-byte groups once and preserves every caught consumer failure. */
 export async function expandInChunksV1(projects,expand,{maximumProjects,maximumBytes}){
@@ -256,25 +286,28 @@ export async function expandStreamV1(entries,expand,{maximumProjects,maximumByte
  return result;
 }
 
-/** 🕰️ Loads the all-workspace graph, the closure of some projects, or the slice of a selected scope (tasks or literal owners) from the newest sealed generation; `lean` answers only project and target names. A shared reader verifies and serves it without ever taking a writer; only a stale or missing generation enters the builder custody, where a holder that finds the work done by a peer serves that generation.
+/** 🕰️ Loads the all-workspace graph (a command whose front door offered a yield ticket and that only waits for a peer's build ends instead of waiting: see `../🛌️yield`), the closure of some projects, or the slice of a selected scope (tasks or literal owners) from the newest sealed generation; `lean` answers only project and target names. A shared reader verifies and serves it without ever taking a writer; only a stale or missing generation enters the builder custody, where a holder that finds the work done by a peer serves that generation.
  * `host` binds the repository: `release()` (optional: drops the in-process caches a construction filled, called once the graph is assembled so a process that goes on to run for hours keeps only the graph), `identity()`, `implementationRows()`, `withShared(body)`, `withBuilder(body)`, `storeOptions(store, control)`, `membership(previous, signal)`, `discoverPart(spec, signal)`, `expand(projects, control)`, `expansionLimits`, `readGraph(value)`, `readLean(value)`, `clock(control)`, `say(key, fields)` and the constants `workspaceRoot`, `namedInputs`, `registryDigest`, `signal`.
  */
 export async function loadGenerationGraphV1(host,{policy="fresh",closure,selection,slice,lean,pin}={}){
- const requestedAt=Date.now(),identity=await host.identity(),roots=slice?[...new Set(slice.roots)]:closure?[...new Set(closure)]:undefined,rows=pin===undefined?await host.implementationRows():[],implementation=implementationDigestV1(rows),scoped=scopeImplementationRowsV1(rows),limits=host.expansionLimits??{maximumProjects:32,maximumBytes:16777216};
+ const requestedAt=graphQueueRequestedAtV1()??Date.now(),identity=await host.identity(),roots=slice?[...new Set(slice.roots)]:closure?[...new Set(closure)]:undefined,rows=pin===undefined?await host.implementationRows():[],implementation=implementationDigestV1(rows),scoped=scopeImplementationRowsV1(rows),limits=host.expansionLimits??{maximumProjects:GENERATION_POLICY_V1.expansionMaximumProjects,maximumBytes:GENERATION_POLICY_V1.expansionMaximumBytes};
+ let pointer;
  const attempt=async(builder,store,control)=>{
-  const engine=createGenerationStoreV1(host.storeOptions(store,control)),progress=createGenerationProgressV1(host.clock(control));
-  const compute=builder?async(spec,signal)=>{announceGenerationBuildV1(host,spec,rows);const part=await host.discoverPart(spec,signal,control);announceWithheldProjectsV1(host,part);return shapeComputeResultV1({workspaceRoot:host.workspaceRoot,separator:host.separator,part,stubs:spec.stubs,implementation:scoped});}:async()=>{throw Error("A shared graph reader never computes");};
-  const base={identity,implementation,policy:builder?"fresh":policy,membership:host.membership,compute,signal:host.signal,progress,requestedAt,builder:builder?body=>body():needsBuild};
-  const closeFn=slice?async(current)=>{const global=await engine.readGlobal(current.manifest);return sliceClosureV1({owners:Object.fromEntries(Object.entries(current.manifest.owners).map(([name,row])=>[name,row.root])),external:Object.keys(global.externalNodes??{}),fragment:name=>engine.readFragment(current.manifest.owners[name]).then(value=>{if(!value)throw Object.assign(Error("Fragment of "+name+" is missing"),{code:"GENERATION_INCOMPLETE"});return value;}),selection:slice.selection,roots:slice.roots,providers:slice.providers??[]});}:undefined;
+  const options=host.storeOptions(store,control),engine=createGenerationStoreV1(options),progress=createGenerationProgressV1(host.clock(control));
+  const compute=builder?async(spec,signal)=>{announceGenerationBuildV1(host,spec,rows);const part=await host.discoverPart(spec,signal,control);announceWithheldProjectsV1(host,part);await host.release?.();return shapeComputeResultV1({workspaceRoot:host.workspaceRoot,separator:host.separator,part,stubs:spec.stubs,implementation:scoped});}:async()=>{throw Error("A shared graph reader never computes");};
+  pointer=join(options.root,GENERATION_POLICY_V1.pointer);
+  const base={identity,implementation,policy:builder?"fresh":policy,membership:host.membership,compute,signal:host.signal,progress,requestedAt,builder:builder?body=>body(builder===true?undefined:builder):needsBuild};
+  const closeFn=slice?async(current)=>{const global=await engine.readGlobal(current.manifest);return sliceClosureV1({owners:Object.fromEntries(Object.entries(current.manifest.owners).map(([name,row])=>[name,row.root])),external:Object.keys(global.externalNodes??{}),fragment:name=>engine.readFragment(current.manifest.owners[name]).then(value=>{if(!value)throw Object.assign(Error("Fragment of "+name+" is missing"),{code:"GENERATION_INCOMPLETE"});return sliceViewV1(value);}),selection:slice.selection,roots:slice.roots,providers:slice.providers??[]});}:undefined;
   const started=Date.now(),result=pin!==undefined?await readPinnedGenerationV1({engine,pin,identity,roots,closure:closeFn,signal:host.signal}):roots?await engine.refreshClosure({...base,roots,closure:closeFn}):await engine.refresh(base);
-  engine.dropIndexes();
-  if(result.needsBuild)return{needsBuild:true,generation:(await engine.read(host.signal))?.pointer.generation??-1};
+  engine.dropIndexes();if(typeof builder==="object")await builder.release();
+  if(result.needsBuild)return{needsBuild:true,pending:result.pending,generation:(await engine.read(host.signal))?.pointer.generation??-1};
   const generation=result.current.manifest.generation;
   if(result.served==="current")host.say(result.current.manifest.implementation===implementation?"current":"stale",{generation});
   else if(result.served==="covered")host.say("covered",{generation});
   else if(result.served==="pinned")host.say("pinned",{generation,count:result.names?result.names.size:Object.keys(result.current.manifest.owners).length});
-  else if(result.served==="built"&&result.published){host.say("published",{generation,computed:result.computed,seconds:Math.round((Date.now()-started)/1000)});if(result.index)host.say("indexed",{generation,rows:result.index.rows,owners:result.index.owners,expanded:(result.index.expandedBytes/1048576).toFixed(1),percent:(100*result.index.expandedBytes/GENERATION_POLICY_V1.maximumIndexBytes).toFixed(1),limit:GENERATION_POLICY_V1.maximumIndexBytes/1048576,packed:(result.index.packedBytes/1048576).toFixed(1)});}
+  else if(result.served==="built"&&result.published){host.say(result.merged===undefined?"published":"merged",{generation,computed:result.computed,seconds:Math.round((Date.now()-started)/1000),theirs:result.merged??0});if(result.index)host.say("indexed",{generation,rows:result.index.rows,owners:result.index.owners,expanded:(result.index.expandedBytes/1048576).toFixed(1),percent:(100*result.index.expandedBytes/GENERATION_POLICY_V1.maximumIndexBytes).toFixed(1),limit:GENERATION_POLICY_V1.maximumIndexBytes/1048576,packed:(result.index.packedBytes/1048576).toFixed(1)});}
   else if(host.verbose||lean)host.say(roots?"closure":"verified",roots?{count:result.names.size}:{generation,checked:result.plan?.checked??0});
+  if(result.plan?.cutoff?.questions)host.say("cutoff",{questions:result.plan.cutoff.questions,rows:result.plan.stale??0,held:result.plan.cutoff.held,changed:result.plan.cutoff.changed});
   if(lean){const listing=await engine.catalog(result.current,{signal:host.signal});return{graph:host.readLean({version:1,lean:true,projects:Object.fromEntries(listing.projects.map(row=>[row.name,{name:row.name,root:row.root,targets:Object.fromEntries(row.targets.map(target=>[target,{}]))}])),dependencies:[],...(listing.unavailable.length?{unavailable:listing.unavailable}:{})}),result};}
   const stream=engine.assembleStream(result.current,{names:result.names&&[...result.names],compare:(a,b)=>a.localeCompare(b),signal:host.signal,progress});
   const projects=await expandStreamV1(stream.nodes(),chunk=>host.expand(chunk,control),limits),assembled=await stream.finish(),closureDigest=selection?createHash("sha256").update(canonicalJsonV1([assembled.membership,[...result.names].sort()])).digest("hex"):assembled.membership;
@@ -284,9 +317,12 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,selecti
  };
  const first=await host.withShared((store,control)=>attempt(false,store,control));
  if(!first.needsBuild){await host.release?.();return first.graph;}
- const queued=Date.now();let held=false;
- const notice=setInterval(()=>{if(!held)host.say("waiting",{seconds:Math.round((Date.now()-queued)/1000),generation:first.generation});},host.waitNoticeMilliseconds??GENERATION_POLICY_V1.waitNoticeMilliseconds);notice.unref?.();
- let built;try{built=await host.withBuilder((store,control)=>{held=true;return attempt(true,store,control);});}finally{clearInterval(notice);}
+ const queued=Date.now();
+ const request=first.pending?.dirty.length?{generation:first.pending.generation,dirty:first.pending.dirty,roots:first.pending.roots,structural:first.pending.structural,implementation}:undefined;
+ if(host.prefetch&&request&&!await host.builderIdle?.(request)){host.carryClosures?.(true);try{await host.prefetch(request);}finally{host.carryClosures?.(false);}}
+ let held=false;
+ const notice=setInterval(()=>{if(held)return;host.say("waiting",{seconds:Math.round((Date.now()-queued)/1000),generation:first.generation});if(pointer!==undefined&&graphQueueYieldsV1({queuedMs:Date.now()-queued,yieldAfterMilliseconds:host.yieldAfterMilliseconds}))yieldGraphQueueV1({generation:first.generation,pointer,requestedAt,queuedMs:Date.now()-queued,exit:host.exitProcess});},host.waitNoticeMilliseconds??GENERATION_POLICY_V1.waitNoticeMilliseconds);notice.unref?.();
+ let built,want=first.pending;try{for(let round=1;;round++){built=await host.withBuilder((store,control,claim)=>{held=true;return attempt(claim??true,store,control);},want);if(!built.needsBuild)break;held=false;want={...built.pending,structural:built.pending.structural||round>=CUSTODY_POLICY_V1.widenRounds};}}finally{clearInterval(notice);}
  await host.release?.();
  return built.graph;
 }

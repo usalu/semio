@@ -196,3 +196,14 @@ test("a corrupt, foreign, unsealed or schema-violating receipt is no receipt", a
   const emptyStore = {read: () => ({version: 1 as const, crate: "a", t: {...leaf.t!, id: "1".repeat(64)}} as never)};
   expect(await crateIdentityV1(textContext(fixture.files, emptyStore), "a", true)).toBe(fixture.expect.base["a:t" as keyof typeof fixture.expect.base]);
 });
+
+test("a context that keeps only the newest parsed files answers every identity as the unbounded one and never holds more files than its bound", async () => {
+  const unbounded = textContext(fixture.files), expected = await allIdentities(unbounded);
+  expect(expected).toEqual(fixture.expect.base);
+  for (const bound of [1, 2, 3, 5]) {
+    const bounded = createCargoResolutionContextV1(textHost(fixture.files), policy, undefined, bound);
+    expect(await allIdentities(bounded), `bound ${bound}`).toEqual(expected);
+    expect(bounded.files.size, `bound ${bound}`).toBeLessThanOrEqual(bound);
+    expect(bounded.counts.parsed, `bound ${bound}`).toBeGreaterThanOrEqual(unbounded.counts.parsed);
+  }
+});

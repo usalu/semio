@@ -21,4 +21,4 @@ print(json.dumps(rows))`;
  expect(paths.length).toBeGreaterThan(1000);
  expect(JSON.parse(run.stdout)).toEqual(actual);
  expect(actual).toEqual([]);
-});
+},180000);

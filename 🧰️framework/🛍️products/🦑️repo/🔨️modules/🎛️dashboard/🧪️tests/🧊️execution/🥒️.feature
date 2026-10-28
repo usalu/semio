@@ -131,3 +131,24 @@ Feature: Native Dashboard Installation and Launch
     When the installed Source signature is checked
     Then device, inode and nanosecond metadata invalidate the old digest
     And replacing an independent dependency lock remains outside the captured scope
+
+  Scenario: Files the executable includes from outside its crate roots make the installation stale
+    Given an installation records the files of its executable's own Cargo dep-info and when that build started
+    When a schema outside every crate root or a TypeScript file that the binary includes is edited, replaced with its old timestamps or removed
+    Then the installation is stale although the source digest is unchanged, and the reason names that file
+    And reading an included file or editing an unrelated file keeps the installation current
+
+  Scenario: A build of a current artifact runs no nested build
+    Given the artifact of the selected mode records exactly the captured sources and none of its compiled files changed
+    And its executable is in place with the recorded size and permissions
+    When the dashboard build task runs
+    Then it answers that executable without starting the nested compile and says so in one line in the language of the command
+    And a removed, resized or re-permissioned executable, a changed source or a changed compiled file sends it on to build
+
+  Scenario: The build is a cacheable artifact and installation is local, idempotent and receipt-checked
+    Given the build task declares the per-mode artifact directory as its only output and is replayed from the action cache
+    When the artifact is installed
+    Then an installation that already names the same bytes answers at once without opening the tools store, refreshing only its record
+    And a missing, foreign or stale artifact is refused in the language of the command instead of being installed
+    And an artifact restored from the action cache after a revert stays current because a touched file only counts when its bytes changed
+    And a build outside the build tool runs the build only when the artifact is not current, then installs it

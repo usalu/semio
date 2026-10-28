@@ -1,0 +1,221 @@
+import{randomBytes}from"node:crypto";
+import{mkdir,open,readFile,rm}from"node:fs/promises";
+import{join}from"node:path";
+import{canonicalJsonV1,compareCodePointsV1}from"../🟨️.mjs";
+import schema from"./🧬️schema/🔣️.json"with{type:"json"};
+
+/** 🧩️ The declared constants of the claim registry; the schema file is the single source and a law keeps both equal. */
+export const CLAIMS_POLICY_V1=Object.freeze(structuredClone(schema.definitions.Policy.const));
+/** 🗣️ The bilingual texts of the prefetch; the schema file declares the same table. */
+export const CLAIM_MESSAGES_V1=Object.freeze(structuredClone(schema.definitions.Messages.const));
+const P=CLAIMS_POLICY_V1,TOKEN=/^[a-f0-9]{24}$/u,HEX=/^[a-f0-9]{64}$/u,STAMP=/^(?:[a-f0-9]{16}|-)$/u,STATES=["running","done","failed"],fail=(message,code)=>Object.assign(Error(message),code?{code}:{}),isObject=value=>value!==null&&typeof value==="object"&&!Array.isArray(value);
+const aborted=signal=>{if(signal?.aborted)throw signal.reason??fail("Aborted","ABORT_ERR");};
+const defaultSleep=(milliseconds,signal)=>new Promise((resolve,reject)=>{
+ if(signal?.aborted){reject(signal.reason);return;}
+ const onAbort=()=>{clearTimeout(timer);reject(signal.reason);},timer=setTimeout(()=>{signal?.removeEventListener("abort",onAbort);resolve();},milliseconds);
+ signal?.addEventListener("abort",onAbort,{once:true});
+});
+
+/** 🖨️ Renders one prefetch message in the language the caller resolved with the shared resolver. */
+export function renderClaimMessageV1(key,fields,language){
+ const template=CLAIM_MESSAGES_V1[language]?.[key];
+ if(template===undefined)throw fail("Closed claim message required: "+key);
+ return template.replace(/\{([a-z]+)\}/gu,(_token,name)=>String(fields[name]));
+}
+
+/** 🔍️ Admits a closed claim: the plan it belongs to, the owners in strict code point order and its state. */
+export function readClaimV1(value){
+ const required=["version","token","base","implementation","owners","state","startedMs"],optional=["endedMs","stamps"];
+ if(!isObject(value))throw fail("Closed claim required");
+ for(const key of Object.keys(value))if(!required.includes(key)&&!optional.includes(key))throw fail("Closed claim required: unknown "+key);
+ for(const key of required)if(!Object.hasOwn(value,key))throw fail("Closed claim required: missing "+key);
+ if(value.version!==1||typeof value.token!=="string"||!TOKEN.test(value.token))throw fail("Claim token of 24 hex digits required");
+ if(!Number.isSafeInteger(value.base)||value.base<-1)throw fail("Generation of the plan required in a claim");
+ if(typeof value.implementation!=="string"||!HEX.test(value.implementation))throw fail("Implementation digest required in a claim");
+ if(!STATES.includes(value.state))throw fail("Closed claim state required");
+ for(const key of["startedMs","endedMs"])if(Object.hasOwn(value,key)&&(!Number.isSafeInteger(value[key])||value[key]<0))throw fail("Epoch milliseconds required in a claim: "+key);
+ if(!Array.isArray(value.owners)||value.owners.length>P.maximumOwners)throw fail("Bounded owner list required in a claim");
+ value.owners.forEach((name,at)=>{if(typeof name!=="string"||name===""||at>0&&compareCodePointsV1(value.owners[at-1],name)>=0)throw fail("Owners in strict code point order required in a claim");});
+ if(Object.hasOwn(value,"stamps")&&(!isObject(value.stamps)||Object.entries(value.stamps).some(([name,stamp])=>!value.owners.includes(name)||typeof stamp!=="string"||!STAMP.test(stamp))))throw fail("Content stamps of owners of the claim required in a claim");
+ return Object.freeze({...value,owners:Object.freeze([...value.owners])});
+}
+
+/**
+ * 🧮️ Chooses what one command computes next from the claims it sees (`live` says whether a running claim's lease is held): the wanted owners that no live running claim covers, no done claim of the same plan and implementation and the same content covers and no recent failed claim of the same content covers are open, the chunk is the first `chunk` of them in code point order (all when at most `chunk + tail` are open), `running` names the live claims that cover a wanted owner and `prepared` counts the wanted owners a done claim covers. `stamps` is the content stamp of every wanted owner (a digest of its files' identities): a done or failed claim covers an owner only when it was made for the same content, so an edit after the prefetch opens the owner again instead of leaving its inference to the exclusive assembly. A failed claim covers its owners only for `failedRetryMilliseconds` after it ended (when `nowMs` is given), so one churn error never disables the prefetch of its owners for the rest of the plan.
+ */
+export function chunkOfV1({wanted,stamps,claims,base,implementation,chunk=P.chunkOwners,tail=P.tailOwners,nowMs}){
+ const names=[...new Set(wanted)].sort(compareCodePointsV1),want=new Set(names),covered=new Set(),done=new Set(),running=new Set(),same=(claim,name)=>claim.stamps?.[name]===stamps?.[name];
+ for(const claim of claims){
+  if(claim.base!==base||claim.implementation!==implementation)continue;
+  if(claim.state==="running"){
+   if(!claim.live)continue;
+   if(claim.owners.some(name=>want.has(name)))running.add(claim.token);
+   for(const name of claim.owners)covered.add(name);
+  }else if(claim.state==="done"){
+   for(const name of claim.owners)if(same(claim,name)){done.add(name);covered.add(name);}
+  }else if(nowMs===undefined||claim.endedMs===undefined||nowMs-claim.endedMs<P.failedRetryMilliseconds){
+   for(const name of claim.owners)if(same(claim,name))covered.add(name);
+  }
+ }
+ const open=names.filter(name=>!covered.has(name));
+ return{open,take:open.length<=chunk+tail?open:open.slice(0,chunk),running:[...running].sort(compareCodePointsV1),prepared:names.filter(name=>done.has(name)).length,covered:names.length-open.length};
+}
+
+/** 🎟️ The number of compute slots: the integer of the environment variable when it lies in range, else the memory share divided by the slot size within 1 and the maximum. */
+export function slotCountV1({memoryMegabytes,environment={}}){
+ const forced=Number(environment[P.environmentSlots]);
+ if(environment[P.environmentSlots]!==undefined&&Number.isInteger(forced)&&forced>=1&&forced<=P.maximumSlots)return forced;
+ return Math.max(1,Math.min(P.maximumSlots,Math.floor(memoryMegabytes*P.slotMemoryBasisPoints/10000/P.slotMegabytes)));
+}
+
+/**
+ * 🏗️ Creates the claim registry of the generation documents under `root`. `fs` is the generation file port, `lease` the lease port `{tryHold(resource), hold(resource, {signal}), wait(resource, {signal})}`: `tryHold` takes the exclusive lease at once or answers undefined, `hold` queues for it, `wait` returns when no exclusive holder is left; a lease is released with `release()` and a dead process holds none.
+ * `prefetch` brings every owner of `wanted` to a done claim of this plan (computed by this command or a peer) and answers when nothing is open and no live peer claim covers a wanted owner, or as soon as `served()` names a generation a peer published.
+ */
+export function createClaimRegistryV1({root,fs,lease,now=()=>Date.now(),sleep=defaultSleep,token=()=>randomBytes(12).toString("hex")}){
+ if(typeof root!=="string"||!root||!fs||!lease)throw fail("Claim registry root, file port and lease port required");
+ const directory=join(root,P.directory),pathOf=name=>join(directory,name+".json"),own=new Set();
+ const resource={claim:name=>"graph-claim:"+root+":"+name,admission:"graph-claims-admission:"+root,slot:at=>"graph-claim-slot:"+root+":"+at};
+ const encode=claim=>Buffer.from(canonicalJsonV1(readClaimV1(claim)));
+ const readOne=async name=>{const bytes=await fs.read(pathOf(name));if(!bytes)return undefined;try{return readClaimV1(JSON.parse(Buffer.from(bytes).toString("utf8")));}catch{return undefined;}};
+
+ /** 📖️ Reads the claim documents; a document that does not parse and is older than the grace of a claim is removed. */
+ async function readClaims(signal){
+  const rows=[];rows.truncated=false;
+  for(const file of await fs.list(directory)){
+   aborted(signal);
+   if(!/^[a-f0-9]{24}\.json$/u.test(file.name))continue;
+   if(rows.length>=P.maximumClaims){rows.truncated=true;break;}
+   const claim=await readOne(file.name.slice(0,24));
+   if(claim)rows.push(claim);else if(now()-file.modifiedMs>10*P.pollMilliseconds)await fs.remove(join(directory,file.name));
+  }
+  return rows;
+ }
+
+ /** 🫀️ Says which running claims are alive: the lease of a claim of another command is probed, a free one belongs to a dead command and its document is removed unless it was finished meanwhile. */
+ async function annotate(claims,signal){
+  const rows=[];
+  for(const claim of claims){
+   aborted(signal);
+   if(claim.state!=="running"||own.has(claim.token)){rows.push({...claim,live:claim.state==="running"});continue;}
+   const probe=await lease.tryHold(resource.claim(claim.token));
+   if(!probe){rows.push({...claim,live:true});continue;}
+   try{const again=await readOne(claim.token);if(again?.state==="running")await fs.remove(pathOf(claim.token));else if(again)rows.push({...again,live:false});}finally{probe.release();}
+  }
+  return rows;
+ }
+
+ /** 🚪️ The short critical section: reads the live claims, drops the claims of older plans and either takes a chunk (slot, lease and document) or says to wait. */
+ async function admit({base,implementation,names,stamps,slots,signal}){
+  const admission=await lease.hold(resource.admission,{signal});
+  try{
+   const listed=await readClaims(signal),claims=await annotate(listed,signal);
+   if(listed.truncated)return{kind:"complete",open:[],take:[],running:[],prepared:0,covered:names.length};
+   for(const claim of claims)if(claim.base<base&&claim.state!=="running")await fs.remove(pathOf(claim.token));
+   const found=chunkOfV1({wanted:names,stamps,claims,base,implementation,nowMs:now()});
+   if(found.open.length===0)return{kind:found.running.length?"wait":"complete",...found};
+   let slot;
+   for(let at=0;at<slots&&!slot;at++)slot=await lease.tryHold(resource.slot(at));
+   if(!slot)return{kind:"slots",...found};
+   const name=token(),hold=await lease.tryHold(resource.claim(name));
+   if(!hold){slot.release();throw fail("A fresh claim lease is free","CLAIM_LEASE_TAKEN");}
+   try{
+    const taken=stamps?Object.fromEntries(found.take.filter(owner=>stamps[owner]!==undefined).map(owner=>[owner,stamps[owner]])):undefined,claim=readClaimV1({version:1,token:name,base,implementation,owners:found.take,state:"running",startedMs:now(),...taken&&Object.keys(taken).length?{stamps:taken}:{}});
+    await fs.write(pathOf(name),encode(claim));own.add(name);
+    return{kind:"compute",claim,hold,slot,...found};
+   }catch(error){hold.release();slot.release();throw error;}
+  }finally{admission.release();}
+ }
+
+ const settle=async(claim,state)=>{await fs.write(pathOf(claim.token),encode({...claim,state,endedMs:now()}));};
+ const abandon=async claim=>{try{await fs.remove(pathOf(claim.token));}catch{}};
+
+ /** ⏳️ Returns when one of the leases is free or after the poll time, whichever comes first. */
+ async function waitAny(resources,signal){
+  const controller=new AbortController(),onAbort=()=>controller.abort(signal.reason);
+  signal?.addEventListener("abort",onAbort,{once:true});
+  const quiet=promise=>promise.catch(error=>{if(!controller.signal.aborted)throw error;});
+  try{await Promise.race([...resources.map(name=>quiet(lease.wait(name,{signal:controller.signal}))),quiet(sleep(P.pollMilliseconds,controller.signal))]);}
+  finally{controller.abort();signal?.removeEventListener("abort",onAbort);}
+ }
+
+ async function prefetch({base,implementation,wanted,stamps,run,served,say=()=>{},progress,signal,slots=1}){
+  const names=[...new Set(wanted)].sort(compareCodePointsV1),started=now();let computed=0,noticed=-Infinity;
+  if(names.length===0)return{computed,served:false};
+  const notice=(key,fields)=>{if(now()-noticed>=P.noticeMilliseconds){noticed=now();say(key,fields);}};
+  for(;;){
+   aborted(signal);
+   const generation=served?await served():undefined;
+   if(generation!==undefined){say("served",{generation});await sweep(signal).catch(()=>undefined);return{computed,served:true};}
+   const step=await admit({base,implementation,names,stamps,slots,signal}),total=names.length,fields={open:step.open.length,total,prepared:step.prepared,covered:step.covered,slots,peers:step.running.length};
+   await progress?.({done:step.prepared,total});
+   if(step.kind==="complete"){if(computed)say("prepared",{count:computed,seconds:Math.round((now()-started)/1000)});return{computed,served:false};}
+   if(step.kind==="wait"){notice("joined",fields);await waitAny(step.running.map(resource.claim),signal);continue;}
+   if(step.kind==="slots"){notice("slotsBusy",{...fields,seconds:Math.round((now()-started)/1000)});await waitAny(Array.from({length:slots},(_,at)=>resource.slot(at)),signal);continue;}
+   const{claim,hold,slot}=step;
+   try{
+    say("computing",{...fields,count:claim.owners.length});
+    await run([...claim.owners],{done:step.prepared,total});
+    await settle(claim,"done");computed+=claim.owners.length;
+   }catch(error){
+    if(signal?.aborted)await abandon(claim);else await settle(claim,"failed").catch(()=>abandon(claim));
+    throw error;
+   }finally{hold.release();slot.release();own.delete(claim.token);}
+  }
+ }
+
+ /** 🧹️ Removes every claim document that is not running (a finished plan leaves them behind), the claims of a live command stay. */
+ async function sweep(signal){for(const claim of await annotate(await readClaims(signal),signal))if(!claim.live)await fs.remove(pathOf(claim.token));}
+
+ return Object.freeze({prefetch,sweep,list:async signal=>annotate(await readClaims(signal),signal),resource});
+}
+
+/** 🛡️ Runs a prefetch that can never fail its command: a failure is told in English and German through `say` and answered as `failed` (the assembly computes the owners itself and reports the real failure), a cancellation is rethrown. */
+export async function prepareStaleProjectsV1({registry,say=()=>{},signal,...options}){
+ try{return await registry.prefetch({...options,say,signal});}
+ catch(error){
+  if(signal?.aborted)throw error;
+  say("failed",{reason:String(error?.message??error).replace(/\s+/gu," ").slice(0,200)});
+  return{computed:0,served:false,failed:true};
+ }
+}
+
+/**
+ * 🔗️ The lease port of the registry over the queued lease acquisition of the process module (`acquire` is `acquireQueuedResourceLease`, injected so this leaf imports nothing of the repository): `tryHold` takes an exclusive lease at once or answers undefined, `hold` queues for it, `wait` returns when no exclusive holder is left. Shared acquisitions are cohort tickets: a plain shared ticket would wait for every earlier ticket, held ones included, and the waiters of one claim would be served one after the other.
+ */
+export function createQueuedClaimLeasePortV1({acquire,directory,control}){
+ const request=(resource,mode,signal,timeoutMs)=>acquire({directory,resource,mode,...(mode==="shared"?{sharedCohort:true}:{}),owner:randomBytes(16).toString("base64url"),...(control?{control}:{}),signal:signal??control?.signal??new AbortController().signal,...(timeoutMs!==undefined?{timeoutMs}:{})});
+ return Object.freeze({
+  async tryHold(resource){try{return await request(resource,"exclusive",undefined,0);}catch(error){if(/timed out/iu.test(String(error?.message)))return undefined;throw error;}},
+  hold:(resource,options)=>request(resource,"exclusive",options?.signal),
+  async wait(resource,options){(await request(resource,"shared",options?.signal)).release();},
+ });
+}
+
+/** 🔒️ A reference lease port over lock files for tests and non repository runtimes: acquisition is `open(wx)`, the lock of a dead process is replaced, waiting polls with backoff and honours the abort signal. */
+export function createFileClaimLeasePortV1(directory,{sleep=defaultSleep}={}){
+ const alive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error?.code==="EPERM";}};
+ const pathOf=name=>join(directory,Buffer.from(name).toString("base64url").slice(-120)+".lock");
+ const holderOf=async path=>{try{return JSON.parse(await readFile(path,"utf8"));}catch{return undefined;}};
+ async function tryHold(name){
+  const path=pathOf(name),mark=randomBytes(8).toString("hex");
+  await mkdir(directory,{recursive:true});
+  for(let round=0;round<3;round++){
+   try{const file=await open(path,"wx");try{await file.writeFile(JSON.stringify({pid:process.pid,mark}));}finally{await file.close();}return{release(){holderOf(path).then(held=>{if(held?.mark===mark)return rm(path,{force:true});}).catch(()=>{});}};}
+   catch(error){
+    if(error?.code!=="EEXIST")throw error;
+    const held=await holderOf(path);
+    if(held&&alive(held.pid))return undefined;
+    if(held===undefined&&round===0){await sleep(5);continue;}
+    const again=await holderOf(path);if(again?.mark===held?.mark)await rm(path,{force:true});
+   }
+  }
+  return undefined;
+ }
+ async function hold(name,{signal}={}){for(let delay=2;;delay=Math.min(delay*2,50)){aborted(signal);const held=await tryHold(name);if(held)return held;await sleep(delay,signal);}}
+ async function wait(name,{signal}={}){
+  const path=pathOf(name);
+  for(let delay=2;;delay=Math.min(delay*2,50)){aborted(signal);const held=await holderOf(path);if(!held||!alive(held.pid))return;await sleep(delay,signal);}
+ }
+ return Object.freeze({tryHold,hold,wait});
+}

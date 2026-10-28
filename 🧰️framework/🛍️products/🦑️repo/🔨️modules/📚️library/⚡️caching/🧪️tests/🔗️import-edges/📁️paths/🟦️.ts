@@ -1,4 +1,3 @@
-import "../../../../🏗️build/📤️arguments/🧪️tests/🟦️.ts";
 import {expect,test} from "bun:test";
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
 import {createHash} from "node:crypto";
@@ -6,7 +5,6 @@ import {join,parse,resolve} from "node:path";
 import Ajv from "ajv";
 import {build} from "esbuild";
 import {cacheInternals} from "../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
-
 type PathVector={id:string;prefix:string;segment:string;count:number;suffix:string;utf16:number;admitted:boolean};
 const caching=resolve(import.meta.dir,"../../.."),fixture=JSON.parse(readFileSync(join(caching,"🧪️tests/🧫️fixtures/📁️source-facts/🔣️.json"),"utf8")) as {version:number;paths:PathVector[]};
 const schema=JSON.parse(readFileSync(join(caching,"🧬️schema/📁️source-facts/🔣️.json"),"utf8"));

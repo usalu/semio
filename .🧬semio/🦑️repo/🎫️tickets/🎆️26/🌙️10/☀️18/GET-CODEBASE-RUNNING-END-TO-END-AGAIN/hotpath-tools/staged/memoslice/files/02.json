@@ -1,0 +1,26 @@
+{
+ "$comment": "One index with a slice owner, a project outside the slice, the environment owner and a pseudo owner supporting a derived fact the slice holds. Row 3 is derived (never checked against the disk); row 1 belongs only to the project outside the slice; row 5 is shared.",
+ "index": {
+  "version": 1,
+  "owners": ["@semio-tech/slice", "@semio-tech/outside", "@env", "@derived:0123456789abcdef0123456789abcdef"],
+  "rows": [
+   {"kind": "file", "path": "slice/a.ts", "fact": "a"},
+   {"kind": "file", "path": "outside/b.ts", "fact": "b"},
+   {"kind": "exists", "path": "package.json", "fact": true},
+   {"kind": "derived", "path": "question", "fact": "answer"},
+   {"kind": "file", "path": "shared/support.ts", "fact": "s"},
+   {"kind": "file", "path": "both.ts", "fact": "c"}
+  ],
+  "classes": [
+   {"r": [0, 5], "o": [0]},
+   {"r": [1, 5], "o": [1]},
+   {"r": [2], "o": [2]},
+   {"r": [3], "o": [0, 3]},
+   {"r": [3, 4], "o": [3]}
+  ]
+ },
+ "slice": ["@semio-tech/slice"],
+ "expected": [0, 5, 2, 4],
+ "graph": {"projects": {"@semio-tech/slice": {}}, "unavailable": [{"project": "@semio-tech/withheld"}]},
+ "owners": ["@semio-tech/slice", "@semio-tech/withheld"]
+}

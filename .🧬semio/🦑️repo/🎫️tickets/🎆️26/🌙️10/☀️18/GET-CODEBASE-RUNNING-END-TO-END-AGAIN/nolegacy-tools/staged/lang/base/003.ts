@@ -1,0 +1,89 @@
+import {buildPreparationBudgetMs,progressDeadlinePolicyV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import{readNativeArtifactCacheParentPolicyV1,readNativeArtifactCachePolicyV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/💾️cache/🟦️.ts";
+import{withRepositoryCachePartitionArtifactCacheV1}from"../📦️budget/📥️opening/🟦️.ts";
+import type{NativeArtifactCachePolicyV1,NativeArtifactCacheVolumeV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/💾️cache/🟦️.ts";
+import{recoverCompactCompilerHeadroomV1}from"./📏️capacity/♻️recovery/🟦️.ts";
+import{withCompilerWorkspaceLifetimeV1,withCompilerWorkspaceBorrowV1,requireCompilerWorkspaceBorrowCustodyV1}from"./📏️capacity/🟦️.ts";
+import{repositoryCompilerLayoutV1,repositoryCompilerHostV1}from"./📍️layout/🟦️.ts";
+import{readNativeCallerAuthorityV1}from"../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {receiveScriptProcessInvocation,withRequestedIssuedResourceControlV1,withRenewableIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withRepositoryToolingStoreV1} from "../🛠️tools/🟦️.ts";
+import {withRepositoryRustToolchainV1,type RepositoryRustToolchainV1} from "../../../🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts";
+import { openRepositoryCachePartitionV1 } from "../📦️budget/📥️opening/♻️reset/🟦️.ts";
+import {randomBytes} from "node:crypto";
+import {AsyncLocalStorage} from "node:async_hooks";
+import {existsSync,lstatSync,mkdirSync,readFileSync,writeFileSync,openSync,fsyncSync,closeSync,renameSync,rmSync} from "node:fs";
+import {join,resolve} from "node:path";
+import {acquireQueuedResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{acquireNativeStorageV1,recoverNativeStorageReservationV1,requireNativeStorageReservationV1,observeNativeStorageStateV1,type NativeStorageReservationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import type{NativeStoragePolicyV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1,type NativeImageStorageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {readBuildMode,type BuildMode} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import type {CargoSourceBoundaryPolicyV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
+import {repositoryStrictStorageV1} from "../🟦️.ts";
+import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {repositoryCompilerLaunchEnvironmentV1} from "./🚪️ingress/🟦️.ts";
+import {UNIT_CACHE_SCRIPT_V1,unitCacheRootV1} from "../../../🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
+import {withCompilerLaneViewV1,type CompilerLaneRequestV1} from "./🛤️lane/🟦️.ts";
+
+/** 🏪️ Retains one charged shared compiler working set rather than minting a new allocation per invocation. */
+export interface RepositoryCompilerStoreV1 {readonly control:ResourceLeaseControl;readonly root:string;readonly buildDirectory:string;readonly captureDirectory:string;readonly storage:NativeStorageReservationV1;readonly sourceBoundary:CargoSourceBoundaryPolicyV1;readonly environment:Readonly<Record<string,string|undefined>>;readonly toolchain:RepositoryRustToolchainV1}
+/** 🔄️ Recovers the exact still-charged store through the shared bounded serialized journal. */
+export async function repositoryCompilerReservationV1(image:NativeImageStorageV1,policy:NativeStoragePolicyV1,mode:BuildMode,control:ResourceLeaseControl):Promise<NativeStorageReservationV1>{
+ checkResourceLeaseControl(control);mode=readBuildMode(mode);await image.recheck();const owner="repo:compiler:"+mode,receipt=requireNativeStoragePathV1(image.root,join(image.root,"compiler-"+mode+".json")),lease=await acquireQueuedResourceLease({directory:policy.leaseDirectory,resource:"repo:compiler-charge:"+image.root+":"+mode,mode:"exclusive",owner:randomBytes(16).toString("base64url"),signal:control.signal,control});
+ try{
+  let id:string|undefined;if(existsSync(receipt)){const status=lstatSync(receipt);if(!status.isFile()||status.isSymbolicLink()||status.nlink!==1||status.size>2048)throw Error("Original compiler charge receipt required");const row=JSON.parse(readFileSync(receipt,"utf8"));if(validateJsonSchemaSubset(schema,row).length||row.mode!==mode||row.owner!==owner||row.bytes!==policy.maximumWorkspaceBytes)throw Error("Compiler charge receipt disagrees with authored policy");id=row.allocation;}
+  else{const state=await observeNativeStorageStateV1({policy,control,port:image.port}),candidates=state.allocations.filter(row=>row.owner===owner);if(candidates.length>1)throw Error("Original compiler allocation identity is ambiguous");id=candidates[0]?.id;}
+  const storage=id?await recoverNativeStorageReservationV1({policy,control,port:image.port,id}):await acquireNativeStorageV1({policy,control,port:image.port,owner,kind:"compiler-workspace",bytes:policy.maximumWorkspaceBytes});
+  if(storage.allocation.owner!==owner||storage.allocation.bytes!==policy.maximumWorkspaceBytes||storage.allocation.kind!=="compiler-workspace"||storage.allocation.phase==="retiring")throw Error("Original shared compiler allocation refused");
+  await storage.recheck();if(!existsSync(receipt)){const temporary=requireNativeStoragePathV1(image.root,receipt+"~"+randomBytes(8).toString("hex"));try{writeFileSync(temporary,JSON.stringify({version:1,mode,allocation:storage.allocation.id,owner,bytes:storage.allocation.bytes})+"\n",{flag:"wx"});const fd=openSync(temporary,"r+");try{fsyncSync(fd);}finally{closeSync(fd);}await storage.recheck();renameSync(temporary,receipt);}finally{rmSync(temporary,{force:true});}}if(storage.allocation.phase==="reserved")await storage.commit();return storage;
+ }finally{lease.release();}
+}
+
+/** 🗜️ Holds the actual persistent backing and original store charge through every compiler output publication. */
+async function withRepositoryCompilerStoreOwnedV1<T>(host:string,workspace:string,mode:BuildMode,control:ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>,body:(store:Omit<RepositoryCompilerStoreV1,"toolchain">,control:ResourceLeaseControl)=>Promise<T>,original:ScriptInvocation):Promise<T>{
+ requireIssuedResourceControlInvocationV1(control,original);mode=readBuildMode(mode);const declaration=repositoryStrictStorageV1(host);
+ return withRequestedIssuedResourceControlV1(control,0,async imageControl=>{let image:NativeImageStorageV1|undefined,failed=false,failure:unknown;
+ try{image=await openRepositoryCachePartitionV1(host,"rust",imageControl);const opened=image,policy={version:1 as const,root:image.root,leaseDirectory:declaration.leaseDirectory,capacityBytes:declaration.capacityBytes,maximumWorkspaceBytes:declaration.maximumWorkspaceBytes,maximumArtifactBytes:declaration.maximumArtifactBytes};
+ return await withRequestedIssuedResourceControlV1(imageControl,0,async reservationControl=>{const storage=await repositoryCompilerReservationV1(opened,policy,mode,reservationControl),{buildDirectory,captureDirectory,temporaryDirectory:temporary,homeDirectory:home,targetDirectory}=repositoryCompilerLayoutV1(opened.root,mode);for(const path of[buildDirectory,captureDirectory,temporary,home]){requireNativeStoragePathV1(opened.root,path);await storage.recheck();mkdirSync(path,{recursive:true});}
+ const admittedEnvironment=await repositoryCompilerLaunchEnvironmentV1(storage,reservationControl,environment),store=Object.freeze({control:reservationControl,root:opened.root,buildDirectory,captureDirectory,storage,sourceBoundary:declaration.sourceBoundary,environment:Object.freeze({...admittedEnvironment,CARGO_HOME:home,CARGO_TARGET_DIR:targetDirectory,CARGO_BUILD_BUILD_DIR:buildDirectory,SEMIO_UNIT_CACHE_ROOT:unitCacheRootV1(opened.root),SEMIO_UNIT_CACHE_SCRIPT:UNIT_CACHE_SCRIPT_V1,TMPDIR:temporary,TMP:temporary,TEMP:temporary,SEMIO_TEST_ARTIFACT_DIR:captureDirectory})});
+ const owner:CompilerStoreOwner={partition:opened,policy,storage,control:reservationControl,invocation:original,workspace,host,mode,live:true};compilerStoreOwners.set(store,owner);try{return await withCompilerWorkspaceLifetimeV1(storage,reservationControl,actualControl=>body(store,actualControl),()=>recoverCompactCompilerHeadroomV1(host,mode,original,reservationControl,storage));}finally{owner.live=false;}});
+ }catch(error){failed=true;failure=error;throw error;}finally{try{await image?.close();}catch(error){if(failed)throw new AggregateError(Object.is(failure,error)?[failure]:[failure,error],"Compiler body and image reader close failed");throw error;}}
+ });
+}
+
+/** 🛠️ Retains the exact Source compiler generation on tools8 beside Rust16 through every Original child settlement. */
+export function withRepositoryCompilerStoreV1<T>(workspace:string,mode:BuildMode,control:ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>,body:(store:RepositoryCompilerStoreV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{checkResourceLeaseControl(control);
+ const retained=retainedCompilerStores.getStore()?.get(retainedCompilerKeyV1(workspace,mode));
+ if(retained?.live){let reusable=true;try{requireIssuedResourceControlInvocationV1(control,retained.invocation);}catch{reusable=false;}
+  if(reusable)return withRequestedIssuedResourceControlV1(retained.control,0,async actual=>{await retained.store.storage.recheck();const value=await body(retained.store,actual);await retained.store.storage.recheck();return value;},control.signal,control);}
+ return receiveScriptProcessInvocation(environment,original=>{requireIssuedResourceControlInvocationV1(control,original);const host=repositoryCompilerHostV1(resolve(readNativeCallerAuthorityV1(original.capabilities).repositoryRoot),resolve(workspace));return withRenewableIssuedResourceControlV1(control,progressDeadlinePolicyV1("native-child",0,environment,{maximumMilliseconds:buildPreparationBudgetMs()}),0,preparation=>withRepositoryToolingStoreV1(host,original,preparation,tools=>withRepositoryRustToolchainV1(host,tools,preparation,async(generation,toolchainControl)=>{if(environment.RUSTUP_TOOLCHAIN&&![generation.channel,generation.environment.RUSTUP_TOOLCHAIN].includes(environment.RUSTUP_TOOLCHAIN))throw Error("Incoming compiler toolchain disagrees with Source pin");const projected={...generation.environment,...environment,PATH:generation.environment.PATH,RUSTUP_HOME:generation.environment.RUSTUP_HOME,RUSTUP_TOOLCHAIN:generation.environment.RUSTUP_TOOLCHAIN,RUSTUP_AUTO_INSTALL:"0",RUSTUP_TRACE_DIR:undefined,RUSTUP_DIST_ROOT:undefined,RUSTUP_DIST_SERVER:generation.environment.RUSTUP_DIST_SERVER,RUSTUP_UPDATE_ROOT:generation.environment.RUSTUP_UPDATE_ROOT};return withRepositoryCompilerStoreOwnedV1(host,workspace,mode,toolchainControl,projected,async(store,actualControl)=>{await generation.recheck();const complete=Object.freeze({...store,toolchain:generation}),owner=compilerStoreOwners.get(store);if(!owner?.live)throw Error("Actual retained compiler constructor required");compilerStoreOwners.set(complete,owner);const result=await body(complete,actualControl);await generation.recheck();return result;},original); })));});}
+
+/** 🛤️ Like `withRepositoryCompilerStoreV1`, but the build and target directories of the store the body sees are a lane taken from the pool for the crates in `request`, so the caller compiles in a directory of its own over the shared unit cache; a caller that compiles into the shared directory instead holds the whole-directory custody and serialises every other caller of it.
+ * @see ./🛤️lane/🟦️.ts */
+export function withRepositoryCompilerLaneV1<T>(workspace:string,mode:BuildMode,control:ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>,request:CompilerLaneRequestV1,body:(store:RepositoryCompilerStoreV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
+ return withRepositoryCompilerStoreV1(workspace,mode,control,environment,(store,actual)=>withRepositoryCompilerStoreLaneV1(store,actual,request,body));
+}
+
+/** 🛣️ A lane over a compiler store the caller already holds: the caller keeps its store (image reader, storage charge, preparation state) for as long as it needs it and takes a pooled lane only around the compile itself, so it holds no build-directory custody while it keeps its store (a proctor that serves the executable it built, a producer that publishes after the build). The lane's provenance is published into the store's shared build directory before the lane is released.
+ * @see ./🛤️lane/🟦️.ts */
+export function withRepositoryCompilerStoreLaneV1<T>(store:RepositoryCompilerStoreV1,control:ResourceLeaseControl,request:CompilerLaneRequestV1,body:(view:RepositoryCompilerStoreV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
+ const owner=compilerStoreOwners.get(store);if(!owner?.live)throw Error("Actual retained compiler constructor required");
+ requireNativeStorageReservationV1(owner.storage,owner.control);requireIssuedResourceControlRefinementV1(owner.control,control);
+ return withCompilerLaneViewV1({host:owner.host,store,control,request,register:view=>{compilerStoreOwners.set(view,owner);}},body);
+}
+
+type RetainedCompilerStoreV1={readonly store:RepositoryCompilerStoreV1;readonly control:ResourceLeaseControl;readonly invocation:ScriptInvocation;live:boolean};
+const retainedCompilerStores=new AsyncLocalStorage<ReadonlyMap<string,RetainedCompilerStoreV1>>(),retainedCompilerKeyV1=(workspace:string,mode:BuildMode)=>workspace+"\0"+mode;
+/** 🧵️ Enters the compiler store once and lets every `withRepositoryCompilerStoreV1` call of the same invocation, workspace and mode inside `body` reuse it with its own deadline and cancellation, until `body` settles. */
+export function withRetainedRepositoryCompilerStoreV1<T>(workspace:string,mode:BuildMode,control:ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>,body:(control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
+ return withRepositoryCompilerStoreV1(workspace,mode,control,environment,(store,actual)=>{const owner=compilerStoreOwners.get(store);if(!owner?.live)throw Error("Actual retained compiler constructor required");const entry:RetainedCompilerStoreV1={store,control:actual,invocation:owner.invocation,live:true},map=new Map(retainedCompilerStores.getStore());map.set(retainedCompilerKeyV1(workspace,mode),entry);return retainedCompilerStores.run(map,async()=>{try{return await body(actual);}finally{entry.live=false;}});});
+}
+type CompilerStoreOwner={partition:NativeImageStorageV1;policy:NativeStoragePolicyV1;storage:NativeStorageReservationV1;control:ResourceLeaseControl;invocation:ScriptInvocation;workspace:string;host:string;mode:BuildMode;live:boolean};
+const compilerStoreOwners=new WeakMap<object,CompilerStoreOwner>();
+/** 🪢️ Resolves only an actual live compiler factory to its privately retained partition operation. */
+export function withRepositoryCompilerArtifactCacheV1<T>(store:RepositoryCompilerStoreV1,invocation:ScriptInvocation,control:ResourceLeaseControl,request:Readonly<{policy:NativeArtifactCachePolicyV1;key:string;content:string}>,body:(cache:NativeArtifactCacheVolumeV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{const owner=compilerStoreOwners.get(store);if(!owner?.live||owner.invocation!==invocation||owner.storage!==store.storage||owner.control!==store.control||owner.partition.root!==store.root)throw Error("Exact live compiler store factory required");requireIssuedResourceControlInvocationV1(control,invocation);requireNativeStorageReservationV1(owner.storage,owner.control);requireIssuedResourceControlRefinementV1(owner.control,control);const captured=Object.freeze({policy:readNativeArtifactCachePolicyV1(request.policy),key:request.key,content:request.content});return withCompilerWorkspaceBorrowV1(owner.storage,control,actual=>{requireCompilerWorkspaceBorrowCustodyV1(owner.storage,owner.control,actual);return withRepositoryCachePartitionArtifactCacheV1(owner.partition,{...captured,allocation:owner.storage,allocationControl:owner.control,control:actual,invocation,parentPolicy:owner.policy},body);});}
+
+/** 👓️ Authenticates an exact live compiler owner and its carried phase without issuing new storage or compiler authority. */
+export function requireRepositoryCompilerStoreV1(store:RepositoryCompilerStoreV1,workspace:string,invocation:ScriptInvocation,control:ResourceLeaseControl):BuildMode{const owner=compilerStoreOwners.get(store);if(!owner?.live||owner.workspace!==workspace||owner.invocation!==invocation||owner.storage!==store.storage||owner.control!==store.control||owner.partition.root!==store.root)throw Error("Exact live compiler store reader required");requireIssuedResourceControlInvocationV1(control,invocation);requireNativeStorageReservationV1(owner.storage,owner.control);requireIssuedResourceControlRefinementV1(owner.control,control);return owner.mode;}

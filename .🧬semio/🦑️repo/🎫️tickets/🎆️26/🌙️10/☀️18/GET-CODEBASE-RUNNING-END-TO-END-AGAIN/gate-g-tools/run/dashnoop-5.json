@@ -1,0 +1,20 @@
+{
+ "label": "dashnoop-5",
+ "target": "@semio-tech/repo-dashboard-rs:build",
+ "started": "01:00:24",
+ "wall_s": 795.7,
+ "peak_tree_mb": 2874,
+ "peak_processes": 7,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "3",
+   "1 internal, 2 worker"
+  ],
+  "actions": [
+   "3"
+  ]
+ }
+}

@@ -1,0 +1,113 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "ts-valid-types",
+   "path": "a.ts",
+   "source": "export interface A<T>{x:T}\nexport const f=<T,>(v:T):T=>v;\nexport enum E{A,B}\nconst s={a:1} satisfies Record<string,number>;\nexport {s};",
+   "valid": true
+  },
+  {
+   "id": "ts-top-level-await",
+   "path": "a.mts",
+   "source": "const v=await Promise.resolve(1);\nexport default v?.toString()??'';",
+   "valid": true
+  },
+  {
+   "id": "tsx-valid",
+   "path": "a.tsx",
+   "source": "export const C=()=><div className=\"x\">{[1,2].map(n=><b key={n}>{n}</b>)}</div>;",
+   "valid": true
+  },
+  {
+   "id": "js-valid-class",
+   "path": "a.js",
+   "source": "export class K{#p=1;static s=2;get p(){return this.#p;}}",
+   "valid": true
+  },
+  {
+   "id": "cjs-valid",
+   "path": "a.cjs",
+   "source": "module.exports={a:1};",
+   "valid": true
+  },
+  {
+   "id": "template-valid",
+   "path": "a.ts",
+   "source": "export const t=`a${1+1}b${`n${2}`}`;",
+   "valid": true
+  },
+  {
+   "id": "unexpected-semicolon",
+   "path": "b.ts",
+   "source": "export const v=;",
+   "valid": false
+  },
+  {
+   "id": "unterminated-string",
+   "path": "b.ts",
+   "source": "export const v='abc;\nexport const w=1;",
+   "valid": false
+  },
+  {
+   "id": "unterminated-template",
+   "path": "b.ts",
+   "source": "export const v=`abc",
+   "valid": false
+  },
+  {
+   "id": "missing-brace",
+   "path": "b.ts",
+   "source": "export function f(){\n  if(true){\n    return 1;\n}",
+   "valid": false
+  },
+  {
+   "id": "stray-paren",
+   "path": "b.ts",
+   "source": "export const v=(1+2));",
+   "valid": false
+  },
+  {
+   "id": "bad-import",
+   "path": "b.ts",
+   "source": "import from 'x';",
+   "valid": false
+  },
+  {
+   "id": "bad-arrow",
+   "path": "b.js",
+   "source": "export const f=(a,b)=>=a+b;",
+   "valid": false
+  },
+  {
+   "id": "unclosed-object",
+   "path": "b.js",
+   "source": "export const o={a:1,b:;",
+   "valid": false
+  },
+  {
+   "id": "tsx-unclosed-tag",
+   "path": "b.tsx",
+   "source": "export const C=()=><div><b></div>;",
+   "valid": false
+  },
+  {
+   "id": "class-bad-member",
+   "path": "b.ts",
+   "source": "export class K{ x y }",
+   "valid": false
+  },
+  {
+   "id": "missing-expression",
+   "path": "b.ts",
+   "source": "export const v=1+;",
+   "valid": false
+  },
+  {
+   "id": "duplicate-comma",
+   "path": "b.ts",
+   "source": "export const [a,,]=[1,2]; export const {,b}={};",
+   "valid": false
+  }
+ ]
+}

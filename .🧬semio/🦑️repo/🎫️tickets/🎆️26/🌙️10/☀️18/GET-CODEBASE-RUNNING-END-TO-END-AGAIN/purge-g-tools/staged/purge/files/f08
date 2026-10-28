@@ -1,0 +1,557 @@
+{
+ "version": 1,
+ "nodes": [
+  {
+   "path": ".🧬semio/🦑️repo/keep.txt",
+   "kind": "file",
+   "text": "keep"
+  },
+  {
+   "path": ".🧬semio/old-repo/x.txt",
+   "kind": "file",
+   "text": "xx"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/old-tickets/t.md",
+   "kind": "file",
+   "text": "tttt"
+  },
+  {
+   "path": "🦑️repo/stray.txt",
+   "kind": "file",
+   "text": "stray!"
+  },
+  {
+   "path": "pkg/.🧬semio/pkg-repo/z.txt",
+   "kind": "file",
+   "text": "zzz"
+  },
+  {
+   "path": "node_modules/.🧬semio/n-repo/a",
+   "kind": "file",
+   "text": "a"
+  },
+  {
+   "path": "target/.🧬semio/t-repo/a",
+   "kind": "file",
+   "text": "a"
+  },
+  {
+   "path": "src/.🧬semio/p-repo/a",
+   "kind": "file",
+   "text": "aaaa"
+  },
+  {
+   "path": "src/main.ts",
+   "kind": "file",
+   "text": "export {}"
+  },
+  {
+   "path": ".generation3d-foo-link/data",
+   "kind": "file",
+   "text": "12345"
+  },
+  {
+   "path": ".generation3d-bar-link",
+   "kind": "file",
+   "text": "123"
+  },
+  {
+   "path": ".w-g3-ticket",
+   "kind": "file",
+   "text": "w"
+  },
+  {
+   "path": ".generation3d-keep",
+   "kind": "file",
+   "text": "k"
+  },
+  {
+   "path": "other-link",
+   "kind": "file",
+   "text": "o"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG/🎫️ticket.json",
+   "kind": "file",
+   "text": "{\"status\":\"closed\"}"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG/a.bin",
+   "kind": "file",
+   "size": 6291456
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG/sub/b.bin",
+   "kind": "file",
+   "size": 4194304
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG/sub/c.bin",
+   "kind": "file",
+   "size": 4194304
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG/sub/d.bin",
+   "kind": "file",
+   "size": 4194304
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG/🗑️generated/g.txt",
+   "kind": "file",
+   "text": "gen"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG/small.txt",
+   "kind": "file",
+   "text": "s"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG/deep/x/y/z.txt",
+   "kind": "file",
+   "text": "z"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/🎫️ticket.json",
+   "kind": "file",
+   "text": "{\"status\":\"open\"}"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/huge.bin",
+   "kind": "file",
+   "size": 105906176
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/🗑️generated/o.txt",
+   "kind": "file",
+   "text": "o"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/NEW/notes.md",
+   "kind": "file",
+   "text": "notes"
+  },
+  {
+   "path": "pkg/target/CACHEDIR.TAG",
+   "kind": "file",
+   "text": "Signature: 8a477f597d28d172789f06886806bc55"
+  },
+  {
+   "path": "pkg/target/debug/a.o",
+   "kind": "file",
+   "text": "obj"
+  },
+  {
+   "path": "pkg/dist/x.js",
+   "kind": "file",
+   "text": "js"
+  },
+  {
+   "path": "target-x/CACHEDIR.TAG",
+   "kind": "file",
+   "text": "sig"
+  },
+  {
+   "path": "node_modules/target/CACHEDIR.TAG",
+   "kind": "file",
+   "text": "sig"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/target/CACHEDIR.TAG",
+   "kind": "file",
+   "text": "sig"
+  },
+  {
+   "path": "build/y.txt",
+   "kind": "file",
+   "text": "y"
+  }
+ ],
+ "bytes": [
+  {
+   "path": "src/main.ts",
+   "expected": 9
+  },
+  {
+   "path": ".generation3d-foo-link",
+   "expected": 5
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG/sub",
+   "expected": 12582912
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG",
+   "expected": 18874392
+  },
+  {
+   "path": "pkg/target",
+   "expected": 46
+  },
+  {
+   "path": "nothing",
+   "expected": 0
+  }
+ ],
+ "misplaced": {
+  "all": {
+   "prefixes": [],
+   "expected": [
+    {
+     "kind": "misplaced",
+     "path": "🦑️repo",
+     "bytes": 6
+    },
+    {
+     "kind": "misplaced",
+     "path": ".🧬semio/old-repo",
+     "bytes": 2
+    },
+    {
+     "kind": "misplaced",
+     "path": ".🧬semio/🦑️repo/old-tickets",
+     "bytes": 4
+    },
+    {
+     "kind": "misplaced",
+     "path": "pkg/.🧬semio/pkg-repo",
+     "bytes": 3
+    },
+    {
+     "kind": "misplaced",
+     "path": "src/.🧬semio/p-repo",
+     "bytes": 4
+    }
+   ]
+  },
+  "protected": {
+   "prefixes": [
+    "src/.🧬semio/p-repo",
+    ".🧬semio/old-repo"
+   ],
+   "expected": [
+    {
+     "kind": "misplaced",
+     "path": "🦑️repo",
+     "bytes": 6
+    },
+    {
+     "kind": "misplaced",
+     "path": ".🧬semio/🦑️repo/old-tickets",
+     "bytes": 4
+    },
+    {
+     "kind": "misplaced",
+     "path": "pkg/.🧬semio/pkg-repo",
+     "bytes": 3
+    }
+   ]
+  }
+ },
+ "transient": {
+  "prefixes": [],
+  "expected": [
+   {
+    "kind": "root-transient",
+    "path": ".generation3d-foo-link",
+    "bytes": 5
+   },
+   {
+    "kind": "root-transient",
+    "path": ".generation3d-bar-link",
+    "bytes": 3
+   },
+   {
+    "kind": "root-transient",
+    "path": ".w-g3-ticket",
+    "bytes": 1
+   }
+  ],
+  "protected": [
+   ".generation3d-bar-link"
+  ],
+  "expectedProtected": [
+   {
+    "kind": "root-transient",
+    "path": ".generation3d-foo-link",
+    "bytes": 5
+   },
+   {
+    "kind": "root-transient",
+    "path": ".w-g3-ticket",
+    "bytes": 1
+   }
+  ]
+ },
+ "ticketRoots": [
+  ".🧬semio/🦑️repo/🎫️tickets"
+ ],
+ "ticketFolders": [
+  ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG",
+  ".🧬semio/🦑️repo/🎫️tickets/26/10/21/NEW",
+  ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN"
+ ],
+ "generatedRemovals": [
+  {
+   "folder": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG",
+   "prefixes": [],
+   "expected": [
+    {
+     "kind": "ticket-generated",
+     "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG/🗑️generated",
+     "bytes": 3
+    }
+   ]
+  },
+  {
+   "folder": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG",
+   "prefixes": [
+    ".🧬semio/🦑️repo/🎫️tickets/26/10/21/BIG/🗑️generated"
+   ],
+   "expected": []
+  },
+  {
+   "folder": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN",
+   "prefixes": [],
+   "expected": []
+  },
+  {
+   "folder": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/NEW",
+   "prefixes": [],
+   "expected": []
+  }
+ ],
+ "build": {
+  "prefixes": [],
+  "expected": [
+   {
+    "kind": "build-artifact",
+    "path": "pkg/target",
+    "bytes": 46
+   },
+   {
+    "kind": "build-artifact",
+    "path": "target-x",
+    "bytes": 3
+   }
+  ],
+  "protected": [
+   "target-x"
+  ],
+  "expectedProtected": [
+   {
+    "kind": "build-artifact",
+    "path": "pkg/target",
+    "bytes": 46
+   }
+  ]
+ },
+ "dedupe": [
+  {
+   "rows": [
+    {
+     "kind": "ticket-dir",
+     "path": "a/b",
+     "bytes": 1
+    },
+    {
+     "kind": "ticket-dir",
+     "path": "a/b/c",
+     "bytes": 1
+    },
+    {
+     "kind": "ticket-dir",
+     "path": "a",
+     "bytes": 1
+    },
+    {
+     "kind": "ticket-dir",
+     "path": "z",
+     "bytes": 1
+    }
+   ],
+   "expected": [
+    "a/b/c",
+    "z"
+   ]
+  },
+  {
+   "rows": [
+    {
+     "kind": "ticket-dir",
+     "path": "x/y",
+     "bytes": 1
+    },
+    {
+     "kind": "ticket-dir",
+     "path": "x/yz",
+     "bytes": 1
+    },
+    {
+     "kind": "ticket-dir",
+     "path": "x/y/z",
+     "bytes": 1
+    },
+    {
+     "kind": "ticket-dir",
+     "path": "x/y",
+     "bytes": 1
+    }
+   ],
+   "expected": [
+    "x/y/z",
+    "x/yz"
+   ]
+  },
+  {
+   "rows": [],
+   "expected": []
+  }
+ ],
+ "git": {
+  "files": {
+   ".gitignore": "big.bin\nignored-dir/\nnode_modules/\n*.tmp\n",
+   "tracked.txt": "t",
+   "big.bin": null,
+   "small.tmp": "s",
+   "ignored-dir/inner.bin": null,
+   "node_modules/pkg/big.bin": null,
+   "keep.txt": "k",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/SLUG/ignored.tmp": "i",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/SLUG/big.bin": null,
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/SLUG/🎫️ticket.json": "{}",
+   "tickets/26/10/21/ASCII/ignored.tmp": "i",
+   "tickets/26/10/21/ASCII/readme.md": "r"
+  },
+  "sizes": {
+   "big.bin": 105906176,
+   "ignored-dir/inner.bin": 105906176,
+   "node_modules/pkg/big.bin": 105906176,
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/SLUG/big.bin": 105906176
+  },
+  "oversized": [
+   {
+    "kind": "gitignore",
+    "path": "big.bin",
+    "bytes": 105906176
+   },
+   {
+    "kind": "ticket-generated",
+    "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/SLUG/big.bin",
+    "bytes": 105906176
+   }
+  ],
+  "ticketRoots": [
+   ".🧬semio/🦑️repo/🎫️tickets"
+  ],
+  "ignoredMap": {
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/SLUG": [
+    ".🧬semio/🦑️repo/🎫️tickets/26/10/21/SLUG/big.bin",
+    ".🧬semio/🦑️repo/🎫️tickets/26/10/21/SLUG/ignored.tmp"
+   ]
+  },
+  "asciiRoots": [
+   "tickets"
+  ],
+  "asciiMap": {
+   "tickets/26/10/21/ASCII": [
+    "tickets/26/10/21/ASCII/ignored.tmp"
+   ]
+  }
+ },
+ "illegal": {
+  "files": {
+   "ok.txt": "ok",
+   "weird:name.txt": "w",
+   "dir/aux": "a",
+   "trail.": "t",
+   "sub/CON.txt": "c",
+   "node_modules/bad:x": "n",
+   "target-x/nul": "x",
+   "good dir/file": "g"
+  },
+  "tracked": [
+   "ok.txt",
+   "weird:name.txt",
+   "dir/aux",
+   "sub/CON.txt",
+   "good dir/file"
+  ],
+  "expected": [
+   "dir/aux",
+   "sub/CON.txt",
+   "trail.",
+   "weird:name.txt"
+  ],
+  "expectedProtected": [
+   "dir/aux",
+   "sub/CON.txt",
+   "trail."
+  ],
+  "protected": [
+   "weird:name.txt"
+  ]
+ },
+ "incremental": {
+  "files": {
+   "inc/crate-a/s-1-aaa/dep-graph.bin": "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+   "inc/crate-b/s-2-bbb-working/q.bin": "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "inc/crate-b/s-3-ccc/w.bin": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww",
+   "inc/crate-c/s-4-ddd/e.bin": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+   "inc/crate-d/notes.txt": "no session"
+  },
+  "target": "tgt",
+  "max": 1,
+  "mixedExpected": [
+   "tgt/debug/incremental/crate-a",
+   "tgt/debug/incremental/crate-c"
+  ],
+  "idleFiles": {
+   "idle/crate-a/s-1-aaa/x.bin": "x",
+   "idle/crate-b/s-2-bbb/y.bin": "y"
+  },
+  "idleExpected": [
+   "tgt/release/incremental"
+  ],
+  "idleUnder": [
+   "tgt/release/incremental/crate-a/s-1-aaa/x.bin",
+   "tgt/release/incremental/crate-b/s-2-bbb/y.bin"
+  ],
+  "mixed": [
+   "tgt/debug/incremental/crate-a/s-1-aaa/dep-graph.bin",
+   "tgt/debug/incremental/crate-b/s-2-bbb-working/q.bin",
+   "tgt/debug/incremental/crate-b/s-3-ccc/w.bin",
+   "tgt/debug/incremental/crate-c/s-4-ddd/e.bin",
+   "tgt/debug/incremental/crate-d/notes.txt"
+  ]
+ },
+ "thresholds": {
+  "buildArtifact": 10737418240,
+  "oversizedIgnored": 104857600
+ },
+ "walk": {
+  "skipNames": [
+   "node_modules",
+   "target"
+  ],
+  "stopAt": "src",
+  "visitedAll": [
+   "src",
+   "pkg",
+   "node_modules",
+   "target",
+   "build",
+   "target-x",
+   "other"
+  ],
+  "tree": [
+   "src/inner",
+   "pkg/inner",
+   "node_modules/inner",
+   "target/inner",
+   "build/inner",
+   "target-x/inner",
+   "other/inner"
+  ]
+ }
+}

@@ -1,0 +1,12 @@
+{
+ "label": "g40-print3",
+ "target": "@semio-tech/print-rs:test",
+ "started": "12:58:28",
+ "wall_s": 10.1,
+ "peak_tree_mb": 1311,
+ "peak_processes": 3,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

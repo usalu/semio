@@ -22,6 +22,8 @@ test("genuine birth ladder is schema-closed and refuses duplicate or conditional
   expect(validate(policy)).toBe(true);
   expect(validate({ ...policy, unknown: true })).toBe(false);
   expect(validate({ ...policy, births: [] })).toBe(false);
+  expect(validate({ ...policy, births: [{ ...policy.births[0], preparation: "unknown" }] })).toBe(false);
+  expect(policy.births.filter(row => "preparation" in row).map(row => row.id)).toEqual(["target-execution"]);
   expect(readGenuineBirthPolicyV1().births.map(row => row.id)).toEqual(policy.births.map(row => row.id));
   expect(() => readGenuineBirthPolicyV1({ ...policy, births: [policy.births[0], policy.births[0]] })).toThrow();
   expect(() => readGenuineBirthPolicyV1({ ...policy, births: [{ ...policy.births[1] }, policy.births[0]] })).toThrow();

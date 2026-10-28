@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "sizes": {
+    "small": {
+      "timeout": "short",
+      "seconds": 60
+    },
+    "medium": {
+      "timeout": "moderate",
+      "seconds": 300
+    },
+    "large": {
+      "timeout": "long",
+      "seconds": 900
+    },
+    "enormous": {
+      "timeout": "eternal",
+      "seconds": 3600
+    }
+  },
+  "levels": {
+    "fundamental": "small",
+    "quick": "medium",
+    "long": "large",
+    "exhaustive": "enormous"
+  },
+  "witness": {
+    "from": 2000
+  },
+  "measure": {
+    "headroom": 3,
+    "minimumRuns": 5,
+    "shardAboveSeconds": 300
+  },
+  "default": {
+    "size": "enormous",
+    "shards": 1,
+    "flaky": false
+  },
+  "rules": [
+    {
+      "id": "course-test-shards",
+      "evidence": "declared",
+      "reason": "The course suite (17 files, 716 tests) needs 50 to 260 s of wall time on a quiet host and five times that at load 40 to 70; three shards keep each far inside its budget (Vitest assigns 6, 6 and 5 files).",
+      "targets": ["test"],
+      "projects": ["@teaching/architecture-course"],
+      "shards": 3
+    }
+  ],
+  "messages": {
+    "shardNotHonoured": {
+      "en": "No command of ${label} honoured shard ${index}/${total}; this shard ran the whole task.",
+      "de": "Kein Befehl von ${label} hat den Shard ${index}/${total} beachtet; dieser Shard hat die ganze Task ausgeführt."
+    }
+  }
+}

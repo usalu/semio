@@ -74,9 +74,9 @@ mod change_gas_material_gas {
 #[path = "."]
 mod change_glazing_material_visible_transmittance {
     pub use crate::window_layer_optics_mutations::change_glazing_material_visible_transmittance::*;
-    #[path = "../../🥂️window-layer/🥽️change-glazing-visible-transmittance/🧪️tests/⛔️refuses/🦀️.rs"]
+    #[path = "../../🥂️window-layer/🥽️glazing-visible-transmittance/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
-    #[path = "../../🥂️window-layer/🥽️change-glazing-visible-transmittance/🧪️tests/✅️applies/🦀️.rs"]
+    #[path = "../../🥂️window-layer/🥽️glazing-visible-transmittance/🧪️tests/✅️applies/🦀️.rs"]
     mod tests_applies;
 }
 

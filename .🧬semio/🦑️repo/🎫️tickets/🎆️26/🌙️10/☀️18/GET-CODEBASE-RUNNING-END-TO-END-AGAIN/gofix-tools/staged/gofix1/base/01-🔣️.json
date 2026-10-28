@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.repo.cli.entrypoint/1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "buildVerbs",
+    "dashboardArguments",
+    "vectors",
+    "rootScriptPrefixes",
+    "scriptExtensions",
+    "scriptOptions"
+  ],
+  "properties": {
+    "buildVerbs": {
+      "const": [
+        "run",
+        "run-many",
+        "affected",
+        "exec",
+        "watch",
+        "graph",
+        "show",
+        "inputs",
+        "reset",
+        "tools",
+        "preflight",
+        "incremental",
+        "concurrency",
+        "conformance",
+        "units",
+        "bench",
+        "dependencies",
+        "cargo",
+        "cache",
+        "remote-cache",
+        "capacity",
+        "leases",
+        "service",
+        "remote-execution",
+        "doctor",
+        "session"
+      ]
+    },
+    "dashboardArguments": {
+      "const": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--output=stream",
+        "--"
+      ]
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "argv",
+          "kind",
+          "arguments"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "argv": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "kind": {
+            "enum": [
+              "domain",
+              "build",
+              "mcp",
+              "workspace",
+              "script"
+            ]
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "rootScriptPrefixes": {
+      "const": [
+        [
+          "dev",
+          "mcp",
+          "stdio",
+          "os"
+        ]
+      ]
+    },
+    "scriptExtensions": {
+      "const": [
+        ".ts",
+        ".mjs",
+        ".js"
+      ]
+    },
+    "scriptOptions": {
+      "const": [
+        "watch",
+        "cwd"
+      ]
+    }
+  }
+}

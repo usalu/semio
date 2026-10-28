@@ -1,0 +1,121 @@
+{
+ "batch": "leasesentry",
+ "files": [
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+   "base": "1b1a0afa95a33acf9c2a906977429a1f12fa62af70db411774432e70b7b4ce39",
+   "applied": "0db55ae46577ed237d8915e9607acbe817eb1ab226f002b21cc0f0bf8e9ee94e",
+   "edits": [
+    {
+     "old": "import {readIssuedResourceControlCapabilitiesV1,requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupDescendantV1,requireAcceptedPhysicalCleanupControlV1,checkAcceptedPhysicalCleanupV1,noteAcceptedPhysicalCleanupProgressV1,readAcceptedPhysicalCleanupV1,requireIssuedResourceControlRefinementV1,requireIssuedResourceControlDescendantV1,withAcceptedPhysicalCleanupOperationV1,closeAcceptedPhysicalCleanupChildrenV1} from \"../🧭️routing/📥️invocation/🏃️process/🟦️.ts\";",
+     "new": "import {readIssuedResourceControlCapabilitiesV1,requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupDescendantV1,requireAcceptedPhysicalCleanupControlV1,checkAcceptedPhysicalCleanupV1,noteAcceptedPhysicalCleanupProgressV1,readAcceptedPhysicalCleanupV1,requireIssuedResourceControlRefinementV1,requireIssuedResourceControlDescendantV1,withAcceptedPhysicalCleanupOperationV1,closeAcceptedPhysicalCleanupChildrenV1} from \"./🦥️routing/🟦️.ts\";"
+    }
+   ],
+   "keep": "1b1a0afa95a33acf"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🟦️.ts",
+   "base": "c0bc1d7741b729c5fa9bf412484c4a1ecd3fccfa8319b0e09e633d787b5a9467",
+   "applied": "dbb7fea8d4a0294745faa581f6e60dca7a567875e6834ac23cae6da8a727c2fc",
+   "edits": [
+    {
+     "old": "import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from\"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts\";",
+     "new": "import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from\"../🦥️routing/🟦️.ts\";"
+    }
+   ],
+   "keep": "c0bc1d7741b729c5"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts",
+   "base": "23e8b1fe5edf4758fa119d772d1ed09ca7d45770ab6e6f91a043fd7238256783",
+   "applied": "fd2c3dd538b29cc07315948189e8b75bcca68d86a730bc0f11568cc52aea4be4",
+   "edits": [
+    {
+     "old": "export { listSessionSandboxesV1, reclaimAgentSessionSandboxesV1, testSandboxParentV1 } from \"../../../🧪️testing/🏖️sandbox/🟦️.ts\";\n",
+     "new": ""
+    }
+   ],
+   "keep": "23e8b1fe5edf4758"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🏖️sandbox/🟦️.ts",
+   "base": "8aed5d38907e04bed820562af3914a2bba88f9e5f1348fa331ba54ffd295176d",
+   "applied": "c10632d9928b9344f6fb39443e8dacdcda90fc91d2ff206a037c67b7ec764fc6",
+   "edits": [
+    {
+     "old": "export { requireArtifactOutsideManagedParentV1, safeTemporaryDirectoryV1 }",
+     "new": "export { listSessionSandboxesV1, reclaimAgentSessionSandboxesV1, requireArtifactOutsideManagedParentV1, safeTemporaryDirectoryV1, testSandboxParentV1 }"
+    }
+   ],
+   "keep": "8aed5d38907e04be"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️agent-sessions/🟦️.ts",
+   "base": "8920369d0c3abc9702af4a65c9609078314592717a85de4add2e2f101505d58b",
+   "applied": "7802fa1329e80a377bc5b58b44873e37e6f1f3fcec1fbb7954c089a65abc1d0d",
+   "edits": [
+    {
+     "old": "import {agentSessionRegistryRootV1,agentSessionStoreV1,adoptAgentSessionV1,collectAgentSessionsIfDueV1,reclaimAgentSessionSandboxesV1,type",
+     "new": "import {reclaimAgentSessionSandboxesV1} from \"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🏖️sandbox/🟦️.ts\";\nimport {agentSessionRegistryRootV1,agentSessionStoreV1,adoptAgentSessionV1,collectAgentSessionsIfDueV1,type"
+    }
+   ],
+   "keep": "8920369d0c3abc97"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️agent-sessions/⌨️command/🟦️.ts",
+   "base": "f91c391b6180d39e8f58e257b09a0ea9e7be41531b67d2c40c94a29d1bc70eb5",
+   "applied": "a0dc683b5c5a39bdcb1d5857d856447c6fb7c92a858440f4c81eeb1527169c37",
+   "edits": [
+    {
+     "old": "listAgentSessionsV1,listSessionSandboxesV1,renderAgentSessionListV1,renderAgentSessionStatusV1,testSandboxParentV1,AGENT_SESSION_POLICY_V1",
+     "new": "listAgentSessionsV1,renderAgentSessionListV1,renderAgentSessionStatusV1,AGENT_SESSION_POLICY_V1"
+    },
+    {
+     "old": "import {AgentSessionErrorV1,",
+     "new": "import {listSessionSandboxesV1,testSandboxParentV1} from \"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🏖️sandbox/🟦️.ts\";\nimport {AgentSessionErrorV1,"
+    }
+   ],
+   "keep": "f91c391b6180d39e"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+   "base": "e8d8d6f741bedcedb87d05ca0007b189ffd20880b36421fa1d03e0f01a342446",
+   "applied": "7ec4f0329bcf2fb01bf8ced29ed24306b014e973a4c50f35cc751721920102d4",
+   "edits": [
+    {
+     "old": "export function requireIssuedResourceControlDescendantV1(ancestor:ResourceLeaseControl,control:ResourceLeaseControl):void{requireIssuedResourceControlV1(ancestor);requireIssuedResourceControlV1(control);const expected=controls.get(ancestor)!,policy=schema.definitions.ControlDescendant.const;if(!policy.includeSelf||!policy.liveIssuance||policy.restrictionEquivalence)throw Error(\"Closed actual control lineage policy required\");for(let row:ControlScope|undefined=controls.get(control);row;row=row.parentControl)if(row===expected)return;throw Error(\"Exact issued resource control descendant required\");}",
+     "new": "export function requireIssuedResourceControlDescendantV1(ancestor:ResourceLeaseControl,control:ResourceLeaseControl):void{requireIssuedResourceControlV1(ancestor);requireIssuedResourceControlV1(control);const expected=controls.get(ancestor)!,policy=schema.definitions.ControlDescendant.const;if(!policy.includeSelf||!policy.liveIssuance||policy.restrictionEquivalence)throw Error(\"Closed actual control lineage policy required\");for(let row:ControlScope|undefined=controls.get(control);row;row=row.parentControl)if(row===expected)return;throw Error(\"Exact issued resource control descendant required\");}\n\n/** 🪪️ Publishes the members the lazy lease bridge calls under a process-wide key, so a lease module that a test runner loaded through its own module graph reaches the routing instance that issued the controls and not a second copy with an empty issuance table. */\n(globalThis as unknown as Record<symbol,unknown>)[Symbol.for(\"semio.issuedRouting.v1\")]=Object.freeze({readIssuedResourceControlCapabilitiesV1,requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupDescendantV1,requireAcceptedPhysicalCleanupControlV1,checkAcceptedPhysicalCleanupV1,noteAcceptedPhysicalCleanupProgressV1,readAcceptedPhysicalCleanupV1,requireIssuedResourceControlRefinementV1,requireIssuedResourceControlDescendantV1,withAcceptedPhysicalCleanupOperationV1,closeAcceptedPhysicalCleanupChildrenV1,withRequestedIssuedResourceControlV1});"
+    }
+   ],
+   "keep": "e8d8d6f741bedced"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🦥️routing/🟦️.ts",
+   "created": true,
+   "base": null,
+   "applied": "ad513343fcaf6bdfd09daa48fa1cd11ab45ee3222e533ba70fa4e1d7edd802a5",
+   "source": "lazy-routing.ts"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🦥️routing/🧪️tests/🟦️.ts",
+   "created": true,
+   "base": null,
+   "applied": "3558993b805910491497c3734e96e2a33c4090b72e27f9b306266bea0a59d1a4",
+   "source": "bridge-law.ts"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🦥️routing/🧪️tests/🧫️fixtures/🟦️.ts",
+   "created": true,
+   "base": null,
+   "applied": "8ab64ec241b26cf9eb5befab02cf2dab319ade933d4d26f78ca4ceb682ed1021",
+   "source": "bridge-fixture.ts"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🦥️routing/🧪️tests/🧫️fixtures/🟨️.mjs",
+   "created": true,
+   "base": null,
+   "applied": "c7cf5455b9ba92786a97a0f5f78168b52d469535aadee3ac3c3f9e7229def09e",
+   "source": "bridge-config.mjs"
+  }
+ ]
+}

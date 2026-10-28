@@ -4,11 +4,12 @@ import{AsyncLocalStorage}from"node:async_hooks";
 import ts from"typescript";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
-import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
+import{declareBuildTestEnvelopeV1,withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import*as routing from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl}from"@semio-tech/process/leases";
 import schema from"./🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
+declareBuildTestEnvelopeV1({owner:"test:build-workspace-graph-laws",maximumElapsedMilliseconds:300000,capabilities:{}});
 
 test("Observed settlement preserves thrown undefined and exact arbitrary failures",()=>withBuildTestInvocationV1(async original=>{
  expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);const source=await readFile(new URL("../../../👁️observation/🟨️.mjs",import.meta.url),"utf8"),tree=ts.createSourceFile("observation.mjs",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),node=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="settleObservedComputationV1");if(!node)throw Error("Actual observed settlement owner required");const code=ts.transpileModule(node.getText(tree).replace(/^export\s/u,""),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,db=new Database(":memory:"),phase=routing.createIssuedResourceControlV1(original,"observation:settlement-law",0);

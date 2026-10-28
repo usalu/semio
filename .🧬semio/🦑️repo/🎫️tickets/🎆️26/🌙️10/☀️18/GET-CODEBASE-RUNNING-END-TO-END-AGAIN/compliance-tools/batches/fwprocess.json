@@ -1,0 +1,115 @@
+{
+ "title": "🎭️ Staged batch `cp-fwprocess` (lane compliance): every docstring of the process module's changed files starts with an emoji no other docstring of the file starts with; Python oracles get emoji docstrings and lose body comments.",
+ "files": [
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🧯️ceiling/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🐍️oracle/🐍️.py",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪜️phases/🐍️oracle/🐍️.py",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🐍️oracle/🐍️.py",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts"
+ ],
+ "emoji": [
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🧯️ceiling/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts"
+ ],
+ "manual": [
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🐍️oracle/🐍️.py",
+   "old": "    \"\"\"The request a run of this class asks for",
+   "new": "    \"\"\"📏 The request a run of this class asks for",
+   "count": 1
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🐍️oracle/🐍️.py",
+   "old": "    \"\"\"Full requests of classes that are declared",
+   "new": "    \"\"\"🧮 Full requests of classes that are declared",
+   "count": 1
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🐍️oracle/🐍️.py",
+   "old": "    \"\"\"Gate-g row 4c, step by step",
+   "new": "    \"\"\"🎞 Gate-g row 4c, step by step",
+   "count": 1
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🐍️oracle/🐍️.py",
+   "old": "    # the chain goes on: run 2 finishes quiet, runs 3 and 4 follow\n",
+   "new": "",
+   "count": 1
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🐍️oracle/🐍️.py",
+   "old": "    # sanity facts the law relies on\n",
+   "new": "",
+   "count": 1
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪜️phases/🐍️oracle/🐍️.py",
+   "old": "    \"\"\"The recorded night as a stream",
+   "new": "    \"\"\"🌙 The recorded night as a stream",
+   "count": 1
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🐍️oracle/🐍️.py",
+   "old": "\"\"\"Independent model of the compile units admission decision.",
+   "new": "\"\"\"🧮 Independent model of the compile units admission decision.",
+   "count": 1
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🐍️oracle/🐍️.py",
+   "old": "    \"\"\"Counted admission of FIFO requests",
+   "new": "    \"\"\"🚦 Counted admission of FIFO requests",
+   "count": 1
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧬️schema/🔣️.json",
+   "old": "fuer ",
+   "new": "für ",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧬️schema/🔣️.json",
+   "old": "Identitaet",
+   "new": "Identität",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧬️schema/🔣️.json",
+   "old": "geaendert",
+   "new": "geändert",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧬️schema/🔣️.json",
+   "old": "urspruengliche",
+   "new": "ursprüngliche",
+   "count": "any",
+   "optional": true
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧬️schema/🔣️.json",
+   "old": "geoeffnet",
+   "new": "geöffnet",
+   "count": "any",
+   "optional": true
+  }
+ ]
+}

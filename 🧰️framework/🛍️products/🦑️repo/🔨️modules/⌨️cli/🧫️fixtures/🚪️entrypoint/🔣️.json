@@ -22,6 +22,7 @@
     "remote-cache",
     "capacity",
     "leases",
+    "fleet",
     "service",
     "remote-execution",
     "doctor",
@@ -247,6 +248,18 @@
       "kind": "build",
       "arguments": [
         "leases",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "fleet",
+      "argv": [
+        "fleet",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "fleet",
         "--opaque=value"
       ]
     },

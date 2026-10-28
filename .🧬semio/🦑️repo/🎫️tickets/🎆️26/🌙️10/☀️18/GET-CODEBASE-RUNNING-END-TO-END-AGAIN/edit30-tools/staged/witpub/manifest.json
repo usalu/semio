@@ -1,0 +1,37 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "00.ts",
+  "base": "6ab9ae04759d8634bd563332bae3f245216763db4872597f493c8ee5ad4c539b",
+  "new": "cba943f01a6ae9c99a7d47073215cae7f5ac09f81dcbb51aa816ba85b4cebdc0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🧬️schema/🔣️.json": {
+  "file": "01.json",
+  "base": "757f1b91fea53c936aed8e0217a5f3f66037580b593756de2f7c7c51ba55a849",
+  "new": "d980e06a941c8e181b587beaa4b1ef425e5b8d60ae03a3e90db5229862f20b75"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧾️witness/🟦️.ts": {
+  "file": "02.ts",
+  "base": "e911a3fd39d99287d3727b025a87e734305defcd75b12af490c3ff02ddc15a80",
+  "new": "831d61f52b3148358a03e7426e0ab425449462ad3c83e7e7d40e66a05a49c645"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧾️witness/🧬️schema/🔣️.json": {
+  "file": "03.json",
+  "base": null,
+  "new": "68c789e00909a02a6a9d8b4e6faa14358d022a13e280a5ae03bf379d9bb07ead"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧾️witness/🧪️tests/🟦️.ts": {
+  "file": "04.ts",
+  "base": "3a300eb7e22a9e6a9328c263185899ca308c1df107d818cf3178db0f1fd0e6ef",
+  "new": "78b92273d18b302db1967a1b1f62822edca4fae575376745d6dcaee5691e1f67"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧾️witness/🧪️tests/🧮️digest/🟦️.ts": {
+  "file": "05.ts",
+  "base": "58cf034ff8a2fa555c178c47f65426185571ca63614d96f42ad502a2ee601ead",
+  "new": "b9b408a3e7530dc9a5be01d67ed33f572efabaadcce807a796ee29033f6bd72e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️coverage/🟦️.ts": {
+  "file": "06.ts",
+  "base": "02f09d3a56cf5495619efdd956db3ace3b2edcdd0de9a0de62b08a80bc076b16",
+  "new": "049aa991514faacdf5776ab4705dd65d742a30dfcffa2e443ee4765ff946b96e"
+ }
+}

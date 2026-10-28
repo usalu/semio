@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "id": "bootstrap",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "nx.admitted-structural-collection-manifests": {
+      "en": "[nx] Admitted {inventory} structural collection manifests",
+      "de": "[nx] {inventory} strukturelle Sammlungsmanifeste zugelassen"
+    },
+    "nx.validating-current-owner-custody": {
+      "en": "[nx] Validating current owner custody ({visited} directories, {admitted} manifests)",
+      "de": "[nx] Aktuelle Eigentümer-Obhut wird geprüft ({visited} Verzeichnisse, {admitted} Manifeste)"
+    },
+    "nx.waiting-for-source-watcher-and": {
+      "en": "[nx] Waiting for source watcher and project graph ({seconds}s); Ctrl+C cancels",
+      "de": "[nx] Warte auf Quell-Watcher und Projektgraph ({seconds} s); Strg+C bricht ab"
+    },
+    "nx.admitting-current-real-project-owners": {
+      "en": "[nx] Admitting current real project owners ({directories} directories)",
+      "de": "[nx] Aktuelle echte Projekteigentümer werden zugelassen ({directories} Verzeichnisse)"
+    },
+    "nx.bootstrap-phases-admissionms-provisioningms-activationms": {
+      "en": "[nx] Bootstrap phases admissionMs={admissionMs} provisioningMs={provisioningMs} activationMs={activationMs}",
+      "de": "[nx] Bootstrap-Phasen admissionMs={admissionMs} provisioningMs={provisioningMs} activationMs={activationMs}"
+    },
+    "nx.could-not-capture-descendants-for": {
+      "en": "Could not capture Nx descendants for cancellation",
+      "de": "Nx-Nachkommen konnten für den Abbruch nicht erfasst werden"
+    },
+    "nx.could-not-inspect-descendants-stopping": {
+      "en": "Could not inspect Nx descendants; stopping owned launch processes: {error}",
+      "de": "Nx-Nachkommen konnten nicht geprüft werden; eigene Startprozesse werden beendet: {error}"
+    },
+    "nx.graph-and-hash-preparation-running": {
+      "en": "[nx] Graph and hash preparation running elapsedMs={elapsedMs}",
+      "de": "[nx] Graph- und Hash-Vorbereitung läuft elapsedMs={elapsedMs}"
+    },
+    "nx.graph-membership-fallback": {
+      "en": "[nx] Graph membership fallback: {reason}",
+      "de": "[nx] Rückfall bei der Graph-Mitgliedschaft: {reason}"
+    },
+    "nx.graph-observation-selected-sealed-elapsedms": {
+      "en": "[nx] Graph observation sealed={sealed} elapsedMs={elapsedMs}",
+      "de": "[nx] Graph-Beobachtung sealed={sealed} elapsedMs={elapsedMs}"
+    },
+    "nx.source-authority-changed-admitting-the": {
+      "en": "[nx] Source authority changed; admitting the current graph again ({attempt}/3)",
+      "de": "[nx] Quellautorität hat sich geändert; der aktuelle Graph wird erneut zugelassen ({attempt}/3)"
+    },
+    "nx.generation-receipt-refused": {
+      "en": "[nx] Generation receipt refused: {reason}",
+      "de": "[nx] Generations-Quittung abgelehnt: {reason}"
+    },
+    "nx.generation-receipt-written": {
+      "en": "[nx] Generation receipt written={written}",
+      "de": "[nx] Generations-Quittung written={written}"
+    },
+    "dependencies.lock-check-required": {
+      "en": "Declared lock check required: {manager}",
+      "de": "Deklarierte Lock-Prüfung erforderlich: {manager}"
+    },
+    "dependencies.owner-pattern-required": {
+      "en": "Declared one-level dependency scope owner pattern required: {pattern}",
+      "de": "Deklariertes Eigentümermuster für Abhängigkeitsbereiche eine Ebene unter der Wurzel erforderlich: {pattern}"
+    },
+    "tools.authorizer-file-required": {
+      "en": "Original captured authorizer file required",
+      "de": "Ursprüngliche erfasste Authorizer-Datei erforderlich"
+    },
+    "tools.rust-compiler-generation-required": {
+      "en": "Original complete Rust compiler generation required",
+      "de": "Vollständige ursprüngliche Rust-Compiler-Generation erforderlich"
+    },
+    "nx.daemon-slots-taken-running-without": {
+      "en": "[nx] Every Nx daemon slot is taken; running without a daemon",
+      "de": "[nx] Alle Nx-Daemon-Slots sind belegt; der Lauf geschieht ohne Daemon"
+    },
+    "dashboard.installation-current": {
+      "en": "[dashboard] {mode} is current: its {files} source files and the {compiled} files its executable was compiled from are unchanged since its build, so nothing is built",
+      "de": "[dashboard] {mode} ist aktuell: seine {files} Quelldateien und die {compiled} Dateien, aus denen sein Programm gebaut wurde, sind seit seinem Build unverändert, es wird nichts gebaut"
+    },
+    "dashboard.artifact-required": {
+      "en": "[dashboard] there is no {mode} build to install: run repo run @semio-tech/repo-dashboard-rs:build first",
+      "de": "[dashboard] es gibt keinen {mode}-Build zum Installieren: zuerst repo run @semio-tech/repo-dashboard-rs:build ausführen"
+    },
+    "dashboard.artifact-sources-moved": {
+      "en": "[dashboard] {path} changed while the {mode} build compiled it, so this build is not kept: run repo run @semio-tech/repo-dashboard-rs:build again",
+      "de": "[dashboard] {path} hat sich geändert, während der {mode}-Build es kompilierte, daher wird dieser Build nicht behalten: repo run @semio-tech/repo-dashboard-rs:build erneut ausführen"
+    },
+    "dashboard.artifact-behind-sources": {
+      "en": "[dashboard] the {mode} build is behind its compiled source {path}: run repo run @semio-tech/repo-dashboard-rs:build --skip-cache",
+      "de": "[dashboard] der {mode}-Build ist hinter seiner kompilierten Quelle {path} zurück: repo run @semio-tech/repo-dashboard-rs:build --skip-cache ausführen"
+    },
+    "dashboard.sources-record-required": {
+      "en": "Dashboard executable sources record required",
+      "de": "Der Quellenbeleg der Dashboard-Programmdatei ist erforderlich"
+    },
+    "tools.cohort-required": {
+      "en": "Closed current immutable tooling cohort required",
+      "de": "Eine geschlossene, aktuelle, unveränderliche Werkzeuggruppe ist erforderlich"
+    },
+    "dashboard.artifact-changed": {
+      "en": "Dashboard artifact changed during installation",
+      "de": "Das Dashboard-Artefakt hat sich während der Installation geändert"
+    },
+    "tools.authorizer-ancestry-changed": {
+      "en": "A directory above an authorizer source changed while it was captured; run the command again",
+      "de": "Ein Verzeichnis über einer Autorisierer-Quelle hat sich während der Erfassung geändert; führe den Befehl erneut aus"
+    },
+    "tools.authorizer-directory-linked": {
+      "en": "An authorizer directory must be a real directory, not a symbolic link: {path}",
+      "de": "Ein Autorisierer-Verzeichnis muss ein echtes Verzeichnis sein, kein symbolischer Link: {path}"
+    },
+    "tools.selection-bounded": {
+      "en": "Select at most {maximum} distinct tooling generations by their 64-digit identity",
+      "de": "Wähle höchstens {maximum} verschiedene Werkzeuggenerationen über ihre 64-stellige Identität"
+    }
+  }
+}

@@ -5,7 +5,7 @@ import{EventEmitter}from"node:events";
 import{PassThrough}from"node:stream";
 import schema from"../🧬️schema/🔣️.json";
 import fixture from"./🔣️.json";
-import{ownedChildDecisionV1,ownedChildNoticeV1,settleOwnedChildV1}from"../🟦️.ts";
+import{isOwnedChildLostErrorV1,ownedChildDecisionV1,ownedChildLostErrorV1,ownedChildNoticeV1,settleOwnedChildV1}from"../🟦️.ts";
 const oracle="SELECT CASE WHEN :closed=1 THEN 'closed' WHEN :exited=1 THEN CASE WHEN :sinceExit>=:grace THEN 'force' ELSE 'wait' END WHEN :alive=0 THEN CASE WHEN :sinceVanished>=:grace THEN 'lost' ELSE 'wait' END ELSE 'wait' END AS decision";
 test("the settlement decision agrees with the closed schema and an independent SQLite table",()=>{
  const database=new Database(":memory:"),validate=new Ajv({strict:true,allowUnionTypes:true}).compile({...schema.definitions.State,definitions:{}});
@@ -25,4 +25,13 @@ test("a fake child whose stream never closes is settled after the grace, its str
 test("the notice is written in the selected language only, none assumed otherwise",()=>{
  expect(ownedChildNoticeV1({pid:1,label:"x",milliseconds:5,kind:"force"},{SEMIO_LANGUAGE:"de"}).split("\n").filter(Boolean).length).toBe(1);
  expect(ownedChildNoticeV1({pid:1,label:"x",milliseconds:5,kind:"force"},{}).split("\n").filter(Boolean).length).toBe(Object.keys(schema.definitions.Notice.const.labels).length);
+});
+test("only a lost child is refused with the closed typed cause, the capture refuses it and the notice vocabulary is unchanged",async()=>{
+ const database=new Database(":memory:"),validate=new Ajv({strict:true,allowUnionTypes:true}).compile({...schema.definitions.LostCause,definitions:{}}),muted=process.stderr.write.bind(process.stderr);process.stderr.write=(()=>true)as typeof process.stderr.write;
+ try{for(const row of fixture.children){const child=new FakeChild();for(const event of row.events)setTimeout(()=>child.emit(event.type,event.code,null),event.at);
+  const result=await settleOwnedChildV1(child as never,"fixture",{graceMilliseconds:60,livenessMilliseconds:10,present:()=>row.present}),refused=result.kind==="lost",oracle=database.query<{refused:number},[string]>("select ?1='lost' refused").get(result.kind)!;
+  expect(Number(refused)).toBe(oracle.refused);const error=ownedChildLostErrorV1("fixture",child.pid);expect(isOwnedChildLostErrorV1(error)).toBe(true);expect(validate(error.cause)).toBe(true);expect(error.message).toBe(schema.definitions.Lost.const.message+": fixture");}
+  for(const other of[Error("x"),Error("x",{cause:{version:1,kind:"other"}}),"lost",undefined,null])expect(isOwnedChildLostErrorV1(other)).toBe(false);
+  const capture=await Bun.file(new URL("../../📥️capture/🟦️.ts",import.meta.url)).text();expect(capture).toContain('settleOwnedChildV1(child,command).then(row=>{closed=true;if(row.kind==="lost")stop(ownedChildLostErrorV1(command,child.pid));');}
+ finally{process.stderr.write=muted;database.close();}
 });

@@ -6,6 +6,14 @@
     "de"
   ],
   "messages": {
+    "hooks.shell-bundled": {
+      "en": "setup: sh.exe is not on PATH, only Git for Windows' own shell ({path}) exists; git runs the commit hooks with it, but an IDE or a cmd session that starts the hook files directly skips them (the hooks swallow errors). Add its folder to PATH to cover both",
+      "de": "setup: sh.exe liegt nicht im PATH, nur die eigene Shell von Git für Windows ({path}) existiert; git führt die Commit-Hooks damit aus, aber eine IDE oder eine cmd-Sitzung, die die Hook-Dateien direkt startet, überspringt sie (die Hooks verschlucken Fehler). Den Ordner in den PATH aufnehmen, um beides abzudecken"
+    },
+    "hooks.shell-missing": {
+      "en": "setup: no POSIX shell (sh.exe) found: the commit hooks cannot run on this machine. Install Git for Windows (it brings sh.exe) and run setup again",
+      "de": "setup: Keine POSIX-Shell (sh.exe) gefunden: die Commit-Hooks können auf diesem Rechner nicht laufen. Git für Windows installieren (bringt sh.exe mit) und setup erneut ausführen"
+    },
     "message.at-least-one-description-bullet": {
       "en": "micro-commit: at least one description bullet is required",
       "de": "micro-commit: Mindestens ein Beschreibungs-Bullet ist erforderlich"
@@ -160,7 +168,7 @@
     },
     "bullets.must-cover-every-staged-area": {
       "en": "micro-commit: bullets must cover every staged area — missing: {missing}",
-      "de": "micro-commit: Die Bullets müssen jeden gestagten Bereich abdecken — es fehlt: {missing}"
+      "de": "micro-commit: Die Bullets müssen jeden vorgemerkten Bereich abdecken — es fehlt: {missing}"
     },
     "bullets.read-diff-again": {
       "en": "micro-commit: read `micro-commit diff` again (include ticket plans, product code, repo, …)",
@@ -176,11 +184,11 @@
     },
     "micro.nothing-is-staged-stage-the": {
       "en": "micro-commit: nothing is staged; stage the intended changes before prepare",
-      "de": "micro-commit: Nichts ist gestaged; die gewünschten Änderungen vor prepare stagen"
+      "de": "micro-commit: Nichts ist vorgemerkt; die gewünschten Änderungen vor prepare vormerken"
     },
     "micro.analyze-the-staged-paths-and": {
       "en": "\nmicro-commit: analyze the staged paths and diff above; pass 1–8 bullets on stdin (`{{emoji}}{{description}}` — pick the emoji that best matches each line, no leading `-`, no space after emoji; never 🎆️ 📊️ 🔢️ 🚩️)",
-      "de": "\nmicro-commit: Die gestageten Pfade und den Diff oben analysieren; 1–8 Bullets über stdin übergeben (`{{emoji}}{{description}}` — das Emoji wählen, das zur jeweiligen Zeile passt, ohne führendes `-`, ohne Leerzeichen nach dem Emoji; nie 🎆️ 📊️ 🔢️ 🚩️)"
+      "de": "\nmicro-commit: Die vorgemerkten Pfade und den Diff oben analysieren; 1–8 Bullets über stdin übergeben (`{{emoji}}{{description}}` — das Emoji wählen, das zur jeweiligen Zeile passt, ohne führendes `-`, ohne Leerzeichen nach dem Emoji; nie 🎆️ 📊️ 🔢️ 🚩️)"
     }
   }
 }

@@ -17,6 +17,8 @@ import type {ScriptInvocation} from "../../../🧭️routing/🟦️.ts";
 import {CurrentPhysicalOwnerV1} from "@semio-tech/framework-filesystem/observation/current";
 import {decodeCargoProvenanceV1} from "../🧾️receipt/🟦️.ts";
 import {createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{privateRepositoryWorkspaceV1}from"../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 
 /** 🧪️ Required compiler observations fail the law before their fields are read. */
@@ -26,7 +28,7 @@ function target(message:Readonly<Record<string,unknown>>):Readonly<Record<string
 
 const relayInvocation = <T>(run: (invocation: any) => Promise<T>): Promise<T> => withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "native-artifacts-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), run);
 const fixtureOutput = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
-const fixtureLeaseDirectory=join(process.cwd(),".cache/b/l/m/data");
+const fixtureLeaseDirectory=join(repository.root,".cache/b/l/m/data");
 if (fixtureOutput.length > 129) throw Error("Native artifact fixture output exceeds the admitted compiler suffix path budget");
 const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const resourceReadSchema = JSON.parse(readFileSync(new URL("../📥️resources/🧬️schema/🔣️.json", import.meta.url), "utf8"));
@@ -191,8 +193,8 @@ test("compiler diagnostics stay inside their line budget while the complete stre
   expect(shown).toEqual(rows.slice(0, spec.live));
   expect(diagnostics.suppressed).toBe(spec.lines - spec.live);
   expect(readFileSync(path, "utf8").split("\n").slice(0, spec.lines)).toEqual(rows);
-  expect(diagnostics.finish(false, path)).toEqual([`[cargo] ${spec.lines - spec.live} diagnostic line(s) not shown; complete log: ${path}`]);
-  expect(diagnostics.finish(true, path).slice(1)).toEqual(rows.slice(-spec.newest));
+  const chosen = process.env.SEMIO_LANGUAGE; process.env.SEMIO_LANGUAGE = "en";
+  try { expect(diagnostics.finish(false, path)).toEqual([`[cargo] ${spec.lines - spec.live} diagnostic line(s) not shown; complete log: ${path}`]); expect(diagnostics.finish(true, path).slice(1)).toEqual(rows.slice(-spec.newest)); } finally { if (chosen === undefined) delete process.env.SEMIO_LANGUAGE; else process.env.SEMIO_LANGUAGE = chosen; }
   expect(new BoundedDiagnosticsV1(null, () => {}, spec.live, spec.newest).finish(true, null)).toEqual([]);
 });
 

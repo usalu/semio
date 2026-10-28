@@ -1,0 +1,25 @@
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  |@semio-tech/course-react| ../../../../🧪️tests/📐️quantity-formatting/🟦️.tsx > 📐️ quantity formatting > speaks the time left in words with the locale's plural forms, like Intl.DurationFormat's long style
+AssertionError: expected [ '0 seconds', '0 Sekunden', …(1) ] to deeply equal [ '0 seconds', '0 Sekunden', …(1) ]
+
+- Expected
++ Received
+
+  [
+    "0 seconds",
+    "0 Sekunden",
+-   "2 Minuten, 5 Sekunden",
++   "2 Minuten und 5 Sekunden",
+  ]
+
+ ❯ ../../../../🧪️tests/📐️quantity-formatting/ð¦ï¸.tsx:200:100
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  3 failed | 38 passed (41)
+      Tests  3 failed | 1050 passed (1053)
+   Start at  08:40:21
+   Duration  87.37s (transform 78.37s, setup 184.48s, import 20.31s, tests 467.68s, environment 56.86s)
+

@@ -1,0 +1,8 @@
+{
+ "target": "test-history-progress",
+ "closureCrates": 26,
+ "workspaceFilesRead": 387,
+ "declared": 442,
+ "undeclared": [],
+ "probeErrors": []
+}

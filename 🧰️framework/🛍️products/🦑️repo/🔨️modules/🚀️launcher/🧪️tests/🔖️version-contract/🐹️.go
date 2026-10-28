@@ -46,7 +46,7 @@ func TestVersionWithoutLanguageOrRepository(t *testing.T) {
 	if code := setup.host.Version(nil); code != 2 || !strings.Contains(lines(setup.log.err), "Keine Sprache") {
 		t.Fatalf("code=%d %q", code, setup.log.err)
 	}
-	empty := t.TempDir()
+	empty := emptyWorkspace(t)
 	host, log := recordingHost(t, map[string]string{"SEMIO_WORKSPACE_ROOT": empty})
 	if code := host.Version(nil); code != 0 || !strings.Contains(lines(log.out), "repo Launcher "+Version) || !strings.Contains(lines(log.out), "no repository here") {
 		t.Fatalf("code=%d %q", code, log.out)

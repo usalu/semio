@@ -1,0 +1,887 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "version": 1,
+  "groups": {
+    "all": [
+      "bun",
+      "node",
+      "rustup",
+      "rust",
+      "node-native-core",
+      "go",
+      "uv",
+      "python-main",
+      "python-oracle",
+      "dotnet",
+      "cmake",
+      "ninja",
+      "wasm-opt",
+      "tectonic",
+      "wasm-pack",
+      "wasm-bindgen",
+      "trunk",
+      "cargo-nextest",
+      "cargo-llvm-cov",
+      "chromium",
+      "bazel"
+    ]
+  },
+  "tools": [
+    {
+      "id": "bun",
+      "summary": {
+        "en": "JavaScript runtime and package manager that runs every repository script.",
+        "de": "JavaScript-Laufzeit und Paketmanager, der jedes Repository-Skript ausführt."
+      },
+      "pin": {
+        "format": "regex",
+        "file": "package.json",
+        "pattern": "\"packageManager\"\\s*:\\s*\"bun@(\\d+\\.\\d+\\.\\d+)\""
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "--version"
+        ],
+        "pattern": "^(\\d+\\.\\d+\\.\\d+)"
+      },
+      "locate": [
+        {
+          "kind": "provisioned",
+          "family": "bun",
+          "executable": "bun"
+        }
+      ],
+      "setup": {
+        "kind": "bun"
+      }
+    },
+    {
+      "id": "node",
+      "summary": {
+        "en": "Node.js for the tools that do not run on Bun.",
+        "de": "Node.js für die Werkzeuge, die nicht auf Bun laufen."
+      },
+      "pin": {
+        "format": "rows",
+        "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json",
+        "pointer": "/definitions/Pins/const/assets",
+        "where": {
+          "tool": "node"
+        },
+        "field": "version"
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "--version"
+        ],
+        "pattern": "^v(\\d+\\.\\d+\\.\\d+)"
+      },
+      "locate": [
+        {
+          "kind": "path",
+          "names": [
+            "node"
+          ],
+          "directories": [
+            "~/.local/node/bin"
+          ]
+        }
+      ],
+      "setup": {
+        "kind": "bootstrap"
+      }
+    },
+    {
+      "id": "rustup",
+      "summary": {
+        "en": "Rust toolchain manager.",
+        "de": "Verwaltung der Rust-Toolchains."
+      },
+      "pin": {
+        "format": "rows",
+        "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json",
+        "pointer": "/definitions/Pins/const/assets",
+        "where": {
+          "tool": "rustup"
+        },
+        "field": "version"
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "--version"
+        ],
+        "pattern": "^rustup (\\d+\\.\\d+\\.\\d+)"
+      },
+      "locate": [
+        {
+          "kind": "path",
+          "names": [
+            "rustup"
+          ],
+          "directories": [
+            "~/.cargo/bin"
+          ]
+        }
+      ],
+      "setup": {
+        "kind": "bootstrap"
+      }
+    },
+    {
+      "id": "rust",
+      "summary": {
+        "en": "Rust nightly with the WebAssembly targets of rust-toolchain.toml.",
+        "de": "Rust-Nightly mit den WebAssembly-Zielen aus rust-toolchain.toml."
+      },
+      "pin": {
+        "format": "regex",
+        "file": "rust-toolchain.toml",
+        "pattern": "^channel\\s*=\\s*\"([^\"]+)\"",
+        "flags": "m"
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "show",
+          "active-toolchain"
+        ],
+        "pattern": "^(nightly-\\d{4}-\\d{2}-\\d{2})"
+      },
+      "locate": [
+        {
+          "kind": "path",
+          "names": [
+            "rustup"
+          ],
+          "directories": [
+            "~/.cargo/bin"
+          ]
+        }
+      ],
+      "setup": {
+        "kind": "rust"
+      }
+    },
+    {
+      "id": "node-native-core",
+      "summary": {
+        "en": "Native core that gives Node the system calls the repository tools bind (built once from the pinned Rust toolchain).",
+        "de": "Nativer Kern, der Node die Systemaufrufe gibt, die die Repository-Werkzeuge binden (einmal mit der gepinnten Rust-Toolchain gebaut)."
+      },
+      "pin": {
+        "format": "regex",
+        "file": "🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🧬️schema/🔣️.json",
+        "pattern": "\"Protocol\"[\\s\\S]*?\"version\":\\s*(\\d+)"
+      },
+      "probe": {
+        "mode": "hook",
+        "arguments": [],
+        "pattern": ""
+      },
+      "locate": [
+        {
+          "kind": "hook"
+        }
+      ],
+      "setup": {
+        "kind": "script",
+        "script": "🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🏗️addon/🛠️prepare/📜️script.ts",
+        "prepare": [
+          "prepare"
+        ],
+        "verify": [
+          "verify"
+        ]
+      }
+    },
+    {
+      "id": "go",
+      "summary": {
+        "en": "Go for the repository's Go packages.",
+        "de": "Go für die Go-Pakete des Repositorys."
+      },
+      "pin": {
+        "format": "json",
+        "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
+        "pointer": "/go/tool/version"
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "version"
+        ],
+        "pattern": "go version go(\\d+\\.\\d+\\.\\d+)"
+      },
+      "locate": [
+        {
+          "kind": "provisioned",
+          "family": "native",
+          "executable": "go",
+          "tool": "go"
+        }
+      ],
+      "setup": {
+        "kind": "native",
+        "tool": "go"
+      }
+    },
+    {
+      "id": "uv",
+      "summary": {
+        "en": "uv for the locked Python environments.",
+        "de": "uv für die gesperrten Python-Umgebungen."
+      },
+      "pin": {
+        "format": "json",
+        "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
+        "pointer": "/python/tool/version"
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "--version"
+        ],
+        "pattern": "^uv (\\d+\\.\\d+\\.\\d+)"
+      },
+      "locate": [
+        {
+          "kind": "provisioned",
+          "family": "native",
+          "executable": "uv",
+          "tool": "uv"
+        }
+      ],
+      "setup": {
+        "kind": "native",
+        "tool": "uv"
+      }
+    },
+    {
+      "id": "python-main",
+      "summary": {
+        "en": "Managed Python interpreter of the workspace and the styling package.",
+        "de": "Verwalteter Python-Interpreter des Workspaces und des Styling-Pakets."
+      },
+      "pin": {
+        "format": "json",
+        "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
+        "pointer": "/python/interpreters/main/series"
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "--version"
+        ],
+        "pattern": "^Python (\\d+\\.\\d+\\.\\d+)"
+      },
+      "locate": [
+        {
+          "kind": "python",
+          "interpreter": "main"
+        }
+      ],
+      "setup": {
+        "kind": "python",
+        "interpreter": "main"
+      }
+    },
+    {
+      "id": "python-oracle",
+      "summary": {
+        "en": "Managed Python interpreter of the energy oracle.",
+        "de": "Verwalteter Python-Interpreter des Energie-Orakels."
+      },
+      "pin": {
+        "format": "json",
+        "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
+        "pointer": "/python/interpreters/oracle/series"
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "--version"
+        ],
+        "pattern": "^Python (\\d+\\.\\d+\\.\\d+)"
+      },
+      "locate": [
+        {
+          "kind": "python",
+          "interpreter": "oracle"
+        }
+      ],
+      "setup": {
+        "kind": "python",
+        "interpreter": "oracle"
+      }
+    },
+    {
+      "id": "dotnet",
+      "summary": {
+        "en": ".NET SDK of the styling and test packages.",
+        "de": ".NET-SDK der Styling- und Testpakete."
+      },
+      "pin": {
+        "format": "json",
+        "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
+        "pointer": "/dotnet/sdk"
+      },
+      "probe": {
+        "mode": "listed",
+        "arguments": [
+          "--list-sdks"
+        ],
+        "pattern": "^({pin}) \\["
+      },
+      "locate": [
+        {
+          "kind": "provisioned",
+          "family": "dotnet",
+          "executable": "dotnet"
+        },
+        {
+          "kind": "path",
+          "names": [
+            "dotnet"
+          ],
+          "directories": [
+            "$DOTNET_ROOT",
+            "~/.dotnet"
+          ]
+        }
+      ],
+      "setup": {
+        "kind": "dotnet"
+      }
+    },
+    {
+      "id": "cmake",
+      "summary": {
+        "en": "CMake for the C++ lane.",
+        "de": "CMake für die C++-Spur."
+      },
+      "pin": {
+        "format": "json",
+        "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
+        "pointer": "/cmake/cmake/version"
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "--version"
+        ],
+        "pattern": "cmake version (\\d+\\.\\d+\\.\\d+)"
+      },
+      "locate": [
+        {
+          "kind": "provisioned",
+          "family": "native",
+          "executable": "cmake",
+          "tool": "cmake"
+        }
+      ],
+      "setup": {
+        "kind": "native",
+        "tool": "cmake"
+      }
+    },
+    {
+      "id": "ninja",
+      "summary": {
+        "en": "Ninja for the C++ lane.",
+        "de": "Ninja für die C++-Spur."
+      },
+      "pin": {
+        "format": "json",
+        "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
+        "pointer": "/cmake/ninja/version"
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "--version"
+        ],
+        "pattern": "^(\\d+\\.\\d+\\.\\d+)"
+      },
+      "locate": [
+        {
+          "kind": "provisioned",
+          "family": "native",
+          "executable": "ninja",
+          "tool": "ninja"
+        }
+      ],
+      "setup": {
+        "kind": "native",
+        "tool": "ninja"
+      }
+    },
+    {
+      "id": "bazel",
+      "summary": {
+        "en": "Bazel build implementation.",
+        "de": "Bazel als Build-Implementierung."
+      },
+      "pin": {
+        "format": "json",
+        "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🧬️schema/🔣️.json",
+        "pointer": "/definitions/Release/const/version"
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "--version"
+        ],
+        "pattern": "^bazel (\\d+\\.\\d+\\.\\d+)"
+      },
+      "locate": [
+        {
+          "kind": "provisioned",
+          "family": "bazel",
+          "executable": "bazel"
+        }
+      ],
+      "setup": {
+        "kind": "bazel"
+      }
+    },
+    {
+      "id": "wasm-opt",
+      "summary": {
+        "en": "Binaryen optimizer for WebAssembly components.",
+        "de": "Binaryen-Optimierer für WebAssembly-Komponenten."
+      },
+      "pin": {
+        "format": "json",
+        "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧬️schema/🔣️.json",
+        "pointer": "/definitions/Release/const/version"
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "--version"
+        ],
+        "pattern": "version_?(\\d+)"
+      },
+      "locate": [
+        {
+          "kind": "provisioned",
+          "family": "binaryen",
+          "executable": "wasm-opt"
+        }
+      ],
+      "setup": {
+        "kind": "binaryen"
+      }
+    },
+    {
+      "id": "tectonic",
+      "summary": {
+        "en": "Tectonic TeX engine for the print pipeline.",
+        "de": "Tectonic-TeX-Engine für die Druck-Pipeline."
+      },
+      "pin": {
+        "format": "json",
+        "file": "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🔣️.json",
+        "pointer": "/version"
+      },
+      "probe": {
+        "mode": "hook",
+        "arguments": [],
+        "pattern": ""
+      },
+      "locate": [
+        {
+          "kind": "hook"
+        }
+      ],
+      "setup": {
+        "kind": "script",
+        "script": "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts",
+        "prepare": [
+          "prepare"
+        ],
+        "verify": [
+          "verify"
+        ]
+      }
+    },
+    {
+      "id": "wasm-pack",
+      "summary": {
+        "en": "wasm-pack builds the browser bindings.",
+        "de": "wasm-pack baut die Browser-Bindings."
+      },
+      "pin": {
+        "format": "value",
+        "value": "0.15.0"
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "--version"
+        ],
+        "pattern": "^wasm-pack (\\d+\\.\\d+\\.\\d+)"
+      },
+      "locate": [
+        {
+          "kind": "provisioned",
+          "family": "cargo",
+          "executable": "wasm-pack"
+        },
+        {
+          "kind": "path",
+          "names": [
+            "wasm-pack"
+          ],
+          "directories": [
+            "~/.cargo/bin"
+          ]
+        }
+      ],
+      "setup": {
+        "kind": "script",
+        "script": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+        "prepare": [
+          "sync",
+          "wasm"
+        ]
+      }
+    },
+    {
+      "id": "wasm-bindgen",
+      "summary": {
+        "en": "wasm-bindgen generates the bindings; it must equal the locked crate.",
+        "de": "wasm-bindgen erzeugt die Bindings; es muss der gesperrten Crate entsprechen."
+      },
+      "pin": {
+        "format": "regex",
+        "file": "Cargo.lock",
+        "pattern": "^name = \"wasm-bindgen\"\\r?\\nversion = \"([^\"]+)\"$",
+        "flags": "m"
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "--version"
+        ],
+        "pattern": "^wasm-bindgen (\\d+\\.\\d+\\.\\d+)"
+      },
+      "locate": [
+        {
+          "kind": "provisioned",
+          "family": "cargo",
+          "executable": "wasm-bindgen"
+        },
+        {
+          "kind": "path",
+          "names": [
+            "wasm-bindgen"
+          ],
+          "directories": [
+            "~/.cargo/bin"
+          ]
+        }
+      ],
+      "setup": {
+        "kind": "script",
+        "script": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+        "prepare": [
+          "sync",
+          "wasm"
+        ]
+      }
+    },
+    {
+      "id": "trunk",
+      "summary": {
+        "en": "Trunk bundles the browser applications.",
+        "de": "Trunk bündelt die Browser-Anwendungen."
+      },
+      "pin": {
+        "format": "value",
+        "value": "0.21.14"
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "--version"
+        ],
+        "pattern": "^trunk (\\d+\\.\\d+\\.\\d+)"
+      },
+      "locate": [
+        {
+          "kind": "provisioned",
+          "family": "cargo",
+          "executable": "trunk"
+        },
+        {
+          "kind": "path",
+          "names": [
+            "trunk"
+          ],
+          "directories": [
+            "~/.cargo/bin"
+          ]
+        }
+      ],
+      "setup": {
+        "kind": "script",
+        "script": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+        "prepare": [
+          "sync",
+          "trunk"
+        ]
+      }
+    },
+    {
+      "id": "cargo-nextest",
+      "summary": {
+        "en": "nextest runs the Rust tests.",
+        "de": "nextest führt die Rust-Tests aus."
+      },
+      "pin": {
+        "format": "value",
+        "value": "0.9.140"
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "--version"
+        ],
+        "pattern": "^cargo-nextest (\\d+\\.\\d+\\.\\d+)"
+      },
+      "locate": [
+        {
+          "kind": "provisioned",
+          "family": "cargo",
+          "executable": "cargo-nextest"
+        },
+        {
+          "kind": "path",
+          "names": [
+            "cargo-nextest"
+          ],
+          "directories": [
+            "~/.cargo/bin"
+          ]
+        }
+      ],
+      "setup": {
+        "kind": "script",
+        "script": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+        "prepare": [
+          "sync",
+          "tools"
+        ]
+      }
+    },
+    {
+      "id": "cargo-llvm-cov",
+      "summary": {
+        "en": "llvm-cov measures Rust coverage.",
+        "de": "llvm-cov misst die Rust-Abdeckung."
+      },
+      "pin": {
+        "format": "value",
+        "value": "0.8.7"
+      },
+      "probe": {
+        "mode": "version",
+        "arguments": [
+          "llvm-cov",
+          "--version"
+        ],
+        "pattern": "^cargo-llvm-cov (\\d+\\.\\d+\\.\\d+)"
+      },
+      "locate": [
+        {
+          "kind": "provisioned",
+          "family": "cargo",
+          "executable": "cargo-llvm-cov"
+        },
+        {
+          "kind": "path",
+          "names": [
+            "cargo-llvm-cov"
+          ],
+          "directories": [
+            "~/.cargo/bin"
+          ]
+        }
+      ],
+      "setup": {
+        "kind": "script",
+        "script": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+        "prepare": [
+          "sync",
+          "tools"
+        ]
+      }
+    },
+    {
+      "id": "chromium",
+      "summary": {
+        "en": "Playwright Chromium for the browser tests.",
+        "de": "Playwright-Chromium für die Browser-Tests."
+      },
+      "pin": {
+        "format": "rows",
+        "package": "playwright-core",
+        "from": "playwright",
+        "file": "browsers.json",
+        "pointer": "/browsers",
+        "where": {
+          "name": "chromium"
+        },
+        "field": "revision"
+      },
+      "probe": {
+        "mode": "hook",
+        "arguments": [],
+        "pattern": ""
+      },
+      "locate": [
+        {
+          "kind": "hook"
+        }
+      ],
+      "setup": {
+        "kind": "script",
+        "script": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+        "prepare": [
+          "sync",
+          "browsers"
+        ]
+      }
+    }
+  ],
+  "messages": {
+    "languages": [
+      "en",
+      "de"
+    ],
+    "texts": {
+      "header": {
+        "en": "tool           pin                   found                 status    location",
+        "de": "Werkzeug        Pin                   gefunden              Status    Ort"
+      },
+      "ok": {
+        "en": "ok",
+        "de": "ok"
+      },
+      "missing": {
+        "en": "missing",
+        "de": "fehlt"
+      },
+      "differs": {
+        "en": "differs",
+        "de": "weicht ab"
+      },
+      "failed": {
+        "en": "failed",
+        "de": "fehlgeschlagen"
+      },
+      "deferred": {
+        "en": "deferred",
+        "de": "zurückgestellt"
+      },
+      "clean": {
+        "en": "All {count} pinned tools match their pins.",
+        "de": "Alle {count} gepinnten Werkzeuge entsprechen ihren Pins."
+      },
+      "drift": {
+        "en": "{count} of {total} pinned tools differ from their pins; run `repo tools setup all`.",
+        "de": "{count} von {total} gepinnten Werkzeugen weichen von ihren Pins ab; führe `repo tools setup all` aus."
+      },
+      "step": {
+        "en": "Provisioning {tool} {pin}.",
+        "de": "Richte {tool} {pin} ein."
+      },
+      "done": {
+        "en": "{tool} {found} is ready.",
+        "de": "{tool} {found} ist bereit."
+      },
+      "skipped": {
+        "en": "{tool} {found} already matches its pin.",
+        "de": "{tool} {found} entspricht bereits dem Pin."
+      },
+      "manual": {
+        "en": "{tool} {pin} is installed by the bootstrap script, not by this command; run the bootstrap again.",
+        "de": "{tool} {pin} wird vom Bootstrap-Skript installiert, nicht von diesem Befehl; führe das Bootstrap erneut aus."
+      },
+      "mismatch": {
+        "en": "{tool} was provisioned but reports {found}, not the pin {pin}.",
+        "de": "{tool} wurde eingerichtet, meldet aber {found} statt des Pins {pin}."
+      },
+      "usage": {
+        "en": "{command} takes {choices}.",
+        "de": "{command} erwartet {choices}."
+      },
+      "unknown": {
+        "en": "Unknown pinned tool: {tool}.",
+        "de": "Unbekanntes gepinntes Werkzeug: {tool}."
+      },
+      "pinfile": {
+        "en": "The pin of {tool} cannot be read from {file}.",
+        "de": "Der Pin von {tool} ist in {file} nicht lesbar."
+      },
+      "postponed": {
+        "en": "{tool} reads its pin from the installed {package}, which is not installed yet; install the dependencies, then run `repo tools setup {tool}` again.",
+        "de": "{tool} liest seinen Pin aus dem installierten {package}, das noch nicht installiert ist; installiere die Abhängigkeiten und führe dann `repo tools setup {tool}` erneut aus."
+      },
+      "installer": {
+        "en": "The pinned installer for {tool} is missing for the host {host}.",
+        "de": "Das gepinnte Installationsprogramm für {tool} fehlt für den Rechner {host}."
+      },
+      "running": {
+        "en": "Running Bun {found} ({path}); pinned Bun {pin}.",
+        "de": "Laufendes Bun {found} ({path}); gepinntes Bun {pin}."
+      },
+      "runtime": {
+        "en": "Warning: the running Bun {found} is not the pinned Bun {pin}; start the repository tools through the repo launcher, which selects the pinned Bun.",
+        "de": "Warnung: das laufende Bun {found} ist nicht das gepinnte Bun {pin}; starte die Repository-Werkzeuge über den repo-Launcher, der das gepinnte Bun wählt."
+      },
+      "cancelled": {
+        "en": "Provisioning was cancelled.",
+        "de": "Die Einrichtung wurde abgebrochen."
+      },
+      "progress": {
+        "en": "{tool}: {received} of {bytes} bytes ({percent} %).",
+        "de": "{tool}: {received} von {bytes} Bytes ({percent} %)."
+      },
+      "warm": {
+        "en": "Preparing {step}: {summary}",
+        "de": "Bereite {step} vor: {summary}"
+      },
+      "warmed": {
+        "en": "{step} is ready.",
+        "de": "{step} ist bereit."
+      },
+      "warmFailed": {
+        "en": "{step} could not be prepared ({reason}); it is built on the first compile instead.",
+        "de": "{step} konnte nicht vorbereitet werden ({reason}); es wird stattdessen beim ersten Kompilieren gebaut."
+      }
+    }
+  },
+  "steps": [
+    {
+      "id": "compiler-helpers",
+      "kind": "cargo-helpers",
+      "summary": {
+        "en": "The memory-admitting rustc scheduler and the unit-cache compiler wrapper (a native executable on Windows) that every Cargo build starts with.",
+        "de": "Der rustc-Scheduler mit Speicherzulassung und der Compiler-Wrapper des Unit-Caches (unter Windows eine native Programmdatei), mit denen jeder Cargo-Build beginnt."
+      },
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "configuration": "prototype",
+      "timeoutSeconds": 1200,
+      "optional": true
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+ "command": [
+  "bun",
+  "/Users/ueli/Documents/semio/node_modules/vitest/vitest.mjs",
+  "run",
+  "--config",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+  "--configLoader",
+  "native",
+  "--testTimeout",
+  "60000",
+  "--hookTimeout",
+  "60000"
+ ],
+ "allowed": 10154,
+ "learned": [],
+ "rounds": [
+  {
+   "round": 0,
+   "exit": 1,
+   "seconds": 108.9,
+   "denied": [],
+   "tail": "ts/📐️quantity-formatting/🟦️.tsx (108 tests | 1 failed) 4832ms\n     × speaks the time left in words with the locale's plural forms, like Intl.DurationFormat's long style 10ms\n\n Test Files  2 failed | 39 passed (41)\n      Tests  2 failed | 1051 passed (1053)\n   Start at  09:01:29\n   Duration  72.88s (transform 63.81s, setup 145.86s, import 15.29s, tests 377.54s, environment 66.73s)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  |@semio-tech/course-react| ../../../../🧪️tests/📢️live-regions/🟦️.tsx > 📢️ live regions > makes the clock of a timed task a timer that is read in words on demand and never speaks by itself (de)\nAssertionError: expected 'Verbleibende Zeit: 1 Minute und 5 Sek…' to be 'Verbleibende Zeit: 1 Minute, 5 Sekund…' // Object.is equality\n\nExpected: \"Verbleibende Zeit: 1 Minute, 5 Sekunden\"\nReceived: \"Verbleibende Zeit: 1 Minute und 5 Sekunden\"\n\n ❯ ../../../../🧪️tests/📢️live-regions/ð¦ï¸.tsx:68:60\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯\n\n FAIL  |@semio-tech/course-react| ../../../../🧪️tests/📐️quantity-formatting/🟦️.tsx > 📐️ quantity formatting > speaks the time left in words with the locale's plural forms, like Intl.DurationFormat's long style\nAssertionError: expected [ '0 seconds', '0 Sekunden', …(1) ] to deeply equal [ '0 seconds', '0 Sekunden', …(1) ]\n\n- Expected\n+ Received\n\n  [\n    \"0 seconds\",\n    \"0 Sekunden\",\n-   \"2 Minuten, 5 Sekunden\",\n+   \"2 Minuten und 5 Sekunden\",\n  ]\n\n ❯ ../../../../🧪️tests/📐️quantity-formatting/ð¦ï¸.tsx:200:100\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯\n\n"
+  }
+ ],
+ "passed": false
+}

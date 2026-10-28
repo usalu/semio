@@ -1,7 +1,7 @@
 /** 🦀️ Rust source evidence readers: production/test source pairs, store roots and comment stripping.
  * @see 📜️script.ts
  */
-import { memberStoreProducerSourceDeclarationV1, type ToolJobMemberStoreProducerSources, type MemberProducerSourceExtension } from "@semio-tech/framework-os/modules/store/initialization/owners/member/source";
+import { memberStoreProducerSourceDeclarationV1, type ToolJobMemberStoreProducerSources, type MemberProducerSourceExtension } from "../../../../../../💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🟦️.ts";
 import { inspectRustModuleGraphFacts } from "../../🌐️rust-module-graph/🟦️.ts";
 import { inspectRustStructure } from "../../🏛️rust-structure/🟦️.ts";
 import { POLICY_SPLIT_SOURCE_ROOTS, policyModuleTreeFiles, policyReadFileSafe, policyReadModuleTreeSource } from "../🟦️.ts";

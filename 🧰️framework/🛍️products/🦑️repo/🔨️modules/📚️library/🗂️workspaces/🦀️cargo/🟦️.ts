@@ -10,6 +10,7 @@ import type {CargoPreparationControlV1,CargoWorkspaceControlV1,CargoWorkspacePro
 import {createHash} from "node:crypto";
 import {runOwnedCommand,type OwnedCommandOptions} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {admitCargoPreparationObservationV1,assertCargoPreparationObservationCurrentV1,cargoPreparationProgramSourcesV1,type CargoPreparationObservationV1} from "./🛠️preparation/🧾️custody/🟦️.ts";
+import {cargoPreparationWitnessHoldsV1,observeCargoPhysicalV1,type CargoPhysicalObservationsV1,type CargoPhysicalOperationKindV1} from "./🛠️preparation/👁️witness/🟦️.ts";
 import custodySchema from "./🛠️preparation/🧾️custody/🧬️schema/🔣️.json" with { type: "json" };
 import invocationSchema from "./🧬️schema/🏃️invocation/🔣️.json" with { type: "json" };
 import { existsSync, lstatSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -55,13 +56,13 @@ const operate=(step:CargoPhysicalOperationV1):any=>{
  return readFileSync(physical(step.root,step.path),"utf8");
 };
 /** 🏃️ Drains the same physical operation plan for synchronous repository consumers. */
-function drain<T>(plan:CargoPhysicalPlanV1<T>):T {
- let step=plan.next();try{while(!step.done)step=plan.next(operate(step.value));return step.value;}finally{plan.return(undefined as T);}
+function drain<T>(plan:CargoPhysicalPlanV1<T>,observations?:CargoPhysicalObservationsV1):T {
+ let step=plan.next();try{while(!step.done){const operation=step.value;step=plan.next(observations&&operation.operation!=="recipe"?observeCargoPhysicalV1(observations,operation.operation as CargoPhysicalOperationKindV1,operation.path,()=>operate(operation)):operate(operation));}return step.value;}finally{plan.return(undefined as T);}
 }
 /** 🛑️ Preserves original cancellation across every reported physical operation. */
-async function controlled<T>(plan:CargoPhysicalPlanV1<T>,control:CargoWorkspaceControlV1):Promise<T> {
+async function controlled<T>(plan:CargoPhysicalPlanV1<T>,control:CargoWorkspaceControlV1,observations?:CargoPhysicalObservationsV1):Promise<T> {
  control.signal.throwIfAborted();let count=0,step=plan.next();
- try{while(!step.done){control.signal.throwIfAborted();const operation=step.value;let value:any;if(operation.operation==="program"||operation.operation==="current"){if(!("leaseControl"in control))throw Error("Actual Cargo preparation phase required");const preparation=control as CargoPreparationControlV1;value=operation.operation==="program"?await cargoPreparationProgramSourcesV1(operation.root,operation.path,preparation):await assertCargoPreparationObservationCurrentV1(operation.observation,preparation);}else if(operation.operation==="recipe"){if(!("childBudget" in control)||typeof control.childBudget!=="function"||!("childOptions" in control)||typeof control.childOptions!=="function")throw Error("Original Cargo preparation child control required");await control.advance({operation:operation.operation,path:operation.path,completedOperations:count+1});control.signal.throwIfAborted();const budget=control.childBudget(30_000),options=control.childOptions(operation.environment);if(!Number.isFinite(budget)||budget<=0||options.signal!==control.signal||!options.output||typeof options.onProgress!=="function")throw Error("Original Cargo preparation child options required");recipeCurrent(operation);try{await runOwnedCommand(process.execPath,[operation.path,...operation.args],operation.cwd,"cargo:owner-preparation",budget,{...options,stdout:"stderr"});}catch(error){control.signal.throwIfAborted();throw error;}}else value=operate(operation);control.signal.throwIfAborted();await control.advance({operation:operation.operation==="program"||operation.operation==="current"?"recipe":operation.operation,path:operation.path,completedOperations:++count});control.signal.throwIfAborted();step=plan.next(value);}return step.value;}finally{plan.return(undefined as T);}
+ try{while(!step.done){control.signal.throwIfAborted();const operation=step.value;let value:any;if(operation.operation==="program"||operation.operation==="current"){if(!("leaseControl"in control))throw Error("Actual Cargo preparation phase required");const preparation=control as CargoPreparationControlV1;value=operation.operation==="program"?await cargoPreparationProgramSourcesV1(operation.root,operation.path,preparation):await assertCargoPreparationObservationCurrentV1(operation.observation,preparation);}else if(operation.operation==="recipe"){if(!("childBudget" in control)||typeof control.childBudget!=="function"||!("childOptions" in control)||typeof control.childOptions!=="function")throw Error("Original Cargo preparation child control required");await control.advance({operation:operation.operation,path:operation.path,completedOperations:count+1});control.signal.throwIfAborted();const budget=control.childBudget(30_000),options=control.childOptions(operation.environment);if(!Number.isFinite(budget)||budget<=0||options.signal!==control.signal||!options.output||typeof options.onProgress!=="function")throw Error("Original Cargo preparation child options required");recipeCurrent(operation);try{await runOwnedCommand(process.execPath,[operation.path,...operation.args],operation.cwd,"cargo:owner-preparation",budget,{...options,stdout:"stderr"});}catch(error){control.signal.throwIfAborted();throw error;}}else value=observations?observeCargoPhysicalV1(observations,operation.operation as CargoPhysicalOperationKindV1,operation.path,()=>operate(operation)):operate(operation);control.signal.throwIfAborted();await control.advance({operation:operation.operation==="program"||operation.operation==="current"?"recipe":operation.operation,path:operation.path,completedOperations:++count});control.signal.throwIfAborted();step=plan.next(value);}return step.value;}finally{plan.return(undefined as T);}
 }
 /** 📁️ Refuses escaped or symlink-backed manifest ancestry before reading owner authority. */
 function* physicalPlan(root:string,path:string):CargoPhysicalPlanV1<string> {
@@ -118,23 +119,30 @@ function* discoverPlan(root:string):CargoPhysicalPlanV1<readonly CargoWorkspaceS
 }
 
 /** 🦀️ Expands each admitted Cargo-native pattern against current physical manifests and rejects absent exact owners. */
-export function cargoWorkspaceMembers(root:string,owner:CargoWorkspaceScope):readonly CargoWorkspacePackage[] {return drain(membersPlan(root,owner));}
+export function cargoWorkspaceMembers(root:string,owner:CargoWorkspaceScope,observations?:CargoPhysicalObservationsV1):readonly CargoWorkspacePackage[] {return drain(membersPlan(root,owner),observations);}
 /** 🏭️ Reads current production member authority through one cancellable physical plan. */
 export function cargoWorkspaceMembersControlledV1(root:string,owner:CargoWorkspaceScope,control:CargoWorkspaceControlV1):Promise<readonly CargoWorkspacePackage[]> {return controlled(membersPlan(root,owner),control);}
+/** 📏️ Binds one owner's admitted member patterns once, for the whole-owner walk and the single-manifest check alike. */
+function memberRules(root:string,owner:CargoWorkspaceScope){
+  const cwd=resolve(root,owner.directory),patterns=owner.memberManifests.map(pattern=>new GlobV1(pattern)),leaves=owner.memberManifests.map(pattern=>new GlobV1(pattern.slice(0,-"/Cargo.toml".length)));
+  const prefixes=owner.memberManifests.map(pattern=>pattern.split(/[*?\[{]/u)[0]!.replace(/\/$/u,"")),excluded=owner.contribution.exclude.map(pattern=>new GlobV1(pattern)),excludedRoots=owner.contribution.exclude.map(pattern=>pattern.endsWith("/**")?new GlobV1(pattern.slice(0,-3)):undefined);
+  const opaque=new Set(["node_modules","target","dist","build","🤖️generated","coverage","🗑️generated"]);
+  return Object.freeze({cwd,
+   matches:(local:string)=>patterns.some(pattern=>pattern.match(local)),
+   leaf:(directory:string)=>leaves.some(pattern=>pattern.match(directory)),
+   reaches:(directory:string)=>!collectionRoot(root,join(cwd,directory))&&(!directory||prefixes.some(prefix=>!prefix||directory.startsWith(prefix+"/")||prefix===directory||prefix.startsWith(directory+"/"))),
+   hidden:(local:string)=>{const name=local.slice(local.lastIndexOf("/")+1);return name.startsWith(".")||opaque.has(name)||excluded.some((pattern,index)=>pattern.match(local)||pattern.match(`${local}/`)||excludedRoots[index]?.match(local));},
+   fileExcluded:(local:string)=>excluded.some(pattern=>pattern.match(slash(dirname(local)))),
+   rootAdmitted:patterns.some(pattern=>pattern.match("Cargo.toml"))&&!excluded.some(pattern=>pattern.match(".")||pattern.match("./")||pattern.match("Cargo.toml"))});
+}
+type CargoMemberRulesV1=ReturnType<typeof memberRules>;
 function* membersPlan(root:string,owner:CargoWorkspaceScope):CargoPhysicalPlanV1<readonly CargoWorkspacePackage[]> {
   const documents = new Map<string, Record<string, any>>(), scopes = new Map<string, CargoWorkspaceScope>();
   const readDocument=function*(path:string):CargoPhysicalPlanV1<Record<string,any>>{const current=documents.get(path);if(current)return current;const document=yield* readPlan(root,path);documents.set(path,document);return document;};
-  const cwd = resolve(root, owner.directory), paths = new Set<string>();
-  const patterns = owner.memberManifests.map(pattern => new GlobV1(pattern));
-  const leaves = owner.memberManifests.map(pattern => new GlobV1(pattern.slice(0, -"/Cargo.toml".length)));
-  const prefixes = owner.memberManifests.map(pattern => pattern.split(/[*?\[{]/u)[0]!.replace(/\/$/u, ""));
-  const excluded = owner.contribution.exclude.map(pattern => new GlobV1(pattern));
-  const excludedRoots = owner.contribution.exclude.map(pattern => pattern.endsWith("/**") ? new GlobV1(pattern.slice(0, -3)) : undefined);
-  const opaque = new Set(["node_modules", "target", "dist", "build", "🤖️generated", "coverage", "🗑️generated"]);
+  const rules=memberRules(root,owner),cwd=rules.cwd,paths=new Set<string>();
   const walk=function*(directory:string):CargoPhysicalPlanV1<void>{
-    if(collectionRoot(root,join(cwd,directory)))return;
-    if (directory && !prefixes.some(prefix => !prefix || directory.startsWith(prefix + "/") || prefix === directory || prefix.startsWith(directory + "/"))) return;
-    if (directory && leaves.some(pattern => pattern.match(directory))) {
+    if(!rules.reaches(directory))return;
+    if (directory && rules.leaf(directory)) {
       const manifest = join(cwd, directory, "Cargo.toml");
       if((yield {operation:"presence",path:manifest,root}) && (yield* readDocument(slash(relative(root,manifest)))).package!==undefined){yield* physicalPlan(root,slash(relative(root,manifest)));paths.add(slash(relative(root,manifest)));return;}
     }
@@ -142,12 +150,12 @@ function* membersPlan(root:string,owner:CargoWorkspaceScope):CargoPhysicalPlanV1
       const name=entry.name;
       if(!entry.isDirectory() && (!entry.isFile() || name!=="Cargo.toml"))continue;
       const local=directory?`${directory}/${name}`:name;
-      if(name.startsWith(".") || opaque.has(name) || excluded.some((pattern,index)=>pattern.match(local) || pattern.match(`${local}/`) || excludedRoots[index]?.match(local)))continue;
+      if(rules.hidden(local))continue;
       if(entry.isDirectory())yield* walk(local);
-      else if(local!=="Cargo.toml" && patterns.some(pattern=>pattern.match(local)) && !excluded.some(pattern=>pattern.match(slash(dirname(local)))))paths.add(slash(relative(root,join(cwd,local))));
+      else if(local!=="Cargo.toml" && rules.matches(local) && !rules.fileExcluded(local))paths.add(slash(relative(root,join(cwd,local))));
     }
   };
-  if (patterns.some(pattern => pattern.match("Cargo.toml")) && !excluded.some(pattern => pattern.match(".") || pattern.match("./") || pattern.match("Cargo.toml"))) {
+  if (rules.rootAdmitted) {
     const manifest = slash(relative(root, join(cwd, "Cargo.toml")));
     if((yield* readDocument(manifest)).package!==undefined)paths.add(manifest);
   }
@@ -163,10 +171,51 @@ function* membersPlan(root:string,owner:CargoWorkspaceScope):CargoPhysicalPlanV1
   }
   return result;
 }
+/** 🔭️ Holds when the whole-owner walk of `membersPlan` would admit exactly this manifest, asking only its own ancestry instead of listing the owner. */
+function* memberPlan(root:string,rules:CargoMemberRulesV1,manifest:string,readDocument:(path:string)=>CargoPhysicalPlanV1<Record<string,any>>):CargoPhysicalPlanV1<boolean> {
+  const local=slash(relative(rules.cwd,resolve(root,manifest)));
+  if(local==="Cargo.toml")return rules.rootAdmitted;
+  if(local.startsWith("../")||isAbsolute(local)||!local.endsWith("/Cargo.toml")||!rules.reaches(""))return false;
+  const parts=local.split("/").slice(0,-1);
+  for(let index=1;index<=parts.length;index++){
+    const directory=parts.slice(0,index).join("/");
+    if(rules.hidden(directory)||!(yield {operation:"state",path:join(rules.cwd,directory),root}).isDirectory()||!rules.reaches(directory))return false;
+    if(rules.leaf(directory)&&(yield {operation:"presence",path:join(rules.cwd,directory,"Cargo.toml"),root})&&(yield* readDocument(slash(relative(root,join(rules.cwd,directory,"Cargo.toml"))))).package!==undefined)return index===parts.length;
+  }
+  return !rules.hidden(local)&&rules.matches(local)&&!rules.fileExcluded(local)&&(yield {operation:"state",path:resolve(root,manifest),root}).isFile();
+}
+function* declaredPlan(root:string,manifest:string,names:readonly string[]):CargoPhysicalPlanV1<readonly CargoWorkspacePackage[]|undefined> {
+  const documents=new Map<string,Record<string,any>>(),scopes=new Map<string,CargoWorkspaceScope>();
+  const readDocument=function*(path:string):CargoPhysicalPlanV1<Record<string,any>>{const current=documents.get(path);if(current)return current;const document=yield* readPlan(root,path);documents.set(path,document);return document;};
+  const owner=yield* selectPlan(root,manifest,readDocument,scopes),rules=memberRules(root,owner),declared=(yield* readDocument(owner.manifest)).workspace?.members;
+  if(!Array.isArray(declared))return undefined;
+  const near=slash(dirname(resolve(root,manifest))).split("/"),shared=(path:string):number=>{const parts=path.split("/");let count=0;while(count<parts.length&&parts[count]===near[count])count++;return count;};
+  const candidates=[...new Set(declared.filter((member):member is string=>pathPattern(member)&&!/[*?[\]{}!]/u.test(member)).map(member=>slash(join(rules.cwd,member))))].sort((a,b)=>shared(b)-shared(a)||(a<b?-1:a>b?1:0));
+  const wanted=new Set(names),found=new Map<string,CargoWorkspacePackage>();
+  for(const directory of candidates){
+    if(found.size===wanted.size)break;
+    const path=slash(relative(root,join(directory,"Cargo.toml")));
+    if(!(yield {operation:"presence",path:join(directory,"Cargo.toml"),root}))continue;
+    const name=(yield* readDocument(path)).package?.name;
+    if(typeof name!=="string"||!wanted.has(name))continue;
+    if(found.has(name)||!(yield* memberPlan(root,rules,path,readDocument))||(yield* selectPlan(root,path,readDocument,scopes)).directory!==owner.directory)return undefined;
+    found.set(name,{directory:slash(dirname(path)),manifest:path,name,workspace:owner.directory});
+  }
+  return found.size===wanted.size?names.map(name=>found.get(name)!):undefined;
+}
+/** 🪧️ Selects named packages among the literal members Cargo reads from the workspace owning `manifest`, nearest first, each admitted exactly as the whole-owner walk would admit it, without listing a directory; undefined when that workspace does not declare them all as current members or a physical answer is not plain.
+ * @see https://doc.rust-lang.org/cargo/reference/workspaces.html#the-members-and-exclude-fields */
+export function cargoDeclaredPackageSelectionsV1(root:string,manifest:string,names:readonly string[],observations?:CargoPhysicalObservationsV1):readonly CargoWorkspacePackage[]|undefined {
+  if(!names.length)return [];try{return drain(declaredPlan(root,manifest,names),observations);}catch{return undefined;}
+}
+/** 🛰️ Binds named packages through the workspace owning `manifest` and inventories the whole repository only when that workspace does not declare them all; a duplicate name outside that workspace is left to the repository inventory's own consumers. */
+export function cargoPackageSelectionsNearV1(root:string,manifest:string,names:readonly string[]):readonly CargoWorkspacePackage[] {
+  return cargoDeclaredPackageSelectionsV1(root,manifest,names)??cargoRepositoryPackageSelections(root,names);
+}
 
 /** 🧭️ Selects the actual nearest Cargo workspace for a physical package, including isolated native test workspaces. */
-export function cargoWorkspaceForManifest(root: string, manifest: string): CargoWorkspaceScope {
-  return selectCargoWorkspace(root, manifest, path => read(root, path), new Map());
+export function cargoWorkspaceForManifest(root: string, manifest: string, observations?: CargoPhysicalObservationsV1): CargoWorkspaceScope {
+  return observations ? drain(selectPlan(root, manifest, path => readPlan(root, path), new Map()), observations) : selectCargoWorkspace(root, manifest, path => read(root, path), new Map());
 }
 
 /** 🎛️ Selects the nearest Cargo workspace through one physical plan that stays cancellable under the caller control. */
@@ -312,7 +361,7 @@ export function parseCargoPreparation(value: unknown): CargoPreparationV1 {
 export type CargoPreparationResultV1=Readonly<{manifests:readonly string[];owners:readonly string[];recipes:readonly CargoPreparationObservationV1[]}>;
 export function prepareCargoOwners(root:string,selected:CargoWorkspaceScope,names:readonly string[]=[],observationDirectory?:string):CargoPreparationResultV1 {return drain(preparationPlan(root,selected,names,observationDirectory));}
 /** 🎚️ Keeps selected dependency closure and real recipe execution under the original caller control. */
-export async function prepareCargoOwnersControlledV1(root:string,selected:CargoWorkspaceScope,control:CargoPreparationControlV1,names:readonly string[]=[],observationDirectory?:string):Promise<CargoPreparationResultV1> {requireIssuedResourceControlV1(control.leaseControl);if(control.signal!==control.leaseControl.signal)throw Error("Actual Cargo preparation signal required");return controlled(preparationPlan(root,selected,names,observationDirectory),control);}
+export async function prepareCargoOwnersControlledV1(root:string,selected:CargoWorkspaceScope,control:CargoPreparationControlV1,names:readonly string[]=[],observationDirectory?:string,observations?:CargoPhysicalObservationsV1):Promise<CargoPreparationResultV1> {requireIssuedResourceControlV1(control.leaseControl);if(control.signal!==control.leaseControl.signal)throw Error("Actual Cargo preparation signal required");return controlled(preparationPlan(root,selected,names,observationDirectory),control,observations);}
 function* preparationPlan(root:string,selected:CargoWorkspaceScope,names:readonly string[],observationDirectory?:string):CargoPhysicalPlanV1<CargoPreparationResultV1> {
  const timed=process.env.SEMIO_CARGO_PREPARATION_TIMING==="1",started=timed?performance.now():0;
  const diagnostic=(phase:CargoPreparationDiagnosticPhaseV1,owner:string,start:number,items:number):void=>{if(timed)logCargoPreparationDiagnosticV1(phase,owner,performance.now()-start,items);};
@@ -401,9 +450,15 @@ export function cargoWorkspacePreparationInvocationV1(storage:CargoPreparationSt
   return{command:process.execPath,args:[storage.program,"synchronize","--manifest",selection.manifest,...selection.packages.flatMap(name=>["--package",name])],cwd:root,environment:env};
 }
 
-/** 🛠️ Awaits the selected native workspace child under unchanged original control. */
+/** ⚖️ Holds when the selected preparation child would only confirm its current receipt, so the launcher need not start it.
+ * @see ./🛠️preparation/👁️witness/🟦️.ts */
+export function cargoPreparationInvocationCurrentV1(storage:CargoPreparationStorageV1,root:string,request:CargoPreparationInvocationV1):boolean{
+ const [,verb,flag,manifest,...rest]=request.args;if(verb!=="synchronize"||flag!=="--manifest"||!manifest||rest.length%2||rest.some((value,index)=>index%2===0?value!=="--package":!value))return false;
+ return cargoPreparationWitnessHoldsV1(storage,root,manifest,rest.filter((_,index)=>index%2===1),request.environment);
+}
+/** 🛠️ Awaits the selected native workspace child under unchanged original control, unless its witnessed receipt still holds. */
 export async function prepareCargoWorkspaceInvocation(storage:CargoPreparationStorageV1,root:string,args:readonly string[],cwd:string,environment:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl):Promise<void>{
- const request=cargoWorkspacePreparationInvocationV1(storage,root,args,cwd,environment);if(!request)return;
+ const request=cargoWorkspacePreparationInvocationV1(storage,root,args,cwd,environment);if(!request||cargoPreparationInvocationCurrentV1(storage,root,request))return;
  const result=await captureOwnedCommandResultV1(request.command,request.args,request.cwd,{control,env:request.environment,output:{maximumBytes:16777216,maximumLines:65536}});
  if(result.status!==0||result.signal!==null)throw Error("Native Cargo owner preparation failed status="+result.status+" signal="+result.signal+": "+(result.stderr||result.stdout).slice(-2048));
 }

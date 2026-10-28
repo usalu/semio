@@ -33,7 +33,7 @@ for(const row of corpus.marker.collect)test("topmost marker-only folders with pr
 test("a taxonomy without marker kinds only keeps the ticket important leaf",()=>{expect<unknown>([...cleanEmptyMarkerFilenames({fileKinds:{x:{emoji:"x",extensionChains:[".x"],role:"specification"}}} as never)]).toEqual([corpus.marker.expectedNames.find(name=>name.endsWith(".md")&&!name.includes("empty"))]);});
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

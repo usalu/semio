@@ -1,0 +1,137 @@
+[
+ {
+  "target": "framework-rs:test-action-choices",
+  "before": "17709",
+  "after": "4229"
+ },
+ {
+  "target": "framework-rs:test-argument-retirement-native",
+  "before": "17709",
+  "after": "3919"
+ },
+ {
+  "target": "framework-rs:test-artifact-kind-source",
+  "before": "17709",
+  "after": "2366"
+ },
+ {
+  "target": "framework-rs:test-command-ingress-consumer",
+  "before": "17711",
+  "after": "2433"
+ },
+ {
+  "target": "framework-rs:test-core-modules",
+  "before": "17709",
+  "after": "3689"
+ },
+ {
+  "target": "framework-rs:test-deflate-encoding",
+  "before": "17709",
+  "after": "2702"
+ },
+ {
+  "target": "framework-rs:test-directory-discovery",
+  "before": "17752",
+  "after": "3182"
+ },
+ {
+  "target": "framework-rs:test-fixture-ownership-source",
+  "before": "17709",
+  "after": "2365"
+ },
+ {
+  "target": "framework-rs:test-history-edit-actions",
+  "before": "17709",
+  "after": "4365"
+ },
+ {
+  "target": "framework-rs:test-history-progress",
+  "before": "17709",
+  "after": "2777"
+ },
+ {
+  "target": "framework-rs:test-host-effect-invocation",
+  "before": "17709",
+  "after": "2368"
+ },
+ {
+  "target": "framework-rs:test-mutation-inputs",
+  "before": "17709",
+  "after": "3921"
+ },
+ {
+  "target": "framework-rs:test-original-factory-admission",
+  "before": "17710",
+  "after": "4321"
+ },
+ {
+  "target": "framework-rs:test-original-factory-admission-source",
+  "before": "17710",
+  "after": "4321"
+ },
+ {
+  "target": "framework-rs:test-package-descriptor-value-codec",
+  "before": "17709",
+  "after": "4191"
+ },
+ {
+  "target": "framework-rs:test-retained-pack-encoding",
+  "before": "17709",
+  "after": "3394"
+ },
+ {
+  "target": "framework-rs:test-snapshot-receiving-source",
+  "before": "17709",
+  "after": "2452"
+ },
+ {
+  "target": "framework-rs:test-snapshot-sqlite",
+  "before": "17709",
+  "after": "2783"
+ },
+ {
+  "target": "framework-rs:test-snapshot-sqlite-native",
+  "before": "17709",
+  "after": "2783"
+ },
+ {
+  "target": "framework-rs:test-snapshot-sqlite-source",
+  "before": "17709",
+  "after": "2413"
+ },
+ {
+  "target": "framework-rs:test-source-projection",
+  "before": "17752",
+  "after": "3228"
+ },
+ {
+  "target": "framework-rs:test-staged-payload-funding",
+  "before": "17709",
+  "after": "3644"
+ },
+ {
+  "target": "framework-rs:test-tool-run-actions",
+  "before": "17709",
+  "after": "4203"
+ },
+ {
+  "target": "framework-rs:test-window-utility-native",
+  "before": "17709",
+  "after": "4313"
+ },
+ {
+  "target": "framework-rs:test-wire-retirement-native",
+  "before": "17709",
+  "after": "4195"
+ },
+ {
+  "target": "framework-rs:test-wire-retirement-source",
+  "before": "17709",
+  "after": "2368"
+ },
+ {
+  "target": "print:check",
+  "before": "25560",
+  "after": "2544"
+ }
+]

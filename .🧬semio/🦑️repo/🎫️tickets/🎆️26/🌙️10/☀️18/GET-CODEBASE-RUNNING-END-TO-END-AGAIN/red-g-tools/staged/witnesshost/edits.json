@@ -1,0 +1,71 @@
+{
+ "batch": "witnesshost",
+ "files": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.mjs",
+   "base": "c68a6c8df252260921922a698ed7fcba1c3c0c7d58b1dc9ebb119216dfc183c2",
+   "applied": "d52ab94baae44b15503c96b868d824ff3d7ba6d1f8cd7545241fdd83d62cde0c",
+   "edits": [
+    {
+     "old": "import schema from \"./🧬️schema/🔣️.json\" with {type: \"json\"};\n",
+     "new": "import schema from \"./🧬️schema/🔣️.json\" with {type: \"json\"};\nimport {readFileSync} from \"node:fs\";\nimport {runtimeAdapterNameV1} from \"../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts\";\n",
+     "count": 1
+    },
+    {
+     "old": " if (typeof Bun !== \"undefined\") {\n  for (const name of [\"spawn\", \"spawnSync\"]) patch(Bun, name, spawned(\"Bun.\" + name));\n  patch(Bun, \"$\", spawned(\"Bun.$\"));\n  for (const name of [\"which\", \"resolve\", \"resolveSync\", \"build\", \"write\"]) patch(Bun, name, function_ => function (...args) { if (name === \"write\") markWrite(typeof args[0] === \"string\" || args[0] instanceof URL ? args[0] : undefined); else taint(\"unobserved Bun.\" + name); return function_.apply(this, args); });\n  patch(Bun, \"file\", function_ => function (...args) { if (typeof args[0] === \"string\" || args[0] instanceof URL) observeBefore(\"f\", args[0]); else if (args[0] !== 1 && args[0] !== 2) taint(\"unobserved Bun.file of \" + (args[0] === null ? \"null\" : typeof args[0] === \"object\" ? (args[0].constructor && args[0].constructor.name) : typeof args[0] + \" \" + String(args[0]))); return function_.apply(this, args); });\n  try { const glob = Bun.Glob; if (glob !== undefined && glob.prototype !== undefined) for (const name of [\"scan\", \"scanSync\"]) patch(glob.prototype, name, function_ => function (...args) { taint(\"unobserved Bun.Glob.\" + name); return function_.apply(this, args); }); } catch { taint(\"cannot observe Bun.Glob\"); }\n }",
+     "new": " const hostBinding = config.host, hostRuntime = hostBinding === undefined ? undefined : globalThis[hostBinding.namespace];\n if (hostRuntime !== undefined) {\n  const label = hostBinding.namespace;\n  for (const name of hostBinding.spawn) patch(hostRuntime, name, spawned(label + \".\" + name));\n  for (const name of hostBinding.unobserved) patch(hostRuntime, name, function_ => function (...args) { if (name === hostBinding.write) markWrite(typeof args[0] === \"string\" || args[0] instanceof URL ? args[0] : undefined); else taint(\"unobserved \" + label + \".\" + name); return function_.apply(this, args); });\n  patch(hostRuntime, hostBinding.fileReader, function_ => function (...args) { if (typeof args[0] === \"string\" || args[0] instanceof URL) observeBefore(\"f\", args[0]); else if (args[0] !== 1 && args[0] !== 2) taint(\"unobserved \" + label + \".\" + hostBinding.fileReader + \" of \" + (args[0] === null ? \"null\" : typeof args[0] === \"object\" ? (args[0].constructor && args[0].constructor.name) : typeof args[0] + \" \" + String(args[0]))); return function_.apply(this, args); });\n  try { const glob = hostRuntime[hostBinding.glob]; if (glob !== undefined && glob.prototype !== undefined) for (const name of [\"scan\", \"scanSync\"]) patch(glob.prototype, name, function_ => function (...args) { taint(\"unobserved \" + label + \".\" + hostBinding.glob + \".\" + name); return function_.apply(this, args); }); } catch { taint(\"cannot observe \" + label + \".\" + hostBinding.glob); }\n }",
+     "count": 1
+    },
+    {
+     "old": "  const sqlite = load(\"bun:sqlite\");\n",
+     "new": "  const sqlite = hostBinding === undefined || hostBinding.sqlite === undefined ? undefined : load(hostBinding.sqlite);\n",
+     "count": 1
+    },
+    {
+     "old": " return {[policy.config]: JSON.stringify(config)};\n}",
+     "new": " config.host = worldWitnessHostBindingV1();\n return {[policy.config]: JSON.stringify(config)};\n}",
+     "count": 1
+    },
+    {
+     "old": "/** 🧾️ The environment a child needs to run under the witness;",
+     "new": "/** 🍞️ The members of the hosting runtime that the witness must observe, read from the table in the adapter directory of that runtime next to this module (`🍞️bun/🔣️.json` for Bun), so this file names no runtime; undefined when the runtime has no adapter directory and nothing of its own to observe. */\nexport function worldWitnessHostBindingV1() {\n try { return JSON.parse(readFileSync(new URL(`./${runtimeAdapterNameV1()}/🔣️.json`, import.meta.url), \"utf8\")); } catch { return undefined; }\n}\n\n/** 🧾️ The environment a child needs to run under the witness;",
+     "count": 1
+    }
+   ],
+   "keep": "c68a6c8df2522609"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.d.mts",
+   "base": "fd98627b46655cc952fd6e144e29ef7fdeb6ae63e6a035cf3d53d3f5ca0a33ba",
+   "applied": "ddc2e071d88601f06ff1ce0bf51dd4b4e41c2ea5725bd3f6309e3d80609dcac8",
+   "edits": [
+    {
+     "old": "export function worldWitnessEnvironmentV1(",
+     "new": "export function worldWitnessHostBindingV1(): Readonly<{ namespace: string; spawn: readonly string[]; unobserved: readonly string[]; write: string; fileReader: string; glob: string; sqlite?: string }> | undefined;\nexport function worldWitnessEnvironmentV1(",
+     "count": 1
+    }
+   ],
+   "keep": "fd98627b46655cc9"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧬️schema/🔣️.json",
+   "base": "b36b549eeaf7471665ef2b089a036a9e58fccf523a5a81aeee57a29746c66b19",
+   "applied": "6d3d3938ae6c080ddb07d536b44d1d6500f6bcc239a80d6e39c549b5c9dd69db",
+   "edits": [
+    {
+     "old": "  \"definitions\": {\n    \"Policy\": {",
+     "new": "  \"definitions\": {\n    \"HostBinding\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\"namespace\", \"spawn\", \"unobserved\", \"write\", \"fileReader\", \"glob\"],\n      \"properties\": {\n        \"namespace\": {\"type\": \"string\", \"minLength\": 1},\n        \"spawn\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"minLength\": 1}, \"minItems\": 1},\n        \"unobserved\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"minLength\": 1}},\n        \"write\": {\"type\": \"string\", \"minLength\": 1},\n        \"fileReader\": {\"type\": \"string\", \"minLength\": 1},\n        \"glob\": {\"type\": \"string\", \"minLength\": 1},\n        \"sqlite\": {\"type\": \"string\", \"minLength\": 1}\n      }\n    },\n    \"Policy\": {",
+     "count": 1
+    }
+   ],
+   "keep": "b36b549eeaf74716"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🍞️bun/🔣️.json",
+   "created": true,
+   "base": null,
+   "applied": "8de08a38b3053baba5e2b499106552a3a2fd74e8973dfc1931010d58ded2e70f",
+   "source": "host-binding.json"
+  }
+ ]
+}

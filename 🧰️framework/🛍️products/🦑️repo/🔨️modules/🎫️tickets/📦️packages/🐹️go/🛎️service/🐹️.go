@@ -81,18 +81,6 @@ type TicketOutcome struct {
 	Warnings []string           `json:"warnings"`
 }
 
-// 🧹️PurgeReport is what an artifact purge removed.
-type PurgeReport struct {
-	RemovedDirectories []string `json:"removedDirectories"`
-	RemovedFiles       []string `json:"removedFiles"`
-}
-
-// 🧹️OversizedFileBytes is the size above which a file is purged from a closed ticket folder.
-const OversizedFileBytes int64 = 5 << 20
-
-// 🧹️OversizedFolderBytes is the size above which a subfolder is purged.
-const OversizedFolderBytes int64 = 10 << 20
-
 // 🪪️TicketInteractionMetadata holds repository-bound interaction facts.
 type TicketInteractionMetadata struct {
  Author string `json:"author"`

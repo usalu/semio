@@ -1,0 +1,85 @@
+{
+ "id": "xplat4-platforms",
+ "files": [
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🧬️schema/🔣️.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/files/🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🧬️schema/🔣️.json",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/xplat4-platforms/f000"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/files/🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🟦️.ts",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/xplat4-platforms/f001"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/files/🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/xplat4-platforms/f002"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🔣️.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/files/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🔣️.json",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/xplat4-platforms/f003"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🔣️.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/files/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🔣️.json",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/xplat4-platforms/f004"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📖️texts/🔣️.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/files/🧰️framework/🔨️modules/🏃️process/📖️texts/🔣️.json",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/xplat4-platforms/f005"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/files/🧰️framework/🔨️modules/🏃️process/📋️project.json",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/xplat4-platforms/f006"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/files/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/xplat4-platforms/f007"
+  },
+  {
+   "rel": ".github/workflows/build-system.yml",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/files/.github/workflows/build-system.yml",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/xplat4-platforms/f008"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️ci-report/🗂️suites/🧪️tests/🔀️workflow/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/files/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️ci-report/🗂️suites/🧪️tests/🔀️workflow/🟦️.ts",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/xplat4-platforms/f009"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/files/🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🟦️.ts",
+   "base": null
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🔣️.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/files/🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🔣️.json",
+   "base": null
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🧬️schema/🔣️.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/files/🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🧬️schema/🔣️.json",
+   "base": null
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🧪️tests/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/files/🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🧪️tests/🟦️.ts",
+   "base": null
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🧪️tests/🐍️oracle/🐍️.py",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/files/🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🧪️tests/🐍️oracle/🐍️.py",
+   "base": null
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🧪️tests/🧫️fixtures/🔣️.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/files/🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🧪️tests/🧫️fixtures/🔣️.json",
+   "base": null
+  }
+ ]
+}

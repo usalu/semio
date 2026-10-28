@@ -1,0 +1,28 @@
+def attached_below(root):
+    """💽 devices of the disk images attached from or mounted below `root` (macOS; elsewhere none): a dropped mirror must release them first, a deleted image file stays allocated while it is attached."""
+    if sys.platform != "darwin":
+        return []
+    out = subprocess.run(["hdiutil", "info", "-plist"], capture_output=True).stdout
+    if not out:
+        return []
+    import plistlib
+    base = os.path.realpath(root) + os.sep
+    below = lambda path: bool(path) and (os.path.realpath(path) + os.sep).startswith(base)
+    devices = []
+    for image in plistlib.loads(out).get("images", []):
+        entities = image.get("system-entities", [])
+        if below(image.get("image-path")) or any(below(entity.get("mount-point")) for entity in entities):
+            device = next((entity["dev-entry"] for entity in entities if entity.get("dev-entry")), None)
+            if device:
+                devices.append(device)
+    return devices
+
+
+def detach_below(root, force):
+    """⏏️ detaches every image below `root`; one that stays busy refuses the drop (no process is touched) unless `force`."""
+    for device in attached_below(root):
+        run = subprocess.run(["hdiutil", "detach"] + (["-force"] if force else []) + [device], capture_output=True, text=True)
+        if run.returncode != 0:
+            fail(f"mirror: the image {device} below {root} is still in use ({run.stderr.strip()}); close what uses it or pass --force")
+
+

@@ -56,7 +56,8 @@ export function registerSiteBuildTests(): void {
     expect(parsed.options.tsBuildInfoFile).toBeUndefined();
     expect(JSON.stringify(config.config.compilerOptions)).not.toContain("node_modules");
     const runner = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🟦️.ts"), "utf8");
-    expect(runner).toContain('"--incremental", "true", "--tsBuildInfoFile", join(directory, "state.tsbuildinfo")');
+    expect(runner).toMatch(/"--incremental",\s*"true",\s*"--tsBuildInfoFile",\s*stateFile/u);
+    expect(runner).toContain('join(directory, "state.tsbuildinfo")');
   });
   it("takes the Vite cache directory only from the framework, never from the course or the ambient shell", async () => {
     const owners = sources(site).filter(path => readFileSync(path, "utf8").includes("SEMIO_VITE_CACHE_DIRECTORY")).map(path => relative(site, path).split("\\").join("/"));

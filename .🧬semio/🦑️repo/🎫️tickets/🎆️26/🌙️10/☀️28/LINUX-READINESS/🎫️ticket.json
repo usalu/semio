@@ -1,0 +1,23 @@
+{
+  "title": "Linux Readiness",
+  "emoji": "🐧",
+  "status": "open",
+  "description": "Get the repository completely ready for Linux end to end. Restore native repo tooling and MCP infrastructure, validate zero-touch native Linux and devcontainer setup while preserving Windows and macOS, implement fixes and verify required build and test gates. Actual models GPT 6.1 Sol High coordinator, Medium executors, Low auditors.",
+  "goal": "zerotouchdevcontainer",
+  "sessions": [
+    "37e5682b-ac3a-4ad7-857f-2b8d02140ea3"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-28 16:16:09",
+      "author": "",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Get the repository completely ready for Linux end to end. Restore native repo tooling and MCP infrastructure, validate zero-touch native Linux and devcontainer setup while preserving Windows and macOS, implement fixes and verify required build and test gates. Actual models GPT 6.1 Sol High coordinator, Medium executors, Low auditors.",
+      "llm": "codex",
+      "effort": "high"
+    }
+  ]
+}

@@ -5,7 +5,7 @@ import Ajv2020 from"ajv/dist/2020";
 import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{testPythonV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import{FACT_CODEC_POLICY_V1,canonicalJsonV1,decodeFactIndexV1,encodeFactIndexV1}from"../🟨️.mjs";
+import{FACT_CODEC_POLICY_V1,canonicalJsonV1,decodeFactIndexV1,encodeFactIndexV1,openFactIndexV1}from"../🟨️.mjs";
 import schema from"../🧬️schema/🔣️.json";
 import fixture from"./🔣️.json";
 
@@ -74,4 +74,24 @@ test("the binary index of a workspace shaped graph stays a fraction of its canon
  expect(bytes.length/jsonBytes).toBeLessThan(fixture.sizes.maximumRatio);
  expect(JSON.parse(canonicalJsonV1(decodeFactIndexV1(bytes,{maximumBytes:limit})))).toEqual(JSON.parse(text));
  if(python){const encoded=model("encode",JSON.stringify(index));expect(encoded.stdout.toString()).toBe(bytes.toString("hex"));}
+});
+
+for(const{id,index}of fixture.indexes)test("a lazily opened fact index equals the decoded one and reads its rows on demand: "+id,()=>{
+ const bytes=encodeFactIndexV1(index as never,{maximumBytes:limit}),lazy=openFactIndexV1(bytes,{maximumBytes:limit}),full=decodeFactIndexV1(bytes,{maximumBytes:limit});
+ expect(lazy.rowsRead()).toBe(0);
+ expect(lazy.owners).toEqual(full.owners);expect(lazy.classes).toEqual(full.classes);expect(lazy.rows.length).toBe(full.rows.length);
+ for(let row=full.rows.length-1;row>=0;row--){expect(lazy.rowKindOf(row)).toBe(full.rows[row]!.kind);expect(lazy.rows[row]).toEqual(full.rows[row]);}
+ expect(lazy.rowsRead()).toBe(full.rows.length);
+ expect(lazy.rows.map(row=>row.path)).toEqual(full.rows.map(row=>row.path));
+});
+
+for(const{id,hex}of fixture.refusals)test("a malformed binary fact index is refused by the lazy opener as well: "+id,()=>{
+ expect(()=>openFactIndexV1(Buffer.from(hex,"hex"),{maximumBytes:limit})).toThrow("Closed binary fact index required");
+});
+
+test("a lazily opened index of a workspace shaped graph materialises only the rows that are read",()=>{
+ const index=workspace(fixture.sizes.owners,fixture.sizes.rowsPerOwner),bytes=encodeFactIndexV1(index,{maximumBytes:limit}),lazy=openFactIndexV1(bytes,{maximumBytes:limit});
+ const picks=[0,7,Math.floor(index.rows.length/2),index.rows.length-1];
+ for(const row of picks)expect(JSON.parse(canonicalJsonV1(lazy.rows[row]))).toEqual(JSON.parse(canonicalJsonV1(index.rows[row])));
+ expect(lazy.rowsRead()).toBe(picks.length);
 });

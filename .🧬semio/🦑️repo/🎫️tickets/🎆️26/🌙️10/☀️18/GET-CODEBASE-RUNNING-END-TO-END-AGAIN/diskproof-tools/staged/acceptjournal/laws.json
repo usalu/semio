@@ -1,0 +1,30 @@
+{
+ "tests": [],
+ "knownRed": [
+  "every writer named by the ledger exists",
+  "the nightly workflow runs the acceptance per product on a pinned macOS runner by schedule and by hand, in place, fails the blocking row on a breach, and keeps the reports"
+ ],
+ "laws": [
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/⚖️law/🌐️native/🟦️.ts",
+   "filter": "source writes"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/⚖️law/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/📐️model/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🛂️acceptance/🧪️tests/🟦️.ts"
+  }
+ ]
+}

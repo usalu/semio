@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
+import{privateRepositoryWorkspaceV1}from"../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 /** 🧩️ Preserves package imports and stable task identities against native Nx inference. */
 export function testSelectedPackageIdentities(workspace: string): void {
@@ -29,7 +31,7 @@ export async function testSelectedFontDependencies(workspace: string): Promise<v
   assert.equal(manifest.package.name, fixture.project);
   const {runTool}=await import("../../🚀️bootstrap/📦️dependencies/🟦️.ts");
   const {repositoryCargoPreparationStorageV1}=await import("../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts");
-  const result = await runTool("cargo",["tree", "--locked", "--offline", "-p", fixture.project, "--edges", "normal,build", "--prefix", "none", "--format", "{p}"],workspace,AbortSignal.timeout(60_000),true,process.env,repositoryCargoPreparationStorageV1(process.cwd()));
+  const result = await runTool("cargo",["tree", "--locked", "--offline", "-p", fixture.project, "--edges", "normal,build", "--prefix", "none", "--format", "{p}"],workspace,AbortSignal.timeout(60_000),true,process.env,repositoryCargoPreparationStorageV1(repository.root));
   const crates = [...new Set(result.trim().split("\n").map(line => line.split(" ")[0]))].sort();
   assert.deepEqual(crates, fixture.crates);
   const { cacheInternals } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");

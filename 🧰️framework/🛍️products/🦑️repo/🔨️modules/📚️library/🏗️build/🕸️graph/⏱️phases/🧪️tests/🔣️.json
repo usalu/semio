@@ -257,6 +257,230 @@
           "total": 3
         }
       ]
+    },
+    {
+      "name": "running-work-is-named-throttled-and-seconds-are-bucketed",
+      "minimumMilliseconds": 250,
+      "steps": [
+        {
+          "op": "begin",
+          "phase": "inference",
+          "total": 566,
+          "at": 0
+        },
+        {
+          "op": "running",
+          "phase": "inference",
+          "running": [
+            {
+              "name": "@semio-tech/a",
+              "seconds": 0
+            }
+          ],
+          "at": 10
+        },
+        {
+          "op": "running",
+          "phase": "inference",
+          "running": [
+            {
+              "name": "@semio-tech/a",
+              "seconds": 0
+            }
+          ],
+          "at": 300
+        },
+        {
+          "op": "running",
+          "phase": "inference",
+          "running": [
+            {
+              "name": "@semio-tech/a",
+              "seconds": 4.9
+            }
+          ],
+          "at": 400
+        },
+        {
+          "op": "running",
+          "phase": "inference",
+          "running": [
+            {
+              "name": "@semio-tech/a",
+              "seconds": 5
+            },
+            {
+              "name": "b c",
+              "seconds": 1
+            }
+          ],
+          "at": 700
+        },
+        {
+          "op": "running",
+          "phase": "inference",
+          "running": [
+            {
+              "name": "@semio-tech/a",
+              "seconds": 12.2
+            },
+            {
+              "name": "b c",
+              "seconds": 8
+            },
+            {
+              "name": "d",
+              "seconds": 1
+            },
+            {
+              "name": "e",
+              "seconds": 0
+            }
+          ],
+          "at": 1000
+        },
+        {
+          "op": "advance",
+          "phase": "inference",
+          "done": 1,
+          "at": 1300
+        },
+        {
+          "op": "advance",
+          "phase": "inference",
+          "done": 2,
+          "at": 1400
+        },
+        {
+          "op": "running",
+          "phase": "inference",
+          "running": [],
+          "at": 1700
+        },
+        {
+          "op": "end",
+          "phase": "inference",
+          "at": 1800
+        }
+      ],
+      "published": [
+        "build:graph-phase:inference:0:566",
+        "build:graph-phase:inference:0:566:1:0:%40semio-tech%2Fa",
+        "build:graph-phase:inference:0:566:2:5:%40semio-tech%2Fa,b%20c",
+        "build:graph-phase:inference:0:566:4:10:%40semio-tech%2Fa,b%20c,d",
+        "build:graph-phase:inference:1:566:4:10:%40semio-tech%2Fa,b%20c,d",
+        "build:graph-phase:inference:2:566"
+      ],
+      "rows": [
+        {
+          "phase": "inference",
+          "milliseconds": 1800,
+          "done": 2,
+          "total": 566
+        }
+      ]
+    },
+    {
+      "name": "names-stop-at-the-resource-character-bound-and-long-names-are-cut",
+      "minimumMilliseconds": 0,
+      "options": {
+        "maximumNames": 3,
+        "maximumResourceCharacters": 55,
+        "maximumNameCharacters": 8
+      },
+      "steps": [
+        {
+          "op": "begin",
+          "phase": "inference",
+          "total": 9,
+          "at": 0
+        },
+        {
+          "op": "running",
+          "phase": "inference",
+          "running": [
+            {
+              "name": "abcdefghijkl",
+              "seconds": 0
+            },
+            {
+              "name": "second",
+              "seconds": 0
+            },
+            {
+              "name": "third",
+              "seconds": 0
+            }
+          ],
+          "at": 1
+        },
+        {
+          "op": "end",
+          "phase": "inference",
+          "at": 2
+        }
+      ],
+      "published": [
+        "build:graph-phase:inference:0:9",
+        "build:graph-phase:inference:0:9:3:0:abcdefgh,second",
+        "build:graph-phase:inference:0:9"
+      ],
+      "rows": [
+        {
+          "phase": "inference",
+          "milliseconds": 2,
+          "done": 0,
+          "total": 9
+        }
+      ]
+    },
+    {
+      "name": "finishing-with-running-work-publishes-the-plain-final-state",
+      "minimumMilliseconds": 250,
+      "steps": [
+        {
+          "op": "begin",
+          "phase": "inference",
+          "total": 2,
+          "at": 0
+        },
+        {
+          "op": "running",
+          "phase": "inference",
+          "running": [
+            {
+              "name": "x",
+              "seconds": 0
+            }
+          ],
+          "at": 300
+        },
+        {
+          "op": "advance",
+          "phase": "inference",
+          "done": 2,
+          "at": 310
+        },
+        {
+          "op": "end",
+          "phase": "inference",
+          "at": 320
+        }
+      ],
+      "published": [
+        "build:graph-phase:inference:0:2",
+        "build:graph-phase:inference:0:2:1:0:x",
+        "build:graph-phase:inference:2:2:1:0:x",
+        "build:graph-phase:inference:2:2"
+      ],
+      "rows": [
+        {
+          "phase": "inference",
+          "milliseconds": 320,
+          "done": 2,
+          "total": 2
+        }
+      ]
     }
   ],
   "refusals": [
@@ -329,6 +553,22 @@
           "op": "begin",
           "phase": "inference",
           "total": -1,
+          "at": 0
+        }
+      ]
+    },
+    {
+      "name": "running-before-begin",
+      "steps": [
+        {
+          "op": "running",
+          "phase": "inference",
+          "running": [
+            {
+              "name": "a",
+              "seconds": 0
+            }
+          ],
           "at": 0
         }
       ]

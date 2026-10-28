@@ -1,0 +1,322 @@
+"""🔼️ Independent Python oracle of the quiet forecast and the grant upgrade: a port of the host capacity decision (quiet requests pass the queue barrier within `memory.maximumQuiet`, an upgrade request replaces the held grant of its id and keeps its arrival, an agent session with nothing running gets its first job past our booked cores, an upgrade short of cores runs with the jobs they leave after the minimum jobs of the fresh requests served after it and keeps its whole memory, an elastic request is decided last and never becomes a barrier) and of the forecast (decayed quiet and busy weights, newest-run rule, quiet size from the estimates oracle, which checks its weighted quantile against numpy). Run `python3 🐍️.py` to regenerate `../🧫️fixtures/🔣️.json`, `python3 🐍️.py --check` to prove the stored vectors are what the oracle produces."""
+import functools,importlib.util,json,math,os,random,sys
+
+HERE=os.path.dirname(os.path.abspath(__file__))
+TARGET=os.path.join(HERE,"..","🧫️fixtures","🔣️.json")
+DECISION=os.path.join(HERE,"..","..","🧫️fixtures","🔣️.json")
+PROTOCOL=json.load(open(os.path.join(HERE,"..","..","..","🧬️schema","🔣️.json"),encoding="utf8"))["definitions"]["Protocol"]["const"]
+
+def load_estimates():
+    spec=importlib.util.spec_from_file_location("estimates_oracle",os.path.join(HERE,"..","..","📐️estimates","🐍️oracle","🐍️.py"))
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);return module
+
+def floor_mb(policy,total):
+    m=policy["memory"];share=total*m["floorBasisPoints"]//10000
+    return min(total,max(m["floorMinimumMegabytes"],min(m["floorMaximumMegabytes"],share)))
+
+def order(waiters,ledger):
+    def held(w):return 0 if w.get("session") is None else sum(g["reservedMegabytes"] for g in ledger if g.get("session")==w["session"])
+    def weight(w):return w.get("weight",1)
+    def cmp(a,b):
+        ra=2 if a.get("grow") is True or a["request"].get("elastic") is True else 0 if a["request"]["priority"]=="interactive" else 1;rb=2 if b.get("grow") is True or b["request"].get("elastic") is True else 0 if b["request"]["priority"]=="interactive" else 1
+        for left,right in ((ra,rb),(held(a)*weight(b),held(b)*weight(a)),(a["arrivedAtMs"],b["arrivedAtMs"]),(a["request"]["id"],b["request"]["id"])):
+            if left!=right:return -1 if left<right else 1
+        return 0
+    return sorted(waiters,key=functools.cmp_to_key(cmp))
+
+def soft_reason(policy,host):
+    if host["pressure"]=="warn":return "pressure-warn"
+    if host["openFiles"] is not None and host["openFilesMaximum"] is not None and host["openFiles"]*10000>host["openFilesMaximum"]*policy["files"]["ceilingBasisPoints"]:return "files"
+    if host["attachedImages"] is not None and host["attachedImages"]>=policy["attaches"]["maximum"]:return "attaches"
+    return None
+
+COUNTS={}
+def count(name):COUNTS[name]=COUNTS.get(name,0)+1
+
+def evaluate(policy,host,ledger,waiters,now):
+    floor=floor_mb(policy,host["totalMegabytes"]);cap=max(0,host["totalMegabytes"]-floor)
+    def ramping(g):return now-g.get("resumedAtMs",g["admittedAtMs"])<g.get("rampMilliseconds",policy["memory"]["rampMilliseconds"])
+    active=[g for g in ledger if g.get("lentSinceMs") is None]
+    def unrealized_of(g):return max(0,g["reservedMegabytes"]-(g["observedMegabytes"] or 0)) if ramping(g) else 0
+    def committed_of(g):
+        if ramping(g):return max(g["reservedMegabytes"],g["observedMegabytes"] or 0)
+        return g["observedMegabytes"] if g["observedMegabytes"] is not None else g["reservedMegabytes"]
+    unrealized=sum(unrealized_of(g) for g in active);committed=sum(committed_of(g) for g in active)
+    observed=host["availableMegabytes"]-floor-unrealized
+    budget=cap*policy["memory"]["budgetBasisPoints"]//10000-committed
+    binding="budget" if budget<observed else "available"
+    room_observed,room_budget=observed,budget;headroom=min(observed,budget)
+    ledger_cpu=sum(g["cpu"] for g in active);ceiling=policy["load"]["perCoreCeiling"]*host["cores"]
+    load_room=math.inf if host["load"] is None and ledger_cpu==0 else ceiling-max(host["load"] or 0,ledger_cpu)
+    reported=None if load_room==math.inf else load_room
+    swap_ceiling=host["totalMegabytes"]*policy["swap"]["ceilingBasisPoints"]//10000;rate=host["swapOutMegabytesPerSecond"];swapping=rate is None or rate>0
+    soft=soft_reason(policy,host)
+    if host["pressure"]=="critical":hard="pressure-critical"
+    elif host["swapUsedMegabytes"] is not None and host["swapUsedMegabytes"]>swap_ceiling and swapping:hard="swap"
+    elif rate is not None and rate>policy["swap"]["outMegabytesPerSecond"]:hard="swap-activity"
+    else:hard=None
+    drained_room=min(host["availableMegabytes"]+sum(g["observedMegabytes"] or 0 for g in ledger),host["totalMegabytes"])-floor
+    drained_budget=cap*policy["memory"]["budgetBasisPoints"]//10000
+    aged=[{**w,"request":{**w["request"],"priority":"interactive"}} if w["request"]["priority"]=="batch" and now-w["arrivedAtMs"]>=policy["wait"]["agingMilliseconds"] else w for w in waiters]
+    growing={w["request"]["id"] for w in waiters if w.get("upgrade") is True}
+    decisions=[];heads=[];state={"blocked":False,"waits":False,"admitted":0,"own":ledger_cpu,"rampers":len([g for g in active if g.get("rampSlot") is True and ramping(g)]),"quiet_left":policy["memory"]["maximumQuiet"]-len([g for g in active if g.get("quiet") is True]),"soft_left":policy["memory"].get("quietSoftStopGrants",0)-len([g for g in active if g.get("quiet") is True]),"room_observed":room_observed,"room_budget":room_budget,"load_room":load_room,"sessions":set()}
+    w_=policy["wait"]
+    ordered=order(aged,active)
+    for at,waiter in enumerate(ordered):
+        r=waiter["request"];quiet=r.get("quiet") is True;avoids=quiet and state["soft_left"]>0;pause=None if avoids else soft;grows=waiter.get("grow") is True and waiter.get("upgrade") is True;elastic=r.get("elastic") is True
+        def need(jobs):return min(r["fixedMegabytes"]+jobs*r["perJobMegabytes"],cap)
+        waited=now-waiter["arrivedAtMs"]
+        replaced=next((g for g in active if g["id"]==r["id"]),None) if waiter.get("upgrade") is True else None
+        held=(replaced["observedMegabytes"] or 0) if replaced else 0
+        free_observed=state["room_observed"]+(unrealized_of(replaced) if replaced else 0)
+        free_budget=state["room_budget"]+(committed_of(replaced) if replaced else 0)
+        if state["load_room"]==math.inf or not replaced:free_load=state["load_room"]
+        else:free_load=state["load_room"]+max(host["load"] or 0,ledger_cpu)-max(host["load"] or 0,ledger_cpu-replaced["cpu"])
+        free_rampers=state["rampers"]-(1 if replaced and replaced.get("rampSlot") is True and ramping(replaced) else 0)
+        cost_observed=lambda jobs:max(0,need(jobs)-held);cost_budget=lambda jobs:max(need(jobs),held)
+        fits=lambda jobs:(cost_observed(jobs)<=free_observed and cost_budget(jobs)<=free_budget) or (replaced is not None and cost_observed(jobs)<=unrealized_of(replaced) and cost_budget(jobs)<=committed_of(replaced))
+        def refuse(reason):
+            if not grows and not elastic:state["waits"]=True
+            decisions.append({"id":r["id"],"verdict":"wait","jobs":0,"reservedMegabytes":0,"reason":reason})
+        def admit(jobs,reason,megabytes=None):
+            reserved=need(jobs) if megabytes is None else megabytes
+            state["room_observed"]=free_observed-max(0,reserved-held);state["room_budget"]=free_budget-max(reserved,held)
+            if state["load_room"]!=math.inf:state["load_room"]=free_load-jobs*r["cpuPerJob"]
+            state["own"]+=jobs*r["cpuPerJob"]-(replaced["cpu"] if replaced else 0);state["admitted"]+=1
+            if waiter.get("session") is not None:state["sessions"].add(waiter["session"])
+            state["rampers"]=free_rampers+(1 if r.get("rampSlot") is True else 0)
+            if quiet:state["quiet_left"]-=1;state["soft_left"]-=1
+            else:
+                for head in heads:
+                    head["bypasses"]+=1
+                    if head["bypasses"]>=w_["maximumBypasses"]:state["blocked"]=True
+            decisions.append({"id":r["id"],"verdict":"admit","jobs":jobs,"reservedMegabytes":reserved,"reason":reason})
+        if hard:refuse(hard);continue
+        if grows:
+            if state["blocked"] or state["waits"]:count("growQueued");refuse("queue-order");continue
+            if replaced is None or (replaced.get("grownAtMs") is not None and ramping(replaced)):count("growRamp");refuse("ramp");continue
+            if soft is not None:refuse(soft);continue
+            def roomy(jobs):
+                wanted=min(r["fixedMegabytes"]+(jobs+PROTOCOL["growSpareJobs"])*r["perJobMegabytes"],cap)
+                return max(0,wanted-held)<=free_observed and max(wanted,held)<=free_budget
+            grown=next((c for c in range(r["preferredJobs"],r["minimumJobs"]-1,-1) if roomy(c) and c*r["cpuPerJob"]<=free_load),0)
+            if grown>0:count("growAdmit" if grown==r["preferredJobs"] else "growPartly");admit(grown,"reduced" if grown<r["preferredJobs"] else "fits",max(replaced["reservedMegabytes"],need(grown)))
+            else:count("growWait");refuse("load" if roomy(r["minimumJobs"]) else "memory")
+            continue
+        if elastic and (state["blocked"] or state["waits"]):count("elasticQueued");refuse("queue-order");continue
+        if state["blocked"] and not (quiet and state["quiet_left"]>0):
+            if quiet:count("quietBlockedByLimit")
+            refuse("queue-order");continue
+        if quiet and state["quiet_left"]<=0:
+            count("quietLimit");refuse("quiet-limit");continue
+        if r.get("rampSlot") is True and free_rampers>=policy["memory"]["maximumRamping"]:refuse("ramp");continue
+        memory_fits=fits(r["minimumJobs"]);jobs=0
+        first=not elastic and waiter.get("session") is not None and state["own"]<ceiling+host["cores"] and waiter["session"] not in state["sessions"] and all(g["id"]==r["id"] or g.get("session")!=waiter["session"] for g in active)
+        if pause is None:
+            for candidate in range(r["preferredJobs"],r["minimumJobs"]-1,-1):
+                if fits(candidate) and (avoids or candidate*r["cpuPerJob"]<=free_load):jobs=candidate;break
+        if jobs==0 and pause is None and memory_fits and (avoids or first and replaced is None or state["own"]-(replaced["cpu"] if replaced else 0)+r["minimumJobs"]*r["cpuPerJob"]<=ceiling):
+            if not avoids and state["own"]-(replaced["cpu"] if replaced else 0)+r["minimumJobs"]*r["cpuPerJob"]>ceiling:count("firstJob")
+            jobs=r["minimumJobs"]
+        if jobs>0:
+            if quiet and state["blocked"]:count("quietPassedBarrier")
+            if replaced:count("upgradeAdmit")
+            if elastic:count("elasticAdmit")
+            admit(jobs,"reduced" if jobs<r["preferredJobs"] else "fits");continue
+        if pause is None and memory_fits and replaced is not None:
+            cores=min(r["preferredJobs"],(ceiling-state["own"]+replaced["cpu"]-sum(w["request"]["minimumJobs"]*w["request"]["cpuPerJob"] for w in ordered[at+1:] if w.get("upgrade") is not True and w.get("grow") is not True and w["request"].get("elastic") is not True))//r["cpuPerJob"])
+            if cores>=1 or first:count("upgradeCores" if cores>=1 else "upgradeFirstJob");admit(max(1,cores),"reduced",need(r["minimumJobs"]));continue
+        reason="memory" if not memory_fits else (pause or "load")
+        if reason=="memory" and replaced is not None and all(g["id"]==r["id"] or (g.get("quiet") is True and g["id"] in growing) for g in active) and state["admitted"]==0 and not quiet:
+            count("upgradePartial");fitted=min(need(r["minimumJobs"]),held+free_observed,free_budget)
+            units=max(1,min(r["preferredJobs"],(fitted-r["fixedMegabytes"])//r["perJobMegabytes"])) if r["perJobMegabytes"]>0 else r["preferredJobs"]
+            if units<r["preferredJobs"]:count("upgradeFewerJobs")
+            admit(units,"override",max(replaced["reservedMegabytes"],min(fitted,need(units))))
+        elif reason!="memory" and not elastic and len(active)-(1 if replaced else 0)==0 and state["admitted"]==0 and waited>=policy["load"]["overrideAfterMilliseconds"]:
+            admit(r["minimumJobs"],"override")
+        else:
+            refuse(reason)
+            if replaced:count("upgradeWait")
+            if elastic:count("elasticWait")
+            if reason in ("memory","load") and not quiet and not elastic:
+                drains=soft is None and need(r["minimumJobs"])<=min(drained_room,drained_budget) and r["minimumJobs"]*r["cpuPerJob"]<=ceiling
+                bypasses=len([g for g in ledger if g["id"]!=r["id"] and g.get("quiet") is not True and g["admittedAtMs"]>=waiter["arrivedAtMs"]])
+                if drains and (waited>=w_["bypassMilliseconds"] or bypasses>=w_["maximumBypasses"]):state["blocked"]=True
+                elif drains:heads.append({"bypasses":bypasses})
+    return {"floorMegabytes":floor,"unrealizedMegabytes":unrealized,"headroomMegabytes":headroom,"binding":binding,"loadRoom":reported,"decisions":decisions}
+
+UNIT=1_000_000
+def forecast(policy,estimates,store,leaf,now):
+    e=policy["estimates"];quiet_key,busy_key=leaf+"~quiet",leaf+"~busy"
+    quiet=store["classes"].get(quiet_key,{"samples":[]})["samples"];busy=store["classes"].get(busy_key,{"samples":[]})["samples"]
+    wq=sum(estimates.weights(policy,quiet,now));wb=sum(estimates.weights(policy,busy,now));total=wq+wb
+    share=0 if total==0 else math.floor(wq*10000/total+0.5)
+    newest=lambda rows:max([row["atMs"] for row in rows],default=-1)
+    estimate=estimates.estimate(policy,store,[quiet_key],now);megabytes=math.floor(estimate["ratioBasisPoints"]*e["quietReferenceMegabytes"]/10000+0.5)
+    history=wq>=e["quietMinimumSamples"]*UNIT and share>=e["quietShareBasisPoints"] and newest(quiet)>newest(busy)
+    latest=max(newest(quiet),newest(busy));since=now-latest
+    follow_up=(not history) and e.get("quietFollowUpMilliseconds",0)>0 and latest>=0 and since>=0 and since<=e["quietFollowUpMilliseconds"]
+    verdict=(history or follow_up) and megabytes<=e["quietMaximumMegabytes"]
+    result={"quiet":verdict,"megabytes":megabytes,"rampMilliseconds":estimate["rampMilliseconds"],"samples":estimate["samples"],"shareBasisPoints":share}
+    if verdict and follow_up:result["followUpMilliseconds"]=since
+    return result
+
+def record_forecast(policy,estimates,store,leaf,run):
+    key=leaf+("~busy" if run["executed"] else "~quiet")
+    return estimates.record(policy,store,[key],{"operation":"run","jobs":1,"peakMegabytes":run["peakMegabytes"],"defaultMegabytes":policy["estimates"]["quietReferenceMegabytes"],"activeMilliseconds":run["activeMilliseconds"],"peakAtMilliseconds":run["peakAtMilliseconds"],"endedAtMs":run["endedAtMs"]})
+
+def quiet_request(full,fc):
+    return {"id":full["id"],"operation":full["operation"],"priority":full["priority"],"minimumJobs":1,"preferredJobs":1,"fixedMegabytes":fc["megabytes"],"perJobMegabytes":0,"cpuPerJob":1,"rampMilliseconds":fc["rampMilliseconds"],"rampSlot":False,"quiet":True}
+
+def ident(rng):return "".join(rng.choice("abcdefghijklmnopqrstuvwxyz0123456789") for _ in range(12))
+
+def random_host(rng):
+    total=rng.choice([16384,32768]);return {"version":1,"atMs":1_800_000_000_000,"platform":"darwin","cores":rng.choice([4,10]),"totalMegabytes":total,"availableMegabytes":rng.randrange(1500,total-1500),"pressure":rng.choice(["normal"]*8+["warn","critical"]),"swapUsedMegabytes":0,"swapOutMegabytesPerSecond":0,"load":rng.choice([None,1,3,8,20]),"openFiles":8000,"openFilesMaximum":245760,"attachedImages":10}
+
+def random_grant(rng,now,quiet=False):
+    jobs=1 if quiet else rng.choice([1,2,4]);reserved=rng.choice([300,600,1200]) if quiet else rng.choice([1500,3000,6000,9000])
+    g={"id":ident(rng),"operation":"run","jobs":jobs,"cpu":jobs,"reservedMegabytes":reserved,"admittedAtMs":now-rng.choice([1000,20000,70000,400000,2000000]),"observedMegabytes":rng.choice([None,0,reserved//3,reserved,reserved*2]),"pid":rng.randrange(100,90000),"bootAtMs":1_700_000_000_000}
+    if quiet:g["quiet"]=True;g["arrivedAtMs"]=g["admittedAtMs"]-rng.choice([0,500,3000])
+    if rng.random()<0.2:g["lentSinceMs"]=now-rng.choice([1000,50000])
+    if rng.random()<0.3:g["rampMilliseconds"]=rng.choice([30000,120000,900000])
+    if rng.random()<0.3:g["resumedAtMs"]=now-rng.choice([1000,40000,300000])
+    if rng.random()<0.2 and not quiet:g["rampSlot"]=True
+    return g
+
+def random_request(rng,quiet=False,identifier=None,larger_than=None):
+    if quiet:return {"id":identifier or ident(rng),"operation":"run","priority":rng.choice(["batch","interactive"]),"minimumJobs":1,"preferredJobs":1,"fixedMegabytes":rng.choice([512,900,1600,2500]),"perJobMegabytes":0,"cpuPerJob":1,"rampMilliseconds":rng.choice([60000,200000]),"rampSlot":False,"quiet":True}
+    jobs=rng.choice([1,2,4,8]);request={"id":identifier or ident(rng),"operation":"run","priority":rng.choice(["batch","interactive"]),"minimumJobs":jobs if larger_than is not None else 1,"preferredJobs":jobs,"fixedMegabytes":rng.choice([512,1536,5120]),"perJobMegabytes":rng.choice([0,768,2048]),"cpuPerJob":rng.choice([1,1,2])}
+    if larger_than is not None:request["fixedMegabytes"]=max(request["fixedMegabytes"],larger_than)
+    if rng.random()<0.3:request["rampSlot"]=True;request["rampMilliseconds"]=rng.choice([60000,300000])
+    return request
+
+def random_world(rng,policy,index):
+    now=1_800_000_000_000+rng.randrange(0,10_000_000);host=random_host(rng);host["atMs"]=now
+    ledger=[random_grant(rng,now,quiet=rng.random()<0.35) for _ in range(rng.choice([0,1,2,3,4,5]))]
+    queue=[]
+    for _ in range(rng.choice([1,2,3,4])):
+        arrived=now-rng.choice([0,500,5000,31000,100000,400000])
+        kind=rng.choice(["fresh","fresh","quiet","upgrade","upgrade"])
+        upgradable=[g for g in ledger if g["id"] not in {w["request"]["id"] for w in queue}]
+        if kind=="upgrade" and upgradable:
+            g=rng.choice(upgradable);request=random_request(rng,identifier=g["id"],larger_than=g["reservedMegabytes"]+1)
+            waiter={"request":request,"arrivedAtMs":g.get("arrivedAtMs",g["admittedAtMs"]),"pid":g["pid"],"upgrade":True}
+        elif kind=="quiet":
+            request=random_request(rng,quiet=True);waiter={"request":request,"arrivedAtMs":arrived,"pid":rng.randrange(100,90000)}
+        else:
+            request=random_request(rng);waiter={"request":request,"arrivedAtMs":arrived,"pid":rng.randrange(100,90000)}
+        if rng.random()<0.3:waiter["session"]=rng.choice(["0123456789ab.codex","0123456789ab.claude","ba9876543210.codex"]);waiter["weight"]=rng.choice([1,2])
+        queue.append(waiter)
+    for g in ledger:
+        if rng.random()<0.4:g["session"]=rng.choice(["0123456789ab.codex","0123456789ab.claude","ba9876543210.codex"])
+    return {"name":f"upgrade-{index}","host":host,"ledger":ledger,"queue":queue,"nowMs":now}
+
+def stores_for_forecast(rng,policy,estimates):
+    cases=[];now=1_900_000_000_000
+    for index in range(60):
+        store={"version":1,"classes":{}};leaf="run:build:dashboard:build";runs=[]
+        steps=rng.choice([0,1,2,3,5,9,14,20])
+        t=now-rng.randrange(0,6)*86_400_000-steps*3_600_000
+        for step in range(steps):
+            t+=rng.randrange(600_000,5_400_000)
+            executed=rng.random()<rng.choice([0.0,0.04,0.12,0.3,0.6,0.9]);peak=rng.choice([300,700,1500,2800,4200,9000,13000]) if not executed else rng.choice([4000,9000,13000])
+            run={"executed":executed,"peakMegabytes":peak,"activeMilliseconds":rng.choice([2000,8000,60000,400000]),"peakAtMilliseconds":rng.choice([0,500,5000,50000]),"endedAtMs":t}
+            run["peakAtMilliseconds"]=min(run["peakAtMilliseconds"],run["activeMilliseconds"])
+            runs.append(run);store=record_forecast(policy,estimates,store,leaf,run)
+        when=now+rng.choice([0,60_000,7_200_000,3*86_400_000])
+        cases.append({"name":f"forecast-{index}","leaf":leaf,"nowMs":when,"runs":runs,"store":store,"expect":forecast(policy,estimates,store,leaf,when)})
+    leaf="run:build:dashboard:build"
+    def scripted(name,pattern,gap=1_800_000):
+        store={"version":1,"classes":{}};t=now-len(pattern)*gap;runs=[]
+        for executed in pattern:
+            t+=gap;run={"executed":executed,"peakMegabytes":9000 if executed else 1400,"activeMilliseconds":4000,"peakAtMilliseconds":2000,"endedAtMs":t};runs.append(run);store=record_forecast(policy,estimates,store,leaf,run)
+        cases.append({"name":name,"leaf":leaf,"nowMs":now,"runs":runs,"store":store,"expect":forecast(policy,estimates,store,leaf,now)})
+    for count_ in (1,2,3,5,12):scripted(f"all-quiet-{count_}",[False]*count_)
+    scripted("quiet-then-busy",[False]*6+[True]);scripted("busy-then-quiet",[True]+[False]*3);scripted("mostly-busy",[True,False,True,True,False,True,False]);scripted("share-edge",[False]*4+[True]+[False]);scripted("only-busy",[True]*4)
+    return cases
+
+def barrier_worlds(rng,policy):
+    worlds=[]
+    for index in range(60):
+        now=1_800_000_000_000+rng.randrange(0,1_000_000);total=rng.choice([16384,32768]);cap=total-floor_mb(policy,total)
+        host={"version":1,"atMs":now,"platform":"darwin","cores":10,"totalMegabytes":total,"availableMegabytes":cap//2+rng.randrange(0,cap//4),"pressure":"normal","swapUsedMegabytes":0,"swapOutMegabytesPerSecond":0,"load":1,"openFiles":8000,"openFilesMaximum":245760,"attachedImages":10}
+        running={"id":ident(rng),"operation":"run","jobs":2,"cpu":2,"reservedMegabytes":int(cap*0.45),"admittedAtMs":now-1_000_000,"observedMegabytes":int(cap*0.45),"pid":4242,"bootAtMs":1_700_000_000_000}
+        queue=[{"request":{"id":ident(rng),"operation":"run","priority":"batch","minimumJobs":1,"preferredJobs":1,"fixedMegabytes":int(cap*0.6),"perJobMegabytes":0,"cpuPerJob":1},"arrivedAtMs":now-rng.choice([40000,100000,900000]),"pid":4243}]
+        for _ in range(rng.choice([1,2,3,5,6])):queue.append({"request":random_request(rng,quiet=True),"arrivedAtMs":now-rng.choice([0,500,3000]),"pid":rng.randrange(100,90000)})
+        queue.append({"request":{"id":ident(rng),"operation":"run","priority":"batch","minimumJobs":1,"preferredJobs":1,"fixedMegabytes":rng.choice([512,1500]),"perJobMegabytes":0,"cpuPerJob":1},"arrivedAtMs":now-rng.choice([0,200]),"pid":4244})
+        worlds.append({"name":f"barrier-{index}","host":host,"ledger":[running],"queue":queue,"nowMs":now})
+    return worlds
+
+def agents_worlds(policy):
+    """👥️ Worlds of several agent sessions on a declared 8-core machine: running 8-job grants of some sessions, quiet grants of other sessions that ask to grow, fresh requests of sessions with and without a running grant, and the elastic farm request of a running session, old enough to be a barrier head; its own generator, so the stored worlds above stay what they were."""
+    rng=random.Random(20261027);worlds=[];sessions=["a00000000001.claude","a00000000002.codex","a00000000003.claude","a00000000004.droid"]
+    for index in range(120):
+        now=1_800_000_000_000+rng.randrange(0,1_000_000);total=16384;cap=total-floor_mb(policy,total)
+        host={"version":1,"atMs":now,"platform":"darwin","cores":8,"totalMegabytes":total,"availableMegabytes":rng.randrange(3000,cap) if index%4 else cap,"pressure":"normal","swapUsedMegabytes":0,"swapOutMegabytesPerSecond":0,"load":rng.choice([None,2,9,24]) if index%4 else rng.choice([None,2]),"openFiles":8000,"openFilesMaximum":245760,"attachedImages":10}
+        ledger=[];queue=[];owners=rng.sample(sessions,1 if index%8==0 else rng.choice([1,2,3]))
+        for owner in owners:
+            if index%8==0 or rng.random()<0.75:ledger.append({"id":ident(rng),"operation":"run","jobs":8,"cpu":8,"reservedMegabytes":rng.choice([2861,3649,5119]),"admittedAtMs":now-rng.choice([5000,90000,900000]),"observedMegabytes":rng.choice([None,500,1800,3400]),"pid":rng.randrange(100,90000),"bootAtMs":1_700_000_000_000,"session":owner,"rampMilliseconds":rng.choice([60000,168836,600000])})
+        for owner in [name for name in sessions if name not in owners][:0 if index%4==0 else rng.choice([1,2])]:
+            g={"id":ident(rng),"operation":"run","jobs":1,"cpu":1,"reservedMegabytes":rng.choice([1502,2048]),"admittedAtMs":now-rng.choice([1000,40000]),"observedMegabytes":rng.choice([None,200,600]),"pid":rng.randrange(100,90000),"bootAtMs":1_700_000_000_000,"session":owner,"quiet":True,"rampMilliseconds":60000}
+            g["arrivedAtMs"]=g["admittedAtMs"];ledger.append(g)
+            request={"id":g["id"],"operation":"run","priority":"interactive","minimumJobs":8,"preferredJobs":8,"fixedMegabytes":rng.choice([245,312,400]),"perJobMegabytes":rng.choice([327,416,450]),"cpuPerJob":1,"rampMilliseconds":168836}
+            if rng.random()<0.3:request["rampSlot"]=True
+            queue.append({"request":request,"arrivedAtMs":g["arrivedAtMs"],"pid":g["pid"],"upgrade":True,"session":owner,"weight":1})
+        if index%8!=0 and (index%4==0 or rng.random()<0.5):
+            owner=rng.choice(sessions);queue.append({"request":{"id":ident(rng),"operation":"run","priority":rng.choice(["batch","interactive"]),"minimumJobs":1,"preferredJobs":8,"fixedMegabytes":rng.choice([245,1536]),"perJobMegabytes":rng.choice([327,2048]),"cpuPerJob":1},"arrivedAtMs":now-rng.choice([0,2000,45000]),"pid":rng.randrange(100,90000),"session":owner,"weight":1})
+        running=[g for g in ledger if g.get("quiet") is not True]
+        if running and (index%8==0 or rng.random()<0.6):
+            owner=rng.choice(running)["session"];queue.append({"request":{"id":ident(rng),"operation":"exec","priority":"batch","minimumJobs":1,"preferredJobs":9,"fixedMegabytes":1536,"perJobMegabytes":2048,"cpuPerJob":1,"elastic":True},"arrivedAtMs":now-rng.choice([5000,40000,200000]),"pid":rng.randrange(100,90000),"session":owner,"weight":1})
+        rng.shuffle(queue)
+        worlds.append({"name":f"agents-{index}","host":host,"ledger":ledger,"queue":queue,"nowMs":now,"expect":evaluate(policy,host,ledger,queue,now)})
+    return worlds
+
+def generate():
+    estimates=load_estimates();fixture=json.load(open(DECISION,encoding="utf8"));policy=fixture["policy"]
+    COUNTS.clear();rng=random.Random(20261026)
+    decisions=[]
+    for index in range(260):
+        world=random_world(rng,policy,index)
+        variant={**policy,"memory":{**policy["memory"],"maximumQuiet":rng.choice([1,2,4])}}
+        world["policy"]={"maximumQuiet":variant["memory"]["maximumQuiet"]}
+        world["expect"]=evaluate(variant,world["host"],world["ledger"],world["queue"],world["nowMs"])
+        decisions.append(world)
+    for world in barrier_worlds(rng,policy):
+        variant={**policy,"memory":{**policy["memory"],"maximumQuiet":rng.choice([1,2,4])}}
+        world["policy"]={"maximumQuiet":variant["memory"]["maximumQuiet"]}
+        world["expect"]=evaluate(variant,world["host"],world["ledger"],world["queue"],world["nowMs"])
+        decisions.append(world)
+    equivalence=[]
+    for index in range(200):
+        now=1_800_000_000_000+rng.randrange(0,10_000_000);total=rng.choice([16384,32768])
+        host={"version":1,"atMs":now,"platform":"darwin","cores":10,"totalMegabytes":total,"availableMegabytes":rng.randrange(3000,total-2000),"pressure":"normal","swapUsedMegabytes":0,"swapOutMegabytesPerSecond":0,"load":rng.choice([None,1,3,8]),"openFiles":8000,"openFilesMaximum":245760,"attachedImages":10}
+        grant=random_grant(rng,now,quiet=True);grant.pop("lentSinceMs",None)
+        obs=grant["observedMegabytes"] or 0
+        request=random_request(rng,identifier=grant["id"],larger_than=max(grant["reservedMegabytes"],obs)+1);request.pop("rampSlot",None)
+        upgrade={"request":request,"arrivedAtMs":grant["arrivedAtMs"],"pid":grant["pid"],"upgrade":True}
+        released_host={**host,"availableMegabytes":host["availableMegabytes"]+obs}
+        fresh={"request":request,"arrivedAtMs":grant["arrivedAtMs"],"pid":grant["pid"]}
+        with_upgrade=evaluate(policy|{"memory":{**policy["memory"],"maximumQuiet":4}},host,[grant],[upgrade],now)
+        without=evaluate(policy|{"memory":{**policy["memory"],"maximumQuiet":4}},released_host,[],[fresh],now)
+        if without["decisions"][0]["verdict"]=="wait" and without["decisions"][0]["reason"]=="memory":
+            partial=with_upgrade["decisions"][0];assert partial["verdict"]=="admit" and partial["reason"]=="override" and 1<=partial["jobs"]<=request["preferredJobs"] and (request["perJobMegabytes"]==0 or partial["jobs"] in (1,request["preferredJobs"]) or request["fixedMegabytes"]+partial["jobs"]*request["perJobMegabytes"]<=max(partial["reservedMegabytes"],grant["reservedMegabytes"])) and grant["reservedMegabytes"]<=partial["reservedMegabytes"]<=min(request["fixedMegabytes"]+request["minimumJobs"]*request["perJobMegabytes"],released_host["totalMegabytes"]-floor_mb(policy,released_host["totalMegabytes"])),(index,partial)
+            count("equivalencePartial")
+        else:assert with_upgrade["decisions"]==without["decisions"],(index,with_upgrade["decisions"],without["decisions"])
+        equivalence.append({"name":f"equivalence-{index}","host":host,"grant":grant,"request":request,"nowMs":now,"expect":with_upgrade["decisions"][0]})
+        if with_upgrade["decisions"][0]["verdict"]=="admit":count("equivalenceAdmit")
+        else:count("equivalenceWait")
+    forecasts=stores_for_forecast(rng,policy,estimates)
+    full={"id":"aaaaaaaa1","operation":"run","priority":"batch","minimumJobs":1,"preferredJobs":4,"fixedMegabytes":1536,"perJobMegabytes":2048,"cpuPerJob":1}
+    quiets=[{"full":full,"forecast":item["expect"],"expect":quiet_request(full,item["expect"])} for item in forecasts[:12]]
+    agents=agents_worlds(policy)
+    return {"policy":{"maximumQuiet":4},"decisions":decisions,"agents":agents,"equivalence":equivalence,"forecasts":forecasts,"quietRequests":quiets,"coverage":dict(sorted(COUNTS.items())),"forecastCoverage":{"quiet":sum(1 for item in forecasts if item["expect"]["quiet"]),"busy":sum(1 for item in forecasts if not item["expect"]["quiet"])}}
+
+def dump(value):return json.dumps(value,separators=(",",":"),ensure_ascii=False)+"\n"
+
+if __name__=="__main__":
+    value=generate();text=dump(value)
+    if sys.argv[1:]==["--check"]:
+        stored=open(TARGET,encoding="utf8").read()
+        print("vectors equal the oracle" if stored==text else "STALE vectors");sys.exit(0 if stored==text else 1)
+    with open(TARGET,"w",encoding="utf8") as handle:handle.write(text)
+    print("wrote",len(value["decisions"]),"decisions,",len(value["agents"]),"agent worlds,",len(value["equivalence"]),"equivalences,",len(value["forecasts"]),"forecasts",value["coverage"],value["forecastCoverage"])

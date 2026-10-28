@@ -1,0 +1,85 @@
+{
+ "batches": [
+  {
+   "name": "graph-memo",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "7b768aa704cb715daea331a3c60713677f3d915c4269d1fd9a93231de873fa50",
+   "code": "boot-g graph-memo + memokey + memokey2 + memonotice + factsound + hotpath clonejournal (all live)",
+   "order": 1,
+   "edits": 4,
+   "summary": "The graph memo: when a repeated request is served without a graph child, the two lines it prints, the switch, the refusal reasons."
+  },
+  {
+   "name": "plan-reuse",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "7b768aa704cb715daea331a3c60713677f3d915c4269d1fd9a93231de873fa50",
+   "code": "racy-tools + jobskey + grantenv + ignoredenv + dashplan + universe + planfp 1-2 (all live)",
+   "order": 2,
+   "edits": 8,
+   "summary": "Bazel plan reuse: what keeps a plan, what ends it, the two lines, the troubleshooting rows; the 'not measured yet' sentence becomes the measurement."
+  },
+  {
+   "name": "action-env",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "7b768aa704cb715daea331a3c60713677f3d915c4269d1fd9a93231de873fa50",
+   "code": "actenv v3 + envleak (live)",
+   "order": 3,
+   "edits": 6,
+   "summary": "The action environment allowlist, how a task declares a variable, runtime rows keyed by output only, the warm-cache row and the troubleshooting row."
+  },
+  {
+   "name": "lock-order",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "7b768aa704cb715daea331a3c60713677f3d915c4269d1fd9a93231de873fa50",
+   "code": "leaseord staged, staged2, staged3 + cargofix leaseorder-c (all live)",
+   "order": 4,
+   "edits": 4,
+   "summary": "The lease classes with their ranks, the [lease-order] line, the switch and the registry; the troubleshooting row."
+  },
+  {
+   "name": "capacity",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "7b768aa704cb715daea331a3c60713677f3d915c4269d1fd9a93231de873fa50",
+   "code": "quietfc round 1+2 (live)",
+   "order": 5,
+   "edits": 4,
+   "summary": "The quiet reservation of a hot no-op, the bound of what it grows into, the partial grow line and its troubleshooting row."
+  },
+  {
+   "name": "rust-path",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "7b768aa704cb715daea331a3c60713677f3d915c4269d1fd9a93231de873fa50",
+   "code": "cargofix synchronize + leaseorder-c + rustedit testmemo + rustfast (all live)",
+   "order": 6,
+   "edits": 2,
+   "summary": "The Rust test and build path: the preparation witness, the lease order of the compiler writer, the admission memos."
+  },
+  {
+   "name": "measuring",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "7b768aa704cb715daea331a3c60713677f3d915c4269d1fd9a93231de873fa50",
+   "code": "envleak + hotpath + all of the above (live); measurements of 10-27",
+   "order": 7,
+   "edits": 4,
+   "summary": "A new section on measuring a build (clean environment, the third run, the proof lines) and the 10-27 measurements in the status."
+  },
+  {
+   "name": "readme-bazel",
+   "doc": "🧰️framework/🛍️products/🦑️repo/README.md",
+   "baseSha256": "be08003eff0fead453c9d957576c6e31ef6a1292e8b65e26d56998667e743af5",
+   "code": "racy-tools + jobskey + ignoredenv + dashplan + planfp 1-2 + actenv v3 + envleak (all live)",
+   "order": 8,
+   "edits": 4,
+   "summary": "README, Bazel implementation: plan reuse and the action environment allowlist, EN and DE, pointing at the operator guide."
+  },
+  {
+   "name": "g34",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "7b768aa704cb715daea331a3c60713677f3d915c4269d1fd9a93231de873fa50",
+   "code": "planfp staged3 + hotpath2 rowid, jdir, memolist (live since 10:35, gate verdict g34)",
+   "order": 9,
+   "edits": 10,
+   "summary": "The G34 group: memo stamps for unread siblings, the journal's new place, runtime rows without a child, the plan walk skipping ignored directories."
+  }
+ ]
+}

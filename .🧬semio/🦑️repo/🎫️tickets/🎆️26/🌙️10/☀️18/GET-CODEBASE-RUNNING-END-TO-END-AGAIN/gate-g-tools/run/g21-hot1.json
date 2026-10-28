@@ -1,0 +1,31 @@
+{
+ "label": "g21-hot1",
+ "target": "@teaching/architecture-course:build",
+ "started": "02:02:04",
+ "wall_s": 236.8,
+ "peak_tree_mb": 9210,
+ "peak_processes": 10,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "inferring": [
+   "40"
+  ],
+  "refreshing": [
+   "40"
+  ],
+  "published": [
+   "601",
+   "40",
+   "87"
+  ],
+  "processes": [
+   "6",
+   "2 action cache hit, 1 internal, 5 worker"
+  ],
+  "actions": [
+   "6"
+  ]
+ }
+}

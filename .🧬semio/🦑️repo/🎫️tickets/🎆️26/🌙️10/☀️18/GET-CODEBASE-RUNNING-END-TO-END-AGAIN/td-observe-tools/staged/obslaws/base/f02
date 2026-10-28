@@ -1,0 +1,218 @@
+{
+  "version": 1,
+  "faults": [
+    {
+      "id": "missing",
+      "fault": "missing",
+      "outcome": "refuse"
+    },
+    {
+      "id": "packed",
+      "fault": "packed",
+      "outcome": "refuse"
+    },
+    {
+      "id": "hash",
+      "fault": "hash",
+      "outcome": "refuse"
+    },
+    {
+      "id": "contract",
+      "fault": "contract",
+      "outcome": "refuse"
+    },
+    {
+      "id": "symlink",
+      "fault": "symlink",
+      "outcome": "refuse"
+    },
+    {
+      "id": "hardlink",
+      "fault": "hardlink",
+      "outcome": "refuse"
+    },
+    {
+      "id": "ancestor-replaced",
+      "fault": "ancestor-replaced",
+      "outcome": "refuse"
+    },
+    {
+      "id": "leaf-replaced",
+      "fault": "leaf-replaced",
+      "outcome": "refuse"
+    },
+    {
+      "id": "cancel",
+      "fault": "cancel",
+      "outcome": "refuse"
+    },
+    {
+      "id": "deadline",
+      "fault": "deadline",
+      "outcome": "refuse"
+    },
+    {
+      "id": "fifo",
+      "fault": "fifo",
+      "outcome": "refuse"
+    },
+    {
+      "id": "cancel-close",
+      "fault": "cancel-close",
+      "outcome": "refuse"
+    },
+    {
+      "id": "ancestor-mode",
+      "fault": "ancestor-mode",
+      "outcome": "refuse"
+    },
+    {
+      "id": "invalid-utf8",
+      "fault": "utf8",
+      "outcome": "refuse"
+    }
+  ],
+  "paths": [
+    {
+      "id": "actual-writer",
+      "owner": "graph",
+      "scope": "writer",
+      "outcome": "managed"
+    },
+    {
+      "id": "actual-reader",
+      "owner": "graph",
+      "scope": "consumer",
+      "outcome": "managed"
+    },
+    {
+      "id": "expired-reader",
+      "owner": "graph",
+      "scope": "expired",
+      "outcome": "refuse"
+    },
+    {
+      "id": "missing-reader",
+      "owner": "graph",
+      "scope": "absent",
+      "outcome": "refuse"
+    },
+    {
+      "id": "scope-mismatch",
+      "owner": "graph",
+      "scope": "mismatch",
+      "outcome": "refuse"
+    },
+    {
+      "id": "ordinary-host",
+      "owner": "ordinary",
+      "scope": "absent",
+      "outcome": "ordinary"
+    },
+    {
+      "id": "unknown-native",
+      "owner": "unknown-native",
+      "scope": "absent",
+      "outcome": "refuse"
+    }
+  ],
+  "budgets": [
+    {
+      "id": "packed-exact",
+      "kind": "packed",
+      "used": 9,
+      "next": 1,
+      "maximum": 10,
+      "accepted": true
+    },
+    {
+      "id": "packed-overflow",
+      "kind": "packed",
+      "used": 9,
+      "next": 2,
+      "maximum": 10,
+      "accepted": false
+    },
+    {
+      "id": "output-exact",
+      "kind": "output",
+      "used": 9,
+      "next": 1,
+      "maximum": 10,
+      "accepted": true
+    },
+    {
+      "id": "output-overflow",
+      "kind": "output",
+      "used": 9,
+      "next": 2,
+      "maximum": 10,
+      "accepted": false
+    },
+    {
+      "id": "rows-exact",
+      "kind": "rows",
+      "used": 9,
+      "next": 1,
+      "maximum": 10,
+      "accepted": true
+    },
+    {
+      "id": "rows-overflow",
+      "kind": "rows",
+      "used": 9,
+      "next": 2,
+      "maximum": 10,
+      "accepted": false
+    },
+    {
+      "id": "nodes-exact",
+      "kind": "nodes",
+      "used": 9,
+      "next": 1,
+      "maximum": 10,
+      "accepted": true
+    },
+    {
+      "id": "nodes-overflow",
+      "kind": "nodes",
+      "used": 9,
+      "next": 2,
+      "maximum": 10,
+      "accepted": false
+    },
+    {
+      "id": "parent-sets-exact",
+      "kind": "parentSets",
+      "used": 15,
+      "next": 1,
+      "maximum": 16,
+      "accepted": true
+    },
+    {
+      "id": "parent-sets-overflow",
+      "kind": "parentSets",
+      "used": 16,
+      "next": 1,
+      "maximum": 16,
+      "accepted": false
+    },
+    {
+      "id": "parent-sets-reuse-at-limit",
+      "kind": "parentSets",
+      "used": 16,
+      "next": 0,
+      "maximum": 16,
+      "accepted": true
+    }
+  ],
+  "recovery": {
+    "version": 1,
+    "states": [
+      "warm",
+      "typed-missing-refusal",
+      "group-absent",
+      "recomputed"
+    ]
+  }
+}

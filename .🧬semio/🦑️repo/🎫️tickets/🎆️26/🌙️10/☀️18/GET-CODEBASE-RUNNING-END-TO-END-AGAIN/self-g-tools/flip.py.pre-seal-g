@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+"""Flips the default of the implementation mode from live to sealed in ONE anchored edit (apply after the 11:30 measurement window). usage: flip.py [revert]"""
+import sys
+p="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🔣️.json"
+a,b=('"defaultMode": "live"','"defaultMode": "sealed"') if "revert" not in sys.argv else ('"defaultMode": "sealed"','"defaultMode": "live"')
+s=open(p,encoding="utf-8").read()
+assert s.count(a)==1,"anchor missing: already flipped?"
+open(p,"w",encoding="utf-8").write(s.replace(a,b))
+print("ok", b)

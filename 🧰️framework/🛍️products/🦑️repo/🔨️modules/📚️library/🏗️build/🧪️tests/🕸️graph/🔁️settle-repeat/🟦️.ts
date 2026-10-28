@@ -6,6 +6,7 @@ import ts from"typescript";
 import Ajv from"ajv";
 import schema from"./🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
+import observationSchema from"../../../👁️observation/🧬️schema/🔣️.json";
 
 type Round={outcome:"value"|"failure"|"conflict";message?:string;code?:string;undefined?:boolean;young?:boolean;holds?:boolean};
 
@@ -22,7 +23,7 @@ test("Observed settlement stops repeating a failure that returns unchanged and n
  db.run("create table terminal(scenario text, outcome text, round integer)");
  try{
   for(const scenario of corpus.scenarios){
-   const state={consistent:true,holds:true},scopes=new AsyncLocalStorage<Map<string,unknown>>(),bindings={scopes,sourceCaptures:new AsyncLocalStorage(),inferenceValidationScopes:new AsyncLocalStorage(),retainObservationsV1:()=>{},consistentObservationsV1:()=>state.consistent,observationsHold:async()=>state.holds,conflictingInferenceErrorV1:()=>Object.freeze({path:"modeled Source conflict"}),RACY_MS:0},run=new Function(...Object.keys(bindings),code+";return settleObservedComputationV1;")(...Object.values(bindings));
+   const state={consistent:true,holds:true},scopes=new AsyncLocalStorage<Map<string,unknown>>(),bindings={scopes,sourceCaptures:new AsyncLocalStorage(),inferenceValidationScopes:new AsyncLocalStorage(),retainObservationsV1:()=>{},consistentObservationsV1:()=>state.consistent,observationsHold:async()=>state.holds,conflictingInferenceErrorV1:()=>Object.freeze({path:"modeled Source conflict"}),RACY_MS:0,OBSERVATION_LIMITS_V1:observationSchema.$defs.limits.const},run=new Function(...Object.keys(bindings),code+";return settleObservedComputationV1;")(...Object.values(bindings));
    let calls=0;const events:string[]=[];let settled:string,failure:unknown;
    try{
     await run(async()=>{

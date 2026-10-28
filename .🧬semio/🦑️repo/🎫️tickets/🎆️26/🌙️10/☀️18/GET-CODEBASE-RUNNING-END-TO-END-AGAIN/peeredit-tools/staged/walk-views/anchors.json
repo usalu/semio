@@ -1,0 +1,51 @@
+{
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": [
+    {
+      "name": "import",
+      "old": "import { buildSchedulingNativePrefixesV1, buildSchedulingPrefixesV1 } from \"../../../📥️source/🔏️closure/🗓️scheduling/🟦️.ts\";\n",
+      "new": "import { buildSchedulingNativePrefixesV1, buildSchedulingPrefixesV1 } from \"../../../📥️source/🔏️closure/🗓️scheduling/🟦️.ts\";\nimport { WALK_VIEW_POLICY_V1, walkViewAnswerV1, walkViewOfRecipeV1 } from \"./👓️walk-views/🟨️.mjs\";\n"
+    },
+    {
+      "name": "walk-fact",
+      "old": "   if(!walkFactsV1.has(stored.observations))walkFactsV1.set(stored.observations,{row:{kind:\"derived\",path:question,fact:walkAnswerV1(cache,workspaceRoot,walked)}});\n",
+      "new": "   if(!walkFactsV1.has(stored.observations))walkFactsV1.set(stored.observations,{row:{kind:\"derived\",path:question,fact:walkAnswerV1(cache,workspaceRoot,walked)},views:Object.fromEntries(Object.keys(WALK_VIEW_POLICY_V1.views).map(view=>[view,{kind:\"derived\",path:walkQuestionV1(cache,workspaceRoot,roots,requiredSources,resources,selectors,view),fact:walkAnswerV1(cache,workspaceRoot,walked,view)}]))});\n"
+    },
+    {
+      "name": "walk-facts-doc",
+      "old": "/** 🪢️ The derived fact of every command walk whose stored observations a project can reuse, by those observations: the question the walk answered and the digest of its answer, so a project names the walk by one row instead of by the thousands of rows it read. */\n",
+      "new": "/** 🪢️ The derived fact of every command walk whose stored observations a project can reuse, by those observations: the question the walk answered and the digest of its answer, so a project names the walk by one row instead of by the thousands of rows it read; `views` holds the same walk asked through each declared view (`./👓️walk-views`), the fact a project holds when every consumer of its recipe reads the walk through that view. */\n"
+    },
+    {
+      "name": "question",
+      "old": "/** ❓️ The canonical question one command walk answers: the workspace, the entry files, whether sources are required, the resource files, the router selectors and the script provider designation; nothing else decides the walk. */\nfunction walkQuestionV1(cache, workspaceRoot, roots, requiredSources, resources, selectors) {\n  return JSON.stringify({ walk: 1, workspaceRoot: resolve(workspaceRoot), roots, requiredSources: Boolean(requiredSources), resources: [...resources].sort(), selectors: [...selectors].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0), provider: cache.providerDesignation ?? null });\n}\n",
+      "new": "/** ❓️ The canonical question one command walk answers: the workspace, the entry files, whether sources are required, the resource files, the router selectors and the script provider designation; nothing else decides the walk. A view names the declared view its answer is read through (`./👓️walk-views`); the whole walk names none. */\nfunction walkQuestionV1(cache, workspaceRoot, roots, requiredSources, resources, selectors, view) {\n  return JSON.stringify({ walk: 1, workspaceRoot: resolve(workspaceRoot), roots, requiredSources: Boolean(requiredSources), resources: [...resources].sort(), selectors: [...selectors].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0), provider: cache.providerDesignation ?? null, ...(view === undefined ? {} : { view }) });\n}\n"
+    },
+    {
+      "name": "answer",
+      "old": "/** 🔏️ The digest of everything a project reads from one walk: the roster, the modules it compiled and the generated outputs those modules import. */\nfunction walkAnswerV1(cache, workspaceRoot, value) {\n  const compiled = [...(cache.compiledNames.get(value) ?? [])].sort();\n  const generated = compiled.map(name => [name, cache.generatedImports.get(resolve(workspaceRoot, name.slice(\"{workspaceRoot}/\".length))) ?? []]);\n  return createHash(\"sha256\").update(JSON.stringify([value, compiled, generated])).digest(\"hex\");\n}\n",
+      "new": "/** 🔏️ The digest of everything a project reads from one walk, through a view when one is named: the roster, the modules it compiled and the generated outputs those modules import. */\nfunction walkAnswerV1(cache, workspaceRoot, value, view) {\n  const compiled = [...(cache.compiledNames.get(value) ?? [])].sort();\n  const generated = compiled.map(name => [name, cache.generatedImports.get(resolve(workspaceRoot, name.slice(\"{workspaceRoot}/\".length))) ?? []]);\n  return walkViewAnswerV1(value, compiled, generated, view);\n}\n"
+    },
+    {
+      "name": "derive-check",
+      "old": "  if (question?.walk !== 1 || !Array.isArray(question.roots) || !Array.isArray(question.resources) || !Array.isArray(question.selectors)) throw refuse();\n",
+      "new": "  if (question?.walk !== 1 || !Array.isArray(question.roots) || !Array.isArray(question.resources) || !Array.isArray(question.selectors) || question.view !== undefined && !Object.hasOwn(WALK_VIEW_POLICY_V1.views, question.view)) throw refuse();\n"
+    },
+    {
+      "name": "derive-answer",
+      "old": "  return { fact: walkAnswerV1(cache, question.workspaceRoot, asked.value), rows: support(asked) };\n",
+      "new": "  return { fact: walkAnswerV1(cache, question.workspaceRoot, asked.value, question.view), rows: support(asked) };\n"
+    },
+    {
+      "name": "resolve",
+      "old": "      const rows = [], seen = new Set(), layers = new Set(), values = new Map(), derived = new Map(), take = row => { if (!seen.has(row)) { seen.add(row); rows.push(row); } };\n      for (const [key, recipe] of recipes) { const entry = await ensureClosureEntryV1(workspaceRoot, recipe); values.set(key, entry.value); entry.rows.forEach(take); for (const layer of entry.layers) if (!layers.has(layer)) { layers.add(layer); const fact = walkFactsV1.get(layer); if (fact) derived.set(fact.row.path, { row: fact.row, support: layer }); } }\n      for (const layer of layers) { if (walkFactsV1.has(layer)) continue; const walks = walkMembersV1.get(layer); if (!walks || ![...walks].some(question => derived.has(question))) layer.forEach(take); }\n",
+      "new": "      const rows = [], seen = new Set(), layers = new Set(), values = new Map(), derived = new Map(), walked = new Set(), take = row => { if (!seen.has(row)) { seen.add(row); rows.push(row); } };\n      for (const [key, recipe] of recipes) { const entry = await ensureClosureEntryV1(workspaceRoot, recipe), view = walkViewOfRecipeV1(recipe.fn); values.set(key, entry.value); entry.rows.forEach(take); for (const layer of entry.layers) { layers.add(layer); const fact = walkFactsV1.get(layer); if (fact) { const row = view === undefined ? fact.row : fact.views?.[view] ?? fact.row; derived.set(row.path, { row, support: layer }); walked.add(fact.row.path); } } }\n      for (const layer of layers) { if (walkFactsV1.has(layer)) continue; const walks = walkMembersV1.get(layer); if (!walks || ![...walks].some(question => walked.has(question))) layer.forEach(take); }\n"
+    }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🔣️.json": [
+    {
+      "name": "text",
+      "old": "    \"closure.derived-provider-differs\": {\n",
+      "new": "    \"closure.walk-views-required\": {\n      \"en\": \"Closed command walk view policy required\",\n      \"de\": \"Geschlossene Richtlinie der Sichten auf Befehlsdurchläufe erforderlich\"\n    },\n    \"closure.derived-provider-differs\": {\n"
+    }
+  ]
+}

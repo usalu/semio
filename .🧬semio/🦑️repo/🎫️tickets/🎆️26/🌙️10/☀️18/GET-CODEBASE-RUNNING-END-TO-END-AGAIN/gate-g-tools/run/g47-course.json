@@ -1,0 +1,31 @@
+{
+ "label": "g47-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "21:01:31",
+ "wall_s": 515.0,
+ "peak_tree_mb": 6884,
+ "peak_processes": 6,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "4"
+  ],
+  "inferring": [
+   "4"
+  ],
+  "published": [
+   "680",
+   "4",
+   "214"
+  ],
+  "processes": [
+   "8",
+   "1 internal, 7 worker"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

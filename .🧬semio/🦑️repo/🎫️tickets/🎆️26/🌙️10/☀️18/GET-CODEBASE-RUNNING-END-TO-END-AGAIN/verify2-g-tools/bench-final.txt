@@ -1,0 +1,27 @@
+receipt cdb4ee2aea69 frontier rows 79005 texts 327 inputs 5605 provider rows 2988
+A complete walk x2 (today)
+ pass 1 fast                       6798 ms cpu 1023 ms
+  match
+ pass 2 recheck                    8457 ms cpu 1031 ms
+  match
+B vouched round 1 (no sealed cursor: complete walk + journal recheck)
+ open vouch                        691 ms cpu 43 ms
+  mode cursor 
+ pass 1 fast                       5203 ms cpu 919 ms
+  match skipped 0
+ pass 2 recheck                    4366 ms cpu 621 ms
+  match settled 80216
+B vouched round 2 (sealed cursor)
+ open vouch                        26 ms cpu 3 ms
+  mode journal 
+ pass 1 fast                       3176 ms cpu 467 ms
+  match skipped 80216
+ pass 2 recheck                    5687 ms cpu 483 ms
+  match settled 80216
+B vouched round 3 (sealed cursor)
+ open vouch                        40 ms cpu 8 ms
+  mode journal 
+ pass 1 fast                       3025 ms cpu 447 ms
+  match skipped 80216
+ pass 2 recheck                    3918 ms cpu 446 ms
+  match settled 80216

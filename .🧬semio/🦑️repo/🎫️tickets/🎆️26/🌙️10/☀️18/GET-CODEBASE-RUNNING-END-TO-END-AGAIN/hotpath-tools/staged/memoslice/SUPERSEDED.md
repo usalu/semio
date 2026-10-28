@@ -1,0 +1,1 @@
+SUPERSEDED 08:50 by the coordinator's factsound batch (G29, 08:39): the sidecar is scoped to the covered owners + @env, same effect (g29-hot3/4: 218,205 facts vouched + 288 rechecked, served from the memo). Never apply this batch.

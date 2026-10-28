@@ -1,0 +1,194 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/repo/cargo-build-units/v1",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "minimumAgeMilliseconds": 1800000,
+        "busyMinimumAgeMilliseconds": 10800000,
+        "idleMilliseconds": 86400000,
+        "keepNewestPerCrate": 2,
+        "bases": [
+          "b/*",
+          "t/*",
+          "u/l/*/b",
+          "u/l/*/t",
+          "components/*/b",
+          "components/*/t"
+        ],
+        "maximumProfileDepth": 2,
+        "directory": "build",
+        "marker": "fingerprint",
+        "usedMarker": "invoked.timestamp",
+        "outputDirectory": "out",
+        "lockName": ".lock",
+        "maximumEntriesPerUnit": 262144,
+        "reportedRemovals": 8,
+        "yieldEvery": 8,
+        "lease": {
+          "namespace": "semio.cargo.build-lease/v1",
+          "directoryFromStore": ".cache/b/l/m/data",
+          "maximumAncestors": 12
+        }
+      }
+    },
+    "Reason": {
+      "enum": [
+        "superseded",
+        "pressure"
+      ]
+    },
+    "Unit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "crate",
+        "profile",
+        "bytes",
+        "lastUsedMs",
+        "held",
+        "busy"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "crate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "profile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lastUsedMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "held": {
+          "type": "boolean"
+        },
+        "busy": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "needBytes",
+        "nowMs",
+        "units"
+      ],
+      "properties": {
+        "needBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nowMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "units": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Unit"
+          }
+        }
+      }
+    },
+    "Removal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "bytes",
+        "reason"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "$ref": "#/definitions/Reason"
+        }
+      }
+    },
+    "Vector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "input",
+        "remove"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "$ref": "#/definitions/Input"
+        },
+        "remove": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Removal"
+          }
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "scan": {
+          "en": "[repo cache] scanning stale Cargo build units below {root}",
+          "de": "[repo cache] durchsuche veraltete Cargo-Build-Einheiten unter {root}"
+        },
+        "would": {
+          "en": "[repo cache] would remove build unit {path} ({bytes}, {reason})",
+          "de": "[repo cache] würde Build-Einheit {path} entfernen ({bytes}, {reason})"
+        },
+        "removed": {
+          "en": "[repo cache] removed build unit {path} ({bytes}, {reason})",
+          "de": "[repo cache] Build-Einheit {path} entfernt ({bytes}, {reason})"
+        },
+        "held": {
+          "en": "[repo cache] kept build unit {path}: a running compiler holds its lock",
+          "de": "[repo cache] Build-Einheit {path} behalten: ein laufender Compiler hält ihre Sperre"
+        },
+        "busyProfile": {
+          "en": "[repo cache] profile {profile} of {directory} is held by running compilers: only superseded units idle for {hours} h go",
+          "de": "[repo cache] Profil {profile} von {directory} wird von laufenden Compilern gehalten: nur abgelöste, seit {hours} Std. ungenutzte Einheiten gehen"
+        },
+        "summaryPlan": {
+          "en": "[repo cache] build units: would remove {count} of {total} ({bytes}); {held} held by running compilers, {kept} kept",
+          "de": "[repo cache] Build-Einheiten: würde {count} von {total} entfernen ({bytes}); {held} von laufenden Compilern gehalten, {kept} behalten"
+        },
+        "summaryApply": {
+          "en": "[repo cache] build units: removed {count} of {total} ({bytes}); {held} held by running compilers, {kept} kept",
+          "de": "[repo cache] Build-Einheiten: {count} von {total} entfernt ({bytes}); {held} von laufenden Compilern gehalten, {kept} behalten"
+        },
+        "reason.superseded": {
+          "en": "idle for {hours} h and superseded by newer variants of its crate",
+          "de": "seit {hours} Std. ungenutzt und durch neuere Varianten seines Crates abgelöst"
+        },
+        "reason.pressure": {
+          "en": "image below its free-space floor",
+          "de": "Image unter der Freiraum-Untergrenze"
+        }
+      }
+    }
+  }
+}

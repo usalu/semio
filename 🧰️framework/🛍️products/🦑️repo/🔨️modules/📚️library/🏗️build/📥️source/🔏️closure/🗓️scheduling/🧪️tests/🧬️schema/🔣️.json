@@ -2,14 +2,15 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio:build:scheduling-law-corpus:v1",
   "title": "Build Scheduling Law Corpus",
-  "description": "Language-agnostic cases of the scheduling split: the forged policies the admission must refuse and the outcomes the immutable loader must reach when it merges, or refuses, an unkeyed scheduling overlay beside a keyed snapshot.",
+  "description": "Language-agnostic cases of the scheduling split: the forged policies the admission must refuse and the outcomes the immutable loader must reach when it merges, or refuses, an unkeyed scheduling overlay beside a keyed snapshot. The native fallback rows name the scheduling prefixes that leave the key of the Rust compile command (`leaves`), the ones that stay keyed because they build the Cargo arguments (`stays`) and the Cargo script whose closure is measured.",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "version",
     "checkoutFromTests",
     "forgedPolicies",
-    "loaderCases"
+    "loaderCases",
+    "nativeFallback"
   ],
   "properties": {
     "version": {
@@ -52,6 +53,37 @@
           "message": {
             "type": "string"
           }
+        }
+      }
+    },
+    "nativeFallback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stays",
+        "leaves",
+        "cargoScript"
+      ],
+      "properties": {
+        "stays": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 2
+          }
+        },
+        "leaves": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 2
+          }
+        },
+        "cargoScript": {
+          "type": "string",
+          "minLength": 2
         }
       }
     }

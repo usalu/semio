@@ -1,0 +1,202 @@
+{
+ "$schema": "./🧬️schema/🔣️.json",
+ "description": "Rust source inclusion mechanisms the derivation of a crate's source set must follow or refuse. Resolved cases list the exact files a compilation of the crate (all targets, cfg(test) included) reads and must equal the derivation and cover what rustc --emit=dep-info reads; refused cases name the reason, and `outside` lists the files rustc reads outside the package directory, which a key derived from the directory alone would miss. rustc is the independent oracle of every row.",
+ "cases": [
+  {
+   "name": "path-mount-outside-the-package-directory",
+   "mechanism": "path attribute on a mod",
+   "crate": "owner/📦️packages/🦀️rust",
+   "files": {
+    "owner/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"retained\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"🦀️.rs\"\n",
+    "owner/📦️packages/🦀️rust/🦀️.rs": "//! glue\n\n/// 🔏️ doc comment above the mount.\n#[path = \"../../🦀️.rs\"]\npub mod retained;\n",
+    "owner/🦀️.rs": "#[path=\"✂️span/🦀️.rs\"] pub mod span;\n#[path = \"🩹️patch/🦀️.rs\"] pub mod patch;\n",
+    "owner/✂️span/🦀️.rs": "pub fn span() {}\n",
+    "owner/🩹️patch/🦀️.rs": "#[path=\"🚚️apply/🦀️.rs\"] mod apply;\n",
+    "owner/🩹️patch/🚚️apply/🦀️.rs": "pub fn apply() {}\n"
+   },
+   "flavor": "named",
+   "resolved": true,
+   "expected": [
+    "owner/📦️packages/🦀️rust/🦀️.rs",
+    "owner/🦀️.rs",
+    "owner/✂️span/🦀️.rs",
+    "owner/🩹️patch/🦀️.rs",
+    "owner/🩹️patch/🚚️apply/🦀️.rs"
+   ],
+   "outside": [
+    "owner/🦀️.rs",
+    "owner/✂️span/🦀️.rs",
+    "owner/🩹️patch/🦀️.rs",
+    "owner/🩹️patch/🚚️apply/🦀️.rs"
+   ]
+  },
+  {
+   "name": "path-attribute-with-rust-string-escapes",
+   "mechanism": "\\u{…}, \\xNN and line continuation in a path literal",
+   "crate": "c10",
+   "files": {
+    "c10/Cargo.toml": "[package]\nname = \"c10\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "c10/src/lib.rs": "#[path = \"\\u{1f9ea}tests/u\\x6eit.rs\"]\nmod unit;\n#[path = \"gen\\\n        erated.rs\"]\nmod generated;\n",
+    "c10/src/🧪tests/unit.rs": "pub fn unit() {}\n",
+    "c10/src/generated.rs": "pub fn generated() {}\n"
+   },
+   "flavor": "named",
+   "resolved": true,
+   "expected": [
+    "c10/src/generated.rs",
+    "c10/src/lib.rs",
+    "c10/src/🧪tests/unit.rs"
+   ],
+   "outside": []
+  },
+  {
+   "name": "macro-emitting-an-inline-module",
+   "mechanism": "macro_rules! with an inline mod",
+   "crate": "c1",
+   "files": {
+    "c1/Cargo.toml": "[package]\nname = \"c1\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "c1/src/lib.rs": "macro_rules! declare { ($vis:vis $owner:ident) => { $vis mod $owner { pub fn go() {} } }; }\ndeclare!(pub inline);\nmod real;\n",
+    "c1/src/real.rs": "pub fn real() {}\n"
+   },
+   "flavor": "named",
+   "resolved": true,
+   "expected": [
+    "c1/src/lib.rs",
+    "c1/src/real.rs"
+   ],
+   "outside": []
+  },
+  {
+   "name": "macro-emitting-an-out-of-line-module",
+   "mechanism": "macro_rules! with mod name;",
+   "crate": "c2",
+   "files": {
+    "c2/Cargo.toml": "[package]\nname = \"c2\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "c2/src/lib.rs": "macro_rules! declare { ($n:ident) => { mod $n; }; }\ndeclare!(helper);\n",
+    "c2/src/helper.rs": "pub fn helper() {}\n"
+   },
+   "flavor": "named",
+   "resolved": false,
+   "reason": "macro-mount",
+   "outside": []
+  },
+  {
+   "name": "macro-emitting-a-path-mount",
+   "mechanism": "macro_rules! with a path attribute",
+   "crate": "c3/crate",
+   "files": {
+    "c3/crate/Cargo.toml": "[package]\nname = \"c3\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "c3/crate/src/lib.rs": "macro_rules! declare { ($p:literal) => { #[path = $p] mod generated; }; }\ndeclare!(\"../../shared/gen.rs\");\n",
+    "c3/shared/gen.rs": "pub fn generated() {}\n"
+   },
+   "flavor": "named",
+   "resolved": false,
+   "reason": "macro-mount",
+   "outside": [
+    "c3/shared/gen.rs"
+   ]
+  },
+  {
+   "name": "include-family-with-literal-paths",
+   "mechanism": "include!, include_str!, include_bytes!, env!(CARGO_MANIFEST_DIR)",
+   "crate": "c4/crate",
+   "files": {
+    "c4/crate/Cargo.toml": "[package]\nname = \"c4\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "c4/crate/src/lib.rs": "pub const A: &str = include_str!(\"data/a.txt\");\npub const B: &[u8] = include_bytes!(\"data/b.bin\");\ninclude!(\"gen.rs\");\npub const C: &str = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/data/c.txt\"));\npub const D: &str = include_str!(\"../../shared/d.txt\");\n",
+    "c4/crate/src/data/a.txt": "a\n",
+    "c4/crate/src/data/b.bin": "b\n",
+    "c4/crate/src/gen.rs": "pub const G: u8 = 1;\n",
+    "c4/crate/data/c.txt": "c\n",
+    "c4/shared/d.txt": "d\n"
+   },
+   "flavor": "named",
+   "resolved": true,
+   "expected": [
+    "c4/crate/data/c.txt",
+    "c4/crate/src/data/a.txt",
+    "c4/crate/src/data/b.bin",
+    "c4/crate/src/gen.rs",
+    "c4/crate/src/lib.rs",
+    "c4/shared/d.txt"
+   ],
+   "outside": [
+    "c4/shared/d.txt"
+   ]
+  },
+  {
+   "name": "include-with-a-macro-variable-path",
+   "mechanism": "include_str!($path) in macro_rules!",
+   "crate": "c9",
+   "files": {
+    "c9/Cargo.toml": "[package]\nname = \"c9\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "c9/src/lib.rs": "macro_rules! text { ($p:literal) => { include_str!($p) }; }\npub const X: &str = text!(\"data/x.txt\");\n",
+    "c9/src/data/x.txt": "x\n"
+   },
+   "flavor": "named",
+   "resolved": false,
+   "reason": "dynamic-include",
+   "outside": []
+  },
+  {
+   "name": "include-inside-quote-is-emitted-code-not-an-input",
+   "mechanism": "include_str! inside a quote!-style body",
+   "crate": "c5",
+   "files": {
+    "c5/Cargo.toml": "[package]\nname = \"c5\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "c5/src/lib.rs": "macro_rules! quote { ($($t:tt)*) => { 0 }; }\npub fn emit(path: &str) -> u8 { let _ = path; quote!(include_str!(#path)) }\n"
+   },
+   "flavor": "named",
+   "resolved": true,
+   "expected": [
+    "c5/src/lib.rs"
+   ],
+   "emitters": [
+    "c5/src/lib.rs"
+   ],
+   "outside": []
+  },
+  {
+   "name": "conditional-path-attribute",
+   "mechanism": "cfg_attr(…, path = …) on a mod",
+   "crate": "c6",
+   "files": {
+    "c6/Cargo.toml": "[package]\nname = \"c6\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "c6/src/lib.rs": "#[cfg_attr(unix, path = \"unix.rs\")]\nmod platform;\n",
+    "c6/src/unix.rs": "pub fn p() {}\n",
+    "c6/src/platform.rs": "pub fn p() {}\n"
+   },
+   "flavor": "named",
+   "resolved": false,
+   "reason": "conditional-mount",
+   "outside": []
+  },
+  {
+   "name": "build-script",
+   "mechanism": "build.rs next to the crate",
+   "crate": "c7",
+   "files": {
+    "c7/Cargo.toml": "[package]\nname = \"c7\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "c7/build.rs": "fn main() { println!(\"cargo:rerun-if-changed=../shared/x.txt\"); }\n",
+    "c7/src/lib.rs": "pub fn f() {}\n",
+    "shared/x.txt": "x\n"
+   },
+   "flavor": "named",
+   "resolved": false,
+   "reason": "build-script",
+   "outside": []
+  },
+  {
+   "name": "tests-only-crate-as-a-dependency",
+   "mechanism": "no compiled entry point",
+   "crate": "c8",
+   "files": {
+    "c8/Cargo.toml": "[package]\nname = \"c8\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "c8/tests/t.rs": "#[test]\nfn t() {}\n"
+   },
+   "flavor": "dependency",
+   "resolved": false,
+   "reason": "no-entries",
+   "outside": []
+  }
+ ]
+}

@@ -1,0 +1,37 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json": {
+  "file": "00.json",
+  "base": "62e85d4717dbd40f5f2b81fd2ab9d61ed8306c665169ffe4de7175a360bbe425",
+  "new": "99f43068938f6efeaaa192199798346ae7e46f53c49656cf2bf2a155ef3375c9"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts": {
+  "file": "01.ts",
+  "base": "8932a21ad87427b357ef5ffadd9118f96995af39d39530056c4acb4435d41e33",
+  "new": "53e4147cd7b4de46c857e7dba33d204ab52eda00c57246c64bd979ef4b75f93c"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts": {
+  "file": "02.ts",
+  "base": "1203c58e43742088650a8c3d79155a4e3b571983ff4ddc3b13fe01d9a3a9b400",
+  "new": "b31581d40f30d7b941624e78a7cdfe8d724bf01c1e87c9291f749fcd174cb48d"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🔼️upgrade/🟦️.ts": {
+  "file": "03.ts",
+  "base": "a50a941e54a22f3c32e5cfaeac60b8be7af21864758772373f235cc77ddecef2",
+  "new": "cc030cc20a829b3a5aae5461b5c1e68ba174085f1b07728d5b6a995ffa49288b"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts": {
+  "file": "04.ts",
+  "base": "c9380fe6584e1d13335df29846e2f2c20a0a80342ca595a4e2f5d3dcfde882fd",
+  "new": "77473f24d5d7278c80c28b8e15695e7b4f6ebc16f1eb59890f2fdab08e78428d"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts": {
+  "file": "05.ts",
+  "base": "45f59aa2f378a6327a90350ceb7a3f21915719cc122d0f11600c4214076a09ed",
+  "new": "8c52798f975b21a397c968c8976ea13c8fd44e28e7500a9fc190fc0c998ff5b6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🌡️host-capacity/🔣️.json": {
+  "file": "06.json",
+  "base": null,
+  "new": "57969da816b91aeb271bff10035560a347b09af81673f6582317429788194409"
+ }
+}

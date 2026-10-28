@@ -1,0 +1,83 @@
+{
+  "decode": [
+    {"line": "{\"s\":1,\"t\":5,\"r\":[[\"m\",0,\"a/b.ts\"],[\"a\",1,\"d\"]]}", "valid": true},
+    {"line": "{\"s\":2,\"t\":5,\"l\":[\"overflow\",\"\"]}", "valid": true},
+    {"line": "{\"s\":3,\"t\":5,\"r\":[]}", "valid": true},
+    {"line": "{\"s\":0,\"t\":5,\"r\":[]}", "valid": false},
+    {"line": "{\"s\":1,\"t\":5}", "valid": false},
+    {"line": "{\"s\":1,\"t\":5,\"r\":[],\"l\":[\"x\",\"\"]}", "valid": false},
+    {"line": "{\"s\":1,\"t\":5,\"r\":[],\"x\":1}", "valid": false},
+    {"line": "{\"s\":1,\"t\":5,\"r\":[[\"z\",0,\"a\"]]}", "valid": false},
+    {"line": "{\"s\":1,\"t\":5,\"r\":[[\"m\",2,\"a\"]]}", "valid": false},
+    {"line": "{\"s\":1,\"t\":5,\"r\":[[\"m\",0,\"/abs\"]]}", "valid": false},
+    {"line": "{\"s\":1,\"t\":5,\"r\":[[\"m\",0,\"a/../b\"]]}", "valid": false},
+    {"line": "{\"s\":1,\"t\":5,\"r\":[[\"m\",0,\"a\\\\b\"]]}", "valid": false},
+    {"line": "{\"s\":1,\"t\":5,\"r\":[[\"m\",0,\"\"]]}", "valid": false},
+    {"line": "{\"s\":1,\"t\":5,\"r\":[[\"m\",0,\"a/./b\"]]}", "valid": false},
+    {"line": "{\"s\":1,\"t\":5,\"l\":[\"\",\"\"]}", "valid": false},
+    {"line": "{\"s\":1.5,\"t\":5,\"r\":[]}", "valid": false},
+    {"line": "{\"s\":1,\"t\":5,\"r\":", "valid": false},
+    {"line": "[]", "valid": false},
+    {"line": "{\"s\":1,\"t\":5,\"r\":[[\"m\",0,\".hidden/file\"],[\"m\",0,\"..x\"]]}", "valid": true}
+  ],
+  "affects": [
+    {"row": ["m", 0, "a/b.ts"], "root": "a", "insensitive": false, "expect": true},
+    {"row": ["m", 0, "a/b.ts"], "root": "a/b.ts", "insensitive": false, "expect": true},
+    {"row": ["m", 0, "a/b.ts"], "root": "a/c", "insensitive": false, "expect": false},
+    {"row": ["m", 0, "ab/c.ts"], "root": "a", "insensitive": false, "expect": false},
+    {"row": ["m", 0, "a"], "root": "a/b", "insensitive": false, "expect": true},
+    {"row": ["m", 1, "a"], "root": "a/b", "insensitive": false, "expect": false},
+    {"row": ["a", 1, "a"], "root": "a/b", "insensitive": false, "expect": true},
+    {"row": ["r", 1, "a"], "root": "a/b/c.ts", "insensitive": false, "expect": true},
+    {"row": ["n", 1, "a"], "root": "a/b/c.ts", "insensitive": false, "expect": true},
+    {"row": ["m", 0, "x"], "root": "", "insensitive": false, "expect": true},
+    {"row": ["m", 0, "A/B.ts"], "root": "a", "insensitive": false, "expect": false},
+    {"row": ["m", 0, "A/B.ts"], "root": "a", "insensitive": true, "expect": true},
+    {"row": ["m", 0, "café/x"], "root": "café", "insensitive": true, "expect": true},
+    {"row": ["m", 0, "src"], "root": "src2", "insensitive": true, "expect": false}
+  ],
+  "merge": [
+    {"rows": [["m", 0, "b"], ["a", 0, "a"], ["m", 0, "b"]], "expect": [["a", 0, "a"], ["m", 0, "b"]]},
+    {"rows": [["m", 0, "a"], ["r", 1, "a"]], "expect": [["r", 1, "a"]]},
+    {"rows": [["n", 0, "a"], ["m", 1, "a"]], "expect": [["n", 1, "a"]]},
+    {"rows": [], "expect": []}
+  ],
+  "cursor": [
+    {"text": "0123456789abcdef:42", "expect": {"epoch": "0123456789abcdef", "seq": 42}},
+    {"text": "0123456789abcdef:", "expect": null},
+    {"text": "0123456789ABCDEF:1", "expect": null},
+    {"text": "0123456789abcdef:-1", "expect": null},
+    {"text": "short:1", "expect": null}
+  ],
+  "excluded": [
+    {"root": "node_modules/x", "insensitive": false, "expect": true},
+    {"root": "a/node_modules", "insensitive": false, "expect": true},
+    {"root": "a/b", "insensitive": false, "expect": false},
+    {"root": ".git/hooks", "insensitive": false, "expect": true},
+    {"root": ".GIT/hooks", "insensitive": true, "expect": true},
+    {"root": ".GIT/hooks", "insensitive": false, "expect": false},
+    {"root": "", "insensitive": false, "expect": false},
+    {"root": ".gitignore", "insensitive": false, "expect": false}
+  ],
+  "read": [
+    {"name": "empty log at the start", "segments": [], "after": 0, "expect": {"ok": true, "seqs": [], "head": 0}},
+    {"name": "empty log after a cursor", "segments": [], "after": 3, "expect": {"ok": false, "reason": "gap"}},
+    {"name": "everything after zero", "segments": [{"first": 1, "lines": [1, 2, 3]}], "after": 0, "expect": {"ok": true, "seqs": [1, 2, 3], "head": 3}},
+    {"name": "tail after two", "segments": [{"first": 1, "lines": [1, 2, 3, 4]}], "after": 2, "expect": {"ok": true, "seqs": [3, 4], "head": 4}},
+    {"name": "nothing new", "segments": [{"first": 1, "lines": [1, 2, 3]}], "after": 3, "expect": {"ok": true, "seqs": [], "head": 3}},
+    {"name": "cursor beyond the head", "segments": [{"first": 1, "lines": [1, 2, 3]}], "after": 9, "expect": {"ok": false, "reason": "gap"}},
+    {"name": "across two segments", "segments": [{"first": 1, "lines": [1, 2]}, {"first": 3, "lines": [3, 4, 5]}], "after": 1, "expect": {"ok": true, "seqs": [2, 3, 4, 5], "head": 5}},
+    {"name": "cursor at a segment border", "segments": [{"first": 1, "lines": [1, 2]}, {"first": 3, "lines": [3, 4]}], "after": 2, "expect": {"ok": true, "seqs": [3, 4], "head": 4}},
+    {"name": "oldest segment dropped", "segments": [{"first": 5, "lines": [5, 6]}, {"first": 7, "lines": [7]}], "after": 2, "expect": {"ok": false, "reason": "floor"}},
+    {"name": "cursor exactly at the floor", "segments": [{"first": 5, "lines": [5, 6]}], "after": 4, "expect": {"ok": true, "seqs": [5, 6], "head": 6}},
+    {"name": "newest segment empty, cursor at head", "segments": [{"first": 1, "lines": [1, 2]}, {"first": 3, "lines": []}], "after": 2, "expect": {"ok": true, "seqs": [], "head": 2}},
+    {"name": "newest segment empty, cursor behind", "segments": [{"first": 1, "lines": [1, 2]}, {"first": 3, "lines": []}], "after": 1, "expect": {"ok": true, "seqs": [2], "head": 2}},
+    {"name": "hole in the sequence", "segments": [{"first": 1, "lines": [1, 2, 4]}], "after": 0, "expect": {"ok": false, "reason": "gap"}},
+    {"name": "hole between segments", "segments": [{"first": 1, "lines": [1, 2]}, {"first": 4, "lines": [4]}], "after": 0, "expect": {"ok": false, "reason": "gap"}},
+    {"name": "garbage line", "segments": [{"first": 1, "lines": [1, "garbage", 3]}], "after": 0, "expect": {"ok": false, "reason": "gap"}},
+    {"name": "undecodable record in range", "segments": [{"first": 1, "lines": [1, "{\"s\":2,\"t\":1,\"r\":[[\"z\",0,\"a\"]]}"]}], "after": 0, "expect": {"ok": false, "reason": "gap"}},
+    {"name": "torn last line is ignored", "segments": [{"first": 1, "lines": [1, 2], "torn": "{\"s\":3,\"t\":1,\"r\":[[\"m\",0,\"a"}], "after": 0, "expect": {"ok": true, "seqs": [1, 2], "head": 2}},
+    {"name": "foreign epoch is ignored", "segments": [{"first": 1, "lines": [1, 2], "epoch": "fedcba9876543210"}], "after": 0, "expect": {"ok": true, "seqs": [], "head": 0}},
+    {"name": "lost record is a record", "segments": [{"first": 1, "lines": [1, "lost:2", 3]}], "after": 1, "expect": {"ok": true, "seqs": [2, 3], "head": 3}}
+  ]
+}

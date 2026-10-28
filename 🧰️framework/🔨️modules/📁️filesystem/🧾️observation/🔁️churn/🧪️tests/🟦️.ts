@@ -154,14 +154,15 @@ test("a directory listed while a peer adds a file is listed again; a roster that
  expect((await owner(root).directoryEntries(dir))!.length).toBe(62);
 });
 
-test("an input that is rewritten on every read fails after the declared attempts, naming the path in both languages",async()=>{
+test("an input that is rewritten on every read fails after the declared attempts, naming the path in the chosen language",async()=>{
  const root=scratch(),path=join(root,"busy.txt");writeFileSync(path,"x");
  let version=0;
  const reader=owner(root,event=>{if(event.phase==="read")writeFileSync(path,"v"+(++version)+" ".repeat(version%3));});
- const failure=await reader.digest(path).catch(error=>error);
+ const saved=process.env.SEMIO_LANGUAGE;process.env.SEMIO_LANGUAGE="de";
+ const failure=await reader.digest(path).catch(error=>error).finally(()=>{if(saved===undefined)delete process.env.SEMIO_LANGUAGE;else process.env.SEMIO_LANGUAGE=saved;});
  expect(failure).toBeInstanceOf(ConcurrentEditErrorV1);
  expect(failure.path).toBe(path);expect(failure.attempts).toBe(protocol.profiles.read.maximumAttempts);
- expect(failure.message).toContain(path);expect(failure.message).toContain("kept changing");expect(failure.message).toContain("änderte sich");
+ expect(failure.message).toContain(path);expect(failure.message).toContain("änderte sich");expect(failure.message).not.toContain("kept changing");
  expect(version).toBe(protocol.profiles.read.maximumAttempts);
 },30_000);
 

@@ -9,18 +9,20 @@ import { createRequire } from "node:module";
 import ts from "typescript";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, dirname, relative } from "node:path";
+import { join, dirname, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import fastGlob from "fast-glob";
 
 type Scenario = { id: string; mutation: { op: "none" | "write" | "replace-directory-with-file"; path?: string; content?: string }; expected: "hit" | "miss" };
 const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as { schemaVersion: number; files: Record<string, string>; scenarios: Scenario[];corruption:{value:string;computations:number};races:{before:string;after:string;entry:string;directory:string;conflict:string;text:string;ports:string[]};semantic:{parentValidation:{projects:number;expectedReads:number};provider:{id:string;revision:string;nextRevision:string};before:string;bodyChanged:string;importsChanged:string;expected:string[];changedExpected:string[];cacheMaximumBytes:number;oversizedCharacters:number;malformedFactPatches:unknown[][];nested:{path:string;before:string;after:string;missing:string};replayError:string} };
 const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8")));
-const { observedFs, observeInference, inferenceHeaderLine } = await import(new URL("../🟨️.mjs", import.meta.url).href) as typeof import("../🟨️.mjs");
-beforeAll(async()=>{const root=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir();mkdirSync(root,{recursive:true});await observeInference({cachePath:join(root,"observation-test-load.json"),key:"observation-test-load"},()=>undefined);});
+/** 📂️ The physical root of every law workspace (SEMIO_TEST_ARTIFACT_DIR, else the OS temporary directory), resolved once: observation refuses a symlinked ancestry such as the macOS `/var`. */
+const artifactRoot = (() => { const root = process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(); mkdirSync(root, { recursive: true }); return realpathSync(root); })();
+const { observedFs, observeInference, inferenceHeaderLine, inferenceObservationBlockPathV1, readInferenceHeaderV1 } = await import(new URL("../🟨️.mjs", import.meta.url).href) as typeof import("../🟨️.mjs");
+beforeAll(async()=>{await observeInference({cachePath:join(artifactRoot,"observation-test-load.json"),key:"observation-test-load"},()=>undefined);});
 
 test("Rust and native closure memo hits retain every receiving scope's source facts",async()=>{
- const {closureReplay:row}=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")),parent=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),root=mkdtempSync(join(parent,"closure-"));
+ const {closureReplay:row}=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")),parent=artifactRoot,root=mkdtempSync(join(parent,"closure-"));
  const api=await import("../🟨️.mjs"),plugin=await import("../../🕸️graph/📥️inference/🟨️.mjs");await plugin.libraryBootstrap;
  try{
   for(const[path,content]of Object.entries(row.files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),content as string);}
@@ -39,7 +41,7 @@ test("Rust and native closure memo hits retain every receiving scope's source fa
 
 test("invocation memo replays complete current observations into every receiving scope",async()=>{
  const {invocationMemo:row}=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
- const parent=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),root=mkdtempSync(join(parent,"memo-")),path=join(root,row.path),cache=new Map(),counts:number[]=[];
+ const parent=artifactRoot,root=mkdtempSync(join(parent,"memo-")),path=join(root,row.path),cache=new Map(),counts:number[]=[];
  const api=await import("../🟨️.mjs");let calls=0;
  try{
   writeFileSync(path,row.before);
@@ -56,7 +58,7 @@ test("invocation memo replays complete current observations into every receiving
 
 test("project observations await asynchronous JSON computation before admission",async()=>{
  const {invocationMemo:row}=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
- const parent=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),root=mkdtempSync(join(parent,"async-")),path=join(root,row.path),api=await import("../🟨️.mjs");
+ const parent=artifactRoot,root=mkdtempSync(join(parent,"async-")),path=join(root,row.path),api=await import("../🟨️.mjs");
  try{
   writeFileSync(path,JSON.stringify(row.projectResult));
   const compute=()=>api.observeProjectInferenceV1({cachePath:join(root,"image.json"),key:"async-project",owner:root},async()=>JSON.parse(await api.observedFs.readFile(path,"utf8")));
@@ -68,12 +70,19 @@ test("project observations await asynchronous JSON computation before admission"
 
 /** 🧪️ One isolated workspace whose files are older than the racy window, so the first result is persisted. */
 function workspace(): string {
-  const parent = process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir();
-  mkdirSync(parent, { recursive: true });
-  const root = mkdtempSync(join(realpathSync(parent), "io-"));
+  const root = mkdtempSync(join(artifactRoot, "io-"));
   for (const [path, content] of Object.entries(fixture.files)) { mkdirSync(join(root, path, ".."), { recursive: true }); writeFileSync(join(root, path), content); }
   Bun.sleepSync(2200);
   return root;
+}
+
+/** 🧱️ The rows of one persisted record, decoded independently of production: the header names content-addressed blocks (brotli JSON arrays named by the sha256 of their bytes) that precede the header's inline rows; the production expansion must agree row for row. */
+function recordHeader(cachePath: string): { digest: string; resultSha256: string; blocks: string[]; authorityObservations: unknown[]; observations: any[] } {
+  const line = JSON.parse(inferenceHeaderLine(cachePath)!) as { digest: string; resultSha256: string; blocks: string[]; authorityObservations: unknown[]; observations: any[] };
+  const blocked = line.blocks.flatMap((name) => { const bytes = brotliDecompressSync(readFileSync(inferenceObservationBlockPathV1(dirname(resolve(cachePath)), name))); expect(createHash("sha256").update(bytes).digest("hex")).toBe(name); return JSON.parse(bytes.toString("utf8")) as any[]; });
+  const expanded = { ...line, observations: [...blocked, ...line.observations] };
+  expect(expanded.observations).toEqual(readInferenceHeaderV1(cachePath).observations);
+  return expanded;
 }
 
 /** 🔍️ The probe program: one read, one absence, one listing and one type probe, all through the observed filesystem. */
@@ -116,7 +125,8 @@ const { memoizedFileRecord, observationsHold, observeDependencies } = await impo
 for (const scenario of fixture.scenarios) test(`non-blocking validation agrees with reuse: ${scenario.id}`, async () => {
   const root = workspace(), cachePath = join(root, ".cache", "inference.json");
   await observeInference({ cachePath, key: ["hold", scenario.id] }, () => probe(root));
-  const header = JSON.parse(inferenceHeaderLine(cachePath)!) as { observations: unknown[] };
+  const header = recordHeader(cachePath);
+  expect(header.observations.length, "the record holds the probe's facts").toBeGreaterThan(0);
   if (scenario.mutation.op === "write") { mkdirSync(join(root, scenario.mutation.path!, ".."), { recursive: true }); writeFileSync(join(root, scenario.mutation.path!), scenario.mutation.content!); }
   if (scenario.mutation.op === "replace-directory-with-file") { rmSync(join(root, scenario.mutation.path!), { recursive: true }); writeFileSync(join(root, scenario.mutation.path!), "file"); }
   expect(await observationsHold(header.observations), scenario.id).toBe(scenario.expected === "hit");
@@ -132,7 +142,7 @@ test("a per-file analysis is memoized across inference misses by content digest 
   const second = await run("two");
   expect(second).toEqual(first);
   expect(analyses).toBe(1);
-  const header = JSON.parse(inferenceHeaderLine(cachePath)!) as { observations: { kind: string; path: string }[] };
+  const header = recordHeader(cachePath) as { observations: { kind: string; path: string }[] };
   expect(header.observations.some((row) => row.kind === "file" && row.path === file)).toBe(true);
   writeFileSync(file, "changed bytes\n");
   Bun.sleepSync(2200);
@@ -244,25 +254,36 @@ test("semantic source replay cache bounds JSON images and isolates returned valu
  try{const first=observedSourceAnalysisV1(provider,path);if(typeof first!=="object"||first===null||!("imports" in first)||!Array.isArray(first.imports))throw Error("Original parser import image required");first.imports.push("./mutated.js");expect(observedSourceAnalysisV1(provider,path)).toEqual(shared);expect(small).toBe(1);for(let round=0;round<2;round++){const value=observedSourceAnalysisV1(oversized,path);if(typeof value!=="string")throw Error("Original parser string image required");expect(value.length).toBe(fixture.semantic.oversizedCharacters);}expect(large).toBe(2);expect(sourceObservationStatsV1().analysisBytes).toBeLessThanOrEqual(fixture.semantic.cacheMaximumBytes);}finally{rmSync(root,{recursive:true,force:true});}
 },20000);
 
-test("semantic source same-stamp byte changes cannot bypass current parser admission",async()=>{
+test("semantic source analysis trusts an identical stamp without reading and judges a moved stamp by the current parser; a source inside the racy window is never persisted",async()=>{
  const root=workspace(),path=join(root,"source.ts"),provider=registerSourceAnalysisV1({id:fixture.semantic.provider.id,revision:fixture.semantic.provider.revision,analyze:semanticParser});writeFileSync(path,fixture.semantic.before);
- try{const captured=await captureObservedSourceInputsV1(()=>observedSourceAnalysisV1(provider,path)),stamp=rawFs.statSync(path),original=rawFs.statSync;writeFileSync(path,fixture.semantic.importsChanged);const mocked=spyOn(rawFs,"statSync").mockImplementation(((file:any,...args:any[])=>String(file)===path?stamp:(original as any)(file,...args)) as typeof rawFs.statSync);try{expect(await observationsHold(captured.observations)).toBe(false);}finally{mocked.mockRestore();}}finally{rmSync(root,{recursive:true,force:true});}
-},20000);
+ try{const captured=await captureObservedSourceInputsV1(()=>observedSourceAnalysisV1(provider,path)),stamp=rawFs.statSync(path),original=rawFs.statSync,readOriginal=rawFs.readFileSync;let reads=0;writeFileSync(path,fixture.semantic.importsChanged);
+  const stat=spyOn(rawFs,"statSync").mockImplementation(((file:any,...args:any[])=>String(file)===path?stamp:(original as any)(file,...args)) as typeof rawFs.statSync),read=spyOn(rawFs,"readFileSync").mockImplementation(((file:any,...args:any[])=>{if(String(file)===path)reads++;return (readOriginal as any)(file,...args);}) as typeof rawFs.readFileSync);
+  try{expect(await observationsHold(captured.observations)).toBe(true);expect(reads).toBe(0);}finally{stat.mockRestore();read.mockRestore();}
+  expect(await observationsHold(captured.observations)).toBe(false);
+  const cachePath=join(root,"racy.json");let calls=0;writeFileSync(path,fixture.semantic.before);
+  const run=()=>observeInference({cachePath,key:"racy"},()=>{calls++;return observedSourceAnalysisV1(provider,path);});
+  await run();await run();expect(calls).toBe(2);expect(rawFs.existsSync(cachePath)).toBe(false);
+  Bun.sleepSync(2200);await run();await run();expect(calls).toBe(3);expect(rawFs.existsSync(cachePath)).toBe(true);
+ }finally{rmSync(root,{recursive:true,force:true});}
+},30000);
 
 test("semantic parent validation shares each provider independently across project images",async()=>{
  const root=workspace(),path=join(root,"source.ts"),command=registerSourceAnalysisV1({id:fixture.semantic.provider.id+":parent-command",revision:fixture.semantic.provider.revision,analyze:semanticParser}),module=registerSourceAnalysisV1({id:fixture.semantic.provider.id+":parent-module",revision:fixture.semantic.provider.revision,analyze:(source:string,bytes:Buffer)=>({imports:semanticParser(source,bytes)})});writeFileSync(path,fixture.semantic.before);Bun.sleepSync(2200);
  const projects=Array.from({length:fixture.semantic.parentValidation.projects},(_,index)=>()=>observeProjectInferenceV1({cachePath:join(root,`project-${index}.json`),key:index,owner:root},()=>({command:observedSourceAnalysisV1(command,path),module:observedSourceAnalysisV1(module,path)})));
  try{for(const project of projects)await project();let reads=0;const original=rawFs.readFileSync,mocked=spyOn(rawFs,"readFileSync").mockImplementation(((file:any,...args:any[])=>{if(String(file)===path)reads++;return (original as any)(file,...args);}) as typeof rawFs.readFileSync);
-  try{const result=await observeInference({cachePath:join(root,"parent.json"),key:"provider-sharing"},async()=>{const values=[];for(const project of projects)values.push(await project());return {values,validationReads:reads};}),oracle=ts.preProcessFile(fixture.semantic.before,true,true).importedFiles.map(item=>item.fileName);expect(result.values).toEqual(Array.from({length:fixture.semantic.parentValidation.projects},()=>({command:oracle,module:{imports:oracle}})));expect(result.validationReads).toBe(fixture.semantic.parentValidation.expectedReads);}finally{mocked.mockRestore();}
+  try{const parent=async(key:string)=>{reads=0;return observeInference({cachePath:join(root,key+".json"),key},async()=>{const values=[];for(const project of projects)values.push(await project());return {values,validationReads:reads};});},oracle=ts.preProcessFile(fixture.semantic.before,true,true).importedFiles.map(item=>item.fileName),expected=Array.from({length:fixture.semantic.parentValidation.projects},()=>({command:oracle,module:{imports:oracle}}));
+   const unchanged=await parent("provider-sharing-unchanged");expect(unchanged.values).toEqual(expected);expect(unchanged.validationReads).toBe(0);
+   writeFileSync(path,fixture.semantic.bodyChanged);
+   const result=await parent("provider-sharing");expect(result.values).toEqual(expected);expect(result.validationReads).toBe(fixture.semantic.parentValidation.expectedReads);}finally{mocked.mockRestore();}
  }finally{rmSync(root,{recursive:true,force:true});}
 },20000);
 
 
 test("observed TOML receives literal astral paths and refuses surrogate escapes with exact original source context",async()=>{
- const corpus=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")).tomlReceiving,parser=createRequire(import.meta.url)("smol-toml"),schema=JSON.parse(readFileSync(new URL("../../🧬️schema/📥️toml-failure.json",import.meta.url),"utf8")),admit=new Ajv({strict:true}).compile(schema),parent=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),root=mkdtempSync(join(parent,"toml-")),path=join(root,"Cargo.toml"),plugin=await import("../../🕸️graph/📥️inference/🟨️.mjs"),api=await import("../🟨️.mjs");await plugin.libraryBootstrap;
+ const corpus=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")).tomlReceiving,parser=createRequire(import.meta.url)("smol-toml"),schema=JSON.parse(readFileSync(new URL("../../🧬️schema/📥️toml-failure.json",import.meta.url),"utf8")),admit=new Ajv({strict:true}).compile(schema),parent=artifactRoot,root=mkdtempSync(join(parent,"toml-")),path=join(root,"Cargo.toml"),plugin=await import("../../🕸️graph/📥️inference/🟨️.mjs"),api=await import("../🟨️.mjs");await plugin.libraryBootstrap;
  try{for(const row of corpus.cases){writeFileSync(path,row.source);let independent:any,builtin:any,error:any,receipt:any;try{independent=parser.parse(row.source);}catch{}try{builtin=Bun.TOML.parse(row.source);}catch{}try{receipt=await api.captureObservedSourceInputsV1(()=>plugin.cacheInternals.nativeDependencyRoots(".",root,false,new Map(),new Map()),undefined,false);}catch(value){error=value;}
   expect(Boolean(independent),row.name).toBe(row.smolAccepted);const bunDiverges=/\\U[0-9A-Fa-f]{8}|\\u[dD][89a-fA-F][0-9A-Fa-f]{2}/u.test(row.source);if(!bunDiverges)expect(Boolean(builtin),row.name).toBe(row.accepted);expect(error===undefined,row.name).toBe(row.accepted);
-  if(row.accepted){expect(independent.lib.path).toBe(row.path);if(!bunDiverges)expect(builtin.lib.path).toBe(row.path);expect(receipt.observations.some((fact:any)=>fact.kind==="file"&&fact.path===path)).toBe(true);expect(await api.observationsHold(receipt.observations)).toBe(true);}else{expect(error.message).toContain("Observed TOML parse refused");expect(admit(error.tomlObservation)).toBe(true);expect(error.tomlObservation.path).toBe(path);expect(error.tomlObservation.sha256).toBe(createHash("sha256").update(row.source).digest("hex"));expect(error.tomlObservation.bytes).toBe(Buffer.byteLength(row.source));expect(error.tomlObservation.sourceLine).toBe(row.source.split("\n")[error.tomlObservation.line]);expect(error.cause.message).toContain("0xD800 - 0xDFFF");}
+  if(row.accepted){expect(independent.lib.path).toBe(row.path);if(!bunDiverges)expect(builtin.lib.path).toBe(row.path);expect(receipt.observations.some((fact:any)=>fact.kind==="file"&&fact.path===path)).toBe(true);expect(await api.observationsHold(receipt.observations)).toBe(true);}else{expect(error.message).toContain("Observed TOML parse refused");expect(admit(error.tomlObservation)).toBe(true);expect(error.tomlObservation.path).toBe(path);expect(error.tomlObservation.sha256).toBe(createHash("sha256").update(row.source).digest("hex"));expect(error.tomlObservation.bytes).toBe(Buffer.byteLength(row.source));expect(error.tomlObservation.sourceLine).toBe(row.source.split("\n")[error.tomlObservation.line??0]);expect(error.cause.message).toMatch(/0xD800 - 0xDFFF|Unicode scalar value/u);}
  }
  }finally{rmSync(root,{recursive:true,force:true});}
 });
@@ -287,7 +308,7 @@ test("semantic Source observation declaration roster matches actual runtime expo
 });
 
 for(const row of JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")).semantic.settlement.cases)test("semantic settlement retains original cancellation: "+row.id,async()=>{
- const input=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")).semantic.settlement,api=await import("../🟨️.mjs"),parent=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!parent)throw Error("Original Source law artifact directory required");const root=mkdtempSync(join(parent,"settle-")),path=join(root,"source.txt"),controller=new AbortController();writeFileSync(path,input.before);let computations=0,rounds=0;
+ const input=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")).semantic.settlement,api=await import("../🟨️.mjs"),parent=artifactRoot;const root=mkdtempSync(join(parent,"settle-")),path=join(root,"source.txt"),controller=new AbortController();writeFileSync(path,input.before);let computations=0,rounds=0;
  try{const result=api.settleObservedComputationV1(async()=>{computations++;await Promise.resolve();if(row.phase==="compute"){controller.abort(Error(row.reason));return "completed";}api.observedFs.readFileSync(path);writeFileSync(path,input.after);api.observedFs.readFileSync(path);return "completed";},{signal:controller.signal,limit:1,onRound:async()=>{rounds++;await Promise.resolve();controller.abort(Error(row.reason));}});await expect(result).rejects.toThrow(row.reason);expect(computations).toBe(1);expect(rounds).toBe(row.phase==="round"?1:0);
  const oracle=Bun.spawnSync(["node","--input-type=module","-e",'const c=new AbortController();try{await Promise.resolve();c.abort(Error(process.argv[1]));c.signal.throwIfAborted();console.log("completed")}catch(e){console.log(e.message)}',row.reason],{stdout:"pipe",stderr:"pipe"});expect(oracle.exitCode).toBe(0);expect(oracle.stdout.toString().trim()).toBe(row.reason);
  }finally{rmSync(root,{recursive:true,force:true});}

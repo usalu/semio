@@ -1,0 +1,351 @@
+import {afterAll,expect,test} from "bun:test";
+import Ajv from "ajv";
+import {spawnSync} from "node:child_process";
+import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {dirname,join} from "node:path";
+import {parse as parseYaml} from "yaml";
+import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
+import {CI_TEXT_KEYS_V1,ciCacheDeltaV1,ciPlanSelectionV1,ciTargetMatcherV1,ciTextV1,compareCiPlansV1,extractJsonObjectsV1,judgeCiCacheProofV1,readCiCacheStatusV1,readCiPlanV1,readCiTestResultsIndexV1,renderCiCacheDeltaV1,renderCiParityV1,renderCiPlanV1,renderCiProofV1,renderCiTestsV1,summarizeCiJUnitV1,summarizeCiPlanV1,summarizeCiTestsV1,type CiCacheStatusV1,type CiLanguageV1} from "../🟦️.ts";
+import {runCiReportV1} from "../📜️script.ts";
+import {resolveLanguageV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {CATALOG_LANGUAGES_V1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
+
+const ajv=new Ajv({strict:true,allowUnionTypes:true}),check=(definition:string,value:unknown)=>{
+ const validate=ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`});
+ if(!validate(value))throw Error(`${definition}: ${ajv.errorsText(validate.errors)}`);
+};
+const scratch:string[]=[];
+const directory=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`ci-report-${label}-`));scratch.push(path);return path;};
+afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
+const statusOf=(text:string):CiCacheStatusV1=>readCiCacheStatusV1(text);
+const decorate=(value:unknown)=>`[script] reading\n${JSON.stringify(value,null,2)}\n`;
+
+test("every expected value of the fixture is a closed document of the schema",()=>{
+ for(const row of fixture.statuses)check("CacheStatus",row.expected);
+ for(const row of fixture.deltas)check("Delta",row.expected);
+ for(const row of fixture.proofs)check("Proof",row.expected);
+ for(const row of fixture.selections)check("PlanSummary",row.summary);
+ for(const row of fixture.parities)check("Parity",row.expected);
+ for(const row of fixture.junit)check("JUnit",row.expected);
+ for(const row of fixture.tests){check("TestsSummary",row.expected);if(row.index)check("TestResultsIndex",row.index);}
+ for(const text of Object.values(fixture.plans))check("DryRunPlan",extractJsonObjectsV1(text)[0]);
+ expect(()=>check("CacheStatus",{...fixture.statuses[0]!.expected,extra:1})).toThrow();
+ expect(()=>check("TestResult",{label:"//:a",status:"passed",cached:false,durationMillis:1,file:"../x.xml"})).toThrow();
+});
+
+test("JSON documents are found between log lines, over CRLF, and braces inside strings do not confuse the scan",()=>{
+ for(const row of fixture.extraction)expect(extractJsonObjectsV1(row.text).length,row.name).toBe(row.expectedCount);
+ expect(()=>readCiCacheStatusV1("[script] nothing here\n")).toThrow("Closed CacheStatus required");
+ expect(()=>readCiPlanV1("{\"tasks\":{}}\n")).toThrow("Closed DryRunPlan required");
+ const two=fixture.extraction.find(row=>row.name==="two-documents-last-wins")!;
+ expect(statusOf(two.text).entries).toBe(14);
+});
+
+test("cache statuses are read exactly as the neutral entry prints them",()=>{
+ for(const row of fixture.statuses)expect(statusOf(row.text),row.name).toEqual(row.expected as CiCacheStatusV1);
+});
+
+test("cache deltas and hit rates equal the independent Python computation",()=>{
+ for(const row of fixture.deltas){
+  const delta=ciCacheDeltaV1(statusOf(row.before),statusOf(row.after));
+  expect({...delta,hitRate:undefined},row.name).toEqual({...row.expected,hitRate:undefined} as never);
+  if(row.expected.hitRate===null)expect(delta.hitRate,row.name).toBeNull();
+  else expect(delta.hitRate!,row.name).toBeCloseTo(row.expected.hitRate,12);
+ }
+ expect(()=>ciCacheDeltaV1(statusOf(fixture.deltas[0]!.before),statusOf(fixture.statuses[1]!.text))).toThrow("one tool");
+});
+
+test("a cache proof passes only when run 1 grows the store, run 2 does not, and run 2 is recognized as a hit by the implementation's own evidence",()=>{
+ for(const row of fixture.proofs){
+  const statuses=row.statuses.map(statusOf) as [CiCacheStatusV1,CiCacheStatusV1,CiCacheStatusV1];
+  const proof=judgeCiCacheProofV1({tool:row.tool as "nx"|"bazel",statuses,logs:[row.logs[0]!,row.logs[1]!]});
+  expect(proof,row.name).toEqual(row.expected as typeof proof);
+ }
+ expect(new Set(fixture.proofs.map(row=>row.expected.rule))).toEqual(new Set(["activity","spawn-marker","log-marker","none"]));
+});
+
+test("selections, summaries and parity of plans equal the independent computation",()=>{
+ const plans=Object.fromEntries(Object.entries(fixture.plans).map(([name,text])=>[name,readCiPlanV1(text)]));
+ for(const row of fixture.selections){
+  const plan=plans[row.plan]!;
+  expect(ciPlanSelectionV1(plan,row.targets),`${row.plan} ${row.targets}`).toEqual(row.expected);
+  expect(summarizeCiPlanV1(plan,row.targets),`${row.plan} ${row.targets}`).toEqual(row.summary);
+ }
+ for(const row of fixture.parities)expect(compareCiPlansV1(plans[row.first]!,plans[row.second]!,row.targets),`${row.first} ${row.second}`).toEqual(row.expected);
+ expect(ciTargetMatcherV1("b*,test")("build")).toBe(true);
+ expect(ciTargetMatcherV1("b*,test")("typecheck")).toBe(false);
+ expect(ciTargetMatcherV1("a.b")("axb")).toBe(false);
+ expect(()=>ciTargetMatcherV1(" , ")).toThrow("Target list required");
+});
+
+test("JUnit counts equal the Python ElementTree and xmllint counts, with CDATA, comments and nested suites ignored where they must be",()=>{
+ const xmllint=Bun.which("xmllint");
+ for(const row of fixture.junit){
+  expect(summarizeCiJUnitV1(row.xml),row.name).toEqual(row.expected);
+  if(xmllint===null||row.name==="cdata-and-comments-ignored")continue;
+  const count=(expression:string)=>Number(spawnSync(xmllint,["--xpath",`count(${expression})`,"-"],{input:row.xml,encoding:"utf8"}).stdout);
+  expect({tests:count("//testcase"),failures:count("//failure"),errors:count("//error"),skipped:count("//skipped")},`xmllint ${row.name}`).toEqual(row.expected);
+ }
+});
+
+test("exported test results are summed per file and the index names the failed tasks",()=>{
+ for(const row of fixture.tests){
+  const index=row.index?readCiTestResultsIndexV1(JSON.stringify(row.index)):undefined;
+  expect(summarizeCiTestsV1(row.files,index),row.name).toEqual(row.expected);
+ }
+ expect(()=>readCiTestResultsIndexV1(JSON.stringify({version:1,tool:"bazel",results:[{label:"//:a",status:"weird",cached:false,durationMillis:0,file:"a.xml"}]}))).toThrow("Closed test results index required");
+});
+
+test("the language is the flag, then SEMIO_LANGUAGE, then the locale; none resolved is refused",()=>{
+ for(const row of fixture.languages){
+  const pick=()=>resolveLanguageV1(CATALOG_LANGUAGES_V1,row.flag===null?[]:["--lang",row.flag],row.environment,()=>[]).language;
+  if(row.expected===null)expect(pick,JSON.stringify(row)).toThrow("en|de");
+  else expect(pick(),JSON.stringify(row)).toBe(row.expected as CiLanguageV1);
+ }
+});
+
+test("English and German define the same messages with the same placeholders",()=>{
+ const placeholders=(language:CiLanguageV1,key:string)=>{
+  const text=ciTextV1(language,key as never,{});
+  return [...text.matchAll(/\{([a-z]+)\}/gu)].map(match=>match[1]!).sort();
+ };
+ for(const key of CI_TEXT_KEYS_V1){
+  expect(placeholders("de",key),key).toEqual(placeholders("en",key));
+  expect(ciTextV1("de",key as never,{})).not.toBe(ciTextV1("en",key as never,{}));
+ }
+});
+
+test("the rendered Markdown carries the computed numbers in both languages",()=>{
+ const warm=fixture.deltas.find(row=>row.name==="warm-run")!,delta=ciCacheDeltaV1(statusOf(warm.before),statusOf(warm.after));
+ const rate=`${(warm.expected.hitRate!*100).toFixed(1)}%`;
+ expect(renderCiCacheDeltaV1(delta,"bazel linux",true,"en")).toContain(`hit rate ${rate}`);
+ expect(renderCiCacheDeltaV1(delta,"bazel linux",true,"de")).toContain(`Trefferquote ${rate}`);
+ expect(renderCiCacheDeltaV1(ciCacheDeltaV1(statusOf(fixture.deltas[3]!.before),statusOf(fixture.deltas[3]!.after)),"nx",false,"en")).toContain("no build activity");
+ const failing=fixture.proofs.find(row=>row.name==="bazel-nothing-stored")!;
+ const statuses=failing.statuses.map(statusOf) as [CiCacheStatusV1,CiCacheStatusV1,CiCacheStatusV1];
+ const proof=judgeCiCacheProofV1({tool:"bazel",statuses,logs:[failing.logs[0]!,failing.logs[1]!]});
+ expect(renderCiProofV1(proof,"en")).toContain("stored nothing");
+ expect(renderCiProofV1(proof,"de")).toContain("speicherte nichts");
+ const plan=readCiPlanV1(fixture.plans.first);
+ expect(renderCiPlanV1(summarizeCiPlanV1(plan,"build,test"),"x","en")).toContain("3 selected tasks of 4 planned, in 2 projects");
+ expect(renderCiPlanV1(summarizeCiPlanV1(readCiPlanV1(fixture.plans.empty),"build"),"x","de")).toContain("nichts ist betroffen");
+ expect(renderCiParityV1(compareCiPlansV1(plan,readCiPlanV1(fixture.plans["missing-test"]),"build,test"),"en")).toContain("only in the first");
+ expect(renderCiTestsV1(summarizeCiTestsV1([],undefined),"de")).toContain("keine Testergebnisse");
+});
+
+test("the command line reads the files the neutral entry wrote and exits 0, 1 or 2",()=>{
+ const root=directory("cli"),file=(name:string,text:string)=>{const path=join(root,name);writeFileSync(path,text);return path;};
+ const run=(...argv:string[])=>{let out="";const code=runCiReportV1(argv,{GITHUB_ACTIONS:"true",SEMIO_LANGUAGE:"en"},text=>{out+=text;});return {code,out};};
+ const good=fixture.proofs.find(row=>row.name==="bazel-activity-rule-real-logs")!,bad=fixture.proofs.find(row=>row.name==="nx-miss")!;
+ const proofArgs=(row:typeof good)=>["proof","--tool",row.tool,...row.statuses.flatMap((text,index)=>[`--status${index}`,file(`${row.name}-s${index}`,text)]),"--log1",file(`${row.name}-l1`,row.logs[0]!),"--log2",file(`${row.name}-l2`,row.logs[1]!)];
+ expect(run(...proofArgs(good))).toMatchObject({code:0});
+ const failed=run(...proofArgs(bad),"--lang","de");
+ expect(failed.code).toBe(1);expect(failed.out).toContain("Cache-Beweis unter nx fehlgeschlagen");expect(failed.out).toContain("::error::proof failed");
+ const delta=fixture.deltas[1]!;
+ expect(run("cache-delta","--tool","bazel","--before",file("b",delta.before),"--after",file("a",delta.after),"--label","bazel linux")).toMatchObject({code:0});
+ const first=file("first",fixture.plans.first),second=file("second",fixture.plans["missing-test"]);
+ expect(run("plan","--plan",first,"--targets","build,test","--label","bazel").out).toContain("3 selected tasks of 4 planned");
+ expect(run("parity","--first",first,"--second",first,"--targets","build,test").code).toBe(0);
+ expect(run("parity","--first",first,"--second",second,"--targets","build,test").code).toBe(1);
+ const results=join(root,"results");mkdirSync(join(results,"nested"),{recursive:true});
+ const row=fixture.tests[0]!;
+ for(const entry of row.files){mkdirSync(dirname(join(results,entry.file)),{recursive:true});writeFileSync(join(results,entry.file),entry.xml);}
+ writeFileSync(join(results,"index.json"),JSON.stringify(row.index));
+ expect(run("tests","--dir",results).code).toBe(0);
+ expect(run("tests","--dir",results,"--require").code).toBe(1);
+ expect(run("tests","--dir",join(root,"missing")).out).toContain("no test results were exported");
+ expect(run("tests","--dir",join(root,"missing"),"--require").code).toBe(1);
+ const located=file("located",decorate(fixture.statuses[0]!.expected)),absent=file("absent",decorate({...fixture.statuses[2]!.expected}));
+ expect(run("cache-directory","--status",located).out).toBe(`${fixture.statuses[0]!.expected.directory}\n`);
+ expect(run("cache-directory","--status",absent).out).toBe("\n");
+ expect(run("proof","--tool","bazel").code).toBe(2);
+ expect(run("proof","--tool","maven").code).toBe(2);
+ expect(run("plan","--bogus","x").code).toBe(2);
+ expect(run("cache-delta","--tool").code).toBe(2);
+ expect(runCiReportV1(["tests","--dir",root],{SEMIO_LANGUAGE:"fr"},()=>{})).toBe(2);
+ expect(run("nothing").code).toBe(2);
+ expect(run().code).toBe(0);
+ expect(run("--help").code).toBe(0);
+});
+
+const repositoryRoot=(()=>{
+ let path=import.meta.dir;
+ while(!existsSync(join(path,".github","workflows","build-system.yml"))){const parent=dirname(path);if(parent===path)throw Error("repository root with .github/workflows/build-system.yml required");path=parent;}
+ return path;
+})();
+const workflowText=readFileSync(join(repositoryRoot,".github","workflows","build-system.yml"),"utf8");
+const workflow=parseYaml(workflowText) as {on:Record<string,unknown>;permissions:Record<string,string>;concurrency:{group:string;"cancel-in-progress":string};env:Record<string,string>;jobs:Record<string,{name?:string;needs?:string|string[];"runs-on"?:string;"timeout-minutes"?:number;env?:Record<string,string>;strategy?:{matrix:{include:Record<string,string>[]}};steps:Step[];outputs?:Record<string,string>}>};
+type Step={id?:string;name?:string;if?:string|boolean;uses?:string;with?:Record<string,string>;run?:string;shell?:string;env?:Record<string,string>;"continue-on-error"?:boolean};
+const actions=Object.fromEntries(["repo-launcher","cache-proof"].map(name=>[name,parseYaml(readFileSync(join(repositoryRoot,".github","actions",name,"action.yml"),"utf8")) as {runs:{steps:Step[]}}]));
+
+type Scalar=string|number|boolean|null|undefined;
+type Context=Record<string,unknown>;
+
+function tokenize(source:string):string[]{
+ const tokens:string[]=[];
+ const pattern=/\s*('(?:[^']|'')*'|[0-9]+(?:\.[0-9]+)?|[A-Za-z_][A-Za-z0-9_-]*|&&|\|\||==|!=|<=|>=|[()!<>.,\[\]*])/guy;
+ let rest=0;
+ for(let match=pattern.exec(source);match!==null;match=pattern.exec(source)){tokens.push(match[1]!);rest=pattern.lastIndex;}
+ if(source.slice(rest).trim()!=="")throw Error(`Unsupported expression: ${source}`);
+ return tokens;
+}
+
+const truthy=(value:unknown)=>!(value===null||value===undefined||value===""||value===0||value===false);
+const numeric=(value:unknown)=>value===null||value===undefined||value===""?0:typeof value==="boolean"?Number(value):Number(value);
+function looseEquals(a:unknown,b:unknown):boolean{
+ if(typeof a==="string"&&typeof b==="string")return a.toLowerCase()===b.toLowerCase();
+ return numeric(a)===numeric(b);
+}
+const text=(value:unknown):string=>value===null||value===undefined?"":typeof value==="object"?JSON.stringify(value):String(value);
+
+function evaluate(source:string,context:Context):unknown{
+ const tokens=tokenize(source);let position=0;
+ const peek=()=>tokens[position],take=()=>tokens[position++]!;
+ const functions:Record<string,(...args:unknown[])=>unknown>={
+  format:(pattern,...values)=>text(pattern).replace(/\{(\d+)\}/gu,(_,index)=>text(values[Number(index)])),
+  success:()=>(context.job as {status:string}).status==="success",failure:()=>(context.job as {status:string}).status==="failure",always:()=>true,cancelled:()=>(context.job as {status:string}).status==="cancelled",
+  hashFiles:(...patterns)=>`hash(${patterns.map(text).join(",")})`,fromJSON:value=>JSON.parse(text(value)),toJSON:value=>JSON.stringify(value),
+  contains:(a,b)=>text(a).toLowerCase().includes(text(b).toLowerCase()),startsWith:(a,b)=>text(a).toLowerCase().startsWith(text(b).toLowerCase()),endsWith:(a,b)=>text(a).toLowerCase().endsWith(text(b).toLowerCase()),join:(a,b)=>(a as unknown[]).join(text(b??","))
+ };
+ const or=():unknown=>{let left=and();while(peek()==="||"){take();const right=and();left=truthy(left)?left:right;}return left;};
+ const and=():unknown=>{let left=comparison();while(peek()==="&&"){take();const right=comparison();left=truthy(left)?right:left;}return left;};
+ const comparison=():unknown=>{
+  const left=unary(),operator=peek();
+  if(operator===undefined||!["==","!=","<",">","<=",">="].includes(operator))return left;
+  take();const right=unary();
+  switch(operator){case "==":return looseEquals(left,right);case "!=":return !looseEquals(left,right);case "<":return numeric(left)<numeric(right);case ">":return numeric(left)>numeric(right);case "<=":return numeric(left)<=numeric(right);default:return numeric(left)>=numeric(right);}
+ };
+ const unary=():unknown=>{if(peek()==="!"){take();return !truthy(unary());}return primary();};
+ const primary=():unknown=>{
+  const token=take();
+  if(token==="("){const value=or();if(take()!==")")throw Error(`Missing parenthesis: ${source}`);return value;}
+  if(token.startsWith("'"))return token.slice(1,-1).replace(/''/gu,"'");
+  if(/^[0-9]/u.test(token))return Number(token);
+  if(token==="true")return true;if(token==="false")return false;if(token==="null")return null;
+  if(peek()==="("){
+   take();const args:unknown[]=[];
+   while(peek()!==")"){args.push(or());if(peek()===",")take();}
+   take();const fn=functions[token];if(fn===undefined)throw Error(`Unsupported function ${token}`);return fn(...args);
+  }
+  let value:unknown=context[token];
+  while(peek()==="."||peek()==="["){
+   const key=take()==="."?take():(()=>{const inner=or();take();return text(inner);})();
+   value=value===null||value===undefined?undefined:(value as Record<string,unknown>)[key];
+  }
+  return value===undefined?null:value;
+ };
+ const value=or();
+ if(position!==tokens.length)throw Error(`Unsupported expression: ${source}`);
+ return value;
+}
+
+const interpolate=(value:string,context:Context):string=>value.replace(/\$\{\{([\s\S]*?)\}\}/gu,(_,expression:string)=>text(evaluate(expression.trim(),context)));
+const condition=(value:string|boolean|undefined,context:Context):boolean=>{
+ if(value===undefined)return truthy(evaluate("success()",context));
+ if(typeof value==="boolean")return value;
+ const match=/^\s*\$\{\{([\s\S]*)\}\}\s*$/u.exec(value);
+ return truthy(evaluate((match?match[1]!:value).trim(),context));
+};
+
+type Scenario=(typeof fixture.workflow)[number];
+function bash(script:string,environment:Record<string,string>,cwd?:string):{status:number|null;output:Record<string,string>;environmentFile:Record<string,string>}{
+ const root=directory("bash"),outputFile=join(root,"output"),environmentFile=join(root,"env");
+ writeFileSync(outputFile,"");writeFileSync(environmentFile,"");
+ const result=spawnSync("bash",["-eo","pipefail","-c",script],{cwd,env:{PATH:process.env.PATH??"",HOME:process.env.HOME??"",GITHUB_OUTPUT:outputFile,GITHUB_ENV:environmentFile,GITHUB_STEP_SUMMARY:join(root,"summary"),RUNNER_TEMP:root,...environment},encoding:"utf8"});
+ const parse=(path:string)=>Object.fromEntries(readFileSync(path,"utf8").split("\n").filter(Boolean).map(line=>{const at=line.indexOf("=");return [line.slice(0,at),line.slice(at+1)];}));
+ return {status:result.status,output:parse(outputFile),environmentFile:parse(environmentFile)};
+}
+
+function contextOf(scenario:Scenario):Context{
+ return {github:scenario.github,vars:new Proxy(scenario.vars,{get:(target,key)=>(target as Record<string,string>)[key as string]??""}),secrets:new Proxy(scenario.secrets,{get:(target,key)=>(target as Record<string,string>)[key as string]??""}),inputs:scenario.inputs,runner:{os:"Linux",arch:"X64",temp:"/tmp/r"},needs:{},matrix:{},steps:{},env:{},job:{status:"success"}};
+}
+
+function resolveEnvironment(scenario:Scenario):Record<string,string>{
+ const context=contextOf(scenario),resolved:Record<string,string>={};
+ for(const [name,value] of Object.entries(workflow.env)){resolved[name]=interpolate(String(value),{...context,env:resolved});}
+ return resolved;
+}
+
+function planStep(scenario:Scenario){
+ const step=workflow.jobs.plan!.steps.find(candidate=>candidate.id==="range")!;
+ const environment=Object.fromEntries(Object.entries(step.env!).map(([name,value])=>[name,interpolate(value,contextOf(scenario))]));
+ return bash(step.run!,environment).output.range;
+}
+
+test("workflow dry-run render: remote cache access, token, range and cache steps follow the event",()=>{
+ const rendered:Record<string,unknown>[]=[];
+ for(const scenario of fixture.workflow){
+  const environment=resolveEnvironment(scenario);
+  for(const [name,expected] of Object.entries(scenario.expected.env))expect(environment[name],`${scenario.name} ${name}`).toBe(expected);
+  const range=planStep(scenario);
+  expect(range,`${scenario.name} range`).toBe(scenario.expected.range);
+  const group=interpolate(workflow.concurrency.group,contextOf(scenario)),cancel=interpolate(workflow.concurrency["cancel-in-progress"],contextOf(scenario));
+  expect(group,`${scenario.name} group`).toBe(scenario.expected.group);expect(cancel,`${scenario.name} cancel`).toBe(scenario.expected.cancel);
+  const ran:Record<string,boolean>={};
+  for(const [jobName,job] of Object.entries(workflow.jobs)){
+   const context={...contextOf(scenario),env:{...environment,...Object.fromEntries(Object.entries(job.env??{}).map(([key,value])=>[key,interpolate(String(value),{...contextOf(scenario),env:environment,needs:{plan:{outputs:{range}}}})]))},needs:{plan:{outputs:{range}}},matrix:job.strategy?.matrix.include[0]??{},steps:{"bun-store":{outputs:{"cache-hit":""}},"cache-dir":{outputs:{directory:"/cache"}}}} as Context;
+   for(const step of job.steps)if(step.name!==undefined&&/^(Save|Restore)/u.test(step.name)){
+    const key=`${jobName}: ${step.name}`;ran[key]=condition(step.if,context);
+   }
+  }
+  for(const [key,value] of Object.entries(scenario.expected.steps))expect(ran[key],`${scenario.name} ${key}`).toBe(value);
+  rendered.push({scenario:scenario.name,remoteCache:{endpoint:environment.SEMIO_REMOTE_CACHE_ENDPOINT,access:environment.SEMIO_REMOTE_CACHE_ACCESS,upload:environment.SEMIO_REMOTE_CACHE_UPLOAD,token:environment.SEMIO_REMOTE_CACHE_TOKEN?"set":"empty"},tool:environment.BUILD_TOOL,targets:environment.TARGETS,range,group,cancelInProgress:cancel,restoreAndSaveSteps:ran});
+ }
+ if(process.env.SEMIO_CI_RENDER==="1")console.log(JSON.stringify(rendered,null,1));
+});
+
+test("the plan script falls back to every project when the base revision is not in the clone",()=>{
+ const step=workflow.jobs.affected!.steps.find(candidate=>candidate.name?.startsWith("Use the whole workspace"))!;
+ expect(workflow.jobs.parity!.steps.find(candidate=>candidate.name?.startsWith("Use the whole workspace"))!.run).toBe(step.run);
+ const repository=directory("git"),git=(...args:string[])=>spawnSync("git",["-c","commit.gpgsign=false","-c","core.hooksPath=/dev/null","-c","init.defaultBranch=main",...args],{cwd:repository,encoding:"utf8",env:{...process.env,GIT_AUTHOR_NAME:"t",GIT_AUTHOR_EMAIL:"t@t",GIT_COMMITTER_NAME:"t",GIT_COMMITTER_EMAIL:"t@t"}});
+ git("init","-q");writeFileSync(join(repository,"a"),"1");git("add","a");git("commit","-q","-m","one");
+ const head=git("rev-parse","HEAD").stdout.trim();
+ expect(bash(step.run!,{PLAN_RANGE:`--base=${head} --head=HEAD`},repository).environmentFile.AFFECTED_RANGE).toBe(`--base=${head} --head=HEAD`);
+ expect(bash(step.run!,{PLAN_RANGE:`--base=${"1".repeat(40)} --head=HEAD`},repository).environmentFile.AFFECTED_RANGE).toBe("--all");
+ expect(bash(step.run!,{PLAN_RANGE:"--all"},repository).environmentFile.AFFECTED_RANGE).toBe("--all");
+});
+
+test("the workflow sets the language explicitly and exercises German once",()=>{
+ expect(workflow.env.SEMIO_LANGUAGE).toBe("en");
+ const german=workflow.jobs.smoke!.steps.filter(step=>step.env?.SEMIO_LANGUAGE==="de");
+ expect(german.length).toBe(1);
+ expect(german[0]!.run).toContain("repo preflight");
+});
+
+test("every action is pinned to a full commit SHA and every job is bounded",()=>{
+ const uses=[...workflow.jobs.plan!.steps,...Object.values(workflow.jobs).flatMap(job=>job.steps),...Object.values(actions).flatMap(action=>action.runs.steps)].map(step=>step.uses).filter((value):value is string=>value!==undefined);
+ expect(uses.length).toBeGreaterThan(8);
+ for(const value of uses)expect(value.startsWith("./.github/actions/")||/^[\w.-]+\/[\w./-]+@[0-9a-f]{40}$/u.test(value),value).toBe(true);
+ for(const [name,job] of Object.entries(workflow.jobs))expect(job["timeout-minutes"],name).toBeGreaterThan(0);
+ expect(workflow.permissions).toEqual({contents:"read"});
+ for(const name of ["smoke","affected"])expect(workflow.jobs[name]!.strategy!.matrix.include.map(row=>row.name),name).toEqual(["linux","macos","windows"]);
+ expect(workflow.jobs.parity!.needs).toEqual(["plan","smoke"]);
+ expect(workflow.jobs.affected!.needs).toEqual(["plan","smoke"]);
+});
+
+test("the workflow calls only the neutral entry and the report; no step names an implementation or an installer",()=>{
+ const scripts=[...Object.entries(workflow.jobs).flatMap(([job,value])=>value.steps.map(step=>({where:`${job}/${step.name??step.id}`,step}))),...Object.entries(actions).flatMap(([name,action])=>action.runs.steps.map(step=>({where:`${name}/${step.name}`,step})))].filter(entry=>entry.step.run!==undefined);
+ expect(scripts.length).toBeGreaterThan(20);
+ const forbidden=/\b(nx|nxl|bazel|bazelisk|cargo|rustc|rustup|sudo|apt-get|apt|brew|npm|npx|yarn|pnpm|pip|go)\b/u;
+ for(const {where,step} of scripts){
+  if(step.shell==="pwsh")continue;
+  const code=step.run!.split("\n").filter(line=>!line.trim().startsWith("#")).join("\n").replace(/--tool=(?:nx|bazel)\b/gu,"--tool=TOOL").replace(/package\.json/gu,"manifest");
+  expect(forbidden.test(code),`${where}: ${code.match(forbidden)?.[0]}`).toBe(false);
+  for(const line of code.split("\n"))if(/^\s*bun\s/u.test(line))expect(/^\s*bun\s+(?:repo\s|"\$CI_REPORT"\s|--version)/u.test(line),`${where}: ${line}`).toBe(true);
+ }
+ const tools=scripts.flatMap(entry=>[...entry.step.run!.matchAll(/--tool=(\w+|"\$\w+")/gu)].map(match=>match[1]));
+ expect(new Set(tools)).toEqual(new Set(["nx","bazel",'"$BUILD_TOOL"','"$TOOL"']));
+});
+
+test("the launcher action holds no runtime pin and the registry pins the Bun of the package manager field",()=>{
+ const action=readFileSync(join(repositoryRoot,".github","actions","repo-launcher","action.yml"),"utf8"),registry=JSON.parse(readFileSync(join(repositoryRoot,"\u{1F9F0}\uFE0Fframework","\u{1F6CD}\uFE0Fproducts","\u{1F991}\uFE0Frepo","\u{1F528}\uFE0Fmodules","\u{1F680}\uFE0Flauncher","\u{1F5C2}\uFE0Fregistry","\u{1F523}\uFE0F.json"),"utf8"))as{runtimes:{bun:{version:string;distributions:{archive:string;sha256:string}[]}}};
+ expect(action.match(/[0-9a-f]{64}/gu)).toBeNull();expect(action).not.toMatch(/bun-version/u);expect(workflowText).not.toMatch(/BUN_VERSION|actions\/bun-repo/u);
+ expect(registry.runtimes.bun.version).toBe(String(JSON.parse(readFileSync(join(repositoryRoot,"package.json"),"utf8")).packageManager).replace("bun@",""));
+ expect(registry.runtimes.bun.version).toBe(fixture.pins.bun);
+ const pinned=new Map(registry.runtimes.bun.distributions.map(row=>[row.archive,row.sha256]));
+ for(const [asset,hash] of Object.entries(fixture.pins.assets)){const archive=asset+".zip";if(pinned.has(archive))expect(pinned.get(archive),asset).toBe(hash);}
+ expect(pinned.get("bun-darwin-aarch64.zip")).toBe(fixture.pins.assets["bun-darwin-aarch64"]);
+ expect(String(workflow.env.NODE_VERSION)).toBe(String(JSON.parse(readFileSync(join(repositoryRoot,"package.json"),"utf8")).engines.node));
+});

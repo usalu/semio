@@ -1,0 +1,1141 @@
+{
+  "version": 1,
+  "labels": {
+    "title": {
+      "en": "Concurrent session conformance",
+      "de": "Konformität gleichzeitiger Sitzungen"
+    },
+    "workload": {
+      "en": "workload",
+      "de": "Arbeitslast"
+    },
+    "tool": {
+      "en": "tool",
+      "de": "Werkzeug"
+    },
+    "session": {
+      "en": "session",
+      "de": "Sitzung"
+    },
+    "group": {
+      "en": "group",
+      "de": "Gruppe"
+    },
+    "step": {
+      "en": "step",
+      "de": "Schritt"
+    },
+    "wall": {
+      "en": "wall ms",
+      "de": "Dauer ms"
+    },
+    "wait": {
+      "en": "wait ms",
+      "de": "Wartezeit ms"
+    },
+    "executed": {
+      "en": "executed",
+      "de": "ausgeführt"
+    },
+    "restored": {
+      "en": "restored",
+      "de": "wiederhergestellt"
+    },
+    "cached": {
+      "en": "cached",
+      "de": "im Cache"
+    },
+    "steps": {
+      "en": "steps",
+      "de": "Schritte"
+    },
+    "concurrent": {
+      "en": "concurrent",
+      "de": "gleichzeitig"
+    },
+    "serial": {
+      "en": "serial",
+      "de": "seriell"
+    },
+    "leases": {
+      "en": "lock waits",
+      "de": "Sperrwartezeiten"
+    },
+    "lease": {
+      "en": "lock",
+      "de": "Sperre"
+    },
+    "count": {
+      "en": "waits",
+      "de": "Wartevorgänge"
+    },
+    "total": {
+      "en": "total ms",
+      "de": "gesamt ms"
+    },
+    "maximum": {
+      "en": "longest ms",
+      "de": "längste ms"
+    },
+    "relation": {
+      "en": "relation",
+      "de": "Beziehung"
+    },
+    "related": {
+      "en": "related",
+      "de": "verwandt"
+    },
+    "unrelated": {
+      "en": "unrelated",
+      "de": "fremd"
+    },
+    "external": {
+      "en": "external",
+      "de": "extern"
+    },
+    "holders": {
+      "en": "holders",
+      "de": "Halter"
+    },
+    "rules": {
+      "en": "pass criteria",
+      "de": "Abnahmekriterien"
+    },
+    "rule": {
+      "en": "criterion",
+      "de": "Kriterium"
+    },
+    "status": {
+      "en": "status",
+      "de": "Status"
+    },
+    "pass": {
+      "en": "pass",
+      "de": "bestanden"
+    },
+    "fail": {
+      "en": "fail",
+      "de": "fehlgeschlagen"
+    },
+    "skip": {
+      "en": "skipped",
+      "de": "übersprungen"
+    },
+    "value": {
+      "en": "value",
+      "de": "Wert"
+    },
+    "limit": {
+      "en": "limit",
+      "de": "Grenze"
+    },
+    "owner": {
+      "en": "executor",
+      "de": "Executor"
+    },
+    "acceptance": {
+      "en": "acceptance by executor",
+      "de": "Abnahme je Executor"
+    },
+    "summary": {
+      "en": "summary",
+      "de": "Zusammenfassung"
+    },
+    "criteria": {
+      "en": "criteria",
+      "de": "Kriterien"
+    },
+    "sessions": {
+      "en": "sessions",
+      "de": "Sitzungen"
+    },
+    "milliseconds": {
+      "en": "milliseconds",
+      "de": "Millisekunden"
+    },
+    "area": {
+      "en": "area",
+      "de": "Bereich"
+    },
+    "setup": {
+      "en": "setup",
+      "de": "Vorbereitung"
+    },
+    "progress": {
+      "en": "done",
+      "de": "fertig"
+    },
+    "cancelled": {
+      "en": "cancelled",
+      "de": "abgebrochen"
+    },
+    "unproven": {
+      "en": "unproven",
+      "de": "unbewiesen"
+    },
+    "exact": {
+      "en": "exact",
+      "de": "exakt"
+    },
+    "window": {
+      "en": "by time window",
+      "de": "nach Zeitfenster"
+    },
+    "ambiguous": {
+      "en": "ambiguous",
+      "de": "mehrdeutig"
+    },
+    "none": {
+      "en": "none",
+      "de": "keine"
+    },
+    "start": {
+      "en": "start ms",
+      "de": "Beginn ms"
+    },
+    "end": {
+      "en": "end ms",
+      "de": "Ende ms"
+    },
+    "exit": {
+      "en": "exit",
+      "de": "Ende"
+    },
+    "target": {
+      "en": "target",
+      "de": "Ziel"
+    },
+    "phase": {
+      "en": "phase",
+      "de": "Phase"
+    },
+    "list": {
+      "en": "workloads",
+      "de": "Arbeitslasten"
+    },
+    "uncached": {
+      "en": "uncached tasks",
+      "de": "nicht zwischengespeicherte Tasks"
+    },
+    "independent": {
+      "en": "independent",
+      "de": "unabhängig"
+    },
+    "refused": {
+      "en": "refused",
+      "de": "abgelehnt"
+    }
+  },
+  "classes": [
+    {
+      "id": "graph-facts",
+      "label": {
+        "en": "Graph facts",
+        "de": "Graph-Fakten"
+      },
+      "scope": "workspace",
+      "patterns": [
+        "^repository-graph-facts:"
+      ]
+    },
+    {
+      "id": "dependency-image",
+      "label": {
+        "en": "Dependency image",
+        "de": "Abhängigkeits-Image"
+      },
+      "scope": "workspace",
+      "patterns": [
+        "^native-fixed-image:"
+      ]
+    },
+    {
+      "id": "bazel-server",
+      "label": {
+        "en": "Bazel server",
+        "de": "Bazel-Server"
+      },
+      "scope": "workspace",
+      "patterns": [
+        "^bazel:server$",
+        "^bazel-server"
+      ]
+    },
+    {
+      "id": "cargo-units",
+      "label": {
+        "en": "Cargo units",
+        "de": "Cargo-Einheiten"
+      },
+      "scope": "workspace",
+      "patterns": [
+        "^cargo:",
+        "^cargo-unit"
+      ]
+    },
+    {
+      "id": "capacity-admission",
+      "label": {
+        "en": "Capacity admission",
+        "de": "Kapazitätszulassung"
+      },
+      "scope": "host",
+      "patterns": [
+        "^semio\\.host\\.capacity/",
+        "^compiler:capacity"
+      ]
+    },
+    {
+      "id": "toolchain-acquisition",
+      "label": {
+        "en": "Toolchain acquisition",
+        "de": "Werkzeugbeschaffung"
+      },
+      "scope": "host",
+      "patterns": [
+        "^/.*/(?:bun|bazel|cargo|node)(?:\\.exe)?$",
+        "^[A-Za-z]:[\\\\/].*(?:bun|bazel|cargo|node)(?:\\.exe)?$"
+      ]
+    },
+    {
+      "id": "other",
+      "label": {
+        "en": "Other lock",
+        "de": "Andere Sperre"
+      },
+      "scope": "workspace",
+      "patterns": [
+        "^"
+      ]
+    }
+  ],
+  "criteria": [
+    {
+      "id": "default",
+      "title": {
+        "en": "Isolation, sharing and correctness",
+        "de": "Isolation, gemeinsame Nutzung und Korrektheit"
+      },
+      "rules": [
+        {
+          "id": "all-steps-succeed",
+          "kind": "no-failure",
+          "title": {
+            "en": "Every step exits successfully",
+            "de": "Jeder Schritt endet erfolgreich"
+          },
+          "owners": [
+            "conc-graph",
+            "conc-bazel",
+            "conc-cargo",
+            "conc-deps",
+            "conc-leases"
+          ]
+        },
+        {
+          "id": "outputs-equal-serial",
+          "kind": "serial-equal",
+          "compare": [
+            "exit",
+            "outputs",
+            "stdout"
+          ],
+          "title": {
+            "en": "Every session's results equal a serial run",
+            "de": "Die Ergebnisse jeder Sitzung entsprechen einem seriellen Lauf"
+          },
+          "owners": [
+            "conc-graph",
+            "conc-bazel",
+            "conc-cargo",
+            "conc-deps",
+            "conc-leases"
+          ]
+        },
+        {
+          "id": "graph-facts-unrelated-wait",
+          "kind": "max-wait",
+          "title": {
+            "en": "No wait above 5 s on the graph facts for an unrelated project",
+            "de": "Keine Wartezeit über 5 s auf die Graph-Fakten für ein fremdes Projekt"
+          },
+          "owners": [
+            "conc-graph"
+          ],
+          "classes": [
+            "graph-facts"
+          ],
+          "relation": "unrelated",
+          "maximumMilliseconds": 5000
+        },
+        {
+          "id": "dependency-image-unrelated-wait",
+          "kind": "max-wait",
+          "title": {
+            "en": "No wait above 5 s on the dependency image for an unrelated project",
+            "de": "Keine Wartezeit über 5 s auf das Abhängigkeits-Image für ein fremdes Projekt"
+          },
+          "owners": [
+            "conc-deps"
+          ],
+          "classes": [
+            "dependency-image"
+          ],
+          "relation": "unrelated",
+          "maximumMilliseconds": 5000
+        },
+        {
+          "id": "bazel-server-unrelated-wait",
+          "kind": "max-wait",
+          "title": {
+            "en": "No wait above 5 s on the Bazel server for an unrelated project",
+            "de": "Keine Wartezeit über 5 s auf den Bazel-Server für ein fremdes Projekt"
+          },
+          "owners": [
+            "conc-bazel"
+          ],
+          "classes": [
+            "bazel-server"
+          ],
+          "relation": "unrelated",
+          "maximumMilliseconds": 5000
+        },
+        {
+          "id": "cargo-units-unrelated-wait",
+          "kind": "max-wait",
+          "title": {
+            "en": "No wait above 5 s on Cargo units for an unrelated project",
+            "de": "Keine Wartezeit über 5 s auf Cargo-Einheiten für ein fremdes Projekt"
+          },
+          "owners": [
+            "conc-cargo"
+          ],
+          "classes": [
+            "cargo-units"
+          ],
+          "relation": "unrelated",
+          "maximumMilliseconds": 5000
+        },
+        {
+          "id": "capacity-admission-unrelated-wait",
+          "kind": "max-wait",
+          "title": {
+            "en": "No wait above 5 s for capacity admission behind an unrelated project",
+            "de": "Keine Wartezeit über 5 s auf die Kapazitätszulassung hinter einem fremden Projekt"
+          },
+          "owners": [
+            "conc-leases"
+          ],
+          "classes": [
+            "capacity-admission"
+          ],
+          "relation": "unrelated",
+          "maximumMilliseconds": 5000
+        },
+        {
+          "id": "other-unrelated-wait",
+          "kind": "max-wait",
+          "title": {
+            "en": "No wait above 5 s on any other lock for an unrelated project",
+            "de": "Keine Wartezeit über 5 s auf eine andere Sperre für ein fremdes Projekt"
+          },
+          "owners": [
+            "conc-leases"
+          ],
+          "classes": [
+            "toolchain-acquisition",
+            "other"
+          ],
+          "relation": "unrelated",
+          "maximumMilliseconds": 5000
+        },
+        {
+          "id": "second-session-zero-actions",
+          "kind": "executes-once",
+          "sessions": [
+            "*"
+          ],
+          "excludeUncached": true,
+          "title": {
+            "en": "A task executes in one session only; the others execute no action for it",
+            "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+          },
+          "owners": [
+            "conc-bazel",
+            "conc-graph"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "warm",
+      "title": {
+        "en": "Isolation and a fully warm cache",
+        "de": "Isolation und ein vollständig warmer Cache"
+      },
+      "rules": [
+        {
+          "id": "all-steps-succeed",
+          "kind": "no-failure",
+          "title": {
+            "en": "Every step exits successfully",
+            "de": "Jeder Schritt endet erfolgreich"
+          },
+          "owners": [
+            "conc-graph",
+            "conc-bazel",
+            "conc-cargo",
+            "conc-deps",
+            "conc-leases"
+          ]
+        },
+        {
+          "id": "outputs-equal-serial",
+          "kind": "serial-equal",
+          "compare": [
+            "exit",
+            "outputs",
+            "stdout"
+          ],
+          "title": {
+            "en": "Every session's results equal a serial run",
+            "de": "Die Ergebnisse jeder Sitzung entsprechen einem seriellen Lauf"
+          },
+          "owners": [
+            "conc-graph",
+            "conc-bazel",
+            "conc-cargo",
+            "conc-deps",
+            "conc-leases"
+          ]
+        },
+        {
+          "id": "graph-facts-unrelated-wait",
+          "kind": "max-wait",
+          "title": {
+            "en": "No wait above 5 s on the graph facts for an unrelated project",
+            "de": "Keine Wartezeit über 5 s auf die Graph-Fakten für ein fremdes Projekt"
+          },
+          "owners": [
+            "conc-graph"
+          ],
+          "classes": [
+            "graph-facts"
+          ],
+          "relation": "unrelated",
+          "maximumMilliseconds": 5000
+        },
+        {
+          "id": "dependency-image-unrelated-wait",
+          "kind": "max-wait",
+          "title": {
+            "en": "No wait above 5 s on the dependency image for an unrelated project",
+            "de": "Keine Wartezeit über 5 s auf das Abhängigkeits-Image für ein fremdes Projekt"
+          },
+          "owners": [
+            "conc-deps"
+          ],
+          "classes": [
+            "dependency-image"
+          ],
+          "relation": "unrelated",
+          "maximumMilliseconds": 5000
+        },
+        {
+          "id": "bazel-server-unrelated-wait",
+          "kind": "max-wait",
+          "title": {
+            "en": "No wait above 5 s on the Bazel server for an unrelated project",
+            "de": "Keine Wartezeit über 5 s auf den Bazel-Server für ein fremdes Projekt"
+          },
+          "owners": [
+            "conc-bazel"
+          ],
+          "classes": [
+            "bazel-server"
+          ],
+          "relation": "unrelated",
+          "maximumMilliseconds": 5000
+        },
+        {
+          "id": "cargo-units-unrelated-wait",
+          "kind": "max-wait",
+          "title": {
+            "en": "No wait above 5 s on Cargo units for an unrelated project",
+            "de": "Keine Wartezeit über 5 s auf Cargo-Einheiten für ein fremdes Projekt"
+          },
+          "owners": [
+            "conc-cargo"
+          ],
+          "classes": [
+            "cargo-units"
+          ],
+          "relation": "unrelated",
+          "maximumMilliseconds": 5000
+        },
+        {
+          "id": "capacity-admission-unrelated-wait",
+          "kind": "max-wait",
+          "title": {
+            "en": "No wait above 5 s for capacity admission behind an unrelated project",
+            "de": "Keine Wartezeit über 5 s auf die Kapazitätszulassung hinter einem fremden Projekt"
+          },
+          "owners": [
+            "conc-leases"
+          ],
+          "classes": [
+            "capacity-admission"
+          ],
+          "relation": "unrelated",
+          "maximumMilliseconds": 5000
+        },
+        {
+          "id": "other-unrelated-wait",
+          "kind": "max-wait",
+          "title": {
+            "en": "No wait above 5 s on any other lock for an unrelated project",
+            "de": "Keine Wartezeit über 5 s auf eine andere Sperre für ein fremdes Projekt"
+          },
+          "owners": [
+            "conc-leases"
+          ],
+          "classes": [
+            "toolchain-acquisition",
+            "other"
+          ],
+          "relation": "unrelated",
+          "maximumMilliseconds": 5000
+        },
+        {
+          "id": "warm-sessions-zero-actions",
+          "kind": "max-executed",
+          "sessions": [
+            "*"
+          ],
+          "maximum": 0,
+          "excludeUncached": true,
+          "title": {
+            "en": "A warm target executes no cached action in any session",
+            "de": "Ein warmes Ziel führt in keiner Sitzung eine zwischenspeicherbare Aktion aus"
+          },
+          "owners": [
+            "conc-bazel",
+            "conc-graph"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "smoke",
+      "title": {
+        "en": "Successful steps and serial equality only",
+        "de": "Nur erfolgreiche Schritte und serielle Gleichheit"
+      },
+      "rules": [
+        {
+          "id": "all-steps-succeed",
+          "kind": "no-failure",
+          "title": {
+            "en": "Every step exits successfully",
+            "de": "Jeder Schritt endet erfolgreich"
+          },
+          "owners": [
+            "conc-graph",
+            "conc-bazel",
+            "conc-cargo",
+            "conc-deps",
+            "conc-leases"
+          ]
+        },
+        {
+          "id": "outputs-equal-serial",
+          "kind": "serial-equal",
+          "compare": [
+            "exit",
+            "outputs",
+            "stdout"
+          ],
+          "title": {
+            "en": "Every session's results equal a serial run",
+            "de": "Die Ergebnisse jeder Sitzung entsprechen einem seriellen Lauf"
+          },
+          "owners": [
+            "conc-graph",
+            "conc-bazel",
+            "conc-cargo",
+            "conc-deps",
+            "conc-leases"
+          ]
+        }
+      ]
+    }
+  ],
+  "workloads": [
+    {
+      "id": "disjoint-projects",
+      "title": {
+        "en": "Agents edit and build disjoint projects",
+        "de": "Agenten ändern und bauen getrennte Projekte"
+      },
+      "summary": {
+        "en": "A TypeScript package, a Rust crate, a Go module and a schema crate are edited, built and tested at the same time; nobody may wait for an unrelated project and every result equals a serial run.",
+        "de": "Ein TypeScript-Paket, eine Rust-Crate, ein Go-Modul und eine Schema-Crate werden gleichzeitig geändert, gebaut und getestet; niemand darf auf ein fremdes Projekt warten und jedes Ergebnis entspricht einem seriellen Lauf."
+      },
+      "criteria": "default",
+      "setup": [],
+      "sessions": [
+        {
+          "id": "ts",
+          "area": "disjoint-ts",
+          "group": "g-ts",
+          "steps": [
+            {
+              "kind": "edit",
+              "file": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📜️script.ts",
+              "op": "comment",
+              "language": "ts"
+            },
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/framework-graph:test"
+            },
+            {
+              "kind": "revert"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/framework-graph:test"
+            }
+          ]
+        },
+        {
+          "id": "rust",
+          "area": "disjoint-rust",
+          "group": "g-rust",
+          "steps": [
+            {
+              "kind": "edit",
+              "file": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/🦀️.rs",
+              "op": "comment",
+              "language": "rs"
+            },
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "run",
+              "target": "@teaching/proctor:build"
+            },
+            {
+              "kind": "revert"
+            },
+            {
+              "kind": "run",
+              "target": "@teaching/proctor:build"
+            }
+          ]
+        },
+        {
+          "id": "go",
+          "area": "disjoint-go",
+          "group": "g-go",
+          "steps": [
+            {
+              "kind": "edit",
+              "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🐹️go/🐹️.go",
+              "op": "comment",
+              "language": "go"
+            },
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/repo-move-go:test"
+            },
+            {
+              "kind": "revert"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/repo-move-go:test"
+            }
+          ]
+        },
+        {
+          "id": "schema",
+          "area": "disjoint-schema",
+          "group": "g-schema",
+          "steps": [
+            {
+              "kind": "edit",
+              "file": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+              "op": "comment",
+              "language": "rs"
+            },
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/framework-schema:test-subset-contract"
+            },
+            {
+              "kind": "revert"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/framework-schema:test-subset-contract"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "same-target-cold",
+      "title": {
+        "en": "Agents build the same changed target at once",
+        "de": "Agenten bauen gleichzeitig dasselbe geänderte Ziel"
+      },
+      "summary": {
+        "en": "One edit makes every cache stale; three agents then build the same target together. Each task may execute once, the other agents must find its result.",
+        "de": "Eine Änderung macht jeden Cache ungültig; drei Agenten bauen dann zusammen dasselbe Ziel. Jeder Task darf einmal laufen, die anderen Agenten müssen sein Ergebnis finden."
+      },
+      "criteria": "default",
+      "setup": [
+        {
+          "kind": "edit",
+          "file": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📜️script.ts",
+          "op": "private-body",
+          "language": "ts"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "a",
+          "area": "same-target",
+          "group": "g-same",
+          "delayMilliseconds": 0,
+          "steps": [
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/framework-graph:test"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "area": "same-target",
+          "group": "g-same",
+          "delayMilliseconds": 250,
+          "steps": [
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/framework-graph:test"
+            }
+          ]
+        },
+        {
+          "id": "c",
+          "area": "same-target",
+          "group": "g-same",
+          "delayMilliseconds": 500,
+          "steps": [
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/framework-graph:test"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "warm-fanout",
+      "title": {
+        "en": "Agents build a warm target at once",
+        "de": "Agenten bauen gleichzeitig ein warmes Ziel"
+      },
+      "summary": {
+        "en": "The target is built once before; three agents then build it together and every one must find everything in the cache.",
+        "de": "Das Ziel wird vorab einmal gebaut; drei Agenten bauen es dann zusammen und jeder muss alles im Cache finden."
+      },
+      "criteria": "warm",
+      "setup": [
+        {
+          "kind": "run",
+          "target": "@semio-tech/framework-graph:test"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "a",
+          "area": "same-target",
+          "group": "g-same",
+          "delayMilliseconds": 0,
+          "steps": [
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/framework-graph:test"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "area": "same-target",
+          "group": "g-same",
+          "delayMilliseconds": 0,
+          "steps": [
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/framework-graph:test"
+            }
+          ]
+        },
+        {
+          "id": "c",
+          "area": "same-target",
+          "group": "g-same",
+          "delayMilliseconds": 0,
+          "steps": [
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/framework-graph:test"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "readers-while-edit",
+      "title": {
+        "en": "Agents read the graph while another agent edits",
+        "de": "Agenten lesen den Graphen, während ein anderer Agent ändert"
+      },
+      "summary": {
+        "en": "One agent edits a source and lists the projects while two others list the projects too: a source edit must not make unrelated readers wait for a rebuild of the graph facts.",
+        "de": "Ein Agent ändert eine Quelle und listet die Projekte, zwei weitere listen die Projekte ebenfalls: eine Quelländerung darf unbeteiligte Leser nicht auf den Neuaufbau der Graph-Fakten warten lassen."
+      },
+      "criteria": "default",
+      "setup": [],
+      "sessions": [
+        {
+          "id": "editor",
+          "area": "editor",
+          "group": "g-editor",
+          "steps": [
+            {
+              "kind": "edit",
+              "file": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📜️script.ts",
+              "op": "comment",
+              "language": "ts"
+            },
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "repo",
+              "args": [
+                "show",
+                "projects"
+              ],
+              "stdout": true
+            },
+            {
+              "kind": "revert"
+            },
+            {
+              "kind": "repo",
+              "args": [
+                "show",
+                "projects"
+              ],
+              "stdout": true
+            }
+          ]
+        },
+        {
+          "id": "reader-a",
+          "area": "reader",
+          "group": "g-reader-a",
+          "steps": [
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "repo",
+              "args": [
+                "show",
+                "projects"
+              ],
+              "stdout": true
+            }
+          ]
+        },
+        {
+          "id": "reader-b",
+          "area": "reader",
+          "group": "g-reader-b",
+          "steps": [
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "repo",
+              "args": [
+                "show",
+                "projects"
+              ],
+              "stdout": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "product-agents",
+      "title": {
+        "en": "Three agents edit and build the three products",
+        "de": "Drei Agenten ändern und bauen die drei Produkte"
+      },
+      "summary": {
+        "en": "The dashboard, the architecture course and print are built warm once, then three agents each change a source of one product and rebuild it together with the others; nobody may wait for an unrelated product and every result equals a serial run.",
+        "de": "Dashboard, Architekturkurs und Druck werden einmal warm gebaut, dann ändert je ein Agent eine Quelle eines Produkts und baut es zusammen mit den anderen neu; niemand darf auf ein fremdes Produkt warten und jedes Ergebnis entspricht einem seriellen Lauf."
+      },
+      "criteria": "default",
+      "setup": [
+        {
+          "kind": "run",
+          "target": "@semio-tech/repo-dashboard-rs:build"
+        },
+        {
+          "kind": "run",
+          "target": "@teaching/architecture-course:build"
+        },
+        {
+          "kind": "run",
+          "target": "@semio-tech/print:build"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "dashboard",
+          "area": "product-dashboard",
+          "group": "g-dashboard",
+          "steps": [
+            {
+              "kind": "edit",
+              "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🦀️.rs",
+              "op": "private-body",
+              "language": "rs"
+            },
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/repo-dashboard-rs:build"
+            },
+            {
+              "kind": "revert"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/repo-dashboard-rs:build"
+            }
+          ]
+        },
+        {
+          "id": "course",
+          "area": "product-course",
+          "group": "g-course",
+          "steps": [
+            {
+              "kind": "edit",
+              "file": "🎓️teaching/🏛️architecture/📚️course/📚️course/🟦️.ts",
+              "op": "private-body",
+              "language": "ts"
+            },
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "run",
+              "target": "@teaching/architecture-course:build"
+            },
+            {
+              "kind": "revert"
+            },
+            {
+              "kind": "run",
+              "target": "@teaching/architecture-course:build"
+            }
+          ]
+        },
+        {
+          "id": "print",
+          "area": "product-print",
+          "group": "g-print",
+          "steps": [
+            {
+              "kind": "edit",
+              "file": "🧰️framework/🛍️products/📓️print/📦️artifacts/📖️pdf/🟦️.ts",
+              "op": "private-body",
+              "language": "ts"
+            },
+            {
+              "kind": "barrier",
+              "id": "go"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/print:build"
+            },
+            {
+              "kind": "revert"
+            },
+            {
+              "kind": "run",
+              "target": "@semio-tech/print:build"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

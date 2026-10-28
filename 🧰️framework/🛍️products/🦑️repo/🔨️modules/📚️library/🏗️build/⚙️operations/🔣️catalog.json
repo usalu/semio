@@ -22,7 +22,7 @@
       "valueName": "{backends}",
       "description": {
         "en": "Select the build implementation; otherwise SEMIO_BUILD_TOOL, then the policy default (nx).",
-        "de": "Wählt die Build-Implementierung; sonst SEMIO_BUILD_TOOL, dann der Standard der Policy (nx)."
+        "de": "Wählt die Build-Implementierung; sonst SEMIO_BUILD_TOOL, dann der Standard der Richtlinie (nx)."
       }
     },
     {
@@ -31,7 +31,7 @@
       "valueName": "on|off",
       "description": {
         "en": "Run actions in persistent workers (on) or in one process each (off); otherwise SEMIO_BUILD_WORKERS, then the worker policy of the build policy.",
-        "de": "Führt Aktionen in persistenten Workern (on) oder je in einem eigenen Prozess (off) aus; sonst SEMIO_BUILD_WORKERS, dann die Worker-Policy der Build-Policy."
+        "de": "Führt Aktionen in persistenten Workern (on) oder je in einem eigenen Prozess (off) aus; sonst SEMIO_BUILD_WORKERS, dann die Worker-Richtlinie der Build-Richtlinie."
       }
     },
     {"name": "--service", "value": "required", "valueName": "auto|off|require", "description": {"en": "Use the resident service (auto: when one answers), never use it (off), or fail when none answers (require); otherwise SEMIO_BUILD_SERVICE, then auto.", "de": "Nutzt den residenten Dienst (auto: wenn einer antwortet), nutzt ihn nie (off) oder schlägt fehl, wenn keiner antwortet (require); sonst SEMIO_BUILD_SERVICE, dann auto."}},
@@ -176,7 +176,7 @@
     {
       "name": "--json",
       "value": "none",
-      "operations": ["graph", "show", "incremental", "concurrency", "bench", "capacity", "leases", "cache", "remote-cache", "doctor", "tools", "conformance", "units", "service", "session"],
+      "operations": ["graph", "show", "incremental", "concurrency", "bench", "capacity", "fleet", "leases", "cache", "remote-cache", "doctor", "tools", "conformance", "units", "service", "session"],
       "description": { "en": "Print lists as JSON instead of one entry per line.", "de": "Gibt Listen als JSON statt eines Eintrags je Zeile aus." }
     },
     {
@@ -184,13 +184,20 @@
       "value": "required",
       "valueName": "id[,id]",
       "operations": ["cache"],
-      "description": { "en": "cache status|gc: limit the report or the collection to these ledger areas (or retired, undeclared).", "de": "cache status|gc: beschränkt Bericht oder Einsammeln auf diese Bereiche des Verzeichnisses (oder retired, undeclared)." }
+      "description": { "en": "cache status|gc: limit the report or the collection to these ledger areas (or retired, undeclared); cache dedupe: limit the search to these places (bazel-outputs, bazel-workspaces, vite-products, tools).", "de": "cache status|gc: beschränkt Bericht oder Einsammeln auf diese Bereiche der Bilanz (oder retired, undeclared); cache dedupe: beschränkt die Suche auf diese Orte (bazel-outputs, bazel-workspaces, vite-products, tools)." }
+    },
+    {
+      "name": "--budget",
+      "value": "required",
+      "valueName": "size",
+      "operations": ["cache"],
+      "description": { "en": "cache status|gc: the disk budget of this machine for this call (an integer or a number with KiB, MiB, GiB, TiB, e.g. 40GiB); it beats the SEMIO_CACHE_BUDGET_BYTES variable, which beats the machine file in the repository cache root, which beats the declared default.", "de": "cache status|gc: das Platzbudget dieses Rechners für diesen Aufruf (eine ganze Zahl oder eine Zahl mit KiB, MiB, GiB, TiB, z. B. 40GiB); es schlägt die Variable SEMIO_CACHE_BUDGET_BYTES, diese die Rechnerdatei im Repository-Cache-Wurzelordner, diese den deklarierten Standard." }
     },
     {
       "name": "--deep",
       "value": "none",
       "operations": ["cache"],
-      "description": { "en": "cache verify (required): read every indexed optional graph leaf and every closure inventory again and compare it with its recorded hash. cache status: walk every cache home now (with progress, cancellable) and record the sizes, instead of reading statfs and the size ledger.", "de": "cache verify (erforderlich): liest jedes indexierte optionale Graph-Blatt und jedes Closure-Inventar erneut und vergleicht es mit seinem erfassten Hash. cache status: läuft jetzt jede Cache-Heimat ab (mit Fortschritt, abbrechbar) und erfasst die Größen, statt statfs und das Größenverzeichnis zu lesen." }
+      "description": { "en": "cache verify (required): read every indexed optional graph leaf and every closure inventory again and compare it with its recorded hash. cache status: walk every cache home now (with progress, cancellable) and record the sizes, instead of reading statfs and the size ledger.", "de": "cache verify (erforderlich): liest jedes indexierte optionale Graph-Blatt und jedes Abschluss-Inventar erneut und vergleicht es mit seinem erfassten Hash. cache status: läuft jetzt jede Cache-Heimat ab (mit Fortschritt, abbrechbar) und erfasst die Größen, statt statfs und die Größenbilanz zu lesen." }
     },
     {
       "name": "--tasks",
@@ -212,8 +219,8 @@
       "name": "--scenario",
       "value": "required",
       "valueName": "ids|all",
-      "operations": ["incremental", "conformance"],
-      "description": { "en": "incremental plan|run: comma list of scenario ids, or all.", "de": "incremental plan|run: Kommaliste von Szenario-IDs oder all." }
+      "operations": ["incremental", "conformance", "bench"],
+      "description": { "en": "incremental plan|run and bench acceptance: comma list of scenario ids, or all (bench acceptance also takes kind:<noop|peer|edit> and product:<course|print|dashboard>; without --in-place, all leaves the scenarios that edit files out).", "de": "incremental plan|run und bench acceptance: Kommaliste von Szenario-IDs oder all (bench acceptance nimmt auch kind:<noop|peer|edit> und product:<course|print|dashboard>; ohne --in-place lässt all die Szenarien aus, die Dateien ändern)." }
     },
     {
       "name": "--implementations",
@@ -298,6 +305,13 @@
       "description": { "en": "bench run: store the report as the baseline of later runs.", "de": "bench run: speichert den Bericht als Referenz für spätere Läufe." }
     },
     {
+      "name": "--history",
+      "value": "required",
+      "valueName": "folder",
+      "operations": ["bench"],
+      "description": { "en": "bench run: store the report in this folder as <UTC start>-<host class>.json and compare with the newest earlier report of this host class when no --baseline is given; bench compare: compare the two newest reports of this host class.", "de": "bench run: legt den Bericht in diesem Ordner als <UTC-Start>-<Rechnerklasse>.json ab und vergleicht ohne --baseline mit dem jüngsten früheren Bericht dieser Rechnerklasse; bench compare: vergleicht die beiden jüngsten Berichte dieser Rechnerklasse." }
+    },
+    {
       "name": "--current",
       "value": "required",
       "valueName": "path",
@@ -309,7 +323,7 @@
       "value": "required",
       "valueName": "path",
       "operations": ["bench"],
-      "description": { "en": "bench run|compare: also write the report as a markdown file.", "de": "bench run|compare: schreibt den Bericht zusätzlich als Markdown-Datei." }
+      "description": { "en": "bench run|compare|acceptance: also write the report as a markdown file.", "de": "bench run|compare|acceptance: schreibt den Bericht zusätzlich als Markdown-Datei." }
     },
     {
       "name": "--max-load",
@@ -323,6 +337,12 @@
       "value": "none",
       "operations": ["bench"],
       "description": { "en": "bench run: discard and prepare the disposable copy first, so that the cold graph probe starts from a copy without graph.", "de": "bench run: verwirft die Wegwerf-Kopie und bereitet sie zuerst vor, damit die Messung des kalten Graphen von einer Kopie ohne Graph startet." }
+    },
+    {
+      "name": "--in-place",
+      "value": "none",
+      "operations": ["bench"],
+      "description": { "en": "bench acceptance: run the scenarios that edit and restore source files in this checkout (a CI runner, a private clone); nobody else may edit it meanwhile.", "de": "bench acceptance: führt die Szenarien, die Quelldateien ändern und zurücksetzen, in diesem Checkout aus (CI-Runner, private Kopie); währenddessen darf ihn niemand sonst bearbeiten." }
     },
     {
       "name": "--scope",
@@ -350,7 +370,7 @@
       "value": "separate",
       "valueName": "port",
       "operations": ["remote-cache"],
-      "description": { "en": "remote-cache serve: port to listen on; 0 picks a free port (default from the build policy).", "de": "remote-cache serve: Port, auf dem gelauscht wird; 0 wählt einen freien Port (Standard aus der Build-Policy)." }
+      "description": { "en": "remote-cache serve: port to listen on; 0 picks a free port (default from the build policy).", "de": "remote-cache serve: Port, auf dem gelauscht wird; 0 wählt einen freien Port (Standard aus der Build-Richtlinie)." }
     },
     {
       "name": "--host",
@@ -433,7 +453,7 @@
       "value": "separate",
       "valueName": "n",
       "operations": ["remote-execution"],
-      "description": { "en": "remote-execution serve|workers: actions one worker runs at the same time (default: one per CPU).", "de": "remote-execution serve|workers: Actions, die ein Worker gleichzeitig ausführt (Standard: eine je CPU)." }
+      "description": { "en": "remote-execution serve|workers: actions one worker runs at the same time (default: one per CPU).", "de": "remote-execution serve|workers: Aktionen, die ein Worker gleichzeitig ausführt (Standard: eine je CPU)." }
     },
     {
       "name": "--advertise",
@@ -447,7 +467,7 @@
       "value": "separate",
       "valueName": "auto|darwin-sandbox|linux-sandbox|isolated-root",
       "operations": ["remote-execution"],
-      "description": { "en": "remote-execution serve|workers: how workers confine an action (default: the first available strategy of the hermetic table for this host).", "de": "remote-execution serve|workers: wie Worker eine Action einsperren (Standard: die erste verfügbare Strategie der Hermetic-Tabelle für diesen Host)." }
+      "description": { "en": "remote-execution serve|workers: how workers confine an action (default: the first available strategy of the hermetic table for this host).", "de": "remote-execution serve|workers: wie Worker eine Aktion einsperren (Standard: die erste verfügbare Strategie der Hermetic-Tabelle für diesen Rechner)." }
     },
     {
       "name": "--work-directory",
@@ -524,6 +544,13 @@
       "valueName": "path",
       "operations": ["leases"],
       "description": { "en": "leases status: the lease directory to inspect (default: the checkout's lease store).", "de": "leases status: das zu untersuchende Lease-Verzeichnis (Standard: der Lease-Speicher dieses Checkouts)." }
+    },
+    {
+      "name": "--limit",
+      "value": "required",
+      "valueName": "n",
+      "operations": ["fleet"],
+      "description": { "en": "fleet status: how many runs the text output lists (default: 20, the JSON output always lists all).", "de": "fleet status: wie viele Läufe die Textausgabe auflistet (Standard: 20, die JSON-Ausgabe listet immer alle)." }
     },
     {
       "name": "--violations",
@@ -830,7 +857,7 @@
       "name": "exec",
       "requires": "dependencies",
       "synopsis": "exec --projects=<projects> -- <command>",
-      "summary": { "en": "Run a command once per selected project, in the project root.", "de": "Führt einen Befehl einmal je gewähltem Projekt im Projektstamm aus." },
+      "summary": { "en": "Run a command once per selected project, in the project root.", "de": "Führt einen Befehl einmal je gewähltem Projekt in der Projektwurzel aus." },
       "dryRun": true,
       "progress": true,
       "cancellable": true,
@@ -838,7 +865,7 @@
       "examples": [
         {
           "command": "repo exec --projects=@semio-tech/repo-client -- repo tools exec bun -- test",
-          "description": { "en": "Run one command inside one project root.", "de": "Führt einen Befehl im Stamm eines Projekts aus." }
+          "description": { "en": "Run one command inside one project root.", "de": "Führt einen Befehl in der Wurzel eines Projekts aus." }
         },
         { "command": "repo exec --projects=tag:rust --dry-run", "description": { "en": "List the repo-exec tasks and run nothing.", "de": "Listet die repo-exec-Tasks auf und führt nichts aus." } }
       ],
@@ -945,7 +972,7 @@
         {
           "name": "exec",
           "synopsis": "tools exec [--cwd=<path>] [--light] <tool|command> -- <arguments>", "flags": ["--cwd", "--light"],
-          "summary": { "en": "Run a registered tool with the sanitized environment of the registry, under machine capacity unless it is light, with progress and cancellation. <tool> is a registry id (cargo, node, uv) or an executable a registered tool owns (rustc, rustfmt, python3, bunx).", "de": "Führt ein registriertes Werkzeug mit der bereinigten Umgebung der Registratur aus, unter Rechnerkapazität, sofern es nicht leicht ist, mit Fortschritt und Abbruch. <tool> ist eine Id der Registratur (cargo, node, uv) oder ein Programm, das ein registriertes Werkzeug besitzt (rustc, rustfmt, python3, bunx)." }
+          "summary": { "en": "Run a registered tool with the sanitized environment of the registry, under machine capacity unless it is light, with progress and cancellation. <tool> is a registry id (cargo, node, uv) or an executable a registered tool owns (rustc, rustfmt, python3, bunx).", "de": "Führt ein registriertes Werkzeug mit der bereinigten Umgebung der Registratur aus, unter Rechnerkapazität, sofern es nicht leicht ist, mit Fortschritt und Abbruch. <tool> ist eine ID der Registratur (cargo, node, uv) oder ein Programm, das ein registriertes Werkzeug besitzt (rustc, rustfmt, python3, bunx)." }
         }
       ],
       "flags": ["--json", "--cwd", "--light"],
@@ -1013,7 +1040,7 @@
       ],
       "subcommands": [
         { "name": "list", "synopsis": "concurrency list", "flags": [], "summary": { "en": "List the authored workloads with their simulated agents.", "de": "Listet die verfassten Arbeitslasten mit ihren simulierten Agenten auf." } },
-        { "name": "plan", "synopsis": "concurrency plan [--workloads=<ids|all>] [--sessions=<n>]", "flags": ["--workloads", "--sessions", "--implementations", "--root", "--json"], "summary": { "en": "Print the closure of every target, the tasks that always execute and whether the agents are independent.", "de": "Gibt die Hülle jedes Ziels, die immer ausgeführten Tasks und die Unabhängigkeit der Agenten aus." } },
+        { "name": "plan", "synopsis": "concurrency plan [--workloads=<ids|all>] [--sessions=<n>]", "flags": ["--workloads", "--sessions", "--implementations", "--root", "--json"], "summary": { "en": "Print the closure of every target, the tasks that always execute and whether the agents are independent.", "de": "Gibt den Abschluss jedes Ziels, die immer ausgeführten Tasks und die Unabhängigkeit der Agenten aus." } },
         { "name": "run", "synopsis": "concurrency run [--workloads=<ids|all>] [--sessions=<n>] [--criteria=<id>]", "summary": { "en": "Run the agents at the same time and once more in a row, measure waits per lock, cache hits and correctness, and judge the pass criteria.", "de": "Führt die Agenten gleichzeitig und danach nacheinander aus, misst Wartezeiten je Sperre, Cache-Treffer und Korrektheit und beurteilt die Abnahmekriterien." } }
       ],
       "flags": ["--workloads", "--sessions", "--criteria", "--implementations", "--root", "--file", "--json"],
@@ -1026,7 +1053,7 @@
       "name": "conformance",
       "requires": "dependencies",
       "synopsis": "conformance list|plan|run",
-      "summary": { "en": "Judge every build backend against the same language-agnostic scenarios: plan, run, cache hit and miss, outputs, test results, affected, cancellation, progress, concurrency and remote cache.", "de": "Beurteilt jedes Build-Backend an denselben sprachunabhängigen Szenarien: Plan, Lauf, Cache-Treffer und -Fehlgriff, Ausgaben, Testergebnisse, Betroffene, Abbruch, Fortschritt, Nebenläufigkeit und Remote-Cache." },
+      "summary": { "en": "Judge every build backend against the same language-agnostic scenarios: plan, run, cache hit and miss, outputs, test results, affected, cancellation, progress, concurrency and remote cache.", "de": "Beurteilt jedes Build-Backend an denselben sprachunabhängigen Szenarien: Plan, Lauf, Cache-Treffer und -Fehltreffer, Ausgaben, Testergebnisse, Betroffene, Abbruch, Fortschritt, Nebenläufigkeit und Remote-Cache." },
       "dryRun": false,
       "progress": true,
       "cancellable": true,
@@ -1062,7 +1089,7 @@
         },
         {
           "en": "Bazel lists only the iface.json of interface dependencies, so an unchanged interface cuts off by itself. Go libraries compile directly against dependency export data, so Bazel cuts off at an unchanged export interface; binaries, tests, cgo packages and .NET projects read dependency sources (policy or unit marker bazel: sources) and rebuild with them; the cutoff then happens in units run.",
-          "de": "Bazel führt nur die iface.json der Schnittstellen-Abhängigkeiten auf, daher schneidet eine unveränderte Schnittstelle von selbst ab. Go-Bibliotheken werden direkt gegen die Export-Daten ihrer Abhängigkeiten kompiliert, daher schneidet Bazel bei unveränderter Export-Schnittstelle ab; Binärdateien, Tests, cgo-Pakete und .NET-Projekte lesen Quellen ihrer Abhängigkeiten (Policy oder Einheitenmarkierung bazel: sources) und bauen damit neu; der Abschnitt passiert dann in units run."
+          "de": "Bazel führt nur die iface.json der Schnittstellen-Abhängigkeiten auf, daher schneidet eine unveränderte Schnittstelle von selbst ab. Go-Bibliotheken werden direkt gegen die Export-Daten ihrer Abhängigkeiten kompiliert, daher schneidet Bazel bei unveränderter Export-Schnittstelle ab; Binärdateien, Tests, cgo-Pakete und .NET-Projekte lesen Quellen ihrer Abhängigkeiten (Richtlinie oder Einheitenmarkierung bazel: sources) und bauen damit neu; der Abschnitt passiert dann in units run."
         }
       ],
       "subcommands": [
@@ -1169,24 +1196,26 @@
     {
       "name": "bench",
       "requires": "none",
-      "synopsis": "bench list|run|compare",
-      "summary": { "en": "Measure the performance objectives (hot-cache latency, edit to rebuild per language, cache hit rate, graph, memory, concurrent agents) in a disposable checkout copy, judge them against the SLO table and compare with a stored baseline.", "de": "Misst die Leistungsziele (Latenz bei heißem Cache, Änderung bis Neubau je Sprache, Cache-Trefferquote, Graph, Speicher, gleichzeitige Agenten) in einer Wegwerf-Kopie des Checkouts, beurteilt sie anhand der Zieltabelle und vergleicht mit einer gespeicherten Referenz." },
+      "synopsis": "bench list|run|compare|acceptance",
+      "summary": { "en": "Measure the performance objectives (hot-cache latency, edit to rebuild per language, cache hit rate, graph, memory, concurrent agents) in a disposable checkout copy, judge them against the SLO table and compare with a stored baseline; `bench acceptance` holds the acceptance scenarios of the three products (hot no-op, peer edit, one-line edit with byte-exact revert) on the checkout itself to declared budgets.", "de": "Misst die Leistungsziele (Latenz bei heißem Cache, Änderung bis Neubau je Sprache, Cache-Trefferquote, Graph, Speicher, gleichzeitige Agenten) in einer Wegwerf-Kopie des Checkouts, beurteilt sie anhand der Zieltabelle und vergleicht mit einer gespeicherten Referenz; `bench acceptance` hält die Abnahmeszenarien der drei Produkte (heißer Leerlauf, fremde Änderung, einzeilige Änderung mit byteidentischer Rücknahme) im Checkout selbst an deklarierte Budgets." },
       "dryRun": false,
       "progress": true,
       "cancellable": true,
       "notes": [
-        {"en": "Prepare the disposable copy first with `repo incremental prepare` (or pass --prepare).", "de": "Zuerst die Wegwerf-Kopie mit `repo incremental prepare` vorbereiten (oder --prepare übergeben)."},
+        {"en": "bench list|run|compare: prepare the disposable copy first with `repo incremental prepare` (or pass --prepare); bench acceptance runs on the checkout itself and needs no copy.", "de": "bench list|run|compare: zuerst die Wegwerf-Kopie mit `repo incremental prepare` vorbereiten (oder --prepare übergeben); bench acceptance läuft im Checkout selbst und braucht keine Kopie."},
         {"en": "Only blocking objectives make the exit code fail; advisory objectives, recorded values and everything unproven are reported.", "de": "Nur verbindliche Ziele lassen den Exit-Code fehlschlagen; beratende Ziele, erfasste Werte und alles Unbewiesene werden berichtet."}
       ],
       "subcommands": [
         { "name": "list", "synopsis": "bench list", "flags": ["--json"], "summary": { "en": "List the objectives with their probe, goal, gate and enforcement.", "de": "Listet die Ziele mit Messung, Zielwert, Schwelle und Durchsetzung auf." } },
-        { "name": "run", "synopsis": "bench run [--slo=<ids|all>] [--runs=<n>] [--baseline=<report>] [--save-baseline=<report>] [--prepare]", "flags": ["--slo", "--runs", "--baseline", "--save-baseline", "--markdown", "--max-load", "--prepare", "--implementations", "--root", "--file", "--json"], "summary": { "en": "Measure the selected objectives with every implementation, print percentiles, host load and verdicts, and compare with the baseline.", "de": "Misst die gewählten Ziele mit jeder Implementierung, gibt Perzentile, Rechnerlast und Urteile aus und vergleicht mit der Referenz." } },
-        { "name": "compare", "synopsis": "bench compare --current=<report> --baseline=<report>", "flags": ["--current", "--baseline", "--markdown", "--json"], "summary": { "en": "Compare two stored reports of the same host class and name every regression beyond the tolerance of its objective.", "de": "Vergleicht zwei gespeicherte Berichte derselben Rechnerklasse und nennt jede Verschlechterung über die Toleranz ihres Ziels hinaus." } }
+        { "name": "run", "synopsis": "bench run [--slo=<ids|all>] [--runs=<n>] [--baseline=<report>] [--save-baseline=<report>] [--history=<folder>] [--prepare]", "flags": ["--slo", "--runs", "--baseline", "--save-baseline", "--history", "--markdown", "--max-load", "--prepare", "--implementations", "--root", "--file", "--json"], "summary": { "en": "Measure the selected objectives with every implementation, print percentiles, host load and verdicts, and compare with the baseline.", "de": "Misst die gewählten Ziele mit jeder Implementierung, gibt Perzentile, Rechnerlast und Urteile aus und vergleicht mit der Referenz." } },
+        { "name": "compare", "synopsis": "bench compare --current=<report> --baseline=<report> | --history=<folder>", "flags": ["--current", "--baseline", "--history", "--markdown", "--json"], "summary": { "en": "Compare two stored reports of the same host class, name every regression beyond the tolerance of its objective and every blocking objective over its budget.", "de": "Vergleicht zwei gespeicherte Berichte derselben Rechnerklasse und nennt jede Verschlechterung über die Toleranz ihres Ziels sowie jedes verbindliche Ziel über dem Budget." } },
+        { "name": "acceptance", "synopsis": "bench acceptance [--scenario=<ids|all>] [--in-place]", "flags": ["--scenario", "--in-place", "--markdown", "--file", "--json"], "summary": { "en": "Run the acceptance scenarios (hot no-op three times, peer edit, one-line edit with byte-exact revert) of the course, print and the dashboard through the official route on this checkout, with the exact wall clock and the physical footprint, judge them against the declared budgets and fail when a blocking budget is broken.", "de": "Führt die Abnahmeszenarien (heißer Leerlauf dreimal, fremde Änderung, einzeilige Änderung mit byteidentischer Rücknahme) von Kurs, Druck und Dashboard über den offiziellen Weg in diesem Checkout aus, mit exakter Laufzeit und physischem Speicherbedarf, beurteilt sie anhand der deklarierten Budgets und schlägt fehl, wenn ein verbindliches Budget verletzt ist." } }
       ],
-      "flags": ["--slo", "--runs", "--baseline", "--save-baseline", "--current", "--markdown", "--max-load", "--prepare", "--implementations", "--root", "--file", "--json"],
+      "flags": ["--slo", "--runs", "--baseline", "--save-baseline", "--current", "--history", "--markdown", "--max-load", "--prepare", "--implementations", "--root", "--file", "--json", "--scenario", "--in-place"],
       "examples": [
         { "command": "repo bench list", "description": { "en": "List the performance objectives.", "de": "Listet die Leistungsziele auf." } },
-        { "command": "repo bench run --slo=kind:noop --baseline=bench-baseline.json", "description": { "en": "Measure the warm no-op objectives and compare with the stored baseline.", "de": "Misst die Ziele für den warmen Leerlauf und vergleicht mit der gespeicherten Referenz." } }
+        { "command": "repo bench run --slo=kind:noop --baseline=bench-baseline.json", "description": { "en": "Measure the warm no-op objectives and compare with the stored baseline.", "de": "Misst die Ziele für den warmen Leerlauf und vergleicht mit der gespeicherten Referenz." } },
+        { "command": "repo bench acceptance --in-place --file=acceptance.json --markdown=acceptance.md", "description": { "en": "Run every acceptance scenario on this checkout and fail when a blocking budget is broken.", "de": "Führt jedes Abnahmeszenario in diesem Checkout aus und schlägt fehl, wenn ein verbindliches Budget verletzt ist." } }
       ]
     },
     {
@@ -1243,7 +1272,7 @@
     {
       "name": "cache",
       "requires": "none",
-      "synopsis": "cache status|gc|verify|clear",
+      "synopsis": "cache status|gc|verify|dedupe|clear",
       "summary": {
         "en": "Show and collect every declared cache home with its budget, or clear the selected tool's local task cache.",
         "de": "Zeigt und sammelt jede deklarierte Cache-Heimat mit ihrem Budget oder leert den lokalen Task-Cache des gewählten Werkzeugs."
@@ -1254,7 +1283,7 @@
       "subcommands": [
         {
           "name": "status",
-          "synopsis": "cache status [--deep|--tasks]", "flags": ["--area", "--json", "--deep", "--tasks"],
+          "synopsis": "cache status [--deep|--tasks] [--budget=<size>]", "flags": ["--area", "--budget", "--json", "--deep", "--tasks"],
           "summary": {
             "en": "Print the cache ledger without walking any tree (statfs of each partition plus the recorded sizes; --deep walks everything): every partition and area with its use against its budget, the retired roots and undeclared entries still on disk; with --tasks, a CacheStatus of the selected tool instead.",
             "de": "Gibt die Cache-Bilanz ohne Ablaufen eines Baums aus (statfs jeder Partition plus erfasste Größen; --deep läuft alles ab): jede Partition und jeden Bereich mit Nutzung gegen Budget, die noch vorhandenen stillgelegten Wurzeln und nicht deklarierten Einträge; mit --tasks stattdessen einen CacheStatus des gewählten Werkzeugs."
@@ -1262,7 +1291,7 @@
         },
         {
           "name": "gc",
-          "synopsis": "cache gc [--dry-run] [--area=<id>]", "flags": ["--dry-run", "--area", "--json"],
+          "synopsis": "cache gc [--dry-run] [--area=<id>] [--budget=<size>]", "flags": ["--dry-run", "--area", "--budget", "--json"],
           "summary": {
             "en": "Collect the cache: remove retired roots, units unused longer than their area allows and the oldest units beyond an area's budget, and entries nobody declared; it never removes a unit that is held by a lease or used recently.",
             "de": "Sammelt den Cache ein: entfernt stillgelegte Wurzeln, länger als erlaubt unbenutzte Einheiten, die ältesten Einheiten über dem Budget eines Bereichs und nicht deklarierte Einträge; eine durch Lease gehaltene oder kürzlich benutzte Einheit wird nie entfernt."
@@ -1274,27 +1303,41 @@
           "flags": ["--deep", "--json"],
           "summary": {
             "en": "Read every indexed optional graph leaf and every content-addressed closure inventory again, compare each with its recorded hash or name and print what differs; the only command that re-reads leaf bytes after they were written.",
-            "de": "Liest jedes indexierte optionale Graph-Blatt und jedes inhaltsadressierte Closure-Inventar erneut, vergleicht es mit seinem erfassten Hash oder Namen und gibt aus, was abweicht; der einzige Befehl, der Blattbytes nach dem Schreiben erneut liest."
+            "de": "Liest jedes indexierte optionale Graph-Blatt und jedes inhaltsadressierte Abschluss-Inventar erneut, vergleicht es mit seinem erfassten Hash oder Namen und gibt aus, was abweicht; der einzige Befehl, der Blattbytes nach dem Schreiben erneut liest."
+          }
+        },
+        {
+          "name": "dedupe",
+          "synopsis": "cache dedupe [--dry-run] [--area=<id>]", "flags": ["--dry-run", "--area", "--json"],
+          "summary": {
+            "en": "Find identical large files inside the declared places of the machine budget (Bazel outputs and workspaces, Vite products, tool installs) and replace each duplicate by a copy-on-write clone of one canonical file, freeing the duplicated blocks; files used recently, with volatile names or changed meanwhile are kept, a volume that cannot clone keeps everything, and --dry-run only reports what would be freed at most.",
+            "de": "Findet identische große Dateien in den deklarierten Orten des Rechner-Budgets (Bazel-Ergebnisse und -Workspaces, Vite-Produkte, Werkzeug-Installationen) und ersetzt jedes Duplikat durch einen Copy-on-Write-Klon einer kanonischen Datei, wodurch die doppelten Blöcke frei werden; kürzlich benutzte, flüchtig benannte oder zwischenzeitlich geänderte Dateien bleiben, ein Volume ohne Klon-Unterstützung behält alles, und --dry-run meldet nur, was höchstens frei würde."
           }
         },
         { "name": "clear", "synopsis": "cache clear", "flags": [], "summary": { "en": "Empty the cache and print a CacheClear.", "de": "Leert den Cache und gibt einen CacheClear aus." } }
       ],
-      "flags": ["--json", "--dry-run", "--area", "--deep", "--tasks"],
+      "flags": ["--json", "--dry-run", "--area", "--budget", "--deep", "--tasks"],
       "examples": [
         { "command": "repo cache status", "description": { "en": "Show every cache partition and area against its budget.", "de": "Zeigt jede Cache-Partition und jeden Bereich gegen sein Budget." } },
-        { "command": "repo cache gc --dry-run", "description": { "en": "List what the collector would remove.", "de": "Listet auf, was der Einsammler entfernen würde." } },
-        { "command": "repo cache verify --deep", "description": { "en": "Re-read and re-hash every indexed optional graph leaf and closure inventory.", "de": "Liest und hasht jedes indexierte optionale Graph-Blatt und Closure-Inventar erneut." } },
+        { "command": "repo cache gc --dry-run", "description": { "en": "List what the collector would remove.", "de": "Listet auf, was der Sammler entfernen würde." } },
+        { "command": "repo cache gc --dry-run --budget=40GiB", "description": { "en": "Plan the collection against a 40 GiB machine budget.", "de": "Plant das Einsammeln gegen ein Rechner-Budget von 40 GiB." } },
+        { "command": "repo cache dedupe --dry-run", "description": { "en": "Report how many bytes identical files waste in the declared places.", "de": "Meldet, wie viele Bytes identische Dateien in den deklarierten Orten verschwenden." } },
+        { "command": "repo cache verify --deep", "description": { "en": "Re-read and re-hash every indexed optional graph leaf and closure inventory.", "de": "Liest und hasht jedes indexierte optionale Graph-Blatt und Abschluss-Inventar erneut." } },
         { "command": "repo cache status --tasks --tool=bazel", "description": { "en": "Show the Bazel disk cache and build activity.", "de": "Zeigt den Bazel-Disk-Cache und die Build-Aktivität." } },
         { "command": "repo cache clear", "description": { "en": "Empty the Nx task cache.", "de": "Leert den Nx-Task-Cache." } }
       ],
       "notes": [
         {
           "en": "status prints the cache ledger of schema cache-ledger: every fixed partition, every area inside a partition, every area of the repository and native cache roots with its declared budget, and what is retired or undeclared; gc collects it. Both publish progress, stop at the next checkpoint when the caller cancels, and take no lease for the report, which reads statfs of each partition and the size ledger that gc and --deep write and walks no tree unless --deep is given; gc takes an area's lease exclusively without waiting and never removes a unit whose SQLite lease file is locked, whose queue ticket belongs to a living process or that was used within the quiet time of its area. Areas kept by an owner (Nx at maxCacheSize, Cargo, Bazel, test evidence, the dashboard) are reported, not collected here.",
-          "de": "status gibt die Cache-Bilanz des Schemas cache-ledger aus: jede feste Partition, jeden Bereich innerhalb einer Partition, jeden Bereich der Repository- und nativen Cache-Wurzeln mit seinem deklarierten Budget sowie das, was stillgelegt oder nicht deklariert ist; gc sammelt es ein. Beide melden Fortschritt, halten am nächsten Prüfpunkt an, wenn der Aufrufer abbricht, und nehmen für den Bericht keine Lease, der statfs jeder Partition und das Größenverzeichnis liest, das gc und --deep schreiben, und keinen Baum abläuft, solange --deep nicht gegeben ist; gc nimmt die Lease eines Bereichs exklusiv ohne Warten und entfernt nie eine Einheit, deren SQLite-Lease-Datei gesperrt ist, deren Warteschlangenticket einem lebenden Prozess gehört oder die innerhalb der Ruhezeit ihres Bereichs benutzt wurde. Bereiche, die ein Verwalter hält (Nx bei maxCacheSize, Cargo, Bazel, Testnachweise, das Dashboard), werden gemeldet, nicht hier eingesammelt."
+          "de": "status gibt die Cache-Bilanz des Schemas cache-ledger aus: jede feste Partition, jeden Bereich innerhalb einer Partition, jeden Bereich der Repository- und nativen Cache-Wurzeln mit seinem deklarierten Budget sowie das, was stillgelegt oder nicht deklariert ist; gc sammelt es ein. Beide melden Fortschritt, halten am nächsten Prüfpunkt an, wenn der Aufrufer abbricht, und nehmen keine Lease für den Bericht, der statfs jeder Partition und die Größenbilanz liest, die gc und --deep schreiben, und keinen Baum abläuft, solange --deep nicht gegeben ist; gc nimmt die Lease eines Bereichs exklusiv ohne Warten und entfernt nie eine Einheit, deren SQLite-Lease-Datei gesperrt ist, deren Warteschlangenticket einem lebenden Prozess gehört oder die innerhalb der Ruhezeit ihres Bereichs benutzt wurde. Bereiche, die ein Verwalter hält (Nx bei maxCacheSize, Cargo, Bazel, Testnachweise, das Dashboard), werden gemeldet, nicht hier eingesammelt."
+        },
+        {
+          "en": "One machine disk budget governs every cache (schema machine-disk-budget): a total in bytes, 40 GiB by default and set per machine with --budget, the SEMIO_CACHE_BUDGET_BYTES variable or the file in the repository cache root, is shared out to the stores (the image partitions and everything loose) by weight with floors and a headroom per image. Stores are filled by weighted max-min fairness over what they hold, so a store below its fair share is never cut. status prints each store's quota, what must go and the image size that would fit; gc enforces the loose store's quota least recently used first, never touching a unit a live process holds or that was used recently, and leaves the images to their owners, whose free-space thresholds act once the images are recreated at the planned size.",
+          "de": "Ein Rechner-Platzbudget regelt jeden Cache (Schema machine-disk-budget): eine Gesamtsumme in Bytes, standardmäßig 40 GiB und je Rechner mit --budget, der Variable SEMIO_CACHE_BUDGET_BYTES oder der Datei im Repository-Cache-Wurzelordner gesetzt, wird nach Gewicht mit Untergrenzen und einem Spielraum je Image auf die Speicher (die Image-Partitionen und alles Lose) verteilt. Die Speicher werden nach gewichteter Max-Min-Fairness über das gefüllt, was sie halten, sodass ein Speicher unter seinem fairen Anteil nie gekürzt wird. status gibt je Speicher die Quote, das zu Entfernende und die passende Image-Größe aus; gc setzt die Quote des losen Speichers zuletzt Benutztes zuerst durch, ohne je eine Einheit anzufassen, die ein lebender Prozess hält oder die kürzlich benutzt wurde, und überlässt die Images ihren Verwaltern, deren Schwellen für freien Platz wirken, sobald die Images in der geplanten Größe neu angelegt werden."
         },
         {
           "en": "Optional graph caches are retired by an append-only member index per group (name, size, kind, stamp and the sha256 of every leaf, taken once when the leaf is written; the shared namespace and the generation documents keep one too) plus an lstat of each member, never by reading leaf bytes; gc indexes a group the index cannot vouch for before it may be retired, holding that group's non-blocking writer lease only while it appends rows, never while it reads leaves. verify --deep reads and hashes every indexed leaf and every closure inventory again and prints what differs, publishes progress and stops at the next checkpoint when the caller cancels.",
-          "de": "Optionale Graph-Caches werden über einen anhängenden Mitgliederindex je Gruppe (Name, Größe, Art, Stempel und sha256 jedes Blatts, einmalig beim Schreiben erfasst; der gemeinsame Namensraum und die Generationsdokumente führen ebenfalls einen) und ein lstat jedes Mitglieds stillgelegt, nie durch Lesen von Blattbytes; gc indexiert eine Gruppe, für die der Index nicht bürgen kann, bevor sie stillgelegt werden darf, und hält deren nichtblockierende Schreiber-Lease nur beim Anhängen von Zeilen, nie beim Lesen von Blättern. verify --deep liest und hasht jedes indexierte Blatt und jedes Closure-Inventar erneut und gibt aus, was abweicht, meldet Fortschritt und hält am nächsten Prüfpunkt an, wenn der Aufrufer abbricht."
+          "de": "Optionale Graph-Caches werden über einen anhängenden Mitgliederindex je Gruppe (Name, Größe, Art, Stempel und sha256 jedes Blatts, einmalig beim Schreiben erfasst; der gemeinsame Namensraum und die Generationsdokumente führen ebenfalls einen) und ein lstat jedes Mitglieds stillgelegt, nie durch Lesen von Blattbytes; gc indexiert eine Gruppe, für die der Index nicht bürgen kann, bevor sie stillgelegt werden darf, und hält deren nichtblockierende Schreiber-Lease nur beim Anhängen von Zeilen, nie beim Lesen von Blättern. verify --deep liest und hasht jedes indexierte Blatt und jedes Abschluss-Inventar erneut und gibt aus, was abweicht, meldet Fortschritt und hält am nächsten Prüfpunkt an, wenn der Aufrufer abbricht."
         },
         {
           "en": "status --tasks prints a CacheStatus, clear prints a CacheClear; both stop at the next checkpoint when the caller cancels and publish progress while walking or removing entries.",
@@ -1337,7 +1380,7 @@
           "synopsis": "remote-cache gc [--dry-run] [--json] [--directory <path>] [--max-bytes <n>]", "flags": ["--directory", "--max-bytes", "--dry-run", "--json"],
           "summary": {
             "en": "Collect the store from outside, also while a server runs: remove unusable action results, entries idle for too long and the least recently used entries beyond the bound; --dry-run only plans.",
-            "de": "Sammelt den Speicher von außen ein, auch während ein Server läuft: entfernt unbrauchbare Action-Ergebnisse, zu lange ungenutzte Einträge und die am längsten ungenutzten Einträge über der Grenze; --dry-run plant nur."
+            "de": "Sammelt den Speicher von außen ein, auch während ein Server läuft: entfernt unbrauchbare Aktionsergebnisse, zu lange ungenutzte Einträge und die am längsten ungenutzten Einträge über der Grenze; --dry-run plant nur."
           }
         }
       ],
@@ -1352,12 +1395,12 @@
           "command": "repo remote-cache status",
           "description": { "en": "Show how Nx and Bazel use the remote cache (once an endpoint is configured) and whether the server answers.", "de": "Zeigt, wie Nx und Bazel den Remote-Cache nutzen (sobald ein Endpunkt konfiguriert ist) und ob der Server antwortet." }
         },
-        { "command": "repo remote-cache gc --dry-run", "description": { "en": "List what the collector would remove from the store.", "de": "Listet auf, was der Einsammler aus dem Speicher entfernen würde." } }
+        { "command": "repo remote-cache gc --dry-run", "description": { "en": "List what the collector would remove from the store.", "de": "Listet auf, was der Sammler aus dem Speicher entfernen würde." } }
       ],
       "notes": [
         {
           "en": "The remote cache is off for clients until SEMIO_REMOTE_CACHE_ENDPOINT names an http or https origin. SEMIO_REMOTE_CACHE_INSTANCE, _ACCESS (read-only|read-write), _UPLOAD, _COMPRESSION, _DOWNLOAD (toplevel|all), _TIMEOUT_SECONDS and _RETRIES override the defaults of the build policy; the access token is read from the variable named by SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT (default SEMIO_REMOTE_CACHE_TOKEN) and is never written to disk.",
-          "de": "Der Remote-Cache ist für Clients aus, bis SEMIO_REMOTE_CACHE_ENDPOINT einen http- oder https-Ursprung nennt. SEMIO_REMOTE_CACHE_INSTANCE, _ACCESS (read-only|read-write), _UPLOAD, _COMPRESSION, _DOWNLOAD (toplevel|all), _TIMEOUT_SECONDS und _RETRIES überschreiben die Standardwerte der Build-Policy; das Zugriffstoken wird aus der Variable gelesen, die SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT nennt (Standard SEMIO_REMOTE_CACHE_TOKEN), und nie auf die Platte geschrieben."
+          "de": "Der Remote-Cache ist für Clients aus, bis SEMIO_REMOTE_CACHE_ENDPOINT einen http- oder https-Ursprung nennt. SEMIO_REMOTE_CACHE_INSTANCE, _ACCESS (read-only|read-write), _UPLOAD, _COMPRESSION, _DOWNLOAD (toplevel|all), _TIMEOUT_SECONDS und _RETRIES überschreiben die Standardwerte der Build-Richtlinie; das Zugriffstoken wird aus der Variable gelesen, die SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT nennt (Standard SEMIO_REMOTE_CACHE_TOKEN), und nie auf die Platte geschrieben."
         },
         {
           "en": "Bazel renders the contract into its remote cache settings (endpoint, instance name, upload, compression, download mode, timeout, retries) and passes the token through a credential helper. Nx renders it into its self-hosted remote cache variables (server and access token); it cannot honour compression, download mode, timeouts or retries and leaves read-only to the server. status prints both renderings.",
@@ -1365,11 +1408,11 @@
         },
         {
           "en": "serve speaks Bazel's HTTP cache protocol (GET, HEAD and PUT on /ac/<sha256> and /cas/<sha256>) and the Nx self-hosted cache API (GET and PUT on /v1/cache/<hash>, 409 when an entry exists), each under an optional /<instance> prefix. A blob is refused with 400 unless its content has the digest in its address; an action result is refused with 400 unless it is a well-formed ActionResult whose output blobs are already stored (the policy can relax this to structure or off), and a result whose blobs left the store is answered as a miss. Bearer tokens come from SEMIO_REMOTE_CACHE_SERVER_READ_TOKEN and SEMIO_REMOTE_CACHE_SERVER_WRITE_TOKEN; without a token it refuses to listen beyond loopback; --read-only (or SEMIO_REMOTE_CACHE_SERVER_READ_ONLY=true) refuses every write; --tls-certificate and --tls-key (or SEMIO_REMOTE_CACHE_SERVER_TLS_CERTIFICATE and SEMIO_REMOTE_CACHE_SERVER_TLS_KEY) switch to HTTPS. One server owns a directory at a time.",
-          "de": "serve spricht Bazels HTTP-Cache-Protokoll (GET, HEAD und PUT auf /ac/<sha256> und /cas/<sha256>) und die selbst gehostete Cache-API von Nx (GET und PUT auf /v1/cache/<hash>, 409 bei vorhandenem Eintrag), jeweils mit optionalem Präfix /<instance>. Ein Blob wird mit 400 abgelehnt, wenn sein Inhalt nicht den Digest seiner Adresse hat; ein Action-Ergebnis wird mit 400 abgelehnt, wenn es kein wohlgeformtes ActionResult mit bereits gespeicherten Ausgabe-Blobs ist (die Policy kann das auf structure oder off lockern), und ein Ergebnis, dessen Blobs den Speicher verlassen haben, wird als Fehltreffer beantwortet. Bearer-Tokens stammen aus SEMIO_REMOTE_CACHE_SERVER_READ_TOKEN und SEMIO_REMOTE_CACHE_SERVER_WRITE_TOKEN; ohne Token lauscht er nur auf Loopback; --read-only (oder SEMIO_REMOTE_CACHE_SERVER_READ_ONLY=true) lehnt jedes Schreiben ab; --tls-certificate und --tls-key (oder SEMIO_REMOTE_CACHE_SERVER_TLS_CERTIFICATE und SEMIO_REMOTE_CACHE_SERVER_TLS_KEY) schalten auf HTTPS. Ein Server besitzt ein Verzeichnis."
+          "de": "serve spricht Bazels HTTP-Cache-Protokoll (GET, HEAD und PUT auf /ac/<sha256> und /cas/<sha256>) und die selbst gehostete Cache-API von Nx (GET und PUT auf /v1/cache/<hash>, 409 bei vorhandenem Eintrag), jeweils mit optionalem Präfix /<instance>. Ein Blob wird mit 400 abgelehnt, wenn sein Inhalt nicht den Digest seiner Adresse hat; ein Aktionsergebnis wird mit 400 abgelehnt, wenn es kein wohlgeformtes ActionResult mit bereits gespeicherten Ausgabe-Blobs ist (die Richtlinie kann das auf structure oder off lockern), und ein Ergebnis, dessen Blobs den Speicher verlassen haben, wird als Fehltreffer beantwortet. Bearer-Tokens stammen aus SEMIO_REMOTE_CACHE_SERVER_READ_TOKEN und SEMIO_REMOTE_CACHE_SERVER_WRITE_TOKEN; ohne Token lauscht er nur auf Loopback; --read-only (oder SEMIO_REMOTE_CACHE_SERVER_READ_ONLY=true) lehnt jedes Schreiben ab; --tls-certificate und --tls-key (oder SEMIO_REMOTE_CACHE_SERVER_TLS_CERTIFICATE und SEMIO_REMOTE_CACHE_SERVER_TLS_KEY) schalten auf HTTPS. Ein Server besitzt ein Verzeichnis."
         },
         {
           "en": "The store is bounded and evicts the least recently used entries and entries idle for too long. It lives in the remote cache home of the cache ledger, so cache status reports it and cache gc collects it with the same bounds; gc here does the same from the command line, takes the collector lock, never blocks a running server and stops at the next checkpoint when the caller cancels. serve and gc publish progress while they scan the store; the output follows SEMIO_LANGUAGE or --lang and is printed in both languages when neither is set.",
-          "de": "Der Speicher ist begrenzt und entfernt die am längsten ungenutzten und die zu lange ungenutzten Einträge. Er liegt in der Remote-Cache-Heimat der Cache-Bilanz, sodass cache status ihn meldet und cache gc ihn mit denselben Grenzen einsammelt; gc hier tut dasselbe von der Befehlszeile aus, nimmt die Einsammler-Sperre, blockiert nie einen laufenden Server und hält am nächsten Kontrollpunkt an, wenn der Aufrufer abbricht. serve und gc melden den Fortschritt beim Einlesen des Speichers; die Ausgabe folgt SEMIO_LANGUAGE oder --lang und erscheint in beiden Sprachen, wenn keins von beiden gesetzt ist."
+          "de": "Der Speicher ist begrenzt und entfernt die am längsten ungenutzten und die zu lange ungenutzten Einträge. Er liegt in der Remote-Cache-Heimat der Cache-Bilanz, sodass cache status ihn meldet und cache gc ihn mit denselben Grenzen einsammelt; gc hier tut dasselbe von der Befehlszeile aus, nimmt die Sammler-Sperre, blockiert nie einen laufenden Server und hält am nächsten Kontrollpunkt an, wenn der Aufrufer abbricht. serve und gc melden den Fortschritt beim Einlesen des Speichers; die Ausgabe folgt SEMIO_LANGUAGE oder --lang und erscheint in beiden Sprachen, wenn keins von beiden gesetzt ist."
         }
       ]
     },
@@ -1425,9 +1468,9 @@
       ],
       "notes": [
         {"en": "Every heavy repo command (run, run-many, affected, exec, watch, cargo, show, graph, dependencies) is admitted the same way before it starts; capacity run does it for everything else.", "de": "Jeder schwere repo-Befehl (run, run-many, affected, exec, watch, cargo, show, graph, dependencies) wird vor dem Start auf dieselbe Weise zugelassen; capacity run tut dies für alles andere."},
-        {"en": "A request is admitted while the free memory stays above the floor (a share of the host memory between 4 and 8 GB), the swap stays below its ceiling and the load below its ceiling per core, the machine-wide open file table stays below its ceiling share and fewer disk images are attached than the maximum (the last three are waited out and overridden only when nothing of ours runs); memory pressure at the critical level admits nobody. Requests are served first come first served, interactive before batch.", "de": "Eine Anfrage wird zugelassen, solange der freie Speicher über der Untergrenze bleibt (ein Anteil des Host-Speichers zwischen 4 und 8 GB), der Swap unter seiner Obergrenze und die Last unter ihrer Obergrenze je Kern, die systemweite Tabelle offener Dateien unter ihrem Anteil der Obergrenze und weniger Disk-Images angehängt sind als das Maximum (die letzten drei werden abgewartet und nur übergangen, wenn nichts von uns läuft); Speicherdruck auf kritischer Stufe lässt niemanden zu. Anfragen werden in der Reihenfolge des Eintreffens bedient, interaktive vor Stapelläufen."},
-        {"en": "The grant sets the parallelism of the selected tool through that tool's own limits: the task parallelism for Nx, the job and local-resource limits for Bazel, the core count for Cargo. SEMIO_HOST_CAPACITY=off switches the governor off explicitly.", "de": "Die Zuteilung setzt die Parallelität des gewählten Werkzeugs über dessen eigene Grenzen: die Task-Parallelität bei Nx, die Job- und lokalen Ressourcengrenzen bei Bazel, die Kernzahl bei Cargo. SEMIO_HOST_CAPACITY=off schaltet die Steuerung ausdrücklich ab."},
-        {"en": "Waiting prints a progress line in the chosen language and stops at the next checkpoint when the caller cancels; the grant of a process that dies is reclaimed automatically.", "de": "Das Warten gibt eine Fortschrittszeile in der gewählten Sprache aus und hält am nächsten Prüfpunkt an, wenn der Aufrufer abbricht; die Zuteilung eines beendeten Prozesses wird automatisch zurückgefordert."}
+        {"en": "A request is admitted while the free memory stays above the floor (a share of the host memory between 4 and 8 GB), the swap stays below its ceiling and the load below its ceiling per core, the machine-wide open file table stays below its ceiling share and fewer disk images are attached than the maximum (the last three are waited out and overridden only when nothing of ours runs); memory pressure at the critical level admits nobody. Requests are served first come first served, interactive before batch.", "de": "Eine Anfrage wird zugelassen, solange der freie Speicher über der Untergrenze bleibt (ein Anteil des Rechnerspeichers zwischen 4 und 8 GB), die Auslagerung unter ihrer Obergrenze und die Last unter ihrer Obergrenze je Kern, die systemweite Tabelle offener Dateien unter ihrem Anteil der Obergrenze und weniger Disk-Images eingehängt sind als das Maximum (die letzten drei werden abgewartet und nur übergangen, wenn nichts von uns läuft); Speicherdruck auf kritischer Stufe lässt niemanden zu. Anfragen werden in der Reihenfolge des Eintreffens bedient, interaktive vor Stapelläufen."},
+        {"en": "The grant sets the parallelism of the selected tool through that tool's own limits: the task parallelism for Nx, the job and local-resource limits for Bazel, the core count for Cargo. SEMIO_HOST_CAPACITY=off switches the governor off explicitly.", "de": "Die Zusage setzt die Parallelität des gewählten Werkzeugs über dessen eigene Grenzen: die Task-Parallelität bei Nx, die Job- und lokalen Ressourcengrenzen bei Bazel, die Kernzahl bei Cargo. SEMIO_HOST_CAPACITY=off schaltet den Kapazitätswächter ausdrücklich ab."},
+        {"en": "Waiting prints a progress line in the chosen language and stops at the next checkpoint when the caller cancels; the grant of a process that dies is reclaimed automatically.", "de": "Das Warten gibt eine Fortschrittszeile in der gewählten Sprache aus und hält am nächsten Prüfpunkt an, wenn der Aufrufer abbricht; die Zusage eines beendeten Prozesses wird automatisch zurückgefordert."}
       ]
     },
     {
@@ -1447,7 +1490,7 @@
           "synopsis": "leases status [--json] [--all] [--lease-directory=<path>] [--violations=<n>]",
           "summary": {
             "en": "Print every held and awaited lease with mode, class, holder, hold duration, queue position and blockers, the wait-for graph, deadlock cycles, recent order violations and the admission queue.",
-            "de": "Gibt jedes gehaltene und erwartete Lease mit Modus, Klasse, Halter, Haltedauer, Warteschlangenposition und Blockierern aus, dazu den Wartegraphen, Verklemmungszyklen, jüngste Reihenfolgeverletzungen und die Zulassungswarteschlange."
+            "de": "Gibt jede gehaltene und erwartete Lease mit Modus, Klasse, Halter, Haltedauer, Warteschlangenposition und Blockierern aus, dazu den Wartegraphen, Verklemmungszyklen, jüngste Reihenfolgeverletzungen und die Zulassungswarteschlange."
           }
         }
       ],
@@ -1470,11 +1513,57 @@
       "notes": [
         {
           "en": "Leases are declared in lock classes with a rank (SEMIO_LEASE_ORDER=off|observe|enforce overrides the declared rules). A request that breaks the order, closes a deadlock cycle, or waits beyond the grace period while its task holds another lease exclusively fails fast with a diagnostic naming the blocking process.",
-          "de": "Leases sind in Sperrklassen mit einem Rang deklariert (SEMIO_LEASE_ORDER=off|observe|enforce überschreibt die deklarierten Regeln). Eine Anfrage, die die Reihenfolge verletzt, einen Deadlock-Zyklus schließt oder über die Schonfrist hinaus wartet, während ihre Aufgabe eine andere Lease exklusiv hält, schlägt sofort mit einer Diagnose fehl, die den blockierenden Prozess nennt."
+          "de": "Leases sind in Sperrklassen mit einem Rang deklariert (SEMIO_LEASE_ORDER=off|observe|enforce überschreibt die deklarierten Regeln). Eine Anfrage, die die Reihenfolge verletzt, einen Verklemmungszyklus schließt oder über die Schonfrist hinaus wartet, während ihre Task eine andere Lease exklusiv hält, schlägt sofort mit einer Diagnose fehl, die den blockierenden Prozess nennt."
         },
         {
           "en": "Processes register what they hold and await in the per-user lease registry (SEMIO_LEASE_REGISTRY_DIRECTORY overrides its location); entries of dead processes are ignored and removed.",
-          "de": "Prozesse tragen im Lease-Verzeichnis je Benutzer ein, was sie halten und worauf sie warten (SEMIO_LEASE_REGISTRY_DIRECTORY überschreibt dessen Ort); Einträge toter Prozesse werden ignoriert und entfernt."
+          "de": "Prozesse tragen im Lease-Verzeichnis je Nutzer ein, was sie halten und worauf sie warten (SEMIO_LEASE_REGISTRY_DIRECTORY überschreibt dessen Ort); Einträge toter Prozesse werden ignoriert und entfernt."
+        }
+      ]
+    },
+    {
+      "name": "fleet",
+      "requires": "none",
+      "synopsis": "fleet status",
+      "summary": {
+        "en": "Show one picture of the shared workspace: who runs what (phase, progress, age, priority, code freshness), the queues with waiting-time estimates, memory admitted against really used, the Bazel servers, storage against its budgets, the sealed implementation and the last graph generation.",
+        "de": "Zeigt ein Gesamtbild des gemeinsamen Arbeitsbereichs: wer was ausführt (Phase, Fortschritt, Alter, Priorität, Aktualität des Codes), die Warteschlangen mit Wartezeitschätzungen, zugesagter gegen tatsächlich genutzten Speicher, die Bazel-Server, den Speicher auf dem Datenträger gegen seine Budgets, die versiegelte Implementierung und die letzte Graph-Generation."
+      },
+      "dryRun": false,
+      "progress": false,
+      "cancellable": false,
+      "subcommands": [
+        {
+          "name": "status",
+          "synopsis": "fleet status [--json] [--limit=<n>]",
+          "summary": {
+            "en": "Print the fleet picture as compact text, or with --json as one document whose schema is validated before it is printed.",
+            "de": "Gibt das Gesamtbild als kompakten Text aus, mit --json als ein Dokument, dessen Schema vor der Ausgabe geprüft wird."
+          }
+        }
+      ],
+      "flags": [
+        "--json",
+        "--limit"
+      ],
+      "examples": [
+        {
+          "command": "repo fleet status",
+          "description": { "en": "See at a glance who runs what, who waits for what and for how long, and what the disk and memory budgets look like.", "de": "Zeigt auf einen Blick, wer was ausführt, wer worauf wie lange wartet und wie es um die Speicher- und Datenträgerbudgets steht." }
+        },
+        {
+          "command": "repo fleet status --json",
+          "description": { "en": "The same picture as one machine-readable document for an agent.", "de": "Dasselbe Bild als ein maschinenlesbares Dokument für einen Agenten." }
+        }
+      ],
+      "notes": [
+        {
+          "en": "The command answers from the existing status readers of the leases, the capacity gate, the Bazel slots, the cache ledger, the sealed implementation store and the graph generation pointer in parallel; it takes no lease, loads no graph, starts no build and answers within a second on a loaded machine. A reader that fails is named under the sources and leaves only its own section out.",
+          "de": "Der Befehl antwortet aus den vorhandenen Statusquellen der Leases, des Kapazitäts-Tors, der Bazel-Slots, des Cache-Verzeichnisses, des versiegelten Implementierungsspeichers und des Zeigers der Graph-Generation gleichzeitig; er nimmt keine Lease, lädt keinen Graphen, startet keinen Build und antwortet auch auf einem ausgelasteten Rechner innerhalb einer Sekunde. Eine Quelle, die ausfällt, steht unter den Quellen und lässt nur ihren eigenen Abschnitt aus."
+        },
+        {
+          "en": "Waiting-time estimates add the time left of the holder (its own progress counter, else earlier holds of the same kind) to the typical hold of everyone ahead; a memory waiter is admitted once the memory of the running grants, released after the typical duration of their operation, covers its need. No estimate is printed where nothing is known.",
+          "de": "Wartezeitschätzungen addieren die Restzeit des Halters (sein eigener Fortschrittszähler, sonst frühere Haltezeiten derselben Art) zur üblichen Haltezeit aller Vorderen; ein Speicher-Wartender wird zugelassen, sobald der Speicher der laufenden Zusagen, nach der üblichen Dauer ihrer Operation freigegeben, seinen Bedarf deckt. Wo nichts bekannt ist, wird keine Schätzung gedruckt."
         }
       ]
     },
@@ -1484,7 +1573,7 @@
       "synopsis": "service status|start|stop|restart|issue|revoke|drop-caches|probe",
       "summary": {
         "en": "Run, inspect or stop the resident service of this worktree that keeps the graph, file digests and task results warm and answers every agent over one local socket.",
-        "de": "Startet, prüft oder beendet den residenten Dienst dieses Worktrees, der Graph, Datei-Prüfsummen und Aufgabenergebnisse warm hält und alle Agenten über einen lokalen Socket bedient."
+        "de": "Startet, prüft oder beendet den residenten Dienst dieses Arbeitsbaums, der Graph, Datei-Prüfsummen und Task-Ergebnisse warm hält und alle Agenten über einen lokalen Socket bedient."
       },
       "dryRun": false,
       "progress": true,
@@ -1527,7 +1616,7 @@
           "synopsis": "service issue --agent <id> [--classes <classes>] [--for <projects>] [--ttl <seconds>]",
           "summary": {
             "en": "Print a capability token for one agent session, bound to this worktree and restricted to command classes, projects and lifetime; hand it to an agent that must not do more (SEMIO_SERVICE_TOKEN).",
-            "de": "Gibt eine Berechtigung für eine Agenten-Sitzung aus, an diesen Worktree gebunden und beschränkt auf Befehlsklassen, Projekte und Lebensdauer; für einen Agenten, der nicht mehr tun darf (SEMIO_SERVICE_TOKEN)."
+            "de": "Gibt eine Berechtigung für eine Agenten-Sitzung aus, an diesen Arbeitsbaum gebunden und beschränkt auf Befehlsklassen, Projekte und Lebensdauer; für einen Agenten, der nicht mehr tun darf (SEMIO_SERVICE_TOKEN)."
           }
         },
         {
@@ -1543,7 +1632,7 @@
           "synopsis": "service drop-caches",
           "summary": {
             "en": "Forget digests and task results; the next request re-proves everything.",
-            "de": "Vergisst Prüfsummen und Aufgabenergebnisse; die nächste Anfrage belegt alles neu."
+            "de": "Vergisst Prüfsummen und Task-Ergebnisse; die nächste Anfrage belegt alles neu."
           }
         },
         {
@@ -1567,14 +1656,14 @@
           "command": "repo service start",
           "description": {
             "en": "Keep this worktree's graph and results warm for every agent.",
-            "de": "Hält Graph und Ergebnisse dieses Worktrees für alle Agenten warm."
+            "de": "Hält Graph und Ergebnisse dieses Arbeitsbaums für alle Agenten warm."
           }
         },
         {
           "command": "repo service issue --classes=run --for=lib-a --ttl=3600",
           "description": {
             "en": "A token that may only run tasks of lib-a for one hour.",
-            "de": "Eine Berechtigung, die eine Stunde lang nur Aufgaben von lib-a ausführen darf."
+            "de": "Eine Berechtigung, die eine Stunde lang nur Tasks von lib-a ausführen darf."
           }
         }
       ],
@@ -1585,7 +1674,7 @@
         },
         {
           "en": "Only the owner of the checkout can reach the service: its runtime directory is private to the user and every request carries a capability token.",
-          "de": "Nur der Eigentümer des Checkouts erreicht den Dienst: Sein Laufzeitverzeichnis ist privat für den Benutzer und jede Anfrage trägt eine Berechtigung."
+          "de": "Nur der Eigentümer des Checkouts erreicht den Dienst: Sein Laufzeitverzeichnis ist privat für den Nutzer und jede Anfrage trägt eine Berechtigung."
         }
       ]
     },
@@ -1595,7 +1684,7 @@
       "synopsis": "remote-execution serve|status|workers",
       "summary": {
         "en": "Run the in-house remote execution service that hermetic Bazel actions can run on, inspect it, or join this machine to it as a worker.",
-        "de": "Betreibt den hauseigenen Remote-Execution-Dienst, auf dem hermetische Bazel-Actions laufen können, zeigt ihn an oder bindet diesen Rechner als Worker an."
+        "de": "Betreibt den hauseigenen Remote-Execution-Dienst, auf dem hermetische Bazel-Aktionen laufen können, zeigt ihn an oder bindet diesen Rechner als Worker an."
       },
       "dryRun": false,
       "progress": true,
@@ -1622,28 +1711,28 @@
           "synopsis": "remote-execution workers --join <url> [--name <name>] [--concurrency <n>] [--sandbox <strategy>] [--properties <name=value,...>] [--work-directory <path>]", "flags": ["--join", "--name", "--concurrency", "--sandbox", "--properties", "--work-directory"],
           "summary": {
             "en": "Run a worker of this machine (or devcontainer) that joins a scheduler, runs the hermetic actions it is handed in a sandbox and reports until stopped.",
-            "de": "Betreibt einen Worker dieses Rechners (oder Devcontainers), der einem Scheduler beitritt, die ihm zugeteilten hermetischen Actions in einer Sandbox ausführt und meldet, bis er gestoppt wird."
+            "de": "Betreibt einen Worker dieses Rechners (oder Devcontainers), der einem Scheduler beitritt, die ihm zugeteilten hermetischen Aktionen in einer Sandbox ausführt und meldet, bis er gestoppt wird."
           }
         }
       ],
       "flags": ["--bind", "--grpc-port", "--worker-port", "--cache", "--local-workers", "--concurrency", "--advertise", "--sandbox", "--work-directory", "--join", "--name", "--properties", "--tls-certificate", "--tls-key"],
       "examples": [
-        { "command": "repo remote-execution serve", "description": { "en": "Run the service on 127.0.0.1:8980 with the shared store and one local worker; hermetic Bazel actions can then run remotely.", "de": "Betreibt den Dienst auf 127.0.0.1:8980 mit dem gemeinsamen Speicher und einem lokalen Worker; hermetische Bazel-Actions können dann remote laufen." } },
+        { "command": "repo remote-execution serve", "description": { "en": "Run the service on 127.0.0.1:8980 with the shared store and one local worker; hermetic Bazel actions can then run remotely.", "de": "Betreibt den Dienst auf 127.0.0.1:8980 mit dem gemeinsamen Speicher und einem lokalen Worker; hermetische Bazel-Aktionen können dann remote laufen." } },
         { "command": "repo remote-execution workers --join http://build-host:8981", "description": { "en": "Add this machine as a worker of a service that runs elsewhere.", "de": "Fügt diesen Rechner als Worker eines Dienstes hinzu, der anderswo läuft." } },
         { "command": "repo remote-execution status", "description": { "en": "Show the client contract, whether the endpoint answers and which workers are registered.", "de": "Zeigt den Client-Vertrag, ob der Endpunkt antwortet und welche Worker angemeldet sind." } }
       ],
       "notes": [
         {
           "en": "Remote execution is off for clients until SEMIO_REMOTE_EXECUTION_ENDPOINT names a grpc or grpcs origin; while it is unset every action stays local. SEMIO_REMOTE_EXECUTION_PLATFORM (default linux-x64), _INSTANCE (default main), _PROPERTIES and _JOBS are read by the Bazel implementation; serve prints the endpoint, platform and instance of this machine. Only hermetic actions are sent, with no local fallback: an unreachable service fails the build.",
-          "de": "Remote-Execution ist für Clients aus, bis SEMIO_REMOTE_EXECUTION_ENDPOINT einen grpc- oder grpcs-Ursprung nennt; solange sie ungesetzt ist, bleibt jede Action lokal. SEMIO_REMOTE_EXECUTION_PLATFORM (Standard linux-x64), _INSTANCE (Standard main), _PROPERTIES und _JOBS liest die Bazel-Implementierung; serve gibt Endpunkt, Plattform und Instanz dieses Rechners aus. Nur hermetische Actions werden gesendet, ohne lokalen Rückfall: Ein nicht erreichbarer Dienst lässt den Build scheitern."
+          "de": "Remote-Execution ist für Clients aus, bis SEMIO_REMOTE_EXECUTION_ENDPOINT einen grpc- oder grpcs-Ursprung nennt; solange sie ungesetzt ist, bleibt jede Aktion lokal. SEMIO_REMOTE_EXECUTION_PLATFORM (Standard linux-x64), _INSTANCE (Standard main), _PROPERTIES und _JOBS liest die Bazel-Implementierung; serve gibt Endpunkt, Plattform und Instanz dieses Rechners aus. Nur hermetische Aktionen werden gesendet, ohne lokalen Rückfall: Ein nicht erreichbarer Dienst lässt den Build scheitern."
         },
         {
           "en": "The service implements the subset of the Remote Execution API v2 that Bazel needs, over gRPC on HTTP/2 with the repository's own wire codec: capabilities, execution (also waiting for an operation), action cache, content-addressable storage and ByteStream. Bazel offloads execution only over this protocol, and refuses an HTTP cache beside a gRPC executor, so the service is the cache too: it keeps its blobs and results in the shared store of repo remote-cache (started inside serve, or named with --cache), and the Bazel implementation drops its HTTP cache flags while an executor is configured. Identical actions in flight run once; results of successful actions enter the action cache.",
-          "de": "Der Dienst setzt die Teilmenge der Remote Execution API v2 um, die Bazel braucht, über gRPC auf HTTP/2 mit dem eigenen Wire-Codec des Repositories: Capabilities, Ausführung (auch das Warten auf eine Operation), Action-Cache, inhaltsadressierter Speicher und ByteStream. Bazel lagert die Ausführung nur über dieses Protokoll aus und lehnt einen HTTP-Cache neben einem gRPC-Executor ab, daher ist der Dienst auch der Cache: Er hält Blobs und Ergebnisse im gemeinsamen Speicher von repo remote-cache (in serve gestartet oder mit --cache genannt), und die Bazel-Implementierung lässt ihre HTTP-Cache-Flags weg, solange ein Executor konfiguriert ist. Gleiche Actions im Flug laufen einmal; Ergebnisse erfolgreicher Actions gelangen in den Action-Cache."
+          "de": "Der Dienst setzt die Teilmenge der Remote Execution API v2 um, die Bazel braucht, über gRPC auf HTTP/2 mit dem eigenen Wire-Codec des Repositories: Capabilities, Ausführung (auch das Warten auf eine Operation), Aktions-Cache, inhaltsadressierter Speicher und ByteStream. Bazel lagert die Ausführung nur über dieses Protokoll aus und lehnt einen HTTP-Cache neben einem gRPC-Executor ab, daher ist der Dienst auch der Cache: Er hält Blobs und Ergebnisse im gemeinsamen Speicher von repo remote-cache (in serve gestartet oder mit --cache genannt), und die Bazel-Implementierung lässt ihre HTTP-Cache-Flags weg, solange ein Executor konfiguriert ist. Gleiche Aktionen im Flug laufen einmal; Ergebnisse erfolgreicher Aktionen gelangen in den Aktions-Cache."
         },
         {
           "en": "Workers pull work: each long-polls the scheduler's HTTP listener (default port 8981), offers its platform properties (OSFamily and Arch of its machine, plus --properties) and runs the actions whose required properties it offers, up to --concurrency at once. Every action gets a private input root built from the store, exactly its declared environment, and the sandbox of the hermetic table for the host: darwin-sandbox on macOS (no network, writes only inside the root), linux-sandbox (bubblewrap) on Linux, otherwise isolated-root, the private root alone (always the case on Windows); --sandbox pins one. A worker that stops heartbeating loses its work to another worker; cancelling a call or a timeout kills the whole process tree. --local-workers sets how many worker processes serve starts (default 1, 0 starts none).",
-          "de": "Worker holen Arbeit ab: Jeder fragt den HTTP-Listener des Schedulers (Standard-Port 8981) per Long Poll, bietet die Plattform-Eigenschaften seines Rechners an (OSFamily und Arch, dazu --properties) und führt die Actions aus, deren geforderte Eigenschaften er bietet, bis zu --concurrency gleichzeitig. Jede Action erhält ein privates Eingabeverzeichnis aus dem Speicher, genau ihre deklarierte Umgebung und die Sandbox der Hermetic-Tabelle für den Host: darwin-sandbox auf macOS (kein Netzwerk, Schreiben nur im Verzeichnis), linux-sandbox (bubblewrap) auf Linux, sonst isolated-root, das private Verzeichnis allein (unter Windows immer); --sandbox legt eine fest. Ein Worker, der keine Heartbeats mehr sendet, verliert seine Arbeit an einen anderen; Abbruch eines Aufrufs oder ein Zeitlimit beendet den ganzen Prozessbaum. --local-workers legt fest, wie viele Worker-Prozesse serve startet (Standard 1, 0 startet keinen)."
+          "de": "Worker holen Arbeit ab: Jeder fragt den HTTP-Listener des Schedulers (Standard-Port 8981) per Long Poll, bietet die Plattform-Eigenschaften seines Rechners an (OSFamily und Arch, dazu --properties) und führt die Aktionen aus, deren geforderte Eigenschaften er bietet, bis zu --concurrency gleichzeitig. Jede Aktion erhält ein privates Eingabeverzeichnis aus dem Speicher, genau ihre deklarierte Umgebung und die Sandbox der Hermetic-Tabelle für den Rechner: darwin-sandbox auf macOS (kein Netzwerk, Schreiben nur im Verzeichnis), linux-sandbox (bubblewrap) auf Linux, sonst isolated-root, das private Verzeichnis allein (unter Windows immer); --sandbox legt eine fest. Ein Worker, der keine Heartbeats mehr sendet, verliert seine Arbeit an einen anderen; Abbruch eines Aufrufs oder ein Zeitlimit beendet den ganzen Prozessbaum. --local-workers legt fest, wie viele Worker-Prozesse serve startet (Standard 1, 0 startet keinen)."
         },
         {
           "en": "Tokens: the read and write tokens of repo remote-cache (SEMIO_REMOTE_CACHE_SERVER_READ_TOKEN, SEMIO_REMOTE_CACHE_SERVER_WRITE_TOKEN) also guard the gRPC listener (read: lookups and downloads; write: everything including execution), and SEMIO_REMOTE_EXECUTION_WORKER_TOKEN guards the worker API; beyond loopback --bind refuses to start without them. Workers read the cache token from SEMIO_REMOTE_CACHE_TOKEN. --tls-certificate and --tls-key switch both listeners to TLS (grpcs). serve, workers and status publish progress and stop at the next checkpoint when the caller cancels; the output follows SEMIO_LANGUAGE or --lang and is printed in both languages when neither is set.",
@@ -1655,7 +1744,7 @@
       "name": "doctor",
       "requires": "none",
       "synopsis": "doctor [--json] [--fix [--dry-run]] [--only=<area>[,<area>]] [--strict] [--facts]",
-      "summary": { "en": "Answer in one shot why work is waiting, slow or failing: tool pins, storage images, leases, capacity grants, agent sessions, graph and dependency generations, caches, running repo processes and the host, each problem with its owner and the command that resolves it.", "de": "Beantwortet auf einmal, warum Arbeit wartet, langsam ist oder scheitert: Werkzeug-Pins, Speicherabbilder, Leases, Kapazitätszusagen, Agent-Sitzungen, Graph- und Abhängigkeits-Generationen, Caches, laufende repo-Prozesse und der Rechner, jedes Problem mit seinem Eigentümer und dem Befehl, der es löst." },
+      "summary": { "en": "Answer in one shot why work is waiting, slow or failing: tool pins, storage images, leases, capacity grants, agent sessions, graph and dependency generations, caches, running repo processes and the host, each problem with its owner and the command that resolves it.", "de": "Beantwortet auf einmal, warum Arbeit wartet, langsam ist oder scheitert: Werkzeug-Pins, Speicher-Images, Leases, Kapazitätszusagen, Agent-Sitzungen, Graph- und Abhängigkeits-Generationen, Caches, laufende repo-Prozesse und der Rechner, jedes Problem mit seinem Eigentümer und dem Befehl, der es löst." },
       "dryRun": false,
       "progress": true,
       "cancellable": true,
@@ -1668,9 +1757,9 @@
         { "command": "repo doctor --json", "description": { "en": "The report as JSON for tools and agents.", "de": "Der Bericht als JSON für Werkzeuge und Agenten." } }
       ],
       "notes": [
-        { "en": "doctor reads state only: it takes no lease and no capacity grant, so it answers even while a build holds everything, and it never starts a heavy command.", "de": "doctor liest nur Zustand: Es nimmt weder ein Lease noch eine Kapazitätszusage und antwortet daher auch dann, wenn ein Build alles hält; es startet nie einen schweren Befehl." },
+        { "en": "doctor reads state only: it takes no lease and no capacity grant, so it answers even while a build holds everything, and it never starts a heavy command.", "de": "doctor liest nur Zustand: Es nimmt weder eine Lease noch eine Kapazitätszusage und antwortet daher auch dann, wenn ein Build alles hält; es startet nie einen schweren Befehl." },
         { "en": "Areas: tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, host. Exit status 1 when an error remains (a warning too with --strict), 130 when cancelled.", "de": "Bereiche: tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, host. Exit-Status 1, wenn ein Fehler bleibt (mit --strict auch eine Warnung), 130 bei Abbruch." },
-        { "en": "--fix applies only repairs that are declared safe in the doctor policy; every other finding names the command to run or whom to ask.", "de": "--fix wendet nur Reparaturen an, die in der doctor-Policy als sicher deklariert sind; jeder andere Befund nennt den Befehl oder wen man fragen soll." }
+        { "en": "--fix applies only repairs that are declared safe in the doctor policy; every other finding names the command to run or whom to ask.", "de": "--fix wendet nur Reparaturen an, die in der doctor-Richtlinie als sicher deklariert sind; jeder andere Befund nennt den Befehl oder wen man fragen soll." }
       ]
     },
     {
@@ -1679,7 +1768,7 @@
       "synopsis": "session open|status|close|list",
       "summary": {
         "en": "Show, open and close agent sessions: one identity per agent working in this worktree, with its cargo lane, Bazel slot preference, Nx daemon namespace, test sandbox root, lease owner tag, budget share and capability.",
-        "de": "Zeigt, öffnet und schließt Agent-Sitzungen: eine Identität je Agent, der in diesem Arbeitsbaum arbeitet, mit Cargo-Bahn, Bazel-Slot-Präferenz, Nx-Daemon-Namensraum, Test-Sandbox-Wurzel, Lease-Eigentümer-Marke, Budgetanteil und Berechtigung."
+        "de": "Zeigt, öffnet und schließt Agent-Sitzungen: eine Identität je Agent, der in diesem Arbeitsbaum arbeitet, mit Cargo-Lane, Bazel-Slot-Präferenz, Nx-Daemon-Namensraum, Test-Sandbox-Wurzel, Lease-Eigentümer-Marke, Budgetanteil und Berechtigung."
       },
       "dryRun": false,
       "progress": false,
@@ -1690,7 +1779,7 @@
           "synopsis": "session open [--agent=<name>] [--client=<name>] [--client-pid=<pid>] [--owner-pid=<pid>] [--weight=<n>] [--export] [--json]",
           "summary": {
             "en": "Open the session of the calling agent, or attach to it when it exists. The agent is named by --agent, else by the client's own session variable, else by the connection (--client), else by the nearest agent-client ancestor process, else the default session.",
-            "de": "Öffnet die Sitzung des aufrufenden Agents oder bindet an sie, wenn sie existiert. Der Agent wird durch --agent benannt, sonst durch die eigene Sitzungsvariable des Clients, sonst durch die Verbindung (--client), sonst durch den nächsten Agent-Client-Vorfahrenprozess, sonst die Standard-Sitzung."
+            "de": "Öffnet die Sitzung des aufrufenden Agenten oder bindet an sie, wenn sie existiert. Der Agent wird durch --agent benannt, sonst durch die eigene Sitzungsvariable des Clients, sonst durch die Verbindung (--client), sonst durch den nächsten Agent-Client-Vorfahrenprozess, sonst die Standard-Sitzung."
           }
         },
         {

@@ -1,0 +1,22 @@
+{
+  "id": "print-check",
+  "evidence": "traced",
+  "description": "print:check type-checks the package source and its five registered suites with `tsc --noEmit` and bundles the source, so it reads the TypeScript program of exactly those six entry files (type-only imports and declaration companions included) resolved with the root tsconfig options, never the product tree or the dependency umbrellas `reads` and `^default` stand for; the command closure of the target script is added by the graph inference.",
+  "select": {"project": "@semio-tech/print", "targets": ["check"]},
+  "replaces": ["default", "^default", "reads"],
+  "reads": [
+    {
+      "program": {
+        "tsconfig": "tsconfig.json",
+        "entries": [
+          "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🟦️.ts",
+          "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+          "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️chart-mutations/🟦️.ts",
+          "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🧪️tests/📜️chart-inference-result/🟦️.ts",
+          "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts",
+          "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🟦️.ts"
+        ]
+      }
+    }
+  ]
+}

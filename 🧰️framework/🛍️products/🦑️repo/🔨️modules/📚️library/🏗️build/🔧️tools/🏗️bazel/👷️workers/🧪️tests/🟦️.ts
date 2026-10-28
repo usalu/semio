@@ -51,7 +51,7 @@ test("every task action carries its neutral kind and mnemonic, launchers carry n
 });
 
 test("the generated rule declares the JSON worker protocol, cancellation and one flagfile, and keeps the implementation as tools",()=>{
- const source=readFileSync(join(import.meta.dir,"../../📜️script.ts"),"utf8"),rules=source.slice(source.indexOf("const STARLARK_RULES=`"),source.indexOf("`;",source.indexOf("const STARLARK_RULES=`")));
+ const rules=api.bazelStarlarkRulesV1();
  for(const needle of ['requirements["supports-workers"] = "1"','requirements["requires-worker-protocol"] = "json"','requirements["supports-worker-cancellation"] = "1"','requirements["supports-multiplex-workers"] = "1"','request.use_param_file("@%s", use_always = True)','request.set_param_file_format("multiline")','tools = [ctx.file.runner, ctx.file.source]','mnemonic = ctx.attr.mnemonic','"work-action", request]'])expect(rules.includes(needle),needle).toBe(true);
  expect(rules.includes("birth-action")).toBe(false);
  expect(rules.match(/_requirements\(ctx, True\)/gu)?.length).toBe(1);
@@ -77,9 +77,9 @@ test.skipIf(process.env.SEMIO_BAZEL_INTEGRATION!=="1"||!binary)("Bazel itself ac
     request.set_param_file_format("multiline")
     request.add(out.path)
     request.add(ctx.attr.payload)
-    ctx.actions.run(executable = ctx.attr.bun, arguments = [ctx.file.worker.path, "work-action", request], tools = [ctx.file.worker], outputs = [out], mnemonic = ctx.attr.mnemonic, execution_requirements = {"supports-workers": "1", "requires-worker-protocol": "json", "supports-worker-cancellation": "1", "no-sandbox": "1"}, use_default_shell_env = True)
+    ctx.actions.run(executable = ctx.attr.runtime, arguments = [ctx.file.worker.path, "work-action", request], tools = [ctx.file.worker], outputs = [out], mnemonic = ctx.attr.mnemonic, execution_requirements = {"supports-workers": "1", "requires-worker-protocol": "json", "supports-worker-cancellation": "1", "no-sandbox": "1"}, use_default_shell_env = True)
     return [DefaultInfo(files = depset([out]))]
-fixture_work = rule(implementation = _impl, attrs = {"worker": attr.label(allow_single_file = True), "payload": attr.string(), "bun": attr.string(), "mnemonic": attr.string()})
+fixture_work = rule(implementation = _impl, attrs = {"worker": attr.label(allow_single_file = True), "payload": attr.string(), "runtime": attr.string(), "mnemonic": attr.string()})
 `);
   const worker=`import {appendFileSync,readFileSync,writeFileSync} from "node:fs";
 import {serveWorkerV1} from ${JSON.stringify(protocol)};
@@ -90,7 +90,7 @@ if(process.argv.includes("--persistent_worker")){
 `;
   writeFileSync(join(workspace,"worker.ts"),worker);
   const targets=[["a","RepoTest","one"],["b","RepoCheck","two"],["c","RepoTest","three"]];
-  const build=(suffix:string)=>writeFileSync(join(workspace,"BUILD.bazel"),'load(":rules.bzl", "fixture_work")\n'+targets.map(([name,mnemonic,payload])=>`fixture_work(name = "${name}", worker = "worker.ts", payload = "${payload}${suffix}", bun = ${JSON.stringify(process.execPath)}, mnemonic = "${mnemonic}")`).join("\n")+"\n");
+  const build=(suffix:string)=>writeFileSync(join(workspace,"BUILD.bazel"),'load(":rules.bzl", "fixture_work")\n'+targets.map(([name,mnemonic,payload])=>`fixture_work(name = "${name}", worker = "worker.ts", payload = "${payload}${suffix}", runtime = ${JSON.stringify(process.execPath)}, mnemonic = "${mnemonic}")`).join("\n")+"\n");
   const plan=planWorkersV1(readWorkerPolicyV1(buildPolicy.workers),{cores:4,memoryBytes:8*1024**3},{jobs:3}),flags=bazelWorkerSettingsV1(plan).flags.filter(flag=>!flag.startsWith("--experimental_worker_cancellation"));
   const arguments_=["build","//:a","//:b","//:c","--lockfile_mode=off","--incompatible_autoload_externally=",...flags];
   build("");const first=run(directory,arguments_);expect(first.status,first.stderr).toBe(0);

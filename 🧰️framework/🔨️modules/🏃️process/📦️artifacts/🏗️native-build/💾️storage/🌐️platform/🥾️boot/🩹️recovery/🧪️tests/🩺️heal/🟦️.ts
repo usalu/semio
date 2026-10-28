@@ -1,4 +1,5 @@
 import{expect,test}from"bun:test";
+import{testScratchRootV1}from"../../../../../../../../🧪️testing/🏖️sandbox/🟦️.ts";
 import{createHash}from"node:crypto";
 import{chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,utimesSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
@@ -8,7 +9,7 @@ import{healNativeLeakedImagesV1,healNativeProcessBootV1,nativeBootImageRosterV1,
 import{loadNativeBootLedgerV1,nativeBootLedgerPathV1}from"../../🟦️.ts";
 
 const BOOT="1E4A0CBE-3710-481F-9614-F8F1FCBD61D0",DAY=86400000,STEM="a".repeat(64);
-const scratch=()=>{const base=process.env.SEMIO_TEST_ARTIFACT_DIR?resolve(process.env.SEMIO_TEST_ARTIFACT_DIR):tmpdir();mkdirSync(base,{recursive:true});return realpathSync(mkdtempSync(join(base,"hl-")));};
+const scratch=()=>{const base=testScratchRootV1("heal");mkdirSync(base,{recursive:true});return realpathSync(mkdtempSync(join(base,"hl-")));};
 const sha=(text:string|Buffer)=>createHash("sha256").update(text).digest("hex");
 const b36=(n:number,w:number)=>n.toString(36).padStart(w,"0");
 function control(published:string[]=[]):ResourceLeaseControl{return{signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:progress=>{published.push(progress.resource);},yieldContinuation:async()=>{}};}
@@ -85,3 +86,32 @@ test.skipIf(process.platform!=="darwin")("a really attached abandoned scratch im
   expect((await roster()).map(row=>row.imagePath)).toEqual([recent]);
  }finally{for(const mount of mounts)try{run("/usr/bin/hdiutil",["detach","-force",mount]);}catch{}rmSync(root,{recursive:true,force:true});}
 },120000);
+
+const mountTable=()=>run("/sbin/mount",[]);
+test.skipIf(process.platform!=="darwin")("a holder killed in the middle of an attach leaves kernel mounts that the sweep detaches, while a live lease, a healthy attach and a recent write keep theirs",async()=>{
+ const root=scratch();const devices:string[]=[];
+ try{
+  const workspace=join(root,"ws"),leaseDirectory=join(workspace,".cache","b","c");mkdirSync(leaseDirectory,{recursive:true});
+  const partition=(name:string)=>{const path=join(workspace,".cache","b",name,"fixed.dmg"),mount=join(workspace,".cache","b",name,"m");mkdirSync(mount,{recursive:true});run("/usr/bin/hdiutil",["create","-size","16m","-fs","APFS","-volname",name,"-ov",path]);return{path,mount};};
+  const killed=partition("p"),half=partition("g"),live=partition("o"),healthy=partition("t"),recent=partition("d");
+  const holder=Bun.spawn([process.execPath,"-e","const{spawnSync}=require('node:child_process');const r=spawnSync('/usr/bin/hdiutil',['attach','-nobrowse','-noautoopen','-owners','off','-mountpoint',process.argv[1],process.argv[2]]);if(r.status!==0)process.exit(3);console.log('attached');setInterval(()=>{},1000);",killed.mount,killed.path],{stdout:"pipe",stderr:"pipe"});
+  const reader=holder.stdout.getReader();const first=await reader.read();expect(new TextDecoder().decode(first.value)).toContain("attached");
+  holder.kill("SIGKILL");await holder.exited;
+  expect(mountTable(),"the kernel mount outlives its killed holder").toContain(killed.mount+" (apfs");
+  run("/usr/bin/hdiutil",["attach","-nobrowse","-noautoopen","-nomount",half.path]);
+  run("/usr/bin/hdiutil",["attach","-nobrowse","-noautoopen","-owners","off","-mountpoint",live.mount,live.path]);
+  run("/usr/bin/hdiutil",["attach","-nobrowse","-noautoopen","-owners","on","-mountpoint",healthy.mount,healthy.path]);
+  run("/usr/bin/hdiutil",["attach","-nobrowse","-noautoopen","-owners","off","-mountpoint",recent.mount,recent.path]);
+  for(const row of[killed,half,live,healthy])age(row.path,DAY);
+  const mine=[killed,half,live,healthy,recent].map(row=>row.path),host:NativeBootHostV1={clock:async()=>({bootSession:BOOT,bootEpochMs:Date.now()}),capture:async(program,args)=>run(program,args)},owner=control();
+  const real=nativeBootImageRosterV1(owner,host,root),roster=async()=>(await real()).filter(row=>mine.includes(row.imagePath));
+  const before=await roster();expect(before.map(row=>row.imagePath).sort()).toEqual([...mine].sort());
+  expect(before.find(row=>row.imagePath===half.path)!.mounts).toEqual([]);expect(before.find(row=>row.imagePath===killed.path)!.owners).toBe(false);expect(before.find(row=>row.imagePath===healthy.path)!.owners).toBe(true);
+  const lease=await acquireResourceLease({directory:leaseDirectory,resource:"native-fixed-image:"+dirname(live.path),mode:"exclusive",signal:owner.signal,control:owner,timeoutMs:0});
+  try{await healNativeProcessBootV1({leaseDirectory,control:owner,host,roster});}finally{lease.release();}
+  const after=(await roster()).map(row=>row.imagePath).sort();
+  expect(after).toEqual([live.path,healthy.path,recent.path].sort());
+  expect(mountTable()).not.toContain(killed.mount+" (");
+  for(const row of before)if(after.includes(row.imagePath)&&row.device)devices.push(row.device);
+ }finally{for(const device of devices)try{run("/usr/bin/hdiutil",["detach","-force",device]);}catch{}rmSync(root,{recursive:true,force:true});}
+},180000);

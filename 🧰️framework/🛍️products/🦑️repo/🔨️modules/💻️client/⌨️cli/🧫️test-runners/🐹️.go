@@ -320,7 +320,7 @@ func runCanonicalGoTestDispatch(moduleRoot string, inputPath string, goArgs []st
 	script := filepath.Join(toolchain, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "📦️packages", "🟦️typescript", "📜️script.ts")
 	args := []string{script, "go-test", moduleRoot, inputPath}
 	args = append(args, goArgs...)
-	repo, err := os.Executable()
+	repo, err := repoExecutable()
 	if err != nil {
 		return err
 	}

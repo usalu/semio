@@ -1,0 +1,4 @@
+(version 1)
+(allow default)
+(deny file-read-data (regex #"package\.json$"))
+(allow file-read-data (literal "/Users/ueli/Documents/semio/package.json"))

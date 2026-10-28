@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://repo/caching/record-store-index/v1",
+  "title": "Record store pack index",
+  "description": "The index published (by rename, after its pack) next to one immutable record pack: every record's 64-hex key, its contiguous byte range in the pack and the first 32 hex digits of the value's SHA-256.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "pack", "packBytes", "records"],
+  "properties": {
+    "format": { "const": 1 },
+    "pack": { "type": "string", "pattern": "^[0-9a-z]+-[0-9]+-[0-9a-f]{16}$" },
+    "packBytes": { "type": "integer", "minimum": 0 },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 4,
+        "maxItems": 4,
+        "items": [
+          { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          { "type": "integer", "minimum": 0 },
+          { "type": "integer", "minimum": 0 },
+          { "type": "string", "pattern": "^[0-9a-f]{32}$" }
+        ]
+      }
+    }
+  }
+}

@@ -112,7 +112,7 @@ test("no record, parser identity or generation fact is keyed by the bytes of the
  expect(observation).toContain("nestedProject?recordStampV1():OBSERVATION_REVISION");
  expect(observation).toContain("stampedFragments.some(fragment=>row.path.includes(fragment))");
  const host=readFileSync(join(library,"🏗️build","🕸️graph","🟦️.ts"),"utf8");
- expect(host).toContain("producer.classifyImplementationRowsV1(rows)");expect(host).toContain("generationSchemaV1.definitions.Identity.const");expect(readFileSync(join(library,"🏗️build","🕸️graph","🕰️generations","🧬️schema","🔣️.json"),"utf8")).toContain("graph-generations-v3");
+ expect(host).toContain("producer.classifyImplementationRowsV1(rows)");expect(host).toContain("generationSchemaV1.definitions.Identity.const");expect(readFileSync(join(library,"🏗️build","🕸️graph","🕰️generations","🧬️schema","🔣️.json"),"utf8")).toContain("graph-generations-v4");
  const generations=readFileSync(join(library,"🏗️build","🕸️graph","🕰️generations","🟨️.mjs"),"utf8");
  expect(generations.includes("implementation:Object.freeze({none:")).toBe(false);
 });

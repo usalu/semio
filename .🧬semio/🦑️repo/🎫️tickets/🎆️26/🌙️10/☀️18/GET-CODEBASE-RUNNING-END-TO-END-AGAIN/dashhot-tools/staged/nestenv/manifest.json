@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧬️schema/🔣️.json": {
+  "file": "00.json",
+  "base": "0704a6fa503fc5d1cd452239c56f38fb6c65cb891b7c96f3ef48a57c68f65800",
+  "new": "21642ae81fe2146ac41843570d522f584dac2275bbb15f6f44f69753fdbdd6d0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧪️tests/🟦️.ts": {
+  "file": "01.ts",
+  "base": "16862124b919af4aef008d67df53544ca3305280460909d7d4c443f0cb53707b",
+  "new": "826da17bc5f9018574ab954efceef42c6a0c2dba15968141a8a18e88f94624fd"
+ }
+}

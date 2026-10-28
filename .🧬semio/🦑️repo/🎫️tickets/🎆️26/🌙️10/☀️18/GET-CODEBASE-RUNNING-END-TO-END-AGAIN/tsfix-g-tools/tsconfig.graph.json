@@ -1,0 +1,7 @@
+{
+  "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+  "compilerOptions": {"allowJs": true, "noEmit": true, "types": ["bun", "node"], "skipLibCheck": true},
+  "include": [],
+  "exclude": [],
+  "files": ["/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts"]
+}

@@ -15,6 +15,22 @@ import (
 	"testing"
 )
 
+// 🪟️A Windows final path reads as the shell spelling libuv's `realpath` gives it (the service hashes that text): the Win32 file namespace prefix goes, a UNC volume keeps its two leading separators, any other text stays.
+func TestFinalPathSpelling(t *testing.T) {
+	for final, want := range map[string]string{
+		`\\?\C:\Users\ada\semio`:     `C:\Users\ada\semio`,
+		`\\?\c:\semio`:               `c:\semio`,
+		`\\?\UNC\server\share\semio`: `\\server\share\semio`,
+		`\\server\share\semio`:       `\\server\share\semio`,
+		`C:\semio`:                   `C:\semio`,
+		`\\.\C:\semio`:               `\\.\C:\semio`,
+	} {
+		if got := FinalPathSpelling(final); got != want {
+			t.Errorf("%s: %s, want %s", final, got, want)
+		}
+	}
+}
+
 // 🧭️Every corpus case resolves to the expected root, or to none.
 func TestWorkspaceRootCorpus(t *testing.T) {
 	var corpus struct {

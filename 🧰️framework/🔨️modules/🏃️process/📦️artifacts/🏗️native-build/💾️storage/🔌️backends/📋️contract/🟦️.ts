@@ -1,5 +1,6 @@
 import {AsyncLocalStorage} from "node:async_hooks";
 import {existsSync} from "node:fs";
+import type {ResourceLeaseControl} from "../../../../../🔒️leases/🟦️.ts";
 import {dirname,join} from "node:path";
 import {nativeStorageBackendsV1,nativeStorageEnvironmentV1,selectNativeStorageBackendV1,type NativeStorageBackendDeclarationV1,type NativeStorageSelectionV1} from "../🧭️selection/🟦️.ts";
 import type {NativeStorageGeometryV1,NativeStorageOperationsV1} from "./🔌️operations/🟦️.ts";
@@ -76,5 +77,9 @@ export const nativeStorageAttachedV1=(image:string,root:string):boolean=>geometr
 export const nativeStorageFilesystemBytesV1=(root:string,declared:number):number=>geometry(nativeStorageBackendOfDirectoryV1(dirname(root)).id).filesystemBytes(root,declared);
 /** 🧮️ Reports the bytes in use below the root by the backend that owns its backing file. */
 export const nativeStorageUsedBytesV1=(root:string):number=>geometry(nativeStorageBackendOfDirectoryV1(dirname(root)).id).usedBytes(root);
+/** 🧹️ Drops the cached host attachment facts of every bound backend after the physical state changed. */
+export const invalidateNativeStorageRostersV1=():void=>{for(const value of geometries.values())value.invalidate();};
+/** 🗺️ Tells whether the host still maps the backing file or the volume root of any given directory, by the backend that owns the first directory's backing file. */
+export const nativeStorageMappedV1=(directories:readonly string[],control:ResourceLeaseControl):Promise<boolean>=>geometry(nativeStorageBackendOfDirectoryV1(directories[0]!).id).mapped(directories,control);
 /** 🪣️ Reports allocation unit and free units of the backend that owns the root's backing file. */
 export const nativeStorageSpaceV1=(root:string,declared:number):Readonly<{bsize:number;bavail:number}>=>geometry(nativeStorageBackendOfDirectoryV1(dirname(root)).id).space(root,declared);

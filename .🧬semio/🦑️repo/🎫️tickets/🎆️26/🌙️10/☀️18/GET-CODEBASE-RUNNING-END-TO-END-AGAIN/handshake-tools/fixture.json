@@ -1,0 +1,336 @@
+{
+ "budget": 10000.0,
+ "epoch": 1700000000000,
+ "rows": [
+  {
+   "name": "idle host: the plain budget",
+   "ratios": [
+    [
+     0,
+     0.4
+    ]
+   ],
+   "events": [
+    [
+     5000,
+     "check"
+    ],
+    [
+     9000,
+     "check"
+    ],
+    [
+     12000,
+     "check"
+    ]
+   ],
+   "deadline": null,
+   "until": 600000,
+   "tolerance": 2,
+   "fails": [
+    "build.bazel.birth-handshake-deadline-exhausted",
+    10000.0
+   ],
+   "checks": [
+    [
+     5000,
+     false
+    ],
+    [
+     9000,
+     false
+    ],
+    [
+     12000,
+     true
+    ]
+   ]
+  },
+  {
+   "name": "load 18.5 on 10 cores, no waiting: the budget counts at 1/1.85",
+   "ratios": [
+    [
+     0,
+     1.85
+    ]
+   ],
+   "events": [
+    [
+     9000,
+     "check"
+    ],
+    [
+     15000,
+     "check"
+    ],
+    [
+     17000,
+     "check"
+    ],
+    [
+     20000,
+     "check"
+    ]
+   ],
+   "deadline": null,
+   "until": 600000,
+   "tolerance": 2,
+   "fails": [
+    "build.bazel.birth-handshake-deadline-exhausted",
+    18500.000000000004
+   ],
+   "checks": [
+    [
+     9000,
+     false
+    ],
+    [
+     15000,
+     false
+    ],
+    [
+     17000,
+     false
+    ],
+    [
+     20000,
+     true
+    ]
+   ]
+  },
+  {
+   "name": "load 18.5 on 10 cores, waiting at 600 ms: nothing fails, the late joined passes",
+   "ratios": [
+    [
+     0,
+     1.85
+    ]
+   ],
+   "events": [
+    [
+     600,
+     "waiting"
+    ],
+    [
+     15000,
+     "check"
+    ],
+    [
+     120000,
+     "check"
+    ]
+   ],
+   "deadline": null,
+   "until": 600000,
+   "tolerance": 2,
+   "fails": null,
+   "checks": [
+    [
+     15000,
+     false
+    ],
+    [
+     120000,
+     false
+    ]
+   ]
+  },
+  {
+   "name": "the g48p-edit log: waiting for the grant 15 s, then joined",
+   "ratios": [
+    [
+     0,
+     1.85
+    ]
+   ],
+   "events": [
+    [
+     300,
+     "waiting"
+    ],
+    [
+     15200,
+     "check"
+    ],
+    [
+     16000,
+     "settle"
+    ],
+    [
+     200000,
+     "check"
+    ]
+   ],
+   "deadline": null,
+   "until": 600000,
+   "tolerance": 2,
+   "fails": null,
+   "checks": [
+    [
+     15200,
+     false
+    ],
+    [
+     200000,
+     false
+    ]
+   ]
+  },
+  {
+   "name": "hung parent on a saturated host: the ceiling is eight times the budget",
+   "ratios": [
+    [
+     0,
+     12.0
+    ]
+   ],
+   "events": [
+    [
+     70000,
+     "check"
+    ],
+    [
+     90000,
+     "check"
+    ]
+   ],
+   "deadline": null,
+   "until": 600000,
+   "tolerance": 2,
+   "fails": [
+    "build.bazel.birth-handshake-deadline-exhausted",
+    80000.0
+   ],
+   "checks": [
+    [
+     70000,
+     false
+    ],
+    [
+     90000,
+     true
+    ]
+   ]
+  },
+  {
+   "name": "host load rises after the budget was mostly used",
+   "ratios": [
+    [
+     0,
+     1.5
+    ],
+    [
+     12000,
+     4.0
+    ]
+   ],
+   "events": [
+    [
+     11000,
+     "check"
+    ],
+    [
+     18000,
+     "check"
+    ],
+    [
+     23000,
+     "check"
+    ]
+   ],
+   "deadline": null,
+   "until": 600000,
+   "tolerance": 2000,
+   "fails": [
+    "build.bazel.birth-handshake-deadline-exhausted",
+    20000.0
+   ],
+   "checks": [
+    [
+     11000,
+     false
+    ],
+    [
+     18000,
+     false
+    ],
+    [
+     23000,
+     true
+    ]
+   ]
+  },
+  {
+   "name": "the owner's deadline bounds a waiting birth",
+   "ratios": [
+    [
+     0,
+     1.85
+    ]
+   ],
+   "events": [
+    [
+     400,
+     "waiting"
+    ]
+   ],
+   "deadline": 5000,
+   "until": 600000,
+   "tolerance": 2,
+   "fails": [
+    "build.bazel.birth-deadline-exhausted",
+    5000.0
+   ],
+   "checks": []
+  },
+  {
+   "name": "settled birth is never cancelled",
+   "ratios": [
+    [
+     0,
+     1.85
+    ]
+   ],
+   "events": [
+    [
+     2000,
+     "settle"
+    ],
+    [
+     500000,
+     "check"
+    ]
+   ],
+   "deadline": null,
+   "until": 600000,
+   "tolerance": 2,
+   "fails": null,
+   "checks": [
+    [
+     500000,
+     false
+    ]
+   ]
+  },
+  {
+   "name": "settled birth ignores the owner deadline timer",
+   "ratios": [
+    [
+     0,
+     1.0
+    ]
+   ],
+   "events": [
+    [
+     2000,
+     "settle"
+    ]
+   ],
+   "deadline": 5000,
+   "until": 600000,
+   "tolerance": 2,
+   "fails": null,
+   "checks": []
+  }
+ ]
+}

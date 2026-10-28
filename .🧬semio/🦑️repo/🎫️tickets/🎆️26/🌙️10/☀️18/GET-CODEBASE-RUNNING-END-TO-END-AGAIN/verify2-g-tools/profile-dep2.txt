@@ -1,0 +1,28 @@
+$ repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo dependencies ensure
+[repository:command] running elapsedMs=10003
+[repository:command] running elapsedMs=20004
+#repo-profile	version=1	pid=99460	unit=ms
+#seq	depth	phase	start	duration	self	detail
+1	0	leases.load	8205.8	0.1	0.1	
+2	0	leases.open	8205.9	1660.6	1660.6	
+3	0	diagnostics.opened	11210.0	0.0	0.0	
+4	0	dependencies.verify	12460.5	6683.0	6683.0	
+5	0	dependencies.witness	19143.5	332.9	332.9	
+6	0	dependencies.recheck	19477.5	5452.5	5452.5	
+7	0	leases.close	25069.2	0.3	0.3	
+#total	25071.4	covered	14129.3	uncovered	10942.1
+#repo-profile	version=1	pid=99383	unit=ms
+#seq	depth	phase	start	duration	self	detail
+1	0	boot.main	52.1	0.0	0.0	
+2	0	door.plan	52.4	46.2	46.2	
+3	0	cli.run	114.6	26475.5	97.8	
+4	0	boot.loaded	170.5	0.0	0.0	
+5	1	door.load	212.3	9.6	9.6	
+6	1	door.capacity	222.0	26368.1	2.9	
+7	2	door.admitted	224.8	26365.2	4.8	
+8	3	door.capabilities	227.5	31.4	31.4	
+9	3	door.script	261.0	26329.0	25724.1	
+10	4	source.capture	286.0	604.8	604.8	
+11	5	source.served	890.8	0.0	0.0	memo
+#total	26590.2	covered	26521.7	uncovered	68.4
+SEMIO_REPO_PROFILE=1 bun repo dependencies ensure  3.34s user 2.18s system 20% cpu 26.702 total

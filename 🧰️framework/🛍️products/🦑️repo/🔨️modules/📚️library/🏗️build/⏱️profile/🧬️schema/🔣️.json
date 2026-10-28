@@ -8,7 +8,7 @@
     "phase": { "en": "Phase name", "de": "Name der Phase" },
     "start": { "en": "Milliseconds from process start to the phase start", "de": "Millisekunden vom Prozessstart bis zum Phasenbeginn" },
     "duration": { "en": "Milliseconds from phase start to phase end", "de": "Millisekunden vom Phasenbeginn bis zum Phasenende" },
-    "self": { "en": "Duration minus the time covered by nested phases", "de": "Dauer abzueglich der von verschachtelten Phasen abgedeckten Zeit" },
+    "self": { "en": "Duration minus the time covered by nested phases", "de": "Dauer abzüglich der von verschachtelten Phasen abgedeckten Zeit" },
     "detail": { "en": "Optional neutral detail such as a program name or a count", "de": "Optionales neutrales Detail wie ein Programmname oder eine Anzahl" }
   },
   "definitions": {

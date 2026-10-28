@@ -1,0 +1,15 @@
+/** ⏳️ What a start does with the pointer it found. A heavy command promotes a drifted tree (or a snapshot without a receipt); a light command never waits for the stat walk while its snapshot is fresh, checks the tree once it is older, and then promotes before it runs only when the snapshot is old enough that running it would be wrong, or starts a detached promotion while it runs the snapshot. The facts of a check are kept in the store, so the next light commands skip it.
+ * @see ../🟦️.ts the policy `light` and the plan, ../🧪️tests/🗂️store/🟦️.ts the laws */
+function startVerdictV1(root:string,store:SealedEntryV1,mode:ImplementationModeV1,pointer:SealedPointerV1|undefined,light:boolean,now=Date.now()):Readonly<{action:"run"|"promote"|"refresh";start:boolean}>{
+ if(mode==="promote"||!pointer)return{action:"promote",start:false};
+ if(!light){const receipt=readSealedReceiptV1(store,pointer.digest);return{action:!receipt?.tree||now-pointer.promotedAtMs>=sealedPolicyV1.coalesceMilliseconds&&!sealedTreeDriftV1(root,receipt.tree).fresh?"promote":"run",start:false};}
+ const checked=readSealedCheckedV1(store,pointer.digest),plan=sealedLightActionV1({now,promotedAtMs:pointer.promotedAtMs,checked,drifted:()=>{const receipt=readSealedReceiptV1(store,pointer.digest);return!receipt?.tree||!sealedTreeDriftV1(root,receipt.tree).fresh;},blocked:()=>{const known=readSealedBlockedV1(store);return known?.tree!=null&&sealedTreeDriftV1(root,known.tree).fresh;}});
+ if(plan.probed)writeSealedCheckedV1(store,{version:1,entry:store.entry,digest:pointer.digest,atMs:now,drifted:plan.drifted,refreshedAtMs:plan.start?now:checked?.refreshedAtMs??null});
+ return{action:plan.action,start:plan.start};
+}
+/** 🔄️ Starts the detached process that promotes the live tree while a light command runs the snapshot it has (the same door script in `promote` mode, which runs nothing); the process id, or nothing when it could not be started. */
+function refreshV1(argv:readonly string[],environment:NodeJS.ProcessEnv):number|undefined{
+ try{const script=process.argv[1];if(!script)return undefined;const child=spawn(process.execPath,[script,...argv],{detached:true,stdio:"ignore",env:{...environment,[sealedPolicyV1.modeVariable]:"promote"}});child.unref();return child.pid;}catch{return undefined;}
+}
+
+const promoteLiveV1=async(

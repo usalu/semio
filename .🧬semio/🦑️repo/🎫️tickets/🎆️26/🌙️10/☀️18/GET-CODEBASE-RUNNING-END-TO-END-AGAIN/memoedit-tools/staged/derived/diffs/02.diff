@@ -1,0 +1,138 @@
+--- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧬️schema/🔣️.json	2026-10-27 13:32:21
++++ /var/folders/pm/zdg449hs6r33w_2gtsn23byc0000gn/T/sm/meder/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧬️schema/🔣️.json	2026-10-27 13:54:50
+@@ -1,6 +1,6 @@
+ {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+-  "$comment": "🧠️ The graph memo: the slice a graph planner child produced once, kept beside the change journal and served again to the next identical request while the journal proves that nothing the planned generation read has changed. `relevance` is the closed table of what a fact row reads: `path` rows read the entry they name, `none` rows read nothing of the tree, `link` rows follow symbolic links, `resolve` rows resolve a request, `text` rows name their inputs inside their key. A kind this table does not name makes a generation unsealable (fail closed); a law keeps the table equal to the kinds the observation and generation schemas declare. Stamp refinement: the discovery frontier of a generation holds, per directory, the entry stamp (mtime, inode) captured with it; the planner itself treats a directory with an unmoved stamp (and not touched within the racy window of the capture) as one whose names, node types and absences cannot have moved (`stableDirectoriesV1`). A directory of the frontier whose facts are only entries and listings of kinds `Policy.stamped` is STAMPED: a row that adds, removes or renames a name directly inside it is relevant, a row that only says 'modified' (a content edit of a sibling no fact read; the kind is advisory) is settled by one lstat against the stamp kept in the table `.lst`. Directories a resolution or derived fact names, directories read by a kind of `Policy.following` (it follows symbolic links), and directories without a usable stamp are STRICT: every row directly inside is relevant (except the modification of a directory). `carry`: a sealed slice whose generation pointer moved is served under the newer generation when every generation-wide digest named in `shared` and the row of every owner the slice covers are identical in both manifests (the planner would verify the same facts and assemble the same projects from the same rows); otherwise the reason `pointer` names the first difference. Edit refinement: when the journal names a relevant change, the memo does not give up at once. The edit index of the sealed sidecar maps every entry to the rows that name it and every directory to the rows that read its children; the lookup re-checks exactly those rows with the planner's own checks (an analysis is replayed and compared by its result, so an edit that keeps a file's imports and modules holds), proves a directory that has relevant entries below it to be the same directory (frontier inode), lists a frontier directory whose children changed again with the planner's own walk predicates and compares its subdirectories and members, refuses a touched path that became a symbolic link, a row it cannot check (a derived fact, a closure) and more than `maximumEditPaths` paths or `maximumEditRows` rows; when everything holds it serves and re-seals the stamps of the directories it listed again.",
++  "$comment": "🧠️ The graph memo: the slice a graph planner child produced once, kept beside the change journal and served again to the next identical request while the journal proves that nothing the planned generation read has changed. `relevance` is the closed table of what a fact row reads: `path` rows read the entry they name, `none` rows read nothing of the tree, `link` rows follow symbolic links, `resolve` rows resolve a request, `text` rows name their inputs inside their key. A kind this table does not name makes a generation unsealable (fail closed); a law keeps the table equal to the kinds the observation and generation schemas declare. Stamp refinement: the discovery frontier of a generation holds, per directory, the entry stamp (mtime, inode) captured with it; the planner itself treats a directory with an unmoved stamp (and not touched within the racy window of the capture) as one whose names, node types and absences cannot have moved (`stableDirectoriesV1`). A directory of the frontier whose facts are only entries and listings of kinds `Policy.stamped` is STAMPED: a row that adds, removes or renames a name directly inside it is relevant, a row that only says 'modified' (a content edit of a sibling no fact read; the kind is advisory) is settled by one lstat against the stamp kept in the table `.lst`. Directories a resolution or derived fact names, directories read by a kind of `Policy.following` (it follows symbolic links), and directories without a usable stamp are STRICT: every row directly inside is relevant (except the modification of a directory). `carry`: a sealed slice whose generation pointer moved is served under the newer generation when every generation-wide digest named in `shared` and the row of every owner the slice covers are identical in both manifests (the planner would verify the same facts and assemble the same projects from the same rows); otherwise the reason `pointer` names the first difference. Edit refinement: when the journal names a relevant change, the memo does not give up at once. The edit index of the sealed sidecar maps every entry to the rows that name it and every directory to the rows that read its children; the lookup re-checks exactly those rows with the planner's own checks (an analysis is replayed and compared by its result, so an edit that keeps a file's imports and modules holds), proves a directory that has relevant entries below it to be the same directory (frontier inode), lists a frontier directory whose children changed again with the planner's own walk predicates and compares its subdirectories and members, refuses a touched path that became a symbolic link, a row it cannot check (a derived fact, a closure) and more than `maximumEditPaths` paths or `maximumEditRows` rows; when everything holds it serves and re-seals the stamps of the directories it listed again. Derived refinement: a re-checked row that does not hold and that only pseudo owners hold (the support of derived facts), and a derived fact the journal names, make the memo ask those questions again with the planner's own derivation (`openGenerationDeriverV1`, `settleSuspectsV1`) in a child process of the same invocation (`Policy.derive`); it serves only when every answer is the recorded one and every new support reads only entries the old support read; a stale row a project or the environment holds itself, a failed or changed answer, a new entry and more than `maximumDerivedQuestions` questions plan.",
+   "definitions": {
+     "Policy": {
+       "const": {
+@@ -8,6 +8,7 @@
+         "directory": "graph-memo",
+         "switch": "SEMIO_BUILD_GRAPH_MEMO",
+         "sidecar": "SEMIO_BUILD_GRAPH_MEMO_OUT",
++        "derive": "SEMIO_BUILD_GRAPH_MEMO_DERIVE",
+         "recordSuffix": ".json",
+         "planSuffix": ".plan",
+         "relevanceSuffix": ".rel",
+@@ -22,6 +23,7 @@
+         "maximumEditBytes": 134217728,
+         "maximumEditPaths": 256,
+         "maximumEditRows": 4096,
++        "maximumDerivedQuestions": 64,
+         "maximumRows": 4000000,
+         "leafSymlinkCheckConcurrency": 64,
+         "environmentPrefixes": [
+@@ -41,6 +43,7 @@
+         ],
+         "environmentDenied": [
+           "SEMIO_BUILD_GENERATION_PIN",
++          "SEMIO_BUILD_GRAPH_MEMO_DERIVE",
+           "SEMIO_BUILD_GRAPH_MEMO_EXPECT",
+           "SEMIO_BUILD_GRAPH_MEMO_OUT",
+           "SEMIO_BUILD_GRAPH_PLAN_OUT",
+@@ -91,13 +94,15 @@
+             "served": "graph: {projects} projects served from the memo of {seconds} s ago; the journal vouches for {rows} facts and {rechecked} facts outside its sight held, no planner process was started",
+             "refused": "graph: the memo cannot serve this request ({reason}); the graph is planned",
+             "carried": "graph: the memo of generation {from} still describes generation {to}: the {projects} projects it serves are unchanged there",
+-            "edited": "graph: the memo re-checked the {rows} facts that read the {paths} changed paths with the planner's own checks; they all still hold"
++            "edited": "graph: the memo re-checked the {rows} facts that read the {paths} changed paths with the planner's own checks; they all still hold",
++            "derived": "graph: {questions} derived facts that read them were asked again by a child process with the planner's own derivation; every answer is unchanged"
+           },
+           "de": {
+             "served": "graph: {projects} Projekte aus dem Memo von vor {seconds} s geliefert; das Journal bürgt für {rows} Fakten, {rechecked} Fakten ausserhalb seiner Sicht gelten noch, es wurde kein Planer-Prozess gestartet",
+             "refused": "graph: das Memo kann diese Anfrage nicht bedienen ({reason}); der Graph wird geplant",
+             "carried": "graph: das Memo der Generation {from} beschreibt auch Generation {to}: die {projects} gelieferten Projekte sind dort unverändert",
+-            "edited": "graph: das Memo hat die {rows} Fakten, welche die {paths} geänderten Pfade lesen, mit den Prüfungen des Planers nachgeprüft; alle gelten noch"
++            "edited": "graph: das Memo hat die {rows} Fakten, welche die {paths} geänderten Pfade lesen, mit den Prüfungen des Planers nachgeprüft; alle gelten noch",
++            "derived": "graph: {questions} abgeleitete Fakten, die sie lesen, wurden von einem Kindprozess mit der Ableitung des Planers neu befragt; jede Antwort ist unverändert"
+           }
+         },
+         "expect": "SEMIO_BUILD_GRAPH_MEMO_EXPECT",
+@@ -365,6 +370,85 @@
+             }
+           },
+           "$comment": "Written by the sealing child next to the relevance: `index` and `frontier` are the digests of the fact index and of the frontier of the served generation, `stem.rix` holds the edit index (the rows that name each entry, the rows that read the children of each directory, the directories with something relevant below them, the frontier directories and members)."
++        }
++      }
++    },
++    "DeriveRequest": {
++      "$comment": "Written by the memo for its derivation child (`Policy.derive` names the file): the fact index of the sealed generation and the pseudo owners whose derived question the child asks again.",
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "version",
++        "index",
++        "suspects"
++      ],
++      "properties": {
++        "version": {
++          "const": 1
++        },
++        "index": {
++          "$ref": "#/definitions/Sha256"
++        },
++        "suspects": {
++          "type": "array",
++          "maxItems": 65536,
++          "items": {
++            "type": "string",
++            "minLength": 1,
++            "maxLength": 256
++          }
++        }
++      }
++    },
++    "DeriveAnswer": {
++      "$comment": "Written by the derivation child next to the request (`.answer.json`): `held` the questions whose answer is the recorded one and whose new support reads no entry the old support did not read, `changed` the questions whose answer moved, `failed` the computations that failed, `uncovered` the held questions whose new support reads a new entry (the memo's relevance does not watch it), `missing` when the fact index is no longer retained.",
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "version",
++        "held",
++        "changed",
++        "failed",
++        "uncovered",
++        "missing"
++      ],
++      "properties": {
++        "version": {
++          "const": 1
++        },
++        "held": {
++          "type": "array",
++          "maxItems": 65536,
++          "items": {
++            "type": "string",
++            "minLength": 1,
++            "maxLength": 256
++          }
++        },
++        "changed": {
++          "type": "array",
++          "maxItems": 65536,
++          "items": {
++            "type": "string",
++            "minLength": 1,
++            "maxLength": 256
++          }
++        },
++        "failed": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "uncovered": {
++          "type": "array",
++          "maxItems": 65536,
++          "items": {
++            "type": "string",
++            "minLength": 1,
++            "maxLength": 256
++          }
++        },
++        "missing": {
++          "type": "boolean"
+         }
+       }
+     }

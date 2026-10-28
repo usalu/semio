@@ -13,12 +13,6 @@ export async function proveAcceptedOriginalDrainV1(mode:string,options:(invocati
  const result:Record<string,boolean>={};
  if(mode==="issuer-canonical-drain"){
   const{proveCanonicalRootControlV1}=await import("../../../🧪️tests/📥️canonical/🟦️.ts");await proveCanonicalRootControlV1();
- }else if(["issuer-baseline-count-drain","issuer-baseline-keybytes-drain"].includes(mode)){
-  const{proveOriginalBaselineLimitV1}=await import("../../../../../../🔒️leases/📦️namespace/📒️baseline/🧪️tests/🟦️.ts");await proveOriginalBaselineLimitV1(mode,options);
- }else if(mode==="issuer-baseline-funding-drain"){
-  const{proveOriginalBaselineFundingV1}=await import("../../../../../../🔒️leases/📦️namespace/📒️baseline/🧪️tests/🟦️.ts");await proveOriginalBaselineFundingV1(options);
- }else if(mode==="issuer-baseline-drain"){
-  const{proveOriginalResourceBaselineV1}=await import("../../../../../../🔒️leases/📦️namespace/📒️baseline/🧪️tests/🟦️.ts");await proveOriginalResourceBaselineV1(options);
  }else if(mode==="issuer-drain-failure"){
   const unhandled:unknown[]=[],observe=(error:unknown)=>{unhandled.push(error);};process.on("unhandledRejection",observe);
   let release!:()=>void,entered!:()=>void,failure:unknown;const ready=new Promise<void>(done=>{entered=done;});
@@ -37,11 +31,6 @@ export async function proveAcceptedOriginalDrainV1(mode:string,options:(invocati
    assert.equal(result.parentWaitsForAcceptedChild,true,"accepted child must retain Original until actual settlement");
   }finally{release();await child.catch(()=>{});await parent.catch(()=>{});}
   result.acceptedChildSettlesBeforeOriginalRetires=stopped&&refused(()=>api.requireIssuedScriptInvocationV1(birth));
-  if(["issuer-baseline-count-drain","issuer-baseline-keybytes-drain"].includes(mode)){
-  const{proveOriginalBaselineLimitV1}=await import("../../../../../../🔒️leases/📦️namespace/📒️baseline/🧪️tests/🟦️.ts");await proveOriginalBaselineLimitV1(mode,options);
- }else if(mode==="issuer-baseline-drain"){
-  const{proveOriginalResourceBaselineV1}=await import("../../../../../../🔒️leases/📦️namespace/📒️baseline/🧪️tests/🟦️.ts");await proveOriginalResourceBaselineV1(options);
- }else if(mode==="issuer-drain-failure")result.detachedFailureRejectsOriginal=String(failure).includes("Detached accepted failure");
   if(mode==="issuer-drain-interrupt")result.interruptionDrainSettlesWithOriginalFailure=String(failure).includes("Original Script process interrupted")&&process.listenerCount("SIGINT")===listeners&&process.listenerCount("SIGTERM")===terminators;
   if(mode==="issuer-drain")assert.equal(failure,undefined);
  }else if(mode==="issuer-nested-drain"){

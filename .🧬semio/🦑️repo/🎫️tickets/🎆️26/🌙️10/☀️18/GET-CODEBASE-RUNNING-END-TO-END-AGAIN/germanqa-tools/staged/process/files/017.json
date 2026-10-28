@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "selection": [
+    {"name": "a channel pin", "file": "[toolchain]\nprofile = \"minimal\"\nchannel = \"nightly-2026-07-20\"\ncomponents = [\"rust-src\"]\n", "environment": {}, "channel": "nightly-2026-07-20"},
+    {"name": "an incoming selection equal to the pin", "file": "[toolchain]\nchannel = \"nightly-2026-07-20\"\n", "environment": {"RUSTUP_TOOLCHAIN": "nightly-2026-07-20"}, "channel": "nightly-2026-07-20"},
+    {"name": "an incoming full toolchain name of the pin", "file": "[toolchain]\nchannel = \"nightly-2026-07-20\"\n", "environment": {"RUSTUP_TOOLCHAIN": "nightly-2026-07-20-aarch64-apple-darwin"}, "channel": "nightly-2026-07-20"},
+    {"name": "an empty incoming selection is none", "file": "[toolchain]\nchannel = \"1.90.0\"\n", "environment": {"RUSTUP_TOOLCHAIN": ""}, "channel": "1.90.0"}
+  ],
+  "refusals": [
+    {"name": "no pin file", "file": null, "environment": {"SEMIO_LANGUAGE": "en"}, "message": "has no pinned channel"},
+    {"name": "no channel key", "file": "[toolchain]\nprofile = \"minimal\"\n", "environment": {"SEMIO_LANGUAGE": "en"}, "message": "has no pinned channel"},
+    {"name": "the key belongs to another table", "file": "[other]\nchannel = \"stable\"\n", "environment": {"SEMIO_LANGUAGE": "de"}, "message": "keinen gepinnten Kanal"},
+    {"name": "an incoming selection of another channel", "file": "[toolchain]\nchannel = \"nightly-2026-07-20\"\n", "environment": {"RUSTUP_TOOLCHAIN": "stable", "SEMIO_LANGUAGE": "en"}, "message": "disagrees with the pinned channel nightly-2026-07-20"},
+    {"name": "an incoming selection of another channel in German", "file": "[toolchain]\nchannel = \"nightly-2026-07-20\"\n", "environment": {"RUSTUP_TOOLCHAIN": "stable", "SEMIO_LANGUAGE": "de"}, "message": "widerspricht dem gepinnten Kanal nightly-2026-07-20"}
+  ]
+}

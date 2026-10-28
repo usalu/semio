@@ -1,0 +1,18 @@
+import {nxToolingStoreBoundPolicyV1} from "../../🟦️.ts";
+import {acquireResourceLease} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import schema from "../../../📥️physical/🧬️schema/🔣️.json" with {type:"json"};
+
+const protocol=schema.definitions.Protocol.const;
+
+/** 🪫️ Asks whether any process still reads the tools image: a try-lock of the very whole-image exclusive scope the retirement needs, released at once; it queues nothing, so no new reader is held back by the question. */
+export async function probeNxToolingImageIdleV1(leaseDirectory:string,imageDirectory:string,signal:AbortSignal):Promise<boolean>{
+ const resource="native-fixed-image:"+imageDirectory;
+ try{const lease=await acquireResourceLease({directory:leaseDirectory,resource,mode:"exclusive",signal,timeoutMs:0,admissionPatienceMs:nxToolingStoreBoundPolicyV1().probePatienceMs});lease.release();return true;}
+ catch(error){if(String((error as Error).message)==="Resource lease timed out: "+resource)return false;throw error;}
+}
+
+/** 🔐️ Asks whether a live reader keeps the owner lease of one toolkit generation: a try-lock that never waits for the generation (it only waits up to a second for the lease directory's admission gate, which other commands hold for microseconds, so a busy directory is not mistaken for a reader) and is released at once, the very lease the retirement itself takes before it removes the generation. */
+export async function probeNxToolingHeldV1(leaseDirectory:string,identity:string,signal:AbortSignal):Promise<boolean>{
+ try{const lease=await acquireResourceLease({directory:leaseDirectory,resource:protocol.owner+identity,mode:"exclusive",signal,timeoutMs:0,admissionPatienceMs:nxToolingStoreBoundPolicyV1().probePatienceMs});lease.release();return false;}
+ catch(error){if(String((error as Error).message)==="Resource lease timed out: "+protocol.owner+identity)return true;throw error;}
+}

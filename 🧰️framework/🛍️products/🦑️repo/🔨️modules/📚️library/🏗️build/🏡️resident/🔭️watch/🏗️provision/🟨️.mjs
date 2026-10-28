@@ -4,6 +4,7 @@ import {chmodSync,copyFileSync,mkdirSync,mkdtempSync,readFileSync,renameSync,rmS
 import {spawnSync} from "node:child_process";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
+import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
 
 /** 🔏 sha256 of the watcher source. */
 export function watcherSourceDigestV1(sourcePath){return createHash("sha256").update(readFileSync(sourcePath)).digest("hex");}
@@ -23,10 +24,11 @@ export function watcherManifestV1(){
 
 const executableName=platform=>platform==="win32"?"semio-repo-watch.exe":"semio-repo-watch";
 
-/** 🛠 Finds or builds the watcher. `locate()` answers an installed path, `compile({directory,signal})` builds `semio-repo-watch` in `directory/target/release` and resolves its path, `outputRoot` is the tools partition directory of the tool. */
-export async function ensureWatcherV1({sourcePath,pinPath,outputRoot,locate,compile,signal,progress=()=>undefined,platform=process.platform,probe=defaultProbe}){
+/** 🛠 Finds or builds the watcher. `locate()` answers an installed path, `compile({directory,signal})` builds `semio-repo-watch` in `directory/target/release` and resolves its path, `outputRoot` is the tools partition directory of the tool, `writable()` answers whether that directory may be written now (an unmounted image is refused before anything is compiled). */
+export async function ensureWatcherV1({sourcePath,pinPath,outputRoot,locate,compile,writable=()=>true,signal,progress=()=>undefined,platform=process.platform,probe=defaultProbe}){
  const pin=readWatcherPinV1(pinPath,sourcePath),installed=await locate();
  if(installed)return{path:installed,built:false,version:pin.version,sha256:pin.sha256};
+ if(!writable())throw refuseBuildV1("missing","watcher.output-root-not-mounted",{path:outputRoot});
  const work=mkdtempSync(join(tmpdir(),"semio-watch-"));
  try{
   progress("compile");

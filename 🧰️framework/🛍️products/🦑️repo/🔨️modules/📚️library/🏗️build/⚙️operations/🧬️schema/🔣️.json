@@ -16,7 +16,7 @@
     "ToolName": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,31}$" },
     "Requires": { "enum": ["none", "dependencies"] },
     "OperationName": {
-      "enum": ["run", "run-many", "affected", "exec", "watch", "graph", "show", "inputs", "reset", "tools", "preflight", "incremental", "concurrency", "bench", "conformance", "units", "dependencies", "cargo", "cache", "capacity", "leases", "remote-execution", "remote-cache", "doctor", "service", "session"]
+      "enum": ["run", "run-many", "affected", "exec", "watch", "graph", "show", "inputs", "reset", "tools", "preflight", "incremental", "concurrency", "bench", "conformance", "units", "dependencies", "cargo", "cache", "capacity", "leases", "fleet", "remote-execution", "remote-cache", "doctor", "service", "session"]
     },
     "Operation": {
       "type": "object",

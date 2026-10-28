@@ -1,0 +1,297 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Native Repository User Installation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "platform",
+    "home",
+    "localAppData",
+    "digest",
+    "directory",
+    "executable"
+  ],
+  "properties": {
+    "platform": {
+      "enum": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    "home": {
+      "type": "string",
+      "minLength": 1
+    },
+    "localAppData": {
+      "type": "string"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "directory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "executable": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    }
+  },
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "unixDirectory": [
+          ".local",
+          "bin"
+        ],
+        "unixReceiptDirectory": [
+          ".local",
+          "share",
+          "semio",
+          "repo"
+        ],
+        "windowsDirectory": [
+          "Semio",
+          "repo"
+        ],
+        "launcherDirectory": [
+          "semio",
+          "launcher",
+          "bin"
+        ],
+        "maximumLinkHops": 8,
+        "maximumPathLength": 256,
+        "maximumBinaryBytes": 536870912,
+        "maximumProfileBytes": 1048576,
+        "shellProfiles": [
+          ".profile",
+          ".bash_profile",
+          ".bash_login",
+          ".bashrc",
+          ".zprofile",
+          ".zshrc"
+        ],
+        "marker": "semio native repo PATH",
+        "texts": {
+          "foreignLink": {
+            "en": "Native installation refuses {path}: it is a symbolic link to {target}, which the semio launcher installer does not own. Move or delete it, then run again: repo run repo-mcp:install",
+            "de": "Die native Installation lehnt {path} ab: Es ist ein symbolischer Link auf {target}, der nicht dem Launcher-Installer von semio gehört. Verschieben oder löschen, dann erneut ausführen: repo run repo-mcp:install"
+          },
+          "foreignDestination": {
+            "en": "Native installation refuses {path}: it is not a regular file. Move or delete it, then run again: repo run repo-mcp:install",
+            "de": "Die native Installation lehnt {path} ab: Es ist keine reguläre Datei. Verschieben oder löschen, dann erneut ausführen: repo run repo-mcp:install"
+          },
+          "foreignExecutable": {
+            "en": "Native installation refuses {path}: it is an executable that no semio installation published. Move or delete it, then run again: repo run repo-mcp:install",
+            "de": "Die native Installation lehnt {path} ab: Es ist eine ausführbare Datei, die keine semio-Installation veröffentlicht hat. Verschieben oder löschen, dann erneut ausführen: repo run repo-mcp:install"
+          }
+        }
+      }
+    },
+    "InvocationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "probes",
+        "published"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "ready",
+            "cancelled-probe",
+            "expired"
+          ]
+        },
+        "probes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "published": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PathCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "components",
+        "expected"
+      ],
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expected": {
+          "type": "string"
+        }
+      }
+    },
+    "BootstrapCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "home",
+        "dataHome",
+        "localAppData",
+        "directory"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "home": {
+          "type": "string"
+        },
+        "dataHome": {
+          "type": "string"
+        },
+        "localAppData": {
+          "type": "string"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "LinkCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "owned"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "absolute",
+            "relative",
+            "chained",
+            "dangling-owned",
+            "foreign",
+            "dangling-foreign",
+            "looping",
+            "regular-file",
+            "missing"
+          ]
+        },
+        "owned": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DestinationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "accepted"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "missing",
+            "directory",
+            "symlink",
+            "dangling-symlink",
+            "bootstrap-symlink"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "HookCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "verb"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "prepare-commit-msg",
+            "post-commit",
+            "post-checkout",
+            "post-merge",
+            "post-rewrite"
+          ]
+        },
+        "verb": {
+          "enum": [
+            "prepare-commit-msg",
+            "reset"
+          ]
+        }
+      }
+    },
+    "BuildPublicationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "platform",
+        "mode",
+        "binary",
+        "destination",
+        "rejected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platform": {
+          "enum": [
+            "linux",
+            "darwin",
+            "win32"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "binary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "destination": {
+          "enum": [
+            "fresh-nested",
+            "default",
+            "same-owner",
+            "unowned-empty",
+            "foreign-owner",
+            "symlink"
+          ]
+        },
+        "rejected": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

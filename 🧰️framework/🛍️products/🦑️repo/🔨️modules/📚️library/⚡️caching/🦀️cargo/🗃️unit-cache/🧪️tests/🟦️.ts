@@ -3,24 +3,25 @@ import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️proces
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import {spawn,spawnSync} from "node:child_process";
-import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
-import {tmpdir} from "node:os";
+import {chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {expandRustcArgumentsV1,keyEnvironmentV1,normalizeRustcArgumentsV1,parseDepInfoV1,parseRustcUnitV1,rustcBypassV1,unitKeyV1,UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 import {planGcV1,type GcInputV1} from "../🧹️gc/🟦️.ts";
-import {acquireLaneV1,enterLaneV1,MAXIMUM_OVERFLOW_LANES_V1,readLaneV1} from "../🧵️lane/🟦️.ts";
+import {enterLaneV1,lanePathsV1,readLaneV1} from "../🧵️lane/🟦️.ts";
+import {acquirePooledLaneV1} from "../🧵️lane/🏊️pool/🟦️.ts";
 import {listObjectsV1,lookupBuildRunV1,pruneEntriesV1,publishBuildRunV1} from "../💾️store/🟦️.ts";
 import {admissionMemoKeyV1,recallAdmissionV1,rememberAdmissionV1,unitAdmissionMemoV1} from "../📖️admission/🟦️.ts";
 import {ensureUnitCacheShimV1,focusFromCargoArgumentsV1,laneMessageV1,unitCacheEnvironmentV1,unitCacheRootV1,unitCacheShimPathV1,unitCacheShimSourceV1} from "../🚪️launch/🟦️.ts";
-import {resolveLanguageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
+import {cargoScratchBaseV1} from "./🏖️scratch/🟦️.ts";
 import {CATALOG_LANGUAGES_V1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 
-/** 🏁️ Every Cargo child runs with the scratch workspace as its working directory, so no repository `.cargo/config.toml` can leak in. Separate OS processes prove the claims, the slot queue and the cache: three sessions build disjoint crates of one workspace at once and compile each shared unit exactly once, a fourth session gets only hits, and no wait exceeds its bound. sccache (hit/miss counts; it keys on the output directory, so its runs reuse one wiped directory while ours cross lanes) and a plain Cargo build (artifact bytes) are the independent oracles; the key, dependency-file, lane and cleanup vectors are language-agnostic JSON. */
+/** 🏁️ Every Cargo child runs in a scratch workspace below `cargoScratchBaseV1`, outside every enclosing Cargo configuration, workspace manifest and toolchain file, so no repository `.cargo/config.toml` can leak in even when the test artifact directory lies inside a checkout. Separate OS processes prove the claims, the slot queue and the cache: three sessions build disjoint crates of one workspace at once and compile each shared unit exactly once, a fourth session gets only hits, and no wait exceeds its bound. sccache (hit/miss counts; it keys on the output directory, so its runs reuse one wiped directory while ours cross lanes) and a plain Cargo build (artifact bytes) are the independent oracles; the key, dependency-file, lane and cleanup vectors are language-agnostic JSON. */
 const here=fileURLToPath(new URL(".",import.meta.url)),script=resolve(here,"../📜️script.ts"),worker=resolve(here,"📥️worker/🟦️.ts"),slow=resolve(here,"⏳️slow/🟦️.ts"),policy=UNIT_CACHE_POLICY_V1;
-const base=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir());mkdirSync(base,{recursive:true});
+const base=cargoScratchBaseV1();
 const scratch=()=>mkdtempSync(join(base,"uc-"));
 const ajv=new Ajv({strict:true});ajv.addSchema(schema);
 const validator=(name:string)=>{const validate=ajv.getSchema(`${schema.$id}#/definitions/${name}`);if(!validate)throw Error("Missing schema definition "+name);return validate;};
@@ -64,11 +65,11 @@ test("the first-level key equals an independent Python serialisation and moves w
  expect(keyEnvironmentV1({CARGO_PKG_NAME:"foo",CARGO_MANIFEST_DIR:"/lane/x",HOME:"/h",PATH:"/p",CARGO_TARGET_DIR:"/lane/t"},"/lane")).toEqual([["CARGO_MANIFEST_DIR","@@semio-lane@@/x"],["CARGO_PKG_NAME","foo"]]);
 });
 
-test("lane identifiers are validated, and a lane records the session and agent that own it", () => {
- for(const bad of fixture.invalidLanes)expect(()=>acquireLaneV1(scratch(),bad),bad).toThrow();
- const cache=scratch(),lane=acquireLaneV1(cache,"a1b2",{session:"0123456789ab.a1b2",agent:"reviewer"});
- try{expect(readLaneV1(cache,"a1b2")).toMatchObject({id:"a1b2",session:"0123456789ab.a1b2",agent:"reviewer"});}finally{lane.release();}
- const plain=acquireLaneV1(cache,"plain");try{expect(readLaneV1(cache,"plain")?.session).toBeUndefined();}finally{plain.release();}
+test("lane identifiers are validated, and a lane records the session and agent that own it", async () => {
+ for(const bad of fixture.invalidLanes)expect(()=>lanePathsV1(scratch(),bad),bad).toThrow();
+ const cache=scratch(),lane=await acquirePooledLaneV1(cache,{crates:["a"],quotaBytes:Number.MAX_SAFE_INTEGER,owner:{session:"0123456789ab.a1b2",agent:"reviewer"}});
+ try{expect(readLaneV1(cache,lane.paths.id)).toMatchObject({id:lane.paths.id,session:"0123456789ab.a1b2",agent:"reviewer"});}finally{lane.release();}
+ const plain=enterLaneV1(cache,"plain");try{expect(readLaneV1(cache,"plain")?.session).toBeUndefined();}finally{plain.release();}
 });
 
 function oracleShares(input:GcInputV1,rules:typeof policy.gc){
@@ -258,16 +259,14 @@ test("cleanup removes by recency inside its bounds, keeps a lane with a live mar
  expect(count(events(cache,"g3"),"miss")).toBeGreaterThan(0);
 },180000);
 
-test("one Cargo process owns a lane at a time: concurrent commands of an agent overflow into sibling lanes and a dead owner frees its lane", async()=>{
- const cache=scratch(),held=Array.from({length:MAXIMUM_OVERFLOW_LANES_V1+1},()=>acquireLaneV1(cache,"agent"));
- expect(held.map(row=>row.paths.id)).toEqual(["agent",...Array.from({length:MAXIMUM_OVERFLOW_LANES_V1},(_,index)=>"agent"+(index+1))]);
- expect(acquireLaneV1(scratch(),"twelvecharsx").paths.id).toBe("twelvecharsx");
- expect(()=>acquireLaneV1(cache,"agent")).toThrow(/busy/u);
- held[1]!.release();expect(acquireLaneV1(cache,"agent").paths.id).toBe("agent1");
- for(const row of held)row.release();
- const child=spawn(process.execPath,[worker,"die",join(cache,"k"),"lane-solo"],{stdio:["ignore","pipe","inherit"]});await new Promise<void>(done=>child.stdout.once("data",()=>done()));
- child.kill("SIGKILL");await new Promise(done=>child.once("close",done));await new Promise(done=>setTimeout(done,1200));
- expect(acquireLaneV1(cache,"solo").paths.id).toBe("solo");
+test("one Cargo process owns a lane at a time: concurrent commands get distinct lanes up to the live maximum, the next one waits and a released lane is taken again", async()=>{
+ const cache=scratch(),maximum=policy.pool.maximumLiveLanes,big=Number.MAX_SAFE_INTEGER,held=[];
+ for(let index=0;index<maximum;index++)held.push(await acquirePooledLaneV1(cache,{crates:["agent"],quotaBytes:big}));
+ expect(new Set(held.map(row=>row.paths.id)).size).toBe(maximum);
+ await expect(acquirePooledLaneV1(cache,{crates:["agent"],quotaBytes:big},{signal:AbortSignal.timeout(300)})).rejects.toBeDefined();
+ const id=held[1]!.paths.id;held[1]!.release();
+ const again=await acquirePooledLaneV1(cache,{crates:["agent"],quotaBytes:big});expect(again.paths.id).toBe(id);expect(again.choice).toBe("warm");
+ again.release();for(const row of held)row.release();
 });
 
 test("the launcher block selects the wrapper chain and the focus follows the package selection", () => {
@@ -277,7 +276,7 @@ test("the launcher block selects the wrapper chain and the focus follows the pac
  expect(block.RUSTC_WRAPPER).toBe(unitCacheShimPathV1(cacheRoot));expect("RUSTC" in block,"the compiler stays the real one").toBe(false);
  expect(readFileSync(block.RUSTC_WRAPPER,"utf8")).toBe(unitCacheShimSourceV1("/bin/bun",script));expect(statSync(block.RUSTC_WRAPPER).mode&0o111).toBe(0o111);
  expect(ensureUnitCacheShimV1(cacheRoot,"/bin/bun")).toBe(block.RUSTC_WRAPPER);
- expect(unitCacheShimSourceV1("/o'p/bun","/s/it's.ts","linux")).toBe("#!/bin/sh\nexec '/o'\\''p/bun' '/s/it'\\''s.ts' \"$@\"\n");expect(unitCacheShimSourceV1("C:\\bun.exe","C:\\s.ts","win32")).toBe('@"C:\\bun.exe" "C:\\s.ts" %*\r\n');expect(unitCacheShimPathV1("/u","win32").endsWith("rustc-wrapper.cmd")).toBe(true);
+ const quoted=unitCacheShimSourceV1("/o'p/bun","/s/it's.ts");expect(quoted.startsWith("#!/bin/sh\n")).toBe(true);expect(quoted.endsWith("exec '/o'\\''p/bun' '/s/it'\\''s.ts' \"$@\"\n")).toBe(true);expect(unitCacheShimPathV1("/u","win32","abc").endsWith("rustc-wrapper-abc.exe"),"a native executable, never a batch file").toBe(true);
  expect(JSON.parse(block.SEMIO_UNIT_CACHE_INNER)).toEqual(["/t/scheduler","rustc"]);expect(block.SEMIO_UNIT_CACHE_FOCUS).toBe("a,b");expect(block.SEMIO_UNIT_CACHE_SLOTS).toBe("6");
  expect(unitCacheRootV1("/store")).toBe("/store/u");
 });
@@ -291,7 +290,7 @@ test("an admission memo holds until a probed path changes, appears, vanishes or 
  expect(validator("AdmissionMemo")(JSON.parse(readFileSync(join(root,"a",key.slice(0,2),key+".json"),"utf8")))).toBe(true);
  expect(recallAdmissionV1(root,key)?.cfg).toEqual(["unix"]);
  expect(admissionMemoKeyV1({...unit,sourceInputs:[{path:"x"}],compilerCfg:["y"]},policy,"tc")).toBe(key);
- for(const changed of[{...unit,kind:"binary"},{...unit,id:"b"}])expect(admissionMemoKeyV1(changed,policy,"tc")).not.toBe(key);
+ for(const changed of[{...unit,kind:"binary"},{...unit,packageName:"b"}])expect(admissionMemoKeyV1(changed,policy,"tc")).not.toBe(key);
  expect(admissionMemoKeyV1(unit,{maxSourceBytes:11},"tc")).not.toBe(key);expect(admissionMemoKeyV1(unit,policy,"other")).not.toBe(key);
  writeFileSync(other,"pub fn c() {}\n");expect(recallAdmissionV1(root,key),"unprobed file").toBeDefined();
  writeFileSync(absent,"");expect(recallAdmissionV1(root,key),"probed path appeared").toBeUndefined();rmSync(absent);expect(recallAdmissionV1(root,key),"and vanished again").toBeDefined();
@@ -304,8 +303,8 @@ test("an admission memo holds until a probed path changes, appears, vanishes or 
 
 test("operator messages exist in English and German and fill every placeholder", () => {
  const pick=(environment:Record<string,string>)=>resolveLanguageV1(CATALOG_LANGUAGES_V1,[],environment,()=>[]).language;expect(pick({SEMIO_LANGUAGE:"de"})).toBe("de");expect(pick({LANG:"de_DE.UTF-8"})).toBe("de");expect(pick({LANG:"en_US.UTF-8"})).toBe("en");expect(()=>pick({})).toThrow("--lang=en|de");
- for(const kind of["overflow","collected"] as const)for(const language of["en","de"] as const){const text=laneMessageV1(kind,{base:"a",lane:"a1",lanes:1,incremental:2,objects:3},language);expect(text).not.toMatch(/\{\w+\}/u);expect(text.length).toBeGreaterThan(20);}
- expect(laneMessageV1("overflow",{base:"a",lane:"a1"},"de")).toContain("Überlauf-Lane a1");
+ for(const kind of["overflow","collected","trimmed","poolBusy"] as const)for(const language of["en","de"] as const){const text=laneMessageV1(kind,{busy:1,total:2,lane:"a1",lanes:1,incremental:2,objects:3,count:4,quotaMib:5,removed:6,live:7,maximum:8,sessions:0,units:0},language);expect(text).not.toMatch(/\{\w+\}/u);expect(text.length).toBeGreaterThan(20);}
+ expect(laneMessageV1("overflow",{busy:1,total:2,lane:"a1"},"de")).toContain("neue Lane a1");
 });
 
 const generator=`use std::{env,fs,io::Write};
@@ -431,3 +430,53 @@ fn main() {
  }
  const second=events(cache,"x2");expect(count(second,"miss")+count(second,"failed")).toBe(0);expect(count(second,"hit")).toBeGreaterThan(0);
 },120000);
+
+test("a build script that runs the compiler through RUSTC_WRAPPER (libc does) works in a cold lane although the jobserver numbers in its environment name descriptors it does not have",async()=>{
+ const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache");mkdirSync(join(workspace,"src"),{recursive:true});
+ writeFileSync(join(workspace,"Cargo.toml"),'[package]\nname = "probe"\nversion = "0.1.0"\nedition = "2021"\nbuild = "build.rs"\n');
+ writeFileSync(join(workspace,"build.rs"),`use std::process::Command;
+fn main() {
+    let rustc = std::env::var("RUSTC").unwrap();
+    let wrapper = std::env::var("RUSTC_WRAPPER").unwrap();
+    for arguments in [vec!["--version"], vec!["-vV"]] {
+        let output = Command::new(&wrapper).arg(&rustc).args(&arguments).env("CARGO_MAKEFLAGS", "-j --jobserver-fds=3,5 --jobserver-auth=3,5").output().expect("failed to run rustc");
+        assert!(output.status.success(), "{:?}", output);
+        assert!(String::from_utf8_lossy(&output.stdout).starts_with("rustc"), "{:?}", output);
+    }
+    println!("cargo:rerun-if-changed=build.rs");
+}
+`);
+ writeFileSync(join(workspace,"src","lib.rs"),"pub fn f() {}\n");
+ const laneRoot=join(cache,"l","w1");mkdirSync(laneRoot,{recursive:true});
+ const block=unitCacheEnvironmentV1({cacheRoot:cache,lane:"w1",laneRoot,scheduler:"unused",compiler:"rustc",toolchain:"tc",focus:[],slots:2,features:{buildScripts:true}});
+ const run=await new Promise<{code:number;output:string}>(done=>{const child=spawn(cargo,["build"],{cwd:workspace,env:{HOME:process.env.HOME,PATH:`${process.env.HOME}/.cargo/bin:/usr/bin:/bin`,...block,SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"]),CARGO_TARGET_DIR:join(laneRoot,"t"),CARGO_INCREMENTAL:"0"} as NodeJS.ProcessEnv,stdio:["ignore","pipe","pipe"]});let output="";child.stdout.on("data",chunk=>{output+=chunk;});child.stderr.on("data",chunk=>{output+=chunk;});child.on("close",code=>done({code:code??1,output}));});
+ expect(run.code,run.output).toBe(0);
+},120000);
+
+test("the stand-in survives jobserver numbers whose descriptors are not open, where the runtime holds its own descriptors at the lowest numbers",()=>{
+ const cacheRoot=join(scratch(),"u"),laneRoot=join(cacheRoot,"l","s");mkdirSync(laneRoot,{recursive:true});
+ const block=unitCacheEnvironmentV1({cacheRoot,lane:"s",laneRoot,compiler:"rustc",toolchain:"tc",focus:[],slots:1});
+ for(const flags of["-j --jobserver-fds=3,5 --jobserver-auth=3,5","-j --jobserver-auth=3,4","-j --jobserver-auth=4,5","-j --jobserver-auth=3,3","-j --jobserver-auth=fifo:/nonexistent"]){
+  const run=spawnSync(block.RUSTC_WRAPPER,["rustc","--version"],{env:{HOME:process.env.HOME,PATH:`${process.env.HOME}/.cargo/bin:/usr/bin:/bin`,...block,CARGO_MAKEFLAGS:flags},encoding:"utf8",stdio:["ignore","pipe","pipe"]});
+  expect(run.stderr,flags).toContain("job-token pool");expect(run.stderr,flags).toContain("Job-Token-Pool");expect(run.status,flags).toBe(0);expect(run.stdout.startsWith("rustc "),flags).toBe(true);
+ }
+});
+
+test("the stand-in reports exactly the jobserver descriptors that are open before the runtime starts, as an independent Python census of the same descriptors sees them",()=>{
+ const shim=join(scratch(),"rustc-wrapper");writeFileSync(shim,unitCacheShimSourceV1("/usr/bin/printenv","SEMIO_UNIT_CACHE_JOBSERVER_FDS"));chmodSync(shim,0o755);
+ const stdioOf=(open:readonly number[])=>{const stdio:Array<"ignore"|"pipe">=["ignore","pipe","pipe"];for(let index=3;index<=Math.max(2,...open);index++)stdio[index]=open.includes(index)?"pipe":"ignore";return stdio;};
+ const python=testPythonV1()??"python3",census="import os,sys\nfor n in map(int,sys.argv[1:]):\n try: os.fstat(n); print(n)\n except OSError: pass\n";
+ const openAccordingToPython=(open:readonly number[],candidates:readonly number[])=>spawnSync(python,["-I","-c",census,...candidates.map(String)],{stdio:stdioOf(open),encoding:"utf8"}).stdout.split("\n").filter(Boolean).map(Number);
+ const reported=(flags:string,open:readonly number[],extra:Readonly<Record<string,string>>={},variable="CARGO_MAKEFLAGS")=>spawnSync(shim,[],{env:{PATH:"/usr/bin:/bin",[variable]:flags,...extra},stdio:stdioOf(open),encoding:"utf8"}).stdout.trim();
+ for(const [flags,pair,open] of[["-j --jobserver-fds=3,5 --jobserver-auth=3,5",[3,5],[3,5]],["-j --jobserver-auth=7,9",[7,9],[7,9]],["-j --jobserver-fds=3,5 --jobserver-auth=3,5",[3,5],[3]],["-j --jobserver-fds=3,5 --jobserver-auth=3,5",[3,5],[5]],["-j --jobserver-fds=3,5 --jobserver-auth=3,5",[3,5],[]],["-j --jobserver-auth=4,6",[4,6],[3,4,5]]] as const){
+  const live=openAccordingToPython(open,pair);expect(reported(flags,open),flags+" with "+open.join(",")+" open").toBe(live.length===2?pair.join(","):"");
+ }
+ expect(reported("-j --jobserver-auth=fifo:/tmp/jobs",[3,5]),"a named pipe is no descriptor pair").toBe("");
+ expect(reported("-j --jobserver-auth=3",[3])).toBe("");
+ expect(reported("-j --jobserver-auth=3,5,7",[3,5,7])).toBe("");
+ expect(reported("-j",[3,5])).toBe("");
+ expect(reported("-j --jobserver-auth=3,5",[3,5],{},"MAKEFLAGS"),"MAKEFLAGS is read when CARGO_MAKEFLAGS is absent").toBe("3,5");
+ expect(reported("-j --jobserver-auth=3,5",[],{SEMIO_UNIT_CACHE_JOBSERVER_FDS:"3,5"}),"a value inherited from a parent wrapper is never trusted").toBe("");
+ expect(reported("-j --jobserver-auth=3,5",[3,5],{},"MFLAGS"),"MFLAGS is the last variable read").toBe("3,5");
+ expect(reported("",[3,5],{MAKEFLAGS:"-j --jobserver-auth=3,5"}),"the first variable that is set decides, even an empty one, like the jobserver crate").toBe("");
+});

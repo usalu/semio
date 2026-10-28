@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📥️runtime-provision/🐹️.go": {
+  "file": "00.go",
+  "base": "95350e8e5189e9d7b157ae4921f78ddb2d73a9275ca6f818ad6a09e09cfcd6a9",
+  "new": "0fd2f1221c8746cbecd7a43107d1c4c1023a715dff8fbb319aa2bb00d8f40202"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🪟️runtime-outside-partition/🐹️.go": {
+  "file": "01.go",
+  "base": null,
+  "new": "225a2bb4035203a06d6b9929ad375855f87cf128298163b5c28a9f9cce28dd1a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🪟️runtime-outside-partition/🥒️.feature": {
+  "file": "02.feature",
+  "base": null,
+  "new": "d156000c6a74280837ed712f4695d91f87da1b3b875037466cb5fa87d748567f"
+ }
+}

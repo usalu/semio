@@ -434,8 +434,8 @@
             "declined": "The cache image {partition} ({directory}) is not recreated: its journal verdict is {reason} (a whole-image reset never drops persistent state or foreign charges). Space is recovered by collection (repo cache gc) only."
           },
           "de": {
-            "obsolete": "Das Cache-Image {partition} ({directory}) wurde in einem nicht unterstützten Quittungsformat veröffentlicht, zum Beispiel vor der bootstabilen Vorfahrenbindung. Sein Inhalt ist neu berechenbar: es wird ausgemustert und automatisch neu aufgebaut.",
-            "attached": "Das Cache-Image {partition} ({directory}) ist angehängt und hat ein nicht unterstütztes Quittungsformat. Hängen Sie es ab (hdiutil detach <Gerät>) und führen Sie den Befehl erneut aus: es wird dann automatisch neu aufgebaut.",
+            "obsolete": "Das Cache-Image {partition} ({directory}) wurde in einem nicht unterstützten Quittungsformat veröffentlicht, zum Beispiel vor der bootstabilen Vorfahrenbindung. Sein Inhalt ist neu berechenbar: es wird stillgelegt und automatisch neu aufgebaut.",
+            "attached": "Das Cache-Image {partition} ({directory}) ist angehängt und hat ein nicht unterstütztes Quittungsformat. Hänge es ab (hdiutil detach <Gerät>) und führe den Befehl erneut aus: es wird dann automatisch neu aufgebaut.",
             "declined": "Das Cache-Image {partition} ({directory}) wird nicht neu erzeugt: sein Journal-Urteil lautet {reason} (ein Gesamt-Reset verwirft nie persistenten Zustand oder fremde Belastungen). Platz wird nur durch Einsammeln (repo cache gc) zurückgewonnen."
           }
         },

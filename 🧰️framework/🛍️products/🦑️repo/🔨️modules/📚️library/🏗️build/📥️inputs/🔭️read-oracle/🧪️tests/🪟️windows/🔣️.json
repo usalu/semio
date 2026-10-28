@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {"name": "a cmd shim of a package manager is refused", "command": "npm", "env": {"Path": "C:\\Windows\\System32;C:\\nodejs"}, "files": ["C:\\nodejs\\npm", "C:\\nodejs\\npm.cmd", "C:\\Windows\\System32\\cmd.exe"], "expect": {"refusal": "C:\\nodejs\\npm.cmd"}},
+    {"name": "an exe on the path is started directly", "command": "git", "env": {"PATH": "C:\\Git\\cmd;C:\\nodejs"}, "files": ["C:\\Git\\cmd\\git.exe"], "expect": {"path": "C:\\Git\\cmd\\git.exe"}},
+    {"name": "the first directory decides, as in the shell", "command": "tool", "env": {"PATH": "C:\\a;C:\\b"}, "files": ["C:\\a\\tool.cmd", "C:\\b\\tool.exe"], "expect": {"refusal": "C:\\a\\tool.cmd"}},
+    {"name": "within one directory the extensions follow PATHEXT", "command": "tool", "env": {"PATH": "C:\\a", "PATHEXT": ".EXE;.CMD"}, "files": ["C:\\a\\tool.cmd", "C:\\a\\tool.exe"], "expect": {"path": "C:\\a\\tool.exe"}},
+    {"name": "an explicit extension is kept", "command": "python.exe", "env": {"PATH": "C:\\py"}, "files": ["C:\\py\\python.exe"], "expect": {"path": "C:\\py\\python.exe"}},
+    {"name": "an absolute name without extension gets one", "command": "C:\\tools\\x", "env": {"PATH": "C:\\other"}, "files": ["C:\\tools\\x.exe", "C:\\other\\x.cmd"], "expect": {"path": "C:\\tools\\x.exe"}},
+    {"name": "an unknown command keeps its name and fails as not found", "command": "ghost", "env": {"PATH": "C:\\a"}, "files": [], "expect": {"path": "ghost"}}
+  ]
+}

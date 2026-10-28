@@ -10,8 +10,9 @@ import Ajv from "ajv";
 import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
-import {GENERATION_MESSAGES_V1,extractGraphPolicyV1,implementationDigestV1,loadGenerationGraphV1,renderGenerationMessageV1,scopeImplementationRowsV1,sliceClosureV1,expandInChunksV1,shapeComputeResultV1,survivingStubsV1} from "../🟨️.mjs";
+import {GENERATION_MESSAGES_V1,extractGraphPolicyV1,implementationDigestV1,loadGenerationGraphV1,renderGenerationMessageV1,scopeImplementationRowsV1,sliceClosureV1,sliceViewV1,expandInChunksV1,shapeComputeResultV1,survivingStubsV1} from "../🟨️.mjs";
 import {GENERATION_POLICY_V1,canonicalJsonV1} from "../../🟨️.mjs";
+import {encodeGenerationPinV1,generationPinOpenV1,readGenerationPinV1} from "../../🧷️pin/🟨️.mjs";
 import {applyOps,createMockHost,ringFiles,seed} from "../../🧪️tests/🏃️world/🟦️.ts";
 
 const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"..","..","🧪️tests","🐍️.py");
@@ -200,13 +201,43 @@ const sliceTree=()=>{
 
 for(const[index,row]of(fixture as any).closures.entries())test("selected closure is the independent model "+index,async()=>{
  const owners=Object.fromEntries(Object.entries(row.owners).map(([name,value]:[string,any])=>[name,value.root])),fragments=row.owners as Record<string,any>;
- const run=()=>sliceClosureV1({owners,fragment:async(name:string)=>({edges:fragments[name].edges.map((target:string)=>({source:name,target})),node:{targets:fragments[name].targets}}),selection:row.selection as never,roots:row.roots,external:row.external??[],providers:row.providers??[]});
+ const run=()=>sliceClosureV1({owners,fragment:async(name:string)=>({edges:fragments[name].edges.map((target:string)=>({source:name,target})),node:{targets:fragments[name].targets,namedInputs:fragments[name].namedInputs}}),selection:row.selection as never,roots:row.roots,external:row.external??[],providers:row.providers??[]});
  if(row.expected.error)await expect(run()).rejects.toMatchObject({code:"GENERATION_UNKNOWN_OWNER"});else expect([...await run()].sort()).toEqual(row.expected.admitted);
 });
 
 
+for(const[index,row]of(fixture as any).closures.entries())test("selected closure over the slice view of the fragments is the independent model "+index,async()=>{
+ const owners=Object.fromEntries(Object.entries(row.owners).map(([name,value]:[string,any])=>[name,value.root])),fragments=row.owners as Record<string,any>;
+ const run=()=>sliceClosureV1({owners,fragment:async(name:string)=>sliceViewV1({edges:fragments[name].edges.map((target:string)=>({source:name,target,type:"static"})),node:{targets:Object.fromEntries(Object.entries(fragments[name].targets??{}).map(([target,operation]:[string,any])=>[target,{...operation,executor:"repo:noop",options:{big:"x".repeat(64)},outputs:["o"]}])),namedInputs:fragments[name].namedInputs}}),selection:row.selection as never,roots:row.roots,external:row.external??[],providers:row.providers??[]});
+ if(row.expected.error)await expect(run()).rejects.toMatchObject({code:"GENERATION_UNKNOWN_OWNER"});else expect([...await run()].sort()).toEqual(row.expected.admitted);
+});
+
+test("the slice view keeps only what the closure reads",()=>{
+ const view=sliceViewV1({edges:[{target:"b",source:"a",sourceFile:"x"} as never],node:{targets:{build:{inputs:["{workspaceRoot}/x",{projects:["b"],input:"nativeSources"},{env:"E"}],dependsOn:["^build"],executor:"repo:script",options:{command:"x"}} as never}}});
+ expect(view).toEqual({edges:[{target:"b"}],node:{targets:{build:{inputs:[{input:"nativeSources",projects:["b"]}],dependsOn:["^build"]}}}});
+ const grouped=sliceViewV1({edges:[],node:{targets:{test:{inputs:["default","^shared","!{projectRoot}/dist/**",{env:"E"}]}},namedInputs:{default:["{projectRoot}/**/*",{input:"cargoToolchain",projects:["proctor"],extra:1} as never],shared:[{input:"own",dependencies:true}]}}});
+ expect(grouped).toEqual({edges:[],node:{targets:{test:{inputs:["default","^shared"],dependsOn:undefined}},namedInputs:{default:[{input:"cargoToolchain",projects:["proctor"]}],shared:[{input:"own",dependencies:true}]}}});
+});
+
+test("an orchestrating build pins a generation that covers the nested run it launches: the outer slice admits the declared children, the nested slice is inside it",async()=>{
+ const fragments:Record<string,{root:string;edges:string[];targets:Record<string,unknown>}>={
+  dash:{root:"pkg/dash",edges:["lib"],targets:{build:{executor:"repo:script",metadata:{semio:{execution:{version:1,kind:"orchestration",children:[{project:"dash",target:"compile"}]},cache:{class:"driver-owned"}}}},compile:{inputs:["default",{input:"scriptProvider:leases:native",projects:["providers"]}]}}},
+  providers:{root:"lib/providers",edges:["process"],targets:{}},process:{root:"process",edges:["framework"],targets:{}},framework:{root:"framework",edges:["value"],targets:{}},value:{root:"value",edges:[],targets:{}},lib:{root:"lib",edges:[],targets:{}},course:{root:"course",edges:["framework"],targets:{build:{}}},
+ };
+ const owners=Object.fromEntries(Object.entries(fragments).map(([name,row])=>[name,row.root])),fragment=async(name:string)=>sliceViewV1({edges:fragments[name]!.edges.map(target=>({target})),node:{targets:fragments[name]!.targets as never}});
+ const closure=(target:string)=>sliceClosureV1({owners,fragment,selection:{kind:"tasks",tasks:[{project:"dash",target}]}});
+ const outer=await closure("build"),nested=await closure("compile");
+ expect([...outer].sort()).toEqual(["dash","framework","lib","process","providers","value"]);
+ expect([...nested].every(name=>outer.has(name))).toBe(true);
+ const names=Object.keys(owners).sort(),pin=readGenerationPinV1(encodeGenerationPinV1({owner:1,generation:7,manifest:"a".repeat(64),owners:names,covered:outer,atMs:Date.now()}));
+ expect(generationPinOpenV1({pin,owners:names,needed:nested})).toEqual([]);
+ expect((await fragment("dash")).node.targets.build).toEqual({inputs:[],dependsOn:undefined,metadata:{semio:{execution:{kind:"orchestration",children:[{project:"dash",target:"compile"}]}}}});
+ fragments.dash!.targets.build={metadata:{semio:{execution:{version:1,kind:"orchestration",children:[{project:"ghost",target:"compile"}]}}}};
+ await expect(closure("build")).rejects.toMatchObject({code:"GENERATION_UNKNOWN_OWNER"});
+});
+
 test("the slice scenario corpus agrees with the python oracle",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });
@@ -261,3 +292,45 @@ test("a removed owner is no stub of the next inference, so no edge refresh can a
  const python3=Bun.spawnSync([python!,"-I","-c","import json,sys;s=json.load(sys.stdin);print(json.dumps({k:v for k,v in s['stubs'].items() if k not in s['removed']}))"],{stdin:new TextEncoder().encode(JSON.stringify({stubs,removed:["b"]}))});
  expect(JSON.parse(python3.stdout.toString())).toEqual(survivingStubsV1(stubs,["b"]));
 });
+
+test("the stale projects of a pending refresh are prepared once, after the shared attempt and before the builder, for the owners the plan named",async()=>{
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(6));const requests:{generation:number;dirty:readonly string[];roots:Readonly<Record<string,string>>;implementation:string}[]=[];
+  const mock=createMockHost(dir,{prefetch:async request=>{requests.push(request);}});
+  await loadGenerationGraphV1(mock.host);
+  expect(requests).toEqual([]);expect(mock.events).toEqual(["shared","builder:wait","builder:held","builder:released"]);
+  mock.events.length=0;await loadGenerationGraphV1(mock.host);expect(requests).toEqual([]);expect(mock.events).toEqual(["shared"]);
+  await applyOps(dir,[{op:"write",path:"pkg/p2/src/index.ts",content:'import "@syn/p4";\nexport const v=2;\n'}]);
+  mock.events.length=0;await loadGenerationGraphV1(mock.host);
+  expect(mock.events).toEqual(["shared","prefetch","builder:wait","builder:held","builder:released"]);
+  expect(requests).toHaveLength(1);expect(requests[0]!.dirty).toEqual(["p2"]);expect(requests[0]!.generation).toBe(0);expect(Object.keys(requests[0]!.roots)).toEqual(["p2"]);expect(requests[0]!.roots.p2).toBe("pkg/p2");expect(requests[0]!.implementation).toMatch(/^[a-f0-9]{64}$/u);
+ }finally{clean(dir);}
+},60000);
+
+test("a refresh restricted to a closure prepares only the stale owners of that closure",async()=>{
+ const dir=scratch();
+ try{
+  const files:Record<string,string>={};
+  for(const[name,imports]of[["a",["@syn/b"]],["b",["@syn/c"]],["c",[]],["d",["@syn/e"]],["e",[]]] as [string,string[]][])files[`pkg/${name}/project.json`]=JSON.stringify({name,package:`@syn/${name}`,uses:[]}),files[`pkg/${name}/src/index.ts`]=imports.map(spec=>`import "${spec}";`).join("\n")+"\nexport const v=1;\n";
+  await seed(dir,files);const requests:string[][]=[];const mock=createMockHost(dir,{prefetch:async request=>{requests.push([...request.dirty]);}});
+  await loadGenerationGraphV1(mock.host);
+  await applyOps(dir,[{op:"write",path:"pkg/c/src/index.ts",content:"export const v=3;\n"},{op:"write",path:"pkg/e/src/index.ts",content:"export const v=4;\n"}]);
+  await loadGenerationGraphV1(mock.host,{closure:["a"]});
+  expect(requests).toEqual([["c"]]);
+ }finally{clean(dir);}
+},60000);
+
+test("a prefetch that settles late delays the builder, and one that rejects fails the load before any builder is entered",async()=>{
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(6));const mock=createMockHost(dir);await loadGenerationGraphV1(mock.host);
+  await applyOps(dir,[{op:"write",path:"pkg/p2/src/index.ts",content:'import "@syn/p4";\nexport const v=5;\n'}]);
+  let release!:()=>void;const late=new Promise<void>(resolve=>{release=resolve;});
+  const slow=createMockHost(dir,{prefetch:()=>late});const loading=loadGenerationGraphV1(slow.host);
+  await sleep(150);expect(slow.events).toEqual(["shared","prefetch"]);release();await loading;expect(slow.events).toEqual(["shared","prefetch","builder:wait","builder:held","builder:released"]);
+  await applyOps(dir,[{op:"write",path:"pkg/p3/src/index.ts",content:'import "@syn/p5";\nexport const v=6;\n'}]);
+  const failing=createMockHost(dir,{prefetch:async()=>{throw new Error("cancelled");}});
+  await expect(loadGenerationGraphV1(failing.host)).rejects.toThrow("cancelled");expect(failing.events).toEqual(["shared","prefetch"]);
+ }finally{clean(dir);}
+},60000);

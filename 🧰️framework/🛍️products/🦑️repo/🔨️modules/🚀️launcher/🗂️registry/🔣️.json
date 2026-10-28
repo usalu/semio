@@ -6,7 +6,10 @@
   "de"
  ],
  "language": {
-  "protocol": "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🔣️.json"
+  "protocol": "🧰️framework/🔨️modules/⚙️runtime/🗣️language/🔣️.json"
+ },
+ "restart": {
+  "policy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🧬️schema/🔣️.json"
  },
  "routing": {
   "catalogue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json"
@@ -170,7 +173,7 @@
   },
   "downloading": {
    "en": "Downloading {runtime} {version}: {percent}% ({done} of {total} MiB).",
-   "de": "Lade {runtime} {version}: {percent}% ({done} von {total} MiB)."
+   "de": "Lade {runtime} {version}: {percent} % ({done} von {total} MiB)."
   },
   "waitingForPeer": {
    "en": "Another process is provisioning {runtime} {version}; waiting for it.",
@@ -271,18 +274,6 @@
   "versionImplementationUnknown": {
    "en": "implementation: version unreadable ({source})",
    "de": "Implementierung: Version nicht lesbar ({source})"
-  },
-  "languageRefusal": {
-   "en": "No language selected for texts. Pass --lang={choice}, set SEMIO_LANGUAGE={choice}, or run with a locale such as LANG=en_US.UTF-8 (resolution order: --lang, SEMIO_LANGUAGE, LANGUAGE, LC_ALL, LC_MESSAGES, LANG, the operating system language list).",
-   "de": "Keine Sprache für Texte gewählt. Übergib --lang={choice}, setze SEMIO_LANGUAGE={choice} oder starte mit einem Locale wie LANG=de_DE.UTF-8 (Reihenfolge: --lang, SEMIO_LANGUAGE, LANGUAGE, LC_ALL, LC_MESSAGES, LANG, Sprachliste des Betriebssystems)."
-  },
-  "languageUnknownFlag": {
-   "en": "Unknown language: {value} ({choice})",
-   "de": "Unbekannte Sprache: {value} ({choice})"
-  },
-  "languageUnknownVariable": {
-   "en": "{name} names a language that is not offered: {value} ({choice})",
-   "de": "{name} nennt eine nicht angebotene Sprache: {value} ({choice})"
   }
  }
 }

@@ -139,6 +139,7 @@ export function registerReplaysIdentityRemainsCloseTests(): void {
   it("keeps controlled input positions stable while emitting cooperative proposals", () => {
     const frames = installFrames();
     const flushHandoffs = installHandoffs();
+    installBudgetClock(0.0001);
     const onNodesChange = vi.fn();
     const nodes = [{ id: "controlled", position: { x: 100, y: 50 }, data: {} }];
     const view = render(

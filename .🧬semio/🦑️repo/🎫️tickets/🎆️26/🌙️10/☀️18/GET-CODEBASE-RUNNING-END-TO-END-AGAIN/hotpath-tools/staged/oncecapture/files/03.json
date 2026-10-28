@@ -1,0 +1,9 @@
+{
+ "version": 1,
+ "root": "/workspace",
+ "entry": "🏗️build/🚪️entry/🟦️.ts",
+ "files": [
+  {"path": "🏗️build/🚪️entry/🟦️.ts", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "base64": "ZXhwb3J0IHt9Owo=", "imports": {"./🟦️.ts": "🏗️build/🟦️.ts"}},
+  {"path": "🏗️build/🟦️.ts", "sha256": "1111111111111111111111111111111111111111111111111111111111111111", "base64": "Y29uc3QgeD0iw6kiOwo=", "imports": {}}
+ ]
+}

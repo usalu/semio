@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cache collector limits / Grenzen des Cache-Sammlers",
+  "definitions": {
+    "Limits": {
+      "description": "EN: The waits, budgets, intervals and progress cadences of the cache collector. DE: Die Wartezeiten, Budgets, Intervalle und Fortschrittstakte des Cache-Sammlers.",
+      "const": {
+        "graphLeaseWaitMilliseconds": 600000,
+        "phaseBudgetMilliseconds": 3600000,
+        "graphCollectorIntervalMilliseconds": 300000,
+        "productsCollectorIntervalMilliseconds": 900000,
+        "atimeProbeAgeMilliseconds": 172800000,
+        "atimeProbeToleranceMilliseconds": 1000,
+        "dedupeProgressMilliseconds": 250,
+        "dedupeCountProgressStride": 512
+      }
+    },
+    "LimitsDescriptions": {
+      "const": {
+        "en": {
+          "graphLeaseWaitMilliseconds": "How long the graph reclaim waits for the exclusive lease of the graph partition before it gives up (10 minutes).",
+          "phaseBudgetMilliseconds": "The most time one reclaim phase of an owner may run before its resource control expires (1 hour).",
+          "graphCollectorIntervalMilliseconds": "The least time between two launches of the graph collector (5 minutes).",
+          "productsCollectorIntervalMilliseconds": "The least time between two launches of the products collector, which measures trees (15 minutes).",
+          "atimeProbeAgeMilliseconds": "How far back the probe file of the access-time check is dated (two days).",
+          "atimeProbeToleranceMilliseconds": "How much later than the dated time the access time must be after the read for the volume to count as recording it.",
+          "dedupeProgressMilliseconds": "The least time between two progress reports of the deduplication.",
+          "dedupeCountProgressStride": "After how many counted files the deduplication checks for progress and cancellation."
+        },
+        "de": {
+          "graphLeaseWaitMilliseconds": "Wie lange die Graph-Rueckgewinnung auf die exklusive Lease der Graph-Partition wartet, bevor sie aufgibt (10 Minuten).",
+          "phaseBudgetMilliseconds": "Die meiste Zeit, die eine Rueckgewinnungsphase eines Eigentuemers laufen darf, bevor ihre Ressourcenkontrolle ablaeuft (1 Stunde).",
+          "graphCollectorIntervalMilliseconds": "Die kleinste Zeit zwischen zwei Starts des Graph-Sammlers (5 Minuten).",
+          "productsCollectorIntervalMilliseconds": "Die kleinste Zeit zwischen zwei Starts des Produkt-Sammlers, der Baeume misst (15 Minuten).",
+          "atimeProbeAgeMilliseconds": "Wie weit die Probedatei der Zugriffszeit-Pruefung zurueckdatiert wird (zwei Tage).",
+          "atimeProbeToleranceMilliseconds": "Um wie viel spaeter als die zurueckdatierte Zeit die Zugriffszeit nach dem Lesen sein muss, damit das Laufwerk sie als erfasst gilt.",
+          "dedupeProgressMilliseconds": "Die kleinste Zeit zwischen zwei Fortschrittsmeldungen der Deduplizierung.",
+          "dedupeCountProgressStride": "Nach wie vielen gezaehlten Dateien die Deduplizierung auf Fortschritt und Abbruch prueft."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,96 @@
+--- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/📤️relevance/🟦️.ts	2026-10-27 11:47:52
++++ /var/folders/pm/zdg449hs6r33w_2gtsn23byc0000gn/T/sm/mework/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/📤️relevance/🟦️.ts	2026-10-27 13:09:51
+@@ -1,7 +1,7 @@
+ import {readFileSync,writeFileSync,renameSync,rmSync} from "node:fs";
+ import {lstat} from "node:fs/promises";
+ import {join} from "node:path";
+-import {GRAPH_MEMO_POLICY_V1,memoClassesV1,memoDirectoriesV1,memoExcluderV1,memoLeavesV1,memoReachV1,packMemoRelevanceV1,packMemoStampsV1,type MemoIdentityV1,type MemoRecheckV1,type MemoRowV1} from "../🟦️.ts";
++import {GRAPH_MEMO_POLICY_V1,memoClassesV1,memoDirectoriesV1,memoExcluderV1,memoLeavesV1,memoReachV1,packMemoEditIndexV1,packMemoRelevanceV1,packMemoStampsV1,type MemoIdentityV1,type MemoRecheckV1,type MemoRowV1} from "../🟦️.ts";
+ import {changeJournalDirectoryV1,connectChangeJournalV1} from "../../../../🏡️resident/📜️journal/🟦️.ts";
+ import {canonicalRootV1} from "../../../../🏡️resident/📨️protocol/📍️endpoint/🟨️.mjs";
+ import {readChangeStateV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🟦️.ts";
+@@ -17,17 +17,20 @@
+  root:string;rows:()=>Iterable<MemoRowV1>;frontier:Readonly<{directories:Iterable<readonly [string,...unknown[]]>;members:Iterable<readonly [string,...unknown[]]>;capturedAt?:number}>;
+  excluded:(relative:string)=>boolean;isLink:(relative:string)=>Promise<boolean>;signal?:AbortSignal;
+ }>;
+-/** 🧱️ The relevance of one generation: the names a change must not touch (`directories`), the directories where every direct child row is relevant (`strict`), the directories a frontier stamp vouches for (`stamped`, with their `stamps`: modification time and inode), the facts the journal cannot see, and why the generation cannot be sealed when it cannot. */
+-export type MemoBuiltV1=Readonly<{directories:ReadonlySet<string>;strict:ReadonlySet<string>;stamped:ReadonlySet<string>;stamps:ReadonlyMap<string,readonly[number,number]>;recheck:MemoRecheckV1;rows:number;linked:number;unsealable:string|null}>;
++/** ✏️ What the edit index of one generation is built from: per vouched fact (by the position of its row in the walk of `rows`) the entries it names and the directories whose children it reads, the directories with something relevant below them, and the frontier directories and members. */
++export type MemoBuiltEditsV1=Readonly<{named:Readonly<{paths:readonly string[];ids:readonly number[]}>;inside:Readonly<{paths:readonly string[];ids:readonly number[]}>;above:ReadonlySet<string>;frontier:ReadonlySet<string>;members:ReadonlySet<string>}>;
++/** 🧱️ The relevance of one generation: the names a change must not touch (`directories`), the directories where every direct child row is relevant (`strict`), the directories a frontier stamp vouches for (`stamped`, with their `stamps`: modification time and inode), the facts the journal cannot see, the edit index (`edits`), and why the generation cannot be sealed when it cannot. */
++export type MemoBuiltV1=Readonly<{directories:ReadonlySet<string>;strict:ReadonlySet<string>;stamped:ReadonlySet<string>;stamps:ReadonlyMap<string,readonly[number,number]>;recheck:MemoRecheckV1;edits:MemoBuiltEditsV1;rows:number;linked:number;unsealable:string|null}>;
++const NO_EDITS:MemoBuiltEditsV1={named:{paths:[],ids:[]},inside:{paths:[],ids:[]},above:new Set(),frontier:new Set(),members:new Set()};
+ 
+-/** 🔬️ Classifies every fact of a generation as vouchable by the journal (the entries it reads are inside the journal's sight and no symbolic link lies on the way) or to be checked by the next lookup itself, and collects the directories of the vouchable ones. A kind the policy table does not name makes the generation unsealable. */
++/** 🔬️ Classifies every fact of a generation as vouchable by the journal (the entries it reads are inside the journal's sight and no symbolic link lies on the way) or to be checked by the next lookup itself, collects the directories of the vouchable ones and, for the edit index, which row names each entry and which row reads the children of each directory. A kind the policy table does not name makes the generation unsealable. */
+ export async function buildGraphMemoRelevanceV1(input:MemoBuildInputV1):Promise<MemoBuiltV1>{
+- const {root,excluded,signal}=input,policy=GRAPH_MEMO_POLICY_V1,none=(reason:string):MemoBuiltV1=>({directories:new Set(),strict:new Set(),stamped:new Set(),stamps:new Map(),recheck:{rows:[],identities:[]},rows:0,linked:0,unsealable:reason});
++ const {root,excluded,signal}=input,policy=GRAPH_MEMO_POLICY_V1,none=(reason:string):MemoBuiltV1=>({directories:new Set(),strict:new Set(),stamped:new Set(),stamps:new Map(),recheck:{rows:[],identities:[]},edits:NO_EDITS,rows:0,linked:0,unsealable:reason});
+  const frontierDirectories=new Set<string>(),frontierMembers=new Set<string>(),stampable=new Map<string,readonly[number,number]>(),capturedAt=input.frontier.capturedAt;
+  for(const [path,mtimeMs,ino] of input.frontier.directories){const key=path==="."?"":path;frontierDirectories.add(key);if(typeof capturedAt==="number"&&typeof mtimeMs==="number"&&typeof ino==="number"&&capturedAt-mtimeMs>=GENERATION_POLICY_V1.racyMilliseconds)stampable.set(key,[mtimeMs,ino]);}
+  for(const [path] of input.frontier.members)frontierMembers.add(path);
+- const vouched=new Set<string>(),strict=new Set<string>(),listing=new Set<string>(),recheckRows=new Map<string,MemoRowV1>(),identities=new Map<string,MemoIdentityV1>();
+- let count=0,failure:string|null=null;
++ const vouched=new Set<string>(),strict=new Set<string>(),listing=new Set<string>(),recheckRows=new Map<string,MemoRowV1>(),identities=new Map<string,MemoIdentityV1>(),named={paths:[] as string[],ids:[] as number[]},inside={paths:[] as string[],ids:[] as number[]};
++ let count=0,position=-1,failure:string|null=null;
+  const defer=(leaf:MemoRowV1):void=>{
+   if(leaf.kind==="analysis"){
+    const source=(leaf.fact as {source?:Record<string,unknown>}|null)?.source;
+@@ -39,12 +42,13 @@
+  };
+  for(const row of input.rows()){
+   if((count&0x1fff)===0)signal?.throwIfAborted();
++  position++;
+   for(const leaf of memoLeavesV1(row)){
+    if(++count>policy.maximumRows)return none("rows");
+    const reach=memoReachV1(leaf,root,excluded);
+    if(!reach)return none("kind:"+leaf.kind);
+    if(reach.recheck)defer(leaf);
+-   else{const classes=memoClassesV1(leaf,reach);for(const mention of classes.names)vouched.add(mention);for(const mention of classes.strict)strict.add(mention);for(const mention of classes.listing)listing.add(mention);}
++   else{const classes=memoClassesV1(leaf,reach);for(const mention of classes.names){vouched.add(mention);named.paths.push(mention);named.ids.push(position);}for(const mention of classes.strict){strict.add(mention);inside.paths.push(mention);inside.ids.push(position);}for(const mention of classes.listing){listing.add(mention);inside.paths.push(mention);inside.ids.push(position);}}
+   }
+   if(failure)return none(failure);
+  }
+@@ -71,15 +75,19 @@
+   }
+   if(failure)return none(failure);
+  }
+- return{directories,strict,stamped,stamps,recheck:{rows:[...recheckRows.values()],identities:[...identities.values()]},rows:count,linked:linked.size,unsealable:null};
++ const above=new Set<string>();for(const path of directories)if(path!==""){const cut=path.lastIndexOf("/");above.add(cut<0?"":path.slice(0,cut));}
++ return{directories,strict,stamped,stamps,recheck:{rows:[...recheckRows.values()],identities:[...identities.values()]},edits:{named,inside,above,frontier:frontierDirectories,members:frontierMembers},rows:count,linked:linked.size,unsealable:null};
+ }
+ 
+ const atomic=(target:string,data:string|Uint8Array):void=>{const temporary=target+"."+process.pid+".tmp";try{writeFileSync(temporary,data,{mode:0o600});renameSync(temporary,target);}catch(error){try{rmSync(temporary,{force:true});}catch{}throw error;}};
+ 
+-/** 📤️ Writes the four files of a sidecar next to the plan file (`stem.json` header, `stem.rel` relevance, `stem.chk` recheck set, `stem.lst` stamps of the stamped directories). */
+-export function writeGraphMemoSidecarFilesV1(stem:string,pointer:Readonly<{file:string;generation:number;manifest:string}>,built:MemoBuiltV1,insensitive:boolean):void{
+- const policy=GRAPH_MEMO_POLICY_V1,header={version:1,pointer,rows:built.rows,rechecked:built.recheck.rows.length+built.recheck.identities.length,directories:built.directories.size,strict:built.strict.size,stamped:built.stamped.size,linked:built.linked,unsealable:built.unsealable};
+- if(built.unsealable===null){atomic(stem+policy.recheckSuffix,JSON.stringify(built.recheck));atomic(stem+policy.stampSuffix,packMemoStampsV1(built.stamps,insensitive));atomic(stem+policy.relevanceSuffix,packMemoRelevanceV1(built.directories,insensitive,built.strict,built.stamped));}
++/** 📤️ Writes the files of a sidecar next to the plan file (`stem.json` header, `stem.rel` relevance, `stem.chk` recheck set, `stem.lst` stamps of the stamped directories) and, with `edit` (the fact index and frontier of the generation and the fact index id of every position of the walk; positions are ids without it), the edit index `stem.rix`. The header is written last. */
++export function writeGraphMemoSidecarFilesV1(stem:string,pointer:Readonly<{file:string;generation:number;manifest:string}>,built:MemoBuiltV1,insensitive:boolean,edit?:Readonly<{index:string;frontier:string|null;ids?:readonly number[]}>):void{
++ const policy=GRAPH_MEMO_POLICY_V1,sealable=built.unsealable===null,header={version:1,pointer,rows:built.rows,rechecked:built.recheck.rows.length+built.recheck.identities.length,directories:built.directories.size,strict:built.strict.size,stamped:built.stamped.size,linked:built.linked,unsealable:built.unsealable,...(sealable&&edit?{edit:{index:edit.index,frontier:edit.frontier}}:{})};
++ if(sealable){
++  atomic(stem+policy.recheckSuffix,JSON.stringify(built.recheck));atomic(stem+policy.stampSuffix,packMemoStampsV1(built.stamps,insensitive));atomic(stem+policy.relevanceSuffix,packMemoRelevanceV1(built.directories,insensitive,built.strict,built.stamped));
++  if(edit){const ids=edit.ids,map=(table:Readonly<{paths:readonly string[];ids:readonly number[]}>)=>({paths:table.paths,ids:ids?table.ids.map(at=>ids[at]!):table.ids});atomic(stem+policy.editSuffix,packMemoEditIndexV1({named:map(built.edits.named),inside:map(built.edits.inside),above:built.edits.above,frontier:built.edits.frontier,members:built.edits.members},insensitive));}
++ }
+  atomic(stem+".json",JSON.stringify(header));
+ }
+ 
+@@ -103,7 +111,7 @@
+ 
+ /** 🧪️ Classifies the facts of the slice the planner just served (pointer, manifest, fact index, frontier of its generation) against the journal's own sight and writes the sidecar the parent seals. A light record's `expected` generation that differs from the served one still seals when the served slice is the same there ({@link sameSliceV1}), so a peer's refresh between two identical requests does not defer sealing. A pin whose coverage time is older than `verifiedAfter` (the slice came from a peer's stamp or an outer pin, not from a verification after the memo cursor) is unsealable (`unverified`). Best effort: any failure leaves no header and the parent seals nothing. The generation files are content-addressed and immutable, so no store custody is taken; a pointer that moved meanwhile makes the generation unsealable. */
+ export async function writeGraphMemoSliceSidecarV1(input:MemoSidecarInputV1):Promise<void>{
+- const {root,generations,stem,client,insensitive,signal}=input,unsealable=(header:Parameters<typeof writeGraphMemoSidecarFilesV1>[1],reason:string)=>writeGraphMemoSidecarFilesV1(stem,header,{directories:new Set(),strict:new Set(),stamped:new Set(),stamps:new Map(),recheck:{rows:[],identities:[]},rows:0,linked:0,unsealable:reason},insensitive);
++ const {root,generations,stem,client,insensitive,signal}=input,unsealable=(header:Parameters<typeof writeGraphMemoSidecarFilesV1>[1],reason:string)=>writeGraphMemoSidecarFilesV1(stem,header,{directories:new Set(),strict:new Set(),stamped:new Set(),stamps:new Map(),recheck:{rows:[],identities:[]},edits:NO_EDITS,rows:0,linked:0,unsealable:reason},insensitive);
+  try{
+   const pointerFile=join(generations,GENERATION_POLICY_V1.pointer),pointer=readGenerationPointerV1(readFileSync(pointerFile));
+   const header={file:pointerFile,generation:pointer.generation,manifest:pointer.manifest??"0".repeat(64)};
+@@ -121,7 +129,7 @@
+   const built=await buildGraphMemoRelevanceV1({root,rows,frontier,excluded,...(signal?{signal}:{}),isLink:async relative=>{try{return(await lstat(root+"/"+relative)).isSymbolicLink();}catch{return false;}}});
+   engine.dropIndexes();
+   const again=readGenerationPointerV1(readFileSync(pointerFile));
+-  writeGraphMemoSidecarFilesV1(stem,header,again.manifest===pointer.manifest?built:{...built,unsealable:"moved"},insensitive);
++  writeGraphMemoSidecarFilesV1(stem,header,again.manifest===pointer.manifest?built:{...built,unsealable:"moved"},insensitive,{index:manifest.factIndex,frontier:manifest.frontier??null,ids});
+  }catch{try{rmSync(stem+".json",{force:true});}catch{}}
+ }
+ 

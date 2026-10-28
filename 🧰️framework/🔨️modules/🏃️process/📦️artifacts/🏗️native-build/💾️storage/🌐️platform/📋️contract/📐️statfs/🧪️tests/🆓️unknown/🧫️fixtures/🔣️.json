@@ -1,0 +1,163 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "a coherent volume",
+      "row": {
+        "bsize": 4096,
+        "blocks": 1000,
+        "bavail": 250
+      },
+      "expected": [
+        1024000,
+        4096000
+      ]
+    },
+    {
+      "name": "no available blocks left",
+      "row": {
+        "bsize": 4096,
+        "blocks": 1000,
+        "bavail": 0
+      },
+      "expected": [
+        0,
+        4096000
+      ]
+    },
+    {
+      "name": "a block size of zero",
+      "row": {
+        "bsize": 0,
+        "blocks": 1000,
+        "bavail": 250
+      },
+      "expected": null
+    },
+    {
+      "name": "a negative number of available blocks",
+      "row": {
+        "bsize": 4096,
+        "blocks": 1000,
+        "bavail": -1
+      },
+      "expected": null
+    },
+    {
+      "name": "a volume without blocks",
+      "row": {
+        "bsize": 4096,
+        "blocks": 0,
+        "bavail": 250
+      },
+      "expected": [
+        1024000,
+        null
+      ]
+    },
+    {
+      "name": "more available blocks than blocks",
+      "row": {
+        "bsize": 4096,
+        "blocks": 100,
+        "bavail": 250
+      },
+      "expected": [
+        1024000,
+        null
+      ]
+    },
+    {
+      "name": "a one byte block",
+      "row": {
+        "bsize": 1,
+        "blocks": 1000000000000000,
+        "bavail": 5
+      },
+      "expected": [
+        5,
+        1000000000000000
+      ]
+    },
+    {
+      "name": "a fraction of a block size",
+      "row": {
+        "bsize": 0.5,
+        "blocks": 10,
+        "bavail": 1
+      },
+      "expected": null
+    },
+    {
+      "name": "a huge product",
+      "row": {
+        "bsize": 1e+300,
+        "blocks": 10,
+        "bavail": 10000000000.0
+      },
+      "expected": null
+    }
+  ],
+  "sites": {
+    "roots": [
+      "🧰️framework/🔨️modules/🏃️process",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules"
+    ],
+    "routed": [
+      "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📐️elastic/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🔎️probes/💾️storage/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🚀️launch/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/⌨️command/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🏃️runner/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🔌️port/🟦️.ts"
+    ],
+    "kept": [
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+        "reason": "diagnostic-fact"
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/🆓️free-space/🟦️.ts",
+        "reason": "default-reader"
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🟦️.ts",
+        "reason": "mounted-image"
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts",
+        "reason": "platform-contract"
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🎛️owner/🟦️.ts",
+        "reason": "mounted-image"
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🍎️mounted-image/📐️geometry/🟦️.ts",
+        "reason": "mounted-image"
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📁️directory-partition/📐️geometry/🟦️.ts",
+        "reason": "platform-contract"
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts",
+        "reason": "mounted-image"
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🟦️.ts",
+        "reason": "platform-contract"
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/💾️storage/🟦️.ts",
+        "reason": "test-utility"
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts",
+        "reason": "mounted-image"
+      }
+    ]
+  }
+}

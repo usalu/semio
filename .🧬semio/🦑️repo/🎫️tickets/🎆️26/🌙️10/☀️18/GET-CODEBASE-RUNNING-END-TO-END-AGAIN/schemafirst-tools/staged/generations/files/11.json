@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "🏗️build/🕸️graph/🕰️generations/🧩️claims/🧬️schema/🔣️.json",
+ "definitions": [
+  "Policy"
+ ],
+ "sources": [
+  "🏗️build/🕸️graph/🕰️generations/🧩️claims/🟨️.mjs"
+ ],
+ "exports": [
+  {
+   "source": "🏗️build/🕸️graph/🕰️generations/🧩️claims/🟨️.mjs",
+   "name": "CLAIMS_POLICY_V1",
+   "definition": "Policy"
+  }
+ ]
+}

@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Scan": {
+      "const": {
+        "entriesPerYield": 128,
+        "entriesPerProgress": 4096
+      }
+    },
+    "Idle": {
+      "const": {
+        "idleMilliseconds": 900000,
+        "useResolutionMilliseconds": 60000,
+        "pressureFreeRatio": 0.2,
+        "pressureIdleMilliseconds": 60000,
+        "nestedIdleMilliseconds": 3600000,
+        "candidatesPerSlice": 64,
+        "pressureCandidatesPerSlice": 256,
+        "slicesPerSweep": 8,
+        "claimTurnsPerSweep": 4,
+        "admissionPatienceMilliseconds": 2000,
+        "budgetMilliseconds": 3000,
+        "pressureSweepIntervalMilliseconds": 30000,
+        "nestedStoresPerSweep": 16,
+        "nestedEntries": 512
+      }
+    },
+    "Store": {
+      "const": {
+        "databaseBytes": 8192,
+        "claimBytes": 12288,
+        "resourceEntries": 1536,
+        "claimEntries": 2048,
+        "nestedStores": 3,
+        "nestedStoreBytes": 4259840
+      }
+    },
+    "Messages": {
+      "const": {
+        "swept": {
+          "en": "Lease store swept: {databases} idle databases, {queues} empty queues, {claims} settled claims and {stores} abandoned nested stores retired ({freed} freed, {free} % free).",
+          "de": "Lease-Speicher aufgeräumt: {databases} ungenutzte Datenbanken, {queues} leere Warteschlangen, {claims} erledigte Ansprüche und {stores} verwaiste verschachtelte Speicher entfernt ({freed} frei geworden, {free} % frei)."
+        },
+        "pressure": {
+          "en": "The lease store is {used} % full; entries idle for {idle} s are retired now.",
+          "de": "Der Lease-Speicher ist zu {used} % belegt; ab {idle} s ungenutzte Einträge werden jetzt entfernt."
+        },
+        "pressureUnmeasured": {
+          "en": "The free space of the lease store could not be read; entries idle for {idle} s are retired now.",
+          "de": "Der freie Platz des Lease-Speichers konnte nicht gelesen werden; ab {idle} s ungenutzte Einträge werden jetzt entfernt."
+        },
+        "busy": {
+          "en": "Lease store sweep postponed: the directory is busy, the next opener continues.",
+          "de": "Lease-Speicher-Aufräumen verschoben: das Verzeichnis ist belegt, der nächste Aufrufer macht weiter."
+        },
+        "failed": {
+          "en": "Lease store sweep failed ({reason}); the store stays as it is and the next opener tries again.",
+          "de": "Lease-Speicher-Aufräumen fehlgeschlagen ({reason}); der Speicher bleibt unverändert und der nächste Aufrufer versucht es erneut."
+        },
+        "cancelled": {
+          "en": "Lease store sweep cancelled after {slices} slices; the cursor is kept.",
+          "de": "Lease-Speicher-Aufräumen nach {slices} Abschnitten abgebrochen; der Zeiger bleibt erhalten."
+        }
+      }
+    }
+  }
+}

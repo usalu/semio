@@ -1,0 +1,70 @@
+FAIL  :: Persistent Cargo target recipe defining types and dashboard registration are complete
+FAIL  :: Persistent Cargo target recipe keeps original control through immutable capture
+FAIL  :: Persistent Cargo target recipe production retains fresh warm outputs and source validation
+FAIL  :: a QUEUED wait for the Cargo registry behind an exclusive holder is refused the same way while the task holds the compiler writer
+FAIL  :: a batch the free storage cannot cover above the hard reserve is refused before Cargo starts
+FAIL  :: a build action that names its invocation (SEMIO_BUILD_INVOCATION_PID) is granted a shared lease the invocation holds at once, even with excl
+FAIL  :: a build script that runs the compiler through RUSTC_WRAPPER (libc does) works in a cold lane although the jobserver numbers in its environme
+FAIL  :: a compiler failure is returned unchanged and publishes nothing
+FAIL  :: a component Cargo did not link fails every stage and job that waits for it, and a failed job fails the release
+FAIL  :: a failed upgrade consumes the shared hold and leaves nothing behind
+FAIL  :: a finalizer runs once its stages settled, also after one failed, and the failure still fails the release
+FAIL  :: a lane job runs inside its profile's Cargo lane before that lane's passes, and an idle stage widens onto free slots
+FAIL  :: a nested build action that names the chain of its invocations (SEMIO_BUILD_INVOCATION_PIDS) joins the shared hold of any pid in the chain at
+FAIL  :: a queued request that must not wait for its resource still waits for a busy admission gate; a raw try-lock stays a single attempt; patience 
+FAIL  :: a real build over wasm32-wasip2 components: both profiles, admitted units, streamed stages, timeline, report and recorded telemetry
+FAIL  :: a task re-entering a shared lease it already holds bypasses the queue, so a waiting writer cannot deadlock it
+FAIL  :: a yielding exclusive request waits for the holders without closing the queue, an ordinary one still closes it
+FAIL  :: actual Native stage retains immutable allotment and tokens through canonical descendants
+FAIL  :: admission gate: queued-try-lock-admission-wait-is-bounded-at-the-patience
+FAIL  :: admission gate: queued-try-lock-waits-for-the-gate-within-the-patience
+FAIL  :: an ordinary writer that waits for a long holder stops closing the queue for later readers after the writer preference
+FAIL  :: an unlinked component fails the native build without deleting unowned checkout bytes and still writes the report
+FAIL  :: an upgrade keeps its arrival position and later exclusive requesters wait behind it
+FAIL  :: build script runs are shared between lanes: one run per distinct input, declared and undeclared facts decide, OUT_DIR and cargo: lines are r
+FAIL  :: build scripts that exec $RUSTC work from a bare PATH and a non-executable tracked script, in a fresh lane and from the cache; the wrapper ac
+FAIL  :: cache hits are reported to the build broker with the measurements recorded when the unit was built, the real scheduler is the compiler behin
+FAIL  :: cached artifacts equal the bytes of a plain Cargo build, and sccache reaches the same hit and miss counts on library units
+FAIL  :: cancellation stops every Cargo tree, and the stall watchdog stops a pass in which nothing starts or finishes
+FAIL  :: cleanup removes by recency inside its bounds, keeps a lane with a live marker, drops entries of removed objects and leaves the cache usable
+FAIL  :: compact headroom recovery runs under the budgeted preparation control chain of an ordinary compiler store
+FAIL  :: component Cargo continuation consumes each exact live command view
+FAIL  :: component batch effects receive the exact consumed view
+FAIL  :: component unit graph executes the returned command view
+FAIL  :: concurrent shared compiles overlap, headroom recovery and maintenance are exclusive, and a short image recovers once
+FAIL  :: concurrent sibling tasks of one process wait for each other's lease like separate processes do: no self-deadlock, even beyond the grace peri
+FAIL  :: concurrent upgraders that each hold shared access never deadlock and never overlap
+FAIL  :: dead predecessors are reaped by their successors without sweeping every ticket
+FAIL  :: default compiler workspace copied Native owner refuses before property or callback effects
+FAIL  :: exclusive compiler jobs and stages hold the whole pool without deadlocking concurrent requests
+FAIL  :: fair readers: shared requests through withResourceLeases no longer starve an exclusive request; raw polling is the negative control
+FAIL  :: generation roots and fixed leaves are admitted as resolved absolute paths before effects
+FAIL  :: generations: the environment selects warm or fresh; fresh is a new one-letter-store directory, warm compiles into the shared stores
+FAIL  :: headroom recovery never queues an exclusive writer request behind a long shared holder
+FAIL  :: jobs start as soon as their completions happen, post-link stages stream per component, and a job waits for a whole component stage
+FAIL  :: leases status shows holders, waiters with position and blockers, hold durations and the wait-for edge, in English and German, and the JSON m
+FAIL  :: neutral Cargo input operation isolates accepted failure and drains descendants
+FAIL  :: neutral completed Cargo retention copies exact real descriptor bytes
+FAIL  :: neutral completed Cargo retention publication references share exact neutral schema
+FAIL  :: neutral completed Cargo retention reports a changed source digest as a retryable concurrent edit
+FAIL  :: no compile path waits for the compiler writer, the build-directory custody (or any other lease) while it holds cpu units: the writer custody
+FAIL  :: no production flow takes the exclusive compiler writer, so a holder of the shared writer can never queue an upgrade behind its own cohort
+FAIL  :: one received Original retains actual physical admission, image exclusion and repeatable compact recovery laws (macOS image backend)
+FAIL  :: pending stages and finalizers retain original numeric authority and settle without aborting its signal
+FAIL  :: queued exclusive compiler cancellation drains rejected work and permits a successor
+FAIL  :: queued requests that close a cycle are detected too
+FAIL  :: re-entrant shared: a process that holds a shared lease gets a second shared request at once, even with exclusive requests queued on it
+FAIL  :: repository compiler callers consume complete command continuations under the actual phase
+FAIL  :: reserved nested compiler processes receive held worker slots and release them before the next compiler
+FAIL  :: the build lease is never taken inside an input scope that holds the shared writer custody (withCargoCompilerInputsV1, withBuildInputs, withC
+FAIL  :: the compiler headroom wait polls until the headroom appears and honours cancellation
+FAIL  :: the driver streams each component the moment Cargo links it, runs profiles in parallel lanes and workspaces of one profile in sequence, unde
+FAIL  :: the exact wedge shape without re-entrancy is detected as a deadlock cycle through the queued-ahead writers, and only the stuck second reques
+FAIL  :: the focused crate compiles incrementally in its own lane, is never published, and its neighbours stay shared
+FAIL  :: the original finite caller budget stops running metadata and returns admission
+FAIL  :: three sessions build disjoint crates at once, share each unit exactly once, a fourth gets only hits and no lock wait exceeds its bound
+FAIL  :: unit graph compilation cancellation stops its metadata child and releases admission
+FAIL  :: unlaned same-profile Cargo jobs reserve tokens before mutable state
+FAIL  :: writer bounded against queued bun readers: queued-readers-queued-writer-bun
+FAIL  :: writer bounded against queued node readers: queued-readers-queued-writer-node
+FAIL  :: writer starved against python python readers: python-readers-queued-writer

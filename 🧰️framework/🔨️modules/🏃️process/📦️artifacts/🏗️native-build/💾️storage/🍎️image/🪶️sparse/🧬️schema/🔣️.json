@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "initialBytes": 67108864,
+        "admissionFreeBytes": 4294967296,
+        "growVerb": "resize",
+        "growSizeFlag": "-size",
+        "growUnit": "m",
+        "trailerBytes": 40960
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["imageBytes", "backingBytes", "volumeBytes"],
+      "properties": {
+        "imageBytes": {"type": "integer", "minimum": 1},
+        "backingBytes": {"type": "integer", "minimum": 1},
+        "volumeBytes": {"type": "integer", "minimum": 1}
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["measured", "initialAllocatedLimitBytes"],
+      "properties": {
+        "initialAllocatedLimitBytes": {"type": "integer", "minimum": 1},
+        "measured": {"type": "array", "items": {"$ref": "#/definitions/Case"}}
+      }
+    }
+  }
+}

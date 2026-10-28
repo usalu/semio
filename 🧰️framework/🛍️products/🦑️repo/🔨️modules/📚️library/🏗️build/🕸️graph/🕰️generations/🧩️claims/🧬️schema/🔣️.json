@@ -1,0 +1,352 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Claims of the stale projects of a pending graph refresh",
+  "description": "How concurrent commands share the compute of one graph refresh. The inference of a project is cached by its project record, so a refresh splits into a PREFETCH that fills the record cache and an ASSEMBLY (the existing build) that finds the records warm, publishes the generation and holds its exclusive custody only for that. The prefetch is shared by CLAIMS: a claim names the stale owners one command computes now, as a closed document `<directory>/<token>.json` beside the generation documents (written by rename). A claim belongs to the generation it was planned against (`base`) and to the implementation digest of its writer (records of another implementation do not serve a command). A claim is `running` while the lease named after its token (`graph-claim:<root>:<token>`) is held exclusively by the command that computes it, `done` when the command finished the chunk, `failed` when the chunk failed (its owners are left to the assembly, which reports the failure properly). A running claim whose lease is free belongs to a dead command: its file is removed and its owners are open again. A command takes the owners it needs that no live running claim and no done or failed claim of the same base and implementation covers, at most `chunkOwners` of them in code point order (all of them when at most `chunkOwners + tailOwners` are open), under the short admission lease; it needs one of at most `slots` compute slot leases, so that the number of concurrent computers is bounded by memory. When nothing is open but a live claim covers an owner it needs, the command waits for that claim's lease (it never waits while it holds an exclusive lease). The slot count is the share of the memory (`slotMemoryBasisPoints` of 10000) divided by `slotMegabytes`, at least 1 and at most `maximumSlots`, or the integer of the environment variable named by `environmentSlots` when it lies in that range.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "directory": "c",
+        "chunkOwners": 128,
+        "tailOwners": 32,
+        "pollMilliseconds": 5000,
+        "noticeMilliseconds": 20000,
+        "maximumClaims": 1024,
+        "maximumOwners": 65536,
+        "slotMegabytes": 4096,
+        "slotMemoryBasisPoints": 5000,
+        "maximumSlots": 4,
+        "environmentSlots": "SEMIO_GRAPH_COMPUTERS",
+        "failedRetryMilliseconds": 60000,
+        "failureReasonCharacters": 200,
+        "lockNameCharacters": 120
+      }
+    },
+    "Claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "token",
+        "base",
+        "implementation",
+        "owners",
+        "state",
+        "startedMs"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "token": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{24}$"
+        },
+        "base": {
+          "type": "integer",
+          "minimum": -1,
+          "maximum": 9007199254740991
+        },
+        "implementation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "owners": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxItems": 65536
+        },
+        "state": {
+          "enum": [
+            "running",
+            "done",
+            "failed"
+          ]
+        },
+        "startedMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "endedMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "stamps": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^(?:[a-f0-9]{16}|-)$"
+          }
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "en": {
+          "joined": "graph: {covered} of the {total} stale projects are prepared or being prepared by {peers} other command(s); waiting for them ({prepared} of {total} prepared)",
+          "computing": "graph: preparing {count} of the {open} open stale projects ({slots} compute slots), {prepared} of {total} already prepared",
+          "slotsBusy": "graph: all {slots} compute slots are busy, {open} stale projects are still open ({seconds} s)",
+          "served": "graph: generation {generation} was published by a peer, nothing is left to prepare",
+          "failed": "graph: preparing the stale projects failed ({reason}); the refresh computes them itself",
+          "prepared": "graph: {count} stale projects prepared by this command in {seconds} s"
+        },
+        "de": {
+          "joined": "Graph: {covered} der {total} veralteten Projekte werden von {peers} anderen Befehlen vorbereitet oder sind es schon; warte darauf ({prepared} von {total} vorbereitet)",
+          "computing": "Graph: {count} der {open} offenen veralteten Projekte werden vorbereitet ({slots} Rechen-Slots), {prepared} von {total} schon vorbereitet",
+          "slotsBusy": "Graph: alle {slots} Rechen-Slots sind belegt, {open} veraltete Projekte sind noch offen ({seconds} s)",
+          "served": "Graph: Generation {generation} wurde von einem anderen Prozess veröffentlicht, nichts ist mehr vorzubereiten",
+          "failed": "Graph: die veralteten Projekte konnten nicht vorbereitet werden ({reason}); die Erneuerung berechnet sie selbst",
+          "prepared": "Graph: {count} veraltete Projekte von diesem Befehl in {seconds} s vorbereitet"
+        }
+      }
+    },
+    "ChunkCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "wanted",
+        "claims",
+        "base",
+        "implementation",
+        "chunk",
+        "tail"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "wanted": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "claims": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "token",
+              "base",
+              "implementation",
+              "owners",
+              "state",
+              "live"
+            ],
+            "properties": {
+              "token": {
+                "type": "string"
+              },
+              "base": {
+                "type": "integer"
+              },
+              "implementation": {
+                "type": "string"
+              },
+              "owners": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "state": {
+                "enum": [
+                  "running",
+                  "done",
+                  "failed"
+                ]
+              },
+              "live": {
+                "type": "boolean"
+              },
+              "endedMs": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "stamps": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "base": {
+          "type": "integer"
+        },
+        "implementation": {
+          "type": "string"
+        },
+        "chunk": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "tail": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "open",
+            "take",
+            "running",
+            "prepared",
+            "covered"
+          ],
+          "properties": {
+            "open": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "take": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "running": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "prepared": {
+              "type": "integer"
+            },
+            "covered": {
+              "type": "integer"
+            }
+          }
+        },
+        "stamps": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "nowMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "SlotCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "memoryMegabytes",
+        "environment"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "memoryMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "chunks",
+        "slots",
+        "refusals"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "chunks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ChunkCase"
+          }
+        },
+        "slots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SlotCase"
+          }
+        },
+        "refusals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "claim"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "claim": {}
+            }
+          }
+        }
+      }
+    },
+    "PolicyDescriptions": {
+      "const": {
+        "en": {
+          "version": "The version of the policy.",
+          "directory": "The directory of the claim documents.",
+          "chunkOwners": "How many owners one claim chunk covers.",
+          "tailOwners": "A chunk takes all open owners when at most chunkOwners plus this many are open, so no tiny last chunk remains.",
+          "pollMilliseconds": "How long a waiting computer waits for the lease of a peer before it reads the claims again; a claim file unreadable for ten times this long is removed.",
+          "noticeMilliseconds": "After how long a waiting computer says so.",
+          "maximumClaims": "The most claim files one read of the registry returns; the rest is reported as truncated.",
+          "maximumOwners": "The most owners one claim covers.",
+          "slotMegabytes": "The memory one computing slot needs.",
+          "slotMemoryBasisPoints": "The share of the host memory the slots may use, in basis points.",
+          "maximumSlots": "The most computing slots at once.",
+          "environmentSlots": "The environment variable that forces the number of slots.",
+          "failedRetryMilliseconds": "For how long the failed claim of the same content covers its owners, so they are not retried at once.",
+          "failureReasonCharacters": "The most characters of the reason a failed claim records.",
+          "lockNameCharacters": "The most trailing characters of an owner name in the name of its lock file."
+        },
+        "de": {
+          "version": "Die Version der Richtlinie.",
+          "directory": "Das Verzeichnis der Anspruchsdokumente.",
+          "chunkOwners": "Wie viele Eigentümer ein Anspruchsabschnitt abdeckt.",
+          "tailOwners": "Ein Abschnitt nimmt alle offenen Eigentümer, wenn höchstens chunkOwners plus so viele offen sind, damit kein winziger letzter Abschnitt bleibt.",
+          "pollMilliseconds": "Wie lange ein wartender Rechner auf die Lease eines Peers wartet, bevor er die Ansprüche erneut liest; eine Anspruchsdatei, die zehnmal so lange unlesbar ist, wird entfernt.",
+          "noticeMilliseconds": "Nach welcher Zeit ein wartender Rechner das meldet.",
+          "maximumClaims": "Die meisten Anspruchsdateien, die ein Lesen des Registers liefert; der Rest wird als abgeschnitten gemeldet.",
+          "maximumOwners": "Die meisten Eigentümer, die ein Anspruch abdeckt.",
+          "slotMegabytes": "Der Speicher, den ein Rechenplatz braucht.",
+          "slotMemoryBasisPoints": "Der Anteil des Hostspeichers, den die Plätze nutzen dürfen, in Basispunkten.",
+          "maximumSlots": "Die meisten Rechen-Slots gleichzeitig.",
+          "environmentSlots": "Die Umgebungsvariable, die die Zahl der Plätze erzwingt.",
+          "failedRetryMilliseconds": "Wie lange der fehlgeschlagene Anspruch desselben Inhalts seine Eigentümer abdeckt, damit sie nicht sofort erneut versucht werden.",
+          "failureReasonCharacters": "Die meisten Zeichen des Grundes, den ein fehlgeschlagener Anspruch festhält.",
+          "lockNameCharacters": "Die meisten abschliessenden Zeichen eines Eigentümernamens im Namen seiner Sperrdatei."
+        }
+      }
+    }
+  }
+}

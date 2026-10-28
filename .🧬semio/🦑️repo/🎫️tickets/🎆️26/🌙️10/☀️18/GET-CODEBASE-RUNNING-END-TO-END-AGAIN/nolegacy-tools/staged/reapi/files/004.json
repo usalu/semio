@@ -1,0 +1,265 @@
+{
+ "version": 1,
+ "description": "Language-agnostic wire scenarios of the remote execution service: each row is one gRPC call (method, request bytes), the status trailer it must end with and the decoded response it must contain (subset match; bytes as hex, digests as hash/size_bytes). Any client in any language can replay them in order against an empty service.",
+ "scenarios": [
+  {
+   "name": "capabilities",
+   "method": "build.bazel.remote.execution.v2.Capabilities/GetCapabilities",
+   "requestMessage": "build.bazel.remote.execution.v2.GetCapabilitiesRequest",
+   "responseMessage": "build.bazel.remote.execution.v2.ServerCapabilities",
+   "request": {
+    "instance_name": "main"
+   },
+   "status": 0,
+   "expect": {
+    "cache_capabilities": {
+     "digest_functions": [
+      1
+     ],
+     "max_batch_total_size_bytes": 4194304,
+     "symlink_absolute_path_strategy": 2,
+     "action_cache_update_capabilities": {
+      "update_enabled": true
+     }
+    },
+    "execution_capabilities": {
+     "exec_enabled": true,
+     "digest_function": 1
+    },
+    "low_api_version": {
+     "major": 2,
+     "minor": 1
+    },
+    "high_api_version": {
+     "major": 2,
+     "minor": 3
+    }
+   },
+   "requestHex": "0a046d61696e"
+  },
+  {
+   "name": "find-missing-before-upload",
+   "method": "build.bazel.remote.execution.v2.ContentAddressableStorage/FindMissingBlobs",
+   "requestMessage": "build.bazel.remote.execution.v2.FindMissingBlobsRequest",
+   "responseMessage": "build.bazel.remote.execution.v2.FindMissingBlobsResponse",
+   "request": {
+    "instance_name": "main",
+    "blob_digests": [
+     {
+      "hash": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+      "size_bytes": 5
+     },
+     {
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+     }
+    ]
+   },
+   "status": 0,
+   "expect": {
+    "missing_blob_digests": [
+     {
+      "hash": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+      "size_bytes": 5
+     }
+    ]
+   },
+   "requestHex": "0a046d61696e12440a4032636632346462613566623061333065323665383362326163356239653239653162313631653563316661373432356537333034333336323933386239383234100512420a4065336230633434323938666331633134396166626634633839393666623932343237616534316534363439623933346361343935393931623738353262383535"
+  },
+  {
+   "name": "batch-update",
+   "method": "build.bazel.remote.execution.v2.ContentAddressableStorage/BatchUpdateBlobs",
+   "requestMessage": "build.bazel.remote.execution.v2.BatchUpdateBlobsRequest",
+   "responseMessage": "build.bazel.remote.execution.v2.BatchUpdateBlobsResponse",
+   "request": {
+    "instance_name": "main",
+    "requests": [
+     {
+      "digest": {
+       "hash": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+       "size_bytes": 5
+      },
+      "data": "68656c6c6f"
+     },
+     {
+      "digest": {
+       "hash": "b68565cf5699273f6a21847b3fe44726374cbd6c3bfdc829527f1db2a0504341",
+       "size_bytes": 12
+      },
+      "data": "6f7468657220627974657321"
+     }
+    ]
+   },
+   "status": 0,
+   "expect": {
+    "responses": [
+     {
+      "digest": {
+       "hash": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+       "size_bytes": 5
+      },
+      "status": {
+       "code": 0
+      }
+     },
+     {
+      "digest": {
+       "hash": "b68565cf5699273f6a21847b3fe44726374cbd6c3bfdc829527f1db2a0504341",
+       "size_bytes": 12
+      },
+      "status": {
+       "code": 3
+      }
+     }
+    ]
+   },
+   "requestHex": "0a046d61696e124d0a440a40326366323464626135666230613330653236653833623261633562396532396531623136316535633166613734323565373330343333363239333862393832341005120568656c6c6f12540a440a4062363835363563663536393932373366366132313834376233666534343732363337346362643663336266646338323935323766316462326130353034333431100c120c6f7468657220627974657321"
+  },
+  {
+   "name": "find-missing-after-upload",
+   "method": "build.bazel.remote.execution.v2.ContentAddressableStorage/FindMissingBlobs",
+   "requestMessage": "build.bazel.remote.execution.v2.FindMissingBlobsRequest",
+   "responseMessage": "build.bazel.remote.execution.v2.FindMissingBlobsResponse",
+   "request": {
+    "instance_name": "main",
+    "blob_digests": [
+     {
+      "hash": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+      "size_bytes": 5
+     },
+     {
+      "hash": "b68565cf5699273f6a21847b3fe44726374cbd6c3bfdc829527f1db2a0504341",
+      "size_bytes": 12
+     }
+    ]
+   },
+   "status": 0,
+   "expect": {
+    "missing_blob_digests": [
+     {
+      "hash": "b68565cf5699273f6a21847b3fe44726374cbd6c3bfdc829527f1db2a0504341",
+      "size_bytes": 12
+     }
+    ]
+   },
+   "requestHex": "0a046d61696e12440a4032636632346462613566623061333065323665383362326163356239653239653162313631653563316661373432356537333034333336323933386239383234100512440a4062363835363563663536393932373366366132313834376233666534343732363337346362643663336266646338323935323766316462326130353034333431100c"
+  },
+  {
+   "name": "batch-read",
+   "method": "build.bazel.remote.execution.v2.ContentAddressableStorage/BatchReadBlobs",
+   "requestMessage": "build.bazel.remote.execution.v2.BatchReadBlobsRequest",
+   "responseMessage": "build.bazel.remote.execution.v2.BatchReadBlobsResponse",
+   "request": {
+    "instance_name": "main",
+    "digests": [
+     {
+      "hash": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+      "size_bytes": 5
+     },
+     {
+      "hash": "b68565cf5699273f6a21847b3fe44726374cbd6c3bfdc829527f1db2a0504341",
+      "size_bytes": 12
+     },
+     {
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+     }
+    ]
+   },
+   "status": 0,
+   "expect": {
+    "responses": [
+     {
+      "digest": {
+       "hash": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+       "size_bytes": 5
+      },
+      "data": "68656c6c6f",
+      "status": {
+       "code": 0
+      }
+     },
+     {
+      "digest": {
+       "hash": "b68565cf5699273f6a21847b3fe44726374cbd6c3bfdc829527f1db2a0504341",
+       "size_bytes": 12
+      },
+      "status": {
+       "code": 5
+      }
+     },
+     {
+      "digest": {
+       "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "size_bytes": 0
+      },
+      "status": {
+       "code": 0
+      }
+     }
+    ]
+   },
+   "requestHex": "0a046d61696e12440a4032636632346462613566623061333065323665383362326163356239653239653162313631653563316661373432356537333034333336323933386239383234100512440a4062363835363563663536393932373366366132313834376233666534343732363337346362643663336266646338323935323766316462326130353034333431100c12420a4065336230633434323938666331633134396166626634633839393666623932343237616534316534363439623933346361343935393931623738353262383535"
+  },
+  {
+   "name": "byte-stream-read",
+   "method": "google.bytestream.ByteStream/Read",
+   "requestMessage": "google.bytestream.ReadRequest",
+   "responseMessage": "google.bytestream.ReadResponse",
+   "request": {
+    "resource_name": "main/blobs/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824/5"
+   },
+   "status": 0,
+   "expect": {
+    "data": "68656c6c6f"
+   },
+   "requestHex": "0a4d6d61696e2f626c6f62732f326366323464626135666230613330653236653833623261633562396532396531623136316535633166613734323565373330343333363239333862393832342f35"
+  },
+  {
+   "name": "action-result-miss",
+   "method": "build.bazel.remote.execution.v2.ActionCache/GetActionResult",
+   "requestMessage": "build.bazel.remote.execution.v2.GetActionResultRequest",
+   "responseMessage": null,
+   "request": {
+    "instance_name": "main",
+    "action_digest": {
+     "hash": "b68565cf5699273f6a21847b3fe44726374cbd6c3bfdc829527f1db2a0504341",
+     "size_bytes": 12
+    }
+   },
+   "status": 5,
+   "expect": null,
+   "requestHex": "0a046d61696e12440a4062363835363563663536393932373366366132313834376233666534343732363337346362643663336266646338323935323766316462326130353034333431100c"
+  },
+  {
+   "name": "invalid-digest",
+   "method": "build.bazel.remote.execution.v2.ContentAddressableStorage/FindMissingBlobs",
+   "requestMessage": "build.bazel.remote.execution.v2.FindMissingBlobsRequest",
+   "responseMessage": null,
+   "request": {
+    "instance_name": "main",
+    "blob_digests": [
+     {
+      "hash": "nothex",
+      "size_bytes": 1
+     }
+    ]
+   },
+   "status": 3,
+   "expect": null,
+   "requestHex": "0a046d61696e120a0a066e6f746865781001"
+  },
+  {
+   "name": "unimplemented-method",
+   "method": "google.longrunning.Operations/GetOperation",
+   "requestMessage": "google.longrunning.GetOperationRequest",
+   "responseMessage": null,
+   "request": {
+    "name": "operations/x"
+   },
+   "status": 12,
+   "expect": null,
+   "requestHex": "0a0c6f7065726174696f6e732f78"
+  }
+ ]
+}

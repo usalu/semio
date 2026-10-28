@@ -39,6 +39,30 @@ func testRoot(t *testing.T) string {
 	return root
 }
 
+// 🕳️emptyWorkspace answers an empty directory that no workspace root resolves from: the first scratch base (the issued temporary directory, the per-user cache, the shared temporary directories of Unix) holding a fresh directory without a repository above it, so a case about a missing repository holds when a harness issues its scratch below a checkout.
+func emptyWorkspace(t *testing.T) string {
+	t.Helper()
+	bases := []string{os.TempDir()}
+	if cache, err := os.UserCacheDir(); err == nil {
+		bases = append(bases, cache)
+	}
+	if runtime.GOOS != "windows" {
+		bases = append(bases, "/tmp", "/var/tmp")
+	}
+	for _, base := range bases {
+		directory, err := os.MkdirTemp(base, "launcher-empty-")
+		if err != nil {
+			continue
+		}
+		t.Cleanup(func() { os.RemoveAll(directory) })
+		if _, err := ResolveRoot(directory); IsRootNotFound(err) {
+			return directory
+		}
+	}
+	t.Fatal("no scratch base lies outside every repository")
+	return ""
+}
+
 func readFixture(t *testing.T, relative string, into any) {
 	t.Helper()
 	raw, err := os.ReadFile(filepath.Join(testRoot(t), filepath.FromSlash(relative)))
@@ -82,7 +106,7 @@ func recordingHost(t *testing.T, values map[string]string) (Host, *recorded) {
 		Stdout:  func(text string) { log.out = append(log.out, text) },
 		Stderr:  func(text string) { log.err = append(log.err, text) },
 		Getwd:   os.Getwd,
-		System:  func() []string { return nil },
+		System:  func(OsLocale) []string { return nil },
 		Target:  func() (string, string, bool) { return "linux", "x64", false },
 		HandOff: func(executable string, argv []string, env []string) error {
 			log.calls++

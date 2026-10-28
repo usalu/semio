@@ -48,7 +48,7 @@ test.skipIf(!python)("generated BUILD declares one repo_test per Bazel test and 
  expect(build.split("\n")[0]).toContain('"repo_test"');
  const program="import ast,json,sys\nsource=json.loads(sys.stdin.read())\ntree=ast.parse(source)\nout=[]\nfor node in tree.body:\n    if isinstance(node,ast.Expr) and isinstance(node.value,ast.Call):\n        call=node.value\n        row={'rule':call.func.id}\n        for keyword in call.keywords:\n            row[keyword.arg]=ast.literal_eval(keyword.value)\n        out.append(row)\nprint(json.dumps(out,ensure_ascii=False))",
   result=Bun.spawnSync([python!,"-I","-c",program],{stdin:new TextEncoder().encode(JSON.stringify(build.replace(/^load\(.*$/mu,""))),stdout:"pipe",stderr:"pipe"});
- expect(result.exitCode,result.stderr.toString()).toBe(0);
+expect(result.exitCode,result.stderr.toString()).toBe(0);
  const rows=JSON.parse(result.stdout.toString()) as Record<string,unknown>[],tests=rows.filter(row=>row.rule==="repo_test"),expectedTests=[...emitted.values()].filter(action=>action.kind==="test");
  expect(tests.map(row=>row.name).sort()).toEqual(expectedTests.map(action=>action.label).sort());
  for(const row of tests){
@@ -57,11 +57,11 @@ test.skipIf(!python)("generated BUILD declares one repo_test per Bazel test and 
   expect(row.timeout).toBe("eternal");expect(row.cache).toBe(true);expect(row.manifest).toBe(action.label+".json");expect(row.fingerprint).toBe(action.label+".input");expect(row.identity).toBe(action.id);expect("uncached_reason" in row).toBe(false);
  }
  expect(rows.filter(row=>row.rule==="repo_task").length).toBe([...emitted.values()].filter(action=>action.kind==="task").length);
- const source=await readFile(new URL("../../📜️script.ts",import.meta.url),"utf8"),file=ts.createSourceFile("bazel.ts",source,ts.ScriptTarget.Latest,true),declaration=file.statements.filter(ts.isVariableStatement).flatMap(row=>[...row.declarationList.declarations]).find(row=>row.name.getText(file)==="STARLARK_RULES")!,rules=(declaration.initializer as ts.NoSubstitutionTemplateLiteral).text;
+ const rules=api.bazelStarlarkRulesV1();
  const parsed=Bun.spawnSync([python!,"-I","-c","import ast,json,sys\ntree=ast.parse(json.loads(sys.stdin.read()))\nrow={}\nfor node in tree.body:\n    if isinstance(node,ast.Assign) and isinstance(node.value,ast.Call) and getattr(node.value.func,'id','')=='rule':\n        name=node.targets[0].id\n        row[name]={k.arg:ast.unparse(k.value) for k in node.value.keywords}\nprint(json.dumps(row))"],{stdin:new TextEncoder().encode(JSON.stringify(rules)),stdout:"pipe",stderr:"pipe"});
  expect(parsed.exitCode,parsed.stderr.toString()).toBe(0);
  const declared=JSON.parse(parsed.stdout.toString()) as Record<string,Record<string,string>>;
- expect(Object.keys(declared).sort()).toEqual(["repo_launch","repo_noop","repo_task","repo_test"]);
+ expect(Object.keys(declared).sort()).toEqual(["repo_cargo","repo_launch","repo_noop","repo_task","repo_test"]);expect(declared.repo_cargo!.test).toBeUndefined();
  expect(declared.repo_test!.test).toBe("True");expect(declared.repo_task!.test).toBeUndefined();expect(declared.repo_launch!.executable).toBe("True");
  for(const name of Object.keys(declared).filter(name=>declared[name]!.test==="True"))expect(name.endsWith("_test")).toBe(true);
 });

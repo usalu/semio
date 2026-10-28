@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "const": {
+    "version": 1,
+    "purpose": "native-command-heartbeat",
+    "languages": [
+      "en",
+      "de"
+    ],
+    "labels": {
+      "en": {
+        "running": "[{label}] still running after {seconds} s"
+      },
+      "de": {
+        "running": "[{label}] läuft seit {seconds} s"
+      }
+    }
+  }
+}

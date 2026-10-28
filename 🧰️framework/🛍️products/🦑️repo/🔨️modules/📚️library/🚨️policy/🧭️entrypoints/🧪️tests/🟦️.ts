@@ -22,7 +22,7 @@ for(const row of corpus.defects)test.failing("subcommand dispatch defect "+JSON.
 for(const row of corpus.policy)test("policy argv "+JSON.stringify(row.segments)+" is not a policy run",async()=>{expect(await dispatchPolicyArgv(row.segments,import.meta.url)).toBe(row.expected);});
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

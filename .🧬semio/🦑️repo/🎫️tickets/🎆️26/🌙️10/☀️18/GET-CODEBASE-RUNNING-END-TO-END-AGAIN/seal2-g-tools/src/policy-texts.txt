@@ -1,0 +1,8 @@
+    "stale": {
+      "en": "[implementation] The sealed snapshot {digest} is {minutes} minutes old and the live tree has changed; a new snapshot is prepared in the background (process {pid}). This command runs the snapshot.",
+      "de": "[implementation] Der versiegelte Schnappschuss {digest} ist {minutes} Minuten alt und der Arbeitsbaum hat sich geaendert; ein neuer Schnappschuss wird im Hintergrund vorbereitet (Prozess {pid}). Dieser Befehl fuehrt den Schnappschuss aus."
+    },
+    "refused": {
+      "en": "[implementation] The sealed snapshot {digest} is {hours} hours old, the live tree has changed and cannot be promoted: {rows}. Fix the file(s) and run again, or use {variable}=live to run the live tree.",
+      "de": "[implementation] Der versiegelte Schnappschuss {digest} ist {hours} Stunden alt, der Arbeitsbaum hat sich geaendert und laesst sich nicht befoerdern: {rows}. Die Datei(en) korrigieren und erneut starten, oder mit {variable}=live den Arbeitsbaum ausfuehren."
+    },

@@ -1,0 +1,11 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "🏗️build/📥️inputs/🧬️schema/🔣️.json",
+ "definitions": [
+  "Limits"
+ ],
+ "sources": [
+  "🏗️build/📥️inputs/🟨️.mjs"
+ ]
+}

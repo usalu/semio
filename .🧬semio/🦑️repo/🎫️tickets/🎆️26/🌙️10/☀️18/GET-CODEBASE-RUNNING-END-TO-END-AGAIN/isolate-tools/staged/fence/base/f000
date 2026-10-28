@@ -1,0 +1,10 @@
+preload = ["./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/📜️script.ts"]
+
+[test]
+preload = ["./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/📜️script.ts", "./🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/📜️script.ts"]
+
+[install]
+linker = "isolated"
+globalStore = false
+publicHoistPattern = []
+hoistPattern = []

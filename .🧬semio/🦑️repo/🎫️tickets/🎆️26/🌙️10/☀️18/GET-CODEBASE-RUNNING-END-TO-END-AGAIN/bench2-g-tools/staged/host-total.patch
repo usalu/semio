@@ -1,0 +1,71 @@
+--- a/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json
++++ b/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json
+@@ -10,7 +10,7 @@
+         "planEnvironment": "SEMIO_HOST_CAPACITY_PLAN",
+         "directoryEnvironment": "SEMIO_HOST_CAPACITY_DIRECTORY",
+         "switchEnvironment": "SEMIO_HOST_CAPACITY",
+-        "floorEnvironment": "SEMIO_HOST_CAPACITY_FLOOR_MEGABYTES",
++        "totalEnvironment": "SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES",
+         "maximumJobs": 1024,
+         "maximumFileBytes": 65536,
+         "bootToleranceMilliseconds": 120000,
+--- a/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts
++++ b/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts
+@@ -1,8 +1,11 @@
+ import {execFile} from "node:child_process";
+ import {readdir,readFile} from "node:fs/promises";
+ import {cpus,freemem,loadavg,platform as osPlatform,totalmem} from "node:os";
++import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+ import {formatHostCapacityV1,hostCapacityErrorV1,type HostCapacityPolicyV1,type HostSampleV1} from "../📏️decision/🟦️.ts";
+ 
++const totalEnvironment=schema.definitions.Protocol.const.totalEnvironment;
++
+ const OPTIONAL_PROBE_MILLISECONDS=3000,MEGABYTE=1048576,SCALE:Readonly<Record<string,number>>={K:1/1024,M:1,G:1024,T:1048576};
+ 
+ /** 🧮️ Raw platform counters in bytes before the policy turns them into one sample; `null` marks a counter the platform does not offer. */
+@@ -157,9 +160,16 @@
+  return Object.freeze({availableBytes:freemem(),compressedBytes:null,constrainedBytes:null,swapUsedBytes:null,swappedOutBytes:null,pressureLevel:null,stallPercent:null,openFiles:null,openFilesMaximum:null,attachedImages:null,partial:true as const});
+ }
+ 
+-/** 🖥️ Reads one host sample: counters, core count, total memory and load. */
+-export async function readHostSampleV1(policy:HostCapacityPolicyV1,probe:HostProbeV1,previous?:Readonly<{atMs:number;swappedOutMegabytes:number|null}>,now:()=>number=Date.now):Promise<HostSampleRecordV1>{
+- const counters=await readHostCountersV1(probe),cores=await readHostCoresV1(probe,cpus().length||1),average=probe.platform==="win32"?busyLoadV1():loadavg()[0]!,host=reduceHostSampleV1(policy,{platform:probe.platform,cores,totalMegabytes:Math.floor(totalmem()/MEGABYTE),atMs:now(),load:average===null?null:Math.round(average*100)/100},counters,previous);
++/** 🪞️ Reads the simulated host size from the environment: `SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES` makes a larger host report that many megabytes in total (what is available stays what the real host has free, capped at that total: a busy 32 GB host stays busy), so that a 16 GB machine can be measured on a 32 GB one; an absent or malformed value means the real host. */
++export function simulatedHostTotalV1(environment:Readonly<Record<string,string|undefined>>):number|null{
++ const text=environment[totalEnvironment];
++ return text!==undefined&&/^[1-9][0-9]{3,8}$/u.test(text)?Number(text):null;
++}
++
++/** 🖥️ Reads one host sample: counters, core count, total memory and load; a simulated total (see `simulatedHostTotalV1`) shrinks the host. */
++export async function readHostSampleV1(policy:HostCapacityPolicyV1,probe:HostProbeV1,previous?:Readonly<{atMs:number;swappedOutMegabytes:number|null}>,now:()=>number=Date.now,environment:Readonly<Record<string,string|undefined>>=process.env):Promise<HostSampleRecordV1>{
++ const real=Math.floor(totalmem()/MEGABYTE),simulated=simulatedHostTotalV1(environment),total=simulated===null?real:Math.min(real,simulated);
++ const counters=await readHostCountersV1(probe),cores=await readHostCoresV1(probe,cpus().length||1),average=probe.platform==="win32"?busyLoadV1():loadavg()[0]!,host=reduceHostSampleV1(policy,{platform:probe.platform,cores,totalMegabytes:total,atMs:now(),load:average===null?null:Math.round(average*100)/100},counters,previous);
+  return Object.freeze({host,swappedOutMegabytes:counters.swappedOutBytes===null?null:Math.floor(counters.swappedOutBytes/MEGABYTE)});
+ }
+ 
+--- a/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📡️sampling/🟦️.ts
++++ b/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📡️sampling/🟦️.ts
+@@ -2,7 +2,7 @@
+ import {spawnSync} from "node:child_process";
+ import {freemem,totalmem} from "node:os";
+ import {formatHostCapacityErrorV1,readHostCapacityPolicyV1,resolveHostCapacityLanguageV1,type HostCommandRunnerV1} from "../../🟦️.ts";
+-import {observeTreeMegabytesV1,parseDarwinCountersV1,parseLinuxCountersV1,parseProcessTableV1,parseWindowsCountersV1,readHostCountersV1,WINDOWS_COUNTERS_COMMAND,readHostSampleV1,reduceHostSampleV1,treeMegabytesV1} from "../../📡️sampling/🟦️.ts";
++import {observeTreeMegabytesV1,parseDarwinCountersV1,parseLinuxCountersV1,parseProcessTableV1,parseWindowsCountersV1,readHostCountersV1,WINDOWS_COUNTERS_COMMAND,readHostSampleV1,reduceHostSampleV1,simulatedHostTotalV1,treeMegabytesV1} from "../../📡️sampling/🟦️.ts";
+ import decisionFixture from "../🧫️fixtures/🔣️.json";
+ import fixture from "./🧫️fixtures/🔣️.json";
+ 
+@@ -74,3 +74,14 @@
+  expect(Number.isFinite(independent)).toBe(true);
+  expect(Math.abs(host.attachedImages!-independent),"attached images agree with plutil's count of hdiutil's plist").toBeLessThanOrEqual(1);
+ });
++
++test("A simulated host total shrinks the host: total is the smaller size, the available memory is capped at it, malformed values mean the real host",async()=>{
++ const key="SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES";
++ for(const [text,expected] of [["16384",16384],["1000",1000],["999",null],["016384",null],["16 GB",null],["-1",null],["",null],[undefined,null]] as const)expect(simulatedHostTotalV1({[key]:text}),String(text)).toBe(expected);
++ const item=fixture.linux[0]!,probe={platform:"linux" as const,run:async()=>"",read:async(path:string)=>path==="/proc/meminfo"?item.meminfo:path==="/proc/vmstat"?item.vmstat:path==="/proc/pressure/memory"?item.pressure:path==="/proc/sys/fs/file-nr"?item.fileNr:null};
++ const real=Math.floor(totalmem()/1048576),limit=Math.floor(real/2),plain=(await readHostSampleV1(policy,probe,undefined,()=>0,{})).host,small=(await readHostSampleV1(policy,probe,undefined,()=>0,{[key]:String(limit)})).host,larger=(await readHostSampleV1(policy,probe,undefined,()=>0,{[key]:String(real*2)})).host;
++ expect(small.totalMegabytes).toBe(limit);
++ expect(small.availableMegabytes).toBe(Math.min(limit,plain.availableMegabytes));
++ expect(larger.totalMegabytes,"a simulated total never grows the host").toBe(plain.totalMegabytes);
++ expect(larger.availableMegabytes).toBe(plain.availableMegabytes);
++});

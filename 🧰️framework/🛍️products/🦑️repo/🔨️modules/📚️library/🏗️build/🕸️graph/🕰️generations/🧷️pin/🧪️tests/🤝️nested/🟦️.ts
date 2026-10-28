@@ -50,7 +50,7 @@ test("a nested command reads exactly the generation of its Original while peers 
   expect(reseal.at(-1)).toMatchObject({generation:record.generation,manifest:record.manifest,atMs:pin.covered.atMs});
   expect([...reseal.at(-1)!.covered!].sort()).toEqual(["a","b","c"]);
   const german=createMockHost(dir,{language:"de",custody:{tail:dead()}});await loadGenerationGraphV1(german.host,{closure:["b"],pin});
-  expect(german.said[0]!.text).toContain("angeheftete Generation");
+  expect(german.said[0]!.text).toContain("gepinnte Generation");
  }finally{rmSync(dir,{recursive:true,force:true});}
 },60000);
 

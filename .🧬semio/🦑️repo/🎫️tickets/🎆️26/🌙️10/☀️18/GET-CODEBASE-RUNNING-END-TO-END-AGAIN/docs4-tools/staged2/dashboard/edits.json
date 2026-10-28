@@ -1,0 +1,26 @@
+{
+ "name": "dashboard",
+ "code": "dashhot fresh + nestenv, audit5 profilefresh (live)",
+ "lane": "docs4",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "e88fdd1b3edd95f1a46291cd1f2304ae9f06f3616faeeaa8a56826552197e872",
+ "needs": [],
+ "edits": [
+  {
+   "id": "dash-bullets",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "## 🧪️ Tests and routing tables",
+   "where": "before",
+   "block": "- **Dashboard no-op** (live, G41-G43): `repo-dashboard-rs:build` returns the installed binary without a nested `repo run … :compile` when Cargo's own source list holds. The compile records the dep-info of the binary (every source file the executable was compiled from, including `include_str!` files outside the crate roots) in `semio.sources.json` beside the executable, `installed.json` (version 4) keeps it with the build start, and a run checks it by stat only: the same captured sources (roots, manifests, `Cargo.lock`, the Cargo profile policy files of `🎚️mode/🦀️profile`), no recorded source changed (the later of mtime and ctime counts, so a replacement that keeps old timestamps counts), the executable in place with its recorded size and mode. It then prints `[dashboard] prototype is current: its … source files and the … files its executable was compiled from are unchanged since its build, so nothing is built`. `repo dashboard` uses the same rule (it used to miss `include_str!` and schema inputs). A change of the build tool's own code does not make a current installation stale; `repo run @semio-tech/repo-dashboard-rs:compile` and `:install` force a build. The plan of the nested compile is reusable from the second edit on (the per-action cancellation address `SEMIO_BAZEL_CONTROL_URL` is no plan input). Measured: no-op 10.0 s at 1.15 GB (was 140-357 s), the run after a landing 20-25 s, the first run after a library landing 95-470 s while 38-66 projects are re-inferred.\n"
+  },
+  {
+   "id": "dash-bullets",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "## 🧪️ Tests und Routing-Tabellen",
+   "where": "before",
+   "block": "- **Dashboard-No-op** (live, G41-G43): `repo-dashboard-rs:build` gibt die installierte Binärdatei ohne verschachteltes `repo run … :compile` zurück, wenn die eigene Quellenliste von Cargo gilt. Der Compile hält die Dep-Info der Binärdatei (jede Quelldatei, aus der die ausführbare Datei kompiliert wurde, auch `include_str!`-Dateien außerhalb der Crate-Wurzeln) in `semio.sources.json` neben der ausführbaren Datei fest, `installed.json` (Version 4) behält sie mit dem Build-Beginn, und ein Lauf prüft sie nur mit Stat: dieselben erfassten Quellen (Wurzeln, Manifeste, `Cargo.lock`, die Cargo-Profil-Policy-Dateien von `🎚️mode/🦀️profile`), keine aufgezeichnete Quelle geändert (das Spätere von mtime und ctime zählt, ein Ersatz mit alten Zeitstempeln zählt also), die ausführbare Datei vorhanden mit aufgezeichneter Größe und aufgezeichnetem Modus. Dann gibt er `[dashboard] prototype ist aktuell: seine … Quelldateien und die … Dateien, aus denen sein Programm gebaut wurde, sind seit seinem Build unverändert, es wird nichts gebaut` aus. `repo dashboard` nutzt dieselbe Regel (es übersah `include_str!` und Schema-Eingaben). Eine Änderung am Code des Build-Werkzeugs macht eine aktuelle Installation nicht veraltet; `repo run @semio-tech/repo-dashboard-rs:compile` und `:install` erzwingen einen Build. Der Plan des verschachtelten Compiles ist ab der zweiten Änderung wiederverwendbar (die Abbruch-Adresse je Aktion `SEMIO_BAZEL_CONTROL_URL` ist keine Plan-Eingabe). Gemessen: No-op 10,0 s bei 1,15 GB (vorher 140-357 s), der Lauf nach einer Landung 20-25 s, der erste Lauf nach einer Bibliothekslandung 95-470 s, während 38-66 Projekte neu abgeleitet werden.\n"
+  }
+ ]
+}

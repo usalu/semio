@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧬️schema/🔣️.json": {
+  "file": "00.json",
+  "base": "0c79b3dcc7afb2d0abaffea83d8fbc7b09f51520647d91519a7b7a99f3fc8b01",
+  "new": "fe069b6d926d4d34a73e3fcf4bee114d02ad5a71201ce788688750b9747cc0ff"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🟦️.ts": {
+  "file": "01.ts",
+  "base": "b65260616a541cce607bfe97de33fa6d3433e96ae61396691e30282f96b06c02",
+  "new": "6348d25f36241bf4936b018688882a107dcbad8a6bd0d0d83182b25be6751901"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🗃️records/🔣️.json": {
+  "file": "02.json",
+  "base": null,
+  "new": "33735efeaa30356247c69415f487f765dbe4af594a0a6656406b4922e556fe65"
+ }
+}

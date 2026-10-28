@@ -26,7 +26,7 @@ export async function runDeclaredRustBuildV1(workspace:string,project:string,pac
  if(fallback){
   const {buildRepositoryCargoArtifacts}=await import("../../../../../⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"),{repositoryCargoNetworkV1}=await import("../../../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts");
   checkResourceLeaseControl(phaseControl);
-  await buildRepositoryCargoArtifacts(resolve(workspace,intent.manifest),[...rustBuildIntentArgumentsV1(intent),...args],workspace,{producer:"artifact",invocation:invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(invocation,workspace),control:phaseControl,environment:process.env});checkResourceLeaseControl(phaseControl);return;
+  await buildRepositoryCargoArtifacts(resolve(workspace,intent.manifest),[...rustBuildIntentArgumentsV1(intent),...args],workspace,{producer:"artifact",invocation:invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(invocation,workspace),control:phaseControl,environment:process.env,...(intent.sourcesRecord?{sourcesRecord:intent.sourcesRecord}:{})});checkResourceLeaseControl(phaseControl);return;
  }
  const request=declaredRustBuildArgumentsV1(project,args,process.env,target),{runOwnedBuildChildInvocationV1}=await import("../../../../📥️caller/📤️child/🟦️.ts");
  checkResourceLeaseControl(phaseControl);await runOwnedBuildChildInvocationV1(workspace,request,invocation,phaseControl);checkResourceLeaseControl(phaseControl);

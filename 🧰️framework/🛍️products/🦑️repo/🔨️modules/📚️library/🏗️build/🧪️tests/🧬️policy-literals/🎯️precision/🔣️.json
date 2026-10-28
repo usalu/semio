@@ -1,0 +1,12 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "🏗️build/📥️inputs/🎯️precision/🧬️schema/🔣️.json",
+ "definitions": [
+  "Limits"
+ ],
+ "sources": [
+  "🏗️build/📥️inputs/🎯️precision/🟦️.ts"
+ ],
+ "minimumNumber": 1000
+}

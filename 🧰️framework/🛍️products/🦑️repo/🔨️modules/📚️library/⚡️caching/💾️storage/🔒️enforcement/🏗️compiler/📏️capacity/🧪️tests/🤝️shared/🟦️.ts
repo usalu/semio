@@ -1,13 +1,15 @@
 import{test,expect}from"bun:test";
 import{mkdirSync,mkdtempSync}from"node:fs";
 import{join,resolve}from"node:path";
-import{receiveScriptProcessInvocation}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import{scriptCompilerAdmissionControlV1}from"@semio-tech/process/compiler-capacity";
 import{withCompilerSharedHeadroomV1,withCompilerWriterCustodyV1}from"../../🟦️.ts";
+import{declareLibraryBuildTestEnvelopeV1}from"../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"compiler-headroom"});
 
 /** 🤝️ Compiles hold the writer custody together; only recovering missing headroom or maintenance is exclusive, and an exclusive request waits for the running compiles without being starved by later ones. */
 const pause=(milliseconds:number)=>new Promise<void>(done=>setTimeout(done,milliseconds));
-test("concurrent shared compiles overlap, headroom recovery and maintenance are exclusive, and a short image recovers once",async()=>receiveScriptProcessInvocation(process.env,async original=>{
+test("concurrent shared compiles overlap, headroom recovery and maintenance are exclusive, and a short image recovers once",async()=>withBuildTestInvocationV1(async original=>{
  const base=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!base)throw Error("Original diagnostic fixture directory required");
  const root=mkdtempSync(join(resolve(base),"sh-")),lease=join(root,"lease"),image={root:join(root,"img"),maximumPhysicalBytes:2**40,recheck:async()=>{}};mkdirSync(image.root,{recursive:true});
  const control=scriptCompilerAdmissionControlV1(original,"rust:shared-writer",120000),log:string[]=[],t0=Date.now(),request={version:1 as const,wait:true};

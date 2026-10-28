@@ -1,0 +1,18 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/📒️ledger/🟦️.ts": {
+  "mode": "plain",
+  "pass": 8,
+  "fails": [],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🏗️native/🟦️.ts": {
+  "mode": "plain",
+  "pass": 3,
+  "fails": [
+   "Cargo synchronization reuses content-bound admission and observes manifest and lock changes",
+   "(unnamed)",
+   "All Cargo workspaces consume selected inline profiles without authored manifest tables"
+  ],
+  "artifacts": "short"
+ }
+}

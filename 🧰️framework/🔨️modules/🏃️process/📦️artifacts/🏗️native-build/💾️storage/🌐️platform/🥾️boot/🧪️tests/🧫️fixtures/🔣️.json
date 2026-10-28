@@ -1,0 +1,68 @@
+[
+  {
+    "id": "first read succeeds",
+    "outcomes": [
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+    ],
+    "attempts": 1,
+    "result": "value"
+  },
+  {
+    "id": "one lost child then success",
+    "outcomes": [
+      "lost",
+      "ok",
+      "ok",
+      "ok"
+    ],
+    "attempts": 2,
+    "result": "value"
+  },
+  {
+    "id": "two lost children then success",
+    "outcomes": [
+      "lost",
+      "lost",
+      "ok",
+      "ok"
+    ],
+    "attempts": 3,
+    "result": "value"
+  },
+  {
+    "id": "every allowed attempt lost",
+    "outcomes": [
+      "lost",
+      "lost",
+      "lost",
+      "ok"
+    ],
+    "attempts": 3,
+    "result": "lost"
+  },
+  {
+    "id": "a fault is never repeated",
+    "outcomes": [
+      "fault",
+      "ok",
+      "ok",
+      "ok"
+    ],
+    "attempts": 1,
+    "result": "fault"
+  },
+  {
+    "id": "a fault after a lost child is not repeated",
+    "outcomes": [
+      "lost",
+      "fault",
+      "ok",
+      "ok"
+    ],
+    "attempts": 2,
+    "result": "fault"
+  }
+]

@@ -1,4 +1,5 @@
 import {expect,test} from "bun:test";
+import{testScratchRootV1}from"../../../../../../🧪️testing/🏖️sandbox/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -20,7 +21,7 @@ const walkedBytes=(root:string)=>Number(python("import os,sys\nt=0\nfor d,_,fs i
 /** ✅️ The storage contract every backend must satisfy, expressed only through the neutral facade, the neutral helpers and the selection; the same body runs once per declared backend. */
 async function conform(expected:string){
  const declaration=selectedNativeStorageDeclarationV1();expect(declaration.id).toBe(expected);expect(nativeImageBackingFilenameV1()).toBe(declaration.backingFilename);
- const sandbox=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR||process.env.TMPDIR||tmpdir(),"sc-")));
+ const sandbox=realpathSync(mkdtempSync(join(testScratchRootV1("conformance"),"sc-")));
  const hostNeedsCaseSensitiveVolume=process.platform==="darwin"&&!declaration.capabilities.includes("mounted-volume"),volume=join(sandbox,"cs");
  let scratch=sandbox;
  if(hostNeedsCaseSensitiveVolume){mkdirSync(volume);const created=tool(["create","-size","256m","-fs","Case-sensitive APFS","-volname","semio-sandbox","-ov",join(sandbox,"cs.dmg")]);expect(created.status,created.stdout+created.stderr).toBe(0);const attached=tool(["attach","-nobrowse","-noautoopen","-mountpoint",volume,join(sandbox,"cs.dmg")]);expect(attached.status,attached.stdout+attached.stderr).toBe(0);scratch=realpathSync(volume);}

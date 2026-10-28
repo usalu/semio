@@ -6,6 +6,7 @@
    "const": {
     "installedScheme": "installed:",
     "rootScheme": "semio-root:",
+    "catalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧭️sites/🧬️schema/🔣️.json",
     "maximumSitesPerFile": 4096,
     "languages": [
      "en",
@@ -75,8 +76,8 @@
       "fix": "Fix: load code with a literal import from a captured file; createRequire(base) with a base outside the closure may only call .resolve()."
      },
      "de": {
-      "refusal": "Erfasstes deklarierendes Require-Modul erforderlich: {importer} liegt außerhalb der erfassten Closure und darf nur Pfade auflösen",
-      "fix": "Behebung: Lade Code mit einem literalen Import aus einer erfassten Datei; createRequire(base) mit einer Basis außerhalb der Closure darf nur .resolve() aufrufen."
+      "refusal": "Erfasstes deklarierendes Require-Modul erforderlich: {importer} liegt außerhalb des erfassten Abschlusses und darf nur Pfade auflösen",
+      "fix": "Behebung: Lade Code mit einem literalen Import aus einer erfassten Datei; createRequire(base) mit einer Basis außerhalb des Abschlusses darf nur .resolve() aufrufen."
      }
     },
     "schema-read": {
@@ -96,7 +97,7 @@
      },
      "de": {
       "refusal": "Installiertes Paket seit der Erfassung verändert: {specifier} ({detail})",
-      "fix": "Behebung: Starte den Befehl erneut, damit die Erfassung die installierte Version neu aufnimmt, oder stelle die gepinnte Dependency-Generation wieder her."
+      "fix": "Behebung: Starte den Befehl erneut, damit die Erfassung die installierte Version neu aufnimmt, oder stelle die gepinnte Abhängigkeits-Generation wieder her."
      }
     },
     "unresolved": {
@@ -105,8 +106,8 @@
       "fix": "Fix: install the package (bun install) or correct the specifier; optional dependencies must be required inside try/catch with a literal specifier."
      },
      "de": {
-      "refusal": "Closure-Stelle nicht auflösbar: {specifier} (in {importer})",
-      "fix": "Behebung: Installiere das Paket (bun install) oder korrigiere den Specifier; optionale Abhängigkeiten muessen mit literalem Specifier in try/catch angefordert werden."
+      "refusal": "Abschluss-Stelle nicht auflösbar: {specifier} (in {importer})",
+      "fix": "Behebung: Installiere das Paket (bun install) oder korrigiere den Specifier; optionale Abhängigkeiten müssen mit literalem Specifier in try/catch angefordert werden."
      }
     },
     "computed-site": {
@@ -116,7 +117,67 @@
      },
      "de": {
       "refusal": "Berechnete Import-Stelle nicht deklariert: {importer} enthält {detail}",
-      "fix": "Behebung: Trage den Besitzer einmalig in ComputedImportSites (Authorizers-Schema) mit Stellenzahl und den ladbaren roots ein."
+      "fix": "Behebung: Trage den Eigentümer einmalig in ComputedImportSites (Authorizers-Schema) mit Stellenzahl und den ladbaren roots ein."
+     }
+    },
+    "compiler-comment-unclosed": {
+     "en": {
+      "refusal": "Closed compiler comment required in a captured module",
+      "fix": "Fix: close the block comment of the captured source."
+     },
+     "de": {
+      "refusal": "Ein geschlossener Kommentar ist in einem erfassten Modul erforderlich",
+      "fix": "Behebung: Schließe den Blockkommentar der erfassten Quelle."
+     }
+    },
+    "builtin-read-coverage-refused": {
+     "en": {
+      "refusal": "Closed compiler builtin-read import coverage refused: the rewrite did not count every built-in import",
+      "fix": "Fix: import fs, fs/promises and module with literal specifiers in the captured source."
+     },
+     "de": {
+      "refusal": "Geschlossene Abdeckung der Built-in-Leseimporte verweigert: die Umschreibung hat nicht jeden Built-in-Import gezählt",
+      "fix": "Behebung: Importiere fs, fs/promises und module in der erfassten Quelle mit literalen Specifiern."
+     }
+    },
+    "builtin-read-remained": {
+     "en": {
+      "refusal": "Mutable compiler builtin read remained after the rewrite",
+      "fix": "Fix: import fs, fs/promises and module with literal specifiers in the captured source."
+     },
+     "de": {
+      "refusal": "Ein veränderlicher Built-in-Lesezugriff blieb nach der Umschreibung bestehen",
+      "fix": "Behebung: Importiere fs, fs/promises und module in der erfassten Quelle mit literalen Specifiern."
+     }
+    },
+    "implementation-image-changed": {
+     "en": {
+      "refusal": "Immutable implementation image changed",
+      "fix": "Fix: run the command again; the outermost command restarts with the implementation now on disk."
+     },
+     "de": {
+      "refusal": "Unveränderliches Implementierungs-Image hat sich geändert",
+      "fix": "Behebung: Führe den Befehl erneut aus; der äußerste Befehl startet mit der Implementierung neu, die jetzt auf dem Datenträger liegt."
+     }
+    },
+    "implementation-image-required": {
+     "en": {
+      "refusal": "Closed immutable implementation image required",
+      "fix": "Fix: run the command again; the outermost command restarts with the implementation now on disk."
+     },
+     "de": {
+      "refusal": "Ein geschlossenes unveränderliches Implementierungs-Image ist erforderlich",
+      "fix": "Behebung: Führe den Befehl erneut aus; der äußerste Befehl startet mit der Implementierung neu, die jetzt auf dem Datenträger liegt."
+     }
+    },
+    "import-resolution-required": {
+     "en": {
+      "refusal": "Closed captured import resolution required",
+      "fix": "Fix: run the command again; the outermost command restarts with the implementation now on disk."
+     },
+     "de": {
+      "refusal": "Eine geschlossene erfasste Importauflösung ist erforderlich",
+      "fix": "Behebung: Führe den Befehl erneut aus; der äußerste Befehl startet mit der Implementierung neu, die jetzt auf dem Datenträger liegt."
      }
     }
    }

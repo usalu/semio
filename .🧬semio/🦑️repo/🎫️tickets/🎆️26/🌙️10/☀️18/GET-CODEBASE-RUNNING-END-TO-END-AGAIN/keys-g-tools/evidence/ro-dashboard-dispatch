@@ -1,0 +1,377 @@
+{
+ "command": [
+  "bun",
+  "test",
+  "--timeout",
+  "60000",
+  "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts"
+ ],
+ "allowed": 1866,
+ "learned": [
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/📜️script.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/⌨️command/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️runtime-selection/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️runtime-selection/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🔣️.json",
+  "🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🧪️tests/🔣️.json",
+  "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+  "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts",
+  "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/🦀️.rs",
+  "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🧪️tests/🦀️.rs",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️issuance/🧬️schema/📥️request.json",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🧹️cleanup.json",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🌊️races/🟦️.ts",
+  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/⚖️observation/🧪️tests/🦀️.rs",
+  "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🦀️.rs",
+  "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs",
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/⏳️wait/🧬️schema/📜️policy.json",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧭️continuation/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/⚖️fairness/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🎛️control/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/⏱️eta/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/⚖️priority/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/🤝️yield/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️bounded/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️metadata/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/📜️ticket.json",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🔣️policy.json",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧹️cleanup/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts",
+  "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🗄️store/🟦️.ts",
+  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧬️schema/🌊️races.json",
+  "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📺️terminal/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧪️tests/🦀️.rs",
+  "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json",
+  "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🦀️.rs",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧭️continuation/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📥️json.json",
+  "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🪪️identity/🟦️.ts",
+  "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧩️widgets/📦️packages/🦀️rust/Cargo.toml",
+  "Cargo.toml",
+  "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/⏱️work/🦀️.rs",
+  "🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🏛️frame/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/Cargo.toml",
+  "🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧪️tests/🦀️.rs",
+  "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧪️tests/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🏃️host/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🦀️.rs",
+  "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+  "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧪️tests/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+  "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🦀️.rs",
+  "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🦀️.rs"
+ ],
+ "rounds": [
+  {
+   "round": 0,
+   "exit": 1,
+   "seconds": 5.3,
+   "denied": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/📜️script.ts"
+   ],
+   "tail": "bun test v1.3.14 (0d9b296a)\n\n🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:\n\n# Unhandled error between tests\n-------------------------------\nerror: EPERM reading \"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/📜️script.ts\"\n-------------------------------\n\n\n 0 pass\n 1 fail\n 1 error\nRan 1 test across 1 file. [12.00ms]\n"
+  },
+  {
+   "round": 1,
+   "exit": 1,
+   "seconds": 5.2,
+   "denied": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/⌨️command/🟦️.ts"
+   ],
+   "tail": "bun test v1.3.14 (0d9b296a)\n\n🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:\n\n# Unhandled error between tests\n-------------------------------\nerror: EPERM reading \"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/⌨️command/🟦️.ts\"\n-------------------------------\n\n\n 0 pass\n 1 fail\n 1 error\nRan 1 test across 1 file. [12.00ms]\n"
+  },
+  {
+   "round": 2,
+   "exit": 1,
+   "seconds": 5.4,
+   "denied": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/🟦️.ts"
+   ],
+   "tail": "bun test v1.3.14 (0d9b296a)\n\n🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:\n\n# Unhandled error between tests\n-------------------------------\nerror: EPERM reading \"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/🟦️.ts\"\n-------------------------------\n\n\n 0 pass\n 1 fail\n 1 error\nRan 1 test across 1 file. [34.00ms]\n"
+  },
+  {
+   "round": 3,
+   "exit": 1,
+   "seconds": 11.9,
+   "denied": [
+    "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts"
+   ],
+   "tail": "bun test v1.3.14 (0d9b296a)\n\n🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:\n\n# Unhandled error between tests\n-------------------------------\nerror: EPERM reading \"/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts\"\n-------------------------------\n\n\n 0 pass\n 1 fail\n 1 error\nRan 1 test across 1 file. [26.00ms]\n"
+  },
+  {
+   "round": 4,
+   "exit": 1,
+   "seconds": 5.5,
+   "denied": [
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🟦️.ts"
+   ],
+   "tail": "bun test v1.3.14 (0d9b296a)\n\n🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:\n\n# Unhandled error between tests\n-------------------------------\nerror: EPERM reading \"/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🟦️.ts\"\n-------------------------------\n\n\n 0 pass\n 1 fail\n 1 error\nRan 1 test across 1 file. [43.00ms]\n"
+  },
+  {
+   "round": 5,
+   "exit": 1,
+   "seconds": 6.5,
+   "denied": [
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🔣️.json"
+   ],
+   "tail": "bun test v1.3.14 (0d9b296a)\n\n🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:\n\n# Unhandled error between tests\n-------------------------------\nerror: EPERM reading \"/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🔣️.json\"\n-------------------------------\n\n\n 0 pass\n 1 fail\n 1 error\nRan 1 test across 1 file. [180.00ms]\n"
+  },
+  {
+   "round": 6,
+   "exit": 1,
+   "seconds": 5.8,
+   "denied": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️runtime-selection/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json"
+   ],
+   "tail": "bun test v1.3.14 (0d9b296a)\n[runtime guard] skipped: EPERM: operation not permitted, open '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json'\n\n🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:\n\n# Unhandled error between tests\n-------------------------------\nerror: EPERM reading \"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️runtime-selection/🟦️.ts\"\n-------------------------------\n\n\n 0 pass\n 1 fail\n 1 error\nRan 1 test across 1 file. [388.00ms]\n"
+  },
+  {
+   "round": 7,
+   "exit": 1,
+   "seconds": 5.1,
+   "denied": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️runtime-selection/🟦️.ts"
+   ],
+   "tail": "bun test v1.3.14 (0d9b296a)\nbun test v1.4.2 (744846f84)\n\n🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:\n\n# Unhandled error between tests\n-------------------------------\nerror: EPERM reading \"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️runtime-selection/🟦️.ts\"\n-------------------------------\n\n\n 0 pass\n 1 fail\n 1 error\nRan 1 test across 1 file. [138.00ms]\n"
+  },
+  {
+   "round": 8,
+   "exit": 1,
+   "seconds": 6.8,
+   "denied": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🔣️.json"
+   ],
+   "tail": "bun test v1.3.14 (0d9b296a)\nbun test v1.4.2 (744846f84)\n\n🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:\n\n# Unhandled error between tests\n-------------------------------\nerror: EPERM reading \"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🔣️.json\"\n-------------------------------\n\n\n 0 pass\n 1 fail\n 1 error\nRan 1 test across 1 file. [118.00ms]\n"
+  },
+  {
+   "round": 9,
+   "exit": 1,
+   "seconds": 5.7,
+   "denied": [
+    "🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🧪️tests/🔣️.json",
+    "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust/Cargo.toml"
+   ],
+   "tail": "eturn text;}).has(resolve(base,row.target)),oracle=database.query(\"WITH RECURSIVE edges AS(SELECT json_extract(value,'$.source') source,json_extract(value,'$.target') target FROM json_each(?1)),reachable(path) AS(SELECT ?2 UNION SELECT edges.target FROM edges JOIN reachable ON edges.source=reachable.path)SELECT EXISTS(SELECT 1 FROM reachable WHERE path=?3) accepted\").get(JSON.stringify(edges),row.entry,row.target)as{accepted:number};expect(actual,row.id).toBe(row.r\n190 |   const owners=new Map<string,Set<string>>();for(const route of fixture.valueNativeRoutes.routes)for(const group of route.groups){let mounted=owners.get(group.manifest);if(!mounted){const manifest=parseToml(readFileSync(join(root,group.manifest),\"utf8\"))as{lib:{path:string}};mounted=graph(resolve(dirname(join(root,group.manifest)),manifest.lib.path),file=>readFileSync(file,\"utf8\"));owners.set(group.manifest,mounted);}for(const source of group.lawSources)expect(mounted.has(resolve(root,source)),group.package+\":\"+source+\" must be mounted\").toBe(true);}\n\nerror: EPERM: operation not permitted, open '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/Cargo.toml'\n      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:190:208)\n(fail) native value laws are reachable through real library mounts and exact domain fixtures [21.48ms]\n\n 9 pass\n 6 fail\n 1132 expect() calls\nRan 15 tests across 1 file. [758.00ms]\n"
+  },
+  {
+   "round": 10,
+   "exit": 1,
+   "seconds": 6.0,
+   "denied": [
+    "🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/🦀️.rs",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️issuance/🧬️schema/📥️request.json",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🧹️cleanup.json",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🌊️races/🟦️.ts",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/📦️packages/🦀️rust/Cargo.toml"
+   ],
+   "tail": "}).validate(schema,fixture)).toBe(true);const root=process.cwd(),policy=fixture.lawMounts,database=new Database(\":memory:\");\n188 |  const graph=(entry:string,read:(path:string)=>string)=>{const paths=new Set<string>(),pending=[entry];let bytes=0;while(pending.length){const file=pending.pop()!;if(paths.has(file))continue;const local=relative(root,file);if(isAbsolute(local)||local===\"..\"||local.startsWith(\"../\")||local.startsWith(\"..\\\\\")||file.length>256||paths.size>=policy.maximumFiles)throw Error(\"Bounded workspace library module graph required\");paths.add(file);const source=read(file);bytes+=Buffer.byteLength(source);if(bytes>policy.maximumBytes)throw Error(\"Bounded native law Source observation required\");for(const child of inspectRustModuleChildren(source))pending.push(child.via===\"include\"?resolve(dirname(file),child.path):resolve(dirname(file),...child.modules,child.path));}return paths;};\n\nerror: EPERM: operation not permitted, open '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/🦀️.rs'\n      at graph (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:188:452)\n      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:190:285)\n(fail) native value laws are reachable through real library mounts and exact domain fixtures [89.56ms]\n\n 9 pass\n 6 fail\n 1138 expect() calls\nRan 15 tests across 1 file. [909.00ms]\n"
+  },
+  {
+   "round": 11,
+   "exit": 1,
+   "seconds": 5.9,
+   "denied": [
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/⚖️observation/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs",
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/⏳️wait/🧬️schema/📜️policy.json",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧭️continuation/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/⚖️fairness/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/🎛️control/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/⏱️eta/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/⚖️priority/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/🤝️yield/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️bounded/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️metadata/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/📜️ticket.json",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🔣️policy.json",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧹️cleanup/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🗄️store/🟦️.ts",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧬️schema/🌊️races.json",
+    "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📺️terminal/📦️packages/🦀️rust/Cargo.toml"
+   ],
+   "tail": "2020({strict:true}).validate(schema,fixture)).toBe(true);const root=process.cwd(),policy=fixture.lawMounts,database=new Database(\":memory:\");\n188 |  const graph=(entry:string,read:(path:string)=>string)=>{const paths=new Set<string>(),pending=[entry];let bytes=0;while(pending.length){const file=pending.pop()!;if(paths.has(file))continue;const local=relative(root,file);if(isAbsolute(local)||local===\"..\"||local.startsWith(\"../\")||local.startsWith(\"..\\\\\")||file.length>256||paths.size>=policy.maximumFiles)throw Error(\"Bounded workspace library module graph required\");paths.add(file);const source=read(file);bytes+=Buffer.byteLength(source);if(bytes>policy.maximumBytes)throw Error(\"Bounded native law Source observation required\");for(const child of inspectRustModuleChildren(source))pending.push(child.via===\"include\"?resolve(dirname(file),child.path):resolve(dirname(file),...child.modules,child.path));}return paths;};\n\nerror: EPERM: operation not permitted, open '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs'\n      at graph (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:188:452)\n      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:190:285)\n(fail) native value laws are reachable through real library mounts and exact domain fixtures [29.19ms]\n\n 10 pass\n 5 fail\n 1231 expect() calls\nRan 15 tests across 1 file. [795.00ms]\n"
+  },
+  {
+   "round": 12,
+   "exit": 1,
+   "seconds": 6.1,
+   "denied": [
+    "🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧭️continuation/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📥️json.json",
+    "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🪪️identity/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧩️widgets/📦️packages/🦀️rust/Cargo.toml"
+   ],
+   "tail": "}).validate(schema,fixture)).toBe(true);const root=process.cwd(),policy=fixture.lawMounts,database=new Database(\":memory:\");\n188 |  const graph=(entry:string,read:(path:string)=>string)=>{const paths=new Set<string>(),pending=[entry];let bytes=0;while(pending.length){const file=pending.pop()!;if(paths.has(file))continue;const local=relative(root,file);if(isAbsolute(local)||local===\"..\"||local.startsWith(\"../\")||local.startsWith(\"..\\\\\")||file.length>256||paths.size>=policy.maximumFiles)throw Error(\"Bounded workspace library module graph required\");paths.add(file);const source=read(file);bytes+=Buffer.byteLength(source);if(bytes>policy.maximumBytes)throw Error(\"Bounded native law Source observation required\");for(const child of inspectRustModuleChildren(source))pending.push(child.via===\"include\"?resolve(dirname(file),child.path):resolve(dirname(file),...child.modules,child.path));}return paths;};\n\nerror: EPERM: operation not permitted, open '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧪️tests/🦀️.rs'\n      at graph (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:188:452)\n      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:190:285)\n(fail) native value laws are reachable through real library mounts and exact domain fixtures [17.69ms]\n\n 10 pass\n 5 fail\n 1237 expect() calls\nRan 15 tests across 1 file. [890.00ms]\n"
+  },
+  {
+   "round": 13,
+   "exit": 1,
+   "seconds": 5.8,
+   "denied": [
+    "Cargo.toml",
+    "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/⏱️work/🦀️.rs",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🏛️frame/📦️packages/🦀️rust/Cargo.toml"
+   ],
+   "tail": "t:true}).validate(schema,fixture)).toBe(true);const root=process.cwd(),policy=fixture.lawMounts,database=new Database(\":memory:\");\n188 |  const graph=(entry:string,read:(path:string)=>string)=>{const paths=new Set<string>(),pending=[entry];let bytes=0;while(pending.length){const file=pending.pop()!;if(paths.has(file))continue;const local=relative(root,file);if(isAbsolute(local)||local===\"..\"||local.startsWith(\"../\")||local.startsWith(\"..\\\\\")||file.length>256||paths.size>=policy.maximumFiles)throw Error(\"Bounded workspace library module graph required\");paths.add(file);const source=read(file);bytes+=Buffer.byteLength(source);if(bytes>policy.maximumBytes)throw Error(\"Bounded native law Source observation required\");for(const child of inspectRustModuleChildren(source))pending.push(child.via===\"include\"?resolve(dirname(file),child.path):resolve(dirname(file),...child.modules,child.path));}return paths;};\n\nerror: EPERM: operation not permitted, open '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/⏱️work/🦀️.rs'\n      at graph (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:188:452)\n      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:190:285)\n(fail) native value laws are reachable through real library mounts and exact domain fixtures [21.04ms]\n\n 11 pass\n 4 fail\n 1452 expect() calls\nRan 15 tests across 1 file. [764.00ms]\n"
+  },
+  {
+   "round": 14,
+   "exit": 1,
+   "seconds": 8.6,
+   "denied": [
+    "🧰️framework/Cargo.toml",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/📦️packages/🦀️rust/Cargo.toml"
+   ],
+   "tail": "ict:true}).validate(schema,fixture)).toBe(true);const root=process.cwd(),policy=fixture.lawMounts,database=new Database(\":memory:\");\n188 |  const graph=(entry:string,read:(path:string)=>string)=>{const paths=new Set<string>(),pending=[entry];let bytes=0;while(pending.length){const file=pending.pop()!;if(paths.has(file))continue;const local=relative(root,file);if(isAbsolute(local)||local===\"..\"||local.startsWith(\"../\")||local.startsWith(\"..\\\\\")||file.length>256||paths.size>=policy.maximumFiles)throw Error(\"Bounded workspace library module graph required\");paths.add(file);const source=read(file);bytes+=Buffer.byteLength(source);if(bytes>policy.maximumBytes)throw Error(\"Bounded native law Source observation required\");for(const child of inspectRustModuleChildren(source))pending.push(child.via===\"include\"?resolve(dirname(file),child.path):resolve(dirname(file),...child.modules,child.path));}return paths;};\n\nerror: EPERM: operation not permitted, open '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧪️tests/🦀️.rs'\n      at graph (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:188:452)\n      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:190:285)\n(fail) native value laws are reachable through real library mounts and exact domain fixtures [33.20ms]\n\n 11 pass\n 4 fail\n 1488 expect() calls\nRan 15 tests across 1 file. [1141.00ms]\n"
+  },
+  {
+   "round": 15,
+   "exit": 1,
+   "seconds": 6.1,
+   "denied": [
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🏃️host/📦️packages/🦀️rust/Cargo.toml"
+   ],
+   "tail": "rict:true}).validate(schema,fixture)).toBe(true);const root=process.cwd(),policy=fixture.lawMounts,database=new Database(\":memory:\");\n188 |  const graph=(entry:string,read:(path:string)=>string)=>{const paths=new Set<string>(),pending=[entry];let bytes=0;while(pending.length){const file=pending.pop()!;if(paths.has(file))continue;const local=relative(root,file);if(isAbsolute(local)||local===\"..\"||local.startsWith(\"../\")||local.startsWith(\"..\\\\\")||file.length>256||paths.size>=policy.maximumFiles)throw Error(\"Bounded workspace library module graph required\");paths.add(file);const source=read(file);bytes+=Buffer.byteLength(source);if(bytes>policy.maximumBytes)throw Error(\"Bounded native law Source observation required\");for(const child of inspectRustModuleChildren(source))pending.push(child.via===\"include\"?resolve(dirname(file),child.path):resolve(dirname(file),...child.modules,child.path));}return paths;};\n\nerror: EPERM: operation not permitted, open '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🦀️.rs'\n      at graph (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:188:452)\n      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:190:285)\n(fail) native value laws are reachable through real library mounts and exact domain fixtures [30.35ms]\n\n 11 pass\n 4 fail\n 1586 expect() calls\nRan 15 tests across 1 file. [966.00ms]\n"
+  },
+  {
+   "round": 16,
+   "exit": 1,
+   "seconds": 6.7,
+   "denied": [
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml"
+   ],
+   "tail": "}).validate(schema,fixture)).toBe(true);const root=process.cwd(),policy=fixture.lawMounts,database=new Database(\":memory:\");\n188 |  const graph=(entry:string,read:(path:string)=>string)=>{const paths=new Set<string>(),pending=[entry];let bytes=0;while(pending.length){const file=pending.pop()!;if(paths.has(file))continue;const local=relative(root,file);if(isAbsolute(local)||local===\"..\"||local.startsWith(\"../\")||local.startsWith(\"..\\\\\")||file.length>256||paths.size>=policy.maximumFiles)throw Error(\"Bounded workspace library module graph required\");paths.add(file);const source=read(file);bytes+=Buffer.byteLength(source);if(bytes>policy.maximumBytes)throw Error(\"Bounded native law Source observation required\");for(const child of inspectRustModuleChildren(source))pending.push(child.via===\"include\"?resolve(dirname(file),child.path):resolve(dirname(file),...child.modules,child.path));}return paths;};\n\nerror: EPERM: operation not permitted, open '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🦀️.rs'\n      at graph (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:188:452)\n      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:190:285)\n(fail) native value laws are reachable through real library mounts and exact domain fixtures [27.53ms]\n\n 11 pass\n 4 fail\n 1592 expect() calls\nRan 15 tests across 1 file. [1183.00ms]\n"
+  },
+  {
+   "round": 17,
+   "exit": 1,
+   "seconds": 8.1,
+   "denied": [
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml"
+   ],
+   "tail": "ate(schema,fixture)).toBe(true);const root=process.cwd(),policy=fixture.lawMounts,database=new Database(\":memory:\");\n188 |  const graph=(entry:string,read:(path:string)=>string)=>{const paths=new Set<string>(),pending=[entry];let bytes=0;while(pending.length){const file=pending.pop()!;if(paths.has(file))continue;const local=relative(root,file);if(isAbsolute(local)||local===\"..\"||local.startsWith(\"../\")||local.startsWith(\"..\\\\\")||file.length>256||paths.size>=policy.maximumFiles)throw Error(\"Bounded workspace library module graph required\");paths.add(file);const source=read(file);bytes+=Buffer.byteLength(source);if(bytes>policy.maximumBytes)throw Error(\"Bounded native law Source observation required\");for(const child of inspectRustModuleChildren(source))pending.push(child.via===\"include\"?resolve(dirname(file),child.path):resolve(dirname(file),...child.modules,child.path));}return paths;};\n\nerror: EPERM: operation not permitted, open '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧪️tests/🦀️.rs'\n      at graph (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:188:452)\n      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:190:285)\n(fail) native value laws are reachable through real library mounts and exact domain fixtures [36.56ms]\n\n 11 pass\n 4 fail\n 1680 expect() calls\nRan 15 tests across 1 file. [1159.00ms]\n"
+  },
+  {
+   "round": 18,
+   "exit": 1,
+   "seconds": 7.8,
+   "denied": [
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml"
+   ],
+   "tail": "ct:true}).validate(schema,fixture)).toBe(true);const root=process.cwd(),policy=fixture.lawMounts,database=new Database(\":memory:\");\n188 |  const graph=(entry:string,read:(path:string)=>string)=>{const paths=new Set<string>(),pending=[entry];let bytes=0;while(pending.length){const file=pending.pop()!;if(paths.has(file))continue;const local=relative(root,file);if(isAbsolute(local)||local===\"..\"||local.startsWith(\"../\")||local.startsWith(\"..\\\\\")||file.length>256||paths.size>=policy.maximumFiles)throw Error(\"Bounded workspace library module graph required\");paths.add(file);const source=read(file);bytes+=Buffer.byteLength(source);if(bytes>policy.maximumBytes)throw Error(\"Bounded native law Source observation required\");for(const child of inspectRustModuleChildren(source))pending.push(child.via===\"include\"?resolve(dirname(file),child.path):resolve(dirname(file),...child.modules,child.path));}return paths;};\n\nerror: EPERM: operation not permitted, open '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🦀️.rs'\n      at graph (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:188:452)\n      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:190:285)\n(fail) native value laws are reachable through real library mounts and exact domain fixtures [36.72ms]\n\n 11 pass\n 4 fail\n 1686 expect() calls\nRan 15 tests across 1 file. [911.00ms]\n"
+  },
+  {
+   "round": 19,
+   "exit": 1,
+   "seconds": 6.6,
+   "denied": [
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🦀️.rs"
+   ],
+   "tail": "te(schema,fixture)).toBe(true);const root=process.cwd(),policy=fixture.lawMounts,database=new Database(\":memory:\");\n188 |  const graph=(entry:string,read:(path:string)=>string)=>{const paths=new Set<string>(),pending=[entry];let bytes=0;while(pending.length){const file=pending.pop()!;if(paths.has(file))continue;const local=relative(root,file);if(isAbsolute(local)||local===\"..\"||local.startsWith(\"../\")||local.startsWith(\"..\\\\\")||file.length>256||paths.size>=policy.maximumFiles)throw Error(\"Bounded workspace library module graph required\");paths.add(file);const source=read(file);bytes+=Buffer.byteLength(source);if(bytes>policy.maximumBytes)throw Error(\"Bounded native law Source observation required\");for(const child of inspectRustModuleChildren(source))pending.push(child.via===\"include\"?resolve(dirname(file),child.path):resolve(dirname(file),...child.modules,child.path));}return paths;};\n\nerror: EPERM: operation not permitted, open '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🦀️.rs'\n      at graph (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:188:452)\n      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts:190:285)\n(fail) native value laws are reachable through real library mounts and exact domain fixtures [39.12ms]\n\n 13 pass\n 2 fail\n 1832 expect() calls\nRan 15 tests across 1 file. [1237.00ms]\n"
+  }
+ ],
+ "passed": false
+}

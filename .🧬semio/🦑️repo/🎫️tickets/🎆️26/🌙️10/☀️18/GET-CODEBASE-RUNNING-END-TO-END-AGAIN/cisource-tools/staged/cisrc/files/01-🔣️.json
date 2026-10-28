@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "hosts",
+    "gates",
+    "devcontainer",
+    "sourceGate",
+    "windowGate"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "hosts": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "runner"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "runner": {
+            "type": "string"
+          }
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "name": {
+                "const": "linux"
+              },
+              "runner": {
+                "const": "ubuntu-latest"
+              }
+            }
+          },
+          {
+            "properties": {
+              "name": {
+                "const": "macos"
+              },
+              "runner": {
+                "const": "macos-latest"
+              }
+            }
+          },
+          {
+            "properties": {
+              "name": {
+                "const": "windows"
+              },
+              "runner": {
+                "const": "windows-latest"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "gates": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "command"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "filesystem-command-laws",
+              "terminal-editor-controller",
+              "explicit-language-choice",
+              "canonical-cold-lazy-launch",
+              "installed-journeys",
+              "installed-load",
+              "process-deadline"
+            ]
+          },
+          "command": {
+            "type": "string",
+            "pattern": "^repo (cargo|run) ",
+            "maxLength": 600
+          }
+        }
+      }
+    },
+    "devcontainer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runner",
+        "configuration",
+        "adapter",
+        "gates",
+        "completedEntry"
+      ],
+      "properties": {
+        "runner": {
+          "const": "ubuntu-latest"
+        },
+        "configuration": {
+          "const": ".devcontainer/devcontainer.json"
+        },
+        "adapter": {
+          "const": "devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca"
+        },
+        "gates": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "filesystem-command-laws",
+              "terminal-editor-controller",
+              "explicit-language-choice",
+              "canonical-cold-lazy-launch",
+              "installed-journeys",
+              "installed-load",
+              "process-deadline"
+            ]
+          }
+        },
+        "completedEntry": {
+          "const": "Human control plane: repo dashboard"
+        }
+      }
+    },
+    "sourceGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project",
+        "target",
+        "owner",
+        "selector",
+        "command",
+        "entry",
+        "inputs"
+      ],
+      "properties": {
+        "project": {
+          "const": "@semio-tech/repo-dashboard-rs"
+        },
+        "target": {
+          "const": "test-ci-source"
+        },
+        "owner": {
+          "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust"
+        },
+        "selector": {
+          "const": "ci-source"
+        },
+        "command": {
+          "const": "repo ./📜️script.ts test ci-source"
+        },
+        "entry": {
+          "type": "string",
+          "pattern": "^\\{workspaceRoot\\}/.+/🟦️\\.ts$",
+          "maxLength": 256
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 10,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "contains": {
+            "const": "{projectRoot}/📋️project.json"
+          },
+          "items": {
+            "type": "string",
+            "pattern": "^\\{(?:workspaceRoot|projectRoot)\\}/",
+            "maxLength": 256
+          }
+        }
+      }
+    },
+    "windowGate": {
+      "const": {
+        "id": "terminal-editor-controller",
+        "command": "repo run @semio-tech/repo-dashboard-rs:test-windows --skip-cache --output=stream"
+      }
+    }
+  }
+}

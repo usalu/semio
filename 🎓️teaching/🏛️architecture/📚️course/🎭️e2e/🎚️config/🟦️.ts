@@ -1,16 +1,19 @@
 /** 🎚️ Playwright configuration of the end-to-end gate. The gate boots the stack and passes its site origin as
- * `PLAYWRIGHT_BASE_URL`; Playwright starts no server. The projects run in this order:
- * - `boot` loads the site once, so a cold dev server has transformed and optimized everything before the others start;
- * - `desktop`, `phone` and `layout` share one proctor; multi-user tests open simultaneous learner contexts;
- * - `presence`, then `shortage`, then `away`, then `faults`, run alone afterwards: they count who is online, take the
- *   proctor away for a moment, take it away before a learner ever arrives, and let it die again and again or speak
- *   another contract;
- * - `pets` runs last and nothing waits for it: the companions are decoration, so they never hold up another project.
+ * `PLAYWRIGHT_BASE_URL`; Playwright starts no server. The projects fall into the shards of the shard table and the gate
+ * runs one shard per Playwright process (a wave), so no project here depends on a project of another shard:
+ * - `boot` loads the site once, so a cold dev server has transformed and optimized everything before a wave starts; the gate
+ *   runs it right after a stack is up;
+ * - the `shared` shard (`desktop`, `phone`, `layout` and `pets`) shares one proctor on several workers: every learner is
+ *   a fresh device with a handle of its own, multi-user tests open simultaneous learner contexts, and the companions are
+ *   decoration whose waits count the pets' own time;
+ * - the `exclusive` shard runs on one worker with a proctor of its own: `presence`, then `shortage`, then `away`, then
+ *   `faults` count who is online, take the proctor away for a moment, take it away before a learner ever arrives, and let it
+ *   die again and again or speak another contract.
  *
- * Each topology gets one worker: multi-user journeys already open several learner contexts, and independent heavy
- * browser journeys share the host's socket and rendering resources. `--workers` explicitly overrides this budget.
- * Every step waits at most twenty seconds for what it expects, so a hang fails at once; the limit of
- * a whole test is ten minutes, bounding the longest journeys through every screen in both languages.
+ * The workers of a wave come from the gate (the worker policy of the admitted memory and cores); `--workers` explicitly
+ * overrides the shared shard's. Every step waits at most twenty seconds for what it expects, so a hang fails at once; the
+ * limit of a whole test is ten minutes, bounding the longest journeys through every screen in both languages.
+ * @see ../🔒️sessions/🔣️.json — the shard table
  * @see ../🟦️.ts — the gate that boots the stacks and runs this configuration
  * @see ../../🧪️tests — the specs
  * https://playwright.dev/docs/test-projects#dependencies */
@@ -40,13 +43,13 @@ export default defineConfig({
   use: { baseURL, viewport: DESKTOP_VIEWPORT, trace: "retain-on-failure", screenshot: "only-on-failure", actionTimeout: 20_000, navigationTimeout: 60_000 },
   projects: [
     { name: "boot", testMatch: ["🚀️site-boot/🟦️.ts"] },
-    { name: "desktop", dependencies: ["boot"], fullyParallel: true, testMatch: ["🪪️first-visit/🟦️.ts", "🥞️layered-home/🟦️.ts", "🎯️quiz-runs/🟦️.ts", "⛰️challenge-levels/🟦️.ts", "🏆️live-leaderboard/🟦️.ts", "🗣️both-languages/🟦️.ts"] },
-    { name: "phone", dependencies: ["boot"], testMatch: ["📱️phone/🟦️.ts"], use: { viewport: PHONE_VIEWPORT, isMobile: true, hasTouch: true } },
-    { name: "layout", dependencies: ["boot"], fullyParallel: true, testMatch: ["📐️adaptive-layout/🟦️.ts"] },
-    { name: "presence", dependencies: ["desktop", "phone", "layout"], testMatch: ["👥️shared-presence/🟦️.ts"] },
+    { name: "desktop", fullyParallel: true, testMatch: ["🪪️first-visit/🟦️.ts", "🥞️layered-home/🟦️.ts", "🎯️quiz-runs/🟦️.ts", "⛰️challenge-levels/🟦️.ts", "🏆️live-leaderboard/🟦️.ts", "🗣️both-languages/🟦️.ts"] },
+    { name: "phone", fullyParallel: true, testMatch: ["📱️phone/🟦️.ts"], use: { viewport: PHONE_VIEWPORT, isMobile: true, hasTouch: true } },
+    { name: "layout", fullyParallel: true, testMatch: ["📐️adaptive-layout/🟦️.ts"] },
+    { name: "presence", testMatch: ["👥️shared-presence/🟦️.ts"] },
     { name: "shortage", dependencies: ["presence"], testMatch: ["🔌️connection-shortage/🟦️.ts"] },
     { name: "away", dependencies: ["shortage"], testMatch: ["📴️proctor-away/🟦️.ts"] },
     { name: "faults", dependencies: ["away"], testMatch: ["🛟️proctor-faults/🟦️.ts"] },
-    { name: "pets", dependencies: ["faults"], fullyParallel: true, testMatch: ["🐕️pet-walk/🟦️.ts", "🐕️pet-walk/🧭️cast-and-choices/🟦️.ts", "🐕️pet-walk/🪜️mischief-ladder-and-phone/🟦️.ts"] },
+    { name: "pets", fullyParallel: true, testMatch: ["🐕️pet-walk/🟦️.ts", "🐕️pet-walk/🧭️cast-and-choices/🟦️.ts", "🐕️pet-walk/🪜️mischief-ladder-and-phone/🟦️.ts"] },
   ],
 });

@@ -1,0 +1,24 @@
+{
+ "target": "test-host-effect-invocation",
+ "tag": "r2",
+ "declared": 31,
+ "rows": [
+  {
+   "leg": "bun-host-effect",
+   "kind": "bun",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 0,
+   "tail": " 0 fail |  10 expect() calls | Ran 5 tests across 1 file. [27.00ms] | ",
+   "notes": [
+    "profiles:1",
+    "rules:8",
+    "capacity:600"
+   ]
+  }
+ ]
+}

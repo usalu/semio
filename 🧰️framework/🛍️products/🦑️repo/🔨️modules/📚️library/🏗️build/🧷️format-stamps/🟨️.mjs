@@ -1,18 +1,19 @@
+import {noticeLanguagesV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import schemaContract from"./🧬️schema/🔣️.json"with{type:"json"};
+import{createHash}from"node:crypto";
 import{closeSync,constants,fstatSync,openSync,readSync,writeSync}from"node:fs";
 import{join}from"node:path";
 import{fileURLToPath}from"node:url";
+import{abortLeaseRootV1,registerLeaseImplementationProviderV1,registerLeaseYieldHandlerV1}from"../../../../../../🔨️modules/🏃️process/🔒️leases/📈️standing/🟦️.ts";
 import{physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
 import{STALE_IMPLEMENTATION_CODE_V1,STALE_IMPLEMENTATION_CODES_V1,churnReasonTextV1,concurrentEditOfV1,installRestartableFailureHandlerV1}from"../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 const protocol=JSON.parse(JSON.stringify(schemaContract.$defs.Protocol.const));
 const staleCode=STALE_IMPLEMENTATION_CODE_V1,tableCode="SEMIO_STAMP_TABLE_INVALID";
 /** 📖️ The closed protocol of the stamp table exactly as the schema declares it. */
 export function formatStampProtocolV1(){return JSON.parse(JSON.stringify(protocol));}
-/** 🌐️ The languages a message is rendered in: the chosen one (`SEMIO_LANGUAGE`, `LC_ALL`, `LANG`), both declared languages when none is chosen. */
+/** 🌐️ The languages a message is rendered in: the one the language protocol chooses, both declared languages when it chooses none. */
 export function formatStampLanguagesV1(environment=process.env){
- const pick=value=>{const code=String(value??"").toLowerCase().split(/[-_.:@]/u)[0];return protocol.languages.includes(code)?code:undefined;};
- const chosen=pick(environment.SEMIO_LANGUAGE)??pick(environment.LC_ALL)??pick(environment.LANG);
- return chosen?[chosen]:[...protocol.languages];
+ return [...noticeLanguagesV1(protocol.languages,environment)];
 }
 /** 💬️ Renders one declared message in one language; every placeholder must be given. */
 export function formatStampTextV1(language,key,values={}){
@@ -129,3 +130,8 @@ registerFormatStampGuardV1(formatStampsV1);
 export function declareFormatStampV1(id,document){formatStampsV1.declare(id,document);}
 /** ✅️ Throws a stale-implementation error when any of the declared stamps moved since this process loaded them. */
 export function requireCurrentFormatStampsV1(ids,context,kind){formatStampsV1.ensureCurrent(ids,context,kind);}
+registerLeaseImplementationProviderV1({components:()=>Object.fromEntries([...formatStampsV1.owned()].map(([id,value])=>[id,createHash("sha256").update(canonical(value)).digest("hex").slice(0,12)])),bound:resource=>formatStampsV1.idsOf(resource),moved:resource=>formatStampsV1.idsOf(resource).filter(id=>formatStampsV1.moved([id]).length>0)});
+/** 🤝️ A holder asked to give a resource up ends the way an outdated implementation ends, whatever the reason: the outermost command starts again (exit 75) with the current code, and a stuck holder (no output and an idle process tree for the declared time) is restarted the same way instead of failing for the person who ran it; the request's message names why. */
+registerLeaseYieldHandlerV1(request=>{
+ const error=new StaleImplementationErrorV1([],{context:request.resource,kind:"yield"});error.message=request.message;if(!abortLeaseRootV1(error))exitIfStaleImplementationV1(error);
+});

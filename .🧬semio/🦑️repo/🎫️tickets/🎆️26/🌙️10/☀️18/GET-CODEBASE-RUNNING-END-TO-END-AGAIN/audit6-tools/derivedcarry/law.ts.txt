@@ -1,0 +1,41 @@
+
+/** 🧮️ A second derived question, whose support reads the whole text of every import target and whose row names only its input (the targets lie in another directory, so a change there does not name the question): how many imports of `lib/d.ts` name a file whose text contains `yes`. A target can therefore be restored to its sealed bytes without touching any row that names the question itself. */
+const deriveTexts:MemoDeriverV1=async row=>{
+ const [,file]=JSON.parse(row.path) as [string,string];
+ const captured=await observation.captureObservedSourceInputsV1(()=>{const host=observation.observedTypeScriptHost({readFile:(path:string)=>{try{return readFileSync(path,"utf8");}catch{return undefined;}}} as never) as {readFile(path:string):string|undefined};return modelImports(host.readFile(file)??"").filter(spec=>(host.readFile(join(dirname(file),spec))??"").includes("yes")).length;},undefined,false);
+ return{fact:captured.value,rows:captured.observations as unknown as MemoRowV1[]};
+};
+/** 🔮️ The independent answer of {@link deriveTexts} on the tree as it is now (plain reads). */
+const textsAnswer=(root:string):number|undefined=>{const read=(path:string)=>{try{return readFileSync(join(root,path),"utf8");}catch{return "";}};return modelImports(read("lib/d.ts")).filter(spec=>read(join("lib",spec)).includes("yes")).length;};
+
+test("a derived serve leaves its stale support behind: the record carries those rows, so a later change that restores one of their paths alone is settled against the tree the question was last asked on, never against the sealed rows (two-step sequences, oracle = the planner's verdict on the final tree)",async()=>{
+ const write=(path:string,text:string)=>(root:string)=>writeFileSync(join(root,path),text),both=(...steps:((root:string)=>void)[])=>(root:string)=>{for(const step of steps)step(root);},swap=both(write("docs/x.ts","no\n"),write("docs/z.ts","yes\n"));
+ const sequences:readonly Readonly<{name:string;first:(root:string)=>void;second:(root:string)=>void;serve:boolean}>[]=[
+  {name:"the two targets swap their marker, then the first is restored (the answer grows to 2)",first:swap,second:write("docs/x.ts","yes\n"),serve:false},
+  {name:"the two targets swap their marker, then the second is restored (the answer drops to 0)",first:swap,second:write("docs/z.ts","no\n"),serve:false},
+  {name:"the two targets swap their marker, then the swap is undone (the sealed tree again)",first:swap,second:both(write("docs/x.ts","yes\n"),write("docs/z.ts","no\n")),serve:true},
+  {name:"a target edited keeping its marker, then restored (the answer stays 1)",first:write("docs/x.ts","yes again\n"),second:write("docs/x.ts","yes\n"),serve:true},
+ ];
+ let carriedWrong=0;
+ for(const sequence of sequences){
+  const {root}=fixture();for(const [path,text] of [["lib/d.ts","import '../docs/x.ts';\nimport '../docs/z.ts';\nd\n"],["docs/x.ts","yes\n"],["docs/z.ts","no\n"]] as const)writeFileSync(join(root,path),text);
+  const settled=new Date(Date.now()-LATER);for(const directory of ["lib","docs"])utimesSync(join(root,directory),settled,settled);
+  const memo=await sealed(root,deriveTexts),d=textsAnswer(root);
+  expect(d,"one of the two targets carries the marker").toBe(1);
+  let before=snapshot(root);sequence.first(root);memo.journal.rows.push(...journalRows(before,snapshot(root),false));
+  const first=await (await memo.open()).lookup();
+  expect(textsAnswer(root),sequence.name+": the first step keeps the answer").toBe(d);
+  expect(first.hit?first.edited?.questions:first.detail,sequence.name+": the first step is served by asking the question again").toBe(1);
+  before=snapshot(root);sequence.second(root);memo.journal.rows.push(...journalRows(before,snapshot(root),false));
+  const verdict=await planner(root,memo.raw,memo.frontier,d,textsAnswer),second=await (await memo.open()).lookup();
+  if(second.hit)expect(verdict,"the memo served what the planner would plan: "+sequence.name).toBe(true);
+  expect(second.hit,sequence.name).toBe(sequence.serve);
+  expect(verdict,sequence.name+" (planner)").toBe(sequence.serve);
+  const recordFile=join(memo.directory,"e".repeat(40)+".json"),record=JSON.parse(readFileSync(recordFile,"utf8")) as {relevance:Record<string,unknown>};
+  if(sequence.name.includes("undone"))expect(record.relevance.carried,"the sealed tree again: nothing left to carry").toBeUndefined();
+  const {carried:_carried,...forgotten}=record.relevance;writeFileSync(recordFile,JSON.stringify({...record,relevance:forgotten}));
+  memo.journal.rows.push(["m",0,"docs/x.ts"]);
+  if((await (await memo.open()).lookup()).hit&&!await planner(root,memo.raw,memo.frontier,d,textsAnswer))carriedWrong++;
+ }
+ expect(carriedWrong,"a record that forgets the carried rows must be wrong somewhere").toBeGreaterThan(0);
+},120000);

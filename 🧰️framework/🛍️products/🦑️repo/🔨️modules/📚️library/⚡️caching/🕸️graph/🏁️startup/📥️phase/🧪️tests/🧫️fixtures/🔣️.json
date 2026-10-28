@@ -70,8 +70,8 @@
       "callee": "checkResourceLeaseControl",
       "phaseIndex": 0,
       "expected": [
-        "actualPhase",
-        "actualPhase"
+        "birthPhase",
+        "birthPhase"
       ]
     },
     {

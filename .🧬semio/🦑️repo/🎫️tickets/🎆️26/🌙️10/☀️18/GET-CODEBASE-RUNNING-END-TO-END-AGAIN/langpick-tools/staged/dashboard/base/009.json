@@ -1,0 +1,486 @@
+{
+  "negotiate": [
+    {
+      "value": "de",
+      "language": "de"
+    },
+    {
+      "value": "de_DE.UTF-8",
+      "language": "de"
+    },
+    {
+      "value": "de-AT",
+      "language": "de"
+    },
+    {
+      "value": "de@euro",
+      "language": "de"
+    },
+    {
+      "value": "DE_ch",
+      "language": "de"
+    },
+    {
+      "value": "en",
+      "language": "en"
+    },
+    {
+      "value": "en_US.UTF-8",
+      "language": "en"
+    },
+    {
+      "value": "C",
+      "language": null
+    },
+    {
+      "value": "POSIX",
+      "language": null
+    },
+    {
+      "value": "",
+      "language": null
+    },
+    {
+      "value": "fr_FR.UTF-8",
+      "language": null
+    },
+    {
+      "value": "deutsch",
+      "language": null
+    }
+  ],
+  "resolve": [
+    {
+      "environment": {},
+      "expected": null
+    },
+    {
+      "environment": {
+        "LANG": "de_DE.UTF-8"
+      },
+      "expected": "de"
+    },
+    {
+      "environment": {
+        "LC_ALL": "C",
+        "LANG": "de_DE.UTF-8"
+      },
+      "expected": "de"
+    },
+    {
+      "environment": {
+        "LC_ALL": "en_US.UTF-8",
+        "LANG": "de_DE.UTF-8"
+      },
+      "expected": "en"
+    },
+    {
+      "environment": {
+        "LC_MESSAGES": "de",
+        "LANG": "en"
+      },
+      "expected": "de"
+    },
+    {
+      "environment": {
+        "LANG": "fr_FR.UTF-8"
+      },
+      "expected": null
+    },
+    {
+      "environment": {
+        "LANGUAGE": "de"
+      },
+      "expected": null
+    }
+  ],
+  "invalidDeclarations": [
+    {
+      "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
+      "systemVariables": [
+        "LC_ALL",
+        "LC_MESSAGES",
+        "LANG"
+      ],
+      "choices": [],
+      "prompt": [
+        "Choose language / Sprache wählen",
+        "1 English    2 Deutsch",
+        "↑ ↓ / Tab: select / auswählen    Enter: confirm / bestätigen    Esc: cancel / abbrechen"
+      ],
+      "messages": {
+        "saving": "Saving language / Sprache wird gespeichert…",
+        "saveFailed": "Could not save / Speichern fehlgeschlagen",
+        "disconnected": "Language event worker disconnected / Sprachereignis-Verbindung getrennt",
+        "terminalUnavailable": "Terminal unavailable / Terminal nicht verfügbar",
+        "required": "Choose --language en|de or open the dashboard / --language en|de wählen oder Dashboard öffnen",
+        "cancelled": "Language selection cancelled / Sprachauswahl abgebrochen"
+      }
+    },
+    {
+      "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
+      "systemVariables": [
+        "LC_ALL",
+        "LC_MESSAGES",
+        "LANG"
+      ],
+      "choices": [
+        {
+          "language": "fr",
+          "name": "Français"
+        }
+      ],
+      "prompt": [
+        "Choose language / Sprache wählen",
+        "1 English    2 Deutsch",
+        "↑ ↓ / Tab: select / auswählen    Enter: confirm / bestätigen    Esc: cancel / abbrechen"
+      ],
+      "messages": {
+        "saving": "Saving language / Sprache wird gespeichert…",
+        "saveFailed": "Could not save / Speichern fehlgeschlagen",
+        "disconnected": "Language event worker disconnected / Sprachereignis-Verbindung getrennt",
+        "terminalUnavailable": "Terminal unavailable / Terminal nicht verfügbar",
+        "required": "Choose --language en|de or open the dashboard / --language en|de wählen oder Dashboard öffnen",
+        "cancelled": "Language selection cancelled / Sprachauswahl abgebrochen"
+      }
+    },
+    {
+      "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
+      "systemVariables": [
+        "LC_ALL",
+        "LC_MESSAGES",
+        "LANG"
+      ],
+      "choices": [
+        {
+          "language": "en",
+          "name": "English"
+        },
+        {
+          "language": "en",
+          "name": "English"
+        }
+      ],
+      "prompt": [
+        "Choose language / Sprache wählen",
+        "1 English    2 Deutsch",
+        "↑ ↓ / Tab: select / auswählen    Enter: confirm / bestätigen    Esc: cancel / abbrechen"
+      ],
+      "messages": {
+        "saving": "Saving language / Sprache wird gespeichert…",
+        "saveFailed": "Could not save / Speichern fehlgeschlagen",
+        "disconnected": "Language event worker disconnected / Sprachereignis-Verbindung getrennt",
+        "terminalUnavailable": "Terminal unavailable / Terminal nicht verfügbar",
+        "required": "Choose --language en|de or open the dashboard / --language en|de wählen oder Dashboard öffnen",
+        "cancelled": "Language selection cancelled / Sprachauswahl abgebrochen"
+      }
+    },
+    {
+      "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
+      "systemVariables": [
+        "lang"
+      ],
+      "choices": [
+        {
+          "language": "en",
+          "name": "English"
+        },
+        {
+          "language": "de",
+          "name": "Deutsch"
+        }
+      ],
+      "prompt": [
+        "Choose language / Sprache wählen",
+        "1 English    2 Deutsch",
+        "↑ ↓ / Tab: select / auswählen    Enter: confirm / bestätigen    Esc: cancel / abbrechen"
+      ],
+      "messages": {
+        "saving": "Saving language / Sprache wird gespeichert…",
+        "saveFailed": "Could not save / Speichern fehlgeschlagen",
+        "disconnected": "Language event worker disconnected / Sprachereignis-Verbindung getrennt",
+        "terminalUnavailable": "Terminal unavailable / Terminal nicht verfügbar",
+        "required": "Choose --language en|de or open the dashboard / --language en|de wählen oder Dashboard öffnen",
+        "cancelled": "Language selection cancelled / Sprachauswahl abgebrochen"
+      }
+    },
+    {
+      "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
+      "systemVariables": [
+        "LANG",
+        "LANG"
+      ],
+      "choices": [
+        {
+          "language": "en",
+          "name": "English"
+        },
+        {
+          "language": "de",
+          "name": "Deutsch"
+        }
+      ],
+      "prompt": [
+        "Choose language / Sprache wählen",
+        "1 English    2 Deutsch",
+        "↑ ↓ / Tab: select / auswählen    Enter: confirm / bestätigen    Esc: cancel / abbrechen"
+      ],
+      "messages": {
+        "saving": "Saving language / Sprache wird gespeichert…",
+        "saveFailed": "Could not save / Speichern fehlgeschlagen",
+        "disconnected": "Language event worker disconnected / Sprachereignis-Verbindung getrennt",
+        "terminalUnavailable": "Terminal unavailable / Terminal nicht verfügbar",
+        "required": "Choose --language en|de or open the dashboard / --language en|de wählen oder Dashboard öffnen",
+        "cancelled": "Language selection cancelled / Sprachauswahl abgebrochen"
+      }
+    },
+    {
+      "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
+      "systemVariables": [
+        "LC_ALL",
+        "LC_MESSAGES",
+        "LANG"
+      ],
+      "choices": [
+        {
+          "language": "en",
+          "name": "English"
+        },
+        {
+          "language": "de",
+          "name": "Deutsch"
+        }
+      ],
+      "prompt": [
+        "Choose language / Sprache wählen",
+        "1 English    2 Deutsch",
+        "↑ ↓ / Tab: select / auswählen    Enter: confirm / bestätigen    Esc: cancel / abbrechen"
+      ],
+      "default": "en",
+      "messages": {
+        "saving": "Saving language / Sprache wird gespeichert…",
+        "saveFailed": "Could not save / Speichern fehlgeschlagen",
+        "disconnected": "Language event worker disconnected / Sprachereignis-Verbindung getrennt",
+        "terminalUnavailable": "Terminal unavailable / Terminal nicht verfügbar",
+        "required": "Choose --language en|de or open the dashboard / --language en|de wählen oder Dashboard öffnen",
+        "cancelled": "Language selection cancelled / Sprachauswahl abgebrochen"
+      }
+    },
+    {
+      "systemVariables": [],
+      "choices": [
+        {
+          "language": "en",
+          "name": "English"
+        },
+        {
+          "language": "de",
+          "name": "Deutsch"
+        }
+      ],
+      "messages": {
+        "saving": "Saving language / Sprache wird gespeichert…",
+        "saveFailed": "Could not save / Speichern fehlgeschlagen",
+        "disconnected": "Language event worker disconnected / Sprachereignis-Verbindung getrennt",
+        "terminalUnavailable": "Terminal unavailable / Terminal nicht verfügbar",
+        "required": "Choose --language en|de or open the dashboard / --language en|de wählen oder Dashboard öffnen",
+        "cancelled": "Language selection cancelled / Sprachauswahl abgebrochen"
+      }
+    },
+    {
+      "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
+      "systemVariables": [
+        "LC_ALL",
+        "LC_MESSAGES",
+        "LANG"
+      ],
+      "choices": [
+        {
+          "language": "en",
+          "name": "English"
+        },
+        {
+          "language": "de",
+          "name": "Deutsch"
+        }
+      ],
+      "prompt": [
+        "a"
+      ],
+      "messages": {
+        "saving": "Saving language / Sprache wird gespeichert…",
+        "saveFailed": "Could not save / Speichern fehlgeschlagen",
+        "disconnected": "Language event worker disconnected / Sprachereignis-Verbindung getrennt",
+        "terminalUnavailable": "Terminal unavailable / Terminal nicht verfügbar",
+        "required": "Choose --language en|de or open the dashboard / --language en|de wählen oder Dashboard öffnen",
+        "cancelled": "Language selection cancelled / Sprachauswahl abgebrochen"
+      }
+    }
+  ],
+  "choiceOrders": [
+    {
+      "declaration": {
+        "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
+        "systemVariables": [
+          "LC_ALL",
+          "LC_MESSAGES",
+          "LANG"
+        ],
+        "choices": [
+          {
+            "language": "en",
+            "name": "English"
+          },
+          {
+            "language": "de",
+            "name": "Deutsch"
+          }
+        ],
+        "prompt": [
+          "Choose language / Sprache wählen",
+          "1 English    2 Deutsch",
+          "↑ ↓ / Tab: select / auswählen    Enter: confirm / bestätigen    Esc: cancel / abbrechen"
+        ],
+        "messages": {
+          "saving": "Saving language / Sprache wird gespeichert…",
+          "saveFailed": "Could not save / Speichern fehlgeschlagen",
+          "disconnected": "Language event worker disconnected / Sprachereignis-Verbindung getrennt",
+          "terminalUnavailable": "Terminal unavailable / Terminal nicht verfügbar",
+          "required": "Choose --language en|de or open the dashboard / --language en|de wählen oder Dashboard öffnen",
+          "cancelled": "Language selection cancelled / Sprachauswahl abgebrochen"
+        }
+      },
+      "expected": null
+    },
+    {
+      "declaration": {
+        "$schema": "../../🧬️schema/⚙️preferences/🌐️language/🔣️.json",
+        "systemVariables": [
+          "LC_ALL",
+          "LC_MESSAGES",
+          "LANG"
+        ],
+        "choices": [
+          {
+            "language": "de",
+            "name": "Deutsch"
+          },
+          {
+            "language": "en",
+            "name": "English"
+          }
+        ],
+        "prompt": [
+          "Choose language / Sprache wählen",
+          "1 English    2 Deutsch",
+          "↑ ↓ / Tab: select / auswählen    Enter: confirm / bestätigen    Esc: cancel / abbrechen"
+        ],
+        "messages": {
+          "saving": "Saving language / Sprache wird gespeichert…",
+          "saveFailed": "Could not save / Speichern fehlgeschlagen",
+          "disconnected": "Language event worker disconnected / Sprachereignis-Verbindung getrennt",
+          "terminalUnavailable": "Terminal unavailable / Terminal nicht verfügbar",
+          "required": "Choose --language en|de or open the dashboard / --language en|de wählen oder Dashboard öffnen",
+          "cancelled": "Language selection cancelled / Sprachauswahl abgebrochen"
+        }
+      },
+      "expected": null
+    }
+  ],
+  "selection": [
+    {
+      "actions": [],
+      "selected": null,
+      "outcome": "pending"
+    },
+    {
+      "actions": [
+        "enter"
+      ],
+      "selected": null,
+      "outcome": "pending"
+    },
+    {
+      "actions": [
+        "1"
+      ],
+      "selected": "en",
+      "outcome": "pending"
+    },
+    {
+      "actions": [
+        "2",
+        "enter"
+      ],
+      "selected": "de",
+      "outcome": "accepted"
+    },
+    {
+      "actions": [
+        "down",
+        "enter"
+      ],
+      "selected": "en",
+      "outcome": "accepted"
+    },
+    {
+      "actions": [
+        "up",
+        "enter"
+      ],
+      "selected": "de",
+      "outcome": "accepted"
+    },
+    {
+      "actions": [
+        "tab",
+        "tab",
+        "enter"
+      ],
+      "selected": "de",
+      "outcome": "accepted"
+    },
+    {
+      "actions": [
+        "2",
+        "escape"
+      ],
+      "selected": "de",
+      "outcome": "cancelled"
+    }
+  ],
+  "publication": [
+    {
+      "id": "cancel-before-confirmation",
+      "confirmed": false,
+      "cancelled": true,
+      "committed": false,
+      "events": 0,
+      "outcome": "cancelled"
+    },
+    {
+      "id": "cancel-before-publication",
+      "confirmed": true,
+      "cancelled": true,
+      "committed": false,
+      "events": 0,
+      "outcome": "cancelled"
+    },
+    {
+      "id": "cancel-after-publication",
+      "confirmed": true,
+      "cancelled": true,
+      "committed": true,
+      "events": 1,
+      "outcome": "saved"
+    },
+    {
+      "id": "explicit-publication",
+      "confirmed": true,
+      "cancelled": false,
+      "committed": true,
+      "events": 1,
+      "outcome": "saved"
+    }
+  ]
+}

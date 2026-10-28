@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts": {
+  "file": "f000",
+  "base": "9ac33b4047f1277b429af28869f292841e26d5060316a031eba11c7bdaa51416",
+  "new": "d3c4ea5318f8783c34ed5cc1d784153528bea5ba592fde7e299948fee6ab192d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧰️support/🟦️.ts": {
+  "file": "f001",
+  "base": "cb24bf30c663c56f598d3b58006660ed495c4c62eb915e0ce1d50bfbbbc4a257",
+  "new": "b7daf903226558a54ae5533bea3e4c02c9b272c62fb05ed06938937530d5a987"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧫️private-repository/🟦️.ts": {
+  "file": "f002",
+  "base": null,
+  "new": "b229be932d04a891855f0bebeb1844dd1faaa8331b5a6ac605101f95bac38858"
+ }
+}

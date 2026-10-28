@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🚦️trampoline/🟦️.ts": {
+  "file": "e00",
+  "base": "80c23ffff96fd0d4afccfaf3aab60ff73da4ac1171850b8f3af352e20959e3ad",
+  "new": "d54b0f59f9bdd0e80daffd316d6f89c249bdab3d1bac71be08fec78d26d82425"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧪️tests/🚦️trampoline/🟦️.ts": {
+  "file": "e01",
+  "base": "075959a9f08eb62f134351479c342767515f3728742fcf38e394cf7433dd2ff9",
+  "new": "12acb209c0e6290ca0b60553e2e9b1d890c9ce3f2d893e16b6fa64a6ac0e0dc5"
+ }
+}

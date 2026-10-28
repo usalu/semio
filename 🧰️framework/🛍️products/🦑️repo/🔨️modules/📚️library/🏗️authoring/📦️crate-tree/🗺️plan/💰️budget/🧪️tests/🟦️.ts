@@ -15,7 +15,7 @@ for(const row of corpus.ok)test("budget "+row.text,()=>{expect(parseCrateBudget(
 for(const text of corpus.errors)test("budget refuses "+JSON.stringify(text),()=>{expect(()=>parseCrateBudget(text)).toThrow("a crate budget is written <files>/<bytes>/<lines> with positive integers, got "+JSON.stringify(text));});
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

@@ -1,7 +1,15 @@
 import{createHash}from"node:crypto";
-import{canonicalJsonV1}from"../🟨️.mjs";
+import{canonicalJsonV1}from"../🧮️fact-codec/🟨️.mjs";
 
 const sha256=value=>createHash("sha256").update(value).digest("hex");
+
+/** 🔏️ The digest of a JSON data file without the top level sections that nothing of the graph reads (`ignore`): the canonical text of the remaining document, so an edit of an ignored section moves nothing; text that is no JSON object is digested whole and tagged, so it can never equal a digest of a document. */
+export function sectionalDigestV1(text,ignore){
+ let value;try{value=JSON.parse(text);}catch{return"!unparsable:"+sha256(text);}
+ if(value===null||typeof value!=="object"||Array.isArray(value))return"!unparsable:"+sha256(text);
+ const kept={};for(const key of Object.keys(value))if(!ignore.includes(key))kept[key]=value[key];
+ return sha256(canonicalJsonV1(kept));
+}
 
 /** 🌍️ Reads the one field of a manifest that other projects' edges depend on: the project name and native root, the package name, the Go module or the crate name. The same function derives a fact and checks it, so a change the extractor cannot see is never reported as stable by a different reader. */
 export function extractEnvironmentFieldV1(extractor,text){
@@ -23,7 +31,9 @@ export async function environmentRowHoldsV1(row,{read,stat}){
   if(!status)return row.fact.sha256===null;
   if(row.fact.sha256===null)return false;
   if(status.size===row.fact.size&&status.mtimeMs===row.fact.mtimeMs)return true;
-  const text=await read(row.path);return text!==undefined&&sha256(text)===row.fact.sha256;
+  const text=await read(row.path);
+  if(text===undefined)return false;
+  return(row.fact.ignore?.length?sectionalDigestV1(text,row.fact.ignore):sha256(text))===row.fact.sha256;
  }
  throw Error("Closed environment row kind required: "+row.kind);
 }
@@ -34,13 +44,18 @@ export async function environmentRowHoldsV1(row,{read,stat}){
  */
 export async function deriveEnvironmentV1({projects,workspaceManifests,lock,taxonomy,read,stat}){
  const rows=[],owners=[],packages=[],modules=[];
- const field=async(path,extract)=>{const value=extractEnvironmentFieldV1(extract,await read(path));rows.push({kind:"field",path,fact:{extract,value}});return value;};
- for(const project of projects){
+ const field=async(path,extract)=>({row:{kind:"field",path,fact:{extract,value:extractEnvironmentFieldV1(extract,await read(path))}}});
+ const FIELD_CONCURRENCY_V1=64,found=new Array(projects.length);
+ for(let from=0;from<projects.length;from+=FIELD_CONCURRENCY_V1)await Promise.all(projects.slice(from,from+FIELD_CONCURRENCY_V1).map(async(project,at)=>{
+  found[from+at]=await Promise.all([project.config?field(project.config,project.config.endsWith("Cargo.toml")?"cargo-package":"project-json"):undefined,field(project.root+"/package.json","package-json"),field(project.root+"/go.mod","go-mod")]);
+ }));
+ projects.forEach((project,at)=>{
   owners.push([project.name,project.root,project.nativeRoot??null]);
-  if(project.config)await field(project.config,project.config.endsWith("Cargo.toml")?"cargo-package":"project-json");
-  const packageName=await field(project.root+"/package.json","package-json");if(packageName?.name)packages.push([packageName.name,project.name]);
-  const go=await field(project.root+"/go.mod","go-mod");if(go?.module)modules.push([go.module,project.name]);
- }
+  const[config,pack,go]=found[at];
+  if(config)rows.push(config.row);
+  rows.push(pack.row);if(pack.row.fact.value?.name)packages.push([pack.row.fact.value.name,project.name]);
+  rows.push(go.row);if(go.row.fact.value?.module)modules.push([go.row.fact.value.module,project.name]);
+ });
  const digests=[],digest=async path=>{const status=await stat(path),text=status?await read(path):undefined;const fact=text===undefined?{sha256:null}:{sha256:sha256(text),size:status.size,mtimeMs:status.mtimeMs};rows.push({kind:"digest",path,fact});return fact.sha256;};
  for(const path of[...workspaceManifests].sort()){const text=await read(path);if(text!==undefined&&text.includes("[workspace"))digests.push([path,await digest(path)]);}
  const lockDigest=lock?await digest(lock):null,taxonomyDigest=taxonomy?await digest(taxonomy):null;

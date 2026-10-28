@@ -1,5 +1,5 @@
 /** 🔸️ The framework reserved exact phase of toolJobCoverageRun. */
-import { toolJobMemberStoreProducerExact } from "@semio-tech/framework-os/modules/store/initialization/owners/member/source";
+import { toolJobMemberStoreProducerExact } from "../../../../../../../💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🟦️.ts";
 import { policyReadFileSafe } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { policyReadMemberStoreProducerSources, policyReadRustPolicySource } from "../../../../🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
 import { toolJobArtifactEnvelopeOwnedCodecExact, toolJobChildContentRootExact, toolJobImmutableOperationRootsExact } from "../../🗄️artifact-store/🟦️.ts";

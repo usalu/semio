@@ -1,0 +1,20 @@
+{
+ "label": "g36q-revert",
+ "target": "@semio-tech/print-rs:test",
+ "started": "11:42:23",
+ "wall_s": 30.2,
+ "peak_tree_mb": 3441,
+ "peak_processes": 4,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "3",
+   "2 disk cache hit, 1 internal"
+  ],
+  "actions": [
+   "3"
+  ]
+ }
+}

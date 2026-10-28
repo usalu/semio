@@ -1,6 +1,7 @@
 import{expect,test}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
+import{resolve}from"node:path";
 import{spawn,spawnSync}from"node:child_process";
 import schema from"../🧬️schema/🔣️.json";
 import fixture from"./🔣️.json";
@@ -18,11 +19,10 @@ test("a process without progress and without a live child reports once and is st
 });
 test("a termination signal always ends the process: after the grace, or at once on the second signal",async()=>{
  const exits:number[]=[],notices:string[]=[],guard=createScriptTerminationGuardV1({exit:code=>{exits.push(code);},notice:text=>{notices.push(text);},languages:()=>["en","de"],graceMilliseconds:30});
- guard("SIGTERM",143);expect(exits).toEqual([]);await new Promise(done=>setTimeout(done,80));expect(exits).toEqual([143]);expect(notices[0]!.split("\n").filter(Boolean).length).toBe(2);
- const second=createScriptTerminationGuardV1({exit:code=>{exits.push(code);},notice:()=>{},languages:()=>["en"],graceMilliseconds:60000});second("SIGINT",130);second("SIGINT",130);expect(exits).toEqual([143,130]);
+ guard("SIGTERM",143);expect(exits).toEqual([]);expect(notices).toHaveLength(1);expect(notices[0]).toContain("SIGTERM received");expect(notices[0]).toContain("SIGTERM empfangen");expect(notices[0]!.split("\n").filter(Boolean).length).toBe(2);await new Promise(done=>setTimeout(done,80));expect(exits).toEqual([143]);expect(notices).toHaveLength(2);expect(notices[1]).toContain("did not end this process");expect(notices[1]!.split("\n").filter(Boolean).length).toBe(2);
+ const second=createScriptTerminationGuardV1({exit:code=>{exits.push(code);},notice:()=>{},languages:()=>["en"],graceMilliseconds:60000});second("SIGINT",130);second("SIGINT",130);expect(exits).toEqual([143,130]);const silent:string[]=[],third=createScriptTerminationGuardV1({exit:()=>{},notice:text=>{silent.push(text);},languages:()=>["de"],graceMilliseconds:60000});third("SIGINT",130);expect(silent).toHaveLength(1);expect(silent[0]).toContain("SIGINT empfangen");expect(silent[0]).toContain("spätestens nach 60 s");expect(silent[0]).not.toContain("received");
 });
-test("the live child count agrees with the system's own parent query",async()=>{
- if(process.platform==="win32")return;
+test.skipIf(process.platform==="win32")("the live child count agrees with the system's own parent query",async()=>{
  expect(liveChildCountV1()).toBe(0);
  const child=spawn("sleep",["5"],{stdio:"ignore"});try{await new Promise(done=>setTimeout(done,100));const oracle=spawnSync("pgrep",["-P",String(process.pid)],{encoding:"utf8"}).stdout.split("\n").filter(Boolean).length;expect(liveChildCountV1()).toBe(oracle);expect(oracle).toBe(1);}finally{child.kill();}
 });
@@ -34,8 +34,7 @@ test("children that are alive but whose whole tree used no CPU time are stopped 
  const stop=startScriptProcessWatchdogV1({children:()=>[4242,4243],cpu:()=>busy?++ticks:7,stallMilliseconds:60,idleTreeMilliseconds:150,checkMilliseconds:10,onStall:(_idle,decision,children)=>{seen.push(decision+":"+children.length);}});
  try{await sleep(400);expect(seen).toEqual([]);busy=false;await sleep(500);expect(seen).toEqual(["tree-stalled:2"]);}finally{stop();}
 });
-test("the CPU time reader agrees with the system's ps for a sleeping child",async()=>{
- if(process.platform==="win32")return;
+test.skipIf(process.platform==="win32")("the CPU time reader agrees with the system's ps for a sleeping child",async()=>{
  const child=spawn("sleep",["5"],{stdio:"ignore"});try{await new Promise(done=>setTimeout(done,150));const used=treeCpuMillisecondsV1([child.pid!]);expect(used).toBeDefined();expect(used!).toBeLessThan(1000);}finally{child.kill();}
  expect(treeCpuMillisecondsV1([])).toBeUndefined();
 });
@@ -62,3 +61,28 @@ test("a wait episode chains the polls of one queue and ends once nothing waited 
  await sleep(gap+50);expect(scriptProcessWaitEpisodeV1()).toBe(0);
  await waitingDelayV1(30);expect(scriptProcessWaitEpisodeV1(),"a new episode starts from zero").toBeLessThan(during);
 },15000);
+
+test("an interrupt or a termination ends the process with the conventional exit status and one short notice in the chosen language or both, with no raw error dump, checked against a Python subprocess oracle", async () => {
+  const module = resolve(import.meta.dir, "../../🟦️.ts"), script = `const {createScriptProcessEnvelope,withScriptProcessEnvelope}=await import(${JSON.stringify(module)});await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"interrupt-fixture",maximumElapsedMilliseconds:0},{},Date.now()),async invocation=>{process.stdout.write("ready\\n");await new Promise((_accept,fail)=>invocation.control.signal.addEventListener("abort",()=>fail(invocation.control.signal.reason)));});`;
+  const clean = Object.fromEntries(Object.entries(process.env).filter(([name]) => !/^(SEMIO_LANGUAGE|LANGUAGE|LC_[A-Z]+|LANG)$/u.test(name)));
+  const python = "import subprocess,sys,time,signal\np=subprocess.Popen([sys.argv[1],'--eval',sys.argv[2]],stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=__import__('json').loads(sys.argv[4]))\np.stdout.readline()\np.send_signal(getattr(signal,sys.argv[3]))\nerr=p.stderr.read().decode()\nprint(__import__('json').dumps({'code':p.wait(),'err':err}))";
+  const cases: [string, NodeJS.Signals, Record<string, string>, number, string[], string[]][] = [
+    ["de", "SIGINT", { SEMIO_LANGUAGE: "de" }, 130, ["Abgebrochen (SIGINT); Leases freigegeben."], ["Cancelled"]],
+    ["en", "SIGINT", { SEMIO_LANGUAGE: "en", LANG: "de_DE.UTF-8" }, 130, ["Cancelled (SIGINT); leases released."], ["Abgebrochen"]],
+    ["both", "SIGTERM", { LC_ALL: "C" }, 143, ["Cancelled (SIGTERM); leases released.", "Abgebrochen (SIGTERM); Leases freigegeben."], []]
+  ];
+  for (const [name, signal, extra, code, contains, absent] of cases) {
+    const environment = { ...clean, ...extra };
+    const oracle = JSON.parse(Bun.spawnSync(["python3", "-I", "-c", python, process.execPath, script, signal, JSON.stringify(environment)], { stdout: "pipe", stderr: "pipe" }).stdout.toString()) as { code: number; err: string };
+    const child = Bun.spawn([process.execPath, "--eval", script], { env: environment, stdout: "pipe", stderr: "pipe" });
+    await child.stdout.getReader().read();
+    child.kill(signal);
+    const [exitCode, err] = await Promise.all([child.exited, new Response(child.stderr).text()]);
+    expect(oracle.code, name).toBe(code);
+    expect(exitCode, name).toBe(code);
+    for (const text of contains) { expect(err, name).toContain(text); expect(oracle.err, name).toContain(text); }
+    for (const text of absent) expect(err, name).not.toContain(text);
+    expect(err, name).not.toMatch(/\berror:|\bat interrupt\b|Bun v\d|^\s*\d+ \|/mu);
+    expect(err.split("\n").filter(line => line.trim() !== "").length, name).toBeLessThanOrEqual(2 * contains.length);
+  }
+}, 60_000);

@@ -1,0 +1,116 @@
+{
+  "package": "app/📦️packages/🦀️rust",
+  "files": {
+    "Cargo.toml": "[workspace]\n",
+    "Cargo.lock": "# lock\n",
+    "app/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"app\"\n[lib]\npath = \"🦀️.rs\"\n",
+    "app/📦️packages/🦀️rust/🦀️.rs": "pub const SCHEMA: &str = include_str!(\"../../../schema/🔣️.json\");\npub const MODEL: &str = include_str!(\"../../🟦️.ts\");\n",
+    "app/🟦️.ts": "export const model = 1;\n",
+    "app/🎮️registry/🦀️.rs": "pub fn registry() {}\n",
+    "schema/🔣️.json": "{}\n",
+    "notes/README.md": "unrelated\n"
+  },
+  "roots": [
+    "app"
+  ],
+  "compiled": [
+    "app/📦️packages/🦀️rust/🦀️.rs",
+    "app/🎮️registry/🦀️.rs",
+    "app/🟦️.ts",
+    "schema/🔣️.json"
+  ],
+  "mutations": [
+    {
+      "name": "nothing changed",
+      "kind": "none",
+      "path": null,
+      "digest": false,
+      "compiled": false
+    },
+    {
+      "name": "a crate source is edited",
+      "kind": "write",
+      "path": "app/🎮️registry/🦀️.rs",
+      "digest": true,
+      "compiled": true
+    },
+    {
+      "name": "a schema outside every crate root that the binary includes is edited",
+      "kind": "write",
+      "path": "schema/🔣️.json",
+      "digest": false,
+      "compiled": true
+    },
+    {
+      "name": "a TypeScript file the binary includes is edited",
+      "kind": "write",
+      "path": "app/🟦️.ts",
+      "digest": false,
+      "compiled": true
+    },
+    {
+      "name": "an included file is replaced keeping its old timestamps",
+      "kind": "replace-keep-times",
+      "path": "schema/🔣️.json",
+      "digest": false,
+      "compiled": true
+    },
+    {
+      "name": "an included file is removed",
+      "kind": "remove",
+      "path": "schema/🔣️.json",
+      "digest": false,
+      "compiled": true
+    },
+    {
+      "name": "an unrelated file outside every root is edited",
+      "kind": "write",
+      "path": "notes/README.md",
+      "digest": false,
+      "compiled": false
+    },
+    {
+      "name": "an included file is only read",
+      "kind": "read",
+      "path": "schema/🔣️.json",
+      "digest": false,
+      "compiled": false
+    },
+    {
+      "name": "an included file is rewritten with identical bytes",
+      "kind": "rewrite-same",
+      "path": "schema/🔣️.json",
+      "digest": false,
+      "compiled": false
+    },
+    {
+      "name": "a crate source is rewritten with identical bytes",
+      "kind": "rewrite-same",
+      "path": "app/🎮️registry/🦀️.rs",
+      "digest": true,
+      "compiled": false
+    }
+  ],
+  "executables": [
+    {
+      "name": "in place",
+      "kind": "none",
+      "current": true
+    },
+    {
+      "name": "removed",
+      "kind": "remove",
+      "current": false
+    },
+    {
+      "name": "other size",
+      "kind": "append",
+      "current": false
+    },
+    {
+      "name": "other permissions",
+      "kind": "chmod",
+      "current": false
+    }
+  ]
+}

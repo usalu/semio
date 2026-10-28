@@ -7,6 +7,21 @@ import json, math, re, sys
 MEGABYTE = 1048576
 
 
+def language_oracle():
+    """🗣️ The independent oracle of the one language protocol (`⚙️runtime/🗣️language`) and the protocol it reads."""
+    import importlib.util
+    import os
+    root = os.path.dirname(os.path.abspath(__file__))
+    while not os.path.isdir(os.path.join(root, "🧰️framework")):
+        root = os.path.dirname(root)
+    folder = os.path.join(root, "🧰️framework", "🔨️modules", "⚙️runtime", "🗣️language")
+    spec = importlib.util.spec_from_file_location("language_oracle", os.path.join(folder, "🧪️tests", "🐍️.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    with open(os.path.join(folder, "🔣️.json"), encoding="utf-8") as handle:
+        return module, json.load(handle)
+
+
 def decide(policy, state):
     if state["running"] >= state["workers"]:
         return {"admit": False, "collect": False, "reason": "workers"}
@@ -43,13 +58,8 @@ def budget(policy, environment, host):
 
 
 def languages(policy, environment):
-    for name in policy["languageEnvironment"]:
-        value = environment.get(name)
-        if value:
-            head = re.split(r"[_.@-]", value)[0].lower()
-            if head in policy["languages"]:
-                return [head]
-    return list(policy["languages"])
+    oracle, protocol = language_oracle()
+    return oracle.notices(protocol, policy["languages"], environment)
 
 
 def render(policy, messages, key, fields, environment):
@@ -63,6 +73,7 @@ def expect(fixture):
         "budgets": [budget(policy, row["environment"], row["hostMegabytes"]) for row in fixture["budgets"]],
         "languages": [languages(policy, row["environment"]) for row in fixture["languages"]],
         "messages": [render(policy, messages, row["key"], row["fields"], row["environment"]) for row in fixture["messageCases"]],
+        "childHeap": {"bytes": policy["childHeapMegabytes"] * MEGABYTE, "grantIndependent": True},
     }
 
 

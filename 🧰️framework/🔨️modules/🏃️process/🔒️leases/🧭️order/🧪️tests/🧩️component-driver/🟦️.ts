@@ -41,11 +41,11 @@ test("the registry reader precedes the compiler writer, which precedes the exclu
  expect(live.allowed.some(edge=>edge.to==="registry-fetch")).toBe(false);
 });
 
-test("the build-directory custody is its own class: its holder may wait for every class but the registry fetch, and no other class may wait for it (it is taken first, before the writer and the cores)",()=>{
+test("the build-directory custody is its own class: its holder may wait for every class but the registry fetch and the inert ones nobody waits for, and no other class may wait for it (it is taken first, before the writer and the cores)",()=>{
  const custody='["semio.cargo.custody-lease/v1","/w/.cache/rust/fixed/m/b/p","prototype"]';
  expect(classifyLeaseResourceV1(live,custody).id).toBe("cargo-custody");
  expect(classifyLeaseResourceV1(live,'["semio.cargo.build-lease/v1","/b","prototype"]').id).toBe("cargo-coordination");
- expect(live.allowed.filter(edge=>edge.from==="cargo-custody").map(edge=>edge.to).sort()).toEqual(live.classes.map(row=>row.id).filter(id=>id!=="registry-fetch").sort());
+ expect(live.allowed.filter(edge=>edge.from==="cargo-custody").map(edge=>edge.to).sort()).toEqual(live.classes.filter(row=>row.id!=="registry-fetch"&&row.inert!==true).map(row=>row.id).sort());
  expect(live.allowed.filter(edge=>edge.to==="cargo-custody").map(edge=>edge.from)).toEqual(["cargo-custody"]);
  expect(live.allowed.some(edge=>edge.from==="registry-fetch"||edge.to==="registry-fetch")).toBe(false);
 });
@@ -60,7 +60,7 @@ test("component builds hold the compiler writer shared so they run beside ordina
 
 test("the warm component driver compiles in a private lane of its agent, never in the shared build directory: its shared target and build and the pass inputs it requests come from one lane, so its build-directory custody is never contended by another driver",()=>{
  const text=readFileSync(owners[0]!,"utf8");
- expect(text.includes("withRepositoryComponentLaneV1({storage:store.storage,root:store.root,environment:options.environment,control}")).toBe(true);
+ expect(text.includes("withRepositoryComponentLaneV1({storage:store.storage,root:store.root,workspace:repoRoot,environment:options.environment,control}")).toBe(true);
  expect(text.includes("shared:{target:lane.target,build:lane.build}")).toBe(true);
  expect(text.includes("build:lane.build,target:lane.target")).toBe(true);
  expect(text.includes("CARGO_TARGET_DIR!,build:store.buildDirectory")).toBe(false);

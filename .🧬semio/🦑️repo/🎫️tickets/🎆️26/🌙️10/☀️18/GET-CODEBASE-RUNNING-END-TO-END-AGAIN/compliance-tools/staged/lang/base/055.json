@@ -1,0 +1,221 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:sealed-implementation:v1",
+  "title": "Sealed implementation store",
+  "description": "The policy of the sealed implementation store and the closed records it keeps per entry: the pointer to the current snapshot, the receipt of a promoted snapshot (validation + stat fingerprint of the live closure it was captured from) and the record of a blocked promotion.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "modeVariable", "defaultMode", "modes", "languages", "cacheDirectory", "stampedFiles", "keepPrevious", "quietMilliseconds", "maximumBytes", "maximumTextCharacters", "maximumPathCharacters", "maximumCommandLineCharacters", "settleMilliseconds", "captureAttempts", "blockedRetryMilliseconds", "coalesceMilliseconds", "light", "promotion", "helpTokens", "leadingWords", "maximumBlockedRows", "shownBlockedRows", "lock", "check", "readyDescriptor", "codeLoaders", "texts"],
+  "properties": {
+    "version": { "const": 1 },
+    "modeVariable": { "$ref": "#/definitions/Variable" },
+    "defaultMode": { "enum": ["sealed", "live"] },
+    "modes": { "type": "array", "uniqueItems": true, "minItems": 2, "items": { "$ref": "#/definitions/Mode" } },
+    "languages": { "type": "array", "uniqueItems": true, "minItems": 2, "items": { "enum": ["en", "de"] } },
+    "cacheDirectory": { "type": "string", "minLength": 1, "pattern": "^[^/\\\\:][^\\\\:]*$" },
+    "stampedFiles": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "keepPrevious": { "type": "integer", "minimum": 0, "maximum": 8 },
+    "quietMilliseconds": { "type": "integer", "minimum": 0 },
+    "maximumBytes": { "type": "integer", "minimum": 67108864 },
+    "maximumTextCharacters": { "type": "integer", "minimum": 1 },
+    "maximumPathCharacters": { "type": "integer", "minimum": 1 },
+    "maximumCommandLineCharacters": { "type": "integer", "minimum": 1 },
+    "settleMilliseconds": { "type": "integer", "minimum": 0, "maximum": 60000 },
+    "captureAttempts": { "type": "integer", "minimum": 1, "maximum": 8 },
+    "blockedRetryMilliseconds": { "type": "integer", "minimum": 0 },
+    "coalesceMilliseconds": { "type": "integer", "minimum": 0 },
+    "light": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["freshMilliseconds", "promoteAfterMilliseconds", "refuseAfterMilliseconds", "refreshDebounceMilliseconds"],
+      "properties": {
+        "freshMilliseconds": { "type": "integer", "minimum": 0 },
+        "promoteAfterMilliseconds": { "type": "integer", "minimum": 0 },
+        "refuseAfterMilliseconds": { "type": "integer", "minimum": 0 },
+        "refreshDebounceMilliseconds": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "promotion": {
+      "description": "🧷️ When a command promotes the live tree. `explicit`: it runs the promoted snapshot; only a `promote` run, a store without a snapshot or a snapshot older than `agedMilliseconds` whose tree drifted promote, and the drift is announced at most once per `noticeMilliseconds`. `drift`: a heavy command promotes every drifted tree before it runs, light commands follow `light`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule", "agedMilliseconds", "noticeMilliseconds"],
+      "properties": {
+        "rule": { "enum": ["explicit", "drift"] },
+        "agedMilliseconds": { "type": "integer", "minimum": 0 },
+        "noticeMilliseconds": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "helpTokens": { "type": "array", "uniqueItems": true, "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "leadingWords": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "maximumBlockedRows": { "type": "integer", "minimum": 1, "maximum": 500 },
+    "shownBlockedRows": { "type": "integer", "minimum": 1, "maximum": 20 },
+    "lock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pollMilliseconds", "busyTimeoutMilliseconds", "waitMaximumMilliseconds"],
+      "properties": {
+        "pollMilliseconds": { "type": "integer", "minimum": 1 },
+        "busyTimeoutMilliseconds": { "type": "integer", "minimum": 0, "maximum": 1000 },
+        "waitMaximumMilliseconds": { "type": "integer", "minimum": 1000 }
+      }
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["argument", "maximumMilliseconds", "maximumOutputBytes", "commands", "commandMilliseconds"],
+      "properties": {
+        "argument": { "type": "string", "pattern": "^--[a-z-]+=$" },
+        "maximumMilliseconds": { "type": "integer", "minimum": 1000 },
+        "maximumOutputBytes": { "type": "integer", "minimum": 1024 },
+        "commands": { "type": "array", "items": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } } },
+        "commandMilliseconds": { "type": "integer", "minimum": 1000 }
+      }
+    },
+    "readyDescriptor": { "type": "integer", "minimum": 4, "maximum": 9 },
+    "codeLoaders": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^\\.[a-z]+$" },
+      "additionalProperties": { "enum": ["ts", "tsx", "js", "jsx"] }
+    },
+    "texts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["promoter", "promoteDone", "blocked", "blockedRow", "blockedMore", "none", "promoting", "waiting", "promoted", "unstable", "fallback", "mode", "startup", "candidateLoader", "candidateNotLoaded", "candidateNotLoadedWithin", "selfCheckNotEnded", "selfCheckEnded", "stale", "refused", "unpromoted"],
+      "properties": {
+        "promoter": { "$ref": "#/definitions/Text" },
+        "promoteDone": { "$ref": "#/definitions/Text" },
+        "candidateLoader": { "$ref": "#/definitions/Text" },
+        "candidateNotLoaded": { "$ref": "#/definitions/Text" },
+        "candidateNotLoadedWithin": { "$ref": "#/definitions/Text" },
+        "selfCheckNotEnded": { "$ref": "#/definitions/Text" },
+        "selfCheckEnded": { "$ref": "#/definitions/Text" },
+        "blocked": { "$ref": "#/definitions/Text" },
+        "blockedRow": { "$ref": "#/definitions/Text" },
+        "blockedMore": { "$ref": "#/definitions/Text" },
+        "none": { "$ref": "#/definitions/Text" },
+        "promoting": { "$ref": "#/definitions/Text" },
+        "waiting": { "$ref": "#/definitions/Text" },
+        "promoted": { "$ref": "#/definitions/Text" },
+        "unstable": { "$ref": "#/definitions/Text" },
+        "fallback": { "$ref": "#/definitions/Text" },
+        "mode": { "$ref": "#/definitions/Text" },
+        "startup": { "$ref": "#/definitions/Text" },
+        "stale": { "$ref": "#/definitions/Text" },
+        "refused": { "$ref": "#/definitions/Text" },
+        "unpromoted": { "$ref": "#/definitions/Text" }
+      }
+    }
+  },
+  "definitions": {
+    "Variable": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+    "Mode": { "enum": ["sealed", "live", "promote"] },
+    "Text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": { "en": { "type": "string", "minLength": 1 }, "de": { "type": "string", "minLength": 1 } }
+    },
+    "Checked": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "entry", "digest", "atMs", "drifted", "refreshedAtMs"],
+      "properties": {
+        "version": { "const": 1 },
+        "entry": { "$ref": "#/definitions/Path" },
+        "digest": { "$ref": "#/definitions/Digest" },
+        "atMs": { "type": "integer", "minimum": 0 },
+        "drifted": { "type": "boolean" },
+        "refreshedAtMs": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "Digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "Path": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "Pointer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "entry", "digest", "loader", "bytes", "files", "promotedAtMs", "previous"],
+      "properties": {
+        "version": { "const": 1 },
+        "entry": { "$ref": "#/definitions/Path" },
+        "digest": { "$ref": "#/definitions/Digest" },
+        "loader": { "$ref": "#/definitions/Digest" },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "files": { "type": "integer", "minimum": 1 },
+        "promotedAtMs": { "type": "integer", "minimum": 0 },
+        "previous": { "type": "array", "maxItems": 8, "uniqueItems": true, "items": { "$ref": "#/definitions/Digest" } }
+      }
+    },
+    "Tree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["files", "directories", "listings", "absent"],
+      "properties": {
+        "files": { "type": "array", "items": { "type": "array", "minItems": 3, "maxItems": 3, "items": [{ "$ref": "#/definitions/Path" }, { "$ref": "#/definitions/Digest" }, { "type": "string", "minLength": 1 }] } },
+        "directories": { "type": "array", "items": { "type": "array", "minItems": 3, "maxItems": 3, "items": [{ "type": "string" }, { "type": "string", "pattern": "^[0-9]+$" }, { "type": "string", "pattern": "^[0-9]+$" }] } },
+        "listings": { "type": "array", "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": [{ "$ref": "#/definitions/Path" }, { "$ref": "#/definitions/Digest" }] } },
+        "absent": { "type": "array", "items": { "$ref": "#/definitions/Path" } }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "entry", "digest", "loader", "createdAtMs", "changes", "validation", "tree"],
+      "properties": {
+        "version": { "const": 1 },
+        "entry": { "$ref": "#/definitions/Path" },
+        "digest": { "$ref": "#/definitions/Digest" },
+        "loader": { "$ref": "#/definitions/Digest" },
+        "createdAtMs": { "type": "integer", "minimum": 0 },
+        "changes": { "$ref": "#/definitions/Changes" },
+        "validation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["syntaxFiles", "syntaxMilliseconds", "loadMilliseconds"],
+          "properties": {
+            "syntaxFiles": { "type": "integer", "minimum": 0 },
+            "syntaxMilliseconds": { "type": "integer", "minimum": 0 },
+            "loadMilliseconds": { "type": ["integer", "null"], "minimum": 0 }
+          }
+        },
+        "tree": { "oneOf": [{ "$ref": "#/definitions/Tree" }, { "type": "null" }] }
+      }
+    },
+    "Changes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["previous", "added", "removed", "changed", "paths"],
+      "properties": {
+        "previous": { "oneOf": [{ "$ref": "#/definitions/Digest" }, { "type": "null" }] },
+        "added": { "type": "integer", "minimum": 0 },
+        "removed": { "type": "integer", "minimum": 0 },
+        "changed": { "type": "integer", "minimum": 0 },
+        "paths": { "type": "array", "maxItems": 200, "items": { "$ref": "#/definitions/Path" } }
+      }
+    },
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "line", "column", "message"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "line": { "type": "integer", "minimum": 0 },
+        "column": { "type": "integer", "minimum": 0 },
+        "message": { "type": "string", "minLength": 1, "maxLength": 300 }
+      }
+    },
+    "Blocked": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "entry", "atMs", "rows", "tree"],
+      "properties": {
+        "version": { "const": 1 },
+        "entry": { "$ref": "#/definitions/Path" },
+        "atMs": { "type": "integer", "minimum": 0 },
+        "rows": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Row" } },
+        "tree": { "oneOf": [{ "$ref": "#/definitions/Tree" }, { "type": "null" }] }
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+--- /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/verify2-g-tools/staged/vouch/new/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🪪️vouch/🟦️.ts	2026-10-26 20:28:16
++++ /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/rev4-g-tools/staged/vouch-anchor/new/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🪪️vouch/🟦️.ts	2026-10-26 21:44:56
+@@ -20,7 +20,7 @@
+  skippable(paths:Iterable<string>):ReadonlySet<string>;
+  /** 🔁️ Asks the journal again and answers the paths of `paths` that stayed untouched since the anchor (the sealed point, or the start of the verification when none exists); empty when the journal cannot vouch any more. */
+  settled(paths:Iterable<string>,signal?:AbortSignal):Promise<ReadonlySet<string>>;
+- /** 🔏️ Stores the latest cursor as the point at which the world matched; call it only after every row of the verification held. */
++ /** 🔏️ Stores the point at which the world matched: the cursor of the FIRST fence the final pass asked for (`settled` is called once per group of rows with a fresh fence; a row proven unchanged at an earlier fence and not looked at again must not be covered by a later one), else the start cursor; call it only after every row of the verification held. */
+  seal():Promise<void>;
+ }
+ 
+@@ -72,7 +72,7 @@
+ /** 🚪️ Opens the vouch of one verification: with the cursor sealed for `key` the journal answers which paths changed since; without it (first run, another key, restarted service, gap, overflow) only the start cursor is taken, so that a second look of the same verification can be answered by the journal instead of a second walk. */
+ export async function openVouchV1(options:Readonly<{client:ChangeJournalClientV1;directory:string;consumer:string;key:string;insensitive?:boolean;linked?:readonly string[];signal?:AbortSignal}>):Promise<VouchV1>{
+  const {client,directory,consumer,key,signal,linked=[]}=options,insensitive=options.insensitive??(process.platform==="darwin"||process.platform==="win32"),stored=readVouchRecordV1(directory,consumer,key);
+- let mode:VouchModeV1="walk",cursor:ChangeCursorV1|undefined,rows:ChangeRowV1[]=[],refusal:string|undefined,broken=false,excluded:(path:string)=>boolean=()=>true;
++ let mode:VouchModeV1="walk",cursor:ChangeCursorV1|undefined,anchor:ChangeCursorV1|undefined,rows:ChangeRowV1[]=[],refusal:string|undefined,broken=false,excluded:(path:string)=>boolean=()=>true;
+  try{
+   if(stored){const answer=await client.since(stored,[""],signal);if(answer.exact){mode="journal";cursor=answer.cursor;rows=[...answer.rows];}else refusal=answer.reason;}
+   if(mode!=="journal"){const taken=await client.cursor(signal);if("exact" in taken)refusal??=taken.reason;else{mode="cursor";cursor=taken;}}
+@@ -87,10 +87,10 @@
+    try{
+     const answer=await client.since(cursor,[""],abort??signal);
+     if(!answer.exact){broken=true;return new Set<string>();}
+-    cursor=answer.cursor;rows=mergeChangeRowsV1([...rows,...answer.rows]);
++    cursor=answer.cursor;anchor??=answer.cursor;rows=mergeChangeRowsV1([...rows,...answer.rows]);
+     return provenUnchangedV1(paths,rows,excluded,insensitive,linked);
+    }catch(error){(abort??signal)?.throwIfAborted();broken=true;return new Set<string>();}
+   },
+-  async seal(){if(mode!=="walk"&&cursor!==undefined&&!broken)writeVouchRecordV1(directory,consumer,key,cursor);},
++  async seal(){const sealed=anchor??cursor;if(mode!=="walk"&&sealed!==undefined&&!broken)writeVouchRecordV1(directory,consumer,key,sealed);},
+  };
+ }

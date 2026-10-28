@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { CATALOG_LANGUAGES_V1, handleTextV1, qualifiedKeyV1, type CatalogHandleV1, type TextValuesV1 } from "../📖️catalog/🟦️.ts";
 import { isRepoErrorV1, renderRepoErrorV1, repoErrorExitCodeV1 } from "../🚨️error/🟦️.ts";
-import { resolveLanguageV1, type LanguageEnvironmentV1, type OsLanguageListV1 } from "../🟦️.ts";
+import { resolveLanguageV1, type LanguageEnvironmentV1, type OsLanguageListV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import { writeDiagnosticLineV1 } from "../../📤️output/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 

@@ -3,77 +3,97 @@
   {
    "imageBytes": 33554432,
    "filesystemBytes": 33513472,
-   "usedAtEmptyBytes": 679936
+   "usedAtEmptyBytes": 667648
   },
   {
    "imageBytes": 66060288,
    "filesystemBytes": 66019328,
-   "usedAtEmptyBytes": 827392
+   "usedAtEmptyBytes": 815104
+  },
+  {
+   "imageBytes": 67108864,
+   "filesystemBytes": 67067904,
+   "usedAtEmptyBytes": 815104
   },
   {
    "imageBytes": 134217728,
-   "filesystemBytes": 134176768,
-   "usedAtEmptyBytes": 1417216
+   "filesystemBytes": 134217728,
+   "usedAtEmptyBytes": 1404928
   },
   {
    "imageBytes": 267386880,
-   "filesystemBytes": 267345920,
-   "usedAtEmptyBytes": 1544192
+   "filesystemBytes": 267386880,
+   "usedAtEmptyBytes": 1531904
   },
   {
    "imageBytes": 268435456,
-   "filesystemBytes": 268394496,
-   "usedAtEmptyBytes": 1544192
+   "filesystemBytes": 268435456,
+   "usedAtEmptyBytes": 1531904
   },
   {
    "imageBytes": 536870912,
-   "filesystemBytes": 536829952,
-   "usedAtEmptyBytes": 1798144
+   "filesystemBytes": 536870912,
+   "usedAtEmptyBytes": 1785856
   },
   {
    "imageBytes": 1073741824,
-   "filesystemBytes": 1073700864,
-   "usedAtEmptyBytes": 3387392
+   "filesystemBytes": 1073741824,
+   "usedAtEmptyBytes": 4341760
   },
   {
    "imageBytes": 1610612736,
-   "filesystemBytes": 1610571776,
-   "usedAtEmptyBytes": 6410240
+   "filesystemBytes": 1610612736,
+   "usedAtEmptyBytes": 6406144
   },
   {
    "imageBytes": 2146435072,
-   "filesystemBytes": 2146394112,
-   "usedAtEmptyBytes": 8466432
+   "filesystemBytes": 2146435072,
+   "usedAtEmptyBytes": 8454144
   },
   {
    "imageBytes": 2147483648,
-   "filesystemBytes": 2147442688,
-   "usedAtEmptyBytes": 8466432
+   "filesystemBytes": 2147483648,
+   "usedAtEmptyBytes": 8454144
   },
   {
    "imageBytes": 2148532224,
-   "filesystemBytes": 1938776064,
-   "usedAtEmptyBytes": 8093696
+   "filesystemBytes": 2148532224,
+   "usedAtEmptyBytes": 9531392
   },
   {
    "imageBytes": 2415919104,
-   "filesystemBytes": 2206162944,
-   "usedAtEmptyBytes": 9658368
+   "filesystemBytes": 2415919104,
+   "usedAtEmptyBytes": 10018816
   },
   {
    "imageBytes": 2684354560,
-   "filesystemBytes": 2474598400,
-   "usedAtEmptyBytes": 10141696
+   "filesystemBytes": 2684354560,
+   "usedAtEmptyBytes": 10534912
   },
   {
    "imageBytes": 3221225472,
-   "filesystemBytes": 3011469312,
-   "usedAtEmptyBytes": 12222464
+   "filesystemBytes": 3221225472,
+   "usedAtEmptyBytes": 12599296
   },
   {
    "imageBytes": 4293918720,
-   "filesystemBytes": 4084162560,
-   "usedAtEmptyBytes": 16334848
+   "filesystemBytes": 4293918720,
+   "usedAtEmptyBytes": 16711680
+  },
+  {
+   "imageBytes": 8588886016,
+   "filesystemBytes": 8588886016,
+   "usedAtEmptyBytes": 26411008
+  },
+  {
+   "imageBytes": 8589934592,
+   "filesystemBytes": 8589934592,
+   "usedAtEmptyBytes": 26411008
+  },
+  {
+   "imageBytes": 25769803776,
+   "filesystemBytes": 25769803776,
+   "usedAtEmptyBytes": 61878272
   }
  ],
  "usable": [
@@ -87,23 +107,23 @@
   },
   {
    "imageBytes": 134217728,
-   "usableBytes": 131031200
+   "usableBytes": 131072000
   },
   {
    "imageBytes": 2147483648,
-   "usableBytes": 2136432800
+   "usableBytes": 2136473600
   },
   {
    "imageBytes": 2149580800,
-   "usableBytes": 1929625760
+   "usableBytes": 2137513984
   },
   {
    "imageBytes": 4293918720,
-   "usableBytes": 4065587360
+   "usableBytes": 4273475584
   },
   {
    "imageBytes": 8588886016,
-   "usableBytes": 8343777440
+   "usableBytes": 8551665664
   }
  ]
 }

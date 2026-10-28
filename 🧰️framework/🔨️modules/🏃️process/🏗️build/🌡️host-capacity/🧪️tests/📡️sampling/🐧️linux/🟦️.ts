@@ -59,14 +59,14 @@ test("the process tree reads /proc without any external tool: status rows, the l
  const rows=await readLinuxProcessTableV1(read,list);expect(rows.map(row=>row.pid).sort((a,b)=>a-b)).toEqual([1,10,11,12,13]);
  expect(treeMegabytesV1(rows,fixture.tree.root)).toBe(fixture.tree.megabytes);expect(treeMegabytesV1(rows,fixture.tree.absent)).toBeNull();
  const run=async()=>{throw Error("ps is not used on Linux");};
- expect(await observeTreeMegabytesV1(fixture.tree.root,run,"linux",{read,list})).toBe(fixture.tree.megabytes);
- expect(await observeTreeMegabytesV1(fixture.tree.root,run,"win32",{read,list})).toBeNull();
+ expect(await observeTreeMegabytesV1(fixture.tree.root,run,"linux",{read,list},undefined,"resident")).toBe(fixture.tree.megabytes);
+ expect(await observeTreeMegabytesV1(fixture.tree.root,run,"win32",{read,list},undefined,"resident")).toBeNull();
 });
 
 test.skipIf(process.platform!=="linux")("on a real Linux host the observed tree of a child equals what ps reports for it",async()=>{
  const child=Bun.spawn(["sleep","5"],{stdout:"ignore",stderr:"ignore"});try{
   await Bun.sleep(100);
-  const observed=await observeTreeMegabytesV1(process.pid),ps=Bun.spawnSync(["ps","-A","-o","pid=,ppid=,rss="],{stdout:"pipe"}).stdout.toString();
+  const observed=await observeTreeMegabytesV1(process.pid,undefined,undefined,undefined,undefined,"resident"),ps=Bun.spawnSync(["ps","-A","-o","pid=,ppid=,rss="],{stdout:"pipe"}).stdout.toString();
   const rows=ps.trim().split("\n").map(line=>line.trim().split(/\s+/u).map(Number)),mine=new Set([process.pid]);let grew=true;while(grew){grew=false;for(const[pid,parent]of rows)if(!mine.has(pid!)&&mine.has(parent!)){mine.add(pid!);grew=true;}}
   const expected=Math.floor(rows.filter(([pid])=>mine.has(pid!)).reduce((sum,[,,rss])=>sum+rss!,0)/1024);
   expect(Math.abs(observed!-expected)).toBeLessThanOrEqual(8);

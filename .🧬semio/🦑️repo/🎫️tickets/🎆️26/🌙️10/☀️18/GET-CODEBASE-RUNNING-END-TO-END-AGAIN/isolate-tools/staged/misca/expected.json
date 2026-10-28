@@ -1,0 +1,80 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/💾️state/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 7,
+  "fails": []
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎯️recipe/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 5,
+  "fails": []
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧪️tests/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 10,
+  "fails": [
+   "(unnamed)",
+   "proc-macro exact laws discover controlled compiler runtime: cancelled",
+   "proc-macro exact laws discover controlled compiler runtime: failed",
+   "proc-macro exact laws discover controlled compiler runtime: multiline",
+   "proc-macro exact laws discover controlled compiler runtime: relative"
+  ]
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🆕️fresh-component/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🟦️.ts": {
+  "mode": "env",
+  "pass": 6,
+  "fails": [
+   "(unnamed)",
+   "dashboard immutable installation preserves old bytes and reuses identical published executable",
+   "installation Source staleness excludes publication bytes and records genuine Source changes",
+   "installation receipt schema binds selected mode to exact finite tools bytes and permissions",
+   "installed finite dashboard retains authored capabilities and original deadline through its child lifetime",
+   "native launch arguments match shared vectors while Nx keeps compile and installation scheduling",
+   "source digest and installed record routing recover invalid metadata before stale-capable controls",
+   "source digest detects same-size atomic Source replacement with preserved timestamps",
+   "source digest names the crate closure and changes only for compiled Source vectors",
+   "source digest retains each actual Cargo workspace and table-form inherited dependency"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🧪️tests/🍎️image/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": [
+   "actual repository exact Cargo prepares and acquires every selected bounded workspace"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/📥️capture/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 2,
+  "fails": [
+   "repository Cargo capture consumes actual JSON inside Original compiler and target custody",
+   "shell Cargo writers use awaited Original launcher and issued generated capture"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 3,
+  "fails": [
+   "(unnamed)",
+   "isolated Cargo stores are removed on every owner settlement and swept only after their kernel claim is released"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 3,
+  "fails": [
+   "(unnamed)",
+   "actual Cargo builds and executes one bounded immutable test product under the original process handoff"
+  ]
+ }
+}

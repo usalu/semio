@@ -1,0 +1,10 @@
+/** 📜️ Fixture for build sealed. */
+import{startImplementationV1}from"../../🚦️trampoline/🟦️.ts";
+import{findSealedRootV1,sealedEntryOfV1,sealedPolicyV1}from"../../🟦️.ts";
+import{resolveSealedImplementationV1}from"../../📤️promotion/🟦️.ts";
+import{fixtureCaptureV1,fixtureLoaderV1,testPolicyV1}from"./🟦️.ts";
+
+/** 🚦️ A front door script of a fixture workspace (the promotion rule of the real policy, or the one `FIXTURE_PROMOTION` names): the trampoline in front, a promoter that is the real store protocol over the fixture capture (or one that fails, when `FIXTURE_PROMOTER=broken`), and a live door that only says LIVE behind it. */
+const root=findSealedRootV1(process.env.FIXTURE_ROOT!),argv=process.argv.slice(2),rule=process.env.FIXTURE_PROMOTION;
+const promote=process.env.FIXTURE_PROMOTER==="broken"?async()=>{throw Error("the promoter does not load");}:async(workspace:string,entry:string,environment:NodeJS.ProcessEnv,write:(text:string)=>void)=>resolveSealedImplementationV1(workspace,sealedEntryOfV1(workspace,entry,testPolicyV1),{capture:fixtureCaptureV1(workspace,entry),loader:fixtureLoaderV1,policy:testPolicyV1,environment,write});
+await startImplementationV1(root,argv,process.env,async()=>{console.log("LIVE "+argv.join(","));},{entry:"tool/entry.ts",promote,...(rule==="explicit"||rule==="drift"?{policy:{...sealedPolicyV1,promotion:{...sealedPolicyV1.promotion,rule}}}:{})});

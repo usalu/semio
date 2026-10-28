@@ -5,7 +5,7 @@ import json,re,statistics,sys
 def key(text): return text.encode("utf-16-be","surrogatepass")
 request=json.load(sys.stdin)
 policy=json.load(open(request["schemaPath"],encoding="utf8"))["definitions"]["Policy"]["const"]
-METRICS=["wallMs","startMs","greenMs","peakRssBytes","hitRatio","makespanMs","maxUnrelatedWaitMs","speedup"]
+METRICS=["wallMs","startMs","greenMs","peakRssBytes","hitRatio","makespanMs","maxUnrelatedWaitMs","speedup","queueMs","graphMs","executeMs","executedActions","inferredProjects"]
 
 def stats(values):
     xs=sorted(values);n=len(xs)
@@ -155,6 +155,58 @@ def tree(table,pid,system):
         frontier=nxt
     return sum(rows[p][1] for p in seen)
 
+def line_key(line):
+    m=re.match(policy["scriptRow"],line)
+    if not m: return line
+    try: row=json.loads(m.group(1))
+    except ValueError: return line
+    return "script:%s:%s:%s"%(row.get("command",""),row.get("stage",""),(row.get("activity") or {}).get("resource",""))
+
+def observe(case):
+    """Phases, executed actions and re-inferred projects of the output lines of a command, read the way the policy says."""
+    rules=[(r["id"],[re.compile(p) for p in r["patterns"]]) for r in policy["phases"]["rules"]]
+    ob=policy["observation"];limit=policy["maximumObservedLineCharacters"]
+    refreshing,inferring,processes,task,cached=[re.compile(ob[k]) for k in("graphRefreshing","graphInferring","bazelProcesses","nxTask","nxCached")]
+    idle=[re.compile(p) for p in ob["bazelIdle"]]
+    current,since,totals=policy["phases"]["initial"],0.0,{}
+    bazel,tasks,hits,inferred=None,0,0,0
+    for item in case["lines"]:
+        at,line=item["at"],item["line"][:limit]
+        key=line_key(line);phase=None
+        for ident,pats in rules:
+            if any(p.search(key) for p in pats): phase=ident;break
+        if phase is not None and phase!=current:
+            totals[current]=totals.get(current,0.0)+max(0.0,at-since);current,since=phase,at
+        m=processes.search(line)
+        if m:
+            total=0
+            for part in m.group(2).split(", "):
+                c=re.match(r"^(\d+) (.+)$",part.strip())
+                if c and not any(p.search(c.group(2)) for p in idle): total+=int(c.group(1))
+            bazel=(bazel or 0)+total
+        if task.search(line):
+            tasks+=1
+            if cached.search(line): hits+=1
+        for rx in (refreshing,inferring):
+            f=rx.search(line)
+            if f: inferred=max(inferred,int(f.group(1)))
+    totals[current]=totals.get(current,0.0)+max(0.0,case["wallMs"]-since)
+    phases={k:v for k,v in totals.items() if v>0}
+    return {"phases":phases,"executed":None if bazel is None and tasks==0 else (bazel or 0)+(tasks-hits),"inferred":inferred}
+
+def history_name(case):
+    m=re.match(r"^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d+)?Z$",case["startedAt"])
+    return "%s%s%sT%s%s%sZ-%s.json"%(*m.groups()[:6],case["hostClass"])
+
+def history_latest(case):
+    pat=re.compile(policy["history"]["name"])
+    def stamp(n):
+        m=pat.match(n);return m.group(1) if m and m.group(2)==case["hostClass"] else None
+    limit=None if case["before"] is None else stamp(case["before"])
+    if case["before"] is not None and limit is None: return None
+    found=sorted([n for n in case["files"] if stamp(n) is not None and (limit is None or stamp(n)<limit)],key=lambda n:(stamp(n),n))
+    return found[-1] if found else None
+
 op,cases=request["op"],request["cases"]
 if op=="stats": out=[stats(c["values"]) for c in cases]
 elif op=="stats-numpy":
@@ -172,6 +224,9 @@ elif op=="compare": out=[compare(c["slos"],c["current"],c["baseline"]) for c in 
 elif op=="select": out=[select(c) for c in cases]
 elif op=="mutate": out=[mutate(c["text"],c["op"],c["language"],c["nonce"]) for c in cases]
 elif op=="markers": out=[first_marker(c["tool"],c["lines"]) for c in cases]
+elif op=="observe": out=[observe(c) for c in cases]
+elif op=="history-name": out=[history_name(c) for c in cases]
+elif op=="history-latest": out=[history_latest(c) for c in cases]
 elif op=="tree": out=[tree(c["table"],c["pid"],c["system"]) for c in cases]
 else: sys.exit("unknown op "+op)
 json.dump(out,sys.stdout,ensure_ascii=False)

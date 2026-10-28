@@ -16,7 +16,7 @@ require (
 	github.com/usalu/semio/repo/providers v0.0.0 // indirect
 	github.com/usalu/semio/repo/search v0.0.0
 	github.com/usalu/semio/repo/statutes v0.0.0 // indirect
-	github.com/usalu/semio/repo/tickets v0.0.0 // indirect
+	github.com/usalu/semio/repo/tickets v0.0.0
 	github.com/usalu/semio/repo/todos v0.0.0 // indirect
 	github.com/usalu/semio/repo/workspace v0.0.0
 	github.com/usalu/semio/repo/workspace/sandbox v0.0.0

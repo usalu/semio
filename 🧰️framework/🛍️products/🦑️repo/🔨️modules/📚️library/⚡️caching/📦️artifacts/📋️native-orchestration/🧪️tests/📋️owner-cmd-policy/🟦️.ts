@@ -100,7 +100,7 @@ test("native progress follows the declared owner and preserves independent child
     writeFileSync(join(output,`${row.id}.stdout.log`),result.stdout);writeFileSync(join(output,`${row.id}.stderr.log`),result.stderr);
     expect(result.status,result.stderr).toBe(0);
     expect(result.stdout.split(/\r?\n/).filter(line=>line.startsWith("interactive-ready")).join("\n")+"\n").toBe(oracle.stdout);
-    expect(result.stderr.includes("[native:owner-command] running elapsedMs="),row.id).toBe(row.wrapperProgress);
+    expect(/\[native:owner-command\] (?:still running after|läuft seit) \d+ s/u.test(result.stderr),row.id).toBe(row.wrapperProgress);
   }
 },180000);
 

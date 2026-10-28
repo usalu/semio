@@ -1,5 +1,5 @@
 import{join}from"node:path";
-import{resolveLanguageV1}from"../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import{resolveLanguageV1}from"../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 
 /** 📌️ One row of the launcher registry that matters to a guard: the pinned archive of the host. */
 export type PinnedDistributionV1=Readonly<{platform:string;arch:string;libc:string;archive:string;bytes:number;sha256:string}>;

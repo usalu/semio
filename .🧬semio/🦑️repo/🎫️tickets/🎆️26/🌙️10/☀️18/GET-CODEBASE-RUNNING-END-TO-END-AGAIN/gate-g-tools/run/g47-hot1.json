@@ -1,0 +1,20 @@
+{
+ "label": "g47-hot1",
+ "target": "@teaching/architecture-course:build",
+ "started": "21:35:17",
+ "wall_s": 58.8,
+ "peak_tree_mb": 2114,
+ "peak_processes": 6,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "8",
+   "7 disk cache hit, 1 internal"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

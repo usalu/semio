@@ -177,8 +177,21 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 	if sessions, ok := ticket["sessions"].([]interface{}); ok && len(sessions) > 0 {
 		t.Fatalf("expected hooks to not persist sessions, got %+v", sessions)
 	}
-	if _, hasAgents := ticket["agents"]; hasAgents {
-		t.Fatal("agents must not be persisted in ticket.json")
+	requireAgentSession(t, ticket, "test-session-1", "")
+}
+
+func requireAgentSession(t *testing.T, ticket map[string]interface{}, session string, transcript string) {
+	t.Helper()
+	agents, _ := ticket["agents"].([]interface{})
+	if len(agents) != 1 {
+		t.Fatalf("expected the durable agents member to hold exactly the hook session, got %+v", ticket["agents"])
+	}
+	agent, _ := agents[0].(map[string]interface{})
+	if agent["session"] != session {
+		t.Fatalf("expected agent session %q, got %+v", session, agent)
+	}
+	if transcript != "" && agent["transcript"] != transcript {
+		t.Fatalf("expected agent transcript %q, got %+v", transcript, agent)
 	}
 }
 
@@ -383,9 +396,7 @@ func TestTrackHookTranscriptInSession(t *testing.T) {
 	if sessions, ok := ticket["sessions"].([]interface{}); ok && len(sessions) > 0 {
 		t.Fatalf("expected hooks to not persist sessions, got %+v", sessions)
 	}
-	if _, hasAgents := ticket["agents"]; hasAgents {
-		t.Error("agents must not be persisted in ticket.json")
-	}
+	requireAgentSession(t, ticket, "transcript-session", "/home/user/.vscode/transcripts/abc.jsonl")
 }
 
 func TestTrackHookCodeEditedLogsToFile(t *testing.T) {

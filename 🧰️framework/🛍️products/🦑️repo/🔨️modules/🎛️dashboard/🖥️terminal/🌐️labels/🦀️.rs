@@ -100,7 +100,7 @@ dashboard_labels! {
     source_too_many: "The directory or tree exceeds the 4096-entry limit", "Das Verzeichnis oder der Baum überschreitet das Limit von 4096 Einträgen";
     source_not_text: "The file is not supported UTF8 text", "Die Datei ist kein unterstützter UTF8-Text";
     source_partial_publication: "Save could not settle. Retained bytes are available at {path}; local buffer is retained. Inspect the retained version before continuing.", "Speichern konnte nicht abgeschlossen werden. Aufbewahrte Bytes liegen unter {path}; der lokale Puffer bleibt erhalten. Vor dem Fortfahren die aufbewahrte Version prüfen.";
-    source_publication_race: "Save raced with another writer; your version was published and the predecessor is retained at {path}. Buffer retained.", "Speichern kollidierte mit anderem Schreiber; Ihre Version wurde veröffentlicht und die Vorgängerversion liegt unter {path}. Puffer bleibt erhalten.";
+    source_publication_race: "Save raced with another writer; your version was published and the predecessor is retained at {path}. Buffer retained.", "Speichern kollidierte mit anderem Schreiber; deine Version wurde veröffentlicht und die Vorgängerversion liegt unter {path}. Puffer bleibt erhalten.";
     source_conflict: "File changed elsewhere; buffer retained. Reload after saving your changes elsewhere or explicitly discard.", "Datei wurde andernorts geändert; Puffer bleibt erhalten. Änderungen anderweitig sichern oder ausdrücklich verwerfen und neu laden.";
     source_locked: "Another writer owns the file; try again after it finishes", "Ein anderer Schreiber besitzt die Datei; nach dessen Ende erneut versuchen";
     source_io_error: "Filesystem access failed", "Dateisystemzugriff fehlgeschlagen";
@@ -134,10 +134,10 @@ dashboard_labels! {
     row_cancel_discovery: "Cancel discovery", "Suche abbrechen";
     row_no_tasks: "No tasks yet — start one with New task", "Noch keine Aufgaben — mit Neue Aufgabe starten";
     row_back: "Back to tasks", "Zurück zu Aufgaben";
-    open_starting: "Opening ready address; {cancel} cancels", "Bereite Adresse öffnen; {cancel} bricht ab";
-    open_finished: "Ready address opened", "Bereite Adresse geöffnet";
-    open_unavailable: "The selected task has no active ready address", "Die ausgewählte Aufgabe hat keine aktive bereite Adresse";
-    open_failed: "Cannot open ready address: {problem}", "Bereite Adresse lässt sich nicht öffnen: {problem}";
+    open_starting: "Opening ready address; {cancel} cancels", "Bereitschaftsadresse öffnen; {cancel} bricht ab";
+    open_finished: "Ready address opened", "Bereitschaftsadresse geöffnet";
+    open_unavailable: "The selected task has no active ready address", "Die ausgewählte Aufgabe hat keine aktive Bereitschaftsadresse";
+    open_failed: "Cannot open ready address: {problem}", "Bereitschaftsadresse lässt sich nicht öffnen: {problem}";
     open_cancelled: "Opening cancelled; task keeps running", "Öffnen abgebrochen; Aufgabe läuft weiter";
     status_pending: "waiting", "wartet";
     status_running: "running", "läuft";
@@ -277,7 +277,7 @@ dashboard_labels! {
     cli_cannot_open_browser: "cannot open a browser: {error}", "Ein Browser lässt sich nicht öffnen: {error}";
     cli_no_daemon: "no dashboard daemon answers for this workspace ({error}); `repo dashboard run` starts one", "Kein Dashboard-Dienst antwortet für diesen Arbeitsbereich ({error}); `repo dashboard run` startet einen";
     cli_daemon_unreachable: "cannot reach the dashboard daemon: {error}", "Der Dashboard-Dienst ist nicht erreichbar: {error}";
-    cli_no_ready_declared: "the command declares no ready address; it is started", "Der Befehl erklärt keine bereite Adresse; er ist gestartet";
+    cli_no_ready_declared: "the command declares no ready address; it is started", "Der Befehl erklärt keine Bereitschaftsadresse; er ist gestartet";
     cli_check_summary: "{commands} commands, {problems} problems", "{commands} Befehle, {problems} Probleme";
     cli_graph_absent: "build graph publication absent: targets inferred by the graph are not checked", "Build-Graph-Veröffentlichung fehlt: vom Graphen abgeleitete Targets werden nicht geprüft";
     cli_run_failed: "[semio] failed to run {command}: {error}", "[semio] {command} konnte nicht gestartet werden: {error}";
@@ -294,7 +294,7 @@ dashboard_labels! {
     action_cancel_discovery: "cancel discovery", "Suche abbrechen";
     action_restart_task: "restart", "neu starten";
     action_stop_task: "stop", "anhalten";
-    action_open_ready: "Open ready address", "Bereite Adresse öffnen";
+    action_open_ready: "Open ready address", "Bereitschaftsadresse öffnen";
     action_cancel_open_ready: "Cancel opening", "Öffnen abbrechen";
     action_kill_task: "kill", "beenden";
     action_copy_selection: "copy selection", "Auswahl kopieren";

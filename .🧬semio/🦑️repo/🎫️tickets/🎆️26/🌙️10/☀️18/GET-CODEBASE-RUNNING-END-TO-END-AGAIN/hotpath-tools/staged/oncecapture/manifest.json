@@ -1,0 +1,27 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟦️.ts": {
+  "file": "00.ts",
+  "base": "e0f43b34c12d5b3c40a297a5c0cb22d6ac3f12bb8fd1a4182da0f4179db24829",
+  "new": "5f0279a8dd09450b1447d9ad9a737ea04f028d48a14028a1b5350e71b481924a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🏗️compiler/🟦️.ts": {
+  "file": "01.ts",
+  "base": "08a491e5650a60ecdc1dfa086bc575d2919bfdb754fd30ceaf6eab94ca253d09",
+  "new": "5a86cf623b2db18f707dbdfe81e043a0d2c68095620bd9529e4a668551cd613d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🟦️.ts": {
+  "file": "02.ts",
+  "base": "ad2696ecc247a110e040b302652344ad3b5bbc4fd3b2f5d604dc41872f7962b0",
+  "new": "aeee6d0efd66bc1090a7845789414d4afc69c7bcc47ac23cd5df639e4a5ed6a0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/📜️text/🔣️.json": {
+  "file": "03.json",
+  "base": null,
+  "new": "a011d4516153515d9ad28ec422533df7a17d7201212942cda69e2196880648ef"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/📜️text/🟦️.ts": {
+  "file": "04.ts",
+  "base": null,
+  "new": "08e69c6d0e8cb60d44a62d7e4dc85b89aad449b7765f4a12bc3eefe6b1bdf0e2"
+ }
+}

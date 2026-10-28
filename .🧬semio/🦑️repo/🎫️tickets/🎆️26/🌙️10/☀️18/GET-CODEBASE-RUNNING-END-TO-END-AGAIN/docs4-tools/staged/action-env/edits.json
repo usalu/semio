@@ -1,0 +1,58 @@
+{
+ "name": "action-env",
+ "code": "actenv v3 + envleak (live)",
+ "lane": "docs4",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "7b768aa704cb715daea331a3c60713677f3d915c4269d1fd9a93231de873fa50",
+ "needs": [],
+ "edits": [
+  {
+   "id": "env-bullets",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "   - **Test runners** start the workers one job of their grant carries, from one policy (`🧪️testing/👷️workers`): memory of the job minus the base of the runner over the measured RSS of a worker (learned per class in `estimates.json`), and the cores of the job times what the runner can share one core with, never fewer than one. Defaults: vitest 4 (cap 8), bun test files 1 (cap 8), Playwright 1 (cap 4), end-to-end stacks 2, Cargo test threads = cores. An override (`SEMIO_VITEST_WORKERS`, `SEMIO_BUN_TEST_WORKERS`, `SEMIO_CARGO_TEST_THREADS`, `SEMIO_PLAYWRIGHT_WORKERS`, `SEMIO_E2E_STACKS`) never leaves the admitted cores; a reduced count prints `[tests] Vitest: 2 of 4 worker(s), bounded by …`.",
+   "where": "after",
+   "block": "   - **Action environment** (live): an action process does not inherit your shell; it gets an allowlist. The planner writes it to `runtime.json` of the generated workspace (mode 0600, outside every action key): the names of the classes of the schema `🌿️environment/🏃️action` (host, temporary directories, locale, terminal, CI kind, `SEMIO_*` and `NX_*`, Rust `CARGO*` and `RUST*`, native toolchain `SDKROOT`, `CC*`, `CPATH`, ..., JavaScript `NODE_*`, `BUN_*`, `VITE_*`, `PLAYWRIGHT_*`, Go, Python and .NET, package manager, git, XDG directories, graphics, Windows) plus every name the task graph itself declares. Credential-like names (`*TOKEN*`, `*SECRET*`, `*PASSWORD*`, `*_KEY`, `AUTH`, `COOKIE`, ...) are withheld even inside an allowed class, and so are agent, desktop and session variables, `SSH_AUTH_SOCK`, proxies, `DISPLAY` and `DBUS_*`; on the reference Mac the file holds 46 of 72 shell names. **To give a task a variable, declare it**: an `{\"env\": \"NAME\"}` row among the `inputs` of the target or of a named input (as `SEMIO_BUILD_MODE` in `nx.json`), a `valueEnv` entry or an `env` map of the target. The plan collects the declarations (`declared-environment.json` beside the workspace, read again by the run phase; a missing record is refused), delivers them even when credential-like, and the value of a declared variable is part of the action key. A switch exported in an arbitrary shell therefore no longer reaches a Bazel action unless the task declares it (it was an undeclared input of a cached task), and a service or continuous task that read a credential from the shell has to declare it. A name the build tool's own code starts to read must be classified in the fixture of the allowlist, else a law turns red. A hot or cached run executes no action: to prove that a task does not need a withheld variable, run it with `--skip-cache`. The Bazel client keeps its own environment (cache credential helper) and `TEST_*` come from Bazel.\n   - **Runtime rows of a key**: a `{\"runtime\": \"<command>\"}` input (as `repo tools exec --light bun -- --version` in `sharedGlobals`) keys by the standard OUTPUT of the command only, run without the diagnostic switches (`SEMIO_REPO_PROFILE`, `SEMIO_LEASE_TRACE`, `SEMIO_PROGRESS_DEADLINE_TRACE`, `NODE_DEBUG`, `BUN_CONFIG_VERBOSE_FETCH`) and the ambient variables; standard error never keys, and a command that fails is refused in English and German instead of being keyed. Before, `SEMIO_REPO_PROFILE=json|1` (its profile goes to standard error) re-keyed seven actions of the course build on every run (8 processes, 55-60 s instead of 20 s)."
+  },
+  {
+   "id": "env-bullets",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "   - **Testläufer** starten so viele Worker, wie ein Job ihrer Zusage trägt, nach einer einzigen Richtlinie (`🧪️testing/👷️workers`): der Speicher des Jobs abzüglich der Grundlast des Läufers geteilt durch den gemessenen RSS eines Workers (je Klasse in `estimates.json` gelernt), und die Kerne des Jobs mal der Zahl, die sich ein Kern bei diesem Läufer teilen kann, nie weniger als einer. Standard: vitest 4 (Grenze 8), bun-test-Dateien 1 (Grenze 8), Playwright 1 (Grenze 4), Ende-zu-Ende-Stacks 2, Cargo-Test-Threads = Kerne. Eine Vorgabe (`SEMIO_VITEST_WORKERS`, `SEMIO_BUN_TEST_WORKERS`, `SEMIO_CARGO_TEST_THREADS`, `SEMIO_PLAYWRIGHT_WORKERS`, `SEMIO_E2E_STACKS`) verlässt nie die zugelassenen Kerne; eine verkleinerte Zahl erscheint als `[tests] Vitest: 2 von 4 Worker(n), begrenzt durch …`.",
+   "where": "after",
+   "block": "   - **Umgebung der Aktionen** (live): ein Aktionsprozess erbt nicht deine Shell, er bekommt eine Allowlist. Der Planer schreibt sie nach `runtime.json` des erzeugten Arbeitsbereichs (Modus 0600, außerhalb jedes Aktionsschlüssels): die Namen der Klassen des Schemas `🌿️environment/🏃️action` (Host, temporäre Verzeichnisse, Locale, Terminal, CI-Art, `SEMIO_*` und `NX_*`, Rust `CARGO*` und `RUST*`, native Toolchain `SDKROOT`, `CC*`, `CPATH`, ..., JavaScript `NODE_*`, `BUN_*`, `VITE_*`, `PLAYWRIGHT_*`, Go, Python und .NET, Paketmanager, git, XDG-Verzeichnisse, Grafik, Windows) plus jeden Namen, den der Task-Graph selbst deklariert. Namen, die nach Zugangsdaten aussehen (`*TOKEN*`, `*SECRET*`, `*PASSWORD*`, `*_KEY`, `AUTH`, `COOKIE`, ...), werden auch innerhalb einer erlaubten Klasse zurückgehalten, ebenso Variablen von Agent, Desktop und Sitzung, `SSH_AUTH_SOCK`, Proxys, `DISPLAY` und `DBUS_*`; auf dem Referenz-Mac enthält die Datei 46 von 72 Shell-Namen. **Um einer Task eine Variable zu geben, wird sie deklariert**: eine Zeile `{\"env\": \"NAME\"}` unter den `inputs` des Targets oder einer benannten Eingabe (wie `SEMIO_BUILD_MODE` in `nx.json`), ein Eintrag `valueEnv` oder eine `env`-Map des Targets. Der Plan sammelt die Deklarationen (`declared-environment.json` neben dem Arbeitsbereich, von der Laufphase erneut gelesen; ein fehlender Eintrag wird abgelehnt), liefert sie auch dann, wenn sie nach Zugangsdaten aussehen, und der Wert einer deklarierten Variable gehört zum Aktionsschlüssel. Ein Schalter, der in einer beliebigen Shell exportiert wurde, erreicht eine Bazel-Aktion deshalb nicht mehr, außer die Task deklariert ihn (er war eine undeklarierte Eingabe einer gecachten Task), und ein Dienst oder eine fortlaufende Task, die ein Zugangsdatum aus der Shell las, muss es deklarieren. Ein Name, den der Code des Build-Werkzeugs selbst zu lesen beginnt, muss in der Fixture der Allowlist eingeordnet werden, sonst wird ein Gesetz rot. Ein heißer oder gecachter Lauf führt keine Aktion aus: um zu beweisen, dass eine Task eine zurückgehaltene Variable nicht braucht, mit `--skip-cache` starten. Der Bazel-Client behält seine eigene Umgebung (Credential-Helper des Caches) und `TEST_*` kommen von Bazel.\n   - **Laufzeit-Zeilen eines Schlüssels**: eine Eingabe `{\"runtime\": \"<Befehl>\"}` (wie `repo tools exec --light bun -- --version` in `sharedGlobals`) schlüsselt nur nach der AUSGABE des Befehls (Standardausgabe), ausgeführt ohne die Diagnoseschalter (`SEMIO_REPO_PROFILE`, `SEMIO_LEASE_TRACE`, `SEMIO_PROGRESS_DEADLINE_TRACE`, `NODE_DEBUG`, `BUN_CONFIG_VERBOSE_FETCH`) und ohne die Umgebungsvariablen des Umfelds; die Standardfehlerausgabe schlüsselt nie, und ein Befehl, der scheitert, wird auf Englisch und Deutsch abgelehnt statt geschlüsselt. Früher schlüsselte `SEMIO_REPO_PROFILE=json|1` (sein Profil geht auf die Standardfehlerausgabe) sieben Aktionen des Kurs-Builds bei jedem Lauf neu (8 Prozesse, 55-60 s statt 20 s)."
+  },
+  {
+   "id": "env-table",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "| Policy numbers: `hostCapacity`, `workers`, `remoteCache`, `remoteExecution` of `🏗️build/🔣️policy.json`, `storage` of `⚡️caching/🔣️policy.json` | nothing (sectional digest) |",
+   "where": "after",
+   "block": "| Ambient host, agent, desktop or session variable, a diagnostic switch (`SEMIO_REPO_PROFILE`, `SEMIO_LEASE_TRACE`), the job count granted to the run | nothing: no action key moves and the Bazel plan is reused (the value of a variable a task declares as `env` input is part of its key) |"
+  },
+  {
+   "id": "env-table",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "| Policy-Zahlen: `hostCapacity`, `workers`, `remoteCache`, `remoteExecution` in `🏗️build/🔣️policy.json`, `storage` in `⚡️caching/🔣️policy.json` | nichts (abschnittsweiser Digest) |",
+   "where": "after",
+   "block": "| Variable von Host, Agent, Desktop oder Sitzung, ein Diagnoseschalter (`SEMIO_REPO_PROFILE`, `SEMIO_LEASE_TRACE`), die dem Lauf zugeteilte Job-Zahl | nichts: kein Aktionsschlüssel bewegt sich und der Bazel-Plan wird wiederverwendet (der Wert einer Variable, die eine Task als `env`-Eingabe deklariert, gehört zu ihrem Schlüssel) |"
+  },
+  {
+   "id": "env-row",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "| swap growing, machine sluggish | `bun repo capacity status` (swap, pressure, who holds what); do not run `bun`, `tsc` or Python scripts outside `repo capacity run`; stop what you started |",
+   "where": "after",
+   "block": "| An action does not see a variable of your shell (a missing token, a switch without effect, `command not found` for a tool outside the standard `PATH`) | by design: action processes get the allowlist (see \"Action environment\"), not the shell. Declare the variable as an `env` input of the task (explicit and reviewable), then run once with `--skip-cache` so the action really executes. |"
+  },
+  {
+   "id": "env-row",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "| Swap wächst, Rechner träge | `bun repo capacity status` (Swap, Druck, wer was hält); `bun`, `tsc` oder Python-Skripte nie außerhalb von `repo capacity run` starten; Eigenes beenden |",
+   "where": "after",
+   "block": "| Eine Aktion sieht eine Variable deiner Shell nicht (ein fehlendes Token, ein wirkungsloser Schalter, `command not found` für ein Werkzeug außerhalb des Standard-`PATH`) | gewollt: Aktionsprozesse bekommen die Allowlist (siehe „Umgebung der Aktionen“), nicht die Shell. Die Variable als `env`-Eingabe der Task deklarieren (ausdrücklich und prüfbar), dann einmal mit `--skip-cache` starten, damit die Aktion wirklich läuft. |"
+  }
+ ]
+}

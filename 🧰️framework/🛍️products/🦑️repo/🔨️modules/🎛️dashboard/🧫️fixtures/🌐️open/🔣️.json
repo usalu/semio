@@ -3,7 +3,7 @@
   "key": "u",
   "cancelAction": "cancel-open-ready",
   "cancelKey": "U",
-  "labels": { "en": "Open ready address", "de": "Bereite Adresse öffnen" },
+  "labels": { "en": "Open ready address", "de": "Bereitschaftsadresse öffnen" },
   "platforms": {
     "windows": ["rundll32.exe", "url.dll,FileProtocolHandler"],
     "macos": ["open"],

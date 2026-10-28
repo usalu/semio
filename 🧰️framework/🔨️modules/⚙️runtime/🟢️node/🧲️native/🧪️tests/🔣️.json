@@ -1,0 +1,838 @@
+{
+ "version": 1,
+ "environment": {
+  "SEMIO_NODEFFI_CORPUS": "wörld"
+ },
+ "calls": [
+  {
+   "id": "abs-negative",
+   "symbol": "abs",
+   "args": [
+    [
+     "i32",
+     -7
+    ]
+   ],
+   "returns": "i32",
+   "expect": 7
+  },
+  {
+   "id": "abs-bool-true",
+   "symbol": "abs",
+   "args": [
+    [
+     "i32",
+     true
+    ]
+   ],
+   "returns": "i32",
+   "expect": 1
+  },
+  {
+   "id": "abs-float-number-truncates",
+   "symbol": "abs",
+   "args": [
+    [
+     "i32",
+     -7.9
+    ]
+   ],
+   "returns": "i32",
+   "expect": 7
+  },
+  {
+   "id": "abs-null-is-zero",
+   "symbol": "abs",
+   "args": [
+    [
+     "i32",
+     null
+    ]
+   ],
+   "returns": "i32",
+   "expect": 0
+  },
+  {
+   "id": "abs-returns-i8-truncates",
+   "symbol": "abs",
+   "args": [
+    [
+     "i32",
+     70000
+    ]
+   ],
+   "returns": "i8",
+   "expect": 112
+  },
+  {
+   "id": "abs-returns-u8-truncates",
+   "symbol": "abs",
+   "args": [
+    [
+     "i32",
+     70000
+    ]
+   ],
+   "returns": "u8",
+   "expect": 112
+  },
+  {
+   "id": "abs-returns-i16-sign-extends",
+   "symbol": "abs",
+   "args": [
+    [
+     "i32",
+     40000
+    ]
+   ],
+   "returns": "i16",
+   "expect": -25536
+  },
+  {
+   "id": "abs-returns-u16",
+   "symbol": "abs",
+   "args": [
+    [
+     "i32",
+     40000
+    ]
+   ],
+   "returns": "u16",
+   "expect": 40000
+  },
+  {
+   "id": "abs-returns-u32",
+   "symbol": "abs",
+   "args": [
+    [
+     "i32",
+     -1
+    ]
+   ],
+   "returns": "u32",
+   "expect": 1
+  },
+  {
+   "id": "abs-returns-bool",
+   "symbol": "abs",
+   "args": [
+    [
+     "i32",
+     0
+    ]
+   ],
+   "returns": "bool",
+   "expect": false
+  },
+  {
+   "id": "abs-returns-bool-true",
+   "symbol": "abs",
+   "args": [
+    [
+     "i32",
+     3
+    ]
+   ],
+   "returns": "bool",
+   "expect": true
+  },
+  {
+   "id": "labs-i64-number",
+   "symbol": "labs",
+   "args": [
+    [
+     "i64",
+     -5
+    ]
+   ],
+   "returns": "i64",
+   "expect": {
+    "bigint": "5"
+   }
+  },
+  {
+   "id": "labs-i64-bigint-large",
+   "symbol": "labs",
+   "args": [
+    [
+     "i64",
+     {
+      "bigint": "-9223372036854775807"
+     }
+    ]
+   ],
+   "returns": "i64",
+   "expect": {
+    "bigint": "9223372036854775807"
+   }
+  },
+  {
+   "id": "labs-u64-negative-wraps",
+   "symbol": "labs",
+   "args": [
+    [
+     "u64",
+     {
+      "bigint": "-5"
+     }
+    ]
+   ],
+   "returns": "u64",
+   "expect": {
+    "bigint": "5"
+   }
+  },
+  {
+   "id": "llabs-returns-u64",
+   "symbol": "llabs",
+   "args": [
+    [
+     "i64",
+     {
+      "bigint": "-9223372036854775807"
+     }
+    ]
+   ],
+   "returns": "u64",
+   "expect": {
+    "bigint": "9223372036854775807"
+   }
+  },
+  {
+   "id": "toupper-u8",
+   "symbol": "toupper",
+   "args": [
+    [
+     "i32",
+     97
+    ]
+   ],
+   "returns": "u8",
+   "expect": 65
+  },
+  {
+   "id": "toupper-i8",
+   "symbol": "toupper",
+   "args": [
+    [
+     "u8",
+     122
+    ]
+   ],
+   "returns": "i8",
+   "expect": 90
+  },
+  {
+   "id": "strlen-cstring-string",
+   "symbol": "strlen",
+   "args": [
+    [
+     "cstring",
+     {
+      "string": "héllo"
+     }
+    ]
+   ],
+   "returns": "u64",
+   "expect": {
+    "bigint": "6"
+   }
+  },
+  {
+   "id": "strlen-cstring-buffer",
+   "symbol": "strlen",
+   "args": [
+    [
+     "cstring",
+     {
+      "bytes": "61626300",
+      "view": "Buffer"
+     }
+    ]
+   ],
+   "returns": "u64",
+   "expect": {
+    "bigint": "3"
+   }
+  },
+  {
+   "id": "strlen-ptr-buffer",
+   "symbol": "strlen",
+   "args": [
+    [
+     "ptr",
+     {
+      "bytes": "68656c6c6f00",
+      "view": "Buffer"
+     }
+    ]
+   ],
+   "returns": "u64",
+   "expect": {
+    "bigint": "5"
+   }
+  },
+  {
+   "id": "strlen-ptr-uint8array-offset",
+   "symbol": "strlen",
+   "args": [
+    [
+     "ptr",
+     {
+      "bytes": "7a7a61626300",
+      "view": "Uint8Array",
+      "offset": 2
+     }
+    ]
+   ],
+   "returns": "u64",
+   "expect": {
+    "bigint": "3"
+   }
+  },
+  {
+   "id": "strlen-ptr-dataview-offset",
+   "symbol": "strlen",
+   "args": [
+    [
+     "ptr",
+     {
+      "bytes": "7a7a7a6162636400",
+      "view": "DataView",
+      "offset": 3
+     }
+    ]
+   ],
+   "returns": "u64",
+   "expect": {
+    "bigint": "4"
+   }
+  },
+  {
+   "id": "strlen-ptr-arraybuffer",
+   "symbol": "strlen",
+   "args": [
+    [
+     "ptr",
+     {
+      "bytes": "61626364656600",
+      "view": "ArrayBuffer"
+     }
+    ]
+   ],
+   "returns": "u64",
+   "expect": {
+    "bigint": "6"
+   }
+  },
+  {
+   "id": "strlen-ptr-pointer-number",
+   "symbol": "strlen",
+   "args": [
+    [
+     "ptr",
+     {
+      "pointer": "b",
+      "offset": 1
+     }
+    ]
+   ],
+   "returns": "u64",
+   "expect": {
+    "bigint": "3"
+   },
+   "buffers": [
+    {
+     "id": "b",
+     "bytes": "7a61626300"
+    }
+   ]
+  },
+  {
+   "id": "strtoull-maximum",
+   "symbol": "strtoull",
+   "args": [
+    [
+     "cstring",
+     {
+      "string": "18446744073709551615"
+     }
+    ],
+    [
+     "ptr",
+     null
+    ],
+    [
+     "i32",
+     10
+    ]
+   ],
+   "returns": "u64",
+   "expect": {
+    "bigint": "18446744073709551615"
+   }
+  },
+  {
+   "id": "strtoll-negative",
+   "symbol": "strtoll",
+   "args": [
+    [
+     "cstring",
+     {
+      "string": "-9223372036854775807"
+     }
+    ],
+    [
+     "ptr",
+     null
+    ],
+    [
+     "i32",
+     10
+    ]
+   ],
+   "returns": "i64",
+   "expect": {
+    "bigint": "-9223372036854775807"
+   }
+  },
+  {
+   "id": "strtoll-hex",
+   "symbol": "strtoll",
+   "args": [
+    [
+     "cstring",
+     {
+      "string": "ff"
+     }
+    ],
+    [
+     "ptr",
+     null
+    ],
+    [
+     "i32",
+     16
+    ]
+   ],
+   "returns": "i64",
+   "expect": {
+    "bigint": "255"
+   }
+  },
+  {
+   "id": "memset-fills-and-returns-destination",
+   "symbol": "memset",
+   "args": [
+    [
+     "ptr",
+     {
+      "ref": "b"
+     }
+    ],
+    [
+     "i32",
+     65
+    ],
+    [
+     "u64",
+     3
+    ]
+   ],
+   "returns": "ptr",
+   "expect": {
+    "pointer": "b",
+    "offset": 0
+   },
+   "buffers": [
+    {
+     "id": "b",
+     "bytes": "0000000000"
+    }
+   ],
+   "after": {
+    "b": "4141410000"
+   }
+  },
+  {
+   "id": "memcpy-copies-bytes",
+   "symbol": "memcpy",
+   "args": [
+    [
+     "ptr",
+     {
+      "ref": "b"
+     }
+    ],
+    [
+     "ptr",
+     {
+      "bytes": "cafebabe",
+      "view": "Buffer"
+     }
+    ],
+    [
+     "u64",
+     4
+    ]
+   ],
+   "returns": "ptr",
+   "expect": {
+    "pointer": "b",
+    "offset": 0
+   },
+   "buffers": [
+    {
+     "id": "b",
+     "bytes": "0000000000"
+    }
+   ],
+   "after": {
+    "b": "cafebabe00"
+   }
+  },
+  {
+   "id": "memchr-finds",
+   "symbol": "memchr",
+   "args": [
+    [
+     "ptr",
+     {
+      "ref": "b"
+     }
+    ],
+    [
+     "i32",
+     3
+    ],
+    [
+     "u64",
+     5
+    ]
+   ],
+   "returns": "ptr",
+   "expect": {
+    "pointer": "b",
+    "offset": 2
+   },
+   "buffers": [
+    {
+     "id": "b",
+     "bytes": "0102030405"
+    }
+   ]
+  },
+  {
+   "id": "memchr-misses-null",
+   "symbol": "memchr",
+   "args": [
+    [
+     "ptr",
+     {
+      "ref": "b"
+     }
+    ],
+    [
+     "i32",
+     9
+    ],
+    [
+     "u64",
+     5
+    ]
+   ],
+   "returns": "ptr",
+   "expect": null,
+   "buffers": [
+    {
+     "id": "b",
+     "bytes": "0102030405"
+    }
+   ]
+  },
+  {
+   "id": "memcmp-equal",
+   "symbol": "memcmp",
+   "args": [
+    [
+     "ptr",
+     {
+      "bytes": "0102",
+      "view": "Buffer"
+     }
+    ],
+    [
+     "ptr",
+     {
+      "bytes": "0102",
+      "view": "Buffer"
+     }
+    ],
+    [
+     "u64",
+     2
+    ]
+   ],
+   "returns": "i32",
+   "expect": 0
+  },
+  {
+   "id": "getenv-cstring",
+   "symbol": "getenv",
+   "args": [
+    [
+     "cstring",
+     {
+      "string": "SEMIO_NODEFFI_CORPUS"
+     }
+    ]
+   ],
+   "returns": "cstring",
+   "expect": {
+    "string": "wörld"
+   }
+  },
+  {
+   "id": "getenv-unset-cstring-null",
+   "symbol": "getenv",
+   "args": [
+    [
+     "cstring",
+     {
+      "string": "SEMIO_NODEFFI_CORPUS_UNSET"
+     }
+    ]
+   ],
+   "returns": "cstring",
+   "expect": null
+  },
+  {
+   "id": "getenv-unset-ptr-null",
+   "symbol": "getenv",
+   "args": [
+    [
+     "cstring",
+     {
+      "string": "SEMIO_NODEFFI_CORPUS_UNSET"
+     }
+    ]
+   ],
+   "returns": "ptr",
+   "expect": null
+  },
+  {
+   "id": "getpid-i32",
+   "symbol": "getpid",
+   "args": [],
+   "returns": "i32",
+   "expect": {
+    "context": "pid"
+   }
+  },
+  {
+   "id": "getpid-u32",
+   "symbol": "getpid",
+   "args": [],
+   "returns": "u32",
+   "expect": {
+    "context": "pid"
+   }
+  },
+  {
+   "id": "getpid-i64",
+   "symbol": "getpid",
+   "args": [],
+   "returns": "i64",
+   "expect": {
+    "context": "pidBigint"
+   }
+  },
+  {
+   "id": "getpid-u64",
+   "symbol": "getpid",
+   "args": [],
+   "returns": "u64",
+   "expect": {
+    "context": "pidBigint"
+   }
+  },
+  {
+   "id": "getpid-ptr",
+   "symbol": "getpid",
+   "args": [],
+   "returns": "ptr",
+   "expect": {
+    "context": "pid"
+   }
+  },
+  {
+   "id": "getppid-i32",
+   "symbol": "getppid",
+   "args": [],
+   "returns": "i32",
+   "expect": {
+    "context": "ppid"
+   }
+  },
+  {
+   "id": "access-missing-sets-errno",
+   "symbol": "access",
+   "args": [
+    [
+     "cstring",
+     {
+      "string": "/nonexistent/semio-nodeffi"
+     }
+    ],
+    [
+     "i32",
+     0
+    ]
+   ],
+   "returns": "i32",
+   "expect": -1,
+   "errno": 2
+  },
+  {
+   "id": "access-root-clears-nothing",
+   "symbol": "access",
+   "args": [
+    [
+     "cstring",
+     {
+      "string": "/"
+     }
+    ],
+    [
+     "i32",
+     0
+    ]
+   ],
+   "returns": "i32",
+   "expect": 0
+  },
+  {
+   "id": "void-return",
+   "symbol": "srand",
+   "args": [
+    [
+     "u32",
+     1
+    ]
+   ],
+   "returns": "void",
+   "expect": {
+    "void": true
+   }
+  }
+ ],
+ "memory": [
+  {
+   "id": "read-widths",
+   "bytes": "80ff0180ff7fff7f0100000000000080",
+   "reads": [
+    [
+     "i8",
+     0,
+     -128
+    ],
+    [
+     "u8",
+     0,
+     128
+    ],
+    [
+     "i16",
+     0,
+     -128
+    ],
+    [
+     "u16",
+     0,
+     65408
+    ],
+    [
+     "i16",
+     2,
+     -32767
+    ],
+    [
+     "u16",
+     2,
+     32769
+    ],
+    [
+     "i32",
+     0,
+     -2147352704
+    ],
+    [
+     "u32",
+     0,
+     2147614592
+    ],
+    [
+     "i32",
+     4,
+     2147450879
+    ],
+    [
+     "u32",
+     4,
+     2147450879
+    ],
+    [
+     "i64",
+     8,
+     {
+      "bigint": "-9223372036854775807"
+     }
+    ],
+    [
+     "u64",
+     8,
+     {
+      "bigint": "9223372036854775809"
+     }
+    ],
+    [
+     "ptr",
+     8,
+     9.223372036854776e+18
+    ]
+   ]
+  }
+ ],
+ "view": {
+  "id": "toarraybuffer-is-live",
+  "bytes": "0102030405060708",
+  "offset": 2,
+  "length": 4,
+  "fill": 66,
+  "fillLength": 4,
+  "expectBefore": "03040506",
+  "expectAfter": "42424242"
+ },
+ "refusals": [
+  {
+   "id": "missing-symbol",
+   "library": "libc",
+   "symbol": "semio_nodeffi_missing",
+   "args": [],
+   "returns": "i32"
+  },
+  {
+   "id": "missing-library",
+   "library": "/nonexistent/semio-nodeffi.dylib",
+   "symbol": "x",
+   "args": [],
+   "returns": "i32"
+  }
+ ],
+ "host": [
+  "rename-swap",
+  "statfs",
+  "case-sensitivity",
+  "process-tree"
+ ]
+}

@@ -1,0 +1,138 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/♻️pressure/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "compact headroom recovery runs under the budgeted preparation control chain of an ordinary compiler store"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 5,
+  "fails": [
+   "(unnamed)",
+   "one received Original retains actual physical admission, image exclusion and repeatable compact recovery laws (macOS image backend)"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 2,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🏦️funded/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "a namespace native image is funded by the nx partition journal and retires with its charge"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/📜️script.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "Nx graph strict same-wire purpose child"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️store/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📥️purpose/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🗄️persistent-state/🟦️.ts": {
+  "mode": "plain",
+  "pass": 1,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 6,
+  "fails": [
+   "(unnamed)",
+   "Nx graph diagnostics route logs and batch output through the live funded owner",
+   "Nx graph native constructors authenticate before creation and every cached reuse",
+   "Nx graph native constructors retain async entry ownership and immutable contracts",
+   "Rust promotion refuses a replaced revision after the real output reader waits",
+   "a namespace bound inside a nested tooling store settles with that store only after its release (the loader hang of every Nx run)",
+   "actual Nx hook holds product readers and restore writers through original callback"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts": {
+  "mode": "env",
+  "pass": 6,
+  "fails": [
+   "(unnamed)",
+   "actual Cargo config flags activate Source mounts before ordinary boundary admission",
+   "actual Cargo passthrough arguments become root compiler flags only for cargo rustc",
+   "actual Cargo plans normal/proc-macro/build-script units without compiler execution",
+   "actual multi-target Cargo units of one package keep distinct identities",
+   "actual ordinary Cargo build rejects owned Source growth before its compiler executable starts"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🎛️operation/🟦️.ts": {
+  "mode": "env",
+  "pass": 2,
+  "fails": [
+   "(unnamed)",
+   "graph operation carries real law cancellation into actual retained pool wait",
+   "graph operation physical child",
+   "graph operation root cancellation drains accepted work before healthy parent retirement"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 8,
+  "fails": [
+   "(unnamed)",
+   "Nx current domain maintenance administrative caller orders fixed Source dispatch",
+   "Nx current domain maintenance administrative fixed dispatch is present",
+   "Nx current domain maintenance artifact diagnostic preserves exact primary",
+   "Nx current domain maintenance bounded file reader refuses unstable own Source files",
+   "Nx current domain maintenance bounded planner emits only one current command",
+   "Nx current domain maintenance child seed defers exact reserved publication metadata",
+   "Nx current domain maintenance directory readers retain primary and close",
+   "Nx current domain maintenance domain payload diagnostic exists",
+   "Nx current domain maintenance domain payload diagnostic remains observation only",
+   "Nx current domain maintenance entire artifact and empty image phases",
+   "Nx current domain maintenance exact helper selects only image publication",
+   "Nx current domain maintenance fixed artifact command ordering",
+   "Nx current domain maintenance fixed native payload command ordering",
+   "Nx current domain maintenance helper reads only bounded stable Source DATA",
+   "Nx current domain maintenance intent derives closed independent candidates",
+   "Nx current domain maintenance observation admits exact current facts",
+   "Nx current domain maintenance owner and command facts remain closed",
+   "Nx current domain maintenance payload read refusal retains cached facts and exact physical calls",
+   "Nx current domain maintenance payload read reporter is bounded and descriptor only",
+   "Nx current domain maintenance pending image decision requires canonical publication",
+   "Nx current domain maintenance prepared Core dispatch stays closed before fixed publisher",
+   "Nx current domain maintenance prepared service closed entry and dispatcher",
+   "Nx current domain maintenance profile boundaries preserve failure",
+   "Nx current domain maintenance retained inactive image",
+   "Nx current domain maintenance service roster remains bounded unqualified DATA",
+   "Nx current domain maintenance shared transaction owner preserves canonical Source behavior",
+   "Nx current domain maintenance standalone closed entry",
+   "Nx current domain maintenance streamed dispatch stays explicit",
+   "Nx current domain maintenance streamed snapshot roles remain current and closed",
+   "Nx current maintenance vectors use typed dashboard script arguments",
+   "Nx native graph backing bounds watcher metadata with actual retained directories",
+   "Nx native graph backing funds an isolated pool and drains actual nested images",
+   "Nx native graph backing preserves an ALL parent and selected child within funded publication peaks",
+   "Nx native graph backing protects a live reader and retires its actual fixed image",
+   "Nx native graph backing reenters a genuine pool writer under the same live publication authority",
+   "Nx native graph backing refuses a forged pool admission invocation",
+   "Nx native graph backing refuses an expired narrower pool reentry",
+   "Nx native graph backing refuses invalid retirement envelopes before any storage side effect"
+  ]
+ }
+}

@@ -1,0 +1,50 @@
+import {expect,test} from "bun:test";
+import {readFile} from "node:fs/promises";
+import {createHash,randomUUID} from "node:crypto";
+import {resolve} from "node:path";
+import ts from "typescript";
+import {runtimeIdentityV1} from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import Ajv from "ajv";
+import {Database} from "bun:sqlite";
+import corpus from "./🔣️.json";
+import schema from "./🧬️schema.json";
+import runtimeCorpus from "./🔣️runtime.json";
+import runtimeSchema from "./🧬️runtime.json";
+import {createNativeBuildCallerCapabilitiesV1,issueBuildTaskEnvironmentV1} from "../../../../📥️caller/🟦️.ts";
+import {buildExecEnvironmentV1} from "../../../../⚙️operations/🌱️exec-environment/🟦️.ts";
+import {createScriptProcessEnvelope,withScriptProcessEnvelope,createIssuedResourceControlV1,checkScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+
+const trees=await Promise.all(["../../📜️script.ts","../../🎬️executor/🟦️.ts"].map(async path=>ts.createSourceFile("bazel.ts",await readFile(new URL(path,import.meta.url),"utf8"),ts.ScriptTarget.Latest,true))),definition=(name:string)=>{for(const tree of trees){const node=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===name);if(node)return node.getText(tree).replace(/^export /u,"");}throw Error("Bazel fingerprint implementation required: "+name);};
+const constant=(name:string)=>{for(const tree of trees){const node=tree.statements.find(node=>ts.isVariableStatement(node)&&node.declarationList.declarations.some(row=>row.name.getText(tree)===name));if(node)return node.getText(tree);}throw Error("Bazel fingerprint constant required: "+name);};
+const fingerprintCode=()=>ts.transpileModule(constant("cargoDirectoryKeys")+"\n"+definition("bazelTaskCargoDirectoriesV1")+"\n"+definition("issueBazelTaskEnvironmentV1")+"\n"+definition("bazelTaskBaseEnvironmentV1")+"\n"+definition("taskFingerprint")+";return taskFingerprint;",{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+
+test("Bazel fingerprints declared env and runtime inputs through the actual issued task environment",async()=>{
+ expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);const root=process.cwd(),database=new Database(":memory:"),results:{group:string;fingerprint:string;environmentFingerprint:string}[]=[];
+ try{for(const[index,row]of corpus.entries()){
+  const capabilities=createNativeBuildCallerCapabilitiesV1(root,["run","fixture:build"],"bazel",{SEMIO_BUILD_MODE:row.grant.mode,CARGO_NET_OFFLINE:String(row.grant.offline)}),task={id:"fixture:build",project:"fixture",target:"build",root:"fixture",args:[],definition:{execution:{kind:"command",command:"repo ./📜️script.ts",env:row.taskEnvironment},inputs:[...Object.keys(row.expected).map(env=>({env})),{runtime:"fixture-runtime"}]}},runtime:NodeJS.ProcessEnv[]=[],runtimeOutputs:string[]=[];
+  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"bazel:fingerprint",maximumElapsedMilliseconds:30000},capabilities,Date.now()),async original=>{
+   const base=Object.fromEntries(Object.entries({...process.env,...row.ambient}).filter(([_key,value])=>value!==null)),bindings={runtimeIdentityV1,bazelNativeToolchainClassV1:()=>undefined,createHash,randomUUID,bazelClosureMarkerV1:()=>undefined,bazelCargoClassV1:()=>undefined,bazelCargoToolchainDigestV1:async()=>"",bazelGoClassV1:()=>false,bazelGoToolchainDigestV1:async()=>"",process:{...process,env:base},bazelTaskInputsV1:(_graph:unknown,selected:typeof task)=>selected.definition.inputs,issueBuildTaskEnvironmentV1,buildExecEnvironmentV1,resolve,checkScriptInvocation,captureOwnedCommandV1:async(_program:string,_arguments:string[],_root:string,options:{env:NodeJS.ProcessEnv})=>{runtime.push(options.env);const program="process.stdout.write(JSON.stringify(Object.fromEntries(JSON.parse(process.argv[1]).map(key=>[key,process.env[key]??null]))))",child=Bun.spawnSync([process.execPath,"-e",program,JSON.stringify(Object.keys(row.expected))],{env:options.env});expect(child.exitCode).toBe(0);const output=child.stdout.toString();runtimeOutputs.push(output);return output;}},code=fingerprintCode(),run=Function(...Object.keys(bindings),code)(...Object.values(bindings)),fingerprint=await run(root,{},task,[],new Map(),original,createIssuedResourceControlV1(original,"bazel:fingerprint",0),true,"implementation");expect(runtime).toHaveLength(1);expect(Object.fromEntries(Object.keys(row.expected).map(key=>[key,runtime[0]![key]??null]))).toEqual(row.expected);database.exec("CREATE TABLE IF NOT EXISTS cases(id INTEGER,key TEXT,value TEXT)");for(const[key,value]of Object.entries(row.expected))database.query("INSERT INTO cases VALUES(?,?,?)").run(index,key,value);const oracle=Object.fromEntries(database.query("SELECT key,value FROM cases WHERE id=? ORDER BY key").all(index).map(value=>[(value as{key:string}).key,(value as{value:string|null}).value]));expect(JSON.parse(runtimeOutputs[0]!)).toEqual(oracle);const environmentTask={...task,definition:{...task.definition,inputs:task.definition.inputs.filter(input=>"env"in input)}},environmentFingerprint=await run(root,{},environmentTask,[],new Map(),original,createIssuedResourceControlV1(original,"bazel:environment-fingerprint",0),true,"implementation");for(const previous of results){expect(fingerprint===previous.fingerprint).toBe(row.cacheGroup===previous.group);expect(environmentFingerprint===previous.environmentFingerprint).toBe(row.cacheGroup===previous.group);}results.push({group:row.cacheGroup,fingerprint,environmentFingerprint});
+  });
+ }}finally{database.close();}
+},30000);
+
+test("Bazel runtime input boundaries cannot alias different ordered command outputs",async()=>{
+ expect(new Ajv({strict:true}).validate(runtimeSchema,runtimeCorpus)).toBe(true);const root=process.cwd(),capabilities=createNativeBuildCallerCapabilitiesV1(root,["run","fixture:build"],"bazel",{}),database=new Database(":memory:");
+ try{await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"bazel:runtime-boundary",maximumElapsedMilliseconds:30000},capabilities,Date.now()),async original=>{
+  const fingerprints:string[]=[],task={id:"fixture:build",project:"fixture",target:"build",root:"fixture",args:[],definition:{execution:{kind:"command",command:"repo ./📜️script.ts"},inputs:runtimeCorpus.commands.map(runtime=>({runtime}))}};
+  for(const outputs of runtimeCorpus.outputs){let position=0;const bindings={runtimeIdentityV1,bazelNativeToolchainClassV1:()=>undefined,createHash,randomUUID,bazelClosureMarkerV1:()=>undefined,bazelCargoClassV1:()=>undefined,bazelCargoToolchainDigestV1:async()=>"",bazelGoClassV1:()=>false,bazelGoToolchainDigestV1:async()=>"",process,bazelTaskInputsV1:()=>task.definition.inputs,issueBuildTaskEnvironmentV1,buildExecEnvironmentV1,resolve,checkScriptInvocation,captureOwnedCommandV1:async()=>outputs[position++]},code=fingerprintCode(),run=Function(...Object.keys(bindings),code)(...Object.values(bindings));fingerprints.push(await run(root,{},task,[],new Map(),original,createIssuedResourceControlV1(original,"bazel:runtime-boundary",0),true,"implementation"));expect(position).toBe(runtimeCorpus.commands.length);}
+  const oracle=database.query("SELECT json_array(?1,?2)<>json_array(?3,?4) distinctOutput").get(...runtimeCorpus.outputs.flat()) as{distinctOutput:number};expect(Boolean(oracle.distinctOutput)).toBe(runtimeCorpus.distinct);expect(fingerprints[0]!==fingerprints[1]).toBe(runtimeCorpus.distinct);
+ });}finally{database.close();}
+},30000);
+
+
+test("Bazel folds the crate resolution identity into the fingerprint, never a lock file, and refuses a lock marker without one",async()=>{
+ const root=process.cwd(),key="a".repeat(64),capabilities=createNativeBuildCallerCapabilitiesV1(root,["run","fixture:build"],"bazel",{SEMIO_BUILD_MODE:"prototype"}),task={id:"fixture:build",project:"fixture",target:"build",root:"fixture",args:[],definition:{execution:{kind:"command",command:"repo ./📜️script.ts",env:{}},inputs:[{env:"SEMIO_CARGO_LOCK_"+key}]}};
+ const fingerprint=(resolutions:Map<string,string>)=>withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"bazel:fingerprint",maximumElapsedMilliseconds:30000},capabilities,Date.now()),async original=>{
+  const bindings={runtimeIdentityV1,bazelNativeToolchainClassV1:()=>undefined,createHash,randomUUID,bazelClosureMarkerV1:(row:{env:string})=>row.env.startsWith("SEMIO_CARGO_LOCK_")?{kind:"lock",key:row.env.slice("SEMIO_CARGO_LOCK_".length)}:undefined,bazelCargoClassV1:()=>undefined,bazelCargoToolchainDigestV1:async()=>"",bazelGoClassV1:()=>false,bazelGoToolchainDigestV1:async()=>"",process:{...process,env:{...process.env}},bazelTaskInputsV1:(_graph:unknown,selected:typeof task)=>selected.definition.inputs,issueBuildTaskEnvironmentV1,buildExecEnvironmentV1,resolve,checkScriptInvocation,captureOwnedCommandV1:async()=>""},run=Function(...Object.keys(bindings),fingerprintCode())(...Object.values(bindings));
+  return run(root,{},task,[],new Map(),original,createIssuedResourceControlV1(original,"bazel:fingerprint",0),true,"implementation",undefined,resolutions);
+ });
+ const first=await fingerprint(new Map([[key,"1".repeat(64)]])),same=await fingerprint(new Map([[key,"1".repeat(64)]])),moved=await fingerprint(new Map([[key,"2".repeat(64)]]));
+ expect(same).toBe(first);expect(moved).not.toBe(first);
+ await expect(fingerprint(new Map())).rejects.toThrow("Bazel Cargo resolution identity required");
+},30000);

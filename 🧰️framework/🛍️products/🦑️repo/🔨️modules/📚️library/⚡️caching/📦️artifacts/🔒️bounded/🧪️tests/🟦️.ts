@@ -20,14 +20,16 @@ import storagePolicy from "../../../💾️storage/🔒️enforcement/📦️bud
 import repositoryPolicy from "../../../🔣️policy.json" with {type:"json"};
 import repositorySchema from "../../../🧬️schema/🔣️.json" with {type:"json"};
 import {ordinaryNativeStoragePortV1,type NativeStoragePortV1} from "@semio-tech/process/artifacts/native-build/storage";
+import{privateRepositoryWorkspaceV1,testNxToolkitDirectoryV1,testCheckoutRootV1}from"../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;
 if(!artifacts)throw Error("Original artifact directory required");
 const original=()=>({signal:new AbortController().signal,remainingMilliseconds:()=>20000,publish:async()=>{},yieldContinuation:async()=>{}});
 function owned(){const parent=mkdtempSync(join(artifacts!,"nx-bound-")),root=join(parent,"store");mkdirSync(root);mkdirSync(join(parent,"foreign"));symlinkSync(join(parent,"foreign"),join(root,"link"),process.platform==="win32"?"junction":"dir");return{parent,root};}
 
 test("authored storage resolves one fixed16GiB backing with independent envelope accounting",()=>{
- expect(new Ajv({strict:true}).compile(repositorySchema)(repositoryPolicy)).toBe(true);const actual=repositoryStrictStorageV1(process.cwd()),db=new Database(":memory:");
- try{expect(actual.directory).toBe(join(process.cwd(),".🧬semio/🦑️repo/⚡️cache/rust/fixed"));expect(actual.leaseDirectory).toBe(join(process.cwd(),".cache/b/l/m/data"));expect((db.query("SELECT ?1 - ?2 AS reserve,?3 <= ?2 AND ?4 <= ?2 AS kindsFit").get(actual.capacityBytes,actual.filesystemBytes,actual.maximumWorkspaceBytes,actual.maximumArtifactBytes) as {reserve:number;kindsFit:number})).toEqual({reserve:1048576,kindsFit:1});expect(actual.capacityBytes).toBe(51539607552);}finally{db.close();}
+ expect(new Ajv({strict:true}).compile(repositorySchema)(repositoryPolicy)).toBe(true);const actual=repositoryStrictStorageV1(repository.root),db=new Database(":memory:");
+ try{expect(actual.directory).toBe(join(repository.root,".🧬semio/🦑️repo/⚡️cache/rust/fixed"));expect(actual.leaseDirectory).toBe(join(repository.root,".cache/b/l/m/data"));expect((db.query("SELECT ?1 - ?2 AS reserve,?3 <= ?2 AND ?4 <= ?2 AS kindsFit").get(actual.capacityBytes,actual.filesystemBytes,actual.maximumWorkspaceBytes,actual.maximumArtifactBytes) as {reserve:number;kindsFit:number})).toEqual({reserve:1048576,kindsFit:1});expect(actual.capacityBytes).toBe(51539607552);}finally{db.close();}
 });
 
 test("Nx cache database loader and temporary paths share one declared backing namespace",()=>{
@@ -45,7 +47,7 @@ test("neutral Nx output confinement agrees with independent SQLite path segments
 });
 
 test("ordinary directories and escaping outputs refuse before producer or journal writes",async()=>{
- const {root,parent}=owned();let writes=0,observations=0;const policy={version:1 as const,root,leaseDirectory:join(process.cwd(),".cache/b/l/m/data"),capacityBytes:100,maximumWorkspaceBytes:100,maximumArtifactBytes:100},control=original();
+ const {root,parent}=owned();let writes=0,observations=0;const policy={version:1 as const,root,leaseDirectory:join(repository.root,".cache/b/l/m/data"),capacityBytes:100,maximumWorkspaceBytes:100,maximumArtifactBytes:100},control=original();
  try{await expect(withBoundedNxArtifactWriteV1({policy,control,port:ordinaryNativeStoragePortV1(),request:{version:1,kind:"artifact-publication",owner:"nx:unit",maximumBytes:8,paths:[join(root,"cache")]}},async()=>{writes++;})).rejects.toThrow("enforcing storage backend");
  const port={...ordinaryNativeStoragePortV1(),observe:async()=>{observations++;return null;}};
  await expect(withBoundedNxArtifactWriteV1({policy,control,port,request:{version:1,kind:"artifact-restore",owner:"nx:unit",maximumBytes:8,paths:[join(parent,"foreign")]}},async()=>{writes++;})).rejects.toThrow("boundary");
@@ -65,14 +67,14 @@ test("publication and failed restore remain conservatively charged in an explici
 
 
  test("authored Nx default agrees with finite storage policy and refuses ordinary directory aliases",()=>{
- const validate=new Ajv({strict:true}).compile(cacheConfigurationSchema),workspace=process.cwd();expect(new Ajv({strict:true}).compile(fixtureSchema)(fixture)).toBe(true);
+ const validate=new Ajv({strict:true}).compile(cacheConfigurationSchema),workspace=repository.root;expect(new Ajv({strict:true}).compile(fixtureSchema)(fixture)).toBe(true);
  for(const row of fixture.authoredCacheDirectories){expect(validate(row.directory)).toBe(row.accepted);if(row.accepted)expect(readAuthoredNxCacheDirectoryV1(workspace,row.directory)).toBe(join(workspace,storagePolicy.partitions.rust.directory,"m/nx/artifacts"));else expect(()=>readAuthoredNxCacheDirectoryV1(workspace,row.directory)).toThrow("Authored bounded Nx cache directory");}
- expect(readAuthoredNxCacheDirectoryV1(workspace,JSON.parse(readFileSync(join(workspace,"nx.json"),"utf8")).cacheDirectory)).toBe(join(workspace,storagePolicy.partitions.rust.directory,"m/nx/artifacts"));
+ expect(readAuthoredNxCacheDirectoryV1(workspace,JSON.parse(readFileSync(join(testCheckoutRootV1(),"nx.json"),"utf8")).cacheDirectory)).toBe(join(workspace,storagePolicy.partitions.rust.directory,"m/nx/artifacts"));
  });
 
 
  test("actual frozen Nx refuses authored cache initialization without original bounded namespace",async()=>{
- const identity=process.env.SEMIO_NX_TOOLING_IDENTITY;if(!identity)throw Error("Original immutable SDK required");const parent=mkdtempSync(join(artifacts!,"nx-cfg-")),root=join(parent,"workspace"),sdk=createRequire(join(process.cwd(),".cache/b/t/m/nx",identity,"package.json"));mkdirSync(root);writeFileSync(join(root,"nx.json"),JSON.stringify({cacheDirectory:cacheConfigurationSchema.const}));
+ const identity=process.env.SEMIO_NX_TOOLING_IDENTITY;if(!identity)throw Error("Original immutable SDK required");const parent=mkdtempSync(join(artifacts!,"nx-cfg-")),root=join(parent,"workspace"),sdk=createRequire(join(testNxToolkitDirectoryV1(identity),"package.json"));mkdirSync(root);writeFileSync(join(root,"nx.json"),JSON.stringify({cacheDirectory:cacheConfigurationSchema.const}));
  const source=`try{require(${JSON.stringify(sdk.resolve("nx/src/utils/cache-directory"))});console.log(JSON.stringify({refused:false}));}catch(error){console.log(JSON.stringify({refused:String(error).includes('Original bounded Nx namespace required')}));}`;
  try{await withBuildTestInvocationV1(async original=>{for(const row of fixture.rawCacheAdmission){const output=await captureOwnedCommandV1("node",["-e",source],root,{control:scriptCompilerAdmissionControlV1(original,"nx:authored-default:node",20000),env:{...scriptInvocationEnvironment(original,process.env),NODE_PATH:join(dirname(dirname(sdk.resolve("nx/package.json")))),NX_WORKSPACE_ROOT:root,NX_WORKSPACE_ROOT_PATH:root,NX_CACHE_DIRECTORY:row.environment==="foreign"?join(parent,"foreign"):undefined,SEMIO_NX_FIXED_STORAGE:undefined,NX_WORKSPACE_DATA_DIRECTORY:join(root,"data")}});expect(JSON.parse(output.trim().split("\n").reverse().find(line=>line.startsWith("{"))!).refused).toBe(row.refused);}});}finally{rmSync(parent,{recursive:true});}
  });

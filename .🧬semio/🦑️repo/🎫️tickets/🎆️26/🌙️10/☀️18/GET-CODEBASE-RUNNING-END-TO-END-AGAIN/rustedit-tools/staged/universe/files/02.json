@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Bazel Source Universe",
+  "description": "Which directories the world witness of a planner run must observe so that a recorded plan is reused only while git would list the same sources. A pattern whose literal prefix is empty (`**/🧬️schema/**/*.json`) reaches the whole checkout; the walk below the root then skips every directory name that each such pattern's own task excludes completely with a negation of the shape `**/<name>/**`, `**/{a,b}/**` or `**/.*/**`. A root-anchored pattern without such a negation leaves the universe unbounded and the plan is not reused.",
+  "definitions": {
+    "Policy": {
+      "description": "Closed constants: the negation shapes that prune a directory name, and the probe paths that the runtime glob must exclude before a name counts as pruned (one below the root, one deeper).",
+      "const": {
+        "prunableNegation": "^\\*\\*/(\\{(?:\\.\\*|[^{}*?\\[\\]/!,]+)(?:,(?:\\.\\*|[^{}*?\\[\\]/!,]+))*\\}|\\.\\*|[^{}*?\\[\\]/!]+)/\\*\\*$",
+        "dotSegment": ".*",
+        "probes": [
+          "{name}/p",
+          "q/{name}/p/r.json"
+        ],
+        "dotProbeName": ".p"
+      }
+    },
+    "Groups": {
+      "description": "The expanded string inputs of every cacheable task of one plan, one array per task; a leading `!` marks a negation of that task.",
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "Universe": {
+      "description": "`roots`: the minimal directories below which every non-root-anchored pattern lies, walked completely. `whole`: null when no pattern is root-anchored; `unbounded` when one has no pruning negation; otherwise the directory names (and dot names) every root-anchored pattern excludes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roots",
+        "whole"
+      ],
+      "properties": {
+        "roots": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "whole": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "const": "unbounded"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "names",
+                "dot"
+              ],
+              "properties": {
+                "names": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "dot": {
+                  "type": "boolean"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

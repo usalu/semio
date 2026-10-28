@@ -38,8 +38,8 @@ fn open_ready_customization_is_localized_deduplicated_and_cancellable() {
     task.ready_url = Some("http://127.0.0.1:6061/".into());
     dashboard.update_session(&mut tui, task);
     dashboard.focus_window(&mut tui, 1);
-    assert_eq!(dashboard.text().action("open-ready"), "Bereite Adresse öffnen");
-    assert!(dashboard.footer_hints(&tui).iter().any(|hint| hint.key == "Ctrl+A g" && hint.label == "Bereite Adresse öffnen"));
+    assert_eq!(dashboard.text().action("open-ready"), "Bereitschaftsadresse öffnen");
+    assert!(dashboard.footer_hints(&tui).iter().any(|hint| hint.key == "Ctrl+A g" && hint.label == "Bereitschaftsadresse öffnen"));
     press(&mut dashboard, &mut tui, &[ctrl('a'), key('g'), ctrl('a'), key('g')]);
     assert_eq!(dashboard.effects, [Effect::OpenReady("http://127.0.0.1:6061/".into())]);
     assert!(dashboard.notice.as_ref().unwrap().contains("Ctrl+A G"));

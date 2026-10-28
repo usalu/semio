@@ -1,7 +1,7 @@
 preload = ["./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/📜️script.ts"]
 
 [test]
-preload = ["./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/📜️script.ts"]
+preload = ["./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/📜️script.ts", "./🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/📜️script.ts", "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🚧️fence/📜️script.ts"]
 
 [install]
 linker = "isolated"

@@ -1,0 +1,4 @@
+/** 🧵️ [cmdid] Prints the genuine native build caller envelope `repo run @semio-tech/repo-lib:test-build-command-line` would hand a test, issued from the checkout that is the working directory (a mirror or live; its real path, as a test process sees it), so a law runs beneath a real parent grant. usage: cd <root> && bun wire.ts */
+const root=process.cwd();
+const{createScriptProcessEnvelope,readScriptPolicy}=await import(root+"/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),{createBuildBootstrapCapabilitiesV1}=await import(root+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️child/🟦️.ts");
+process.stdout.write(JSON.stringify(createScriptProcessEnvelope(readScriptPolicy({version:1,owner:"repository:build",maximumElapsedMilliseconds:3600000}),await createBuildBootstrapCapabilitiesV1(root,["run","@semio-tech/repo-lib:test-build-command-line"],process.env),Date.now())));

@@ -50,7 +50,7 @@ beforeAll(() => {
 afterAll(() => rmSync(root, { recursive: true, force: true }));
 
 function semio(args: string[], env: Record<string, string> = {}): { code: number; out: string; err: string } {
-  const run = Bun.spawnSync([binary(), ...args], { cwd: root, env: { ...process.env, ...env, SEMIO_DASHBOARD_GRAPH: "fresh", SEMIO_LOCALE: "en", SEMIO_PLUGIN_CATALOG: join(root,"catalog") }, stdout: "pipe", stderr: "pipe" });
+  const run = Bun.spawnSync([binary(), ...args], { cwd: root, env: { ...process.env, ...env, SEMIO_DASHBOARD_GRAPH: "fresh", SEMIO_LANGUAGE: "en", SEMIO_PLUGIN_CATALOG: join(root,"catalog") }, stdout: "pipe", stderr: "pipe" });
   return { code: run.exitCode, out: run.stdout.toString(), err: run.stderr.toString() };
 }
 const json = (path: string): Json => JSON.parse(files.get(path)!) as Json;

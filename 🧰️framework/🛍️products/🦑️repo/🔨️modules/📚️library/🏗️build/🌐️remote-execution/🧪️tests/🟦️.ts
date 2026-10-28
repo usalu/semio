@@ -23,7 +23,7 @@ test("capabilities advertise execution, SHA-256 and the API versions Bazel negot
  const cluster=await start({workers:0}),caps=await cluster.client.unary(`${NAMESPACE_V1}.Capabilities/GetCapabilities`,{});
  expect(caps.execution_capabilities).toMatchObject({exec_enabled:true,digest_function:1});
  expect(caps.cache_capabilities).toMatchObject({digest_functions:[1],max_batch_total_size_bytes:4194304,symlink_absolute_path_strategy:2});
- expect([caps.low_api_version.major,caps.low_api_version.minor,caps.high_api_version.major,caps.high_api_version.minor]).toEqual([2,0,2,3]);
+ expect([caps.low_api_version.major,caps.low_api_version.minor,caps.high_api_version.major,caps.high_api_version.minor]).toEqual([2,1,2,3]);
  expect(await code(cluster.client.unary(`${NAMESPACE_V1}.ActionCache/GetActionResult`,{instance_name:"Bad Instance!",action_digest:{hash:"a".repeat(64),size_bytes:1}}))).toBe(GRPC_CODES_V1.INVALID_ARGUMENT);
  expect(await code(cluster.client.unary(`${NAMESPACE_V1}.ActionCache/GetActionResult`,{instance_name:"main",action_digest:{hash:"a".repeat(64),size_bytes:1}}))).toBe(GRPC_CODES_V1.NOT_FOUND);
  expect(await code(cluster.client.unary(`${NAMESPACE_V1}.ContentAddressableStorage/FindMissingBlobs`,{instance_name:"main",blob_digests:[{hash:"zz",size_bytes:1}]}))).toBe(GRPC_CODES_V1.INVALID_ARGUMENT);
@@ -56,9 +56,13 @@ test("a failing action reports its exit code and is not cached; a missing execut
  expect(missing.response.result.exit_code).toBe(127);
 });
 
-test("directory outputs come back as a Tree with children, executable bits and symbolic links; symlink outputs are reported",async()=>{
+test("directory outputs come back as a Tree with children, executable bits and symbolic links; symlink outputs are reported; a REAPI 2.0 command is refused and a 2.1 command that also fills the deprecated fields is served from output_paths alone",async()=>{
  const cluster=await start({workers:1}),script="mkdir -p out/sub; echo A > out/sub/a.txt; echo B > out/b.sh; chmod +x out/b.sh; ln -s sub/a.txt out/link; ln -s out/b.sh top-link; mkdir -p out/empty";
- const action=await cluster.action({arguments:["/bin/sh","-c",script],outputDirectories:["out"],outputFiles:["top-link"]}),run=await cluster.execute(action),result=run.response.result;
+ for(const declared of [{outputFiles:["top-link"]},{outputDirectories:["out"]},{outputFiles:["top-link"],outputDirectories:["out"]}]){
+  const refused=await cluster.execute(await cluster.action({arguments:["/bin/sh","-c",script],...declared}));
+  expect(refused.response.status.code,JSON.stringify(declared)).toBe(GRPC_CODES_V1.INVALID_ARGUMENT);
+ }
+ const action=await cluster.action({arguments:["/bin/sh","-c",script],outputPaths:["out","top-link"],outputFiles:["out/b.sh"],outputDirectories:["out/sub"]}),run=await cluster.execute(action),result=run.response.result;
  expect(run.response.status.code).toBe(0);
  expect(result.output_directories).toHaveLength(1);expect(result.output_directories[0].path).toBe("out");
  const tree=decodeProtobufV1(REAPI_V1.tree,(await cluster.content.read("main",{hash:result.output_directories[0].tree_digest.hash,size:result.output_directories[0].tree_digest.size_bytes}))!);
@@ -66,7 +70,7 @@ test("directory outputs come back as a Tree with children, executable bits and s
  expect(tree.root.directories.map((row:any)=>row.name)).toEqual(["empty","sub"]);expect(tree.root.symlinks).toEqual([expect.objectContaining({name:"link",target:"sub/a.txt"})]);
  expect(tree.children).toHaveLength(2);
  const names=tree.children.flatMap((row:any)=>row.files.map((file:any)=>file.name));expect(names).toEqual(["a.txt"]);
- expect(result.output_file_symlinks.map((row:any)=>[row.path,row.target])).toEqual([["top-link","out/b.sh"]]);expect(result.output_symlinks.map((row:any)=>row.path)).toEqual(["top-link"]);
+ expect(result.output_symlinks.map((row:any)=>[row.path,row.target])).toEqual([["top-link","out/b.sh"]]);expect(result.output_file_symlinks).toEqual([]);expect(result.output_directory_symlinks).toEqual([]);
  expect(textOfV1(await cluster.content.read("main",{hash:sha("A\n"),size:2}))).toBe("A\n");
 });
 

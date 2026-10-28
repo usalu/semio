@@ -36,7 +36,9 @@
         "maximumTextBytes": 65536,
         "maximumChunkBytes": 65536,
         "maximumPathUnits": 256,
-        "maximumAncestors": 64
+        "maximumAncestors": 64,
+        "settleMilliseconds": 2000,
+        "maximumSettledRevisions": 4096
       }
     },
     "Case": {
@@ -352,6 +354,28 @@
               "type": "boolean"
             }
           }
+        }
+      }
+    },
+    "PolicyDescriptions": {
+      "const": {
+        "en": {
+          "maximumSourceBytes": "The most bytes of one source file a revision captures (8 MiB).",
+          "maximumTextBytes": "The most bytes of a source or schema whose text is retained (64 KiB): schemas and policy files are read under this ceiling.",
+          "maximumChunkBytes": "The size of one read while a file is hashed (64 KiB).",
+          "maximumPathUnits": "The most UTF-16 units of an absolute source path.",
+          "maximumAncestors": "The most directory levels between the base and a captured source.",
+          "settleMilliseconds": "How long a source must be unchanged before its revision is remembered by file identity.",
+          "maximumSettledRevisions": "The most settled revisions remembered at once."
+        },
+        "de": {
+          "maximumSourceBytes": "Die meisten Bytes einer Quelldatei, die eine Revision erfasst (8 MiB).",
+          "maximumTextBytes": "Die meisten Bytes einer Quelle oder eines Schemas, deren Text behalten wird (64 KiB): Schemas und Richtliniendateien werden unter dieser Obergrenze gelesen.",
+          "maximumChunkBytes": "Die Größe eines Lesevorgangs beim Hashen einer Datei (64 KiB).",
+          "maximumPathUnits": "Die meisten UTF-16-Einheiten eines absoluten Quellpfads.",
+          "maximumAncestors": "Die meisten Verzeichnisebenen zwischen Basis und erfasster Quelle.",
+          "settleMilliseconds": "Wie lange eine Quelle unverändert sein muss, bevor ihre Revision unter der Dateiidentität gemerkt wird.",
+          "maximumSettledRevisions": "Die meisten gleichzeitig gemerkten beruhigten Revisionen."
         }
       }
     }

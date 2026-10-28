@@ -1,3 +1,4 @@
+import {LANGUAGE_PROTOCOL_V1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import { afterAll, beforeAll, expect, test } from "bun:test";
 import progressSchema from "../../../🧬️schema/📈️progress.json";
 import { createScriptProcessEnvelope, withScriptProcessEnvelope, createIssuedResourceControlV1, createRenewableIssuedResourceControlV1 } from "../../../🟦️.ts";
@@ -6,7 +7,7 @@ import { ProgressDeadlineExpiredV1 } from "../../../../../../⏱️budget/🟦�
 import { runOwnedCommand } from "../../../../../../🎛️owned-execution/🟦️.ts";
 
 const within = <T>(run: (control: ReturnType<typeof createIssuedResourceControlV1>, invocation: any) => Promise<T>) => withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "fixture:progress-deadline", maximumElapsedMilliseconds: 60000 }, {}, Date.now()), (invocation) => run(createIssuedResourceControlV1(invocation, "fixture:progress", 0), invocation));
-const languageVariables = progressSchema.const.firstFailure.systemVariables, savedLanguage = languageVariables.map(name => [name, process.env[name]] as const);
+const languageVariables = [LANGUAGE_PROTOCOL_V1.explicitVariable,LANGUAGE_PROTOCOL_V1.preferenceListVariable,...LANGUAGE_PROTOCOL_V1.environmentOrder], savedLanguage = languageVariables.map(name => [name, process.env[name]] as const);
 beforeAll(() => { for (const name of languageVariables) delete process.env[name]; });
 afterAll(() => { for (const [name, value] of savedLanguage) { if (value === undefined) delete process.env[name]; else process.env[name] = value; } });
 const pause = (milliseconds: number) => new Promise<void>((accept) => setTimeout(accept, milliseconds));

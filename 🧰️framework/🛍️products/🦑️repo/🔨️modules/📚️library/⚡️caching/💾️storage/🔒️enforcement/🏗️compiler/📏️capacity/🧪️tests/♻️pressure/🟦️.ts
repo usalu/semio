@@ -9,11 +9,12 @@ import{repositoryLeaseDirectoryV1}from"../../../../📦️budget/📥️opening/
 import{repositoryCompilerLayoutV1}from"../../../📍️layout/🟦️.ts";
 import fixture from"../♻️recovery.json"with{type:"json"};
 import pressure from"./🔣️.json"with{type:"json"};
+import{privateRepositoryWorkspaceV1}from"../../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
-test("compact headroom recovery runs under the budgeted preparation control chain of an ordinary compiler store",async()=>receiveScriptProcessInvocation(process.env,async original=>{
- if(process.platform!=="darwin")return;
+test.skipIf(process.platform!=="darwin")("compact headroom recovery runs under the budgeted preparation control chain of an ordinary compiler store",async()=>receiveScriptProcessInvocation(process.env,async original=>{
  const base=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!base)throw Error("Original diagnostic fixture directory required");
- const api=await import("../../🟦️.ts"),recovery=await import("../../♻️recovery/🟦️.ts"),workspace=process.cwd(),leaseDirectory=repositoryLeaseDirectoryV1(workspace),outer=scriptCompilerAdmissionControlV1(original,"rust:pressure-chain",pressure.budgetMilliseconds);
+ const api=await import("../../🟦️.ts"),recovery=await import("../../♻️recovery/🟦️.ts"),workspace=repository.root,leaseDirectory=repositoryLeaseDirectoryV1(workspace),outer=scriptCompilerAdmissionControlV1(original,"rust:pressure-chain",pressure.budgetMilliseconds);
  await withRequestedIssuedResourceControlV1(outer,pressure.preparationMilliseconds,preparation=>withRequestedIssuedResourceControlV1(preparation,0,async control=>{
   expect(control.signal).not.toBe(original.control.signal);
   const parent=mkdtempSync(join(resolve(base),"pc-")),directory=join(parent,"i"),maximumPhysicalBytes=fixture.imageBytes+1048576;let image:Awaited<ReturnType<typeof openNativeImageStorageV1>>|undefined,storage:Awaited<ReturnType<typeof acquireNativeStorageV1>>|undefined,policy:Parameters<typeof recoverNativeStorageReservationV1>[0]["policy"]|undefined;

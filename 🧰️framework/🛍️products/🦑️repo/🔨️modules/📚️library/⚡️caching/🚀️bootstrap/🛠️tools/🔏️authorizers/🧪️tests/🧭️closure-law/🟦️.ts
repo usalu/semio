@@ -4,7 +4,7 @@ import{dirname,join,posix,resolve}from"node:path";
 import{fileURLToPath}from"node:url";
 import{createRequire}from"node:module";
 import{captureNxAuthorizerSourcesV1,nxAuthorizerCapturedBytesV1,nxAuthorizerCapturedImportsV1}from"../../🟦️.ts";
-import{closureRefusalV1,closureSpecifierKindV1,closureTargetSchemesV1}from"../../🧭️sites/🟦️.ts";
+import{closureRefusalCatalogPathV1,closureRefusalV1,closureSpecifierKindV1,closureTargetSchemesV1}from"../../🧭️sites/🟦️.ts";
 import{astSitesV1}from"../../🧭️sites/🧪️tests/🔭️oracle/🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json";
 import selection from"../../../../../../📦️packages/🟦️typescript/🏗️build/⌨️command/🧭️selection/🧬️schema/🔣️json/🟦️.ts";
@@ -62,4 +62,9 @@ test("declared roots and installed package markers hold",async()=>{
  const markers=new Set<string>();for(const map of imports.values())for(const target of Object.values(map))if(target.startsWith(closureTargetSchemesV1.installed))markers.add(target);
  expect(markers.size).toBeGreaterThan(0);
  for(const marker of markers){const body=marker.slice(closureTargetSchemesV1.installed.length),at=body.lastIndexOf("@"),name=body.slice(0,at),version=body.slice(at+1),manifest=JSON.parse(readFileSync(installedManifestV1(name),"utf8"))as{version:string};expect(manifest.version,marker).toBe(version);}
+},600000);
+
+/** 📍️ A loader renders every refusal after authentication from the catalog image of its snapshot, so every command closure must carry the catalog file. */
+test("every command closure carries the refusal catalog",async()=>{
+ for(const entry of kernels){const source=await captureNxAuthorizerSourcesV1(root,entry,new AbortController().signal,{installed:true});expect([...nxAuthorizerCapturedBytesV1(source).keys()],entry).toContain(closureRefusalCatalogPathV1);}
 },600000);

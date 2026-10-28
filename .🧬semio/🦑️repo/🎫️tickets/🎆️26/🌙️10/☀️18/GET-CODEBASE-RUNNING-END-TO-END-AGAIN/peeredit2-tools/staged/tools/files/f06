@@ -1,0 +1,410 @@
+{
+  "version": 1,
+  "id": "build",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "observation.closure-provider-incomplete": {
+      "en": "Closure provider with answer and settle required",
+      "de": "Ein Abschluss-Anbieter mit answer und settle ist erforderlich"
+    },
+    "observation.inference-header-unbounded": {
+      "en": "Bounded regular inference header required: {file}",
+      "de": "Beschränkter regulärer Inferenz-Header erforderlich: {file}"
+    },
+    "observation.inference-header-incomplete": {
+      "en": "Complete inference header required: {file}",
+      "de": "Vollständiger Inferenz-Header erforderlich: {file}"
+    },
+    "observation.inference-record-header-open": {
+      "en": "Closed inference record header required: {file}",
+      "de": "Geschlossener Inferenz-Record-Header erforderlich: {file}"
+    },
+    "bazel.workspaces-reclaim-rule-required": {
+      "en": "Declared Bazel workspaces reclaim rule required",
+      "de": "Deklarierte Rückgewinnungsregel der Bazel-Workspaces erforderlich"
+    },
+    "nx.failure-tail-size-required": {
+      "en": "Bounded Nx failure tail size required",
+      "de": "Beschränkte Größe des Nx-Fehlerendes erforderlich"
+    },
+    "closure.key-unknown": {
+      "en": "Known command closure key required: {key}",
+      "de": "Bekannter Schlüssel des Befehlsabschlusses erforderlich: {key}"
+    },
+    "closure.read-through-queries-only": {
+      "en": "A command closure is read through its queries only: {name}",
+      "de": "Ein Befehlsabschluss wird nur über seine Abfragen gelesen: {name}"
+    },
+    "closure.recipe-unknown": {
+      "en": "Known command closure recipe required: {recipe}",
+      "de": "Bekanntes Rezept des Befehlsabschlusses erforderlich: {recipe}"
+    },
+    "closure.scripts-unbound": {
+      "en": "Bound command closure scripts required for {workspace}",
+      "de": "Gebundene Skripte des Befehlsabschlusses erforderlich für {workspace}"
+    },
+    "closure.late-cache-required": {
+      "en": "A script input cache made for late command closures is required for {workspace}",
+      "de": "Ein für späte Befehlsabschlüsse angelegter Skripteingabe-Zwischenspeicher ist erforderlich für {workspace}"
+    },
+    "closure.query-unknown": {
+      "en": "Known command closure query required: {query}",
+      "de": "Bekannte Abfrage des Befehlsabschlusses erforderlich: {query}"
+    },
+    "closure.symbolic-fallback-required": {
+      "en": "A symbolic fallback is required in the late mode",
+      "de": "Im späten Modus ist ein symbolischer Rückfall erforderlich"
+    },
+    "closure.literal-inputs-unknown": {
+      "en": "Known literal module inputs of a command closure recipe required: {digest}",
+      "de": "Bekannte literale Modul-Eingaben eines Befehlsabschluss-Rezepts erforderlich: {digest}"
+    },
+    "closure.derived-question-unknown": {
+      "en": "A known derived command walk question is required: {question}",
+      "de": "Eine bekannte abgeleitete Frage nach dem Befehlsdurchlauf ist erforderlich: {question}"
+    },
+    "closure.provider-closures-required": {
+      "en": "Closed script provider closure policy required",
+      "de": "Geschlossene Richtlinie der Skriptanbieter-Abschlüsse erforderlich"
+    },
+    "closure.provider-project-required": {
+      "en": "The directory of the script provider designation {designation} must be the providers project: its project file declares the designation under metadata.semio.scriptProviders",
+      "de": "Das Verzeichnis der Skriptanbieter-Bezeichnung {designation} muss das Anbieterprojekt sein: seine Projektdatei deklariert die Bezeichnung unter metadata.semio.scriptProviders"
+    },
+    "closure.provider-designation-differs": {
+      "en": "The providers project declares {designation}, but the command walks resolve ports through another script provider designation",
+      "de": "Das Anbieterprojekt deklariert {designation}, aber die Befehlsdurchläufe lösen Ports über eine andere Skriptanbieter-Bezeichnung auf"
+    },
+    "closure.provider-port-unknown": {
+      "en": "The script provider designation names no port {port}",
+      "de": "Die Skriptanbieter-Bezeichnung nennt keinen Port {port}"
+    },
+    "closure.provider-generated-import": {
+      "en": "The closure of script provider {port} imports generated outputs of {targets}: a provider closure may not import a generated output, because the projects that name it cannot depend on its producer; import it from the command instead",
+      "de": "Der Abschluss des Skriptanbieters {port} importiert generierte Ausgaben von {targets}: ein Anbieterabschluss darf keine generierte Ausgabe importieren, weil die Projekte, die ihn nennen, nicht von ihrem Erzeuger abhängen können; importiere sie stattdessen im Befehl"
+    },
+    "closure.tool-unknown": {
+      "en": "The shared closure policy declares no tool command {name}",
+      "de": "Die Richtlinie der geteilten Abschlüsse deklariert keinen Werkzeugbefehl {name}"
+    },
+    "closure.provider-entry-stale": {
+      "en": "The provider closures {port} changed while a query over a command closure was answered; run the command again",
+      "de": "Die Anbieterabschlüsse {port} haben sich geändert, während eine Abfrage über einen Befehlsabschluss beantwortet wurde; führe den Befehl erneut aus"
+    },
+    "closure.walk-views-required": {
+      "en": "Closed command walk view policy required",
+      "de": "Geschlossene Richtlinie der Sichten auf Befehlsdurchläufe erforderlich"
+    },
+    "closure.derived-provider-differs": {
+      "en": "The derived command walk was recorded under another script provider designation: {provider}",
+      "de": "Der abgeleitete Befehlsdurchlauf wurde unter einer anderen Skriptanbieter-Bezeichnung aufgezeichnet: {provider}"
+    },
+    "assembly.symbolic-group-without-list": {
+      "en": "Symbolic input group {name} of project {project} has no input list; the record carries {record}",
+      "de": "Die symbolische Eingabegruppe {name} des Projekts {project} hat keine Eingabeliste; der Datensatz enthält {record}"
+    },
+    "json.indent-out-of-range": {
+      "en": "Indent of 0 to 10 spaces required",
+      "de": "Einrückung von 0 bis 10 Leerzeichen erforderlich"
+    },
+    "json.value-required": {
+      "en": "A JSON value is required",
+      "de": "Ein JSON-Wert ist erforderlich"
+    },
+    "graph.released-read": {
+      "en": "Released build graph read: its content was dropped after planning",
+      "de": "Gelesener freigegebener Build-Graph: sein Inhalt wurde nach der Planung verworfen"
+    },
+    "nx-engine.package-export-missing": {
+      "en": "Private Nx engine workspace package export missing: {specifier}",
+      "de": "Export des privaten Workspace-Pakets der Nx-Engine fehlt: {specifier}"
+    },
+    "nx-engine.package-file-missing": {
+      "en": "Private Nx engine workspace package file missing: {specifier} -> {exported}",
+      "de": "Datei des privaten Workspace-Pakets der Nx-Engine fehlt: {specifier} -> {exported}"
+    },
+    "nx-engine.table-required": {
+      "en": "Closed Nx engine unkeyed domain table required",
+      "de": "Geschlossene Tabelle der nicht geschluesselten Nx-Engine-Domaenen erforderlich"
+    },
+    "nx-engine.family-required": {
+      "en": "Known Nx engine family required (generic or native): {family}",
+      "de": "Bekannte Nx-Engine-Familie erforderlich (generic oder native): {family}"
+    },
+    "nx.caller-required": {
+      "en": "Original Repo-to-Nx caller required",
+      "de": "Ursprünglicher Repo-zu-Nx-Aufrufer erforderlich"
+    },
+    "nx.child-selection-undeclared": {
+      "en": "Undeclared Repo-to-Nx child selection: {selection}",
+      "de": "Nicht deklarierte Repo-zu-Nx-Kindauswahl: {selection}"
+    },
+    "nx.original-child-selection-undeclared": {
+      "en": "Undeclared original Nx child selection: {selection}",
+      "de": "Nicht deklarierte ursprüngliche Nx-Kindauswahl: {selection}"
+    },
+    "nx.child-data-open": {
+      "en": "Closed original Nx child data required",
+      "de": "Geschlossene ursprüngliche Nx-Kinddaten erforderlich"
+    },
+    "bazel.output-outside-workspace": {
+      "en": "Build output must be inside the workspace: {path}",
+      "de": "Die Build-Ausgabe muss innerhalb des Workspace liegen: {path}"
+    },
+    "bazel.output-ancestry-not-real": {
+      "en": "Build output requires real directory ancestry: {current}",
+      "de": "Die Build-Ausgabe verlangt echte Verzeichnis-Vorfahren: {current}"
+    },
+    "bazel.task-option-required": {
+      "en": "Build task requires option {key}: {task}",
+      "de": "Die Build-Aufgabe verlangt die Option {key}: {task}"
+    },
+    "bazel.task-manifest-required": {
+      "en": "Closed Bazel task manifest required",
+      "de": "Geschlossenes Bazel-Task-Manifest erforderlich"
+    },
+    "bazel.implementation-required": {
+      "en": "Exact captured Bazel implementation required",
+      "de": "Exakt erfasste Bazel-Implementierung erforderlich"
+    },
+    "bazel.runtime-channel-workspace-required": {
+      "en": "Bazel runtime channel requires the manifest's own workspace",
+      "de": "Der Bazel-Laufzeitkanal verlangt den eigenen Workspace des Manifests"
+    },
+    "bazel.runtime-channel-required": {
+      "en": "Closed Bazel runtime channel required",
+      "de": "Geschlossener Bazel-Laufzeitkanal erforderlich"
+    },
+    "bazel.build-modes-conflict": {
+      "en": "Conflicting build modes: task {task} is {configuration}, the original caller is {mode}",
+      "de": "Widersprüchliche Build-Modi: Task {task} ist {configuration}, der ursprüngliche Aufrufer ist {mode}"
+    },
+    "bazel.replayed-output-missing": {
+      "en": "Declared output of a replayed Bazel task was not produced: {task} {path}",
+      "de": "Die deklarierte Ausgabe einer wiederholten Bazel-Aufgabe wurde nicht erzeugt: {task} {path}"
+    },
+    "bazel.snapshot-link-target-required": {
+      "en": "Bazel snapshot link requires an existing file or directory target",
+      "de": "Der Bazel-Snapshot-Link verlangt ein vorhandenes Datei- oder Verzeichnisziel"
+    },
+    "bazel.output-directory-changed-during-mode-update": {
+      "en": "Original Bazel output directory changed during mode update",
+      "de": "Das ursprüngliche Bazel-Ausgabeverzeichnis hat sich während der Modus-Aktualisierung geändert"
+    },
+    "bazel.output-directory-changed-before-mode-update": {
+      "en": "Original Bazel output directory changed before mode update",
+      "de": "Das ursprüngliche Bazel-Ausgabeverzeichnis hat sich vor der Modus-Aktualisierung geändert"
+    },
+    "bazel.output-snapshot-invalid": {
+      "en": "Invalid Bazel output snapshot",
+      "de": "Ungültiger Bazel-Ausgabe-Snapshot"
+    },
+    "bazel.restored-output-not-directory": {
+      "en": "Restored Bazel output requires an ordinary directory",
+      "de": "Die wiederhergestellte Bazel-Ausgabe verlangt ein gewöhnliches Verzeichnis"
+    },
+    "bazel.snapshot-file-identity-invalid": {
+      "en": "Invalid Bazel snapshot file identity",
+      "de": "Ungültige Dateiidentität im Bazel-Snapshot"
+    },
+    "bazel.orchestration-task-changed": {
+      "en": "Original Bazel orchestration task changed",
+      "de": "Die ursprüngliche Bazel-Orchestrierungsaufgabe hat sich geändert"
+    },
+    "bazel.orchestration-declaration-changed": {
+      "en": "Original Bazel orchestration declaration changed",
+      "de": "Die ursprüngliche Bazel-Orchestrierungsdeklaration hat sich geändert"
+    },
+    "bazel.build-command-required": {
+      "en": "Build command required: {task}",
+      "de": "Build-Befehl erforderlich: {task}"
+    },
+    "bazel.task-phase-expired": {
+      "en": "Inherited Bazel task phase expired",
+      "de": "Die geerbte Phase der Bazel-Aufgabe ist abgelaufen"
+    },
+    "bazel.cancellation-control-required": {
+      "en": "Original loopback Bazel action cancellation control required",
+      "de": "Ursprüngliche Loopback-Abbruchsteuerung der Bazel-Aktion erforderlich"
+    },
+    "bazel.handshake-cancelled": {
+      "en": "Original Bazel handshake cancelled",
+      "de": "Der ursprüngliche Bazel-Handshake wurde abgebrochen"
+    },
+    "bazel.handshake-deadline-exhausted": {
+      "en": "Original Bazel handshake deadline exhausted",
+      "de": "Die Frist des ursprünglichen Bazel-Handshakes ist erschöpft"
+    },
+    "bazel.work-request-cancelled": {
+      "en": "Bazel work request cancelled",
+      "de": "Die Bazel-Arbeitsanfrage wurde abgebrochen"
+    },
+    "bazel.action-control-disconnected": {
+      "en": "Original Bazel action control disconnected",
+      "de": "Die ursprüngliche Bazel-Aktionssteuerung wurde getrennt"
+    },
+    "bazel.action-control-message-too-large": {
+      "en": "Bazel action control exceeds its bounded message",
+      "de": "Die Bazel-Aktionssteuerung überschreitet ihre begrenzte Nachrichtengröße"
+    },
+    "bazel.action-control-invalid": {
+      "en": "Invalid Bazel action control",
+      "de": "Ungültige Bazel-Aktionssteuerung"
+    },
+    "bazel.invocation-cancelled": {
+      "en": "Original Bazel invocation cancelled",
+      "de": "Der ursprüngliche Bazel-Aufruf wurde abgebrochen"
+    },
+    "bazel.action-control-event-invalid": {
+      "en": "Invalid Bazel action control event",
+      "de": "Ungültiges Ereignis der Bazel-Aktionssteuerung"
+    },
+    "bazel.action-termination-receipt-deadline-exhausted": {
+      "en": "Bazel action termination receipt deadline exhausted",
+      "de": "Die Frist für den Beendigungsbeleg der Bazel-Aktion ist erschöpft"
+    },
+    "bazel.birth-input-required": {
+      "en": "Bounded regular Bazel birth input required",
+      "de": "Begrenzte reguläre Birth-Eingabe der Bazel-Aktion erforderlich"
+    },
+    "bazel.birth-input-shortened": {
+      "en": "Bazel birth input shortened",
+      "de": "Die Birth-Eingabe der Bazel-Aktion wurde verkürzt"
+    },
+    "bazel.birth-input-changed": {
+      "en": "Bazel birth input changed: {path}",
+      "de": "Die Birth-Eingabe der Bazel-Aktion hat sich geändert: {path}"
+    },
+    "bazel.birth-handshake-deadline-exhausted": {
+      "en": "Bazel action birth handshake deadline exhausted",
+      "de": "Die Frist des Birth-Handshakes der Bazel-Aktion ist erschöpft"
+    },
+    "bazel.birth-rendezvous-required": {
+      "en": "Bazel birth rendezvous required",
+      "de": "Birth-Rendezvous der Bazel-Aktion erforderlich"
+    },
+    "bazel.birth-wire-expectation-required": {
+      "en": "Bazel birth wire expectation required",
+      "de": "Erwartung der Birth-Leitung der Bazel-Aktion erforderlich"
+    },
+    "bazel.birth-deadline-exhausted": {
+      "en": "Original Bazel action birth deadline exhausted",
+      "de": "Die Birth-Frist der ursprünglichen Bazel-Aktion ist erschöpft"
+    },
+    "bazel.birth-owned-rendezvous-required": {
+      "en": "Owned Bazel birth rendezvous required",
+      "de": "Eigenes Birth-Rendezvous der Bazel-Aktion erforderlich"
+    },
+    "bazel.birth-required": {
+      "en": "Closed Bazel action birth required",
+      "de": "Geschlossener Birth der Bazel-Aktion erforderlich"
+    },
+    "bazel.birth-message-too-large": {
+      "en": "Bazel birth message exceeds finite control boundary",
+      "de": "Die Birth-Nachricht der Bazel-Aktion überschreitet die endliche Steuergrenze"
+    },
+    "bazel.birth-parent-disconnected": {
+      "en": "Original Bazel birth parent disconnected",
+      "de": "Der ursprüngliche Birth-Elternprozess der Bazel-Aktion wurde getrennt"
+    },
+    "bazel.birth-response-too-large": {
+      "en": "Bazel birth response exceeds finite control boundary",
+      "de": "Die Birth-Antwort der Bazel-Aktion überschreitet die endliche Steuergrenze"
+    },
+    "bazel.birth-response-refused": {
+      "en": "Bazel birth response refused",
+      "de": "Die Birth-Antwort der Bazel-Aktion wurde abgelehnt"
+    },
+    "bazel.birth-parent-cancelled": {
+      "en": "Original Bazel birth parent cancelled",
+      "de": "Der ursprüngliche Birth-Elternprozess der Bazel-Aktion wurde abgebrochen"
+    },
+    "bazel.birth-termination-receipt-deadline-exhausted": {
+      "en": "Bazel birth termination receipt deadline exhausted",
+      "de": "Die Frist für den Beendigungsbeleg des Bazel-Birth ist erschöpft"
+    },
+    "bazel.action-manifest-output-expected": {
+      "en": "Expected Bazel action manifest output [dependency snapshots]",
+      "de": "Erwartete Ausgabe des Bazel-Aktionsmanifests [Abhängigkeits-Snapshots]"
+    },
+    "bazel.child-deadline-exhausted": {
+      "en": "Original Bazel child deadline exhausted",
+      "de": "Die Frist des ursprünglichen Bazel-Kindprozesses ist erschöpft"
+    },
+    "bazel.birth-manifest-changed": {
+      "en": "Original Bazel action birth manifest changed",
+      "de": "Das ursprüngliche Birth-Manifest der Bazel-Aktion hat sich geändert"
+    },
+    "bazel.work-request-manifest-required": {
+      "en": "Bazel work request requires a manifest and an output",
+      "de": "Die Bazel-Arbeitsanfrage verlangt ein Manifest und eine Ausgabe"
+    },
+    "bazel.work-action-arguments-expected": {
+      "en": "Expected Bazel work-action --persistent_worker or one @flagfile",
+      "de": "Erwartet wurde die Bazel-Arbeitsaktion --persistent_worker oder ein @flagfile"
+    },
+    "bazel.orchestrated-tasks-adapter-only": {
+      "en": "Orchestrated Bazel tasks run only in the adapter implementation",
+      "de": "Orchestrierte Bazel-Tasks laufen nur in der Adapter-Implementierung"
+    },
+    "bazel.loader-identity-required": {
+      "en": "Captured Bazel loader identity required",
+      "de": "Erfasste Bazel-Loader-Identität erforderlich"
+    },
+    "bazel.task-entry-loader-required": {
+      "en": "Bazel task entry requires its captured implementation loader",
+      "de": "Der Einstieg der Bazel-Aufgabe verlangt ihren erfassten Implementierungs-Loader"
+    },
+    "bazel.cleanup-refusal-retained": {
+      "en": "[bazel] Cleanup refusal retained after primary: {message}",
+      "de": "[bazel] Aufräum-Ablehnung nach der primären Ablehnung behalten: {message}"
+    },
+    "bazel.scope-table-required": {
+      "en": "Closed Bazel implementation scope table required",
+      "de": "Geschlossene Bazel-Implementierungs-Scope-Tabelle erforderlich"
+    },
+    "bazel.scope-unique-required": {
+      "en": "Unique Bazel implementation scope required: {id}",
+      "de": "Eindeutiger Bazel-Implementierungs-Scope erforderlich: {id}"
+    },
+    "scheduling.table-required": {
+      "en": "Closed build scheduling domain table required",
+      "de": "Geschlossene Tabelle der Build-Scheduling-Domänen erforderlich"
+    },
+    "scheduling.domain-required": {
+      "en": "Declared build scheduling domain required: {id}",
+      "de": "Deklarierte Build-Scheduling-Domäne erforderlich: {id}"
+    },
+    "scheduling.snapshot-name-required": {
+      "en": "Snapshot file name ending in .json required: {name}",
+      "de": "Snapshot-Dateiname mit Endung .json erforderlich: {name}"
+    },
+    "scheduling.entry-required": {
+      "en": "The entry module of a captured implementation cannot be scheduling code: {entry}",
+      "de": "Das Einstiegsmodul einer erfassten Implementierung darf kein Scheduling-Code sein: {entry}"
+    },
+    "bazel.scope-declared-required": {
+      "en": "Declared Bazel implementation scope required: {id}",
+      "de": "Deklarierter Bazel-Implementierungs-Scope erforderlich: {id}"
+    },
+    "closure.source-not-admitted": {
+      "en": "Implementation Source is not admitted by parent: {path}",
+      "de": "Die Implementierungs-Quelle wird vom Elternprozess nicht zugelassen: {path}"
+    },
+    "closure.source-differs": {
+      "en": "Captured implementation Source differs from admitted parent",
+      "de": "Die erfasste Implementierungs-Quelle weicht vom zugelassenen Elternprozess ab"
+    },
+    "closure.capacity-exceeded": {
+      "en": "Implementation Source closure capacity exceeded: {path}",
+      "de": "Die Kapazität des Implementierungs-Quellabschlusses ist überschritten: {path}"
+    },
+    "bazel.scope-table-refused": {
+      "en": "[bazel] the declared implementation scope table is refused ({reason}), every action keeps the full executor closure",
+      "de": "[bazel] die deklarierte Implementierungs-Scope-Tabelle wird abgelehnt ({reason}), jede Aktion behält die volle Executor-Hülle"
+    }
+  }
+}

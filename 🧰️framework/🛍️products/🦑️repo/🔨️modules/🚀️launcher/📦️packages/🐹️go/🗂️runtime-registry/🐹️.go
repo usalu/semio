@@ -73,6 +73,9 @@ type Registry struct {
 	Language  struct {
 		Protocol string `json:"protocol"`
 	} `json:"language"`
+	Restart struct {
+		Policy string `json:"policy"`
+	} `json:"restart"`
 	Routing struct {
 		Catalogue string `json:"catalogue"`
 	} `json:"routing"`
@@ -108,7 +111,7 @@ type RegistryError struct {
 func (e RegistryError) Error() string { return e.Path + ": " + e.Kind + " " + e.Subject }
 
 // 🔢️RequiredMessages are the text identifiers the launcher and the runtime guard of the build implementation print; the registry must carry every one in every language.
-var RequiredMessages = []string{"runtimeUnknown", "runtimeUnsupported", "entryUnknown", "entryMissing", "provisioning", "downloading", "waitingForPeer", "ready", "downloadFailed", "integrityFailed", "extractFailed", "probeFailed", "pathTooLong", "cacheUnavailable", "cancelled", "handOffFailed", "domainNeedsInstall", "helpNative", "helpDashboard", "helpOsMcp", "versionRuntimeReady", "versionRuntimeAbsent", "versionImplementation", "versionImplementationUnknown", "languageRefusal", "languageUnknownFlag", "languageUnknownVariable", "mirrorRefused", "redirectRefused", "extractTooLarge", "unexpected", "guardTest", "guardMissing", "guardLoop"}
+var RequiredMessages = []string{"runtimeUnknown", "runtimeUnsupported", "entryUnknown", "entryMissing", "provisioning", "downloading", "waitingForPeer", "ready", "downloadFailed", "integrityFailed", "extractFailed", "probeFailed", "pathTooLong", "cacheUnavailable", "cancelled", "handOffFailed", "domainNeedsInstall", "helpNative", "helpDashboard", "helpOsMcp", "versionRuntimeReady", "versionRuntimeAbsent", "versionImplementation", "versionImplementationUnknown", "mirrorRefused", "redirectRefused", "extractTooLarge", "unexpected", "guardTest", "guardMissing", "guardLoop"}
 
 var (
 	shaPattern          = regexp.MustCompile(`^[a-f0-9]{64}$`)
@@ -128,8 +131,14 @@ func LoadRegistry(root string) (*Registry, error) {
 	return DecodeRegistry(path, raw)
 }
 
-// 🔬️DecodeRegistry decodes a registry document strictly and validates its constraints.
+// 🔬️DecodeRegistry reads the contract of a registry document before anything else, so a registry of another contract is refused as such (with the command that rebuilds the launcher) and never as a malformed field of a shape this launcher does not know, then decodes it strictly and validates its constraints.
 func DecodeRegistry(path string, raw []byte) (*Registry, error) {
+	var header struct {
+		Contract *int `json:"contract"`
+	}
+	if json.Unmarshal(raw, &header) == nil && header.Contract != nil && *header.Contract != Contract {
+		return nil, RegistryError{Path: path, Kind: "contract", Found: *header.Contract}
+	}
 	decoder := json.NewDecoder(bytes.NewReader(raw))
 	decoder.DisallowUnknownFields()
 	registry := &Registry{}
@@ -153,7 +162,7 @@ func unknownField(err error) string {
 }
 
 func (r *Registry) problem() (kind, subject string) {
-	if len(r.Languages) < 2 || r.Language.Protocol == "" || r.Routing.Catalogue == "" || r.Cache.MaximumPathLength != 256 || len(r.Cache.ToolsPartition) == 0 || len(r.Cache.User) == 0 {
+	if len(r.Languages) < 2 || r.Language.Protocol == "" || r.Restart.Policy == "" || r.Routing.Catalogue == "" || r.Cache.MaximumPathLength != 256 || len(r.Cache.ToolsPartition) == 0 || len(r.Cache.User) == 0 {
 		return "incomplete", "-"
 	}
 	if _, ok := r.Runtimes[r.Selected]; !ok {
@@ -284,3 +293,12 @@ func (rt *Runtime) ExecutableName() string {
 }
 
 // #endregion 🗂️Registry
+
+// 📥️InstallCommand is the exact command that rebuilds and reinstalls the launcher of the checkout whose registry is at registryPath.
+func InstallCommand(registryPath string) string {
+	directory := filepath.Join(filepath.Dir(filepath.Dir(registryPath)), "📥️install")
+	if runtime.GOOS == "windows" {
+		return `powershell -NoProfile -ExecutionPolicy Bypass -File "` + filepath.Join(directory, "🔵️.ps1") + `"`
+	}
+	return `bash "` + filepath.Join(directory, "🐚️.sh") + `"`
+}

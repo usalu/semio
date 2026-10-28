@@ -1,0 +1,37 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🟦️.ts": {
+  "file": "00.ts",
+  "base": "05e6f4696e7c8e8ad694463cc39a7b596d86193ea0224d9ffeeddbed39cd0f12",
+  "new": "56fbb4758d3fb47e1a2deded9316fd9bc6d609b4c116f1e694b64ffdc81d4bb0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🟦️.ts": {
+  "file": "01.ts",
+  "base": null,
+  "new": "014cc998c11a457e8b602335288836275d2d4a67d36947f8319ca193cf599952"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧬️schema/🔣️.json": {
+  "file": "02.json",
+  "base": null,
+  "new": "134aed737f9b38decc73dbc5de4b15fccff017268650616d7d167ff001062f99"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/📤️relevance/🟦️.ts": {
+  "file": "03.ts",
+  "base": null,
+  "new": "6e1fe94053ed5a5f05df75753ce96faea852e7457adb2f91e68b877fb20e274e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🚪️command/🟦️.ts": {
+  "file": "04.ts",
+  "base": null,
+  "new": "06adabdeef713d0b66b97c53dc67ac7973d7cca39287e904a80ddcd1c47860e2"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧪️tests/🟦️.ts": {
+  "file": "05.ts",
+  "base": null,
+  "new": "a658dc7e89d97b8e51e497a3958cdc8f847b696d4941067f25a3ab55df01996b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧪️tests/🐍️.py": {
+  "file": "06.py",
+  "base": null,
+  "new": "f3810333a68ab95067d57eca3a13d416e64b2b6e969e63decf9815c308d879f3"
+ }
+}

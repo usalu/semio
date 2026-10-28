@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "owner": "repository:genuine-test",
+  "maximumElapsedMilliseconds": 290000,
+  "childTimeoutMilliseconds": 120000,
+  "buildMode": "prototype",
+  "artifactRoute": "genuine-test",
+  "births": [
+    { "id": "setup", "arguments": ["tools", "setup", "all"], "sdk": false, "environment": {} },
+    { "id": "setup-sdk", "arguments": ["tools", "setup", "all"], "sdk": true, "environment": {}, "after": "SDK required|immutable SDK|NX_TOOLING|tooling identity|Nx SDK" },
+    { "id": "orchestration", "arguments": ["run", "parent:build"], "sdk": true, "environment": { "SEMIO_BUILD_TOOL": "nx" }, "after": "Nx namespace required|Nx caller|orchestration" },
+    { "id": "model", "arguments": ["run", "@semio-tech/repo-lib:test-build-model"], "sdk": true, "environment": {}, "after": "Repo-to-Nx|Undeclared" },
+    { "id": "target-execution", "arguments": ["tools", "setup", "all"], "sdk": false, "environment": {}, "preparation": "target-execution" }
+  ]
+}

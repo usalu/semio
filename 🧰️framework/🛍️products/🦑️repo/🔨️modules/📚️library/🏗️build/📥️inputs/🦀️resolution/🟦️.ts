@@ -1,4 +1,4 @@
-import {createHash} from "node:crypto";
+import {compareUtf8V1, sha256HexV1} from "../../🧂️text-bytes/🟨️.mjs";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type: "json"};
 import {resolveBuildHelpLanguageV1} from "../../⚙️operations/📖️help/🟦️.ts";
@@ -41,8 +41,8 @@ export class CargoResolutionErrorV1 extends Error {
 }
 
 const DEPENDENCY_KINDS = ["dependencies", "build-dependencies", "dev-dependencies"] as const;
-const sha = (value: string): string => createHash("sha256").update(value).digest("hex");
-const bytes = (left: string, right: string): number => Buffer.compare(Buffer.from(left), Buffer.from(right));
+const sha = (value: string): string => sha256HexV1(value);
+const bytes = (left: string, right: string): number => compareUtf8V1(left, right);
 const table = (value: unknown): CargoTomlV1 | undefined => (typeof value === "object" && value !== null && !Array.isArray(value) ? (value as CargoTomlV1) : undefined);
 const at = (directory: string, name: string): string => (directory === "" ? name : `${directory}/${name}`);
 const parent = (directory: string): string => (directory.includes("/") ? directory.slice(0, directory.lastIndexOf("/")) : "");
@@ -182,16 +182,22 @@ export type CargoResolutionContextV1 = {
   toolchain?: Promise<{toolchain: string; config: string}>;
 };
 
-/** 🆕️ Opens a resolution run over a host and, optionally, a receipt store. */
-export function createCargoResolutionContextV1(host: CargoReadHostV1, policy: CargoResolutionPolicyV1, store?: CargoReceiptStoreV1): CargoResolutionContextV1 {
+/** 🆕️ Opens a resolution run over a host and, optionally, a receipt store; `maximumFiles` bounds the parsed files it keeps (least recently read first out, a file read again is parsed again): a graph of thousands of crates parsed every manifest and lock once and kept them all. */
+export function createCargoResolutionContextV1(host: CargoReadHostV1, policy: CargoResolutionPolicyV1, store?: CargoReceiptStoreV1, maximumFiles = Infinity): CargoResolutionContextV1 {
   const files = new Map<string, Promise<CargoFileV1 | null>>(), digests = new Map<string, Promise<string | null>>(), counts = {parsed: 0, digested: 0, reused: 0, derived: 0};
   const read = (path: string): Promise<CargoFileV1 | null> => {
     let known = files.get(path);
-    if (!known) {
-      counts.parsed++;
-      files.set(path, (known = host.read(path)));
-      digests.set(path, known.then((file) => file?.sha ?? null));
+    if (known) {
+      if (maximumFiles !== Infinity) {
+        files.delete(path);
+        files.set(path, known);
+      }
+      return known;
     }
+    counts.parsed++;
+    files.set(path, (known = host.read(path)));
+    digests.set(path, known.then((file) => file?.sha ?? null));
+    if (files.size > maximumFiles) files.delete(files.keys().next().value!);
     return known;
   };
   const digest = (path: string): Promise<string | null> => {
@@ -303,7 +309,9 @@ export async function cargoResolutionPartsV1(context: CargoResolutionContextV1, 
   return {lock, workspace, ...(await toolchainIdentityV1(context))};
 }
 
-const normalizeKey = (pattern: string): string => pattern.replace(/^!?\{(?:workspaceRoot|projectRoot)\}\//u, "").replace(/^(?:\.\/)+/u, "");
+/** 🔤️ The prefixes of an input pattern that name its root, compiled once instead of once per pattern. */
+const ROOT_PREFIX_V1 = /^!?\{(?:workspaceRoot|projectRoot)\}\//u, DOT_SLASH_V1 = /^(?:\.\/)+/u;
+const normalizeKey = (pattern: string): string => pattern.replace(ROOT_PREFIX_V1, "").replace(DOT_SLASH_V1, "");
 const expandBraces = (pattern: string): string[] => {
   const open = pattern.indexOf("{");
   if (open < 0) return [pattern];

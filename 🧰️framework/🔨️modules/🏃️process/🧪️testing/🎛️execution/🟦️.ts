@@ -5,6 +5,8 @@ import { join, resolve } from "node:path";
 import { terminateOwnedProcessTree } from "../../🪓️termination/🟦️.ts";
 import { detachDiskImagesUnderV1 } from "../🏖️sandbox/🖼️images/🟦️.ts";
 import { guardArgumentsV1, testCheckoutRootV1, testSandboxEnvironmentV1 } from "../🏖️sandbox/🟦️.ts";
+import { describeTestBudgetV1, sharedHostContentionV1, watchTestBudgetV1, type ContentionSourceV1, type TestBudgetSnapshotV1 } from "../🎚️budget/⏲️contention/🟦️.ts";
+import { bunTestCeilingV1 } from "../🟨️bun/🧯️ceiling/🟦️.ts";
 import { prepareTestCommandV1, testProtocolMessageV1 } from "../🚦️protocol/🟦️.ts";
 
 export { attachedDiskImagesV1, detachDiskImagesUnderV1 } from "../🏖️sandbox/🖼️images/🟦️.ts";
@@ -13,6 +15,7 @@ export { attachedDiskImagesV1, detachDiskImagesUnderV1 } from "../🏖️sandbox
 export type TestCommandOptions = Readonly<{
   cwd: string;
   budgetMs: number;
+  contention?: ContentionSourceV1;
   env?: Readonly<Record<string, string | undefined>>;
   signal?: AbortSignal;
   onTimeoutHint?: string;
@@ -20,7 +23,7 @@ export type TestCommandOptions = Readonly<{
   captureStdout?: Readonly<{ limitBytes: number; onChunk: (bytes: Uint8Array) => void }>;
 }>;
 
-/** ⏱️ Executes one explicitly bounded test process without selecting a tool or repository policy. */
+/** ⏱️ Executes one explicitly bounded test process without selecting a tool or repository policy; the budget is work, not wall time: it counts at the speed the host gives (`contention`, the load of this host by default), so a slow shared host does not stop a run that fits its budget on an idle one, while a hung process is still stopped after at most the policy's stretch times its budget. */
 export async function runBudgetedTestCommand(command: string, args: readonly string[], options: TestCommandOptions): Promise<void> {
   if (!Number.isSafeInteger(options.budgetMs) || options.budgetMs < 0) throw Error("Invalid test command budget");
   if (options.captureStdout && (!Number.isSafeInteger(options.captureStdout.limitBytes) || options.captureStdout.limitBytes < 1)) throw Error("Invalid captured output byte limit");
@@ -29,12 +32,14 @@ export async function runBudgetedTestCommand(command: string, args: readonly str
   const sandbox = testSandboxEnvironmentV1(options.env ?? process.env, { route: "test-command", checkout: testCheckoutRootV1(options.cwd, options.env ?? process.env) });
   const prepared = prepareTestCommandV1(command, args, sandbox.environment, sandbox.environment.TMPDIR ?? tmpdir());
   const started = performance.now();
+  const ceiling = bunTestCeilingV1(command, args, options.cwd, options.env ?? process.env);
   const child = spawn(command, [...guardArgumentsV1(command, prepared.args, sandbox.environment)], { stdio: options.captureStdout ? ["inherit", "pipe", "inherit"] : "inherit", cwd: options.cwd, env: { ...sandbox.environment, ...prepared.environment }, detached: process.platform !== "win32", windowsHide: true });
-  let reason: "timeout" | "cancelled" | "interrupted" | "output-limit" | undefined;
+  let reason: "timeout" | "cancelled" | "interrupted" | "output-limit" | "memory-ceiling" | undefined;
   const stop = (next: typeof reason): void => {
     reason ??= next;
     if (child.pid && child.exitCode === null && child.signalCode === null) terminateOwnedProcessTree(child.pid);
   };
+  const release = ceiling !== undefined && child.pid !== undefined ? ceiling(child.pid, message => { console.error(message); stop("memory-ceiling"); }) : undefined;
   let bytes=0;
   child.stdout?.on("data", (chunk: Buffer) => { bytes += chunk.byteLength; if(bytes > options.captureStdout!.limitBytes) stop("output-limit"); else options.captureStdout!.onChunk(chunk); });
   const abort = (): void => stop("cancelled"), interrupt = (): void => stop("interrupted");
@@ -42,7 +47,8 @@ export async function runBudgetedTestCommand(command: string, args: readonly str
   if (options.signal?.aborted) abort();
   process.once("SIGINT", interrupt);
   process.once("SIGTERM", interrupt);
-  const timer = options.budgetMs > 0 ? setTimeout(() => stop("timeout"), options.budgetMs) : undefined;
+  let expired: TestBudgetSnapshotV1 | undefined;
+  const watch = options.budgetMs > 0 ? watchTestBudgetV1(options.budgetMs, { source: options.contention ?? sharedHostContentionV1(), report: console.error, expire: snapshot => { expired = snapshot; stop("timeout"); } }) : undefined;
   try {
     const { code, signal } = await new Promise<{ code: number | null; signal: string | null }>((accept, reject) => {
       child.once("error", reject);
@@ -51,11 +57,12 @@ export async function runBudgetedTestCommand(command: string, args: readonly str
     try { prepared.finish({ code, signal, durationMs: performance.now() - started, ...(reason ? { reason } : {}) }); } catch (error) { console.error(testProtocolMessageV1("reportFailed", { reason: String(error) })); }
     const failure = reason === "timeout" ? `${command} exceeded its ${options.budgetMs}ms budget` : reason ? `${command} ${reason}` : signal ? `${command} was killed by ${signal}` : code !== 0 ? `${command} exited with status ${code}` : undefined;
     if (!failure) return;
-    if (reason === "timeout") console.error(`[budget] ${command} ${args.join(" ")} exceeded ${options.budgetMs}ms — killed. ${options.onTimeoutHint ?? "Trim it, or assign it to a higher level (quick/long/exhaustive)."}`);
+    if (reason === "timeout") console.error(`[budget] ${command} ${args.join(" ")} exceeded ${options.budgetMs}ms — killed. ${options.onTimeoutHint ?? "Trim it, or assign it to a higher level (quick/long/exhaustive)."}${expired ? "\n" + describeTestBudgetV1("expired", expired) : ""}`);
     if (options.throwOnFailure) throw Error(failure);
     process.exit(reason || signal ? 1 : code ?? 1);
   } finally {
-    if (timer) clearTimeout(timer);
+    if (release) release();
+    watch?.stop();
     options.signal?.removeEventListener("abort", abort);
     process.off("SIGINT", interrupt);
     process.off("SIGTERM", interrupt);

@@ -65,7 +65,7 @@ test("leases: holders, waiters with their blockers, dead rows and folders of van
  const root=fresh(),registry=join(fresh(),"registry"),environment={...process.env,SEMIO_LEASE_REGISTRY_DIRECTORY:registry};
  const directory=join(root,".cache","b","l","m","data");mkdirSync(directory,{recursive:true});
  const holderPid=process.pid,waiterPid=sleeper(),deadPid=dead(),resource="cargo:registry:/w/home",now=Date.now();
- const entry=(pid:number,holds:unknown[],waits:unknown[],updated=now)=>({version:1,pid,startedAtMs:1000+pid,updatedAtMs:updated,command:"/w/script.ts repo cargo test",directory,holds,waits});
+ const entry=(pid:number,holds:unknown[],waits:unknown[],updated=now)=>({version:1,pid,startedAtMs:1000+pid,updatedAtMs:updated,command:"/w/script.ts repo cargo test",directory,standing:{version:1,priority:"agent",implementation:{digest:"0123456789abcdef",loadedAtMs:1000+pid,components:{}},progressAtMs:updated},holds,waits});
  const folder=leaseRegistryFolderV1(registry,directory);
  write(join(folder,"directory.json"),JSON.stringify({version:1,directory}));
  write(join(folder,`${holderPid}-${1000+holderPid}.json`),JSON.stringify(entry(holderPid,[{resource,mode:"exclusive",sinceMs:now-100000,task:0}],[])));
@@ -231,7 +231,7 @@ test("tools: the wasm lock identity reads every declared lock against the root p
  const facts=wasmLockFactsV1(root);
  expect(facts).toEqual([{path:"Cargo.lock",version:"0.2.129",pinned:"0.2.129"},{path:"🧰️framework/Cargo.lock",version:null,pinned:"0.2.129"},{path:"🌎️hub/Cargo.lock",version:"0.2.126",pinned:"0.2.129"}]);
  expect(validateDoctorV1("ToolsFacts",{rows:[],wasmLocks:facts})).toEqual([]);
- const report=analyzeDoctorV1({version:1,atMs:1,platform:"darwin",probes:[],tools:{rows:[],wasmLocks:facts}} as never,DOCTOR_POLICY_V1);
+ const report=analyzeDoctorV1({version:1,atMs:1,platform:"darwin",probes:[],tools:{rows:[],wasmLocks:facts}},{policy:DOCTOR_POLICY_V1});
  expect(report.findings.map(finding=>[finding.id,finding.severity,finding.subject]).sort()).toEqual([["tools.wasm-lock-drift","error","🌎️hub/Cargo.lock"],["tools.wasm-lock-drift","error","🧰️framework/Cargo.lock"]].sort());
 });
 
@@ -313,7 +313,7 @@ test("--fix end to end: a dry run changes nothing, the real run repairs, reads a
  write(join(base,"s1","inference",`p-${gone}`,"f.bin"),"z".repeat(4000),300);const time=(Date.now()-300000)/1000;utimesSync(join(base,"s1","inference",`p-${gone}`),time,time);
  const directory=join(root,".cache","b","l","m","data");mkdirSync(directory,{recursive:true});
  const folder=leaseRegistryFolderV1(registry,directory);write(join(folder,"directory.json"),JSON.stringify({version:1,directory}));
- write(join(folder,`${gone}-1.json`),JSON.stringify({version:1,pid:gone,startedAtMs:1,updatedAtMs:Date.now(),command:"x",directory,holds:[],waits:[]}));
+ write(join(folder,`${gone}-1.json`),JSON.stringify({version:1,pid:gone,startedAtMs:1,updatedAtMs:Date.now(),command:"x",directory,standing:{version:1,priority:"agent",implementation:{digest:"0123456789abcdef",loadedAtMs:1,components:{}},progressAtMs:1},holds:[],waits:[]}));
  const only=new Set(["caches","leases"] as const);
  const port=ports(root,{environment});
  const before=await runDoctorV1(port,{only:only as never,fix:false});

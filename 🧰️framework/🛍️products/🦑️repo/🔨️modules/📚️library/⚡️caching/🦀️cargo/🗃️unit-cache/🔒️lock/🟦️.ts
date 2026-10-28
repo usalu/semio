@@ -1,6 +1,7 @@
 import {randomBytes} from "node:crypto";
 import {closeSync,linkSync,mkdirSync,openSync,readFileSync,readdirSync,renameSync,rmSync,statSync,utimesSync,writeSync} from "node:fs";
 import {join} from "node:path";
+import {settleBusyFilesystemSyncV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1;
@@ -9,6 +10,11 @@ export const sleepV1=(milliseconds:number,signal?:AbortSignal):Promise<void>=>ne
 
 /** 🫀️ Whether a process exists; a permission refusal still means it exists. */
 export function processAliveV1(pid:number):boolean{try{process.kill(pid,0);return true;}catch(error){return(error as NodeJS.ErrnoException).code==="EPERM";}}
+
+/** 🧹️ Removes one claim file and never throws: a Windows sharing violation (`EPERM`, `EBUSY`, `EACCES` while a reader, scanner or indexer holds the file) is retried on the churn table's pauses, and a file that stays busy is announced in every language and left to age out as stale; `false` then. */
+export function removeClaimFileV1(path:string,world:Readonly<{platform?:string;sleepSync?:(milliseconds:number)=>void;report?:(text:string)=>void}>={}):boolean{
+ return settleBusyFilesystemSyncV1(path,()=>rmSync(path,{force:true}),{report:text=>{try{(world.report??(line=>process.stderr.write(line+"\n")))(text);}catch{}},...world.platform?{platform:world.platform}:{},...world.sleepSync?{sleepSync:world.sleepSync}:{}}).settled;
+}
 
 type Holder=Readonly<{pid:number;token:string;atMs:number}>;
 function holderOf(path:string):Holder|undefined{try{const row=JSON.parse(readFileSync(path,"utf8"));return typeof row?.pid==="number"?row:undefined;}catch{return undefined;}}
@@ -27,7 +33,7 @@ function removeStale(path:string,staleMs:number):void{
  const grave=path+".dead-"+randomBytes(4).toString("hex");
  try{renameSync(path,grave);}catch{return;}
  if(!stale(grave,staleMs,Date.now())){try{linkSync(grave,path);}catch{}}
- rmSync(grave,{force:true});
+ removeClaimFileV1(grave);
 }
 
 function tryCreate(path:string,heartbeatMs:number):ClaimV1|undefined{
@@ -36,7 +42,7 @@ function tryCreate(path:string,heartbeatMs:number):ClaimV1|undefined{
  try{writeSync(fd,JSON.stringify({pid:process.pid,token,atMs:Date.now()}));}finally{closeSync(fd);}
  const beat=setInterval(()=>{try{const now=new Date();utimesSync(path,now,now);}catch{}},heartbeatMs);beat.unref?.();
  let released=false;
- return Object.freeze({path,waitedMs:0,release(){if(released)return;released=true;clearInterval(beat);if(holderOf(path)?.token===token)rmSync(path,{force:true});}});
+ return Object.freeze({path,waitedMs:0,release(){if(released)return;released=true;clearInterval(beat);if(holderOf(path)?.token===token)removeClaimFileV1(path);}});
 }
 
 /** 🚪️ Takes the claim only if it is free right now, replacing a dead or silent holder; never waits. */
@@ -49,6 +55,12 @@ export function tryClaimV1(directory:string,name:string):ClaimV1|undefined{
   removeStale(path,policy.lock.staleMilliseconds);
  }
  return undefined;
+}
+
+/** 👁️ Whether the claim `name` is held right now by a live, recently beating holder; reads only, never replaces a dead holder and never takes the claim. */
+export function claimHeldV1(directory:string,name:string):boolean{
+ const path=join(directory,name+".lock");
+ return ageOf(path,Date.now())!==undefined&&!stale(path,policy.lock.staleMilliseconds,Date.now());
 }
 
 /** 🔐️ Takes the per-unit claim named `name` inside `directory`. Waiting is bounded: `undefined` after the maximum wait means "compile anyway", so no wait chain can become a deadlock. A holder that died or stopped beating is replaced atomically. */
@@ -64,7 +76,7 @@ export async function acquireUnitClaimV1(directory:string,name:string,options:Re
   if(waited>=limit)return undefined;
   if(!reported){reported=true;options.onWait?.(0);}
   await sleepV1(Math.min(poll,Math.max(1,limit-waited)),options.signal);
-  poll=Math.min(policy.lock.pollMaximumMilliseconds,Math.ceil(poll*1.5));
+  poll=Math.min(policy.lock.pollMaximumMilliseconds,Math.ceil(poll*policy.lock.pollBackoffBasisPoints/10000));
  }
 }
 
@@ -86,11 +98,11 @@ export async function acquireSlotV1(root:string,count:number,options:Readonly<{s
      const path=join(slots,String(index)+".lock");
      if(stale(path,policy.slot.staleMilliseconds,now))removeStale(path,policy.slot.staleMilliseconds);
      const claim=tryCreate(path,policy.slot.heartbeatMilliseconds);
-     if(claim){clearInterval(beat);rmSync(ticket,{force:true});return Object.freeze({...claim,waitedMs:Date.now()-started});}
+     if(claim){clearInterval(beat);removeClaimFileV1(ticket);return Object.freeze({...claim,waitedMs:Date.now()-started});}
     }
    }
    if(!reported&&Date.now()-started>200){reported=true;options.onWait?.(Date.now()-started);}
    await sleepV1(policy.slot.pollMilliseconds,options.signal);
   }
- }catch(error){clearInterval(beat);rmSync(ticket,{force:true});throw error;}
+ }catch(error){clearInterval(beat);removeClaimFileV1(ticket);throw error;}
 }

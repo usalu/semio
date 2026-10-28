@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🔣️.json": {
+  "file": "00-🔣️.json",
+  "base": "df45265bef0e45996e082d29aed9e749be8f1eb8e11b173f12bf6924aa8fa192",
+  "new": "9191554d9e863381a4af34d9a56f806741b9ea2ffd5561f8bf3966cee39217e1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🧬️schema/🔣️.json": {
+  "file": "01-🔣️.json",
+  "base": "54f1af378899b38c1e8e1d136c2e2f8413bb45eeb54dc1984d0c4d7d19faa6ba",
+  "new": "81d580c3eb5f9ce2c51437090cbe435aa97abf12ff58e207d1663c29cb64f012"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🏗️ci/🟦️.ts": {
+  "file": "02-🟦️.ts",
+  "base": "5769b24da9fcfeca79df1e59d166cea483f4998c9ac882307f20c8fc83eb88d1",
+  "new": "3b3535b56cfeef8ed5a5858f62c620b0192226de503b68a61c19d675bec3989a"
+ }
+}

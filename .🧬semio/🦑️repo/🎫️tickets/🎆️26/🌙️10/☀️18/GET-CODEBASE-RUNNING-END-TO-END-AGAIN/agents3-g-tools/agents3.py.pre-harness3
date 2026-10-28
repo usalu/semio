@@ -1,0 +1,388 @@
+"""🧑‍🤝‍🧑 Three concurrent agents on a declared 16 GB machine (agents3-g): one shared sampler, three realistic agent loops, a streaming summary.
+
+`agents3.py run --tag T [--label L] [--wait] [--private-capdir]`   the scenario (edits leaf files, restores byte-exact)
+`agents3.py summary --dir D`                                       markdown tables of one scenario directory (streams the timeline)
+`agents3.py restore --dir D`                                       puts the edited files back from the byte backups
+
+Agents: A course:build after a one-line TS edit; B print-rs:test after a one-line Rust edit; C repo-dashboard-rs:build as
+no-op, a peer edit of an unrelated file, no-op again, restore, no-op. Languages en, de, en. Exit 75 is retried like an agent would.
+Own RSS above 500 MB aborts. Phases come from phases.json (copy of bench2-g's); sampling is ONE `ps` + ONE `top` every 2 s.
+"""
+import argparse, json, os, re, signal, subprocess, sys, threading, time
+from datetime import datetime, timezone
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import measure_lib as M  # noqa: E402
+
+C = os.path.abspath(os.path.join(HERE, ".."))
+ROOT = os.environ.get("BENCH_LIVE", "/Users/ueli/Documents/semio")
+SCRATCH = os.environ.get("AGENTS3_SCRATCH", "/private/tmp/claude-501/-Users-ueli-Documents-semio/de5d5cb4-dca7-469c-b840-78655a0500ed/scratchpad/agents3-g")
+PEER = next(p for p in M.PRODUCTS["peers"] if p["id"] == "unrelated-ts")
+TARGETS = {"A": ("course", "@teaching/architecture-course:build", "en"), "B": ("print", "@semio-tech/print-rs:test", "de"), "C": ("dashboard", "@semio-tech/repo-dashboard-rs:build", "en")}
+PLANS = {
+    "A": [("edit", "course"), ("run", "edit"), ("restore", "course")],
+    "B": [("edit", "print"), ("run", "edit"), ("restore", "print")],
+    "C": [("run", "noop1"), ("peer", None), ("run", "noop2-peer"), ("unpeer", None), ("run", "noop3")],
+}
+LIMIT = 500 * 1024 * 1024
+MB = 1048576.0
+
+
+def vm_stat():
+    text = subprocess.run(["vm_stat"], capture_output=True, text=True, timeout=10).stdout
+    page = int(re.search(r"page size of (\d+)", text).group(1))
+    get = lambda name: int(re.search(name + r":\s+(\d+)", text).group(1))
+    return {"compressorMb": get("Pages occupied by compressor") * page / MB, "swapouts": get("Swapouts"), "swapins": get("Swapins"), "pageouts": get("Pageouts"), "freeMb": get("Pages free") * page / MB}
+
+
+def free_percent():
+    try:
+        m = re.search(r"free percentage: (\d+)%", subprocess.run(["memory_pressure", "-Q"], capture_output=True, text=True, timeout=10).stdout)
+        return int(m.group(1)) if m else None
+    except Exception:
+        return None
+
+
+def waiting_now():
+    try:
+        out = subprocess.run(["bun", "repo", "leases", "status"], cwd=ROOT, capture_output=True, text=True, timeout=240, env=M.environment()).stdout
+        return len(re.findall(r"WAITING", out))
+    except Exception:
+        return None
+
+
+def members(rows, root):
+    found, grown = {root}, True
+    while grown:
+        grown = False
+        for pid, (parent, _, _) in rows.items():
+            if pid not in found and parent in found:
+                found.add(pid)
+                grown = True
+    return found
+
+
+def footprints(pids):
+    """macOS `footprint` (physical footprint incl. compressed memory, bytes) of the given pids in one ~0.2 s call; vanished pids are skipped."""
+    if sys.platform != "darwin" or not pids:
+        return {}
+    args = ["footprint", "--noCategories", "-f", "bytes"]
+    for pid in sorted(pids)[:500]:
+        args += ["-p", str(pid)]
+    try:
+        text = subprocess.run(args, capture_output=True, text=True, timeout=30).stdout
+    except Exception:
+        return {}
+    return {int(m.group(1)): int(m.group(2)) for m in re.finditer(r"\[(\d+)\]: .*?Footprint: (\d+) B", text)}
+
+
+class Sampler:
+    """One `ps` + one `top` per 2 s: footprint, RSS and compressed bytes of each agent tree, Bazel JVM servers, host swap, compressor, free %."""
+
+    def __init__(self, path):
+        self.roots, self.stop, self.path, self.lock = {}, threading.Event(), path, threading.Lock()
+        self.peaks = {}
+        self.thread = threading.Thread(target=self.loop, daemon=True)
+
+    def set_root(self, name, pid):
+        with self.lock:
+            if pid is None:
+                self.roots.pop(name, None)
+            else:
+                self.roots[name] = pid
+
+    def loop(self):
+        t0, n = time.monotonic(), 0
+        with open(self.path, "a", encoding="utf8", buffering=1) as out:
+            while not self.stop.is_set():
+                rows = M.process_table()
+                with self.lock:
+                    roots = dict(self.roots)
+                trees = {name: members(rows, pid) if pid in rows else set() for name, pid in roots.items()}
+                server_roots = {pid for pid, r in rows.items() if r[2].startswith("bazel(") or r[2].rstrip().endswith("/bazel")}
+                servers = set().union(set(), *(members(rows, pid) for pid in server_roots)) - set().union(set(), *trees.values())
+                foot = footprints(set().union(servers, *trees.values()))
+                agents = {}
+                for name, pids in trees.items():
+                    agents[name] = {"rss": sum(rows[p][1] for p in pids) or None, "foot": sum(foot.get(p, 0) for p in pids) or None}
+                    peak = self.peaks.setdefault(name, {"rss": 0, "foot": 0})
+                    for k in peak:
+                        peak[k] = max(peak[k], agents[name][k] or 0)
+                sfoot = sum(foot.get(p, 0) for p in servers)
+                self.peaks["servers"] = {"rss": max(self.peaks.get("servers", {}).get("rss", 0), sum(rows[p][1] for p in servers)), "foot": max(self.peaks.get("servers", {}).get("foot", 0), sfoot)}
+                n += 1
+                row = {"t": round(time.monotonic() - t0, 1), "at": time.strftime("%H:%M:%S"), "load1": M.load1(), "servers": sfoot, "agents": agents}
+                try:
+                    row.update(vm_stat())
+                    if n % 3 == 1:
+                        row["freePct"] = free_percent()
+                    if n % 5 == 1:
+                        row["swapMb"] = M.swap_used_mb()
+                except Exception as error:
+                    row["vmError"] = str(error)
+                out.write(json.dumps(row, ensure_ascii=False) + "\n")
+                if M.own_rss_bytes() > LIMIT:
+                    print("agents3.py: own RSS above 500 MB, aborting", file=sys.stderr)
+                    os._exit(3)
+                self.stop.wait(max(0.1, t0 + 2.0 * n - time.monotonic()))
+
+
+def run_once(name, label, target, language, outdir, sampler, retries=3):
+    """One agent command with exit-75 retries; the record keeps every attempt."""
+    attempts = []
+    for attempt in range(1, retries + 1):
+        ident = "%s.%s.a%d" % (name, label, attempt)
+        log_path = os.path.join(outdir, ident + ".log")
+        started = datetime.now(timezone.utc).isoformat()
+        t0 = time.monotonic()
+        cmd = os.environ["AGENTS3_FAKE_CMD"].split() if os.environ.get("AGENTS3_FAKE_CMD") else ["bun", "repo", "--tool=bazel", "run", target]
+        child = subprocess.Popen(cmd, cwd=ROOT, env=M.environment({"SEMIO_LANGUAGE": language}), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, start_new_session=True, bufsize=0)
+        sampler.set_root(name, child.pid)
+        stream, first, marker, capacity = M.Stream(), [None], [None], []
+        last_wait = [None, 0]
+
+        def reader():
+            pending = b""
+            with open(log_path, "wb") as log:
+                while True:
+                    chunk = os.read(child.stdout.fileno(), 65536)
+                    if not chunk:
+                        break
+                    if log.tell() < M.LOG_LIMIT:
+                        log.write(chunk)
+                    at = (time.monotonic() - t0) * 1000
+                    first[0] = at if first[0] is None else first[0]
+                    pending += chunk
+                    if len(pending) > 1048576 and b"\n" not in pending:
+                        pending = b""
+                    while b"\n" in pending:
+                        raw, pending = pending.split(b"\n", 1)
+                        line = raw.decode("utf8", "replace").rstrip("\r")
+                        stream.feed(at, line)
+                        if line.startswith("[capacity]") and len(capacity) < 40:
+                            if line.startswith("[capacity] waiting"):
+                                last_wait[0], last_wait[1] = line[:300], last_wait[1] + 1
+                                if last_wait[1] > 1:
+                                    continue
+                            capacity.append({"atMs": round(at), "line": line[:300]})
+                        if marker[0] is None and re.search(r"^(\[\d+ / \d+\]|> nx run )", line):
+                            marker[0] = at
+
+        thread = threading.Thread(target=reader, daemon=True)
+        thread.start()
+        code = child.wait()
+        thread.join(10)
+        sampler.set_root(name, None)
+        wall = (time.monotonic() - t0) * 1000
+        phases = stream.phases(wall)
+        queue = phases.get("queue-capacity", 0) + phases.get("queue-graph", 0)
+        record = {"id": ident, "agent": name, "label": label, "target": target, "language": language, "exit": code, "startedAt": started, "startedClock": time.strftime("%H:%M:%S", time.localtime(time.time() - wall / 1000)),
+                  "startOffsetMs": None, "wallMs": round(wall), "queueMs": round(queue), "runMs": round(wall - queue), "phases": phases, "firstOutputMs": first[0] and round(first[0]), "executeStartMs": marker[0] and round(marker[0]),
+                  "actions": stream.actions(), "graph": stream.graph, "capacityWaits": last_wait[1], "capacityLastWait": last_wait[0], "capacity": capacity, "log": log_path}
+        attempts.append(record)
+        json.dump(record, open(os.path.join(outdir, ident + ".json"), "w", encoding="utf8"), indent=1, ensure_ascii=False)
+        print(json.dumps({k: record[k] for k in ("id", "exit", "wallMs", "queueMs", "runMs", "phases")}, ensure_ascii=False), flush=True)
+        if code != 75:
+            break
+        time.sleep(10)
+    return attempts
+
+
+def append_edit(path, language, outdir, tag, nonce):
+    original = open(path, "rb").read()
+    text = original.decode("utf8")
+    edited = ((text if text.endswith("\n") or text == "" else text + "\n") + M.TEMPLATES[(language, "private-body" if tag != "peer" else "comment")](nonce)).encode("utf8")
+    for base in (os.path.join(outdir, "backup"), os.path.join(SCRATCH, os.path.basename(outdir), "backup")):
+        os.makedirs(base, exist_ok=True)
+        open(os.path.join(base, tag + ".orig"), "wb").write(original)
+    manifest = os.path.join(outdir, "edits.jsonl")
+    open(manifest, "a", encoding="utf8").write(json.dumps({"tag": tag, "path": path, "language": language, "originalBytes": len(original), "editedBytes": len(edited)}, ensure_ascii=False) + "\n")
+    open(path, "wb").write(edited)
+    return original, edited
+
+
+def agent_thread(name, outdir, sampler, results, edits, delay):
+    product, target, language = TARGETS[name]
+    spec = next(p for p in M.PRODUCTS["products"] if p["id"] == product)
+    nonce = int(time.time()) % 1000000007 + ord(name)
+    time.sleep(delay)
+    out = []
+    for step, label in PLANS[name]:
+        if step == "edit":
+            edits[name] = (os.path.join(ROOT, spec["editFile"]),) + append_edit(os.path.join(ROOT, spec["editFile"]), spec["language"], outdir, name + "-edit", nonce)
+        elif step == "peer":
+            edits[name + "-peer"] = (os.path.join(ROOT, PEER["file"]),) + append_edit(os.path.join(ROOT, PEER["file"]), PEER["language"], outdir, "peer", nonce)
+        elif step == "restore":
+            path, original, edited = edits.pop(name)
+            M.restore(path, original, edited)
+        elif step == "unpeer":
+            path, original, edited = edits.pop(name + "-peer")
+            M.restore(path, original, edited)
+        else:
+            out += run_once(name, label, target, language, outdir, sampler)
+    results[name] = out
+
+
+def restore_all(edits):
+    for path, original, edited in list(edits.values()):
+        M.restore(path, original, edited)
+    edits.clear()
+
+
+def announced(text, phrase):
+    """True when a coordination line announces the phrase (lines that only mention it as a future event do not count)."""
+    return any(phrase in line and not re.match(r"- \d\d:\d\d agents3-g", line) and not re.search(r"announces|will say|wait for|waits for|when |until |polls for", line) for line in text.splitlines())
+
+
+def bench_running():
+    out = subprocess.run(["ps", "-A", "-o", "command="], capture_output=True, text=True).stdout
+    return any("bench2-g-tools/" in line and "grep" not in line for line in out.splitlines())
+
+
+def print_active(text):
+    """rustedit-g owns print-rs runs after 19:35: not ready while its last EDIT line says ON or a print-rs command runs."""
+    marks = [line for line in text.splitlines() if "rustedit-g EDIT" in line]
+    out = subprocess.run(["ps", "-A", "-o", "command="], capture_output=True, text=True).stdout
+    running = any("print-rs:" in line and "grep" not in line for line in out.splitlines())
+    return running or bool(marks and re.search(r"EDIT ON", marks[-1]))
+
+
+def gate_running():
+    """Brief addendum 20:56: not while gate-g has a product build queued or running (a g*-course log written within 3 minutes)."""
+    import glob
+    return any(time.time() - os.path.getmtime(f) < 180 for f in glob.glob(os.path.join(C, "gate-g-tools", "run", "g*-course.log")))
+
+
+def quietfc_landed(text):
+    """True when the LAST gate line about quietfc says landed (a later revert line turns it off again)."""
+    marks = [line for line in text.splitlines() if re.match(r"- \d\d:\d\d (?!agents3-g)", line) and re.search(r"quietfc (?:re-?)?(?:landed|reverted)", line, re.I) and not re.search(r"wait for|waits for|until|when quietfc-g|announces", line, re.I)]
+    if not marks:
+        return False
+    hit = re.search(r"quietfc (?:re-?)?(landed|reverted)", marks[-1], re.I)
+    return hit.group(1).lower() == "landed"
+
+
+def now_ready():
+    """Start rules: quiet window done, no bench2-g process, no print-rs run, no gate product build, quietfc currently landed (brief addendum 20:56: no fallback)."""
+    text = open(os.path.join(C, "coordination.md"), encoding="utf8").read()
+    quiet = announced(text, "BENCH QUIET DONE") or time.strftime("%H%M") >= "1935"
+    if quiet and not bench_running() and not print_active(text) and not gate_running() and quietfc_landed(text):
+        return "post-quietfc"
+    return None
+
+
+def cmd_run(args):
+    outdir = os.path.join(C, "🗑️generated", "agents3-g", args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    label = args.label or "adhoc"
+    while args.wait:
+        ready = now_ready()
+        waiting = waiting_now() if ready else None
+        print("[%s] ready=%s waiting=%s" % (time.strftime("%H:%M:%S"), ready, waiting), flush=True)
+        if ready and waiting is not None and waiting < 4:
+            time.sleep(20)
+            again = waiting_now()
+            if again is not None and again < 4:
+                label = ready
+                break
+        time.sleep(30)
+    env = {"SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES": "16384"}
+    if label != "pre-quietfc":
+        env["SEMIO_HOST_CAPACITY_CORES"] = os.environ.get("AGENTS3_CORES", "8")
+    if args.private_capdir or label == "pre-quietfc":
+        env["SEMIO_HOST_CAPACITY_DIRECTORY"] = os.path.join(outdir, "capdir")
+    os.environ["BENCH_ENV"] = json.dumps(env)
+    meta = {"tag": args.tag, "label": label, "env": env, "startedAt": datetime.now(timezone.utc).isoformat(), "startedClock": time.strftime("%H:%M:%S"), "hostCores": os.cpu_count(),
+            "swapStartMb": M.swap_used_mb(), "load1Start": M.load1(), "vm0": vm_stat(), "freePct0": free_percent()}
+    json.dump(meta, open(os.path.join(outdir, "meta.json"), "w"), indent=1)
+    sampler = Sampler(os.path.join(outdir, "timeline.jsonl"))
+    sampler.thread.start()
+    edits, results = {}, {}
+    signal.signal(signal.SIGTERM, lambda *_: (restore_all(edits), os._exit(143)))
+    signal.signal(signal.SIGINT, lambda *_: (restore_all(edits), os._exit(130)))
+    t0 = time.monotonic()
+    threads = [threading.Thread(target=agent_thread, args=(n, outdir, sampler, results, edits, i * args.stagger)) for i, n in enumerate("ABC")]
+    try:
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+    finally:
+        restore_all(edits)
+        sampler.stop.set()
+        time.sleep(2.5)
+    meta.update({"makespanMs": round((time.monotonic() - t0) * 1000), "swapEndMb": M.swap_used_mb(), "load1End": M.load1(), "vm1": vm_stat(), "peaks": sampler.peaks, "endClock": time.strftime("%H:%M:%S")})
+    json.dump(meta, open(os.path.join(outdir, "meta.json"), "w"), indent=1)
+    json.dump(results, open(os.path.join(outdir, "results.json"), "w"), indent=1, ensure_ascii=False)
+    print("DONE", outdir, flush=True)
+
+
+def cmd_restore(args):
+    print("restore: the run restores in `finally`; verify with `git diff --stat` on the three files. Backups:", os.path.join(args.dir, "backup"), os.path.join(SCRATCH, os.path.basename(args.dir), "backup"))
+
+
+def cmd_summary(args):
+    meta = json.load(open(os.path.join(args.dir, "meta.json")))
+    results = json.load(open(os.path.join(args.dir, "results.json")))
+    print("## %s (%s) %s-%s makespan %.0f s, env %s" % (meta["tag"], meta["label"], meta["startedClock"], meta["endClock"], meta["makespanMs"] / 1000, json.dumps(meta["env"])))
+    print("| agent | run | exit | queue s | run s | wall s | phases (s) | actions | peak footprint MiB | peak RSS MiB |")
+    print("|---|---|---|---|---|---|---|---|---|---|")
+    for name in "ABC":
+        peak = meta["peaks"].get(name, {})
+        for r in results.get(name, []):
+            act = r["actions"]["bazel"]
+            acts = ("%d exec / %d cached" % (act["executed"], act["cached"])) if act else "n/a"
+            ph = ", ".join("%s %.0f" % (k, v / 1000) for k, v in r["phases"].items())
+            print("| %s %s | %s | %s | %.0f | %.0f | %.0f | %s | %s | %.0f | %.0f |" % (name, TARGETS[name][0], r["label"] + "/a" + r["id"][-1], r["exit"], r["queueMs"] / 1000, r["runMs"] / 1000, r["wallMs"] / 1000, ph, acts, peak.get("foot", 0) / MB, peak.get("rss", 0) / MB))
+    swap_max = load_max = comp_max = 0.0
+    free_min, sum_foot_max, sum_at, n = 100, 0, None, 0
+    first = last = None
+    with open(os.path.join(args.dir, "timeline.jsonl"), encoding="utf8") as handle:
+        for line in handle:
+            row = json.loads(line)
+            n += 1
+            first = first or row
+            last = row
+            swap_max = max(swap_max, row.get("swapMb") or 0)
+            load_max = max(load_max, row.get("load1") or 0)
+            comp_max = max(comp_max, row.get("compressorMb") or 0)
+            if row.get("freePct") is not None:
+                free_min = min(free_min, row["freePct"])
+            total = sum((a.get("foot") or 0) for a in row["agents"].values()) + (row.get("servers") or 0)
+            if total > sum_foot_max:
+                sum_foot_max, sum_at = total, row["at"]
+    print("\nBazel servers and the actions they spawn (outside the agent trees) peak footprint %.0f MiB, RSS %.0f MiB" % (meta["peaks"].get("servers", {}).get("foot", 0) / MB, meta["peaks"].get("servers", {}).get("rss", 0) / MB))
+    print("host: %d samples; swap max %.0f MiB (start %s, end %s); compressor max %.0f MiB; swapouts %d, swapins %d, pageouts %d during the run; free%% min %s; load1 max %.1f (start %s)" % (n, swap_max, meta["swapStartMb"], meta["swapEndMb"], comp_max, last["swapouts"] - meta["vm0"]["swapouts"], last["swapins"] - meta["vm0"]["swapins"], last["pageouts"] - meta["vm0"]["pageouts"], free_min, load_max, meta["load1Start"]))
+    print("sum of the three trees' footprint + Bazel servers/actions peaks at %.0f MiB (%s); declared total 16384 MiB" % (sum_foot_max / MB, sum_at))
+    starved = []
+    for name in "ABC":
+        for r in results.get(name, []):
+            others = [o for k in "ABC" if k != name for o in results.get(k, []) if o["queueMs"] < o["wallMs"]]
+            if r["queueMs"] > 2 * max(r["runMs"], 1000) and others:
+                starved.append("%s %s queue %.0f s vs run %.0f s" % (name, r["label"], r["queueMs"] / 1000, r["runMs"] / 1000))
+    print("starvation (queue > 2x own run while others proceed): %s" % (starved or "none"))
+    print("exit 75 attempts: %s" % ([r["id"] for k in results for r in results[k] if r["exit"] == 75] or "none"))
+    for name in "ABC":
+        for r in results.get(name, []):
+            print("- %s %s capacity rows: %s; waits %d" % (name, r["label"], [c["line"][:200] for c in r["capacity"][:3]], r["capacityWaits"]))
+
+
+def main():
+    p = argparse.ArgumentParser()
+    sub = p.add_subparsers(dest="mode", required=True)
+    r = sub.add_parser("run")
+    r.add_argument("--tag", required=True)
+    r.add_argument("--label", default=None)
+    r.add_argument("--wait", action="store_true")
+    r.add_argument("--private-capdir", action="store_true")
+    r.add_argument("--stagger", type=float, default=3.0)
+    s = sub.add_parser("summary")
+    s.add_argument("--dir", required=True)
+    q = sub.add_parser("restore")
+    q.add_argument("--dir", required=True)
+    args = p.parse_args()
+    {"run": cmd_run, "summary": cmd_summary, "restore": cmd_restore}[args.mode](args)
+
+
+main()

@@ -169,8 +169,8 @@ test("a progress deadline is refused in every selected language", async () => {
   const api = await import(join(progressOwner, "🟦️.ts")), policy = api.progressDeadlinePolicyV1("native-child", 2, {}), both = ["en", "de"] as const;
   const idle = api.progressDeadlineNoticeV1("idle", "native:owner-command", policy, 31 * 60000, 2, both), maximum = api.progressDeadlineNoticeV1("maximum", "native:owner-command", policy, 0, 2, both);
   expect(idle).toContain("native:owner-command stopped: no progress for 31 min (idle window 60 min)");
-  expect(idle).toContain("native:owner-command gestoppt: seit 31 Min. kein Fortschritt (Leerlauffenster 60 Min.)");
+  expect(idle).toContain("native:owner-command gestoppt: seit 31 min kein Fortschritt (Leerlauffenster 60 min)");
   expect(maximum).toContain("maximum duration of 260 min derived from its declared cost (2 unit(s))");
-  expect(maximum).toContain("Höchstdauer von 260 Min. ist erreicht");
+  expect(maximum).toContain("Höchstdauer von 260 min ist erreicht");
   expect(api.progressDeadlineNoticeV1("idle", "x", policy, 0, 0, ["de"])).not.toContain("stopped");
 });

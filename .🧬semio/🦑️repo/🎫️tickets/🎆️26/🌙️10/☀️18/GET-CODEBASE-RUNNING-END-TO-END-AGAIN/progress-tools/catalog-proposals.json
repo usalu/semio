@@ -1,0 +1,206 @@
+{
+ "_doc": "Ready-to-land EN+DE catalog entries for the hard-coded English lines of today's product runs (result-progress.md section C). Each entry names the call site that prints the English text now and the placeholders its call must pass. Library entries go to 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🔣️.json (sayBuildV1); framework process entries need a catalog beside their module (pattern: 🎛️owned-execution/🧬️schema/📣️heartbeat.json).",
+ "library": {
+  "bazel.prepare.waiting": {
+   "site": "🏗️build/🔧️tools/🏗️bazel/📜️script.ts:953,971 console.log(`[bazel] ${event.phase} ${event.bytes}/${event.total}`)",
+   "en": "[bazel] waiting for the download lease of the Bazel executable ({total} bytes)",
+   "de": "[bazel] wartet auf die Download-Sperre der Bazel-Programmdatei ({total} Bytes)",
+   "values": [
+    "total"
+   ]
+  },
+  "bazel.prepare.verifying": {
+   "site": "same",
+   "en": "[bazel] verifying the Bazel executable ({total} bytes)",
+   "de": "[bazel] Bazel-Programmdatei wird geprüft ({total} Bytes)",
+   "values": [
+    "total"
+   ]
+  },
+  "bazel.prepare.ready": {
+   "site": "same",
+   "en": "[bazel] the Bazel executable is ready ({total} bytes)",
+   "de": "[bazel] Bazel-Programmdatei ist bereit ({total} Bytes)",
+   "values": [
+    "total"
+   ]
+  },
+  "bazel.prepare.downloading": {
+   "site": "same (today the guard `event.phase!==\"downloading\"` makes a cold 58 MB download silent; print at most every 5 s)",
+   "en": "[bazel] downloading the Bazel executable: {done} of {total} bytes",
+   "de": "[bazel] Bazel-Programmdatei wird heruntergeladen: {done} von {total} Bytes",
+   "values": [
+    "done",
+    "total"
+   ]
+  },
+  "bazel.prepareBun.waiting": {
+   "site": "📜️script.ts:973 `[bazel] bun ${id} ${event.phase} …`",
+   "en": "[bazel] waiting for the download lease of Bun for {platform} ({total} bytes)",
+   "de": "[bazel] wartet auf die Download-Sperre von Bun für {platform} ({total} Bytes)",
+   "values": [
+    "platform",
+    "total"
+   ]
+  },
+  "bazel.prepareBun.verifying": {
+   "site": "same",
+   "en": "[bazel] verifying Bun for {platform} ({total} bytes)",
+   "de": "[bazel] Bun für {platform} wird geprüft ({total} Bytes)",
+   "values": [
+    "platform",
+    "total"
+   ]
+  },
+  "bazel.prepareBun.ready": {
+   "site": "same",
+   "en": "[bazel] Bun for {platform} is ready ({total} bytes)",
+   "de": "[bazel] Bun für {platform} ist bereit ({total} Bytes)",
+   "values": [
+    "platform",
+    "total"
+   ]
+  },
+  "bazel.catalogPreparing": {
+   "site": "📜️script.ts:97 console.log(\"[bazel] preparing fixed embedded module catalog\")",
+   "en": "[bazel] preparing the fixed embedded module catalog",
+   "de": "[bazel] der eingebettete feste Modulkatalog wird vorbereitet",
+   "values": []
+  },
+  "bazel.plannerRetry": {
+   "site": "📜️script.ts:821 console.warn(\"[bazel] the planner failed under the world witness, planning again without it: …\")",
+   "en": "[bazel] the planner failed under the world witness, planning again without it: {reason}",
+   "de": "[bazel] der Planer ist unter den Weltbeobachtungen gescheitert, es wird ohne sie erneut geplant: {reason}",
+   "values": [
+    "reason"
+   ]
+  },
+  "bazel.idleServersNotReaped": {
+   "site": "📜️script.ts:916 console.warn(`[bazel] idle servers not reaped: …`)",
+   "en": "[bazel] idle servers not reaped: {reason}",
+   "de": "[bazel] ruhende Server nicht beendet: {reason}",
+   "values": [
+    "reason"
+   ]
+  },
+  "bazel.cacheActivityNotRecorded": {
+   "site": "⚙️operations/🟦️.ts:198",
+   "en": "[bazel] cache activity not recorded: {reason}",
+   "de": "[bazel] Cache-Aktivität nicht aufgezeichnet: {reason}",
+   "values": [
+    "reason"
+   ]
+  },
+  "bazel.noAffected": {
+   "site": "🔌️backend/🟦️.ts:47 console.log(\"[bazel] no affected tasks\")",
+   "en": "[bazel] no affected tasks",
+   "de": "[bazel] keine betroffenen Tasks",
+   "values": []
+  },
+  "bazel.taskStarted": {
+   "site": "🎬️executor/🟦️.ts:164 `[bazel] task-started ${task.id}`",
+   "en": "[bazel] task {task} started",
+   "de": "[bazel] Task {task} gestartet",
+   "values": [
+    "task"
+   ]
+  },
+  "bazel.taskReady": {
+   "site": "📜️script.ts:997 `[bazel] task-ready ${task.id} ${address}`",
+   "en": "[bazel] task {task} is ready at {address}",
+   "de": "[bazel] Task {task} ist erreichbar unter {address}",
+   "values": [
+    "task",
+    "address"
+   ]
+  },
+  "storeReceipt.reexecuting": {
+   "site": "🧾️store-receipt/🟦️.ts:37 report(\"[store-receipt] \"+line)",
+   "en": "[store-receipt] re-executing {task}: {reason}",
+   "de": "[store-receipt] {task} wird erneut ausgeführt: {reason}",
+   "values": [
+    "task",
+    "reason"
+   ]
+  },
+  "cargoProvenance.reading": {
+   "site": "⚡️caching/🦀️cargo/🧾️provenance + 🏃️process/🟦️.ts:120 console.log(\"[cargo-provenance] \"+JSON.stringify(row))",
+   "en": "[cargo-provenance] reading {work} build record(s): {bytes} of {totalBytes} bytes",
+   "de": "[cargo-provenance] {work} Build-Datei(en) werden gelesen: {bytes} von {totalBytes} Bytes",
+   "values": [
+    "work",
+    "bytes",
+    "totalBytes"
+   ]
+  },
+  "cargoTargetRecipe.reading": {
+   "site": "native-build/🟦️.ts (cargoProvenanceProgressSinkV1 -> `[cargo-target-recipe] {json}`)",
+   "en": "[cargo-target-recipe] reading {work} input(s) of the target recipe: {bytes} of {totalBytes} bytes",
+   "de": "[cargo-target-recipe] {work} Eingabe(n) des Target-Rezepts werden gelesen: {bytes} von {totalBytes} Bytes",
+   "values": [
+    "work",
+    "bytes",
+    "totalBytes"
+   ]
+  },
+  "repoCargo.admitted": {
+   "site": "⚡️caching/…/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts:188 `[repo cargo] ${store} store, ${tokens} of ${cores} cores admitted, rustc memory budget ${budget} GiB`",
+   "en": "[repo cargo] {store} store, {tokens} of {cores} cores admitted, rustc memory budget {budget} GiB",
+   "de": "[repo cargo] Speicher {store}, {tokens} von {cores} Kernen zugelassen, rustc-Speicherbudget {budget} GiB",
+   "values": [
+    "store",
+    "tokens",
+    "cores",
+    "budget"
+   ],
+   "note": "{store} must be the localized word (shared = gemeinsam, isolated = isoliert), not the raw value"
+  },
+  "testResolution.ownership": {
+   "site": "test-resolution ownership line (`[test-resolution] ownership: N source operations`)",
+   "en": "[test-resolution] ownership: {count} source operation(s)",
+   "de": "[test-resolution] Zuständigkeit: {count} Quellvorgang/-vorgänge",
+   "values": [
+    "count"
+   ]
+  },
+  "deploy.staged": {
+   "site": "🎓️teaching/…/🚀️deploy/🟦️.ts:162 console.log(`[deploy] ${line}`) with line `staged N files in DIR`",
+   "en": "[deploy] staged {count} file(s) in {directory}",
+   "de": "[deploy] {count} Datei(en) bereitgestellt in {directory}",
+   "values": [
+    "count",
+    "directory"
+   ]
+  }
+ },
+ "process": {
+  "nativeBuild.diagnosticsHidden": {
+   "site": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts:328 `[cargo] ${n} diagnostic line(s) not shown; complete log: ${path}`",
+   "en": "[cargo] {count} diagnostic line(s) not shown; complete log: {path}",
+   "de": "[cargo] {count} Diagnosezeile(n) nicht angezeigt; vollständiges Protokoll: {path}",
+   "values": [
+    "count",
+    "path"
+   ],
+   "withoutPath": {
+    "en": "[cargo] {count} diagnostic line(s) not shown",
+    "de": "[cargo] {count} Diagnosezeile(n) nicht angezeigt"
+   }
+  },
+  "nativeBuild.staged": {
+   "site": "native-build/🟦️.ts:976 `[nx-native] staged ${n} deliverables in ${dir}`",
+   "en": "[nx-native] staged {count} deliverable(s) in {directory}",
+   "de": "[nx-native] {count} Ergebnisdatei(en) bereitgestellt in {directory}",
+   "values": [
+    "count",
+    "directory"
+   ]
+  },
+  "workerOutputTruncated": {
+   "site": "🏗️build/👷️workers/🧬️schema/🔣️.json:441 truncationMarker \"\\n[worker] output truncated\\n\"",
+   "en": "[worker] output truncated",
+   "de": "[worker] Ausgabe gekürzt",
+   "values": []
+  }
+ }
+}

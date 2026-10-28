@@ -1,0 +1,400 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Read oracle corpus",
+  "description": "🔭️ A workspace tree with policy, log and trace vectors and live runs; every backend must give the expected answer, an independent Python evaluator recomputes the policy and parsing vectors.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "tree",
+    "policy",
+    "seatbeltLog",
+    "strace",
+    "straceStrings",
+    "linuxGrants",
+    "runs"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "tree": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "policy": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "tree",
+          "allowed",
+          "ambient",
+          "names",
+          "refusals",
+          "rules",
+          "readable"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "tree": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ambient": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "refusals": {
+            "type": "boolean"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "effect",
+                "kind",
+                "path"
+              ],
+              "properties": {
+                "effect": {
+                  "enum": [
+                    "allow",
+                    "deny"
+                  ]
+                },
+                "kind": {
+                  "enum": [
+                    "subpath",
+                    "literal"
+                  ]
+                },
+                "path": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "readable": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "seatbeltLog": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "root",
+          "log",
+          "denials"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "root": {
+            "type": "string"
+          },
+          "log": {
+            "type": "string"
+          },
+          "denials": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "strace": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "root",
+          "cwd",
+          "log",
+          "opened",
+          "denied"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "root": {
+            "type": "string"
+          },
+          "cwd": {
+            "type": "string"
+          },
+          "log": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opened": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "denied": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "straceStrings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "literal",
+          "text"
+        ],
+        "properties": {
+          "literal": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "linuxGrants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "root",
+          "tree",
+          "directories",
+          "allowed",
+          "ambient",
+          "names",
+          "grants",
+          "readable"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "root": {
+            "type": "string"
+          },
+          "tree": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "directories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ambient": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "grants": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "readable": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "runs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "allowed",
+          "ambient",
+          "names",
+          "reads",
+          "mode",
+          "rounds",
+          "expect"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "allowed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ambient": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reads": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "shell": {
+            "enum": [
+              "cat"
+            ]
+          },
+          "mode": {
+            "enum": [
+              "report",
+              "tolerate",
+              "silent"
+            ]
+          },
+          "rounds": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expect": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "seatbelt": {
+                "$ref": "#/definitions/Expectation"
+              },
+              "landlock": {
+                "$ref": "#/definitions/Expectation"
+              },
+              "mirror": {
+                "$ref": "#/definitions/Expectation"
+              }
+            }
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Expectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clean",
+        "passed",
+        "learned"
+      ],
+      "properties": {
+        "clean": {
+          "type": "boolean"
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "learned": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "firstDenied": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "firstExit": {
+          "type": "integer"
+        },
+        "needsTrace": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

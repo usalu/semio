@@ -112,7 +112,7 @@
     },
     "gc.locked": {
       "en": "Another collector holds {lock}; nothing was removed.",
-      "de": "Ein anderer Einsammler hält {lock}; nichts wurde entfernt."
+      "de": "Ein anderer Sammler hält {lock}; nichts wurde entfernt."
     },
     "gc.summary.plan": {
       "en": "Would remove {entries} of {total} entries ({bytes}): {age} idle too long, {budget} over the bound, {dangling} dangling; {remaining} entries ({left}) would remain.",

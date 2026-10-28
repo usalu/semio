@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🔣️policy.json": {
+  "file": "f000",
+  "base": "040a781f98e266316733dd213df7c09a6ebed5b936eb7fc0b1b60b96de6a4602",
+  "new": "12bfcfd776b6144e994dcf740414df4f51d8a4a1dde9da25495facff6b644d3a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🛂️acceptance/🧬️schema/🔣️.json": {
+  "file": "f001",
+  "base": "07140af354efeff6d0546eae8617291cf46e47c1b2bf2dbf337154f479400fac",
+  "new": "860d719b9bf16cb8f6404a02c044d6b8a2efd79306709dc8a4776e34099bf8ab"
+ },
+ "🧰️framework/🛍️products/🦑️repo/README.md": {
+  "file": "f002",
+  "base": "d8f176a823f0fa8e97bec9bfd851ade70b4fe8b2d4d82e5d8b1ad877caace218",
+  "new": "f66f82c09853efafc71fc7e21994025a7e14c9240482d48d5e7ece11c347d77b"
+ }
+}

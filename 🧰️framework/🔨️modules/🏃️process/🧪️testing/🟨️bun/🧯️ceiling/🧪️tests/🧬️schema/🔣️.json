@@ -1,0 +1,16 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "type": "object",
+ "required": ["version", "arguments", "budgets", "run"],
+ "additionalProperties": false,
+ "properties": {
+  "version": {"const": 1},
+  "arguments": {"type": "array", "items": {"type": "object", "required": ["arguments", "operands", "flags"], "additionalProperties": false, "properties": {"arguments": {"$ref": "#/definitions/Strings"}, "operands": {"$ref": "#/definitions/Strings"}, "flags": {"$ref": "#/definitions/Strings"}}}},
+  "budgets": {"type": "object", "required": ["table", "defaultMegabytes", "cases"], "additionalProperties": false, "properties": {
+   "table": {"type": "array", "items": {"type": "array", "minItems": 2, "maxItems": 2, "items": [{"type": "string"}, {"type": "integer", "minimum": 1}]}},
+   "defaultMegabytes": {"type": "integer", "minimum": 1},
+   "cases": {"type": "array", "items": {"type": "object", "required": ["operands", "budgetMegabytes", "ceilingMegabytes", "declared"], "additionalProperties": false, "properties": {"operands": {"$ref": "#/definitions/Strings"}, "budgetMegabytes": {"type": "integer"}, "ceilingMegabytes": {"type": "integer"}, "declared": {"type": "boolean"}}}}}},
+  "run": {"type": "object", "required": ["holdMegabytes", "holdMilliseconds", "declaredBelow", "declaredAbove"], "additionalProperties": false, "properties": {"holdMegabytes": {"type": "integer", "minimum": 1}, "holdMilliseconds": {"type": "integer", "minimum": 1}, "declaredBelow": {"type": "integer", "minimum": 1}, "declaredAbove": {"type": "integer", "minimum": 1}}}
+ },
+ "definitions": {"Strings": {"type": "array", "items": {"type": "string"}}}
+}

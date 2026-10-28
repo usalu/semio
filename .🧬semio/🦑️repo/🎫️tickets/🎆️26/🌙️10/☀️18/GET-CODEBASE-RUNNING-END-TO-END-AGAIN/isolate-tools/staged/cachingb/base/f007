@@ -1,0 +1,152 @@
+import{testRecordV1}from"../📋️values/🟦️.ts";
+import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import assert from "node:assert/strict";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { dirname, join, resolve } from "node:path";
+import { spawn, spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { pathToFileURL } from "node:url";
+import {createRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type{ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{nativeCallerPhaseV1}from"../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+
+/** 🔒️ Keeps Trunk's build/serve Cargo invocation on the committed dependency lock. */
+export async function testTrunkLockfile(workspace: string,invocation:ScriptInvocation,parent:ResourceLeaseControl,native = false): Promise<void> {
+  requireIssuedResourceControlInvocationV1(parent,invocation);
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔒️trunk-lockfile/🔣️.json"), "utf8"));
+  const workspaceProject = JSON.parse(readFileSync(join(workspace, "📋️project.json"), "utf8")), tooling = workspaceProject.targets[fixture.tooling.target];
+  assert.ok(tooling, "Trunk acquisition must have an explicit Nx prerequisite");
+  assert.equal(tooling.cache, false);
+  assert.deepEqual(tooling.outputs, []);
+  assert.equal(tooling.options.command, fixture.tooling.command);
+  assert.ok(workspaceProject.targets["deps-wasm"].dependsOn.includes(fixture.tooling.target));
+  const ts = require("typescript"), implementation = join(workspace, fixture.tooling.implementation);
+  const { prepareDependencies } = await import(pathToFileURL(implementation).href);
+  const bundle = await require("esbuild").build({ entryPoints: [implementation], bundle: true, platform: "node", format: "esm", packages: "external", write: false, metafile: true, logLevel: "silent" });
+  const closure = Object.keys(bundle.metafile.inputs).map(path => resolve(path));
+  assert.ok(!closure.includes(join(workspace, "📜️script.ts")), "Native preparation must not load the root application router");
+  assert.ok(closure.every(path => !path.includes("/🔍️discovery/") && !path.includes("/🎮️playground/")), "Native setup must not load application taxonomy");
+  const temporary = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "native-dependencies-"));
+  const phase=nativeCallerPhaseV1(invocation,workspace,parent),progress:string[]=[];
+  try {
+    writeFileSync(join(temporary, "Cargo.lock"), `[[package]]\nname = "wasm-bindgen"\nversion = "${fixture.tooling.bindgenVersion}"\n`);
+    for (const row of fixture.tooling.cases) {
+      const commands: string[][] = [];
+      await prepareDependencies("trunk", temporary, invocation,{version:1,directory:workspace,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program},phase, async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean) => {
+        assert.equal(cwd, temporary); assert.equal(signal.aborted, false);
+        if (capture) return command === "trunk" ? row.version : command === "wasm-bindgen" ? row.bindgen : row.targets;
+        commands.push([command, ...args]); return "";
+      });
+      assert.deepEqual(commands, row.commands, "Preparation must be pinned and avoid reinstalling ready tooling");
+    }
+    const controller = new AbortController(), failure = new Error("Cancelled dependency probe"), calls: string[][] = [];
+    const cancelledPhase=nativeCallerPhaseV1(invocation,workspace,createRequestedIssuedResourceControlV1(parent,0,controller.signal));
+    await assert.rejects(prepareDependencies("trunk", temporary, invocation,{version:1,directory:workspace,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program},cancelledPhase, async (command: string, args: string[]) => {
+      calls.push([command, ...args]); controller.abort(failure); throw failure;
+    }), error => error === failure);
+    assert.deepEqual(calls, [["trunk", "--version"]], "Cancelling a probe must never start an installation");
+    await phase.advance("trunk-fixture:completed");const continuation=phase.leaseControl.yieldContinuation;if(!continuation)throw Error("Issued Native continuation required");await continuation();progress.push("yield");assert.ok(progress.length>0);assert.ok(progress.includes("yield"));
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+  for (const config of fixture.configs) {
+    const path = config.compiler, compiler = readFileSync(join(workspace, path), "utf8"), syntax = ts.createSourceFile(path, compiler, ts.ScriptTarget.Latest, true);
+    let template: any;
+    const visit = (node: any): void => {
+      if (ts.isCallExpression(node) && node.expression.getText(syntax) === "writeFileSync" && node.arguments[0]?.getText(syntax).includes('"Trunk.toml"')) template = node.arguments[1];
+      ts.forEachChild(node, visit);
+    };
+    visit(syntax);
+    assert.ok(template, "The finite compiler must supply its private Trunk configuration");
+    const source = new Function("profile", "bindgen", "return " + template.getText(syntax))("dev", [fixture.tooling.bindgenVersion]);
+    const parsed = Bun.TOML.parse(source) as { build: Record<string, unknown> };
+    assert.deepEqual(parsed, require("smol-toml").parse(source));
+    for (const [key, value] of Object.entries(fixture.build)) assert.equal(parsed.build[key], value, `${path}: build.${key}`);
+    const metadata = compiler.indexOf('runTool("cargo", ["metadata"'), compile = compiler.indexOf('runTool("trunk", ["build"');
+    assert.ok(metadata >= 0 && compile > metadata && compiler.slice(metadata, compile).includes('"--locked"') && compiler.slice(metadata, compile).includes('"--offline"'), "Locked offline Cargo metadata must precede finite compilation");
+    const projectPath = join(workspace, config.project), project = JSON.parse(readFileSync(projectPath, "utf8")), target = project.targets[fixture.target];
+    for (const consumer of fixture.tooling.consumers) assert.ok(project.targets[consumer].dependsOn.includes(`workspace:${fixture.tooling.target}`), `${consumer} must schedule Trunk preparation before execution`);
+    const routerSource = readFileSync(join(dirname(projectPath), "📜️script.ts"), "utf8");
+    assert.doesNotMatch(routerSource, /\bensure(?:Trunk|WasmTarget)\s*\(/, "Trunk build and serve must consume the Nx preparation");
+    const graph = { nodes: { workspace: { name: "workspace", type: "app", data: { root: ".", targets: { [fixture.tooling.target]: tooling, "deps-wasm-opt": workspaceProject.targets["deps-wasm-opt"], "deps-cargo": workspaceProject.targets["deps-cargo"] } } }, renderer: { name: "renderer", type: "lib", data: { root: "renderer", targets: { wasm: project.targets.wasm, "generate-browser-boot": { ...project.targets["generate-browser-boot"], dependsOn: [] }, "generate-frame-worker": { ...project.targets["generate-frame-worker"], dependsOn: [] } } } } }, dependencies: { workspace: [], renderer: [] } };
+    const tasks = require("nx/src/tasks-runner/create-task-graph").createTaskGraph(graph, {}, ["renderer"], ["wasm"], undefined, {}, false);
+    assert.ok(tasks.dependencies["renderer:wasm"].includes(`workspace:${fixture.tooling.target}`));
+    assert.equal(project.name, fixture.project);
+    assert.deepEqual(target.outputs, []);
+    assert.ok(target.options.command.includes("native cargo metadata --manifest"));
+    const { cacheInternals } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
+    for(const name of["withNativePreparation","targetPolicy","nativeLockInputs"])assert.equal(typeof cacheInternals[name],"function");
+    if(typeof cacheInternals.withNativePreparation!=="function"||typeof cacheInternals.targetPolicy!=="function"||typeof cacheInternals.nativeLockInputs!=="function")throw Error("Current native inference Source functions required");
+    const projectRoot = config.project.slice(0, -"/📋️project.json".length);
+    const prepared = testRecordV1(cacheInternals.withNativePreparation({ ...structuredClone(project), root: projectRoot }, workspace, { fixture: { ownership: "owned", target: "fixture:generate", nativeConsumers: [projectRoot] } }));
+    assert.deepEqual(testRecordV1(testRecordV1(prepared.targets)[fixture.target]).dependsOn ?? [], [], "Cargo metadata must not schedule native source generators");
+    assert.equal(testRecordV1(cacheInternals.targetPolicy(fixture.target,target)).cache, true, "the lock guard replays once every manifest it validates is hashed");
+    assert.deepEqual(cacheInternals.nativeLockInputs(target.options.command), ["{workspaceRoot}/**/Cargo.toml", "{workspaceRoot}/Cargo.lock"], "cargo metadata --locked validates the lock against every workspace manifest");
+    assert.deepEqual(cacheInternals.nativeLockInputs('repo "script.ts" native cargo check --manifest "Cargo.toml"'), []);
+    if (native) {
+      const env = { ...process.env }; delete env.NO_COLOR; delete env.FORCE_COLOR;
+      const temporary = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "trunk-config-"));
+      writeFileSync(join(temporary, "Trunk.toml"), source);
+      const result = spawnSync("trunk", ["config", "--config", join(temporary, "Trunk.toml"), "--skip-version-check", "show"], { cwd: workspace, env, encoding: "utf8", timeout: 15000 });
+      rmSync(temporary, { recursive: true, force: true });
+      assert.equal(result.status, 0, result.stderr);
+      assert.match(result.stdout, /\bbuild: Build \{[\s\S]*?\blocked: true,/);
+    }
+  }
+}
+
+/** 🔬️ Proves stale-lock rejection before compilation, including subsequent native watch rebuilds. */
+export async function testNativeTrunkLockfile(workspace: string, generated: string): Promise<void> {
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔒️trunk-lockfile/🔣️.json"), "utf8")), root = mkdtempSync(join(generated, "trunk-lockfile-"));
+  const hook = fixture.hook;
+  const args = [resolve(import.meta.dir, "../../🦀️cargo/📜️script.ts"), ...hook.command_arguments, join(root, "Cargo.toml")];
+  for (const [path, contents] of Object.entries(fixture.probe.files)) writeFileSync(join(root, path), contents as string);
+  writeFileSync(join(root, "Trunk.toml"), fixture.probe.files["Trunk.toml"] + `\n[[hooks]]\nstage=${JSON.stringify(hook.stage)}\ncommand=${JSON.stringify(hook.command)}\ncommand_arguments=${JSON.stringify(args)}\n`);
+  const env: NodeJS.ProcessEnv = { ...process.env, CARGO_TARGET_DIR: join(root, "target") }; delete env.NO_COLOR; delete env.FORCE_COLOR;
+  const trunkArgs = ["--config", join(root, "Trunk.toml"), "--skip-version-check", "--log", "info", "--color", "never"];
+  const result = spawnSync("trunk", ["build", ...trunkArgs], { cwd: root, env, encoding: "utf8", timeout: 15000 });
+  writeFileSync(join(root, "stale-build.log"), result.stdout + result.stderr);
+  assert.equal(result.status, fixture.probe.expectedStatus, (result.stdout + result.stderr).slice(-3000));
+  assert.ok((result.stdout + result.stderr).includes(fixture.probe.diagnostic));
+  assert.equal(readFileSync(join(root, "Cargo.lock"), "utf8"), fixture.probe.files["Cargo.lock"]);
+  writeFileSync(join(root, "Cargo.lock"), fixture.probe.validLock);
+  const oracle = spawnSync("cargo", ["metadata", "--locked", "--format-version=1", "--manifest-path", join(root, "Cargo.toml")], { cwd: root, env, encoding: "utf8", timeout: 15000 });
+  assert.equal(oracle.status, 0, oracle.stderr);
+  assert.equal(JSON.parse(oracle.stdout).packages[0].name, "trunk-lock-fixture");
+  const watch = spawn("trunk", ["watch", ...trunkArgs], { cwd: root, env, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] });
+  let output = "", exited = false;
+  watch.stdout.on("data", (bytes) => { output += bytes; }); watch.stderr.on("data", (bytes) => { output += bytes; });
+  const closed = new Promise<void>((accept) => { watch.once("close", () => { exited = true; accept(); }); watch.once("error", (error) => { output += error.message; }); });
+  const stop = (): void => {
+    if (!watch.pid || exited) return;
+    if (process.platform === "win32") spawnSync("taskkill", ["/pid", String(watch.pid), "/t", "/f"], { stdio: "ignore" });
+    else try { process.kill(-watch.pid, "SIGTERM"); } catch {}
+  };
+  process.once("SIGINT", stop); process.once("SIGTERM", stop);
+  const until = async (pattern: string, offset = 0): Promise<void> => {
+    const start = Date.now();
+    while (!output.slice(offset).includes(pattern)) {
+      assert.ok(!exited && Date.now() - start < 30000, `Trunk did not emit ${pattern}: ${output.slice(-3000)}`);
+      await new Promise((accept) => setTimeout(accept, 100));
+    }
+  };
+  const progress = setInterval(() => console.log("[TRACE] Native Trunk watch lockfile probe running"), 10000);
+  try {
+    await until("success");
+    const files = readdirSync(join(root, "dist"), { recursive: true, withFileTypes: true }).filter((file) => file.isFile()).map((file) => join(file.parentPath, file.name)).sort();
+    const digest = (): string => createHash("sha256").update(Buffer.concat(files.map((file) => readFileSync(file)))).digest("hex"), before = digest();
+    const offset = output.length;
+    writeFileSync(join(root, "Cargo.lock"), fixture.probe.files["Cargo.lock"]);
+    writeFileSync(join(root, "🦀️.rs"), fixture.probe.files["🦀️.rs"] + "pub fn changed() -> u32 { 43 }\n");
+    await until(fixture.probe.diagnostic, offset);
+    await until("hook call to", offset);
+    assert.equal(readFileSync(join(root, "Cargo.lock"), "utf8"), fixture.probe.files["Cargo.lock"]);
+    assert.equal(digest(), before, "Rejected watch rebuild must preserve the previous deliverables");
+  } finally {
+    stop();
+    const force = setTimeout(() => { if (!exited && watch.pid && process.platform !== "win32") try { process.kill(-watch.pid, "SIGKILL"); } catch {} }, 2000);
+    await closed;
+    clearTimeout(force); clearInterval(progress);
+    process.off("SIGINT", stop); process.off("SIGTERM", stop);
+    writeFileSync(join(root, "watch.log"), output);
+  }
+}

@@ -1,0 +1,28 @@
+{
+ "target": "test-deflate-encoding",
+ "crates": [
+  "semio-framework-deflate"
+ ],
+ "closureCrates": 25,
+ "depInfoUnits": 44,
+ "workspaceFilesRead": 201,
+ "declared": 367,
+ "undeclared": [
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🆔️identity/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/♻️retirement/🌳️typed/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/♻️retirement/📮️handback/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/♻️retirement/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/⚖️compare/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/🏟️collection-arena/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📃️ui-list/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📋️copy/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/🔢️fixed-list/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/🗝️ui-map/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/🗺️fixed-map-and-bytes/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📏️budget/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📏️budget/🧬️schema/🔣️.json",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔤️text/🦀️.rs"
+ ],
+ "closureWithoutUnits": []
+}

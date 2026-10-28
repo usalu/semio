@@ -1,0 +1,55 @@
+import "../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/♻️retirement/🌀️support/🧪️tests/🟦️.ts";
+import {ticketScopeVectorLawV1} from "../../../🔗️graphql/🧪️tests/🌿️tickets/📁️scope/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
+import {createIssuedResourceControlV1} from "./../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
+import {withRepositoryTestArtifactsV1,repositoryTestArtifactRootV1} from "@semio-tech/repo-test/storage";
+import {testResourceLeaseAdmissionTimeoutV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🧪️tests/🚪️admission/🟦️.ts";
+import { expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { build } from "esbuild";
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
+import { BuildScript } from "../📜️script.ts";
+import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+const root = findWorkspaceRoot(import.meta.dir);
+
+test("workspace build entry loads without the audit monolith under the independent bundler", async () => {
+  const compiled = await build({ absWorkingDir: root, entryPoints: [fixture.entry], bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
+  for (const input of Object.keys(compiled.metafile!.inputs)) for (const forbidden of fixture.forbiddenInputs) expect(forbidden.endsWith(".ts") ? input === forbidden : input.includes(forbidden), input).toBe(false);
+  const project = JSON.parse(readFileSync(resolve(root, "📋️project.json"), "utf8"));
+  for (const [name, args] of Object.entries(fixture.targets)) expect(project.targets[name].options.command).toBe(`repo ./${fixture.entry} ${args}`);
+  expect(project.targets.build.executor).toBe("repo:noop");expect(project.targets.build.dependsOn).toContain("build-storybook");
+});
+
+test("workspace build gate requires compiler intent and emits the completed graph mode", () => withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "workspace-build-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), async invocation => {
+  const before = process.env.SEMIO_BUILD_MODE, messages: string[] = [], log = console.log;
+  console.log = (...args: unknown[]) => { messages.push(args.join(" ")); };
+  try {
+    const script = new BuildScript(root, root, invocation);
+    for (const mode of fixture.modes) {
+      process.env.SEMIO_BUILD_MODE = mode;
+      await script.run([]);
+      expect(messages.at(-1)).toBe(`[build] Completed the ${mode} workspace build graph.`);
+    }
+    for (const mode of fixture.invalidModes) {
+      if (mode === null) delete process.env.SEMIO_BUILD_MODE; else process.env.SEMIO_BUILD_MODE = mode;
+      await expect(script.run([])).rejects.toThrow("prototype or release");
+    }
+    process.env.SEMIO_BUILD_MODE = "prototype";
+    for (const args of fixture.invalidSelections) await expect(script.run(args)).rejects.toThrow();
+  } finally {
+    console.log = log;
+    if (before === undefined) delete process.env.SEMIO_BUILD_MODE; else process.env.SEMIO_BUILD_MODE = before;
+  }
+}));
+
+
+
+
+test("actual lease admission refusal retains bounded context and genuine continuation",async()=>withBuildTestInvocationV1(async original=>withRepositoryTestArtifactsV1(root,original,createIssuedResourceControlV1(original,"test:artifact-entry",0),async()=>testResourceLeaseAdmissionTimeoutV1(repositoryTestArtifactRootV1(root),scriptCompilerAdmissionControlV1(original,"test:resource-leases",30000)))));
+
+test("rooted ticket lifecycle neutral vectors preserve independent repository projections",()=>ticketScopeVectorLawV1());
+
+

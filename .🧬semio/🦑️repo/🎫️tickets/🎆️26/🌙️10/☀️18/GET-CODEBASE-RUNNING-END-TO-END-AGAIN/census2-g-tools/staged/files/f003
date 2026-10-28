@@ -1,0 +1,293 @@
+# 📓️ Build system field guide: one workspace, many agents, 16 GB
+
+Reference for people and agents who build in the same checkout at the same time. English first, Deutsch below. The contracts, measurements and history are in [README.md](README.md) (Build tools guide); every command and variable here exists in the code. Status words: **live** = in the tree, **pending gate** = staged or just applied and waiting for the landing gate (`result-gate-g.md` lists the order and the product build after each batch), **in progress** = a lane has not finished it, **not verified** = built and tested graph-free only.
+
+## 🚀️ Run a build
+
+```bash
+bun repo run <project>:<target>                    # one task and its closure
+bun repo run-many --targets=build,test --projects=a,b
+bun repo affected --targets=test                   # changed against HEAD and dependents
+bun repo run <project>:<target> --tool=bazel       # --tool=nx|bazel, else SEMIO_BUILD_TOOL, else the policy default (nx)
+bun repo run <project>:<target> --dry-run          # plan only; --skip-cache ignores the task cache once
+SEMIO_BUILD_GRAPH_POLICY=current bun repo run …    # serve the newest sealed graph, never wait for a rebuild
+bun repo show projects --graph-policy=current      # read-only queries: same switch as a flag
+SEMIO_REPO_PROFILE=1 bun repo run …                # phase table of every process (json for JSON)
+bun repo doctor [--only=leases,capacity]           # why is work waiting, slow or failing, with the fixing command
+```
+
+- Everything goes through `repo`; never start `nx`, `bazel`, `cargo`, `rustc` or a private `CARGO_TARGET_DIR`. Nested tasks inherit `SEMIO_BUILD_TOOL`.
+- Through MCP the tools `run`, `test`, `run_many`, `affected` and the rest map one to one and take `agent`. `watch`, `reset`, `cache gc|clear|dedupe` are not MCP tools (human decisions).
+- Dashboard, architecture course and print are green on Bazel after each of the gate batches 1-4 (course, dashboard, print, course; `result-gate-g.md`); the course e2e passed 76/76 on both topologies (coordination 07:30).
+
+## 🔬️ What happens on a run
+
+1. **Door** (35-75 MB): plans the route, then waits in the **capacity queue** alone (no loader child while it waits). A run that needs the graph and only waits for a peer's graph build also waits as the door alone: after 15 s in the queue it yields (exit 75 internally), waits for a newer generation or 10 min, and restarts with its first request time, at most 3 times.
+2. **Graph**: one builder holds `repository-graph-facts:<root>:shard:7`. Every build stamps the pointer with the time it began observing and the owners it verified (coverage stamp); a waiter that began earlier is served at once (`graph: generation N was sealed by a peer after this command began and already covers it`). Stale owners are first inferred in claimed chunks of at most 128 owners by any number of processes (`graph: … prepared/preparing`; compute slots follow RAM and the learned size of a rebuild, `SEMIO_GRAPH_COMPUTERS=<n>` overrides), then one exclusive assembly publishes. Inference memory is governed (a quarter of the host's RAM and half of the run's grant, clamped to 1-16 GB; `SEMIO_GRAPH_MEMORY_MB` overrides). A project whose source does not parse, or whose dependency is not in the snapshot, is **withheld** instead of failing the generation. `SEMIO_GRAPH_PHASES=1` prints phase timings.
+3. **Nested pin**: a `repo run` started inside an orchestrated Bazel or semio action reads the generation of its parent (`SEMIO_BUILD_GENERATION_PIN`) and inherits its capacity grant, so it never waits for the graph or the machine behind itself.
+4. **Admission** (`repo capacity status`):
+   - **Gate**: a run is admitted while free memory stays above the floor (12.5 % of RAM clamped to 1536-4096 MB: 2048 MB on 16 GB, 4096 MB on 32 GB), swap stays below 25 %, load below 2 per core and pressure is not critical; fair queue, aging 5 min, at most 6 overtakes.
+   - **Size**: a run reserves its operation default (`show`/`graph` 5120 MB, `dependencies` 6144 MB, tasks 768-4096 MB per kind) scaled by what earlier runs of its class really peaked (decayed 0.9 quantile of the last 16, +25 % margin, 30-200 % of the default, at most half of the memory above the floor; `[capacity] run: sized at 43% of the default from 5 earlier run(s) of its class`). The state is `estimates.json` in the host-capacity cache directory (`~/Library/Caches/semio/host-capacity`, `$XDG_CACHE_HOME` or `~/.cache`, `%LOCALAPPDATA%`). A reservation counts in full until the class normally peaks (60 s up to 30 min, 5 min for an unknown class); at most 2 shrunk reservations ramp at once. A failed run never lowers an estimate.
+   - **Phases** (live, gate batch 4): a run marks assembly, plan, rebuild and execution (graph load, graph build, tool start). The graph build learns its own class `phase:rebuild` and never inflates the class of the task; the reservation is the highest of the phases still to come and shrinks at each boundary (`… at least 1125 MB because of its plan phase`). The compute slots of a rebuild follow what a rebuild measurably takes.
+   - **Quiet grant** (pending gate, batch 4b; in the tree since 16:03): a run of a Bazel-gated tool whose class mostly executed nothing holds only a small reservation (`[capacity] run: forecast quiet from 5 earlier run(s) of its class (100% of them executed nothing): 1500 MB reserved now, the full 5632 MB only if work has to run`), passes the queue barrier (at most 4 quiet grants) and grows into the full request in the fair queue with the position it arrived with, once the planner, a graph rebuild or the first Bazel action that really runs needs it (`… work has to run, waiting 12s to grow the reservation from 1500 MB to 5632 MB`). A run that executed anything is learned as busy.
+   - `SEMIO_HOST_CAPACITY=off` is the escape hatch; wrap ad-hoc heavy commands in `repo capacity run --memory=<MB> -- <command>`.
+5. **Tool**:
+   - **Bazel** with persistent workers: 2 servers on 16 GB (heap 1536 MB each, a further server only per 4096 MB headroom, idle ones are reaped and exit after 600 s). A repeated selection in a slot skips the planner when a traced witness of everything the planner read still holds (`[bazel] plan reused: N observations … the planner was not started`; `SEMIO_REPO_PLAN_REUSE=off|verify`; a miss says `[bazel] planning again: <reason>`); the change journal (`SEMIO_REPO_CHANGES=on|off`, default on, needs the native watcher, else the always-correct stat walk) makes that check cheap. The hermetic `course:typecheck` is served by a persistent worker service (`RepoHermeticService`, 2 instances, 120 s idle, cold fallback, `--workers=off` forces cold).
+   - **Nx**: at most 2 finite daemons; on hosts up to 24 GiB they idle out after 2 min and retire above 1280 MB resident.
+   - **Compilers**: rustc front-end threads follow the admitted cores (`SEMIO_COMPILER_PARALLELISM`).
+   - **Test runners** start the workers one job of their grant carries, from one policy (`🧪️testing/👷️workers`): memory of the job minus the base of the runner over the measured RSS of a worker (learned per class in `estimates.json`), and the cores of the job times what the runner can share one core with, never fewer than one. Defaults: vitest 4 (cap 8), bun test files 1 (cap 8), Playwright 1 (cap 4), end-to-end stacks 2, Cargo test threads = cores. An override (`SEMIO_VITEST_WORKERS`, `SEMIO_BUN_TEST_WORKERS`, `SEMIO_CARGO_TEST_THREADS`, `SEMIO_PLAYWRIGHT_WORKERS`, `SEMIO_E2E_STACKS`) never leaves the admitted cores; a reduced count prints `[tests] Vitest: 2 of 4 worker(s), bounded by …`. A test file that holds more than a typical file process is declared with its measured peak RSS in `🧪️testing/👷️workers/📏️file-budgets`: the suite runner prices a cohort with its biggest file, starts the files of a cohort only while the megabytes held by the running ones plus the budget of the next fit the share of the grant, and stops a file above 150 % of its budget (3 GB when undeclared) by name; `SEMIO_TEST_FILE_CEILING=off` lifts the ceilings. The same ceilings hold every `bun test` process that the owned command runners start (`🧪️testing/🟨️bun/🧯️ceiling`), whoever the caller is: it is terminated by name above its ceiling, a command that is no `bun test` of the hosting runtime has none.
+
+## 🤝️ Working as one of many agents
+
+About 20 agents share one checkout and one machine. What keeps that working:
+
+- **Identity**: `bun repo session open --agent=<name>` (also `session list|status|close`, `close --dead`) gives you a session with its own cargo lane, Bazel slot preference, Nx daemon namespace, test sandbox root, lease owner tag and budget share. Without `--agent` the client's own session variable or the nearest agent ancestor names you. MCP tools take `agent` for the same attribution.
+- **Priority class**: agents run as `agent`, fan-out tools as `background` (see the next section); never claim `interactive` from an agent.
+- **Queue etiquette**: a waiting run is cheap (door alone, 35-75 MB) and Ctrl+C gives everything back, so wait; do not start the same build twice. Start a graph-loading run only when `bun repo leases status | grep -c WAITING` is below 4, one at a time. Use `SEMIO_BUILD_GRAPH_POLICY=current` for read-only questions. Never start `bun`, `tsc`, Python or `find` scans that read the tree or the ticket `🗑️generated` folders outside `repo capacity run`; ad-hoc scripts stream their input and stay below 500 MB RSS; kill your own pids before you finish, never someone else's.
+- **Staging edits to the build tool**: the build library, the process module and the launcher are edited by many lanes at once. While a landing gate is open (wave 1026g), edits there are staged, not live: an anchored patch (every anchor must exist exactly once, else it refuses and writes nothing; new files first), a revert, base hashes (apply refuses when a file changed since staging), a graph-free verify script and laws with an independent oracle; the lane hands it over with `FOR gate-g: batch ready <path>`; the gate applies one batch at a time, runs one official product build (course, dashboard, print in turn) and reverts on red. Exceptions are type-error fixes and a fix of a red you caused (announce it as FIX-OF-RED with the failing run). Outside a gate: compile-atomic (module complete and tested, then the call-site switch in one edit), re-read before you edit.
+- **Sealed snapshot**: live, opt-in. `SEMIO_REPO_IMPLEMENTATION=sealed` runs the tool from a content-addressed snapshot of its own sources, so a half-finished peer edit cannot stop your command; `live` captures the tree as before (the default until gate batch 8 flips it); `promote` promotes now and runs nothing (exit 1 when blocked). Details: `🏗️build/🏛️sealed/README.md`.
+- **Fleet status**: not landed. Today read `bun repo leases status`, `bun repo capacity status`, `bun repo session list` and `bun repo doctor`.
+- **Memory budget** (16 GB host, measured 10-26):
+
+  | Part | Bound |
+  |---|---|
+  | waiting run | door alone, 35-75 MB; loader 255 MB |
+  | free-memory floor | 2048 MB always left free |
+  | graph builder | 3.7-5.0 GB flat in vivo (15-29 GB before the abort-listener leak fix); target 2 GB not met |
+  | Bazel | 2 servers, JVM peak 0.75 GB fleet-wide, persistent worker 98 MB |
+  | Nx | 2 finite daemons, drain above 1280 MB |
+  | test workers | one policy per runner, never beyond the grant |
+
+- **Disk budget**: see the disk section; set the budget per machine, run `cache gc --dry-run --area=…` before anything else, delete the `🗑️generated` folder of your ticket when you are done (outside the ledger).
+
+**When it goes wrong**
+
+| Symptom | Meaning and action |
+|---|---|
+| exit 75 | declared restart (outdated implementation, format stamp moved, graph yield, file churn, a source renamed mid-run). The front door restarts by itself up to 6 times with back-off 0.25, 1, 4, 12, 30, 30 s (`Restarting with the current implementation (2 of 6)`); a wrapper that surfaces it: run again, do not loop faster. |
+| `Foreign native image mounted inside the parent … Detach the device <d>` | a test mounted an image inside a managed `.cache/b` parent; its sandbox must live outside (OS temp directory). Detach the named device through its owner, never force-unmount; finished scratch images idle 15 min are swept at the next `repo` command. |
+| `graph: <project> is withheld: <file> does not parse (sha256 …)` or `… depends on projects that this graph snapshot does not contain` | the project is held back, not broken: fix or restore the named file and run again (the next generation heals it), or run again for projects created or removed during the build. A task of a withheld project says why instead of `Unknown build task`. |
+| `The runtime registry declares contract N, this launcher implements contract M. Rebuild and reinstall the launcher with: …` | the installed Go launcher is older than the registry; run the printed installer once (`🚀️launcher/📥️install`); there is one install location. |
+
+## 🚦️ Priority, leases and stuck holders
+
+- **Classes** `interactive > agent > background`: a person at a terminal outside an agent session is `interactive`, everything else `agent`, the MCP fan-out tools (`test`, `run_many`, `affected` and the `run` of `incremental`, `conformance`, `units`, `bench`, `concurrency`) export `background`; `SEMIO_LEASE_PRIORITY=interactive|agent|background` overrides. A ticket is filed 60 min earlier (interactive) or later (background) than it arrived and served in filed order, so overtaking is bounded and nothing starves. The capacity queue reads the same class (and treats a class whose median run is under 120 s as interactive).
+- **`bun repo leases status`** (`--json`, `--all`): holders, waiters, who blocks whom, cycles, the capacity queue. A second line per exclusive holder shows priority, code age, phase and counters (`inference 120 of 566`), time left (from its own counter, else the median of earlier holds of the same kind) and the state `progressing`, `silent` (1 min), `STUCK` (no published progress and no CPU use of the holder or its children, probed every 30 s, for 20 min on the graph builder, 60 min elsewhere), `STALE` (loaded older code of a format stamp than the newest process) or `legacy` (started before this code). Waiters see the same in their `lease-queue` line, English or German. A busy holder is never stuck.
+- **`SEMIO_LEASE_RECLAIM=report|request|terminate`** (default `request`): `report` only shows; `request` asks a stuck holder to give the resource up (it ends with exit 75, the outermost command restarts); `terminate` additionally stops one that ignored the request for 2 min and made no progress (matching OS start time, signalable, never itself; SIGTERM, SIGKILL of the tree after 15 s; `reclaim.jsonl`; not on Windows; a `legacy` holder only after 4 h). A holder on newer code asks a stale holder to yield; a healthy holder is never asked.
+
+## 🔥️ Warm caches and what invalidates them
+
+A task key is its declared inputs, the inferred command closure, tool pins and the mode (`prototype`/`release` are different keys). Edits fall into two kinds:
+
+| Edit | Effect |
+|---|---|
+| **Scheduling code**: leases, capacity, store custody, process supervision, retry observation, progress and texts, process launch (the seven domains of `🏗️build/📥️source/🔏️closure/🗓️scheduling/🔣️.json`) | no action key moves; Nx re-keys at most the 1171 of 12817 tasks that read that code on purpose (tests, lints); Rust targets stay keyed on `native-build` (it assembles Cargo arguments) |
+| **Output-producing code**: command scripts, generators, native-build, inference, schemas, product sources | re-keys everything whose closure contains it; about 3.7k of 4020 projects contain build-library files in their closure |
+| Policy numbers: `hostCapacity`, `workers`, `remoteCache`, `remoteExecution` of `🏗️build/🔣️policy.json`, `storage` of `⚡️caching/🔣️policy.json` | nothing (sectional digest) |
+| Comment, rewritten specifier or import of a file the shared walks already reach | graph: derived facts re-ask the question, the answer is equal, 0 projects re-inferred; a new file in a closure is a real change |
+| Peer edit of an unrelated file, or a file renamed mid-run | observed again (bounded retries: 6 reads, 5 snapshots, 4 builds), else exit 75 and an automatic restart; never a failed run |
+
+- A library edit lands as one graph generation. Measured at the gate: 7 to 170 projects re-inferred (170 in 355 s), a one-project change 34 s. A framework-wide edit re-infers about 566 projects, which took 60-120 min with a builder at 5-13 GB before the memory and early-cutoff fixes; not re-measured since.
+- The source closure of the build tool (about 1450 files) is captured once per user and remembered (`~/Library/Caches/semio-repo`, `$XDG_CACHE_HOME`, `%LOCALAPPDATA%`; hit 0.1 s against 8-30 s under load; any edit of the closure is a miss; `SEMIO_REPO_SOURCE_MEMO=on|off`).
+- TypeScript: warm incremental `tsc` is 6-7 CPU-s per check (state file per owner and compiler). The hermetic Bazel check is 24-41 CPU-s cold and 0.4-5 CPU-s in the persistent worker (graph-free corpus of 22 edit steps, identical diagnostics; official before/after not run). Bazel actions are shared across slots through one disk cache; a different selection in a slot costs about 10 s instead of a 28 s JVM restart.
+
+## ✏️ Editing the build tool while others build
+
+- **Live**: a run finishes with the implementation it loaded; an edit it did not load restarts the outermost command with exit 75 (at most 6 times; `SEMIO_STALE_REEXEC` counts). See the many-agents section for how to land an edit.
+- Scheduling-domain edits (table above) cost nobody a rebuild; anything else re-keys and, after a framework-wide edit, re-infers the graph.
+- **Sealed** (live opt-in, default flip pending gate batch 8): a promotion needs the tree to parse, load and pass two self-checks; a broken edit keeps the previous snapshot working and names `path:line:col` (EN and DE). Limits: runtime faults that parse and load are not caught; a light command costs about 1 s; Windows and Linux untested.
+
+## 💾️ Disk budget
+
+```bash
+bun repo cache status [--budget=40GiB] [--json]    # ledger + machine plan: quotas per store, bytes to evict, bytes blocked by holders
+bun repo cache gc --dry-run [--area=retired,undeclared]
+bun repo cache dedupe --dry-run [--area=bazel-outputs]
+bun repo cache verify --deep
+```
+
+- Budget precedence: `--budget` > `SEMIO_CACHE_BUDGET_BYTES` > file `🎚️machine-budget.json` in the repository cache root > default 40 GiB (below the sum of the store floors it is refused); a host free-space floor of 15 GiB shrinks the effective budget. Quotas are weighted max-min fair per store (rust 44 %, products 23 %, tools 8 %, dependencies 7 %, graph 5 %, diagnostics 3 %, nx 1.5 %, leases 0.1 %, loose 8.4 %). This machine holds 69 GiB of content, so the default does not fit: set the budget per machine.
+- `cache gc` is lock-aware: it re-measures a unit before removing it and never removes one held by an SQLite lock, a queue ticket, a lease, used within the area's quiet time or changed since the scan. Always `--dry-run` first. `--area` is the safe form while peers edit the library; a full `gc` can fail with a restart under churn (fix landed, not re-run live).
+- `cache gc --area=nx-tooling,nx-tmp` bounds the Nx toolkit store: the 8 newest generations of `.cache/b/t/m/nx` stay (3 while the tools image is over its machine quota or has under 2.5 GiB free), plus the current activation, every generation a live reader holds (its `nx-tooling:<identity>` lease, probed by a try-lock) and every one younger than 10 minutes; the rest is retired oldest first, at most 16 per run. Retiring needs the whole tools image to itself, so the run polls for an idle image (no queue: nobody is held back) for 90 s (`SEMIO_NX_TOOLING_IDLE_WAIT_MS`, 0 to 600000), otherwise says so and leaves the work to the next run; the Nx storage preparation starts one detached collector per 15 minutes when less than 2.5 GiB are free. Runs hold the tools image for their whole lifetime, so it was never idle while the fleet ran: collect in a quiet window. `nx-tmp` removes `nx/tmp/tmp-<pid>-*` install trees whose process is gone and that stayed unused for an hour (enforced: -825 MiB). `--dry-run` only plans.
+- `cache dedupe` replaces identical files by copy-on-write clones (never copies, never hardlinks; a volume that cannot clone keeps everything) in `bazel-outputs`, `bazel-workspaces`, `vite-products`, `tools`; files used within 1 h, volatile names and files changed since hashing are skipped. Measured: 2.75 GiB real gain on the products image.
+- New macOS images are created sparse (64 MiB, then resized: cost = content; live). The existing fixed images (about 98 GiB on this machine) stay fully allocated until recreated in a quiet window (helper ready, not applied). `~/.sinc` and ticket `🗑️generated` folders are outside the ledger.
+
+## 🦀️ Rust lanes
+
+`bun repo cargo --store=shared --configuration=prototype|release -- <cargo args>`: every agent gets a private lane over one content-addressed unit cache (`SEMIO_CARGO_LANE`, `SEMIO_UNIT_CACHE_SLOTS`), so different crates build concurrently (measured 2.0x for two crates) and a one-line edit of the dashboard binary rebuilds in 44 s (23 CPU-s, 1.3 GB). The cargo part of a run is bounded by the admission: `1 of 10 cores admitted` also bounds rustc threads. Every compiling caller takes a pooled lane (test and lint runners, exact laws, wasm build, relay, wgpu, the component driver, every artifact build through `buildRepositoryCargoArtifacts`, the proctor and the Hub's Cargo checks), so none holds a whole-directory custody; a lane's provenance receipts are published into the shared ledger before the lane is released, and two artifact builds compile at the same time (measured: pair 12.5 s to 8.1 s, custody wait 6.2 s to 0.06 s, peak RSS 0.8 to 1.4 GB). A cold lane compiled officially in `print-rs:test` (gate 3b, 192 s). A test that needs a Rust oracle builds it through its own issued invocation, never a nested `repo cargo`.
+
+## 🧪️ Tests and routing tables
+
+- Every build-library test file is routed to exactly one suite in `🏗️build/🗂️suites/🔣️.json` (51 suites, law `build-route-table`); the caching module has its own table (`⚡️caching/🗂️suites/🔣️.json`, 102 suites). A suite runs as `bun repo run @semio-tech/repo:test-<suite>` (targets in `⚡️caching/📋️project.json`). A new test file must be added to a suite or the route law fails. Process-module and product tests have their own tables.
+- Census (route-g, 10-26): of 353 build-library files 270 were green in official mode; the 83 others are classed (52 stale expectations, 16 birth or Nx gated, 7 real defects, 5 peer, 2 load); fixes for them are pending gate (route2-g).
+- Graph-free single file: `nice -n 10 bun test ./<file>` from the module directory, always with `./` (a bare path is a filter and scans the whole directory). Laws that need the repo envelope run through their suite route. Ad-hoc scripts stream their input and stay below 500 MB.
+
+## 🩹️ Troubleshooting
+
+| Symptom | Meaning and action |
+|---|---|
+| `[capacity] waiting 42s for run: not enough free memory (need … MB; … spare above the … MB floor …)` | admission queue, not a hang; reasons: `memory`, `swap`, `pressure-*`, `files`, `attaches`, `load`, `ramp`, `queue-order`; read `bun repo capacity status`; Ctrl+C gives everything back. On a saturated host (load 30-65) a course build waited 46 min. |
+| `Waiting for access to repository-graph-facts:…:shard:7 … position 3 of 9, behind … holder: progressing, inference 120 of 566, about 34 min left` | a peer builds the graph; you are served by the coverage stamp when it publishes; for read-only queries use `SEMIO_BUILD_GRAPH_POLICY=current`; `bun repo leases status` shows STUCK/STALE holders |
+| swap growing, machine sluggish | `bun repo capacity status` (swap, pressure, who holds what); do not run `bun`, `tsc` or Python scripts outside `repo capacity run`; stop what you started |
+| ENFILE / file table full | transient; commands retry (`busy`); stop runaway `bun test <path>` without `./` |
+| exit 75, foreign mount, withheld project, launcher contract | see "When it goes wrong" |
+| `bun repo doctor` | one-shot answer for waiting, slow or failing work (pins, images, leases, grants, generations); `--fix --dry-run` lists the safe repairs |
+
+## 📍️ Status
+
+Measured 10-26 on a 32 GB Mac with 20 agents (load 17-65), 16 GB simulated by policy; absolute seconds are 2-4x an idle host.
+
+- Met: dashboard rebuild after a one-line edit under 2 min and under 3 GB; no-wait admission of at least 4 runs on 16 GB with learned sizes; queue time 2.3x lower in the replay; graph-free `cache status` tree 580 MB (was 2363 MB), Bazel worker 98 MB (was 1770 MB), a waiting run 35-75 MB; graph builder flat at 3.7-5.0 GB (was 15-29 GB); one-project graph change 34 s; environment move 144-159 s to 43-52 s; test-owner rediscovery 69 s to 3-5 s.
+- Not met or not shown: a hot Bazel no-op under 10 s (not measurable on this host: 45 min in the capacity queue; planner skip and quiet grant are in the tree to fix the two causes, the measurement repeats after batch 4b); graph builder under 2 GB (index views 1.7 GB, native discovery; the index-chunk batch reaches 2.9 GB peak, pending gate); graph generation under 2 min after a larger peer edit.
+- Pending gate: quiet grant (4b), cache-key narrowing (keys2-g, undeclared-g), route fixes (route2-g), native-storage guard (store-g), index chunks (gram2-g), Nx fixes (nxfix-g), e2e worker rows (e2eperf-g), sealed default (self-g).
+- In progress: fleet status (obs-g), cross-platform CI for the suite tables (ci-g).
+- Not verified: Windows and Linux (the Windows lease lock and unit-cache wrapper are modelled and tested through injected platforms; one real Windows CI run is needed), a live yield between two graph builders.
+
+---
+
+# 🇩🇪️ Deutsch
+
+# 📓️ Feldführer zum Build-System: ein Workspace, viele Agenten, 16 GB
+
+Nachschlagewerk für Menschen und Agenten, die gleichzeitig im selben Checkout bauen. Verträge, Messungen und Geschichte stehen in [README.md](README.md) (Build-Werkzeuge im Alltag); jeder Befehl und jede Variable hier existiert im Code. Statuswörter: **live** = im Baum, **wartet auf das Tor** = vorbereitet oder gerade eingespielt und wartet auf das Landungs-Tor (`result-gate-g.md` nennt Reihenfolge und Produkt-Build nach jedem Paket), **in Arbeit** = eine Bahn ist nicht fertig, **nicht verifiziert** = gebaut und nur ohne Graph getestet.
+
+## 🚀️ Einen Build starten
+
+```bash
+bun repo run <Projekt>:<Target>                    # eine Task samt Abschluss
+bun repo run-many --targets=build,test --projects=a,b
+bun repo affected --targets=test                   # gegenüber HEAD geändert samt Abhängigen
+bun repo run <Projekt>:<Target> --tool=bazel       # --tool=nx|bazel, sonst SEMIO_BUILD_TOOL, sonst Standard der Policy (nx)
+bun repo run <Projekt>:<Target> --dry-run          # nur planen; --skip-cache ignoriert den Task-Cache einmalig
+SEMIO_BUILD_GRAPH_POLICY=current bun repo run …    # neuesten versiegelten Graphen liefern, nie auf Neuaufbau warten
+bun repo show projects --graph-policy=current      # lesende Abfragen: derselbe Schalter als Flag
+SEMIO_REPO_PROFILE=1 bun repo run …                # Phasentabelle jedes Prozesses (json für JSON)
+bun repo doctor [--only=leases,capacity]           # warum Arbeit wartet, langsam ist oder scheitert, samt behebendem Befehl
+```
+
+- Alles läuft über `repo`; nie `nx`, `bazel`, `cargo`, `rustc` oder ein eigenes `CARGO_TARGET_DIR` starten. Verschachtelte Tasks erben `SEMIO_BUILD_TOOL`.
+- Über MCP bilden `run`, `test`, `run_many`, `affected` und die übrigen Werkzeuge je eine Operation ab und nehmen `agent`. `watch`, `reset`, `cache gc|clear|dedupe` sind keine MCP-Werkzeuge (menschliche Entscheidungen).
+- Dashboard, Architekturkurs und Print sind auf Bazel nach jedem der Tor-Pakete 1-4 grün (Kurs, Dashboard, Print, Kurs; `result-gate-g.md`); das Kurs-E2E bestand 76/76 in beiden Topologien (Koordination 07:30).
+
+## 🔬️ Was bei einem Lauf geschieht
+
+1. **Tür** (35-75 MB): plant die Route und wartet dann allein in der **Kapazitäts-Warteschlange** (kein Lader-Kind während des Wartens). Ein Lauf, der nur auf den Graph-Aufbau eines Peers wartet, wartet ebenfalls als Tür allein: nach 15 s in der Schlange gibt er nach (intern Exit 75), wartet auf eine neuere Generation oder 10 min und startet mit seiner ersten Anfragezeit neu, höchstens 3 Mal.
+2. **Graph**: ein Erbauer hält `repository-graph-facts:<root>:shard:7`. Jeder Aufbau stempelt den Zeiger mit dem Beginn seiner Beobachtung und den geprüften Eignern (Abdeckungsstempel); ein Wartender, der früher begann, wird sofort bedient (`graph: generation N was sealed by a peer after this command began and already covers it`). Veraltete Eigner werden zuerst in beanspruchten Stücken von höchstens 128 Eignern von beliebig vielen Prozessen abgeleitet (`graph: … prepared/preparing`; die Rechen-Plätze folgen dem RAM und der gelernten Größe eines Neuaufbaus, `SEMIO_GRAPH_COMPUTERS=<n>` überschreibt), dann veröffentlicht ein exklusives Zusammensetzen. Der Speicher der Inferenz wird geregelt (ein Viertel des RAM und die Hälfte der Zusage des Laufs, begrenzt auf 1-16 GB; `SEMIO_GRAPH_MEMORY_MB` überschreibt). Ein Projekt, dessen Quelle sich nicht lesen lässt oder dessen Abhängigkeit nicht im Schnappschuss liegt, wird **zurückgehalten**, statt die Generation scheitern zu lassen. `SEMIO_GRAPH_PHASES=1` gibt Phasenzeiten aus.
+3. **Verschachtelte Pins**: ein `repo run`, den eine orchestrierte Bazel- oder semio-Aktion startet, liest die Generation seines Elternteils (`SEMIO_BUILD_GENERATION_PIN`) und erbt dessen Kapazitätszusage; er wartet nie hinter sich selbst auf Graph oder Rechner.
+4. **Zulassung** (`repo capacity status`):
+   - **Tor**: ein Lauf wird zugelassen, solange der freie Speicher über der Untergrenze bleibt (12,5 % des RAM, begrenzt auf 1536-4096 MB: 2048 MB bei 16 GB, 4096 MB bei 32 GB), Swap unter 25 %, Last unter 2 je Kern und der Druck nicht kritisch ist; faire Warteschlange, Alterung 5 min, höchstens 6 Überholungen.
+   - **Größe**: ein Lauf reserviert den Standardwert seiner Operation (`show`/`graph` 5120 MB, `dependencies` 6144 MB, Tasks 768-4096 MB je Art), skaliert mit dem, was frühere Läufe seiner Klasse wirklich erreicht haben (abklingendes 0,9-Quantil der letzten 16, +25 % Zuschlag, 30-200 % des Standards, höchstens die Hälfte des Speichers über der Untergrenze; `[capacity] run: auf 43% des Standardwerts bemessen, aus 5 frueheren Laeufen seiner Klasse`). Der Zustand ist `estimates.json` im Host-Capacity-Cache-Verzeichnis (`~/Library/Caches/semio/host-capacity`, `$XDG_CACHE_HOME` oder `~/.cache`, `%LOCALAPPDATA%`). Eine Reservierung zählt voll, bis die Klasse üblicherweise ihren Gipfel erreicht (60 s bis 30 min, 5 min für eine unbekannte Klasse); höchstens 2 verkleinerte Reservierungen wachsen gleichzeitig. Ein gescheiterter Lauf senkt nie eine Schätzung.
+   - **Phasen** (live, Tor-Paket 4): ein Lauf markiert Aufbereitung, Plan, Neuaufbau und Ausführung (Graph laden, Graph bauen, Werkzeugstart). Der Graphaufbau lernt seine eigene Klasse `phase:rebuild` und bläht nie die Klasse der Aufgabe auf; die Reservierung ist das Höchste der noch kommenden Phasen und sinkt an jeder Grenze (`… mindestens 1125 MB wegen der Phase plan`). Die Rechen-Plätze eines Neuaufbaus folgen dem, was ein Neuaufbau messbar braucht.
+   - **Ruhige Zusage** (wartet auf das Tor, Paket 4b; seit 16:03 im Baum): ein Lauf eines Werkzeugs mit bewachten Ausführern (Bazel), dessen Klasse meist nichts ausgeführt hat, hält nur eine kleine Reservierung (`[capacity] run: ruhig prognostiziert aus 5 frueheren Laeufen seiner Klasse (100% fuehrten nichts aus): jetzt 1500 MB reserviert, die vollen 5632 MB nur, wenn Arbeit laufen muss`), überholt die Warteschlangen-Sperre (höchstens 4 ruhige Zusagen) und wächst in der fairen Warteschlange mit der Position, mit der er ankam, auf die volle Anfrage, sobald der Planer, ein Graph-Neuaufbau oder die erste wirklich laufende Bazel-Aktion es braucht (`… es muss Arbeit laufen, wartet seit 12 s darauf, die Reservierung von 1500 MB auf 5632 MB zu vergroessern`). Ein Lauf, der etwas ausgeführt hat, wird als beschäftigt gelernt.
+   - `SEMIO_HOST_CAPACITY=off` ist die Notausstiegsluke; schwere Ad-hoc-Befehle in `repo capacity run --memory=<MB> -- <Befehl>` einpacken.
+5. **Werkzeug**:
+   - **Bazel** mit persistenten Workern: 2 Server bei 16 GB (Heap je 1536 MB, ein weiterer nur je 4096 MB Spielraum, Leerlauf-Server werden abgeräumt und enden nach 600 s). Eine wiederholte Auswahl in einem Slot überspringt den Planer, wenn ein verfolgter Zeuge von allem, was der Planer las, noch gilt (`[bazel] plan reused: N observations … the planner was not started`; `SEMIO_REPO_PLAN_REUSE=off|verify`; ein Fehltreffer nennt `[bazel] planning again: <Grund>`); das Änderungsjournal (`SEMIO_REPO_CHANGES=on|off`, Standard an, braucht den nativen Beobachter, sonst der stets korrekte Stat-Lauf) macht diese Prüfung billig. Das hermetische `course:typecheck` bedient ein persistenter Worker-Dienst (`RepoHermeticService`, 2 Instanzen, 120 s Leerlauf, kalter Rückfall, `--workers=off` erzwingt kalt).
+   - **Nx**: höchstens 2 endliche Daemons; auf Rechnern bis 24 GiB enden sie nach 2 min Leerlauf und treten über 1280 MB resident ab.
+   - **Compiler**: die Frontend-Threads von rustc folgen den zugelassenen Kernen (`SEMIO_COMPILER_PARALLELISM`).
+   - **Testläufer** starten so viele Worker, wie ein Job ihrer Zusage trägt, nach einer einzigen Richtlinie (`🧪️testing/👷️workers`): der Speicher des Jobs abzüglich der Grundlast des Läufers geteilt durch den gemessenen RSS eines Workers (je Klasse in `estimates.json` gelernt), und die Kerne des Jobs mal der Zahl, die sich ein Kern bei diesem Läufer teilen kann, nie weniger als einer. Standard: vitest 4 (Grenze 8), bun-test-Dateien 1 (Grenze 8), Playwright 1 (Grenze 4), Ende-zu-Ende-Stacks 2, Cargo-Test-Threads = Kerne. Eine Vorgabe (`SEMIO_VITEST_WORKERS`, `SEMIO_BUN_TEST_WORKERS`, `SEMIO_CARGO_TEST_THREADS`, `SEMIO_PLAYWRIGHT_WORKERS`, `SEMIO_E2E_STACKS`) verlässt nie die zugelassenen Kerne; eine verkleinerte Zahl erscheint als `[tests] Vitest: 2 von 4 Worker(n), begrenzt durch …`. Eine Testdatei, die mehr belegt als ein typischer Dateiprozess, wird mit ihrer gemessenen Spitze (RSS) in `🧪️testing/👷️workers/📏️file-budgets` deklariert: der Suite-Läufer bepreist eine Gruppe mit ihrer größten Datei, startet die Dateien einer Gruppe nur, solange die Megabytes der laufenden Dateien plus das Budget der nächsten in den Anteil der Zuteilung passen, und hält eine Datei über 150 % ihres Budgets (3 GB ohne Deklaration) namentlich an; `SEMIO_TEST_FILE_CEILING=off` hebt die Obergrenzen auf. Dieselben Obergrenzen gelten für jeden `bun test`-Prozess, den die eigenen Befehlsläufer starten (`🧪️testing/🟨️bun/🧯️ceiling`), gleich wer ihn aufruft: über der Obergrenze wird er namentlich beendet, ein Befehl, der kein `bun test` der Host-Laufzeit ist, hat keine.
+
+## 🤝️ Als einer von vielen Agenten arbeiten
+
+Rund 20 Agenten teilen sich einen Checkout und einen Rechner. Was das trägt:
+
+- **Identität**: `bun repo session open --agent=<Name>` (auch `session list|status|close`, `close --dead`) gibt dir eine Sitzung mit eigener Cargo-Lane, Bazel-Slot-Präferenz, Nx-Daemon-Namensraum, Test-Sandbox-Wurzel, Lease-Eigentümer-Marke und Budgetanteil. Ohne `--agent` benennt dich die Sitzungsvariable des Clients oder der nächste Agent-Vorfahre. MCP-Werkzeuge nehmen `agent` für dieselbe Zuordnung.
+- **Prioritätsklasse**: Agenten laufen als `agent`, Fan-out-Werkzeuge als `background` (siehe nächster Abschnitt); als Agent nie `interactive` beanspruchen.
+- **Warteschlangen-Etikette**: ein wartender Lauf ist billig (nur die Tür, 35-75 MB) und Strg+C gibt alles zurück, also warten; denselben Build nicht doppelt starten. Einen Graph-ladenden Lauf nur starten, wenn `bun repo leases status | grep -c WAITING` unter 4 liegt, einen nach dem anderen. Für lesende Fragen `SEMIO_BUILD_GRAPH_POLICY=current`. Nie `bun`, `tsc`, Python oder `find`-Läufe, die den Baum oder die `🗑️generated`-Ordner der Tickets lesen, außerhalb von `repo capacity run` starten; Ad-hoc-Skripte lesen ihre Eingabe als Strom und bleiben unter 500 MB RSS; die eigenen pids vor dem Ende beenden, nie fremde.
+- **Änderungen am Build-Werkzeug vorbereiten**: Build-Bibliothek, Prozess-Modul und Launcher ändern viele Bahnen gleichzeitig. Solange ein Landungs-Tor offen ist (Welle 1026g), werden Änderungen dort vorbereitet, nicht live eingespielt: ein verankerter Patch (jeder Anker muss genau einmal existieren, sonst verweigert er und schreibt nichts; neue Dateien zuerst), ein Revert, Basis-Hashes (das Einspielen verweigert, wenn sich eine Datei seit der Vorbereitung änderte), ein Verifikationsskript ohne Graph und Gesetze mit unabhängigem Orakel; die Bahn übergibt mit `FOR gate-g: batch ready <Pfad>`; das Tor spielt ein Paket nach dem anderen ein, führt einen offiziellen Produkt-Build aus (Kurs, Dashboard, Print abwechselnd) und macht bei Rot rückgängig. Ausnahmen sind Typfehler-Korrekturen und die Korrektur eines selbst verursachten Rots (als FIX-OF-RED mit dem fehlgeschlagenen Lauf melden). Außerhalb eines Tors: kompilier-atomar (Modul vollständig und getestet, dann die Umstellung der Aufrufstellen in einer Änderung), vor dem Ändern neu lesen.
+- **Versiegelter Schnappschuss**: live, als Opt-in. `SEMIO_REPO_IMPLEMENTATION=sealed` führt das Werkzeug aus einem inhaltsadressierten Schnappschuss seiner eigenen Quellen aus, sodass eine halbfertige Peer-Änderung deinen Befehl nicht stoppt; `live` erfasst den Baum wie bisher (Standard, bis Tor-Paket 8 ihn umlegt); `promote` befördert jetzt und führt nichts aus (Exit 1 bei Blockade). Einzelheiten: `🏗️build/🏛️sealed/README.md`.
+- **Flottenstatus**: nicht eingespielt. Heute `bun repo leases status`, `bun repo capacity status`, `bun repo session list` und `bun repo doctor` lesen.
+- **Speicherbudget** (16-GB-Rechner, gemessen am 26.10.):
+
+  | Teil | Grenze |
+  |---|---|
+  | wartender Lauf | nur die Tür, 35-75 MB; Lader 255 MB |
+  | Untergrenze des freien Speichers | stets 2048 MB frei |
+  | Graph-Erbauer | 3,7-5,0 GB flach in vivo (15-29 GB vor der Korrektur des Abort-Listener-Lecks); Ziel 2 GB nicht erreicht |
+  | Bazel | 2 Server, JVM-Spitze 0,75 GB flottenweit, persistenter Worker 98 MB |
+  | Nx | 2 endliche Daemons, Abtreten über 1280 MB |
+  | Test-Worker | eine Richtlinie je Läufer, nie über die Zusage |
+
+- **Plattenbudget**: siehe den Plattenabschnitt; das Budget je Maschine setzen, vor allem anderen `cache gc --dry-run --area=…`, den `🗑️generated`-Ordner des eigenen Tickets am Ende löschen (außerhalb des Verzeichnisses).
+
+**Wenn etwas schiefgeht**
+
+| Symptom | Bedeutung und Maßnahme |
+|---|---|
+| Exit 75 | deklarierter Neustart (veraltete Implementierung, Format-Stempel bewegt, Graph-Nachgeben, Datei-Churn, eine mitten im Lauf umbenannte Quelle). Die Eingangstür startet selbst neu, bis zu 6 Mal mit Wartezeit 0,25, 1, 4, 12, 30, 30 s (`Neustart mit der aktuellen Implementierung (2 von 6)`); zeigt ein Wrapper ihn, erneut starten und nicht schneller wiederholen. |
+| `Foreign native image mounted inside the parent … Detach the device <d>` | ein Test hat ein Abbild in einem verwalteten `.cache/b`-Elternteil eingehängt; seine Sandbox muss außerhalb liegen (OS-Temp-Ordner). Das genannte Gerät über seinen Besitzer aushängen, nie erzwingen; fertige Scratch-Abbilder nach 15 min Leerlauf räumt der nächste `repo`-Befehl ab. |
+| `Graph: <Projekt> wird zurückgehalten: <Datei> lässt sich nicht lesen (sha256 …)` oder `… hängt von Projekten ab, die dieser Graph-Schnappschuss nicht enthält` | das Projekt ist zurückgehalten, nicht kaputt: die genannte Datei korrigieren oder wiederherstellen und erneut starten (die nächste Generation heilt es), oder erneut starten bei Projekten, die während des Aufbaus angelegt oder entfernt wurden. Eine Task eines zurückgehaltenen Projekts nennt den Grund statt `Unknown build task`. |
+| `Die Laufzeitregistratur deklariert Vertrag N, dieser Launcher setzt Vertrag M um. Baue den Launcher neu und installiere ihn mit: …` | der installierte Go-Launcher ist älter als die Registratur; den ausgegebenen Installer einmal ausführen (`🚀️launcher/📥️install`); es gibt genau einen Installationsort. |
+
+## 🚦️ Priorität, Leases und festhängende Halter
+
+- **Klassen** `interactive > agent > background`: wer an einem Terminal außerhalb einer Agent-Sitzung arbeitet, ist `interactive`, alles andere `agent`; die MCP-Fan-out-Werkzeuge (`test`, `run_many`, `affected` und das `run` von `incremental`, `conformance`, `units`, `bench`, `concurrency`) setzen `background`; `SEMIO_LEASE_PRIORITY=interactive|agent|background` überschreibt. Ein Ticket wird 60 min früher (interactive) oder später (background) als seine Ankunft eingereiht und in dieser Reihenfolge bedient: Überholen ist begrenzt, nichts verhungert. Die Kapazitäts-Warteschlange liest dieselbe Klasse (und behandelt eine Klasse, deren Median-Lauf unter 120 s liegt, als interaktiv).
+- **`bun repo leases status`** (`--json`, `--all`): Halter, Wartende, wer wen blockiert, Zyklen, die Kapazitäts-Warteschlange. Eine zweite Zeile je exklusivem Halter zeigt Priorität, Code-Alter, Phase und Zähler (`inference 120 of 566`), Restzeit (aus dem eigenen Zähler, sonst dem Median früherer Halte derselben Art) und den Zustand `progressing`, `silent` (1 min), `STUCK` (kein veröffentlichter Fortschritt und keine CPU-Nutzung des Halters oder seiner Kinder, alle 30 s geprüft, 20 min beim Graph-Erbauer, 60 min sonst), `STALE` (älteren Code eines Format-Stempels geladen als der neueste Prozess) oder `legacy` (vor diesem Code gestartet). Wartende sehen dasselbe in ihrer `lease-queue`-Zeile, englisch oder deutsch. Ein beschäftigter Halter ist nie festhängend.
+- **`SEMIO_LEASE_RECLAIM=report|request|terminate`** (Standard `request`): `report` zeigt nur; `request` bittet einen festhängenden Halter, die Ressource abzugeben (er endet mit Exit 75, der äußerste Befehl startet neu); `terminate` beendet zusätzlich einen, der die Bitte 2 min ignorierte und nicht vorankam (gleiche OS-Startzeit, signalisierbar, nie sich selbst; SIGTERM, nach 15 s SIGKILL des Baums; `reclaim.jsonl`; nicht unter Windows; ein `legacy`-Halter erst nach 4 h). Ein Halter mit neuerem Code bittet einen veralteten Halter nachzugeben; ein gesunder Halter wird nie gefragt.
+
+## 🔥️ Warme Caches und was sie entwertet
+
+Der Schlüssel einer Task besteht aus den deklarierten Eingaben, dem abgeleiteten Befehls-Abschluss, den Werkzeug-Pins und dem Modus (`prototype`/`release` sind verschiedene Schlüssel). Änderungen sind von zwei Arten:
+
+| Änderung | Wirkung |
+|---|---|
+| **Scheduling-Code**: Leases, Kapazität, Speicher-Obhut, Prozessüberwachung, Wiederholung von Beobachtungen, Fortschritt und Texte, Prozessstart (die sieben Domänen in `🏗️build/📥️source/🔏️closure/🗓️scheduling/🔣️.json`) | kein Aktionsschlüssel ändert sich; Nx schlüsselt höchstens die 1171 von 12817 Tasks neu, die diesen Code absichtlich lesen (Tests, Lints); Rust-Targets bleiben auf `native-build` verschlüsselt (es baut die Cargo-Argumente) |
+| **Ausgabe erzeugender Code**: Befehlsskripte, Generatoren, native-build, Inferenz, Schemas, Produktquellen | schlüsselt alles neu, in dessen Abschluss er liegt; rund 3,7k von 4020 Projekten enthalten Dateien der Build-Bibliothek in ihrem Abschluss |
+| Policy-Zahlen: `hostCapacity`, `workers`, `remoteCache`, `remoteExecution` in `🏗️build/🔣️policy.json`, `storage` in `⚡️caching/🔣️policy.json` | nichts (abschnittsweiser Digest) |
+| Kommentar, umgeschriebener Specifier oder Import einer Datei, die die gemeinsamen Läufe schon erreichen | Graph: abgeleitete Fakten stellen die Frage erneut, die Antwort ist gleich, 0 Projekte neu abgeleitet; eine neue Datei im Abschluss ist eine echte Änderung |
+| Peer-Änderung einer fremden Datei oder eine mitten im Lauf umbenannte Datei | erneut beobachtet (begrenzte Wiederholungen: 6 Lesungen, 5 Schnappschüsse, 4 Builds), sonst Exit 75 und automatischer Neustart; nie ein fehlgeschlagener Lauf |
+
+- Eine Bibliotheksänderung landet als eine Graph-Generation. Am Tor gemessen: 7 bis 170 Projekte neu abgeleitet (170 in 355 s), eine Ein-Projekt-Änderung 34 s. Ein Framework-weiter Neuaufbau leitet rund 566 Projekte neu ab; das dauerte 60-120 min bei einem Erbauer mit 5-13 GB vor den Korrekturen von Speicher und frühem Abbruch; seither nicht neu gemessen.
+- Der Quell-Abschluss des Build-Werkzeugs (rund 1450 Dateien) wird einmal je Nutzer erfasst und gemerkt (`~/Library/Caches/semio-repo`, `$XDG_CACHE_HOME`, `%LOCALAPPDATA%`; Treffer 0,1 s gegen 8-30 s unter Last; jede Änderung des Abschlusses ist ein Fehltreffer; `SEMIO_REPO_SOURCE_MEMO=on|off`).
+- TypeScript: warmes inkrementelles `tsc` kostet 6-7 CPU-s je Prüfung (Zustandsdatei je Eigner und Compiler). Die hermetische Bazel-Prüfung kostet kalt 24-41 CPU-s und im persistenten Worker 0,4-5 CPU-s (Korpus ohne Graph mit 22 Änderungsschritten, gleiche Diagnosen; offizielles Vorher/Nachher nicht gelaufen). Bazel-Aktionen werden über einen Disk-Cache zwischen Slots geteilt; eine andere Auswahl in einem Slot kostet rund 10 s statt 28 s JVM-Neustart.
+
+## ✏️ Das Build-Werkzeug ändern, während andere bauen
+
+- **Live**: ein Lauf endet mit der Implementierung, die er geladen hat; eine Änderung, die er nicht geladen hat, startet den äußersten Befehl mit Exit 75 neu (höchstens 6 Mal; `SEMIO_STALE_REEXEC` zählt). Wie eine Änderung landet, steht im Abschnitt über viele Agenten.
+- Änderungen in Scheduling-Domänen (Tabelle oben) kosten niemanden einen Neuaufbau; alles andere schlüsselt neu und leitet nach einer Framework-weiten Änderung den Graphen neu ab.
+- **Versiegelt** (live als Opt-in, Umlegen des Standards wartet auf Tor-Paket 8): eine Beförderung verlangt, dass der Baum liest, lädt und zwei Selbstprüfungen besteht; eine kaputte Änderung lässt den vorigen Schnappschuss weiterarbeiten und nennt `Pfad:Zeile:Spalte` (EN und DE). Grenzen: Laufzeitfehler, die lesen und laden, werden nicht gefangen; ein leichter Befehl kostet rund 1 s; Windows und Linux ungetestet.
+
+## 💾️ Plattenbudget
+
+```bash
+bun repo cache status [--budget=40GiB] [--json]    # Verzeichnis + Maschinenplan: Quoten je Speicher, zu räumende Bytes, von Haltern blockierte Bytes
+bun repo cache gc --dry-run [--area=retired,undeclared]
+bun repo cache dedupe --dry-run [--area=bazel-outputs]
+bun repo cache verify --deep
+```
+
+- Vorrang des Budgets: `--budget` > `SEMIO_CACHE_BUDGET_BYTES` > Datei `🎚️machine-budget.json` im Repository-Cache-Wurzelordner > Standard 40 GiB (unterhalb der Summe der Speicher-Untergrenzen wird es abgelehnt); eine Untergrenze von 15 GiB freiem Hostplatz verkleinert das wirksame Budget. Die Quoten sind gewichtet max-min-fair je Speicher (rust 44 %, products 23 %, tools 8 %, dependencies 7 %, graph 5 %, diagnostics 3 %, nx 1,5 %, leases 0,1 %, loose 8,4 %). Diese Maschine hält 69 GiB Inhalt, der Standard passt also nicht: Budget je Maschine setzen.
+- `cache gc` beachtet Sperren: es misst eine Einheit vor dem Entfernen neu und entfernt nie eine, die ein SQLite-Lock, ein Warteschlangen-Ticket oder ein Lease hält, in der Ruhezeit des Bereichs benutzt oder seit dem Scan verändert wurde. Immer zuerst `--dry-run`. `--area` ist die sichere Form, solange Peers die Bibliothek ändern; ein vollständiges `gc` kann unter Churn mit einem Neustart enden (Korrektur eingespielt, live nicht erneut gelaufen).
+- `cache gc --area=nx-tooling,nx-tmp` begrenzt den Nx-Werkzeugspeicher: die 8 neuesten Generationen von `.cache/b/t/m/nx` bleiben (3, solange das Werkzeug-Image über seiner Maschinenquote liegt oder weniger als 2,5 GiB frei hat), dazu die aktuelle Aktivierung, jede Generation, die ein lebender Leser hält (sein Lease `nx-tooling:<identity>`, per Try-Lock geprüft), und jede, die jünger als 10 Minuten ist; der Rest wird, älteste zuerst, entfernt, höchstens 16 je Lauf. Das Entfernen braucht das ganze Werkzeug-Image für sich, deshalb fragt der Lauf 90 s lang nach einem ruhenden Image (ohne Warteschlange: niemand wird aufgehalten; `SEMIO_NX_TOOLING_IDLE_WAIT_MS`, 0 bis 600000), meldet sonst, dass es belegt war, und überlässt die Arbeit dem nächsten Lauf; die Nx-Speichervorbereitung startet höchstens alle 15 Minuten einen losgelösten Sammler, wenn weniger als 2,5 GiB frei sind. Läufe halten das Werkzeug-Image ihre ganze Lebenszeit, es war also nie ruhig, solange die Flotte lief: in einem ruhigen Fenster sammeln. `nx-tmp` entfernt Installationsbäume `nx/tmp/tmp-<pid>-*`, deren Prozess beendet ist und die eine Stunde unbenutzt blieben (erzwungen: -825 MiB). `--dry-run` plant nur.
+- `cache dedupe` ersetzt identische Dateien durch Copy-on-Write-Klone (nie Kopien, nie Hardlinks; ein Volume ohne Klone behält alles) in `bazel-outputs`, `bazel-workspaces`, `vite-products`, `tools`; Dateien, die innerhalb von 1 h benutzt wurden, flüchtige Namen und seit dem Hashen geänderte Dateien werden übersprungen. Gemessen: 2,75 GiB echter Gewinn auf dem Products-Abbild.
+- Neue macOS-Abbilder entstehen spärlich (64 MiB, dann vergrößert: Kosten = Inhalt; live). Die vorhandenen festen Abbilder (rund 98 GiB auf dieser Maschine) bleiben voll belegt, bis sie in einem ruhigen Fenster neu angelegt werden (Helfer bereit, nicht angewandt). `~/.sinc` und die `🗑️generated`-Ordner der Tickets liegen außerhalb des Verzeichnisses.
+
+## 🦀️ Rust-Lanes
+
+`bun repo cargo --store=shared --configuration=prototype|release -- <Cargo-Argumente>`: jeder Agent bekommt eine private Lane über einen inhaltsadressierten Unit-Cache (`SEMIO_CARGO_LANE`, `SEMIO_UNIT_CACHE_SLOTS`), sodass verschiedene Crates gleichzeitig bauen (gemessen 2,0x für zwei Crates) und eine Ein-Zeilen-Änderung des Dashboard-Binärs in 44 s neu gebaut wird (23 CPU-s, 1,3 GB). Der Cargo-Teil eines Laufs ist durch die Zulassung begrenzt: `1 of 10 cores admitted` begrenzt auch die rustc-Threads. Jeder kompilierende Aufrufer nimmt eine gepoolte Lane (Test- und Lint-Läufer, Exact-Gesetze, Wasm-Build, Relay, wgpu, der Komponententreiber, jeder Artefakt-Build über `buildRepositoryCargoArtifacts`, der Proctor und die Cargo-Prüfungen des Hubs), keiner hält also eine Obhut über ein ganzes Verzeichnis; die Provenienz-Belege einer Lane werden vor ihrer Freigabe ins gemeinsame Ledger veröffentlicht, und zwei Artefakt-Builds kompilieren gleichzeitig (gemessen: Paar 12,5 s auf 8,1 s, Obhut-Wartezeit 6,2 s auf 0,06 s, Spitzen-RSS 0,8 auf 1,4 GB). Eine kalte Lane kompilierte offiziell in `print-rs:test` (Tor 3b, 192 s). Ein Test, der ein Rust-Orakel braucht, baut es über seinen eigenen ausgestellten Aufruf, nie über ein verschachteltes `repo cargo`.
+
+## 🧪️ Tests und Routing-Tabellen
+
+- Jede Testdatei der Build-Bibliothek ist genau einer Suite in `🏗️build/🗂️suites/🔣️.json` zugeordnet (51 Suiten, Gesetz `build-route-table`); das Caching-Modul hat eine eigene Tabelle (`⚡️caching/🗂️suites/🔣️.json`, 102 Suiten). Eine Suite läuft als `bun repo run @semio-tech/repo:test-<Suite>` (Targets in `⚡️caching/📋️project.json`). Eine neue Testdatei muss in eine Suite eingetragen werden, sonst scheitert das Routing-Gesetz. Prozess-Modul und Produkte haben eigene Tabellen.
+- Zählung (route-g, 26.10.): von 353 Dateien der Build-Bibliothek waren 270 im offiziellen Modus grün; die 83 übrigen sind eingeordnet (52 veraltete Erwartungen, 16 geburts- oder Nx-gesteuert, 7 echte Defekte, 5 Peers, 2 Last); die Korrekturen warten auf das Tor (route2-g).
+- Einzeldatei ohne Graph: `nice -n 10 bun test ./<Datei>` im Modulverzeichnis, immer mit `./` (ein bloßer Pfad ist ein Filter und durchsucht das ganze Verzeichnis). Gesetze, die die Repo-Hülle brauchen, laufen über ihre Suite. Ad-hoc-Skripte lesen ihre Eingabe als Strom und bleiben unter 500 MB.
+
+## 🩹️ Fehlersuche
+
+| Symptom | Bedeutung und Maßnahme |
+|---|---|
+| `[capacity] waiting 42s for run: not enough free memory (need … MB; … spare above the … MB floor …)` | Zulassungs-Warteschlange, kein Hänger; Gründe: `memory`, `swap`, `pressure-*`, `files`, `attaches`, `load`, `ramp`, `queue-order`; `bun repo capacity status` lesen; Strg+C gibt alles zurück. Auf einem gesättigten Rechner (Last 30-65) wartete ein Kurs-Build 46 min. |
+| `Waiting for access to repository-graph-facts:…:shard:7 … position 3 of 9, behind … holder: progressing, inference 120 of 566, about 34 min left` | ein Peer baut den Graphen; der Abdeckungsstempel bedient dich bei der Veröffentlichung; für lesende Abfragen `SEMIO_BUILD_GRAPH_POLICY=current`; `bun repo leases status` zeigt STUCK/STALE-Halter |
+| Swap wächst, Rechner träge | `bun repo capacity status` (Swap, Druck, wer was hält); `bun`, `tsc` oder Python-Skripte nie außerhalb von `repo capacity run` starten; Eigenes beenden |
+| ENFILE / Dateitabelle voll | vorübergehend; Befehle wiederholen (`busy`); außer Kontrolle geratene `bun test <Pfad>` ohne `./` beenden |
+| Exit 75, fremdes Abbild, zurückgehaltenes Projekt, Launcher-Vertrag | siehe „Wenn etwas schiefgeht“ |
+| `bun repo doctor` | Antwort in einem Zug, warum Arbeit wartet, langsam ist oder scheitert (Pins, Abbilder, Leases, Zusagen, Generationen); `--fix --dry-run` listet die sicheren Reparaturen |
+
+## 📍️ Stand
+
+Gemessen am 26.10. auf einem Mac mit 32 GB und 20 Agenten (Last 17-65), 16 GB per Policy simuliert; absolute Sekunden sind 2-4x einer ruhigen Maschine.
+
+- Erreicht: Dashboard-Neubau nach Ein-Zeilen-Änderung unter 2 min und unter 3 GB; Zulassung von mindestens 4 Läufen ohne Warten bei 16 GB mit gelernten Größen; Wartezeit im Replay 2,3x niedriger; `cache status` ohne Graph 580 MB Prozessbaum (vorher 2363 MB), Bazel-Worker 98 MB (vorher 1770 MB), ein wartender Lauf 35-75 MB; Graph-Erbauer flach bei 3,7-5,0 GB (vorher 15-29 GB); Ein-Projekt-Änderung am Graphen 34 s; Umgebungs-Verschiebung 144-159 s auf 43-52 s; Neu-Entdeckung der Test-Eigner 69 s auf 3-5 s.
+- Nicht erreicht oder nicht gezeigt: ein heißer Bazel-No-op unter 10 s (auf diesem Rechner nicht messbar: 45 min in der Kapazitäts-Warteschlange; Planer-Überspringen und ruhige Zusage sind im Baum und beheben die beiden Ursachen, die Messung wird nach Paket 4b wiederholt); Graph-Erbauer unter 2 GB (Index-Sichten 1,7 GB, native Entdeckung; das Index-Chunk-Paket erreicht 2,9 GB Spitze, wartet auf das Tor); Graph-Generation unter 2 min nach einer größeren Peer-Änderung.
+- Wartet auf das Tor: ruhige Zusage (4b), Schlüssel-Verengung (keys2-g, undeclared-g), Routing-Korrekturen (route2-g), Wächter für den nativen Speicher (store-g), Index-Chunks (gram2-g), Nx-Korrekturen (nxfix-g), E2E-Worker-Zeilen (e2eperf-g), versiegelter Standard (self-g).
+- In Arbeit: Flottenstatus (obs-g), plattformübergreifende CI für die Suite-Tabellen (ci-g).
+- Nicht verifiziert: Windows und Linux (das Windows-Lease-Lock und der Unit-Cache-Wrapper sind über eingespeiste Plattformen modelliert und getestet; ein echter Windows-CI-Lauf fehlt), ein echtes Nachgeben zwischen zwei Graph-Erbauern.

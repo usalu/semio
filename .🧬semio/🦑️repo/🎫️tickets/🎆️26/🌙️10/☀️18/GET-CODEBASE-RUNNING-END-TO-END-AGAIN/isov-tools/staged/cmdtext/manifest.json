@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🗣️language-catalogs/🔒️allowlist/🔣️.json": {
+  "file": "f000",
+  "base": "5a828fa065f7dd3327e7817b282cac07c16a315e530892d830545e771b9b1d93",
+  "new": "78748daaca0e78aa6fd2b707ad997e64560e616e061c7ee15df2d0c55813c7db"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/🧪️tests/🟦️.ts": {
+  "file": "f001",
+  "base": "4c93cd911330821209b30d20729bb8d33901a60d78228fea9e7b8e179685a703",
+  "new": "86b2bff3f3e618620283e6896c7f26039781e59a9449bb759ff3623f17f22fce"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🟦️.ts": {
+  "file": "f002",
+  "base": "43a80cdeef74a29ccfa3f2d884b68a58d9510072683c095140ab879dfff8e6cd",
+  "new": "3df639bbc8ddfcf881e08e057ca17605a2d7b313aacc007f4d8410604fc1d58f"
+ }
+}

@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-noto-mono \
     fonts-noto \
     ripgrep \
+    strace \
     cloc \
     netcat-openbsd \
     iproute2 \
@@ -60,6 +61,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libappindicator3-1 \
     libu2f-udev \
     libvulkan1 \
+    mesa-vulkan-drivers \
     xdg-utils \
     ca-certificates \
     gnupg \

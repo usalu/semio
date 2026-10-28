@@ -4,12 +4,12 @@ import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
 import {copyFileSync,existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
 import {homedir,tmpdir} from "node:os";
-import {dirname,join} from "node:path";
+import {basename,dirname,join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import table from "../🎯️slo/🔣️.json" with {type:"json"};
 import catalog from "../../../⚙️operations/🔣️catalog.json" with {type:"json"};
-import {benchBaselineV1,benchCompareV1,benchHostV1,benchJudgeV1,benchLoadClassV1,benchMarkersV1,benchMutateV1,benchReportV1,benchSelectV1,benchSeriesV1,benchSloIssuesV1,benchStatsV1,benchTallyV1,renderBenchComparisonV1,renderBenchListV1,renderBenchReportV1,type BenchProbeV1,type BenchReportV1,type BenchRowV1,type BenchSampleV1,type BenchSeriesV1,type BenchSloSetV1,type BenchSloV1,type BenchToolV1} from "../🟦️.ts";
+import {benchBaselineV1,benchBudgetV1,benchCompareV1,benchHistoryLatestV1,benchHistoryNameV1,benchLineKeyV1,benchObservedValuesV1,benchObserverV1,renderBenchBudgetV1,benchHostV1,benchJudgeV1,benchLoadClassV1,benchMarkersV1,benchMutateV1,benchReportV1,benchSelectV1,benchSeriesV1,benchSloIssuesV1,benchStatsV1,benchTallyV1,renderBenchComparisonV1,renderBenchListV1,renderBenchReportV1,type BenchProbeV1,type BenchReportV1,type BenchRowV1,type BenchSampleV1,type BenchSeriesV1,type BenchSloSetV1,type BenchSloV1,type BenchToolV1} from "../🟦️.ts";
 import {benchCliPortsV1,benchConcurrencyFromReportV1,benchRunArgumentsV1,benchRunProbeV1,benchRunV1,benchSpawnV1,benchTreeRssV1,type BenchHostPortsV1,type BenchPortsV1,type BenchRunV1,type BenchSpawnSpecV1} from "../🏃️runner/🟦️.ts";
 import {benchArgumentsV1,benchOptionNamesV1,runBenchCommandV1,type BenchCommandPortsV1} from "../⌨️command/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../..//🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -72,8 +72,14 @@ test("the authored SLO table is admitted and every inconsistency is found",()=>{
  has(mutate(copy=>{copy.probes.find((row:any)=>row.kind==="edit").unit="ghost";}),"unknown unit");
  has(mutate(copy=>{delete copy.probes.find((row:any)=>row.kind==="concurrency").workload;}),"workload is required");
  has(mutate(copy=>{copy.probes.find((row:any)=>row.id==="graph-scope-cold").runs=2;}),"a cold probe runs once");
- has(mutate(copy=>{copy.probes.find((row:any)=>row.id==="cli-help").cold=true;}),"only a graph probe can be cold");
- has(mutate(copy=>{copy.probes.find((row:any)=>row.id==="cli-help").memory=true;}),"only noop and edit probes measure memory");
+ has(mutate(copy=>{copy.probes.find((row:any)=>row.id==="cli-help").cold=true;}),"only a graph or a no-op probe can be cold");
+ has(mutate(copy=>{copy.probes.find((row:any)=>row.kind==="peer").cold=true;}),"only a graph or a no-op probe can be cold");
+ has(mutate(copy=>{delete copy.probes.find((row:any)=>row.kind==="peer").unit;}),"unit is required for peer");
+ has(mutate(copy=>{delete copy.probes.find((row:any)=>row.kind==="peer").target;}),"target is required for peer");
+ has(mutate(copy=>{copy.probes.find((row:any)=>row.kind==="peer").unit="ghost";}),"unknown unit");
+ has(mutate(copy=>{copy.probes.find((row:any)=>row.kind==="edit").target="a:b";}),"target is not allowed for edit");
+ has(mutate(copy=>{copy.slos.find((row:any)=>row.metric==="executedActions").metric="hitRatio";}),"does not yield hitRatio");
+ has(mutate(copy=>{copy.probes.find((row:any)=>row.id==="cli-help").memory=true;}),"only noop, edit and peer probes measure memory");
  has(mutate(copy=>{copy.probes.find((row:any)=>row.id==="graph-scope-warm").lane="resident";}),"no resident lane");
  expect(mutate(copy=>{copy.units[0].file="x".repeat(300);}).length).toBeGreaterThan(0);
  expect(mutate(copy=>{delete copy.labels.pass;}).length).toBeGreaterThan(0);
@@ -89,19 +95,19 @@ test("the objectives the user asked for are in the table, enforced where they ar
   const oneshot=by.get(`noop-${verb}-oneshot-p50`)!;
   expect([oneshot.goal,oneshot.gate,oneshot.enforcement]).toEqual([300,1000,"advisory"]);
  }
- for(const unit of set.units){
+ for(const unit of set.units.filter(row=>!row.id.startsWith("product-")&&!row.id.startsWith("peer-"))){
   const start=by.get(`edit-${unit.id}-resident-start-p95`)!;
   expect([start.goal,start.gate,start.statistic,start.metric,start.enforcement,start.source]).toEqual([500,500,"p95","startMs","blocking","user-goal"]);
   expect(by.get(`edit-${unit.id}-oneshot-start-p50`)!.goal).toBe(500);
   for(const lane of ["oneshot","resident"]){const green=by.get(`edit-${unit.id}-${lane}-green-p50`)!;expect([green.goal,green.gate,green.metric]).toEqual([null,null,"greenMs"]);}
   expect(probes.get(`edit-${unit.id}-resident`)!.runs).toBeGreaterThanOrEqual(policy.minimumSamples.p95);
  }
- expect(set.units.map(row=>row.language).sort()).toEqual(["go","py","rs","ts"]);
+ expect(set.units.filter(row=>!row.id.startsWith("product-")&&!row.id.startsWith("peer-")).map(row=>row.language).sort()).toEqual(["go","py","rs","ts"]);
  for(const verb of ["build","test"]){const hit=by.get(`cache-second-run-${verb}-min`)!;expect([hit.goal,hit.gate,hit.direction,hit.statistic,hit.metric,hit.enforcement,hit.tolerance.relative,hit.tolerance.absolute]).toEqual([1,1,"higher","min","hitRatio","blocking",0,0]);}
  expect(by.get("cli-help-p95")!.goal).toBe(200);
  expect(by.get("graph-scope-cold-max")!.gate).toBe(300000);
  expect(probes.get("graph-scope-cold")!.cold).toBe(true);
- expect(set.slos.filter(row=>row.metric==="peakRssBytes").length).toBe(2);
+ expect(set.slos.filter(row=>row.metric==="peakRssBytes"&&!row.id.startsWith("product-")).length).toBe(2);
  for(const slo of set.slos)expect(policy.sources).toContain(slo.source);
 });
 
@@ -359,7 +365,7 @@ test("memory probes keep the peak of the process tree and are unsupported where 
  const memory=probe({id:"m",kind:"noop",lane:"oneshot",target:"@x/y:build",runs:3,warmup:0,memory:true});
  const measured=await runProbe(memory,{spawn:(spec,call)=>finished({peakRssBytes:spec.memory?100+call:null})});
  expect(measured.world.calls.slice(1).every(call=>call.memory)).toBe(true);
- expect(measured.series.samples.map(row=>row.values)).toEqual([{peakRssBytes:101},{peakRssBytes:102},{peakRssBytes:103}]);
+ expect(measured.series.samples.map(row=>row.values)).toEqual([{wallMs:100,peakRssBytes:101},{wallMs:100,peakRssBytes:102},{wallMs:100,peakRssBytes:103}]);
  const none=await runProbe(memory,{});
  expect([none.series.status,none.series.reason]).toEqual(["unavailable","unsupported"]);
 });
@@ -478,14 +484,16 @@ test("the option parser accepts every documented form, refuses every other and m
  expect(ok(["run","--slo=a,kind:edit","--runs=25","--baseline","x.json","--save-baseline=y.json","--markdown=z.md","--max-load=1.5","--implementations=nx","--root=/r","--file=f","--json","--prepare","--lang=de"])).toMatchObject({slo:["a","kind:edit"],runs:25,baseline:"x.json",saveBaseline:"y.json",markdown:"z.md",maxLoad:1.5,tools:["nx"],root:"/r",file:"f",json:true,prepare:true,language:"de"});
  expect(ok(["run","--slo=all,a"]).slo).toBe("all");
  expect(ok(["compare","--current=a","--baseline=b","--markdown=m"])).toMatchObject({operation:"compare",current:"a",baseline:"b"});
- for(const bad of [[],["frobnicate"],["run","extra"],["run","--runs=0"],["run","--runs=1001"],["run","--runs=x"],["run","--runs=1.5"],["run","--max-load=0"],["run","--max-load=-1"],["run","--max-load=abc"],["run","--slo"],["run","--slo","--json"],["run","--slo=a","--slo=b"],["run","--json=1"],["run","--implementations=cargo"],["run","--lang=fr"],["run","--nope"],["compare"],["compare","--current=a"],["compare","--baseline=b"],["run","--current=a"],["list","--prepare"],["list","--runs=3"],["compare","--current=a","--baseline=b","--save-baseline=c"],["compare","--current=a","--baseline=b","--max-load=1"]])expect(()=>ok(bad),JSON.stringify(bad)).toThrow(/Erwartet|Unbekannt|braucht|Wiederholte|gehört|gehören|ganze Zahl|positive Zahl/u);
+ expect(ok(["compare","--history=h"])).toMatchObject({operation:"compare",history:"h",current:undefined,baseline:undefined});
+ expect(ok(["run","--history","h","--slo=a"])).toMatchObject({history:"h",slo:["a"]});
+ for(const bad of [[],["frobnicate"],["run","extra"],["run","--runs=0"],["run","--runs=1001"],["run","--runs=x"],["run","--runs=1.5"],["run","--max-load=0"],["run","--max-load=-1"],["run","--max-load=abc"],["run","--slo"],["run","--slo","--json"],["run","--slo=a","--slo=b"],["run","--json=1"],["run","--implementations=cargo"],["run","--lang=fr"],["run","--nope"],["compare"],["compare","--current=a"],["compare","--baseline=b"],["compare","--history=h","--current=a"],["compare","--history=h","--baseline=b"],["list","--history=h"],["run","--history"],["run","--history=a","--history=b"],["run","--current=a"],["list","--prepare"],["list","--runs=3"],["compare","--current=a","--baseline=b","--save-baseline=c"],["compare","--current=a","--baseline=b","--max-load=1"]])expect(()=>ok(bad),JSON.stringify(bad)).toThrow(/Erwartet|Unbekannt|braucht|Wiederholte|gehört|gehören|ganze Zahl|positive Zahl/u);
  const entry=(catalog as any).operations.find((row:any)=>row.name==="bench"),names=benchOptionNamesV1(),flags=(catalog as any).flags;
  expect(entry).toBeDefined();
  expect(entry.requires).toBe("none");
  expect([...entry.flags].sort()).toEqual([...names.valued,...names.plain].filter(name=>name!=="--lang").sort());
  for(const name of names.valued.filter(value=>value!=="--lang")){const flag=flags.find((row:any)=>row.name===name);expect(flag.value,name).toBe("required");expect(flag.operations).toContain("bench");}
  for(const name of names.plain){const flag=flags.find((row:any)=>row.name===name);expect(flag.value,name).toBe("none");expect(flag.operations).toContain("bench");}
- expect(entry.subcommands.map((row:any)=>row.name)).toEqual(["list","run","compare"]);
+ expect(entry.subcommands.map((row:any)=>row.name)).toEqual(["list","run","compare","acceptance"]);
  for(const sub of entry.subcommands){expect(sub.synopsis.startsWith("bench ")).toBe(true);for(const flag of sub.flags??[])expect(entry.flags).toContain(flag);expect(sub.summary.en).not.toBe(sub.summary.de);}
  expect(entry.summary.en).not.toBe(entry.summary.de);
  expect(entry.implementations).toBeUndefined();
@@ -633,7 +641,7 @@ const commandPorts=(live:string,root:string,environment:Record<string,string|und
  const ports:BenchCommandPortsV1={
   write:line=>{out.push(line);},progress:async stage=>{progress.push(stage);},check:()=>{},signal:controller.signal,environment,platform:process.platform,tmpdir:()=>tmpdir(),home:()=>homedir(),now:()=>performance.now(),
   run:async()=>"",report:async(file,value)=>{reports.set(file,value);},locks:()=>{},files:async()=>["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json"],adapter:async()=>{throw Error("no adapter");},nxRecord:()=>"",exists:async path=>existsSync(path),
-  scratch:async()=>mkdtempSync(join(tmpdir(),"bench-scratch-")),readText:async path=>{const found=texts.get(path);if(found===undefined)throw Error("ENOENT "+path);return found;},writeText:async(path,content)=>{texts.set(path,content);},...over
+  scratch:async()=>mkdtempSync(join(tmpdir(),"bench-scratch-")),list:async folder=>[...texts.keys()].filter(key=>dirname(key)===folder).map(key=>basename(key)),readText:async path=>{const found=texts.get(path);if(found===undefined)throw Error("ENOENT "+path);return found;},writeText:async(path,content)=>{texts.set(path,content);},...over
  };
  return {ports,out,reports,texts,progress};
 };
@@ -762,3 +770,129 @@ test("the build workflow carries the bench job: after smoke, not blocking, pinne
  expect(raw).toContain("#   bench    -");
  for(const step of steps)if(step.uses&&!step.uses.startsWith("./"))expect(raw,step.uses).toContain(`${step.uses} # v`);
 });
+
+test("the output of a command yields phases, executed actions and re-inferred projects exactly as the oracle reads them",()=>{
+ const run=(row:typeof fixture.observations[number])=>{const observer=benchObserverV1();for(const item of row.lines)observer.feed(item.at,item.line);return observer.finish(row.wallMs);};
+ for(const row of fixture.observations)same(run(row),{phases:row.phases,executed:row.executed,inferred:row.inferred});
+ const oracle=python("observe",fixture.observations.map(row=>({lines:row.lines,wallMs:row.wallMs})));
+ for(const[at,row]of fixture.observations.entries())same({phases:row.phases,executed:row.executed,inferred:row.inferred},oracle![at]);
+ for(const row of fixture.observations){const total=Object.values(run(row).phases).reduce((sum,value)=>sum+value,0);expect(total,row.name).toBeCloseTo(row.wallMs,6);}
+ expect(benchLineKeyV1('[script] {"command":"build:discover","stage":"running","activity":{"resource":"r:1"}}')).toBe("script:build:discover:running:r:1");
+ expect(benchLineKeyV1("[script] {broken}")).toBe("[script] {broken}");
+ expect(benchLineKeyV1("plain")).toBe("plain");
+ const values=benchObservedValuesV1({phases:{"queue-capacity":10,"queue-graph":5,verify:20,graph:30,admission:1,execute:100,finish:2,boot:7},executed:3,inferred:4});
+ expect(values).toEqual({queueMs:15,graphMs:51,executeMs:102,inferredProjects:4,executedActions:3});
+ expect(benchObservedValuesV1({phases:{boot:9},executed:null,inferred:0})).toEqual({queueMs:0,graphMs:0,executeMs:0,inferredProjects:0});
+ for(const rule of policy.phases.rules)expect(rule.patterns.length).toBeGreaterThan(0);
+ const mapped=new Set(Object.values(policy.phases.metrics).flat());
+ expect([...mapped].sort()).toEqual(policy.phases.rules.map(rule=>rule.id).sort());
+});
+
+test("a real process is observed while it runs: queue time, execution time and the executed actions of its summary line",async()=>{
+ const script='const w=ms=>new Promise(r=>setTimeout(r,ms));console.log("[capacity] waiting 0s for run: not enough free memory");await w(200);console.log("[1 / 3] checking cached actions");await w(150);console.log("INFO: 5 processes: 1 internal, 4 local.");';
+ const run=await benchSpawnV1(process.execPath,["-e",script],process.cwd(),{...process.env} as Record<string,string>,[],false,new AbortController().signal,()=>performance.now());
+ expect(run.exit).toBe(0);
+ const seen=run.observation!;
+ expect(seen.executed).toBe(4);
+ expect(seen.phases["queue-capacity"]!).toBeGreaterThanOrEqual(190);
+ expect(seen.phases.execute!).toBeGreaterThanOrEqual(140);
+ expect(Object.values(seen.phases).reduce((sum,value)=>sum+value,0)).toBeCloseTo(run.wallMs,3);
+},30000);
+
+test("history names sort by time and host class, and the latest report of a host class is picked like the oracle picks it",()=>{
+ for(const row of fixture.history){
+  expect(benchHistoryNameV1(row.startedAt,row.hostClass),row.name).toBe(row.fileName);
+  expect(benchHistoryLatestV1(row.files,row.hostClass,row.before),row.name).toBe(row.latest);
+ }
+ expect(python("history-name",fixture.history)).toEqual(fixture.history.map(row=>row.fileName));
+ expect(python("history-latest",fixture.history)).toEqual(fixture.history.map(row=>row.latest));
+ for(const bad of [["2026-10-26T09:00:00+01:00","a"],["yesterday","a"],["2026-10-26T09:00:00Z","a/b"],["2026-10-26T09:00:00Z",""]])expect(()=>benchHistoryNameV1(bad[0]!,bad[1]!)).toThrow(/UTC/u);
+ const names=["20261026T090000Z-h.json","20261025T090000Z-h.json","20261027T090000Z-h.json"];
+ expect(names.map(name=>benchHistoryNameV1(`${name.slice(0,4)}-${name.slice(4,6)}-${name.slice(6,8)}T09:00:00Z`,"h"))).toEqual(names);
+ expect(benchHistoryLatestV1(names,"h")).toBe("20261027T090000Z-h.json");
+});
+
+test("a peer probe edits an unrelated unit and builds the product target: the file is restored, the target is the probe's and the new metrics are kept",async()=>{
+ const original="export const a=1;\n",peer=probe({id:"p",kind:"peer",lane:"oneshot",target:"@prod/p:build",unit:"u",runs:3,warmup:0,memory:true}),seen:string[]=[];
+ const observation={phases:{"queue-capacity":50,graph:200,execute:300,boot:10},executed:0,inferred:2};
+ const{series,world}=await runProbe(peer,{spawn:(spec,call,files)=>{seen.push(files.get(unit.file)!);return finished({wallMs:700,peakRssBytes:1000+call,observation});}});
+ expect(world.calls.every(call=>call.args[1]==="@prod/p:build")).toBe(true);
+ expect(seen[0]).toBe(original);
+ expect(seen.slice(1).every(content=>content.startsWith(original)&&content.length>original.length)).toBe(true);
+ expect(world.files.get(unit.file)).toBe(original);
+ expect(series.samples.map(row=>row.values)).toEqual([1,2,3].map(call=>({wallMs:700,queueMs:50,graphMs:200,executeMs:300,inferredProjects:2,executedActions:0,peakRssBytes:1000+call})));
+ expect(series.samples.every(row=>row.startKind===null)).toBe(true);
+ const judged=benchJudgeV1(slo({id:"x",probe:"p",metric:"executedActions",statistic:"max",goal:0,gate:0}),"nx",series);
+ expect([judged.status,judged.value,judged.unit]).toEqual(["pass",0,"count"]);
+ const reexecuted=await runProbe(peer,{spawn:(_,call)=>finished({peakRssBytes:5,observation:{...observation,executed:call===0?0:3}})});
+ expect(benchJudgeV1(slo({id:"x",probe:"p",metric:"executedActions",statistic:"max",goal:0,gate:0}),"nx",reexecuted.series)).toMatchObject({status:"fail",value:3});
+ const unobserved=await runProbe(peer,{spawn:()=>finished({peakRssBytes:5})});
+ expect(unobserved.series.samples.map(row=>row.values)).toEqual([{wallMs:100,peakRssBytes:5},{wallMs:100,peakRssBytes:5},{wallMs:100,peakRssBytes:5}]);
+ expect(benchJudgeV1(slo({id:"x",probe:"p",metric:"executedActions",statistic:"max",goal:0,gate:0}),"nx",unobserved.series)).toMatchObject({status:"unproven",reason:"no-samples"});
+ const cold=await runProbe(probe({id:"c",kind:"noop",lane:"oneshot",target:"@prod/p:build",runs:1,warmup:0,cold:true,memory:true}),{fresh:true,spawn:()=>finished({peakRssBytes:9})});
+ expect([cold.world.calls.length,cold.series.samples.length]).toEqual([1,1]);
+});
+
+const repoRoot=(()=>{for(let at=import.meta.dir;;at=dirname(at)){if(existsSync(join(at,"bunfig.toml"))&&existsSync(join(at,"bun.lock")))return process.env.SEMIO_TEST_REPO_ROOT??at;if(dirname(at)===at)throw Error("repository root not found");}})();
+
+test("the product catalogue holds the brief's budgets for the dashboard, the architecture course and print, and every edited file exists",()=>{
+ const by=new Map(set.slos.map(row=>[row.id,row])),probes=new Map(set.probes.map(row=>[row.id,row])),units=new Map(set.units.map(row=>[row.id,row]));
+ const products=[["dashboard","@semio-tech/repo-dashboard-rs:build",120000],["course","@teaching/architecture-course:build",60000],["print","@semio-tech/print:build",60000]] as const;
+ for(const[id,target,editBudget]of products){
+  const noop=probes.get(`product-${id}-noop`)!,edit=probes.get(`product-${id}-edit`)!,cold=probes.get(`product-${id}-cold`)!;
+  expect([noop.kind,noop.target,noop.memory,noop.runs>=policy.minimumSamples.p50]).toEqual(["noop",target,true,true]);
+  expect([cold.cold,cold.runs,cold.memory]).toEqual([true,1,true]);
+  expect(units.get(edit.unit!)!.target).toBe(target);
+  const wall=by.get(`product-${id}-noop-wall-p50`)!,rss=by.get(`product-${id}-noop-rss-max`)!,executed=by.get(`product-${id}-noop-executed-max`)!,green=by.get(`product-${id}-edit-green-p50`)!;
+  expect([wall.goal,wall.gate,wall.enforcement,wall.metric]).toEqual([10000,10000,"blocking","wallMs"]);
+  expect([rss.gate,rss.enforcement,rss.metric]).toEqual([1.5*1024**3,"blocking","peakRssBytes"]);
+  expect([executed.goal,executed.gate,executed.enforcement,executed.statistic]).toEqual([0,0,"blocking","max"]);
+  expect([green.gate,green.enforcement,green.metric]).toEqual([editBudget,"blocking","greenMs"]);
+  for(const kind of ["unrelated","scheduling"]){
+   const peerProbe=probes.get(`product-${id}-peer-${kind}`)!;
+   expect([peerProbe.kind,peerProbe.target,peerProbe.unit,peerProbe.memory]).toEqual(["peer",target,`peer-${kind}`,true]);
+   const re=by.get(`${peerProbe.id}-executed-max`)!,graph=by.get(`${peerProbe.id}-graph-p50`)!,peak=by.get(`${peerProbe.id}-rss-max`)!;
+   expect([re.gate,re.enforcement,graph.gate,graph.enforcement,peak.gate,peak.enforcement]).toEqual([0,"blocking",120000,"blocking",2*1024**3,"blocking"]);
+   expect(by.get(`${peerProbe.id}-inferred-max`)!.metric).toBe("inferredProjects");
+  }
+  for(const phase of ["queue","graph","execute"]){expect(by.get(`product-${id}-noop-${phase}-p50`)).toBeDefined();expect(by.get(`product-${id}-edit-${phase}-p50`)).toBeDefined();}
+ }
+ const agents=probes.get("product-agents")!;
+ expect([agents.kind,agents.workload,agents.sessions]).toEqual(["concurrency","product-agents",3]);
+ for(const unit of set.units){expect(existsSync(join(repoRoot,unit.file)),unit.file).toBe(true);expect(join(repoRoot,unit.file).length).toBeLessThanOrEqual(policy.maximumPathLength);}
+ expect(units.get("peer-scheduling")!.file).toContain("🏃️process/🏗️build");
+ for(const slo of set.slos.filter(row=>row.source==="product-budget"))expect(slo.id.startsWith("product-")).toBe(true);
+});
+
+test("the command stores every run in the history, compares the next run with the newest earlier report of the host class and compares the two newest reports; blocking objectives over budget fail a comparison",async()=>{
+ const{base}=makeRoot("bench-history-"),live=mkdtempSync(join(tmpdir(),"bench-live-")),env={...process.env,SEMIO_LANGUAGE:"en"},cache={cache:async()=>({cacheable:6,executedCacheable:0,uncachedExecuted:0,total:6})};
+ const sample=()=>benchHostV1({platform:"test",arch:"x",cpus:10,memoryBytes:1e10,load1:1});
+ try{
+  const first=commandPorts(live,base,env);
+  let tick=0;const stamped=(over:Partial<BenchHostPortsV1>)=>({...over,sample,clock:()=>`2026-10-26T0${++tick}:00:00.000Z`});
+  await runBenchCommandV1(live,["bench","run","--slo=probe:cache-second-run-build","--implementations=nx","--root",base,"--history","hist"],{...first.ports,overrides:stamped(cache)});
+  const names=[...first.texts.keys()];
+  expect(names.map(name=>dirname(name))).toEqual(["hist"]);
+  expect(basename(names[0]!)).toMatch(/^20261026T0[0-9]0000Z-test-x-10\.json$/u);
+  const second=commandPorts(live,base,env);second.texts.set(names[0]!,first.texts.get(names[0]!)!);
+  await runBenchCommandV1(live,["bench","run","--slo=probe:cache-second-run-build","--implementations=nx","--root",base,"--history","hist","--json"],{...second.ports,overrides:stamped(cache)});
+  const report=JSON.parse(second.out[0]!) as BenchReportV1;
+  expect(report.comparison!.rows.map(row=>row.status)).toEqual(["same"]);
+  expect([...second.texts.keys()].filter(name=>dirname(name)==="hist").length).toBe(2);
+  const compare=commandPorts(live,base,env);
+  for(const[name,text]of second.texts)if(dirname(name)==="hist")compare.texts.set(name,text);
+  await runBenchCommandV1(live,["bench","compare","--history","hist"],{...compare.ports,overrides:{sample}});
+  expect(compare.out[0]).toContain("Comparison with the baseline");
+  const lonely=commandPorts(live,base,env);lonely.texts.set(names[0]!,first.texts.get(names[0]!)!);
+  await expect(runBenchCommandV1(live,["bench","compare","--history","hist"],{...lonely.ports,overrides:{sample}})).rejects.toThrow(/fewer than two reports/u);
+  const failing=plain(report) as BenchReportV1&{rows:BenchRowV1[]};
+  const row=failing.rows[0]!;(row as any).value=0.5;(row as any).status="fail";
+  const over=commandPorts(live,base,env);over.texts.set("cur.json",JSON.stringify(failing));over.texts.set("base.json",JSON.stringify(failing));
+  await expect(runBenchCommandV1(live,["bench","compare","--current=cur.json","--baseline=base.json","--lang=en"],over.ports)).rejects.toThrow(/1 blocking objectives are over budget/u);
+  expect(over.out[0]).toContain("Over budget");
+  const budget=benchBudgetV1(failing);
+  expect([budget.rows.length,budget.blocking]).toEqual([1,1]);
+  expect(renderBenchBudgetV1(budget.rows,set,"de","markdown")).toContain("Über dem Budget");
+  expect(benchBudgetV1(report)).toEqual({rows:[],blocking:0});
+ }finally{rmSync(base,{recursive:true,force:true});rmSync(live,{recursive:true,force:true});}
+},120000);

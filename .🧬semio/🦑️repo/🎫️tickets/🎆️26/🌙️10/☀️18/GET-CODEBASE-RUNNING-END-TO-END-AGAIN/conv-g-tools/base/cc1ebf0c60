@@ -1,0 +1,8 @@
+export type GraphQueueYieldPolicyV1=Readonly<{version:1;yieldAfterMilliseconds:number;maximumYields:number;wakeMilliseconds:number;pollMilliseconds:number;progressMilliseconds:number;environment:Readonly<{ticket:string;requestedAt:string;round:string}>;exitCode:number;texts:Readonly<Record<"waiting"|"resumed",Readonly<Record<string,string>>>>}>;
+type Env=Readonly<Record<string,string|undefined>>;
+export function graphQueueYieldPolicyV1():GraphQueueYieldPolicyV1;
+export function graphQueueRequestedAtV1(environment?:Env):number|undefined;
+export function graphQueueYieldRoundV1(environment?:Env):number;
+export function graphQueueYieldsV1(options:{queuedMs:number;environment?:Env;yieldAfterMilliseconds?:number}):boolean;
+export function yieldGraphQueueV1(options:{generation:number;pointer:string;requestedAt:number;queuedMs?:number;environment?:Env;write?:(text:string)=>void;exit?:(code:number)=>void;now?:()=>number}):void;
+export function waitGraphQueueYieldV1(options?:{environment?:Env;now?:()=>number;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;write?:(text:string)=>void;read?:(pointer:string)=>number;signal?:AbortSignal}):Promise<Readonly<Record<string,string>>|undefined>;

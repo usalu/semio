@@ -1,0 +1,2212 @@
+{
+ "version": 1,
+ "table": {
+  "version": 1,
+  "ceilingBasisPoints": 15137,
+  "unlistedCeilingMegabytes": 3001,
+  "files": [
+   {
+    "path": "alpha/b/c/🟦️.ts",
+    "megabytes": 731,
+    "reason": "odd size so a floor instead of a ceiling shows"
+   },
+   {
+    "path": "alpha/d/🟦️.ts",
+    "megabytes": 64,
+    "reason": "the smallest budget"
+   },
+   {
+    "path": "zulu/🟦️.ts",
+    "megabytes": 2999,
+    "reason": "above the unlisted ceiling"
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "limits alpha/b/c/🟦️.ts default 1",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/b/c/🟦️.ts",
+    "default": 1
+   },
+   "expect": {
+    "budgetMegabytes": 731,
+    "ceilingMegabytes": 1107,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits alpha/b/c/🟦️.ts default 64",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/b/c/🟦️.ts",
+    "default": 64
+   },
+   "expect": {
+    "budgetMegabytes": 731,
+    "ceilingMegabytes": 1107,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits alpha/b/c/🟦️.ts default 509",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/b/c/🟦️.ts",
+    "default": 509
+   },
+   "expect": {
+    "budgetMegabytes": 731,
+    "ceilingMegabytes": 1107,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits alpha/b/c/🟦️.ts default 1024",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/b/c/🟦️.ts",
+    "default": 1024
+   },
+   "expect": {
+    "budgetMegabytes": 731,
+    "ceilingMegabytes": 1107,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits alpha/b/c/🟦️.ts default 2999",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/b/c/🟦️.ts",
+    "default": 2999
+   },
+   "expect": {
+    "budgetMegabytes": 731,
+    "ceilingMegabytes": 1107,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits alpha/b/c/🟦️.ts default 3001",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/b/c/🟦️.ts",
+    "default": 3001
+   },
+   "expect": {
+    "budgetMegabytes": 731,
+    "ceilingMegabytes": 1107,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits alpha/b/c/🟦️.ts default 5000",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/b/c/🟦️.ts",
+    "default": 5000
+   },
+   "expect": {
+    "budgetMegabytes": 731,
+    "ceilingMegabytes": 1107,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits alpha/d/🟦️.ts default 1",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/d/🟦️.ts",
+    "default": 1
+   },
+   "expect": {
+    "budgetMegabytes": 64,
+    "ceilingMegabytes": 97,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits alpha/d/🟦️.ts default 64",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/d/🟦️.ts",
+    "default": 64
+   },
+   "expect": {
+    "budgetMegabytes": 64,
+    "ceilingMegabytes": 97,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits alpha/d/🟦️.ts default 509",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/d/🟦️.ts",
+    "default": 509
+   },
+   "expect": {
+    "budgetMegabytes": 64,
+    "ceilingMegabytes": 97,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits alpha/d/🟦️.ts default 1024",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/d/🟦️.ts",
+    "default": 1024
+   },
+   "expect": {
+    "budgetMegabytes": 64,
+    "ceilingMegabytes": 97,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits alpha/d/🟦️.ts default 2999",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/d/🟦️.ts",
+    "default": 2999
+   },
+   "expect": {
+    "budgetMegabytes": 64,
+    "ceilingMegabytes": 97,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits alpha/d/🟦️.ts default 3001",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/d/🟦️.ts",
+    "default": 3001
+   },
+   "expect": {
+    "budgetMegabytes": 64,
+    "ceilingMegabytes": 97,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits alpha/d/🟦️.ts default 5000",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/d/🟦️.ts",
+    "default": 5000
+   },
+   "expect": {
+    "budgetMegabytes": 64,
+    "ceilingMegabytes": 97,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits zulu/🟦️.ts default 1",
+   "kind": "limits",
+   "input": {
+    "path": "zulu/🟦️.ts",
+    "default": 1
+   },
+   "expect": {
+    "budgetMegabytes": 2999,
+    "ceilingMegabytes": 4540,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits zulu/🟦️.ts default 64",
+   "kind": "limits",
+   "input": {
+    "path": "zulu/🟦️.ts",
+    "default": 64
+   },
+   "expect": {
+    "budgetMegabytes": 2999,
+    "ceilingMegabytes": 4540,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits zulu/🟦️.ts default 509",
+   "kind": "limits",
+   "input": {
+    "path": "zulu/🟦️.ts",
+    "default": 509
+   },
+   "expect": {
+    "budgetMegabytes": 2999,
+    "ceilingMegabytes": 4540,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits zulu/🟦️.ts default 1024",
+   "kind": "limits",
+   "input": {
+    "path": "zulu/🟦️.ts",
+    "default": 1024
+   },
+   "expect": {
+    "budgetMegabytes": 2999,
+    "ceilingMegabytes": 4540,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits zulu/🟦️.ts default 2999",
+   "kind": "limits",
+   "input": {
+    "path": "zulu/🟦️.ts",
+    "default": 2999
+   },
+   "expect": {
+    "budgetMegabytes": 2999,
+    "ceilingMegabytes": 4540,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits zulu/🟦️.ts default 3001",
+   "kind": "limits",
+   "input": {
+    "path": "zulu/🟦️.ts",
+    "default": 3001
+   },
+   "expect": {
+    "budgetMegabytes": 2999,
+    "ceilingMegabytes": 4540,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits zulu/🟦️.ts default 5000",
+   "kind": "limits",
+   "input": {
+    "path": "zulu/🟦️.ts",
+    "default": 5000
+   },
+   "expect": {
+    "budgetMegabytes": 2999,
+    "ceilingMegabytes": 4540,
+    "declared": true
+   }
+  },
+  {
+   "name": "limits omega/🟦️.ts default 1",
+   "kind": "limits",
+   "input": {
+    "path": "omega/🟦️.ts",
+    "default": 1
+   },
+   "expect": {
+    "budgetMegabytes": 1,
+    "ceilingMegabytes": 3001,
+    "declared": false
+   }
+  },
+  {
+   "name": "limits omega/🟦️.ts default 64",
+   "kind": "limits",
+   "input": {
+    "path": "omega/🟦️.ts",
+    "default": 64
+   },
+   "expect": {
+    "budgetMegabytes": 64,
+    "ceilingMegabytes": 3001,
+    "declared": false
+   }
+  },
+  {
+   "name": "limits omega/🟦️.ts default 509",
+   "kind": "limits",
+   "input": {
+    "path": "omega/🟦️.ts",
+    "default": 509
+   },
+   "expect": {
+    "budgetMegabytes": 509,
+    "ceilingMegabytes": 3001,
+    "declared": false
+   }
+  },
+  {
+   "name": "limits omega/🟦️.ts default 1024",
+   "kind": "limits",
+   "input": {
+    "path": "omega/🟦️.ts",
+    "default": 1024
+   },
+   "expect": {
+    "budgetMegabytes": 1024,
+    "ceilingMegabytes": 3001,
+    "declared": false
+   }
+  },
+  {
+   "name": "limits omega/🟦️.ts default 2999",
+   "kind": "limits",
+   "input": {
+    "path": "omega/🟦️.ts",
+    "default": 2999
+   },
+   "expect": {
+    "budgetMegabytes": 2999,
+    "ceilingMegabytes": 4540,
+    "declared": false
+   }
+  },
+  {
+   "name": "limits omega/🟦️.ts default 3001",
+   "kind": "limits",
+   "input": {
+    "path": "omega/🟦️.ts",
+    "default": 3001
+   },
+   "expect": {
+    "budgetMegabytes": 3001,
+    "ceilingMegabytes": 4543,
+    "declared": false
+   }
+  },
+  {
+   "name": "limits omega/🟦️.ts default 5000",
+   "kind": "limits",
+   "input": {
+    "path": "omega/🟦️.ts",
+    "default": 5000
+   },
+   "expect": {
+    "budgetMegabytes": 5000,
+    "ceilingMegabytes": 7569,
+    "declared": false
+   }
+  },
+  {
+   "name": "limits alpha/b/c/🟦️.ts.bak default 1",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/b/c/🟦️.ts.bak",
+    "default": 1
+   },
+   "expect": {
+    "budgetMegabytes": 1,
+    "ceilingMegabytes": 3001,
+    "declared": false
+   }
+  },
+  {
+   "name": "limits alpha/b/c/🟦️.ts.bak default 64",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/b/c/🟦️.ts.bak",
+    "default": 64
+   },
+   "expect": {
+    "budgetMegabytes": 64,
+    "ceilingMegabytes": 3001,
+    "declared": false
+   }
+  },
+  {
+   "name": "limits alpha/b/c/🟦️.ts.bak default 509",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/b/c/🟦️.ts.bak",
+    "default": 509
+   },
+   "expect": {
+    "budgetMegabytes": 509,
+    "ceilingMegabytes": 3001,
+    "declared": false
+   }
+  },
+  {
+   "name": "limits alpha/b/c/🟦️.ts.bak default 1024",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/b/c/🟦️.ts.bak",
+    "default": 1024
+   },
+   "expect": {
+    "budgetMegabytes": 1024,
+    "ceilingMegabytes": 3001,
+    "declared": false
+   }
+  },
+  {
+   "name": "limits alpha/b/c/🟦️.ts.bak default 2999",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/b/c/🟦️.ts.bak",
+    "default": 2999
+   },
+   "expect": {
+    "budgetMegabytes": 2999,
+    "ceilingMegabytes": 4540,
+    "declared": false
+   }
+  },
+  {
+   "name": "limits alpha/b/c/🟦️.ts.bak default 3001",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/b/c/🟦️.ts.bak",
+    "default": 3001
+   },
+   "expect": {
+    "budgetMegabytes": 3001,
+    "ceilingMegabytes": 4543,
+    "declared": false
+   }
+  },
+  {
+   "name": "limits alpha/b/c/🟦️.ts.bak default 5000",
+   "kind": "limits",
+   "input": {
+    "path": "alpha/b/c/🟦️.ts.bak",
+    "default": 5000
+   },
+   "expect": {
+    "budgetMegabytes": 5000,
+    "ceilingMegabytes": 7569,
+    "declared": false
+   }
+  },
+  {
+   "name": "ratio 0 files default 1",
+   "kind": "ratio",
+   "input": {
+    "paths": [],
+    "default": 1
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 0 files default 64",
+   "kind": "ratio",
+   "input": {
+    "paths": [],
+    "default": 64
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 0 files default 509",
+   "kind": "ratio",
+   "input": {
+    "paths": [],
+    "default": 509
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 0 files default 731",
+   "kind": "ratio",
+   "input": {
+    "paths": [],
+    "default": 731
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 0 files default 1024",
+   "kind": "ratio",
+   "input": {
+    "paths": [],
+    "default": 1024
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 0 files default 2999",
+   "kind": "ratio",
+   "input": {
+    "paths": [],
+    "default": 2999
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 0 files default 4000",
+   "kind": "ratio",
+   "input": {
+    "paths": [],
+    "default": 4000
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 1 files default 1",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "omega/🟦️.ts"
+    ],
+    "default": 1
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 1 files default 64",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "omega/🟦️.ts"
+    ],
+    "default": 64
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 1 files default 509",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "omega/🟦️.ts"
+    ],
+    "default": 509
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 1 files default 731",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "omega/🟦️.ts"
+    ],
+    "default": 731
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 1 files default 1024",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "omega/🟦️.ts"
+    ],
+    "default": 1024
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 1 files default 2999",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "omega/🟦️.ts"
+    ],
+    "default": 2999
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 1 files default 4000",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "omega/🟦️.ts"
+    ],
+    "default": 4000
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 1 files default 1",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/d/🟦️.ts"
+    ],
+    "default": 1
+   },
+   "expect": 640000
+  },
+  {
+   "name": "ratio 1 files default 64",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/d/🟦️.ts"
+    ],
+    "default": 64
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 1 files default 509",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/d/🟦️.ts"
+    ],
+    "default": 509
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 1 files default 731",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/d/🟦️.ts"
+    ],
+    "default": 731
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 1 files default 1024",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/d/🟦️.ts"
+    ],
+    "default": 1024
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 1 files default 2999",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/d/🟦️.ts"
+    ],
+    "default": 2999
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 1 files default 4000",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/d/🟦️.ts"
+    ],
+    "default": 4000
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 2 files default 1",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/b/c/🟦️.ts",
+     "alpha/d/🟦️.ts"
+    ],
+    "default": 1
+   },
+   "expect": 7310000
+  },
+  {
+   "name": "ratio 2 files default 64",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/b/c/🟦️.ts",
+     "alpha/d/🟦️.ts"
+    ],
+    "default": 64
+   },
+   "expect": 114219
+  },
+  {
+   "name": "ratio 2 files default 509",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/b/c/🟦️.ts",
+     "alpha/d/🟦️.ts"
+    ],
+    "default": 509
+   },
+   "expect": 14362
+  },
+  {
+   "name": "ratio 2 files default 731",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/b/c/🟦️.ts",
+     "alpha/d/🟦️.ts"
+    ],
+    "default": 731
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 2 files default 1024",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/b/c/🟦️.ts",
+     "alpha/d/🟦️.ts"
+    ],
+    "default": 1024
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 2 files default 2999",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/b/c/🟦️.ts",
+     "alpha/d/🟦️.ts"
+    ],
+    "default": 2999
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 2 files default 4000",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/b/c/🟦️.ts",
+     "alpha/d/🟦️.ts"
+    ],
+    "default": 4000
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 2 files default 1",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "zulu/🟦️.ts",
+     "omega/🟦️.ts"
+    ],
+    "default": 1
+   },
+   "expect": 29990000
+  },
+  {
+   "name": "ratio 2 files default 64",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "zulu/🟦️.ts",
+     "omega/🟦️.ts"
+    ],
+    "default": 64
+   },
+   "expect": 468594
+  },
+  {
+   "name": "ratio 2 files default 509",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "zulu/🟦️.ts",
+     "omega/🟦️.ts"
+    ],
+    "default": 509
+   },
+   "expect": 58920
+  },
+  {
+   "name": "ratio 2 files default 731",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "zulu/🟦️.ts",
+     "omega/🟦️.ts"
+    ],
+    "default": 731
+   },
+   "expect": 41026
+  },
+  {
+   "name": "ratio 2 files default 1024",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "zulu/🟦️.ts",
+     "omega/🟦️.ts"
+    ],
+    "default": 1024
+   },
+   "expect": 29288
+  },
+  {
+   "name": "ratio 2 files default 2999",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "zulu/🟦️.ts",
+     "omega/🟦️.ts"
+    ],
+    "default": 2999
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 2 files default 4000",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "zulu/🟦️.ts",
+     "omega/🟦️.ts"
+    ],
+    "default": 4000
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 5 files default 1",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/b/c/🟦️.ts",
+     "alpha/d/🟦️.ts",
+     "zulu/🟦️.ts",
+     "omega/🟦️.ts",
+     "alpha/b/c/🟦️.ts.bak"
+    ],
+    "default": 1
+   },
+   "expect": 29990000
+  },
+  {
+   "name": "ratio 5 files default 64",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/b/c/🟦️.ts",
+     "alpha/d/🟦️.ts",
+     "zulu/🟦️.ts",
+     "omega/🟦️.ts",
+     "alpha/b/c/🟦️.ts.bak"
+    ],
+    "default": 64
+   },
+   "expect": 468594
+  },
+  {
+   "name": "ratio 5 files default 509",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/b/c/🟦️.ts",
+     "alpha/d/🟦️.ts",
+     "zulu/🟦️.ts",
+     "omega/🟦️.ts",
+     "alpha/b/c/🟦️.ts.bak"
+    ],
+    "default": 509
+   },
+   "expect": 58920
+  },
+  {
+   "name": "ratio 5 files default 731",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/b/c/🟦️.ts",
+     "alpha/d/🟦️.ts",
+     "zulu/🟦️.ts",
+     "omega/🟦️.ts",
+     "alpha/b/c/🟦️.ts.bak"
+    ],
+    "default": 731
+   },
+   "expect": 41026
+  },
+  {
+   "name": "ratio 5 files default 1024",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/b/c/🟦️.ts",
+     "alpha/d/🟦️.ts",
+     "zulu/🟦️.ts",
+     "omega/🟦️.ts",
+     "alpha/b/c/🟦️.ts.bak"
+    ],
+    "default": 1024
+   },
+   "expect": 29288
+  },
+  {
+   "name": "ratio 5 files default 2999",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/b/c/🟦️.ts",
+     "alpha/d/🟦️.ts",
+     "zulu/🟦️.ts",
+     "omega/🟦️.ts",
+     "alpha/b/c/🟦️.ts.bak"
+    ],
+    "default": 2999
+   },
+   "expect": 10000
+  },
+  {
+   "name": "ratio 5 files default 4000",
+   "kind": "ratio",
+   "input": {
+    "paths": [
+     "alpha/b/c/🟦️.ts",
+     "alpha/d/🟦️.ts",
+     "zulu/🟦️.ts",
+     "omega/🟦️.ts",
+     "alpha/b/c/🟦️.ts.bak"
+    ],
+    "default": 4000
+   },
+   "expect": 10000
+  },
+  {
+   "name": "admit held [] next 1 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 1,
+    "share": 1000
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 1 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 1,
+    "share": 1024
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 1 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 1,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 1 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 1,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 500 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 500,
+    "share": 1000
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 500 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 500,
+    "share": 1024
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 500 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 500,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 500 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 500,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 1000 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 1000,
+    "share": 1000
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 1000 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 1000,
+    "share": 1024
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 1000 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 1000,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 1000 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 1000,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 1024 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 1024,
+    "share": 1000
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 1024 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 1024,
+    "share": 1024
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 1024 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 1024,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 1024 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 1024,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 2048 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 2048,
+    "share": 1000
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 2048 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 2048,
+    "share": 1024
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 2048 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 2048,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [] next 2048 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [],
+    "next": 2048,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500] next 1 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 1,
+    "share": 1000
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500] next 1 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 1,
+    "share": 1024
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500] next 1 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 1,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500] next 1 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 1,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500] next 500 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 500,
+    "share": 1000
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500] next 500 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 500,
+    "share": 1024
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500] next 500 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 500,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500] next 500 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 500,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500] next 1000 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 1000,
+    "share": 1000
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500] next 1000 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 1000,
+    "share": 1024
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500] next 1000 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 1000,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500] next 1000 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 1000,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500] next 1024 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 1024,
+    "share": 1000
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500] next 1024 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 1024,
+    "share": 1024
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500] next 1024 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 1024,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500] next 1024 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 1024,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500] next 2048 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 2048,
+    "share": 1000
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500] next 2048 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 2048,
+    "share": 1024
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500] next 2048 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 2048,
+    "share": 2048
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500] next 2048 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500
+    ],
+    "next": 2048,
+    "share": 2047
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500, 500] next 1 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 1,
+    "share": 1000
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500, 500] next 1 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 1,
+    "share": 1024
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500, 500] next 1 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 1,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500, 500] next 1 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 1,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500, 500] next 500 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 500,
+    "share": 1000
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500, 500] next 500 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 500,
+    "share": 1024
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500, 500] next 500 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 500,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500, 500] next 500 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 500,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500, 500] next 1000 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 1000,
+    "share": 1000
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500, 500] next 1000 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 1000,
+    "share": 1024
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500, 500] next 1000 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 1000,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500, 500] next 1000 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 1000,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500, 500] next 1024 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 1024,
+    "share": 1000
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500, 500] next 1024 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 1024,
+    "share": 1024
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500, 500] next 1024 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 1024,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500, 500] next 1024 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 1024,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [500, 500] next 2048 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 2048,
+    "share": 1000
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500, 500] next 2048 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 2048,
+    "share": 1024
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500, 500] next 2048 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 2048,
+    "share": 2048
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [500, 500] next 2048 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     500,
+     500
+    ],
+    "next": 2048,
+    "share": 2047
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 1 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 1,
+    "share": 1000
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 1 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 1,
+    "share": 1024
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 1 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 1,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 1 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 1,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 500 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 500,
+    "share": 1000
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 500 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 500,
+    "share": 1024
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 500 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 500,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 500 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 500,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 1000 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 1000,
+    "share": 1000
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 1000 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 1000,
+    "share": 1024
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 1000 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 1000,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 1000 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 1000,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 1024 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 1024,
+    "share": 1000
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 1024 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 1024,
+    "share": 1024
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 1024 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 1024,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 1024 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 1024,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 2048 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 2048,
+    "share": 1000
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 2048 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 2048,
+    "share": 1024
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 2048 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 2048,
+    "share": 2048
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1, 2, 3, 4] next 2048 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "next": 2048,
+    "share": 2047
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1024] next 1 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 1,
+    "share": 1000
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1024] next 1 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 1,
+    "share": 1024
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1024] next 1 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 1,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1024] next 1 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 1,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1024] next 500 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 500,
+    "share": 1000
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1024] next 500 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 500,
+    "share": 1024
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1024] next 500 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 500,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1024] next 500 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 500,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1024] next 1000 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 1000,
+    "share": 1000
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1024] next 1000 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 1000,
+    "share": 1024
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1024] next 1000 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 1000,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1024] next 1000 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 1000,
+    "share": 2047
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1024] next 1024 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 1024,
+    "share": 1000
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1024] next 1024 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 1024,
+    "share": 1024
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1024] next 1024 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 1024,
+    "share": 2048
+   },
+   "expect": true
+  },
+  {
+   "name": "admit held [1024] next 1024 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 1024,
+    "share": 2047
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1024] next 2048 share 1000",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 2048,
+    "share": 1000
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1024] next 2048 share 1024",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 2048,
+    "share": 1024
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1024] next 2048 share 2048",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 2048,
+    "share": 2048
+   },
+   "expect": false
+  },
+  {
+   "name": "admit held [1024] next 2048 share 2047",
+   "kind": "admit",
+   "input": {
+    "held": [
+     1024
+    ],
+    "next": 2048,
+    "share": 2047
+   },
+   "expect": false
+  }
+ ]
+}

@@ -16,7 +16,7 @@ import schema from"../🧬️schema/🔣️.json" with{type:"json"};
 const protocol=schema.definitions.Protocol.const,leaks=protocol.leakedImages,cleanup=cleanupSchema.definitions.Protocol.const,image=storageSchema.definitions.ImageProtocol.const;
 
 /** 🖼️ Names one image of the kernel roster by its backing path and its whole-disk device. */
-export type NativeBootRosterImageV1=Readonly<{imagePath:string;device:string|null}>;
+export type NativeBootRosterImageV1=Readonly<{imagePath:string;device:string|null;mounts?:readonly string[];owners?:boolean|null}>;
 
 /** 🔌️ Supplies the two host reads recovery needs; production binds them to the issued control, tests to plain process spawns. */
 export type NativeBootHostV1=Readonly<{capture(program:string,args:readonly string[],cwd:string,limits:Readonly<{maximumBytes:number;maximumLines:number}>):Promise<string>;clock():Promise<NativeBootClockV1>}>;
@@ -52,17 +52,29 @@ export async function healNativeToolStateBootV1(input:Readonly<{leaseDirectory:s
  return healNativeBootV1({ledgerPath,bootSession:clock.bootSession,residue:()=>false,recover:()=>recoverNativeBootV1({port,ledgerPath,now:Date.now,signal:control.signal,onProgress:publisher(control,input.onProgress)})});
 }
 
-/** 🛰️ Reads the kernel image roster through the shared per-process roster; one attach or detach by any process never yields a torn view. */
+/** 🧾️ Reads which mount points carry the no-owners flag from `mount` output; a line it cannot read says nothing. */
+export function nativeBootMountOwnersV1(mountOutput:string):ReadonlyMap<string,boolean>{
+ const rows=new Map<string,boolean>();
+ for(const line of mountOutput.split("\n")){const row=/^\S+ on (.+) \(([^()]*)\)$/u.exec(line);if(row)rows.set(row[1]!,!row[2]!.split(",").map(flag=>flag.trim()).includes(image.mountWithoutOwnersFlag));}
+ return rows;
+}
+
+/** 🛰️ Reads the kernel image roster through the shared per-process roster, with the mount points and ownership of every image; one attach or detach by any process never yields a torn view. */
 export function nativeBootImageRosterV1(control:ResourceLeaseControl,host:NativeBootHostV1,cwd:string):()=>Promise<readonly NativeBootRosterImageV1[]>{
  const policy=Object.freeze({attempts:image.informationAttempts,backoffMilliseconds:image.informationBackoffMilliseconds,signal:control.signal});
- return()=>observeSharedNativeImageInventoryV1(()=>host.capture(nativeImageHdiutilProgramV1,["info","-plist"],cwd,{maximumBytes:cleanup.maximumOutputBytes,maximumLines:cleanup.maximumOutputLines}),information=>{
-  const rows=information.images;if(!Array.isArray(rows)||rows.length>cleanup.maximumObservedImages)throw Error("Complete bounded Native kernel inventory required");
-  return Object.freeze(rows.flatMap((row:unknown)=>{
-   const entry=row as Record<string,unknown>|null;if(!entry||typeof entry!=="object"||Array.isArray(entry)||typeof entry["image-path"]!=="string")return[];
-   const entities=Array.isArray(entry["system-entities"])?entry["system-entities"]as Record<string,unknown>[]:[],device=entities.map(item=>item?.["dev-entry"]).find((value):value is string=>typeof value==="string"&&/^\/dev\/disk[0-9]+$/u.test(value))??null;
-   return[Object.freeze({imagePath:entry["image-path"],device})];
-  }));
- },policy);
+ return async()=>{
+  const rows=await observeSharedNativeImageInventoryV1(()=>host.capture(nativeImageHdiutilProgramV1,["info","-plist"],cwd,{maximumBytes:cleanup.maximumOutputBytes,maximumLines:cleanup.maximumOutputLines}),information=>{
+   const rows=information.images;if(!Array.isArray(rows)||rows.length>cleanup.maximumObservedImages)throw Error("Complete bounded Native kernel inventory required");
+   return Object.freeze(rows.flatMap((row:unknown)=>{
+    const entry=row as Record<string,unknown>|null;if(!entry||typeof entry!=="object"||Array.isArray(entry)||typeof entry["image-path"]!=="string")return[];
+    const entities=Array.isArray(entry["system-entities"])?entry["system-entities"]as Record<string,unknown>[]:[],device=entities.map(item=>item?.["dev-entry"]).find((value):value is string=>typeof value==="string"&&/^\/dev\/disk[0-9]+$/u.test(value))??null,mounts=entities.map(item=>item?.["mount-point"]).filter((value):value is string=>typeof value==="string");
+    return[Object.freeze({imagePath:entry["image-path"],device,mounts:Object.freeze(mounts)})];
+   }));
+  },policy);
+  if(!rows.some(row=>row.mounts.length))return rows;
+  const owners=nativeBootMountOwnersV1(await host.capture(image.mountProgram,[],cwd,{maximumBytes:cleanup.maximumOutputBytes,maximumLines:cleanup.maximumOutputLines}));
+  return Object.freeze(rows.map(row=>Object.freeze({...row,owners:row.mounts.length?owners.get(row.mounts[0]!)??null:null})));
+ };
 }
 
 const partition=new RegExp(leaks.partitionPattern,"u");

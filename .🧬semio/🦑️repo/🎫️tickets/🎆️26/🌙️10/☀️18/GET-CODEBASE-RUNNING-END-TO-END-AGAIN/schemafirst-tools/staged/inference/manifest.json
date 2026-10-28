@@ -1,0 +1,47 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️schema/🔣️.json": {
+  "file": "00.json",
+  "base": null,
+  "new": "c92939fd9e68b9164ed26bb330465b28c2312ee5ea5d08816264a500d4824ec7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️schema/🟨️.mjs": {
+  "file": "01.mjs",
+  "base": null,
+  "new": "9d61b27f69a7ad4b20934f4618cc91b2da6de1c8284751108c775f40ad7474e4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️schema/🟨️.d.mts": {
+  "file": "02.mts",
+  "base": null,
+  "new": "5582f67ea8f413d5b3c0ee467fabc0d115205d559138d0d624f440d05d8ae4f5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs": {
+  "file": "03.mjs",
+  "base": "12cf6e4ead773678057674eeaf03e3208d3ed44c8c094b7172c934b3c10084f3",
+  "new": "a758391150fa19735568538537bc6f294064bd760119d3e2c75a4d69c33f8277"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🟨️.mjs": {
+  "file": "04.mjs",
+  "base": "69ed77acd5f8924e580626978f145054546b87ee76f894d9000b88b8767bb8d4",
+  "new": "10af1d1e4597e2a98db1e4e8d73034fe195824567a9edb4f66efcd9d6447ebb7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs": {
+  "file": "05.mjs",
+  "base": "23d549f2419686e9bd58824971b51e9fd781807c92ce8dd75cb17528453c6308",
+  "new": "fc4974ce7e5c250e2fce82e1dfcf9eac1960f06273a32b34754c1a4abe635f73"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": {
+  "file": "06.mjs",
+  "base": "e9363eac430c943a42516afc36605b21b9a52fa17bc193cbcaa9388c0827c9df",
+  "new": "a2a42a7617a655de0b293c3783ac121a7b6732973252f8335f15613f7e17382f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts": {
+  "file": "07.ts",
+  "base": "898ecb226fbde4cb988325098ab080576498e4132021bb1e35848c629ab4f668",
+  "new": "3c0b591e2c37bca16c8b224e60ba467a6f37a9919773d4711f070620ac065b28"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🔎️inference/🔣️.json": {
+  "file": "08.json",
+  "base": null,
+  "new": "4999943da978021179b0cd417d8dbf665086fa84e5ebc8f9cbbd2da68a051021"
+ }
+}

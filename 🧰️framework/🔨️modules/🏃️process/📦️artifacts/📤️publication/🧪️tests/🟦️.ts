@@ -7,6 +7,8 @@ import { dirname, join, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { stageArtifacts } from "../🟦️.ts";
 import { acquireResourceLease } from "../../../🔒️leases/🟦️.ts";
+import{privateRepositoryWorkspaceV1}from"../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 /** 📦️ Verifies portable publication, cancellation and complete bytes through independent Python. */
 export async function testArtifactPublication(output: string): Promise<void> {
@@ -14,7 +16,7 @@ export async function testArtifactPublication(output: string): Promise<void> {
   const validator = new (createRequire(import.meta.url)("ajv").default)({strict:true}), schema = JSON.parse(readFileSync(resolve(import.meta.dirname,"../🧬️schema/🔣️.json"),"utf8"));
   assert.ok(validator.validate(schema,fixture));
   assert.equal(validator.validate(schema,{...fixture,markerFilename:"foreign-artifact.json"}),false);
-  const root = mkdtempSync(join(output, "ap-")), staging = join(root, "dist"), leaseRoot = resolve(process.cwd(), ".cache/b/l/m/data");
+  const root = mkdtempSync(join(output, "ap-")), staging = join(root, "dist"), leaseRoot = resolve(repository.root, ".cache/b/l/m/data");
   mkdirSync(leaseRoot, { recursive: true });
   const leaseDirectory = mkdtempSync(join(leaseRoot, "ap-"));
   const files = new Map<string, string>();

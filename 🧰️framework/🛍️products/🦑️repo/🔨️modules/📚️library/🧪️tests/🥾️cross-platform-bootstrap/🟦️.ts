@@ -22,7 +22,7 @@ type Fixture = Readonly<{
   repoLocalGitConfig: readonly (readonly [string, string])[];
   unixBootstrap: Readonly<{ path: string; packageManagers: readonly string[]; requiredTools: readonly string[]; forbidden: readonly string[]; installerInvocations: number }>;
   windowsBootstrap: Readonly<{ path: string; required: readonly string[]; forbidden: readonly string[] }>;
-  nativePins: Readonly<{ hosts: readonly string[]; tools: readonly string[]; platforms: readonly string[]; architectures: readonly string[]; rowShape: string; forbiddenInstallers: readonly string[]; playwrightCache: string }>;
+  nativePins: Readonly<{ launcherRegistry: string; hosts: readonly string[]; tools: readonly string[]; platforms: readonly string[]; architectures: readonly string[]; rowShape: string; forbiddenInstallers: readonly string[]; playwrightCache: string }>;
   windowsLongPaths: Readonly<{ cases: readonly Readonly<{ output: string; expected: boolean | null }>[] }>;
   nodePin: Readonly<{ manifest: string; dockerfile: string; dockerfileArg: string }>;
   workspaceManifests: Readonly<{ rootManifest: string }>;
@@ -151,6 +151,22 @@ describe("cross-platform bootstrap", () => {
     expect(dirs.overBudget, `tracked directories above ${directoryBudget} UTF-16 units (max ${dirs.max})`).toEqual([]);
   }, 60_000);
 
+  test("keeps current product paths inside the stock Windows MAX_PATH budget", () => {
+    const paths = [...new Set(git(["-c", "core.quotepath=off", "ls-files", "-z", "--cached", "--others", "--exclude-standard"]).split("\0").filter(path => path && !path.includes("/🎫️tickets/") && existsSync(join(repoRoot, path))))];
+    const { windowsMaxPath, cloneRootMax, componentMax } = fixture.pathBudget;
+    const directories = [...new Set(paths.flatMap(path => path.split("/").slice(0, -1).map((_, index, parts) => parts.slice(0, index + 1).join("/"))))];
+    const utf16 = (value: string) => iconv.encode(value, "utf16le").length / 2;
+    const files = measurePaths(paths, value => value.length, windowsMaxPath - 1 - cloneRootMax, componentMax);
+    const dirs = measurePaths(directories, value => value.length, windowsMaxPath - 13 - cloneRootMax, componentMax);
+    expect(paths.length).toBeGreaterThan(1000);
+    expect(files).toEqual(measurePaths(paths, utf16, windowsMaxPath - 1 - cloneRootMax, componentMax));
+    expect(dirs).toEqual(measurePaths(directories, utf16, windowsMaxPath - 13 - cloneRootMax, componentMax));
+    expect(files.overComponent).toEqual([]);
+    expect(dirs.overComponent).toEqual([]);
+    expect(files.overBudget).toEqual([]);
+    expect(dirs.overBudget).toEqual([]);
+  }, 60_000);
+
   test("saves every non-ASCII PowerShell script with a UTF-8 BOM so Windows PowerShell 5.1 decodes it as UTF-8", () => {
     const scripts = productScripts(fixture.scriptEncoding.bomExtensions);
     expect(scripts.length).toBeGreaterThan(0);
@@ -167,12 +183,15 @@ describe("cross-platform bootstrap", () => {
   test("checks shell scripts out with LF endings and keeps them parseable by bash", () => {
     const scripts = productScripts(fixture.scriptEncoding.lfExtensions);
     expect(scripts.length).toBeGreaterThan(0);
-    const attributes = git(["check-attr", "eol", "--", ...scripts]).trim().split("\n");
+    const attributes = git(["check-attr", "-z", "eol", "--", ...scripts]).split("\0");
     for (const [index, script] of scripts.entries()) {
       expect({ script, cr: readFileSync(join(repoRoot, script)).includes(0x0d) }).toEqual({ script, cr: false });
-      expect(attributes[index]).toBe(`${script}: eol: lf`);
+      expect(attributes.slice(index * 3, index * 3 + 3)).toEqual([script, "eol", "lf"]);
     }
-    if (process.platform === "win32") return;
+  });
+
+  test.skipIf(process.platform === "win32")("parses every shell script with bash -n (POSIX hosts)", () => {
+    const scripts = productScripts(fixture.scriptEncoding.lfExtensions);
     for (const script of scripts) {
       const parsed = spawnSync("bash", ["-n", join(repoRoot, script)], { encoding: "utf8" });
       expect({ script, status: parsed.status, stderr: parsed.stderr }).toEqual({ script, status: 0, stderr: "" });
@@ -223,11 +242,14 @@ describe("cross-platform bootstrap", () => {
     expect(shellFunction(source, "linux_package_manager")).toContain(`for manager in ${fixture.unixBootstrap.packageManagers.join(" ")}; do`);
     expect(source).toContain(`report_missing_tools ${fixture.unixBootstrap.requiredTools.join(" ")}`);
     expect(source.match(/\bapt-get (update|install)\b/gu)?.length ?? 0).toBe(source.match(/run_privileged env DEBIAN_FRONTEND=noninteractive apt-get (update|install)\b/gu)?.length ?? 0);
-    const calls = source.replace(/\\\n\s*/gu, " ").split("\n").filter((line) => /^\s*install_linux_packages\s/u.test(line));
+    const calls = shellFunction(source, "ensure_native_toolchain").replace(/\\\n\s*/gu, " ").split("\n").filter((line) => /^\s*install_linux_packages\s/u.test(line));
     expect(calls.length).toBe(fixture.unixBootstrap.installerInvocations);
     expect(shellFunction(source, "ensure_native_toolchain")).toContain('done < <(linux_toolchain_packages "$manager")');
     for (const call of calls) expect({ call: call.trim(), guarded: call.includes("|| log ") }).toEqual({ call: call.trim(), guarded: true });
-    if (process.platform === "win32") return;
+  });
+
+  test.skipIf(process.platform === "win32")("lists the Linux toolchain packages of every supported package manager through bash (POSIX hosts)", () => {
+    const source = readFileSync(join(repoRoot, fixture.unixBootstrap.path), "utf8"), packages = shellFunction(source, "linux_toolchain_packages");
     for (const manager of fixture.unixBootstrap.packageManagers) {
       const listed = spawnSync("bash", ["-c", `${packages}\nlinux_toolchain_packages "$1"`, "law", manager], { encoding: "utf8" });
       expect({ manager, status: listed.status }).toEqual({ manager, status: 0 });
@@ -254,14 +276,16 @@ describe("cross-platform bootstrap", () => {
     return { path, schema: JSON.parse(readFileSync(path, "utf8")), ...(JSON.parse(readFileSync(path, "utf8")).definitions.Pins.const as { assets: { tool: string; version: string; platform: string; arch: string; url: string; sha256: string }[] }) };
   };
 
-  test("pins and checksums every installer the native bootstraps download, agreeing with the image, the Bun and rustup schemas and the toolchain pins", () => {
+  test("pins and checksums every installer the native bootstraps download, agreeing with the image, the launcher registry and rustup schema", () => {
     const pins = nativePins(), rules = fixture.nativePins;
     const validate = new Ajv({ allErrors: true, strict: true }).compile(pins.schema);
     expect(validate({ assets: pins.assets }), JSON.stringify(validate.errors)).toBe(true);
     const shell = readFileSync(join(repoRoot, fixture.unixBootstrap.path), "utf8"), windows = readFileSync(join(repoRoot, fixture.windowsBootstrap.path), "utf8");
-    const bunPath = nativePinsPath(shell, /^PINS_FILE="\$REPO_ROOT\/(.*)"$/mu, "/");
+    const registryPath = join(repoRoot, rules.launcherRegistry);
+    expect(nativePinsPath(shell, /^LAUNCHER_REGISTRY="\$REPO_ROOT\/(.*)"$/mu, "/")).toBe(registryPath);
     expect(nativePinsPath(windows, /^\$script:PinsFile = Join-Path \$repoRoot "(.*)"$/mu, "\\")).toBe(pins.path);
-    expect(nativePinsPath(windows, /^\$script:BunPinsFile = Join-Path \$repoRoot "(.*)"$/mu, "\\")).toBe(bunPath);
+    expect(shell).toContain('bash "$LAUNCHER_INSTALL" "$LAUNCHER_BIN"');
+    expect(windows).not.toContain("BunPinsFile");
     const rowLines = readFileSync(pins.path, "utf8").split("\n").filter((line) => line.trim().startsWith('{"tool":'));
     expect(rowLines.length).toBe(pins.assets.length);
     for (const [index, line] of rowLines.entries()) {
@@ -276,13 +300,18 @@ describe("cross-platform bootstrap", () => {
       for (const row of rows) expect(row.url).toContain(row.version);
     }
     expect(pins.assets.filter((row) => row.tool === "dotnet-install")).toHaveLength(1);
-    const bun = JSON.parse(readFileSync(bunPath, "utf8")).definitions.Release.const as { version: string; release: string; distributions: { platform: string; arch: string; musl: boolean; archive: string; sha256: string }[] };
+    const bun = JSON.parse(readFileSync(registryPath, "utf8")).runtimes.bun as { version: string; download: { base: string }; distributions: { platform: string; arch: string; libc: string; archive: string; sha256: string }[] };
     expect(bun.version).toBe((JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as { packageManager: string }).packageManager.replace("bun@", ""));
     const image = readFileSync(join(repoRoot, fixture.nodePin.dockerfile), "utf8");
     const imageNode = [...image.matchAll(/node_archive="([^"]+)"; node_sha="([a-f0-9]{64})"/gu)].map((match) => [match[1], match[2]]);
     expect(imageNode).toEqual(["x64", "arm64"].map((arch) => [arch, pins.assets.find((row) => row.tool === "node" && row.platform === "linux" && row.arch === arch)!.sha256]));
     const imageBun = [...image.matchAll(/bun_archive="([^"]+)"; bun_sha="([a-f0-9]{64})"/gu)].map((match) => [match[1], match[2]]);
-    expect(imageBun).toEqual(["x64-baseline", "aarch64"].map((archive) => [archive, bun.distributions.find((row) => row.platform === "linux" && !row.musl && row.archive === `bun-linux-${archive}.zip`)!.sha256]));
+    expect(imageBun).toEqual([]);
+    expect(bun.download.base).toContain(bun.version);
+    for (const row of bun.distributions) {
+      expect(row.sha256).toMatch(/^[a-f0-9]{64}$/u);
+      expect(row.archive).toMatch(/^bun-.+\.zip$/u);
+    }
     const rustup = JSON.parse(readFileSync(join(libraryRoot, "⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧬️schema/🔣️.json"), "utf8")).definitions.Protocol.const.bootstrapVersion as string;
     expect(pins.assets.find((row) => row.tool === "rustup")!.version).toBe(rustup);
     const devcontainer = Bun.JSONC.parse(readFileSync(join(repoRoot, ".devcontainer/devcontainer.json"), "utf8")) as { features: Record<string, { version?: string }> };
@@ -303,17 +332,10 @@ describe("cross-platform bootstrap", () => {
     expect(windows.match(/function Save-VerifiedDownload \{[\s\S]*?Invoke-WebRequest[\s\S]*?Get-FileHash[\s\S]*?Checksum mismatch[\s\S]*?\n\}/u)).not.toBeNull();
   });
 
-  test("selects pinned distributions in the shell exactly as the schemas declare them", () => {
-    if (process.platform === "win32") return;
+  test.skipIf(process.platform==="win32")("selects pinned distributions in the shell exactly as the schemas declare them", () => {
     const pins = nativePins(), source = readFileSync(join(repoRoot, fixture.unixBootstrap.path), "utf8");
-    const bunPath = nativePinsPath(source, /^PINS_FILE="\$REPO_ROOT\/(.*)"$/mu, "/");
-    const bun = JSON.parse(readFileSync(bunPath, "utf8")).definitions.Release.const as { version: string; release: string; distributions: { platform: string; arch: string; musl: boolean; archive: string; sha256: string }[] };
-    const functions = ["pin_row", "pin_field", "bun_release_row", "version_at_least"].map((name) => shellFunction(source, name)).join("\n");
-    const script = (body: string) => spawnSync("bash", ["-c", `set -euo pipefail\nPINS_FILE="$1"\nBUN_PINS_FILE="$2"\n${functions}\n${body}`, "law", pins.path, bunPath], { encoding: "utf8" });
-    for (const row of bun.distributions.filter((candidate) => candidate.platform !== "win32")) {
-      const result = script(`bun_release_row ${row.platform} ${row.arch} ${row.musl}`);
-      expect({ status: result.status, stdout: result.stdout.trim() }).toEqual({ status: 0, stdout: `${bun.version} ${bun.release} ${row.archive} ${row.sha256}` });
-    }
+    const functions = ["pin_row", "pin_field", "version_at_least"].map((name) => shellFunction(source, name)).join("\n");
+    const script = (body: string) => spawnSync("bash", ["-c", `set -euo pipefail\nPINS_FILE="$1"\n${functions}\n${body}`, "law", pins.path], { encoding: "utf8" });
     for (const row of pins.assets.filter((candidate) => candidate.platform !== "any")) {
       const result = script(`row="$(pin_row ${row.tool} ${row.platform} ${row.arch})"; printf '%s|%s|%s' "$(pin_field "$row" version)" "$(pin_field "$row" url)" "$(pin_field "$row" sha256)"`);
       expect({ tool: row.tool, status: result.status, stdout: result.stdout }).toEqual({ tool: row.tool, status: 0, stdout: `${row.version}|${row.url}|${row.sha256}` });

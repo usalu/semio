@@ -13,10 +13,12 @@ import (
 	"bytes"
 	"context"
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"io"
 	"os"
 	"os/signal"
@@ -234,6 +236,33 @@ type residentFrame struct {
 
 // 🛰️ForwardResident hands an eligible build command to the resident service; handled=false means the caller continues with the normal path and nothing was printed.
 func (h Host) ForwardResident(ctx context.Context, root, kind string, args []string) (bool, int) {
+	busy := false
+	handled, code := h.forwardResidentOnce(ctx, root, kind, args, &busy)
+	if !busy {
+		return handled, code
+	}
+	registry, err := LoadRegistry(root)
+	if err != nil {
+		return handled, code
+	}
+	policy, err := LoadRestartPolicy(root, registry)
+	if err != nil {
+		return handled, code
+	}
+	languages := residentLanguages(h, root, args)
+	for attempt := 0; busy && attempt < policy.Maximum; attempt++ {
+		h.Stderr(policy.Notice(languages, attempt))
+		if !restartSleep(ctx, policy.Wait(attempt)) {
+			return true, 130
+		}
+		busy = false
+		handled, code = h.forwardResidentOnce(ctx, root, kind, args, &busy)
+	}
+	return handled, code
+}
+
+// 🛰️forwardResidentOnce is one attempt to ask the service; busy is set when the service refused with a later retry.
+func (h Host) forwardResidentOnce(ctx context.Context, root, kind string, args []string, busy *bool) (bool, int) {
 	if kind != "build" {
 		return false, 0
 	}
@@ -241,10 +270,7 @@ func (h Host) ForwardResident(ctx context.Context, root, kind string, args []str
 	if mode == "off" || !ResidentEligible(args) {
 		return false, 0
 	}
-	real, err := filepath.EvalSymlinks(root)
-	if err != nil {
-		real = root
-	}
+	real := canonicalRoot(root)
 	paths := ResidentEndpointsFor(real, h.Env, residentGOOS, os.Getuid(), os.TempDir())
 	fail := func(reason string) (bool, int) {
 		if mode != "require" {
@@ -283,13 +309,7 @@ func (h Host) ForwardResident(ctx context.Context, root, kind string, args []str
 	}
 	defer connection.Close()
 	identifier := make([]byte, 8)
-	if file, openErr := os.Open("/dev/urandom"); openErr == nil {
-		_, _ = io.ReadFull(file, identifier)
-		file.Close()
-	} else {
-		sum := sha256.Sum256([]byte(strconv.FormatInt(time.Now().UnixNano(), 10)))
-		copy(identifier, sum[:8])
-	}
+	_, _ = rand.Read(identifier)
 	agent := ResidentAgentID(h.Env("SEMIO_AGENT_ID"), "launcher")
 	token := h.Env("SEMIO_SERVICE_TOKEN")
 	if token == "" {
@@ -359,6 +379,7 @@ func (h Host) ForwardResident(ctx context.Context, root, kind string, args []str
 				}
 				h.Stderr(text)
 				if frame.Retry == "later" {
+					*busy = true
 					return true, 75
 				}
 				return true, 1
@@ -413,5 +434,82 @@ func residentLanguages(h Host, root string, args []string) []string {
 	}
 	return nil
 }
+
+// #region 🔁️Restart
+
+// 📜️RestartPolicy is the part of the shared restart policy the launcher reads.
+type RestartPolicy struct {
+	Maximum int
+	Waits   []time.Duration
+	Texts   map[string]map[string]string
+}
+
+// 📥️LoadRestartPolicy reads the protocol constant of the policy file the registry names.
+func LoadRestartPolicy(root string, registry *Registry) (RestartPolicy, error) {
+	raw, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(registry.Restart.Policy)))
+	if err != nil {
+		return RestartPolicy{}, err
+	}
+	var document struct {
+		Definitions struct {
+			Protocol struct {
+				Constant struct {
+					Maximum     int `json:"maximumReexecutions"`
+					LoadFailure struct {
+						BackoffMs []int `json:"backoffMs"`
+					} `json:"loadFailure"`
+					Texts map[string]map[string]string `json:"texts"`
+				} `json:"const"`
+			} `json:"Protocol"`
+		} `json:"$defs"`
+	}
+	if err = json.Unmarshal(raw, &document); err != nil {
+		return RestartPolicy{}, err
+	}
+	constant := document.Definitions.Protocol.Constant
+	if constant.Maximum < 1 || len(constant.LoadFailure.BackoffMs) == 0 || constant.Texts["en"]["busy"] == "" || constant.Texts["de"]["busy"] == "" {
+		return RestartPolicy{}, errors.New("restart policy incomplete")
+	}
+	policy := RestartPolicy{Maximum: constant.Maximum, Texts: constant.Texts}
+	for _, milliseconds := range constant.LoadFailure.BackoffMs {
+		policy.Waits = append(policy.Waits, time.Duration(milliseconds)*time.Millisecond)
+	}
+	return policy, nil
+}
+
+// ⏱️Wait is the pause before restart number attempt (counted from zero); the last wait repeats.
+func (p RestartPolicy) Wait(attempt int) time.Duration {
+	return p.Waits[min(attempt, len(p.Waits)-1)]
+}
+
+// 📣️Notice is the busy notice before restart number attempt in each of the languages, preferred first.
+func (p RestartPolicy) Notice(languages []string, attempt int) string {
+	fields := map[string]string{"delay": strconv.FormatInt(p.Wait(attempt).Milliseconds(), 10), "attempt": strconv.Itoa(attempt + 1), "maximum": strconv.Itoa(p.Maximum)}
+	if len(languages) == 0 {
+		languages = []string{"en", "de"}
+	}
+	text := ""
+	for _, language := range languages {
+		if text != "" {
+			text += "\n"
+		}
+		text += Format(p.Texts[language]["busy"], fields)
+	}
+	return text
+}
+
+// 😴restartSleep waits and reports false when the context ended first; tests replace it.
+var restartSleep = func(ctx context.Context, wait time.Duration) bool {
+	timer := time.NewTimer(wait)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+		return true
+	case <-ctx.Done():
+		return false
+	}
+}
+
+// #endregion 🔁️Restart
 
 // #endregion 🛰️Resident

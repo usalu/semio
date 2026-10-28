@@ -1,0 +1,28 @@
+{
+ "label": "hubreds-2",
+ "target": "os-hub:test",
+ "started": "02:35:10",
+ "wall_s": 522.6,
+ "peak_tree_mb": 6693,
+ "peak_processes": 6,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "23"
+  ],
+  "inferring": [
+   "23"
+  ],
+  "published": [
+   "707",
+   "23",
+   "105"
+  ],
+  "processes": [
+   "11",
+   "1 disk cache hit, 3 internal, 7 local"
+  ]
+ }
+}

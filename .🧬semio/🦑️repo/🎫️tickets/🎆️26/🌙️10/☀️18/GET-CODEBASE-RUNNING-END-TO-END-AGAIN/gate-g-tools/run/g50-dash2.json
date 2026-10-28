@@ -1,0 +1,12 @@
+{
+ "label": "g50-dash2",
+ "target": "@semio-tech/repo-dashboard-rs:build",
+ "started": "02:16:12",
+ "wall_s": 23.6,
+ "peak_tree_mb": 1829,
+ "peak_processes": 4,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

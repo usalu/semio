@@ -8,6 +8,12 @@ function layer(device: Device, name: string) {
   return activeOverview(device.page).locator(`:scope > [data-layered-${name}]`);
 }
 
+/** 📏️ How far the size of the preview is from the size of the active overview, rounded to whole pixels, both measured now: the footer lists the other learners online and changes its height with them, so the size of the grid is only as old as its measurement. */
+async function sizeGap(device: Device, id: string): Promise<readonly [number, number]> {
+  const [frame, preview] = [await boxOf(activeOverview(device.page)), await boxOf(pane(device.page, id))];
+  return [Math.round(preview.width) - Math.round(frame.width), Math.round(preview.height) - Math.round(frame.height)];
+}
+
 /** 📍️ Distance between preview and active overview corners. */
 async function displacement(device: Device, id: string): Promise<number> {
   const [frame, preview] = [await boxOf(activeOverview(device.page)), await boxOf(pane(device.page, id))];
@@ -58,8 +64,7 @@ test("each nested grid pans under glass, reveals crisp screen-sized previews and
     await card(learner.page, id).locator("[data-layered-zoom]").hover();
     await expect(card(learner.page, id)).toHaveAttribute("data-revealed", "");
     await expect.poll(() => displacement(learner, id)).toBeLessThan(0.5);
-    const preview = await boxOf(pane(learner.page, id));
-    expect([Math.round(preview.width), Math.round(preview.height)]).toEqual([Math.round(frame.width), Math.round(frame.height)]);
+    await expect.poll(() => sizeGap(learner, id)).toEqual([0, 0]);
     await expect(veil).toHaveAttribute("data-veil", "clear");
     await expect(veil).toBeHidden();
     await expect(pane(learner.page, id)).toHaveAttribute("inert", "");

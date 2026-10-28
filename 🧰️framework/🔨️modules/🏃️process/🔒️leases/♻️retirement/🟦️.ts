@@ -1,4 +1,4 @@
-import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../🦥️routing/🟦️.ts";
 import{withArtifactReadDirectoryV1}from"../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import type{ResourceLeaseControl}from"../🎛️control/🟦️.ts";
 import {lstatSync,statSync,type Stats} from "node:fs";
@@ -8,6 +8,7 @@ import {SqliteDatabaseV1} from "../../../../📦️packages/🟦️typescript/�
 import {dirname,join,resolve} from "node:path";
 import authoritySchema from "../🧬️schema/📜️ticket.json" with {type:"json"};
 import scanSchema from"./🧬️schema/🔣️.json" with{type:"json"};
+import {leaseDatabaseUnopenableBusyV1} from "../🪟️windows/🟦️.ts";
 const schema=authoritySchema.definitions.RetirementPolicy;
 /** 📐️ Bounds cooperative scanning even when unfinished entries consume no candidate slot. */
 export const resourceLeaseRetirementScanLimitsV1=Object.freeze({...scanSchema.definitions.Scan.const});
@@ -26,7 +27,7 @@ export async function openResourceLeaseDatabaseV1(path:string,readonly=false,cre
  return{exec:sql=>database.exec(sql),read:(sql,...values)=>{const statement=database.prepare(sql);try{return statement.get(...values) as Record<string,unknown>|undefined;}finally{statement.finalize();}},close:()=>{if(!closed){database.close(true);closed=true;}}};
 }
 /** 🚥️ Recognizes only actual SQLite contention and the owner's closed nonwaiting refusal. */
-export function resourceLeaseBusyV1(error:unknown):boolean{const value=error!==null&&typeof error==="object"?error as{code?:string;errcode?:number;errno?:number}:undefined;return value?.code==="SQLITE_BUSY"||value?.code==="SQLITE_LOCKED"||[5,6].includes((value?.errcode??value?.errno??-1)&255)||error instanceof Error&&error.message.startsWith("Resource lease timed out: ");}
+export function resourceLeaseBusyV1(error:unknown):boolean{const value=error!==null&&typeof error==="object"?error as{code?:string;errcode?:number;errno?:number}:undefined;return value?.code==="SQLITE_BUSY"||value?.code==="SQLITE_LOCKED"||[5,6].includes((value?.errcode??value?.errno??-1)&255)||leaseDatabaseUnopenableBusyV1(error)||error instanceof Error&&error.message.startsWith("Resource lease timed out: ");}
 /** 🧹️ Attempts every cleanup independently while preserving any arbitrary primary failure. */
 export function finishResourceLeaseCleanupV1(failed:boolean,failure:unknown,operations:readonly (()=>void)[]):void{for(const operation of operations)try{operation();}catch(error){if(!failed){failed=true;failure=error;}}if(failed)throw failure;}
 /** 🛟️ Retains private admission custody until every failed connection close and gate close confirms completion. */

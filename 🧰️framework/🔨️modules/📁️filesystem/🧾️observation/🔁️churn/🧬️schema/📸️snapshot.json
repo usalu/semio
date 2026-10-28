@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/filesystem/observation/churn/snapshot",
+  "title": "Stable tree snapshot protocol",
+  "description": "A run that hashes many files must never consume a mix of two tree states. The snapshot lists the tree (names and identity of every directory and file), consumes every file exactly once, lists the tree again and requires the two listings to be identical; an entry modified less than the settle window of the churn policy before the observation is only accepted after the window passed and a third listing agrees, so a writer that paused halfway through a rewrite is waited out. Any difference is a concurrent edit of the `snapshot` layer of the churn policy.",
+  "definitions": {
+    "Text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "concurrency": 32,
+        "maximumEntries": 1000000,
+        "maximumDepth": 64,
+        "texts": {
+          "en": {
+            "settle": "{path} was edited {age} ms ago: waiting {delay} ms for the edit to settle before the snapshot is accepted."
+          },
+          "de": {
+            "settle": "{path} wurde vor {age} ms bearbeitet: warte {delay} ms, bis die Bearbeitung abgeschlossen ist, bevor der Schnappschuss gilt."
+          }
+        }
+      }
+    }
+  }
+}

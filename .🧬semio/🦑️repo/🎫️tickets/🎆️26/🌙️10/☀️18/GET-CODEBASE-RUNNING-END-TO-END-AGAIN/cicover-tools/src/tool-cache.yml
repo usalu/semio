@@ -1,0 +1,46 @@
+name: tool cache
+description: >-
+  Restores or saves one cache of the repository's tool caches (the Bun store, the launcher runtimes, the Go build cache, the TeX bundle and fonts). The key is
+  `<name>-<operating system>-<architecture>-<hash>`; a restore falls back to the newest key of the same operating system and architecture, because every entry of these caches is content
+  addressed or version addressed and is verified by its owner before use, so a stale restore costs a download, never a wrong result. Only a push (or a manual run) on the repository's
+  default branch saves, and only when the exact key is not stored yet, so a pull request can neither evict nor poison a cache. Call it with `mode: restore` before the work and with `mode: save` after it.
+
+inputs:
+  mode:
+    description: restore (before the work) or save (after the work).
+    required: true
+  name:
+    description: Cache family; it starts the key (for example bun-store, launcher, go-build, print-tex).
+    required: true
+  paths:
+    description: Directories to store, one per line, relative to the workspace or absolute.
+    required: true
+  hash:
+    description: Hash of the files whose change rotates the key (pass the result of hashFiles); empty means one rolling key per operating system and architecture.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Restore the ${{ inputs.name }} cache
+      if: ${{ inputs.mode == 'restore' }}
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ inputs.paths }}
+        key: ${{ inputs.name }}-${{ runner.os }}-${{ runner.arch }}-${{ inputs.hash }}
+        restore-keys: ${{ inputs.name }}-${{ runner.os }}-${{ runner.arch }}-
+    - name: Look for the exact ${{ inputs.name }} cache before saving it
+      id: stored
+      if: ${{ inputs.mode == 'save' && success() && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ inputs.paths }}
+        key: ${{ inputs.name }}-${{ runner.os }}-${{ runner.arch }}-${{ inputs.hash }}
+        lookup-only: true
+    - name: Save the ${{ inputs.name }} cache
+      if: ${{ inputs.mode == 'save' && success() && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && steps.stored.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ inputs.paths }}
+        key: ${{ inputs.name }}-${{ runner.os }}-${{ runner.arch }}-${{ inputs.hash }}

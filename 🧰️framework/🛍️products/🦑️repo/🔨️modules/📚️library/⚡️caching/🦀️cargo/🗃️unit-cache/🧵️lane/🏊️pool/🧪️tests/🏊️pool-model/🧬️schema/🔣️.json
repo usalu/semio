@@ -1,0 +1,45 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "schema://repo.cargo/LanePoolModelV1",
+ "title": "Corpus of the Cargo lane pool: acquisition, trimming and quota cases, and the counts of the exhaustive sweep",
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["version", "acquire", "trim", "quota", "sweep"],
+ "properties": {
+  "version": { "const": 1 },
+  "acquire": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/AcquireCase" } },
+  "trim": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/TrimCase" } },
+  "quota": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/QuotaCase" } },
+  "sweep": { "type": "object", "additionalProperties": false, "required": ["claim", "unguarded"], "properties": { "claim": { "$ref": "#/definitions/Totals" }, "unguarded": { "$ref": "#/definitions/Totals" } } }
+ },
+ "definitions": {
+  "Lane": {
+   "type": "object", "additionalProperties": false, "required": ["id", "claimed", "lastUsedMs", "crateKey", "bytes"],
+   "properties": { "id": { "type": "string", "pattern": "^[a-z0-9]{1,12}$" }, "claimed": { "type": "boolean" }, "lastUsedMs": { "type": "integer", "minimum": 0 }, "crateKey": { "type": "string", "maxLength": 12 }, "bytes": { "type": ["integer", "null"], "minimum": 0 } }
+  },
+  "Bounds": {
+   "type": "object", "additionalProperties": false, "required": ["maximumLanes", "maximumLiveLanes", "quotaBytes"],
+   "properties": { "maximumLanes": { "type": "integer", "minimum": 1 }, "maximumLiveLanes": { "type": "integer", "minimum": 1 }, "quotaBytes": { "type": "integer", "minimum": 0 } }
+  },
+  "Choice": {
+   "type": "object", "additionalProperties": false, "required": ["kind"],
+   "properties": { "kind": { "enum": ["warm", "lru", "new", "busy"] }, "id": { "type": "string" } }
+  },
+  "AcquireCase": {
+   "type": "object", "additionalProperties": false, "required": ["id", "crateKey", "bounds", "lanes", "expect"],
+   "properties": { "id": { "type": "string", "minLength": 1 }, "crateKey": { "type": "string", "minLength": 1, "maxLength": 12 }, "bounds": { "$ref": "#/definitions/Bounds" }, "lanes": { "type": "array", "items": { "$ref": "#/definitions/Lane" } }, "expect": { "$ref": "#/definitions/Choice" } }
+  },
+  "TrimCase": {
+   "type": "object", "additionalProperties": false, "required": ["id", "bounds", "lanes", "expect"],
+   "properties": { "id": { "type": "string", "minLength": 1 }, "bounds": { "$ref": "#/definitions/Bounds" }, "lanes": { "type": "array", "items": { "$ref": "#/definitions/Lane" } }, "expect": { "type": "array", "items": { "type": "string" } } }
+  },
+  "QuotaCase": {
+   "type": "object", "additionalProperties": false, "required": ["id", "capacityBytes", "machineQuotaBytes", "laneShareNumerator", "laneShareDenominator", "expect"],
+   "properties": { "id": { "type": "string", "minLength": 1 }, "capacityBytes": { "type": "integer", "minimum": 0 }, "machineQuotaBytes": { "type": ["integer", "null"], "minimum": 0 }, "laneShareNumerator": { "type": "integer", "minimum": 1 }, "laneShareDenominator": { "type": "integer", "minimum": 1 }, "expect": { "type": "integer", "minimum": 0 } }
+  },
+  "Totals": {
+   "type": "object", "additionalProperties": false, "required": ["configs", "states", "violations", "stuck", "unreachableDone", "overlaps"],
+   "properties": { "configs": { "type": "integer" }, "states": { "type": "integer" }, "violations": { "type": "integer" }, "stuck": { "type": "integer" }, "unreachableDone": { "type": "integer" }, "overlaps": { "type": "integer" } }
+  }
+ }
+}

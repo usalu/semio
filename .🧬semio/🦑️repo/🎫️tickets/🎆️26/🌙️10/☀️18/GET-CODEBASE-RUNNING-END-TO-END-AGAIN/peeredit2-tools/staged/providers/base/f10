@@ -1,0 +1,133 @@
+{
+ "version": 1,
+ "files": {
+  "scriptInputs": "../../🧭️script-inputs/🟨️.mjs",
+  "entry": "../../🚦️invocation/🟨️.mjs",
+  "observation": "../../../../👁️observation/🟨️.mjs",
+  "projectNodes": "../../📦️project-nodes/🟨️.mjs"
+ },
+ "functions": {
+  "relativeScriptInputs": {
+   "file": "scriptInputs",
+   "start": "export async function relativeScriptInputs(",
+   "end": "/** 🙈️ The resources the build policy declares presentation-only"
+  },
+  "targetScriptSources": {
+   "file": "scriptInputs",
+   "start": "export async function targetScriptSources(",
+   "end": "/** ⚙️ Keeps configured recipe inheritance"
+  },
+  "invokeCurrentImplementationV1": {
+   "file": "entry",
+   "start": "function invokeCurrentImplementationV1(",
+   "end": "if (reloadedImplementation?.revision !== revision) {"
+  },
+  "observeInferenceSnapshotV1": {
+   "file": "observation",
+   "start": "export async function observeInferenceSnapshotV1(",
+   "end": "compute));\n}"
+  },
+  "emojiProjectJsonNodes": {
+   "file": "projectNodes",
+   "start": "export async function emojiProjectJsonNodes(",
+   "end": "const results = (await Promise.all(configFiles"
+  },
+  "routerKeptFromSourceV1": {
+   "file": "scriptInputs",
+   "start": "function routerKeptFromSourceV1(",
+   "end": "/** 🔀️ The imports a router script needs"
+  }
+ },
+ "order": [
+  {
+   "name": "the partial branch is taken before the whole-pass record",
+   "function": "invokeCurrentImplementationV1",
+   "before": "args[1]?.snapshot ? observeInferenceSnapshotV1(",
+   "after": "observeInference({ cachePath:"
+  }
+ ],
+ "present": [
+  {
+   "name": "a closure file is admitted by its physical shape, not by its bytes",
+   "function": "relativeScriptInputs",
+   "text": "if(!admitted.has(path)){requirePhysicalSourceV1(path);admitted.add(path);}"
+  },
+  {
+   "name": "a data or asset leaf is admitted by its physical shape, not by its bytes",
+   "function": "relativeScriptInputs",
+   "text": "if(!seen)requirePhysicalSourceV1(path);return;"
+  },
+  {
+   "name": "code files are consumed through their analysis fact, which survives edits that keep the imports",
+   "function": "relativeScriptInputs",
+   "text": "observedSourceAnalysisV1(prepareSourceAnalysesV1().command,path)"
+  },
+  {
+   "name": "the script provider ports of a closure member are an analysis fact, not its bytes",
+   "function": "relativeScriptInputs",
+   "text": "observedSourceAnalysisV1(PROVIDER_PORTS, path)"
+  },
+  {
+   "name": "a closure member is admitted by its physical shape before its facts are read",
+   "function": "relativeScriptInputs",
+   "text": "requirePhysicalSourceV1(path);\n      const ports"
+  },
+  {
+   "name": "an entry script is admitted by its physical shape",
+   "function": "targetScriptSources",
+   "text": "requirePhysicalSourceV1(bound.script)"
+  },
+  {
+   "name": "the project's own manifest stays a content fact",
+   "function": "targetScriptSources",
+   "text": "readPhysicalSource(manifest)"
+  },
+  {
+   "name": "the partial pass runs in project scope",
+   "function": "invokeCurrentImplementationV1",
+   "text": "observeInferenceSnapshotV1(() => emojiProjectJsonNodes(...args))"
+  },
+  {
+   "name": "the snapshot pass seals module load facts like every pass",
+   "function": "observeInferenceSnapshotV1",
+   "text": "loadSealed=true"
+  },
+  {
+   "name": "the snapshot pass runs the projects in nested scopes",
+   "function": "observeInferenceSnapshotV1",
+   "text": "inferenceValidationScopes.run(nested,()=>scopes.run(nested,"
+  },
+  {
+   "name": "the project filter is the owner roots of the part",
+   "function": "emojiProjectJsonNodes",
+   "text": "wantedRoots = options?.ownerRoots"
+  },
+  {
+   "name": "a router script, named by its commands, is the one closure member read for its bytes",
+   "function": "routerKeptFromSourceV1",
+   "text": "readPhysicalSource(path)"
+  }
+ ],
+ "absent": [
+  {
+   "name": "no closure member is read for its bytes",
+   "function": "relativeScriptInputs",
+   "text": "readPhysicalSource("
+  },
+  {
+   "name": "no entry script is read for its bytes",
+   "function": "targetScriptSources",
+   "text": "readPhysicalSource(bound.script)"
+  },
+  {
+   "name": "the snapshot pass never settles in rounds",
+   "function": "observeInferenceSnapshotV1",
+   "text": "settle"
+  },
+  {
+   "name": "the snapshot pass never rejects contradictory facts between projects",
+   "function": "observeInferenceSnapshotV1",
+   "text": "conflictingInferenceErrorV1"
+  }
+ ]
+}

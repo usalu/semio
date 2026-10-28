@@ -1,5 +1,6 @@
 /** 🎮️ Projects playground catalog rows into session, preparation, activation, serving and site targets. */
-import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { advanceScriptInvocation, checkScriptInvocation, requireIssuedResourceControlInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { catalogBuildContributionForManifestV1 } from "../../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
@@ -23,7 +24,7 @@ export function wire(registry) {
   ({ revisionIdentity } = registry);
 }
 
-/** 🎮️ Flattens every plugin playground row from Cargo manifests (with authored `distDir`).
+/** 🗺️ Flattens every plugin playground row from Cargo manifests (with authored `distDir`).
  * @param {readonly string[]} configFiles
  * @param {string} workspaceRoot
  * @param {readonly import("../../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts").CatalogBuildContributionV1[]} [catalogContributions]
@@ -92,7 +93,7 @@ export function playgroundSiteTargetsForAdmissionV1(root,playgrounds,workspaceRo
  return pluginSiteTargetsForCrate(root,rows,owner.root,workspaceRoot);
 }
 
-/** 🎮️ Gives each Cargo-declared playground session an independent generated artifact: a pure function of the committed
+/** 🏗️ Gives each Cargo-declared playground session an independent generated artifact: a pure function of the committed
  * semantic descriptors of its runtime closure, so no session waits on a component build.
  * @returns {import("../🟨️.d.mts").GeneratedProjectV1["targets"]} */
 export function playgroundSessionTargets(configFiles, workspaceRoot,catalogContributions=[]) {
@@ -119,7 +120,7 @@ export function playgroundSessionTargets(configFiles, workspaceRoot,catalogContr
   }),"deterministic","pure-function-of-inputs")]));
 }
 
-/** 🎮️ Declares completed runtime prerequisites, cacheable validation and profile-specific browser producers.
+/** 🧵️ Declares completed runtime prerequisites, cacheable validation and profile-specific browser producers.
  * A lane's preparation is a cached verdict over the `component` targets of its closure (each replays from its own receipt), so no lane compiles; its
  * activation owns a restorable runtime directory and hashes the owner trees of the components it records. The production Vite bundle replays from the
  * receipt of its store output over the `viteBundleSources` contract (the framework and os-dev trees, the lane's owner roots and development contribution). */
@@ -128,11 +129,20 @@ export function playgroundSessionTargets(configFiles, workspaceRoot,catalogContr
  * @param {string} workspaceRoot
  * @param {string} projectRoot
  * @returns {Record<string, { cache: boolean, continuous?: boolean, dependsOn: string[], outputs: string[], inputs?: unknown[], metadata?: { semio?: { orchestrator?: boolean, execution?: object, runtimeInputAdmission?: object } }, options: { command: string, forwardAllArgs?: boolean } }>}
+ * 🏠️ Boot closure: host sessions must serve before the full catalog materializes. `appScoped: true` keeps the host's own depends-on/consumes without the host-fanout that otherwise selects every crate.
+ * ⚡ `serve` must not wait on activate: warm `served` boots from already-staged modules (content-hash freshness inside ServeScript) in seconds. `dev` still depends on boot-only activate so the host is materialized before Vite, then the activation Vite plugin prefetches the rest on demand.
+ * 🌐️ `S_HUB_URL` and `S_DATA_DIR` are baked into the bundle at Vite `define` time (`🏗️builder/🌐️vite/🟦️.ts:237`, `import.meta.env.VITE_S_HUB_URL`), so two bundles that differ only by which hub they sign in against are DIFFERENT artifacts. Without these env inputs the cache key ignores them and a cached bundle silently answers for the wrong hub.
  */
 export async function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot, contracts = {},catalogContributions=[],context) {
   if(!catalogContributions.length)return {};
   if(!context?.invocation&&!context?.preparationControl)throw Error("Original playground preparation invocation required");
-  const advance=phase=>context.preparationControl?context.preparationControl.advance(phase):advanceScriptInvocation(context.invocation,phase,"running");
+  const advance=async phase=>{
+    if(context.preparationControl)return context.preparationControl.advance(phase);
+    const lease=context.phaseControl;
+    if(lease){requireIssuedResourceControlInvocationV1(lease,context.invocation);checkScriptInvocation(context.invocation);checkResourceLeaseControl(lease);}
+    await advanceScriptInvocation(context.invocation,phase,"running");
+    if(lease)checkResourceLeaseControl(lease);
+  };
   await advance("build:playground-components");
   const components = new Map(), playgrounds = [], nativeFiles = new Map(), nativeClosures = new Map();
   const projectOwners = new Map(), nativeHostOwners = new Map(), nativePlans = new Map();
@@ -188,8 +198,6 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
     const nativeHost=loaded.admitPlaygroundNativeHostV1(playground.nativeHost,nativeHostOwner,`playground ${playground.variant}, nativeHost`);
     const mcpHost=loaded.admitPlaygroundNativeHostV1(playground.mcpHost,nativeHostOwner,`playground ${playground.variant}, mcpHost`);
     if(mcpHost)for(const profile of ["prototype","release"])for(const transport of ["stdio","http"])result[`mcp-${playground.variant}-${transport}-${profile}`]=withCacheDecision({cache:false,continuous:true,outputs:[],dependsOn:[`${mcpHost.project}:${mcpHost.target}`],options:{command:`repo ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts mcp ${playground.variant} ${profile} ${transport}`,forwardAllArgs:true}},"continuous","serves-until-stopped");
-    // 🏠️ Boot closure: host sessions must serve before the full catalog materializes. `appScoped: true`
-    // keeps the host's own depends-on/consumes without the host-fanout that otherwise selects every crate.
     const bootSelected = loaded.runtimeComponentClosure(componentRows, [{ id: playground.pluginId, appScoped: true }]);
     const selected = loaded.runtimeComponentClosure(componentRows, [{ id: playground.pluginId, appScoped: playground.app !== undefined }]);
     const bootComponents=await componentTargetsOf(bootSelected),selectedComponents=await componentTargetsOf(selected);
@@ -212,9 +220,6 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
         dependsOn: [`prepare-${playground.variant}-native-${profile}`, `${nativeHost?.project??wgpuProject.name}:${nativeHost?.target??"native-build"}`],
         options: { command: `${nativeScript} run ${playground.variant} ${profile}${operation === "smoke" ? " --smoke" : ""}`, forwardAllArgs: true },
       }, "live", "drives-running-process");
-      // ⚡ `serve` must not wait on activate: warm `served` boots from already-staged modules (content-hash
-      // freshness inside ServeScript) in seconds. `dev` still depends on boot-only activate so the host is
-      // materialized before Vite, then the activation Vite plugin prefetches the rest on demand.
       result[`serve-${playground.variant}-react-${profile}`] = withCacheDecision({ cache: false, continuous: true, outputs: [], dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`], options: { command: `repo ./📜️script.ts serve ${playground.variant} react ${profile}` } }, "continuous", "serves-until-stopped");
       result[`dev-${playground.variant}-react-${profile}`] = withCacheDecision({ cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-react-${profile}`], options: { command: `repo ./📜️script.ts serve ${playground.variant} react ${profile}` } }, "continuous", "serves-until-stopped");
       result[`activate-${playground.variant}-react-${profile}`] = withCacheDecision({
@@ -257,10 +262,6 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
       parallelism: false,
       metadata: orchestrator,
       outputs: [storeReceiptOutputV1(name)],
-      // 🌐️ `S_HUB_URL` and `S_DATA_DIR` are baked into the bundle at Vite `define` time
-      // (`🏗️builder/🌐️vite/🟦️.ts:237`, `import.meta.env.VITE_S_HUB_URL`), so two bundles that differ
-      // only by which hub they sign in against are DIFFERENT artifacts. Without these env inputs the
-      // cache key ignores them and a cached bundle silently answers for the wrong hub.
       inputs: ["production", "^production", "viteBundleSources", transitiveOutputs, ...ownerSources(selected), ...contributionSources, { env: "S_HUB_URL" }, { env: "S_DATA_DIR" }, { runtime: `repo ${JSON.stringify(buildPath(relative(workspaceRoot, resolve(workspaceRoot, projectRoot, "../../🚚️distribution/📜️script.ts"))))} inputs` }],
       dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", "semio-framework-canvas:stage-runtime-assets", `${flowProject.name}:wasm`, ...distributionEngines, ...engines, ...selectedComponents, "@semio-tech/assets:build"],
       options: { command: `repo ../../🚚️distribution/📜️script.ts build ${playground.variant} react release`, forwardAllArgs: true },

@@ -10,6 +10,7 @@
     "environment",
     "strategies",
     "toolchains",
+    "services",
     "classes",
     "exceptions"
   ],
@@ -36,6 +37,9 @@
       "items": {
         "$ref": "#/definitions/Toolchain"
       }
+    },
+    "services": {
+      "$ref": "#/definitions/Services"
     },
     "classes": {
       "type": "array",
@@ -284,6 +288,9 @@
         },
         "providers": {
           "$ref": "#/definitions/Providers"
+        },
+        "service": {
+          "$ref": "#/definitions/Id"
         }
       }
     },
@@ -352,6 +359,58 @@
           "sandboxed",
           "isolated-root"
         ]
+      }
+    },
+    "Services": {
+      "description": "The persistent services hermetic workers host: one Bazel mnemonic and instance bound for all service actions, and per engine the module the worker imports (it exports `createHermeticServiceV1`), the environment variable that carries the loopback address and token to the action's own commands and the idle time after which the worker releases the engine. A class names its engine in `service`; a service action declares no outputs, so the worker keeps nothing but compiler state between requests.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mnemonic",
+        "instances",
+        "engines"
+      ],
+      "properties": {
+        "mnemonic": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9]*$",
+          "maxLength": 64
+        },
+        "instances": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "engines": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Engine"
+          }
+        }
+      }
+    },
+    "Engine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "module",
+        "environment",
+        "idleMilliseconds"
+      ],
+      "properties": {
+        "module": {
+          "$ref": "#/definitions/Glob"
+        },
+        "environment": {
+          "type": "string",
+          "pattern": "^SEMIO_HERMETIC_[A-Z0-9_]+$",
+          "maxLength": 64
+        },
+        "idleMilliseconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600000
+        }
       }
     }
   }

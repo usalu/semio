@@ -119,7 +119,7 @@ func verifyInstalled(directory string, name string, row Distribution) bool {
 	return receipt.Bytes == 0 || receipt.Bytes == info.Size()
 }
 
-// 🔎️Locate answers an installed runtime without side effects: the tools partition first, then the user cache.
+// 🔎️Locate answers an installed runtime without side effects: the tools partition first, then the user cache (on Windows the other way round, see outsideToolsPartition).
 func (q ProvisionRequest) Locate() (Install, bool, error) {
 	row, err := q.row()
 	if err != nil {
@@ -130,7 +130,11 @@ func (q ProvisionRequest) Locate() (Install, bool, error) {
 		return Install{}, false, err
 	}
 	name := q.Runtime.ExecutableName()
-	for _, candidate := range []struct{ directory, origin string }{{tools, "tools-partition"}, {user, "user-cache"}} {
+	candidates := []struct{ directory, origin string }{{tools, "tools-partition"}, {user, "user-cache"}}
+	if q.outsideToolsPartition() {
+		candidates[0], candidates[1] = candidates[1], candidates[0]
+	}
+	for _, candidate := range candidates {
 		if verifyInstalled(candidate.directory, name, row) {
 			return Install{Executable: filepath.Join(candidate.directory, name), Directory: candidate.directory, Origin: candidate.origin}, true, nil
 		}
@@ -164,6 +168,11 @@ func isLoopback(host string) bool {
 // 🏗️Ensure answers the installed runtime and fetches it when absent; ctx cancels the download and the wait for a peer.
 func (q ProvisionRequest) Ensure(ctx context.Context) (Install, error) {
 	if found, ok, err := q.Locate(); ok || err != nil {
+		if ok && err == nil && found.Origin == "tools-partition" && q.outsideToolsPartition() {
+			if adopted, failure := q.adopt(found); failure == nil {
+				return adopted, nil
+			}
+		}
 		return found, err
 	}
 	row, _ := q.row()
@@ -198,6 +207,72 @@ func (q ProvisionRequest) Ensure(ctx context.Context) (Install, error) {
 		err = Failure{ID: "integrityFailed", Values: map[string]string{"what": "receipt", "archive": row.Archive, "actual": "missing", "expected": row.Sha256}}
 	}
 	return found, err
+}
+
+// 🪟️outsideToolsPartition tells whether the runtime must never run from the tools partition: a running Windows image pins the directory it lives in, and the partition is attached and detached by renaming it.
+func (q ProvisionRequest) outsideToolsPartition() bool { return q.Platform == "win32" }
+
+// 🪟️adopt copies an installed runtime of the tools partition into the user cache (executable and receipt, staged beside the destination and renamed into place, so peers that adopt at the same moment end with one valid copy) and answers the copy; any failure leaves the caller on the tools-partition copy.
+func (q ProvisionRequest) adopt(from Install) (Install, error) {
+	row, err := q.row()
+	if err != nil {
+		return Install{}, err
+	}
+	_, final, err := q.StoreDirectories(row)
+	if err != nil {
+		return Install{}, err
+	}
+	name := q.Runtime.ExecutableName()
+	if len(filepath.Join(final, name)) > q.Registry.Cache.MaximumPathLength {
+		return Install{}, Failure{ID: "pathTooLong", Values: map[string]string{"path": final, "limit": strconv.Itoa(q.Registry.Cache.MaximumPathLength)}}
+	}
+	if err := os.MkdirAll(filepath.Dir(final), 0o755); err != nil {
+		return Install{}, err
+	}
+	token := make([]byte, 8)
+	_, _ = rand.Read(token)
+	staging := filepath.Join(filepath.Dir(final), ".prepare-"+hex.EncodeToString(token))
+	if err := os.Mkdir(staging, 0o755); err != nil {
+		return Install{}, err
+	}
+	defer os.RemoveAll(staging)
+	for _, file := range []string{name, receiptName} {
+		if err := copyInstalled(filepath.Join(from.Directory, file), filepath.Join(staging, file)); err != nil {
+			return Install{}, err
+		}
+	}
+	if !verifyInstalled(staging, name, row) {
+		return Install{}, Failure{ID: "integrityFailed", Values: map[string]string{"what": "copy", "archive": row.Archive, "actual": "unverified", "expected": row.Sha256}}
+	}
+	if !verifyInstalled(final, name, row) {
+		_ = os.RemoveAll(final)
+	}
+	if err := os.Rename(staging, final); err != nil && !verifyInstalled(final, name, row) {
+		return Install{}, err
+	}
+	return Install{Executable: filepath.Join(final, name), Directory: final, Origin: "user-cache"}, nil
+}
+
+// 📄️copyInstalled copies one file of an install and keeps its permission bits.
+func copyInstalled(source string, destination string) error {
+	in, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+	info, err := in.Stat()
+	if err != nil {
+		return err
+	}
+	out, err := os.OpenFile(destination, os.O_CREATE|os.O_EXCL|os.O_WRONLY, info.Mode().Perm())
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(out, in); err != nil {
+		_ = out.Close()
+		return err
+	}
+	return out.Close()
 }
 
 func (q ProvisionRequest) lock(ctx context.Context, path string) (func(), error) {
@@ -274,13 +349,24 @@ func (q ProvisionRequest) fetch(ctx context.Context, row Distribution, final str
 	if !verifyInstalled(final, q.Runtime.ExecutableName(), row) {
 		_ = os.RemoveAll(final)
 	}
-	if err := os.Rename(staging, final); err != nil {
+	if err := renameRetrying(os.Rename, renameTransient, time.Sleep, staging, final); err != nil {
 		if verifyInstalled(final, q.Runtime.ExecutableName(), row) {
 			return nil
 		}
 		return Failure{ID: "cacheUnavailable", Values: map[string]string{"reason": err.Error()}}
 	}
 	return nil
+}
+
+// 🔁️renameRetrying publishes by rename and repeats a refusal the host calls transient (Windows: a scanner or indexer that holds the fresh executable for a moment) after 10, 20, 40 … 1280 ms, 2.55 s in all, like the Go command's own robust rename; any other error, and the last transient one, is returned. See https://cs.opensource.google/go/go/+/refs/tags/go1.26.0:src/cmd/go/internal/robustio/robustio_windows.go
+func renameRetrying(rename func(string, string) error, transient func(error) bool, sleep func(time.Duration), from, to string) error {
+	for wait := 10 * time.Millisecond; ; wait *= 2 {
+		err := rename(from, to)
+		if err == nil || !transient(err) || wait > 1280*time.Millisecond {
+			return err
+		}
+		sleep(wait)
+	}
 }
 
 func (q ProvisionRequest) download(ctx context.Context, row Distribution, link, base, destination string) error {

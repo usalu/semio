@@ -36,6 +36,35 @@ def closure_model(case):
             active[name].add(target)
             queue.append((name, target))
 
+    groups = set()
+
+    def imported(name):
+        return sorted({e for e in owners[name]["edges"] if e in owners})
+
+    def reach(name, inputs):
+        for entry in inputs:
+            if isinstance(entry, str):
+                group = entry[1:] if entry.startswith("^") else entry
+                for owner in imported(name) if entry.startswith("^") else [name]:
+                    values = owners[owner].get("namedInputs", {}).get(group)
+                    if not isinstance(values, list) or (owner, group) in groups:
+                        continue
+                    groups.add((owner, group))
+                    reach(owner, values)
+            elif isinstance(entry, dict) and (isinstance(entry.get("input"), str) or entry.get("projects") is not None):
+                if entry.get("dependencies") is True:
+                    named = imported(name)
+                elif entry.get("projects") is None:
+                    named = [name]
+                else:
+                    named = [entry["projects"]] if isinstance(entry["projects"], str) else entry["projects"]
+                for owner in named:
+                    if owner not in owners:
+                        continue
+                    admit(owner)
+                    if isinstance(entry.get("input"), str):
+                        reach(owner, [entry["input"]])
+
     selection = case["selection"]
     if selection["kind"] == "tasks":
         for row in selection["tasks"]:
@@ -52,12 +81,7 @@ def closure_model(case):
         if operation is None:
             continue
         deps = sorted({e for e in owners[name]["edges"] if e in owners})
-        for entry in operation.get("inputs", []):
-            if isinstance(entry, dict) and entry.get("projects") is not None:
-                named = [entry["projects"]] if isinstance(entry["projects"], str) else entry["projects"]
-                for value in named:
-                    if value in owners:
-                        admit(value)
+        reach(name, operation.get("inputs", []))
         for dep in operation.get("dependsOn", []):
             if isinstance(dep, str):
                 if dep.startswith("^"):
@@ -81,6 +105,10 @@ def closure_model(case):
                     projects = dep["projects"]
                 for value in projects:
                     task(value, dep["target"], dep.get("dependencies") is True)
+        execution = ((operation.get("metadata") or {}).get("semio") or {}).get("execution") or {}
+        if execution.get("kind") == "orchestration":
+            for child in execution.get("children", []):
+                task(child["project"], child["target"], False)
 
     def inside(root, path):
         return root == "." or path == root or path.startswith(root + "/")

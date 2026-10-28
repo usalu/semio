@@ -1,0 +1,6 @@
+{
+ "version": 1,
+ "rule": { "configs": 24, "states": 44516, "lostStates": 0, "lostFinal": 0, "stuck": 0 },
+ "releaseFirst": { "configs": 24, "states": 101531, "lostStates": 23672, "lostFinal": 496, "stuck": 0 },
+ "unguarded": { "configs": 24, "states": 51024, "lostStates": 4022, "lostFinal": 159, "stuck": 0 }
+}

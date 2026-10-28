@@ -9,11 +9,13 @@ export type BenchToolV1="nx"|"bazel";
 /** 🌳️ What an objective is measured with: one implementation, or `neutral` for a command that does not depend on it. */
 export type BenchSloToolV1=BenchToolV1|"neutral";
 /** 🌰️ The kinds of probe. */
-export type BenchKindV1="cli-help"|"noop"|"edit"|"graph"|"cache"|"concurrency";
+export type BenchKindV1="cli-help"|"noop"|"edit"|"peer"|"graph"|"cache"|"concurrency";
 /** 🌴️ The path a command takes: one process per command, or the resident service. */
 export type BenchLaneV1="oneshot"|"resident";
 /** 🌵️ What a probe measures. */
-export type BenchMetricV1="wallMs"|"startMs"|"greenMs"|"peakRssBytes"|"hitRatio"|"makespanMs"|"maxUnrelatedWaitMs"|"speedup";
+export type BenchMetricV1="wallMs"|"startMs"|"greenMs"|"peakRssBytes"|"hitRatio"|"makespanMs"|"maxUnrelatedWaitMs"|"speedup"|"queueMs"|"graphMs"|"executeMs"|"executedActions"|"inferredProjects";
+/** 🌲️ The unit a metric is measured in. */
+export type BenchUnitNameV1="ms"|"bytes"|"ratio"|"count";
 /** 🌶️ How the samples of a series are condensed to one number. */
 export type BenchStatisticV1="min"|"p50"|"p95"|"p99"|"max"|"mean";
 /** 🌷️ The verdict of an objective: `warn` met the gate but not the goal, `recorded` has neither. */
@@ -45,11 +47,11 @@ export type BenchSeriesV1=Readonly<{probe:string;tool:BenchSloToolV1;lane:BenchL
 /** 🍄️ What the host looked like when a measurement started or ended. */
 export type BenchHostV1=Readonly<{platform:string;arch:string;cpus:number;memoryBytes:number;load1:number|null;loadPerCore:number|null;loadClass:BenchLoadClassV1;hostClass:string}>;
 /** 🍅️ The verdict of one objective with one implementation. */
-export type BenchRowV1=Readonly<{slo:string;tool:BenchSloToolV1;probe:string;metric:BenchMetricV1;statistic:BenchStatisticV1;direction:"lower"|"higher";unit:"ms"|"bytes"|"ratio";value:number|null;goal:number|null;gate:number|null;n:number;status:BenchStatusV1;reason:BenchReasonV1|null;inflated:boolean;enforcement:"advisory"|"blocking";loadClass:BenchLoadClassV1}>;
+export type BenchRowV1=Readonly<{slo:string;tool:BenchSloToolV1;probe:string;metric:BenchMetricV1;statistic:BenchStatisticV1;direction:"lower"|"higher";unit:BenchUnitNameV1;value:number|null;goal:number|null;gate:number|null;n:number;status:BenchStatusV1;reason:BenchReasonV1|null;inflated:boolean;enforcement:"advisory"|"blocking";loadClass:BenchLoadClassV1}>;
 /** 🍆️ The verdicts counted. */
 export type BenchTallyV1=Readonly<{pass:number;warn:number;fail:number;unproven:number;recorded:number;blockingFailed:number}>;
 /** 🍇️ One objective compared with the stored baseline. */
-export type BenchCompareRowV1=Readonly<{slo:string;tool:BenchSloToolV1;metric:BenchMetricV1;statistic:BenchStatisticV1;direction:"lower"|"higher";unit:"ms"|"bytes"|"ratio";base:number|null;current:number|null;delta:number|null;relative:number|null;toleranceRelative:number;toleranceAbsolute:number;status:BenchCompareStatusV1;enforcement:"advisory"|"blocking";reason:BenchReasonV1|null}>;
+export type BenchCompareRowV1=Readonly<{slo:string;tool:BenchSloToolV1;metric:BenchMetricV1;statistic:BenchStatisticV1;direction:"lower"|"higher";unit:BenchUnitNameV1;base:number|null;current:number|null;delta:number|null;relative:number|null;toleranceRelative:number;toleranceAbsolute:number;status:BenchCompareStatusV1;enforcement:"advisory"|"blocking";reason:BenchReasonV1|null}>;
 /** 🍈️ The comparisons counted. */
 export type BenchCompareTallyV1=Readonly<{improved:number;same:number;regressed:number;inconclusive:number;incomparable:number;new:number;missing:number;blockingRegressed:number}>;
 /** 🍉️ A report compared with a baseline. */
@@ -58,11 +60,15 @@ export type BenchComparisonV1=Readonly<{version:1;currentHostClass:string;baseli
 export type BenchReportV1=Readonly<{version:1;kind:"bench-report";startedAt:string;finishedAt:string;host:BenchHostV1;hostAfter:BenchHostV1;tools:readonly BenchToolV1[];runsOverride:number|null;series:readonly BenchSeriesV1[];rows:readonly BenchRowV1[];tally:BenchTallyV1;comparison:BenchComparisonV1|null}>;
 /** 🍋️ A probe with one implementation and the objectives that read its samples. */
 export type BenchPairV1=Readonly<{probe:BenchProbeV1;tool:BenchSloToolV1;slos:readonly BenchSloV1[]}>;
+/** 🔭️ What the output of one command tells: wall time per phase (queues, graph, execution), the actions the tool executed (`null` when the tool printed no summary) and the projects the graph re-inferred. */
+export type BenchObservationV1=Readonly<{phases:Readonly<Record<string,number>>;executed:number|null;inferred:number}>;
+/** 🔬️ Reads the output lines of a command one by one (with the elapsed milliseconds when each arrived) and keeps only counters, never a line. */
+export type BenchObserverV1=Readonly<{feed(at:number,line:string):void;finish(wallMs:number):BenchObservationV1}>;
 
 const policy=schema.definitions.Policy.const,order=(left:string,right:string)=>left<right?-1:left>right?1:0;
 const both=(english:string,german:string)=>`${english}\n${german}`;
 const closed=(name:keyof typeof schema.definitions,value:unknown,message:string):void=>{if(validateJsonSchemaSubset(schema.definitions[name],value,schema).length)throw Error(message);};
-const metrics=schema.definitions.Metric.enum as readonly BenchMetricV1[],unitOf=(metric:BenchMetricV1)=>policy.units[metric] as "ms"|"bytes"|"ratio";
+const metrics=schema.definitions.Metric.enum as readonly BenchMetricV1[],unitOf=(metric:BenchMetricV1)=>policy.units[metric] as BenchUnitNameV1;
 
 /** 🍌️ Reads a percentile of sorted values by linear interpolation between ranks (the inclusive method of Python's `statistics.quantiles` and NumPy's default). */
 export function benchPercentileV1(sorted:readonly number[],fraction:number):number{
@@ -184,17 +190,17 @@ export function benchSloIssuesV1(value:unknown):string[]{
  }
  for(const probe of set.probes){
   const need=(field:keyof BenchProbeV1,wanted:boolean)=>{if((probe[field]!==undefined)!==wanted)found.push(`${probe.id}: ${field} ${wanted?"is required":"is not allowed"} for ${probe.kind}`);};
-  need("target",probe.kind==="noop"||probe.kind==="graph"||probe.kind==="cache");need("unit",probe.kind==="edit");need("workload",probe.kind==="concurrency");need("sessions",probe.kind==="concurrency");need("lane",probe.kind==="noop"||probe.kind==="edit"||probe.kind==="graph");
+  need("target",probe.kind==="noop"||probe.kind==="graph"||probe.kind==="cache"||probe.kind==="peer");need("unit",probe.kind==="edit"||probe.kind==="peer");need("workload",probe.kind==="concurrency");need("sessions",probe.kind==="concurrency");need("lane",probe.kind==="noop"||probe.kind==="edit"||probe.kind==="peer"||probe.kind==="graph");
   if(probe.unit!==undefined&&!units.has(probe.unit))found.push(`${probe.id}: unknown unit ${probe.unit}`);
   if(probe.lane==="resident"&&probe.kind==="graph")found.push(`${probe.id}: a graph probe has no resident lane`);
-  if(probe.cold&&probe.kind!=="graph")found.push(`${probe.id}: only a graph probe can be cold`);
+  if(probe.cold&&probe.kind!=="graph"&&probe.kind!=="noop")found.push(`${probe.id}: only a graph or a no-op probe can be cold`);
   if(probe.cold&&probe.runs!==1)found.push(`${probe.id}: a cold probe runs once`);
-  if(probe.memory&&probe.kind!=="noop"&&probe.kind!=="edit")found.push(`${probe.id}: only noop and edit probes measure memory`);
+  if(probe.memory&&probe.kind!=="noop"&&probe.kind!=="edit"&&probe.kind!=="peer")found.push(`${probe.id}: only noop, edit and peer probes measure memory`);
  }
  for(const slo of set.slos){
   const probe=probes.get(slo.probe);
   if(!probe){found.push(`${slo.id}: unknown probe ${slo.probe}`);continue;}
-  const yielded=(policy.metrics[probe.kind][probe.memory?"memory":"plain"] as readonly string[]);
+  const yielded=[...policy.metrics[probe.kind].plain,...(probe.memory?policy.metrics[probe.kind].memory:[])] as readonly string[];
   if(!yielded.includes(slo.metric))found.push(`${slo.id}: ${probe.id} does not yield ${slo.metric}`);
   if(policy.minimumSamples[slo.statistic]>probe.runs)found.push(`${slo.id}: ${slo.statistic} needs ${policy.minimumSamples[slo.statistic]} samples but ${probe.id} runs ${probe.runs}`);
   if(slo.metric==="startMs"&&slo.direction!=="lower")found.push(`${slo.id}: a start time is judged downwards`);
@@ -243,6 +249,7 @@ export function benchFormatV1(metric:BenchMetricV1,value:number|null):string{
  if(metric==="hitRatio")return `${trim(value*100,1)} %`;
  if(metric==="peakRssBytes")return `${trim(value/1048576,1)} MiB`;
  if(metric==="speedup")return trim(value,2);
+ if(metric==="executedActions"||metric==="inferredProjects")return String(Math.round(value));
  return trim(value,value<10?2:1);
 }
 
@@ -290,4 +297,69 @@ export function renderBenchListV1(set:BenchSloSetV1,language:"en"|"de",format:"t
  const t=(key:string)=>text(set,key,language),probes=new Map(set.probes.map(row=>[row.id,row]));
  const rows=set.slos.map(slo=>[slo.id,slo.title[language],`${slo.probe}${probes.get(slo.probe)?.lane?` (${t(probes.get(slo.probe)!.lane!)})`:""}`,t(slo.metric),slo.statistic,limit(slo.metric,slo.goal),limit(slo.metric,slo.gate),slo.tools.map(tool=>t(tool)).join(","),t(slo.enforcement),slo.source]);
  return [heading(t("list"),format,1),"",...grid([t("slo"),t("name"),t("probe"),t("metric"),t("statistic"),t("goal"),t("gate"),t("tool"),t("enforcement"),t("source")],rows,[0,1,2,3,4,7,8,9],format)].join("\n");
+}
+
+const phaseRules=policy.phases.rules.map(rule=>({id:rule.id,patterns:rule.patterns.map(pattern=>new RegExp(pattern,"u"))})),scriptRow=new RegExp(policy.scriptRow,"u");
+const observed=Object.freeze({refreshing:new RegExp(policy.observation.graphRefreshing,"u"),inferring:new RegExp(policy.observation.graphInferring,"u"),processes:new RegExp(policy.observation.bazelProcesses,"u"),idle:policy.observation.bazelIdle.map(pattern=>new RegExp(pattern,"u")),task:new RegExp(policy.observation.nxTask,"u"),cached:new RegExp(policy.observation.nxCached,"u")});
+
+/** 🥜️ Turns a structured progress row `[script] {json}` into `script:<command>:<stage>:<resource>`; any other line is its own key. */
+export function benchLineKeyV1(line:string):string{
+ const row=scriptRow.exec(line);
+ if(!row)return line;
+ try{const value=JSON.parse(row[1]!) as {command?:unknown;stage?:unknown;activity?:{resource?:unknown}|null};return `script:${String(value.command??"")}:${String(value.stage??"")}:${String(value.activity?.resource??"")}`;}catch{return line;}
+}
+
+/** 🌰️ Reads the output of one command line by line: every line that a phase rule matches opens that phase until the next line of another phase (lines no rule matches belong to the phase before; the time before the first match is `boot`), a Bazel summary line adds its executed processes (everything but internal ones and cache hits), every `> nx run` line adds a task unless it was restored, and the largest project count the graph announced is the inference. Lines longer than the policy limit are cut; no line is kept. */
+export function benchObserverV1():BenchObserverV1{
+ let current:string=policy.phases.initial,since=0,bazel:number|null=null,tasks=0,restored=0,inferred=0;
+ const totals:Record<string,number>={};
+ return Object.freeze({
+  feed(at:number,line:string):void{
+   const text=line.length>policy.maximumObservedLineCharacters?line.slice(0,policy.maximumObservedLineCharacters):line,key=benchLineKeyV1(text),phase=phaseRules.find(rule=>rule.patterns.some(pattern=>pattern.test(key)))?.id;
+   if(phase!==undefined&&phase!==current){totals[current]=(totals[current]??0)+Math.max(0,at-since);current=phase;since=at;}
+   const summary=observed.processes.exec(text);
+   if(summary){let sum=0;for(const part of summary[2]!.split(", ")){const cell=/^(\d+) (.+)$/u.exec(part.trim());if(cell&&!observed.idle.some(pattern=>pattern.test(cell[2]!)))sum+=Number(cell[1]);}bazel=(bazel??0)+sum;}
+   if(observed.task.test(text)){tasks++;if(observed.cached.test(text))restored++;}
+   for(const found of [observed.refreshing.exec(text),observed.inferring.exec(text)])if(found)inferred=Math.max(inferred,Number(found[1]));
+  },
+  finish(wallMs:number):BenchObservationV1{
+   const phases:Record<string,number>={...totals};
+   phases[current]=(phases[current]??0)+Math.max(0,wallMs-since);
+   for(const id of Object.keys(phases))if(!(phases[id]!>0))delete phases[id];
+   return Object.freeze({phases:Object.freeze(phases),executed:bazel===null&&tasks===0?null:(bazel??0)+(tasks-restored),inferred});
+  }
+ });
+}
+
+/** 🌱️ Sums the wall time of the phases that make up one metric (`queueMs`, `graphMs`, `executeMs`) and adds the executed actions and the re-inferred projects, as far as the command printed them. */
+export function benchObservedValuesV1(observation:BenchObservationV1):Partial<Record<BenchMetricV1,number>>{
+ const sum=(ids:readonly string[])=>ids.reduce((total,id)=>total+(observation.phases[id]??0),0),values:Partial<Record<BenchMetricV1,number>>={queueMs:sum(policy.phases.metrics.queueMs),graphMs:sum(policy.phases.metrics.graphMs),executeMs:sum(policy.phases.metrics.executeMs),inferredProjects:observation.inferred};
+ if(observation.executed!==null)values.executedActions=observation.executed;
+ return values;
+}
+
+/** 🌲️ Names the file a report takes in the history: the start as `YYYYMMDDTHHMMSSZ`, the host class and `.json`, so that names sort by time and a host class never meets another. */
+export function benchHistoryNameV1(startedAt:string,hostClass:string):string{
+ if(!/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?Z$/u.test(startedAt)||!/^[A-Za-z0-9._-]+$/u.test(hostClass))throw Error(both("A UTC start time and a plain host class are required for a history name","Für einen Verlaufsnamen werden eine UTC-Startzeit und eine einfache Rechnerklasse benötigt"));
+ return `${startedAt.slice(0,19).replaceAll("-","").replaceAll(":","")}Z-${hostClass}.json`;
+}
+
+/** 🌳️ Picks the newest history file of a host class, optionally only those older than the named file (which must itself be a history file of that host class, else there is none); other files in the folder are ignored. */
+export function benchHistoryLatestV1(files:readonly string[],hostClass:string,before:string|null=null):string|null{
+ const pattern=new RegExp(policy.history.name,"u"),stamp=(name:string)=>{const match=pattern.exec(name);return match&&match[2]===hostClass?match[1]!:null;},limit=before===null?null:stamp(before);
+ if(before!==null&&limit===null)return null;
+ const found=files.filter(name=>{const at=stamp(name);return at!==null&&(limit===null||at<limit);}).sort((left,right)=>order(stamp(left)!,stamp(right)!)||order(left,right));
+ return found.length?found[found.length-1]!:null;
+}
+
+/** 🌴️ Collects the objectives of a report that missed their gate (the budget); the blocking ones are what fails a comparison. */
+export function benchBudgetV1(report:BenchReportV1):Readonly<{rows:readonly BenchRowV1[];blocking:number}>{
+ const rows=report.rows.filter(row=>row.status==="fail");
+ return Object.freeze({rows,blocking:rows.filter(row=>row.enforcement==="blocking").length});
+}
+
+/** 🌵️ Renders the objectives over budget in a language: value, goal and gate next to each other. */
+export function renderBenchBudgetV1(rows:readonly BenchRowV1[],set:BenchSloSetV1,language:"en"|"de",format:"text"|"markdown"):string{
+ const t=(key:string)=>text(set,key,language),title=(id:string)=>set.slos.find(slo=>slo.id===id)?.title[language]??id;
+ return [heading(t("overBudget"),format),"",...grid([t("slo"),t("tool"),t("statistic"),t("value"),t("goal"),t("gate"),t("status")],rows.map(row=>[title(row.slo),toolName(set,row.tool,language),row.statistic,benchFormatV1(row.metric,row.value),limit(row.metric,row.goal),limit(row.metric,row.gate),`${t(row.status)}${row.enforcement==="blocking"?" !":""}`]),[0,1,2,6],format)].join("\n");
 }

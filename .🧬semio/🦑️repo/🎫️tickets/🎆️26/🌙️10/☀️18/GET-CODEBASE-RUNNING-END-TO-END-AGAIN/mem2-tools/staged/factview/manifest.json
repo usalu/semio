@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs": {
+  "file": "f00",
+  "base": "6e7efb95ede58332b19bb8d37a9a289e8e6b82468bcf135def5f70533472f4e3",
+  "new": "30e731e61cb0df95b2198c9f2387bf1bc792ea5083ef254dbd818d973edf9f61"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🍂️view-release/🟦️.ts": {
+  "file": "n00",
+  "base": null,
+  "new": "e7c41a794b1cbb2fb0da5e0018d507c201acee0585eb3fd22a6785953fec08bb"
+ }
+}

@@ -1,0 +1,6 @@
+import{readFileSync}from"node:fs";import{join}from"node:path";
+const mb=()=>Math.round(process.memoryUsage().rss/1048576),h=()=>Math.round(process.memoryUsage().heapUsed/1048576);
+const ws="/Users/ueli/Documents/semio",inference=await import("/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs"),{cacheInternals,createScriptInputCache,libraryBootstrap}=inference;
+await libraryBootstrap;console.log("boot rss",mb(),"heap",h());
+const fixture=JSON.parse(readFileSync("/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🎓️course-inputs/🔣️.json","utf8")),manifest=JSON.parse(readFileSync(join(ws,fixture.project,"📋️project.json"),"utf8"));
+for(const name of process.argv.slice(2)){const t=Date.now();const s=await cacheInternals.targetScriptSources(manifest.targets[name],ws,createScriptInputCache(),fixture.project);console.log(name,"closure",(s.closure??[]).length,"ms",Date.now()-t,"rss",mb(),"heap",h());Bun.gc(true);console.log("after gc rss",mb(),"heap",h());}

@@ -14,11 +14,11 @@ use semio_repo_test_host::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-layer-visibility" => Vector {
-            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️set-layer-visibility/✅️ok/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️set-layer-visibility/✅️ok/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️set-layer-visibility/✅️ok/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️set-layer-visibility/✅️ok/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️set-layer-visibility/✅️ok/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️layer-visibility/✅️ok/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️layer-visibility/✅️ok/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️layer-visibility/✅️ok/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️layer-visibility/✅️ok/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️layer-visibility/✅️ok/🎯️outcome/🔣️.json"),
             observable: true,
         },
         "set-camera" => Vector {
@@ -54,11 +54,11 @@ fn vector(kind: &str) -> Result<Vector, String> {
             observable: true,
         },
         "set-layer-stroke-scale" => Vector {
-            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️set-layer-stroke-scale/✅️ok/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️set-layer-stroke-scale/✅️ok/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️set-layer-stroke-scale/✅️ok/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️set-layer-stroke-scale/✅️ok/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️set-layer-stroke-scale/✅️ok/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️stroke-scale/✅️ok/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️stroke-scale/✅️ok/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️stroke-scale/✅️ok/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️stroke-scale/✅️ok/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️stroke-scale/✅️ok/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),
@@ -69,11 +69,11 @@ fn vector(kind: &str) -> Result<Vector, String> {
 fn kept(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-layer-visibility" => Vector {
-            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️set-layer-visibility/🟰️nop/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️set-layer-visibility/🟰️nop/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️set-layer-visibility/🟰️nop/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️set-layer-visibility/🟰️nop/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️set-layer-visibility/🟰️nop/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️layer-visibility/🟰️nop/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️layer-visibility/🟰️nop/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️layer-visibility/🟰️nop/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️layer-visibility/🟰️nop/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/👁️layer-visibility/🟰️nop/🎯️outcome/🔣️.json"),
             observable: false,
         },
         "set-camera" => Vector {
@@ -109,11 +109,11 @@ fn kept(kind: &str) -> Result<Vector, String> {
             observable: false,
         },
         "set-layer-stroke-scale" => Vector {
-            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️set-layer-stroke-scale/🟰️nop/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️set-layer-stroke-scale/🟰️nop/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️set-layer-stroke-scale/🟰️nop/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️set-layer-stroke-scale/🟰️nop/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️set-layer-stroke-scale/🟰️nop/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️stroke-scale/🟰️nop/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️stroke-scale/🟰️nop/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️stroke-scale/🟰️nop/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️stroke-scale/🟰️nop/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/📏️stroke-scale/🟰️nop/🎯️outcome/🔣️.json"),
             observable: false,
         },
         other => return Err(format!("no committed no-op vector for {other:?}")),

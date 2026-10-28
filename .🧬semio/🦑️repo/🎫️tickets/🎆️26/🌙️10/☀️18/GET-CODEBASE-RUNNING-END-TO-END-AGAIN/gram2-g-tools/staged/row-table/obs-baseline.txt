@@ -1,0 +1,19 @@
+(fail) (unnamed)
+(fail) actual Node dependency publication reuses settled bytes and preserves current parser facts
+(fail) fixed graph fixtures isolate managed scopes and drain accepted children preserving falsey primaries
+(fail) inference reuse preserves issued cancellation and deadlines after warm validation
+(fail) inference reuse refuses every nonleaf absence and unsafe inventory under managed custody
+(fail) inference reuse revalidates physical inventories inside the prior ten minute window
+(fail) neutral inference actual graph callers retain compact reference admission
+(fail) neutral inference actual inventory descriptors govern memory and disk candidates
+(fail) neutral inference cached predicate preserves failed child primaries and current authority
+(fail) neutral inference cached reference predicate controls disk reuse
+(fail) neutral inference cached reference predicate controls memory reuse
+(fail) neutral inference rechecks Source after awaited disk predicate
+(fail) neutral inference rechecks Source after awaited memory predicate
+(fail) neutral portable expansion reads each compact leaf once through the lean reader and retains refined control
+(fail) observation block path custody classifies actual issued images and ordinary fixtures
+(fail) observation block publisher rebuilds retired shared bytes before publishing a fresh header
+(fail) observation block readers refuse stale physical memos without recomputing or deleting evidence
+(fail) parallel incremental inference settles concurrent edits onto serial full inference and withholds only unparseable projects
+(fail) real Node project admission reuses unchanged owners and rebuilds reverse command imports

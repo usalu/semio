@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Bazel runtime row identity",
+  "description": "🔏️ Schema-first contract that lets a hot run answer a `runtime` input row of the task graph without starting a process. A row whose output is a pure function of the executable that prints it (`bun --version`, `node -p <expression over process.platform>`) is listed in `Policy.rows`; the plan witness records beside its digest the IDENTITY of the executable (resolved path, real path and the stat fields of the resolved program, of the runtime that starts it and of every script it is started with). A later check that finds the same identity needs no child process, a different identity runs the command again. A row that is not listed, or whose text uses shell syntax beyond words and double quotes, has no identity and always runs. / Schema-first Vertrag, mit dem ein heisser Lauf eine `runtime`-Eingabezeile des Aufgabengraphen ohne Prozessstart beantwortet. Eine Zeile, deren Ausgabe eine reine Funktion des ausgebenden Programms ist (`bun --version`, `node -p <Ausdruck ueber process.platform>`), steht in `Policy.rows`; der Planzeuge haelt neben ihrem Digest die IDENTITAET des Programms fest (aufgeloester Pfad, echter Pfad und Stat-Felder des aufgeloesten Programms, der Laufzeit, die es startet, und jedes Skripts, mit dem es gestartet wird). Findet eine spaetere Pruefung dieselbe Identitaet, braucht sie keinen Kindprozess, eine andere Identitaet fuehrt den Befehl erneut aus. Eine nicht aufgefuehrte Zeile oder eine Zeile mit Shell-Syntax jenseits von Woertern und doppelten Anfuehrungszeichen hat keine Identitaet und laeuft immer.",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "description": "Authored values. `command`: the words every listed row starts with. `light`: the only flag accepted between `exec` and the tool. `separator`: the word that ends the tool and starts its arguments. `unquoted` / `quoted`: characters that make a row shell syntax outside / inside double quotes. `statFields`: the exact stat fields (bigint) the identity holds. `subject`: the separator of the parts of a recorded subject. `rows`: the closed list of rows whose output is a function of the executable alone.",
+      "const": {
+        "version": 1,
+        "command": ["repo", "tools", "exec"],
+        "light": "--light",
+        "separator": "--",
+        "unquoted": "$`\\';|&<>(){}*?~#!",
+        "quoted": "$`\\!",
+        "statFields": ["size", "mtimeNs", "ctimeNs", "ino", "mode"],
+        "subject": "\u0000",
+        "rows": [
+          { "tool": "node", "arguments": ["--version"] },
+          { "tool": "node", "arguments": ["-p", "process.platform.concat(process.arch)"] },
+          { "tool": "bun", "arguments": ["--version"] }
+        ]
+      }
+    }
+  }
+}

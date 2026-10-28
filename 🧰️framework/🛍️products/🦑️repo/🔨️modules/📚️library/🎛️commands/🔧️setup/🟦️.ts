@@ -5,7 +5,7 @@ import { NativeDependenciesScript } from "../../⚡️caching/🚀️bootstrap/�
 import { ensureMcpBinary } from "../../../../../💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🟦️.ts";
 import { dispatchSubcommand } from "../../🚨️policy/🧭️entrypoints/🟦️.ts";
 import { runCmd } from "../../🏃️process/🟦️.ts";
-import { installMicroCommitGitHooks } from "../📝️commit/🪝️hooks/🟦️.ts";
+import { installMicroCommitGitHooks, reportHookShellV1 } from "../📝️commit/🪝️hooks/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { existsSync, linkSync, mkdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
@@ -126,6 +126,7 @@ export class SetupScript extends Script {
     for (const [key, value] of REPO_LOCAL_GIT_CONFIG) runCmd("git", ["config", "--local", key, value], { cwd: this.root });
     if (process.platform === "win32") this.reportWindowsLongPaths();
     installMicroCommitGitHooks(this.root);
+    reportHookShellV1();
     const source = "AGENTS.md";
     for (const alias of AGENT_INSTRUCTION_ALIASES) {
       const aliasPath = join(this.root, ...alias.split("/"));

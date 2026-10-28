@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "keepNewest": 8,
+  "keepNewestUnderPressure": 3,
+  "minimumAgeMs": 600000,
+  "maximumPerRun": 16,
+  "intervalMs": 900000,
+  "maximumCensus": 4096,
+  "idleWaitMs": 90000,
+  "idlePollMs": 2000,
+  "probePatienceMs": 1000
+}

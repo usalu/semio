@@ -1,0 +1,5 @@
+batch plan-once2 (graphlat-g) REPLACES plan-once (rev4-g MID 2).
+plan-once kept the plan of a delta refresh for the build whatever happened in between; an edit made while the refresh waited for the builder custody (46 min seen) never reached the generation.
+plan-once2: the plan is kept (atMs stamped) only when the custody is taken within policy.hintMaximumAgeMilliseconds (1000, declared in the schema file, the policy and the type); a longer wait plans again inside the custody (as before plan-once). The unscoped refresh, which kept its hint without any bound, is bounded the same way.
+Files: generations/🟨️.mjs (3 edits), generations/🧬️schema/🔣️.json, generations/🟨️.d.mts, law 🕰️generations/🧪️tests/🪞️plan-once (extended: adversarial edit during the custody wait for closure and whole-workspace refreshes, bound and bound+1).
+Residual window (honest): an edit inside the 1000 ms between the end of the plan and the custody is not seen by this refresh (the same race any plan has between verification and publication; the next run verifies it). A change journal cursor (verify2-g journal-fix) could close it: not landed.

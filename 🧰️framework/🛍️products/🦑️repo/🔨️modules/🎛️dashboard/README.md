@@ -24,7 +24,8 @@ publishes an immutable executable with visible progress and cancellation (`Ctrl+
 a digest of the sources it was built from: names, filesystem identity, sizes and nanosecond timestamps below the
 dashboard module and the modules of every path dependency of its crate (tests, fixtures, build output and
 `node_modules` excluded), plus each dependency's exact Cargo workspace manifest, the selected binary's
-workspace `Cargo.lock`, and root `rust-toolchain.toml` and `.cargo/config.toml`. Inherited dependencies resolve through their actual
+workspace `Cargo.lock`, root `rust-toolchain.toml` and `.cargo/config.toml`, and the Cargo profile policy (profile schema and
+package constraints) that renders the compile's profile. Inherited dependencies resolve through their actual
 workspace. Ordinary startup reads the small installation record and recomputes the digest from file metadata
 without reading source contents. It verifies and starts the immutable executable under the tooling and
 artifact reader leases; a current installation needs no compilation or build graph. When the digest
@@ -35,8 +36,8 @@ tree must never keep a developer from stopping the daemon. `repo run @semio-tech
 prints the executable path for direct native invocation.
 
 The first view immediately shows task controls. Dark appearance, native terminology,
-React and tabbed output are opinionated defaults; the language is the one the system names (`LC_ALL`,
-`LC_MESSAGES`, `LANG`). When no supported system or explicit preference resolves a language, startup shows English and Deutsch with no selected choice. Select and confirm a language to publish a preference event; cancellation exits without creating one. The choices and bilingual prompt are authored in `⚙️preferences/🌐️language/🔣️.json`. The language the dashboard speaks is the language of every task it starts: the TUI and `repo dashboard run` hand it to the task as `SEMIO_LANGUAGE` (the variable the repo CLI reads before every system setting), never a default while no language is chosen, and two dashboards of different languages still share one running task. Command discovery
+React and tabbed output are opinionated defaults; the language is the one the repository language protocol names (`SEMIO_LANGUAGE`, which `repo` exports with its choice,
+then `LANGUAGE`, then the first set of `LC_ALL`, `LC_MESSAGES`, `LANG`). When no supported protocol source or explicit preference resolves a language, startup shows English and Deutsch with no selected choice. Select and confirm a language to publish a preference event; cancellation exits without creating one. The choices and bilingual prompt are authored in `⚙️preferences/🌐️language/🔣️.json`. The language the dashboard speaks is the language of every task it starts: the TUI and `repo dashboard run` hand it to the task as `SEMIO_LANGUAGE` (the variable the repo CLI reads before every system setting), never a default while no language is chosen, and two dashboards of different languages still share one running task. Command discovery
 and daemon connection run in the background. Choose New Task and type search terms to select a
 dev server, build, test, renderer or example directly. Settings are optional and persistent.
 A selection made while the workspace daemon connects remains pending and can be cancelled with
@@ -321,9 +322,9 @@ Choose the save scope in Settings before saving: local-only or shared workspace.
 launch accepts `--language`, `--appearance`, `--terminology`, `--renderer`, `--layout`, `--prefix`, `--root` and
 `--config`; `--help` lists their values.
 
-Environment overrides are `SEMIO_LOCALE`, `SEMIO_APPEARANCE`, `SEMIO_LOCKED_TERMINOLOGY`,
+Environment overrides are `SEMIO_LANGUAGE`, `SEMIO_APPEARANCE`, `SEMIO_LOCKED_TERMINOLOGY`,
 `SEMIO_DASHBOARD_RENDERER`, `SEMIO_DASHBOARD_LAYOUT` and `SEMIO_DASHBOARD_PREFIX`. `SEMIO_DASHBOARD_CONFIG` selects a local
-journal. Values are validated strictly. The language resolves from a supported system setting, then shared events, local events, `SEMIO_LOCALE` and `--language` over it. Unresolved preferences expose `language: null`, bilingual help, and an explicit first-choice screen before the interactive control plane. `Locale` has no `Default`. Local events live under
+journal. Values are validated strictly. The language resolves from a supported system setting, then shared events, local events, `SEMIO_LANGUAGE` and `--language` over it. Unresolved preferences expose `language: null`, bilingual help, and an explicit first-choice screen before the interactive control plane. `Locale` has no `Default`. Local events live under
 `.🧬semio/🦑️repo/⚡️cache/🎛️dashboard/preferences.jsonl`; shared events live under
 `.🧬semio/🦑️repo/🎛️dashboard/⚙️preferences.jsonl`. Event revisions are serialized by operating-system
 file locks, and each journal has a 1 MiB admission limit. Task output and view state remain ephemeral.
@@ -417,6 +418,25 @@ termination, singleton enforcement and reattachment: `repo run @semio-tech/repo-
 a new build is published, and the source digest that decides whether an installation is stale (the fixture names the
 files that must and must not change it): choose `@semio-tech/repo-dashboard-rs:test-execution` in New Task.
 
+An installation also records what its executable was compiled from: the `compile` intent declares `sourcesRecord`, so Cargo's own
+dep-info of the binary (every file of the dependency closure, including `include_str!` files outside the crate roots) and the build
+start are published beside it and copied, together with every Cargo manifest, the lock, the toolchain files and the package declaration
+(Cargo's whole freshness basis) and the sha256 each file held at the build start, into the artifact record and `installed.json`
+(`compiled`). A file counts as changed when it is missing, or when it was touched at or after the build start and no longer holds those
+bytes, so a revert or checkout of identical bytes keeps it current. The same rule makes `repo dashboard` rebuild when a compiled file
+outside the source digest changes.
+
+`build` is a cacheable artifact producer: its only output is `.🧬semio/🦑️repo/⚡️cache/🎛️dashboard/<mode>/artifact` (the executable and
+`artifact.json`, the same record shape as `installed.json`), so a no-op `repo run @semio-tech/repo-dashboard-rs:build` is an action-cache
+hit that starts no process. When its action does run it first asks whether the artifact is current (`currentDashboardArtifactV1`: valid
+for this host and mode, no file of its freshness basis changed, the executable in place) and then runs
+no nested `compile` at all; it says so in one line. Installation is a separate local step (`installDashboardArtifactV1`): it refuses a
+missing, foreign or stale artifact, answers at once (refreshing only the record) when `installed.json` already names the same bytes, and
+otherwise pins the executable into the tools store. `install`, the launcher's rebuild (`📜️script.ts build` outside the build tool, which
+runs the build only when the artifact is not current, then installs) and the test routes install that way. A change of the
+build tool's own code does not make a current artifact stale; removing that artifact directory and running `build --skip-cache` forces
+a rebuild.
+
 Choose **New Task** → `@semio-tech/repo-dashboard-rs:test-journeys` for native startup,
 attach/detach and launcher checks, or `@semio-tech/repo-dashboard-rs:test-smoke` for the build
 and service lifecycle. Their owner builds and selects the installed executable automatically.
@@ -449,14 +469,14 @@ Menschen nutzen `repo dashboard [Argumente]` für Register, Daemon und Ansicht; 
 | `repo dashboard commands [Wörter…] [--json] [--all] [--check]` | Register auflisten oder durchsuchen; `--check` prüft jede Deklaration und Referenz |
 | `repo dashboard run <id> [--param k=v\|flag]… [--env K=V]… [--detach] [--wait-ready] [--dry-run] [-- Argumente…]` | einen Befehl als Daemon-Task starten |
 | `repo dashboard tasks [--json]` | die Tasks des Daemons auflisten |
-| `repo dashboard logs <task> [--follow]` | die Ausgabe eines Tasks ausgeben, optional weiterverfolgen |
-| `repo dashboard stop\|restart\|kill <task>` | einen Task steuern und warten, bis er den Zustand verlassen hat |
-| `repo dashboard open <task>` | die bereite Adresse eines Tasks im System-Browser öffnen |
+| `repo dashboard logs <task> [--follow]` | die Ausgabe einer Task ausgeben, optional weiterverfolgen |
+| `repo dashboard stop\|restart\|kill <task>` | eine Task steuern und warten, bis er den Zustand verlassen hat |
+| `repo dashboard open <task>` | die Bereitschaftsadresse einer Task im System-Browser öffnen |
 | `repo dashboard daemon start\|status\|stop\|attach\|serve` | den Workspace-Daemon verwalten |
 | `repo dashboard preferences show\|set` | Einstellungen lesen oder festhalten |
 | `repo dashboard catalog`, `repo dashboard command-tree` | Playground-Katalog und Befehlsbaum ausgeben |
 
-`run` streamt angehängt die Ausgabe des letzten Prozesses und endet mit dessen Exit-Code (Ctrl-C lässt den Task weiterlaufen); `--detach` kehrt zurück, sobald der Daemon den Start angenommen hat; `--wait-ready` kehrt zurück, sobald jeder Prozess mit deklarierter Bereitschaft seine Adresse ausgegeben hat; `--dry-run` gibt den aufgelösten Start als JSON aus und startet nichts. Ein bereits laufender Task desselben Befehls wird wiederverwendet. Ein Task hat ein Handle, seine Sitzungs-ID, die `run`, `tasks`, `logs`, `stop`, `restart`, `kill` und `open` ausgeben und annehmen. Eine nicht erlaubte Auswahl endet mit Status 2 und nennt das Problem auf stderr. Automatisierte Tests starten Server mit `repo run @semio-tech/repo-dashboard-rs:run --output=stream -- run <id> --detach --wait-ready`.
+`run` streamt angehängt die Ausgabe des letzten Prozesses und endet mit dessen Exit-Code (Ctrl-C lässt die Task weiterlaufen); `--detach` kehrt zurück, sobald der Daemon den Start angenommen hat; `--wait-ready` kehrt zurück, sobald jeder Prozess mit deklarierter Bereitschaft seine Adresse ausgegeben hat; `--dry-run` gibt den aufgelösten Start als JSON aus und startet nichts. Ein bereits laufender Task desselben Befehls wird wiederverwendet. Ein Task hat ein Handle, seine Sitzungs-ID, die `run`, `tasks`, `logs`, `stop`, `restart`, `kill` und `open` ausgeben und annehmen. Eine nicht erlaubte Auswahl endet mit Status 2 und nennt das Problem auf stderr. Automatisierte Tests starten Server mit `repo run @semio-tech/repo-dashboard-rs:run --output=stream -- run <id> --detach --wait-ready`.
 
 ### Tests
 

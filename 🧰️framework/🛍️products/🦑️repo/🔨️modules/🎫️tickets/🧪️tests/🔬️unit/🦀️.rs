@@ -90,20 +90,3 @@ fn a_hunk_stream_becomes_line_numbers() {
     assert_eq!(parsed["x.rs"].removed, vec![1, 2]);
     assert_eq!(parsed["x.rs"].added, vec![1, 2, 3]);
 }
-
-#[test]
-fn an_oversized_artifact_is_purged_but_the_document_is_not() {
-    let store = MemoryTicketStore::new();
-    let tracker = ManagementProviders::Null(NullManagementProvider);
-    let clock = FixedClock::new(26, 9, 6, "2026-09-06 12:00:00");
-    let events = RecordingEventSink::new();
-    let service = service(&store, &tracker, &clock, &events);
-    let id = TicketId::new(26, 9, 6, "PURGE");
-    store.seed_file(&service.layout.document_path(&id), "{}");
-    store.seed_sized_file(&join_path(&service.layout.ticket_dir(&id), "🗑️generated/huge.log"), OVERSIZED_FILE_BYTES + 1);
-    store.seed_sized_file(&join_path(&service.layout.ticket_dir(&id), "small.txt"), 10);
-    let report = service.purge_artifacts(&id).unwrap();
-    assert_eq!(report.removed_files.len(), 1);
-    assert!(store.exists(&service.layout.document_path(&id)));
-    assert!(store.exists(&join_path(&service.layout.ticket_dir(&id), "small.txt")));
-}

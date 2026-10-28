@@ -1,0 +1,178 @@
+{
+ "edits": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "name": "host ports",
+   "old": "  readonly cargoIdentity?: (crateDirectory: string) => unknown;\n};",
+   "new": "  readonly cargoIdentity?: (crateDirectory: string) => unknown;\n  readonly crateNames?: () => Promise<ReadonlyMap<string, string>>;\n  readonly sourceRoots?: (question: SourceRootsQuestionV1) => Promise<readonly string[]>;\n};\n/** 🚶️ The question of a repository walk that selects TypeScript files: the files that entry globs name, or that the include globs of a tsconfig select below its excludes. */\nexport type SourceRootsQuestionV1 = {readonly mode: \"entries\"; readonly globs: readonly string[]} | {readonly mode: \"include\"; readonly include: readonly string[]; readonly exclude: readonly string[]};\n/** 🚶️ What a repository walk skips: whole paths (below the workspace root) and directory names; symbolic links are always skipped. */\nexport type ManifestWalkSkipV1 = {readonly paths: readonly string[]; readonly names: readonly string[]};\n/** 🚶️ The recipe of one repository walk a derived fact stands for: the crate index of the Cargo manifests, or the TypeScript files a question selects. */\nexport type DerivedWalkV1 = {readonly fn: \"crate-index\"; readonly skip: ManifestWalkSkipV1} | {readonly fn: \"source-roots\"; readonly question: SourceRootsQuestionV1};"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "name": "crate index",
+   "old": "  const index = new Map<string, string>();\n  for (const directory of host.cargoManifests()) {\n    if (directory.split(\"/\").some((part) => part.startsWith(\".\"))) continue;\n    const name = packageNameV1(host.readText(directory ? `${directory}/Cargo.toml` : \"Cargo.toml\") ?? \"\");\n    if (name && !index.has(name)) index.set(name, directory);\n  }\n  indexes.set(host, index);\n  return index;\n}\n",
+   "new": "  const index = crateNamesV1(host.cargoManifests(), host.readText);\n  indexes.set(host, index);\n  return index;\n}\n\n/** 🗺️ Maps the crate names of the Cargo manifest directories (in the order given, the first directory of a name wins) to their directory; hidden trees never own a crate. */\nexport function crateNamesV1(directories: readonly string[], readText: (path: string) => string | undefined): Map<string, string> {\n  const index = new Map<string, string>();\n  for (const directory of directories) {\n    if (directory.split(\"/\").some((part) => part.startsWith(\".\"))) continue;\n    const name = packageNameV1(readText(directory ? `${directory}/Cargo.toml` : \"Cargo.toml\") ?? \"\");\n    if (name && !index.has(name)) index.set(name, directory);\n  }\n  return index;\n}\n\n/** 🦀️ Every directory of the repository that holds a Cargo manifest, sorted: symbolic links, the skipped paths and the skipped directory names are not entered. */\nexport function cargoManifestDirectoriesV1(list: (directory: string) => readonly {readonly name: string; readonly directory: boolean; readonly file: boolean; readonly link: boolean}[], skip: ManifestWalkSkipV1): string[] {\n  const found: string[] = [], paths = new Set(skip.paths), names = new Set(skip.names), walk = (directory: string): void => {\n    for (const entry of list(directory)) {\n      const path = directory ? `${directory}/${entry.name}` : entry.name;\n      if (entry.link || paths.has(path) || names.has(entry.name)) continue;\n      if (entry.directory) walk(path);\n      else if (entry.file && entry.name === \"Cargo.toml\") found.push(directory);\n    }\n  };\n  walk(\"\");\n  return found.sort();\n}\n\n/** 🗺️ The crate index of a host: answered by its derived walk when it has one, otherwise by walking in place. */\nexport async function crateIndexOfV1(host: Pick<InputPrecisionHostV1, \"readText\" | \"cargoManifests\" | \"crateNames\">): Promise<ReadonlyMap<string, string>> {\n  return host.crateNames ? host.crateNames() : crateIndexV1(host);\n}\n"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "name": "crate patterns",
+   "old": "export function cratePatternsV1(packages: readonly string[], host: Pick<InputPrecisionHostV1, \"readText\" | \"cargoManifests\" | \"cargoRoots\" | \"cargoSources\" | \"cargoToolchain\" | \"cargoIdentity\">): {patterns: string[]; files: string[]; markers: unknown[]} {\n  const index = crateIndexV1(host);\n  return",
+   "new": "export function cratePatternsV1(packages: readonly string[], host: Pick<InputPrecisionHostV1, \"readText\" | \"cargoManifests\" | \"cargoRoots\" | \"cargoSources\" | \"cargoToolchain\" | \"cargoIdentity\">, index: ReadonlyMap<string, string> = crateIndexV1(host)): {patterns: string[]; files: string[]; markers: unknown[]} {\n  return"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "name": "walk docs",
+   "old": "/** 🔭️ The TypeScript source files the entry globs select: positive globs walked from their literal directory, negations applied, hidden and vendored trees skipped; a pattern without wildcards names one file. */",
+   "new": "/** 🧭️ The TypeScript files a tsconfig's include globs select: positive globs walked from their literal directory, excludes applied, vendored trees skipped; a pattern without wildcards names one file. */\nexport function includeRootsV1(include: readonly string[], exclude: readonly string[], host: Pick<InputPrecisionHostV1, \"listDirectory\" | \"exists\">): string[] {\n  const isExcluded = excludesV1(exclude), roots = new Set<string>();\n  for (const pattern of include) {\n    const stop = pattern.search(/[*?{[]/u), base = stop < 0 ? pattern : pattern.slice(0, pattern.lastIndexOf(\"/\", stop)), pending = [normalize(base)];\n    if (stop < 0 && SOURCE.test(pattern) && host.exists(pattern)) roots.add(pattern);\n    while (stop >= 0 && pending.length) {\n      const directory = pending.pop()!;\n      for (const entry of host.listDirectory(directory)) {\n        const path = directory ? `${directory}/${entry.name}` : entry.name;\n        if (SKIPPED.has(entry.name) || isExcluded(path)) continue;\n        if (entry.directory) pending.push(path);\n        else if (SOURCE.test(path) && globMatchesV1(pattern, path)) roots.add(path);\n      }\n    }\n  }\n  return sorted([...roots]);\n}\n\n/** 🔭️ The TypeScript source files the entry globs select: positive globs walked from their literal directory, negations applied, hidden and vendored trees skipped; a pattern without wildcards names one file. */"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "name": "program memo",
+   "old": "export function programInputsV1(tsconfig: string, host: Pick<InputPrecisionHostV1, \"readText\" | \"exists\" | \"listDirectory\" | \"program\">, entries?: readonly string[]): Promise<{patterns: string[]; files: string[]; roots: string[]}> {\n  const key = entries ? `${normalize(tsconfig)}\\0${JSON.stringify(entries)}` : normalize(tsconfig);\n  let byConfig = programs.get(host);\n  if (!byConfig) programs.set(host, byConfig = new Map());",
+   "new": "export function programInputsV1(tsconfig: string, host: Pick<InputPrecisionHostV1, \"readText\" | \"exists\" | \"listDirectory\" | \"program\" | \"sourceRoots\">, entries?: readonly string[]): Promise<{patterns: string[]; files: string[]; roots: string[]}> {\n  const key = entries ? `${normalize(tsconfig)}\\0${JSON.stringify(entries)}` : normalize(tsconfig), owner = host.program ?? host;\n  let byConfig = programs.get(owner);\n  if (!byConfig) programs.set(owner, byConfig = new Map());"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "name": "program derive head",
+   "old": "async function deriveProgramV1(tsconfig: string, host: Pick<InputPrecisionHostV1, \"readText\" | \"exists\" | \"listDirectory\" | \"program\">, entries?: readonly string[]): Promise<{patterns: string[]; files: string[]; roots: string[]}> {",
+   "new": "async function deriveProgramV1(tsconfig: string, host: Pick<InputPrecisionHostV1, \"readText\" | \"exists\" | \"listDirectory\" | \"program\" | \"sourceRoots\">, entries?: readonly string[]): Promise<{patterns: string[]; files: string[]; roots: string[]}> {"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "name": "program roots",
+   "old": "  const isExcluded = excludesV1(exclude), roots = new Set<string>(entries ? entryFilesV1(entries, host) : config.files.filter((file) => host.exists(file)));\n  if (entries && !roots.size) fail(`Program entries select no TypeScript file: ${tsconfig}`);\n  for (const pattern of include) {\n    const stop = pattern.search(/[*?{[]/u), base = stop < 0 ? pattern : pattern.slice(0, pattern.lastIndexOf(\"/\", stop)), pending = [normalize(base)];\n    if (stop < 0 && SOURCE.test(pattern) && host.exists(pattern)) roots.add(pattern);\n    while (stop >= 0 && pending.length) {\n      const directory = pending.pop()!;\n      for (const entry of host.listDirectory(directory)) {\n        const path = directory ? `${directory}/${entry.name}` : entry.name;\n        if (SKIPPED.has(entry.name) || isExcluded(path)) continue;\n        if (entry.directory) pending.push(path);\n        else if (SOURCE.test(path) && globMatchesV1(pattern, path)) roots.add(path);\n      }\n    }\n  }\n",
+   "new": "  const isExcluded = excludesV1(exclude), ask = (question: SourceRootsQuestionV1): Promise<readonly string[]> => host.sourceRoots ? host.sourceRoots(question) : Promise.resolve(question.mode === \"entries\" ? entryFilesV1(question.globs, host) : includeRootsV1(question.include, question.exclude, host));\n  const roots = new Set<string>(entries ? await ask({mode: \"entries\", globs: entries}) : config.files.filter((file) => host.exists(file)));\n  if (entries && !roots.size) fail(`Program entries select no TypeScript file: ${tsconfig}`);\n  if (include.length) for (const file of await ask({mode: \"include\", include, exclude})) roots.add(file);\n"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "name": "cargo read",
+   "old": "for (const crate of [packages.length ? cratePatternsV1(packages, host) : {patterns: [], files: [], markers: []},",
+   "new": "for (const crate of [packages.length ? cratePatternsV1(packages, host, await crateIndexOfV1(host)) : {patterns: [], files: [], markers: []},"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "name": "script read",
+   "old": "const crates = facts.crates.length ? cratePatternsV1(facts.crates, host) : {patterns: [], files: [], markers: []}, crateDirs",
+   "new": "const crates = facts.crates.length ? cratePatternsV1(facts.crates, host, await crateIndexOfV1(host)) : {patterns: [], files: [], markers: []}, crateDirs"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "name": "dispatch read",
+   "old": "named = crates.length ? cratePatternsV1(crates, host) : {patterns: [], files: [], markers: []}, directories = crateDirectories.length",
+   "new": "named = crates.length ? cratePatternsV1(crates, host, await crateIndexOfV1(host)) : {patterns: [], files: [], markers: []}, directories = crateDirectories.length"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "name": "router index",
+   "old": "facts = literalFactsV1(body), index = crateIndexV1(host);",
+   "new": "facts = literalFactsV1(body), index = await crateIndexOfV1(host);"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "name": "router crates",
+   "old": "const crates = named.length ? cratePatternsV1(named, host) : {patterns: [], files: [], markers: []}, roots = crateDirs.length",
+   "new": "const crates = named.length ? cratePatternsV1(named, host, index) : {patterns: [], files: [], markers: []}, roots = crateDirs.length"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🧬️schema/🔣️.json",
+   "name": "walk definitions",
+   "old": "  \"definitions\": {\n    \"Id\": {",
+   "new": "  \"definitions\": {\n    \"ManifestWalkSkip\": {\n      \"description\": \"What a Cargo manifest walk does not enter: whole paths below the workspace root and directory names.\",\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\"paths\", \"names\"],\n      \"properties\": {\n        \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"minLength\": 1}},\n        \"names\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"minLength\": 1}}\n      }\n    },\n    \"SourceRootsQuestion\": {\n      \"description\": \"The question of a TypeScript file walk: the files that entry globs name, or that the include globs of a tsconfig select below its excludes.\",\n      \"oneOf\": [\n        {\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"mode\", \"globs\"], \"properties\": {\"mode\": {\"const\": \"entries\"}, \"globs\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"minLength\": 1}}}},\n        {\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"mode\", \"include\", \"exclude\"], \"properties\": {\"mode\": {\"const\": \"include\"}, \"include\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"minLength\": 1}}, \"exclude\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"minLength\": 1}}}}\n      ]\n    },\n    \"DerivedWalk\": {\n      \"description\": \"The recipe of one repository walk that a derived fact stands for: the crate index of the Cargo manifests or the TypeScript files a question selects; a project that used it holds the digest of its answer instead of the directories the walk read.\",\n      \"oneOf\": [\n        {\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"fn\", \"skip\"], \"properties\": {\"fn\": {\"const\": \"crate-index\"}, \"skip\": {\"$ref\": \"#/definitions/ManifestWalkSkip\"}}},\n        {\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"fn\", \"question\"], \"properties\": {\"fn\": {\"const\": \"source-roots\"}, \"question\": {\"$ref\": \"#/definitions/SourceRootsQuestion\"}}}\n      ]\n    },\n    \"Id\": {"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+   "name": "walk reader",
+   "old": "const PROGRAM_PHASE = \"build:input-precision\";",
+   "new": "const PROGRAM_PHASE = \"build:input-precision\";\n\n/** ✅️ Admits the recipe of a derived repository walk against its closed schema. */\nexport function readDerivedWalkV1(value: unknown): DerivedWalkV1 {\n  const failures = validateJsonSchemaSubset({$ref: \"#/definitions/DerivedWalk\"}, value, schema);\n  if (failures.length) fail(`Derived walk refused: ${failures.slice(0, 3).join(\"; \")}`);\n  return value as DerivedWalkV1;\n}"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "name": "import engine",
+   "old": "import { routerCommandSpecifiersV1, routerCommandWordV1 } from \"./🔀️router/🟨️.mjs\";",
+   "new": "import { routerCommandSpecifiersV1, routerCommandWordV1 } from \"./🔀️router/🟨️.mjs\";\nimport { cargoManifestDirectoriesV1, crateNamesV1, entryFilesV1, includeRootsV1, readDerivedWalkV1 } from \"../../../📥️inputs/🎯️precision/🟦️.ts\";"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "name": "walk value",
+   "old": "/** 🧩️ The stored observations of every file a command walk visited, by the questions of the walks that visited it",
+   "new": "/** 🔏️ The digest of the answer of a repository walk: what a project that used the walk depends on. */\nexport function derivedWalkAnswerV1(value) { return createHash(\"sha256\").update(JSON.stringify(value)).digest(\"hex\"); }\n\n/** 🚶️ The answer of one repository walk (the crate index of the Cargo manifests, or the TypeScript files a question selects), read through the observed file system. */\nfunction walkValueV1(recipe, workspaceRoot) {\n  const local = path => join(workspaceRoot, path), list = directory => { try { return observedFs.readdirSync(local(directory), { withFileTypes: true }).map(entry => ({ name: entry.name, directory: entry.isDirectory(), file: entry.isFile(), link: entry.isSymbolicLink() })); } catch { return []; } };\n  const readText = path => { try { return observedFs.readFileSync(local(path), \"utf8\"); } catch { return undefined; } };\n  if (recipe.fn === \"crate-index\") return [...crateNamesV1(cargoManifestDirectoriesV1(list, recipe.skip), readText)];\n  const host = { exists: path => existsSync(local(path)), listDirectory: directory => list(directory).map(({ name, directory }) => ({ name, directory })) };\n  return recipe.question.mode === \"entries\" ? entryFilesV1(recipe.question.globs, host) : includeRootsV1(recipe.question.include, recipe.question.exclude, host);\n}\n\n/** 🪢️ One repository walk as a derived fact: the observations it read are one shared layer, named by the question and the digest of the answer, so a project that used the walk holds that one row instead of the directories the walk listed. */\nfunction derivedWalkV1(workspaceRoot, recipe) {\n  const question = JSON.stringify({ derive: 1, workspaceRoot: resolve(workspaceRoot), recipe }), cache = new Map(), value = memoizedObservedComputationV1(cache, question, () => walkValueV1(recipe, workspaceRoot)), stored = cache.get(question);\n  if (stored && !walkFactsV1.has(stored.observations)) walkFactsV1.set(stored.observations, { row: { kind: \"derived\", path: question, fact: derivedWalkAnswerV1(value) } });\n  return value;\n}\n\n/** 🧩️ The stored observations of every file a command walk visited, by the questions of the walks that visited it"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "name": "re-ask",
+   "old": "  if (question?.walk !== 1 || !Array.isArray(question.roots)",
+   "new": "  if (question?.derive === 1) {\n    let recipe;\n    try { recipe = readDerivedWalkV1(question.recipe); } catch { throw refuse(); }\n    const asked = await observeDetachedV1(() => derivedWalkV1(question.workspaceRoot, recipe));\n    return { fact: derivedWalkAnswerV1(asked.value), rows: support(asked) };\n  }\n  if (question?.walk !== 1 || !Array.isArray(question.roots)"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "name": "digest query",
+   "old": "  [\"generated\", value => value?.generatedDependencies ?? []],\n]);",
+   "new": "  [\"generated\", value => value?.generatedDependencies ?? []],\n  [\"digest\", derivedWalkAnswerV1],\n]);"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "name": "recipe case",
+   "old": "    case \"target-sources\": return targetScriptSources(target, workspaceRoot, scripts, recipe.projectRoot, recipe.nativeManifest);\n    default:",
+   "new": "    case \"target-sources\": return targetScriptSources(target, workspaceRoot, scripts, recipe.projectRoot, recipe.nativeManifest);\n    case \"crate-index\": case \"source-roots\": return derivedWalkV1(workspaceRoot, readDerivedWalkV1(recipe));\n    default:"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "name": "api derive",
+   "old": "    async some(list, substrings) {\n      const handle = closureHandleOfV1(list);",
+   "new": "    async derive(recipe) {\n      if (!late) return derivedWalkV1(workspaceRoot, recipe);\n      const key = closureRecipeKeyV1(recipe);\n      knownClosureRecipesV1.set(key, recipe); used.set(key, recipe);\n      const entry = await ensureClosureEntryV1(workspaceRoot, recipe);\n      recordClosureFactV1(JSON.stringify([workspaceRoot, key, [\"digest\"]]), JSON.stringify(closureAnswerV1(entry, [\"digest\"])));\n      return entry.value;\n    },\n    async some(list, substrings) {\n      const handle = closureHandleOfV1(list);"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.d.mts",
+   "name": "types",
+   "old": "export function resolveCommandWalkV1(",
+   "new": "export function derivedWalkAnswerV1(value: unknown): string;\nexport function resolveCommandWalkV1("
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+   "name": "import",
+   "old": "import { deriveInputsV1, inputPrecisionDecisionV1, inputPrecisionLanguageV1, inputPrecisionTextV1, readInputPrecisionV1, selectRuleV1 } from",
+   "new": "import { cargoManifestDirectoriesV1, deriveInputsV1, inputPrecisionDecisionV1, inputPrecisionLanguageV1, inputPrecisionTextV1, readInputPrecisionV1, selectRuleV1 } from"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+   "name": "manifest walk",
+   "old": "/** 🦀️ Lists the directory of every Cargo manifest the build discovers, skipping generated trees. */\nfunction precisionCargoManifestsV1(workspaceRoot) {\n  const found = [], walk = (directory) => {\n    for (const entry of readdirSync(join(workspaceRoot, directory), { withFileTypes: true })) {\n      const path = buildPath(join(directory, entry.name));\n      if (entry.isSymbolicLink() || path === \"compose\" || path === \"temp/compose\" || entry.name === \".🧬semio\" || POLICY.generatedDirectories.includes(entry.name)) continue;\n      if (entry.isDirectory()) walk(path);\n      else if (entry.isFile() && entry.name === \"Cargo.toml\") found.push(directory);\n    }\n  };\n  walk(\"\");\n  return found.sort();\n}\n",
+   "new": "/** 🦀️ What the walk of the Cargo manifests skips: the generated trees and the composition outputs. */\nconst precisionManifestSkipV1 = () => ({ paths: [\"compose\", \"temp/compose\"], names: [\".🧬semio\", ...POLICY.generatedDirectories] });\n\n/** 🦀️ Lists the directory of every Cargo manifest the build discovers, skipping generated trees. */\nfunction precisionCargoManifestsV1(workspaceRoot) {\n  return cargoManifestDirectoriesV1((directory) => readdirSync(join(workspaceRoot, directory), { withFileTypes: true }).map((entry) => ({ name: entry.name, directory: entry.isDirectory(), file: entry.isFile(), link: entry.isSymbolicLink() })), precisionManifestSkipV1());\n}\n\nconst precisionCrateMapsV1 = new WeakMap();\n/** 🚶️ The repository walks of one project's input precision as derived facts: the crate index and the TypeScript files a question selects are answered once per process by their closure entry, and the project records the digest of the answer instead of the directories the walk listed. */\nfunction precisionWalksV1(closures) {\n  return {\n    crateNames: async () => { const entries = await closures.derive({ fn: \"crate-index\", skip: precisionManifestSkipV1() }); let map = precisionCrateMapsV1.get(entries); if (!map) precisionCrateMapsV1.set(entries, map = new Map(entries)); return map; },\n    sourceRoots: (question) => closures.derive({ fn: \"source-roots\", question }),\n  };\n}\n"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+   "name": "precise head",
+   "old": "async function preciseInputsV1(project, name, command, policy, root, workspaceRoot, facts, scripts, intern) {\n  const { document, host } = precisionContextV1(workspaceRoot, facts, scripts), outputs =",
+   "new": "async function preciseInputsV1(project, name, command, policy, root, workspaceRoot, facts, scripts, intern, closures) {\n  const { document, host: shared } = precisionContextV1(workspaceRoot, facts, scripts), host = closures.late ? Object.assign(Object.create(shared), precisionWalksV1(closures)) : shared, outputs ="
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+   "name": "precise call",
+   "old": "policy = await preciseInputsV1(json.name, name, inherited.options?.command ?? inherited.command, policy, root, workspaceRoot, facts, scripts, internCommandSources);",
+   "new": "policy = await preciseInputsV1(json.name, name, inherited.options?.command ?? inherited.command, policy, root, workspaceRoot, facts, scripts, internCommandSources, closures);"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🧪️tests/🟦️.ts",
+   "name": "law import",
+   "old": "import {commandWordsV1, deriveInputsV1, dispatchBranchesV1, entryFilesV1,",
+   "new": "import {commandWordsV1, crateNamesV1, deriveInputsV1, dispatchBranchesV1, entryFilesV1, includeRootsV1,"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🧪️tests/🟦️.ts",
+   "name": "law ports",
+   "old": "  expect(validate.validate(pointed(join(here, \"..\"), rules), {...rules, $schema: 1})).toBe(false);\n});",
+   "new": "  expect(validate.validate(pointed(join(here, \"..\"), rules), {...rules, $schema: 1})).toBe(false);\n});\n\ntest(\"answering the repository walks through the derived-walk ports derives exactly what walking in place derives\", async () => {\n  const asked: string[] = [], ports = (base: InputPrecisionHostV1): InputPrecisionHostV1 => ({...base, crateNames: async () => { asked.push(\"crates\"); return crateNamesV1(base.cargoManifests(), base.readText); }, sourceRoots: async (question) => { asked.push(question.mode); return question.mode === \"entries\" ? entryFilesV1(question.globs, base) : includeRootsV1(question.include, question.exclude, base); }});\n  for (const row of fixture.derive) {\n    const rule = selectRuleV1(document, row.identity as any)!;\n    if (rule.evidence === \"assumed\") continue;\n    expect(await deriveInputsV1(document, rule, row.identity as any, ports(fixtureHost())), JSON.stringify(row.identity)).toEqual(await deriveInputsV1(document, rule, row.identity as any, fixtureHost()));\n  }\n  expect(asked).toContain(\"crates\");\n  const entries = [\"{workspaceRoot}/app/src/**/*.ts\", \"!{workspaceRoot}/app/src/skip/**/*\"];\n  expect(await programInputsV1(\"app/tsconfig.json\", ports(fixtureHost()), entries)).toEqual(await programInputsV1(\"app/tsconfig.json\", fixtureHost(), entries));\n  expect(await programInputsV1(\"app/tsconfig.json\", ports(fixtureHost()))).toEqual(await programInputsV1(\"app/tsconfig.json\", fixtureHost()));\n  expect(asked).toContain(\"entries\");\n  expect(asked).toContain(\"include\");\n});"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/README.md",
+   "name": "readme en",
+   "old": "- **Cheap generations after an environment move (graph generations).**",
+   "new": "- **Repository walks of the input precision are derived facts (graph builder memory).** The crate index of the Cargo manifests (a walk of the whole repository: 126 thousand directory listings in the root project) and the TypeScript files that entry globs or the include globs of a tsconfig select (92 thousand listings in the dev composition) were recorded as raw `readdir` rows by every project that used them. They are derived facts now (closure recipes `crate-index` and `source-roots`, `derive: 1` questions of `🧭️script-inputs`, schema `DerivedWalk` of the precision engine): a project holds ONE `closure` row (the digest of the answer), the listings are the support of one derived fact kept once, the walk is asked again only when a listing went stale, and an equal answer keeps every holder valid. Measured on the real tree (one project per run, same scratch store): the root project 206,302 -> 79,250 rows and `s-dev-composition` 183,817 -> 92,188, the live heap after the inference -0.46 / -0.13 GB (-0.19 / -0.13 GB after a collection), the peak resident set 5.93 -> 5.63 GB and 3.58 -> 3.17 GB; the project values are equal field by field to the ones of the direct walk. Oracle: a Python walk of its own copy of the tree after 22 recorded and 40 x 14 seeded edits of directories and files anywhere (`🚶️repository-walks`): the derived answer equals the full walk after every edit, and whenever every supporting row still holds the answer is the one the holders hold.\n\n- **Cheap generations after an environment move (graph generations).**"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/README.md",
+   "name": "readme de",
+   "old": "- **Günstige Generationen nach einer Umgebungsverschiebung (Graph-Generationen).**",
+   "new": "- **Durchläufe des Repositorys in der Input-Präzision sind abgeleitete Fakten (Speicher des Graph-Aufbaus).** Der Crate-Index der Cargo-Manifeste (ein Durchlauf des ganzen Repositorys: 126 Tausend Verzeichnislisten im Wurzelprojekt) und die TypeScript-Dateien, die Entry-Globs oder die Include-Globs einer tsconfig wählen (92 Tausend Listen in der Dev-Komposition), wurden von jedem Projekt, das sie nutzte, als rohe `readdir`-Zeilen aufgezeichnet. Sie sind jetzt abgeleitete Fakten (Abschluss-Rezepte `crate-index` und `source-roots`, `derive: 1`-Fragen von `🧭️script-inputs`, Schema `DerivedWalk` der Präzisions-Engine): ein Projekt hält EINE `closure`-Zeile (den Digest der Antwort), die Listen sind die Stütze eines einzigen abgeleiteten Fakts, der Durchlauf wird nur neu gefragt, wenn eine Liste veraltet ist, und eine gleiche Antwort lässt jeden Halter gültig. Gemessen auf dem echten Baum (ein Projekt je Lauf, derselbe Arbeitsspeicher-Store): das Wurzelprojekt 206.302 -> 79.250 Zeilen und `s-dev-composition` 183.817 -> 92.188, der lebende Heap nach der Ableitung -0,46 / -0,13 GB (-0,19 / -0,13 GB nach einer Sammlung), der Spitzen-Resident 5,93 -> 5,63 GB und 3,58 -> 3,17 GB; die Projektwerte sind Feld für Feld gleich denen des direkten Durchlaufs. Orakel: ein Python-Durchlauf einer eigenen Kopie des Baums nach 22 aufgezeichneten und 40 x 14 gesäten Änderungen von Verzeichnissen und Dateien überall (`🚶️repository-walks`): die abgeleitete Antwort gleicht dem vollen Durchlauf nach jeder Änderung, und solange jede stützende Zeile gilt, ist die Antwort die, die die Halter halten.\n\n- **Günstige Generationen nach einer Umgebungsverschiebung (Graph-Generationen).**"
+  }
+ ]
+}

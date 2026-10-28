@@ -1,0 +1,1 @@
+712 pass 10 fail (33 test files under generations, taken 15:03-15:07 on a host at load 30, before the batch); the 10 fails are pre-existing (derive-g documented the env-bound ones).

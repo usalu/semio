@@ -1,0 +1,133 @@
+import {afterAll,expect,test} from "bun:test";
+import Ajv from "ajv";
+import {mkdtempSync,rmSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import {setTimeout as sleep} from "node:timers/promises";
+import {adoptUpgradedHostPlanV1,evaluateHostCapacityV1,isHostCapacityV1,newHostCapacityIdV1,readHostCapacityPolicyV1,readHostCapacityStatusV1,readLiveHostCapacityPlanV1,settleHostGrowthV1,withHostCapacityV1,type HostCapacityHandleV1,type HostCapacityOptionsV1,type HostGrantV1,type HostGrowthSettleV1,type HostRequestV1,type HostSampleV1,type HostWaiterV1} from "../../../🟦️.ts";
+import schema from "../../../🧬️schema/🔣️.json";
+import decisionFixture from "../../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+
+const policy=readHostCapacityPolicyV1({...decisionFixture.policy,memory:{...decisionFixture.policy.memory,maximumQuiet:4}});
+const sample=(available:number,over:Partial<HostSampleV1>={}):HostSampleV1=>({version:1,atMs:1_000_000,platform:"darwin",cores:10,totalMegabytes:32768,availableMegabytes:available,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:1,openFiles:8000,openFilesMaximum:245760,attachedImages:10,...over});
+const floor=evaluateHostCapacityV1(policy,sample(20000),[],[],0).floorMegabytes;
+const running:HostGrantV1={id:"runningaaa1",operation:"run",jobs:1,cpu:1,reservedMegabytes:3584,admittedAtMs:0,observedMegabytes:3000,pid:5,bootAtMs:1};
+const growth:HostRequestV1={id:"runningaaa1",operation:"run",priority:"batch",minimumJobs:2,preferredJobs:8,fixedMegabytes:1536,perJobMegabytes:2048,cpuPerJob:1};
+const grow:HostWaiterV1={request:growth,arrivedAtMs:0,pid:5,upgrade:true,grow:true};
+const fresh=(id:string,fixed:number,arrivedAtMs=900_000):HostWaiterV1=>({request:{id,operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:fixed,perJobMegabytes:0,cpuPerJob:1},arrivedAtMs,pid:6});
+const decide=(free:number,grant:HostGrantV1=running,others:readonly HostWaiterV1[]=[],over:Partial<HostSampleV1>={})=>evaluateHostCapacityV1(policy,sample(floor+free,over),[grant],[grow,...others],1_000_000).decisions;
+const mine=(decisions:ReturnType<typeof decide>)=>decisions.find(row=>row.id===growth.id)!;
+
+test("A grow request decides exactly as the Python oracle on every stored world and reaches every rule",()=>{
+ for(const item of fixture.worlds)expect(JSON.parse(JSON.stringify(evaluateHostCapacityV1(policy,item.host as HostSampleV1,item.ledger as HostGrantV1[],item.queue as HostWaiterV1[],item.nowMs))),item.name).toEqual(item.expect);
+ for(const rule of ["growAdmit","growPartly","growWait","growQueued","growRamp"])expect(fixture.coverage[rule as keyof typeof fixture.coverage],`vectors reach ${rule}`).toBeGreaterThan(0);
+ expect(fixture.protocol).toEqual({growSpareJobs:schema.definitions.Protocol.const.growSpareJobs,growSettleAttempts:schema.definitions.Protocol.const.growSettleAttempts});
+});
+
+test("A growth settles only after consecutive admitted attempts, to the fewest jobs they admitted, exactly as the Python oracle",()=>{
+ for(const item of fixture.settle){
+  let state:HostGrowthSettleV1|undefined;
+  item.decisions.forEach((decision,index)=>{const got=settleHostGrowthV1(state,decision as {verdict:"admit"|"wait";jobs:number});state=got.next;expect(JSON.parse(JSON.stringify({next:got.next??null,jobs:got.jobs??null})),`${item.name} step ${index}`).toEqual(item.expect[index]);});
+ }
+ expect(settleHostGrowthV1(undefined,{verdict:"admit",jobs:8}).jobs,"one admitted attempt never grows").toBeUndefined();
+ expect(settleHostGrowthV1(settleHostGrowthV1(undefined,{verdict:"admit",jobs:8}).next,{verdict:"admit",jobs:3}).jobs,"the second grows to the fewest jobs both admitted").toBe(3);
+ expect(settleHostGrowthV1(settleHostGrowthV1(undefined,{verdict:"admit",jobs:8}).next,{verdict:"wait",jobs:0}),"a refused attempt starts again").toEqual({next:undefined,jobs:undefined});
+});
+
+test("A run admitted with 1 of 8 jobs grows to the jobs whose memory fits with one more job's memory left free, takes nothing a waiting run needs and never grows twice on the same memory",()=>{
+ expect([mine(decide(5000)).verdict,mine(decide(5000)).jobs,mine(decide(5000)).reason,mine(decide(5000)).reservedMegabytes],"5000 MB free carry 3 jobs beside what the run holds, the spare job keeps it at 2").toEqual(["admit",2,"reduced",1536+2*2048]);
+ expect([mine(decide(30000)).jobs,mine(decide(30000)).reason],"plenty of memory grows it to every job it asked for").toEqual([8,"fits"]);
+ expect([mine(decide(1000)).verdict,mine(decide(1000)).reason],"memory for one more job plus the spare is not free").toEqual(["wait","memory"]);
+ expect(mine(decide(30000,{...running,reservedMegabytes:40000})).reservedMegabytes,"a growth never shrinks the reservation").toBe(40000);
+ const waiting=decide(12000,running,[fresh("waitingaaa1",20000)]);
+ expect(waiting.map(row=>[row.id,row.verdict,row.reason]),"a run that waits for memory is served first; the growth waits behind it").toEqual([["waitingaaa1","wait","memory"],["runningaaa1","wait","queue-order"]]);
+ const later=decide(12000,running,[fresh("smallaaaaa1",3000)]);
+ expect(later.map(row=>[row.id,row.verdict,row.jobs]),"a fitting request is admitted first and the growth takes only what is left").toEqual([["smallaaaaa1","admit",1],["runningaaa1","admit",4]]);
+ expect([mine(decide(30000,{...running,resumedAtMs:999_000,grownAtMs:999_000})).verdict,mine(decide(30000,{...running,resumedAtMs:999_000,grownAtMs:999_000})).reason],"while the reservation of its previous growth ramps it does not grow again").toEqual(["wait","ramp"]);
+ const fresh0={...running,admittedAtMs:999_000,observedMegabytes:500};
+ expect([mine(decide(30000,fresh0)).verdict,mine(decide(30000,fresh0)).jobs],"a run admitted a second ago grows at once: its admission reservation still counts in full, so nothing is counted twice").toEqual(["admit",8]);
+ expect(mine(decide(5000,fresh0)).jobs,"during the admission ramp the growth pays its whole new reservation minus only what the run holds").toBe(Math.floor((floor+5000-floor+500-1536)/2048)-1);
+ expect(mine(decide(30000,running,[],{pressure:"warn"})).reason,"a soft stop holds a growth like any request").toBe("pressure-warn");
+ expect(mine(decide(30000,running,[],{pressure:"critical"})).reason).toBe("pressure-critical");
+ expect(mine(decide(30000,running,[],{load:19})).verdict,"cores beyond the load room are not grown into").toBe("wait");
+});
+
+test("g38 replay: another command's reservation counts in full while it ramps and then by the memory its process tree holds, so a holder that holds nothing (a sleep) stops holding memory after its ramp and a holder that pins its memory keeps it",()=>{
+ const hold=(observed:number):HostGrantV1=>({id:"holderaaaa1",operation:"command",jobs:1,cpu:1,reservedMegabytes:15620,admittedAtMs:0,observedMegabytes:observed,pid:7,bootAtMs:1});
+ const course:HostWaiterV1={request:{id:"courseaaaa1",operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:1740,perJobMegabytes:0,cpuPerJob:1,quiet:true},arrivedAtMs:15_000,pid:8};
+ const at=(nowMs:number,observed:number)=>evaluateHostCapacityV1(policy,sample(21095-(observed-20),{atMs:nowMs}),[hold(observed)],[course],nowMs).decisions[0]!;
+ const ramp=policy.memory.rampMilliseconds;
+ expect([at(45_000,20).verdict,at(45_000,20).reason],"inside its ramp the holder's 15620 MB count: the course waits beside 21095 MB available").toEqual(["wait","memory"]);
+ expect(at(ramp+1000,20).verdict,"after its ramp a sleep that holds 20 MB counts 20 MB: the host really has the memory").toBe("admit");
+ expect([at(ramp+1000,15600).verdict,at(ramp+1000,15600).reason],"a holder that pins 15600 MB (the host shows them as used) keeps them counted after its ramp").toEqual(["wait","memory"]);
+});
+
+const roots:string[]=[];afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
+const live=readHostCapacityPolicyV1({...decisionFixture.policy,memory:{...decisionFixture.policy.memory,rampMilliseconds:120},load:{...decisionFixture.policy.load,overrideAfterMilliseconds:600000},wait:{...decisionFixture.policy.wait,pollMilliseconds:10,progressMilliseconds:20,heartbeatMilliseconds:40,sampleMaximumAgeMilliseconds:0,lockStaleMilliseconds:2000,staleMilliseconds:60000,lendAfterMilliseconds:600000}});
+const control=(signal=new AbortController().signal)=>({signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined});
+const full=(id:string):HostRequestV1=>({id,operation:"run",priority:"batch",minimumJobs:1,preferredJobs:8,fixedMegabytes:1536,perJobMegabytes:2048,cpuPerJob:1});
+const run=async(language:string,memory:(call:number)=>number,body:(handle:HostCapacityHandleV1,directory:string)=>Promise<void>,over:Partial<HostCapacityOptionsV1>={})=>{
+ const directory=mkdtempSync(join(tmpdir(),"hg-"));roots.push(directory);const lines:string[]=[],request=full(newHostCapacityIdV1());let calls=0;
+ await withHostCapacityV1({directory,policy:live,request,upgrade:request,control:control(),environment:{LANG:language},write:line=>lines.push(line),sample:async()=>({host:{...sample(memory(calls++)),atMs:Date.now()},swappedOutMegabytes:0}),observe:async()=>3000,waited:()=>0,children:()=>[1],...over},handle=>body(handle,directory));
+ return lines;
+};
+const row=async(directory:string,id:string)=>(await readHostCapacityStatusV1({directory,policy:live,control:control(),sample:async()=>({host:sample(floor+1000),swappedOutMegabytes:0})})).grants.find(grant=>grant.id===id)!;
+const until=async(check:()=>Promise<boolean>,milliseconds:number)=>{const end=Date.now()+milliseconds;while(Date.now()<end){if(await check())return true;await sleep(20);}return false;};
+
+test("A run admitted with fewer jobs grows while it runs once memory frees up, in English, and every process of the run follows the grant",async()=>{
+ let free=4000;
+ const lines=await run("en_US.UTF-8",()=>floor+free,async(handle,directory)=>{
+  expect([handle.plan.jobs,handle.jobs],"the plan holds the granted job, the tool is told the jobs it may grow into").toEqual([1,8]);
+  const environment:Record<string,string|undefined>={SEMIO_HOST_CAPACITY_DIRECTORY:directory,...handle.environment,SEMIO_BUILD_PARALLEL:"8"};
+  await sleep(300);expect((await row(directory,handle.id)).jobs,"no memory freed up, no growth").toBe(1);
+  free=30000;
+  expect(await until(async()=>(await row(directory,handle.id)).jobs>1,3000),"it grows").toBe(true);
+  const grown=await row(directory,handle.id);
+  expect([grown.jobs,grown.cpu,grown.reservedMegabytes>=1536+8*2048,typeof grown.grownAtMs]).toEqual([8,8,true,"number"]);
+  expect(readLiveHostCapacityPlanV1(environment)!.jobs,"a process started before the growth reads the grant as it is now").toBe(8);
+  expect(readLiveHostCapacityPlanV1(environment)!.memoryMegabytes).toBe(8*2048);
+  await withHostCapacityV1({directory,policy:live,request:full(newHostCapacityIdV1()),control:control(),environment:{...environment},write:()=>undefined},async nested=>{expect([nested.inherited,nested.jobs,nested.plan.jobs],"a nested invocation that inherits the grant carries the grown plan to its children").toEqual([true,8,8]);});
+  expect(adoptUpgradedHostPlanV1(environment),"the process takes the grown plan over").toBe(true);
+  expect([JSON.parse(environment.SEMIO_HOST_CAPACITY_PLAN!).jobs,environment.SEMIO_BUILD_PARALLEL]).toEqual([8,"8"]);
+  await sleep(200);expect((await row(directory,handle.id)).jobs,"it never shrinks back").toBe(8);
+ });
+ expect(lines[0]).toBe("[capacity] admitted run with 1 of 8 job(s): the host cannot carry more right now; the run grows to more jobs once memory frees up");
+ expect(lines.find(line=>line.includes("grown from"))).toMatch(/^\[capacity\] run: grown from 1 to 8 of 8 job\(s\) after \d+s, reservation 3584 MB -> \d+ MB: memory freed up and nothing of ours waits \(\d+ MB available, \d+ MB floor\); work that starts from now on uses the new jobs$/u);
+},20000);
+
+test("Memory that frees up only for a moment never grows a run, and the growth is said in German",async()=>{
+ const lines=await run("de_DE.UTF-8",call=>call===0?floor+4000:call%2===1?floor+30000:floor+500,async(handle,directory)=>{
+  await sleep(900);expect((await row(directory,handle.id)).jobs,"admitted and refused attempts alternate: no two consecutive admissions").toBe(1);
+ });
+ expect(lines.some(line=>line.includes("gewachsen"))).toBe(false);
+ const german=await run("de_DE.UTF-8",call=>call===0?floor+4000:floor+9000,async(handle,directory)=>{expect(await until(async()=>(await row(directory,handle.id)).jobs>1,3000)).toBe(true);});
+ expect(german[0]).toBe("[capacity] run mit 1 von 8 Job(s) zugelassen: der Rechner trägt gerade nicht mehr; der Lauf wächst auf mehr Jobs, sobald Speicher frei wird");
+ expect(german.find(line=>line.includes("gewachsen"))).toMatch(/^\[capacity\] run: nach \d+ s von 1 auf 4 von 8 Job\(s\) gewachsen, Reservierung 3584 MB -> 9728 MB: Speicher ist frei geworden und nichts von uns wartet/u);
+},20000);
+
+test("A run grows only while nothing else of ours waits for memory: the waiting run is served first",async()=>{
+ let waited=false;
+ await run("en_US.UTF-8",call=>call===0?floor+4000:floor+30000,async(handle,directory)=>{
+  const cancel=new AbortController(),other=withHostCapacityV1({directory,policy:live,request:{...full(newHostCapacityIdV1()),preferredJobs:1,fixedMegabytes:31000,perJobMegabytes:0},control:control(cancel.signal),environment:{},write:()=>undefined,sample:async()=>({host:{...sample(floor+30000),atMs:Date.now()},swappedOutMegabytes:0}),observe:async()=>null,waited:()=>0,children:()=>[1]},async()=>{waited=true;}).catch(()=>undefined);
+  await sleep(600);expect((await row(directory,handle.id)).jobs,"the growth waits behind the waiting run").toBe(1);
+  cancel.abort();await other;
+  expect(await until(async()=>(await row(directory,handle.id)).jobs===8,3000),"once nothing waits it grows").toBe(true);
+ });
+ expect(waited).toBe(false);
+},20000);
+
+test("A run whose tool does not follow its grant is admitted with fewer jobs as before and never grows",async()=>{
+ const directory=mkdtempSync(join(tmpdir(),"hg-"));roots.push(directory);const lines:string[]=[],request=full(newHostCapacityIdV1());let free=4000;
+ await withHostCapacityV1({directory,policy:live,request,control:control(),environment:{LANG:"en_US.UTF-8"},write:line=>lines.push(line),sample:async()=>({host:{...sample(floor+free),atMs:Date.now()},swappedOutMegabytes:0}),observe:async()=>3000,waited:()=>0,children:()=>[1]},async handle=>{
+  expect([handle.jobs,handle.plan.jobs]).toEqual([1,1]);free=30000;await sleep(500);expect((await row(directory,handle.id)).jobs).toBe(1);
+ });
+ expect(lines[0]).toBe("[capacity] admitted run with 1 of 8 job(s): the host cannot carry more right now");
+},20000);
+
+test("The closed schema accepts the grow members and refuses malformed ones, equal to Ajv",()=>{
+ const ajv=new Ajv({strict:false,allErrors:false});ajv.addSchema({$id:"hc",definitions:schema.definitions});
+ const agree=(definition:"Waiter"|"Grant",value:unknown)=>{const own=isHostCapacityV1(definition,value),theirs=ajv.validate({$ref:`hc#/definitions/${definition}`},value) as boolean;expect(own,JSON.stringify(value)).toBe(theirs);return own;};
+ expect(agree("Waiter",grow)).toBe(true);expect(agree("Waiter",{...grow,grow:"yes"})).toBe(false);
+ expect(agree("Grant",{...running,grownAtMs:5})).toBe(true);expect(agree("Grant",{...running,grownAtMs:-1})).toBe(false);
+});

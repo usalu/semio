@@ -1,0 +1,1 @@
+🐹️ The Go launcher reads every rule of the one protocol (flag, `--` end, separators, macOS command and parse pattern, refusal texts per kind) instead of hard-coding them; its three registry copies of the refusal texts are no longer required (they are dropped once the rebuilt launcher is installed: batch `launcher2`).

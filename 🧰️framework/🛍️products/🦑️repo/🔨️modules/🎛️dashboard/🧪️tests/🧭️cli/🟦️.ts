@@ -23,7 +23,7 @@ let root = "";
 let port = 0;
 let daemon: ReturnType<typeof Bun.spawn> | undefined;
 const instance = `cli-${process.pid}-${Date.now()}`;
-const environment = { ...process.env, SEMIO_DASHBOARD_INSTANCE: instance, SEMIO_LOCALE: "en", SEMIO_SCRIPT_PROCESS_INVOCATION:"view-envelope", SEMIO_SCRIPT_CAPABILITIES:"view-capabilities", SEMIO_SCRIPT_POLICY:"view-policy" } as Record<string, string>;
+const environment = { ...process.env, SEMIO_DASHBOARD_INSTANCE: instance, SEMIO_LANGUAGE: "en", SEMIO_SCRIPT_PROCESS_INVOCATION:"view-envelope", SEMIO_SCRIPT_CAPABILITIES:"view-capabilities", SEMIO_SCRIPT_POLICY:"view-policy" } as Record<string, string>;
 
 function semio(args: string[]): { code: number; out: string; err: string; lines: string[] } {
   const run = Bun.spawnSync([binary(), ...args, "--root", root], { cwd: root, env: environment, stdout: "pipe", stderr: "pipe" });

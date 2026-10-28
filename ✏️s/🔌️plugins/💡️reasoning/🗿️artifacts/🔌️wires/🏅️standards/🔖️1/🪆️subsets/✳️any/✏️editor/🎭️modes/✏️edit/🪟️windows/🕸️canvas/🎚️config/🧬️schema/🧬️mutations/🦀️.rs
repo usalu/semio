@@ -1,7 +1,7 @@
 //! 🧬️ Wires canvas configuration mutations.
 
 use super::{WiresCanvasCamera, WiresCanvasWindowConfig, WiresCanvasWindowConfigDiff};
-#[path = "🎥️set-camera/🦀️.rs"]
+#[path = "🎥️camera/🦀️.rs"]
 mod set_camera;
 pub use set_camera::SetCamera;
 

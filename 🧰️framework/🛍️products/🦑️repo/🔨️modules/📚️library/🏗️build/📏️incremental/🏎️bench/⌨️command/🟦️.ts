@@ -1,21 +1,23 @@
-import {mkdir,readFile,rm,writeFile} from "node:fs/promises";
+import {mkdir,readFile,readdir,rm,writeFile} from "node:fs/promises";
+import {arch,cpus,platform,totalmem} from "node:os";
 import {dirname,join,resolve} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import acceptance from "../🛂️acceptance/🧬️schema/🔣️.json" with {type:"json"};
 import slo from "../🎯️slo/🔣️.json" with {type:"json"};
 import {incrementalDisposableV1} from "../../🏃️runner/🟦️.ts";
 import {incrementalCommandPortsV1,incrementalDefaultRootV1,incrementalLanguageV1,runIncrementalCommandV1,type IncrementalCommandPortsV1} from "../../⌨️command/🟦️.ts";
-import {benchBaselineV1,benchCompareV1,benchSelectV1,benchSloIssuesV1,renderBenchComparisonV1,renderBenchListV1,renderBenchReportV1,type BenchReportV1,type BenchSloSetV1,type BenchToolV1} from "../🟦️.ts";
+import {benchBaselineV1,benchBudgetV1,benchCompareV1,benchHistoryLatestV1,benchHistoryNameV1,benchHostV1,benchSelectV1,benchSloIssuesV1,renderBenchBudgetV1,renderBenchComparisonV1,renderBenchListV1,renderBenchReportV1,type BenchReportV1,type BenchSloSetV1,type BenchToolV1} from "../🟦️.ts";
 import {benchCliPortsV1,benchRunV1,type BenchHostPortsV1} from "../🏃️runner/🟦️.ts";
 
 const policy=schema.definitions.Policy.const,tools:readonly BenchToolV1[]=["nx","bazel"],operations=["list","run","compare"] as const,script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",catalog="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json";
 
 /** 🍘️ The closed arguments of `repo bench`. */
-export type BenchArgumentsV1=Readonly<{operation:typeof operations[number];slo:readonly string[]|"all";runs:number|undefined;baseline:string|undefined;saveBaseline:string|undefined;current:string|undefined;markdown:string|undefined;maxLoad:number|undefined;tools:readonly BenchToolV1[];root:string|undefined;file:string|undefined;json:boolean;prepare:boolean;language:"en"|"de"|undefined}>;
+export type BenchArgumentsV1=Readonly<{operation:typeof operations[number];slo:readonly string[]|"all";runs:number|undefined;baseline:string|undefined;saveBaseline:string|undefined;current:string|undefined;history:string|undefined;markdown:string|undefined;maxLoad:number|undefined;tools:readonly BenchToolV1[];root:string|undefined;file:string|undefined;json:boolean;prepare:boolean;language:"en"|"de"|undefined}>;
 
-const both=(english:string,german:string)=>`${english}\n${german}`,valuedOptions=Object.freeze(["--slo","--runs","--baseline","--save-baseline","--current","--markdown","--max-load","--implementations","--root","--file","--lang"]),plainOptions=Object.freeze(["--json","--prepare"]);
+const both=(english:string,german:string)=>`${english}\n${german}`,valuedOptions=Object.freeze(["--slo","--runs","--baseline","--save-baseline","--current","--history","--markdown","--max-load","--implementations","--root","--file","--lang"]),plainOptions=Object.freeze(["--json","--prepare"]);
 
 /** 🍙️ The option names `repo bench` accepts, so the operations catalogue can be checked against the parser. */
-export function benchOptionNamesV1():{valued:readonly string[];plain:readonly string[]}{return {valued:valuedOptions,plain:plainOptions};}
+export function benchOptionNamesV1():{valued:readonly string[];plain:readonly string[]}{const own=acceptance.definitions.Policy.const.options;return {valued:[...valuedOptions,...own.valued],plain:[...plainOptions,...own.plain]};}
 
 /** 🍚️ Reads `bench list|run|compare` with its options; every unknown or repeated option is refused in both languages. */
 export function benchArgumentsV1(args:readonly string[]):BenchArgumentsV1{
@@ -37,14 +39,15 @@ export function benchArgumentsV1(args:readonly string[]):BenchArgumentsV1{
  if(runs!==undefined&&(!/^[1-9][0-9]*$/u.test(values["--runs"]!)||runs>policy.maximumRuns))throw Error(both(`Runs must be a whole number from 1 to ${policy.maximumRuns}`,`Läufe müssen eine ganze Zahl von 1 bis ${policy.maximumRuns} sein`));
  const maxLoad=values["--max-load"]===undefined?undefined:Number(values["--max-load"]);
  if(maxLoad!==undefined&&(!/^[0-9]+(\.[0-9]+)?$/u.test(values["--max-load"]!)||!(maxLoad>0)))throw Error(both("The load limit must be a positive number (load per core)","Die Lastgrenze muss eine positive Zahl sein (Last je Kern)"));
- if(operation==="compare"&&(!values["--current"]||!values["--baseline"]))throw Error(both("bench compare needs --current=<report> and --baseline=<report>","bench compare braucht --current=<Bericht> und --baseline=<Bericht>"));
+ if(operation==="compare"&&(values["--history"]===undefined?!values["--current"]||!values["--baseline"]:values["--current"]!==undefined||values["--baseline"]!==undefined))throw Error(both("bench compare needs --current=<report> and --baseline=<report>, or --history=<folder> alone","bench compare braucht --current=<Bericht> und --baseline=<Bericht> oder allein --history=<Ordner>"));
+ if(operation==="list"&&values["--history"]!==undefined)throw Error(both("--history belongs to bench run and bench compare","--history gehört zu bench run und bench compare"));
  if(operation!=="compare"&&values["--current"]!==undefined)throw Error(both("--current belongs to bench compare","--current gehört zu bench compare"));
  if(operation!=="run"&&(flags.has("--prepare")||values["--save-baseline"]!==undefined||runs!==undefined||maxLoad!==undefined))throw Error(both("--prepare, --runs, --max-load and --save-baseline belong to bench run","--prepare, --runs, --max-load und --save-baseline gehören zu bench run"));
- return Object.freeze({operation,slo:picked===undefined||picked.includes("all")?"all":picked,runs,baseline:values["--baseline"],saveBaseline:values["--save-baseline"],current:values["--current"],markdown:values["--markdown"],maxLoad,tools:[...new Set(chosen)] as BenchToolV1[],root:values["--root"],file:values["--file"],json:flags.has("--json"),prepare:flags.has("--prepare"),language:language as "en"|"de"|undefined});
+ return Object.freeze({operation,slo:picked===undefined||picked.includes("all")?"all":picked,runs,baseline:values["--baseline"],saveBaseline:values["--save-baseline"],current:values["--current"],history:values["--history"],markdown:values["--markdown"],maxLoad,tools:[...new Set(chosen)] as BenchToolV1[],root:values["--root"],file:values["--file"],json:flags.has("--json"),prepare:flags.has("--prepare"),language:language as "en"|"de"|undefined});
 }
 
 /** 📮️ What `repo bench` needs besides the incremental command ports: reading and writing plain files such as the baseline and the markdown report. */
-export type BenchCommandPortsV1=IncrementalCommandPortsV1&Readonly<{readText(path:string):Promise<string>;writeText(path:string,text:string):Promise<void>;overrides?:Partial<BenchHostPortsV1>}>;
+export type BenchCommandPortsV1=IncrementalCommandPortsV1&Readonly<{readText(path:string):Promise<string>;writeText(path:string,text:string):Promise<void>;list(folder:string):Promise<readonly string[]>;overrides?:Partial<BenchHostPortsV1>}>;
 
 const readReport=async(ports:BenchCommandPortsV1,path:string):Promise<BenchReportV1>=>{
  let value:unknown;
@@ -58,20 +61,29 @@ export async function runBenchCommandV1(live:string,args:readonly string[],ports
  if(issues.length)throw Error(`Closed SLO table required: ${issues.join("; ")}`);
  const lang=incrementalLanguageV1(parsed.language,ports.environment),root=parsed.root??incrementalDefaultRootV1(ports.platform,ports.tmpdir(),ports.home());
  if(parsed.operation==="list"){ports.write(parsed.json?JSON.stringify(set,null,2):renderBenchListV1(set,lang,"text"));return;}
- const emit=async(report:BenchReportV1|null,comparison:ReturnType<typeof benchCompareV1>|null):Promise<void>=>{
+ const hostClass=()=>(ports.overrides?.sample?.()??benchHostV1({platform:platform(),arch:arch(),cpus:Math.max(1,cpus().length),memoryBytes:totalmem(),load1:null})).hostClass;
+ const emit=async(report:BenchReportV1|null,comparison:ReturnType<typeof benchCompareV1>|null,over:ReturnType<typeof benchBudgetV1>|null=null):Promise<void>=>{
   if(report&&parsed.file)await ports.report(parsed.file,report);
+  if(report&&parsed.history)await ports.writeText(join(parsed.history,benchHistoryNameV1(report.startedAt,report.host.hostClass)),JSON.stringify(report,null,2)+"\n");
   if(report&&parsed.saveBaseline)await ports.writeText(parsed.saveBaseline,JSON.stringify(report,null,2)+"\n");
-  if(parsed.markdown)await ports.writeText(parsed.markdown,(report?renderBenchReportV1(report,set,lang,"markdown"):renderBenchComparisonV1(comparison!,set,lang,"markdown"))+"\n");
-  ports.write(parsed.json?JSON.stringify(report??comparison,null,2):report?renderBenchReportV1(report,set,lang,"text"):renderBenchComparisonV1(comparison!,set,lang,"text"));
+  if(parsed.markdown)await ports.writeText(parsed.markdown,(report?renderBenchReportV1(report,set,lang,"markdown"):renderBenchComparisonV1(comparison!,set,lang,"markdown")+(over?.rows.length?"\n\n"+renderBenchBudgetV1(over.rows,set,lang,"markdown"):""))+"\n");
+  ports.write(parsed.json?JSON.stringify(report??comparison,null,2):report?renderBenchReportV1(report,set,lang,"text"):renderBenchComparisonV1(comparison!,set,lang,"text")+(over?.rows.length?"\n\n"+renderBenchBudgetV1(over.rows,set,lang,"text"):""));
  };
  if(parsed.operation==="compare"){
   await ports.progress("compare");
-  const comparison=benchCompareV1(set,await readReport(ports,parsed.current!),await readReport(ports,parsed.baseline!));
-  await emit(null,comparison);
+  let currentPath=parsed.current,baselinePath=parsed.baseline;
+  if(parsed.history!==undefined){
+   const files=await ports.list(parsed.history),newest=benchHistoryLatestV1(files,hostClass()),older=newest===null?null:benchHistoryLatestV1(files,hostClass(),newest);
+   if(newest===null||older===null)throw Error(both(`The history ${parsed.history} holds fewer than two reports of this host class`,`Der Verlauf ${parsed.history} enthält weniger als zwei Berichte dieser Rechnerklasse`));
+   currentPath=join(parsed.history,newest);baselinePath=join(parsed.history,older);
+  }
+  const current=await readReport(ports,currentPath!),comparison=benchCompareV1(set,current,await readReport(ports,baselinePath!)),over=benchBudgetV1(current);
+  await emit(null,comparison,over);
   if(comparison.tally.blockingRegressed)throw Error(both(`Performance regressed in ${comparison.tally.blockingRegressed} blocking objectives`,`Die Leistung hat sich bei ${comparison.tally.blockingRegressed} verbindlichen Zielen verschlechtert`));
+  if(over.blocking)throw Error(both(`${over.blocking} blocking objectives are over budget`,`${over.blocking} verbindliche Ziele liegen über dem Budget`));
   return;
  }
- const pairs=benchSelectV1(set,parsed.slo,parsed.tools),baseline=parsed.baseline?await readReport(ports,parsed.baseline):null;
+ const pairs=benchSelectV1(set,parsed.slo,parsed.tools),previous=parsed.baseline===undefined&&parsed.history!==undefined?benchHistoryLatestV1(await ports.list(parsed.history),hostClass()):null,baseline=parsed.baseline?await readReport(ports,parsed.baseline):previous===null?null:await readReport(ports,join(parsed.history!,previous));
  await incrementalDisposableV1(live,root);
  if(parsed.prepare){
   await ports.progress("prepare");
@@ -92,10 +104,12 @@ export async function runBenchCommandV1(live:string,args:readonly string[],ports
 /** 🔩️ Binds the command to the running build CLI: the incremental harness's ports with progress published under `bench:`, a high resolution clock and plain file access for baselines and reports. */
 export async function benchCommandPortsV1(root:string,invocation:import("../../../../../../../..//🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation):Promise<BenchCommandPortsV1>{
  const base=await incrementalCommandPortsV1(root,invocation),routing=await import("../../../../../../../..//🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
- return Object.freeze({...base,now:()=>performance.now(),progress:(stage:string)=>routing.advanceScriptInvocation(invocation,"bench:"+stage,"running"),readText:(path:string)=>readFile(resolve(path),"utf8"),writeText:async(path:string,text:string)=>{const target=resolve(path);if(target.length>policy.maximumPathLength)throw Error(`Path exceeds ${policy.maximumPathLength} characters: ${target}`);await mkdir(dirname(target),{recursive:true});await writeFile(target,text);}});
+ return Object.freeze({...base,now:()=>performance.now(),progress:(stage:string)=>routing.advanceScriptInvocation(invocation,"bench:"+stage,"running"),readText:(path:string)=>readFile(resolve(path),"utf8"),list:async(folder:string)=>readdir(resolve(folder)).catch(error=>{if((error as NodeJS.ErrnoException).code==="ENOENT")return [];throw error;}),writeText:async(path:string,text:string)=>{const target=resolve(path);if(target.length>policy.maximumPathLength)throw Error(`Path exceeds ${policy.maximumPathLength} characters: ${target}`);await mkdir(dirname(target),{recursive:true});await writeFile(target,text);}});
 }
 
-/** 🍜️ The entry the build CLI calls for `repo bench`. */
+/** 🍜️ The entry the build CLI calls for `repo bench`; `repo bench acceptance` is the acceptance module's own command. */
 export async function runBenchV1(root:string,args:readonly string[],invocation:import("../../../../../../../..//🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation):Promise<void>{
+ const rest=args.slice(args[0]==="bench"?1:0);
+ if(rest[0]==="acceptance"){const{runAcceptanceV1}=await import("../🛂️acceptance/⌨️command/🟦️.ts");await runAcceptanceV1(root,rest.slice(1),invocation);return;}
  await runBenchCommandV1(root,args,await benchCommandPortsV1(root,invocation));
 }

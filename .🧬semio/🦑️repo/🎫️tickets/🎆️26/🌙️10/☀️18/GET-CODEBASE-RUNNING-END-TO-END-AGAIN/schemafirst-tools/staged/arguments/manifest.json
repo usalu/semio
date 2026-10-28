@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs": {
+  "file": "00.mjs",
+  "base": "0d70c73e7d0ee5b20ba822dbc1705a02289b80dd7e79adc7667b7810c854c16a",
+  "new": "4247ff4df81ebd6149a12d0f1dd7a2e8d0df30e4a4ba3cdcddf896a31d016e84"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🔃️revision-arguments/🔣️.json": {
+  "file": "01.json",
+  "base": null,
+  "new": "85dc550ef292e0c80266694359de72a0aa22bb27f05ef28243b69482528ab888"
+ }
+}

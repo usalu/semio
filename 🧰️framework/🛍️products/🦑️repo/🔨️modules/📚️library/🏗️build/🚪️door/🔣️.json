@@ -6,10 +6,20 @@
   "light": [
     { "operation": "leases", "export": "runLeasesCliV1", "call": "root-args-environment" },
     { "operation": "doctor", "export": "runDoctorCliV1", "call": "root-args-environment" },
-    { "operation": "capacity", "export": "runCapacityCommandV1", "call": "args-options" }
+    { "operation": "capacity", "export": "runCapacityCommandV1", "call": "args-options" },
+    { "operation": "fleet", "export": "runFleetCliV1", "call": "root-args-environment" }
   ],
-  "closedSubcommands": ["tools", "show", "incremental", "concurrency", "dependencies", "cache", "remote-cache", "capacity", "leases", "remote-execution"],
+  "closedSubcommands": ["tools", "show", "incremental", "concurrency", "dependencies", "cache", "remote-cache", "capacity", "leases", "fleet", "remote-execution"],
   "refusedExitCode": 2,
+  "liveness": {
+    "delaysSeconds": [5, 10, 20],
+    "repeatSeconds": 30,
+    "unknownPhase": "?",
+    "texts": {
+      "en": "[repo] still working after {seconds} s; last phase started: {phase}",
+      "de": "[repo] arbeitet seit {seconds} s; zuletzt begonnene Phase: {phase}"
+    }
+  },
   "texts": {
     "unknownCommand": {
       "en": "Unknown command \"{command}\". Known commands: {known}. Run \"repo --help\" for the list.",
@@ -18,6 +28,10 @@
     "unknownSubcommand": {
       "en": "Unknown subcommand \"{subcommand}\" of \"{command}\". Known subcommands: {known}. Run \"repo {command} --help\".",
       "de": "Unbekannter Unterbefehl \"{subcommand}\" von \"{command}\". Bekannte Unterbefehle: {known}. \"repo {command} --help\" zeigt die Hilfe."
+    },
+    "missingArgument": {
+      "en": "\"repo {command}\" needs {usage}. Run \"repo {command} --help\".",
+      "de": "\"repo {command}\" braucht {usage}. \"repo {command} --help\" zeigt die Hilfe."
     },
     "invalidValue": {
       "en": "{option} accepts {allowed}, not \"{value}\".",

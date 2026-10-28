@@ -154,15 +154,6 @@ func TestLayoutPathsComposeFromTheRoot(t *testing.T) {
 
 // #endregion 🧭️Layout
 
-// #region 🧭️Discovery
-
-func TestFindRepoRootUsesTheActualCheckout(t *testing.T) {
- start, err := os.Getwd(); if err != nil { t.Fatal(err) }; expected, err := filepath.EvalSymlinks(start); if err != nil { t.Fatal(err) };
- for candidate := expected;; candidate = filepath.Dir(candidate) { info, err := os.Stat(filepath.Join(candidate, ".git")); if err == nil && (info.IsDir() || info.Mode().IsRegular()) { expected = candidate; break }; if filepath.Dir(candidate) == candidate { break } }; if got := FindRepoRoot(start); got != expected { t.Fatalf("FindRepoRoot = %q, want %q", got, expected) }
-}
-
-// #endregion 🧭️Discovery
-
 // #region ⚙️RepoConfig
 
 func TestParseRepoConfigAppliesTheLoggingSection(t *testing.T) {

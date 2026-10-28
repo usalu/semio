@@ -270,7 +270,7 @@
   },
   "listHeader": {
    "en": "Registered tools (id, pin, state, path):",
-   "de": "Registrierte Werkzeuge (Id, Pin, Zustand, Pfad):"
+   "de": "Registrierte Werkzeuge (ID, Pin, Zustand, Pfad):"
   },
   "admitting": {
    "en": "[tools] {tool} waits for machine capacity.",

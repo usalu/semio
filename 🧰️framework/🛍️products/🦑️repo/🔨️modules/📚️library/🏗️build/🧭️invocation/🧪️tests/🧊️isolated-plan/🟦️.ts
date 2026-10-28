@@ -45,9 +45,12 @@ test("the runtime child writes its plan and returns before the graph is pinned o
  expect(text.slice(loaded,pinned)).toContain("buildGraphPlanInChildV1(process.env,process.env.SEMIO_BUILD_REUSE_GRAPH===\"true\")?loadBuildGraphInChildV1(root,args,invocation,phaseControl):loadHere()");
 });
 
-test("the child heap is told the granted megabytes, never less than 2 GiB",()=>{
- expect(invocation.buildGraphChildHeapBytesV1({})).toBe(2147483648);
- expect(invocation.buildGraphChildHeapBytesV1({SEMIO_HOST_CAPACITY_PLAN:JSON.stringify({memoryMegabytes:0,fixedMegabytes:5120})})).toBe(5120*1048576);
- expect(invocation.buildGraphChildHeapBytesV1({SEMIO_HOST_CAPACITY_PLAN:JSON.stringify({memoryMegabytes:512,fixedMegabytes:0})})).toBe(2147483648);
- expect(invocation.buildGraphChildHeapBytesV1({SEMIO_HOST_CAPACITY_PLAN:"{"})).toBe(2147483648);
+test("the child heap is the declared graph child size, never the capacity grant of the run",async()=>{
+ const text=readFileSync(fileURLToPath(new URL("../../🕸️graph/🟦️.ts",import.meta.url)),"utf8"),start=text.indexOf("export async function loadBuildGraphInChildV1("),body=text.slice(start,text.indexOf("\n}\n",start));
+ expect(start).toBeGreaterThan(-1);
+ expect(body).toContain("BUN_JSC_forceRAMSize:String(graphChildHeapBytesV1())");
+ expect(body.match(/BUN_JSC_forceRAMSize/gu)?.length).toBe(1);
+ expect("buildGraphChildHeapBytesV1" in invocation).toBe(false);
+ const memory=await import("../../../🧠️memory/🟨️.mjs");
+ expect(memory.graphChildHeapBytesV1()).toBe(memory.GRAPH_MEMORY_POLICY_V1.childHeapMegabytes*1048576);
 });

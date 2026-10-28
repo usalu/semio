@@ -27,13 +27,89 @@
     "en": "the esbuild provider is not installed; set SEMIO_RUNTIME_ESBUILD to its module or install it beside the workspace",
     "de": "der esbuild-Anbieter ist nicht installiert; setze SEMIO_RUNTIME_ESBUILD auf sein Modul oder installiere ihn neben dem Arbeitsbereich"
   },
-  "reasonNativeNone": {
-    "en": "Node has no foreign function interface; set SEMIO_RUNTIME_NATIVE_PROVIDER to a module exporting nativeSystemV1",
-    "de": "Node hat keine Schnittstelle für native Funktionen; setze SEMIO_RUNTIME_NATIVE_PROVIDER auf ein Modul, das nativeSystemV1 exportiert"
+  "nativeLibcPlatform": {
+    "en": "No C library binding exists for the platform {platform}; native storage needs Linux, macOS or Windows",
+    "de": "Für die Plattform {platform} gibt es keine Anbindung der C-Bibliothek; der native Speicher braucht Linux, macOS oder Windows"
+  },
+  "nativeLibcArchitecture": {
+    "en": "No C library names are declared for the architecture {arch}; add them to the libc table of the runtime schema",
+    "de": "Für die Architektur {arch} sind keine Namen der C-Bibliothek erklärt; trage sie in der libc-Tabelle des Laufzeit-Schemas ein"
+  },
+  "nativeLibcMissing": {
+    "en": "The dynamic loader opened none of the C library names {names} on {platform} {arch}; install glibc or musl, or run on a supported distribution",
+    "de": "Der dynamische Lader konnte keinen der Namen {names} der C-Bibliothek auf {platform} {arch} öffnen; installiere glibc oder musl oder nutze eine unterstützte Distribution"
   },
   "reasonNativeNoExport": {
     "en": "{designation} exports no nativeSystemV1",
     "de": "{designation} exportiert kein nativeSystemV1"
+  },
+  "nativeTargetUnsupported": {
+    "en": "No Node native core is declared for {platform} {arch}; add a row to the targets of the Node native schema",
+    "de": "Für {platform} {arch} ist kein nativer Kern für Node erklärt; trage eine Zeile in die Ziele des nativen Schemas für Node ein"
+  },
+  "nativePathLength": {
+    "en": "The Node native core path {path} exceeds {limit} characters; set SEMIO_RUNTIME_CACHE to a shorter directory",
+    "de": "Der Pfad {path} des nativen Kerns für Node ist länger als {limit} Zeichen; setze SEMIO_RUNTIME_CACHE auf ein kürzeres Verzeichnis"
+  },
+  "nativeCompilerMissing": {
+    "en": "No Rust compiler ({program}) was found; install the repository toolchain (rustup reads rust-toolchain.toml), put it on the PATH or set SEMIO_RUSTC; a prebuilt core can be named by SEMIO_RUNTIME_NATIVE_ADDON",
+    "de": "Es wurde kein Rust-Compiler ({program}) gefunden; installiere die Toolchain des Repositorys (rustup liest rust-toolchain.toml), nimm sie in den PATH auf oder setze SEMIO_RUSTC; ein vorgebauter Kern kann mit SEMIO_RUNTIME_NATIVE_ADDON benannt werden"
+  },
+  "nativeBuilding": {
+    "en": "Building the Node native core once for {platform} {arch} into {directory}",
+    "de": "Der native Kern für Node wird einmalig für {platform} {arch} nach {directory} gebaut"
+  },
+  "nativeCompileFailed": {
+    "en": "The Node native core did not build (compiler status {status}): {tail}",
+    "de": "Der native Kern für Node wurde nicht gebaut (Compiler-Status {status}): {tail}"
+  },
+  "nativeLockTimeout": {
+    "en": "Waited {seconds} s for another process to build the Node native core",
+    "de": "Es wurde {seconds} s auf einen anderen Prozess gewartet, der den nativen Kern für Node baut"
+  },
+  "nativeLoadFailed": {
+    "en": "The Node native core {file} could not be loaded: {reason}",
+    "de": "Der native Kern {file} für Node konnte nicht geladen werden: {reason}"
+  },
+  "nativeCoreIncomplete": {
+    "en": "The Node native core {file} lacks the primitives {missing}",
+    "de": "Dem nativen Kern {file} für Node fehlen die Grundfunktionen {missing}"
+  },
+  "nativeType": {
+    "en": "Unknown native type {type}",
+    "de": "Unbekannter nativer Typ {type}"
+  },
+  "nativeArgument": {
+    "en": "A native argument of type {type} cannot be built from a value of kind {kind}",
+    "de": "Ein natives Argument vom Typ {type} lässt sich nicht aus einem Wert der Art {kind} bilden"
+  },
+  "nativeFloat": {
+    "en": "The Node native binding passes integers, booleans and pointers only; {type} is not supported (use Bun for floating point symbols)",
+    "de": "Die native Anbindung für Node übergibt nur Ganzzahlen, Wahrheitswerte und Zeiger; {type} wird nicht unterstützt (nutze Bun für Symbole mit Gleitkommazahlen)"
+  },
+  "nativeLength": {
+    "en": "A NUL-terminated native string longer than {limit} bytes is refused",
+    "de": "Eine mit NUL beendete native Zeichenkette über {limit} Bytes wird abgelehnt"
+  },
+  "nativeByteLength": {
+    "en": "toArrayBuffer needs an explicit byte length",
+    "de": "toArrayBuffer braucht eine ausdrückliche Länge in Bytes"
+  },
+  "nativeArity": {
+    "en": "The native symbol {name} declares more than {limit} arguments",
+    "de": "Das native Symbol {name} erklärt mehr als {limit} Argumente"
+  },
+  "nativeClosed": {
+    "en": "The native library {path} is closed",
+    "de": "Die native Bibliothek {path} ist geschlossen"
+  },
+  "nativeSymbol": {
+    "en": "The symbol {name} is not exported by the native library {path}",
+    "de": "Das Symbol {name} wird von der nativen Bibliothek {path} nicht exportiert"
+  },
+  "reasonNativeCallback": {
+    "en": "the Node native core binds no callbacks; run the caller under Bun",
+    "de": "der native Kern für Node bindet keine Rückrufe; führe den Aufrufer unter Bun aus"
   },
   "bodyTooLarge": {
     "en": "The request body is too large.",
@@ -226,5 +302,25 @@
   "lawListFailed": {
     "en": "Listing the files failed: {detail}",
     "de": "Das Auflisten der Dateien ist fehlgeschlagen: {detail}"
+  },
+  "nativePrebuildUsage": {
+    "en": "Usage: prepare | verify. prepare builds the Node native core for this source once; verify only reports whether it is built.",
+    "de": "Aufruf: prepare | verify. prepare baut den nativen Kern für Node zu diesem Quelltext einmalig; verify meldet nur, ob er gebaut ist."
+  },
+  "nativePrebuildReady": {
+    "en": "The Node native core is ready: {file}",
+    "de": "Der native Kern für Node ist bereit: {file}"
+  },
+  "nativePrebuildDesignated": {
+    "en": "The prebuilt Node native core named by SEMIO_RUNTIME_NATIVE_ADDON is used: {file}",
+    "de": "Der vorgebaute native Kern für Node, den SEMIO_RUNTIME_NATIVE_ADDON benennt, wird verwendet: {file}"
+  },
+  "nativePrebuildMissing": {
+    "en": "The Node native core for this source is not built yet ({file}); run repo tools setup toolchains",
+    "de": "Der native Kern für Node zu diesem Quelltext ist noch nicht gebaut ({file}); führe repo tools setup toolchains aus"
+  },
+  "nativePrebuildToolchain": {
+    "en": "The Node native core cannot be built on {platform} {arch}: missing {missing}; run repo preflight, it names the remedy of each",
+    "de": "Der native Kern für Node kann auf {platform} {arch} nicht gebaut werden: es fehlt {missing}; führe repo preflight aus, es nennt die Abhilfe zu jedem"
   }
 }

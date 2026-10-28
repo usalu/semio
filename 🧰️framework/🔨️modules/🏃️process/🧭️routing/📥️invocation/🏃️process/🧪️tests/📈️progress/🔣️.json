@@ -87,7 +87,7 @@
     {
       "name": "german-read-checkpoint",
       "environment": {
-        "SEMIO_DASHBOARD_LOCALE": "de"
+        "SEMIO_LANGUAGE": "de"
       },
       "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"read\",\"unit\":2,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":16,\"files\":8,\"bytes\":4096}",
       "expected": "compiler · Quellen lesen: 2/4 semio-core · 16 Lesevorgänge · 8 Dateien · 4096 Bytes"
@@ -104,7 +104,8 @@
     {
       "name": "data-authored-fallback",
       "environment": {
-        "LANG": "C"
+        "LANG": "C",
+        "SEMIO_LANGUAGE": "en"
       },
       "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"complete\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
       "expected": "compiler · Source admitted: 1/4 semio-core · 0 reads · 0 files · 0 bytes"
@@ -112,7 +113,6 @@
     {
       "name": "unsupported-override-continues-chain",
       "environment": {
-        "SEMIO_DASHBOARD_LOCALE": "fr",
         "LC_MESSAGES": "de-AT"
       },
       "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
@@ -120,55 +120,73 @@
     },
     {
       "name": "impossible-unit-total",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":5,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
       "expected": null
     },
     {
       "name": "impossible-file-total",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":3,\"files\":4,\"bytes\":0}",
       "expected": null
     },
     {
       "name": "negative-byte-total",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":-1}",
       "expected": null
     },
     {
       "name": "unsafe-total",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":9007199254740992}",
       "expected": null
     },
     {
       "name": "unknown-phase",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"waiting\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
       "expected": null
     },
     {
       "name": "unknown-field",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0,\"unowned\":true}",
       "expected": null
     },
     {
       "name": "terminal-control-package",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio\\u001b[31m\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
       "expected": null
     },
     {
       "name": "oversized-payload",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
       "expected": null
     },
     {
       "name": "malformed-json",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "cargo:source-admission:{broken",
       "expected": null
     }
@@ -489,8 +507,8 @@
     {
       "name": "german-override-read",
       "environment": {
-        "SEMIO_DASHBOARD_LOCALE": "de",
-        "LANG": "en_US.UTF-8"
+        "LANG": "en_US.UTF-8",
+        "SEMIO_LANGUAGE": "de"
       },
       "resource": "build:parser-source:readText:256",
       "command": "repository:command",
@@ -501,7 +519,6 @@
     {
       "name": "unsupported-override-continues-chain",
       "environment": {
-        "SEMIO_DASHBOARD_LOCALE": "fr",
         "LC_MESSAGES": "de-AT"
       },
       "resource": "build:parser-source:selection:64",
@@ -512,7 +529,9 @@
     },
     {
       "name": "safe-maximum",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:state:9007199254740991",
       "command": "repository:command",
       "mode": "shared",
@@ -521,7 +540,9 @@
     },
     {
       "name": "zero",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:list:0",
       "command": "repository:command",
       "mode": "shared",
@@ -530,7 +551,9 @@
     },
     {
       "name": "negative",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:list:-1",
       "command": "repository:command",
       "mode": "shared",
@@ -539,7 +562,9 @@
     },
     {
       "name": "leading-zero",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:list:064",
       "command": "repository:command",
       "mode": "shared",
@@ -548,7 +573,9 @@
     },
     {
       "name": "fraction",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:list:1.5",
       "command": "repository:command",
       "mode": "shared",
@@ -557,7 +584,9 @@
     },
     {
       "name": "scientific",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:list:1e3",
       "command": "repository:command",
       "mode": "shared",
@@ -566,7 +595,9 @@
     },
     {
       "name": "unsafe",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:list:9007199254740992",
       "command": "repository:command",
       "mode": "shared",
@@ -575,7 +606,9 @@
     },
     {
       "name": "unknown-operation",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:walk:64",
       "command": "repository:command",
       "mode": "shared",
@@ -584,7 +617,9 @@
     },
     {
       "name": "wrong-case",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:readtext:64",
       "command": "repository:command",
       "mode": "shared",
@@ -593,7 +628,9 @@
     },
     {
       "name": "extra-field",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:list:64:unowned",
       "command": "repository:command",
       "mode": "shared",
@@ -602,7 +639,9 @@
     },
     {
       "name": "terminal-control",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:list:64\u001b[31m",
       "command": "repository:command",
       "mode": "shared",
@@ -611,7 +650,9 @@
     },
     {
       "name": "missing-count",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:list:",
       "command": "repository:command",
       "mode": "shared",
@@ -620,7 +661,9 @@
     },
     {
       "name": "exclusive-refused",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:list:64",
       "command": "repository:command",
       "mode": "exclusive",
@@ -629,7 +672,9 @@
     },
     {
       "name": "nonzero-elapsed-refused",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:list:64",
       "command": "repository:command",
       "mode": "shared",
@@ -638,7 +683,9 @@
     },
     {
       "name": "negative-elapsed-refused",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:list:64",
       "command": "repository:command",
       "mode": "shared",
@@ -647,7 +694,9 @@
     },
     {
       "name": "command-control-refused",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:list:64",
       "command": "repository\ncommand",
       "mode": "shared",
@@ -656,7 +705,9 @@
     },
     {
       "name": "empty-command-refused",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:list:64",
       "command": "",
       "mode": "shared",
@@ -665,7 +716,9 @@
     },
     {
       "name": "oversized-command",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:list:64",
       "command": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
       "mode": "shared",
@@ -674,7 +727,9 @@
     },
     {
       "name": "oversized-resource",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:list:111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
       "command": "repository:command",
       "mode": "shared",
@@ -683,7 +738,9 @@
     },
     {
       "name": "hostile-operation",
-      "environment": {},
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
       "resource": "build:parser-source:state\u001b[31m:64",
       "command": "repository:command",
       "mode": "shared",
@@ -706,7 +763,7 @@
     {
       "name": "german-behind-shared",
       "environment": {
-        "SEMIO_DASHBOARD_LOCALE": "de"
+        "SEMIO_LANGUAGE": "de"
       },
       "resource": "lease-queue:{\"version\":1,\"position\":2,\"queued\":2,\"holderMode\":\"shared\",\"holderPid\":4620,\"holderSeconds\":0,\"resource\":\"native-fixed-image:/repo/.cache/b/d\"}",
       "command": "repository:command",
@@ -717,7 +774,8 @@
     {
       "name": "fallback-language-is-english",
       "environment": {
-        "LANG": "C"
+        "LANG": "C",
+        "SEMIO_LANGUAGE": "en"
       },
       "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":15,\"holderMode\":\"exclusive\",\"holderPid\":12528,\"holderSeconds\":8040,\"resource\":\"native-fixed-image:/repo/.cache/b/d\"}",
       "command": "compiler",
@@ -7201,6 +7259,74 @@
         1,
         3
       ]
+    }
+  ],
+  "queueHolderCases": [
+    {
+      "name": "english-holder-counter-and-eta",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":9,\"holderMode\":\"exclusive\",\"holderPid\":69857,\"holderSeconds\":6300,\"resource\":\"repository-graph-facts:/repo:shard:7\",\"holderState\":\"progressing\",\"holderPhase\":\"inference\",\"holderDone\":120,\"holderTotal\":566,\"holderEtaMinutes\":34}",
+      "command": "repository:command",
+      "mode": "exclusive",
+      "elapsedMs": 0,
+      "expected": "repository:command · Waiting for access to repository-graph-facts:/repo:shard:7 (exclusive): position 3 of 9, behind the request of process 69857 (exclusive, queued 6300 s ago) · holder: progressing, inference 120 of 566, about 34 min left"
+    },
+    {
+      "name": "german-holder-stale",
+      "environment": {
+        "SEMIO_LANGUAGE": "de"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":9,\"holderMode\":\"exclusive\",\"holderPid\":69857,\"holderSeconds\":6300,\"resource\":\"repository-graph-facts:/repo:shard:7\",\"holderState\":\"stale\"}",
+      "command": "repository:command",
+      "mode": "exclusive",
+      "elapsedMs": 0,
+      "expected": "repository:command · Wartet auf Zugriff auf repository-graph-facts:/repo:shard:7 (exklusiv): Position 3 von 9, hinter der Anfrage von Prozess 69857 (exklusiv, seit 6300 s eingereiht) · Halter: VERALTET (älterer Code)"
+    },
+    {
+      "name": "english-holder-phase-only-stuck",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":9,\"holderMode\":\"exclusive\",\"holderPid\":69857,\"holderSeconds\":6300,\"resource\":\"repository-graph-facts:/repo:shard:7\",\"holderState\":\"stuck\",\"holderPhase\":\"dependencies:store-ownership:state\"}",
+      "command": "bun:dependency-storage",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "bun:dependency-storage · Waiting for access to repository-graph-facts:/repo:shard:7 (shared): position 3 of 9, behind the request of process 69857 (exclusive, queued 6300 s ago) · holder: STUCK, dependencies:store-ownership:state"
+    },
+    {
+      "name": "german-holder-unknown",
+      "environment": {
+        "LANG": "de_DE.UTF-8"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":9,\"holderMode\":\"exclusive\",\"holderPid\":69857,\"holderSeconds\":6300,\"resource\":\"repository-graph-facts:/repo:shard:7\",\"holderState\":\"unknown\"}",
+      "command": "bun:dependency-storage",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "bun:dependency-storage · Wartet auf Zugriff auf repository-graph-facts:/repo:shard:7 (geteilt): Position 3 von 9, hinter der Anfrage von Prozess 69857 (exklusiv, seit 6300 s eingereiht) · Halter: unbekannt (kein lebender Registereintrag)"
+    },
+    {
+      "name": "holder-counter-without-total-refused",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":9,\"holderMode\":\"exclusive\",\"holderPid\":69857,\"holderSeconds\":6300,\"resource\":\"repository-graph-facts:/repo:shard:7\",\"holderState\":\"progressing\",\"holderDone\":3}",
+      "command": "repository:command",
+      "mode": "exclusive",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "holder-unknown-state-refused",
+      "environment": {
+        "LANG": "en"
+      },
+      "resource": "lease-queue:{\"version\":1,\"position\":3,\"queued\":9,\"holderMode\":\"exclusive\",\"holderPid\":69857,\"holderSeconds\":6300,\"resource\":\"repository-graph-facts:/repo:shard:7\",\"holderState\":\"dead\"}",
+      "command": "repository:command",
+      "mode": "exclusive",
+      "elapsedMs": 0,
+      "expected": null
     }
   ]
 }

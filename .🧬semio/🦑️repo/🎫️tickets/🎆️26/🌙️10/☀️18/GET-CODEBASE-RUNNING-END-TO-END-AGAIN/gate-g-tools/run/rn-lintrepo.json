@@ -1,0 +1,12 @@
+{
+ "label": "rn-lintrepo",
+ "target": "workspace:lint-repo",
+ "started": "01:33:10",
+ "wall_s": 32.4,
+ "peak_tree_mb": 1593,
+ "peak_processes": 4,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 15.1,
+ "graph": {}
+}

@@ -1,0 +1,12 @@
+{
+ "label": "g41-print2",
+ "target": "@semio-tech/print-rs:test",
+ "started": "13:31:36",
+ "wall_s": 20.1,
+ "peak_tree_mb": 2262,
+ "peak_processes": 4,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

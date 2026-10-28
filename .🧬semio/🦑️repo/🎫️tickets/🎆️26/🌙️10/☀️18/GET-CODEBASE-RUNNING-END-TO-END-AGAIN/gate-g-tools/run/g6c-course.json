@@ -1,0 +1,31 @@
+{
+ "label": "g6c-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "22:55:16",
+ "wall_s": 246.2,
+ "peak_tree_mb": 8130,
+ "peak_processes": 4,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "inferring": [
+   "39"
+  ],
+  "refreshing": [
+   "39"
+  ],
+  "published": [
+   "580",
+   "39",
+   "73"
+  ],
+  "processes": [
+   "6",
+   "2 action cache hit, 1 internal, 2 local, 3 worker"
+  ],
+  "actions": [
+   "6"
+  ]
+ }
+}

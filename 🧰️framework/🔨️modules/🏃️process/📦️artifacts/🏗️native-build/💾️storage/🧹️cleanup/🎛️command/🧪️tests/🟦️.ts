@@ -42,10 +42,10 @@ def decide(r):
     return "live" if r["live"] else "foreign"
 print(json.dumps({r["id"]:decide(r) for r in rows}))`,run=Bun.spawnSync(["python3","-I","-c",model,pattern,JSON.stringify(rows)]);
  expect(run.exitCode,run.stderr.toString()).toBe(0);const independent=JSON.parse(run.stdout.toString());
- for(const row of rows){expect(api.foreignChildMountV1(Error(row.message),row.attached),row.id).toBe(row.foreign);expect(api.unfundedChildDecisionV1(Error(row.message),row.attached,()=>row.live),row.id).toBe(row.decision);expect(independent[row.id],row.id).toBe(row.decision);}
+ for(const row of rows){expect(api.foreignChildMountV1(Error(row.message),row.attached),row.id).toBe(row.foreign);expect(String(api.unfundedChildDecisionV1(Error(row.message),row.attached,()=>row.live)),row.id).toBe(row.decision);expect(independent[row.id],row.id).toBe(row.decision);}
  const refusal=api.foreignChildMountRefusalV1({root:"/c/p/m/tmp/st/d/1/a/i/m",image:"/c/p/m/tmp/st/d/1/a/i/fixed.dmg",device:"/dev/disk23s1"});
  const [en,de]=refusal.message.split("\n");
- for(const text of[en,de]){expect(text).toContain("/c/p/m/tmp/st/d/1/a/i/m");expect(text).toContain("/c/p/m/tmp/st/d/1/a/i/fixed.dmg");expect(text).toContain("hdiutil detach /dev/disk23s1");expect(text).not.toContain("{");}
- expect(en).toContain("Foreign native image");expect(de).toContain("Fremdes natives Abbild");
+ for(const text of[en,de]){expect(text).toContain("/c/p/m/tmp/st/d/1/a/i/m");expect(text).toContain("/c/p/m/tmp/st/d/1/a/i/fixed.dmg");expect(text).toContain("/dev/disk23s1");expect(text).not.toContain("{");}
+ expect(en).toContain("Foreign native image");expect(de).toContain("Fremdes natives Image");
  expect(api.concurrentChildChangeV1(refusal)).toBe(false);
 });

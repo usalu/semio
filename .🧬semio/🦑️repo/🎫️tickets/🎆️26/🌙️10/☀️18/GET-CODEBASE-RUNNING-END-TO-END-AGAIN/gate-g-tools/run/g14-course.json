@@ -1,0 +1,31 @@
+{
+ "label": "g14-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "01:16:05",
+ "wall_s": 226.4,
+ "peak_tree_mb": 9790,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 5.0,
+ "graph": {
+  "inferring": [
+   "40"
+  ],
+  "refreshing": [
+   "40"
+  ],
+  "published": [
+   "595",
+   "42",
+   "82"
+  ],
+  "processes": [
+   "8",
+   "2 disk cache hit, 1 internal, 5 worker"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

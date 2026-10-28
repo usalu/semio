@@ -1,0 +1,42 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧬️schema/🔣️.json": {
+  "file": "00.json",
+  "base": "72ed640c1f4a20f57258fdc89f67bb1ba9b6648f78663d0ae52a45886ee38190",
+  "new": "3962024bc6e2040b1abfc7a736226b7afecf2b8bb5274cd3b2181828b4b090ae"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs": {
+  "file": "01.mjs",
+  "base": "e71f79b1fb0530eaa720a1c0468287dacce940c8759d28677dabcc919a7e1756",
+  "new": "97fc44103ef7f8d1dc82fffd4889f8d4599b632e306166b095da6ee3661c4f46"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.d.mts": {
+  "file": "02.mts",
+  "base": "c6e0cebcb89c6b338f6083c57c7cb14733091c1cb407715659505f263f86bfb7",
+  "new": "7d54b652a8f72b43ef60d1d3ce0d561df16f57f8a18bf21e8aeed55c8237b81b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "03.json",
+  "base": "45256d114184bbb44144452c4dcaff4fa3bb37ff4a20988cc95f55f9db1d068b",
+  "new": "c6c4801c1535a5016644004f52400e871e571e3d8dc953af49740cd2654bdcef"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️required/🟦️.ts": {
+  "file": "04.ts",
+  "base": "c7e51c16f6dbde85ef12c1a4b251c00112b8c66d3644c01d50c59fb12bef1c8a",
+  "new": "17b9fe4ce22d81971865396420bc97b3851a691d1e18c3269870936ab26ecc30"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔁️settle-repeat/🟦️.ts": {
+  "file": "05.ts",
+  "base": "f9a98ee3499952df8e82d0fcd1b70a66033bd6d9e70236297b85710e7da447fe",
+  "new": "3023fcaf9b16e9cbfd31efaa8139367fc0d47648ad9429a6832bed2d49fa8a4a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/👁️observation/🔣️.json": {
+  "file": "06.json",
+  "base": null,
+  "new": "5e9c6858120f7e09a0e953aee694e2a5ba27bf66c10cfa93727bc0c680a76647"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🔁️revision-observation/🔣️.json": {
+  "file": "07.json",
+  "base": null,
+  "new": "053019d799c73d423bf4a799c81e881a979aef569418c5ff78232471044cf0e2"
+ }
+}

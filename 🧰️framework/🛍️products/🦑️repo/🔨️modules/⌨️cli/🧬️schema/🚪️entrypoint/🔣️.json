@@ -36,6 +36,7 @@
         "remote-cache",
         "capacity",
         "leases",
+        "fleet",
         "service",
         "remote-execution",
         "doctor",

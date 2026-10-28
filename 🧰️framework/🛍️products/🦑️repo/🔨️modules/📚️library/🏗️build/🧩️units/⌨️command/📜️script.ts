@@ -7,7 +7,7 @@ const controller = new AbortController();
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.on(signal, () => controller.abort());
 const args = process.argv.slice(2);
 const requested = unitsArgumentsV1(args.slice(args[0] === "units" ? 1 : 0)).language;
-const language = await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts");
+const language = await import("../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts");
 const ports: UnitsCommandPortsV1 = {
   write: line => console.log(line),
   progress: async stage => {console.error(`[units] ${stage}`);},

@@ -1,0 +1,163 @@
+"""🧪 peer-g: peer-edit scenarios on an official product build; reuses bench3-g `measure.run` (phases, tree RSS, Bazel actions).
+
+`scenario.py <out> <stage>...`; stage = `control:<product>` | `peer:<id>:<product>` with ids from `scenarios.json`.
+A peer stage runs the build, waits for the trigger row in its live log, appends one comment line to every file of the
+scenario, holds it for `holdSeconds`, restores the bytes exactly (sha256 checked) and lets the build finish. The next
+`control` stage is the follow-up hot run. Edit windows are announced in coordination.md.
+"""
+import hashlib, json, os, re, subprocess, sys, threading, time
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, *([".."] * 8)))
+BENCH = os.path.join(HERE, "..", "bench3-g-tools", "measure.py")
+COORD = os.path.join(HERE, "..", "coordination.md")
+SPEC = json.load(open(os.path.join(HERE, "scenarios.json"), encoding="utf8"))
+TARGETS = {"course": "@teaching/architecture-course:build", "print": "@semio-tech/print-rs:test", "printbuild": "@semio-tech/print-rs:build"}
+NAMESPACE = {"__name__": "measure", "__file__": BENCH}
+exec(compile(open(BENCH, encoding="utf8").read().rsplit("\nmain()", 1)[0], BENCH, "exec"), NAMESPACE)
+RUN = NAMESPACE["run"]
+WATCH = ["🧰️framework", "🎓️teaching", "✏️s"]
+
+
+def say(text):
+    with open(COORD, "a", encoding="utf8") as handle:
+        handle.write("- %s peer-g %s\n" % (time.strftime("%H:%M"), text))
+
+
+def waiting():
+    try:
+        out = subprocess.run(["bun", "repo", "leases", "status"], cwd=ROOT, capture_output=True, text=True, timeout=240).stdout
+        return sum(1 for line in out.splitlines() if line.startswith("WAITING"))
+    except Exception:
+        return 0
+
+
+def gate_building():
+    """Coordinator rule 20:56: no official run of mine while gate-g's product build is queued or running."""
+    out = subprocess.run(["ps", "-A", "-o", "command="], capture_output=True, text=True).stdout
+    return any("gate-g-tools/product.py" in line and "grep" not in line for line in out.splitlines())
+
+
+def gate():
+    quiet = 0
+    for _ in range(2000):
+        if not gate_building() and waiting() < 4:
+            quiet += 1
+            if quiet >= 2:
+                return
+            time.sleep(15)
+            continue
+        quiet = 0
+        time.sleep(30)
+    raise SystemExit("gate never quiet")
+
+
+def sha(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def peers_since(marker, skip):
+    """Files below the watched roots modified after the marker (other lanes' edits during the run), minus our own."""
+    command = ["find"] + WATCH + ["-type", "f", "-newer", marker, "-not", "-path", "*/node_modules/*", "-not", "-path", "*/.cache/*", "-not", "-path", "*/🗑️generated/*"]
+    try:
+        out = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, timeout=300).stdout.splitlines()
+    except Exception:
+        return None
+    return sorted(x for x in out if x not in skip and "/target/" not in x and "/dist/" not in x)[:60]
+
+
+def stage(out, spec, index):
+    kind, _, rest = spec.partition(":")
+    ident, product = (rest.split(":") + [None])[:2] if kind == "peer" else (None, rest)
+    scenario = SPEC["scenarios"][ident] if ident else None
+    label = "%02d-%s-%s" % (index, product, ident or "control")
+    gate()
+    marker = os.path.join(out, label + ".marker")
+    open(marker, "w").close()
+    state = {"edited": False, "restored": None, "edits": [], "triggerAtMs": None}
+    files = [os.path.join(ROOT, f) for f in (scenario["files"] if scenario else [])]
+    originals = {f: open(f, "rb").read() for f in files}
+    os.makedirs(os.path.join(out, "backup"), exist_ok=True)
+    for f, data in originals.items():
+        open(os.path.join(out, "backup", label + "." + hashlib.sha1(f.encode()).hexdigest()[:8]), "wb").write(data)
+    log = os.path.join(out, label + ".log")
+    t0 = time.monotonic()
+
+    def editor():
+        pattern = re.compile(scenario["trigger"])
+        offset, ready = 0, False
+        while not ready and time.monotonic() - t0 < 3600:
+            time.sleep(0.4)
+            if not os.path.exists(log):
+                continue
+            with open(log, "rb") as handle:
+                handle.seek(offset)
+                chunk = handle.read()
+            if b"\n" in chunk:
+                chunk, offset = chunk[: chunk.rindex(b"\n") + 1], offset + chunk.rindex(b"\n") + 1
+                ready = any(pattern.search(line) for line in chunk.decode("utf8", "replace").splitlines())
+            if RECORD.get("done"):
+                return
+        if not ready:
+            return
+        state["triggerAtMs"] = round((time.monotonic() - t0) * 1000)
+        nonce = int(time.time())
+        try:
+            for f in files:
+                edited = originals[f] + (b"\n" if originals[f] and not originals[f].endswith(b"\n") else b"") + (scenario["line"] % nonce).encode("utf8")
+                open(f, "wb").write(edited)
+                state["edits"].append(os.path.relpath(f, ROOT))
+                say("EDIT ON %s (%s %s, build %s)" % (os.path.relpath(f, ROOT), ident, product, label))
+            state["edited"] = True
+            time.sleep(scenario["holdSeconds"])
+        finally:
+            ok = True
+            for f in files:
+                if os.path.exists(f) and open(f, "rb").read() != originals[f]:
+                    open(f, "wb").write(originals[f])
+                ok = ok and sha(open(f, "rb").read()) == sha(originals[f])
+                if state["edited"]:
+                    say("EDIT OFF %s (restored byte-exact: %s)" % (os.path.relpath(f, ROOT), ok))
+            state["restored"] = ok
+
+    RECORD = {}
+    thread = None
+    if scenario:
+        thread = threading.Thread(target=editor, daemon=True)
+        thread.start()
+    command = ["nice", "-n", "10", "bun", "repo", "--tool=bazel", "run", TARGETS[product]]
+    started = time.strftime("%H:%M:%S")
+    attempts = []
+    try:
+        for attempt in range(4):
+            record = RUN(command, ROOT, label + ("" if attempt == 0 else ".retry%d" % attempt), out)
+            tail = open(record["log"], "rb").read()[-6000:].decode("utf8", "replace")
+            host_fault = record["exit"] != 0 and "execute" not in record["phases"] and ("ENFILE" in tail or "EMFILE" in tail) and not state["edited"]
+            attempts.append({"exit": record["exit"], "wallMs": record["wallMs"], "hostFault": host_fault})
+            if not host_fault:
+                break
+            time.sleep(60)
+    finally:
+        RECORD["done"] = True
+        if thread:
+            thread.join(120)
+        for f, data in originals.items():
+            if open(f, "rb").read() != data:
+                open(f, "wb").write(data)
+                state["restored"] = "forced after run"
+    record.update({"stage": spec, "label": label, "startedLocal": started, "peerState": state, "peerFilesDuringRun": peers_since(marker, set(state["edits"])), "attempts": attempts})
+    json.dump(record, open(os.path.join(out, label + ".json"), "w", encoding="utf8"), indent=1, ensure_ascii=False)
+    actions = (record["actions"].get("bazel") or {})
+    print(json.dumps({"label": label, "exit": record["exit"], "wallMs": record["wallMs"], "executed": actions.get("executed"), "line": actions.get("line"), "cached": actions.get("cached"), "phases": record["phases"], "graph": record["graph"], "peerState": state, "peers": len(record["peerFilesDuringRun"] or [])}, ensure_ascii=False), flush=True)
+    return record
+
+
+def main():
+    out = sys.argv[1]
+    os.makedirs(out, exist_ok=True)
+    for index, spec in enumerate(sys.argv[2:]):
+        stage(out, spec, index)
+    print("[%s] CHAIN-DONE" % time.strftime("%H:%M:%S"), flush=True)
+
+
+main()

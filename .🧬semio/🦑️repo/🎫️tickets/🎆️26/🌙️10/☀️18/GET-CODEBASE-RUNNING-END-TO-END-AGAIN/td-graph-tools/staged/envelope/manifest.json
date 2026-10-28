@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️candidate/🟦️.ts": {
+  "file": "f000",
+  "base": "51267acadd11bf2ac8ccb39cafe4f158ad71c126575bba4732a638fd04310f08",
+  "new": "651b356f269748003893cd16d893f8d5e3ca740d94a88384293caab01fb78e48"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️settlement/🟦️.ts": {
+  "file": "f001",
+  "base": "1a751c3fb62662fba5c88d3550ccc33f89507061e4f259e05005401e5c200ef2",
+  "new": "573addc708304d1e1fc919098f829ac5d14b7fff59b7822a7f00cdaa1b2692e0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts": {
+  "file": "f002",
+  "base": "3309379227e87753ff1a512a3d2b36044780fe24f755853ba87a6909d70556cf",
+  "new": "3f4995eb03d482497de82f5dbeaa4fd1752f03dbf9da46c592c50cd61dc91a72"
+ }
+}

@@ -1,4 +1,4 @@
-import {readdirSync,rmSync,statSync,statfsSync,truncateSync,writeFileSync} from "node:fs";
+import {readdirSync,rmSync,statSync,truncateSync,writeFileSync} from "node:fs";
 import {basename,dirname,join} from "node:path";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 import {listObjectsV1,pruneEntriesV1,removeObjectsV1} from "../💾️store/🟦️.ts";
@@ -7,6 +7,8 @@ import {tryClaimV1} from "../🔒️lock/🟦️.ts";
 import {collectIncrementalV1,type IncrementalReportV1} from "./🌱️incremental/🟦️.ts";
 import {collectUnitsV1,measureUnitsV1,unitProfilesV1} from "./🧱️units/🟦️.ts";
 import {recordFillSampleV1} from "./📈️fill/🟦️.ts";
+import {pruneAdmissionsV1} from "./📖️admissions/🟦️.ts";
+import {nativeFreeSpaceSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1.gc,layout=UNIT_CACHE_POLICY_V1.layout,objectBatch=64;
 /** 🧮️ One measured lane. */
@@ -75,10 +77,12 @@ export function planGcV1(input:GcInputV1,override:Partial<typeof policy>={}):GcP
 }
 
 /** 🔬️ The size and free bytes of the image a cache root lives in. */
-export type VolumeFactsV1=Readonly<{volumeBytes:number;freeBytes:number}>;
-/** 🔭️ The size of the image a cache root lives in and its free bytes; a root whose volume cannot be read counts as empty and as large as its capacity. */
+export type VolumeFactsV1=Readonly<{volumeBytes:number;freeBytes:number;unmeasured?:true}>;
+/** 🔭️ The size of the image a cache root lives in and its free bytes. A root whose volume cannot be read is unknown: it is reported as `unmeasured:true` and, so that no collection starts on a guess, counts as empty and as large as its capacity. */
 export function measureVolumeV1(root:string,capacityBytes:number):VolumeFactsV1{
- try{const stat=statfsSync(root,{bigint:true}),volumeBytes=Number(stat.blocks*stat.bsize);return{volumeBytes:Math.max(1,volumeBytes),freeBytes:Math.min(volumeBytes,Number(stat.bavail*stat.bsize))};}catch{return{volumeBytes:capacityBytes,freeBytes:capacityBytes};}
+ const space=nativeFreeSpaceSyncV1(root);
+ if(space?.totalBytes===undefined)return{volumeBytes:capacityBytes,freeBytes:capacityBytes,unmeasured:true};
+ return{volumeBytes:Math.max(1,space.totalBytes),freeBytes:Math.min(space.totalBytes,space.availableBytes)};
 }
 
 /** 📏️ Measures a cache root on disk. `capacityBytes` is the share basis of its parts (the image minus one compile workspace), the pressure comes from the image itself. */
@@ -127,6 +131,7 @@ export async function collectGarbageSingleFlightV1(root:string,capacityBytes:num
    }
   }
   const plan=planGcV1(measureGcV1(root,capacityBytes,nowMs,measure)),applied={...await applyGcYieldingV1(root,plan,nowMs,options),sessions,units};
+  await pruneAdmissionsV1(root,nowMs,{retentionMs:policy.admissionRetentionMilliseconds,temporaryMs:policy.admissionTemporaryMilliseconds,maximumBytes:Math.floor(capacityBytes*policy.admissionShare)},options.signal);
   return{running:false,plan,applied};
  }finally{claim.release();}
 }
@@ -134,12 +139,12 @@ export async function collectGarbageSingleFlightV1(root:string,capacityBytes:num
 /** 👁️ How a watch ended: another watcher owns the cache root, or this one saw the image quiet for the quiet period, ran out of its lifetime, or kept collecting without freeing anything. */
 export type GcWatchV1=Readonly<{state:"running"}|{state:"done";reason:"quiet"|"expired"|"stalled"|"cancelled";rounds:number;collections:number;freedBytes:number}>;
 
-/** ⌚️ Keeps the unit cache relieved while compiles run: one watcher per cache root (its claim), polling the image every `watchPollMilliseconds`; below the floor it collects (the same single-flight collection as the one-shot collector), between floor and target it only watches, at or above the target for the quiet period it ends; it also ends after its maximum lifetime and after `watchStalledRounds` collections in a row that freed nothing (running compilers hold the space), which the next compile launch restarts. Every poll appends a sample to the fill telemetry. Never throws except for cancellation. */
+/** ⌚️ Keeps the unit cache relieved while compiles run: one watcher per cache root (its claim), polling the image every `watchPollMilliseconds`; below the floor it collects (the same single-flight collection as the one-shot collector), between floor and target it maintains (the share-bounded collection) once at its start and then every maintenance interval, at or above the target for the quiet period it ends; it also ends after its maximum lifetime and after `watchStalledRounds` collections in a row that freed nothing (running compilers hold the space), which the next compile launch restarts. Every poll appends a sample to the fill telemetry. Never throws except for cancellation. */
 export async function watchUnitCachePressureV1(root:string,capacityBytes:number,options:Readonly<{signal?:AbortSignal;now?:()=>number;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;measure?:typeof measureVolumeV1;collect?:typeof collectGarbageSingleFlightV1;profiles?:()=>Promise<Readonly<Record<string,number>>>;report?:IncrementalReportV1}>={}):Promise<GcWatchV1>{
  const claim=tryClaimV1(join(root,layout.locks),policy.watchClaim);if(!claim)return{state:"running"};
  const now=options.now??Date.now,sleep=options.sleep??((milliseconds:number,signal?:AbortSignal)=>new Promise<void>((done,fail)=>{const timer=setTimeout(done,milliseconds);signal?.addEventListener("abort",()=>{clearTimeout(timer);fail(signal.reason);},{once:true});})),measure=options.measure??measureVolumeV1,collect=options.collect??collectGarbageSingleFlightV1,started=now();
  const scan=options.profiles??(async()=>{const store=dirname(root),totals:Record<string,number>={};for(const unit of await measureUnitsV1(unitProfilesV1(store),{nowMs:now(),busy:()=>true,signal:options.signal}))totals[dirname(dirname(dirname(unit.path))).slice(store.length+1)]=(totals[dirname(dirname(dirname(unit.path))).slice(store.length+1)]??0)+unit.bytes;return totals;});
- let rounds=0,collections=0,freedBytes=0,idle=0,quietSince:number|null=null,scanned=-Infinity;
+ let rounds=0,collections=0,freedBytes=0,idle=0,quietSince:number|null=null,scanned=-Infinity,maintained=-Infinity;
  try{
   for(;;){
    options.signal?.throwIfAborted();rounds++;
@@ -151,7 +156,10 @@ export async function watchUnitCachePressureV1(root:string,capacityBytes:number,
     if(idle>=policy.watchStalledRounds)return{state:"done",reason:"stalled",rounds,collections,freedBytes};
    }else if(before.freeBytes>=target){
     idle=0;quietSince??=at;if(at-quietSince>=policy.watchQuietMilliseconds)return{state:"done",reason:"quiet",rounds,collections,freedBytes};
-   }else{idle=0;quietSince=null;}
+   }else{
+    idle=0;quietSince=null;
+    if(at-maintained>=policy.maintenanceIntervalMilliseconds){maintained=at;await collect(root,capacityBytes,{nowMs:at,signal:options.signal,report:options.report});collections++;}
+   }
    if(now()-started>=policy.watchMaximumMilliseconds)return{state:"done",reason:"expired",rounds,collections,freedBytes};
    await sleep(policy.watchPollMilliseconds,options.signal);
   }

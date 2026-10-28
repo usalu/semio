@@ -1,0 +1,11 @@
+import {spawn} from "node:child_process";
+import {readFileSync} from "node:fs";
+import {join} from "node:path";
+const root=process.argv[2]!,module=await import(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌿️environment/🔏️identity/🟦️.ts"));
+const nx=JSON.parse(readFileSync(join(root,"nx.json"),"utf8")) as {namedInputs:{sharedGlobals:{runtime?:string}[]}};
+const rows=nx.namedInputs.sharedGlobals.flatMap(row=>row.runtime===undefined?[]:[row.runtime]);
+const run=(text:string)=>new Promise<number>(accept=>{const started=performance.now(),child=spawn(process.execPath,["exec",text],{cwd:root,env:process.env,stdio:["ignore","pipe","pipe"]});child.stdout.resume();child.stderr.resume();child.on("close",()=>accept(performance.now()-started));});
+const started=performance.now(),children=await Promise.all(rows.map(run)),childWall=performance.now()-started;
+const identityStarted=performance.now();for(let round=0;round<100;round+=1)for(const text of rows)module.bazelRuntimeIdentityV1(root,text,process.env);
+const identityMs=(performance.now()-identityStarted)/100;
+console.log(JSON.stringify({rows:rows.length,childrenWallMs:Math.round(childWall),childMs:children.map(Math.round),identityAllRowsMs:Number(identityMs.toFixed(3))}));

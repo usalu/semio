@@ -1,0 +1,31 @@
+{
+ "label": "g6-dash",
+ "target": "@semio-tech/repo-dashboard-rs:build",
+ "started": "22:59:41",
+ "wall_s": 185.9,
+ "peak_tree_mb": 4580,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "inferring": [
+   "2"
+  ],
+  "refreshing": [
+   "2"
+  ],
+  "published": [
+   "581",
+   "2",
+   "25"
+  ],
+  "processes": [
+   "2",
+   "1 action cache hit, 1 internal, 1 worker"
+  ],
+  "actions": [
+   "2"
+  ]
+ }
+}

@@ -10,5 +10,8 @@ export const directoryPartitionGeometryV1:NativeStorageGeometryV1={
  filesystemBytes:(_root,declared)=>declared,
  usedBytes:root=>nativeDirectoryUsedBytesSyncV1(root,readNativeDirectoryAnchorFileV1(dirname(root)).maximumPhysicalBytes),
  space:(root,declared)=>{const bsize=process.platform==="win32"?nativeDirectoryProtocolV1().exchange.windows.blockBytes:statfsSync(root).bsize;return Object.freeze({bsize,bavail:Math.max(0,Math.floor((declared-nativeDirectoryUsedBytesSyncV1(root,declared))/bsize))});}
+,
+ invalidate:()=>{},
+ mapped:async()=>false
 };
 bindNativeStorageGeometryV1("directory-partition",directoryPartitionGeometryV1);

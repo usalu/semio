@@ -1,3 +1,5 @@
+/** 📏️ The declared ceilings of the source revision capture: the schema file beside the module is their single source. */
+export const REVISION_POLICY_V1:Readonly<{maximumSourceBytes:number;maximumTextBytes:number;maximumChunkBytes:number;maximumPathUnits:number;maximumAncestors:number;settleMilliseconds:number;maximumSettledRevisions:number}>;
 /** 🧾️ Copies a bounded ordinary Source observation without a descriptor, owner or effect port. */
 export interface BoundedSourceRevisionV1{readonly sha256:string;readonly byteLength:number;readonly text:string|null}
 /** 🔏️ Allows only reducing byte extents; retained UTF8 text also requires the private text ceiling. */

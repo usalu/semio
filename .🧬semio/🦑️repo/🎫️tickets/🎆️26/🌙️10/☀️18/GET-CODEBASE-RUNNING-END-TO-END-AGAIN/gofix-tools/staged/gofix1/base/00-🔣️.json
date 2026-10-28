@@ -1,0 +1,789 @@
+{
+  "buildVerbs": [
+    "run",
+    "run-many",
+    "affected",
+    "exec",
+    "watch",
+    "graph",
+    "show",
+    "inputs",
+    "reset",
+    "tools",
+    "preflight",
+    "incremental",
+    "concurrency",
+    "conformance",
+    "units",
+    "bench",
+    "dependencies",
+    "cargo",
+    "cache",
+    "remote-cache",
+    "capacity",
+    "leases",
+    "service",
+    "remote-execution",
+    "doctor",
+    "session"
+  ],
+  "dashboardArguments": [
+    "run",
+    "@semio-tech/repo-dashboard-rs:run",
+    "--output=stream",
+    "--"
+  ],
+  "vectors": [
+    {
+      "id": "run",
+      "argv": [
+        "run",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "run",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "run-many",
+      "argv": [
+        "run-many",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "run-many",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "affected",
+      "argv": [
+        "affected",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "affected",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "exec",
+      "argv": [
+        "exec",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "exec",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "watch",
+      "argv": [
+        "watch",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "watch",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "dependencies",
+      "argv": [
+        "dependencies",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "dependencies",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "cargo",
+      "argv": [
+        "cargo",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "cargo",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "tools",
+      "argv": [
+        "tools",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "tools",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "reset",
+      "argv": [
+        "reset",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "reset",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "cache",
+      "argv": [
+        "cache",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "cache",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "preflight",
+      "argv": [
+        "preflight",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "preflight",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "show",
+      "argv": [
+        "show",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "show",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "graph",
+      "argv": [
+        "graph",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "graph",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "inputs",
+      "argv": [
+        "inputs",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "inputs",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "incremental",
+      "argv": [
+        "incremental",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "incremental",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "concurrency",
+      "argv": [
+        "concurrency",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "concurrency",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "capacity",
+      "argv": [
+        "capacity",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "capacity",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "leases",
+      "argv": [
+        "leases",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "leases",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "remote-execution",
+      "argv": [
+        "remote-execution",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "remote-execution",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "session",
+      "argv": [
+        "session",
+        "--opaque=value"
+      ],
+      "kind": "build",
+      "arguments": [
+        "session",
+        "--opaque=value"
+      ]
+    },
+    {
+      "id": "conformance",
+      "argv": ["conformance", "--opaque=value"],
+      "kind": "build",
+      "arguments": ["conformance", "--opaque=value"]
+    },
+    {
+      "id": "units",
+      "argv": ["units", "--opaque=value"],
+      "kind": "build",
+      "arguments": ["units", "--opaque=value"]
+    },
+    {
+      "id": "bench",
+      "argv": ["bench", "--opaque=value"],
+      "kind": "build",
+      "arguments": ["bench", "--opaque=value"]
+    },
+    {
+      "id": "remote-cache",
+      "argv": ["remote-cache", "--opaque=value"],
+      "kind": "build",
+      "arguments": ["remote-cache", "--opaque=value"]
+    },
+    {
+      "id": "service",
+      "argv": ["service", "--opaque=value"],
+      "kind": "build",
+      "arguments": ["service", "--opaque=value"]
+    },
+    {
+      "id": "doctor",
+      "argv": ["doctor", "--opaque=value"],
+      "kind": "build",
+      "arguments": ["doctor", "--opaque=value"]
+    },
+    {
+      "id": "service-status",
+      "argv": ["service", "status"],
+      "kind": "build",
+      "arguments": ["service", "status"]
+    },
+    {
+      "id": "service-leading-option",
+      "argv": ["--service=off", "run", "a:b"],
+      "kind": "build",
+      "arguments": ["--service=off", "run", "a:b"]
+    },
+    {
+      "id": "root",
+      "argv": [],
+      "kind": "build",
+      "arguments": []
+    },
+    {
+      "id": "help",
+      "argv": [
+        "--help"
+      ],
+      "kind": "build",
+      "arguments": [
+        "--help"
+      ]
+    },
+    {
+      "id": "help-short",
+      "argv": [
+        "-h"
+      ],
+      "kind": "build",
+      "arguments": [
+        "-h"
+      ]
+    },
+    {
+      "id": "help-language",
+      "argv": [
+        "--help",
+        "--lang=de"
+      ],
+      "kind": "build",
+      "arguments": [
+        "--help",
+        "--lang=de"
+      ]
+    },
+    {
+      "id": "domain-help",
+      "argv": [
+        "ticket",
+        "--help"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "ticket",
+        "--help"
+      ]
+    },
+    {
+      "id": "graphql",
+      "argv": [
+        "--json",
+        "graphql",
+        "--query",
+        "{}"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "--json",
+        "graphql",
+        "--query",
+        "{}"
+      ]
+    },
+    {
+      "id": "mcp",
+      "argv": [
+        "mcp"
+      ],
+      "kind": "mcp",
+      "arguments": []
+    },
+    {
+      "id": "mcp-extra",
+      "argv": [
+        "mcp",
+        "client"
+      ],
+      "kind": "mcp",
+      "arguments": [
+        "client"
+      ]
+    },
+    {
+      "id": "dashboard",
+      "argv": [
+        "dashboard",
+        "commands",
+        "--check"
+      ],
+      "kind": "build",
+      "arguments": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--output=stream",
+        "--",
+        "commands",
+        "--check"
+      ]
+    },
+    {
+      "id": "dashboard-empty",
+      "argv": [
+        "dashboard"
+      ],
+      "kind": "build",
+      "arguments": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--output=stream",
+        "--"
+      ]
+    },
+    {
+      "id": "tool-first",
+      "argv": [
+        "--tool=bazel",
+        "run",
+        "x:y",
+        "--",
+        "--tool=child"
+      ],
+      "kind": "build",
+      "arguments": [
+        "--tool=bazel",
+        "run",
+        "x:y",
+        "--",
+        "--tool=child"
+      ]
+    },
+    {
+      "id": "tool-separated",
+      "argv": [
+        "--tool",
+        "nx",
+        "cargo",
+        "--",
+        "check"
+      ],
+      "kind": "build",
+      "arguments": [
+        "--tool",
+        "nx",
+        "cargo",
+        "--",
+        "check"
+      ]
+    },
+    {
+      "id": "unknown",
+      "argv": [
+        "wat"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "wat"
+      ]
+    },
+    {
+      "id": "opaque-tail",
+      "argv": [
+        "graphql",
+        "--",
+        "run"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "graphql",
+        "--",
+        "run"
+      ]
+    },
+    {
+      "id": "tool-help",
+      "argv": [
+        "--tool=bazel",
+        "--help"
+      ],
+      "kind": "build",
+      "arguments": [
+        "--tool=bazel",
+        "--help"
+      ]
+    },
+    {
+      "id": "tool-default-help",
+      "argv": [
+        "--tool",
+        "nx"
+      ],
+      "kind": "build",
+      "arguments": [
+        "--tool",
+        "nx"
+      ]
+    },
+    {
+      "id": "tool-missing-value",
+      "argv": [
+        "--tool"
+      ],
+      "kind": "build",
+      "arguments": [
+        "--tool"
+      ]
+    },
+    {
+      "id": "os-mcp",
+      "argv": [
+        "dev",
+        "mcp",
+        "stdio",
+        "os"
+      ],
+      "kind": "workspace",
+      "arguments": [
+        "dev",
+        "mcp",
+        "stdio",
+        "os"
+      ]
+    },
+    {
+      "id": "os-mcp-options",
+      "argv": [
+        "dev",
+        "mcp",
+        "stdio",
+        "os",
+        "--folder",
+        "space with 🦑",
+        "--scopes",
+        "workspace.read,ui.observe"
+      ],
+      "kind": "workspace",
+      "arguments": [
+        "dev",
+        "mcp",
+        "stdio",
+        "os",
+        "--folder",
+        "space with 🦑",
+        "--scopes",
+        "workspace.read,ui.observe"
+      ]
+    },
+    {
+      "id": "os-mcp-opaque-tail",
+      "argv": [
+        "dev",
+        "mcp",
+        "stdio",
+        "os",
+        "--",
+        "--tool=literal"
+      ],
+      "kind": "workspace",
+      "arguments": [
+        "dev",
+        "mcp",
+        "stdio",
+        "os",
+        "--",
+        "--tool=literal"
+      ]
+    },
+    {
+      "id": "not-os-mcp",
+      "argv": [
+        "dev",
+        "mcp",
+        "stdio",
+        "client"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "dev",
+        "mcp",
+        "stdio",
+        "client"
+      ]
+    },
+    {
+      "id": "not-stdio",
+      "argv": [
+        "dev",
+        "mcp",
+        "http",
+        "os"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "dev",
+        "mcp",
+        "http",
+        "os"
+      ]
+    },
+    {
+      "id": "incomplete-provider",
+      "argv": [
+        "dev",
+        "mcp",
+        "stdio"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "dev",
+        "mcp",
+        "stdio"
+      ]
+    },
+    {
+      "id": "mcp-explicit-root",
+      "argv": [
+        "mcp",
+        "--repo",
+        "chosen"
+      ],
+      "kind": "mcp",
+      "arguments": [
+        "--repo",
+        "chosen"
+      ]
+    },
+    {
+      "id": "mcp-prefix-root",
+      "argv": [
+        "--repo",
+        "chosen",
+        "mcp"
+      ],
+      "kind": "mcp",
+      "arguments": [
+        "--repo",
+        "chosen"
+      ]
+    },
+    {
+      "id": "mcp-prefix-root-equals",
+      "argv": [
+        "--repo=chosen",
+        "mcp"
+      ],
+      "kind": "mcp",
+      "arguments": [
+        "--repo=chosen"
+      ]
+    },
+    {
+      "id": "script-plain",
+      "argv": [
+        "./📜️script.ts",
+        "build"
+      ],
+      "kind": "script",
+      "arguments": [
+        "./📜️script.ts",
+        "build"
+      ]
+    },
+    {
+      "id": "script-watch",
+      "argv": [
+        "--watch",
+        "./x.ts",
+        "a"
+      ],
+      "kind": "script",
+      "arguments": [
+        "--watch",
+        "./x.ts",
+        "a"
+      ]
+    },
+    {
+      "id": "script-cwd-equals",
+      "argv": [
+        "--cwd=sub",
+        "x.mjs"
+      ],
+      "kind": "script",
+      "arguments": [
+        "--cwd=sub",
+        "x.mjs"
+      ]
+    },
+    {
+      "id": "script-cwd-separate",
+      "argv": [
+        "--cwd",
+        "sub dir",
+        "--watch",
+        "x.js",
+        "--",
+        "z"
+      ],
+      "kind": "script",
+      "arguments": [
+        "--cwd",
+        "sub dir",
+        "--watch",
+        "x.js",
+        "--",
+        "z"
+      ]
+    },
+    {
+      "id": "script-after-tool-is-build",
+      "argv": [
+        "--tool=nx",
+        "x.ts"
+      ],
+      "kind": "build",
+      "arguments": [
+        "--tool=nx",
+        "x.ts"
+      ]
+    },
+    {
+      "id": "script-argument-is-not-a-script",
+      "argv": [
+        "ticket",
+        "x.ts"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "ticket",
+        "x.ts"
+      ]
+    },
+    {
+      "id": "script-option-without-script",
+      "argv": [
+        "--watch",
+        "run"
+      ],
+      "kind": "domain",
+      "arguments": [
+        "--watch",
+        "run"
+      ]
+    }
+  ],
+  "rootScriptPrefixes": [
+    [
+      "dev",
+      "mcp",
+      "stdio",
+      "os"
+    ]
+  ],
+  "scriptExtensions": [
+    ".ts",
+    ".mjs",
+    ".js"
+  ],
+  "scriptOptions": [
+    "watch",
+    "cwd"
+  ]
+}

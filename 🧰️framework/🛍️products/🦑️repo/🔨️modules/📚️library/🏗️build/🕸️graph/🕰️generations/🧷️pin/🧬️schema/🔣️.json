@@ -23,13 +23,17 @@
      "uncovered": "graph: this command runs inside a build whose pinned graph generation {generation} does not cover {count} of the projects it needs ({names}); it does not plan a graph of its own: add them to the selection of the invoking build or run the command outside of it",
      "retired": "graph: the graph generation {generation} pinned by the invoking build is no longer kept; this command does not plan a graph of its own: run the invoking build again",
      "identity": "graph: the graph generation {generation} pinned by the invoking build belongs to another repository identity; this command does not plan a graph of its own",
-     "malformed": "graph: the generation pin of the invoking build is not a closed pin ({reason}); this command does not plan a graph of its own"
+     "malformed": "graph: the generation pin of the invoking build is not a closed pin ({reason}); this command does not plan a graph of its own",
+     "inputInvalid": "graph: the generation pin of this build cannot be written: its owner, generation, manifest or owners are not closed",
+     "unbounded": "graph: the generation pin of this build exceeds {maximum} bytes"
     },
     "de": {
-     "uncovered": "Graph: dieser Befehl läuft in einem Build, dessen angeheftete Graph-Generation {generation} {count} der benötigten Projekte nicht abdeckt ({names}); er plant keinen eigenen Graphen: die Projekte in die Auswahl des aufrufenden Builds aufnehmen oder den Befehl außerhalb davon ausführen",
-     "retired": "Graph: die vom aufrufenden Build angeheftete Graph-Generation {generation} wird nicht mehr aufbewahrt; dieser Befehl plant keinen eigenen Graphen: den aufrufenden Build erneut ausführen",
-     "identity": "Graph: die vom aufrufenden Build angeheftete Graph-Generation {generation} gehört zu einer anderen Repository-Identität; dieser Befehl plant keinen eigenen Graphen",
-     "malformed": "Graph: die Generations-Anheftung des aufrufenden Builds ist keine geschlossene Anheftung ({reason}); dieser Befehl plant keinen eigenen Graphen"
+     "uncovered": "Graph: dieser Befehl läuft in einem Build, dessen gepinnte Graph-Generation {generation} {count} der benötigten Projekte nicht abdeckt ({names}); er plant keinen eigenen Graphen: die Projekte in die Auswahl des aufrufenden Builds aufnehmen oder den Befehl außerhalb davon ausführen",
+     "retired": "Graph: die vom aufrufenden Build gepinnte Graph-Generation {generation} wird nicht mehr aufbewahrt; dieser Befehl plant keinen eigenen Graphen: den aufrufenden Build erneut ausführen",
+     "identity": "Graph: die vom aufrufenden Build gepinnte Graph-Generation {generation} gehört zu einer anderen Repository-Identität; dieser Befehl plant keinen eigenen Graphen",
+     "malformed": "Graph: der Generations-Pin des aufrufenden Builds ist kein geschlossener Pin ({reason}); dieser Befehl plant keinen eigenen Graphen",
+     "inputInvalid": "Graph: die Generationsanheftung dieses Builds lässt sich nicht schreiben: Eigentümer, Generation, Manifest oder Besitzerliste sind nicht geschlossen",
+     "unbounded": "Graph: die Generationsanheftung dieses Builds überschreitet {maximum} Bytes"
     }
    }
   },

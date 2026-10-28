@@ -1,0 +1,104 @@
+"""🚚 [backlog] ONE uniform CLI over every staged batch of the backlog queue: `land.py <id> check|apply|revert [--root R]` (default root: the live checkout; always pass a mirror root to rehearse). Exit 0 = the batch ends in the requested state, non-zero = refused, nothing written. `land.py list` prints the ids. Batches without their own revert tool (route2, laws-g) get a byte backup under backlog-tools/backup/<id>@<root>/ taken by `apply` and restored by `revert`. stdlib only.
+usage: land.py list | land.py <id> check|apply|revert [--root R]"""
+import hashlib, json, os, re, shutil, subprocess, sys
+C = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LIVE = os.path.abspath(os.path.join(C, *[".."] * 7))
+BUN = os.environ.get("BUN", "bun")
+OUT = C + "/backlog-tools/out"
+MOD = "🧰️framework/🛍️products/🦑️repo/🔨️modules/"
+LIB = MOD + "📚️library/"
+def py(*a): return ["python3", "-I", *a]
+def run(argv, env=None, cwd=None):
+    r = subprocess.run(argv, env={**os.environ, **(env or {})}, cwd=cwd, capture_output=True, text=True)
+    sys.stdout.write((r.stdout + r.stderr)[-3000:]); return r.returncode
+def retarget(src, root, interp):
+    text = open(src, encoding="utf8").read(); d = os.path.dirname(src)
+    text = re.sub(r'\$\(dirname "\$0"\)', d, text); text = re.sub(r'\$\{0%/\*\}', d, text)
+    text = text.replace('C=root+"/.🧬', 'C="' + LIVE + '/.🧬')
+    text = re.sub(r'(?<![/\w])\.🧬semio/[^\'" \n]*?GET-CODEBASE-RUNNING-END-TO-END-AGAIN', lambda m: LIVE + "/" + m.group(0), text)
+    text = re.sub(re.escape(LIVE) + r'(?!/\.🧬semio|/\.cache|/\.nx)', root, text)
+    os.makedirs(OUT, exist_ok=True); out = f"{OUT}/rt-{hashlib.md5((src + root).encode()).hexdigest()[:8]}{os.path.splitext(src)[1]}"
+    open(out, "w", encoding="utf8").write(text); return interp + [out]
+def sha(p): return hashlib.sha256(open(p, "rb").read()).hexdigest()
+def backup_dir(bid, root): return f"{C}/backlog-tools/backup/{bid}@{'live' if root == LIVE else os.path.basename(root)}"
+def snapshot(bid, root, rels):
+    d = backup_dir(bid, root); os.makedirs(d, exist_ok=True); man = {}
+    for i, rel in enumerate(sorted(set(rels))):
+        p = f"{root}/{rel}"; man[rel] = {"file": None, "before": None}
+        if os.path.isfile(p): shutil.copyfile(p, f"{d}/f{i:03d}"); man[rel] = {"file": f"f{i:03d}", "before": sha(p)}
+    json.dump(man, open(d + "/manifest.json", "w"), ensure_ascii=False, indent=1)
+def restore(bid, root):
+    d = backup_dir(bid, root); man = json.load(open(d + "/manifest.json", encoding="utf8")); n = 0
+    for rel, m in man.items():
+        p = f"{root}/{rel}"
+        if m["file"] is None:
+            if os.path.exists(p): os.remove(p); n += 1
+        elif not os.path.exists(p) or sha(p) != m["before"]: shutil.copyfile(f"{d}/{m['file']}", p); n += 1
+    print(f"restored {n} of {len(man)} files from {d}"); return 0
+def laws(cmd, root):
+    base = retarget(C + "/laws-g-tools/apply-build-tools.py", root, ["python3", "-I"])
+    if cmd == "check": return 0 if "to change: []" in subprocess.run(base + ["--check"], capture_output=True, text=True).stdout else 1
+    if cmd == "revert": return restore("laws", root)
+    snapshot("laws", root, [LIB + "🏗️build/🗂️suites/🔣️.json"]); return run(base)
+def bench3(cmd, root):
+    return run(retarget(C + "/bench3-g-tools/staged/observer/apply.sh", root, ["sh"]) + [cmd])
+def filelist(bid):
+    p = f"{C}/backlog-tools/files/{bid}.txt"
+    return [l.strip() for l in open(p, encoding="utf8") if l.strip()] if os.path.exists(p) else []
+def guarded(bid, tool):
+    """apply-time byte backup of every file the batch touches (list: backlog-tools/files/<id>.txt, from the batch's own check); revert restores those bytes when every file still equals what apply wrote (exact, no stale `base` copies), else falls back to the tool's own revert"""
+    def run_(cmd, root):
+        d = backup_dir("g-" + bid, root)
+        if cmd == "apply":
+            rels = filelist(bid)
+            if rels: snapshot("g-" + bid, root, rels)
+            rc = tool("apply", root)
+            if rc == 0 and rels:
+                man = json.load(open(d + "/manifest.json", encoding="utf8"))
+                for rel, m in man.items(): m["after"] = sha(f"{root}/{rel}") if os.path.isfile(f"{root}/{rel}") else None
+                json.dump(man, open(d + "/manifest.json", "w"), ensure_ascii=False, indent=1)
+            return rc
+        if cmd == "revert" and os.path.exists(d + "/manifest.json"):
+            man = json.load(open(d + "/manifest.json", encoding="utf8"))
+            if all("after" in m and ((sha(f"{root}/{r}") if os.path.isfile(f"{root}/{r}") else None) == m["after"]) for r, m in man.items()):
+                return restore("g-" + bid, root)
+        return tool(cmd, root)
+    return run_
+REG = {}
+for b in ["tests", "tests2", "runtimelaw", "leasesentry", "witnesshost", "gaterace", "startupbudget"]:
+    REG["red-" + b] = lambda cmd, root, b=b: run(py(C + "/red-g-tools/stage.py", cmd, b, "--root", root) + (["--rebase"] if cmd == "apply" else []))
+for b in ["rootguard", "unitcache", "sweep", "ledger"]:
+    REG["disk-" + b] = lambda cmd, root, b=b: run(py(C + "/disk-g-tools/stage.py", cmd, b, "--root", root, "--backup-dir", backup_dir("disk-" + b, root)))
+for d, t in [("gram3-index-chunks", ("gram2-g-tools/staged/batch_generic.py", "gram3-g-tools/staged/index-chunks")), ("gram3-churn", ("gram2-g-tools/staged/batch_generic.py", "gram3-g-tools/staged/churn")), ("gram2-row-table", ("gram2-g-tools/staged/batch_generic.py", "gram2-g-tools/staged/row-table")), ("walk-walks", ("walk-g-tools/staged/batch_generic.py", "walk-g-tools/staged/walks")), ("walk-footprint", ("walk-g-tools/staged/batch_generic.py", "walk-g-tools/staged/footprint"))]:
+    REG[d] = lambda cmd, root, t=t: run(py(f"{C}/{t[0]}", f"{C}/{t[1]}", {"check": "status"}.get(cmd, cmd)), env={"BATCH_ROOT": root})
+def gram4(cmd, root):
+    sh_ = ["sh", C + "/gram4-g-tools/staged/shape-keys/apply.sh"]
+    if cmd == "apply" and subprocess.run(sh_ + ["check"], env={**os.environ, "BATCH_ROOT": root}, capture_output=True).returncode: subprocess.run(sh_ + ["bases"], env={**os.environ, "BATCH_ROOT": root})
+    return run(sh_ + [cmd], env={"BATCH_ROOT": root})
+REG["gram4-shape-keys"] = gram4
+REG["seal2"] = lambda cmd, root: run(py(C + "/seal2-g-tools/staged/seal2/apply.py", cmd, "--root", root))
+REG["census2"] = lambda cmd, root: run(py(C + "/census2-g-tools/staged/stage.py", cmd, "--root", root))
+REG["fdleak-guard"] = lambda cmd, root: run(py(C + "/fdleak-g-tools/staged/guard/stage.py", cmd, "--root", root))
+REG["obsrows"] = lambda cmd, root: run(py(C + "/obsrows-g-tools/stage.py", cmd, "--root", root + "/" + LIB))
+REG["obsrows2"] = lambda cmd, root: run(py(C + "/obsrows2-g-tools/stage.py", cmd, "obsrows2", "--root", root) + (["--rebase"] if cmd == "apply" else []))
+REG["sweep2"] = lambda cmd, root: run(py(C + "/sweep2-g-tools/batch/apply.py", cmd), env={"SWEEP2_ROOT": root, "SWEEP2_BACKUP": backup_dir("sweep2", root)})
+REG["bench3-observer"] = bench3
+REG["laws-g"] = laws
+REG["setup-g"] = lambda cmd, root: run(py(C + "/setup-g-tools/staged/stage.py", {"check": "check"}.get(cmd, cmd)), env={"SEMIO_STAGE_ROOT": root})
+REG["jobsrv"] = lambda cmd, root: run(py(C + "/jobsrv-g-tools/stage.py", cmd), env={"JG_ROOT": root})
+for b in ["conv-g", "route2", "xplat3", "xplat4-platforms", "xplat4-freespace", "xplat4-corpus", "obs-g-fleet", "dashlock", "nxfix-core", "nxfix-nx-patch", "nxlock"]:
+    REG[b] = lambda cmd, root, b=b: run(py(C + "/backlog-tools/mergeland.py", b, cmd, "--root", root))
+REG["rev3fix"] = lambda cmd, root: run(py(C + "/rev3fix-g-tools/batch.py", C + "/rev3fix-g-tools/staged/rev3fix", cmd, root) + (["--accept-drift"] if cmd == "apply" else []))
+REG["sealed-flip"] = lambda cmd, root: run(py(C + "/self-g-tools/flip.py", {"check": "status", "apply": "apply", "revert": "revert"}[cmd], "--root", root))
+for d in sorted(os.listdir(C + "/docs3-g-tools/staged")):
+    if os.path.isfile(f"{C}/docs3-g-tools/staged/{d}/stage.py"):
+        REG["docs3-" + d] = lambda cmd, root, d=d: run(py(f"{C}/docs3-g-tools/staged/{d}/stage.py", cmd, "--root", root))
+for _id in [k for k in list(REG) if k.startswith(("red-", "gram", "walk-", "seal2", "census2", "fdleak", "obsrows", "setup-g", "bench3", "rev3fix"))]:
+    REG[_id] = guarded(_id, REG[_id])
+def main(argv):
+    if len(argv) >= 1 and argv[0] == "list": print("\n".join(sorted(REG))); return 0
+    bid, cmd = argv[0], argv[1]
+    root = os.path.abspath(argv[argv.index("--root") + 1]) if "--root" in argv else LIVE
+    if bid not in REG or cmd not in ("check", "apply", "revert"): sys.exit(__doc__)
+    return REG[bid](cmd, root)
+if __name__ == "__main__": sys.exit(main(sys.argv[1:]))

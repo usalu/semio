@@ -79,8 +79,8 @@ export async function testContainerRuntimeBootstrap(workspace: string,invocation
     const recording: string = [
       "set -eu", "exec 3>&1", "native_available=$NATIVE_INITIAL",
       "log() { :; }",
-      "bun() { [ \"$*\" = \"repo run repo-mcp:install\" ] || return 92; printf 'installer\\n' >&3; [ \"$FAIL_AT\" != installer ] || return 9; native_available=1; }",
-      "repo() { [ \"$native_available\" = 1 ] || return 91; case \"$*\" in --help) phase=help;; 'run workspace:setup') phase=setup;; 'run @semio-tech/repo-developer-tools:setup-debugger') phase=debugger;; *) return 93;; esac; printf '%s\\n' \"$phase\" >&3; [ \"$FAIL_AT\" != \"$phase\" ]; }",
+      "bun() { return 92; }",
+      "repo() { if [ \"$*\" = \"run repo-mcp:install\" ]; then printf 'installer\\n' >&3; [ \"$FAIL_AT\" != installer ] || return 9; native_available=1; return 0; fi; [ \"$native_available\" = 1 ] || return 91; case \"$*\" in --help) phase=help;; 'run workspace:setup') phase=setup;; 'run @semio-tech/repo-developer-tools:setup-debugger') phase=debugger;; *) return 93;; esac; printf '%s\\n' \"$phase\" >&3; [ \"$FAIL_AT\" != \"$phase\" ]; }",
       "ensure_browser_libraries() { printf 'browser\\n' >&3; }", ownedBootstrap, "repo_bootstrap",
     ].join("\n");
     const answer = spawnSync("bash", ["-c", recording], { cwd: workspace, env: { ...process.env, REPO_ROOT: workspace, LOCAL_BIN: "/owned-native-test-bin", SKIP_REPO_BOOTSTRAP: "0", NATIVE_INITIAL: row.nativePresent ? "1" : "0", FAIL_AT: row.failAt ?? "" }, encoding: "utf8", timeout: 5000 });
@@ -146,31 +146,30 @@ export async function testContainerRuntimeBootstrap(workspace: string,invocation
   assert.deepEqual(Object.keys(config.portsAttributes).map(Number).sort((left, right) => left - right), expectedPorts, "Every forwarded port carries a label");
   for (const entry of forwarded) assert.equal(config.portsAttributes[String(entry.port)]?.label, entry.label, `Port ${entry.port} is labelled after its dashboard command`);
   assert.equal(JSON.parse(readFileSync(join(workspace, "package.json"), "utf8")).packageManager, `bun@${fixture.bun}`);
-  assert.ok(dockerfile.includes(`ARG BUN_VERSION=${fixture.bun}\n`));
   assert.ok(dockerfile.includes(`ARG NODE_VERSION=${fixture.node}\n`));
   const runtime = dockerfile.match(/^RUN set -eu; \\\n[\s\S]*?(?=\n\n)/m)?.[0];
   assert.ok(runtime, "Runtime acquisition must be one checked image layer");
   const selector = runtime.replaceAll("\\\n", "\n").match(/case "\$runtime_arch" in[\s\S]*?esac;/)?.[0];
   assert.ok(selector, "Image must reject unsupported runtime architectures");
-  const rows = [...selector.matchAll(/^\s*(amd64|arm64)\) bun_archive="([^"]+)"; bun_sha="([a-f0-9]{64})"; node_archive="([^"]+)"; node_sha="([a-f0-9]{64})";;/gm)].map(([, architecture, bunArchive, bunSha256, nodeArchive, nodeSha256]) => ({ architecture, bunArchive, bunSha256, nodeArchive, nodeSha256 }));
+  const rows = [...selector.matchAll(/^\s*(amd64|arm64)\) node_archive="([^"]+)"; node_sha="([a-f0-9]{64})";;/gm)].map(([, architecture, nodeArchive, nodeSha256]) => ({ architecture, nodeArchive, nodeSha256 }));
   assert.deepEqual(require("lodash/sortBy")(rows, "architecture"), require("lodash/sortBy")(fixture.platforms, "architecture"));
-  for (const tool of ["bun", "node"]) {
-    assert.ok(runtime.indexOf(`"$${tool}_sha`) < runtime.indexOf(tool === "bun" ? "unzip -p" : "tar -xJf"), `${tool} verification must precede extraction`);
+  for (const tool of ["node"]) {
+    assert.ok(runtime.indexOf(`"$${tool}_sha`) < runtime.indexOf("tar -xJf"), `${tool} verification must precede extraction`);
     assert.ok(runtime.includes(`test "$(${tool} --version)" = "${tool === "node" ? "v" : ""}$${tool.toUpperCase()}_VERSION"`));
   }
-  assert.equal((runtime.match(/sha256sum -c -/g) ?? []).length, 2);
-  assert.equal((runtime.match(/--max-time 300/g) ?? []).length, 2);
-  assert.ok(runtime.includes("https://github.com/oven-sh/bun/releases/download/bun-v$BUN_VERSION/"));
+  assert.equal((runtime.match(/sha256sum -c -/g) ?? []).length, 1);
+  assert.equal((runtime.match(/--max-time 300/g) ?? []).length, 1);
+  assert.ok(!runtime.includes("oven-sh/bun"), "The image installs no Bun: the repo launcher provisions the pinned runtime");
   assert.ok(runtime.includes("https://nodejs.org/dist/v$NODE_VERSION/"));
   assert.ok(!/bun install|npm|curl[^\n]*\|\s*(?:ba)?sh/.test(runtime));
   assert.ok(!/(?:curl|wget)[^\n]*\|[^\n]*\bsh\b/.test(dockerfile), "The image pipes no unpinned installer into a shell; tools come from pinned features or checksum-verified archives");
   assert.equal(config.features[fixture.uvFeature.id]?.version, fixture.uvFeature.version, "uv comes from its pinned feature only");
   if (process.platform !== "win32") {
-    const command = `${selector}\nprintf '%s|%s|%s|%s' "$bun_archive" "$bun_sha" "$node_archive" "$node_sha"`;
+    const command = `${selector}\nprintf '%s|%s' "$node_archive" "$node_sha"`;
     for (const row of fixture.platforms) {
       const result = spawnSync("sh", ["-ec", command], { env: { ...process.env, runtime_arch: row.architecture }, encoding: "utf8", timeout: 5000 });
       assert.equal(result.status, 0, result.stderr);
-      assert.equal(result.stdout, [row.bunArchive, row.bunSha256, row.nodeArchive, row.nodeSha256].join("|"));
+      assert.equal(result.stdout, [row.nodeArchive, row.nodeSha256].join("|"));
     }
     for (const architecture of fixture.rejectedArchitectures) assert.notEqual(spawnSync("sh", ["-ec", command], { env: { ...process.env, runtime_arch: architecture }, encoding: "utf8", timeout: 5000 }).status, 0);
   }

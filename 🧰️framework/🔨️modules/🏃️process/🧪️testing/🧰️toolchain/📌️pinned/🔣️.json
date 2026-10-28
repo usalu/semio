@@ -4,15 +4,23 @@
   "messages": {
     "unregistered": {
       "en": "[toolchain] The tool {tool} is not registered, so its pinned Rust toolchain cannot be read.",
-      "de": "[toolchain] Das Werkzeug {tool} ist nicht registriert, daher kann seine angeheftete Rust-Werkzeugkette nicht gelesen werden."
+      "de": "[toolchain] Das Werkzeug {tool} ist nicht registriert, daher kann seine gepinnte Rust-Werkzeugkette nicht gelesen werden."
     },
     "unpinned": {
       "en": "[toolchain] The tool {tool} has no pinned channel under {root}; tests must not run on the machine default.",
-      "de": "[toolchain] Das Werkzeug {tool} hat unter {root} keinen angehefteten Kanal; Tests duerfen nicht auf dem Maschinenstandard laufen."
+      "de": "[toolchain] Das Werkzeug {tool} hat unter {root} keinen gepinnten Kanal; Tests dürfen nicht auf dem Rechnerstandard laufen."
     },
     "disagrees": {
       "en": "[toolchain] The incoming toolchain {incoming} disagrees with the pinned channel {channel}.",
-      "de": "[toolchain] Die eingehende Werkzeugkette {incoming} widerspricht dem angehefteten Kanal {channel}."
+      "de": "[toolchain] Die eingehende Werkzeugkette {incoming} widerspricht dem gepinnten Kanal {channel}."
+    },
+    "unregisteredTool": {
+      "en": "[toolchain] The test tool {tool} is not registered, so the route cannot hand its pinned binary to the tests.",
+      "de": "[toolchain] Das Testwerkzeug {tool} ist nicht registriert, daher kann die Route den gepinnten Programmpfad nicht an die Tests geben."
+    },
+    "missingTool": {
+      "en": "[toolchain] The pinned test tool {tool} is not provisioned on this host (tried: {tried}); run `repo tools setup all`. A law that needs it must fail, never skip.",
+      "de": "[toolchain] Das gepinnte Testwerkzeug {tool} ist auf diesem Rechner nicht bereitgestellt (versucht: {tried}); `repo tools setup all` ausführen. Ein Gesetz, das es braucht, muss fehlschlagen, nicht übersprungen werden."
     }
   }
 }

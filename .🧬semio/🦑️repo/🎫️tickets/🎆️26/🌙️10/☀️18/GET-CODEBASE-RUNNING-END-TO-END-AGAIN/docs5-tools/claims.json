@@ -1,0 +1,86 @@
+{
+ "live": [
+  "withBuildTestInvocationV1",
+  "registerBuildTestLawV1",
+  "registerBuildTestFixtureV1",
+  "createBuildBootstrapCapabilitiesV1",
+  "receiveScriptProcessInvocation",
+  "Original parent Script process invocation required",
+  "Required original cache consumer unavailable",
+  "${path}/${key} is not allowed",
+  "build-graph-rust",
+  "build-workspace-graph-laws",
+  "\"scratch\": \"checkout\"",
+  "test-sandbox",
+  "Original compiler ingress requires the repository launcher and authentic enforcing store",
+  "maximumElapsedMilliseconds",
+  "compiler-units",
+  "declared-wait",
+  "scriptProvider:",
+  "toolClosure:",
+  "@semio-tech/repo-script-providers",
+  "cargo-command",
+  "cargo-lock-owner",
+  "liftNxNamedInputReferencesV1",
+  "artifact-command",
+  "artifact-sources",
+  "test-discovery",
+  "closure-of",
+  "owner-discovery",
+  "minimumProjects",
+  "missBasisPoints",
+  "graph-farm-worker",
+  "worker process inside the capacity grant of this process",
+  "inferring projects with",
+  "projects inferred by",
+  "differ from this process",
+  "Verifying input closures",
+  "derived results asked again",
+  "Promoting the live tree to a sealed snapshot",
+  "that are not promoted",
+  "Waiting for the promotion that process",
+  "swap-activity",
+  "pressure-warn",
+  "pressure-critical",
+  "quiet-limit",
+  "queue-order",
+  "cannot carry more right now",
+  "declareBuildTestEnvelopeV1",
+  "Inherited build test capabilities differ",
+  "cargoScratchBaseV1",
+  "suspectsWithinV1",
+  "expandedCommandInputsV1",
+  "Build test envelope declared after the first callback",
+  "One test process receives one birth"
+ ],
+ "pending": {
+  "adoptInferenceAuthorityV1": "farmid-tools/staged/authority",
+  "hostBlockersV1": "agents16-tools/staged/behind",
+  "the host itself (nothing of ours)": "agents16-tools/staged/behind",
+  "the run grows to more jobs once memory and cores free up": "agents16-tools/staged/allrun"
+ },
+ "files": [
+  "gate-g-tools/verdict.py",
+  "gate-g-tools/phases.py",
+  "gate-g-tools/product.py",
+  "backlog-tools/live-laws.sh"
+ ],
+ "paths": [
+  "🚀️launcher/📌️runtime-pin",
+  "🧪️testing/🟨️bun/🪦️orphans",
+  "🧪️testing/📥️invocation",
+  "📚️library/🏃️process/🔌️providers",
+  "🧭️script-inputs/🔌️provider-closures/🔣️.json",
+  "👓️walk-views/🔣️.json"
+ ],
+ "rootfiles": [
+  [
+   "bunfig.toml",
+   "runtime-pin"
+  ],
+  [
+   "bunfig.toml",
+   "orphans"
+  ]
+ ]
+}

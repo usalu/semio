@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "writer": "repo:compiler-writer:",
+  "acquisitions": {
+    "recipe": ["[\"semio.cargo.store-lease/v1\",", "[\"semio.cargo.build-lease/v1\",", "[\"semio.cargo.target-store/v1\",", "[\"semio.cargo.custody-lease/v1\",", "[\"cargo-target-recipe-v1\","],
+    "artifact": ["artifact-capture:", "artifact:"]
+  },
+  "cases": [
+    {"id": "writer-entered-last", "port": "offers", "sequence": ["recipe", "writer", "release-writer", "artifact"], "expect": "granted"},
+    {"id": "writer-held-around-body", "port": "holds", "sequence": ["writer", "recipe"], "expect": "lease-order"},
+    {"id": "artifacts-under-writer", "port": "offers", "sequence": ["recipe", "writer", "artifact"], "expect": "lease-order"},
+    {"id": "offered-writer-never-entered", "port": "offers", "sequence": ["recipe", "artifact"], "expect": "refused"},
+    {"id": "no-writer-offered", "port": "none", "sequence": ["recipe", "writer", "release-writer", "artifact"], "expect": "granted"}
+  ]
+}

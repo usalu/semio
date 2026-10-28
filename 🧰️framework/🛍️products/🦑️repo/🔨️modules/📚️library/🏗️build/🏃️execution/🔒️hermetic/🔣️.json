@@ -11,8 +11,10 @@
       "bunfig.toml",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/**/*",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json",
-      "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🟦️.ts",
-      "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🔣️.json"
+      "🧰️framework/🔨️modules/⚙️runtime/🗣️language/🟦️.ts",
+      "🧰️framework/🔨️modules/⚙️runtime/🗣️language/🔣️.json",
+      "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🔁️incremental/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🔣️.json"
     ],
     "markers": [
       "📋️project.json"
@@ -112,6 +114,17 @@
       }
     }
   ],
+  "services": {
+    "mnemonic": "RepoHermeticService",
+    "instances": 2,
+    "engines": {
+      "typescript-check": {
+        "module": "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🔁️incremental/🟦️.ts",
+        "environment": "SEMIO_HERMETIC_TYPESCRIPT_CHECK",
+        "idleMilliseconds": 120000
+      }
+    }
+  },
   "classes": [
     {
       "id": "ts-typecheck",
@@ -139,7 +152,8 @@
       ],
       "providers": {
         "typescript-check": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🔌️providers/🔷️typescript/🟦️.ts"
-      }
+      },
+      "service": "typescript-check"
     },
     {
       "id": "ts-test",

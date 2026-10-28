@@ -3,8 +3,9 @@ export type {NativeProtectedParentRequestV1,NativeImageMaintenanceRequestV1,Nati
 import {lstatSync,opendirSync,statfsSync} from "node:fs";
 import {dirname,join,resolve,relative,isAbsolute,sep} from "node:path";
 import {nativeStorageAttachedV1,nativeStorageBackingFilenameV1,nativeStorageFilesystemBytesV1,nativeStorageSpaceV1,nativeStorageUsedBytesV1} from "../../🔌️backends/📋️contract/🟦️.ts";
-export {nativeDirectoryUsedBytesSyncV1,nativePartitionOfV1,nativeStatfsSyncV1,nativeStatfsV1,type NativePartitionV1} from "./📐️statfs/🟦️.ts";
-import {requireMaterializedPathV1,type ResourceLeaseWriterProofV1,type ResourceLeaseControl} from "../../../../../🔒️leases/🟦️.ts";
+export {nativeDirectoryUsedBytesSyncV1,nativeFreeSpaceSyncV1,nativePartitionOfV1,nativeStatfsSyncV1,nativeStatfsV1,type NativeFreeSpaceV1,type NativePartitionV1} from "./📐️statfs/🟦️.ts";
+import {requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../../🔒️leases/🎛️control/🟦️.ts";
+import type {ResourceLeaseWriterProofV1} from "../../../../../🔒️leases/🟦️.ts";
 import type {NativeStoragePortV1} from "../../🔌️port/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";

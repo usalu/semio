@@ -3,7 +3,7 @@ import {createHash} from "node:crypto";
 import {buildLeaseReportV1} from "../../📋️status/🟦️.ts";
 
 const resource="semio.compiler.host-capacity/v1",key=createHash("sha256").update(resource).digest("hex");
-const entry=(pid:number)=>({version:1 as const,pid,startedAtMs:0,updatedAtMs:0,command:"c"+pid,directory:"/d",holds:[{resource,mode:"shared" as const,sinceMs:1000,task:pid}],waits:[]});
+const entry=(pid:number)=>({version:1 as const,pid,startedAtMs:0,updatedAtMs:0,command:"c"+pid,directory:"/d",standing:{version:1 as const,priority:"agent" as const,implementation:{digest:"0123456789abcdef",loadedAtMs:0,components:{}},progressAtMs:0},holds:[{resource,mode:"shared" as const,sinceMs:1000,task:pid}],waits:[]});
 const ticket=(pid:number,position:number,mode:"shared"|"exclusive")=>({hash:key,position,queued:5,arrivedAtMs:1000+position,pid,mode});
 
 test("a holder's own arrival ticket behind an exclusive head is neither a wait nor a deadlock cycle",()=>{

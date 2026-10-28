@@ -1,0 +1,41 @@
+{
+ "name": "nxlock",
+ "code": "nxlock-g-tools/staged/nxlock (after nxfix-g core)",
+ "lane": "nxlock-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "nxlock-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "   - **Nx**: at most 2 finite daemons; on hosts up to 24 GiB they idle out after 2 min and retire above 1280 MB resident.",
+   "where": "after",
+   "block": "   - **Nx daemon start order**: the start lease `nx:daemon-startup:` (class `daemon-startup`, rank 8, taken last, nothing awaited while it is held) used to be held (rank 2) while the start requested native storage, graph pool and graph namespace, a hold-and-wait out of order, and the daemon service bound its namespace before the tooling and SDK leases. Now images, toolkit and namespace are opened first and the exclusive start lease comes last; the service binds after the tooling and SDK leases. `build-graph:` pins and `nx:daemon-slot:` are inert classes (only non-waiting try-locks request them), skipped by the order check. Proven by an independent Python rank model over the replayed acquisition sequences and single-file laws (order 73, component driver 21, graph startup 18, put-slots 14); the repo-wide Nx start path under peer load is not proven. Landing it changes lease-policy bytes, so lease-related tasks re-key once."
+  },
+  {
+   "id": "nxlock-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "   - **Nx**: höchstens 2 endliche Daemons; auf Rechnern bis 24 GiB enden sie nach 2 min Leerlauf und treten über 1280 MB resident ab.",
+   "where": "after",
+   "block": "   - **Startreihenfolge des Nx-Daemons**: das Start-Lease `nx:daemon-startup:` (Klasse `daemon-startup`, Rang 8, zuletzt genommen, währenddessen wird nichts erwartet) wurde früher (Rang 2) gehalten, während der Start nativen Speicher, Graph-Pool und Graph-Namensraum anforderte, ein Halten-und-Warten in falscher Reihenfolge, und der Daemon-Dienst band seinen Namensraum vor den Tooling- und SDK-Leases. Jetzt werden Abbilder, Toolkit und Namensraum zuerst geöffnet und das exklusive Start-Lease kommt zuletzt; der Dienst bindet nach den Tooling- und SDK-Leases. `build-graph:`-Pins und `nx:daemon-slot:` sind inerte Klassen (nur nicht wartende Try-Locks fordern sie an) und werden von der Reihenfolgeprüfung übersprungen. Bewiesen durch ein unabhängiges Python-Rangmodell über die nachgespielten Erwerbsfolgen und Einzeldatei-Gesetze (Reihenfolge 73, Komponententreiber 21, Graph-Start 18, Put-Slots 14); der repo-weite Nx-Startpfad unter Peer-Last ist nicht bewiesen. Das Einspielen ändert Lease-Policy-Bytes, daher werden lease-bezogene Tasks einmal neu geschlüsselt."
+  },
+  {
+   "id": "nxlock-row",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "| `The runtime registry declares contract N, this launcher implements contract M. Rebuild and reinstall the launcher with: …` | the installed Go launcher is older than the registry; run the printed installer once (`🚀️launcher/📥️install`); there is one install location. |",
+   "where": "after",
+   "block": "| `[lease-order] Lock order violated: <A> (<class>, rank r) is requested while <B> (<class>, rank s) is held shared …` | the out-of-order rule runs in `observe` mode: the line is printed and nothing is refused (a wait that would block others is the separate `Refusing to wait`). Every hot Bazel run prints it for `bazel-slot-gate` (tool-singleton, rank 2) requested while a graph snapshot lease (rank 4) is held shared, a hold-and-wait shape that is harmless while that graph lease is shared only; open for the lease and graph owners. Take locks in ascending rank or release the held one first; `SEMIO_LEASE_ORDER=enforce` would make it fatal. |"
+  },
+  {
+   "id": "nxlock-row",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "| `Die Laufzeitregistratur deklariert Vertrag N, dieser Launcher setzt Vertrag M um. Baue den Launcher neu und installiere ihn mit: …` | der installierte Go-Launcher ist älter als die Registratur; den ausgegebenen Installer einmal ausführen (`🚀️launcher/📥️install`); es gibt genau einen Installationsort. |",
+   "where": "after",
+   "block": "| `[lease-order] Sperrreihenfolge verletzt: <A> (<Klasse>, Rang r) wird angefordert, während <B> (<Klasse>, Rang s) geteilt gehalten wird …` | die Regel für falsche Reihenfolge läuft im Modus `observe`: die Zeile wird ausgegeben und nichts abgelehnt (ein Warten, das andere blockieren würde, ist das getrennte `Warten abgelehnt`). Jeder heiße Bazel-Lauf gibt sie für `bazel-slot-gate` (tool-singleton, Rang 2) aus, das angefordert wird, während ein Graph-Schnappschuss-Lease (Rang 4) geteilt gehalten wird, eine Halten-und-Warten-Form, die harmlos ist, solange dieses Graph-Lease nur geteilt wird; offen für die Eigner von Leases und Graph. Sperren in aufsteigendem Rang nehmen oder die gehaltene zuerst freigeben; `SEMIO_LEASE_ORDER=enforce` würde es fatal machen. |"
+  }
+ ]
+}

@@ -27,7 +27,7 @@ for(const[index,row]of corpus.pathMatch.entries())test("path match "+index,()=>{
 test("a revision range without label matches or with an unknown base yields no prefixes",()=>{expect(inferPathPrefixesForBundleLabel(root,"no-such-revision",head,corpus.bundles[0]!.label)).toEqual([]);expect(assignChangedPathsToBundles(root,"no-such-revision",head,corpus.bundles)).toEqual([[],[]]);});
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

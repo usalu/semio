@@ -1,0 +1,53 @@
+{
+ "name": "fleet",
+ "code": "obs-g-tools/staged/fleet",
+ "lane": "obs-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "fleet-bullet",
+   "lang": "en",
+   "kind": "replace",
+   "old": "- **Fleet status**: not landed. Today read `bun repo leases status`, `bun repo capacity status`, `bun repo session list` and `bun repo doctor`.",
+   "new": "- **Fleet status**: `bun repo fleet status` (`--json`, `--limit=<n>`; MCP tool `fleet_status`) is one read-only picture in under a second without a lease or a graph: who runs what (phase, counter, time left, age, priority, code freshness, memory admitted against really used), every queue with a waiting-time estimate, Bazel servers, storage against its budgets, sealed implementation, graph generation and findings (stuck holders, pressure, long waits, low disk). Start here, then `bun repo leases status` or `bun repo capacity status` for detail."
+  },
+  {
+   "id": "fleet-bullet",
+   "lang": "de",
+   "kind": "replace",
+   "old": "- **Flottenstatus**: nicht eingespielt. Heute `bun repo leases status`, `bun repo capacity status`, `bun repo session list` und `bun repo doctor` lesen.",
+   "new": "- **Flottenstatus**: `bun repo fleet status` (`--json`, `--limit=<n>`; MCP-Werkzeug `fleet_status`) ist ein schreibgeschütztes Gesamtbild in unter einer Sekunde ohne Lease und ohne Graph: wer was ausführt (Phase, Zähler, Restzeit, Alter, Priorität, Aktualität des Codes, zugesagter gegen tatsächlich genutzten Speicher), jede Warteschlange mit Wartezeitschätzung, Bazel-Server, Speicher gegen seine Budgets, versiegelte Implementierung, Graph-Generation und Befunde (festhängende Halter, Druck, lange Wartezeiten, wenig Platz). Hier anfangen, danach `bun repo leases status` oder `bun repo capacity status` für Einzelheiten."
+  },
+  {
+   "id": "fleet-status",
+   "lang": "en",
+   "kind": "replace",
+   "old": "- In progress: fleet status (obs-g), cross-platform CI for the suite tables (ci-g).",
+   "new": "- In progress: cross-platform CI for the suite tables (ci-g)."
+  },
+  {
+   "id": "fleet-status",
+   "lang": "de",
+   "kind": "replace",
+   "old": "- In Arbeit: Flottenstatus (obs-g), plattformübergreifende CI für die Suite-Tabellen (ci-g).",
+   "new": "- In Arbeit: plattformübergreifende CI für die Suite-Tabellen (ci-g)."
+  },
+  {
+   "id": "fleet-row",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "| `bun repo doctor` | one-shot answer for waiting, slow or failing work (pins, images, leases, grants, generations); `--fix --dry-run` lists the safe repairs |",
+   "where": "after",
+   "block": "| `bun repo fleet status [--json]` | the whole picture in one read-only screen (about 0.4-0.5 s, 93 MB, no lease, no graph): a source that fails or hangs names itself and leaves out only its own section; a run started before the standing-record format shows `code unknown`; waiting-time estimates are printed only where earlier holds taught one |"
+  },
+  {
+   "id": "fleet-row",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "| `bun repo doctor` | Antwort in einem Zug, warum Arbeit wartet, langsam ist oder scheitert (Pins, Abbilder, Leases, Zusagen, Generationen); `--fix --dry-run` listet die sicheren Reparaturen |",
+   "where": "after",
+   "block": "| `bun repo fleet status [--json]` | das Gesamtbild auf einem schreibgeschützten Bildschirm (rund 0,4-0,5 s, 93 MB, kein Lease, kein Graph): eine Quelle, die scheitert oder hängt, nennt sich selbst und lässt nur ihren eigenen Abschnitt weg; ein Lauf, der vor dem Format des Standing-Eintrags startete, zeigt `code unknown`; Wartezeitschätzungen erscheinen nur, wo frühere Halte eine gelehrt haben |"
+  }
+ ]
+}

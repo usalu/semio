@@ -1,0 +1,1 @@
+[{"suffix": "🧭️script-inputs/🟨️.mjs", "find": "export function bindClosureScriptsV1(workspaceRoot, scripts) { closureScriptsV1.set(workspaceRoot, scripts); }", "replace": "export function bindClosureScriptsV1(workspaceRoot, scripts) { globalThis.__m3scripts = closureScriptsV1; globalThis.__m3entries = closureEntriesV1; closureScriptsV1.set(workspaceRoot, scripts); }"}]

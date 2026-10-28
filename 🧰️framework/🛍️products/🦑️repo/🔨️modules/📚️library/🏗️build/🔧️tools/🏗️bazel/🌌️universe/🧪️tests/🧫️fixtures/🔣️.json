@@ -1,0 +1,15 @@
+{
+  "cases": [
+    {"name": "no root-anchored pattern", "groups": [["app/src/**/*.ts", "app/src/other/*.json"], ["other/**/*.ts", "!other/**/dist/**"]], "expected": {"roots": ["app/src", "other"], "whole": null}},
+    {"name": "keys5 schema documents rule beside a product closure", "groups": [["**/🧬️schema/**/*.json", "!**/{target,node_modules,dist,🗑️generated,📦️packages}/**", "!**/.*/**", "!**/⚡️cache/**", "!**/*.md"], ["🧰️framework/🛍️products/📓️print/**/*", "rustfmt.toml"]], "expected": {"roots": ["rustfmt.toml", "🧰️framework/🛍️products/📓️print"], "whole": {"names": ["dist", "node_modules", "target", "⚡️cache", "📦️packages", "🗑️generated"], "dot": true}}},
+    {"name": "two root-anchored tasks prune only the names both exclude", "groups": [["**/*.json", "!**/{target,📦️packages}/**", "!**/.*/**"], ["**/*.toml", "!**/target/**"]], "expected": {"roots": [], "whole": {"names": ["target"], "dot": false}}},
+    {"name": "a negation of the same task applies to all its root-anchored patterns", "groups": [["**/*.json", "**/*.toml", "!**/{target,node_modules}/**"]], "expected": {"roots": [], "whole": {"names": ["node_modules", "target"], "dot": false}}},
+    {"name": "root-anchored pattern without negation is unbounded", "groups": [["**/*.md"], ["**/*.json", "!**/target/**"]], "expected": {"roots": [], "whole": "unbounded"}},
+    {"name": "negations that do not exclude a whole directory prune nothing", "groups": [["**/*.json", "!**/*.md", "!**/x*/**", "!**/target/*.json", "!target/**", "!**/a/b/**"]], "expected": {"roots": [], "whole": "unbounded"}},
+    {"name": "two root-anchored tasks without a shared name are unbounded", "groups": [["**/*.json", "!**/target/**"], ["Cargo.{toml,lock}", "!**/dist/**"]], "expected": {"roots": [], "whole": "unbounded"}},
+    {"name": "a negation of another task never prunes", "groups": [["**/*.json"], ["other/**", "!**/target/**"]], "expected": {"roots": ["other"], "whole": "unbounded"}},
+    {"name": "dot alternative inside braces", "groups": [["**/🧬️schema/**", "!**/{.*,target}/**"]], "expected": {"roots": [], "whole": {"names": ["target"], "dot": true}}},
+    {"name": "literal files and nested roots stay minimal", "groups": [["./app/src/**/*.ts", "app/src/", "app/**/*", "app2/a?.ts"], ["**/*.json", "!**/node_modules/**"]], "expected": {"roots": ["app", "app2"], "whole": {"names": ["node_modules"], "dot": false}}}
+  ],
+  "probeRefusals": ["**/*.md", "**/x*/**", "**/target/*.json", "target/**", "**/a/b/**"]
+}

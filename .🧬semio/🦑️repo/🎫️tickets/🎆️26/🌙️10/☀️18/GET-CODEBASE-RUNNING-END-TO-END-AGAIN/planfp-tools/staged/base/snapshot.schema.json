@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "attempts": 3,
+        "concurrency": 24,
+        "readChunkBytes": 262144,
+        "maximumFileBytes": 1073741824,
+        "maximumFiles": 1048576,
+        "maximumManifestBytes": 268435456,
+        "racyMilliseconds": 2000,
+        "progressFiles": 1024,
+        "manifest": "snapshot.json",
+        "temporary": "snapshot-tmp",
+        "fileMode": 420,
+        "executableMode": 493,
+        "poolProbe": "clone-probe",
+        "poolFanout": 2,
+        "poolExecutableSuffix": ".x"
+      }
+    },
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "bytes",
+        "executable",
+        "liveMtimeNs",
+        "liveIno",
+        "racy",
+        "aliasMtimeNs"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1073741824
+        },
+        "executable": {
+          "type": "boolean"
+        },
+        "liveMtimeNs": {
+          "type": "string",
+          "pattern": "^[0-9]{1,24}$"
+        },
+        "liveIno": {
+          "type": "string",
+          "pattern": "^[0-9]{1,24}$"
+        },
+        "racy": {
+          "type": "boolean"
+        },
+        "aliasMtimeNs": {
+          "type": "string",
+          "pattern": "^[0-9]{1,24}$"
+        },
+        "realMtimeNs": {
+          "type": "string",
+          "pattern": "^[0-9]{1,24}$"
+        }
+      }
+    },
+    "Manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "rows"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "rows": {
+          "type": "array",
+          "maxItems": 1048576,
+          "items": {
+            "$ref": "#/definitions/Row"
+          }
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "en": {
+          "summary": "[bazel] source snapshot: {files} files, {captured} captured, {reused} reused, {pruned} pruned, {vanished} vanished before capture"
+        },
+        "de": {
+          "summary": "[bazel] Quellen-Schnappschuss: {files} Dateien, {captured} erfasst, {reused} wiederverwendet, {pruned} entfernt, {vanished} vor der Erfassung verschwunden"
+        }
+      }
+    }
+  }
+}

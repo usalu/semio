@@ -24,7 +24,7 @@
       "glob": "BUILD.bazel",
       "justification": {
         "en": "The generated BUILD file is the Bazel rendering of the task graph, not an input of the task.",
-        "de": "Die erzeugte BUILD-Datei ist Bazels Darstellung des Aufgabengraphen, keine Eingabe der Aufgabe."
+        "de": "Die erzeugte BUILD-Datei ist Bazels Darstellung des Task-Graphen, keine Eingabe der Task."
       },
       "evidence": "renderBazelBuildV1 writes BUILD.bazel at the workspace root"
     },
@@ -46,7 +46,7 @@
       "glob": "t_*.json",
       "justification": {
         "en": "The task manifest carries the declared command, working directory and environment of the task; it is how Bazel keys them, while Nx hashes them as part of the target.",
-        "de": "Das Aufgabenmanifest trägt Befehl, Arbeitsverzeichnis und Umgebung der Aufgabe; so bildet Bazel deren Schlüssel, während Nx sie als Teil des Ziels hasht."
+        "de": "Das Task-Manifest trägt Befehl, Arbeitsverzeichnis und Umgebung der Task; so bildet Bazel deren Schlüssel, während Nx sie als Teil des Ziels hasht."
       },
       "evidence": "bazelManifestV1 renders <label>.json"
     },
@@ -57,7 +57,7 @@
       "glob": "t_*.sh",
       "justification": {
         "en": "The launcher script starts the shared task runner; Nx starts the same runner through its own executor.",
-        "de": "Das Startskript startet den gemeinsamen Aufgabenläufer; Nx startet denselben Läufer über seinen eigenen Executor."
+        "de": "Das Startskript startet den gemeinsamen Task-Läufer; Nx startet denselben Läufer über seinen eigenen Executor."
       },
       "evidence": "STARLARK_RULES launcher attribute"
     },

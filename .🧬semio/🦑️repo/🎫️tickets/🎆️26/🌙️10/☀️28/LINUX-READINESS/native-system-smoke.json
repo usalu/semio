@@ -1,0 +1,9 @@
+{
+  "uuid": "aabbccdd-1122-3344-5566-77889900aabb",
+  "libraries": [
+    "cairo",
+    "pango",
+    "icu-uc"
+  ],
+  "language": "c11"
+}

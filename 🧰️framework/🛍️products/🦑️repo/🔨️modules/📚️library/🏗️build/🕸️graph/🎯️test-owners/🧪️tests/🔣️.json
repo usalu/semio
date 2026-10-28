@@ -1,0 +1,1938 @@
+{
+ "version": 1,
+ "worlds": [
+  {
+   "name": "world 0",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m3/b/tests/c0/f.feature",
+    "m4/a/tests/c0/f.feature",
+    "m4/a/tests/c1/f.feature",
+    "m4/a/tests/c2/f.feature",
+    "m4/b/tests/c0/f.feature",
+    "m4/b/tests/c1/f.feature",
+    "m4/b/tests/c2/f.feature",
+    "m4/c/tests/c0/f.feature",
+    "m4/c/tests/c1/f.feature",
+    "m4/c/tests/c2/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m1/a/tests/c0",
+    "m4/b/tests/c1",
+    "m4/c/tests/c1"
+   ],
+   "known": [],
+   "groups": [
+    [
+     "m1/a/tests",
+     [
+      "m1/a/tests/c0/f.feature"
+     ]
+    ],
+    [
+     "m4/b/tests",
+     [
+      "m4/b/tests/c0/f.feature",
+      "m4/b/tests/c1/f.feature",
+      "m4/b/tests/c2/f.feature"
+     ]
+    ],
+    [
+     "m4/c/tests",
+     [
+      "m4/c/tests/c0/f.feature",
+      "m4/c/tests/c1/f.feature",
+      "m4/c/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 1",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m0/a/tests/c1/f.feature",
+    "m0/a/tests/c2/f.feature",
+    "m0/b/tests/c0/f.feature",
+    "m0/c/tests/c0/f.feature",
+    "m0/c/tests/c1/f.feature",
+    "m0/c/tests/c2/f.feature",
+    "m1/b/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [],
+   "known": [
+    "m0/a/tests",
+    "m1/b/tests"
+   ],
+   "groups": []
+  },
+  {
+   "name": "world 2",
+   "features": [
+    "m0/c/tests/c0/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature",
+    "m2/a/tests/c0/f.feature",
+    "m2/b/tests/c0/f.feature",
+    "m2/b/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m2/a"
+   ],
+   "known": [
+    "m0/c/tests",
+    "m2/a/tests",
+    "m2/b/tests"
+   ],
+   "groups": []
+  },
+  {
+   "name": "world 3",
+   "features": [
+    "m0/c/tests/c0/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/b/tests/c1/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m1/b/tests",
+    "m1/c/tests",
+    "zz/new"
+   ],
+   "known": [],
+   "groups": [
+    [
+     "m1/b/tests",
+     [
+      "m1/b/tests/c0/f.feature",
+      "m1/b/tests/c1/f.feature"
+     ]
+    ],
+    [
+     "m1/c/tests",
+     [
+      "m1/c/tests/c0/f.feature",
+      "m1/c/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 4",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m0/b/tests/c2/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m1/a/tests/c2/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m0/b",
+    "m1/a",
+    "m1/a/tests/c1"
+   ],
+   "known": [],
+   "groups": [
+    [
+     "m0/b/tests",
+     [
+      "m0/b/tests/c0/f.feature",
+      "m0/b/tests/c1/f.feature",
+      "m0/b/tests/c2/f.feature"
+     ]
+    ],
+    [
+     "m1/a/tests",
+     [
+      "m1/a/tests/c0/f.feature",
+      "m1/a/tests/c1/f.feature",
+      "m1/a/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 5",
+   "features": [
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m3/b/tests/c0/f.feature",
+    "m3/b/tests/c1/f.feature",
+    "m3/b/tests/c2/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m1/a"
+   ],
+   "known": [
+    "m1/a/tests"
+   ],
+   "groups": []
+  },
+  {
+   "name": "world 6",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m2/a/tests/c0/f.feature",
+    "m2/a/tests/c1/f.feature",
+    "m2/a/tests/c2/f.feature",
+    "m2/b/tests/c0/f.feature",
+    "m2/b/tests/c1/f.feature",
+    "m2/b/tests/c2/f.feature",
+    "m4/a/tests/c0/f.feature",
+    "m4/b/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m0/a/tests/c0",
+    "m2/b/tests/c1",
+    "m4/a/tests"
+   ],
+   "known": [
+    "m0/a/tests",
+    "m2/a/tests",
+    "m2/b/tests",
+    "m4/b/tests"
+   ],
+   "groups": [
+    [
+     "m0/a/tests",
+     [
+      "m0/a/tests/c0/f.feature"
+     ]
+    ],
+    [
+     "m2/b/tests",
+     [
+      "m2/b/tests/c0/f.feature",
+      "m2/b/tests/c1/f.feature",
+      "m2/b/tests/c2/f.feature"
+     ]
+    ],
+    [
+     "m4/a/tests",
+     [
+      "m4/a/tests/c0/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 7",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m0/a/tests/c1/f.feature",
+    "m0/a/tests/c2/f.feature",
+    "m0/c/tests/c0/f.feature",
+    "m2/c/tests/c0/f.feature",
+    "m2/c/tests/c1/f.feature",
+    "m2/c/tests/c2/f.feature"
+   ],
+   "all": true,
+   "roots": [],
+   "known": [
+    "m0/a/tests",
+    "m0/c/tests",
+    "m2/c/tests"
+   ],
+   "groups": [
+    [
+     "m0/a/tests",
+     [
+      "m0/a/tests/c0/f.feature",
+      "m0/a/tests/c1/f.feature",
+      "m0/a/tests/c2/f.feature"
+     ]
+    ],
+    [
+     "m0/c/tests",
+     [
+      "m0/c/tests/c0/f.feature"
+     ]
+    ],
+    [
+     "m2/c/tests",
+     [
+      "m2/c/tests/c0/f.feature",
+      "m2/c/tests/c1/f.feature",
+      "m2/c/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 8",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m0/c/tests/c0/f.feature",
+    "m0/c/tests/c1/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m1/a/tests/c2/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/b/tests/c1/f.feature",
+    "m1/b/tests/c2/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature",
+    "m1/c/tests/c2/f.feature"
+   ],
+   "all": true,
+   "roots": [],
+   "known": [
+    "m0/a/tests",
+    "m1/a/tests",
+    "m1/b/tests",
+    "m1/c/tests"
+   ],
+   "groups": [
+    [
+     "m0/a/tests",
+     [
+      "m0/a/tests/c0/f.feature"
+     ]
+    ],
+    [
+     "m0/c/tests",
+     [
+      "m0/c/tests/c0/f.feature",
+      "m0/c/tests/c1/f.feature"
+     ]
+    ],
+    [
+     "m1/a/tests",
+     [
+      "m1/a/tests/c0/f.feature",
+      "m1/a/tests/c1/f.feature",
+      "m1/a/tests/c2/f.feature"
+     ]
+    ],
+    [
+     "m1/b/tests",
+     [
+      "m1/b/tests/c0/f.feature",
+      "m1/b/tests/c1/f.feature",
+      "m1/b/tests/c2/f.feature"
+     ]
+    ],
+    [
+     "m1/c/tests",
+     [
+      "m1/c/tests/c0/f.feature",
+      "m1/c/tests/c1/f.feature",
+      "m1/c/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 9",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m0/a/tests/c1/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m2/b/tests/c0/f.feature",
+    "m2/b/tests/c1/f.feature",
+    "m4/c/tests/c0/f.feature",
+    "m4/c/tests/c1/f.feature"
+   ],
+   "all": true,
+   "roots": [
+    "m0/a/tests",
+    "m0/a/tests/c1",
+    "m2/b/tests/c0"
+   ],
+   "known": [
+    "m0/a/tests",
+    "m1/a/tests",
+    "m2/b/tests",
+    "m4/c/tests"
+   ],
+   "groups": [
+    [
+     "m0/a/tests",
+     [
+      "m0/a/tests/c0/f.feature",
+      "m0/a/tests/c1/f.feature"
+     ]
+    ],
+    [
+     "m1/a/tests",
+     [
+      "m1/a/tests/c0/f.feature"
+     ]
+    ],
+    [
+     "m2/b/tests",
+     [
+      "m2/b/tests/c0/f.feature",
+      "m2/b/tests/c1/f.feature"
+     ]
+    ],
+    [
+     "m4/c/tests",
+     [
+      "m4/c/tests/c0/f.feature",
+      "m4/c/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 10",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m0/b/tests/c2/f.feature",
+    "m0/c/tests/c0/f.feature",
+    "m0/c/tests/c1/f.feature",
+    "m0/c/tests/c2/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/b/tests/c1/f.feature",
+    "m1/b/tests/c2/f.feature",
+    "m1/c/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m0/a/tests",
+    "m0/b/tests/c2",
+    "m0/c/tests"
+   ],
+   "known": [
+    "m0/a/tests",
+    "m0/c/tests"
+   ],
+   "groups": [
+    [
+     "m0/a/tests",
+     [
+      "m0/a/tests/c0/f.feature"
+     ]
+    ],
+    [
+     "m0/b/tests",
+     [
+      "m0/b/tests/c0/f.feature",
+      "m0/b/tests/c1/f.feature",
+      "m0/b/tests/c2/f.feature"
+     ]
+    ],
+    [
+     "m0/c/tests",
+     [
+      "m0/c/tests/c0/f.feature",
+      "m0/c/tests/c1/f.feature",
+      "m0/c/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 11",
+   "features": [
+    "m3/b/tests/c0/f.feature",
+    "m3/b/tests/c1/f.feature",
+    "m3/b/tests/c2/f.feature",
+    "m4/c/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [],
+   "known": [
+    "m3/b/tests",
+    "m4/c/tests"
+   ],
+   "groups": []
+  },
+  {
+   "name": "world 12",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m0/b/tests/c2/f.feature",
+    "m0/c/tests/c0/f.feature",
+    "m2/b/tests/c0/f.feature",
+    "m2/b/tests/c1/f.feature",
+    "m3/b/tests/c0/f.feature",
+    "m3/c/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [],
+   "known": [
+    "m0/b/tests",
+    "m0/c/tests",
+    "m2/b/tests",
+    "m3/b/tests",
+    "m3/c/tests"
+   ],
+   "groups": []
+  },
+  {
+   "name": "world 13",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m0/b/tests/c2/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m2/a/tests/c0/f.feature",
+    "m2/a/tests/c1/f.feature"
+   ],
+   "all": true,
+   "roots": [
+    "m1/a",
+    "m2/a/tests"
+   ],
+   "known": [
+    "m2/a/tests"
+   ],
+   "groups": [
+    [
+     "m0/b/tests",
+     [
+      "m0/b/tests/c0/f.feature",
+      "m0/b/tests/c1/f.feature",
+      "m0/b/tests/c2/f.feature"
+     ]
+    ],
+    [
+     "m1/a/tests",
+     [
+      "m1/a/tests/c0/f.feature",
+      "m1/a/tests/c1/f.feature"
+     ]
+    ],
+    [
+     "m1/b/tests",
+     [
+      "m1/b/tests/c0/f.feature"
+     ]
+    ],
+    [
+     "m1/c/tests",
+     [
+      "m1/c/tests/c0/f.feature"
+     ]
+    ],
+    [
+     "m2/a/tests",
+     [
+      "m2/a/tests/c0/f.feature",
+      "m2/a/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 14",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    ".",
+    "m1/a/tests/c0",
+    "m1/a/tests/c1"
+   ],
+   "known": [
+    "m0/b/tests"
+   ],
+   "groups": [
+    [
+     "m1/a/tests",
+     [
+      "m1/a/tests/c0/f.feature",
+      "m1/a/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 15",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m2/a/tests/c0/f.feature",
+    "m2/a/tests/c1/f.feature",
+    "m2/c/tests/c0/f.feature",
+    "m2/c/tests/c1/f.feature",
+    "m2/c/tests/c2/f.feature",
+    "m4/a/tests/c0/f.feature",
+    "m4/a/tests/c1/f.feature",
+    "m4/a/tests/c2/f.feature",
+    "m5/c/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m2/c",
+    "m5/c/tests"
+   ],
+   "known": [
+    "m0/b/tests",
+    "m2/a/tests",
+    "m2/c/tests",
+    "m4/a/tests",
+    "m5/c/tests"
+   ],
+   "groups": [
+    [
+     "m5/c/tests",
+     [
+      "m5/c/tests/c0/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 16",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m0/c/tests/c0/f.feature",
+    "m0/c/tests/c1/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m1/a/tests/c2/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/b/tests/c1/f.feature",
+    "m1/b/tests/c2/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m1/b"
+   ],
+   "known": [],
+   "groups": [
+    [
+     "m1/b/tests",
+     [
+      "m1/b/tests/c0/f.feature",
+      "m1/b/tests/c1/f.feature",
+      "m1/b/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 17",
+   "features": [
+    "m1/a/tests/c0/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/b/tests/c1/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature",
+    "m1/c/tests/c2/f.feature",
+    "m3/a/tests/c0/f.feature",
+    "m3/a/tests/c1/f.feature",
+    "m3/a/tests/c2/f.feature",
+    "m3/b/tests/c0/f.feature",
+    "m3/b/tests/c1/f.feature",
+    "m3/b/tests/c2/f.feature",
+    "m3/c/tests/c0/f.feature",
+    "m3/c/tests/c1/f.feature",
+    "m3/c/tests/c2/f.feature"
+   ],
+   "all": false,
+   "roots": [],
+   "known": [
+    "m1/a/tests",
+    "m1/b/tests",
+    "m1/c/tests",
+    "m3/a/tests",
+    "m3/b/tests",
+    "m3/c/tests"
+   ],
+   "groups": []
+  },
+  {
+   "name": "world 18",
+   "features": [
+    "m2/b/tests/c0/f.feature",
+    "m2/b/tests/c1/f.feature",
+    "m2/b/tests/c2/f.feature",
+    "m2/c/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [],
+   "known": [
+    "m2/b/tests"
+   ],
+   "groups": []
+  },
+  {
+   "name": "world 19",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m0/a/tests/c1/f.feature",
+    "m0/a/tests/c2/f.feature",
+    "m0/b/tests/c0/f.feature",
+    "m2/b/tests/c0/f.feature",
+    "m2/b/tests/c1/f.feature",
+    "m4/b/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m0/a/tests/c1",
+    "m2/b/tests/c1",
+    "zz/new"
+   ],
+   "known": [
+    "m0/a/tests",
+    "m0/b/tests",
+    "m2/b/tests",
+    "m4/b/tests"
+   ],
+   "groups": [
+    [
+     "m0/a/tests",
+     [
+      "m0/a/tests/c0/f.feature",
+      "m0/a/tests/c1/f.feature",
+      "m0/a/tests/c2/f.feature"
+     ]
+    ],
+    [
+     "m2/b/tests",
+     [
+      "m2/b/tests/c0/f.feature",
+      "m2/b/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 20",
+   "features": [
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/b/tests/c1/f.feature",
+    "m1/b/tests/c2/f.feature",
+    "m2/a/tests/c0/f.feature",
+    "m2/a/tests/c1/f.feature",
+    "m2/b/tests/c0/f.feature",
+    "m2/c/tests/c0/f.feature",
+    "m2/c/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [],
+   "known": [
+    "m1/a/tests",
+    "m1/b/tests",
+    "m2/a/tests",
+    "m2/c/tests"
+   ],
+   "groups": []
+  },
+  {
+   "name": "world 21",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m0/c/tests/c0/f.feature",
+    "m0/c/tests/c1/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m0/c/tests/c0"
+   ],
+   "known": [
+    "m0/a/tests",
+    "m0/c/tests",
+    "m1/b/tests"
+   ],
+   "groups": [
+    [
+     "m0/c/tests",
+     [
+      "m0/c/tests/c0/f.feature",
+      "m0/c/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 22",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m0/a/tests/c1/f.feature",
+    "m0/a/tests/c2/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "."
+   ],
+   "known": [
+    "m1/a/tests"
+   ],
+   "groups": [
+    [
+     "m0/a/tests",
+     [
+      "m0/a/tests/c0/f.feature",
+      "m0/a/tests/c1/f.feature",
+      "m0/a/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 23",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m0/b/tests/c2/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m2/c/tests/c0/f.feature",
+    "m2/c/tests/c1/f.feature",
+    "m2/c/tests/c2/f.feature",
+    "m3/c/tests/c0/f.feature",
+    "m4/a/tests/c0/f.feature",
+    "m4/a/tests/c1/f.feature",
+    "m4/a/tests/c2/f.feature",
+    "m4/b/tests/c0/f.feature",
+    "m4/b/tests/c1/f.feature",
+    "m4/b/tests/c2/f.feature",
+    "m4/c/tests/c0/f.feature",
+    "m4/c/tests/c1/f.feature",
+    "m4/c/tests/c2/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m0/b/tests/c0"
+   ],
+   "known": [
+    "m1/c/tests",
+    "m4/a/tests",
+    "m4/c/tests"
+   ],
+   "groups": [
+    [
+     "m0/b/tests",
+     [
+      "m0/b/tests/c0/f.feature",
+      "m0/b/tests/c1/f.feature",
+      "m0/b/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 24",
+   "features": [
+    "m1/a/tests/c0/f.feature",
+    "m2/a/tests/c0/f.feature",
+    "m2/c/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [],
+   "known": [
+    "m2/c/tests"
+   ],
+   "groups": []
+  },
+  {
+   "name": "world 25",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m0/a/tests/c1/f.feature",
+    "m0/a/tests/c2/f.feature",
+    "m0/c/tests/c0/f.feature",
+    "m0/c/tests/c1/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m0/a/tests/c2",
+    "m0/c/tests/c1"
+   ],
+   "known": [],
+   "groups": [
+    [
+     "m0/a/tests",
+     [
+      "m0/a/tests/c0/f.feature",
+      "m0/a/tests/c1/f.feature",
+      "m0/a/tests/c2/f.feature"
+     ]
+    ],
+    [
+     "m0/c/tests",
+     [
+      "m0/c/tests/c0/f.feature",
+      "m0/c/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 26",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m0/c/tests/c0/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature"
+   ],
+   "all": true,
+   "roots": [],
+   "known": [],
+   "groups": [
+    [
+     "m0/a/tests",
+     [
+      "m0/a/tests/c0/f.feature"
+     ]
+    ],
+    [
+     "m0/c/tests",
+     [
+      "m0/c/tests/c0/f.feature"
+     ]
+    ],
+    [
+     "m1/a/tests",
+     [
+      "m1/a/tests/c0/f.feature",
+      "m1/a/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 27",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m3/b/tests/c0/f.feature",
+    "m3/b/tests/c1/f.feature",
+    "m3/b/tests/c2/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "."
+   ],
+   "known": [
+    "m3/b/tests"
+   ],
+   "groups": [
+    [
+     "m0/b/tests",
+     [
+      "m0/b/tests/c0/f.feature",
+      "m0/b/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 28",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/b/tests/c1/f.feature",
+    "m1/b/tests/c2/f.feature"
+   ],
+   "all": false,
+   "roots": [],
+   "known": [],
+   "groups": []
+  },
+  {
+   "name": "world 29",
+   "features": [
+    "m0/c/tests/c0/f.feature",
+    "m0/c/tests/c1/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature",
+    "m1/c/tests/c2/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m1/c"
+   ],
+   "known": [
+    "m1/b/tests"
+   ],
+   "groups": [
+    [
+     "m1/c/tests",
+     [
+      "m1/c/tests/c0/f.feature",
+      "m1/c/tests/c1/f.feature",
+      "m1/c/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 30",
+   "features": [
+    "m1/a/tests/c0/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/b/tests/c1/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature",
+    "m1/c/tests/c2/f.feature",
+    "m2/b/tests/c0/f.feature",
+    "m2/b/tests/c1/f.feature",
+    "m2/b/tests/c2/f.feature",
+    "m3/a/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m1/a/tests/c0",
+    "m1/b"
+   ],
+   "known": [
+    "m1/c/tests"
+   ],
+   "groups": [
+    [
+     "m1/a/tests",
+     [
+      "m1/a/tests/c0/f.feature"
+     ]
+    ],
+    [
+     "m1/b/tests",
+     [
+      "m1/b/tests/c0/f.feature",
+      "m1/b/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 31",
+   "features": [
+    "m3/c/tests/c0/f.feature",
+    "m4/a/tests/c0/f.feature",
+    "m4/a/tests/c1/f.feature",
+    "m4/a/tests/c2/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m3/c/tests",
+    "m4/a/tests",
+    "zz/new"
+   ],
+   "known": [],
+   "groups": [
+    [
+     "m3/c/tests",
+     [
+      "m3/c/tests/c0/f.feature"
+     ]
+    ],
+    [
+     "m4/a/tests",
+     [
+      "m4/a/tests/c0/f.feature",
+      "m4/a/tests/c1/f.feature",
+      "m4/a/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 32",
+   "features": [
+    "m0/c/tests/c0/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/b/tests/c1/f.feature",
+    "m2/a/tests/c0/f.feature",
+    "m2/a/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [],
+   "known": [
+    "m1/b/tests",
+    "m2/a/tests"
+   ],
+   "groups": []
+  },
+  {
+   "name": "world 33",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m1/a/tests/c2/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/b/tests/c1/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature",
+    "m1/c/tests/c2/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m0/b/tests/c0",
+    "m1/c/tests/c0"
+   ],
+   "known": [
+    "m1/b/tests",
+    "m1/c/tests"
+   ],
+   "groups": [
+    [
+     "m0/b/tests",
+     [
+      "m0/b/tests/c0/f.feature",
+      "m0/b/tests/c1/f.feature"
+     ]
+    ],
+    [
+     "m1/c/tests",
+     [
+      "m1/c/tests/c0/f.feature",
+      "m1/c/tests/c1/f.feature",
+      "m1/c/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 34",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m0/a/tests/c1/f.feature",
+    "m0/a/tests/c2/f.feature",
+    "m0/c/tests/c0/f.feature",
+    "m0/c/tests/c1/f.feature",
+    "m0/c/tests/c2/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/b/tests/c1/f.feature",
+    "m2/a/tests/c0/f.feature",
+    "m2/c/tests/c0/f.feature",
+    "m3/a/tests/c0/f.feature",
+    "m3/a/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m0/c",
+    "m1/b/tests/c1",
+    "m2/c/tests"
+   ],
+   "known": [
+    "m0/a/tests",
+    "m0/c/tests",
+    "m1/b/tests",
+    "m2/a/tests",
+    "m2/c/tests"
+   ],
+   "groups": [
+    [
+     "m1/b/tests",
+     [
+      "m1/b/tests/c0/f.feature",
+      "m1/b/tests/c1/f.feature"
+     ]
+    ],
+    [
+     "m2/c/tests",
+     [
+      "m2/c/tests/c0/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 35",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m0/a/tests/c1/f.feature",
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m0/c/tests/c0/f.feature",
+    "m0/c/tests/c1/f.feature",
+    "m0/c/tests/c2/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/b/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m1/b"
+   ],
+   "known": [
+    "m0/a/tests",
+    "m0/b/tests",
+    "m0/c/tests",
+    "m1/b/tests"
+   ],
+   "groups": []
+  },
+  {
+   "name": "world 36",
+   "features": [
+    "m2/b/tests/c0/f.feature",
+    "m2/b/tests/c1/f.feature",
+    "m2/b/tests/c2/f.feature",
+    "m2/c/tests/c0/f.feature",
+    "m2/c/tests/c1/f.feature",
+    "m2/c/tests/c2/f.feature",
+    "m4/c/tests/c0/f.feature",
+    "m4/c/tests/c1/f.feature",
+    "m4/c/tests/c2/f.feature",
+    "m5/c/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m4/c/tests/c2"
+   ],
+   "known": [
+    "m2/b/tests",
+    "m2/c/tests"
+   ],
+   "groups": [
+    [
+     "m4/c/tests",
+     [
+      "m4/c/tests/c0/f.feature",
+      "m4/c/tests/c1/f.feature",
+      "m4/c/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 37",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m0/c/tests/c0/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m1/a/tests/c2/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m2/a/tests/c0/f.feature",
+    "m2/a/tests/c1/f.feature",
+    "m2/a/tests/c2/f.feature",
+    "m2/b/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m1/a/tests/c1",
+    "m2/a"
+   ],
+   "known": [
+    "m0/a/tests",
+    "m0/c/tests",
+    "m1/a/tests",
+    "m1/b/tests",
+    "m2/a/tests"
+   ],
+   "groups": [
+    [
+     "m1/a/tests",
+     [
+      "m1/a/tests/c0/f.feature",
+      "m1/a/tests/c1/f.feature",
+      "m1/a/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 38",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature",
+    "m1/c/tests/c2/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m0/b/tests/c1"
+   ],
+   "known": [
+    "m1/c/tests"
+   ],
+   "groups": [
+    [
+     "m0/b/tests",
+     [
+      "m0/b/tests/c0/f.feature",
+      "m0/b/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 39",
+   "features": [
+    "m2/c/tests/c0/f.feature",
+    "m3/c/tests/c0/f.feature",
+    "m3/c/tests/c1/f.feature",
+    "m5/a/tests/c0/f.feature",
+    "m5/a/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [],
+   "known": [],
+   "groups": []
+  },
+  {
+   "name": "world 40",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m0/b/tests/c2/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature",
+    "m2/a/tests/c0/f.feature",
+    "m2/a/tests/c1/f.feature",
+    "m4/a/tests/c0/f.feature",
+    "m4/a/tests/c1/f.feature",
+    "m4/a/tests/c2/f.feature",
+    "m5/b/tests/c0/f.feature",
+    "m5/b/tests/c1/f.feature",
+    "m5/b/tests/c2/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m0/b/tests/c1"
+   ],
+   "known": [
+    "m1/c/tests",
+    "m2/a/tests"
+   ],
+   "groups": [
+    [
+     "m0/b/tests",
+     [
+      "m0/b/tests/c0/f.feature",
+      "m0/b/tests/c1/f.feature",
+      "m0/b/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 41",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m2/b/tests/c0/f.feature",
+    "m3/c/tests/c0/f.feature",
+    "m3/c/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m0/b/tests",
+    "m3/c"
+   ],
+   "known": [
+    "m0/b/tests"
+   ],
+   "groups": [
+    [
+     "m0/b/tests",
+     [
+      "m0/b/tests/c0/f.feature",
+      "m0/b/tests/c1/f.feature"
+     ]
+    ],
+    [
+     "m3/c/tests",
+     [
+      "m3/c/tests/c0/f.feature",
+      "m3/c/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 42",
+   "features": [
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature",
+    "m3/a/tests/c0/f.feature",
+    "m3/c/tests/c0/f.feature",
+    "m4/a/tests/c0/f.feature",
+    "m4/a/tests/c1/f.feature",
+    "m4/a/tests/c2/f.feature",
+    "m4/b/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m3/a/tests",
+    "m3/c/tests/c0",
+    "m4/a/tests/c0"
+   ],
+   "known": [
+    "m1/a/tests",
+    "m1/c/tests",
+    "m3/a/tests",
+    "m4/a/tests"
+   ],
+   "groups": [
+    [
+     "m3/a/tests",
+     [
+      "m3/a/tests/c0/f.feature"
+     ]
+    ],
+    [
+     "m3/c/tests",
+     [
+      "m3/c/tests/c0/f.feature"
+     ]
+    ],
+    [
+     "m4/a/tests",
+     [
+      "m4/a/tests/c0/f.feature",
+      "m4/a/tests/c1/f.feature",
+      "m4/a/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 43",
+   "features": [
+    "m2/a/tests/c0/f.feature",
+    "m2/c/tests/c0/f.feature",
+    "m2/c/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [],
+   "known": [],
+   "groups": []
+  },
+  {
+   "name": "world 44",
+   "features": [
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m1/a/tests/c2/f.feature",
+    "m2/c/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    ".",
+    "m1/a/tests/c1",
+    "m1/a/tests/c2"
+   ],
+   "known": [
+    "m2/c/tests"
+   ],
+   "groups": [
+    [
+     "m1/a/tests",
+     [
+      "m1/a/tests/c0/f.feature",
+      "m1/a/tests/c1/f.feature",
+      "m1/a/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 45",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m0/b/tests/c2/f.feature",
+    "m0/c/tests/c0/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/b/tests/c1/f.feature",
+    "m1/b/tests/c2/f.feature",
+    "m2/a/tests/c0/f.feature",
+    "m2/a/tests/c1/f.feature",
+    "m3/a/tests/c0/f.feature",
+    "m3/a/tests/c1/f.feature",
+    "m3/a/tests/c2/f.feature",
+    "m3/c/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m3/a",
+    "m3/a/tests/c0",
+    "m3/c/tests"
+   ],
+   "known": [
+    "m0/b/tests",
+    "m0/c/tests",
+    "m1/b/tests",
+    "m2/a/tests",
+    "m3/a/tests",
+    "m3/c/tests"
+   ],
+   "groups": [
+    [
+     "m3/a/tests",
+     [
+      "m3/a/tests/c0/f.feature",
+      "m3/a/tests/c1/f.feature",
+      "m3/a/tests/c2/f.feature"
+     ]
+    ],
+    [
+     "m3/c/tests",
+     [
+      "m3/c/tests/c0/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 46",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m1/a/tests/c2/f.feature",
+    "m2/b/tests/c0/f.feature",
+    "m2/b/tests/c1/f.feature",
+    "m2/c/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m1/a/tests/c2"
+   ],
+   "known": [
+    "m0/b/tests",
+    "m2/c/tests"
+   ],
+   "groups": [
+    [
+     "m1/a/tests",
+     [
+      "m1/a/tests/c0/f.feature",
+      "m1/a/tests/c1/f.feature",
+      "m1/a/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 47",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m0/b/tests/c1/f.feature",
+    "m0/b/tests/c2/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m1/a/tests/c2/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature",
+    "m2/b/tests/c0/f.feature",
+    "m2/b/tests/c1/f.feature",
+    "m2/c/tests/c0/f.feature",
+    "m2/c/tests/c1/f.feature"
+   ],
+   "all": true,
+   "roots": [
+    "m0/b/tests/c2"
+   ],
+   "known": [
+    "m0/b/tests",
+    "m1/a/tests",
+    "m1/c/tests"
+   ],
+   "groups": [
+    [
+     "m0/b/tests",
+     [
+      "m0/b/tests/c0/f.feature",
+      "m0/b/tests/c1/f.feature",
+      "m0/b/tests/c2/f.feature"
+     ]
+    ],
+    [
+     "m1/a/tests",
+     [
+      "m1/a/tests/c0/f.feature",
+      "m1/a/tests/c1/f.feature",
+      "m1/a/tests/c2/f.feature"
+     ]
+    ],
+    [
+     "m1/c/tests",
+     [
+      "m1/c/tests/c0/f.feature",
+      "m1/c/tests/c1/f.feature"
+     ]
+    ],
+    [
+     "m2/b/tests",
+     [
+      "m2/b/tests/c0/f.feature",
+      "m2/b/tests/c1/f.feature"
+     ]
+    ],
+    [
+     "m2/c/tests",
+     [
+      "m2/c/tests/c0/f.feature",
+      "m2/c/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 48",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m1/a/tests/c2/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/b/tests/c1/f.feature",
+    "m2/a/tests/c0/f.feature",
+    "m2/a/tests/c1/f.feature",
+    "m2/a/tests/c2/f.feature",
+    "m2/c/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m2/a/tests/c0",
+    "m2/c/tests"
+   ],
+   "known": [
+    "m0/b/tests",
+    "m1/a/tests",
+    "m1/b/tests"
+   ],
+   "groups": [
+    [
+     "m2/a/tests",
+     [
+      "m2/a/tests/c0/f.feature",
+      "m2/a/tests/c1/f.feature",
+      "m2/a/tests/c2/f.feature"
+     ]
+    ],
+    [
+     "m2/c/tests",
+     [
+      "m2/c/tests/c0/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 49",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m4/a/tests/c0/f.feature",
+    "m4/c/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m4/a/tests",
+    "m4/a/tests/c0",
+    "m4/c/tests/c0"
+   ],
+   "known": [
+    "m0/a/tests",
+    "m4/a/tests"
+   ],
+   "groups": [
+    [
+     "m4/a/tests",
+     [
+      "m4/a/tests/c0/f.feature"
+     ]
+    ],
+    [
+     "m4/c/tests",
+     [
+      "m4/c/tests/c0/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 50",
+   "features": [
+    "m1/b/tests/c0/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [],
+   "known": [],
+   "groups": []
+  },
+  {
+   "name": "world 51",
+   "features": [
+    "m1/b/tests/c0/f.feature",
+    "m1/b/tests/c1/f.feature",
+    "m1/b/tests/c2/f.feature",
+    "m2/b/tests/c0/f.feature",
+    "m3/a/tests/c0/f.feature",
+    "m3/a/tests/c1/f.feature",
+    "m3/c/tests/c0/f.feature",
+    "m4/b/tests/c0/f.feature",
+    "m4/b/tests/c1/f.feature",
+    "m4/b/tests/c2/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m3/a/tests/c0",
+    "m3/c/tests",
+    "zz/new"
+   ],
+   "known": [
+    "m1/b/tests"
+   ],
+   "groups": [
+    [
+     "m3/a/tests",
+     [
+      "m3/a/tests/c0/f.feature",
+      "m3/a/tests/c1/f.feature"
+     ]
+    ],
+    [
+     "m3/c/tests",
+     [
+      "m3/c/tests/c0/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 52",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m0/c/tests/c0/f.feature",
+    "m0/c/tests/c1/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m1/a/tests/c2/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m1/a",
+    "zz/new"
+   ],
+   "known": [
+    "m0/b/tests",
+    "m0/c/tests",
+    "m1/a/tests",
+    "m1/c/tests"
+   ],
+   "groups": []
+  },
+  {
+   "name": "world 53",
+   "features": [
+    "m1/a/tests/c0/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature",
+    "m1/c/tests/c2/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m1/c/tests/c2"
+   ],
+   "known": [],
+   "groups": [
+    [
+     "m1/c/tests",
+     [
+      "m1/c/tests/c0/f.feature",
+      "m1/c/tests/c1/f.feature",
+      "m1/c/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 54",
+   "features": [
+    "m0/b/tests/c0/f.feature",
+    "m2/c/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [],
+   "known": [],
+   "groups": []
+  },
+  {
+   "name": "world 55",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m0/a/tests/c1/f.feature",
+    "m0/c/tests/c0/f.feature",
+    "m0/c/tests/c1/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m1/a/tests/c2/f.feature",
+    "m1/b/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m0/c/tests/c0",
+    "m1/a"
+   ],
+   "known": [
+    "m0/a/tests",
+    "m1/a/tests",
+    "m1/b/tests"
+   ],
+   "groups": [
+    [
+     "m0/c/tests",
+     [
+      "m0/c/tests/c0/f.feature",
+      "m0/c/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 56",
+   "features": [
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature",
+    "m4/b/tests/c0/f.feature",
+    "m4/b/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m1/c/tests/c0"
+   ],
+   "known": [],
+   "groups": [
+    [
+     "m1/c/tests",
+     [
+      "m1/c/tests/c0/f.feature",
+      "m1/c/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 57",
+   "features": [
+    "m0/c/tests/c0/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/b/tests/c0/f.feature",
+    "m1/b/tests/c1/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature",
+    "m1/c/tests/c2/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m0/c/tests/c0",
+    "m1/c/tests/c2"
+   ],
+   "known": [
+    "m0/c/tests",
+    "m1/a/tests",
+    "m1/b/tests"
+   ],
+   "groups": [
+    [
+     "m0/c/tests",
+     [
+      "m0/c/tests/c0/f.feature"
+     ]
+    ],
+    [
+     "m1/c/tests",
+     [
+      "m1/c/tests/c0/f.feature",
+      "m1/c/tests/c1/f.feature",
+      "m1/c/tests/c2/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 58",
+   "features": [
+    "m0/c/tests/c0/f.feature",
+    "m1/a/tests/c0/f.feature",
+    "m1/a/tests/c1/f.feature",
+    "m2/a/tests/c0/f.feature",
+    "m2/a/tests/c1/f.feature",
+    "m2/a/tests/c2/f.feature",
+    "m2/c/tests/c0/f.feature",
+    "m2/c/tests/c1/f.feature",
+    "m4/c/tests/c0/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m0/c",
+    "m1/a/tests",
+    "m1/a/tests/c1"
+   ],
+   "known": [
+    "m0/c/tests",
+    "m1/a/tests",
+    "m2/a/tests",
+    "m4/c/tests"
+   ],
+   "groups": [
+    [
+     "m1/a/tests",
+     [
+      "m1/a/tests/c0/f.feature",
+      "m1/a/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  },
+  {
+   "name": "world 59",
+   "features": [
+    "m0/a/tests/c0/f.feature",
+    "m1/c/tests/c0/f.feature",
+    "m1/c/tests/c1/f.feature",
+    "m2/c/tests/c0/f.feature",
+    "m2/c/tests/c1/f.feature"
+   ],
+   "all": false,
+   "roots": [
+    "m1/c/tests/c1"
+   ],
+   "known": [],
+   "groups": [
+    [
+     "m1/c/tests",
+     [
+      "m1/c/tests/c0/f.feature",
+      "m1/c/tests/c1/f.feature"
+     ]
+    ]
+   ]
+  }
+ ]
+}

@@ -1,0 +1,32 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "00.ts",
+  "base": "9192bd3e971254e6ce5aac4b233546dea40dae7670fb88e2b009c80cc70ba1f8",
+  "new": "016b7e618f1140210178985aab9bcb338487d314c6cc0ce4736ab64efebb3655"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌿️environment/🏃️action/🟦️.ts": {
+  "file": "01.ts",
+  "base": null,
+  "new": "92b76650c52e980e371ff8a1b4457e2fbc09cc18aaf12e630cc2e3a01072035b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌿️environment/🏃️action/🧬️schema/🔣️.json": {
+  "file": "02.json",
+  "base": null,
+  "new": "ad06b35637e693c56688ea60d40a4f91fd834101ca92dcdd11dc906c559d8ce5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌿️environment/🏃️action/🧪️tests/🟦️.ts": {
+  "file": "03.ts",
+  "base": null,
+  "new": "00cae1ddda03189421d93e93091e03e8315aab09b0aa44ffc96bade8351c61a3"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌿️environment/🏃️action/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "04.json",
+  "base": null,
+  "new": "d3b811902f24e15a5e988a47bc5e68d2e8c045e512443c23ecb7a4744d3d8820"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌿️environment/🏃️action/🧪️tests/🧮️resources/🐍️oracle/🐍️.py": {
+  "file": "05.py",
+  "base": null,
+  "new": "ae359f2f16b8a2c98a075a25059eec318e9a17e7675639690160f60b10d621b4"
+ }
+}

@@ -4,7 +4,8 @@ import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,writeFi
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {setTimeout as sleep} from "node:timers/promises";
-import {hostCapacityDirectoryV1,newHostCapacityIdV1,readHostCapacityPolicyV1,readHostCapacityStatusV1,withHostCapacityV1,type HostCapacityOptionsV1,type HostSampleV1} from "../../🟦️.ts";
+import {liveChildPidsV1} from "../../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
+import {attachHostCapacityProcessV1,hostCapacityDirectoryV1,newHostCapacityIdV1,readHostCapacityPolicyV1,readHostCapacityStatusV1,takeHostLockV1,withHostCapacityV1,type HostCapacityOptionsV1,type HostSampleV1} from "../../🟦️.ts";
 import decisionFixture from "../🧫️fixtures/🔣️.json";
 
 const base=readHostCapacityPolicyV1(decisionFixture.policy),policy=readHostCapacityPolicyV1({...decisionFixture.policy,load:{...decisionFixture.policy.load,overrideAfterMilliseconds:150},wait:{...decisionFixture.policy.wait,pollMilliseconds:10,progressMilliseconds:20,heartbeatMilliseconds:20,sampleMaximumAgeMilliseconds:0,lockStaleMilliseconds:2000,staleMilliseconds:60000}});
@@ -25,6 +26,21 @@ test("Requests that do not fit together run one after the other in arrival order
  expect(readdirSync(join(directory,"grants"))).toEqual([]);
  expect(readdirSync(join(directory,"queue"))).toEqual([]);
 },30000);
+
+test("A lock that a stale-lock breaker removes between creation and the owner write is lost without a crash, and the lock of a dead owner is broken once and then taken",()=>{
+ const directory=fresh(),lock=join(directory,"lock");
+ expect(takeHostLockV1(directory,Date.now(),base,process.pid,()=>rmSync(lock,{recursive:true,force:true}))).toBe(false);
+ expect(takeHostLockV1(directory,Date.now(),base,process.pid)).toBe(true);
+ expect(readFileSync(join(lock,"owner"),"utf8")).toMatch(new RegExp("^"+process.pid+":\\d+$"));
+ expect(takeHostLockV1(directory,Date.now(),base,process.pid)).toBe(false);
+ expect(existsSync(lock)).toBe(true);
+ rmSync(lock,{recursive:true,force:true});
+ const dead=spawnSync(process.execPath,["-e","0"]).pid;
+ mkdirSync(lock);writeFileSync(join(lock,"owner"),`${dead}:${Date.now()}`);
+ expect(takeHostLockV1(directory,Date.now(),base,process.pid)).toBe(false);
+ expect(existsSync(lock)).toBe(false);
+ expect(takeHostLockV1(directory,Date.now(),base,process.pid)).toBe(true);
+});
 
 test("Two requests that fit together run together and a third waits for one of them",async()=>{
  const directory=fresh();let running=0,peak=0;
@@ -107,6 +123,21 @@ test("A child inside a grant inherits it without queueing even when the machine 
  });
  expect(seen).toBeDefined();
  expect(readdirSync(join(directory,"queue"))).toEqual([]);
+});
+
+test("A process started outside the owner's tree (a build server) is attached to the grant, counted by the heartbeat and learned with the run, and its record goes with the grant",async()=>{
+ const directory=fresh(),runs:{peakMegabytes:number}[]=[],trees:Record<number,number>={[process.pid]:1000,777:600,778:50};
+ await withHostCapacityV1(options(directory,{observe:async pid=>trees[pid]??null,learn:run=>{runs.push(run);}}),async handle=>{
+  const environment={...handle.environment,SEMIO_HOST_CAPACITY_DIRECTORY:directory};
+  expect(attachHostCapacityProcessV1({},777),"no grant in the environment: nothing to attach to").toBe(false);
+  expect(attachHostCapacityProcessV1(environment,777)).toBe(true);expect(attachHostCapacityProcessV1(environment,777)).toBe(true);expect(attachHostCapacityProcessV1(environment,778)).toBe(true);expect(attachHostCapacityProcessV1(environment,0)).toBe(false);
+  expect(readFileSync(join(directory,"grants",`${handle.id}.attached`),"utf8")).toBe("777\n778\n");
+  await sleep(150);
+  expect(JSON.parse(readFileSync(join(directory,"grants",`${handle.id}.json`),"utf8")).observedMegabytes,"own tree 1000 + attached 600 + 50").toBe(1650);
+  const status=await readHostCapacityStatusV1({directory,policy,control:control().value,sample:sampler(()=>({}))});expect(status.grants.length,"the attached record is not a grant").toBe(1);
+  trees[777]=-1;delete trees[778];await sleep(100);
+ });
+ expect(readdirSync(join(directory,"grants")).filter(name=>name.endsWith(".attached"))).toEqual([]);expect(runs.length).toBe(1);expect(runs[0]!.peakMegabytes).toBe(1650);
 });
 
 test("The governor can be switched off explicitly or by policy and says so",async()=>{
@@ -259,6 +290,15 @@ test("A waiting process that still has a child process is not lent, one that los
  });
 },30000);
 
+/** 🛡️ An unreadable process table counts as a live child, so a grant is never lent on a guess (the host cannot run `ps`, as inside the macOS `sandbox-exec` seal of the mirror tool). */
+test("A waiting process whose process table cannot be read is never lent",async()=>{
+ const directory=fresh();let skew=0;
+ await withHostCapacityV1(options(directory,{observe:async()=>100,waited:()=>40000,children:()=>undefined,now:()=>Date.now()+skew}),async handle=>{skew=40000;
+  const read=()=>JSON.parse(readFileSync(join(directory,"grants",`${handle.id}.json`),"utf8"));
+  await sleep(400);expect(read().lentSinceMs).toBeUndefined();expect(read().resumedAtMs).toBeUndefined();
+ });
+},30000);
+
 /** 🧪️ A child process that takes a grant and then either waits through the process watchdog's declared waits (`waiting`) or lives on a plain timer (`working`) for four seconds. */
 function lendingChild(directory:string,mode:"waiting"|"working",authored:object):string{
  const script=join(directory,`lending-${mode}.ts`),gate=JSON.stringify(join(import.meta.dir,"../../🟦️.ts")),watchdog=JSON.stringify(join(import.meta.dir,"../../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts"));
@@ -278,5 +318,65 @@ test("In a real process a grant is lent only while the process is inside declare
   return lent;
  };
  expect(await run("working"),"a process that works on a plain timer is never lent").toBe(false);
- expect(await run("waiting"),"a process that only waits is lent after the authored time").toBe(true);
+ const ps=["/bin/ps","/usr/bin/ps"].find(path=>existsSync(path)),readable=process.platform==="win32"||ps!==undefined&&spawnSync(ps,["-o","pid=","-p",String(process.pid)],{encoding:"utf8",timeout:10000}).status===0;
+ expect(liveChildPidsV1()!==undefined,"the production process-table reader answers exactly where an independent ps call can read the table").toBe(readable);
+ expect(await run("waiting"),readable?"a process that only waits is lent after the authored time":"a process whose process table cannot be read is never lent").toBe(readable);
 },60000);
+
+test("A finished grant reports its peak tree megabytes and its active time without the time it was lent to a queue wait, and a grant that was never observed reports nothing",async()=>{
+ const directory=fresh(),runs:{jobs:number;peakMegabytes:number;activeMilliseconds:number;endedAtMs:number}[]=[];
+ let step=0;const series=[400,2600,900];
+ await withHostCapacityV1(options(directory,{policy:readHostCapacityPolicyV1({...policy,wait:{...policy.wait,lendAfterMilliseconds:1000}}),request:request({fixedMegabytes:100}),learn:run=>{runs.push(run);},observe:async()=>series[Math.min(step++,series.length-1)]!,waited:()=>1_000_000,children:()=>[]}),async()=>sleep(1800));
+ expect(runs.length).toBe(1);
+ expect(runs[0]).toMatchObject({jobs:1,peakMegabytes:2600});
+ expect(runs[0]!.activeMilliseconds).toBeGreaterThan(900);expect(runs[0]!.activeMilliseconds).toBeLessThan(1400);
+ const silent:unknown[]=[];
+ await withHostCapacityV1(options(directory,{request:request({fixedMegabytes:100}),learn:run=>{silent.push(run);},observe:async()=>null}),async()=>sleep(80));
+ expect(silent).toEqual([]);
+ await expect(withHostCapacityV1(options(directory,{request:request({fixedMegabytes:100}),learn:()=>{throw Error("store gone");},observe:async()=>500}),async()=>{await sleep(80);return "kept";})).resolves.toBe("kept");
+},30000);
+
+test("Law: a finished grant reports when its tree first came within 5 % of its peak, so a late peak is learned as late, and how its body ended",async()=>{
+ const directory=fresh(),runs:{peakMegabytes:number;peakAtMilliseconds:number;activeMilliseconds:number;status:string}[]=[];
+ let step=0;const series=[300,500,900,2000,2560,2600,2640,2400];
+ await withHostCapacityV1(options(directory,{request:request({fixedMegabytes:100}),learn:run=>{runs.push(run);},observe:async()=>series[Math.min(step++,series.length-1)]!}),async()=>sleep(450));
+ expect(runs.length).toBe(1);
+ expect(runs[0]).toMatchObject({peakMegabytes:2640,status:"ok"});
+ const reached=policy.wait.heartbeatMilliseconds*series.findIndex(value=>value*10000>=2640*9500);
+ expect(runs[0]!.peakAtMilliseconds,"the first reading at or above 95 % of the peak, not the last one").toBeGreaterThanOrEqual(reached-policy.wait.heartbeatMilliseconds);
+ expect(runs[0]!.peakAtMilliseconds).toBeLessThan(runs[0]!.activeMilliseconds);
+ expect(runs[0]!.peakAtMilliseconds,"a gradual climb is not a late peak").toBeLessThan(policy.wait.heartbeatMilliseconds*(series.length-1));
+ const ended:string[]=[];
+ const failing=options(directory,{request:request({fixedMegabytes:100}),learn:run=>{ended.push(run.status);},observe:async()=>500});
+ await expect(withHostCapacityV1(failing,async()=>{await sleep(80);throw Error("build failed");})).rejects.toThrow("build failed");
+ const abort=new AbortController(),aborted=options(directory,{request:request({fixedMegabytes:100}),control:control(abort.signal).value,learn:run=>{ended.push(run.status);},observe:async()=>500});
+ await expect(withHostCapacityV1(aborted,async()=>{await sleep(60);abort.abort();throw Error("stopped");})).rejects.toThrow("stopped");
+ await expect(withHostCapacityV1(options(directory,{request:request({fixedMegabytes:100}),learn:run=>{ended.push(run.status);},observe:async()=>500}),async()=>{await sleep(80);throw Object.assign(Error("cancelled by the user"),{code:"cancelled"});})).rejects.toThrow("cancelled");
+ expect(ended).toEqual(["failed","cancelled","cancelled"]);
+},30000);
+
+test("Law: the grant carries the time to peak and the ramp slot of its request, the request is refused for a slot while the slots are taken, and the status line says why in English and German",async()=>{
+ const directory=fresh(),shrunk={rampMilliseconds:900000,rampSlot:true};
+ const hold=(index:number)=>withHostCapacityV1(options(directory,{request:request({fixedMegabytes:100,...shrunk}),pid:process.pid}),async handle=>{
+  const grant=JSON.parse(readFileSync(join(directory,"grants",`${handle.id}.json`),"utf8"));
+  expect(grant,`grant ${index}`).toMatchObject(shrunk);
+  return handle.id;
+ });
+ await hold(0);
+ const lines:string[]=[],taken=policy.memory.maximumRamping;
+ const running=Array.from({length:taken},()=>{let release=()=>{};const done=new Promise<void>(accept=>{release=accept;});const started=new Promise<void>(accept=>{void withHostCapacityV1(options(directory,{request:request({fixedMegabytes:100,...shrunk})}),async()=>{accept();await done;});});return {started,release,done};});
+ await Promise.all(running.map(row=>row.started));
+ const abort=new AbortController(),waiting=withHostCapacityV1(options(directory,{request:request({fixedMegabytes:100,...shrunk}),control:control(abort.signal).value,write:line=>lines.push(line)}),async()=>"never").catch(error=>error);
+ await sleep(150);
+ const status=await readHostCapacityStatusV1({directory,policy,control:control().value,sample:sampler(()=>({}))});
+ expect(status.evaluation.decisions.map(row=>row.reason)).toEqual(["ramp"]);
+ expect(lines.at(-1)).toContain("too many learned reservations are still growing to their peak");
+ const german:string[]=[];
+ const abortGerman=new AbortController(),waitingGerman=withHostCapacityV1(options(directory,{request:request({fixedMegabytes:100,...shrunk}),environment:{SEMIO_LANGUAGE:"de"},control:control(abortGerman.signal).value,write:line=>german.push(line)}),async()=>"never").catch(error=>error);
+ await sleep(150);
+ expect(german.at(-1)).toContain("zu viele gelernte Reservierungen wachsen noch auf ihren Spitzenwert an");
+ abort.abort();abortGerman.abort();await waiting;await waitingGerman;
+ for(const row of running)row.release();await Promise.all(running.map(row=>row.done));
+ const plain:string[]=[];
+ await withHostCapacityV1(options(directory,{request:request({fixedMegabytes:100,rampMilliseconds:300000}),write:line=>plain.push(line)}),async handle=>{expect(JSON.parse(readFileSync(join(directory,"grants",`${handle.id}.json`),"utf8")).rampSlot,"an unshrunk request takes no slot").toBeUndefined();});
+},30000);

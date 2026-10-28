@@ -187,12 +187,12 @@ export async function executeRemoteExecutionActionV1(run:RemoteExecutionExecutio
   if(!commandBytes)return fail(9,`Missing blob ${commandDigest.hash}/${commandDigest.size}`,[commandDigest]);
   const command=decodeProtobufV1(REAPI_V1.command,commandBytes) as {arguments:string[];environment_variables:{name:string;value:string}[];output_files:string[];output_directories:string[];output_paths:string[];working_directory:string};
   if(command.arguments.length===0)return fail(3,"Command without arguments");
+  if(command.output_paths.length===0&&(command.output_files.length>0||command.output_directories.length>0))return fail(3,"Command declares only REAPI 2.0 output_files or output_directories; declare output_paths (REAPI 2.1)");
   const rootDigest=action.input_root_digest?unwire(action.input_root_digest):{hash:EMPTY_HASH,size:0},fetchStart=Date.now();
   await materialize(rootDigest,root,0);
-  const cwdRelative=command.working_directory===""?"":safeRelative(command.working_directory),cwd=cwdRelative===""?root:join(root,cwdRelative),legacy=command.output_paths.length===0,declared=legacy?[...command.output_files,...command.output_directories]:command.output_paths;
+  const cwdRelative=command.working_directory===""?"":safeRelative(command.working_directory),cwd=cwdRelative===""?root:join(root,cwdRelative),declared=command.output_paths;
   await mkdir(cwd,{recursive:true});
   for(const path of declared){const clean=safeRelative(path),directory=dirname(join(cwd,clean));await mkdir(directory,{recursive:true});}
-  for(const path of legacy?command.output_directories:[])await mkdir(join(cwd,safeRelative(path)),{recursive:true});
   const env:Record<string,string>={};
   for(const variable of command.environment_variables)env[variable.name]=variable.value;
   const scratch=join(root,".tmp");await mkdir(scratch,{recursive:true});
@@ -218,17 +218,15 @@ export async function executeRemoteExecutionActionV1(run:RemoteExecutionExecutio
    }
    const message={files,directories:children,symlinks:links},bytes=encodeProtobufV1(REAPI_V1.directory,message),digest=digestOf(bytes);collect.push(message);stage(digest,bytes);return digest;
   };
-  const outputFiles:ProtobufMessageV1[]=[],outputDirectories:ProtobufMessageV1[]=[],outputSymlinks:ProtobufMessageV1[]=[],fileSymlinks:ProtobufMessageV1[]=[],directorySymlinks:ProtobufMessageV1[]=[];
+  const outputFiles:ProtobufMessageV1[]=[],outputDirectories:ProtobufMessageV1[]=[],outputSymlinks:ProtobufMessageV1[]=[];
   const realRoot=await realpath(root);
   for(const path of declared){
    const clean=safeRelative(path),full=join(cwd,clean),parent=await realpath(dirname(full)).catch(()=>undefined);
    if(parent!==undefined&&parent!==realRoot&&!parent.startsWith(realRoot+sep))return fail(3,`Output path leaves the input root: ${path}`);
    const info=await lstat(full).catch(()=>undefined);
    if(!info)continue;
-   if(info.isSymbolicLink()){
-    const row={path:clean,target:await readlink(full)};outputSymlinks.push(row);
-    if(legacy)(command.output_directories.includes(path)?directorySymlinks:fileSymlinks).push(row);
-   }else if(info.isDirectory()){
+   if(info.isSymbolicLink())outputSymlinks.push({path:clean,target:await readlink(full)});
+   else if(info.isDirectory()){
     const collect:Directory[]=[],rootDirectory=await walk(full,collect),rootMessage=collect[collect.length-1]!,tree={root:rootMessage,children:collect.slice(0,-1)},treeBytes=encodeProtobufV1(REAPI_V1.tree,tree),treeDigest=digestOf(treeBytes);
     stage(treeDigest,treeBytes);outputDirectories.push({path:clean,tree_digest:wire(treeDigest),root_directory_digest:wire(rootDirectory)});
    }else if(info.isFile())outputFiles.push({path:clean,...(await fileNode(full,clean).then(({digest,is_executable})=>({digest,is_executable})))});
@@ -245,7 +243,7 @@ export async function executeRemoteExecutionActionV1(run:RemoteExecutionExecutio
    }else await run.content.write(run.instance,row.digest,row.source,run.signal);
   });
   const end=Date.now(),result=encodeProtobufV1(REAPI_V1.actionResult,{
-   output_files:outputFiles.sort((left,right)=>left.path<right.path?-1:1),output_directories:outputDirectories,output_symlinks:outputSymlinks,...(legacy?{output_file_symlinks:fileSymlinks,output_directory_symlinks:directorySymlinks}:{}),
+   output_files:outputFiles.sort((left,right)=>left.path<right.path?-1:1),output_directories:outputDirectories,output_symlinks:outputSymlinks,
    exit_code:collected.exitCode,...(inlineOut?{stdout_raw:collected.stdout}:{stdout_digest:wire(stdoutDigest)}),...(inlineErr?{stderr_raw:collected.stderr}:{stderr_digest:wire(stderrDigest)}),
    execution_metadata:{worker:run.workerName,worker_start_timestamp:timestamp(started),input_fetch_start_timestamp:timestamp(fetchStart),input_fetch_completed_timestamp:timestamp(executionStart),execution_start_timestamp:timestamp(executionStart),execution_completed_timestamp:timestamp(executionEnd),output_upload_start_timestamp:timestamp(uploadStart),output_upload_completed_timestamp:timestamp(end),worker_completed_timestamp:timestamp(end)},
   });

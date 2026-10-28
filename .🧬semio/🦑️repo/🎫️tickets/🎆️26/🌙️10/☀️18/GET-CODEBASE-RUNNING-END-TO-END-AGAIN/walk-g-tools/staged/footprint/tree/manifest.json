@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔬️footprint/🐍️oracle/🐍️.py": {
+  "file": "f001",
+  "sha256": "45b9a12f8044d648185460ef918b6a53e01900c7352f4f2600c3d9247d2df33c",
+  "mode": 420
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔬️footprint/🟦️.ts": {
+  "file": "f002",
+  "sha256": "301fe7521d7dad106277419ee054eb4ca017d6fa653fd6db97b0724068560b75",
+  "mode": 420
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔬️footprint/🧫️fixtures/🔣️.json": {
+  "file": "f003",
+  "sha256": "2479313efe997ee8e8124d2c9ec0fec8e0fe91009219105dc580cd3649bf97d1",
+  "mode": 420
+ }
+}

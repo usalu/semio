@@ -1,0 +1,96 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧪️tests/🧫️fixtures/📂️descriptors.json": {
+  "file": "001.json",
+  "base": "e4bada3bed942c15e9a38a190a5511be3c35690501face9e7e6b49be1c20e12b",
+  "new": "1f24e192c7b60b14b28c27882749a3b90a32d63bd19a04b6a05e32949aa10533"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧬️schema/📂️descriptors.json": {
+  "file": "002.json",
+  "base": "9a46c8d01a7c319467708d5e2b976609891dfc86b0ebda4b2ef302fc99f962c1",
+  "new": "cb4620cc0c479af6ddcb6b30ff7cb079e8dbb1ead8ecaadafe3d16a89eb41d03"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧪️tests/📂️descriptors/🟦️.ts": {
+  "file": "003.ts",
+  "base": "9ea627dcc51625525b3e4187622ee438ee0b1e56fbf7cf4bf6b3a4c5a548768a",
+  "new": "3fd1f41660370d2175a2e3e6e68843dab4de1c8e56f9109f44b14027317bc201"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧪️tests/📂️descriptors/🥒️.feature": {
+  "file": "004.feature",
+  "base": "5afb529856f0b4f29395233073dd514e481f3346d2de88a61adeed1bafd36d3e",
+  "new": "0a536ceec75f8b552fa5d1a5b74d6f940800fab6225dd375e2a6243faa886408"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️issuance/🧪️tests/📥️drain/🟦️.ts": {
+  "file": "005.ts",
+  "base": "d3386ee3e5c29ae216441ded0686a9fb9ed7b25826238876094488f1adf3d3b1",
+  "new": "4307f575a7655dd8e67d38b2fdc3bc2a5d9b302b0f46fcc18f9478ed728e2ec0"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🆓️unknown/🧫️fixtures/🔣️.json": {
+  "file": "006.json",
+  "base": "39257eaf249b93f99b4f33d9e2c8f1ff3840a6b4503725c072911fc95b10861a",
+  "new": "8c2ea7e70bee8d9f5361130aaaf9f1dc925e32d706932148dd0e985c753958a7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🧵️prepared-worker/👷️asset-publication/📜️script.ts": {
+  "file": "007.ts",
+  "base": "23b2f3d96a5d7f3b4a7a2a6cd0aa09d3e348a1ae783fcd629766cb35c4597d84",
+  "new": "fca456ae9560044f1c412791c9d84a7ce0a58758fd8f0149e27ce56985af0c71"
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json": {
+  "file": "008.json",
+  "base": "5fb47f1810c8198845feee64e00547365fc0d59b9ece659ea9ed2ad564c392ce",
+  "new": "48ba837957f88b1125eb3886fb4676037eefedf15037848eaa5b571bcd5d35d9"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️namespace/📒️baseline/🔣️policy.json": {
+  "file": "009.json",
+  "base": "903344657a90c3b84021fe306a2d0502956f68612757c1a08ab16b4c8f3c147e",
+  "new": null,
+  "mode": 420
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️namespace/📒️baseline/🟦️.ts": {
+  "file": "010.ts",
+  "base": "45fb421ab4151a66ef0a63250570f40e9eb2422d3fe4a152f53c4481ee912db8",
+  "new": null,
+  "mode": 420
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️namespace/📒️baseline/🧪️tests/🔣️.json": {
+  "file": "011.json",
+  "base": "cd5bfb52d88086c05754d38c43f5c2ffbdcc8205c39b2ea73b729bda51cffbf4",
+  "new": null,
+  "mode": 420
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️namespace/📒️baseline/🧪️tests/🚫️limits.json": {
+  "file": "012.json",
+  "base": "b4aa92bbb622172dea419dff7872160b67ae5c773b76f1bc46d48d16051ceca5",
+  "new": null,
+  "mode": 420
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️namespace/📒️baseline/🧪️tests/🟦️.ts": {
+  "file": "013.ts",
+  "base": "c9c61ae4d0fcc2bd410b220923f719f7a6e3b597c61a4b2e687b88d409733172",
+  "new": null,
+  "mode": 420
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️namespace/📒️baseline/🧬️schema/📥️receipt.json": {
+  "file": "014.json",
+  "base": "9ecb326f1c69bfbc4247de0d65a0d58a6533505f0600fbfd349c8c4bfe848d50",
+  "new": null,
+  "mode": 420
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️namespace/📒️baseline/🧬️schema/🔣️.json": {
+  "file": "015.json",
+  "base": "2ea4020ffa610b4e69a4a8b656ee316dcaf16605fc0253333b7f5c89e827eb69",
+  "new": null,
+  "mode": 420
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️namespace/📒️baseline/🧬️schema/🚫️limits.json": {
+  "file": "016.json",
+  "base": "f153519606bb7fe575206485fa00ff699b54c0c17933dfcaed7f33f5dbbd9fd5",
+  "new": null,
+  "mode": 420
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️namespace/📒️baseline/🧬️schema/🧪️fixture.json": {
+  "file": "017.json",
+  "base": "7950d2a28714ce71c38ead6b87d50067739a666ad7d7519fe2f5e35613943ae9",
+  "new": null,
+  "mode": 420
+ }
+}

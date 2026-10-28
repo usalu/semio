@@ -1,0 +1,47 @@
+{
+ "version": 1,
+ "files": {
+  "package.json": "{}\n",
+  "proj/📜️script.ts": "import \"./lib/a\";\nexport const run = 1;\n",
+  "proj/lib/a.ts": "import \"./gone\";\nexport const a = 1;\n"
+ },
+ "target": {
+  "options": {
+   "cwd": "proj",
+   "command": "repo ./📜️script.ts check proj"
+  }
+ },
+ "failing": "proj/lib/a.ts",
+ "scenarios": [
+  {
+   "name": "nothing changes",
+   "edit": {},
+   "holds": true,
+   "resolves": false
+  },
+  {
+   "name": "an unrelated file appears",
+   "edit": {
+    "proj/other.ts": "export const other = 1;\n"
+   },
+   "holds": true,
+   "resolves": false
+  },
+  {
+   "name": "the missing module appears",
+   "edit": {
+    "proj/lib/gone.ts": "export const gone = 1;\n"
+   },
+   "holds": false,
+   "resolves": true
+  },
+  {
+   "name": "the failing source is repaired",
+   "edit": {
+    "proj/lib/a.ts": "export const a = 1;\n"
+   },
+   "holds": false,
+   "resolves": true
+  }
+ ]
+}

@@ -117,6 +117,7 @@
       "!{workspaceRoot}/**/*.stories.{ts,tsx}"
     ],
     "schedulingSourceExclusions": [
+      "!{workspaceRoot}/🧰️framework/🔨️modules/⚙️runtime/🗣️language/**/*",
       "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/**/*",
       "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/**/*",
       "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/**/*",
@@ -135,12 +136,21 @@
       "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/**/*",
       "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🪓️termination/**/*",
       "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/**/*",
-      "!{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🌊️races/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧾️refusals/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/📥️entry/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/**/*",
-      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/**/*"
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔭️coverage/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧷️pin/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/**/*"
     ],
     "cargoToolchain": [
       "{workspaceRoot}/rustfmt.toml",
@@ -175,11 +185,14 @@
     "version": 1,
     "enabled": true,
     "memory": {
-      "floorBasisPoints": 2000,
-      "floorMinimumMegabytes": 4096,
-      "floorMaximumMegabytes": 8192,
+      "floorBasisPoints": 1250,
+      "floorMinimumMegabytes": 1536,
+      "floorMaximumMegabytes": 4096,
       "budgetBasisPoints": 10000,
-      "rampMilliseconds": 300000
+      "rampMilliseconds": 60000,
+      "maximumRamping": 2,
+      "maximumQuiet": 4,
+      "quietSoftStopGrants": 1
     },
     "swap": {
       "ceilingBasisPoints": 2500,
@@ -189,7 +202,9 @@
       "psiWarnPercent": 10,
       "psiCriticalPercent": 30,
       "availableWarnBasisPoints": 1500,
-      "availableCriticalBasisPoints": 600
+      "availableCriticalBasisPoints": 600,
+      "compressedWarnBasisPoints": 3500,
+      "compressedCriticalBasisPoints": 5500
     },
     "load": {
       "perCoreCeiling": 2,
@@ -212,7 +227,8 @@
       "bypassMilliseconds": 30000,
       "maximumBypasses": 6,
       "agingMilliseconds": 300000,
-      "lendAfterMilliseconds": 30000
+      "lendAfterMilliseconds": 5000,
+      "jitterBasisPoints": 2500
     },
     "kinds": {
       "test": {
@@ -246,21 +262,24 @@
         "shape": "tasks",
         "fixedMegabytes": 1536,
         "cpu": 1,
-        "priority": "batch"
+        "priority": "batch",
+        "forecast": true
       },
       {
         "name": "run-many",
         "shape": "tasks",
         "fixedMegabytes": 1536,
         "cpu": 1,
-        "priority": "batch"
+        "priority": "batch",
+        "forecast": true
       },
       {
         "name": "affected",
         "shape": "tasks",
         "fixedMegabytes": 1536,
         "cpu": 1,
-        "priority": "batch"
+        "priority": "batch",
+        "forecast": true
       },
       {
         "name": "exec",
@@ -312,7 +331,45 @@
         "cpu": 1,
         "priority": "batch"
       }
-    ]
+    ],
+    "envelopes": [
+      {
+        "name": "end-to-end",
+        "pattern": "^test-e2e(?:-|$)",
+        "cpu": 4,
+        "megabytes": 6144
+      }
+    ],
+    "classCeilings": [
+      {
+        "name": "course-build",
+        "pattern": "^run:build:@teaching/architecture-course:build$",
+        "megabytes": 12288
+      }
+    ],
+    "estimates": {
+      "halfLifeMilliseconds": 259200000,
+      "quantileBasisPoints": 9000,
+      "marginBasisPoints": 2500,
+      "minimumSamples": 3,
+      "maximumSamples": 16,
+      "maximumClasses": 256,
+      "minimumRatioBasisPoints": 3000,
+      "maximumRatioBasisPoints": 20000,
+      "minimumMegabytes": 512,
+      "quickMilliseconds": 120000,
+      "maximumShareBasisPoints": 5000,
+      "fallbackCeilingMegabytes": 8192,
+      "defaultRampMilliseconds": 300000,
+      "maximumRampMilliseconds": 1800000,
+      "phaseReferenceMegabytes": 1024,
+      "rebuildPriorMegabytes": 4096,
+      "rebuildShareBasisPoints": 5000,
+      "maximumRebuildSlots": 4,
+      "quietReferenceMegabytes": 2048,
+      "quietMaximumMegabytes": 4096,
+      "quietFollowUpMilliseconds": 1800000
+    }
   },
   "workers": {
     "version": 1,

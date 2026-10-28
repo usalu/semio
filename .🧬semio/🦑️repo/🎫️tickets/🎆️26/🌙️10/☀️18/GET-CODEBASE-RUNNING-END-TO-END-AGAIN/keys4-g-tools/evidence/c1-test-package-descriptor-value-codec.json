@@ -1,0 +1,26 @@
+{
+ "target": "test-package-descriptor-value-codec",
+ "tag": "c1",
+ "declared": 1861,
+ "rows": [
+  {
+   "leg": "cargo-manifest-plugin",
+   "crate": "semio-framework-manifest-plugin",
+   "test": "lib:semio_framework_manifest_plugin",
+   "kind": "cargo",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 2,
+   "tail": " | test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s |  | ",
+   "notes": [
+    "profiles:3",
+    "rules:1210",
+    "capacity:600"
+   ]
+  }
+ ]
+}

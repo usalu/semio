@@ -42,7 +42,7 @@
     },
     "detail": {
       "en": "The probe was cut off, so this area is only partly reported. A stalled probe usually means the machine or a mounted image is overloaded.",
-      "de": "Die Sonde wurde abgebrochen, dieser Bereich ist daher nur teilweise berichtet. Eine hängende Sonde bedeutet meist einen überlasteten Rechner oder ein überlastetes Abbild."
+      "de": "Die Sonde wurde abgebrochen, dieser Bereich ist daher nur teilweise berichtet. Eine hängende Sonde bedeutet meist einen überlasteten Rechner oder ein überlastetes Image."
     },
     "fix": {
       "kind": "command",
@@ -177,7 +177,7 @@
     },
     "detail": {
       "en": "{freeBytes} bytes of {totalBytes} are free. Image files grow on demand, so a full disk stops builds and corrupts nothing but fails every write.",
-      "de": "{freeBytes} Bytes von {totalBytes} sind frei. Abbilddateien wachsen bei Bedarf, ein voller Datenträger stoppt daher Builds und lässt jeden Schreibvorgang fehlschlagen."
+      "de": "{freeBytes} Bytes von {totalBytes} sind frei. Image-Dateien wachsen bei Bedarf, ein voller Datenträger stoppt daher Builds und lässt jeden Schreibvorgang fehlschlagen."
     },
     "fix": {
       "kind": "command",
@@ -201,11 +201,11 @@
     ],
     "title": {
       "en": "Image {partition} has less free space than its floor",
-      "de": "Abbild {partition} hat weniger freien Platz als seine Untergrenze"
+      "de": "Image {partition} hat weniger freien Platz als seine Untergrenze"
     },
     "detail": {
       "en": "{freeBytes} bytes are free, the floor is {floorBytes}. Below the floor the optional caches of this image refuse every write, so work is recomputed again and again and everything runs slowly.",
-      "de": "{freeBytes} Bytes sind frei, die Untergrenze ist {floorBytes}. Unterhalb der Untergrenze verweigern die optionalen Caches dieses Abbilds jeden Schreibvorgang, sodass Arbeit immer wieder neu berechnet wird und alles langsam läuft."
+      "de": "{freeBytes} Bytes sind frei, die Untergrenze ist {floorBytes}. Unterhalb der Untergrenze verweigern die optionalen Caches dieses Images jeden Schreibvorgang, sodass Arbeit immer wieder neu berechnet wird und alles langsam läuft."
     },
     "fix": {
       "kind": "command",
@@ -231,18 +231,18 @@
     ],
     "title": {
       "en": "Image {partition} has {freePercent} % free",
-      "de": "Abbild {partition} hat {freePercent} % frei"
+      "de": "Image {partition} hat {freePercent} % frei"
     },
     "detail": {
       "en": "{freeBytes} bytes of {capacityBytes} are free. A full image fails writes of the build state it holds.",
-      "de": "{freeBytes} Bytes von {capacityBytes} sind frei. Ein volles Abbild lässt Schreibvorgänge des darin gehaltenen Build-Zustands fehlschlagen."
+      "de": "{freeBytes} Bytes von {capacityBytes} sind frei. Ein volles Image lässt Schreibvorgänge des darin gehaltenen Build-Zustands fehlschlagen."
     },
     "fix": {
       "kind": "command",
       "command": "repo cache gc --dry-run --area={partition}",
       "note": {
         "en": "Lists what would be collected from this image; run without --dry-run to apply.",
-        "de": "Listet auf, was aus diesem Abbild eingesammelt würde; ohne --dry-run ausführen, um es anzuwenden."
+        "de": "Listet auf, was aus diesem Image eingesammelt würde; ohne --dry-run ausführen, um es anzuwenden."
       }
     }
   },
@@ -257,11 +257,11 @@
     ],
     "title": {
       "en": "Image {partition} is not attached",
-      "de": "Abbild {partition} ist nicht eingehängt"
+      "de": "Image {partition} ist nicht eingehängt"
     },
     "detail": {
       "en": "The image file exists but is not mounted, as after a reboot. The next repo command that needs it attaches it.",
-      "de": "Die Abbilddatei existiert, ist aber nicht eingehängt, wie nach einem Neustart. Der nächste repo-Befehl, der es braucht, hängt es ein."
+      "de": "Die Image-Datei existiert, ist aber nicht eingehängt, wie nach einem Neustart. Der nächste repo-Befehl, der es braucht, hängt es ein."
     },
     "fix": {
       "kind": "wait",
@@ -285,7 +285,7 @@
     ],
     "title": {
       "en": "Image {partition} has an unsettled publication ({which})",
-      "de": "Abbild {partition} hat eine nicht abgeschlossene Veröffentlichung ({which})"
+      "de": "Image {partition} hat eine nicht abgeschlossene Veröffentlichung ({which})"
     },
     "detail": {
       "en": "A {which} record is {ageSeconds} s old. A publisher that was killed leaves it behind and every command refuses until it is settled.",
@@ -311,11 +311,11 @@
     ],
     "title": {
       "en": "The receipt of image {partition} is unreadable",
-      "de": "Der Beleg von Abbild {partition} ist nicht lesbar"
+      "de": "Die Quittung von Image {partition} ist nicht lesbar"
     },
     "detail": {
       "en": "image.json exists but is not a valid receipt, so the image cannot be attached or verified.",
-      "de": "image.json existiert, ist aber kein gültiger Beleg, das Abbild kann daher weder eingehängt noch geprüft werden."
+      "de": "image.json existiert, ist aber keine gültige Quittung, das Image kann daher weder eingehängt noch geprüft werden."
     },
     "fix": {
       "kind": "command",
@@ -337,11 +337,11 @@
     ],
     "title": {
       "en": "Image {partition} lost its image file",
-      "de": "Abbild {partition} hat seine Abbilddatei verloren"
+      "de": "Image {partition} hat seine Image-Datei verloren"
     },
     "detail": {
       "en": "A receipt exists but the image file is gone and nothing is mounted. The partition starts empty on the next use and every cache in it is recomputed.",
-      "de": "Ein Beleg existiert, die Abbilddatei fehlt jedoch und nichts ist eingehängt. Die Partition beginnt bei der nächsten Benutzung leer und jeder Cache darin wird neu berechnet."
+      "de": "Eine Quittung existiert, die Image-Datei fehlt jedoch und nichts ist eingehängt. Die Partition beginnt bei der nächsten Benutzung leer und jeder Cache darin wird neu berechnet."
     },
     "fix": {
       "kind": "command",
@@ -406,7 +406,7 @@
     },
     "detail": {
       "en": "{command} waits for a {mode} lease of class {class} (owner {owner}), position {position} of {queued}. It stands behind process {rootPid} ({rootCommand}), which has held it for {rootHeldSeconds} s.",
-      "de": "{command} wartet auf ein Lease ({mode}) der Klasse {class} (Eigentümer {owner}), Position {position} von {queued}. Es steht hinter Prozess {rootPid} ({rootCommand}), der es seit {rootHeldSeconds} s hält."
+      "de": "{command} wartet auf eine Lease ({mode}) der Klasse {class} (Eigentümer {owner}), Position {position} von {queued}. Es steht hinter Prozess {rootPid} ({rootCommand}), der es seit {rootHeldSeconds} s hält."
     },
     "fix": {
       "kind": "ask",
@@ -440,7 +440,7 @@
     },
     "detail": {
       "en": "{command} holds a {mode} lease of class {class} (owner {owner}) while {waiters} other process(es) wait for it.",
-      "de": "{command} hält ein Lease ({mode}) der Klasse {class} (Eigentümer {owner}), während {waiters} weitere(r) Prozess(e) darauf warten."
+      "de": "{command} hält eine Lease ({mode}) der Klasse {class} (Eigentümer {owner}), während {waiters} weitere(r) Prozess(e) darauf warten."
     },
     "fix": {
       "kind": "ask",
@@ -469,7 +469,7 @@
     },
     "detail": {
       "en": "A long queue on one lease of class {class} (owner {owner}) means every agent serializes there.",
-      "de": "Eine lange Warteschlange auf einem Lease der Klasse {class} (Eigentümer {owner}) bedeutet, dass sich dort jeder Agent serialisiert."
+      "de": "Eine lange Warteschlange auf einer Lease der Klasse {class} (Eigentümer {owner}) bedeutet, dass sich dort jeder Agent serialisiert."
     },
     "fix": {
       "kind": "command",
@@ -697,7 +697,7 @@
     },
     "detail": {
       "en": "Their lanes, slots and sandboxes are still registered; collecting them returns the resources.",
-      "de": "Ihre Bahnen, Plätze und Sandboxes sind noch eingetragen; Einsammeln gibt die Ressourcen zurück."
+      "de": "Ihre Lanes, Slots und Sandboxes sind noch eingetragen; Einsammeln gibt die Ressourcen zurück."
     },
     "fix": {
       "kind": "automatic",
@@ -936,7 +936,7 @@
     },
     "detail": {
       "en": "About {estimatedBytes} bytes in generations that no pointer or binding uses. The collector removes them after their retention time; they fill the image until then.",
-      "de": "Etwa {estimatedBytes} Bytes in Generationen, die kein Zeiger und keine Bindung benutzt. Der Sammler entfernt sie nach ihrer Aufbewahrungszeit; bis dahin füllen sie das Abbild."
+      "de": "Etwa {estimatedBytes} Bytes in Generationen, die kein Zeiger und keine Bindung benutzt. Der Sammler entfernt sie nach ihrer Aufbewahrungszeit; bis dahin füllen sie das Image."
     },
     "fix": {
       "kind": "command",
@@ -1271,18 +1271,18 @@
     ],
     "title": {
       "en": "{attachedImages} disk images are attached",
-      "de": "{attachedImages} Datenträgerabbilder sind eingehängt"
+      "de": "{attachedImages} Datenträger-Images sind eingehängt"
     },
     "detail": {
       "en": "The governor holds heavy commands back at {limit} attached images; leaked scratch images from tests are the usual cause.",
-      "de": "Der Wächter hält schwere Befehle bei {limit} eingehängten Abbildern zurück; liegengebliebene Scratch-Abbilder aus Tests sind die übliche Ursache."
+      "de": "Der Wächter hält schwere Befehle bei {limit} eingehängten Images zurück; liegengebliebene Wegwerf-Images aus Tests sind die übliche Ursache."
     },
     "fix": {
       "kind": "command",
       "command": "repo cache status",
       "note": {
         "en": "Opening the partitions lets the storage layer detach abandoned scratch images.",
-        "de": "Das Öffnen der Partitionen lässt die Speicherschicht verlassene Scratch-Abbilder aushängen."
+        "de": "Das Öffnen der Partitionen lässt die Speicherschicht verlassene Wegwerf-Images aushängen."
       }
     }
   },

@@ -1,0 +1,16 @@
+{
+ "label": "g46-print",
+ "target": "@semio-tech/print-rs:test",
+ "started": "19:36:28",
+ "wall_s": 2812.8,
+ "peak_tree_mb": 5336,
+ "peak_processes": 11,
+ "exit": 143,
+ "killed": "time",
+ "queued_s": 100.8,
+ "graph": {
+  "inferring": [
+   "128"
+  ]
+ }
+}

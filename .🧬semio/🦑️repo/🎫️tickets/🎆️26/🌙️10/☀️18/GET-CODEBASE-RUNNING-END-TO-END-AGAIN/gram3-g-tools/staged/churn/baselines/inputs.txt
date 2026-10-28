@@ -1,0 +1,65 @@
+(fail) Build input storage component schema preserves every owned contract
+(fail) Build input storage receiver retains one actual birth across test scopes
+(fail) Cargo manifest inference projects the workspace sentinel before strict Source inventory admission
+(fail) Native maintenance preserves first failure across expired genuine child loans
+(fail) Nx closes every consumed optional receiver before fresh physical admission
+(fail) a batch hashes its inputs from one tree state: edits, replacements and creations during the batch run it again
+(fail) actual Nx recovery reopens after consumed Native maintenance: false
+(fail) actual Nx recovery reopens after consumed Native maintenance: true
+(fail) actual TypeScript excludes preserve semantic target Source and exclude owned compiler output
+(fail) actual configured bytes retain metadata edits after finite membership admission
+(fail) actual graph revision consumes helper-only Source byte changes before metadata reuse
+(fail) actual graph writer releases facts and image before maintenance or blocking admission
+(fail) actual loaded inventory epoch gates cover graph warm authority bootstrap producer and reader
+(fail) actual loaded inventory helper and private policy refuse same-process Source drift
+(fail) actual shared graph writer completes inside its retained graph artifact reader
+(fail) actual shared inventory DATA projection agrees with ordinary Node
+(fail) an entry edited a moment before the batch ends is waited out and announced in both languages, then the batch is accepted
+(fail) authored semantic target Source stays in the real Nx map while compiler output remains ignored
+(fail) bounded revision actual Source windows agree with independent Bun SHA and retain only requested finite text
+(fail) bounded revision physical ancestry and exact failures retain original primary through descriptor closure
+(fail) closed physical selected Source snapshot retains genuine funding and Native reader until settlement
+(fail) declared child Source closure: declared nested same-name child and transitive imports
+(fail) declared child Source closure: missing declared child script
+(fail) declared child Source closure: missing declared child transitive import
+(fail) declared child Source closure: missing selected execution declaration
+(fail) declared child Source closure: missing selected native manifest
+(fail) declared child Source closure: missing selected outer script
+(fail) distinct graph datasets advance concurrently while identical writers retain exclusion
+(fail) every case captures, refuses and spends the budget as authored, with the authored number of cancellation checkpoints
+(fail) exact Source actual batch streams current bytes preserves absence and refuses hostile files
+(fail) exact Source window and JSON reduction children consume actual FD operations
+(fail) finite actual membership includes code and metadata assets against fast-glob
+(fail) graph artifact carries every acquired lease through arbitrary cleanup failures
+(fail) graph artifact carries its exact explicit phase into the retained consumer
+(fail) graph bootstrap authenticates its explicit phase before every preparation effect
+(fail) graph membership closes acquired readers after a stopped phase await
+(fail) graph namespace writer defers only a live exact timeout without masking its primary
+(fail) graph tooling recovery authenticates the explicit phase before an attempt
+(fail) graph tooling use carries its exact phase through the reader and callback
+(fail) graph writer admission reconciles exactly once before pressure-free work
+(fail) graph writer carries only genuine explicit phases through each store admission
+(fail) graph writer releases exclusive facts before image maintenance can reacquire its reader
+(fail) graph writer retains actual lease infrastructure without a second artifact reservation
+(fail) incremental optional ledger commits intent before mutation and repairs real API crashes
+(fail) lease continuations drain before acquisition releases its database after a genuine child stop
+(fail) live corpus on the mirror backend (available)
+(fail) live corpus on the seatbelt backend (available)
+(fail) live maintenance verification retains exact source entries and Original native tests
+(fail) native selected maps match physical context and refuse incomplete compiler Source references
+(fail) neutral actual Source reader retains EOF namespace and per-chunk FD verification
+(fail) neutral actual compact helper and implementation revision include shared DATA and exact reader behavior
+(fail) neutral actual graph inventory producers admit closed DATA before writer effects
+(fail) neutral actual portable graph consumer admits shared inventory DATA and binds its authority
+(fail) neutral exact Source batch reads a file replaced mid-read again and yields the replacement's digest
+(fail) neutral graph writer identity preserves the exact original store and hides quota effect ports
+(fail) neutral shared inventory capture refuses hostile rows and preserves copied DATA
+(fail) optional graph headroom inventories once inside acquired custody and never before deferred custody
+(fail) optional graph maintenance defers actual retained readers and preserves exclusive custody
+(fail) optional record orphan cleanup uses exact publication accounting or defers
+(fail) physical group implementation participates in every current and pinned authority
+(fail) queued graph recovery retries optional retirement under its actual writer
+(fail) scoped optional maintenance refuses its own accepted reader
+(fail) selected Rust Native snapshots consume canonical pinned record publications
+(fail) shared optional graph ledger enforces real fixed-image peaks, system contention and crash recovery
+(fail) the rules and the fixture point at their sibling schemas through $schema and validate against the pointed schema

@@ -10,7 +10,13 @@
     "port-is-directory",
     "extra-key",
     "no-domains",
-    "bad-id"
+    "bad-id",
+    "native-keyed-outside-domain",
+    "island-inside-prefix",
+    "prefix-inside-island",
+    "island-duplicate",
+    "island-parent-segment",
+    "keyed-missing"
   ],
   "loaderCases": [
     {
@@ -48,5 +54,19 @@
       "outcome": "refused",
       "message": "Bounded scheduling overlay required"
     }
-  ]
+  ],
+  "nativeFallback": {
+    "stays": [
+      "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/",
+      "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/"
+    ],
+    "leaves": [
+      "🧰️framework/🔨️modules/🏃️process/🔒️leases/",
+      "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/",
+      "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/",
+      "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/"
+    ],
+    "cargoScript": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts"
+  }
 }

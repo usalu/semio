@@ -1,0 +1,1570 @@
+{
+ "startedAtMs": 1000000,
+ "decide": [
+  {
+   "id": "enoent-absent-changed",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "enoent-present-changed",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "present",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "transient",
+    "reason": "vanished",
+    "cause": "present"
+   }
+  },
+  {
+   "id": "enoent-absent-old",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 995000
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "unchanged"
+   }
+  },
+  {
+   "id": "enoent-boundary-equal",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 998000
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "enoent-boundary-just-before",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 997999
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "unchanged"
+   }
+  },
+  {
+   "id": "enoent-no-witness",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": null
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "unchanged"
+   }
+  },
+  {
+   "id": "enotdir-absent",
+   "facts": {
+    "code": "ENOTDIR",
+    "syscall": "open",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "enotdir-present",
+   "facts": {
+    "code": "ENOTDIR",
+    "syscall": "open",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "present",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "transient",
+    "reason": "vanished",
+    "cause": "present"
+   }
+  },
+  {
+   "id": "eisdir-present",
+   "facts": {
+    "code": "EISDIR",
+    "syscall": "read",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "present",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "identity",
+    "cause": "shape"
+   }
+  },
+  {
+   "id": "eisdir-present-unchanged",
+   "facts": {
+    "code": "EISDIR",
+    "syscall": "read",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "present",
+    "changeMs": 995000
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "unchanged"
+   }
+  },
+  {
+   "id": "eisdir-absent",
+   "facts": {
+    "code": "EISDIR",
+    "syscall": "read",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "estale-present",
+   "facts": {
+    "code": "ESTALE",
+    "syscall": "stat",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "present",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "transient",
+    "reason": "identity",
+    "cause": "present"
+   }
+  },
+  {
+   "id": "eloop-present",
+   "facts": {
+    "code": "ELOOP",
+    "syscall": "lstat",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "present",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "identity",
+    "cause": "shape"
+   }
+  },
+  {
+   "id": "eacces-posix",
+   "facts": {
+    "code": "EACCES",
+    "syscall": "open",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "present",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "code"
+   }
+  },
+  {
+   "id": "eacces-win32",
+   "facts": {
+    "code": "EACCES",
+    "syscall": "open",
+    "path": "C:\\w\\src\\a.ts",
+    "platform": "win32",
+    "root": "C:\\w",
+    "startedAtMs": 1000000,
+    "probe": "present",
+    "changeMs": null
+   },
+   "expected": {
+    "disposition": "transient",
+    "reason": "busy",
+    "cause": "busy"
+   }
+  },
+  {
+   "id": "ebusy-win32",
+   "facts": {
+    "code": "EBUSY",
+    "syscall": "open",
+    "path": "C:\\w\\src\\a.ts",
+    "platform": "win32",
+    "root": "C:\\w",
+    "startedAtMs": 1000000,
+    "probe": "present",
+    "changeMs": 995000
+   },
+   "expected": {
+    "disposition": "transient",
+    "reason": "busy",
+    "cause": "busy"
+   }
+  },
+  {
+   "id": "ebusy-posix",
+   "facts": {
+    "code": "EBUSY",
+    "syscall": "open",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "present",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "code"
+   }
+  },
+  {
+   "id": "eperm-win32",
+   "facts": {
+    "code": "EPERM",
+    "syscall": "lstat",
+    "path": "C:\\w\\src\\a.ts",
+    "platform": "win32",
+    "root": "C:\\w",
+    "startedAtMs": 1000000,
+    "probe": "unknown",
+    "changeMs": null
+   },
+   "expected": {
+    "disposition": "transient",
+    "reason": "busy",
+    "cause": "busy"
+   }
+  },
+  {
+   "id": "emfile-posix",
+   "facts": {
+    "code": "EMFILE",
+    "syscall": "open",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "present",
+    "changeMs": 995000
+   },
+   "expected": {
+    "disposition": "transient",
+    "reason": "busy",
+    "cause": "busy"
+   }
+  },
+  {
+   "id": "enfile-posix",
+   "facts": {
+    "code": "ENFILE",
+    "syscall": "lstat",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": null
+   },
+   "expected": {
+    "disposition": "transient",
+    "reason": "busy",
+    "cause": "busy"
+   }
+  },
+  {
+   "id": "enfile-outside",
+   "facts": {
+    "code": "ENFILE",
+    "syscall": "open",
+    "path": "/etc/passwd",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "present",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "outside"
+   }
+  },
+  {
+   "id": "eperm-posix",
+   "facts": {
+    "code": "EPERM",
+    "syscall": "lstat",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "present",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "code"
+   }
+  },
+  {
+   "id": "other-enospc",
+   "facts": {
+    "code": "ENOSPC",
+    "syscall": "open",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "code"
+   }
+  },
+  {
+   "id": "other-eexist",
+   "facts": {
+    "code": "EEXIST",
+    "syscall": "open",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "code"
+   }
+  },
+  {
+   "id": "other-enotempty",
+   "facts": {
+    "code": "ENOTEMPTY",
+    "syscall": "open",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "code"
+   }
+  },
+  {
+   "id": "other-einval",
+   "facts": {
+    "code": "EINVAL",
+    "syscall": "open",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "code"
+   }
+  },
+  {
+   "id": "other-econnreset",
+   "facts": {
+    "code": "ECONNRESET",
+    "syscall": "open",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "code"
+   }
+  },
+  {
+   "id": "other-eagain",
+   "facts": {
+    "code": "EAGAIN",
+    "syscall": "open",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "code"
+   }
+  },
+  {
+   "id": "write-rename",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "rename",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "write"
+   }
+  },
+  {
+   "id": "write-copyfile",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "copyfile",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "write"
+   }
+  },
+  {
+   "id": "write-unlink",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "unlink",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "write"
+   }
+  },
+  {
+   "id": "write-mkdir",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "mkdir",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "write"
+   }
+  },
+  {
+   "id": "write-rmdir",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "rmdir",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "write"
+   }
+  },
+  {
+   "id": "write-symlink",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "symlink",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "write"
+   }
+  },
+  {
+   "id": "write-write",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "write",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "write"
+   }
+  },
+  {
+   "id": "write-utimes",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "utimes",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "write"
+   }
+  },
+  {
+   "id": "read-open",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "open",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "read-lstat",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "read-stat",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "stat",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "read-fstat",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "fstat",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "read-scandir",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "scandir",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "read-opendir",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "opendir",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "read-readdir",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "readdir",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "read-readlink",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "readlink",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "read-realpath",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "realpath",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "read-access",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "access",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "read-read",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "read",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "read-readFile",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "readFile",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "syscall-unknown-is-read",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": null,
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "relative-path",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "relative"
+   }
+  },
+  {
+   "id": "command-not-found",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "spawn",
+    "path": "bun",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "write"
+   }
+  },
+  {
+   "id": "outside-root",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/etc/passwd",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "outside"
+   }
+  },
+  {
+   "id": "outside-sibling-prefix",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w2/x",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "outside"
+   }
+  },
+  {
+   "id": "root-itself",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "dotdot-name-inside",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/..foo/a",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "no-root",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": null,
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "root"
+   }
+  },
+  {
+   "id": "owned-.cache",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/x/.cache/y",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "owned"
+   }
+  },
+  {
+   "id": "owned-.git",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/x/.git/y",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "owned"
+   }
+  },
+  {
+   "id": "owned-\\u26a1\\ufe0fcache",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/x/⚡️cache/y",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "owned"
+   }
+  },
+  {
+   "id": "owned-bazel-out",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/x/bazel-out/y",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "owned"
+   }
+  },
+  {
+   "id": "owned-bazel-bin",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/x/bazel-bin/y",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "owned"
+   }
+  },
+  {
+   "id": "owned-bazel-testlogs",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/x/bazel-testlogs/y",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "owned"
+   }
+  },
+  {
+   "id": "not-owned-lookalike",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/x/.cache2/y",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "probe-unknown",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/src/a.ts",
+    "platform": "posix",
+    "root": "/w",
+    "startedAtMs": 1000000,
+    "probe": "unknown",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "probe"
+   }
+  },
+  {
+   "id": "win32-absent-changed",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "C:\\w\\src\\a.ts",
+    "platform": "win32",
+    "root": "C:\\w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "win32-case-insensitive-inside",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "c:\\W\\Src\\a.ts",
+    "platform": "win32",
+    "root": "C:\\w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "persistent",
+    "reason": "vanished",
+    "cause": "absent"
+   }
+  },
+  {
+   "id": "win32-relative",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "src\\a.ts",
+    "platform": "win32",
+    "root": "C:\\w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "relative"
+   }
+  },
+  {
+   "id": "win32-other-drive",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "D:\\w\\a.ts",
+    "platform": "win32",
+    "root": "C:\\w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "outside"
+   }
+  },
+  {
+   "id": "win32-owned",
+   "facts": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "C:\\w\\.git\\HEAD",
+    "platform": "win32",
+    "root": "C:\\w",
+    "startedAtMs": 1000000,
+    "probe": "absent",
+    "changeMs": 1000010
+   },
+   "expected": {
+    "disposition": "none",
+    "reason": null,
+    "cause": "owned"
+   }
+  }
+ ],
+ "observe": [
+  {
+   "id": "present-file-newest-own",
+   "platform": "posix",
+   "path": "/w/a/b.txt",
+   "lstat": {
+    "/w/a/b.txt": {
+     "directory": false,
+     "mtimeMs": 100,
+     "ctimeMs": 300
+    },
+    "/w/a": {
+     "directory": true,
+     "mtimeMs": 200,
+     "ctimeMs": 250
+    }
+   },
+   "expected": {
+    "probe": "present",
+    "changeMs": 300
+   }
+  },
+  {
+   "id": "present-file-newest-parent",
+   "platform": "posix",
+   "path": "/w/a/b.txt",
+   "lstat": {
+    "/w/a/b.txt": {
+     "directory": false,
+     "mtimeMs": 100,
+     "ctimeMs": 120
+    },
+    "/w/a": {
+     "directory": true,
+     "mtimeMs": 900,
+     "ctimeMs": 800
+    }
+   },
+   "expected": {
+    "probe": "present",
+    "changeMs": 900
+   }
+  },
+  {
+   "id": "absent-parent-exists",
+   "platform": "posix",
+   "path": "/w/a/b.txt",
+   "lstat": {
+    "/w/a/b.txt": "absent",
+    "/w/a": {
+     "directory": true,
+     "mtimeMs": 500,
+     "ctimeMs": 400
+    }
+   },
+   "expected": {
+    "probe": "absent",
+    "changeMs": 500
+   }
+  },
+  {
+   "id": "absent-grandparent",
+   "platform": "posix",
+   "path": "/w/a/b/c.txt",
+   "lstat": {
+    "/w/a/b/c.txt": "absent",
+    "/w/a/b": "absent",
+    "/w/a": {
+     "directory": true,
+     "mtimeMs": 100,
+     "ctimeMs": 700
+    }
+   },
+   "expected": {
+    "probe": "absent",
+    "changeMs": 700
+   }
+  },
+  {
+   "id": "absent-ancestor-is-file",
+   "platform": "posix",
+   "path": "/w/a/b/c.txt",
+   "lstat": {
+    "/w/a/b/c.txt": "absent",
+    "/w/a/b": {
+     "directory": false,
+     "mtimeMs": 650,
+     "ctimeMs": 640
+    },
+    "/w/a": {
+     "directory": true,
+     "mtimeMs": 10,
+     "ctimeMs": 20
+    }
+   },
+   "expected": {
+    "probe": "absent",
+    "changeMs": 650
+   }
+  },
+  {
+   "id": "own-unknown",
+   "platform": "posix",
+   "path": "/w/a/b.txt",
+   "lstat": {
+    "/w/a/b.txt": "unknown",
+    "/w/a": {
+     "directory": true,
+     "mtimeMs": 500,
+     "ctimeMs": 400
+    }
+   },
+   "expected": {
+    "probe": "unknown",
+    "changeMs": null
+   }
+  },
+  {
+   "id": "ancestor-unknown",
+   "platform": "posix",
+   "path": "/w/a/b.txt",
+   "lstat": {
+    "/w/a/b.txt": "absent",
+    "/w/a": "unknown",
+    "/w": {
+     "directory": true,
+     "mtimeMs": 5,
+     "ctimeMs": 5
+    }
+   },
+   "expected": {
+    "probe": "unknown",
+    "changeMs": null
+   }
+  },
+  {
+   "id": "nothing-exists",
+   "platform": "posix",
+   "path": "/w/a/b.txt",
+   "lstat": {
+    "/w/a/b.txt": "absent",
+    "/w/a": "absent",
+    "/w": "absent",
+    "/": "absent"
+   },
+   "expected": {
+    "probe": "absent",
+    "changeMs": null
+   }
+  },
+  {
+   "id": "win32-absent",
+   "platform": "win32",
+   "path": "C:\\w\\a\\b.txt",
+   "lstat": {
+    "C:\\w\\a\\b.txt": "absent",
+    "C:\\w\\a": {
+     "directory": true,
+     "mtimeMs": 321,
+     "ctimeMs": 123
+    }
+   },
+   "expected": {
+    "probe": "absent",
+    "changeMs": 321
+   }
+  },
+  {
+   "id": "win32-present",
+   "platform": "win32",
+   "path": "C:\\w\\a\\b.txt",
+   "lstat": {
+    "C:\\w\\a\\b.txt": {
+     "directory": false,
+     "mtimeMs": 5,
+     "ctimeMs": 6
+    },
+    "C:\\w\\a": {
+     "directory": true,
+     "mtimeMs": 7,
+     "ctimeMs": 8
+    }
+   },
+   "expected": {
+    "probe": "present",
+    "changeMs": 8
+   }
+  }
+ ],
+ "text": [
+  {
+   "id": "node-lstat",
+   "platform": "posix",
+   "text": "ENOENT: no such file or directory, lstat '/w/src/a.ts'",
+   "expected": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/src/a.ts"
+   }
+  },
+  {
+   "id": "node-with-prefix",
+   "platform": "posix",
+   "text": "Error: ENOENT: no such file or directory, open '/w/x.json'\n    at readFileSync (node:fs:441:20)",
+   "expected": {
+    "code": "ENOENT",
+    "syscall": "open",
+    "path": "/w/x.json"
+   }
+  },
+  {
+   "id": "bun-properties",
+   "platform": "posix",
+   "text": "error: ENOENT: no such file or directory, open '/w/x.json'\n  errno: -2,\n  syscall: \"open\",\n  code: \"ENOENT\",\n  path: \"/w/x.json\"\n",
+   "expected": {
+    "code": "ENOENT",
+    "syscall": "open",
+    "path": "/w/x.json"
+   }
+  },
+  {
+   "id": "bun-properties-only",
+   "platform": "posix",
+   "text": "{\n  syscall: \"scandir\",\n  code: \"ENOTDIR\",\n  path: \"/w/a\"\n}",
+   "expected": {
+    "code": "ENOTDIR",
+    "syscall": "scandir",
+    "path": "/w/a"
+   }
+  },
+  {
+   "id": "rename-two-paths",
+   "platform": "posix",
+   "text": "ENOENT: no such file or directory, rename '/w/a' -> '/w/b'",
+   "expected": {
+    "code": "ENOENT",
+    "syscall": "rename",
+    "path": "/w/a"
+   }
+  },
+  {
+   "id": "relative-then-absolute",
+   "platform": "posix",
+   "text": "ENOENT: no such file or directory, open 'x' while reading '/w/y'",
+   "expected": {
+    "code": "ENOENT",
+    "syscall": "open",
+    "path": "/w/y"
+   }
+  },
+  {
+   "id": "relative-only",
+   "platform": "posix",
+   "text": "ENOENT: no such file or directory, lstat 'src/a.ts'",
+   "expected": null
+  },
+  {
+   "id": "spawn",
+   "platform": "posix",
+   "text": "Error: spawn bun ENOENT",
+   "expected": null
+  },
+  {
+   "id": "no-code",
+   "platform": "posix",
+   "text": "something failed at '/w/a'",
+   "expected": null
+  },
+  {
+   "id": "code-without-path",
+   "platform": "posix",
+   "text": "ECONNRESET: socket hang up",
+   "expected": null
+  },
+  {
+   "id": "eslint-is-not-a-code",
+   "platform": "posix",
+   "text": "ESLint: 9.1.0 '/w/a.ts'",
+   "expected": null
+  },
+  {
+   "id": "win32-busy",
+   "platform": "win32",
+   "text": "EBUSY: resource busy or locked, open 'C:\\w\\a.ts'",
+   "expected": {
+    "code": "EBUSY",
+    "syscall": "open",
+    "path": "C:\\w\\a.ts"
+   }
+  },
+  {
+   "id": "win32-relative-path",
+   "platform": "win32",
+   "text": "ENOENT: no such file or directory, lstat 'src\\a.ts'",
+   "expected": null
+  },
+  {
+   "id": "tail-in-the-middle",
+   "platform": "posix",
+   "text": "line one\nstack\nENOENT: no such file or directory, readlink '/w/link'\nmore text",
+   "expected": {
+    "code": "ENOENT",
+    "syscall": "readlink",
+    "path": "/w/link"
+   }
+  },
+  {
+   "id": "old-error-outside-window",
+   "platform": "posix",
+   "text": "ENOENT: no such file or directory, lstat '/w/old'\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "expected": null
+  },
+  {
+   "id": "error-inside-window",
+   "platform": "posix",
+   "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nENOENT: no such file or directory, lstat '/w/new'",
+   "expected": {
+    "code": "ENOENT",
+    "syscall": "lstat",
+    "path": "/w/new"
+   }
+  }
+ ]
+}

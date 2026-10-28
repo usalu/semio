@@ -362,7 +362,7 @@ function Install-PinnedToolchain {
             $installer = Join-Path $scratch "rustup-init.exe"
             Save-VerifiedDownload -Url $rustup.url -Sha256 $rustup.sha256 -Destination $installer
             Write-Step "Installing rustup $($rustup.version)..."
-            & $installer -y --profile minimal --default-toolchain none | Out-Host
+            & $installer -y --no-modify-path --profile minimal --default-toolchain none | Out-Host
             if ($LASTEXITCODE -ne 0) { throw "rustup-init failed with exit code $LASTEXITCODE" }
         } finally {
             Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue
@@ -529,7 +529,7 @@ if (-not $SkipGlobalCliInstall) {
     $uvPath = Get-CommandPathOrThrow -Label "uv" -Candidates @("uv.exe")
 
     Install-UvTool -ToolName "ruff" -UvPath $uvPath
-    Invoke-RepoCommand -FilePath $rustupPath -ArgumentList @("toolchain", "install") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $rustupPath -ArgumentList @("toolchain", "install", "--no-self-update") -WorkingDirectory $repoRoot
 }
 #endregion 🌐️GlobalCliInstall
 

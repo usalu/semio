@@ -7,10 +7,12 @@ import { observeSelectedRuntimeActorsV1, acquireSelectedRuntimeActorsV1, type Se
 import { existsSync, readFileSync, realpathSync, writeFileSync, mkdirSync, readdirSync, statSync, lstatSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { cargoInputDigestV1, cargoDirectoryEntriesV1, cargoProvenancePhysicalControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import { laneBuildDirectoryOwnedV1 } from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts";
+import { unitCacheRootV1 } from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 import { cargoDepInfoResolvedChecksumsV1, cargoDepInfoResolvedSourcesV1, cargoDepInfoSourcesV1, decodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 import { blake3Hex } from "../../../../../../../🔨️modules/🔏️hash/🟦️.ts";
 import type {FileObservationControlV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
-import {CurrentPhysicalOwnerV1,type CurrentPhysicalPortV1} from "@semio-tech/framework-filesystem/observation/current";
+import {CurrentPhysicalOwnerV1,type CurrentPhysicalPortV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts";
 import {cmdBudgetMs} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { inspectRuntimeGraphV1, runtimeEcmaReferencesV1, runtimeRustReferencesV1, runtimeFixturePathV1, type RuntimeResourceReadOwnerV1, type RuntimeGraphEvidenceV1, type RuntimeGraphFindingV1 } from "../🟦️.ts";
@@ -251,9 +253,9 @@ export async function runtimeCargoObservationsForChecksV1(observations:readonly 
 
 
 /** 🌱️ Requires surviving artifacts and complete current Cargo configuration before automatic reuse. */
-export async function runtimeCargoObservationCurrentV1(observation:RuntimeCargoObservationV1,context:{root:string;cwd:string;outDirectory:string;buildDirectory:string;cargoHome:string;fixtureCollections?:readonly string[];physical:CurrentPhysicalPortV1}):Promise<boolean>{
+export async function runtimeCargoObservationCurrentV1(observation:RuntimeCargoObservationV1,context:{root:string;cwd:string;outDirectory:string;buildDirectory:string;buildOwned?:(directory:string)=>boolean;cargoHome:string;fixtureCollections?:readonly string[];physical:CurrentPhysicalPortV1}):Promise<boolean>{
  const physical=context.physical;if(!physical||typeof physical.checkpoint!=="function"||typeof physical.read!=="function"||typeof physical.digest!=="function"||typeof physical.directoryEntries!=="function"||typeof physical.recheck!=="function")throw Error("Runtime currentness requires complete asynchronous physical ownership");await physical.checkpoint();
- if(!observation.buildDirectory||resolve(observation.buildDirectory)!==resolve(context.buildDirectory)||!observation.invocationInputs?.length)return false;
+ if(!observation.buildDirectory||resolve(observation.buildDirectory)!==resolve(context.buildDirectory)&&!context.buildOwned?.(observation.buildDirectory)||!observation.invocationInputs?.length)return false;
  const units=observation.units.filter(unit=>!unit.message.profile.test),manifests=[observation.manifest,...units.map(unit=>unit.message.manifest_path)];if(!units.length||manifests.some(path=>typeof path!=="string"))return false;
  const captured=new Map(observation.invocationInputs.map(input=>[resolve(input.path),input.sha256]));for(const input of observation.invocationInputs){await physical.checkpoint();if((await physical.digest(input.path)??null)!==input.sha256)return false;}
  for(let path of[observation.cwd,...(manifests as string[]).map(dirname)])for(;;){await physical.checkpoint();for(const name of["Cargo.toml","Cargo.lock",".cargo/config.toml",".cargo/config","rust-toolchain.toml","rust-toolchain"])if(!captured.has(join(path,name)))return false;const parent=dirname(path);if(parent===path)break;path=parent;}
@@ -401,7 +403,7 @@ export async function verifyRuntimeFixtureGraphV1(root: string, args: readonly s
     if (!provenance && !artifacts) {
       const ledger = durableLedger;
       const load=():readonly RuntimeCargoObservationV1[]=>existsSync(ledger)?readdirSync(ledger).filter(name=>name.startsWith("cargo-unit-provenance-")&&name.endsWith(".json")).flatMap(name=>{try{return runtimeCargoProvenanceV1(readFileSync(join(ledger,name),"utf8"))}catch{return []}}):[];
-      const physical=new CurrentPhysicalOwnerV1(root,cargoObservation),current=(receipt:RuntimeCargoObservationV1):Promise<boolean>=>runtimeCargoObservationCurrentV1(receipt,{root,cwd:receipt.cwd,outDirectory:"",buildDirectory:directories.build,cargoHome:resolve(environment.CARGO_HOME!),fixtureCollections,physical});
+      const physical=new CurrentPhysicalOwnerV1(root,cargoObservation),current=(receipt:RuntimeCargoObservationV1):Promise<boolean>=>runtimeCargoObservationCurrentV1(receipt,{root,cwd:receipt.cwd,outDirectory:"",buildDirectory:directories.build,buildOwned:directory=>laneBuildDirectoryOwnedV1(unitCacheRootV1(store.root),directory),cargoHome:resolve(environment.CARGO_HOME!),fixtureCollections,physical});
       let completed=await runtimeCargoObservationsForChecksV1(load(),checks,root,current);
       if (completed.length!==checks.length) {
         const producer=declaration.steps.find((step:any)=>step.command?.[0]==="repo"&&step.command?.[1]==="run"&&step.command?.[2]?.endsWith(":guest-framework-check"));
@@ -456,7 +458,7 @@ export async function verifyRuntimeFixtureGraphV1(root: string, args: readonly s
       read(config.browserMountSource); read(config.browserMountConfig);
       const completedProfile = wgpuCompletedProfileV1(), roots = wgpuCompletedFrameworkRootsV1(completedProfile);
       const nativeOwner=join(root,config.nativeBrowserProducer),nativeManifest=join(dirname(dirname(roots.compilerRoot)),"Cargo.toml"),nativeLedger=requireNativeStoragePathV1(store.root,join(directories.build,"semio-trunk-provenance"));
-      const physicalOwner=new CurrentPhysicalOwnerV1(root,cargoObservation),currentCompiler=(receipt:RuntimeCargoObservationV1,physical:CurrentPhysicalPortV1):Promise<boolean>=>runtimeCargoObservationCurrentV1(receipt,{root,cwd:receipt.cwd,outDirectory:"",buildDirectory:directories.build,cargoHome:resolve(environment.CARGO_HOME!),fixtureCollections,physical});
+      const physicalOwner=new CurrentPhysicalOwnerV1(root,cargoObservation),currentCompiler=(receipt:RuntimeCargoObservationV1,physical:CurrentPhysicalPortV1):Promise<boolean>=>runtimeCargoObservationCurrentV1(receipt,{root,cwd:receipt.cwd,outDirectory:"",buildDirectory:directories.build,buildOwned:directory=>laneBuildDirectoryOwnedV1(unitCacheRootV1(store.root),directory),cargoHome:resolve(environment.CARGO_HOME!),fixtureCollections,physical});
       const loadNative=async():Promise<{receipt:RuntimeTrunkObservationV1;compiler:RuntimeCargoObservationV1}|undefined>=>{const candidates:{receipt:RuntimeTrunkObservationV1;compiler:RuntimeCargoObservationV1}[]=[];if(existsSync(nativeLedger))for(const name of readdirSync(nativeLedger)){let receipt:RuntimeTrunkObservationV1;try{receipt=JSON.parse(readFileSync(join(nativeLedger,name,"trunk.json"),"utf8"));}catch{continue;}const compiler=await runtimeTrunkObservationCurrentV1(receipt,{root,profile:completedProfile,manifest:nativeManifest,outputDirectory:roots.compilerRoot,owner:nativeOwner,physical:physicalOwner,compilerCurrent:currentCompiler});if(compiler)candidates.push({receipt,compiler});}candidates.sort((a,b)=>b.receipt.observedAtMs-a.receipt.observedAtMs);return candidates[0];};
       let native=await loadNative();
       if(!native&&!provenance&&!artifacts){console.log(`[runtime graph] acquiring actual native browser mount through ${config.nativeBrowserProject}:wasm:${completedProfile}`);await runRuntimeBuildInvocationV1(root,["run",config.nativeBrowserProject+":wasm","--configuration="+completedProfile,"--skip-cache","--output=static"],invocation,phaseControl,{...environment,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build});native=await loadNative();if(!native)throw Error("Registered Trunk producer did not retain a current exact native mount/compiler/resource witness");}

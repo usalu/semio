@@ -1,7 +1,7 @@
 import{wasmPackageCargoConsumptionV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 import {requireIssuedResourceControlInvocationV1,scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import {withRepositoryCompilerStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {withRepositoryCompilerLaneV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {repositoryCargoCompilerInputsV1,repositoryCargoNetworkV1} from "../../🦀️cargo/📥️dependencies/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
@@ -12,7 +12,7 @@ import {existsSync,readFileSync,realpathSync} from "node:fs";
 import {join,resolve,relative,dirname,basename} from "node:path";
 import {spawnSync} from "node:child_process";
 import {getWorkspaceRoot} from "../../../🗂️workspaces/🟦️.ts";
-import { wasmBindgenVersion } from "../../../⚡️caching/🦀️cargo/🕸️wasm-bindgen/🟦️.ts";
+import { requireWasmBindgenSourceLockV1, wasmBindgenVersion } from "../../../⚡️caching/🦀️cargo/🕸️wasm-bindgen/🟦️.ts";
 import { cargoDirectories } from "../../../⚡️caching/🦀️cargo/🗂️directories/🟦️.ts";
 import {prepareCargoWorkspaceInvocation} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
@@ -61,7 +61,9 @@ export function wasmPackEnvironment(repoRoot: string, bindgen: string, env: Node
 
 /** 🔨️ Authors tools and compiler stores from one explicit child environment. */
 export function repositoryWasmBuildPolicyV1(cwd: string, compilerEnvironment: Readonly<Record<string,string|undefined>> = process.env): WasmBuildPolicyV1 {
-  const mode = readBuildMode(compilerEnvironment.SEMIO_BUILD_MODE), root = getWorkspaceRoot(compilerEnvironment), bindgen = resolveWasmBindgenBin(root, compilerEnvironment), environment = wasmPackEnvironment(root, bindgen, compilerEnvironment), local = resolveWorkspaceBin("wasm-pack", cwd);
+  const mode = readBuildMode(compilerEnvironment.SEMIO_BUILD_MODE), root = getWorkspaceRoot(compilerEnvironment);
+  requireWasmBindgenSourceLockV1(root, relative(root, resolve(cwd)).replaceAll("\\", "/"));
+  const bindgen = resolveWasmBindgenBin(root, compilerEnvironment), environment = wasmPackEnvironment(root, bindgen, compilerEnvironment), local = resolveWorkspaceBin("wasm-pack", cwd);
   const cargo = runtimeParseTomlV1(readFileSync(join(cwd, "Cargo.toml"), "utf8")) as { package?: { name?: string } };
   if (!cargo.package?.name) throw Error("WASM source owner requires an authored Cargo package name");
   return { version: 1, workspaceRoot:root,sourceBoundary:repositoryStrictStorageV1(root).sourceBoundary,compilerConfiguration: join(root,".cargo/config.toml"), cwd: resolve(cwd), sourceOwner: relative(root,resolve(cwd)).replaceAll("\\","/"), mode, artifactDirectory: compilerEnvironment.SEMIO_TEST_ARTIFACT_DIR ? resolve(compilerEnvironment.SEMIO_TEST_ARTIFACT_DIR) : join(cwd, "dist"), buildDirectory: cargoDirectories(root, compilerEnvironment).build, leaseDirectory: join(root,".cache","b","l","m","data"), budgetMs: buildBudgetMs(), packageName: cargo.package.name, searchPath: environment.PATH ?? "", bindgen: { command: bindgen, args: [] }, wasmPack: local ? { command: process.execPath, args: [local] } : { command: "wasm-pack", args: [] } };
@@ -71,7 +73,7 @@ export type RepositoryWasmBuildOptionsV1=Omit<WasmPackWebBuildOptions,"storage"|
 /** 🦀️ Retains real dependencies, toolchain, compiler writer and finite package through selected-mode publication and callback drainage. */
 export async function buildRepositoryWasmWebV1(options:RepositoryWasmBuildOptionsV1):Promise<void>{
  options=Object.freeze({...options,pkg:Object.freeze({...options.pkg,files:Object.freeze([...options.pkg.files])}),cargoFeatures:Object.freeze([...(options.cargoFeatures??[])])});requireIssuedResourceControlInvocationV1(options.control,options.invocation);const authority=readNativeCallerAuthorityV1(options.invocation.capabilities),workspace=authority.repositoryRoot,mode=authority.original.buildMode,owner=relative(workspace,resolve(options.rsDir)).replaceAll("\\","/");if(typeof options.consume!=="function"||!owner||owner.startsWith("../"))throw Error("Actual declared WASM producer and consumer required");const consumption=wasmPackageCargoConsumptionV1(options.producer),control=options.control,environment=scriptInvocationEnvironment(options.invocation,{...process.env,SEMIO_BUILD_MODE:mode});
- await withRepositoryCompilerStoreV1(workspace,mode,control,environment,async(store,control)=>{
+ await withRepositoryCompilerLaneV1(workspace,mode,control,environment,{crates:[owner],unitCache:false},async(store,control)=>{
   const compilerEnvironment=store.environment,selected=repositoryWasmBuildPolicyV1(options.rsDir,compilerEnvironment),policy={...selected,workspaceRoot:workspace,mode,sourceOwner:owner,artifactDirectory:store.captureDirectory,buildDirectory:store.buildDirectory,sourceBoundary:store.sourceBoundary};await store.storage.recheck();
   await buildWasmWebV1({...options,cargoConfigurationSelectors:[],storage:store.storage,environment:compilerEnvironment,control,withCargoInputs:repositoryCargoCompilerInputsV1({workspace,invocation:options.invocation,consumption,network:repositoryCargoNetworkV1(options.invocation,workspace),control,storage:store.storage}),consume:capture=>withProducedWasmPackageTaskV1(capture,async package_=>{await withRepositoryCacheStoreV1(workspace,"products",options.invocation,package_.control,(products,productsPhase)=>{const request=repositoryWasmPackageRequestV1(products.root,package_.owner);return withRepositoryArtifactDestinationV1({workspace,invocation:options.invocation,storage:products.storage,control:products.control,phaseControl:productsPhase,directory:request.path},destination=>stageRepositoryArtifacts(destination,request.owner,package_.files));});await package_.recheck();await options.consume(capture);})},policy);await store.storage.recheck();
  });

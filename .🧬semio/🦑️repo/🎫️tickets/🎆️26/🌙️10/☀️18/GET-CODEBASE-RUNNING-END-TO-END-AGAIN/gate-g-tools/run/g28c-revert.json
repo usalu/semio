@@ -1,0 +1,20 @@
+{
+ "label": "g28c-revert",
+ "target": "@teaching/architecture-course:build",
+ "started": "08:16:11",
+ "wall_s": 55.8,
+ "peak_tree_mb": 2669,
+ "peak_processes": 6,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "2",
+   "1 internal, 1 local"
+  ],
+  "actions": [
+   "2"
+  ]
+ }
+}

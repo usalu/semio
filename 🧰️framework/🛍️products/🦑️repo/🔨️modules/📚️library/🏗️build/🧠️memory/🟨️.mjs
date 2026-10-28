@@ -1,3 +1,4 @@
+import {noticeLanguagesV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import{totalmem}from"node:os";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {runtimeCollectGarbageV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
@@ -12,13 +13,12 @@ const P=GRAPH_MEMORY_POLICY_V1,MEGABYTE=1048576;
 /** 🗣️ The bilingual texts of the governor, read from the schema file. */
 export const GRAPH_MEMORY_MESSAGES_V1=freeze(structuredClone(schema.definitions.Messages.const));
 
-/** 🌐️ The languages of the process: the one the environment names, else every supported language in declared order (English first, German second); there is no default language. */
+/** 🌐️ The languages of the process: the one the language protocol chooses, else every supported language in declared order (English first, German second); there is no default language. */
 export function selectGraphMemoryLanguagesV1(environment){
- const named=P.languageEnvironment.map(name=>environment[name]?.split(/[_.@-]/u)[0]?.toLowerCase()).find(value=>P.languages.includes(value));
- return named===undefined?[...P.languages]:[named];
+ return [...noticeLanguagesV1(P.languages,environment)];
 }
 
-/** 🗣️ Renders one governor message as one line per language of the environment. */
+/** 💬️ Renders one governor message as one line per language of the environment. */
 export function renderGraphMemoryMessagesV1(key,fields,environment){
  return selectGraphMemoryLanguagesV1(environment).map(language=>{
   const template=GRAPH_MEMORY_MESSAGES_V1[language][key];
@@ -47,6 +47,10 @@ export function graphMemoryBudgetBytesV1(environment,policy=P,hostMegabytes=host
  const derived=granted>0?Math.floor(granted*policy.grantShare):Math.floor(part(hostMegabytes)*policy.hostShare);
  return Math.max(policy.minimumBudgetMegabytes,Math.min(policy.maximumBudgetMegabytes,derived))*MEGABYTE;
 }
+
+/** 🧒️ The memory JavaScriptCore is told the graph child process may use (`BUN_JSC_forceRAMSize`), which sets how far its heap grows before it collects: the declared child size, never the capacity grant of the run, because the grant pays for every process of the run and a larger size only lets the child keep more garbage (36 refreshed projects in one process: 2 GiB peaks at 5.5 GB resident and 2.0 GB footprint, 8 GiB at 7.5 GB and 2.8 GB, with identical rows and wall time).
+ * @see ./🧬️schema/🔣️.json */
+export function graphChildHeapBytesV1(policy=P){return policy.childHeapMegabytes*MEGABYTE;}
 
 /**
  * ⚖️ Decides whether the next project may start: never beyond the worker count, otherwise while the managed memory is within the budget (within `resumeRatio` of it after it was exceeded, so admission does not flap).
@@ -124,7 +128,8 @@ export function createMemoryGovernorV1({budgetBytes,workers,baselineBytes=0,samp
   }catch(error){fail(error);}
   finally{pumping=false;}
  };
- signal?.addEventListener("abort",()=>fail(signal.reason),{once:true});
+ const onAbort=()=>fail(signal.reason);
+ signal?.addEventListener("abort",onAbort,{once:true});
  return Object.freeze({
   async run(task){
    signal?.throwIfAborted();
@@ -133,6 +138,7 @@ export function createMemoryGovernorV1({budgetBytes,workers,baselineBytes=0,samp
    finally{running--;lastRelease=now();if(queue.length)pump();}
   },
   stats:()=>({waits:stats.waits,waitedMilliseconds:Math.round(stats.waitedMilliseconds),collections:stats.collections,peakMegabytes:Math.round(stats.peakBytes/MEGABYTE)}),
+  dispose:()=>{signal?.removeEventListener("abort",onAbort);},
  });
 }
 
@@ -155,7 +161,7 @@ export function createStringInternerV1({maximumCharacters=P.maximumInternedChara
 }
 
 /**
- * 🧶️ Replaces every long string value of a freshly parsed JSON value by the shared instance of `interner`, in place and without touching object keys, array lengths or any non-string value, so the value serializes to the identical bytes.
+ * 🔤️ Replaces every long string value of a freshly parsed JSON value by the shared instance of `interner`, in place and without touching object keys, array lengths or any non-string value, so the value serializes to the identical bytes.
  * @template T
  * @param {T} value
  * @param {ReturnType<typeof createStringInternerV1>} interner

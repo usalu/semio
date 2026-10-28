@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "cases": [
+    "publication",
+    "cancel",
+    "deadline",
+    "overflow",
+    "malformed",
+    "missing-end"
+  ],
+  "authority": [
+    "actual-compiler-capture",
+    "private-byte-snapshot",
+    "captured-program",
+    "same-original-control",
+    "owned-child",
+    "closed-dto"
+  ],
+  "workerCompanions": [
+    {
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/🟨️.mjs",
+      "schema": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/🧬️schema/🔣️.json"
+    },
+    {
+      "owner": "🧰️framework/🔨️modules/⚙️runtime/🗣️language/🟦️.ts",
+      "schema": "🧰️framework/🔨️modules/⚙️runtime/🗣️language/🧬️schema/🔣️.json"
+    }
+  ],
+  "entry": {
+    "version": 1,
+    "function": "runScriptProgram",
+    "ingress": "birth-owning-program",
+    "witnessPrefix": "closure-admitted-birth:"
+  },
+  "birth": {
+    "version": 1,
+    "ingress": "birth-owning-program",
+    "owner": "test:admitted-birth",
+    "maximumElapsedMilliseconds": 40000,
+    "deadlineEpochMilliseconds": 2000040000
+  }
+}

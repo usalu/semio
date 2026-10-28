@@ -1,12 +1,14 @@
-/** 🧾️ Contract: the Bazel input witness is the same digest whether it is computed by the reference function, by the real witness program run under Bun over a parameter file, or by an independent Python implementation, for every case of `./🔣️.json`; the program refuses a missing output path and writes atomically. */
+/** 🧾️ Contract: the Bazel input witness is the same digest whether it is computed by the reference function over the bytes, by the publisher from captured rows (path, size, content sha256) of a written plan, or by an independent Python implementation, for every case of `./🔣️.json`; the rules hold no witness action any more. */
 import {afterAll,beforeAll,expect,test,setDefaultTimeout} from "bun:test";
 import {spawnSync} from "node:child_process";
-import {mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,writeFileSync} from "node:fs";
+import {mkdtempSync,realpathSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
-import {dirname,join} from "node:path";
+import {join} from "node:path";
 import Ajv from "ajv";
 import {requireTestToolV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import {BAZEL_WITNESS_RUNNER,BAZEL_WITNESS_STARLARK,bazelWitnessDigestV1} from "../../🟦️.ts";
+import {createHash} from "node:crypto";
+import {bazelStarlarkRulesV1} from "../../../../📜️script.ts";
+import {bazelWitnessDigestV1,bazelWitnessFilesOfPlanV1,bazelWitnessFilesV1,bazelWitnessPlanTextV1} from "../../🟦️.ts";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";
 
@@ -16,7 +18,7 @@ const python=requireTestToolV1("python"),oracleFile=join(import.meta.dir,"./🐍
 const ask=(rows:unknown[]):any[]=>{const run=spawnSync(python,["-I",oracleFile],{input:JSON.stringify({rows}),encoding:"utf8",maxBuffer:128*1024*1024});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout);};
 const bytesOf=(content:any):Buffer=>Buffer.from("repeat" in content?content.repeat.repeat(content.times):content.text);
 let workspace="";
-beforeAll(()=>{workspace=realpathSync(mkdtempSync(join(tmpdir(),"witness-")));writeFileSync(join(workspace,"runner.mjs"),BAZEL_WITNESS_RUNNER);});
+beforeAll(()=>{workspace=realpathSync(mkdtempSync(join(tmpdir(),"witness-")));});
 afterAll(()=>{rmSync(workspace,{recursive:true,force:true});});
 
 test("the corpus is closed by its schema",()=>{
@@ -37,22 +39,18 @@ test("the reference digest equals the authored digest and the Python digest for 
  expect(changed.sha256).not.toBe(other.sha256);
 });
 
-test("the real witness program under Bun writes exactly that digest for every case and replaces its output atomically",()=>{
+test("the publisher writes exactly that digest for every case from the captured rows of a written plan",()=>{
  for(const[index,row]of corpus.cases.entries()){
-  const base=join(workspace,"case"+index);mkdirSync(base,{recursive:true});
-  for(const file of row.files){mkdirSync(dirname(join(base,...file.path.split("/"))),{recursive:true});writeFileSync(join(base,...file.path.split("/")),bytesOf(file.content));}
-  const output="out/deep/"+index+".witness";writeFileSync(join(base,"params"),[output,...row.files.map(file=>file.path)].join("\n")+"\n");
-  const run=spawnSync(process.execPath,[join(workspace,"runner.mjs"),"@params"],{cwd:base,encoding:"utf8",env:{...process.env,BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"}});
-  expect(run.status,row.name+run.stderr).toBe(0);
-  const text=readFileSync(join(base,output),"utf8");expect(text.endsWith("\n"),row.name).toBe(true);expect(JSON.parse(text),row.name).toEqual(row.expected);
-  expect(readdirSync(join(base,"out/deep")),row.name).toEqual([index+".witness"]);
+  const rows=new Map(row.files.map(file=>{const bytes=bytesOf(file.content);return[file.path,{path:file.path,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")}] as const;}));
+  const plan=JSON.parse(bazelWitnessPlanTextV1(new Map([["w_case"+index,row.files.map(file=>file.path)]])));
+  const files=bazelWitnessFilesOfPlanV1(plan,rows);expect(files.length,row.name).toBe(1);
+  const[name,text]=files[0]!;expect(name,row.name).toBe("w_case"+index+bazelWitnessFilesV1.suffix);expect(text.endsWith("\n"),row.name).toBe(true);expect(JSON.parse(text),row.name).toEqual(row.expected);
  }
 });
 
-test("the program refuses a parameter file without an output path and the rule keeps its actions local",()=>{
- const base=join(workspace,"empty");mkdirSync(base,{recursive:true});writeFileSync(join(base,"params"),"\n");
- const run=spawnSync(process.execPath,[join(workspace,"runner.mjs"),"@params"],{cwd:base,encoding:"utf8"});
- expect(run.status).not.toBe(0);expect(run.stderr).toContain("[witness] output path required");
- for(const required of['"no-sandbox": "1"','"no-remote-exec": "1"','ctx.actions.run(','declare_file(ctx.label.name + ".witness")','mnemonic = "RepoInputsWitness"'])expect(BAZEL_WITNESS_STARLARK,required).toContain(required);
- expect(BAZEL_WITNESS_STARLARK.includes("\t")).toBe(false);
+test("the rules hold no witness action: a witnessed test takes the witness as a source file",()=>{
+ const rules=bazelStarlarkRulesV1();
+ for(const gone of["RepoInputsWitness","repo_inputs_witness","witness.mjs"])expect(rules,gone).not.toContain(gone);
+ expect(rules).toContain('"witnesses": attr.label_list(allow_files = True)');
+ expect(rules.includes("\t")).toBe(false);
 });

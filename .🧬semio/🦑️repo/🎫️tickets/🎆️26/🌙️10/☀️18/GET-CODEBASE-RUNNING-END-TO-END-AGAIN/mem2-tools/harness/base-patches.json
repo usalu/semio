@@ -1,0 +1,4 @@
+[
+ {"suffix":"📥️inputs/💾️storage/🟨️.mjs","find":"export async function withRepositoryBuildGraphFactStoreV1(workspace,invocation,phaseControl,body){return withGraphFactWriterV1(workspace,invocation,phaseControl,body);}","replace":"export async function withRepositoryBuildGraphFactStoreV1(workspace,invocation,phaseControl,body){return body({root:'/dev/null'},phaseControl);}"},
+ {"suffix":"👁️observation/📥️reuse/🟨️.mjs","find":"export async function inferenceInventoryReferencesHoldV1(root,value,control){","replace":"export async function inferenceInventoryReferencesHoldV1(root,value,control){return true;"}
+]

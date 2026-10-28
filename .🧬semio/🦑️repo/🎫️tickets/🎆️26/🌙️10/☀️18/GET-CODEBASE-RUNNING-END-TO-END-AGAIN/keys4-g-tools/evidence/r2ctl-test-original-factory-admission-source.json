@@ -1,0 +1,26 @@
+{
+ "target": "test-original-factory-admission-source",
+ "tag": "r2ctl",
+ "declared": 2024,
+ "rows": [
+  {
+   "leg": "bun-admission",
+   "kind": "bun",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": false,
+   "clean": false,
+   "learned": [
+    "🧰️framework/🔨️modules/🎯️action-bus/🚪️admission/🧪️tests/🟦️.ts"
+   ],
+   "rounds": 1,
+   "seconds": 4,
+   "tail": " 1 fail |  1 error | Ran 1 test across 1 file. [41.00ms] | ",
+   "notes": [
+    "profiles:4",
+    "rules:1316",
+    "capacity:600"
+   ]
+  }
+ ]
+}

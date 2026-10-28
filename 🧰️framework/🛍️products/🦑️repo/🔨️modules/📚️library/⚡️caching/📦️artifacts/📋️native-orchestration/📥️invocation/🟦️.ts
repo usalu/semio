@@ -3,7 +3,8 @@ import{createRequire}from"node:module";
 /** 📖️ The refusal texts load when a native caller is refused, never at startup: every entry that reads a caller stays inside its module budget. */
 const refuseCachingV1=(...input:Parameters<typeof import("../../../📖️texts/🟦️.ts").refuseCachingV1>):ReturnType<typeof import("../../../📖️texts/🟦️.ts").refuseCachingV1>=>(createRequire(import.meta.url)("../../../📖️texts/🟦️.ts") as typeof import("../../../📖️texts/🟦️.ts")).refuseCachingV1(...input);
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
-import {cargoExecutionSchemaV1,type CargoExecutionBackendV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
+import cargoExecutionSchemaV1 from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🧬️schema/🔣️json/🟦️.ts";
+import type {CargoExecutionBackendV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import serviceSchema from "../../../🕸️graph/🏁️startup/🧬️lifetime/🧬️schema/🔣️.json" with { type: "json" };
 import callerSchema from "../../../🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json" with { type: "json" };

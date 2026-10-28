@@ -250,11 +250,11 @@
             "graph": "Lese den Projektgraphen nach einer Konfigurationsänderung neu.",
             "queued": "Warte auf einen freien Platz im residenten Dienst ({position} davor).",
             "fence": "Synchronisiere mit dem Dateibeobachter.",
-            "plan": "Plane {tasks} Aufgaben.",
+            "plan": "Plane {tasks} Tasks.",
             "digest": "Berechne Prüfsummen für {files} geänderte Dateien.",
             "execute": "Führe {task} aus.",
             "replay": "Aktuell, seit {since} hat sich nichts geändert.",
-            "resync": "Belege die Mitgliedschaft nach einer Lücke in den Dateiereignissen neu ({reason}).",
+            "resync": "Weise die Mitgliedschaft nach einer Lücke in den Dateiereignissen neu nach ({reason}).",
             "stale-implementation": "Der residente Dienst führt veralteten Code aus und startet neu; führe den Befehl erneut aus.",
             "shutdown": "Der residente Dienst wird beendet.",
             "busy": "Der residente Dienst ist ausgelastet ({inFlight} laufen, {queued} wartend).",
@@ -273,9 +273,9 @@
             "recovered": "Dateiereignisse sind wieder verfügbar.",
             "service-started": "Der residente Dienst läuft (pid {pid}, {files} Dateien beobachtet, Backend {backend}).",
             "service-running": "Der residente Dienst läuft bereits (pid {pid}).",
-            "service-down": "Für dieses Worktree läuft kein residenter Dienst.",
+            "service-down": "Für diesen Arbeitsbaum läuft kein residenter Dienst.",
             "service-stopped": "Der residente Dienst wurde beendet.",
-            "service-failed": "Der residente Dienst wurde nicht bereit: {reason}.",
+            "service-failed": "Der residente Dienst ist nicht bereit geworden: {reason}.",
             "service-usage": "Verwendung: repo service status|start|stop|restart|issue|revoke|drop-caches|probe"
           }
         }

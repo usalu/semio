@@ -1,7 +1,7 @@
 {
   "schema": "repository-cache-budget/v1",
-  "expectedPartitionBytes": 104756936704,
-  "expectedHeadroomBytes": 468713472,
+  "expectedPartitionBytes": 134821707776,
+  "expectedHeadroomBytes": 461373440,
   "cases": [
     {
       "id": "authored",

@@ -107,7 +107,6 @@
      "name",
      "path",
      "dry",
-     "ticket",
      "illegal",
      "cargo",
      "expected",
@@ -121,9 +120,6 @@
       "type": "string"
      },
      "dry": {
-      "type": "boolean"
-     },
-     "ticket": {
       "type": "boolean"
      },
      "illegal": {

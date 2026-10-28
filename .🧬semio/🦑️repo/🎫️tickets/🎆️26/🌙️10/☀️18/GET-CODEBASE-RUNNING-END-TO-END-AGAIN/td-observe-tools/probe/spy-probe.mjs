@@ -1,0 +1,2 @@
+/** 🔬️ [td-observe] outside the test runner: does bun:test spyOn on the node:fs namespace reach a consumer's already-linked named and namespace imports? */
+import * as fs from "node:fs";import{spyOn}from"bun:test";import{viaNamed,viaNs}from"./m.mjs?spy";let hits=0;const real=fs.lstatSync;const spy=spyOn(fs,"lstatSync").mockImplementation((...a)=>{hits++;return real(...a);});viaNamed(".");const named=hits;viaNs(".");spy.mockRestore();viaNamed(".");console.log("[DEBUG] bun",process.versions.bun,"spy named",named,"namespace",hits-named,"after restore",hits);

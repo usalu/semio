@@ -1,0 +1,99 @@
+{
+  "name": "repo-mcp",
+  "$schema": "../../📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "projectType": "application",
+  "namedInputs": {
+    "goToolchain": [
+      "{workspaceRoot}/go.work",
+      "{workspaceRoot}/go.work.sum"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
+  "targets": {
+    "build": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "production",
+        "^production",
+        "goToolchain"
+      ],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp",
+        "command": "repo ./📜️script.ts build"
+      },
+      "outputs": [
+        "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🗃️bin/{options.env.SEMIO_BUILD_MODE}/repo"
+      ]
+    },
+    "install": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": ["default", "^default"],
+      "outputs": [],
+      "dependsOn": ["build"],
+      "options": { "command": "repo ./📜️script.ts install" },
+      "metadata": { "semio": { "dashboard": {
+        "verb": "setup",
+        "title": { "en": "Install Native Repository Command", "de": "Nativen Repository-Befehl installieren" },
+        "description": { "en": "Publish the native repo command and persist its user PATH selection.", "de": "Den nativen repo-Befehl veröffentlichen und seinen Nutzer-PATH dauerhaft auswählen." }
+      },
+      "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" } } }
+    },
+    "test-install": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": ["default", "^default"],
+      "outputs": [],
+      "options": { "command": "repo ./📜️script.ts test-install" },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "dashboard": {
+            "verb": "test",
+            "title": {
+              "en": "Test Native Command Installation",
+              "de": "Native Befehlsinstallation testen"
+            },
+            "description": {
+              "en": "Check native installation, PATH and atomic publication against neutral vectors.",
+              "de": "Native Installation, PATH und atomare Veröffentlichung mit neutralen Fällen prüfen."
+            }
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🐹️go-layout/🧪️tests/🟦️.ts"
+          ]
+        }
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "goToolchain"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts test"
+      }
+    }
+  }
+}

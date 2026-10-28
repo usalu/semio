@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/testing/bun/orphans.json",
+  "title": "TestOrphansV1",
+  "description": "What keeps a `bun test` process from outliving its runner or the host: the child side (a preload) caps the open files of the process and ends its whole tree when its parent is gone; the runner side counts the open files of the process tree of a test file, stops it above the cap by name and, when the file is over, ends and names every process it left behind.",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "guardSwitch": "SEMIO_TEST_ORPHAN_GUARD",
+        "openFilesVariable": "SEMIO_TEST_OPEN_FILES_CEILING",
+        "openFilesCeiling": 8192,
+        "minimumOpenFilesCeiling": 256,
+        "stopBasisPoints": 9000,
+        "parentPollMilliseconds": 250,
+        "observeMilliseconds": 500,
+        "graceMilliseconds": 400,
+        "listedOrphans": 5,
+        "resourceLimit": { "darwin": 8, "linux": 7 }
+      }
+    },
+    "Messages": {
+      "const": {
+        "en": {
+          "parentGone": "[tests] the runner of this test process ({parent}) is gone: ending process {pid} and everything it started",
+          "descriptors": "[tests] {file} holds {count} open files in process {pid} ({command}) and was stopped at its ceiling of {ceiling} open files",
+          "orphans": "[tests] {file} left {count} process(es) running after it ended; they were stopped: {list}"
+        },
+        "de": {
+          "parentGone": "[tests] der Runner dieses Testprozesses ({parent}) ist beendet: Prozess {pid} und alles, was er gestartet hat, wird beendet",
+          "descriptors": "[tests] {file} hält {count} offene Dateien im Prozess {pid} ({command}) und wurde an seiner Obergrenze von {ceiling} offenen Dateien angehalten",
+          "orphans": "[tests] {file} hat {count} Prozess(e) nach seinem Ende laufen lassen; sie wurden beendet: {list}"
+        }
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "ceilings", "orphans"],
+      "properties": {
+        "version": { "const": 1 },
+        "ceilings": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["environment", "ceiling"], "properties": { "environment": { "type": "object", "additionalProperties": { "type": "string" } }, "ceiling": { "type": "integer", "minimum": 256 } } } },
+        "orphans": { "type": "object", "additionalProperties": false, "required": ["opened", "processes"], "properties": { "opened": { "type": "integer", "minimum": 50, "maximum": 2000 }, "processes": { "type": "integer", "minimum": 1, "maximum": 8 } } }
+      }
+    }
+  }
+}

@@ -1,0 +1,109 @@
+{
+ "files": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": [
+   {
+    "old": "executable = ctx.attr.bun",
+    "new": "executable = ctx.attr.runtime",
+    "count": 3
+   },
+   {
+    "old": "\"bun\": attr.string(mandatory = True)",
+    "new": "\"runtime\": attr.string(mandatory = True)",
+    "count": 3
+   },
+   {
+    "old": "    bun = ${quote(input.bun)},",
+    "new": "    runtime = ${quote(input.bun)},",
+    "count": 1
+   },
+   {
+    "old": "[\"bun\",quote(input.bun)]",
+    "new": "[\"runtime\",quote(input.bun)]",
+    "count": 1
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🟦️.ts": [
+   {
+    "old": "executable = ctx.attr.bun",
+    "new": "executable = ctx.attr.runtime",
+    "count": 1
+   },
+   {
+    "old": "\"bun\": attr.string(mandatory = True)",
+    "new": "\"runtime\": attr.string(mandatory = True)",
+    "count": 1
+   },
+   {
+    "old": "    bun = ${quote(input.bun)},",
+    "new": "    runtime = ${quote(input.bun)},",
+    "count": 1
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧾️witness/🟦️.ts": [
+   {
+    "old": "executable = ctx.attr.bun",
+    "new": "executable = ctx.attr.runtime",
+    "count": 1
+   },
+   {
+    "old": "\"bun\": attr.string(mandatory = True)",
+    "new": "\"runtime\": attr.string(mandatory = True)",
+    "count": 1
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️platform/🟦️.ts": [
+   {
+    "old": "executable = ctx.attr.bun",
+    "new": "executable = ctx.attr.runtime",
+    "count": 1
+   },
+   {
+    "old": "bun = ${JSON.stringify(windowsBun)}",
+    "new": "runtime = ${JSON.stringify(windowsBun)}",
+    "count": 2
+   },
+   {
+    "old": "bun = ${bun}",
+    "new": "runtime = ${bun}",
+    "count": 2
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/👷️workers/🧪️tests/🟦️.ts": [
+   {
+    "old": "executable = ctx.attr.bun",
+    "new": "executable = ctx.attr.runtime",
+    "count": 1
+   },
+   {
+    "old": "\"bun\": attr.string()",
+    "new": "\"runtime\": attr.string()",
+    "count": 1
+   },
+   {
+    "old": "bun = ${JSON.stringify(process.execPath)}",
+    "new": "runtime = ${JSON.stringify(process.execPath)}",
+    "count": 1
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️actions/🔣️.json": [
+   {
+    "old": "    \"    bun = \\\"/opt/bun\\\",\",",
+    "new": "    \"    runtime = \\\"/opt/bun\\\",\",",
+    "count": 5
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧪️tests/🟦️.ts": [
+   {
+    "old": "'    bun = %s,'%q(r['bun'])",
+    "new": "'    runtime = %s,'%q(r['bun'])"
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧪️tests/🔣️.json": [
+   {
+    "old": "\"command\": \"bun \\\"",
+    "new": "\"command\": \"repo \\\"",
+    "count": 9
+   }
+  ]
+ }
+}

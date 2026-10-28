@@ -1,0 +1,30 @@
+{
+ "edits": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+   "old": "import{dirname,join}from\"node:path\";",
+   "new": "import{dirname,join,sep}from\"node:path\";"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+   "old": "export function unfoundedWithheldOwnersV1(index,owners){",
+   "new": "export function unfoundedWithheldOwnersV1(index,owners,separator=sep){"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+   "old": "   const row=index.rows[id];if(!kinds.has(row.kind))continue;\n   for(const config of configs)if(row.path===config||row.path.endsWith(\"/\"+config)){",
+   "new": "   const row=index.rows[id];if(!kinds.has(row.kind))continue;\n   const path=separator===\"/\"?row.path:row.path.split(separator).join(\"/\");\n   for(const config of configs)if(path===config||path.endsWith(\"/\"+config)){"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.d.mts",
+   "old": "owners:Readonly<Record<string,{kind:string;tag?:string;config?:string}>>):string[];",
+   "new": "owners:Readonly<Record<string,{kind:string;tag?:string;config?:string}>>,separator?:string):string[];"
+  }
+ ],
+ "newFiles": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🚧️unfounded-withheld/🪟️windows/🟦️.ts",
+   "from": "files/windows-law.ts"
+  }
+ ]
+}

@@ -5,6 +5,7 @@ import{chmod,copyFile,lstat,mkdir,open,readFile,readdir,rename,rm,rmdir,stat,unl
 import{dirname,join}from"node:path";
 import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json" with { type: "json" };
+import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
 
 const policy=schema.definitions.Policy.const,absent=new Set(["ENOENT","ENOTDIR","ELOOP"]),code=(error:unknown)=>(error as NodeJS.ErrnoException).code??"";
 
@@ -13,6 +14,9 @@ export type BazelSourceSnapshotRowV1={path:string;sha256:string;bytes:number;exe
 
 /** 🎟️ What one capture needs: the live checkout, the generated workspace, an optional content pool on the same volume whose identical files every package clones instead of copying, the two view directory names, the alias of a repository directory, the files to capture and the subset that the repository view names too. */
 export interface BazelSourceSnapshotRequestV1{readonly root:string;readonly directory:string;readonly pool?:string;readonly files:readonly string[];readonly real?:ReadonlySet<string>;readonly views:{readonly alias:string;readonly real:string};readonly alias:(directory:string)=>string;readonly check:()=>void;readonly progress:()=>Promise<void>;readonly now?:()=>number}
+
+/** 🗒️ What a plan asks its publisher to capture: the declarable files and the subset the repository view names too; the plan depends on which files exist, the capture on their bytes. */
+export type BazelSourceSnapshotPlanV1={readonly version:1;readonly files:readonly string[];readonly real:readonly string[]};
 
 /** 📊️ The captured files in order, the requested files that vanished before capture, the alias to directory mapping and what the capture did. */
 export interface BazelSourceSnapshotV1{readonly files:string[];readonly vanished:string[];readonly directories:ReadonlyMap<string,string>;readonly captured:number;readonly reused:number;readonly pruned:number}
@@ -41,6 +45,31 @@ async function eachBoundedV1<T>(items:readonly T[],limit:number,work:(item:T)=>P
  let next=0,failure:{error:unknown}|undefined;
  const run=async()=>{for(;;){if(failure)return;const index=next++;if(index>=items.length)return;try{await work(items[index]!);}catch(error){failure??={error};return;}}};
  await Promise.all(Array.from({length:Math.min(limit,items.length)},run));if(failure)throw failure.error;
+}
+
+/** 🗺️ Maps the alias of every directory that holds a requested file to that directory and refuses collisions: the planner names its alias packages by it before anything is captured, the capture places the copies by the same map. */
+export function bazelSourceSnapshotDirectoriesV1(files:readonly string[],alias:(directory:string)=>string):Map<string,string>{
+ const directories=new Map<string,string>(),seen=new Set<string>();
+ for(const path of files){requirePathV1(path);const folder=path.includes("/")?path.slice(0,path.lastIndexOf("/")):"";if(seen.has(folder))continue;seen.add(folder);const name=alias(folder),known=directories.get(name);if(known!==undefined)throw refuseBuildV1("invalid","bazel.source-alias-collision",{name,known,folder});directories.set(name,folder);}
+ return directories;
+}
+
+/** 🧷️ The entries of a workspace root that the capture owns (manifest, scratch directory and both views): the publisher rewrites them after every plan, so they are never part of what a plan record proves. */
+export function bazelSourceSnapshotEntriesV1(views:{readonly alias:string;readonly real:string}):readonly string[]{return [policy.manifest,policy.temporary,views.alias,views.real];}
+
+/** 📛️ The name of the capture plan in a workspace root. */
+export const bazelSourceSnapshotPlanFileV1:string=policy.plan;
+
+/** ✒️ The text of the capture plan the planner leaves in a workspace: sorted and duplicate free, so an unchanged file set gives unchanged bytes. */
+export function bazelSourceSnapshotPlanTextV1(files:Iterable<string>,real:Iterable<string>):string{return JSON.stringify({version:1,files:[...new Set(files)].sort(),real:[...new Set(real)].sort()});}
+
+/** 📥️ Reads the capture plan a planner left in a workspace; a missing or malformed plan is refused, never read as empty. */
+export async function readBazelSourceSnapshotPlanV1(directory:string):Promise<BazelSourceSnapshotPlanV1>{
+ const path=join(directory,policy.plan);
+ if((await stat(path)).size>policy.maximumManifestBytes)throw refuseBuildV1("invalid","bazel.snapshot-plan-bounded");
+ const value:unknown=JSON.parse(await readFile(path,"utf8"));
+ if(validateJsonSchemaSubset(schema.definitions.Plan,value,schema).length)throw refuseBuildV1("invalid","bazel.snapshot-plan-closed");
+ return value as BazelSourceSnapshotPlanV1;
 }
 
 /** 📖️ Reads the manifest that a workspace's last capture published; a missing, oversized or malformed manifest reads as empty so the next capture starts from the live files. */
@@ -92,10 +121,9 @@ async function placeFromPoolV1(pool:string,holder:string,destination:string,clon
 export async function captureBazelSourceSnapshotV1(request:BazelSourceSnapshotRequestV1):Promise<BazelSourceSnapshotV1>{
  const{root,directory,views,check}=request,wanted=[...new Set(request.files)].sort(),real=request.real??new Set<string>();
  if(wanted.length>policy.maximumFiles)throw Error("Bazel source snapshot capacity exceeded");
- const aliases=new Map<string,string>(),directories=new Map<string,string>(),aliasOf=(folder:string)=>{let alias=aliases.get(folder);if(alias===undefined){alias=request.alias(folder);const known=directories.get(alias);if(known!==undefined&&known!==folder)throw Error(`Bazel source alias collision: ${alias}: ${known} and ${folder}`);directories.set(alias,folder);aliases.set(folder,alias);}return alias;};
+ const directories=bazelSourceSnapshotDirectoriesV1(wanted,request.alias),aliases=new Map([...directories].map(([alias,folder])=>[folder,alias])),aliasOf=(folder:string)=>aliases.get(folder)!;
  const aliasRoot=join(directory,views.alias),realRoot=join(directory,views.real),temporary=join(directory,policy.temporary);
  const aliasDestination=(path:string)=>{const cut=path.lastIndexOf("/");return join(aliasRoot,aliasOf(cut<0?"":path.slice(0,cut)),path.slice(cut+1));},realDestination=(path:string)=>join(realRoot,...path.split("/"));
- for(const path of wanted){requirePathV1(path);aliasOf(path.includes("/")?path.slice(0,path.lastIndexOf("/")):"");}
  const pool=request.pool!==undefined&&await poolClonesV1(request.pool)?request.pool:undefined;
  await ensureTreeV1(aliasRoot);await ensureTreeV1(realRoot);await rm(temporary,{recursive:true,force:true});await mkdir(temporary,{recursive:true});
  const prior=await readBazelSourceSnapshotV1(directory),current=new Set(wanted),made=new Map<string,Promise<void>>(),rows:BazelSourceSnapshotRowV1[]=[],vanished:string[]=[];let pruned=0,captured=0,reused=0,done=0,counter=0;
@@ -135,7 +163,7 @@ export async function captureBazelSourceSnapshotV1(request:BazelSourceSnapshotRe
   const gone=async()=>{vanished.push(path);if(row){await removeEntryV1(aliasDestination(path));if(row.realMtimeNs!==undefined)await removeRealV1(path);}};
   if(!facts?.isFile()){await gone();return;}
   let next:BazelSourceSnapshotRowV1|undefined,fresh=false;
-  if(row&&!row.racy&&row.liveMtimeNs===facts.mtimeNs.toString()&&row.liveIno===facts.ino.toString()&&BigInt(row.bytes)===facts.size&&await intact(aliasDestination(path),row.aliasMtimeNs,row.bytes)){next={...row};reused++;}
+  if(row&&!row.racy&&row.liveMtimeNs===facts.mtimeNs.toString()&&row.liveIno===facts.ino.toString()&&BigInt(row.bytes)===facts.size&&row.executable===((facts.mode&0o111n)!==0n)&&await intact(aliasDestination(path),row.aliasMtimeNs,row.bytes)){next={...row};reused++;}
   else{next=await capture(path,live,facts);if(!next){await gone();return;}fresh=true;captured++;}
   if(real.has(path)){if(fresh||next.realMtimeNs===undefined||!await intact(realDestination(path),next.realMtimeNs,next.bytes))next.realMtimeNs=await place(aliasDestination(path),realDestination(path),next.executable,false);}
   else if(next.realMtimeNs!==undefined){await removeRealV1(path);delete next.realMtimeNs;}

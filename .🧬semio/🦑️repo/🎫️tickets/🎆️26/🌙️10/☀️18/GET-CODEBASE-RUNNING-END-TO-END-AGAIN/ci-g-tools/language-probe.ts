@@ -1,0 +1,5 @@
+import{readFileSync,readdirSync}from"node:fs";import{join}from"node:path";
+import{catalogFindingsV1,defaultLanguageFindingsV1,languageLawFindingsV1,proseSitesV1}from"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🗣️language-catalogs/🟦️.ts";
+const root="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/ci-g-tools/staged/files/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️ci-report/🗂️suites",walk=(d:string):string[]=>readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(join(d,e.name)):[join(d,e.name)]);
+const sources=walk(root).filter(p=>/\.(ts|json)$/.test(p)).map(p=>({path:p.slice(root.length+1),text:readFileSync(p,"utf8")}));
+for(const s of sources){const sites=s.path.endsWith(".ts")?proseSitesV1(s.text):0;const f=[...catalogFindingsV1(s),...defaultLanguageFindingsV1(s)];console.log(s.path,"proseSites",sites,"catalog/default findings",f.length,f.map(x=>x.rule+":"+x.detail).slice(0,3).join("|"));}

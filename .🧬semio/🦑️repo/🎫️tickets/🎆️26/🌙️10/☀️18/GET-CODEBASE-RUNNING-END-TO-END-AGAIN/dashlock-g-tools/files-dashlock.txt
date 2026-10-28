@@ -1,0 +1,11 @@
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts
+🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/📤️publication/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🔣️.json
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📌️executable/🧪️tests/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧊️digest/🧪️tests/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧊️digest/🧪️tests/🔣️.json
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧊️digest/🧪️tests/🐍️model.py
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧪️tests/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧪️tests/🐍️model.py

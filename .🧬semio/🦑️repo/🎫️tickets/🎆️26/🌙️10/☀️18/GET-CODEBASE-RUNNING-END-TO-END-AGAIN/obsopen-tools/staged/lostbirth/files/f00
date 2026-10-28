@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:owned-child-settlement",
+  "description": "Closed settlement law of every owned child process: the child is settled by its stream 'close' event, but a child whose exit was observed (or whose process vanished) never leaves its parent waiting for a 'close' that was lost.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "livenessMilliseconds": 250,
+        "graceMilliseconds": 2000
+      },
+      "description": "livenessMilliseconds: cadence of the independent process-table check; graceMilliseconds: how long a child may stay exited (or vanished) without 'close' before its streams are destroyed and it is settled."
+    },
+    "Decision": {
+      "enum": ["wait", "closed", "force", "lost"]
+    },
+    "State": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exited", "closed", "alive", "sinceExitMilliseconds", "sinceVanishedMilliseconds"],
+      "properties": {
+        "exited": { "type": "boolean" },
+        "closed": { "type": "boolean" },
+        "alive": { "type": "boolean" },
+        "sinceExitMilliseconds": { "type": "integer", "minimum": 0 },
+        "sinceVanishedMilliseconds": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Lost": {
+      "const": { "version": 1, "kind": "terminal-lost", "message": "Owned child terminal events lost" },
+      "description": "The refusal of a child whose process vanished while neither 'exit' nor 'close' ever arrived (Bun 1.4.2 loses every event of a fast child about once in forty fresh processes: the exit code is set, the output is gone). Status and output are unknown, so a capture is refused with this cause and only an idempotent reader may repeat."
+    },
+    "LostCause": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "kind", "program", "pid"],
+      "properties": {
+        "version": { "const": 1 },
+        "kind": { "const": "terminal-lost" },
+        "program": { "type": "string", "maxLength": 256 },
+        "pid": { "type": ["integer", "null"] }
+      }
+    },
+    "Notice": {
+      "const": {
+        "labels": {
+          "en": "Child process {pid} ({label}) ended but its output streams stayed open for {milliseconds} ms: the streams were closed and the child settled ({kind}).",
+          "de": "Kindprozess {pid} ({label}) ist beendet, aber seine Ausgabeströme blieben {milliseconds} ms offen: die Ströme wurden geschlossen und das Kind abgeschlossen ({kind})."
+        }
+      }
+    }
+  }
+}

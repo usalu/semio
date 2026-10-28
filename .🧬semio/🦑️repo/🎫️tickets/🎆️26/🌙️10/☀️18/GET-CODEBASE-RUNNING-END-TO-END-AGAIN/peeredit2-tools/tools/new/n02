@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "group": {
+    "prefix": "scriptProvider:",
+    "separator": ":"
+  },
+  "views": {
+    "scheduling": {
+      "packages": true,
+      "contract": {
+        "en": "The provider closure a target's own command closure names (target-sources, generic-target, a scheduling-role closure): without the scheduling files, with the external packages its modules import.",
+        "de": "Der Anbieterabschluss, den der eigene Befehlsabschluss eines Targets nennt (target-sources, generic-target, ein Abschluss mit Scheduling-Rolle): ohne die Scheduling-Dateien, mit den externen Paketen, die seine Module importieren."
+      }
+    },
+    "native": {
+      "packages": false,
+      "contract": {
+        "en": "The provider closure a Rust command's closure names (native-target, native-command, a native-role closure): without the scheduling files a Rust compile may leave out; the native-build modules stay in.",
+        "de": "Der Anbieterabschluss, den der Abschluss eines Rust-Befehls nennt (native-target, native-command, ein Abschluss mit Native-Rolle): ohne die Scheduling-Dateien, die ein Rust-Kompilat auslassen darf; die Native-Build-Module bleiben drin."
+      }
+    }
+  },
+  "tools": {
+    "prefix": "toolClosure:",
+    "closures": {
+      "cargo-command": {
+        "entries": [
+          "../../⚡️caching/🦀️cargo/📜️script.ts"
+        ],
+        "resources": [],
+        "view": "native",
+        "contract": {
+          "en": "The cargo driver every Rust target runs its compiles through (the native command fallback of every native target).",
+          "de": "Der Cargo-Treiber, über den jedes Rust-Target seine Kompilate ausführt (der native Befehls-Fallback jedes nativen Targets)."
+        }
+      },
+      "cargo-lock-owner": {
+        "entries": [
+          "../../🏗️build/📥️inputs/🔒️lock/📜️script.ts"
+        ],
+        "resources": [
+          "../../🏗️build/📥️inputs/🔒️lock/🔣️schema.json"
+        ],
+        "view": "native",
+        "contract": {
+          "en": "The lock owner script that replays a crate's locked resolution (every Rust package target and component store).",
+          "de": "Das Lock-Owner-Skript, das die gesperrte Auflösung einer Crate nachspielt (jedes Rust-Paket-Target und jeder Komponentenspeicher)."
+        }
+      }
+    }
+  },
+  "project": {
+    "basename": "📋️project.json",
+    "metadata": "scriptProviders"
+  },
+  "contract": {
+    "en": "A command closure read through a view names every script provider port it defines, and every target-independent tool command it runs (the cargo driver, the lock owner), by one reference to a named input of the providers project (the project whose root holds the designation and declares it) instead of listing their files: a library edit that changes such a shared closure changes one group of one project, and every action that consumes it still keys on its files through the reference.",
+    "de": "Ein durch eine Sicht gelesener Befehlsabschluss nennt jeden Skriptanbieter-Port, den er definiert, und jeden target-unabhängigen Werkzeugbefehl, den er ausführt (den Cargo-Treiber, den Lock-Owner), mit einem Verweis auf eine benannte Eingabe des Anbieterprojekts (des Projekts, dessen Wurzel die Bezeichnung enthält und sie deklariert), statt ihre Dateien aufzuzählen: eine Bibliotheksänderung, die einen solchen geteilten Abschluss ändert, ändert eine Gruppe eines Projekts, und jede Aktion, die ihn nutzt, schlüsselt über den Verweis weiterhin auf seine Dateien."
+  }
+}

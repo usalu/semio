@@ -1,0 +1,24 @@
+{
+ "target": "test-tool-run-actions",
+ "tag": "r1",
+ "declared": 1875,
+ "rows": [
+  {
+   "leg": "bun-tool-run-actions",
+   "kind": "bun",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 8,
+   "tail": " 0 fail |  34 expect() calls | Ran 3 tests across 1 file. [585.00ms] | ",
+   "notes": [
+    "profiles:3",
+    "rules:1214",
+    "capacity:600"
+   ]
+  }
+ ]
+}

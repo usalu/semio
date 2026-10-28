@@ -1,0 +1,26 @@
+{
+ "target": "test-snapshot-sqlite",
+ "tag": "c1",
+ "declared": 456,
+ "rows": [
+  {
+   "leg": "cargo-sqlite",
+   "crate": "semio-framework-io-sqlite-snapshot",
+   "test": "lib:semio_framework_io_sqlite_snapshot",
+   "kind": "cargo",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 0,
+   "tail": " | test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s |  | ",
+   "notes": [
+    "profiles:1",
+    "rules:315",
+    "capacity:600"
+   ]
+  }
+ ]
+}

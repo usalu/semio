@@ -10,11 +10,13 @@ import catalog from "../../../⚙️operations/🔣️catalog.json";
 import birth from "../../🧪️tests/📥️birth/🔣️.json";
 import corpus from "./🔣️.json";
 import {activeServiceTicketV1,createServiceAdmissionV1,createServiceAuditV1,createServiceGrantV1,declaredCapabilitiesV1,holdServiceInvocationV1,readServiceGrantV1,ServiceRefusalV1,serviceInvocationPolicyV1 as policy,type ServiceGrantV1,type ServiceAuditRowV1,type ServiceRequestV1} from "../🟦️.ts";
-import {attenuateCapabilityV1,canonicalJsonV1,capabilityIdV1,createRevocationRegistryV1,createRootKeyV1,endpointsV1,keyDigestV1,mintCapabilityV1,worktreeIdV1} from "../🔑️session/🟨️.mjs";
+import {attenuateCapabilityV1,canonicalJsonV1,canonicalRootV1,capabilityIdV1,createRevocationRegistryV1,createRootKeyV1,endpointsV1,keyDigestV1,mintCapabilityV1,worktreeIdV1} from "../🔑️session/🟨️.mjs";
 import {createNativeBuildCallerCapabilitiesV1,issueBuildTaskEnvironmentV1,readOwnedBuildInvocationV1} from "../../🟦️.ts";
 import {projectOwnedNxProcessEnvelopeV1} from "../../../🔧️tools/🧶️nx/📨️envelope/🟦️.ts";
 import {createBuildBootstrapCapabilitiesV1} from "../../📤️child/🟦️.ts";
 import {createScriptProcessEnvelope,readScriptPolicy,withScriptProcessEnvelope} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 
 const ajv=new Ajv({strict:false,allErrors:true});
 const compile=(name:string)=>ajv.compile({...(schema.definitions as Record<string,object>)[name],definitions:schema.definitions});
@@ -357,6 +359,30 @@ describe("the build owner registry",()=>{
    expect(read()).toEqual([]);
   }finally{JSON.parse=original;rmSync(place,{recursive:true,force:true});}
  });
+});
+
+test("the worktree root is the kernel's final path on Windows (realpathSync.native, the GetFinalPathNameByHandleW name the Go launcher hashes) and the resolved links elsewhere; a missing root stays as given",()=>{
+ const native=spyOn(realpathSync,"native"),directory=mkdtempSync(join(tmpdir(),"canon-"));
+ try{
+  const actual=canonicalRootV1(directory,"win32");expect(native.mock.calls).toEqual([[directory]]);expect(actual).toBe(realpathSync.native(directory));
+  const calls=native.mock.calls.length;expect(canonicalRootV1(directory,"darwin")).toBe(realpathSync(directory));expect(native.mock.calls.length).toBe(calls);
+  for(const platform of["win32","linux"]as const)expect(canonicalRootV1(join(directory,"missing"),platform)).toBe(join(directory,"missing"));
+ }finally{native.mockRestore();rmSync(directory,{recursive:true,force:true});}
+});
+
+test.skipIf(process.platform!=="win32")("on Windows every drive-letter and component case of one checkout gives one worktree id",()=>{
+ const directory=mkdtempSync(join(tmpdir(),"Canon-Case-")),variant=directory.slice(0,1).toLowerCase()+directory.slice(1).toUpperCase();
+ try{expect(worktreeIdV1(canonicalRootV1(variant))).toBe(worktreeIdV1(canonicalRootV1(directory)));}finally{rmSync(directory,{recursive:true,force:true});}
+});
+
+test("without XDG_RUNTIME_DIR the endpoint directory follows TMPDIR only (TMP and TEMP are no inputs), equal to the independent Python reading of the Go launcher's os.TempDir rule",()=>{
+ const python=testPythonV1();
+ if(python===null)throw Error("python is required for the endpoint oracle");
+ const environments:readonly Record<string,string>[]=[{},{TMP:"/x/tmp"},{TEMP:"/y/temp"},{TMPDIR:"/var/t/"},{TMPDIR:"/var/t",TMP:"/x/tmp",TEMP:"/y/temp"},{XDG_RUNTIME_DIR:"/run/user/1000",TMPDIR:"/var/t"}];
+ const reading=Bun.spawnSync([python,"-c","import hashlib,json,os,sys\nroot,owner,rows=sys.argv[1],sys.argv[2],json.loads(sys.argv[3])\nident=hashlib.sha256(('semio-repo-service-v1\\0'+root).encode()).hexdigest()[:12]\nprint(json.dumps([os.path.join(row.get('XDG_RUNTIME_DIR') or (row.get('TMPDIR') or '/tmp').rstrip('/'),'semio-repo-'+owner,ident) for row in rows]))",realRoot,"1000",JSON.stringify(environments)],{stdout:"pipe",stderr:"pipe"});
+ expect(reading.exitCode,reading.stderr.toString()).toBe(0);
+ const expected=JSON.parse(reading.stdout.toString()) as string[];
+ environments.forEach((environment,index)=>expect(endpointsV1(realRoot,environment,"linux","1000").directory,JSON.stringify(environment)).toBe(expected[index]));
 });
 
 afterAll(()=>{for(const path of[base,shortBase])try{rmSync(path,{recursive:true,force:true});}catch{}});

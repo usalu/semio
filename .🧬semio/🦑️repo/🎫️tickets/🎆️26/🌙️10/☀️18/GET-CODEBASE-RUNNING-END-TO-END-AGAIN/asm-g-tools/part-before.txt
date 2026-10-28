@@ -1,0 +1,25 @@
+  const captured=await observationV1.captureObservedSourceInputsV1(async()=>{
+    const options={analyzeLockfile:true,catalogProviders:registry.catalogProviders.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath})),snapshot:true,...(part.cold?{}:{ownerRoots:part.roots}),onOwnerObservations:(name:string,rows:BuildGraphRowV1[],derived?:{row:BuildGraphRowV1;support:BuildGraphRowV1[]}[])=>{nodeRows[name]=rows;for(const fact of derived??[])derivedFacts.set(fact.row.path+"\0"+fact.row.fact,fact);}};
+    const primary=await owner.discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")||javascriptManagerV1.lockFileNames().includes(file)||file.endsWith(".patch")),options,context);
+    if(invocation)await advanceScriptInvocation(invocation,"build:infer","running");
+    const testContributions=await tests.discoverTestBuildProjectsV1(files.filter(file=>file.endsWith(".feature")),{},context),contributions=[...primary,...testContributions];
+    const policyOwners=Object.assign({},...contributions.map(([,contribution])=>contribution.projects??{}));
+    contributions.push(...await policies.default.createNodesV2[1](files.filter(file=>file.endsWith("📜️script.ts")&&(part.cold||part.roots.has(dirname(file))||!realRoots.has(dirname(file)))),{}, {workspaceRoot:root,projects:policyOwners}));
+    const projects:Record<string,any>={},externalNodes:Record<string,unknown>={},unavailable=new Map<string,BuildUnavailableProjectV1>(),tags:Record<string,string>={},configs:Record<string,string>={},primaryNames=new Set<string>(),testNames=new Set(testContributions.flatMap(([,contribution])=>Object.keys(contribution.projects??{})));
+    contributions.forEach(([file,contribution],index)=>{
+      Object.assign(externalNodes,contribution.externalNodes);
+      for(const row of (contribution.unavailable??[]) as BuildUnavailableProjectV1[])unavailable.set(row.root,row);
+      for(const[name,project]of Object.entries(contribution.projects??{}) as [string,any][]){
+        if(projects[name]&&projects[name].root!==project.root)throw Error(`Duplicate build project ${name}`);
+        projects[name]={...projects[name],...project,name,targets:{...projects[name]?.targets,...project.targets}};
+        if(index<primary.length)primaryNames.add(name);
+        configs[name]??=file;
+      }
+    });
+    for(const name of Object.keys(projects))if(!primaryNames.has(name))tags[name]=testNames.has(name)?"tests":"policy";
+    const kept=stubs.filter(([name,stub])=>!stub.tag&&stub.kind==="project"&&!projects[name]&&!part.roots.has(stub.root));
+    withholdDanglingTestProjectsV1({projects,configs,unavailable,dangling:tests.danglingTestDependenciesV1({...Object.fromEntries(kept.map(([name,stub])=>[name,{root:stub.root}])),...projects}),digest:file=>observedFileDigestV1(root,file)});
+    const listed=[...kept.map(([name,stub])=>({name,root:stub.root,nativeRoot:stub.nativeRoot,config:stub.config})),...Object.entries(projects).filter(([name])=>!tags[name]).map(([name,project])=>({name,root:project.root,nativeRoot:project.metadata?.nativeRoot as string|undefined,config:configs[name]}))];
+    const env=await deriveEnvironmentV1({projects:listed,workspaceManifests:files.filter(file=>file==="Cargo.toml"||file.endsWith("/Cargo.toml")),lock:javascriptManagerV1.primaryLockName(),taxonomy:"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",read,stat});
+    const edgeNames=!part.cold&&env.digest!==part.previousEnv?kept.map(([name])=>name):[],processed=new Set([...Object.keys(projects),...edgeNames]);
+    const contextProjects:Record<string,any>={...Object.fromEntries(kept.map(([name,stub])=>[name,{name,root:stub.root,targets:Object.fromEntries(stub.targets.map(target=>[target,{}])),...(stub.nativeRoot?{metadata:{nativeRoot:stub.nativeRoot}}:{})}])),...projects};

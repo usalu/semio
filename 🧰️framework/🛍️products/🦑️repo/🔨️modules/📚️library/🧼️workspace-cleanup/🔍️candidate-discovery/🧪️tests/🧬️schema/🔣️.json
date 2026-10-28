@@ -9,9 +9,7 @@
   "transient",
   "ticketRoots",
   "ticketFolders",
-  "sizeRemovals",
   "generatedRemovals",
-  "openOversized",
   "build",
   "dedupe",
   "git",
@@ -243,101 +241,7 @@
     "type": "string"
    }
   },
-  "sizeRemovals": {
-   "type": "array",
-   "items": {
-    "type": "object",
-    "additionalProperties": false,
-    "required": [
-     "folder",
-     "prefixes",
-     "expected"
-    ],
-    "properties": {
-     "folder": {
-      "type": "string"
-     },
-     "prefixes": {
-      "type": "array",
-      "items": {
-       "type": "string"
-      }
-     },
-     "expected": {
-      "type": "array",
-      "items": {
-       "type": "object",
-       "additionalProperties": false,
-       "required": [
-        "kind",
-        "path",
-        "bytes"
-       ],
-       "properties": {
-        "kind": {
-         "type": "string"
-        },
-        "path": {
-         "type": "string"
-        },
-        "bytes": {
-         "type": "integer"
-        }
-       }
-      }
-     }
-    }
-   },
-   "minItems": 1
-  },
   "generatedRemovals": {
-   "type": "array",
-   "items": {
-    "type": "object",
-    "additionalProperties": false,
-    "required": [
-     "folder",
-     "prefixes",
-     "expected"
-    ],
-    "properties": {
-     "folder": {
-      "type": "string"
-     },
-     "prefixes": {
-      "type": "array",
-      "items": {
-       "type": "string"
-      }
-     },
-     "expected": {
-      "type": "array",
-      "items": {
-       "type": "object",
-       "additionalProperties": false,
-       "required": [
-        "kind",
-        "path",
-        "bytes"
-       ],
-       "properties": {
-        "kind": {
-         "type": "string"
-        },
-        "path": {
-         "type": "string"
-        },
-        "bytes": {
-         "type": "integer"
-        }
-       }
-      }
-     }
-    }
-   },
-   "minItems": 1
-  },
-  "openOversized": {
    "type": "array",
    "items": {
     "type": "object",
@@ -689,26 +593,14 @@
    "type": "object",
    "additionalProperties": false,
    "required": [
-    "ticketFile",
-    "ticketDir",
     "buildArtifact",
-    "oversizedIgnored",
-    "openTicketFile"
+    "oversizedIgnored"
    ],
    "properties": {
-    "ticketFile": {
-     "type": "integer"
-    },
-    "ticketDir": {
-     "type": "integer"
-    },
     "buildArtifact": {
      "type": "integer"
     },
     "oversizedIgnored": {
-     "type": "integer"
-    },
-    "openTicketFile": {
      "type": "integer"
     }
    }

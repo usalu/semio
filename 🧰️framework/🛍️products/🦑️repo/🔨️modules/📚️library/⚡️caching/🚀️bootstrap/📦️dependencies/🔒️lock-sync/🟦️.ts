@@ -5,7 +5,7 @@ import {parseJsoncV1} from "../🔌️managers/📖️formats/🟦️.ts";
 import {selectPackageManagerV1} from "../🔌️managers/📚️catalog/🟦️.ts";
 import{refuseBootstrapV1}from"../../📖️texts/🟦️.ts";
 import type {LockDriftV1} from "../🔌️managers/🟦️.ts";
-import {resolveLanguageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 
 const protocol=schema.$defs.Protocol.const,texts=schema.$defs.Texts.const as Readonly<Record<string,Readonly<Record<string,string>>>>;
 const fill=(template:string,values:Readonly<Record<string,string|number|undefined>>):string=>Object.entries(values).reduce((text,[key,value])=>text.replaceAll("{"+key+"}",String(value??"")),template);

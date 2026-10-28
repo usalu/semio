@@ -1,3 +1,5 @@
+cargo-features = ["trim-paths"]
+
 [package]
 name = "semio-package-body-oracle"
 version = "0.0.0"

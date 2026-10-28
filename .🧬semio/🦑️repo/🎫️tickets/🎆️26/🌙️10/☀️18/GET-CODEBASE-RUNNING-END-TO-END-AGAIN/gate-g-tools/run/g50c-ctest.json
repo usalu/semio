@@ -1,0 +1,31 @@
+{
+ "label": "g50c-ctest",
+ "target": "@teaching/architecture-course:test",
+ "started": "02:54:39",
+ "wall_s": 161.2,
+ "peak_tree_mb": 5758,
+ "peak_processes": 6,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "16"
+  ],
+  "inferring": [
+   "16"
+  ],
+  "published": [
+   "709",
+   "16",
+   "54"
+  ],
+  "processes": [
+   "12",
+   "1 action cache hit, 6 disk cache hit, 2 internal, 4 local"
+  ],
+  "actions": [
+   "12"
+  ]
+ }
+}

@@ -1,0 +1,110 @@
+import {expect,test} from "bun:test";
+import Ajv from "ajv";
+import {evaluateHostCapacityV1,forecastHostQuietV1,isHostCapacityV1,quietHostRequestV1,readHostCapacityPolicyV1,recordHostForecastV1,type HostEstimateStoreV1,type HostForecastV1,type HostGrantV1,type HostRequestV1,type HostSampleV1,type HostWaiterV1} from "../../🟦️.ts";
+import schema from "../../🧬️schema/🔣️.json";
+import decisionFixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+
+const policyWith=(maximumQuiet:number)=>readHostCapacityPolicyV1({...decisionFixture.policy,memory:{...decisionFixture.policy.memory,maximumQuiet}});
+const policy=policyWith(4),forecastPolicy=readHostCapacityPolicyV1({...decisionFixture.policy,memory:{...decisionFixture.policy.memory,maximumQuiet:4,rampMilliseconds:60000}});
+
+test("Quiet requests and upgrade requests decide exactly as the Python oracle on every stored world",()=>{
+ for(const item of fixture.decisions){
+  const got=evaluateHostCapacityV1(policyWith(item.policy.maximumQuiet),item.host as HostSampleV1,item.ledger as HostGrantV1[],item.queue as HostWaiterV1[],item.nowMs);
+  expect(JSON.parse(JSON.stringify(got)),item.name).toEqual(item.expect);
+ }
+ for(const needed of ["quietPassedBarrier","quietBlockedByLimit","upgradeAdmit","upgradeWait"])expect(fixture.coverage[needed as keyof typeof fixture.coverage],`vectors reach ${needed}`).toBeGreaterThan(0);
+});
+
+test("An upgrade decides as a fresh request would in the world where the held grant is released: only the difference has to fit",()=>{
+ for(const item of fixture.equivalence){
+  const host=item.host as HostSampleV1,grant=item.grant as HostGrantV1,observed=grant.observedMegabytes??0;
+  const upgraded=evaluateHostCapacityV1(policy,host,[grant],[{request:item.request as HostRequestV1,arrivedAtMs:grant.arrivedAtMs!,pid:grant.pid,upgrade:true}],item.nowMs).decisions[0]!;
+  const fresh=evaluateHostCapacityV1(policy,{...host,availableMegabytes:host.availableMegabytes+observed},[],[{request:item.request as HostRequestV1,arrivedAtMs:grant.arrivedAtMs!,pid:grant.pid}],item.nowMs).decisions[0]!;
+  if(fresh.verdict==="wait"&&fresh.reason==="memory"){
+   const request=item.request as HostRequestV1;
+   expect(upgraded.verdict,`${item.name}: the upgrade of the only live grant is never refused for memory`).toBe("admit");expect(upgraded.reason).toBe("override");expect(upgraded.jobs).toBe(request.minimumJobs);
+   expect(upgraded.reservedMegabytes).toBeGreaterThanOrEqual(grant.reservedMegabytes);expect(upgraded.reservedMegabytes).toBeLessThan(request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes);
+  }else expect(upgraded,item.name).toEqual(fresh);
+  expect(upgraded,item.name).toEqual(item.expect as typeof upgraded);
+ }
+ expect(fixture.coverage.equivalenceAdmit).toBeGreaterThan(0);expect(fixture.coverage.equivalencePartial).toBeGreaterThan(0);
+});
+
+test("An upgrade never frees its small reservation for others before it is admitted and never counts twice after",()=>{
+ const host:HostSampleV1={version:1,atMs:1000,platform:"darwin",cores:10,totalMegabytes:32768,availableMegabytes:9000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:1,openFiles:8000,openFilesMaximum:245760,attachedImages:10};
+ const floor=evaluateHostCapacityV1(policy,host,[],[],1000).floorMegabytes,room=host.availableMegabytes-floor;
+ const grant:HostGrantV1={id:"grantaaaa1",operation:"run",jobs:1,cpu:1,reservedMegabytes:1000,admittedAtMs:900,observedMegabytes:800,pid:5,bootAtMs:1,quiet:true,arrivedAtMs:900};
+ const big=(id:string,fixed:number):HostRequestV1=>({id,operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:fixed,perJobMegabytes:0,cpuPerJob:1});
+ const ask=(fixed:number)=>evaluateHostCapacityV1(policy,host,[grant],[{request:big("grantaaaa1",fixed),arrivedAtMs:900,pid:5,upgrade:true}],1000).decisions[0]!;
+ expect(ask(room-1).verdict,"the difference fits, the full request alone would not leave room for the held reservation twice").toBe("admit");
+ expect(ask(room+800).verdict,"it fits exactly when the memory the run already holds is returned").toBe("admit");
+ const partial=ask(room+801);
+ expect([partial.verdict,partial.reason,partial.reservedMegabytes],"a run that is the only one never waits on itself: it grows to the largest size that fits (what it holds plus what is free), not to what it asked for").toEqual(["admit","override",room+800]);
+ const other=evaluateHostCapacityV1(policy,host,[grant],[{request:big("grantaaaa1",room+801),arrivedAtMs:900,pid:5,upgrade:true},{request:big("otheraaaa1",room),arrivedAtMs:950,pid:6}],1000).decisions;
+ expect(other.map(row=>[row.id,row.verdict])).toEqual([["grantaaaa1","admit"],["otheraaaa1","wait"]]);
+});
+
+test("An upgrade that grows nothing always fits, even when the machine is already overcommitted by what the run holds",()=>{
+ const host:HostSampleV1={version:1,atMs:1000,platform:"darwin",cores:10,totalMegabytes:32768,availableMegabytes:2000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:1,openFiles:8000,openFilesMaximum:245760,attachedImages:10};
+ const other:HostGrantV1={id:"otheraaaa01",operation:"run",jobs:1,cpu:1,reservedMegabytes:20000,admittedAtMs:1,observedMegabytes:20000,pid:3,bootAtMs:1};
+ const grant:HostGrantV1={id:"grantaaaa1",operation:"run",jobs:1,cpu:1,reservedMegabytes:1500,admittedAtMs:900,observedMegabytes:6000,pid:5,bootAtMs:1,quiet:true,arrivedAtMs:900};
+ const ask=(fixed:number)=>evaluateHostCapacityV1(policy,host,[other,grant],[{request:{id:"grantaaaa1",operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:fixed,perJobMegabytes:0,cpuPerJob:1},arrivedAtMs:900,pid:5,upgrade:true}],2000).decisions[0]!;
+ expect(ask(5600).verdict,"it already holds more than it asks for").toBe("admit");
+ expect(ask(6001).verdict,"one megabyte more than it holds has to fit and does not").toBe("wait");
+});
+
+test("An upgrade keeps the arrival the run had: it is served before a later arrival and after an earlier one",()=>{
+ const host:HostSampleV1={version:1,atMs:1000,platform:"darwin",cores:10,totalMegabytes:32768,availableMegabytes:17000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:1,openFiles:8000,openFilesMaximum:245760,attachedImages:10};
+ const grant:HostGrantV1={id:"grantaaaa1",operation:"run",jobs:1,cpu:1,reservedMegabytes:1000,admittedAtMs:5000,observedMegabytes:0,pid:5,bootAtMs:1,quiet:true,arrivedAtMs:5000};
+ const request=(id:string)=>({id,operation:"run",priority:"batch" as const,minimumJobs:1,preferredJobs:1,fixedMegabytes:8000,perJobMegabytes:0,cpuPerJob:1});
+ const decisions=(upgradeArrivedAtMs:number)=>evaluateHostCapacityV1(policy,host,[grant],[{request:request("earlieraa1"),arrivedAtMs:4000,pid:6},{request:request("grantaaaa1"),arrivedAtMs:upgradeArrivedAtMs,pid:5,upgrade:true},{request:request("lateraaaa1"),arrivedAtMs:6000,pid:7}],8000).decisions.map(row=>[row.id,row.verdict]);
+ expect(decisions(5000),"with its arrival the earlier request is served, the upgrade waits, the later one waits behind").toEqual([["earlieraa1","admit"],["grantaaaa1","wait"],["lateraaaa1","wait"]]);
+ expect(decisions(3000),"an arrival before everyone is served first").toEqual([["grantaaaa1","admit"],["earlieraa1","wait"],["lateraaaa1","wait"]]);
+});
+
+test("Quiet requests pass the queue barrier only within maximumQuiet and never become a barrier themselves",()=>{
+ const host:HostSampleV1={version:1,atMs:200000,platform:"darwin",cores:10,totalMegabytes:16384,availableMegabytes:9000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:1,openFiles:8000,openFilesMaximum:245760,attachedImages:10};
+ const floor=evaluateHostCapacityV1(policy,host,[],[],1000).floorMegabytes,cap=host.totalMegabytes-floor;
+ const running:HostGrantV1={id:"runningaaa1",operation:"run",jobs:1,cpu:1,reservedMegabytes:Math.floor(cap*0.45),admittedAtMs:1,observedMegabytes:Math.floor(cap*0.45),pid:4,bootAtMs:1};
+ const request=(id:string,fixed:number,quiet=false):HostRequestV1=>({id,operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:fixed,perJobMegabytes:0,cpuPerJob:1,...quiet?{quiet:true as const}:{}});
+ const queue=(quiets:number):HostWaiterV1[]=>[{request:request("headaaaaa01",Math.floor(cap*0.6)),arrivedAtMs:1,pid:5},...Array.from({length:quiets},(_,index)=>({request:request(`quietaaaa${index}1`,600,true),arrivedAtMs:199000+index,pid:6+index})),{request:request("freshaaaa01",600),arrivedAtMs:199900,pid:20}];
+ const got=(limit:number,quiets:number)=>evaluateHostCapacityV1(policyWith(limit),host,[running],queue(quiets),200000).decisions.map(row=>`${row.id.slice(0,5)}:${row.verdict}:${row.reason}`);
+ expect(got(2,3)).toEqual(["heada:wait:memory","quiet:admit:fits","quiet:admit:fits","quiet:wait:queue-order","fresh:wait:queue-order"]);
+ expect(got(4,1)).toEqual(["heada:wait:memory","quiet:admit:fits","fresh:wait:queue-order"]);
+ expect(got(1,0)).toEqual(["heada:wait:memory","fresh:wait:queue-order"]);
+});
+
+test("The forecast of every stored class equals the oracle, replays its recorded runs and flips at the first busy run",()=>{
+ for(const item of fixture.forecasts){
+  let store:HostEstimateStoreV1={version:1,classes:{}};
+  for(const run of item.runs)store=recordHostForecastV1(forecastPolicy,store,item.leaf,run);
+  expect(JSON.parse(JSON.stringify(store)),`${item.name} store`).toEqual(item.store);
+  expect(forecastHostQuietV1(forecastPolicy,item.store as HostEstimateStoreV1,item.leaf,item.nowMs),item.name).toEqual(item.expect as HostForecastV1);
+ }
+ expect(fixture.forecastCoverage.quiet).toBeGreaterThan(0);expect(fixture.forecastCoverage.busy).toBeGreaterThan(0);
+ const byName=(name:string)=>fixture.forecasts.find(item=>item.name===name)!.expect;
+ expect(byName("all-quiet-1").quiet,"one quiet run is not enough evidence").toBe(false);
+ expect(byName("all-quiet-5").quiet).toBe(true);
+ expect(byName("quiet-then-busy").quiet,"the newest run decides, so the run after an edit asks for the full grant").toBe(false);
+ expect(byName("only-busy").quiet).toBe(false);
+ expect(byName("all-quiet-12").megabytes,"the quiet size shrinks towards what quiet runs held").toBeLessThan(byName("all-quiet-2").megabytes);
+});
+
+test("The quiet request is one small fixed block under the id of the full request",()=>{
+ for(const item of fixture.quietRequests){
+  const got=quietHostRequestV1(item.full as HostRequestV1,item.forecast as HostForecastV1);
+  expect(got).toEqual(item.expect as HostRequestV1);
+  expect(got.id).toBe(item.full.id);expect(got.quiet).toBe(true);expect(got.rampSlot).toBe(false);
+ }
+});
+
+test("The closed schema accepts the quiet and upgrade members and refuses malformed ones, equal to Ajv",()=>{
+ const ajv=new Ajv({strict:false,allErrors:false});ajv.addSchema({$id:"hc",definitions:schema.definitions});
+ const agree=(definition:"Request"|"Waiter"|"Grant",value:unknown)=>{const mine=isHostCapacityV1(definition,value),theirs=ajv.validate({$ref:`hc#/definitions/${definition}`},value) as boolean;expect(mine,JSON.stringify(value)).toBe(theirs);return mine;};
+ const request={id:"requestaaa1",operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:900,perJobMegabytes:0,cpuPerJob:1,quiet:true};
+ const grant={id:"requestaaa1",operation:"run",jobs:1,cpu:1,reservedMegabytes:900,admittedAtMs:5,observedMegabytes:null,pid:3,bootAtMs:1,quiet:true,arrivedAtMs:2,upgradedAtMs:9};
+ expect(agree("Request",request)).toBe(true);expect(agree("Request",{...request,quiet:"yes"})).toBe(false);
+ expect(agree("Waiter",{request,arrivedAtMs:2,pid:3,upgrade:true})).toBe(true);expect(agree("Waiter",{request,arrivedAtMs:2,pid:3,upgrade:1})).toBe(false);
+ expect(agree("Grant",grant)).toBe(true);expect(agree("Grant",{...grant,arrivedAtMs:-1})).toBe(false);expect(agree("Grant",{...grant,extra:1})).toBe(false);
+});

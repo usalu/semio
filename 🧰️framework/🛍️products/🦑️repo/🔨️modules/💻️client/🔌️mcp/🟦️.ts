@@ -23,7 +23,7 @@ export async function runBuildScript(context: Readonly<{ root: string; repoRoot:
   const control=context.control??scriptCompilerAdmissionControlV1(context.invocation,"go:build",0);
   requireIssuedResourceControlInvocationV1(control,context.invocation);
   const binary = resolveMcpBin(context.repoRoot);
-  await runCanonicalGoBuild(MODULE_DIR, ["-o", binary, "."], { control, env: goEnvironment(context.repoRoot), budgetMs: buildBudgetMs() });
+  await runCanonicalGoBuild(MODULE_DIR, ["-o", binary, "."], { invocation:context.invocation, control, env: goEnvironment(context.repoRoot), budgetMs: buildBudgetMs() });
 }
 
 /** ▶️ Runs the `TestScript` command under the caller's roots and invocation. */

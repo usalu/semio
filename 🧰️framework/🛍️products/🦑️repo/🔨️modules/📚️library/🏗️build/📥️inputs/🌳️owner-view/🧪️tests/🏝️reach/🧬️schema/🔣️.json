@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Owner view reach law",
+  "description": "The shared view of the framework umbrella leaves the product subtree out of what dependents of a framework module key. That is sound only while no framework module reaches into a product except in ways its own task or its crate closure covers: Cargo path dependencies are inferred project edges, Rust `#[path]` and `include*!` are followed by the crate source inputs, and a test is an own task of its module that keys the private directory itself. Every other reach must be listed with its reason.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "sharedRoot", "privateDirectory", "testDirectory", "codeExtensions", "followedRust", "exceptions"],
+  "properties": {
+    "version": {"const": 1},
+    "sharedRoot": {"type": "string", "minLength": 1},
+    "privateDirectory": {"type": "string", "minLength": 1},
+    "testDirectory": {"type": "string", "minLength": 1},
+    "codeExtensions": {"type": "array", "items": {"type": "string", "pattern": "^\\.[a-z]+$"}, "minItems": 1},
+    "followedRust": {"type": "string", "minLength": 1},
+    "exceptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "reason"],
+        "properties": {"path": {"type": "string", "minLength": 1}, "reason": {"type": "string", "minLength": 1}}
+      }
+    }
+  }
+}

@@ -62,7 +62,7 @@ test("leases carry the session of their process into the registry and the lease 
  expect(formatLeaseReportV1("en",report).join("\n")).toContain(`session ${session.id} (lease-agent)`);expect(formatLeaseReportV1("de",report).join("\n")).toContain(`Sitzung ${session.id} (lease-agent)`);
  const lines:string[]=[];await runLeasesCommandV1(["status","--json"],{environment:env,write:line=>lines.push(line),directory:setup.leases});expect(JSON.parse(lines.join("\n")).holders[0]).toMatchObject({session:address,agent:"lease-agent"});
  holder.send("release");await holder.next("DONE");await holder.done;
- const without=buildLeaseReportV1({directory:setup.leases,atMs:Date.now(),entries:[{version:1,pid:process.pid,startedAtMs:1,updatedAtMs:Date.now(),command:"x",directory:setup.leases,holds:[{resource:"outer:probe",mode:"shared",sinceMs:1,task:1}],waits:[]}],queues:[],violations:[]},env);
+ const without=buildLeaseReportV1({directory:setup.leases,atMs:Date.now(),entries:[{version:1,pid:process.pid,startedAtMs:1,updatedAtMs:Date.now(),command:"x",directory:setup.leases,standing:{version:1,priority:"agent",implementation:{digest:"0123456789abcdef",loadedAtMs:1,components:{}},progressAtMs:1},holds:[{resource:"outer:probe",mode:"shared",sinceMs:1,task:1}],waits:[]}],queues:[],violations:[]},env);
  expect(without.holders[0]!.session).toBeUndefined();expect(formatLeaseReportV1("en",without).join("\n")).not.toContain("session ");
 });
 

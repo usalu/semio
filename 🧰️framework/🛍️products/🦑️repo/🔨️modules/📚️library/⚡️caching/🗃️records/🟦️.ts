@@ -1,6 +1,7 @@
 import { closeSync, lstatSync, mkdirSync, openSync, readdirSync, readFileSync, readSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, hash, randomBytes } from "node:crypto";
 import { dirname, join, relative, resolve } from "node:path";
+import schema from "./🧬️schema/🔣️.json" with {type: "json"};
 
 /** 🗃️ The on-disk index format version; see `./🧬️schema/🔣️.json`. */
 export const RECORD_STORE_FORMAT = 1;
@@ -8,11 +9,11 @@ export const RECORD_STORE_FORMAT = 1;
 const RECORD_KEY = /^[0-9a-f]{64}$/u;
 const PACK_NAME = /^[0-9a-z]+-[0-9]+-[0-9a-f]{16}$/u;
 const PACK_TEMPORARY = /^[0-9a-z]+-[0-9]+-[0-9a-f]{16}\.(?:pack|idx)\.[0-9a-f]{8}\.tmp$/u;
-const ORPHAN_MS = 60 * 60 * 1000;
-const PENDING_FLUSH_BYTES = 64 * 1024 * 1024;
+const ORPHAN_MS = schema.definitions.Limits.const.orphanMilliseconds;
+const PENDING_FLUSH_BYTES = schema.definitions.Limits.const.pendingFlushBytes;
 
 /** 🔌️ Packs keep at most this many read descriptors open across every store of the process: the least recently read one is closed first, so a graph that visits thousands of project stores never exhausts the descriptor table. */
-export const RECORD_STORE_DESCRIPTOR_LIMIT = 32;
+export const RECORD_STORE_DESCRIPTOR_LIMIT = schema.definitions.Limits.const.descriptorLimit;
 const openDescriptors = new Map<string, () => void>();
 
 /** 📦️ A store holding more packs than this is compacted into one pack once its writer flushed, so every process that adds records no longer leaves a pack and an index behind for good. */
@@ -53,7 +54,7 @@ interface Location { readonly pack: string; readonly offset: number; readonly le
 
 /** 🧾️ The first 32 hex digits of a value's SHA-256, enough to reject damaged bytes. */
 function valueDigest(value: Uint8Array): string {
-  return createHash("sha256").update(value).digest("hex").slice(0, 32);
+  return hash("sha256", value, "hex").slice(0, 32);
 }
 
 /** ✅️ Parses one persisted index, or `null` when it is not exactly a well-formed index of a complete pack named like it. */
@@ -205,12 +206,15 @@ export function openRecordStore(directory: string, options:RecordStoreOptionsV1=
 
 /** 🔑️ The record key of one computation: SHA-256 over its namespace and every input, each length-prefixed so no two input lists collide. */
 export function recordKey(namespace: string, ...inputs: readonly (string | Uint8Array)[]): string {
-  const hash = createHash("sha256");
-  for (const part of [namespace, ...inputs]) {
-    const bytes = typeof part === "string" ? Buffer.from(part, "utf8") : part;
-    hash.update(`${bytes.byteLength}:`).update(bytes);
+  const parts = [namespace, ...inputs];
+  if (parts.every((part) => typeof part === "string")) {
+    let text = "";
+    for (const part of parts as string[]) text += `${Buffer.byteLength(part)}:${part}`;
+    return hash("sha256", text, "hex");
   }
-  return hash.digest("hex");
+  const chained = createHash("sha256");
+  for (const part of parts) chained.update(`${typeof part === "string" ? Buffer.byteLength(part) : part.byteLength}:`).update(part);
+  return chained.digest("hex");
 }
 
 const STATIC_IMPORT = /(?:^|[\s;])(?:import|export)\s[^"'`;]*?\bfrom\s*["']([^"']+)["']|(?:^|[\s;])import\s*["']([^"']+)["']|\bimport\s*\(\s*["']([^"']+)["']\s*\)/gu;

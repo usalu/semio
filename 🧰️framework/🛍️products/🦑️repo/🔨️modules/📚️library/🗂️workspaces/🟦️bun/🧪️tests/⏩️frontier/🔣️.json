@@ -1,0 +1,46 @@
+{
+  "cases": [
+    {
+      "paths": 1,
+      "mutation": "none",
+      "callbacks": 1,
+      "accepted": true
+    },
+    {
+      "paths": 63,
+      "mutation": "none",
+      "callbacks": 2,
+      "accepted": true
+    },
+    {
+      "paths": 64,
+      "mutation": "none",
+      "callbacks": 2,
+      "accepted": true
+    },
+    {
+      "paths": 65,
+      "mutation": "none",
+      "callbacks": 2,
+      "accepted": true
+    },
+    {
+      "paths": 4097,
+      "mutation": "none",
+      "callbacks": 65,
+      "accepted": true
+    },
+    {
+      "paths": 128,
+      "mutation": "first",
+      "callbacks": 3,
+      "accepted": false
+    },
+    {
+      "paths": 128,
+      "mutation": "last",
+      "callbacks": 3,
+      "accepted": false
+    }
+  ]
+}

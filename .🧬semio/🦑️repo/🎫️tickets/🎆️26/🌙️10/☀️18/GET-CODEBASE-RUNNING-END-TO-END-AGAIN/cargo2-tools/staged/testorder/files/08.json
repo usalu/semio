@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "resources": {
+    "publication": ["cargo:configuration-publication"],
+    "view": ["cargo:configuration-view:41"],
+    "registry": ["cargo:registry:/home"],
+    "build": ["[\"semio.cargo.store-lease/v1\",", "[\"semio.cargo.build-lease/v1\",", "[\"semio.cargo.target-store/v1\",", "[\"semio.cargo.custody-lease/v1\","],
+    "writer": ["repo:compiler-writer:/image"]
+  },
+  "transient": ["publication"],
+  "cases": [
+    {"id": "tests-runner", "runner": "tests", "sequence": ["publication", "view", "registry", "build", "writer", "run", "run"], "expect": "granted"},
+    {"id": "lint-runner", "runner": "lint", "sequence": ["publication", "view", "registry", "build", "writer", "run"], "expect": "granted"},
+    {"id": "build-lease-before-configuration", "runner": null, "sequence": ["build", "publication", "view"], "expect": "lease-order"},
+    {"id": "step-configuration-under-writer", "runner": null, "sequence": ["publication", "view", "registry", "build", "writer", "publication"], "expect": "lease-order"}
+  ]
+}

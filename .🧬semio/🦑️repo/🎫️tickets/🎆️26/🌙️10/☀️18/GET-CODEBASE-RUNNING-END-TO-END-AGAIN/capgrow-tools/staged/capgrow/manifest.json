@@ -1,0 +1,82 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts": {
+  "file": "f000",
+  "base": "171629e482b2ebc74a48d418ad4e25639df9b4418bdb8dd4910728caa07847dc",
+  "new": "40b0f4518e07b30a741ac85cc88f8a0475352de7c02f77a114ee4db221433ee9"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts": {
+  "file": "f001",
+  "base": "787d95b8e371a32873cf948db4e8f002af26ee85eb837a0e0957efeb0db86d97",
+  "new": "24edefa645eb2da3e5f0f4f34654680874d3264cec3ed6ac65e56a6b5297a2a1"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🔼️upgrade/🟦️.ts": {
+  "file": "f002",
+  "base": "b352d914b7bfe6c1ae282540f476a88ef00c0161cfed5bd461578a4c22f82215",
+  "new": "913936d2fbb2a92316edde813d5f3f8bf6bfdd37bbc1c63c28ba1e492c815fd5"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🌱️grow/🐍️oracle/🐍️.py": {
+  "file": "f003",
+  "base": null,
+  "new": "0ce781b934b8b2bdbe9d70d44062c1cb2151cdc0d28494f47c468ea66b92b5ef"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🌱️grow/🟦️.ts": {
+  "file": "f004",
+  "base": null,
+  "new": "743ddbde4bf3e4350a903b12021a6aa9077d6de5f0a826b38ebf8295695ebece"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🌱️grow/🥒️.feature": {
+  "file": "f005",
+  "base": null,
+  "new": "039b977ae065c3586c45c530633fdebc8d00717b8779cd537e29022b718177de"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🌱️grow/🧫️fixtures/🔣️.json": {
+  "file": "f006",
+  "base": null,
+  "new": "97b5c87d5cdd2e61bd0f895d99f11a6ab31bebbd90d0a4c00ce6befcbb91e7ce"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🐍️oracle/🐍️.py": {
+  "file": "f007",
+  "base": "12ba8a37198705e62a15e2da4325b57de0330683f5ed177d654cb1aa99a2d8b5",
+  "new": "d0243bbc80983eadeacb674455ce940a43681870553d82c2e74186af9d7b5f0c"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json": {
+  "file": "f008",
+  "base": "d7d53165b455261c5321d09ffc6b2dab09745851b633628be270b9d840f35dc9",
+  "new": "5a32db31a31c458a73cd3237ccfd1c8b5ab936ecee37c38ac07f434a6ae7bbb3"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🟦️.ts": {
+  "file": "f009",
+  "base": "8f51773b27706757d0a3bd961d89ef9ecb0744fd93b93f484f976bc439511cf7",
+  "new": "76404908e481ed438f34806450ef2ec47cf2162df8763d3761f1a37fac5e96e4"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🐍️oracle/🐍️.py": {
+  "file": "f010",
+  "base": "0478315d951e9e1daa8808dfde55766b87d9b1a53e8279bb47cf9ae11a7836fc",
+  "new": "a7e8ecd339076211826ee4bbeb4c94ed56e47bf8d6a68562285da80fe48b447c"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🟦️.ts": {
+  "file": "f011",
+  "base": "dea99fd52e62005613c5eec8409bc938ef9fb7b212952b0a530658fc5481d0b4",
+  "new": "399af8a5b098f59fe0ce80cf52fe4e3df1aba1693ae4c675dcb48dec64926cfb"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "f012",
+  "base": "4273f491625857b9d407e38cfc3b6de46dc1fbc61703ea80091a494dd57c18ad",
+  "new": "c82f5ae994cf6268efd363a738fff7af7327b05b20e7553e87720af346114d1e"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧬️schema/🔣️.json": {
+  "file": "f013",
+  "base": "0d8ec3a34140b2ee4ef4205d91d31231277840658722484d843ab0c5fe828adf",
+  "new": "ffc94a1a726e82977c028c1d7149da89c8e073c9c5bb59439ba2d009f09236c8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts": {
+  "file": "f014",
+  "base": "27250ba5dd1617550c7a38b1088c3f5fd2ee8c135994dadaf33705ed09c1e8c4",
+  "new": "f657133031b252627f10d487d3d249b2ce6f78c8918a7b51994e113b7abf6d72"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🌱️grow/🟦️.ts": {
+  "file": "f015",
+  "base": null,
+  "new": "0885cb29080cf323fc1ee21d96d6004ce3109e98986ec11bac2652061bb1b80c"
+ }
+}

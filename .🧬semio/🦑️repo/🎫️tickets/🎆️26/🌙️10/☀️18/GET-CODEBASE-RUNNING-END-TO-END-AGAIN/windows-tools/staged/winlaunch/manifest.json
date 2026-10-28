@@ -1,0 +1,77 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🪟️windows-host/🐹️.go": {
+  "file": "00.go",
+  "base": "ca3805b4d76a51535ae8309050688558f854d72f176b5fea21f245e011fe14d7",
+  "new": "d96268be52d79141559dd0a496eff98873d3426d2367490b5eb5f3d278caee90"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🛰️resident-windows/🐹️.go": {
+  "file": "01.go",
+  "base": "9641cc97a552c4d4eb71ef4d61bd0a98c40a7303ac162b539b8cc37965052ba0",
+  "new": "eddc576a30f3c8ed4f9934b1d052a3826fddf509619dba44daf7770eac720a7f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🐚️unix-host/🐹️.go": {
+  "file": "02.go",
+  "base": "a35511041ffdb5d5d392f1a849cd6898339968a55a515f89d0bc2fd1a7ba6d68",
+  "new": "908b5693fb4c889863c54eb1d6d72496a590d2610129e895c702fb0638781343"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🏗️entry/🐹️.go": {
+  "file": "03.go",
+  "base": "42af3d5dfd4c18f8544e3e2eac8fa8868dba419c863cb87defc624e02b6151fb",
+  "new": "9327ac7afcd8134bd1fb87731d568023ff4e1edf1d60012d52b83490e5e0b321"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🛰️resident/🐹️.go": {
+  "file": "04.go",
+  "base": "b699224bdfc3bea7fb72cc1beab7c445e095e25a0f80e36df7868cbb74b372ad",
+  "new": "880f26392c2f97288cc256207299f78572826aa836006d2258876316fba9b66e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🧭️workspace-root/🐹️.go": {
+  "file": "05.go",
+  "base": "fe8362811bd96cfbef76b030573be00c367b5de7c1659ab85b69c6b97b67e108",
+  "new": "2edecc4e44bd7af41e33155029de54d3f4aa09dcf5375ea25c8dc20a7b735110"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📥️runtime-provision/🐹️.go": {
+  "file": "06.go",
+  "base": "5124a13a33fda120d7fe5265b0d5fd498211052a794551db2a7a0fd30b71a765",
+  "new": "95350e8e5189e9d7b157ae4921f78ddb2d73a9275ca6f818ad6a09e09cfcd6a9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧭️root-contract/🐹️.go": {
+  "file": "07.go",
+  "base": "f723235e235b942adc79daff9a92ece50c654b5d270f4b94cefbd8e4bd1a57c0",
+  "new": "32f861e5260cc467465158ee368f8e63bb5cb8d6607d7fb2201afe6d2584fe47"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🧭️root-contract/🥒️.feature": {
+  "file": "08.feature",
+  "base": "6ea66b5aadf37948d74cae0fd241d53068e890cc0a73991c83aa6a34260208b6",
+  "new": "821936c295003b9a482145fb7b5d7d73be0c2ad6f0bce4f09995882fce828a46"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📥️provision-contract/🐹️.go": {
+  "file": "09.go",
+  "base": "30feb8d0a41cb5750ceff8328054078604f0b0107047c8fc0ed8c4d1dbabb514",
+  "new": "8a5b806ab7b59da761ca1a14c9eb352aaac4f37103b5f0de910c28a5c3eb12b7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📥️provision-contract/🥒️.feature": {
+  "file": "10.feature",
+  "base": "61cfbe12fd72de3651690f4f0e3d2b7d734b276bea382d420facc4cdb7c29ce5",
+  "new": "e3b4b8062c7bbf3d66023f9dee5bc4d871bacaee68758f0787d286af4a757a55"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🪟️windows-contract/🐹️.go": {
+  "file": "11.go",
+  "base": null,
+  "new": "ed1007eb9b9d53f1a088dd616bc26be304a8a7aa18252c287805b3f403ebfbd5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🪟️windows-contract/🥒️.feature": {
+  "file": "12.feature",
+  "base": null,
+  "new": "a902f92e0386da0b388943e718e23477740a9aff9987687ce28f79bf25aac77a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🛰️service/🔑️session/🟨️.mjs": {
+  "file": "13.mjs",
+  "base": "37a7384d32d211f019ea8c4da8afb0446d7080f52cb5105bf03578ef9029a132",
+  "new": "f524facce1c7fe7259774d11be8ee7e4479f5b2f69375e686ef9f4ecd74f61db"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🛰️service/🧪️tests/🟦️.ts": {
+  "file": "14.ts",
+  "base": "292b353c006156d1c762c030155ab64a244689d85b3242963cbb7153b16547f6",
+  "new": "f8c564b423bb13ebf9afde38da4a38ed00a8505a99957afbae102ab166524d0a"
+ }
+}

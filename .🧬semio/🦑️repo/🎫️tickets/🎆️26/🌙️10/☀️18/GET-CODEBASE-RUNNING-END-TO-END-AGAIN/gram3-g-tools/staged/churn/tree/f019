@@ -1,0 +1,38 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Hoisted literal law fixture / Gesetzesdaten der hochgezogenen Literale",
+ "description": "EN: Regular expression literals of the hot graph modules (path below the build library, literal text) that must only be written at module level, so no function builds a new RegExp object per call. DE: Literale regulaerer Ausdruecke der heissen Graph-Module (Pfad unterhalb der Build-Bibliothek, Literaltext), die nur auf Modulebene stehen duerfen, damit keine Funktion pro Aufruf ein neues RegExp-Objekt baut.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "literals"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "literals": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "file",
+     "literal"
+    ],
+    "properties": {
+     "file": {
+      "type": "string",
+      "minLength": 1
+     },
+     "literal": {
+      "type": "string",
+      "pattern": "^/.+/[a-z]*$"
+     }
+    }
+   }
+  }
+ }
+}

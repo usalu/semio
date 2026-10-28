@@ -1,0 +1,42 @@
+{
+ "version": 1,
+ "root": "process",
+ "schema": "🏗️build/🌡️host-capacity/🧬️schema/🔣️.json",
+ "definitions": [
+  "Limits"
+ ],
+ "sources": [
+  "🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts",
+  "🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts",
+  "🏗️build/🌡️host-capacity/🔼️upgrade/🟦️.ts",
+  "🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts",
+  "🏗️build/🌡️host-capacity/📏️decision/🟦️.ts"
+ ],
+ "allow": [
+  {
+   "source": "🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts",
+   "value": 10000,
+   "reason": "The scale of a basis-point ratio (10000 basis points are one whole), not the timeout of a platform command."
+  },
+  {
+   "source": "🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts",
+   "value": 10000,
+   "reason": "The scale of a basis-point ratio (10000 basis points are one whole)."
+  },
+  {
+   "source": "🏗️build/🌡️host-capacity/📏️decision/🟦️.ts",
+   "value": 10000,
+   "reason": "The scale of a basis-point ratio (10000 basis points are one whole)."
+  },
+  {
+   "source": "🏗️build/🌡️host-capacity/🔼️upgrade/🟦️.ts",
+   "value": 10000,
+   "reason": "The scale of a basis-point ratio (10000 basis points are one whole)."
+  },
+  {
+   "source": "🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts",
+   "value": 10000,
+   "reason": "The scale of a basis-point ratio (10000 basis points are one whole)."
+  }
+ ]
+}

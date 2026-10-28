@@ -1,4 +1,4 @@
-"""🐍️ Independent Python oracle of the scheduling split of a narrow implementation scope (standard library only): it takes the closure the executor oracle walks, assigns every file to the scheduling overlay when its path lies under one of the named directory prefixes and to the keyed part otherwise, and lists every import edge from a keyed file into an overlay file that is not a declared port; the production code and the TypeScript compiler law must agree with it."""
+"""🐍️ Independent Python oracle of the scheduling split of a narrow implementation scope (standard library only): it takes the closure the executor oracle walks, assigns every file to the scheduling overlay when its path lies under one of the named directory prefixes and to the keyed part otherwise, and lists every import edge from a keyed file into an overlay file that is not a declared port, and every bare specifier outside docstring blocks (`/** ... */` opening a line is prose, as it is to the TypeScript AST walk); the production code and the TypeScript compiler law must agree with it."""
 import importlib.util, json, os, re, sys
 
 EXECUTOR_ORACLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "🎬️executor", "🧪️tests", "🐍️oracle", "🐍️.py")
@@ -19,6 +19,16 @@ def edges(path):
     return found
 
 
+DYNAMIC = re.compile(r"""\b(?:import|require)\(\s*(["'`])([^"'`\n]+)\1\s*\)""")
+DOCSTRING = re.compile(r"^[ \t]*/\*\*.*?\*/", re.M | re.S)
+
+
+def bare(path):
+    text = DOCSTRING.sub("", open(path, encoding="utf-8").read())
+    found = [match.group(2) for match in executor.STATIC.finditer(text)] + [match.group(2) for match in DYNAMIC.finditer(text)]
+    return [specifier for specifier in found if not specifier.startswith((".", "node:", "bun:")) and specifier != "bun"]
+
+
 if __name__ == "__main__":
     request = json.load(sys.stdin)
     held = executor.closure(request["entry"], request.get("roots", []))
@@ -34,4 +44,6 @@ if __name__ == "__main__":
         for target in edges(path):
             if target in held and target.startswith(prefixes) and target not in ports:
                 violations.append([path, target])
-    print(json.dumps({"keyed": keyed, "overlay": overlay, "violations": sorted(violations)}))
+    leaves = {os.path.normpath(leaf) for leaf in request.get("leaves", [])}
+    external = sorted([path, specifier] for path in held - leaves if not path.endswith(".json") for specifier in bare(path))
+    print(json.dumps({"keyed": keyed, "overlay": overlay, "violations": sorted(violations), "bare": external}))

@@ -101,7 +101,7 @@ Feature: Apply every typed generation3d mutation twice — once in Rust, once in
       | create-generation       | ➕create-generation/🌱️appends     |
       | delete-generation       | 🗑️delete-generation/🚫️removes |
       | delete-generation      | 🗑️delete-generation/📍️removes-a-middle-row |
-      | delete-generation      | 🗑️delete-generation/🔓️removes-an-unselected-middle-row |
+      | delete-generation      | 🗑️delete-generation/🔓️unselected-middle |
       | rename-generation       | 🏷️rename-generation/🏷️retitles               |
       | change-generation-value | 🔧️change-generation-value/🏢️raises  |
       | change-slider-value     | 🎚️change-slider-value/🎚️sets |
@@ -147,7 +147,7 @@ Feature: Apply every typed generation3d mutation twice — once in Rust, once in
       | create-generation       | ➕create-generation/🌱️appends     |
       | delete-generation       | 🗑️delete-generation/🚫️removes |
       | delete-generation      | 🗑️delete-generation/📍️removes-a-middle-row |
-      | delete-generation      | 🗑️delete-generation/🔓️removes-an-unselected-middle-row |
+      | delete-generation      | 🗑️delete-generation/🔓️unselected-middle |
       | rename-generation       | 🏷️rename-generation/🏷️retitles               |
       | change-generation-value | 🔧️change-generation-value/🏢️raises  |
       | change-slider-value     | 🎚️change-slider-value/🎚️sets |

@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "focus": "none",
+  "target": "leaf",
+  "crates": {
+    "core": [],
+    "mid": [
+      "core"
+    ],
+    "leaf": [
+      "mid"
+    ],
+    "other": [
+      "core"
+    ]
+  },
+  "functions": 4000,
+  "cloneBytes": 131072,
+  "seedLane": "a1",
+  "touchLane": "c1",
+  "touchTarget": "other",
+  "servedLane": "b1",
+  "settleMilliseconds": 1100,
+  "modes": {
+    "mtime": {},
+    "checksum": {
+      "CARGO_UNSTABLE_CHECKSUM_FRESHNESS": "true"
+    }
+  },
+  "expect": {
+    "firstServed": [
+      "core",
+      "leaf",
+      "mid"
+    ],
+    "secondInvoked": [],
+    "baseSecondInvoked": [
+      "leaf",
+      "mid"
+    ]
+  }
+}

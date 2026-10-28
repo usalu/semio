@@ -1,0 +1,11 @@
+{
+  "vectors": [
+    { "name": "macOS without any variable", "root": "/w/semio", "environment": {}, "platform": "darwin", "user": "501", "home": "/Users/ada" },
+    { "name": "macOS with a build action scratch TMPDIR", "root": "/w/semio", "environment": { "TMPDIR": "/w/semio/.cache/b/p/m/tmp/" }, "platform": "darwin", "user": "501", "home": "/Users/ada" },
+    { "name": "macOS with TMP and TEMP", "root": "/w/semio", "environment": { "TMPDIR": "/a", "TMP": "/b", "TEMP": "/c" }, "platform": "darwin", "user": "501", "home": "/Users/ada" },
+    { "name": "Linux without XDG_RUNTIME_DIR", "root": "/w/semio", "environment": { "TMPDIR": "/tmp/x" }, "platform": "linux", "user": "1000", "home": "/home/ada" },
+    { "name": "Linux with XDG_RUNTIME_DIR", "root": "/w/semio", "environment": { "XDG_RUNTIME_DIR": "/run/user/1000", "TMPDIR": "/tmp/x" }, "platform": "linux", "user": "1000", "home": "/home/ada" },
+    { "name": "Windows with LOCALAPPDATA", "root": "C:\\w\\semio", "environment": { "LOCALAPPDATA": "C:\\Users\\ada\\AppData\\Local", "TEMP": "C:\\t" }, "platform": "win32", "user": "0", "home": "C:\\Users\\ada" },
+    { "name": "Windows without LOCALAPPDATA", "root": "C:\\w\\semio", "environment": { "TEMP": "C:\\t" }, "platform": "win32", "user": "0", "home": "C:\\Users\\ada" }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+ "label": "g49r-ctest",
+ "target": "@teaching/architecture-course:test",
+ "started": "23:49:48",
+ "wall_s": 480.4,
+ "peak_tree_mb": 4339,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 41.0,
+ "graph": {
+  "refreshing": [
+   "16"
+  ],
+  "inferring": [
+   "16"
+  ],
+  "published": [
+   "695",
+   "16",
+   "144"
+  ],
+  "processes": [
+   "11",
+   "1 action cache hit, 6 disk cache hit, 2 internal, 3 local"
+  ],
+  "actions": [
+   "11"
+  ]
+ }
+}

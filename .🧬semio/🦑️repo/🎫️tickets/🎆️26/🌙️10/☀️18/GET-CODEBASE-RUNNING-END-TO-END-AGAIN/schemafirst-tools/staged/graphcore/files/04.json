@@ -1,0 +1,11 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "🏗️build/🕸️graph/🧬️schema/🔣️.json",
+ "definitions": [
+  "Limits"
+ ],
+ "sources": [
+  "🏗️build/🕸️graph/🟦️.ts"
+ ]
+}

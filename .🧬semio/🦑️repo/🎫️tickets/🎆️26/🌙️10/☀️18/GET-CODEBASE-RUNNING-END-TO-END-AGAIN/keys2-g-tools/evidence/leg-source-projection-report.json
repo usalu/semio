@@ -1,0 +1,20 @@
+{
+ "version": 1,
+ "backend": "seatbelt",
+ "strength": "kernel-enforced",
+ "allowed": 2965,
+ "learned": [],
+ "rounds": [
+  {
+   "exit": 0,
+   "tail": "bun test v1.4.2 (744846f84)\n\n 1 pass\n 0 fail\n 78 expect() calls\nRan 1 test across 1 file. [39.00ms]\n",
+   "seconds": 4.2,
+   "denied": [],
+   "notes": [],
+   "round": 0,
+   "backend": "seatbelt"
+  }
+ ],
+ "passed": true,
+ "clean": true
+}

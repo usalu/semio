@@ -1,0 +1,17 @@
+{
+ "version": 1,
+ "texts": [
+  {"id": "moved-stamp-en", "text": "[bazel] task x failed\nThis command runs an outdated implementation: the declared format stamp graph.record moved from 1 to 2. It yields r without producing anything.", "class": "moved-format-stamp", "disposition": "reexec"},
+  {"id": "moved-stamp-de", "text": "Dieser Befehl führt eine veraltete Implementierung aus: der deklarierte Formatstempel graph.record wechselte von 1 zu 2.", "class": "moved-format-stamp", "disposition": "reexec"},
+  {"id": "stale-reader", "text": "error: Stale loaded Source revision reader; restart required\n at current", "class": "stale-loaded-implementation", "disposition": "reexec"},
+  {"id": "stale-observation", "text": "Stale loaded observation implementation; restart required", "class": "stale-loaded-implementation", "disposition": "reexec"},
+  {"id": "generation-moved", "text": "error: Current shared Source-owner generation changed during consumption", "class": "source-owner-generation", "disposition": "reobserve"},
+  {"id": "bun-manifest", "text": "Bun current manifest changed during verification: /w/package.json", "class": "bun-ownership", "disposition": "reobserve"},
+  {"id": "topology", "text": "Original Cargo workspace topology changed: /w/Cargo.toml", "class": "cargo-workspace-topology", "disposition": "reobserve"},
+  {"id": "exhausted-en", "text": "/w/a.txt kept changing in all 6 attempts (its bytes changed): another process edits it continuously. Run the command again once the edits have stopped.", "class": "retries-exhausted", "disposition": "reobserve"},
+  {"id": "exhausted-de", "text": "/w/a.txt änderte sich in allen 4 Versuchen (seine Bytes änderten sich): ein anderer Prozess bearbeitet es laufend. Den Befehl erneut ausführen, sobald die Änderungen aufgehört haben.", "class": "retries-exhausted", "disposition": "reobserve"},
+  {"id": "own-custody", "text": "Error: Actual compilation destination changed", "class": "own-output-or-store-custody", "disposition": "fatal"},
+  {"id": "ordinary-compile-error", "text": "error TS2322: Type 'string' is not assignable to type 'number'.", "class": null, "disposition": null},
+  {"id": "retry-announcement-is-not-a-refusal", "text": "Another process edited /w/a.txt while it was read (its bytes changed). Taking a new snapshot, attempt 2 of 6, in 10 ms.", "class": null, "disposition": null}
+ ]
+}

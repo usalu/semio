@@ -1,0 +1,12 @@
+{
+ "label": "pr-hot1",
+ "target": "@teaching/architecture-course:build",
+ "started": "16:34:32",
+ "wall_s": 50.8,
+ "peak_tree_mb": 1111,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

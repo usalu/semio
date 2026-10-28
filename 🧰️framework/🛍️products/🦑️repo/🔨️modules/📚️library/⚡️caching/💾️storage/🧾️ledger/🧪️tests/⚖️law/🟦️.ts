@@ -20,7 +20,7 @@ function candidates():string[]{
 const files=candidates().filter(file=>sources.test(file)&&!exempt.test(file)&&!file.includes("💾️storage/🧾️ledger/")&&existsSync(join(root,file)));
 const writers=new Set(ledger.areas.flatMap(area=>area.writers));
 const comment=(line:string,index:number):boolean=>{const head=line.trimStart();return head.startsWith("//")||head.startsWith("*")||head.startsWith("/*")||head.startsWith("#")||line.lastIndexOf("//",index)>=0&&!line.slice(0,line.lastIndexOf("//",index)).includes("\"");};
-const literal=/⚡️cache(?:\/([^"'`\s,)}*{<\\$\[]+)|["'`]\s*,\s*["'`]([^"'`\\$]+)["'`]|["'`]\s*\)\s*\.join\(\s*["'`]([^"'`\\$]+)["'`])/gu;
+const literal=/⚡️cache(?:\/([^"'`\s,)}*{<\\$\[(|]+)|["'`]\s*,\s*["'`]([^"'`\\$]+)["'`]|["'`]\s*\)\s*\.join\(\s*["'`]([^"'`\\$]+)["'`])/gu;
 const dynamic=/⚡️cache["'`][ \t]*,[ \t]*(?![ \t"'`])/u,importing=/^\s*(import|export)\b[^\n]*\bfrom\b/u;
 const joined=(line:string,index:number):boolean=>/(?:join|Join)\(/u.test(line.slice(0,index));
 

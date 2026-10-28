@@ -1,0 +1,191 @@
+{
+ "edits": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🍞️bun/🟦️.ts",
+   "name": "loader-functions",
+   "old": "edits/01-loader-functions.old",
+   "new": "edits/01-loader-functions.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🍞️bun/🟦️.ts",
+   "name": "loader-read",
+   "old": "edits/02-loader-read.old",
+   "new": "edits/02-loader-read.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🍞️bun/🟦️.ts",
+   "name": "loader-identity",
+   "old": "edits/03-loader-identity.old",
+   "new": "edits/03-loader-identity.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🍞️bun/🟦️.ts",
+   "name": "loader-split",
+   "old": "edits/04-loader-split.old",
+   "new": "edits/04-loader-split.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🍞️bun/🟦️.ts",
+   "name": "loader-images",
+   "old": "edits/05-loader-images.old",
+   "new": "edits/05-loader-images.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🍞️bun/🟦️.ts",
+   "name": "loader-redirect",
+   "old": "edits/06-loader-redirect.old",
+   "new": "edits/06-loader-redirect.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🚦️trampoline/🟦️.ts",
+   "name": "tramp-imports",
+   "old": "edits/07-tramp-imports.old",
+   "new": "edits/07-tramp-imports.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🚦️trampoline/🟦️.ts",
+   "name": "tramp-core-imports",
+   "old": "edits/08-tramp-core-imports.old",
+   "new": "edits/08-tramp-core-imports.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🚦️trampoline/🟦️.ts",
+   "name": "tramp-options",
+   "old": "edits/09-tramp-options.old",
+   "new": "edits/09-tramp-options.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🚦️trampoline/🟦️.ts",
+   "name": "tramp-helpers",
+   "old": "edits/10-tramp-helpers.old",
+   "new": "edits/10-tramp-helpers.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🚦️trampoline/🟦️.ts",
+   "name": "tramp-decision",
+   "old": "edits/11-tramp-decision.old",
+   "new": "edits/11-tramp-decision.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🚦️trampoline/🟦️.ts",
+   "name": "tramp-open",
+   "old": "edits/12-tramp-open.old",
+   "new": "edits/12-tramp-open.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🚦️trampoline/🟦️.ts",
+   "name": "tramp-stdio",
+   "old": "edits/13-tramp-stdio.old",
+   "new": "edits/13-tramp-stdio.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🚦️trampoline/🟦️.ts",
+   "name": "tramp-close",
+   "old": "edits/14-tramp-close.old",
+   "new": "edits/14-tramp-close.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🚦️trampoline/🟦️.ts",
+   "name": "tramp-doc",
+   "old": "edits/15-tramp-doc.old",
+   "new": "edits/15-tramp-doc.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🟦️.ts",
+   "name": "core-policy-type",
+   "old": "edits/16-core-policy-type.old",
+   "new": "edits/16-core-policy-type.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🟦️.ts",
+   "name": "core-entry-type",
+   "old": "edits/17-core-entry-type.old",
+   "new": "edits/17-core-entry-type.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🟦️.ts",
+   "name": "core-entry-value",
+   "old": "edits/18-core-entry-value.old",
+   "new": "edits/18-core-entry-value.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🟦️.ts",
+   "name": "core-checked",
+   "old": "edits/19-core-checked.old",
+   "new": "edits/19-core-checked.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🔣️.json",
+   "name": "policy-light",
+   "old": "edits/20-policy-light.old",
+   "new": "edits/20-policy-light.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🔣️.json",
+   "name": "policy-texts",
+   "old": "edits/21-policy-texts.old",
+   "new": "edits/21-policy-texts.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧬️schema/🔣️.json",
+   "name": "schema-required",
+   "old": "edits/22-schema-required.old",
+   "new": "edits/22-schema-required.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧬️schema/🔣️.json",
+   "name": "schema-light",
+   "old": "edits/23-schema-light.old",
+   "new": "edits/23-schema-light.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧬️schema/🔣️.json",
+   "name": "schema-texts-required",
+   "old": "edits/24-schema-texts-required.old",
+   "new": "edits/24-schema-texts-required.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧬️schema/🔣️.json",
+   "name": "schema-texts-properties",
+   "old": "edits/25-schema-texts-properties.old",
+   "new": "edits/25-schema-texts-properties.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧬️schema/🔣️.json",
+   "name": "schema-checked",
+   "old": "edits/26-schema-checked.old",
+   "new": "edits/26-schema-checked.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/📥️stream/🟦️.ts",
+   "name": "test-stream-anchor",
+   "old": "edits/27-test-stream-anchor.old",
+   "new": "edits/27-test-stream-anchor.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/📥️stream/🟦️.ts",
+   "name": "test-stream-fstat",
+   "old": "edits/28-test-stream-fstat.old",
+   "new": "edits/28-test-stream-fstat.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/📥️stream/🟦️.ts",
+   "name": "test-stream-laws",
+   "old": "edits/29-test-stream-laws.old",
+   "new": "edits/29-test-stream-laws.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧪️tests/🗂️store/🟦️.ts",
+   "name": "test-store-laws",
+   "old": "edits/30-test-store-laws.old",
+   "new": "edits/30-test-store-laws.new"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧪️tests/🚦️trampoline/🟦️.ts",
+   "name": "test-trampoline-laws",
+   "old": "edits/31-test-trampoline-laws.old",
+   "new": "edits/31-test-trampoline-laws.new"
+  }
+ ],
+ "files": []
+}

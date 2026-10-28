@@ -16,6 +16,7 @@ import { parseGeneratorPreviewProgressPolicyV1 } from "../../../🏭️generator
 import type { SemanticPackageGeneration } from "../../../🔍️discovery/📦️package-projection-contracts/🟦️.ts";
 import type { PackageDirectoryAdmission, PackageImplementationAdmission } from "../../../🔍️discovery/🧱️package-implementation-admission/🟦️.ts";
 import { TAXONOMY_OPAQUE_PATH_EXCLUSIONS } from "../🧰️taxonomy-parse-helpers/🟦️.ts";
+import {refuseBuildV1} from "../../../🏗️build/📖️texts/🟦️.ts";
 
 function parseImplementationAdmission(value: unknown, name: string): PackageImplementationAdmission | null {
   if (value === undefined || value === null) return null;
@@ -100,11 +101,8 @@ export function parseGeneratorsAndEcosystems({ generatorRows, validatedContractP
     generatorContracts[id] = { ownership, ownerPath, target, previewTarget, previewArguments, previewScript, previewProgress, previewLimits, checkTarget, inputPatterns: [...new Set(inputPatterns)].sort(), inputDiscovery, compilerInputManifest, packageGeneration, projectionActivation, outputRoots, reason: requireString(spec.reason, `generatorContracts.${id}.reason`) };
   }
   if (Object.keys(generatorContracts).length === 0) throw new Error("Taxonomy v7 generatorContracts must not be empty");
-  for (let left = 0; left < generatorRoots.length; left++) for (let right = left + 1; right < generatorRoots.length; right++) {
-    const a = generatorRoots[left];
-    const b = generatorRoots[right];
-    if(!a||!b)throw new Error("Required generator root pair is missing");
-    if (a.path === b.path || a.path.startsWith(`${b.path}/`) || b.path.startsWith(`${a.path}/`)) throw new Error(`Taxonomy v7 generator output roots overlap: ${a.id}:${a.path} and ${b.id}:${b.path}`);
+  for (const [left, a] of generatorRoots.entries()) for (const b of generatorRoots.slice(left + 1)) {
+    if (a.path === b.path || a.path.startsWith(`${b.path}/`) || b.path.startsWith(`${a.path}/`)) throw refuseBuildV1("invalid", "taxonomy.generator-output-roots-overlap", { left: `${a.id}:${a.path}`, right: `${b.id}:${b.path}` });
   }
 
   const ecosystems: Record<string, EcosystemSpec> = {};

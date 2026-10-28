@@ -1,0 +1,172 @@
+{
+ "decide": [
+  {
+   "id": "no-ticket",
+   "ticket": false,
+   "round": "0",
+   "queuedMs": 99999,
+   "expected": false
+  },
+  {
+   "id": "just-before",
+   "ticket": true,
+   "round": "0",
+   "queuedMs": 14999,
+   "expected": false
+  },
+  {
+   "id": "at-limit",
+   "ticket": true,
+   "round": "0",
+   "queuedMs": 15000,
+   "expected": true
+  },
+  {
+   "id": "round-2",
+   "ticket": true,
+   "round": "2",
+   "queuedMs": 20000,
+   "expected": true
+  },
+  {
+   "id": "round-3-is-maximum",
+   "ticket": true,
+   "round": "3",
+   "queuedMs": 20000,
+   "expected": false
+  },
+  {
+   "id": "garbage-round-is-zero",
+   "ticket": true,
+   "round": "x",
+   "queuedMs": 20000,
+   "expected": true
+  },
+  {
+   "id": "negative-round-is-zero",
+   "ticket": true,
+   "round": "-4",
+   "queuedMs": 20000,
+   "expected": true
+  },
+  {
+   "id": "no-round-variable",
+   "ticket": true,
+   "round": null,
+   "queuedMs": 20000,
+   "expected": true
+  }
+ ],
+ "wake": [
+  {
+   "id": "advances-on-first-read",
+   "generation": 5,
+   "series": [
+    [
+     0,
+     6
+    ]
+   ],
+   "expected": {
+    "elapsedMs": 0,
+    "reason": "advanced",
+    "progress": 0
+   }
+  },
+  {
+   "id": "advances-after-nine-seconds",
+   "generation": 5,
+   "series": [
+    [
+     0,
+     5
+    ],
+    [
+     9000,
+     6
+    ]
+   ],
+   "expected": {
+    "elapsedMs": 9000,
+    "reason": "advanced",
+    "progress": 0
+   }
+  },
+  {
+   "id": "never-advances-wakes-at-ten-minutes",
+   "generation": 5,
+   "series": [
+    [
+     0,
+     5
+    ]
+   ],
+   "expected": {
+    "elapsedMs": 600000,
+    "reason": "timeout",
+    "progress": 19
+   }
+  },
+  {
+   "id": "same-generation-does-not-count",
+   "generation": 5,
+   "series": [
+    [
+     0,
+     5
+    ],
+    [
+     30000,
+     5
+    ],
+    [
+     40000,
+     4
+    ]
+   ],
+   "expected": {
+    "elapsedMs": 600000,
+    "reason": "timeout",
+    "progress": 19
+   }
+  },
+  {
+   "id": "unreadable-pointer-keeps-waiting",
+   "generation": 5,
+   "series": [
+    [
+     0,
+     -1
+    ],
+    [
+     12000,
+     7
+    ]
+   ],
+   "expected": {
+    "elapsedMs": 12000,
+    "reason": "advanced",
+    "progress": 0
+   }
+  },
+  {
+   "id": "progress-every-thirty-seconds",
+   "generation": 5,
+   "series": [
+    [
+     0,
+     5
+    ],
+    [
+     95000,
+     6
+    ]
+   ],
+   "expected": {
+    "elapsedMs": 96000,
+    "reason": "advanced",
+    "progress": 3
+   }
+  }
+ ]
+}

@@ -225,21 +225,18 @@
   {
    "name": "a plain source directory is removable",
    "candidate": "src",
-   "allowed": null,
    "expected": [],
    "environment": false
   },
   {
    "name": "a plain file is removable",
    "candidate": "src/a.txt",
-   "allowed": null,
    "expected": [],
    "environment": false
   },
   {
    "name": "the workspace root itself is refused",
    "candidate": ".",
-   "allowed": null,
    "expected": [
     "."
    ],
@@ -248,7 +245,6 @@
   {
    "name": "a path outside the workspace is refused",
    "candidate": "../outside",
-   "allowed": null,
    "expected": [
     "../outside"
    ],
@@ -257,7 +253,6 @@
   {
    "name": "a symlink target is refused",
    "candidate": "linkdir",
-   "allowed": null,
    "expected": [
     "linkdir"
    ],
@@ -266,7 +261,6 @@
   {
    "name": "a missing path is refused",
    "candidate": "nothing",
-   "allowed": null,
    "expected": [
     "nothing"
    ],
@@ -275,7 +269,6 @@
   {
    "name": "a file used as a directory ancestor is refused",
    "candidate": "src/a.txt/zzz",
-   "allowed": null,
    "expected": [
     "src/a.txt"
    ],
@@ -284,7 +277,6 @@
   {
    "name": "an open ticket folder is protected",
    "candidate": "tickets/26/10/21/OPEN",
-   "allowed": null,
    "expected": [
     "tickets/26/10/21/OPEN"
    ],
@@ -293,7 +285,6 @@
   {
    "name": "a file inside an open ticket protects the ticket",
    "candidate": "tickets/26/10/21/OPEN/notes.md",
-   "allowed": null,
    "expected": [
     "tickets/26/10/21/OPEN"
    ],
@@ -302,21 +293,18 @@
   {
    "name": "a closed ticket is removable as a whole",
    "candidate": "tickets/26/10/21/DONE",
-   "allowed": null,
    "expected": [],
    "environment": false
   },
   {
    "name": "a file of a closed ticket is removable",
    "candidate": "tickets/26/10/21/DONE/out.md",
-   "allowed": null,
    "expected": [],
    "environment": false
   },
   {
    "name": "a day folder reports every non-closed ticket below it",
    "candidate": "tickets/26/10/21",
-   "allowed": null,
    "expected": [
     "tickets/26/10/21/ARRAY",
     "tickets/26/10/21/BADJSON",
@@ -330,7 +318,6 @@
   {
    "name": "a ticket folder without manifest is protected",
    "candidate": "tickets/26/10/21/NOMANIFEST",
-   "allowed": null,
    "expected": [
     "tickets/26/10/21/NOMANIFEST"
    ],
@@ -339,7 +326,6 @@
   {
    "name": "a ticket manifest that is not valid JSON protects the ticket",
    "candidate": "tickets/26/10/21/BADJSON",
-   "allowed": null,
    "expected": [
     "tickets/26/10/21/BADJSON"
    ],
@@ -348,7 +334,6 @@
   {
    "name": "an array manifest is not a closed ticket",
    "candidate": "tickets/26/10/21/ARRAY",
-   "allowed": null,
    "expected": [
     "tickets/26/10/21/ARRAY"
    ],
@@ -357,7 +342,6 @@
   {
    "name": "a manifest without status is not closed",
    "candidate": "tickets/26/10/21/NOSTATUS",
-   "allowed": null,
    "expected": [
     "tickets/26/10/21/NOSTATUS"
    ],
@@ -366,23 +350,22 @@
   {
    "name": "a manifest that is a directory is not closed",
    "candidate": "tickets/26/10/21/DIRMANIFEST",
-   "allowed": null,
    "expected": [
     "tickets/26/10/21/DIRMANIFEST"
    ],
    "environment": false
   },
   {
-   "name": "the allowed open ticket may be cleaned inside",
+   "name": "an open ticket stays protected whatever is cleaned inside",
    "candidate": "tickets/26/10/21/OPEN/notes.md",
-   "allowed": "tickets/26/10/21/OPEN",
-   "expected": [],
+   "expected": [
+    "tickets/26/10/21/OPEN"
+   ],
    "environment": false
   },
   {
    "name": "a symlink inside the candidate is refused",
    "candidate": "src2",
-   "allowed": null,
    "expected": [
     "src2/ln"
    ],
@@ -391,7 +374,6 @@
   {
    "name": "an unreadable directory is refused",
    "candidate": "src3",
-   "allowed": null,
    "expected": [
     "src3"
    ],
@@ -400,7 +382,6 @@
   {
    "name": "a managed storage subtree is refused",
    "candidate": ".cache/b/t/x",
-   "allowed": null,
    "expected": [
     ".cache/b/t/x"
    ],
@@ -409,7 +390,6 @@
   {
    "name": "an ancestor of a managed storage directory is refused",
    "candidate": ".cache",
-   "allowed": null,
    "expected": [
     ".cache"
    ],
@@ -418,7 +398,6 @@
   {
    "name": "a native image directory is refused",
    "candidate": "imgs/vm",
-   "allowed": null,
    "expected": [
     "imgs/vm"
    ],
@@ -427,7 +406,6 @@
   {
    "name": "a native image backing file is refused",
    "candidate": "imgs/vm/fixed.dmg",
-   "allowed": null,
    "expected": [
     "imgs/vm/fixed.dmg"
    ],
@@ -436,7 +414,6 @@
   {
    "name": "the receipt inside a native image directory is refused",
    "candidate": "imgs/vm/image.json",
-   "allowed": null,
    "expected": [
     "imgs/vm/image.json"
    ],
@@ -447,7 +424,6 @@
   {
    "name": "an ancestor holding a native image directory is refused",
    "candidate": "imgs",
-   "allowed": null,
    "expected": [
     "imgs"
    ],

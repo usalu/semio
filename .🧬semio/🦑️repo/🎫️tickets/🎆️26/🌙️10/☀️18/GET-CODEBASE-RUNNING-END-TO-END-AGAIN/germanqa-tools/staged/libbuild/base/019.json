@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Build input limits / Grenzen der Build-Eingaben",
+  "definitions": {
+    "Limits": {
+      "description": "EN: The memo limits and the chunk cut of the input closure. DE: Die Speichergrenzen und der Blockschnitt der Eingabe-Huelle.",
+      "const": {
+        "inventoryMemoLimit": 4096,
+        "chunkCutsLimit": 131072,
+        "closureChunkMinimum": 16,
+        "closureChunkModulus": 128
+      }
+    },
+    "LimitsDescriptions": {
+      "const": {
+        "en": {
+          "inventoryMemoLimit": "The most captured inventories the process remembers at once.",
+          "chunkCutsLimit": "The most verified closure stamps the process remembers at once.",
+          "closureChunkMinimum": "The fewest paths a closure chunk holds before the content-defined cut may end it.",
+          "closureChunkModulus": "A closure chunk ends after a path whose hash is zero modulo this number."
+        },
+        "de": {
+          "inventoryMemoLimit": "Die meisten erfassten Inventare, die der Prozess gleichzeitig merkt.",
+          "chunkCutsLimit": "Die meisten verifizierten Huellen-Stempel, die der Prozess gleichzeitig merkt.",
+          "closureChunkMinimum": "Die wenigsten Pfade eines Huellen-Blocks, bevor der inhaltsbestimmte Schnitt ihn beenden darf.",
+          "closureChunkModulus": "Ein Huellen-Block endet nach einem Pfad, dessen Hash modulo dieser Zahl null ist."
+        }
+      }
+    }
+  }
+}

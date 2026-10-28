@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "script.ts",
+  "base": "016b7e618f1140210178985aab9bcb338487d314c6cc0ce4736ab64efebb3655",
+  "new": "fc0c3274cab93228088e8b86c4850835e463a59372391b9434ba5281ba5b28a5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🧪️tests/🟦️.ts": {
+  "file": "reuse.test.ts",
+  "base": "3dcb85bc9bf8aea1c8af41e4a0c44bf401a012c5344fd6f9aacfccfcadaa0b16",
+  "new": "a6eaaf09f91770654ef9c305e1e28295eee937a5ff3320ba0d3cc8c10adc5bd4"
+ }
+}

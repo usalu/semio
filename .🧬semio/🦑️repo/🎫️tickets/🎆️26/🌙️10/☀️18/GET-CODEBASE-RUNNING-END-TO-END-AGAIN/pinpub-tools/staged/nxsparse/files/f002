@@ -1,0 +1,13 @@
+{
+  "$comment": "Backing files of the Nx graph pool law: a sparse image (declared extent, few allocated blocks), a preallocated one, and the shapes that are never a backing.",
+  "sparseBytes": 67108864,
+  "headBytes": 4096,
+  "preallocatedBytes": 65536,
+  "cases": {
+    "sparse": {"kind": "sparse", "admitted": true},
+    "preallocated": {"kind": "preallocated", "admitted": true},
+    "symlink": {"kind": "symlink", "admitted": false},
+    "hardlink": {"kind": "hardlink", "admitted": false},
+    "directory": {"kind": "directory", "admitted": false}
+  }
+}

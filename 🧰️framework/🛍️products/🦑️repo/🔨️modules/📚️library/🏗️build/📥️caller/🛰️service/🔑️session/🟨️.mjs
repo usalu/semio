@@ -1,7 +1,7 @@
 /** 🔑 Session primitives of the resident service, owned by the authority core: macaroon style capability tokens, the worktree identity and endpoints, and the private key file. The resident service and the service invocation share this one implementation. */
 import {createHash,createHmac,randomBytes,timingSafeEqual} from "node:crypto";
 import {appendFileSync,existsSync,lstatSync,readFileSync,realpathSync,statSync} from "node:fs";
-import {tmpdir,userInfo} from "node:os";
+import {homedir,tmpdir,userInfo} from "node:os";
 import {join} from "node:path";
 
 const b64=bytes=>Buffer.from(bytes).toString("base64url");
@@ -66,22 +66,30 @@ export function authorizeCapabilityV1(caveats,request){
  return undefined;
 }
 
-/** 🏠 The realpath of a worktree root: the launcher and the service must hash the same spelling. */
-export function canonicalRootV1(root){try{return realpathSync(root);}catch{return root;}}
+/** 🏠 The realpath of a worktree root: the launcher and the service must hash the same spelling. On Windows that is the kernel's final path (`realpathSync.native`, i.e. `GetFinalPathNameByHandleW`), the one name every drive-letter and component case of the checkout maps to and the one the Go launcher asks the kernel for; elsewhere the resolved links. See https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-getfinalpathnamebyhandlew */
+export function canonicalRootV1(root,platform=process.platform){try{return platform==="win32"?realpathSync.native(root):realpathSync(root);}catch{return root;}}
 
 /** 🔢 Twelve hex digits identifying a worktree root. */
 export function worktreeIdV1(root){return createHash("sha256").update("semio-repo-service-v1\0"+root).digest("hex").slice(0,12);}
 
-/** 📍 Runtime directory, unix socket or pipe name, key file and descriptor file of one worktree; paths stay under 100 bytes so they fit sockaddr_un. */
+/** 📍 Runtime directory, unix socket or pipe name, key file and descriptor file of one worktree; paths stay under 100 bytes so they fit sockaddr_un. Off Windows the directory is below `XDG_RUNTIME_DIR`, else below `TMPDIR`, else `/tmp`, and nothing else (`TMP` and `TEMP` are no inputs), exactly as the Go launcher computes it with `os.TempDir`. See https://pkg.go.dev/os#TempDir */
 export function endpointsV1(root,environment=process.env,platform=process.platform,user=undefined){
  const id=worktreeIdV1(root),owner=user??(()=>{try{return String(userInfo().uid);}catch{return"0";}})();
  if(platform==="win32"){
   const base=join(environment.LOCALAPPDATA||tmpdir(),"semio","repo",id);
   return{id,directory:base,endpoint:"\\\\.\\pipe\\semio-repo-"+owner+"-"+id,key:join(base,"key"),descriptor:join(base,"service.json"),state:join(base,"state.json"),lock:join(base,"service.lock"),audit:join(base,"audit.jsonl"),revoked:join(base,"revoked.jsonl")};
  }
- let directory=join(environment.XDG_RUNTIME_DIR||tmpdir(),"semio-repo-"+owner,id);
+ let directory=join(environment.XDG_RUNTIME_DIR||(environment.TMPDIR||"/tmp").replace(/\/+$/u,""),"semio-repo-"+owner,id);
  if(Buffer.byteLength(join(directory,"s"))>96)directory=join("/tmp","semio-repo-"+owner,id);
  return{id,directory,endpoint:join(directory,"s"),key:join(directory,"key"),descriptor:join(directory,"service.json"),state:join(directory,"state.json"),lock:join(directory,"service.lock"),audit:join(directory,"audit.jsonl"),revoked:join(directory,"revoked.jsonl")};
+}
+
+/** 📌 The private state directory of one worktree and user that no per-process variable moves: below `XDG_RUNTIME_DIR` when that names one, else below the user cache directory of the account database (never `TMPDIR`, which a nested build action sets to its own scratch), so that every process of the worktree reaches the same change journal. */
+export function stateDirectoryV1(root,environment=process.env,platform=process.platform,user=undefined,home=undefined){
+ const id=worktreeIdV1(root),owner=user??(()=>{try{return String(userInfo().uid);}catch{return"0";}})(),account=home??(()=>{try{return userInfo().homedir;}catch{return homedir();}})();
+ if(platform==="win32")return join(environment.LOCALAPPDATA||join(account,"AppData","Local"),"semio","repo",id);
+ if(environment.XDG_RUNTIME_DIR)return join(environment.XDG_RUNTIME_DIR,"semio-repo-"+owner,id);
+ return join(account,platform==="darwin"?"Library/Caches":".cache","semio","repo",id);
 }
 
 /** 🔐 Reads the service key: a regular file owned by the caller that no other user can read, inside a private directory owned by the caller. */

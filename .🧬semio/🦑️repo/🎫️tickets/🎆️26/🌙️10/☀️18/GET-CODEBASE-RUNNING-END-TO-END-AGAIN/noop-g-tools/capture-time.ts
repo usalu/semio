@@ -1,0 +1,4 @@
+import{captureNxAuthorizerSourcesV1,nxAuthorizerCapturedBytesV1,nxAuthorizerCapturedImportsV1}from"../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
+import{resolve}from"node:path";
+const root=resolve(import.meta.dirname,"../../../../../../../..");const entry=process.argv[2]!;
+for(let i=0;i<Number(process.argv[3]??3);i++){const t=performance.now();const c=await captureNxAuthorizerSourcesV1(root,entry,new AbortController().signal,{installed:true});const t1=performance.now();const b=nxAuthorizerCapturedBytesV1(c),im=nxAuthorizerCapturedImportsV1(root,c);let total=0;for(const v of b.values())total+=v.byteLength;console.log(JSON.stringify({run:i,files:c.manifest.sources.length,bytes:total,captureMs:Math.round(t1-t),projectMs:Math.round(performance.now()-t1),digest:c.digest.slice(0,12),cpu:process.cpuUsage()}));}

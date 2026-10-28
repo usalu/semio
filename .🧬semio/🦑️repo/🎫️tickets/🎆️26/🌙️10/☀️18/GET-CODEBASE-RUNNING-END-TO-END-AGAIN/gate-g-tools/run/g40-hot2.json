@@ -1,0 +1,12 @@
+{
+ "label": "g40-hot2",
+ "target": "@teaching/architecture-course:build",
+ "started": "12:41:42",
+ "wall_s": 25.1,
+ "peak_tree_mb": 2394,
+ "peak_processes": 4,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/legacy.ts": {
+  "file": "f001",
+  "sha256": "26b27164af45b71bca6a0fc797a8943e87b3bb9ee7a8e3b14e76f245d6ed039b",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/🔣️.json": {
+  "file": "f002",
+  "sha256": "e4f6d6f658a28783cf58103a71fad30c1e14f553abaa77bb4214c8438cf3ec0c",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/🟦️.ts": {
+  "file": "f003",
+  "sha256": "d73e1ae036079c2a5ad38ed1eb2a1f6c7d8fac04068df30493c4a1799fa33861",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/🧬️schema/🔣️.json": {
+  "file": "f004",
+  "sha256": "11999671a904140085f9135735ee65fe49d460439b10489c863485176144cda0",
+  "mode": 420
+ }
+}

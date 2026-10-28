@@ -192,7 +192,7 @@ export function createPartDiscover(dir:string,log:{full:string[];edges:string[];
 }
 
 /** 🏛️ A repository host over the synthetic workspace: custodies are recorded, a builder custody is exclusive and shared readers never wait for it. */
-export function createMockHost(dir:string,options:{signal?:AbortSignal;language?:"en"|"de";gate?:()=>Promise<void>;identity?:string;implementationFiles?:string[];stamps?:StampTableV1;ownerDelayMs?:number;custody?:{tail:Promise<void>};stamp?:boolean;waitNoticeMilliseconds?:number}={}){
+export function createMockHost(dir:string,options:{signal?:AbortSignal;language?:"en"|"de";gate?:()=>Promise<void>;identity?:string;implementationFiles?:string[];stamps?:StampTableV1;ownerDelayMs?:number;custody?:{tail:Promise<void>};stamp?:boolean;waitNoticeMilliseconds?:number;prefetch?:(request:{generation:number;dirty:readonly string[];roots:Readonly<Record<string,string>>;implementation:string})=>Promise<void>}={}){
  const events:string[]=[],said:{key:string;text:string}[]=[],published:string[]=[],expanded:string[][]=[],log:{full:string[];edges:string[];cold:boolean}[]=[],holdsLog:{resource:string;heldMs:number;waitedMs:number;endedAt:number}[]=[];
  const custody=options.custody??{tail:Promise.resolve()};
  const implementationRows:(GenerationRowV1&{scope?:string})[]=[...(options.implementationFiles??[]).map(path=>{const bytes=readFileSync(join(dir,path));return{kind:"file",path,fact:{sha256:sha(bytes),size:bytes.length}};}),...Object.entries(options.stamps??{}).map(([path,row])=>({kind:"stamp",path,fact:row.stamp,scope:row.scope}))];
@@ -208,6 +208,7 @@ export function createMockHost(dir:string,options:{signal?:AbortSignal;language?
   },
   storeOptions:(store:{root:string})=>({root:store.root,lease,holds,resources:{facts:"repository-graph-facts:mock"},...(options.stamp===undefined?{}:{stamp:options.stamp})}),
   membership,discoverPart:discover,
+  ...(options.prefetch?{async prefetch(request:{generation:number;dirty:readonly string[];roots:Readonly<Record<string,string>>;implementation:string}){events.push("prefetch");await options.prefetch!(request);}}:{}),
   async expand(projects:Record<string,unknown>){expanded.push(Object.keys(projects).sort());return projects;},
   readGraph:(value:unknown)=>value,
   readLean:(value:unknown)=>value,

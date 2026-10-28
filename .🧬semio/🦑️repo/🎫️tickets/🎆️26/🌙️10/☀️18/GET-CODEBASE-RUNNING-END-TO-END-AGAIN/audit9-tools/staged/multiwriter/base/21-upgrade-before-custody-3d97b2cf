@@ -1,0 +1,23 @@
+/** 🔼️ Contract: a run that was forecast quiet asks for its full capacity before the graph builder custody is taken, never while holding it; the phase mark inside the custody is bookkeeping and waits for nothing. */
+import{expect,test}from"bun:test";
+import{readFileSync}from"node:fs";
+import{upgradeBuildCapacityBeforeRebuildV1}from"../../../🌡️host-capacity/🚏️marks/🟦️.ts";
+
+const source=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8");
+const builder=source.indexOf("withBuilder:async<T>");
+
+test("the capacity upgrade of a rebuild is asked before the builder custody is taken",()=>{
+ const upgrade=source.indexOf("await upgradeBuildCapacityBeforeRebuildV1();",builder),custody=source.indexOf("withBuildGraphStateV1(root,invocation,phaseControl,(store,control)=>{image=store.root;return body(store,control);},generationScopeV1)",builder);
+ expect(builder).toBeGreaterThan(0);expect(upgrade).toBeGreaterThan(builder);expect(custody).toBeGreaterThan(upgrade);
+});
+
+test("the phase mark stays inside the custody body and the only wait before the custody is the upgrade",()=>{
+ const body=source.slice(builder,source.indexOf("generationScopeV1)",builder));
+ expect(body).toContain('const body=async(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>{await markBuildCapacityPhaseV1("rebuild");return build(store,control);};');
+ expect(body.match(/upgradeBuildCapacity/gu)?.length).toBe(1);
+});
+
+test("a process under no grant, or one that only inherits it, asks for nothing",async()=>{
+ expect(await upgradeBuildCapacityBeforeRebuildV1({})).toBe(false);
+ expect(await upgradeBuildCapacityBeforeRebuildV1({SEMIO_HOST_CAPACITY_GRANT:"0".repeat(24),SEMIO_HOST_CAPACITY_PHASE_MARKS:"off"})).toBe(false);
+});

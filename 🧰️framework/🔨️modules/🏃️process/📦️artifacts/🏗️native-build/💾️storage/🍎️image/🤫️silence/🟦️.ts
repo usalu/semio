@@ -3,6 +3,8 @@ import{tmpdir}from"node:os";
 import{join}from"node:path";
 import imageSchema from"../../🧬️schema/🔣️.json" with { type: "json" };
 import schema from"./🧬️schema/🔣️.json" with { type: "json" };
+import{nativeImageSparseInitialBytesV1}from"../🪶️sparse/🟦️.ts";
+export{nativeImageSparseAdmissionBytesV1,nativeImageSparseGrowArgumentsV1}from"../🪶️sparse/🟦️.ts";
 const protocol=schema.definitions.Protocol.const,logPattern=new RegExp(protocol.logPattern,"u");
 /** 🤫️ Names the closed observable state of the macOS volume services that must stay silent on one mounted image. */
 export type NativeImageVolumeSilenceFactsV1=Readonly<{directory:"absent"|"directory"|"other";writable:boolean;marker:"absent"|"file"|"other";spotlightMarker:"absent"|"file"|"other";logFiles:number;logBytes:number}>;
@@ -65,9 +67,9 @@ export function createNativeImageVolumeSilenceSeedV1():Readonly<{directory:strin
  try{mkdirSync(service,{mode:protocol.serviceDirectoryMode});chmodSync(service,protocol.serviceDirectoryMode);markerFile(join(service,protocol.serviceMarker));markerFile(join(directory,protocol.spotlightMarker));}catch(error){rmSync(directory,{recursive:true,force:true});throw error;}
  return Object.freeze({directory,dispose:()=>rmSync(directory,{recursive:true,force:true})});
 }
-/** 🧱️ Builds the closed `hdiutil create` argument list of one seeded fixed image. */
+/** 🧱️ Builds the closed `hdiutil create` argument list of one seeded image, created at its initial extent; the declared size is reached by the grow step of the sparse protocol. */
 export function nativeImageSeededCreateArgumentsV1(filesystemBytes:number,image:string,seed:string):readonly string[]{
  const unit=imageSchema.definitions.ImageProtocol.const.unitBytes;
  if(!Number.isSafeInteger(filesystemBytes)||filesystemBytes<=0||filesystemBytes%unit!==0)throw Error("Unit-aligned Native image size required");
- return Object.freeze(["create","-size",String(filesystemBytes/unit)+"m","-format",protocol.seededFormat,"-nospotlight","-fs",imageSchema.definitions.ImageProtocol.const.filesystem,"-volname","semio","-srcfolder",seed,image]);
+ return Object.freeze(["create","-size",String(nativeImageSparseInitialBytesV1(filesystemBytes)/unit)+"m","-format",protocol.seededFormat,"-nospotlight","-fs",imageSchema.definitions.ImageProtocol.const.filesystem,"-volname","semio","-srcfolder",seed,image]);
 }

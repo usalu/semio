@@ -118,7 +118,7 @@
     {
       "labels": {
         "en": "🎯️ Build Tasks · List",
-        "de": "🎯️ Build-Aufgaben · Auflisten"
+        "de": "🎯️ Build-Tasks · Auflisten"
       },
       "args": "show targets",
       "group": "4_build",
@@ -163,7 +163,7 @@
     {
       "labels": {
         "en": "🏗️ Build Task · Run",
-        "de": "🏗️ Build-Aufgabe · Ausführen"
+        "de": "🏗️ Build-Task · Ausführen"
       },
       "args": "--tool=${input:repoBuildTool} run \"${input:repoBuildTask}\" --output=stream",
       "group": "4_build",
@@ -172,7 +172,7 @@
     {
       "labels": {
         "en": "🔎️ Build Task · Inspect Plan",
-        "de": "🔎️ Build-Aufgabe · Plan Anzeigen"
+        "de": "🔎️ Build-Task · Plan Anzeigen"
       },
       "args": "--tool=${input:repoBuildTool} run \"${input:repoBuildTask}\" --dry-run",
       "group": "4_build",
@@ -318,7 +318,7 @@
     {
       "id": "repoBuildTask",
       "type": "promptString",
-      "description": "Project:task[:configuration] / Projekt:Aufgabe[:Konfiguration]"
+      "description": "Project:task[:configuration] / Projekt:Task[:Konfiguration]"
     },
     {
       "id": "repoBuildProject",

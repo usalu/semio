@@ -1,0 +1,37 @@
+import {appendFileSync,mkdirSync,renameSync,statSync} from "node:fs";
+import {dirname} from "node:path";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
+/** 📏️ Bounds observational data without issuing process or writer authority. */
+export const cargoTimingPolicyV1=Object.freeze({...schema.definitions.Policy.const});
+/** 📒️ Formats one phase mark of a Cargo launch as a ledger line: a closed phase and point, finite times.
+ * @see ./🧪️tests/📒️ledger/🟦️.ts */
+export function cargoTimingLedgerRowV1(pid:number,command:string,phase:string,point:string,atMs:number,elapsedMs:number):string{
+ cargoTimingEventV1(phase,point,atMs,elapsedMs,null);if(!Number.isSafeInteger(pid)||pid<1)throw Error("Actual process id required");
+ return JSON.stringify({version:1,atMs,pid,command:command.slice(0,64),phase,point,elapsedMs})+"\n";
+}
+/** 📥️ Appends ledger lines; a ledger at or above `maximumBytes` first moves to `<file>.1` (one generation), and a ledger that cannot be written costs nothing. */
+export function appendCargoTimingLedgerV1(file:string,rows:string,maximumBytes:number=cargoTimingPolicyV1.maximumLogBytes):void{
+ if(!rows)return;
+ try{mkdirSync(dirname(file),{recursive:true});try{if(statSync(file).size>=maximumBytes)renameSync(file,file+".1");}catch{}appendFileSync(file,rows);}catch{}
+}
+/** 🧾️ Records one OS-observed process; ancestry is diagnostic data, never retirement custody. */
+export type OwnedProcessObservationV1=Readonly<{pid:number;parentPid:number;birth:string;cpuMilliseconds:number;elapsedMilliseconds:number;state:string;rssBytes:number;name:string}>;
+/** ⏲️ Decodes the common Unix process CPU/elapsed clock without floating-point fraction loss. */
+export function parseProcessClockV1(text:string):number{
+ const match=/^(?:(\d{1,6})-)?(\d{1,9}:)?(\d{1,9}):(\d{1,2})(?:\.(\d{1,3}))?$/u.exec(text);if(!match)throw Error("Bounded process clock required");const days=Number(match[1]??0),hours=Number(match[2]?.slice(0,-1)??0),minutes=Number(match[3]),seconds=Number(match[4]);if(seconds>=60||match[2]&&minutes>=60||match[1]&&(!match[2]||hours>=24))throw Error("Canonical process clock required");const value=((days*24+hours)*60+minutes)*60000+seconds*1000+Number((match[5]??"").padEnd(3,"0"));if(!Number.isSafeInteger(value))throw Error("Finite process clock required");return value;
+}
+/** 🌳️ Selects only the observed root and its descendants from one bounded OS snapshot. */
+export function readOwnedProcessSnapshotV1(text:string,rootPid:number):readonly OwnedProcessObservationV1[]{
+ if(Buffer.byteLength(text)>cargoTimingPolicyV1.maximumSnapshotBytes||!Number.isSafeInteger(rootPid)||rootPid<1)throw Error("Bounded actual root snapshot required");const lines=text.trim().split(/\r?\n/u);if(lines.length>cargoTimingPolicyV1.maximumSnapshotRows)throw Error("Bounded process row count required");const all=new Map<number,OwnedProcessObservationV1>();
+ for(const line of lines){const row=/^\s*(\d+)\s+(\d+)\s+([\d:.-]+)\s+([\d:.-]+)\s+(\S+)\s+(\d+)\s+(\w{3}\s+\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\s+\d{4})\s+(.+)$/u.exec(line);if(!row)throw Error("Complete process observation row required");const pid=Number(row[1]),parentPid=Number(row[2]),rssBytes=Number(row[6])*1024;if(![pid,parentPid,rssBytes].every(value=>Number.isSafeInteger(value)&&value>=0)||all.has(pid))throw Error("Unique bounded process observation required");all.set(pid,{pid,parentPid,cpuMilliseconds:parseProcessClockV1(row[3]!),elapsedMilliseconds:parseProcessClockV1(row[4]!),state:row[5]!.slice(0,16),rssBytes,birth:row[7]!.replace(/\s+/gu," "),name:row[8]!.split(/[\\/]/u).pop()!.slice(0,64)});}
+ if(!all.has(rootPid))throw Error("Actual observational root absent");const children=new Map<number,number[]>();for(const row of all.values()){const group=children.get(row.parentPid)??[];group.push(row.pid);children.set(row.parentPid,group);}const owned=new Set([rootPid]),pending=[rootPid];while(pending.length)for(const pid of children.get(pending.pop()!)??[])if(!owned.has(pid)){owned.add(pid);pending.push(pid);}return[...owned].map(pid=>all.get(pid)!).sort((a,b)=>a.pid===rootPid?-1:b.pid===rootPid?1:a.pid-b.pid);
+}
+/** 📈️ Reports CPU deltas only for unchanged observed births and nondecreasing clocks. */
+export function compareOwnedProcessSnapshotsV1(previous:readonly OwnedProcessObservationV1[],current:readonly OwnedProcessObservationV1[]){const before=new Map(previous.map(row=>[row.pid,row]));return current.map(row=>{const old=before.get(row.pid);return{...row,cpuDeltaMilliseconds:old&&old.birth===row.birth&&old.parentPid===row.parentPid&&row.elapsedMilliseconds>=old.elapsedMilliseconds&&row.cpuMilliseconds>=old.cpuMilliseconds?row.cpuMilliseconds-old.cpuMilliseconds:null};});}
+/** 📊️ Keeps one root's CPU/state observation within an exact JSON record bound. */
+export function boundedOwnedProcessRecordV1(rootPid:number,atMonotonicMilliseconds:number,elapsedMilliseconds:number,rows:ReturnType<typeof compareOwnedProcessSnapshotsV1>){const selected=rows.slice(0,cargoTimingPolicyV1.maximumSubtreeRows),record=()=>({version:1,rootPid,atMonotonicMilliseconds,elapsedMilliseconds,omitted:rows.length-selected.length,rows:selected});while(selected.length&&Buffer.byteLength(JSON.stringify(record()))>cargoTimingPolicyV1.maximumRecordBytes)selected.pop();return record();}
+/** 🚦️ Validates a fixed phase event; accepting data grants no operation or deadline authority. */
+export function cargoTimingEventV1(phase:string,point:string,atMonotonicMilliseconds:number,elapsedMilliseconds:number,remainingMilliseconds:number|null){if(!schema.definitions.Phase.enum.includes(phase)||!schema.definitions.Point.enum.includes(point)||![atMonotonicMilliseconds,elapsedMilliseconds].every(value=>Number.isSafeInteger(value)&&value>=0)||remainingMilliseconds!==null&&(!Number.isSafeInteger(remainingMilliseconds)||remainingMilliseconds<0))throw Error("Closed finite Cargo timing event required");return{version:1,phase,point,atMonotonicMilliseconds,elapsedMilliseconds,remainingMilliseconds};}
+
+/** 🏷️ Formats actual progress data without interpreting it as a resource custody proof. */
+export function cargoResourceWaitEventV1(resource:string,mode:string,elapsedMilliseconds:number){if(typeof resource!=="string"||!resource||!["shared","exclusive"].includes(mode)||!Number.isSafeInteger(elapsedMilliseconds))throw Error("Closed finite resource progress observation required");return{version:1,resource:resource.slice(0,256),resourceTruncated:resource.length>256,mode,waitElapsedMilliseconds:elapsedMilliseconds};}

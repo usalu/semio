@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/testing/bun/operands.json",
+  "title": "BunTestOperandsV1",
+  "description": "Which file operands of `bun test` are paths and which bun reads as FILTERS: only an operand starting with ./ or ../ (or .\\ ..\\ on Windows), an absolute path or a drive path is a path; any other operand makes bun scan the whole working directory (every directory held open until the scan ends: 122,880 descriptors and 2 GB in one measured case) and run nothing unless a file name matches its test patterns. A path that is the checkout or one of its parents has the same cost.",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "guardSwitch": "SEMIO_TEST_OPERAND_GUARD",
+        "hostCommands": ["bun", "bun.exe"]
+      }
+    },
+    "Messages": {
+      "const": {
+        "en": {
+          "bare": "[tests] `bun test {operand}` reads the operand as a filter, not as a path: bun would scan the whole working directory ({directory}), hold every directory open and run no test. Prefix it with ./ (as ./{operand}) or give the absolute path.",
+          "whole": "[tests] `bun test {operand}` names the checkout or one of its parents: bun would scan every directory below it and hold each open. Name the test files (./path/to/file) or a narrower directory."
+        },
+        "de": {
+          "bare": "[tests] `bun test {operand}` liest den Operanden als Filter, nicht als Pfad: bun würde das ganze Arbeitsverzeichnis ({directory}) durchsuchen, jedes Verzeichnis offen halten und keinen Test ausführen. Stelle ./ voran (als ./{operand}) oder gib den absoluten Pfad an.",
+          "whole": "[tests] `bun test {operand}` nennt den Checkout oder eines seiner übergeordneten Verzeichnisse: bun würde jedes Verzeichnis darunter durchsuchen und offen halten. Nenne die Testdateien (./pfad/zur/datei) oder ein engeres Verzeichnis."
+        }
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "checkout", "cwd", "cases"],
+      "properties": {
+        "version": { "const": 1 },
+        "checkout": { "type": "string" },
+        "cwd": { "type": "string" },
+        "cases": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["operand", "kind"], "properties": { "operand": { "type": "string" }, "kind": { "enum": ["path", "bare", "whole"] } } } }
+      }
+    },
+    "Oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "operands"],
+      "properties": { "version": { "const": 1 }, "operands": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["operand", "runs"], "properties": { "operand": { "type": "string" }, "runs": { "type": "boolean" } } } } }
+    }
+  }
+}

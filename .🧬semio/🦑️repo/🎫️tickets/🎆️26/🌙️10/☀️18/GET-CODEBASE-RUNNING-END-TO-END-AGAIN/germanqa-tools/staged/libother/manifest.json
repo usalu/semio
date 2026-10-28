@@ -1,0 +1,37 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🚷️raw-process-spawn/📒️allowlist/🔣️.json": {
+  "file": "000.json",
+  "base": "595b80eebc6a6688ba9246ddd15f565a648bdfa8532041e9bc8d014a3fa5be46",
+  "new": "ce29757494ae69bada8e8e00fc8391d94b9db2db6dc22ad870cd1acd6600c76b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/📖️texts/🔣️.json": {
+  "file": "001.json",
+  "base": "010a3b68b7e8f2d2cb617ac04f57b869c8a847583586cde86accc86ae3dd910a",
+  "new": "b83dc7e55bb984a1594f7a37c5c3a0c4152b93788963dde018bb07e8150874b6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/📖️texts/🔣️.json": {
+  "file": "002.json",
+  "base": "0b9d0efe0d1a1b5eb01145031bf25643d1ccae92d7be4ec6aa15ee4ae5afd127",
+  "new": "26c4e99f50ee0b86934992ea3e559dffeeabe92d06057791d4f4c57e0ca971e5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🗂️registry/🔣️.json": {
+  "file": "003.json",
+  "base": "be2f18f3aa17e8e3ac560f3747372c68f18041b156a40fca28c685d0d31a615c",
+  "new": "544579c7e76385e6679e289ea0f00c517290c38e7ebc3c68cc3d0cf3cac9ae53"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json": {
+  "file": "004.json",
+  "base": "13f5876360d03bd4df86c3bdec688549e6d5e621eb076faf60c1bef1d9688591",
+  "new": "def033f847ccfd001b18a5bf2081a7e2fd7c189b7772f8b1c54a7189baec2f40"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/📖️texts/🔣️.json": {
+  "file": "005.json",
+  "base": "913a780d5b1452ab2abee1e5210f0d3caa2c9e494dd5ed9a960ac0f0dff35dad",
+  "new": "c5714ff54a02a4901432dc6db54b6674aaeb701abd4b7f3a8fc3489353709efd"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🔧️build-surfaces/🔣️.json": {
+  "file": "006.json",
+  "base": "e52af3132c4df580e18a6ef3d5852f2c7b9b1fe3233dc2b82eff4c7ccf4f8c75",
+  "new": "fa76236ae688a4a93bb365a4574da0999511d6643af4e3e0e0cf6528c09e69b3"
+ }
+}

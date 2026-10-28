@@ -1,0 +1,5 @@
+🧰 Staged batch `tool-closures` (lane peeredit2, on top of `providers`): the cargo driver (native command fallback of every Rust target) and the cargo lock owner become tool closures of the providers project, named by one reference each, so a library edit inside them changes one project instead of every Rust crate; their files stay in the action keys through the reference.
+usage: python3 -I stage.py check|apply|revert [--root DIR]   (default root: walk up from this file to the directory holding 🧰️framework; base = the `providers` batch applied)
+check : exit 0 when every file is `base` or `applied`, 1 otherwise (prints each state).
+apply : every live file must hold its base hash or already the new one, else exit 2 (drift: rebuild with `python3 -I ../../build.py tools <root>`); atomic replace that keeps the mode of the file it replaces.
+revert: every file must hold the new hash (or already base), else exit 2; restores base bytes.

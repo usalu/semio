@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧪️tests/🎓️course/🟦️.ts": {
+  "file": "00.ts",
+  "base": null,
+  "new": "4bb565651d522b9c385616ee57005190f30beabd2711011ff7e1c5a20b59fe30"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧪️tests/🎓️course/🧫️fixtures/🔣️.json": {
+  "file": "01.json",
+  "base": null,
+  "new": "5e0c65ac8127c5493da1414e78212a16314f5661fcbb5f59d8d22d4ef8538770"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧪️tests/🎓️course/🐍️oracle/🐍️.py": {
+  "file": "02.py",
+  "base": null,
+  "new": "cd39377c17510a3ef94ffa9ccfdf79d676414136e30cf9ddf6ae76760c22a81d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🔣️.json": {
+  "file": "03.json",
+  "base": "7de40dccc787fec3165377fe838cf052fbe4c3e54a60319ec2aa8b77e03bc629",
+  "new": "ff61bb03e5950bc3c17c04876b3133c4315e934bf10d38c233accc20ab392a55"
+ }
+}

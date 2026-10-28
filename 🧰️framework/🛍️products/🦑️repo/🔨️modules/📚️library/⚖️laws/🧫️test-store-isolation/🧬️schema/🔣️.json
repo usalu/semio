@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:laws/test-store-isolation/rules",
+  "title": "Test store isolation rules",
+  "description": "Language-agnostic data of the test-store-isolation law: which files are tests, which expressions name the checkout, which calls open the repository store, which literals name live store directories and the documented exceptions. The TypeScript law and the independent Python model both read this document; a test may reach a store only through a private repository workspace, and the test preload fences the live one at runtime.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "roots", "testPath", "sourceExtensions", "checkoutCalls", "checkoutEnvironment", "storeCalls", "storeLiterals", "exceptions"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "version": {"const": 1},
+    "roots": {"description": "Repository-relative directories whose files are scanned.", "type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "testPath": {"description": "Regular expression a repository-relative path must match to be a test file.", "type": "string", "minLength": 1},
+    "sourceExtensions": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^\\.[a-z]+$"}},
+    "checkoutCalls": {"description": "Callee texts whose result is the checkout directory of the test process.", "type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "checkoutEnvironment": {"description": "Environment variables that name the checkout.", "type": "array", "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"}},
+    "storeCalls": {"description": "Regular expressions over the last identifier of a callee that opens, measures or leases inside a repository store.", "type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "storeLiterals": {"description": "Regular expressions over string literal text that name a live store directory.", "type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "exceptions": {
+      "description": "Files that name the live store on purpose, each with its reason.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "reason"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "reason": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}}
+        }
+      }
+    }
+  }
+}

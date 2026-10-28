@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧬️schema/🔣️.json": {
+  "file": "00.json",
+  "base": "5e3af3d98d5445a2f6e320aef2f1507ced03cafa435b143b26c9e71c6745a246",
+  "new": "ed4b0a4b3e6e163369b0ea1979925293147b0ab09c6a92fbfb647e2b7a618e43"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🟨️.mjs": {
+  "file": "01.mjs",
+  "base": "345926696f73d255b3a608f0fec8c0a0850507c0b8aec3a9a085f099ceea81c9",
+  "new": "1bd21c8906f7c81fc8f3023981e553e9c965b3252ae71e549c1305cbb4f355b6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🟨️.d.mts": {
+  "file": "02.mts",
+  "base": "723af63c945ae14a21a386a0534f61a5e90857b21a8fb2e0886630adccbc81f7",
+  "new": "c7d9f36155fb329cff363de25675b435218d6f92134c2fc7dffc22ae721f5f54"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🔏️revision/🔣️.json": {
+  "file": "03.json",
+  "base": null,
+  "new": "ccacee56751dc9d9c6c7a4db28efb6caea0fb80578dbd93e76b6d6cecc1c416d"
+ }
+}

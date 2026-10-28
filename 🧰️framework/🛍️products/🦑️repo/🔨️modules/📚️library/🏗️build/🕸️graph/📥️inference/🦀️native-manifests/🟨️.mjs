@@ -2,8 +2,10 @@
 import { createHash } from "node:crypto";
 import { dirname, isAbsolute, sep, join, relative, resolve } from "node:path";
 import { memoizedObservedComputationV1, memoizedFileRecord, observedSourceAnalysisV1, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { INFERENCE_LIMITS_V1 } from "../🧬️schema/🟨️.mjs";
 import { runtimeParseTomlV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 import {runtimeKeyV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
 const { existsSync, readdirSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
@@ -24,7 +26,7 @@ function cachedRustReferences(file, cache, snapshots) {
   if(cache!==RUST_SOURCE_CACHE){
     const digest=createHash("sha256").update(JSON.stringify(references)).digest("hex"),previous=cache.entries.get(digest);
     if(previous){cache.hits++;cache.entries.delete(digest);cache.entries.set(digest,previous);}
-    else{cache.misses++;const bytes=Buffer.byteLength(JSON.stringify(references))+192;if(bytes<=cache.limit){while(cache.bytes+bytes>cache.limit){const oldest=cache.entries.keys().next().value;cache.bytes-=cache.entries.get(oldest).bytes;cache.entries.delete(oldest);}cache.entries.set(digest,{references,bytes});cache.bytes+=bytes;}}
+    else{cache.misses++;const bytes=Buffer.byteLength(JSON.stringify(references))+INFERENCE_LIMITS_V1.entryOverheadBytes;if(bytes<=cache.limit){while(cache.bytes+bytes>cache.limit){const oldest=cache.entries.keys().next().value;cache.bytes-=cache.entries.get(oldest).bytes;cache.entries.delete(oldest);}cache.entries.set(digest,{references,bytes});cache.bytes+=bytes;}}
   }
   return references;
   });
@@ -66,12 +68,25 @@ export function rustSourceFiles(entries, manifestRoot, cache = RUST_SOURCE_CACHE
   })];
 }
 
-/** 🧭️ Cargo owns compilation while the build graph tracks mounted sources and embedded assets. */
-export function cargoSourceInputs(root, workspaceRoot, facts, includeTests = true, compiled = false) {
-  const directory = join(workspaceRoot, root), manifest = join(directory, "Cargo.toml");
-  if (!existsSync(manifest)) return undefined;
+const RUST_REFUSALS = [["Generated Rust modules", "macro-mount"], ["Conditional Rust mount", "conditional-mount"], ["Dynamic Rust include", "dynamic-include"]];
+
+/** 🧾️ The Rust source set of one crate as the `rust-source-set` fact: the files a compilation of the crate reads (and the files that emit `include*!` into their consumers, whose reads no static reading of the crate can see), or the reason no static reading exists (a build script, a macro or conditional mount, a dynamic include, no entry point, an unparsable file).
+ * @see ./🧬️schema/🔣️.json */
+export function cargoSourceSetV1(root, workspaceRoot, facts, includeTests = true, compiled = false) {
+  if (facts === null || typeof facts !== "object") return cargoSourceSetOfV1(root, workspaceRoot, facts, includeTests, compiled);
+  let memo = CARGO_SOURCE_SETS_V1.get(facts);
+  if (memo === undefined) CARGO_SOURCE_SETS_V1.set(facts, memo = new Map());
+  return memoizedObservedComputationV1(memo, JSON.stringify([root, workspaceRoot, includeTests, compiled]), () => cargoSourceSetOfV1(root, workspaceRoot, facts, includeTests, compiled));
+}
+
+/** 🧠️ The answers of {@link cargoSourceSetV1} per fact table (one per project): the targets of a project ask for the same crates again and again, and a replayed answer hands every asker the rows it rests on without probing the tree again. */
+const CARGO_SOURCE_SETS_V1 = new WeakMap();
+
+function cargoSourceSetOfV1(root, workspaceRoot, facts, includeTests, compiled) {
+  const directory = join(workspaceRoot, root), manifest = join(directory, "Cargo.toml"), unresolved = (reason, message) => ({ version: 1, root, resolved: false, reason, ...(message ? { message } : {}) });
+  if (!existsSync(manifest)) return unresolved("no-manifest");
   const cargo = readToml(manifest), entries = [cargo.lib?.path ?? "src/lib.rs", "src/main.rs", ...(cargo.bin ?? []).map((target) => target.path), ...(includeTests ? [...(cargo.test ?? []), ...(cargo.bench ?? []), ...(cargo.example ?? [])].map((target) => target.path) : []), ...(cargo.package?.build === false ? [] : [typeof cargo.package?.build === "string" ? cargo.package.build : "build.rs"])].filter(Boolean).map((path) => resolve(directory, path)).filter(existsSync);
-  if (cargo.package?.build !== false && existsSync(resolve(directory, typeof cargo.package?.build === "string" ? cargo.package.build : "build.rs"))) return undefined;
+  if (cargo.package?.build !== false && existsSync(resolve(directory, typeof cargo.package?.build === "string" ? cargo.package.build : "build.rs"))) return unresolved("build-script");
   for (const source of ["src/bin", ...(includeTests ? ["tests", "examples", "benches"] : [])]) {
     if (!existsSync(join(directory, source))) continue;
     for (const entry of readdirSync(join(directory, source), { withFileTypes: true })) {
@@ -79,26 +94,45 @@ export function cargoSourceInputs(root, workspaceRoot, facts, includeTests = tru
       if (path.endsWith(".rs") && existsSync(path)) entries.push(path);
     }
   }
-  if (!entries.length) return undefined;
-  try { return rustSourceFiles(entries, directory, RUST_SOURCE_CACHE, facts, compiled).map((file) => `{workspaceRoot}/${buildPath(relative(workspaceRoot, file))}`); }
-  catch { return undefined; }
+  if (!entries.length) return unresolved("no-entries");
+  try {
+    const read = rustSourceFiles(entries, directory, RUST_SOURCE_CACHE, facts, compiled), place = (file) => `{workspaceRoot}/${buildPath(relative(workspaceRoot, file))}`;
+    const emitters = read.filter((file) => file.endsWith(".rs") && existsSync(file) && cachedRustReferences(file, RUST_SOURCE_CACHE, facts).emitted > 0).map(place);
+    return { version: 1, root, resolved: true, files: read.map(place), ...(emitters.length ? { emitters } : {}) };
+  }
+  catch (error) { const message = String(error?.message ?? error); return unresolved(RUST_REFUSALS.find(([prefix]) => message.startsWith(prefix))?.[1] ?? "unparsable", message.split(workspaceRoot + sep).join("")); }
+}
+
+/** 🧭️ Cargo owns compilation while the build graph tracks mounted sources and embedded assets; a crate without a static reading has no source list and keeps its directory and owner tree. */
+export function cargoSourceInputs(root, workspaceRoot, facts, includeTests = true, compiled = false) {
+  const set = cargoSourceSetV1(root, workspaceRoot, facts, includeTests, compiled);
+  return set.resolved ? [...set.files] : undefined;
+}
+
+/** 🛑 The source list an input precision rule may derive a key from: a crate that has no compiled entry point contributes none, a crate whose mounts cannot be read statically refuses, because its directory alone misses the files a `#[path]` mount reaches outside of it (a stale cache hit after an edit of a mounted owner file).
+ * @see ./🧬️schema/🔣️.json */
+export function cargoSourcesOrRefuseV1(root, workspaceRoot, facts, includeTests = true, compiled = false) {
+  const set = cargoSourceSetV1(root, workspaceRoot, facts, includeTests, compiled);
+  if (set.resolved) return [...set.files];
+  if (set.reason === "no-entries" || set.reason === "no-manifest") return undefined;
+  throw Object.assign(refuseBuildV1("refused", "graph.rust-sources-unresolved", { root, reason: set.message ? set.reason + ": " + set.message : set.reason }), { set });
 }
 
 let tomlParsing;
 
-/** 🧾️ The tooling TOML boundary exposes only repository-owned plain records, memoized per parser version (resolved on first use). */
+/** 📏️ The tooling TOML boundary exposes only repository-owned plain records, memoized per parser version (resolved on first use). */
 export function readToml(path) {
   tomlParsing ??= { namespace: `toml-parse-v1:${runtimeKeyV1()}`, parse: (source) => runtimeParseTomlV1(source) };
   return memoizedFileRecord(tomlParsing.namespace, path, (bytes) => {
     const source=bytes.toString("utf8");
     try{return tomlParsing.parse(source);}catch(cause){
-      const where=cause?.position??cause?.errors?.[0]?.position,integer=value=>Number.isInteger(value)&&value>=0?value:null,line=integer(where?.line-1),tomlObservation={version:1,path:resolve(path),namespace:tomlParsing.namespace,sha256:createHash("sha256").update(bytes).digest("hex"),bytes:bytes.byteLength,line,column:integer(where?.column-1),position:integer(where?.offset),sourceLine:(source.split(/\r?\n/u)[line??0]??"").slice(0,512)};
+      const where=cause?.position??cause?.errors?.[0]?.position,integer=value=>Number.isInteger(value)&&value>=0?value:null,line=integer(where?.line-1),tomlObservation={version:1,path:resolve(path),namespace:tomlParsing.namespace,sha256:createHash("sha256").update(bytes).digest("hex"),bytes:bytes.byteLength,line,column:integer(where?.column-1),position:integer(where?.offset),sourceLine:(source.split(/\r?\n/u)[line??0]??"").slice(0,INFERENCE_LIMITS_V1.sourceLineCharacters)};
       const error=Object.assign(new Error("Observed TOML parse refused: "+JSON.stringify(tomlObservation),{cause}),{code:"BUILD_SOURCE_UNPARSEABLE",source:tomlObservation.path,sha256:tomlObservation.sha256});error.tomlObservation=tomlObservation;throw error;
     }
   });
 }
 
-/** 🦀️ Resolves path dependencies, including aliases, target tables and workspace inheritance. */
+/** 🔎️ Resolves path dependencies, including aliases, target tables and workspace inheritance. */
 export function nativeDependencies(manifest, workspace) {
   const result = [];
   for (const table of [manifest, ...Object.values(manifest.target ?? {})]) {
@@ -114,7 +148,7 @@ export function nativeDependencies(manifest, workspace) {
   return result;
 }
 
-/** 🦀️ Resolves each crate's own Cargo workspace before interpreting inherited dependency paths. */
+/** 🔨️ Resolves each crate's own Cargo workspace before interpreting inherited dependency paths. */
 export function nativeWorkspaceV1(directory,workspaceRoot,manifest=readToml(join(directory,"Cargo.toml"))){
  let root=manifest.package?.workspace?resolve(directory,manifest.package.workspace):directory;
  for(;;){
@@ -127,11 +161,17 @@ export function nativeWorkspaceV1(directory,workspaceRoot,manifest=readToml(join
 
 const NATIVE_DIRECTORY_CLOSURES = new WeakMap();
 
-/** 🦀️ Resolves Cargo's local compilation inputs, admitting development dependencies only at the selected test root. Every non-root crate's
+/** 🧶️ The relative spelling of every crate directory a graph construction met, one string instance per directory: the closure of each of thousands of roots lists most of the crates, and a spelling per list entry cost hundreds of megabytes. */
+const NATIVE_DIRECTORY_NAMES = new WeakMap();
+
+/** 🛠️ Resolves Cargo's local compilation inputs, admitting development dependencies only at the selected test root. Every non-root crate's
  * closure is shared across roots of one graph construction; a cyclic path graph falls back to one visited-set traversal. */
 export function nativeDependencyRoots(root, workspaceRoot, tests = false, cache = new Map(), closures = new Map()) {
   const key = `${root}\0${tests}`;
   return memoizedObservedComputationV1(closures,key,()=>{
+  let names = NATIVE_DIRECTORY_NAMES.get(closures);
+  if (!names) NATIVE_DIRECTORY_NAMES.set(closures, names = new Map());
+  const spelled = (path) => { let name = names.get(path); if (name === undefined) names.set(path, name = buildPath(relative(workspaceRoot, path)) || "."); return name; };
   const read = path => memoizedObservedComputationV1(cache,path,()=>readToml(path));
   const children = function* (directory, includeTests) {
     const manifestPath = join(directory, "Cargo.toml");
@@ -166,7 +206,7 @@ export function nativeDependencyRoots(root, workspaceRoot, tests = false, cache 
       for (const member of reached) members.add(member);
     }
     active.delete(directory);
-    return members;
+    return [...members];
     };
     return includeTests?compute():memoizedObservedComputationV1(shared,directory,compute);
   };
@@ -180,7 +220,7 @@ export function nativeDependencyRoots(root, workspaceRoot, tests = false, cache 
     };
     visit(resolve(workspaceRoot, root), tests);
   }
-  const result = [...visited].map((path) => buildPath(relative(workspaceRoot, path)) || ".").sort();
+  const result = [...visited].map(spelled).sort();
   return result;
   });
 }

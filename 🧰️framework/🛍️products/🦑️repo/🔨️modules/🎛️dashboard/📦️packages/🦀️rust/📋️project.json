@@ -22,6 +22,15 @@
       {
         "env": "SEMIO_BUILD_BUDGET_MS"
       }
+    ],
+    "tsTestReads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⚙️runtime/🗣️language/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/🔣️.json"
     ]
   },
   "targets": {
@@ -38,7 +47,8 @@
         "{workspaceRoot}/.github/actions/native-repo/action.yml",
         "{workspaceRoot}/.github/actions/devcontainer-repo/action.yml",
         "{workspaceRoot}/.github/workflows/dashboard.yml",
-        "{workspaceRoot}/.github/workflows/build-system.yml"
+        "{workspaceRoot}/.github/workflows/build-system.yml",
+        "{projectRoot}/📋️project.json"
       ],
       "outputs": [],
       "options": {
@@ -59,7 +69,7 @@
           "dashboard": {
             "title": {
               "en": "Verify Dashboard Automation",
-              "de": "Dashboard-Automatisierung Prüfen"
+              "de": "Dashboard-Automatisierung prüfen"
             },
             "description": {
               "en": "Verify native workflow and owned container bootstrap declarations.",
@@ -113,7 +123,7 @@
       "executor": "repo:script",
       "inputs": [
         "default",
-        "reads",
+        "tsTestReads",
         "testEnv",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧫️fixtures/🌐️language/🔣️.json"
       ],
@@ -181,7 +191,8 @@
           },
           "sourceInputObservation": "freshness",
           "runtimeSourceEntries": [
-            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🟦️.ts"
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🧾️compiled/🟦️.ts"
           ]
         }
       }
@@ -192,8 +203,29 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts build"
       },
-      "cache": false,
-      "outputs": [],
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock",
+        "{workspaceRoot}/🧰️framework/Cargo.toml",
+        "{workspaceRoot}/rust-toolchain.toml",
+        "{workspaceRoot}/.cargo/config.toml",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/⌨️tui/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/*/🎯️targets/⌨️tui/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/🤖️generated/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/**/*",
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
+      "outputs": [
+        "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🎛️dashboard/{options.env.SEMIO_BUILD_MODE}/artifact"
+      ],
       "metadata": {
         "semio": {
           "execution": {
@@ -208,8 +240,8 @@
           },
           "cache": {
             "version": 1,
-            "class": "driver-owned",
-            "reason": "freshness-owned-by-driver"
+            "class": "deterministic",
+            "reason": "pure-function-of-inputs"
           }
         }
       }
@@ -799,6 +831,7 @@
             "package": "semio-framework-repo-dashboard",
             "scope": "binary",
             "binary": "semio",
+            "sourcesRecord": "semio.sources.json",
             "fallback": {
               "kind": "bounded-cargo",
               "adapters": [

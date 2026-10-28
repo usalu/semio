@@ -1,0 +1,75 @@
+{
+ "entry": "tools/entry.ts",
+ "files": {
+  "package.json": "{\"name\":\"fixture-root\",\"private\":true}\n",
+  "tools/entry.ts": "import './a.ts';\nimport '@fix/pkg/feature';\nimport '@alias/x';\n",
+  "tools/a.ts": "export const a = 1;\n",
+  "packages/pkg/package.json": "{\"name\":\"@fix/pkg\",\"version\":\"1.0.0\",\"exports\":{\"./feature\":\"./f1.ts\"}}\n",
+  "packages/pkg/f1.ts": "export const f1 = 1;\n",
+  "packages/pkg/f2.ts": "export const f2 = 2;\n",
+  "libs/x.ts": "export const x = 1;\n",
+  "libs2/x.ts": "export const x2 = 2;\n",
+  "tsconfig.json": "{\"compilerOptions\":{\"baseUrl\":\".\",\"paths\":{\"@alias/*\":[\"./libs/*\"]}}}\n"
+ },
+ "links": {
+  "node_modules/@fix/pkg": "../../packages/pkg"
+ },
+ "steps": [
+  {
+   "name": "a comment in a closure file",
+   "edit": {
+    "tools/a.ts": "// a comment\nexport const a = 1;\n"
+   },
+   "rowsHold": true,
+   "rosterMoved": false
+  },
+  {
+   "name": "an import of a file the walk already reaches",
+   "edit": {
+    "tools/a.ts": "import '../libs/x.ts';\nexport const a = 1;\n"
+   },
+   "rowsHold": false,
+   "rosterMoved": false
+  },
+  {
+   "name": "a transitive import of a new file",
+   "edit": {
+    "tools/a.ts": "import '../libs2/x.ts';\nexport const a = 1;\n"
+   },
+   "rowsHold": false,
+   "rosterMoved": true
+  },
+  {
+   "name": "the exports of a workspace package repointed",
+   "edit": {
+    "packages/pkg/package.json": "{\"name\":\"@fix/pkg\",\"version\":\"1.0.0\",\"exports\":{\"./feature\":\"./f2.ts\"}}\n"
+   },
+   "rowsHold": false,
+   "rosterMoved": true
+  },
+  {
+   "name": "the paths of the tsconfig repointed",
+   "edit": {
+    "tsconfig.json": "{\"compilerOptions\":{\"baseUrl\":\".\",\"paths\":{\"@alias/*\":[\"./libs2/*\"]}}}\n"
+   },
+   "rowsHold": false,
+   "rosterMoved": true
+  },
+  {
+   "name": "a file outside the closure added",
+   "edit": {
+    "libs2/unrelated.ts": "export const unrelated = 1;\n"
+   },
+   "rowsHold": true,
+   "rosterMoved": false
+  },
+  {
+   "name": "a file outside the closure edited",
+   "edit": {
+    "packages/pkg/f2.ts": "export const f2 = 3;\n"
+   },
+   "rowsHold": true,
+   "rosterMoved": false
+  }
+ ]
+}

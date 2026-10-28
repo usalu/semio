@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "namespace": "semio.cargo.unit-cache/v1",
+  "keyedFields": ["packageId","packageName","packageVersion","edition","manifest","sourceRoot","provenance","entry","name","kind","operation","platform","roles","profileName","compilerProfile","profileDigest","compilerFlags","compilerArguments","features","boundary","support","compiler"],
+  "volatileEnvironment": ["PATH","SystemRoot","WINDIR","PATHEXT","RUSTUP_HOME"],
+  "toolchain": "toolchain-a",
+  "policy": {"version": 1, "maxSourceBytes": 4096, "maxSourceFiles": 8, "maxActiveLines": 100},
+  "unit": {
+    "id": "base-0123456789abcdef0123", "packageId": "path+file:///repo/base#0.1.0", "packageName": "base", "packageVersion": "0.1.0", "edition": "2021",
+    "manifest": "/repo/base/Cargo.toml", "sourceRoot": null, "provenance": {"kind": "workspace", "identity": "base"},
+    "sourceInputs": [], "compilerCfg": null, "compiler": {"program": "/tc/bin/rustc", "digest": "aa", "hostTriple": "aarch64-apple-darwin"},
+    "entry": "/repo/base/lib.rs", "name": "base", "kind": "library", "operation": "build", "platform": null, "roles": ["target"],
+    "profileName": "prototype", "compilerProfile": {"opt": "0"}, "profileDigest": "pd1", "compilationDigest": "cd1", "planningDigest": "pl1",
+    "compilerEnvironment": {"CARGO_PKG_NAME": "base", "CARGO_MANIFEST_DIR": "/repo/base", "CARGO_PRIMARY_PACKAGE": "1", "PATH": "/usr/bin", "SystemRoot": null, "WINDIR": null, "PATHEXT": null, "RUSTUP_HOME": "/home/.rustup", "RUSTC_BOOTSTRAP": "1", "RUST_MIN_STACK": null, "SEMIO_BUILD_MODE": "prototype"},
+    "configurationDigest": "cfg1", "compilerFlags": ["-Zthreads=0"], "compilerArguments": ["--edition=2021", "-Copt-level=0"], "features": ["extra"],
+    "dependencies": [{"unit": "dep-1", "externName": "dep", "public": false, "noprelude": false}], "boundary": null, "support": {"kind": "supported", "reason": null}
+  },
+  "same": [
+    {"name": "another unit id", "set": {"id": "base-ffffffffffffffffffff"}},
+    {"name": "other dependency edges", "set": {"dependencies": []}},
+    {"name": "unstable planning digest", "set": {"planningDigest": "pl2"}},
+    {"name": "other compilation digest", "set": {"compilationDigest": "cd2"}},
+    {"name": "other configuration digest", "set": {"configurationDigest": "cfg2"}},
+    {"name": "other PATH", "set": {"compilerEnvironment.PATH": "/opt/bin:/usr/bin"}},
+    {"name": "other RUSTUP_HOME", "set": {"compilerEnvironment.RUSTUP_HOME": "/elsewhere"}},
+    {"name": "admitted source inputs", "set": {"sourceInputs": [{"path": "/repo/base/lib.rs", "digest": "d", "bytes": 3}]}},
+    {"name": "admitted cfg", "set": {"compilerCfg": ["unix"]}}
+  ],
+  "different": [
+    {"name": "entry", "set": {"entry": "/repo/base/other.rs"}},
+    {"name": "manifest", "set": {"manifest": "/repo/other/Cargo.toml"}},
+    {"name": "features", "set": {"features": ["extra", "more"]}},
+    {"name": "compiler flags", "set": {"compilerFlags": ["-Zthreads=1"]}},
+    {"name": "compiler arguments", "set": {"compilerArguments": ["--edition=2021", "-Copt-level=3"]}},
+    {"name": "platform", "set": {"platform": "x86_64-apple-darwin"}},
+    {"name": "kind", "set": {"kind": "proc-macro"}},
+    {"name": "boundary", "set": {"boundary": {"maxSourceBytes": 1, "maxSourceFiles": 1, "maxActiveLines": 1}}},
+    {"name": "compiler digest", "set": {"compiler": {"program": "/tc/bin/rustc", "digest": "bb", "hostTriple": "aarch64-apple-darwin"}}},
+    {"name": "package version", "set": {"packageVersion": "0.2.0"}},
+    {"name": "build mode", "set": {"compilerEnvironment.SEMIO_BUILD_MODE": "release"}},
+    {"name": "package manifest dir", "set": {"compilerEnvironment.CARGO_MANIFEST_DIR": "/repo/moved"}},
+    {"name": "another toolchain", "set": {}, "toolchain": "toolchain-b"}
+  ]
+}

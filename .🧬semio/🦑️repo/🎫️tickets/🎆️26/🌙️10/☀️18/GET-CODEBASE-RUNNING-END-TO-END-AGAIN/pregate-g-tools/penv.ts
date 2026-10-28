@@ -1,0 +1,20 @@
+/** 🧪️ pregate-g: mirror-capable official-envelope runner (copy of ver-f proc-run.ts with root = PG_ROOT). usage: PG_ROOT=<mirror> bun penv.ts file <repo-relative test file> [bun test args] */
+import {spawn} from "node:child_process";
+import {mkdirSync,rmSync} from "node:fs";
+const root=process.env.PG_ROOT!;if(!root)throw Error("PG_ROOT required");
+const lib=root+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/",mod=root+"/🧰️framework/🔨️modules/🏃️process/";
+const {createBuildBootstrapCapabilitiesV1}=await import(lib+"🏗️build/📥️caller/📤️child/🟦️.ts");
+const {issueRepositoryScriptProvidersV1}=await import(lib+"🏃️process/🔌️providers/🟦️.ts");
+const {pinnedRustToolchainV1}=await import(mod+"🧪️testing/🧰️toolchain/📌️pinned/🟦️.ts");
+const {createScriptProcessEnvelope,scriptProcessEnvironment}=await import(mod+"🧭️routing/📥️invocation/🏃️process/🟦️.ts");
+const [mode,target,...rest]=process.argv.slice(2),wall=Number(process.env.PG_WALL??900)*1000;
+const art=(process.env.TMPDIR??"/tmp")+"/pg-art-"+process.pid;rmSync(art,{recursive:true,force:true});mkdirSync(art,{recursive:true});
+const base:NodeJS.ProcessEnv={LANG:"en_US.UTF-8",...process.env,SEMIO_WORKSPACE_ROOT:root,SEMIO_BUILD_MODE:"prototype",SEMIO_BUILD_TOOL:"semio",SEMIO_TEST_ARTIFACT_DIR:art};
+Object.assign(base,pinnedRustToolchainV1(undefined,base).environment);issueRepositoryScriptProvidersV1(base);delete base.SEMIO_SCRIPT_STALL_MS;
+const capabilityBase={...base};delete capabilityBase.SEMIO_TEST_ARTIFACT_DIR;
+const capabilities={...await createBuildBootstrapCapabilitiesV1(root,["run","@semio-tech/framework-process:test-testing"],capabilityBase),artifacts:art};
+const envelope=createScriptProcessEnvelope({version:1,owner:"pregate-g:penv",maximumElapsedMilliseconds:wall},capabilities,Date.now());
+const env=scriptProcessEnvironment(envelope,base) as NodeJS.ProcessEnv;
+const bun=process.env.PG_BUN??"bun";
+const child=spawn("nice",["-n","10",bun,"test","--timeout","120000",...rest,"./"+target!],{cwd:root,env,stdio:["ignore","inherit","inherit"]});
+child.on("close",code=>{try{rmSync(art,{recursive:true,force:true});}catch{}process.exit(code??1);});

@@ -2,7 +2,7 @@
 
 use super::*;
 use super::schema::{WiresCanvasOptionalNode, WiresCanvasTransientDiff};
-#[path = "🖱️set-drag/🦀️.rs"]
+#[path = "🖱️drag/🦀️.rs"]
 mod set_drag;
 pub use set_drag::SetDrag;
 

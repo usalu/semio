@@ -1,0 +1,103 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "version": 1,
+  "messages": {
+    "round": {
+      "en": "Round {round}: exit {exit}, {denied} undeclared reads, {seconds} s ({backend})",
+      "de": "Runde {round}: Exit {exit}, {denied} nicht deklarierte Lesezugriffe, {seconds} s ({backend})"
+    },
+    "fallback": {
+      "en": "Backend {from} is not usable here ({reason}); continuing with {to}",
+      "de": "Backend {from} ist hier nicht nutzbar ({reason}); weiter mit {to}"
+    },
+    "unavailable": {
+      "en": "No read oracle backend is usable on {platform}: {reasons}",
+      "de": "Auf {platform} ist kein Backend des Lese-Orakels nutzbar: {reasons}"
+    },
+    "memory": {
+      "en": "The read oracle holds more than {limit} MB, aborting",
+      "de": "Das Lese-Orakel belegt mehr als {limit} MB und bricht ab"
+    },
+    "cancelled": {
+      "en": "Read oracle cancelled",
+      "de": "Lese-Orakel abgebrochen"
+    },
+    "clean": {
+      "en": "Clean: the command read only declared files ({allowed} declared, {learned} learned, {backend}, {strength})",
+      "de": "Sauber: der Befehl las nur deklarierte Dateien ({allowed} deklariert, {learned} gelernt, {backend}, {strength})"
+    },
+    "dirty": {
+      "en": "Not clean: {learned} undeclared files named, last exit {exit} ({backend}, {strength})",
+      "de": "Nicht sauber: {learned} nicht deklarierte Dateien benannt, letzter Exit {exit} ({backend}, {strength})"
+    },
+    "usage": {
+      "en": "usage: read-oracle --language en|de --root DIR --allow-list FILE [--allow-tree REL]... [--allow-name NAME]... [--cwd REL] [--env K=V]... [--rounds N] [--timeout SECONDS] [--backend auto|seatbelt|landlock|mirror] [--compare output|exit] [--out FILE] -- COMMAND...",
+      "de": "Aufruf: read-oracle --language en|de --root VERZEICHNIS --allow-list DATEI [--allow-tree REL]... [--allow-name NAME]... [--cwd REL] [--env K=V]... [--rounds N] [--timeout SEKUNDEN] [--backend auto|seatbelt|landlock|mirror] [--compare output|exit] [--out DATEI] -- BEFEHL..."
+    },
+    "traceMissing": {
+      "en": "strace is not installed: refused reads cannot be named, only the exit status shows them",
+      "de": "strace ist nicht installiert: verweigerte Lesezugriffe lassen sich nicht benennen, nur der Exit-Status zeigt sie"
+    },
+    "outputDiffers": {
+      "en": "The mirror run produced different output than the workspace run",
+      "de": "Der Lauf im Spiegel lieferte eine andere Ausgabe als der Lauf im Arbeitsbereich"
+    },
+    "batchCommand": {
+      "en": "The command {command} resolves to the batch file {path}; the mirror backend starts executables only (a batch file cannot take arbitrary arguments safely). Name the executable, or run the program the batch file starts",
+      "de": "Der Befehl {command} löst zur Batch-Datei {path} auf; das Spiegel-Backend startet nur ausführbare Dateien (eine Batch-Datei kann beliebige Argumente nicht sicher annehmen). Die ausführbare Datei benennen oder das Programm starten, das die Batch-Datei aufruft"
+    }
+  },
+  "windows": {
+    "summary": {
+      "en": "Windows has no unprivileged way to trace or deny reads of a process tree; the portable sparse mirror proves output equivalence instead.",
+      "de": "Windows kennt keinen unprivilegierten Weg, Lesezugriffe eines Prozessbaums zu verfolgen oder zu verweigern; stattdessen belegt der portable dünne Spiegel die Ausgabegleichheit."
+    },
+    "options": [
+      {
+        "id": "sparse-mirror",
+        "strength": "output-equivalence",
+        "userland": true,
+        "text": {
+          "en": "Implemented: the command runs in a temporary root that holds only the declared files (copy-on-write clones, junctions for installed dependencies) and must give the same exit status and output as in the workspace. A tolerated read of an undeclared file stays invisible.",
+          "de": "Umgesetzt: der Befehl läuft in einem temporären Wurzelverzeichnis, das nur die deklarierten Dateien enthält (Copy-on-Write-Klone, Junctions für installierte Abhängigkeiten) und muss denselben Exit-Status und dieselbe Ausgabe wie im Arbeitsbereich liefern. Ein geduldeter Lesezugriff auf eine nicht deklarierte Datei bleibt unsichtbar."
+        }
+      },
+      {
+        "id": "etw-kernel-file",
+        "strength": "read-trace",
+        "userland": false,
+        "text": {
+          "en": "Not implemented: an Event Tracing for Windows session on the Microsoft-Windows-Kernel-File provider (logman/tracerpt) names every file open exactly, but starting a kernel file session needs administrator rights, so it cannot be zero-touch.",
+          "de": "Nicht umgesetzt: eine Ereignisablaufverfolgung für Windows auf dem Anbieter Microsoft-Windows-Kernel-File (logman/tracerpt) benennt jede Dateiöffnung genau, doch eine Kernel-Dateisitzung braucht Administratorrechte und ist daher nicht ohne Zutun möglich."
+        }
+      },
+      {
+        "id": "app-container",
+        "strength": "enforcement",
+        "userland": false,
+        "text": {
+          "en": "Not implemented: an AppContainer or restricted token with a file allow-list needs ACL grants on the workspace files, which would change the files other agents use at the same time.",
+          "de": "Nicht umgesetzt: ein AppContainer oder eingeschränktes Token mit Dateiliste braucht ACL-Freigaben auf den Dateien des Arbeitsbereichs und würde damit Dateien ändern, die andere Agenten gleichzeitig nutzen."
+        }
+      },
+      {
+        "id": "wsl-landlock",
+        "strength": "enforcement",
+        "userland": false,
+        "text": {
+          "en": "Not implemented: running the Linux backend inside WSL2 works where the WSL kernel has Landlock, but WSL is an optional Windows feature that needs a restart, so it is not zero-touch either.",
+          "de": "Nicht umgesetzt: das Linux-Backend in WSL2 laufen zu lassen funktioniert, wo der WSL-Kernel Landlock hat, doch WSL ist ein optionales Windows-Feature mit Neustart und damit ebenfalls nicht ohne Zutun."
+        }
+      },
+      {
+        "id": "api-hook",
+        "strength": "partial-trace",
+        "userland": true,
+        "text": {
+          "en": "Not implemented: hooking the file API of a process (a Detours style DLL or a Node fs preload) sees only the processes that load it and misses native children, so it cannot prove a read set.",
+          "de": "Nicht umgesetzt: das Einhängen in die Datei-API eines Prozesses (eine DLL im Detours-Stil oder ein Node-fs-Preload) sieht nur Prozesse, die es laden, und verfehlt native Kindprozesse; es kann keine Lesemenge belegen."
+        }
+      }
+    ]
+  }
+}

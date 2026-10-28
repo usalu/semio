@@ -1,0 +1,362 @@
+{
+ "$schema": "./🧬️schema/🔣️.json",
+ "skip": {
+  "paths": [
+   "compose",
+   "temp/compose"
+  ],
+  "names": [
+   ".🧬semio",
+   "target",
+   "node_modules"
+  ]
+ },
+ "questions": {
+  "entries1": {
+   "mode": "entries",
+   "globs": [
+    "{workspaceRoot}/app/src/**/*.ts",
+    "!{workspaceRoot}/app/src/skip/**/*"
+   ]
+  },
+  "entries2": {
+   "mode": "entries",
+   "globs": [
+    "{workspaceRoot}/app/src/main.ts",
+    "{workspaceRoot}/lib/*.mts"
+   ]
+  },
+  "include1": {
+   "mode": "include",
+   "include": [
+    "app/**/*"
+   ],
+   "exclude": [
+    "app/**/dist/**",
+    "app/src/skip/**"
+   ]
+  },
+  "include2": {
+   "mode": "include",
+   "include": [
+    "lib/{a,b}/**/*",
+    "app/src/*.ts"
+   ],
+   "exclude": []
+  }
+ },
+ "files": {
+  "Cargo.toml": "[workspace]\nmembers = [\"crates/*\"]\n",
+  "crates/alpha/Cargo.toml": "[package]\nname = \"alpha\"\nversion = \"0.1.0\"\n",
+  "crates/alpha/src/lib.rs": "pub fn a() {}\n",
+  "crates/beta/Cargo.toml": "[package]\nname = \"beta\"\nversion = \"0.1.0\"\n",
+  "crates/target/Cargo.toml": "[package]\nname = \"ghost\"\nversion = \"0.1.0\"\n",
+  "node_modules/dep/Cargo.toml": "[package]\nname = \"dep\"\nversion = \"0.1.0\"\n",
+  "compose/x/Cargo.toml": "[package]\nname = \"composed\"\nversion = \"0.1.0\"\n",
+  "temp/compose/y/Cargo.toml": "[package]\nname = \"composed2\"\nversion = \"0.1.0\"\n",
+  "temp/other/Cargo.toml": "[package]\nname = \"other\"\nversion = \"0.1.0\"\n",
+  ".hidden/Cargo.toml": "[package]\nname = \"hid\"\nversion = \"0.1.0\"\n",
+  ".🧬semio/t/Cargo.toml": "[package]\nname = \"ticket\"\nversion = \"0.1.0\"\n",
+  "app/src/main.ts": "export {};\n",
+  "app/src/util.tsx": "export {};\n",
+  "app/src/skip/x.ts": "export {};\n",
+  "app/src/node_modules/y.ts": "export {};\n",
+  "app/src/.hid/z.ts": "export {};\n",
+  "app/src/a.d.ts": "export {};\n",
+  "app/test/t.test.ts": "export {};\n",
+  "app/dist/out.ts": "export {};\n",
+  "lib/index.mts": "export {};\n",
+  "lib/a/one.mts": "export {};\n",
+  "readme.md": "# readme\n"
+ },
+ "steps": [
+  {
+   "name": "a file keeps its bytes but is rewritten",
+   "ops": [
+    {
+     "op": "write",
+     "path": "readme.md",
+     "text": "# readme\n"
+    }
+   ],
+   "changes": {}
+  },
+  {
+   "name": "an unrelated file appears at the root",
+   "ops": [
+    {
+     "op": "write",
+     "path": "notes.txt",
+     "text": "x\n"
+    }
+   ],
+   "changes": {}
+  },
+  {
+   "name": "a TypeScript file appears in an included directory",
+   "ops": [
+    {
+     "op": "write",
+     "path": "app/src/new.ts",
+     "text": "export {};\n"
+    }
+   ],
+   "changes": {
+    "entries1": 1,
+    "include1": 1,
+    "include2": 1
+   }
+  },
+  {
+   "name": "a TypeScript file appears in an excluded directory",
+   "ops": [
+    {
+     "op": "write",
+     "path": "app/src/skip/new2.ts",
+     "text": "export {};\n"
+    }
+   ],
+   "changes": {}
+  },
+  {
+   "name": "a TypeScript file appears in a vendored directory",
+   "ops": [
+    {
+     "op": "write",
+     "path": "app/src/node_modules/z.ts",
+     "text": "export {};\n"
+    }
+   ],
+   "changes": {}
+  },
+  {
+   "name": "a crate appears",
+   "ops": [
+    {
+     "op": "write",
+     "path": "crates/gamma/Cargo.toml",
+     "text": "[package]\nname = \"gamma\"\nversion = \"0.1.0\"\n"
+    }
+   ],
+   "changes": {
+    "crates": 1
+   }
+  },
+  {
+   "name": "a crate is renamed in its manifest",
+   "ops": [
+    {
+     "op": "write",
+     "path": "crates/gamma/Cargo.toml",
+     "text": "[package]\nname = \"gamma2\"\nversion = \"0.1.0\"\n"
+    }
+   ],
+   "changes": {
+    "crates": 1
+   }
+  },
+  {
+   "name": "a later directory repeats a crate name",
+   "ops": [
+    {
+     "op": "write",
+     "path": "crates/zeta/Cargo.toml",
+     "text": "[package]\nname = \"alpha\"\nversion = \"0.1.0\"\n"
+    }
+   ],
+   "changes": {}
+  },
+  {
+   "name": "an earlier directory repeats a crate name",
+   "ops": [
+    {
+     "op": "write",
+     "path": "a/Cargo.toml",
+     "text": "[package]\nname = \"alpha\"\nversion = \"0.1.0\"\n"
+    }
+   ],
+   "changes": {
+    "crates": 1
+   }
+  },
+  {
+   "name": "a crate directory is renamed",
+   "ops": [
+    {
+     "op": "rename",
+     "from": "crates/beta",
+     "to": "crates/beta2"
+    }
+   ],
+   "changes": {
+    "crates": 1
+   }
+  },
+  {
+   "name": "a crate moves below a vendored directory",
+   "ops": [
+    {
+     "op": "rename",
+     "from": "crates/gamma",
+     "to": "node_modules/gamma"
+    }
+   ],
+   "changes": {
+    "crates": 1
+   }
+  },
+  {
+   "name": "a hidden crate appears",
+   "ops": [
+    {
+     "op": "write",
+     "path": ".hidden2/Cargo.toml",
+     "text": "[package]\nname = \"hid2\"\nversion = \"0.1.0\"\n"
+    }
+   ],
+   "changes": {}
+  },
+  {
+   "name": "a symbolic link to a directory appears",
+   "ops": [
+    {
+     "op": "symlink",
+     "path": "app/src/link",
+     "target": "../test"
+    }
+   ],
+   "changes": {}
+  },
+  {
+   "name": "a symbolic link named like a source appears",
+   "ops": [
+    {
+     "op": "symlink",
+     "path": "app/src/l.ts",
+     "target": "../test"
+    }
+   ],
+   "changes": {
+    "entries1": 1,
+    "include1": 1,
+    "include2": 1
+   }
+  },
+  {
+   "name": "an excluded directory is removed",
+   "ops": [
+    {
+     "op": "remove",
+     "path": "app/dist"
+    }
+   ],
+   "changes": {}
+  },
+  {
+   "name": "a source file is removed",
+   "ops": [
+    {
+     "op": "remove",
+     "path": "app/src/main.ts"
+    }
+   ],
+   "changes": {
+    "entries1": 1,
+    "entries2": 1,
+    "include1": 1,
+    "include2": 1
+   }
+  },
+  {
+   "name": "a source file is renamed out of the globs",
+   "ops": [
+    {
+     "op": "rename",
+     "from": "lib/index.mts",
+     "to": "lib/index.txt"
+    }
+   ],
+   "changes": {
+    "entries2": 1
+   }
+  },
+  {
+   "name": "a deep tree appears below a braced include",
+   "ops": [
+    {
+     "op": "mkdir",
+     "path": "lib/a/b/c"
+    },
+    {
+     "op": "write",
+     "path": "lib/a/b/c/d.mts",
+     "text": "export {};\n"
+    }
+   ],
+   "changes": {
+    "include2": 1
+   }
+  },
+  {
+   "name": "a directory below a braced include is renamed",
+   "ops": [
+    {
+     "op": "rename",
+     "from": "lib/a",
+     "to": "lib/q"
+    }
+   ],
+   "changes": {
+    "include2": 1
+   }
+  },
+  {
+   "name": "a file becomes a directory",
+   "ops": [
+    {
+     "op": "remove",
+     "path": "readme.md"
+    },
+    {
+     "op": "mkdir",
+     "path": "readme.md"
+    }
+   ],
+   "changes": {}
+  },
+  {
+   "name": "a whole source tree disappears",
+   "ops": [
+    {
+     "op": "remove",
+     "path": "lib"
+    }
+   ],
+   "changes": {}
+  },
+  {
+   "name": "the source tree returns",
+   "ops": [
+    {
+     "op": "write",
+     "path": "lib/index.mts",
+     "text": "export {};\n"
+    },
+    {
+     "op": "write",
+     "path": "lib/b/two.mts",
+     "text": "export {};\n"
+    }
+   ],
+   "changes": {
+    "entries2": 1,
+    "include2": 1
+   }
+  }
+ ],
+ "random": {
+  "seed": 20261026,
+  "sequences": 40,
+  "steps": 14
+ }
+}

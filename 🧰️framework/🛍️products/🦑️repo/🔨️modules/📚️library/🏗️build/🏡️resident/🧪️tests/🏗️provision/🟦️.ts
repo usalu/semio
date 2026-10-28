@@ -3,6 +3,7 @@ import {chmodSync,existsSync,mkdirSync,readFileSync,readdirSync,writeFileSync} f
 import {createHash} from "node:crypto";
 import {join} from "node:path";
 import {ensureWatcherV1,readWatcherPinV1,watcherManifestV1} from "../../🔭️watch/🏗️provision/🟨️.mjs";
+import {toolsPartitionWritableV1} from "../../🔭️watch/🏗️provision/🔌️tools/🟨️.mjs";
 import {cleanup,tempRoot} from "../🟦️.ts";
 
 const SOURCE=join(import.meta.dir,"../../🔭️watch/🦀️rust/🦀️.rs"),PIN=join(import.meta.dir,"../../🔭️watch/🦀️rust/🔣️.json");
@@ -58,6 +59,21 @@ describe("ensure the watcher",()=>{
   expect(existsSync(join(outputRoot,sha,"semio-repo-watch"))).toBe(false);
   await expect(ensureWatcherV1({sourcePath:SOURCE,pinPath:PIN,outputRoot,locate:async()=>undefined,compile:async()=>{throw new Error("cancelled");}})).rejects.toThrow("cancelled");
   expect(readdirSync(join(outputRoot,sha)).filter(name=>!name.startsWith("."))).toEqual([]);
+ });
+ test("an unwritable output root (an image that is not mounted) is refused before anything is compiled or written",async()=>{
+  const{outputRoot}=harness();let compiled=0;
+  await expect(ensureWatcherV1({sourcePath:SOURCE,pinPath:PIN,outputRoot,locate:async()=>undefined,writable:()=>false,compile:async()=>{compiled++;return"";}})).rejects.toThrow(/watcher\.output-root-not-mounted/u);
+  expect(compiled).toBe(0);expect(existsSync(outputRoot)?readdirSync(outputRoot):[]).toEqual([]);
+  const installed=await ensureWatcherV1({sourcePath:SOURCE,pinPath:PIN,outputRoot,locate:async()=>"/installed/semio-repo-watch",writable:()=>false,compile:async()=>{throw new Error("must not compile");}});
+  expect(installed.path).toBe("/installed/semio-repo-watch");
+ });
+ test("the tools partition is writable without an image, and an image partition is not writable while its root is no mount point",()=>{
+  const root=tempRoot("partition-");roots.push(root);
+  const image=join(root,".cache","b","t","m"),partition=join(root,".cache","b","t");
+  expect(toolsPartitionWritableV1(root)).toBe(true);
+  mkdirSync(partition,{recursive:true});writeFileSync(join(partition,"image.json"),"{}");
+  expect(toolsPartitionWritableV1(root)).toBe(false);
+  mkdirSync(image);expect(toolsPartitionWritableV1(root)).toBe(false);
  });
  test.skipIf(process.env.SEMIO_RESIDENT_CARGO!=="1")("a real cargo build of the pinned source yields a watcher that answers the version frame",async()=>{
   const{outputRoot}=harness();

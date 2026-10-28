@@ -20,3 +20,6 @@ export function discoverTestBuildProjectsV1(files:readonly string[],options:Read
 export function discoverTestBuildDependenciesV1(options:unknown,context:unknown):Promise<unknown>;
 /** 🚧️ The test projects whose native source projects the inventory does not hold, with the missing names. */
 export function danglingTestDependenciesV1(projects:Readonly<Record<string,Readonly<{root:string;tags?:readonly string[];targets?:Readonly<Record<string,Readonly<{inputs?:readonly unknown[]}>>>}>>>):readonly Readonly<{source:string;root:string;missing:readonly string[]}>[];
+/** 🧬️ What every test owner shares (opaque): computed once by {@link discoverTestSharedV1} and passed as `context.testShared` to {@link discoverTestBuildProjectsV1} when single owners are discovered. */
+export interface TestSharedV1{readonly commandInputs:unknown;readonly state:unknown}
+export function discoverTestSharedV1(context:BuildInferenceContextV1):Promise<TestSharedV1>;

@@ -1,7 +1,9 @@
-"""Independent model of the compile units admission decision.
+"""🧮 Independent model of the compile units admission decision.
 
 Reads the policy constants from the schema JSON and answers, for every case on stdin
-(a JSON list of {"host": {...}, "intent": {...}}), the planned units. It shares no code with the
+(a JSON list of {"host": {...}, "intent": {...}}), the planned units and the memory budget under a grant;
+for {"history": {...}} the measured footprint of one compile unit (nearest-rank quantile, cross-checked
+with numpy's inverted CDF percentile, a third-party library, whenever numpy is importable). It shares no code with the
 TypeScript implementation: the share, the limits and their order are written down here once more.
 """
 import json
@@ -21,10 +23,11 @@ def plan(policy, host, intent):
     if intent["needed"] is not None:
         limits.append((intent["needed"], "needed"))
     if host["grantedJobs"] is not None:
-        limits.append((host["grantedJobs"], "granted"))
+        carried = 0 if host["grantedMegabytes"] is None else host["grantedMegabytes"] // host["unitMegabytes"]
+        limits.append((max(host["grantedJobs"], carried), "granted"))
     if host["availableMegabytes"] is not None:
         spare = max(0, host["availableMegabytes"] - policy["reserveMegabytes"])
-        limits.append((spare // policy["megabytesPerUnit"], "memory"))
+        limits.append((spare // host["unitMegabytes"], "memory"))
     for value, why in limits:
         if value < units:
             units, reason = max(1, value), why
@@ -36,7 +39,22 @@ def plan(policy, host, intent):
         if halved < units:
             units, reason = max(1, halved), "pressure-warn"
     minimum = max(1, -(-units * policy["minimumShareBasisPoints"] // 10000))
-    return {"preferred": units, "minimum": minimum, "reason": reason}
+    budget = None if host["grantedMegabytes"] is None else max(1, host["grantedMegabytes"], units * host["unitMegabytes"])
+    return {"preferred": units, "minimum": minimum, "reason": reason, "budgetMegabytes": budget}
+
+
+def unit_megabytes(policy, history):
+    peaks = sorted(rows[-1]["peakRssBytes"] for rows in history.values() if rows)
+    if len(peaks) < policy["minimumUnitSamples"]:
+        return policy["megabytesPerUnit"]
+    rank = max(0, -(-len(peaks) * policy["unitQuantileBasisPoints"] // 10000) - 1)
+    try:
+        import numpy
+    except ImportError:
+        numpy = None
+    if numpy is not None:
+        assert int(numpy.percentile(numpy.array(peaks), policy["unitQuantileBasisPoints"] / 100, method="inverted_cdf")) == peaks[rank], (peaks, rank)
+    return max(policy["minimumUnitMegabytes"], -(-peaks[rank] // 1048576))
 
 
 def fixed(policy, name, cores):
@@ -47,7 +65,7 @@ def fixed(policy, name, cores):
 
 
 def simulate(cores, requests):
-    """Counted admission of FIFO requests onto `cores` free cores: each request is (minimum, preferred).
+    """🚦 Counted admission of FIFO requests onto `cores` free cores: each request is (minimum, preferred).
 
     A request starts once `minimum` cores are free and takes up to `preferred`; a request behind a blocked head waits (first come, first served).
     Returns the grants in start order for requests that start without any release.
@@ -68,7 +86,9 @@ if __name__ == "__main__":
     cases = json.load(sys.stdin)
     out = []
     for case in cases:
-        if "fixed" in case:
+        if "history" in case:
+            out.append(unit_megabytes(policy, case["history"]))
+        elif "fixed" in case:
             out.append(fixed(policy, case["fixed"], case["cores"]))
         elif "requests" in case:
             out.append(simulate(case["cores"], case["requests"]))

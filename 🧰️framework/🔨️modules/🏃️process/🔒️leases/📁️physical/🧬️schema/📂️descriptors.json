@@ -12,8 +12,8 @@
     },
     "cases": {
       "type": "array",
-      "minItems": 18,
-      "maxItems": 18,
+      "minItems": 6,
+      "maxItems": 6,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -24,10 +24,7 @@
         ],
         "properties": {
           "owner": {
-            "enum": [
-              "physical",
-              "baseline"
-            ]
+            "const": "physical"
           },
           "failure": {
             "enum": [
@@ -36,14 +33,6 @@
               "named",
               "identity",
               "retain",
-              "hash",
-              "buffer",
-              "read",
-              "short",
-              "update",
-              "after",
-              "mutated",
-              "digest",
               "none"
             ]
           },

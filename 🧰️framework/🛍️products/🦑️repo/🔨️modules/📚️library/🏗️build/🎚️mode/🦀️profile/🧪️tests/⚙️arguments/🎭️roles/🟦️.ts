@@ -13,13 +13,15 @@ import{readBuildMode}from"@semio-tech/process/build-mode";
 import arguments_ from"../🔣️.json"with{type:"json"};
 import corpus from"./🔣️.json"with{type:"json"};
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
+import{privateRepositoryWorkspaceV1}from"../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 type Unit={target:{name:string;kind:string[]};mode:string;profile:Record<string,unknown>;dependencies:{index:number}[]};
 type Line={line:string;stream:string};
 function codegenFlags(command:string):string[]{const flags=[...command.matchAll(/(?:^|\s)-C(?:\s+)?(?:'([^']*)'|"([^"]*)"|([^'"\s]+))(?=\s|$)/gu)].map(match=>match[1]??match[2]??match[3]!);expect(flags.length).toBe([...command.matchAll(/(?:^|\s)-C/gu)].length);return flags;}
 
 registerBuildTestLawV1("pinned Cargo observes host and dual-role compiler profile consumption","profile-oracle",original=>{
- const workspace=process.cwd(),mode=readBuildMode(process.env.SEMIO_BUILD_MODE),control=scriptCompilerAdmissionControlV1(original,"build-mode:host-role-arguments",120000);expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);
+ const workspace=repository.root,mode=readBuildMode(process.env.SEMIO_BUILD_MODE),control=scriptCompilerAdmissionControlV1(original,"build-mode:host-role-arguments",120000);expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);
  return withRepositoryCompilerStoreV1(workspace,mode,control,scriptInvocationEnvironment(original,process.env),(store,control)=>withCompilerWorkspaceWriteV1(store.storage,join(workspace,".cache/b/l/m/data"),control,async()=>{
   const temporary=store.environment.TMPDIR;if(!temporary)throw Error("Actual funded compiler temporary root required");const directory=await mkdtemp(join(temporary,"pr-")),recorded:unknown[]=[];
   try{for(const[index,row]of arguments_.cases.filter(row=>corpus.cases.includes(row.name)).entries())for(const context of corpus.contexts){

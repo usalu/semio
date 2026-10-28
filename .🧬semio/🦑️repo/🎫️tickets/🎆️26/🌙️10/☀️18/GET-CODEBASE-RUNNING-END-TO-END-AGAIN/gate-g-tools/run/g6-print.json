@@ -1,0 +1,31 @@
+{
+ "label": "g6-print",
+ "target": "@semio-tech/print-rs:test",
+ "started": "23:03:21",
+ "wall_s": 422.1,
+ "peak_tree_mb": 8028,
+ "peak_processes": 9,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 5.0,
+ "graph": {
+  "inferring": [
+   "36"
+  ],
+  "refreshing": [
+   "37"
+  ],
+  "published": [
+   "582",
+   "37",
+   "104"
+  ],
+  "processes": [
+   "6",
+   "3 action cache hit, 1 internal, 3 local, 2 worker"
+  ],
+  "actions": [
+   "6"
+  ]
+ }
+}

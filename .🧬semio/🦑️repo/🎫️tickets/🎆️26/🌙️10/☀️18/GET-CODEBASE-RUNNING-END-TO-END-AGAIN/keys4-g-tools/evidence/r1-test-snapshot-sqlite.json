@@ -1,0 +1,48 @@
+{
+ "target": "test-snapshot-sqlite",
+ "tag": "r1",
+ "declared": 456,
+ "rows": [
+  {
+   "leg": "bun-sqlite-unit",
+   "kind": "bun",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json",
+    "🧰️framework/🔨️modules/🖼️assets/README.md",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑\\040\\^M💻dev/🌐️.html",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑\\040\\^M💻dev/📤️distribution/🌐️.html"
+   ],
+   "rounds": 4,
+   "seconds": 45,
+   "tail": " 0 fail |  856 expect() calls | Ran 64 tests across 1 file. [13.42s] | ",
+   "notes": [
+    "profiles:1",
+    "rules:315",
+    "capacity:600",
+    "profiles:1"
+   ]
+  },
+  {
+   "leg": "bun-sqlite-interop",
+   "kind": "bun",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": false,
+   "clean": false,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 2,
+   "tail": " 3 fail |  2 expect() calls | Ran 3 tests across 1 file. [1.85s] | ",
+   "notes": [
+    "profiles:1",
+    "rules:315",
+    "capacity:600"
+   ]
+  }
+ ]
+}

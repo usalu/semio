@@ -2,7 +2,7 @@
 
 use crate::edit::windows::world::transient::{Block3dBrushPreviewSet, Block3dWorldWindowTransient, Block3dWorldWindowTransientDiff};
 
-#[path = "👁️set-brush-preview/🦀️.rs"]
+#[path = "👁️brush-preview/🦀️.rs"]
 pub(crate) mod set_brush_preview;
 pub use crate::edit::windows::world::transient::mutations::set_brush_preview::SetBrushPreview;
 

@@ -99,6 +99,9 @@ export const createScriptInputCache = current.modules["script-inputs"].createScr
 /** 👁️ Projects actual Cargo/Nx compilation and owner generator inputs for live source watching. */
 export const nativeSourceWatchPlanV1 = current.modules["project-assembly"].nativeSourceWatchPlanV1;
 
+/** 🔁️ Opens the answer of derived facts (the command walks a project record named) against the live files, for the generation that decides whether the projects holding them stay valid. */
+export const openGenerationDeriverV1 = current.modules["project-nodes"].openGenerationDeriverV1;
+
 /** 🔎️ Queries source-project normalization through the same production stages without publishing graph facts. */
 export const inferReadOnlyBuildProjectSourcesV1 = current.modules["project-assembly"].inferReadOnlyBuildProjectSourcesV1;
 
@@ -118,7 +121,7 @@ export const currentImplementationRevisionV1 = current.modules.revision.implemen
 export async function loadCurrentImplementationV1() {
   const revision = current.modules.revision.implementationRevision();
   const scope = await loader.load(revision);
-  return { revision, cacheInternals: scope.modules.internals.cacheInternals, libraryBootstrap: scope.modules.bootstrap.libraryBootstrap, createScriptInputCache: scope.modules["script-inputs"].createScriptInputCache };
+  return { revision, cacheInternals: scope.modules.internals.cacheInternals, libraryBootstrap: scope.modules.bootstrap.libraryBootstrap, createScriptInputCache: scope.modules["script-inputs"].createScriptInputCache, resolveCommandWalkV1: scope.modules["script-inputs"].resolveCommandWalkV1, createStreamingEdgesV1: scope.modules["dependency-edges"].createStreamingEdgesImplementation };
 }
 
 /** 🏛️ Supplies current roots, manifests, lock scope, and actual implementation identity behind an owned digest interface. */

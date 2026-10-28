@@ -1,0 +1,25 @@
+{
+ "name": "oracle2",
+ "code": "oracle2-g-tools/staged",
+ "lane": "oracle2-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "oracle-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- TypeScript: warm incremental `tsc` is 6-7 CPU-s per check (state file per owner and compiler). The hermetic Bazel check is 24-41 CPU-s cold and 0.4-5 CPU-s in the persistent worker (graph-free corpus of 22 edit steps, identical diagnostics; official before/after not run). Bazel actions are shared across slots through one disk cache; a different selection in a slot costs about 10 s instead of a 28 s JVM restart.",
+   "where": "after",
+   "block": "- **Proving a narrowed key (read oracle)**: a task's declared inputs are only trustworthy when a run shows that it reads nothing else (`🏗️build/📥️inputs/🔭️read-oracle`; `read-oracle --root DIR --allow-list FILE … [--backend auto|seatbelt|landlock|mirror] [--max-profiles N] -- COMMAND…`). A key of 12,000 to 26,000 declared files could not be proven because Seatbelt refuses profiles above 65,535 bytes; now directories collapse into one rule, a profile holds at most 600 rules (less when the kernel refuses), a larger plan is split into runs that each grant everything declared and refuse a share of the undeclared files (the union is as strict as the whole plan), and a plan beyond `--max-profiles` (default 4) hands over to the mirror and says so on the progress channel (output equivalence, no read trace; `--max-profiles 8` proves `print:test-viz` with the kernel). Two defects found under load are fixed: the unified log was read after a fixed 2.5 s pause, so at load 40 a denial was missed and the run reported `clean`; it is now read only after a marker denial shows that it has flushed (60 s limit, note `log:unflushed`). The `log show` window used a local time stamp that began an hour early under `bun test` (TZ=UTC) and would begin in the future west of UTC; it is `--last <n>s` now. A command started with an already aborted signal starts nothing. Planning costs 6-16 s CPU for the three huge keys (dsl-derive-rs:generate-schema-index 12,246 files, framework:test-source-text 18,965, print:test-viz 26,058); no real oracle run of them yet."
+  },
+  {
+   "id": "oracle-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- TypeScript: warmes inkrementelles `tsc` kostet 6-7 CPU-s je Prüfung (Zustandsdatei je Eigner und Compiler). Die hermetische Bazel-Prüfung kostet kalt 24-41 CPU-s und im persistenten Worker 0,4-5 CPU-s (Korpus ohne Graph mit 22 Änderungsschritten, gleiche Diagnosen; offizielles Vorher/Nachher nicht gelaufen). Bazel-Aktionen werden über einen Disk-Cache zwischen Slots geteilt; eine andere Auswahl in einem Slot kostet rund 10 s statt 28 s JVM-Neustart.",
+   "where": "before",
+   "block": "- **Eine eingeengte Schlüsselmenge beweisen (Lese-Orakel)**: die deklarierten Eingaben einer Aufgabe sind nur glaubwürdig, wenn ein Lauf zeigt, dass sie nichts anderes liest (`🏗️build/📥️inputs/🔭️read-oracle`; `read-oracle --root DIR --allow-list FILE … [--backend auto|seatbelt|landlock|mirror] [--max-profiles N] -- COMMAND…`). Ein Schlüssel mit 12.000 bis 26.000 deklarierten Dateien ließ sich nicht beweisen, weil Seatbelt Profile über 65.535 Bytes ablehnt; jetzt fallen Verzeichnisse in eine Regel zusammen, ein Profil hält höchstens 600 Regeln (weniger, wenn der Kernel ablehnt), ein größerer Plan wird auf Läufe verteilt, die je alles Deklarierte freigeben und einen Teil der nicht deklarierten Dateien verweigern (die Vereinigung ist so streng wie der ganze Plan), und ein Plan jenseits von `--max-profiles` (Standard 4) geht mit Hinweis im Fortschrittskanal an den Spiegel über (Ausgabegleichheit, keine Lese-Spur; `--max-profiles 8` beweist `print:test-viz` mit dem Kernel). Zwei unter Last gefundene Fehler sind behoben: das Unified Log wurde nach fester Pause von 2,5 s gelesen, sodass bei Last 40 eine Verweigerung verpasst und der Lauf als `clean` gemeldet wurde; es wird jetzt erst gelesen, wenn eine Marker-Verweigerung zeigt, dass es geschrieben wurde (Grenze 60 s, Hinweis `log:unflushed`). Das Fenster von `log show` nutzte einen lokalen Zeitstempel, der unter `bun test` (TZ=UTC) eine Stunde zu früh begann und westlich von UTC in der Zukunft läge; es ist jetzt `--last <n>s`. Ein Befehl, der mit einem schon abgebrochenen Signal startet, startet nichts. Die Planung kostet 6-16 s CPU für die drei riesigen Schlüssel (dsl-derive-rs:generate-schema-index 12.246 Dateien, framework:test-source-text 18.965, print:test-viz 26.058); echte Orakel-Läufe damit gab es noch nicht."
+  }
+ ]
+}

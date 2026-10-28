@@ -1,0 +1,112 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🧹️abandoned/🟦️.ts": {
+  "file": "000.ts",
+  "base": "dfcad773eaaa131532441bfe1b9b27dbeed8634246806c95f6ee12c28bc52610",
+  "new": "588d609bc2416c20b0728881e695329684821367161c5806f6d02e957059b774"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🔢️row-table/🟨️.d.mts": {
+  "file": "001.mts",
+  "base": "8854a3316cccdc594dbd20ece25ea944e45fbca8bb0c1950ed373006de944f64",
+  "new": "80fdcbab28476bd470e2364a723c74f3ed04838f1248499863cf583f1c654338"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🔢️row-table/🟨️.mjs": {
+  "file": "002.mjs",
+  "base": "279f1a6c66f80d549c2128fca1caa01503488d12dd1398a118ceb032effa07d6",
+  "new": "b7d1416fd649295d10e830101a7a4a7d900da7cf6ca264f08007d4257e172ff0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs": {
+  "file": "003.mjs",
+  "base": "4568bd8f5ed637964ecfeccba24ab69a2557b705c0dbabebc7909eb828f26ff6",
+  "new": "e71f79b1fb0530eaa720a1c0468287dacce940c8759d28677dabcc919a7e1756"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs": {
+  "file": "004.mjs",
+  "base": "8bdfa2f090b145b1f956ff2bf5871d3b1ed470d041033821c7281a7a9b39e314",
+  "new": "0d70c73e7d0ee5b20ba822dbc1705a02289b80dd7e79adc7667b7810c854c16a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts": {
+  "file": "005.ts",
+  "base": "e363ce4335fd3d1a0f55873a32790392629a9fad325ba2c3d823e7e42e999ee4",
+  "new": "0a165e909fb512bde7a679fdb2392cd96b01c7f787f89448d10750c5730a85a0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs": {
+  "file": "006.mjs",
+  "base": "d77e709a51243bd707bc1bd4820f15787ec06ffacbe20c491739ac55bc22b1e8",
+  "new": "cbeb814f9c30362e30e7d79e5761466ec77d42e4173013dbb4a742c28e382ffd"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🟨️.mjs": {
+  "file": "007.mjs",
+  "base": "14ae0c670b7bcebe586f2c4fbdb57262da10788e80dd7babeb0e27e7300284b5",
+  "new": "1203c0870e763cdf0ac9fccf11a7057095a00bfa1c7b8cf2d22c6e58a089518c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🟨️.mjs": {
+  "file": "008.mjs",
+  "base": "31c81f07246c4d9141af5f7e5b62e78e1983b86be0b274a6bfa7527fafc51b9e",
+  "new": "6bc9b173c33c9f0a12b7122638687f24cbe64d2410bb0da811f72d9bd6b17419"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧳️carry/🟦️.ts": {
+  "file": "009.ts",
+  "base": "ac1d0e17cf3f728d53169e699f091eb891b17d8f4080d63fddf9c18e3791847c",
+  "new": "a5a83ad176c7b24ade9cd3f86a1980f1ba7226dfa524e160c90bcf480efc2fb1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧹️retention/🟦️.ts": {
+  "file": "010.ts",
+  "base": "d6cfa51c7c093c8a03970712ad1ac01b6baf251066233a1f780006b61375eafb",
+  "new": "1faea609b3fe881cdf19e9fc901375160f5a78839b0ca8c2b1556c1dacf10203"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🏃️runner/🟦️.ts": {
+  "file": "011.ts",
+  "base": "e86abe0ff013ab284c6d300adbb192757f655ebcaef23aa19a7634c5005c0e2c",
+  "new": "7cf2fe720639a7c7be67e48d41fb1721cd883233abd355d37ea843a14ffd9651"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🚀️launch/🟦️.ts": {
+  "file": "012.ts",
+  "base": "25e756e6bfdab6852162a16e90cc517c74f425035145857b427753c996a277c8",
+  "new": "c4e73442a63f90900a2990e96e1a0a0bbe6314d44f040cc77e198afb0e9383ae"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧪️tests/🐍️.py": {
+  "file": "013.py",
+  "base": "7afd4f99e9a079c8bea1ebb6e5fa8695bb5c33f6730e55f0a8c6e4a77fd8c0f5",
+  "new": "f22e33da7e29210eef1c5ba1316eed982b461df1ba4fe2df13b514881bac8296"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧪️tests/✏️edit/🟦️.ts": {
+  "file": "014.ts",
+  "base": "024c7ba3102369883bb0a9063dfa2f6d99e95d94c7af42e6ecb938857bd5d499",
+  "new": "0528e6b2d836004c2d802c0f1e5b62a241d63f55383dd1384bc557b153674377"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔭️watch/🦀️rust/🦀️.rs": {
+  "file": "015.rs",
+  "base": "bcd550c288ed1f30d6023cda33fa6147574d071ea1cfbdebfd590413eab8c452",
+  "new": "bfbb777f8fc6310d6a680618f35ac3c127ca8863b9283889fbd2816af1eaa503"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/🟨️.d.mts": {
+  "file": "016.mts",
+  "base": "fd5e9ca50248b081f6e2031a45222a53bd0d216c33d92b08fcba32d774e83697",
+  "new": "3842c8d16900333d8bd3bbfea64aac3ca79ae78f5edf6306bd3d476347706833"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🗃️state/🟨️.mjs": {
+  "file": "017.mjs",
+  "base": "a85249074b7d6743d4ac2384bb5ace41b2e3b246aab7f9a80e291aa2351ebf6a",
+  "new": "65591238b7cc0b35297526e21361d43e4af94b554802e547c4b4a825fa243102"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.d.mts": {
+  "file": "018.mts",
+  "base": "c3a4fa0e45085885a96c16007e6603755fb8e6761cc717b6a3f3ff03881e7c4d",
+  "new": "c6e0cebcb89c6b338f6083c57c7cb14733091c1cb407715659505f263f86bfb7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts": {
+  "file": "019.ts",
+  "base": "cade0e1cdd638b110d557784046f9f477efaa082281e83d9bb792749dfa9fd91",
+  "new": "54d6140bf0f15c8202e6a55447765ddbcc1ca2c5afa55338fcec6cf87b474ae1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧰️support/🟦️.ts": {
+  "file": "020.ts",
+  "base": "cb24bf30c663c56f598d3b58006660ed495c4c62eb915e0ce1d50bfbbbc4a257",
+  "new": "e499722ec758be4266d07bfea656fb64e22fbfb00f5893fbd3a10ef56a485a28"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚢️fleet-status/🧪️tests/🐍️.py": {
+  "file": "021.py",
+  "base": "89a7b361e047325e0ece43b19c2d8080d597a09a1f3abfcbd9d61edf1d3ddfe4",
+  "new": "062092517b3f56d01eeae674862bce5fbd14fb3e58851c8175c96603ce83925f"
+ }
+}

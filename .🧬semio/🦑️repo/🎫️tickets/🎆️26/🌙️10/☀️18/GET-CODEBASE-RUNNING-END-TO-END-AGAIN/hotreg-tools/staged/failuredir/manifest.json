@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🟦️.ts": {
+  "file": "f000",
+  "base": "a8c86426025fca6bbddcffabb051498a5812e4710b509291dff73911b3c2a787",
+  "new": "488607d3c1156e2a101c4672a3a7d221e036dd302c09fa271939ff6aa152d16c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧬️schema/🔣️.json": {
+  "file": "f001",
+  "base": "4f02d927f536833c8b6dcc362763605fb8384e95cd7bfefbad77742ca2a63009",
+  "new": "b13740dc1e0ca607d285dae6f0a6bd42a619f31a42e3a7f060e0e4619092f796"
+ },
+ "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md": {
+  "file": "f002",
+  "base": "7a73f1dde40584daab269ff162b4982c93cd308cc00fe5b7c825a79a983e9a28",
+  "new": "4c72b08be41ae61952173b8001392a3356a7208807337d8840b7f089cd765321"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🧪️tests/🫥️executor-owned/🟦️.ts": {
+  "file": "f003",
+  "base": null,
+  "new": "182f983b1bf457888d8a4f8415b24e92e0bd506fa70bf3411ea5d600fdc83f8d"
+ }
+}

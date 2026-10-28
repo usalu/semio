@@ -1,0 +1,65 @@
+{
+ "id": "nxfix-core",
+ "files": [
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🔣️policy.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxfix-g-tools/staged/core/files/f00",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxfix-core/f000"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxfix-g-tools/staged/core/files/f01",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxfix-core/f001"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🧾️refusals/🔣️.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxfix-g-tools/staged/core/files/f02",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxfix-core/f002"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧬️schema/🧾️refusals.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxfix-g-tools/staged/core/files/f03",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxfix-core/f003"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧾️refusals/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxfix-g-tools/staged/core/files/f04",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxfix-core/f004"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🧪️tests/🐍️order.py",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxfix-g-tools/staged/core/files/f05",
+   "base": null
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🧪️tests/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxfix-g-tools/staged/core/files/f06",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxfix-core/f005"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxfix-g-tools/staged/core/files/f07",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxfix-core/f006"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🧪️tests/🐍️.py",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxfix-g-tools/staged/core/files/f08",
+   "base": null
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🧪️tests/🔣️.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxfix-g-tools/staged/core/files/f09",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxfix-core/f007"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🧪️tests/🟦️.ts",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxfix-g-tools/staged/core/files/f10",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxfix-core/f008"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🧬️schema/🔣️.json",
+   "mine": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/nxfix-g-tools/staged/core/files/f11",
+   "base": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/backlog-tools/merge/base0/nxfix-core/f009"
+  }
+ ]
+}

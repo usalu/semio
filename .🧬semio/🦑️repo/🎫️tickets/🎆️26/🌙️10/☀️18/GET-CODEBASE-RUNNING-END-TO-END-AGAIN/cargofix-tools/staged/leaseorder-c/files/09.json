@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "port": {"file": "../../🟦️.ts", "function": "repositoryCargoCompilerInputsV1", "writer": "withCompilerWorkspaceSharedWriteV1", "property": "writer"},
+  "consumer": {
+    "file": "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+    "build": "buildCargoArtifacts", "capture": "captureCargoArtifacts", "lease": "acquireCargoTargetRecipeV1", "enter": "withWriter",
+    "insideWriter": ["withCompilerCapacityScopeV1", "spawn"],
+    "afterWriter": ["stageArtifacts", "withCompletedCargoArtifactCaptureV1"]
+  }
+}

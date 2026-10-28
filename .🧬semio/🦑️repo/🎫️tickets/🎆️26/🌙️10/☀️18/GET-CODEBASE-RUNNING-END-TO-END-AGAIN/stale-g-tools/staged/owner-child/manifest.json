@@ -1,0 +1,57 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": {
+  "file": "f00",
+  "base": "7454142d781eada4e4cbf4ab3a53c7dfeea665c5612d50a051a9e2769fe67447",
+  "new": "287d772894570a7497977c864a4f3d6e06b62a2ed3332f7f2e744c9a68be850d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.d.mts": {
+  "file": "f01",
+  "base": "506dc46b5dd4cf17d7cfea3ebea9b910a23fe361727423a737d09ac2642602f4",
+  "new": "4b6eef0c2d8698a47285670e4e19ff8ae70031c025fac14e3f6ab5b990591f27"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔖️stamps/🧬️schema/🔣️.json": {
+  "file": "f02",
+  "base": "27cff5adb66679ff4a3ba9db58075ee9a2ff4f28f1c890a98bd15b474b22160c",
+  "new": "e5f7baeb16709772baf7d8fdd57c38447a24f9e0ddde49cdb765acef1fe1ab19"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🔖️output-stamps/🔣️.json": {
+  "file": "f03",
+  "base": "440b5a38c023950c3467b7a8feeab7889355ebde6771accf7a1dd90db40c85e7",
+  "new": "677a78bae1fc85cdf9033fae8a532b1a5e8e9c906e58a35682be849f9677346e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🔖️output-stamps/🟦️.ts": {
+  "file": "f04",
+  "base": "9ef154a6ffe58d68e7b3e49a48d334ace799fd64351359eecf9ba4967591c4e4",
+  "new": "4588da2a25fe40decfdffe718182f12ed7f9998fbc16153e01e7f3c57693f4da"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🪆️owner-child-closure/🔣️.json": {
+  "file": "f05",
+  "base": null,
+  "new": "4de17216685172186b22823ad1bfc8bfced0eab9bc9406896d0d032e8ac5eb36"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🪆️owner-child-closure/🟦️.ts": {
+  "file": "f06",
+  "base": null,
+  "new": "74b67d87eaa47f7440eea2d74b153ede3150289124064b873c377ef00d8b5218"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🪆️owner-child-closure/🧬️schema/🔣️.json": {
+  "file": "f07",
+  "base": null,
+  "new": "3d2b840b12133e9bf56e98dc2ce24fb9efa7bd729fffcc82a9ddabb7ac07a504"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🧭️walk-edits/🔣️.json": {
+  "file": "f08",
+  "base": null,
+  "new": "ac4e0e0aa24ae23be45229505fb7707fb25773b0519989c386fd18719e3ebbbc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🧭️walk-edits/🟦️.ts": {
+  "file": "f09",
+  "base": null,
+  "new": "f74e366c08d399fd611983ff6b970fef7b116a479a1f8cb0caf767d09e1bca0b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🧭️walk-edits/🧬️schema/🔣️.json": {
+  "file": "f10",
+  "base": null,
+  "new": "12a06677c6b6bb68f5aab62898b1bf0356f16672c5a7538959051513ff4d765e"
+ }
+}

@@ -1,0 +1,2 @@
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🧪️tests/🟦️.ts|the product catalogue holds the brief's budgets for the dashboard, the architecture course and print, and every edited file exists
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🟦️.ts|the real CLI prints the own help of a command, also for preflight, without running it

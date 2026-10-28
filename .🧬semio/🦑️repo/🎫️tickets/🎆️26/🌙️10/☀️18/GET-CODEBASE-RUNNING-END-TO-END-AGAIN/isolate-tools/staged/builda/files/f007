@@ -1,0 +1,43 @@
+import{writeSync}from"node:fs";
+import assert from"node:assert/strict";
+import{createHash}from"node:crypto";
+import{createRequire}from"node:module";
+import * as fsModule from"node:fs";
+import{spyOn}from"bun:test";
+import{chmodSync,lstatSync,existsSync,linkSync,mkdirSync,readFileSync,renameSync,rmSync,symlinkSync,writeFileSync}from"node:fs";
+import{dirname,join,resolve}from"node:path";
+import{brotliCompressSync,brotliDecompressSync}from"node:zlib";
+import{receiveScriptProcessInvocation,createIssuedResourceControlV1,scriptInvocationEnvironment,withRequestedIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{withRepositoryBuildGraphPublicationFixtureV1}from"../../../../📥️inputs/💾️storage/🟨️.mjs";
+import{withRepositoryBuildGraphConsumerV1,repositoryBuildGraphWriterDirectoryV1}from"../../../../📥️inputs/💾️storage/🟨️.mjs";
+import{observeInference,observedFs,readInferenceHeaderV1,inferenceObservationBlockPathV1,releaseInferenceMemoryV1}from"../../../🟨️.mjs";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
+import corpus from"../🧫️cases.json";
+import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
+const workspace=resolve(repository.root),hash=(bytes:Uint8Array|string)=>createHash("sha256").update(bytes).digest("hex"),bounded=(path:string)=>{assert(path.length<=256);return path;},nativeFs=createRequire(import.meta.url)("node:fs")as typeof import("node:fs");
+/** 🧷️ Interposes one `node:fs` member for every module of this process through the module namespace: Bun binds builtin ESM imports when `node:fs` is first linked and `syncBuiltinESMExports` never rebinds them, while a namespace spy is seen by every importer. */
+const interposedFsV1:{mockRestore():void}[]=[];
+function interposeFsV1<K extends "lstatSync"|"openSync"|"fstatSync"|"closeSync">(name:K,body:(typeof import("node:fs"))[K]):void{interposedFsV1.push(spyOn(fsModule,name).mockImplementation(body as never));}
+/** 🧽️ Restores every interposed `node:fs` member, newest first. */
+function restoreFsV1():void{while(interposedFsV1.length)interposedFsV1.pop()!.mockRestore();}
+
+/** 🧱️ Executes one admitted physical block refusal and preserves the actual Original terminal primary. */
+export async function runScriptProgram():Promise<void>{
+ const[fault]=process.argv.slice(2);if(!corpus.faults.some(row=>row.fault===fault))throw Error("Closed block child fault required");let calls=0,warm=false,readerFailed=false,readerFailure:unknown,terminal:unknown,failed=false,mutated=false,evidenceRetained=false,sameCancellation=false,fifoSupported=false,secondaryClosed=false,republished=false;const actualOpen=nativeFs.openSync,actualClose=nativeFs.closeSync;
+let reported=false;const report=():void=>{if(reported)return;reported=true;writeSync(1,JSON.stringify({version:1,fault,calls,warm,readerFailed,samePrimary:Object.is(terminal,readerFailure),code:terminal&&typeof terminal==="object"&&"code"in terminal?String(terminal.code):null,mutated,evidenceRetained,sameCancellation,fifoSupported,secondaryClosed,republished,message:terminal instanceof Error?terminal.message:String(terminal)})+"\n");};process.once("exit",report);
+ try{await receiveScriptProcessInvocation(process.env,async original=>{try{const phase=createIssuedResourceControlV1(original,"observation:block-child",180000);await withRepositoryBuildGraphPublicationFixtureV1(workspace,original,phase,async fixture=>fixture.withWriter(async(_store,control)=>{
+  const directory=join(repositoryBuildGraphWriterDirectoryV1(workspace,"inference"),"np");mkdirSync(directory,{recursive:true});const cachePath=bounded(join(directory,"c".repeat(24)+".json")),compute=()=>({generation:++calls,bytes:observedFs.readFileSync(join(workspace,"Cargo.toml")).length}),run=()=>observeInference({cachePath,key:"physical-block"},compute);await run();await run();assert.equal(calls,1);const text=brotliDecompressSync(readFileSync(cachePath)).toString("utf8"),newline=text.indexOf("\n"),header=JSON.parse(text.slice(0,newline));assert(header.blocks.length>0);readInferenceHeaderV1(cachePath);warm=true;releaseInferenceMemoryV1();let blockPath=bounded(inferenceObservationBlockPathV1(directory,header.blocks[0]));const bytes=readFileSync(blockPath);
+  if(fault==="missing")rmSync(blockPath);
+  if(fault==="packed")writeFileSync(blockPath,"invalid compressed bytes");
+  if(fault==="hash")writeFileSync(blockPath,brotliCompressSync(Buffer.from("[]")));
+  if(fault==="contract"||fault==="utf8"){const invalid=fault==="utf8"?Buffer.concat([Buffer.from('[ {"kind":"exists","path":"'),Buffer.from([255]),Buffer.from('","fact":true} ]')]):Buffer.from(JSON.stringify([{kind:"file",path:"invalid",fact:true,unexpected:true}])),digest=hash(invalid);blockPath=bounded(inferenceObservationBlockPathV1(directory,digest));writeFileSync(blockPath,brotliCompressSync(invalid));header.blocks[0]=digest;writeFileSync(cachePath,brotliCompressSync(Buffer.from(JSON.stringify(header)+text.slice(newline))));}
+  if(fault==="symlink"){rmSync(blockPath);const target=bounded(blockPath+"-t");writeFileSync(target,bytes);symlinkSync(target,blockPath);}
+  if(fault==="hardlink")linkSync(blockPath,bounded(blockPath+"-h"));
+  if(fault==="fifo"){const fifo=bounded(blockPath+"-f");if(process.platform==="win32")mkdirSync(fifo);else{const result=await captureOwnedCommandResultV1("mkfifo",[fifo],workspace,{control,env:scriptInvocationEnvironment(original,process.env),output:{maximumBytes:8192,maximumLines:64}});assert.equal(result.status,0,result.stderr);fifoSupported=true;}interposeFsV1("openSync",((target:import("node:fs").PathLike,...args:unknown[])=>{if(!mutated&&String(target)===blockPath){mutated=true;rmSync(blockPath);renameSync(fifo,blockPath);}return Reflect.apply(actualOpen,nativeFs,[target,...args]);})as typeof nativeFs.openSync);}
+  if(["ancestor-replaced","ancestor-mode","leaf-replaced","cancel","cancel-close"].includes(fault!)){interposeFsV1("openSync",((target:import("node:fs").PathLike,...args:unknown[])=>{const descriptor=Reflect.apply(actualOpen,nativeFs,[target,...args]);if(!mutated&&String(target)===blockPath){mutated=true;if(fault==="cancel"||fault==="cancel-close"){if(fault==="cancel-close"){interposeFsV1("closeSync",((value:number)=>{actualClose(value);if(value===descriptor&&!secondaryClosed){secondaryClosed=true;throw Error("Actual close secondary");}})as typeof nativeFs.closeSync);}process.emit("SIGINT");}else if(fault==="ancestor-mode"){const parent=dirname(blockPath),mode=lstatSync(parent).mode;chmodSync(parent,mode^0o200);}else if(fault==="leaf-replaced"){renameSync(blockPath,bounded(blockPath+"-o"));writeFileSync(blockPath,bytes);}else{const parent=dirname(blockPath);renameSync(parent,bounded(parent+"-o"));mkdirSync(parent);writeFileSync(blockPath,bytes);}}return descriptor;})as typeof nativeFs.openSync);}
+  const attempt=async()=>{try{await run();}catch(error){readerFailed=true;readerFailure=error;sameCancellation=Object.is(error,control.signal?.reason);evidenceRetained=existsSync(blockPath);throw error;}};if(fault==="deadline")await withRequestedIssuedResourceControlV1(control,500,async expired=>withRepositoryBuildGraphConsumerV1(workspace,expired,async()=>{await new Promise(resolve=>setTimeout(resolve,600));await attempt();}));else await attempt();
+  if(!readerFailed)republished=readInferenceHeaderV1(cachePath).blocks.every((digest:string)=>hash(brotliDecompressSync(readFileSync(inferenceObservationBlockPathV1(directory,digest))))===digest);
+ }));}catch(error){failed=true;terminal=error;throw error;}});}catch(error){failed=true;terminal=error;}finally{restoreFsV1();}
+ report();process.exitCode=failed?1:0;
+}

@@ -1,0 +1,641 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "Graph generation store",
+ "definitions": {
+  "Identity": {
+   "const": "graph-generations-v4"
+  },
+  "Policy": {
+   "const": {
+    "version": 1,
+    "pointer": "current.json",
+    "manifests": "m",
+    "fragments": "o",
+    "indexes": "x",
+    "frontiers": "f",
+    "envOwner": "@env",
+    "policies": [
+     "fresh",
+     "current"
+    ],
+    "retainGenerations": 4,
+    "graceMilliseconds": 600000,
+    "verifyChunkRows": 4096,
+    "verifyParallelChunks": 4,
+    "bisectBudgetCalls": 64,
+    "racyMilliseconds": 2000,
+    "readConcurrency": 32,
+    "publishWaitMilliseconds": 30000,
+    "pollMaximumMilliseconds": 250,
+    "maximumOwners": 65536,
+    "maximumManifestBytes": 134217728,
+    "maximumFragmentBytes": 67108864,
+    "maximumIndexBytes": 536870912,
+    "compactionFactor": 2,
+    "compactionFloor": 1024,
+    "compactionGrowth": 1.25,
+    "compactionDuplication": 1.5,
+    "brotliQuality": 5,
+    "brotliWindow": 22,
+    "reasonRows": 16,
+    "stampVerification": true,
+    "waitNoticeMilliseconds": 20000,
+    "sweepWaitMilliseconds": 120000,
+    "hintMaximumAgeMilliseconds": 1000,
+    "textMaximumCharacters": 4096,
+    "reasonMaximumCharacters": 256,
+    "rowKeyTextLimit": 128,
+    "leaseStaleMilliseconds": 600000,
+    "expansionMaximumProjects": 32,
+    "expansionMaximumBytes": 16777216,
+    "withheldReasonCharacters": 2048,
+    "pathDisplayCharacters": 160
+   }
+  },
+  "Messages": {
+   "const": {
+    "en": {
+     "current": "graph: serving generation {generation} without verification (graph policy current)",
+     "verified": "graph: generation {generation} verified, {checked} facts checked",
+     "waiting": "graph: waiting for the graph build of a peer ({seconds} s in the queue, generation {generation} was the newest when this command queued)",
+     "covered": "graph: generation {generation} was sealed by a peer after this command began and already covers it, nothing is checked again",
+     "pinned": "graph: generation {generation} pinned by the invoking build serves this command ({count} projects), no queue and no check of the live tree",
+     "building": "graph: refreshing {dirty} projects (generation {generation})",
+     "published": "graph: generation {generation} published, {computed} projects refreshed in {seconds} s",
+     "indexed": "graph: fact index of generation {generation}: {rows} facts of {owners} projects, {expanded} MB expanded ({percent} % of the {limit} MB limit), {packed} MB packed",
+     "swept": "graph: {removed} superseded observation blocks removed ({megabytes} MB, {headers} records kept their blocks)",
+     "closure": "graph: {count} projects of the closure verified, no other project read",
+     "cold": "graph: no usable generation ({reason}), building the first one",
+     "stale": "graph: serving generation {generation} built by another implementation (graph policy current)",
+     "planned": "graph: {count} projects planned by a child process that has exited",
+     "summary": "graph: {rows} stale facts ({kinds}) leave {projects} projects stale",
+     "reason": "graph: {project} is stale: {why}",
+     "reasonStamp": "the inference protocol of {inferrer} changed from {recorded} to {current}",
+     "reasonInput": "the input file {path} changed",
+     "reasonListing": "the entries of the directory {path} changed",
+     "reasonData": "the declared data file {path} changed",
+     "reasonAnalysis": "the source analysis of {path} changed",
+     "reasonFact": "the recorded {kind} fact of {path} changed",
+     "reasonDerived": "the derived result of {path} changed",
+     "cutoff": "graph: {questions} derived results asked again after {rows} stale facts: {held} unchanged, {changed} changed",
+     "reasonMembership": "the workspace file {path} was {change}",
+     "reasonMore": "graph: {count} more stale inputs are not listed",
+     "withheldDependency": "graph: {project} is withheld: {source} depends on projects that this graph snapshot does not contain ({target}), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of {project}",
+     "withheldSource": "graph: {project} is withheld: {source} does not parse (sha256 {sha}); fix that file and run the command again",
+     "changeAdded": "added",
+     "changeRemoved": "removed",
+     "changeChanged": "changed",
+     "merged": "graph: generation {generation} published, {computed} projects refreshed in {seconds} s and merged onto the generation a peer published meanwhile ({theirs} projects of peers kept)"
+    },
+    "de": {
+     "current": "Graph: Generation {generation} wird ohne Prüfung geliefert (Graph-Richtlinie current)",
+     "verified": "Graph: Generation {generation} geprüft, {checked} Fakten kontrolliert",
+     "waiting": "Graph: wartet auf den Graph-Aufbau eines anderen Prozesses ({seconds} s in der Warteschlange, Generation {generation} war beim Einreihen die neueste)",
+     "covered": "Graph: Generation {generation} wurde von einem anderen Prozess nach dem Beginn dieses Befehls versiegelt und deckt ihn bereits ab, nichts wird erneut geprüft",
+     "pinned": "Graph: die vom aufrufenden Build angeheftete Generation {generation} bedient diesen Befehl ({count} Projekte), ohne Warteschlange und ohne Prüfung des Arbeitsbaums",
+     "building": "Graph: {dirty} Projekte werden erneuert (Generation {generation})",
+     "published": "Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert",
+     "indexed": "Graph: Faktenindex der Generation {generation}: {rows} Fakten von {owners} Projekten, {expanded} MB entpackt ({percent} % der Grenze von {limit} MB), {packed} MB gepackt",
+     "swept": "Graph: {removed} überholte Beobachtungsblöcke entfernt ({megabytes} MB, {headers} Aufzeichnungen behalten ihre Blöcke)",
+     "closure": "Graph: {count} Projekte der Hülle geprüft, kein weiteres Projekt gelesen",
+     "cold": "Graph: keine brauchbare Generation ({reason}), die erste wird aufgebaut",
+     "stale": "Graph: Generation {generation} stammt von einer anderen Implementierung und wird geliefert (Graph-Richtlinie current)",
+     "planned": "Graph: {count} Projekte von einem beendeten Kindprozess geplant",
+     "summary": "Graph: {rows} veraltete Fakten ({kinds}) lassen {projects} Projekte veralten",
+     "reason": "Graph: {project} ist veraltet: {why}",
+     "reasonStamp": "das Inferenzprotokoll von {inferrer} wechselte von {recorded} zu {current}",
+     "reasonInput": "die Eingabedatei {path} hat sich geändert",
+     "reasonListing": "die Einträge des Verzeichnisses {path} haben sich geändert",
+     "reasonData": "die deklarierte Datendatei {path} hat sich geändert",
+     "reasonAnalysis": "die Quellanalyse von {path} hat sich geändert",
+     "reasonFact": "der aufgezeichnete Fakt {kind} von {path} hat sich geändert",
+     "reasonDerived": "das abgeleitete Ergebnis von {path} hat sich geändert",
+     "cutoff": "Graph: {questions} abgeleitete Ergebnisse nach {rows} veralteten Fakten erneut abgefragt: {held} unverändert, {changed} verändert",
+     "reasonMembership": "die Arbeitsbereichsdatei {path} wurde {change}",
+     "reasonMore": "Graph: {count} weitere veraltete Eingaben werden nicht aufgelistet",
+     "withheldDependency": "Graph: {project} wird zurückgehalten: {source} hängt von Projekten ab, die dieser Graph-Schnappschuss nicht enthält ({target}); sie wurden während des Graph-Aufbaus angelegt oder entfernt; den Befehl erneut ausführen, um sie aufzunehmen, oder sie aus den nativen Quellen von {project} entfernen",
+     "withheldSource": "Graph: {project} wird zurückgehalten: {source} lässt sich nicht lesen (sha256 {sha}); die Datei korrigieren und den Befehl erneut ausführen",
+     "changeAdded": "hinzugefügt",
+     "changeRemoved": "entfernt",
+     "changeChanged": "geändert",
+     "merged": "Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert und auf die Generation eines anderen Prozesses zusammengeführt ({theirs} Projekte anderer Prozesse übernommen)"
+    }
+   }
+  },
+  "Hex": {
+   "type": "string",
+   "pattern": "^[a-f0-9]{64}$"
+  },
+  "Pointer": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "generation",
+    "manifest",
+    "parent"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "generation": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "manifest": {
+     "anyOf": [
+      {
+       "type": "string",
+       "pattern": "^[a-f0-9]{64}$"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "parent": {
+     "anyOf": [
+      {
+       "type": "string",
+       "pattern": "^[a-f0-9]{64}$"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 256
+    },
+    "verified": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "atMs",
+      "count",
+      "owners"
+     ],
+     "properties": {
+      "atMs": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      },
+      "count": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 65536
+      },
+      "owners": {
+       "type": "string"
+      }
+     }
+    }
+   }
+  },
+  "OwnerRow": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "root",
+    "kind",
+    "fragment",
+    "bytes",
+    "edgesEnv",
+    "targets"
+   ],
+   "properties": {
+    "root": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 4096
+    },
+    "kind": {
+     "enum": [
+      "project",
+      "unavailable"
+     ]
+    },
+    "fragment": {
+     "type": "string",
+     "pattern": "^[a-f0-9]{64}$"
+    },
+    "bytes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 67108864
+    },
+    "edgesEnv": {
+     "type": "string",
+     "pattern": "^[a-f0-9]{64}$"
+    },
+    "targets": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "config": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 4096
+    },
+    "nativeRoot": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 4096
+    },
+    "tag": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 64
+    }
+   }
+  },
+  "Manifest": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "generation",
+    "parent",
+    "identity",
+    "implementation",
+    "env",
+    "membership",
+    "frontier",
+    "factIndex",
+    "global",
+    "owners",
+    "built"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "generation": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "parent": {
+     "anyOf": [
+      {
+       "type": "string",
+       "pattern": "^[a-f0-9]{64}$"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "identity": {
+     "type": "string",
+     "pattern": "^[a-f0-9]{64}$"
+    },
+    "implementation": {
+     "type": "string",
+     "pattern": "^[a-f0-9]{64}$"
+    },
+    "env": {
+     "type": "string",
+     "pattern": "^[a-f0-9]{64}$"
+    },
+    "membership": {
+     "type": "string",
+     "pattern": "^[a-f0-9]{64}$"
+    },
+    "frontier": {
+     "anyOf": [
+      {
+       "type": "string",
+       "pattern": "^[a-f0-9]{64}$"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "factIndex": {
+     "type": "string",
+     "pattern": "^[a-f0-9]{64}$"
+    },
+    "global": {
+     "type": "string",
+     "pattern": "^[a-f0-9]{64}$"
+    },
+    "owners": {
+     "type": "object",
+     "maxProperties": 65536,
+     "additionalProperties": {
+      "$ref": "#/definitions/OwnerRow"
+     }
+    },
+    "built": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "base",
+      "dirty"
+     ],
+     "properties": {
+      "kind": {
+       "enum": [
+        "cold",
+        "delta",
+        "refresh"
+       ]
+      },
+      "base": {
+       "anyOf": [
+        {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 9007199254740991
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "dirty": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     }
+    }
+   }
+  },
+  "Fragment": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "name",
+    "root",
+    "kind",
+    "node",
+    "edges",
+    "edgesEnv",
+    "targets"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 4096
+    },
+    "root": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 4096
+    },
+    "kind": {
+     "enum": [
+      "project",
+      "unavailable"
+     ]
+    },
+    "node": {},
+    "edges": {
+     "type": "array"
+    },
+    "edgesEnv": {
+     "type": "string",
+     "pattern": "^[a-f0-9]{64}$"
+    },
+    "targets": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "config": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 4096
+    },
+    "nativeRoot": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 4096
+    }
+   }
+  },
+  "Row": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "kind",
+    "path",
+    "fact"
+   ],
+   "properties": {
+    "kind": {
+     "type": "string",
+     "minLength": 1
+    },
+    "path": {
+     "type": "string"
+    },
+    "fact": {}
+   }
+  },
+  "FactClass": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "r",
+    "o"
+   ],
+   "properties": {
+    "r": {
+     "type": "array",
+     "items": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+     }
+    },
+    "o": {
+     "type": "array",
+     "items": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+     }
+    }
+   }
+  },
+  "FactIndex": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "owners",
+    "rows",
+    "classes"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "owners": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "rows": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Row"
+     }
+    },
+    "classes": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/FactClass"
+     }
+    }
+   }
+  },
+  "Frontier": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "capturedAt",
+    "directories",
+    "members"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "capturedAt": {
+     "type": "number"
+    },
+    "directories": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3
+     }
+    },
+    "members": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2
+     }
+    }
+   }
+  },
+  "DocumentByteLimit": {
+   "type": "integer",
+   "minimum": 1,
+   "maximum": 536870912
+  },
+  "PolicyDescriptions": {
+   "const": {
+    "en": {
+     "version": "The version of the policy.",
+     "pointer": "The name of the pointer file to the newest generation.",
+     "manifests": "The directory of the generation manifests.",
+     "fragments": "The directory of the owner fragments.",
+     "indexes": "The directory of the fact indexes.",
+     "frontiers": "The directory of the discovery frontiers.",
+     "envOwner": "The pseudo owner that holds the facts about the environment.",
+     "policies": "The graph policies a command may name.",
+     "retainGenerations": "How many sealed generations stay besides the newest.",
+     "graceMilliseconds": "How long a superseded generation stays before the sweep may remove it.",
+     "verifyChunkRows": "How many fact rows one verification call checks.",
+     "verifyParallelChunks": "How many verification chunks run at once.",
+     "bisectBudgetCalls": "The most calls the bisection of a failing chunk may spend.",
+     "racyMilliseconds": "A directory stamp this close to its capture cannot vouch for unchanged names (racy-git rule).",
+     "readConcurrency": "How many files of the generation store are read at once (a frontier check runs twice as many).",
+     "publishWaitMilliseconds": "How long a publication waits for the lease of a peer.",
+     "pollMaximumMilliseconds": "The longest pause between two polls of a lease.",
+     "maximumOwners": "The most owners one generation holds.",
+     "maximumManifestBytes": "The most bytes of one manifest (128 MiB).",
+     "maximumFragmentBytes": "The most bytes of one fragment (64 MiB).",
+     "maximumIndexBytes": "The most bytes of one fact index (512 MiB).",
+     "compactionFactor": "An index is refined when it holds more than this many classes per owner above the floor and has grown by the growth factor.",
+     "compactionFloor": "The number of classes and of row ids an index may hold above its factor before it is refined.",
+     "compactionGrowth": "The growth of the number of classes against the index before that, together with the factor, makes an index refined.",
+     "compactionDuplication": "An index is also refined when its row ids exceed the floor and this many times its rows.",
+     "brotliQuality": "The Brotli quality of persisted documents.",
+     "brotliWindow": "The Brotli window size (log2) of persisted documents.",
+     "reasonRows": "How many rows name the reason a generation is refreshed.",
+     "stampVerification": "Whether directory stamps shorten the verification.",
+     "waitNoticeMilliseconds": "After how long a waiting command says so.",
+     "sweepWaitMilliseconds": "How long the sweep of superseded observation blocks waits for the generation lease.",
+     "hintMaximumAgeMilliseconds": "The oldest age at which the invoking build's hint is still trusted.",
+     "textMaximumCharacters": "The most characters of a bounded text field of a generation document.",
+     "reasonMaximumCharacters": "The most characters of the reason a generation records.",
+     "rowKeyTextLimit": "A row key longer than this many characters is replaced by its digest.",
+     "leaseStaleMilliseconds": "After how long the lock of a silent owner is taken over.",
+     "expansionMaximumProjects": "The most projects the expansion of one command may add by default.",
+     "expansionMaximumBytes": "The most bytes the expansion of one command may add by default (16 MiB).",
+     "withheldReasonCharacters": "The most characters of the reason a project is withheld.",
+     "pathDisplayCharacters": "The most characters of a path shown in a reason."
+    },
+    "de": {
+     "version": "Die Version der Richtlinie.",
+     "pointer": "Der Name der Zeigerdatei auf die neueste Generation.",
+     "manifests": "Das Verzeichnis der Generationsmanifeste.",
+     "fragments": "Das Verzeichnis der Eigentuemer-Fragmente.",
+     "indexes": "Das Verzeichnis der Faktenindizes.",
+     "frontiers": "Das Verzeichnis der Entdeckungsfronten.",
+     "envOwner": "Der Pseudo-Eigentuemer, der die Fakten ueber die Umgebung haelt.",
+     "policies": "Die Graph-Richtlinien, die ein Befehl nennen darf.",
+     "retainGenerations": "Wie viele versiegelte Generationen neben der neuesten bleiben.",
+     "graceMilliseconds": "Wie lange eine abgeloeste Generation bleibt, bevor der Sweep sie entfernen darf.",
+     "verifyChunkRows": "Wie viele Faktenzeilen ein Pruefaufruf kontrolliert.",
+     "verifyParallelChunks": "Wie viele Pruefabschnitte gleichzeitig laufen.",
+     "bisectBudgetCalls": "Die meisten Aufrufe, die das Halbieren eines fehlerhaften Abschnitts ausgeben darf.",
+     "racyMilliseconds": "Ein Verzeichnisstempel so kurz nach seiner Erfassung kann nicht fuer unveraenderte Namen buergen (Racy-Git-Regel).",
+     "readConcurrency": "Wie viele Dateien des Generationsspeichers gleichzeitig gelesen werden (eine Frontpruefung laeuft doppelt so viele).",
+     "publishWaitMilliseconds": "Wie lange eine Veroeffentlichung auf die Lease eines Peers wartet.",
+     "pollMaximumMilliseconds": "Die laengste Pause zwischen zwei Abfragen einer Lease.",
+     "maximumOwners": "Die meisten Eigentuemer, die eine Generation haelt.",
+     "maximumManifestBytes": "Die meisten Bytes eines Manifests (128 MiB).",
+     "maximumFragmentBytes": "Die meisten Bytes eines Fragments (64 MiB).",
+     "maximumIndexBytes": "Die meisten Bytes eines Faktenindex (512 MiB).",
+     "compactionFactor": "Ein Index wird verfeinert, wenn er ueber dem Sockel mehr als so viele Klassen je Eigentuemer haelt und um den Wachstumsfaktor gewachsen ist.",
+     "compactionFloor": "Die Zahl der Klassen und Zeilennummern, die ein Index ueber seinem Faktor halten darf, bevor er verfeinert wird.",
+     "compactionGrowth": "Das Wachstum der Klassenzahl gegenueber dem vorigen Index, das zusammen mit dem Faktor einen Index verfeinern laesst.",
+     "compactionDuplication": "Ein Index wird auch verfeinert, wenn seine Zeilennummern den Sockel und so viel Mal seine Zeilen uebersteigen.",
+     "brotliQuality": "Die Brotli-Qualitaet gespeicherter Dokumente.",
+     "brotliWindow": "Die Brotli-Fenstergroesse (log2) gespeicherter Dokumente.",
+     "reasonRows": "Wie viele Zeilen den Grund nennen, warum eine Generation erneuert wird.",
+     "stampVerification": "Ob Verzeichnisstempel die Pruefung verkuerzen.",
+     "waitNoticeMilliseconds": "Nach welcher Zeit ein wartender Befehl das meldet.",
+     "sweepWaitMilliseconds": "Wie lange der Sweep abgeloester Beobachtungsbloecke auf die Generations-Lease wartet.",
+     "hintMaximumAgeMilliseconds": "Das hoechste Alter, bei dem der Hinweis des aufrufenden Builds noch gilt.",
+     "textMaximumCharacters": "Die meisten Zeichen eines begrenzten Textfelds eines Generationsdokuments.",
+     "reasonMaximumCharacters": "Die meisten Zeichen des Grundes, den eine Generation festhaelt.",
+     "rowKeyTextLimit": "Ein Zeilenschluessel, der laenger ist, wird durch seinen Hash ersetzt.",
+     "leaseStaleMilliseconds": "Nach welcher Zeit die Sperre eines stillen Eigentuemers uebernommen wird.",
+     "expansionMaximumProjects": "Die meisten Projekte, die die Erweiterung eines Befehls standardmaessig hinzufuegen darf.",
+     "expansionMaximumBytes": "Die meisten Bytes, die die Erweiterung eines Befehls standardmaessig hinzufuegen darf (16 MiB).",
+     "withheldReasonCharacters": "Die meisten Zeichen des Grundes, warum ein Projekt zurueckgehalten wird.",
+     "pathDisplayCharacters": "Die meisten Zeichen eines Pfads, der in einem Grund gezeigt wird."
+    }
+   }
+  }
+ }
+}

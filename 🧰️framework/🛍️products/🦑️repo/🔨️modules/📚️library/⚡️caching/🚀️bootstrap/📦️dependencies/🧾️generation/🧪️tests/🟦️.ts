@@ -17,6 +17,10 @@ import * as issued from "../../../../../../../../../🔨️modules/🏃️proces
 import * as storage from "../../💾️storage/🟦️.ts";
 import * as readContext from "../../💾️storage/📥️read-context/🟦️.ts";
 import * as glue from "../💾️storage/🟦️.ts";
+import {startChangeJournalServiceV1} from "../../../../../🏗️build/🏡️resident/📜️journal/🟦️.ts";
+import {readChangeStateV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🟦️.ts";
+import {createChangeJournalClientV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🧭️client/🟦️.ts";
+import {openVouchV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🪪️vouch/🟦️.ts";
 
 const runtime:GenerationRuntimeV1={manager:"0.0.0",revision:"fixture",node:"0.0.0",platform:"fixture",arch:"fixture",sha256:"a".repeat(64)};
 
@@ -118,6 +122,106 @@ test("generation receipt: every fixture case verifies exactly as declared (match
   }finally{rmSync(root,{recursive:true,force:true});}
  }
 },60000);
+
+test("generation receipt recheck: every fixture case answers as the complete verification except that the provider observations are not replayed",async()=>{
+ let provider=0,same=0;
+ for(const row of fixtures.cases as Case[]){
+  const{root,store,place}=materialize(),env:Record<string,string|undefined>={...fixtures.environment},subject=subjectOf(root,env);
+  try{
+   const{result}=await capture(root,store,Date.now()+10000,subject);expect(result.status,row.name).toBe("captured");if(result.status!=="captured")continue;
+   let receipt=result.receipt;const files=new Map<string,Uint8Array>(result.files.map(file=>[file.name,file.bytes]));
+   if(row.tamper==="frontier"||row.tamper==="execution"){const name=row.tamper==="frontier"?receipt.membership.frontier.name:receipt.execution.evidence.name;files.set(name,Buffer.concat([files.get(name)!,Buffer.from("\n")]));}
+   if(row.reseal==="scopeReadSha256"){const{sha256:_,...body}=receipt;receipt=sealGenerationReceiptV1({...body,scopeReadSha256:"1".repeat(64)});}
+   if(row.reseal==="walkStamp"){const{sha256:_,...body}=receipt;receipt=sealGenerationReceiptV1({...body,walkStamp:protocol.walkStamp.replace(/\d+$/u,"0")});}
+   const before=protocol.maximumRelist;
+   try{
+    if(row.relist)(protocol as {maximumRelist:number}).maximumRelist=row.relist;
+    for(const mutation of row.mutations)mutate(root,place,mutation,env);
+    const full=await verifyGenerationReceiptV1(verifyInput(root,store,receipt,files,{ticks:0,checks:0},undefined,row.port,subject)),again=await verifyGenerationReceiptV1({...verifyInput(root,store,receipt,files,{ticks:0,checks:0},undefined,row.port,subject),recheck:true});
+    const skipped=outcome(full)==="mismatch:provider-changed"||row.tamper==="execution"&&outcome(full)==="mismatch:evidence-invalid";
+    expect(outcome(again),row.name).toBe(skipped?"match":outcome(full));
+    if(skipped)provider++;else{same++;if(full.status==="mismatch"&&again.status==="mismatch"){expect(again.path,row.name).toBe(full.path);expect(again.detail,row.name).toBe(full.detail);}}
+    if(again.status==="match"&&full.status==="match")expect(again.sha256,row.name).toBe(full.sha256);
+   }finally{(protocol as {maximumRelist:number}).maximumRelist=before;}
+  }finally{rmSync(root,{recursive:true,force:true});}
+ }
+ expect(provider).toBeGreaterThan(0);expect(same).toBeGreaterThan(provider);
+},120000);
+
+const identityOf=(path:string):string=>{
+ try{const f=lstatSync(path,{bigint:true});return[f.isSymbolicLink()?"l:"+readlinkSync(path):f.isDirectory()?"d:"+readdirSync(path).sort().join(","):"f",f.ino,f.mode,f.size,f.mtimeNs,f.ctimeNs].join("|");}catch{return"absent";}
+};
+const treeIdentity=(root:string):Map<string,string>=>{
+ const rows=new Map<string,string>(),walk=(directory:string)=>{for(const name of readdirSync(directory)){const path=join(directory,name);rows.set(relative(root,path).split("\\").join("/"),identityOf(path));if(lstatSync(path).isDirectory())walk(path);}};
+ walk(root);return rows;
+};
+test("generation receipt with a vouch: every fixture case answers as the complete verification when the vouch proves exactly the unchanged paths, a vouch that lies is caught, and the vouched look skips rows",async()=>{
+ let skipped=0,caught=0,compared=0;
+ for(const row of fixtures.cases as Case[]){
+  const{root,store,place}=materialize(),env:Record<string,string|undefined>={...fixtures.environment},subject=subjectOf(root,env);
+  try{
+   const{result}=await capture(root,store,Date.now()+10000,subject);expect(result.status,row.name).toBe("captured");if(result.status!=="captured")continue;
+   let receipt=result.receipt;const files=new Map<string,Uint8Array>(result.files.map(file=>[file.name,file.bytes]));
+   if(row.tamper==="frontier"||row.tamper==="execution"){const name=row.tamper==="frontier"?receipt.membership.frontier.name:receipt.execution.evidence.name;files.set(name,Buffer.concat([files.get(name)!,Buffer.from("\n")]));}
+   if(row.reseal==="scopeReadSha256"){const{sha256:_,...body}=receipt;receipt=sealGenerationReceiptV1({...body,scopeReadSha256:"1".repeat(64)});}
+   if(row.reseal==="walkStamp"){const{sha256:_,...body}=receipt;receipt=sealGenerationReceiptV1({...body,walkStamp:protocol.walkStamp.replace(/\d+$/u,"0")});}
+   const before=protocol.maximumRelist,identities=treeIdentity(root);
+   try{
+    if(row.relist)(protocol as {maximumRelist:number}).maximumRelist=row.relist;
+    for(const mutation of row.mutations)mutate(root,place,mutation,env);
+    const full=await verifyGenerationReceiptV1(verifyInput(root,store,receipt,files,{ticks:0,checks:0},undefined,row.port,subject));
+    const honest=(paths:readonly string[])=>new Set(paths.filter(path=>identityOf(join(root,path))===(identities.get(path)??"absent")));
+    const liar=(paths:readonly string[])=>new Set(paths);
+    const asked:number[]=[],withVouch=await verifyGenerationReceiptV1({...verifyInput(root,store,receipt,files,{ticks:0,checks:0},undefined,row.port,subject),vouched:paths=>{const proven=honest(paths);asked.push(proven.size);return proven;}});
+    expect(outcome(withVouch),row.name).toBe(outcome(full));
+    if(full.status==="mismatch"&&withVouch.status==="mismatch"){expect(withVouch.path,row.name).toBe(full.path);expect(withVouch.detail,row.name).toBe(full.detail);}
+    if(full.status==="match"&&withVouch.status==="match")expect(withVouch.sha256,row.name).toBe(full.sha256);
+    const again=await verifyGenerationReceiptV1({...verifyInput(root,store,receipt,files,{ticks:0,checks:0},undefined,row.port,subject),recheck:true,vouched:honest}),plain=await verifyGenerationReceiptV1({...verifyInput(root,store,receipt,files,{ticks:0,checks:0},undefined,row.port,subject),recheck:true});
+    expect(outcome(again),row.name).toBe(outcome(plain));
+    skipped+=asked.reduce((sum,count)=>sum+count,0);compared++;
+    const lied=await verifyGenerationReceiptV1({...verifyInput(root,store,receipt,files,{ticks:0,checks:0},undefined,row.port,subject),vouched:liar});
+    if(outcome(lied)!==outcome(full))caught++;
+   }finally{(protocol as {maximumRelist:number}).maximumRelist=before;}
+  }finally{rmSync(root,{recursive:true,force:true});}
+ }
+ expect(compared).toBeGreaterThan(10);expect(skipped).toBeGreaterThan(0);expect(caught).toBeGreaterThan(0);
+},180000);
+
+const watcher=process.env.SEMIO_REPO_WATCH_BINARY??"";
+test.skipIf(!watcher)("generation receipt with a REAL journal: every fixture case answers as the complete verification when the vouch comes from the file watcher of the workspace, in the complete pass and in the recheck, and the unchanged rows are skipped",async()=>{
+ let skipped=0,compared=0;
+ for(const row of fixtures.cases as Case[]){
+  const{root,store,place}=materialize(),env:Record<string,string|undefined>={...fixtures.environment},subject=subjectOf(root,env),directory=join(root+".journal"),environment={...process.env,SEMIO_REPO_WATCH_BINARY:watcher,SEMIO_REPO_CHANGES:"on"};
+  try{
+   const{result}=await capture(root,store,Date.now()+10000,subject);expect(result.status,row.name).toBe("captured");if(result.status!=="captured")continue;
+   let receipt=result.receipt;const files=new Map<string,Uint8Array>(result.files.map(file=>[file.name,file.bytes]));
+   if(row.tamper==="frontier"||row.tamper==="execution"){const name=row.tamper==="frontier"?receipt.membership.frontier.name:receipt.execution.evidence.name;files.set(name,Buffer.concat([files.get(name)!,Buffer.from("\n")]));}
+   if(row.reseal==="scopeReadSha256"){const{sha256:_,...body}=receipt;receipt=sealGenerationReceiptV1({...body,scopeReadSha256:"1".repeat(64)});}
+   if(row.reseal==="walkStamp"){const{sha256:_,...body}=receipt;receipt=sealGenerationReceiptV1({...body,walkStamp:protocol.walkStamp.replace(/\d+$/u,"0")});}
+   const client=createChangeJournalClientV1({directory,root,environment,start:()=>startChangeJournalServiceV1({directory,root,environment})}),before=protocol.maximumRelist;
+   try{
+    const first=await openVouchV1({client,directory:join(directory,"vouch"),consumer:"fixture",key:receipt.sha256});
+    expect(first.mode,row.name).toBe("cursor");
+    const sealing=await verifyGenerationReceiptV1({...verifyInput(root,store,receipt,files,{ticks:0,checks:0},undefined,row.port,subject),vouched:paths=>first.skippable(paths)});
+    if(outcome(sealing)!=="match")continue;
+    await verifyGenerationReceiptV1({...verifyInput(root,store,receipt,files,{ticks:0,checks:0},undefined,row.port,subject),recheck:true,vouched:paths=>first.settled(paths)});
+    await first.seal();
+    if(row.relist)(protocol as {maximumRelist:number}).maximumRelist=row.relist;
+    for(const mutation of row.mutations)mutate(root,place,mutation,env);
+    const full=await verifyGenerationReceiptV1(verifyInput(root,store,receipt,files,{ticks:0,checks:0},undefined,row.port,subject));
+    const second=await openVouchV1({client,directory:join(directory,"vouch"),consumer:"fixture",key:receipt.sha256});
+    expect(second.mode,row.name).toBe("journal");
+    const asked:number[]=[],vouched=await verifyGenerationReceiptV1({...verifyInput(root,store,receipt,files,{ticks:0,checks:0},undefined,row.port,subject),vouched:paths=>{const proven=second.skippable(paths);asked.push(proven.size);return proven;}});
+    expect(outcome(vouched),row.name).toBe(outcome(full));
+    if(full.status==="mismatch"&&vouched.status==="mismatch"){expect(vouched.path,row.name).toBe(full.path);expect(vouched.detail,row.name).toBe(full.detail);}
+    const plain=await verifyGenerationReceiptV1({...verifyInput(root,store,receipt,files,{ticks:0,checks:0},undefined,row.port,subject),recheck:true}),settled=await verifyGenerationReceiptV1({...verifyInput(root,store,receipt,files,{ticks:0,checks:0},undefined,row.port,subject),recheck:true,vouched:paths=>second.settled(paths)});
+    expect(outcome(settled),row.name).toBe(outcome(plain));
+    skipped+=asked.reduce((sum,count)=>sum+count,0);compared++;
+   }finally{(protocol as {maximumRelist:number}).maximumRelist=before;const pid=readChangeStateV1(directory)?.pid;if(pid)try{process.kill(pid,"SIGTERM");}catch{}}
+  }finally{rmSync(root,{recursive:true,force:true});rmSync(root+".journal",{recursive:true,force:true});}
+ }
+ expect(compared).toBeGreaterThan(10);expect(skipped).toBeGreaterThan(0);
+},300000);
 
 test("generation receipt: a tampered or schema-invalid receipt is refused before any filesystem read",async()=>{
  const{root,store}=materialize();

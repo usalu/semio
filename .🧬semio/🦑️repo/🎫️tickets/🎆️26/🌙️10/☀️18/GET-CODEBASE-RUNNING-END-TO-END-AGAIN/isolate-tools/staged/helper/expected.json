@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts": {
+  "mode": "plain",
+  "pass": 10,
+  "artifacts": "short",
+  "fails": [
+   "optional graph writers serialize distinct originals and reuse only the exact active invocation",
+   "nested graph writers defer optional pressure maintenance while an original immutable pin remains held",
+   "actual observation publication reads its persisted full-digest block under the same genuine writer"
+  ]
+ }
+}

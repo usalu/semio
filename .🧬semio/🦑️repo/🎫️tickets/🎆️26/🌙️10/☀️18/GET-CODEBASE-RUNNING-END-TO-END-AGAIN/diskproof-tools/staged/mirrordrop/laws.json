@@ -1,0 +1,13 @@
+{
+ "tests": [],
+ "knownRed": [],
+ "laws": [
+  {
+   "kind": "python",
+   "script": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/diskproof-tools/tests/test_mirror_drop.py",
+   "args": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/mirror-tools/mirror.py"
+   ]
+  }
+ ]
+}

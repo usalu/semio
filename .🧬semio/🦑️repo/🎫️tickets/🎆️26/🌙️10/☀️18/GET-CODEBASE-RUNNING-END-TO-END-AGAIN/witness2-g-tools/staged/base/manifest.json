@@ -1,0 +1,47 @@
+{
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🟦️.ts": {
+  "file": "f001"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🧬️schema/🔣️.json": {
+  "file": "f002"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🧭️client/🟦️.ts": {
+  "file": "f003"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🪪️vouch/🟦️.ts": {
+  "file": "f009"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🪪️vouch/🧬️schema/🔣️.json": {
+  "file": "f010"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🪪️vouch/🧪️tests/🟦️.ts": {
+  "file": "f011"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🟦️.ts": {
+  "file": "f012"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🧪️tests/🟦️.ts": {
+  "file": "f013"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🪪️vouch/🟦️.ts": {
+  "file": "f014"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "f016"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🧪️tests/🟦️.ts": {
+  "file": "f017"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.d.mts": {
+  "file": "f019"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.mjs": {
+  "file": "f020"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧪️tests/🟦️.ts": {
+  "file": "f021"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧬️schema/🔣️.json": {
+  "file": "f022"
+ }
+}

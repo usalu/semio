@@ -1,0 +1,20 @@
+{
+ "title": "🎭️ Staged batch `cp-libother` (lane compliance): every docstring of the changed files starts with an emoji no other docstring of the file starts with.",
+ "files": [
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️closure-read-worker/🟨️.mjs"
+ ],
+ "emoji": [
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts"
+ ],
+ "manual": [
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+   "old": "    /* optional */\n",
+   "new": "",
+   "count": "any",
+   "optional": true
+  }
+ ]
+}

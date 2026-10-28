@@ -24,7 +24,7 @@ test("verify prints what differs and a summary in the caller's language, exits 1
  expect(clean).toBe(0);expect(lines).toEqual(["Verifying 2 graph groups deeply (every indexed leaf is read and hashed again)","Verified 10 leaves (2.00 KiB) in 2 groups and 3 closure inventories: 0 differ, 0 closure inventories differ; 1 stale, 2 unindexed, 0 vanished"]);
  expect(stages).toEqual(["Verifying selections/x (0/2)","Verifying selections/y (1/2)"]);
  const german:string[]=[],code=await runCacheLedgerCommandV1(["verify","--deep","--lang=de"],{workspace:"/w",environment:{},write:line=>german.push(line),verify:async()=>report({mismatches:1,mismatched:["selections/x/np/a.json"],closureMismatches:1,closureMismatched:["build-input-closures/b.json"]})},ports());
- expect(code).toBe(1);expect(german).toEqual(["Hash weicht vom Index ab: selections/x/np/a.json","Closure-Inventar weicht von seinem Namen ab: build-input-closures/b.json","10 Blätter (2.00 KiB) in 2 Gruppen und 3 Closure-Inventare geprüft: 1 weichen ab, 1 Closure-Inventare weichen ab; 1 veraltet, 2 nicht indexiert, 0 verschwunden"]);
+ expect(code).toBe(1);expect(german).toEqual(["Hash weicht vom Index ab: selections/x/np/a.json","Abschluss-Inventar weicht von seinem Namen ab: build-input-closures/b.json","10 Blätter (2.00 KiB) in 2 Gruppen und 3 Abschluss-Inventare geprüft: 1 weichen ab, 1 Abschluss-Inventare weichen ab; 1 veraltet, 2 nicht indexiert, 0 verschwunden"]);
  const json:string[]=[];await runCacheLedgerCommandV1(["verify","--deep","--json"],{workspace:"/w",environment:{},write:line=>json.push(line),verify:async()=>report()},ports());
  expect(JSON.parse(json.join("\n"))).toMatchObject({version:1,groups:2,verified:10,mismatches:0});expect(json.length).toBe(1);
 });

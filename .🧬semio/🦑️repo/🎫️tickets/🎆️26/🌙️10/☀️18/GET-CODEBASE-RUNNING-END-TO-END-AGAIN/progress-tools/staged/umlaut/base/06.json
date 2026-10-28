@@ -1,0 +1,65 @@
+{
+ "version": 1,
+ "spawnOnly": [
+  {
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🚀️launch/🟦️.ts",
+   "reference": "../../📜️script.ts",
+   "contract": {
+    "en": "The cache garbage collector starts the repo build script as a detached maintenance child. That child collects retired cache bytes and never runs an Nx task, so the script and everything only it reaches cannot change the bytes of a task.",
+    "de": "Der Cache-Muellsammler startet das Repo-Build-Skript als losgeloeste Wartungs-Kindprozess. Dieses Kind sammelt ausgemusterte Cache-Bytes ein und fuehrt nie eine Nx-Aufgabe aus, daher koennen das Skript und alles, was nur es erreicht, die Bytes einer Aufgabe nicht aendern."
+   }
+  }
+ ],
+ "domains": [
+  {
+   "id": "bazel-route",
+   "contract": {
+    "en": "Code of the Bazel route: servers, sessions, scopes, task plans and its executor. A task of the Nx route never runs it, so the bytes of its outputs cannot depend on it.",
+    "de": "Code der Bazel-Route: Server, Sitzungen, Scopes, Aufgabenplaene und ihr Executor. Eine Aufgabe der Nx-Route fuehrt ihn nie aus, daher koennen die Bytes ihrer Ausgaben nicht von ihm abhaengen."
+   },
+   "prefixes": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/"
+   ]
+  },
+  {
+   "id": "cache-retention",
+   "contract": {
+    "en": "Retention of cache stores: which cached bytes are kept, pruned or collected. It decides how long bytes live, never what they are.",
+    "de": "Aufbewahrung der Cache-Speicher: welche gecachten Bytes bleiben, bereinigt oder eingesammelt werden. Sie bestimmt, wie lange Bytes leben, nie was sie sind."
+   },
+   "prefixes": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/"
+   ]
+  },
+  {
+   "id": "cargo-route",
+   "contract": {
+    "en": "Cargo orchestration, its unit cache and the Cargo test harness. Only the owner-command executor of a target that compiles Rust runs it; a command of any other target that needs it names it among its own declared inputs, so its bytes cannot depend on it through the engine.",
+    "de": "Cargo-Orchestrierung, ihr Einheiten-Cache und der Cargo-Testrahmen. Nur der Owner-Command-Executor eines Ziels, das Rust uebersetzt, fuehrt sie aus; ein Befehl jedes anderen Ziels, das sie braucht, nennt sie unter seinen eigenen deklarierten Eingaben, daher koennen seine Bytes ueber die Engine nicht von ihr abhaengen."
+   },
+   "prefixes": [
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/"
+   ],
+   "keyedFor": [
+    "native"
+   ]
+  },
+  {
+   "id": "graph-derivation",
+   "contract": {
+    "en": "Derivation of the build graph: inference, observation, sealing and the Nx graph pool. Its result is the task definition (command, environment, inputs, outputs, dependencies) that the Nx hasher already keys, so an edit that keeps every definition cannot change the bytes of a task.",
+    "de": "Ableitung des Build-Graphen: Inferenz, Beobachtung, Versiegelung und der Nx-Graph-Pool. Ihr Ergebnis ist die Aufgabendefinition (Befehl, Umgebung, Eingaben, Ausgaben, Abhaengigkeiten), die der Nx-Hasher bereits schluesselt; eine Aenderung, die jede Definition erhaelt, kann die Bytes einer Aufgabe nicht aendern."
+   },
+   "prefixes": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/"
+   ]
+  }
+ ]
+}

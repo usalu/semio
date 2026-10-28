@@ -70,7 +70,7 @@ def ticket_for(p):
         a = parent
 
 
-def protection(candidate, allowed=None):
+def protection(candidate):
     target = posixpath.normpath(candidate)
     if target == "." or target.startswith(".."):
         return [target]
@@ -82,7 +82,7 @@ def protection(candidate, allowed=None):
             return
         if closed(d):
             closed_set.add(d)
-        elif d != allowed:
+        else:
             prot.add(d)
     inspect("")
     anc = ""
@@ -151,7 +151,7 @@ def generated(candidate):
 
 
 for c in corpus["protection"]:
-    if not c["environment"] and protection(c["candidate"], c["allowed"]) != sorted(c["expected"]):
+    if not c["environment"] and protection(c["candidate"]) != sorted(c["expected"]):
         failures.append("protection: " + c["name"])
 for c in corpus["generated"]:
     if generated(c["candidate"]) != sorted(c["expected"]):

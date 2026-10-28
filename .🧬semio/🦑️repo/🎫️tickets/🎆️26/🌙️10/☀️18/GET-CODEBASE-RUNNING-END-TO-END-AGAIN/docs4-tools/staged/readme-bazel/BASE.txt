@@ -1,0 +1,3 @@
+document: 🧰️framework/🛍️products/🦑️repo/README.md
+sha256 at staging: be08003eff0fead453c9d957576c6e31ef6a1292e8b65e26d56998667e743af5
+4 edit(s): bazel-bullets[en], bazel-bullets[de], guide-pointer[en], guide-pointer[de]

@@ -1,0 +1,31 @@
+FAIL  :: (unnamed)
+FAIL  :: All Cargo workspaces consume selected inline profiles without authored manifest tables
+FAIL  :: Cargo custody actual preparation program binds distinct fixture and tracked defining roots without source copies
+FAIL  :: Cargo custody controlled child admission authenticates actual phase before effects
+FAIL  :: Cargo custody generator awaits program and all current observations under actual phase
+FAIL  :: Cargo custody selected preparation refuses recipe ancestry replaced by a progress observer before any child
+FAIL  :: Cargo custody selected preparation shares actual closure under original cancellation and owned child drain
+FAIL  :: Cargo manifest replanning defining types and dashboard controls are complete
+FAIL  :: Cargo original preparation replan always-changing
+FAIL  :: Cargo original preparation replan always-changing-after-update
+FAIL  :: Cargo original preparation replan changed-after-update
+FAIL  :: Cargo original preparation replan changed-once
+FAIL  :: Cargo original preparation replan expired
+FAIL  :: Cargo original preparation replan identical
+FAIL  :: Cargo synchronization reuses content-bound admission and observes manifest and lock changes
+FAIL  :: actual Cargo command retains complete native compiler input and feature custody
+FAIL  :: actual Cargo command uses its required owner through real native execution and retirement
+FAIL  :: actual artifact wrappers and repository consumer forward the identical original invocation
+FAIL  :: actual original finite process deadline cancels its queued preparation without releasing a peer holder
+FAIL  :: controlled resolver retains exact Unicode closure and refuses changed or cancelled custody
+FAIL  :: current framework member manifest inputs preserve every explicit owned package
+FAIL  :: current physical workspace dependency identities match independent Cargo and TOML
+FAIL  :: original preparation authority closes only its own blocked-progress operation
+FAIL  :: original preparation authority closes only its own budget operation
+FAIL  :: original preparation authority closes only its own child operation
+FAIL  :: original preparation authority closes only its own deadline operation
+FAIL  :: original preparation authority closes only its own physical operation
+FAIL  :: original preparation authority closes only its own queued operation
+FAIL  :: original preparation custody bounds and closes dependency fetch
+FAIL  :: original preparation custody bounds and closes dependency update
+FAIL  :: queued native preparation survives waiting beyond one active recipe budget

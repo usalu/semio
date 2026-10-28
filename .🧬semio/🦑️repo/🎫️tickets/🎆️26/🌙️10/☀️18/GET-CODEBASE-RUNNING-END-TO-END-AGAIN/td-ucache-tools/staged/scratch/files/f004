@@ -1,0 +1,150 @@
+import {expect,test} from "bun:test";
+import {spawn,spawnSync} from "node:child_process";
+import {chmodSync,copyFileSync,mkdirSync,mkdtempSync,readFileSync,writeFileSync} from "node:fs";
+import {join,resolve} from "node:path";
+import {fileURLToPath} from "node:url";
+import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import {unitCacheEnvironmentV1} from "../../../🚪️launch/🟦️.ts";
+import {installBuildScriptShimV1} from "../../../🏗️buildscript/🟦️.ts";
+import {buildJobserverProbeV1,cargoWithRegistryV1,plainCargoEnvironmentV1,type ProbeVerdictV1} from "../🦀️probe/🟦️.ts";
+import {cargoScratchBaseV1} from "../../../🧪️tests/🏖️scratch/🟦️.ts";
+
+/** 🏁️ Jobs started by shimmed build scripts and by the compiler wrapper draw from the pool they were started with and never exceed it. Real Cargo builds crates whose build scripts compile C files with the real `cc` crate (it takes tokens from the pool in parallel); a test compiler counts the compile jobs alive at once. Plain Cargo, without any wrapper, is the oracle; an independent Python parent supplies pools Cargo did not make itself (a fifo like GNU make 4.4 and the repository launcher, a pipe on the usual descriptors, a pipe moved to other numbers); the `jobserver` crate, run as the build script and as the wrapped compiler, reports which pool its process can reach. */
+const here=fileURLToPath(new URL(".",import.meta.url)),outer=resolve(here,"../🧫️fixtures/🐍️outer.py"),python=testPythonV1()??"python3",cargo=process.env.SEMIO_TEST_CARGO??"cargo";
+const base=cargoScratchBaseV1();
+const scratch=()=>mkdtempSync(join(base,"jp-"));
+const cleanPath=`${process.env.HOME}/.cargo/bin:/usr/bin:/bin`;
+
+const slowCompiler=`#!/bin/sh
+case " $* " in
+ *" -c "*)
+  touch "$JS_DIR/run.$$"
+  ls "$JS_DIR" | grep -c '^run\\.' >> "$JS_LOG"
+  sleep "\${JS_SLEEP:-0.4}"
+  rm -f "$JS_DIR/run.$$";;
+esac
+exec "\${JS_REAL_CC:-cc}" "$@"
+`;
+const buildRs=`use std::io::Write;
+fn main() {
+    let out = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
+    let files: usize = std::env::var("BURST_FILES").ok().and_then(|value| value.parse().ok()).unwrap_or(8);
+    let mut build = cc::Build::new();
+    for index in 0..files {
+        let path = out.join(format!("f{}.c", index));
+        writeln!(std::fs::File::create(&path).unwrap(), "int f{}_{}(void) {{ return {}; }}", index, env!("CARGO_PKG_NAME"), index).unwrap();
+        build.file(path);
+    }
+    build.warnings(false).compile("burst");
+    println!("cargo:rerun-if-env-changed=BURST_FILES");
+}
+`;
+const probeBuildRs=`fn main() {
+    let from = unsafe { jobserver::Client::from_env_ext(true) };
+    let tokens = match &from.client {
+        Ok(client) => {
+            let mut held = Vec::new();
+            let mut unsupported = false;
+            while held.len() < 256 { match client.try_acquire() { Ok(Some(token)) => held.push(token), Ok(None) => break, Err(_) => { unsupported = true; break } } }
+            if unsupported { client.available().map(|count| count as i64).unwrap_or(-2) } else { held.len() as i64 }
+        }
+        Err(_) => -1,
+    };
+    println!("cargo:warning=POOL {} NUM_JOBS {}", tokens, std::env::var("NUM_JOBS").unwrap_or_default());
+    println!("cargo:rerun-if-env-changed=PROBE_TAG");
+}
+`;
+
+function writeBurstWorkspace(root:string,members:number){
+ const names=Array.from({length:members},(_,index)=>"m"+(index+1));
+ mkdirSync(root,{recursive:true});
+ writeFileSync(join(root,"Cargo.toml"),`[workspace]\nresolver = "2"\nmembers = [${names.map(name=>`"${name}"`).join(", ")}]\n`);
+ for(const name of names){
+  mkdirSync(join(root,name,"src"),{recursive:true});
+  writeFileSync(join(root,name,"Cargo.toml"),`[package]\nname = "${name}"\nversion = "0.0.0"\nedition = "2021"\nbuild = "build.rs"\n[build-dependencies]\ncc = { version = "1", features = ["parallel"] }\n`);
+  writeFileSync(join(root,name,"src","lib.rs"),"pub fn f() {}\n");writeFileSync(join(root,name,"build.rs"),buildRs);
+ }
+ const lock=cargoWithRegistryV1(cargo,["generate-lockfile"],{cwd:root,env:plainCargoEnvironmentV1()});expect(lock.status,String(lock.stderr)).toBe(0);
+}
+
+type Burst=Readonly<{code:number;output:string;max:number;jobs:number}>;
+function burst(input:Readonly<{workspace:string;directory:string;tag:string;grant:number;files:number;pool?:"fifo"|"pipe"|"pipe-high";cache?:string;target:string}>):Promise<Burst>{
+ const log=join(input.directory,input.tag+".log"),counter=join(input.directory,input.tag+"-jobs"),compiler=join(input.directory,"slowcc");mkdirSync(counter,{recursive:true});writeFileSync(log,"");
+ writeFileSync(compiler,slowCompiler);chmodSync(compiler,0o755);
+ let extra:Record<string,string>={CC:compiler,JS_DIR:counter,JS_LOG:log,BURST_FILES:String(input.files),CARGO_TARGET_DIR:input.target,CARGO_BUILD_BUILD_DIR:join(input.target,"b"),CARGO_INCREMENTAL:"0",CARGO_TERM_COLOR:"never"};
+ if(input.cache){
+  const laneRoot=join(input.cache,"l",input.tag);mkdirSync(laneRoot,{recursive:true});
+  extra={...extra,...unitCacheEnvironmentV1({cacheRoot:input.cache,lane:input.tag,laneRoot,scheduler:"unused",compiler:"rustc",toolchain:"tc",focus:[],slots:8,features:{buildScripts:true}}),SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"]),CARGO_TARGET_DIR:join(laneRoot,"t"),CARGO_BUILD_BUILD_DIR:join(laneRoot,"b")};
+ }
+ const build=["build","--manifest-path",join(input.workspace,"Cargo.toml")],env=plainCargoEnvironmentV1(extra);
+ const command=input.pool?[python,["-I",outer,input.pool,String(input.grant),"--",cargo,...build]] as const:[cargo,[...build,"-j"+input.grant]] as const;
+ return new Promise(done=>{
+  const child=spawn(command[0],[...command[1]],{cwd:input.workspace,env,stdio:["ignore","pipe","pipe"]});let output="";
+  child.stdout.on("data",chunk=>{output+=chunk;});child.stderr.on("data",chunk=>{output+=chunk;});
+  child.on("close",code=>{const rows=readFileSync(log,"utf8").split("\n").filter(Boolean).map(Number);done({code:code??1,output,max:Math.max(0,...rows),jobs:rows.length});});
+ });
+}
+
+test("compile jobs of build scripts never exceed the pool, whoever made it: Cargo itself, a fifo, a pipe, a pipe on other numbers, a pool without tokens; the wrapped build equals plain Cargo",async()=>{
+ const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache");writeBurstWorkspace(workspace,4);
+ const variants=[{name:"own",grant:4,pool:undefined},{name:"fifo",grant:3,pool:"fifo"},{name:"pipe",grant:3,pool:"pipe"},{name:"pipe-high",grant:3,pool:"pipe-high"},{name:"no-tokens",grant:1,pool:undefined}] as const;
+ for(const [index,variant] of variants.entries()){
+  const files=8+index,common={workspace,directory,grant:variant.grant,files,...variant.pool?{pool:variant.pool}:{}};
+  const plain=await burst({...common,tag:"plain-"+variant.name,target:join(directory,"plain-target")}),wrapped=await burst({...common,tag:"wrapped-"+variant.name,cache,target:join(directory,"unused")});
+  expect(plain.code,plain.output).toBe(0);expect(wrapped.code,wrapped.output).toBe(0);
+  expect(plain.max,variant.name+": plain Cargo stays within its pool").toBeLessThanOrEqual(variant.grant);
+  expect(wrapped.max,variant.name+": wrapper and stand-ins stay within the pool ("+wrapped.max+" jobs at once, plain Cargo "+plain.max+")").toBeLessThanOrEqual(variant.grant);
+  expect(wrapped.jobs,variant.name+": the same compile work happens").toBe(plain.jobs);
+  if(variant.grant>2)expect(wrapped.max,variant.name+": the pool is used, not just respected").toBeGreaterThanOrEqual(2);
+ }
+},900000);
+
+test("a shimmed build script sees the same pool as the same build script run by Cargo itself, with Cargo's own pool and with a pool of the cache's own",async()=>{
+ const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache");mkdirSync(join(workspace,"src"),{recursive:true});
+ writeFileSync(join(workspace,"Cargo.toml"),'[package]\nname = "seen"\nversion = "0.0.0"\nedition = "2021"\nbuild = "build.rs"\n[build-dependencies]\njobserver = "0.1"\n');
+ writeFileSync(join(workspace,"src","lib.rs"),"pub fn f() {}\n");writeFileSync(join(workspace,"build.rs"),probeBuildRs);
+ const lock=cargoWithRegistryV1(cargo,["generate-lockfile"],{cwd:workspace,env:plainCargoEnvironmentV1()});expect(lock.status,String(lock.stderr)).toBe(0);
+ const seen=(output:string)=>/POOL (-?\d+) NUM_JOBS (\d*)/u.exec(output)?.slice(1,3).join(" ");
+ const run=(tag:string,jobs:number,cached:boolean,extra:Record<string,string>={})=>{
+  const laneRoot=join(cache,"l",tag);mkdirSync(laneRoot,{recursive:true});
+  const block=cached?{...unitCacheEnvironmentV1({cacheRoot:cache,lane:tag,laneRoot,scheduler:"unused",compiler:"rustc",toolchain:"tc",focus:[],slots:4,features:{buildScripts:true}}),SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"])}:{};
+  const result=spawnSync(cargo,["build","-j"+jobs],{cwd:workspace,env:plainCargoEnvironmentV1({...block,...extra,CARGO_TARGET_DIR:join(laneRoot,"t"),CARGO_BUILD_BUILD_DIR:join(laneRoot,"b"),CARGO_INCREMENTAL:"0",PROBE_TAG:tag,PATH:cleanPath}),encoding:"utf8"});
+  expect(result.status,result.stderr).toBe(0);return seen(result.stderr);
+ };
+ for(const jobs of[4,2,1]){
+  const plain=run("plain"+jobs,jobs,false),first=run("first"+jobs,jobs,true),second=run("second"+jobs,jobs,true);
+  expect(plain,"plain Cargo -j"+jobs).toBe(`${jobs-1} ${jobs}`);expect(first,"shimmed on a miss, -j"+jobs).toBe(plain);expect(second,"shimmed with the compiled script served from the cache, -j"+jobs).toBe(plain);
+ }
+},600000);
+
+test("a stand-in hands the pool on to the real build script and to the compiler, whatever its kind and descriptor numbers, and never takes a token itself",()=>{
+ const directory=scratch(),probe=buildJobserverProbeV1(join(directory,"probe"),cargo),cache=join(directory,"cache");mkdirSync(cache,{recursive:true});
+ const artifact=join(directory,"build_script_probe");copyFileSync(probe,artifact);chmodSync(artifact,0o755);installBuildScriptShimV1(artifact);
+ const block=unitCacheEnvironmentV1({cacheRoot:cache,lane:"p",laneRoot:join(cache,"l","p"),compiler:"rustc",toolchain:"tc",focus:[],slots:1});
+ const asked=(command:string,pool:string,slots:number,extra:Record<string,string>={})=>{
+  const run=spawnSync(python,["-I",outer,pool,String(slots),"--",command,"ignored"],{env:{HOME:process.env.HOME,PATH:cleanPath,JOBSERVER_DIRECTORY:directory,SEMIO_UNIT_CACHE_ROOT:cache,SEMIO_UNIT_CACHE:"off",SEMIO_UNIT_CACHE_INNER:JSON.stringify([probe]),...extra},encoding:"utf8"});
+  expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout) as ProbeVerdictV1;
+ };
+ for(const pool of["fifo","pipe","pipe-high"])for(const [name,command] of[["build script",artifact],["compiler wrapper",block.RUSTC_WRAPPER!]] as const){
+  const direct=spawnSync(python,["-I",outer,pool,"4","--",probe],{env:{HOME:process.env.HOME,PATH:cleanPath,JOBSERVER_DIRECTORY:directory},encoding:"utf8"});
+  expect(JSON.parse(direct.stdout).pool,pool+" reaches the probe without any stand-in").toEqual({client:true,tokens:3});
+  expect(asked(command,pool,4).pool,name+" behind "+pool).toEqual({client:true,tokens:3});
+ }
+ expect(asked(artifact,"none",4).pool.client,"no pool named, none invented").toBe(false);
+},300000);
+
+test("a pool the stand-ins cannot reach is replaced by an empty one, so the command runs serially instead of inventing jobs, and the stand-ins say so in both languages",()=>{
+ const directory=scratch(),probe=buildJobserverProbeV1(join(directory,"probe"),cargo),cache=join(directory,"cache");mkdirSync(cache,{recursive:true});
+ const artifact=join(directory,"build_script_probe");copyFileSync(probe,artifact);chmodSync(artifact,0o755);installBuildScriptShimV1(artifact);
+ const block=unitCacheEnvironmentV1({cacheRoot:cache,lane:"p",laneRoot:join(cache,"l","p"),compiler:"rustc",toolchain:"tc",focus:[],slots:1});
+ const environment={HOME:process.env.HOME,PATH:cleanPath,SEMIO_UNIT_CACHE_ROOT:cache,SEMIO_UNIT_CACHE:"off",SEMIO_UNIT_CACHE_INNER:JSON.stringify([probe]),NUM_JOBS:"8"};
+ for(const flags of["-j --jobserver-fds=3,5 --jobserver-auth=3,5","-j --jobserver-auth=3,4","-j --jobserver-auth=3,5,7","-j --jobserver-auth=fifo:/nonexistent/pool","-j --jobserver-auth=-2,-2"])for(const command of[artifact,block.RUSTC_WRAPPER!]){
+  for(const variable of["CARGO_MAKEFLAGS","MAKEFLAGS"]){
+   const run=spawnSync(command,["ignored"],{env:{...environment,[variable]:flags},encoding:"utf8",stdio:["ignore","pipe","pipe"]}),label=`${variable}=${flags} via ${command===artifact?"build script":"wrapper"}`;
+   expect(run.status,label+run.stderr).toBe(0);
+   const verdict=JSON.parse(run.stdout) as ProbeVerdictV1;expect(verdict.pool,label).toEqual({client:true,tokens:0});expect(verdict.numJobs,label).toBe("1");
+   expect(run.stderr,label).toContain("job-token pool");expect(run.stderr,label).toContain("Job-Token-Pool");
+  }
+ }
+ const quiet=spawnSync(artifact,["ignored"],{env:{...environment},encoding:"utf8"});expect(quiet.stderr,"no pool named, nothing to say").toBe("");expect(JSON.parse(quiet.stdout).numJobs,"NUM_JOBS stays when no pool is named").toBe("8");
+},300000);

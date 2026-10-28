@@ -1,21 +1,23 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import ts from "typescript";
-import {availableParallelism} from "node:os";
+import {availableParallelism,tmpdir} from "node:os";
 import {existsSync,mkdirSync,mkdtempSync,rmSync,readFileSync} from "node:fs";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {acquireCompilerCapacityLeaseV1,scriptCompilerAdmissionControlV1} from "../../🟦️.ts";
 import {resourceLeasePathV1} from "../../../../🔒️leases/🟦️.ts";
 import {captureOwnedCommandResultV1} from "../../../../🎛️owned-execution/📥️capture/🟦️.ts";
-import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from "../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {scriptInvocationEnvironment} from "../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "../../../../🧪️testing/📥️invocation/🟦️.ts";
+declareBuildTestEnvelopeV1({owner:"test:compiler-capacity-inheritance",maximumElapsedMilliseconds:300000,capabilities:{}});
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import capacitySchema from "../../🧬️schema/🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 
-test("Unpaid inherited markers cannot enter while the actual parent owns every CPU",async()=>receiveScriptProcessInvocation(process.env,async original=>{
- const control=scriptCompilerAdmissionControlV1(original,"test:unpaid-capacity-parent",30000),output=process.env.SEMIO_TEST_ARTIFACT_DIR!;
+test("Unpaid inherited markers cannot enter while the actual parent owns every CPU",async()=>withBuildTestInvocationV1(async original=>{
+ const control=scriptCompilerAdmissionControlV1(original,"test:unpaid-capacity-parent",30000),output=artifactOutput;
  mkdirSync(output,{recursive:true});const directory=mkdtempSync(join(output,"f-")),limits={maximumBytes:65536,maximumLines:128},oracle=new Ajv({strict:true}),validate=oracle.compile(schema.definitions.ChildResult);
  for(const row of fixture.authorityRefusals){expect(oracle.validate(schema.definitions.AuthorityRefusal,row)).toBe(true);let reads=0,refused=false;const copied=row.kind==="copy"?{...control}:{signal:control.signal,remainingMilliseconds:()=>null,publish:()=>{},yieldContinuation:async()=>{}};try{await acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"},control:copied,get directory():string{reads++;throw Error("Unread effect directory required");},get environment():Readonly<Record<string,string|undefined>>{reads++;throw Error("Unread inherited effect environment required");}});}catch(error){refused=error instanceof Error&&error.message==="Live Original resource control issuance required";}expect(reads).toBe(row.expectedReads);expect(refused).toBe(row.expectedRefused);}
  for(const value of fixture.invalidResults){expect(validate(value)).toBe(false);expect(validateJsonSchemaSubset(schema.definitions.ChildResult,value).length).toBeGreaterThan(0);}
@@ -31,11 +33,12 @@ test("Unpaid inherited markers cannot enter while the actual parent owns every C
  }finally{parent.release();try{expect(await probe()).toBe(false);}finally{rmSync(directory,{recursive:true,force:true});}}
 }),30000);
 
+const artifactOutput=process.env.SEMIO_TEST_ARTIFACT_DIR??mkdtempSync(join(tmpdir(),"semio-capacity-"));if(process.env.SEMIO_TEST_ARTIFACT_DIR===undefined)process.once("exit",()=>{rmSync(artifactOutput,{recursive:true,force:true});});
 /** 🗺️ Checks the actual launcher consumes one privately authenticated storage namespace for every global guard. */
 test("neutral actual Cargo launcher shares the issued storage lease namespace",()=>{
  const root=process.cwd(),path=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher"),text=readFileSync(join(path,"🟦️.ts"),"utf8"),source=ts.createSourceFile("launcher.ts",text,ts.ScriptTarget.Latest,true),policy=JSON.parse(readFileSync(join(path,"🧬️schema/🔣️.json"),"utf8")).definitions.Configuration.const;
  let authenticatedPolicyReads=0,constantNamespaceUses=0,actualGuardControl=true;
- const walk=(node:ts.Node)=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression)&&node.expression.text==="readNativeStorageReservationPolicyV1"){authenticatedPolicyReads++;actualGuardControl=actualGuardControl&&node.arguments.map(argument=>argument.getText(source)).join(",")==="store.storage,store.control";}if(ts.isStringLiteral(node)&&node.text===".cache/b/l/m/data")constantNamespaceUses++;ts.forEachChild(node,walk);};walk(source);
+ const walk=(node:ts.Node)=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression)&&node.expression.text==="readNativeStorageReservationPolicyV1"){authenticatedPolicyReads++;actualGuardControl=actualGuardControl&&/^(store|options)\.storage,\1\.control$/u.test(node.arguments.map(argument=>argument.getText(source)).join(","));}if(ts.isStringLiteral(node)&&node.text===".cache/b/l/m/data")constantNamespaceUses++;ts.forEachChild(node,walk);};walk(source);
  const observation={version:1,authenticatedPolicyReads,constantNamespaceUses,independentCapacityDirectory:Object.hasOwn(policy,"capacityLeaseDirectory"),actualGuardControl};
  expect(new Ajv({strict:true}).validate(schema.definitions.NamespaceObservation,observation)).toBe(true);expect(validateJsonSchemaSubset(schema.definitions.NamespaceObservation,observation)).toEqual([]);
  for(const name of["withCompilerWorkspaceSharedWriteV1","acquireCargoBuildLeaseV1","withCompilerCapacityConsumptionV1"]){let calls=0;const inspect=(node:ts.Node)=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression)&&node.expression.text===name){calls++;expect(node.arguments.map(argument=>argument.getText(source)).join(",")).toContain("leaseDirectory");}ts.forEachChild(node,inspect);};inspect(source);expect(calls).toBeGreaterThan(0);}

@@ -253,7 +253,7 @@
   "leaves": [
     {
       "key": "camera",
-      "folder": "🎥️set-camera",
+      "folder": "🎥️camera",
       "variant": "SetCamera",
       "kind": "set-camera",
       "tag": 0,

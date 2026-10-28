@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/process/testing/suites.json",
   "title": "ProcessTestSuitesV1",
-  "description": "The complete route table of the process module: every test file of the module belongs to exactly one suite (or is a declared child program), every suite is run by one project target `test-<id>` as `repo ./📜️script.ts test <id>`, and every test file runs in its own process because one process receives one Original birth.",
+  "description": "The complete route table of the process module: every test file of the module belongs to exactly one suite (or is a declared child program), every suite is run by one project target `test-<id>` as `repo ./📜️script.ts test <id>`, and every test file runs in its own process because one process receives one Original birth. The three route tables of the repository go further than this schema and give every suite an explicit verdict (`platforms`, and `platformCauses` when a host is left out); a law pins that.",
   "definitions": {
     "SuiteIdentifier": {
       "type": "string",
@@ -29,6 +29,16 @@
           "pattern": "^[a-z][a-z0-9-]*$"
         }
       }
+    },
+    "PlatformCause": {
+      "enum": [
+        "posix-program",
+        "posix-shell-script",
+        "python3-command",
+        "symlink",
+        "permission-bits",
+        "posix-process-control"
+      ]
     },
     "Suite": {
       "type": "object",
@@ -128,6 +138,40 @@
           "additionalProperties": {
             "$ref": "#/definitions/LauncherIdentifier"
           }
+        },
+        "platforms": {
+          "description": "The hosts the suite can run on. On any other host the route runs none of its files and reports the suite SKIPPED (never green); a suite without this field runs everywhere.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "darwin",
+              "linux",
+              "win32"
+            ]
+          }
+        },
+        "platformCauses": {
+          "description": "Why the suite does not run on every host: the host-bound facts its test files use unconditionally (see the platform evidence rules). Present exactly when `platforms` leaves a host out, so every suite carries an explicit and explained verdict.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/PlatformCause"
+          }
+        },
+        "tools": {
+          "description": "Registered external tools whose pinned binary the route resolves from the tool registry and hands to every test file as SEMIO_TEST_<TOOL>_BINARY; a tool that is not provisioned on the host fails the suite instead of letting its laws skip.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/ToolIdentifier"
+          }
         }
       },
       "anyOf": [
@@ -216,6 +260,11 @@
     "LauncherIdentifier": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "maxLength": 64
+    },
+    "ToolIdentifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
       "maxLength": 64
     }
   }

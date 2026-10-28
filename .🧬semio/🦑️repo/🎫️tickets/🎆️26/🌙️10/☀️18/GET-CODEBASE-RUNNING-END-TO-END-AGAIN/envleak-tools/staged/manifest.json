@@ -1,0 +1,72 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌿️environment/🟦️.ts": {
+  "file": "00.ts",
+  "base": null,
+  "new": "b4334320a4100a2256a5180bdad1506f40fa90a28ca41013b9bc02f8269b42d7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌿️environment/🧬️schema/🔣️.json": {
+  "file": "01.json",
+  "base": null,
+  "new": "f74357f955853f72e1e939fe54cbe6557aee2a71de056d108eb41aadfa48075c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌿️environment/🧪️tests/🟦️.ts": {
+  "file": "02.ts",
+  "base": null,
+  "new": "d7c384e0a3d51a25764934d11c5819ecaf9a288d2a19d547b292abdeabb01c8a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌿️environment/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "03.json",
+  "base": null,
+  "new": "e2f89a4be00487527c145b268e56da6d21589c766249d54dbc4b281bc8c5025f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌿️environment/🧪️tests/🧮️resources/🐍️oracle/🐍️.py": {
+  "file": "04.py",
+  "base": null,
+  "new": "f4197fcda332f1b16f59452d382a3ee4a2d98e2d9402f794058bf58acbe9f7ca"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "05.ts",
+  "base": "8f4cfbd2ad4ef5d89066287a5f8621f4326694da7b08b6d510af54c7783df194",
+  "new": "6399360af1fc64d81e460624a99fd74c5e74a3a0978966f3b7fcf3e2f5a6ec56"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️fingerprint/🟦️.ts": {
+  "file": "06.ts",
+  "base": "d4b4626405e9b7624ca0c70e1410135d2689cf9e8876cbf983b0805ca4309056",
+  "new": "4f1d343b61284f95a3349d2c37169586c44ccf0aaf01debe82c1e3ccd82264c1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️fingerprint/🔣️ambient.json": {
+  "file": "07.json",
+  "base": null,
+  "new": "69e5461be4c27997f787637242ce1724ba33040d17d731d2e9ce64d0689b3369"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️fingerprint/🧬️ambient.json": {
+  "file": "08.json",
+  "base": null,
+  "new": "0d9904d05657c35d198877d0b23ffe2a6583462944b1f475046f5d9a8eff2a89"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.mjs": {
+  "file": "09.mjs",
+  "base": "a75848c69a65259affcf879dd49202a420a451f769d8d4c1323f62de77e7edf1",
+  "new": "295b487765ca4801697b48b5d9cb410d4b1947547d956cbfbb3d0b6d170b1a4d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.d.mts": {
+  "file": "10.mts",
+  "base": "27d93ee01013a3e8d22e3a8f81b56dd636ddece4a80e0c2382e89ecd1bbfb5b3",
+  "new": "235f618dd58c1a3ae61e88ee3c29fb6428a1c8cc5e75f3d611d5c100e23cb790"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧬️schema/🔣️.json": {
+  "file": "11.json",
+  "base": "74e47387bb1e0083295dee6566aad12c45c420ef6bf0d07aa7eceaeafcddd93c",
+  "new": "1ec7cdb347f3653fefd8e4cba322d07b8ed593abe8c1b4fc9ee14199fda042c5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧪️tests/🟦️.ts": {
+  "file": "12.ts",
+  "base": "6c262c74cc5234602fcf17a4e0feaa32a907f812c09298b6569782434b69356e",
+  "new": "1ee1f31fc664cde4d026da6a3990b206dfbb12537f580036e01a7fc5d810861f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🔣️.json": {
+  "file": "13.json",
+  "base": "8ec1306a41523e0c709642b9b42b4391ce526fe7fe524fa858069e76237007a1",
+  "new": "ee6755f3b33cf62b47167c9989d6b7d56a1587cef027953e16a75d408eed741d"
+ }
+}

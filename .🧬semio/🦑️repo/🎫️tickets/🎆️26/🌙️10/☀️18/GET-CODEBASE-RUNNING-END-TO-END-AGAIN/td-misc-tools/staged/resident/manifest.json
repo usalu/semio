@@ -1,0 +1,32 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🗃️state/🟨️.mjs": {
+  "file": "00.mjs",
+  "base": "945d91f764c7453c1941ef3cedba906254dd07bb43eb516a4e9adbb6421481af",
+  "new": "a85249074b7d6743d4ac2384bb5ace41b2e3b246aab7f9a80e291aa2351ebf6a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🗃️state/🟨️.d.mts": {
+  "file": "01.mts",
+  "base": "fd83e9349d2614e96e7a682ec63eab8f821c96a1c13865f524fc411795da9873",
+  "new": "ce7c68e88d482c0011aaf1d7799d2c685062db3ac39bff1270993e03cacd04d0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🗃️state/🟦️.ts": {
+  "file": "02.ts",
+  "base": "6a6f0de4d10ba69b82873230140895ac04aa388af1eb8437848d3f607c407694",
+  "new": "a80676bd31a2d451b5e4a5b62827855e49bb97936ad22c1d24e6f2fac7477b17"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🟦️.ts": {
+  "file": "03.ts",
+  "base": "beed426bda332cf49a0cf6dbf40d05d873ba568abbc0f76d532702a073adb3bf",
+  "new": "9a6c69d9426ec5628c426f08ad4e705e9041aa422275275ca2437d8a9eaf9757"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🔭️watch/🟦️.ts": {
+  "file": "04.ts",
+  "base": "1a7465e91ee42579da9ef533fee8adf3f74a826bec4f305972ddff78a7bd2c99",
+  "new": "6970cd52d6cdee6f0f31670b2ad532223422154a282e5cff8458a064f97829d4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🏛️service/🟦️.ts": {
+  "file": "05.ts",
+  "base": "a57fdce7609e340e1abc3c5423f0bc2561f1de7c48949ae1b84f777e2fa56a7f",
+  "new": "082463ddbf4aa69d013d87a0b0b979d02d700dd47eb51c2954fc0f1b9f33edf4"
+ }
+}

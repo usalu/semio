@@ -1,0 +1,10 @@
+import{readFileSync}from"node:fs";import{resolve,join}from"node:path";
+const D="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph";
+const root=resolve(import.meta.dirname,"../../../../../../../..");
+const rec=await import(join(root,D,"📇️records/🟨️.mjs"));const policy=JSON.parse(readFileSync(join(root,D,"🔣️policy.json"),"utf8")).records;
+const dir=join(root,".cache/b/g/m/snapshots"),manifest=readFileSync(join(dir,process.argv[2]!+".json"));
+let t=performance.now();const graph=await rec.decodeGraphRecordsV1(manifest,async d=>new Uint8Array(readFileSync(join(dir,d+".gz"))),{policy});
+console.log("decode ms",Math.round(performance.now()-t),"projects",Object.keys(graph.projects).length,"deps",graph.dependencies.length);
+t=performance.now();const enc=await rec.encodeGraphRecordsV1(graph,{policy,maximumBytes:536870912});
+console.log("encode ms",Math.round(performance.now()-t),"records",enc.records.size,"bytes",enc.bytes,"same digest",enc.digest===process.argv[2]);
+t=performance.now();let raw=0;for(const n of Object.keys(graph.projects))raw+=JSON.stringify(graph.projects[n]).length;console.log("stringify-only ms",Math.round(performance.now()-t),"raw bytes",raw);

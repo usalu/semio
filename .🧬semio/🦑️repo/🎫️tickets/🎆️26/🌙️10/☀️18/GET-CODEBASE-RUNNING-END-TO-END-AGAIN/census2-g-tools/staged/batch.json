@@ -1,0 +1,210 @@
+{
+ "files": [
+  {
+   "file": "🧰️framework/📦️packages/🟦️typescript/🧪️tests/🔌️sdk-surface/🟦️.ts",
+   "baseSha256": "c9a3eb5c61c478e0d127805d7764ba26368b0cd278e6fd59791e888fe7515cad",
+   "afterSha256": "c3b21f8b77d70ed1db757dbf08818c2d0131650db7b7da99a7887522f70d2042",
+   "edits": [
+    {
+     "old": "import ts from \"typescript\";\n",
+     "new": "import ts from \"typescript\";\nimport { testWorkersV1 } from \"../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/👷️workers/🟦️.ts\";\n/** 👷️ The fresh processes the two loading laws run at once: three at most, fewer when the admitted memory of the test run carries fewer (each loads a facade, 400 MB); six at once held the whole run at 2.8 GB. */\nconst processes = testWorkersV1(\"bun-test\", process.env, { request: 3 }).workers;\n"
+    },
+    {
+     "old": "  const diagnostics = program.getSemanticDiagnostics().concat(program.getSyntacticDiagnostics()).filter(d => d.file && mine.has(resolve(d.file.fileName)) && !(d.code === 2307 && /\\.sql['\"]/.test(ts.flattenDiagnosticMessageText(d.messageText, \"\\n\"))));\n",
+     "new": "  const diagnostics = roots.flatMap(root => { const file = program.getSourceFile(root); return file ? [...program.getSemanticDiagnostics(file), ...program.getSyntacticDiagnostics(file)] : []; }).filter(d => d.file && mine.has(resolve(d.file.fileName)) && !(d.code === 2307 && /\\.sql['\"]/.test(ts.flattenDiagnosticMessageText(d.messageText, \"\\n\"))));\n"
+    },
+    {
+     "old": "      results.push({ subpath, loaded: out.includes(\"LOADED\"), stderr: err.split(\"\\n\").find(line => /error|Cannot/i.test(line)) ?? \"\" });\n    }\n  };\n  await Promise.all(Array.from({ length: 6 }, worker));\n",
+     "new": "      results.push({ subpath, loaded: out.includes(\"LOADED\"), stderr: err.split(\"\\n\").find(line => /error|Cannot/i.test(line)) ?? \"\" });\n    }\n  };\n  await Promise.all(Array.from({ length: processes }, worker));\n"
+    },
+    {
+     "old": "      results.push({ subpath: job.subpath, mismatched: out ? JSON.parse(out) : [\"<did not run>\"], stderr: out ? \"\" : err.split(\"\\n\").find(line => /error|Cannot/i.test(line)) ?? \"\" });\n    }\n  };\n  await Promise.all(Array.from({ length: 6 }, worker));\n",
+     "new": "      results.push({ subpath: job.subpath, mismatched: out ? JSON.parse(out) : [\"<did not run>\"], stderr: out ? \"\" : err.split(\"\\n\").find(line => /error|Cannot/i.test(line)) ?? \"\" });\n    }\n  };\n  await Promise.all(Array.from({ length: processes }, worker));\n"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts",
+   "baseSha256": "f817242081ca983ffcbbaaa0cb369683a9eabebce2386cfdc4d6d34af84bed81",
+   "afterSha256": "f759f31b7ae98ae8155ea4861f727364b02c3b5e58a3c67984fb0cae06fd201f",
+   "edits": [
+    {
+     "old": "export type OwnedCommandCaptureOptionsV1=Readonly<{control:ResourceLeaseControl;output:Readonly<{maximumBytes:number;maximumLines:number}>;input?:OwnedCommandInputV1;env?:Readonly<Record<string,string|undefined>>}>;\ntype Options=Readonly<{input?:OwnedCommandInputV1;env?:Readonly<Record<string,string|undefined>>;signal?:AbortSignal;control?:ResourceLeaseControl;output?:Readonly<{maximumBytes:number;maximumLines:number}>}>;\n",
+     "new": "/** 🔭️ Hands a caller the pid of the spawned child and the function that terminates its process tree (the capture then answers the terminal status and signal of the killed tree like any other, it is no refusal); the caller answers the function that lets go of the child, called when the capture ends. */\nexport type OwnedCommandSpawnHookV1=(pid:number,kill:()=>void)=>(()=>void)|void;\nexport type OwnedCommandCaptureOptionsV1=Readonly<{control:ResourceLeaseControl;output:Readonly<{maximumBytes:number;maximumLines:number}>;input?:OwnedCommandInputV1;env?:Readonly<Record<string,string|undefined>>;onSpawn?:OwnedCommandSpawnHookV1}>;\ntype Options=Readonly<{input?:OwnedCommandInputV1;env?:Readonly<Record<string,string|undefined>>;signal?:AbortSignal;control?:ResourceLeaseControl;output?:Readonly<{maximumBytes:number;maximumLines:number}>;onSpawn?:OwnedCommandSpawnHookV1}>;\n"
+    },
+    {
+     "old": "function startCapture(command:string,args:readonly string[],cwd:string,options:Options,separated:boolean,conversation?:ChannelRun):Promise<Readonly<{result:OwnedCommandCaptureV1;tail:string}>>{try{const control=options.control;if(separated){if(!control)throw Error(\"Actual separated capture control required\");requireIssuedResourceControlV1(control);}const input=options.input,output=options.output,environment=options.env,signal=options.signal;if(input!==undefined){if(!control)throw Error(\"Actual input capture control required\");requireIssuedResourceControlV1(control);}const captured=Object.freeze({...(control?{control}:{}),...(signal?{signal}:{}),...(input===undefined?{}:{input:readOwnedCommandInputV1(input)}),...(output?{output:Object.freeze({...output})}:{}),...(environment?{env:Object.freeze({...environment})}:{})}),argv=Object.freeze([...args]);if(conversation){const remaining=control?.remainingMilliseconds();if(!control||remaining===null||remaining===undefined||remaining<1||input!==undefined||typeof conversation.body!==\"function\"||typeof command!==\"string\"||command.length>256||command.includes(\"\\0\")||typeof cwd!==\"string\"||cwd.length>256||!isAbsolute(cwd)||cwd.includes(\"\\0\")||argv.length>channelPolicy.maximumArguments||argv.some(arg=>typeof arg!==\"string\"||arg.includes(\"\\0\"))||argv.reduce((total,arg)=>total+Buffer.byteLength(arg,\"utf8\"),0)>channelPolicy.maximumArgumentBytes)throw Error(\"Finite owned interactive command and actual Original control required\");}const run=()=>captureOwnedCommandLiveV1(command,argv,cwd,captured,separated,conversation);if(separated||captured.input){if(!captured.control)throw Error(\"Actual input capture control required\");return withIssuedResourceOperationV1(captured.control,run);}return run();}catch(error){const failure=Promise.reject(error);void failure.catch(()=>{});return failure;}}\n",
+     "new": "function startCapture(command:string,args:readonly string[],cwd:string,options:Options,separated:boolean,conversation?:ChannelRun):Promise<Readonly<{result:OwnedCommandCaptureV1;tail:string}>>{try{const control=options.control;if(separated){if(!control)throw Error(\"Actual separated capture control required\");requireIssuedResourceControlV1(control);}const input=options.input,output=options.output,environment=options.env,signal=options.signal;if(input!==undefined){if(!control)throw Error(\"Actual input capture control required\");requireIssuedResourceControlV1(control);}const captured=Object.freeze({...(control?{control}:{}),...(signal?{signal}:{}),...(options.onSpawn?{onSpawn:options.onSpawn}:{}),...(input===undefined?{}:{input:readOwnedCommandInputV1(input)}),...(output?{output:Object.freeze({...output})}:{}),...(environment?{env:Object.freeze({...environment})}:{})}),argv=Object.freeze([...args]);if(conversation){const remaining=control?.remainingMilliseconds();if(!control||remaining===null||remaining===undefined||remaining<1||input!==undefined||typeof conversation.body!==\"function\"||typeof command!==\"string\"||command.length>256||command.includes(\"\\0\")||typeof cwd!==\"string\"||cwd.length>256||!isAbsolute(cwd)||cwd.includes(\"\\0\")||argv.length>channelPolicy.maximumArguments||argv.some(arg=>typeof arg!==\"string\"||arg.includes(\"\\0\"))||argv.reduce((total,arg)=>total+Buffer.byteLength(arg,\"utf8\"),0)>channelPolicy.maximumArgumentBytes)throw Error(\"Finite owned interactive command and actual Original control required\");}const run=()=>captureOwnedCommandLiveV1(command,argv,cwd,captured,separated,conversation);if(separated||captured.input){if(!captured.control)throw Error(\"Actual input capture control required\");return withIssuedResourceOperationV1(captured.control,run);}return run();}catch(error){const failure=Promise.reject(error);void failure.catch(()=>{});return failure;}}\n"
+    },
+    {
+     "old": " let failed=false,stopped:unknown,closed=false,channel:ChannelOwner|undefined;const stop=(cause:unknown)=>{if(!failed){failed=true;stopped=cause;}if(channel){channel.accepting=false;channelEnd(channel,{error:stopped});}if(!closed)terminateOwnedChildTree(child);};\n",
+     "new": " let failed=false,stopped:unknown,closed=false,channel:ChannelOwner|undefined;const stop=(cause:unknown)=>{if(!failed){failed=true;stopped=cause;}if(channel){channel.accepting=false;channelEnd(channel,{error:stopped});}if(!closed)terminateOwnedChildTree(child);};\n const release=options.onSpawn!==undefined&&child.pid!==undefined?options.onSpawn(child.pid,()=>{if(!closed)terminateOwnedChildTree(child);}):undefined;\n"
+    },
+    {
+     "old": " finally{clearTimeout(timer);signal?.removeEventListener(\"abort\",abort);try{await inputPublication;}catch(error){stop(error);}if(channel){await channel.close();channel.accepting=false;channel.live=false;}await publication;}\n",
+     "new": " finally{if(release)release();clearTimeout(timer);signal?.removeEventListener(\"abort\",abort);try{await inputPublication;}catch(error){stop(error);}if(channel){await channel.close();channel.accepting=false;channel.live=false;}await publication;}\n"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+   "baseSha256": "8a41774ee3fdc2ba3c42c68b141c3d0a4397358bae4de72d27814a81f0f55200",
+   "afterSha256": "d78cfc8e7ca97a60f97f3ebf5964c0d6df173e85029c2ab205eae8ce06b12d14",
+   "edits": [
+    {
+     "old": "import {resultStreamV1} from \"../🏗️build/📤️output/🟦️.ts\";\n",
+     "new": "import {resultStreamV1} from \"../🏗️build/📤️output/🟦️.ts\";\nimport {bunTestCeilingV1} from \"../🧪️testing/🟨️bun/🧯️ceiling/🟦️.ts\";\n"
+    },
+    {
+     "old": "export {withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,readOwnedCommandChannelTerminalV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,type OwnedCommandChannelV1,type OwnedCommandTerminalV1,writeOwnedCommandOutputV1,type OwnedCommandOutputSinkV1,captureOwnedCommandResultV1,readOwnedCommandCaptureV1,type OwnedCommandCaptureV1,type OwnedCommandCaptureOptionsV1,type OwnedCommandInputV1} from \"./📥️capture/🟦️.ts\";\n",
+     "new": "export {withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,readOwnedCommandChannelTerminalV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,type OwnedCommandChannelV1,type OwnedCommandTerminalV1,writeOwnedCommandOutputV1,type OwnedCommandOutputSinkV1,captureOwnedCommandResultV1,readOwnedCommandCaptureV1,type OwnedCommandCaptureV1,type OwnedCommandCaptureOptionsV1,type OwnedCommandSpawnHookV1,type OwnedCommandInputV1} from \"./📥️capture/🟦️.ts\";\n"
+    },
+    {
+     "old": "  if (commandSignal?.aborted) {if(auxiliary)throw commandSignal.reason;throw new Error(`${label} stopped: cancelled`);}\n",
+     "new": "  if (commandSignal?.aborted) {if(auxiliary)throw commandSignal.reason;throw new Error(`${label} stopped: cancelled`);}\n  const ceiling = bunTestCeilingV1(command, args, cwd, options.env ?? process.env);\n"
+    },
+    {
+     "old": "    if (!closed) terminateOwnedChildTree(child);\n  };\n",
+     "new": "    if (!closed) terminateOwnedChildTree(child);\n  };\n  const release = ceiling !== undefined && child.pid !== undefined ? ceiling(child.pid, terminate) : undefined;\n"
+    },
+    {
+     "old": "  } finally {\n",
+     "new": "  } finally {\n    if (release) release();\n"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+   "baseSha256": "3bdb5372336751f780c75a4b3f3037ff078e37b13923b0d2be626b3d9f8128ca",
+   "afterSha256": "2291446035a5547ff9ff6008c783f2f6b71b48d58173934c12ce21f33f9c7897",
+   "edits": [
+    {
+     "old": "import { guardArgumentsV1, testCheckoutRootV1, testSandboxEnvironmentV1 } from \"../🏖️sandbox/🟦️.ts\";\n",
+     "new": "import { guardArgumentsV1, testCheckoutRootV1, testSandboxEnvironmentV1 } from \"../🏖️sandbox/🟦️.ts\";\nimport { bunTestCeilingV1 } from \"../🟨️bun/🧯️ceiling/🟦️.ts\";\n"
+    },
+    {
+     "old": "  const started = performance.now();\n",
+     "new": "  const started = performance.now();\n  const ceiling = bunTestCeilingV1(command, args, options.cwd, options.env ?? process.env);\n"
+    },
+    {
+     "old": "  let reason: \"timeout\" | \"cancelled\" | \"interrupted\" | \"output-limit\" | undefined;\n",
+     "new": "  let reason: \"timeout\" | \"cancelled\" | \"interrupted\" | \"output-limit\" | \"memory-ceiling\" | undefined;\n"
+    },
+    {
+     "old": "  };\n",
+     "new": "  };\n  const release = ceiling !== undefined && child.pid !== undefined ? ceiling(child.pid, message => { console.error(message); stop(\"memory-ceiling\"); }) : undefined;\n"
+    },
+    {
+     "old": "    process.exit(reason || signal ? 1 : code ?? 1);\n  } finally {\n",
+     "new": "    process.exit(reason || signal ? 1 : code ?? 1);\n  } finally {\n    if (release) release();\n"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🏃️run/🟦️.ts",
+   "baseSha256": "ad1d693151e31f04d0e2b4d9d36c5881b985ce75362964acc0b9212b43f7d7cb",
+   "afterSha256": "319b84a16f32535af0119ec807a46a2472eaefc24487015e218bfb8a25e7dfa3",
+   "edits": [
+    {
+     "old": "import{announceTestWorkersV1,testWorkersV1,type TestWorkerPolicyV1}from\"../../👷️workers/🟦️.ts\";\n",
+     "new": "import{announceTestWorkersV1,readTestWorkerPolicyV1,testWorkersV1,type TestWorkerPolicyV1}from\"../../👷️workers/🟦️.ts\";\nimport{createTestFileMemoryV1,readTestFileBudgetsV1,testFileRatioBasisPointsV1,type TestFileBudgetsV1,type TestFileProcessRowsV1}from\"../../👷️workers/📏️file-budgets/🟦️.ts\";\n"
+    },
+    {
+     "old": "/** 👷️ Names how many test files run at once: the worker policy (the authored one unless a test brings its own), the store the size of a file process is learned in and where a reduced count is worded. */\nexport type ProcessTestWorkersV1=Readonly<{policy?:TestWorkerPolicyV1;learning?:TestWorkerLearningV1;write?:(line:string)=>void}>;\n",
+     "new": "/** 👷️ Names how many test files run at once: the worker policy (the authored one unless a test brings its own), the store the size of a file process is learned in, the declared test file budgets (the authored ones unless a test brings its own), how the process table is read and how often, and where a reduced count is worded. */\nexport type ProcessTestWorkersV1=Readonly<{policy?:TestWorkerPolicyV1;learning?:TestWorkerLearningV1;budgets?:TestFileBudgetsV1;rows?:()=>Promise<TestFileProcessRowsV1>;intervalMilliseconds?:number;write?:(line:string)=>void}>;\n"
+    },
+    {
+     "old": " const plan=announceTestWorkersV1(testWorkersV1(\"bun-test\",environment,{request:suite.parallel??1,ratioBasisPoints:learnedTestWorkerRatioV1(run.workers?.learning,\"bun-test\",suite.id)},run.workers?.policy),environment,run.workers?.write);\n",
+     "new": " const budgets=run.workers?.budgets??readTestFileBudgetsV1(undefined,environment),defaultMegabytes=(run.workers?.policy??readTestWorkerPolicyV1()).runners.find(row=>row.id===\"bun-test\")!.workerMegabytes;\n const raised=testFileRatioBasisPointsV1(budgets,bunSources.map(source=>relative(checkout,source).split(sep).join(\"/\")),defaultMegabytes),learned=learnedTestWorkerRatioV1(run.workers?.learning,\"bun-test\",suite.id);\n const plan=announceTestWorkersV1(testWorkersV1(\"bun-test\",environment,{request:suite.parallel??1,ratioBasisPoints:raised>10000?Math.max(learned,raised):learned},run.workers?.policy),environment,run.workers?.write);\n"
+    },
+    {
+     "old": "  policy:{version:1,maximumParallelFiles:plan.workers,...processTestProtocolV1.output},\n",
+     "new": "  policy:{version:1,maximumParallelFiles:plan.workers,...processTestProtocolV1.output},memory:createTestFileMemoryV1({budgets,checkout,defaultMegabytes,shareMegabytes:plan.memoryMegabytes,environment,...(run.workers?.rows?{rows:run.workers.rows}:{}),...(run.workers?.intervalMilliseconds?{intervalMilliseconds:run.workers.intervalMilliseconds}:{})}),\n"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/📁️files/🟦️.ts",
+   "baseSha256": "d2cb99442207c04545f44f26964637983cb08fba7d415a689ebc0c3e306e712f",
+   "afterSha256": "005ac90b1960e6093b90332d165181218d11e5f677cc01e7dc3a0e6cb0e3f9d3",
+   "edits": [
+    {
+     "old": "import{captureOwnedCommandResultV1,type OwnedCommandCaptureV1}from\"../../../🎛️owned-execution/🟦️.ts\";\n",
+     "new": "import{describeTestFileExceededV1,type TestFileMemoryV1}from\"../../👷️workers/📏️file-budgets/🟦️.ts\";\nimport{captureOwnedCommandResultV1,type OwnedCommandCaptureV1,type OwnedCommandSpawnHookV1}from\"../../../🎛️owned-execution/🟦️.ts\";\n"
+    },
+    {
+     "old": "export interface OwnedBunFilesRequestV1{readonly invocation:ScriptInvocation;readonly control:ResourceLeaseControl;readonly cwd:string;readonly files:readonly string[];readonly arguments:readonly string[];readonly timeoutMilliseconds?:number;readonly capabilities?:Readonly<Record<string,string>>;readonly environment:Readonly<Record<string,string|undefined>>;readonly policy:OwnedBunFilesPolicyV1;readonly onFileResult:(result:OwnedBunFileResultV1,index:number,control:ResourceLeaseControl)=>Promise<void>}\n",
+     "new": "export interface OwnedBunFilesRequestV1{readonly invocation:ScriptInvocation;readonly control:ResourceLeaseControl;readonly cwd:string;readonly files:readonly string[];readonly arguments:readonly string[];readonly timeoutMilliseconds?:number;readonly capabilities?:Readonly<Record<string,string>>;readonly environment:Readonly<Record<string,string|undefined>>;readonly policy:OwnedBunFilesPolicyV1;readonly memory?:TestFileMemoryV1;readonly onFileResult:(result:OwnedBunFileResultV1,index:number,control:ResourceLeaseControl)=>Promise<void>}\n"
+    },
+    {
+     "old": "export interface OwnedBunFileResultV1{readonly file:string;readonly capture:OwnedCommandCaptureV1}\n",
+     "new": "export interface OwnedBunFileResultV1{readonly file:string;readonly capture:OwnedCommandCaptureV1;readonly memory?:Readonly<{peakMegabytes:number;ceilingMegabytes:number;exceeded:boolean}>}\n"
+    },
+    {
+     "old": "     checkResourceLeaseControl(phase);const capture=await captureOwnedCommandResultV1(process.execPath,[...runtimeTestArgumentsV1([file],selection.timeoutMilliseconds===undefined?undefined:{timeoutMilliseconds:selection.timeoutMilliseconds}),...selection.arguments],cwd,{control:phase,env:selection.capabilities===undefined?scriptInvocationEnvironment(invocation,environment):scriptProcessEnvironment({...readIssuedScriptProcessEnvelopeV1(invocation),capabilities:{...invocation.capabilities,...selection.capabilities}},environment),output:{maximumBytes:policy.maximumFileOutputBytes,maximumLines:policy.maximumFileOutputLines}});\n     total+=Buffer.byteLength(capture.stdout)+Buffer.byteLength(capture.stderr);if(total>policy.maximumTotalOutputBytes)throw Error(\"Owned Bun cohort output limit exceeded\");const result=Object.freeze({file,capture});results[index]=result;\n",
+     "new": "     checkResourceLeaseControl(phase);const run=(onSpawn?:OwnedCommandSpawnHookV1)=>captureOwnedCommandResultV1(process.execPath,[...runtimeTestArgumentsV1([file],selection.timeoutMilliseconds===undefined?undefined:{timeoutMilliseconds:selection.timeoutMilliseconds}),...selection.arguments],cwd,{control:phase,env:selection.capabilities===undefined?scriptInvocationEnvironment(invocation,environment):scriptProcessEnvironment({...readIssuedScriptProcessEnvelopeV1(invocation),capabilities:{...invocation.capabilities,...selection.capabilities}},environment),output:{maximumBytes:policy.maximumFileOutputBytes,maximumLines:policy.maximumFileOutputLines},...(onSpawn?{onSpawn}:{})});\n     let capture:OwnedCommandCaptureV1,memory:OwnedBunFileResultV1[\"memory\"];\n     if(!options.memory)capture=await run();\n     else{\n      const limits=options.memory.limits(file),slot=await options.memory.gate.enter(limits.budgetMegabytes);let hit=0,peak=0;\n      try{checkResourceLeaseControl(phase);capture=await run((pid,kill)=>{const done=options.memory!.watch.watch(pid,limits.ceilingMegabytes,megabytes=>{hit=megabytes;kill();},slot.raise);return()=>{peak=done().peakMegabytes;};});}\n      finally{slot.release();}\n      if(hit>0)capture=Object.freeze({...capture,stderr:capture.stderr+describeTestFileExceededV1(relative(cwd,file).split(sep).join(\"/\"),hit,limits,options.memory.environment)+\"\\n\",status:capture.status===0?null:capture.status,signal:capture.signal??\"SIGKILL\"});\n      memory=Object.freeze({peakMegabytes:Math.max(peak,hit),ceilingMegabytes:limits.ceilingMegabytes,exceeded:hit>0});\n     }\n     total+=Buffer.byteLength(capture.stdout)+Buffer.byteLength(capture.stderr);if(total>policy.maximumTotalOutputBytes)throw Error(\"Owned Bun cohort output limit exceeded\");const result=Object.freeze({file,capture,...(memory?{memory}:{})});results[index]=result;\n"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/🚧️boundary/🟦️.ts",
+   "baseSha256": "f7d23f4a70964f4e2bf29ea42d42d3a3a4142eaa434fa1dacc042a12f91523ba",
+   "afterSha256": "f9925b49b076c7f307d7ce1e95af711bbafe01b271a0b09099206447e4358f61",
+   "edits": [
+    {
+     "old": " const result=await build({entryPoints:[...entries].map((input,index)=>({in:input,out:`entry-${index}`})),outdir:\"general-deletion\",bundle:true,write:false,platform:\"node\",format:\"esm\",packages:\"external\",metafile:true,logLevel:\"silent\",define:{\"import.meta.vitest\":\"false\"},external:[\"bun\"],loader:{\".wasm\":\"file\"},plugins:[{name:\"refuse-specific\",setup(build){build.onResolve({filter:/\\?(?:raw|url|inline)$/},args=>({path:resolve(args.resolveDir,args.path.replace(/\\?[^?]*$/u,\"\")),namespace:\"asset-reference\"}));build.onLoad({filter:/.*/,namespace:\"asset-reference\"},()=>({contents:\"export default \\\"\\\";\",loader:\"js\"}));build.onResolve({filter:/^(?:@semio-tech|@repo)\\//},args=>{const segments=args.path.split(\"/\"),name=segments.slice(0,2).join(\"/\"),owner=packages.get(name);if(!owner)throw Error(`Non-General first-party package refused: ${args.path}`);const key=segments.length===2?\".\":`./${segments.slice(2).join(\"/\")}`,entry=runtime(owner.manifest.exports?.[key]??(key===\".\"?owner.manifest.main:undefined));if(!entry)throw Error(`Missing General public export: ${args.path}`);return {path:resolve(dirname(owner.path),entry)};});build.onLoad({filter:/.*/},args=>{if(specific(args.path))throw Error(`Specific source refused: ${args.path}`);return undefined;});}}]});expect(Object.keys(result.metafile!.inputs).filter(specific)).toEqual([]);writeFileSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,\"general-deletion-bundle.json\"),JSON.stringify(result.metafile));\n",
+     "new": " const all=[...entries].map((input,index)=>({in:input,out:`entry-${index}`})),settings=(batch:{in:string;out:string}[])=>({entryPoints:batch,outdir:\"general-deletion\",bundle:true,write:false,platform:\"node\",format:\"esm\",packages:\"external\",metafile:true,logLevel:\"silent\",define:{\"import.meta.vitest\":\"false\"},external:[\"bun\"],loader:{\".wasm\":\"file\"},plugins:[{name:\"refuse-specific\",setup(build){build.onResolve({filter:/\\?(?:raw|url|inline)$/},args=>({path:resolve(args.resolveDir,args.path.replace(/\\?[^?]*$/u,\"\")),namespace:\"asset-reference\"}));build.onLoad({filter:/.*/,namespace:\"asset-reference\"},()=>({contents:\"export default \\\"\\\";\",loader:\"js\"}));build.onResolve({filter:/^(?:@semio-tech|@repo)\\//},args=>{const segments=args.path.split(\"/\"),name=segments.slice(0,2).join(\"/\"),owner=packages.get(name);if(!owner)throw Error(`Non-General first-party package refused: ${args.path}`);const key=segments.length===2?\".\":`./${segments.slice(2).join(\"/\")}`,entry=runtime(owner.manifest.exports?.[key]??(key===\".\"?owner.manifest.main:undefined));if(!entry)throw Error(`Missing General public export: ${args.path}`);return {path:resolve(dirname(owner.path),entry)};});build.onLoad({filter:/.*/},args=>{if(specific(args.path))throw Error(`Specific source refused: ${args.path}`);return undefined;});}}]}),inputs:Record<string,unknown>={},outputs:Record<string,unknown>={};\n for(let at=0;at<all.length;at+=40){const result=await build(settings(all.slice(at,at+40)));Object.assign(inputs,result.metafile!.inputs);Object.assign(outputs,result.metafile!.outputs);}\n expect(Object.keys(inputs).filter(specific)).toEqual([]);writeFileSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,\"general-deletion-bundle.json\"),JSON.stringify({inputs,outputs}));\n"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+   "afterSha256": "54e1f745d13f518be4d455ae60e53fc75143d3acf3d5514f49e4dc088eb067bf",
+   "edits": [
+    {
+     "old": "   - **Test runners** start the workers one job of their grant carries, from one policy (`🧪️testing/👷️workers`): memory of the job minus the base of the runner over the measured RSS of a worker (learned per class in `estimates.json`), and the cores of the job times what the runner can share one core with, never fewer than one. Defaults: vitest 4 (cap 8), bun test files 1 (cap 8), Playwright 1 (cap 4), end-to-end stacks 2, Cargo test threads = cores. An override (`SEMIO_VITEST_WORKERS`, `SEMIO_BUN_TEST_WORKERS`, `SEMIO_CARGO_TEST_THREADS`, `SEMIO_PLAYWRIGHT_WORKERS`, `SEMIO_E2E_STACKS`) never leaves the admitted cores; a reduced count prints `[tests] Vitest: 2 of 4 worker(s), bounded by …`.\n",
+     "new": "   - **Test runners** start the workers one job of their grant carries, from one policy (`🧪️testing/👷️workers`): memory of the job minus the base of the runner over the measured RSS of a worker (learned per class in `estimates.json`), and the cores of the job times what the runner can share one core with, never fewer than one. Defaults: vitest 4 (cap 8), bun test files 1 (cap 8), Playwright 1 (cap 4), end-to-end stacks 2, Cargo test threads = cores. An override (`SEMIO_VITEST_WORKERS`, `SEMIO_BUN_TEST_WORKERS`, `SEMIO_CARGO_TEST_THREADS`, `SEMIO_PLAYWRIGHT_WORKERS`, `SEMIO_E2E_STACKS`) never leaves the admitted cores; a reduced count prints `[tests] Vitest: 2 of 4 worker(s), bounded by …`. A test file that holds more than a typical file process is declared with its measured peak RSS in `🧪️testing/👷️workers/📏️file-budgets`: the suite runner prices a cohort with its biggest file, starts the files of a cohort only while the megabytes held by the running ones plus the budget of the next fit the share of the grant, and stops a file above 150 % of its budget (3 GB when undeclared) by name; `SEMIO_TEST_FILE_CEILING=off` lifts the ceilings. The same ceilings hold every `bun test` process that the owned command runners start (`🧪️testing/🟨️bun/🧯️ceiling`), whoever the caller is: it is terminated by name above its ceiling, a command that is no `bun test` of the hosting runtime has none.\n"
+    },
+    {
+     "old": "   - **Testläufer** starten so viele Worker, wie ein Job ihrer Zusage trägt, nach einer einzigen Richtlinie (`🧪️testing/👷️workers`): der Speicher des Jobs abzüglich der Grundlast des Läufers geteilt durch den gemessenen RSS eines Workers (je Klasse in `estimates.json` gelernt), und die Kerne des Jobs mal der Zahl, die sich ein Kern bei diesem Läufer teilen kann, nie weniger als einer. Standard: vitest 4 (Grenze 8), bun-test-Dateien 1 (Grenze 8), Playwright 1 (Grenze 4), Ende-zu-Ende-Stacks 2, Cargo-Test-Threads = Kerne. Eine Vorgabe (`SEMIO_VITEST_WORKERS`, `SEMIO_BUN_TEST_WORKERS`, `SEMIO_CARGO_TEST_THREADS`, `SEMIO_PLAYWRIGHT_WORKERS`, `SEMIO_E2E_STACKS`) verlässt nie die zugelassenen Kerne; eine verkleinerte Zahl erscheint als `[tests] Vitest: 2 von 4 Worker(n), begrenzt durch …`.\n",
+     "new": "   - **Testläufer** starten so viele Worker, wie ein Job ihrer Zusage trägt, nach einer einzigen Richtlinie (`🧪️testing/👷️workers`): der Speicher des Jobs abzüglich der Grundlast des Läufers geteilt durch den gemessenen RSS eines Workers (je Klasse in `estimates.json` gelernt), und die Kerne des Jobs mal der Zahl, die sich ein Kern bei diesem Läufer teilen kann, nie weniger als einer. Standard: vitest 4 (Grenze 8), bun-test-Dateien 1 (Grenze 8), Playwright 1 (Grenze 4), Ende-zu-Ende-Stacks 2, Cargo-Test-Threads = Kerne. Eine Vorgabe (`SEMIO_VITEST_WORKERS`, `SEMIO_BUN_TEST_WORKERS`, `SEMIO_CARGO_TEST_THREADS`, `SEMIO_PLAYWRIGHT_WORKERS`, `SEMIO_E2E_STACKS`) verlässt nie die zugelassenen Kerne; eine verkleinerte Zahl erscheint als `[tests] Vitest: 2 von 4 Worker(n), begrenzt durch …`. Eine Testdatei, die mehr belegt als ein typischer Dateiprozess, wird mit ihrer gemessenen Spitze (RSS) in `🧪️testing/👷️workers/📏️file-budgets` deklariert: der Suite-Läufer bepreist eine Gruppe mit ihrer größten Datei, startet die Dateien einer Gruppe nur, solange die Megabytes der laufenden Dateien plus das Budget der nächsten in den Anteil der Zuteilung passen, und hält eine Datei über 150 % ihres Budgets (3 GB ohne Deklaration) namentlich an; `SEMIO_TEST_FILE_CEILING=off` hebt die Obergrenzen auf. Dieselben Obergrenzen gelten für jeden `bun test`-Prozess, den die eigenen Befehlsläufer starten (`🧪️testing/🟨️bun/🧯️ceiling`), gleich wer ihn aufruft: über der Obergrenze wird er namentlich beendet, ein Befehl, der kein `bun test` der Host-Laufzeit ist, hat keine.\n"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts",
+   "baseSha256": "d39e79b47fe4791e7e34d01900be5d860141ace21bec4f7f454f72067c0fbea9",
+   "afterSha256": "7a02529757c27eae787f59e01fbb0facabe41e7686b8fb1b299f33794e4c5cf5",
+   "edits": [
+    {
+     "old": " if(target!==\"node\"&&target!==\"runtime\")throw Error(\"Closed authorizer compiler target required\");if(validateJsonSchemaSubset(schema.$defs.EntryRole,entryRole).length)throw Error(\"Closed authorizer entry role required\");requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);const source=readNxAuthorizerSnapshotV1(value),root=resolve(workspace),files=new Map(source.files.map(row=>[row.path,Buffer.from(row.base64,\"base64\")])),loaded=new Set<string>(),resolutions=new Map(source.manifest.resolutions.map(row=>[row.specifier,row.path])),externals=new Set(nxAuthorizerExternalModulesV1),importMaps=nxAuthorizerImportProjectionV1(root,files,source.manifest.resolutions),physicalSources:CapturedPhysicalSourcesV1={version:1,root,sources:source.manifest.sources},physicalImagesText=JSON.stringify({version:1,images:capturedSourceImagesV1(source.manifest,files,importMaps)}),physicalSourcesText=JSON.stringify(physicalSources),resolutionSourcesText=JSON.stringify({version:1,root,files:source.manifest.sources.map(row=>({...row,imports:importMaps.get(row.path)!}))});checkResourceLeaseControl(control);const result=await runtimeBundleV1({entrypoints:[join(root,source.manifest.entry)],root,target,format:\"esm\",naming:\"entry.mjs\",treeShaking:true,minify:true,splitting:false,sourcemap:\"none\",metafile:true,define:{\"import.meta.vitest\":\"undefined\",\"import.meta.semioFrozenAuthorizers\":\"true\"},plugins:[{name:\"original-captured-source\",setup(build){\n",
+     "new": " if(target!==\"node\"&&target!==\"runtime\")throw Error(\"Closed authorizer compiler target required\");if(validateJsonSchemaSubset(schema.$defs.EntryRole,entryRole).length)throw Error(\"Closed authorizer entry role required\");requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);const source=readNxAuthorizerSnapshotV1(value),root=resolve(workspace),files=new Map(source.files.map(row=>[row.path,Buffer.from(row.base64,\"base64\")])),loaded=new Set<string>(),resolutions=new Map(source.manifest.resolutions.map(row=>[row.specifier,row.path])),externals=new Set(nxAuthorizerExternalModulesV1),importMaps=nxAuthorizerImportProjectionV1(root,files,source.manifest.resolutions),physicalSources:CapturedPhysicalSourcesV1={version:1,root,sources:source.manifest.sources},physicalImagesText=JSON.stringify({version:1,images:capturedSourceImagesV1(source.manifest,files,importMaps)}),physicalSourcesText=JSON.stringify(physicalSources),resolutionSourcesText=JSON.stringify({version:1,root,files:source.manifest.sources.map(row=>({...row,imports:importMaps.get(row.path)!}))});checkResourceLeaseControl(control);const result=await runtimeBundleV1({entrypoints:[join(root,source.manifest.entry)],root,target,format:\"esm\",naming:\"entry.mjs\",treeShaking:true,minify:true,splitting:false,sourcemap:\"none\",metafile:true,define:{\"import.meta.vitest\":\"undefined\",\"import.meta.semioFrozenAuthorizers\":\"true\",\"import.meta.semioCapturedPhysicalSources\":physicalSourcesText,\"import.meta.semioCapturedPhysicalSourceImages\":physicalImagesText,\"import.meta.semioCapturedSourceResolutions\":resolutionSourcesText},plugins:[{name:\"original-captured-source\",setup(build){\n"
+    },
+    {
+     "old": "  build.onLoad({filter:/.*/,namespace},async args=>{checkResourceLeaseControl(control);const path=relative(root,args.path).replaceAll(\"\\\\\",\"/\"),bytes=files.get(path);if(!bytes)throw refuseBootstrapV1(\"missing\",\"tools.authorizer-file-required\");loaded.add(path);await control.publish({resource:\"nx-authorizers:\"+path,mode:\"shared\",elapsedMs:0});await control.yieldContinuation();checkResourceLeaseControl(control);const loader=extname(path)===\".json\"?\"json\":/\\.[cm]?tsx?$/u.test(path)?\"ts\":\"js\",contents=loader===\"json\"?bytes.toString(\"utf8\"):new TranspilerV1({loader,target,define:{\"import.meta.main\":String(entryRole===\"program\"&&path===source.manifest.entry),\"import.meta.semioPhysicalSourceURL\":JSON.stringify(pathToFileURL(args.path).href),\"import.meta.semioCapturedPhysicalSources\":physicalSourcesText,\"import.meta.semioCapturedPhysicalSourceImages\":physicalImagesText,\"import.meta.semioCapturedSourceResolutions\":resolutionSourcesText}}).transformSync((bundledLazyLoadOwnersV1.has(path)?hoistLiteralRequiresV1:(text:string)=>text)(bytes.toString(\"utf8\").replace(mainModuleGuardV1,\"import.meta.main\")));return{contents,loader:loader===\"json\"?\"json\":\"js\"};});\n",
+     "new": "  build.onLoad({filter:/.*/,namespace},async args=>{checkResourceLeaseControl(control);const path=relative(root,args.path).replaceAll(\"\\\\\",\"/\"),bytes=files.get(path);if(!bytes)throw refuseBootstrapV1(\"missing\",\"tools.authorizer-file-required\");loaded.add(path);await control.publish({resource:\"nx-authorizers:\"+path,mode:\"shared\",elapsedMs:0});await control.yieldContinuation();checkResourceLeaseControl(control);const loader=extname(path)===\".json\"?\"json\":/\\.[cm]?tsx?$/u.test(path)?\"ts\":\"js\",contents=loader===\"json\"?bytes.toString(\"utf8\"):new TranspilerV1({loader,target,define:{\"import.meta.main\":String(entryRole===\"program\"&&path===source.manifest.entry),\"import.meta.semioPhysicalSourceURL\":JSON.stringify(pathToFileURL(args.path).href)}}).transformSync((bundledLazyLoadOwnersV1.has(path)?hoistLiteralRequiresV1:(text:string)=>text)(bytes.toString(\"utf8\").replace(mainModuleGuardV1,\"import.meta.main\")));return{contents,loader:loader===\"json\"?\"json\":\"js\"};});\n"
+    }
+   ]
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🎓️course-inputs/🟦️.ts",
+   "baseSha256": "3cb4fd6689478a8547bb862d448fa05c8c9a02db3620ef503196968c84a26d8e",
+   "afterSha256": "70ae8b3e57ba32b51e245b9d390d858bb7003095d379110015b8c9387caa6c7e",
+   "edits": [
+    {
+     "old": "import {expect,test} from \"bun:test\";\n",
+     "new": "import {afterAll,afterEach,expect,test} from \"bun:test\";\n"
+    },
+    {
+     "old": " const program=ts.createProgram({rootNames:parsed.fileNames,options:{...parsed.options,noEmit:true,incremental:false,tsBuildInfoFile:undefined}});\n",
+     "new": " const options={...parsed.options,noEmit:true,incremental:false,tsBuildInfoFile:undefined},host=ts.createCompilerHost(options),parse=host.getSourceFile.bind(host),installed=(file:string)=>(host.realpath?.(file)??file).split(/[\\\\/]/u).includes(\"node_modules\");\n host.getSourceFile=(file,language,...rest)=>installed(file)?ts.createSourceFile(file,\"\",language):parse(file,language,...rest);\n const program=ts.createProgram({rootNames:parsed.fileNames,options,host});\n"
+    },
+    {
+     "old": "test(\"course input law fixture is closed\",()=>{expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);});\n",
+     "new": "test(\"course input law fixture is closed\",()=>{expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);});\n\nafterEach(()=>{Bun.gc(true);});\nafterAll(()=>{require(\"esbuild\").stop();});\n"
+    }
+   ]
+  }
+ ]
+}

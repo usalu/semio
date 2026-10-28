@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Build command runtime limits / Grenzen der Laufzeit des Build-Befehls",
+  "definitions": {
+    "Limits": {
+      "description": "EN: The limits of the custody session of the build command runtime and the grace of a stopped remote execution server. DE: Die Grenzen der Verwahr-Sitzung der Laufzeit des Build-Befehls und die Gnadenfrist eines gestoppten Remote-Ausfuehrungs-Servers.",
+      "const": {
+        "sessionMaximumRequests": 200,
+        "sessionMaximumAgeMilliseconds": 600000,
+        "sessionIdleMilliseconds": 20000,
+        "serverStopGraceMilliseconds": 15000
+      }
+    },
+    "LimitsDescriptions": {
+      "const": {
+        "en": {
+          "sessionMaximumRequests": "The most requests one custody session serves before it ends.",
+          "sessionMaximumAgeMilliseconds": "The longest life of one custody session (10 minutes).",
+          "sessionIdleMilliseconds": "How long a custody session may stay idle before it ends.",
+          "serverStopGraceMilliseconds": "How long a stopped remote execution server may take to exit before it is killed."
+        },
+        "de": {
+          "sessionMaximumRequests": "Die meisten Anfragen, die eine Verwahr-Sitzung bedient, bevor sie endet.",
+          "sessionMaximumAgeMilliseconds": "Die laengste Lebensdauer einer Verwahr-Sitzung (10 Minuten).",
+          "sessionIdleMilliseconds": "Wie lange eine Verwahr-Sitzung untaetig bleiben darf, bevor sie endet.",
+          "serverStopGraceMilliseconds": "Wie lange ein gestoppter Remote-Ausfuehrungs-Server zum Beenden brauchen darf, bevor er beendet wird."
+        }
+      }
+    }
+  }
+}

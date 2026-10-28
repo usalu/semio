@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "focus": "leaf",
+  "edited": "core",
+  "crates": [
+    "core",
+    "leaf"
+  ],
+  "rounds": 2,
+  "flag": "-C incremental=",
+  "expect": {
+    "incrementalCompiles": [
+      "core",
+      "leaf"
+    ],
+    "publishedEdits": 2,
+    "served": {
+      "hits": [
+        "core"
+      ],
+      "misses": [
+        "leaf"
+      ]
+    }
+  }
+}

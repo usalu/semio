@@ -1,0 +1,703 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "localizedForm",
+    "preferences",
+    "readyLifecycle",
+    "repository",
+    "workspaceTerminal",
+    "tabPreview",
+    "widthProbe",
+    "domainLifecycle",
+    "nativeSources",
+    "nativeEditor",
+    "hostScale"
+  ],
+  "properties": {
+    "nativeSources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "script",
+        "binaryEnvironment",
+        "binaryCases"
+      ],
+      "properties": {
+        "script": {
+          "type": "string",
+          "minLength": 1
+        },
+        "binaryEnvironment": {
+          "const": "SEMIO_TEST_CLI"
+        },
+        "binaryCases": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "accepted"
+            ],
+            "properties": {
+              "value": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "widthProbe": {
+      "type": "object",
+      "required": [
+        "fixture"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fixture": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "domainLifecycle": {
+      "type": "object",
+      "required": [
+        "draft",
+        "reopen",
+        "confirmation"
+      ],
+      "properties": {
+        "confirmation": {
+          "type": "string"
+        },
+        "draft": {
+          "type": "object",
+          "required": [
+            "startId",
+            "discardId",
+            "title",
+            "slug",
+            "directory",
+            "startLine",
+            "discardLine"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "reopen": {
+          "type": "object",
+          "required": [
+            "commandId",
+            "id",
+            "documentPath",
+            "importantPath",
+            "document",
+            "prompt",
+            "expectedLine"
+          ],
+          "properties": {
+            "commandId": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "documentPath": {
+              "type": "string"
+            },
+            "importantPath": {
+              "type": "string"
+            },
+            "document": {
+              "type": "object",
+              "required": [
+                "title",
+                "status",
+                "interactions"
+              ]
+            },
+            "prompt": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expectedLine": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "tabPreview": {
+      "type": "object",
+      "required": [
+        "label",
+        "controls",
+        "rows",
+        "corners",
+        "split"
+      ],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "controls": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string"
+          }
+        },
+        "rows": {
+          "const": 3
+        },
+        "corners": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/drop"
+          }
+        },
+        "split": {
+          "$ref": "#/$defs/drop"
+        }
+      }
+    },
+    "localizedForm": {
+      "type": "object",
+      "required": [
+        "commandId",
+        "tool",
+        "input",
+        "expected",
+        "labels"
+      ],
+      "properties": {
+        "commandId": {
+          "type": "string"
+        },
+        "tool": {
+          "type": "object",
+          "required": [
+            "title",
+            "description",
+            "parameters"
+          ],
+          "properties": {
+            "title": {
+              "$ref": "#/$defs/localizedText"
+            },
+            "description": {
+              "$ref": "#/$defs/localizedText"
+            },
+            "parameters": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "description"
+                ],
+                "properties": {
+                  "title": {
+                    "$ref": "#/$defs/localizedText"
+                  },
+                  "description": {
+                    "$ref": "#/$defs/localizedText"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "input": {
+          "type": "object",
+          "required": [
+            "message",
+            "extraArguments",
+            "extraEnvironment"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "expected": {
+          "type": "object",
+          "required": [
+            "message",
+            "flavor",
+            "enabled",
+            "args",
+            "extra"
+          ],
+          "properties": {
+            "message": {
+              "type": "string"
+            },
+            "flavor": {
+              "type": "string"
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "extra": {
+              "type": "string"
+            }
+          }
+        },
+        "labels": {
+          "type": "object",
+          "required": [
+            "en",
+            "de"
+          ],
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "newTask",
+              "commands",
+              "matched",
+              "required",
+              "extraArguments",
+              "extraEnvironment",
+              "start",
+              "title",
+              "description",
+              "message",
+              "flavor",
+              "enabled"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "preferences": {
+      "type": "object",
+      "required": [
+        "events",
+        "expected",
+        "labels"
+      ],
+      "properties": {
+        "events": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "readyLifecycle": {
+      "type": "object",
+      "required": [
+        "commandId",
+        "path",
+        "openPrefix",
+        "restartPrefix",
+        "stopPrefix",
+        "response"
+      ],
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "repository": {
+      "type": "object",
+      "required": [
+        "commandId",
+        "goalId",
+        "document",
+        "expectedLine"
+      ],
+      "properties": {
+        "commandId": {
+          "type": "string"
+        },
+        "goalId": {
+          "type": "string"
+        },
+        "document": {
+          "type": "object"
+        },
+        "expectedLine": {
+          "type": "string"
+        }
+      }
+    },
+    "workspaceTerminal": {
+      "type": "object",
+      "required": [
+        "commandId",
+        "tool",
+        "windowsShell",
+        "unixShell",
+        "input",
+        "expectedArguments",
+        "expectedLine"
+      ],
+      "properties": {
+        "commandId": {
+          "type": "string"
+        },
+        "tool": {
+          "type": "object"
+        },
+        "windowsShell": {
+          "const": "cmd"
+        },
+        "unixShell": {
+          "const": "system"
+        },
+        "input": {
+          "type": "object",
+          "required": [
+            "windows",
+            "unix"
+          ],
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "expectedArguments": {
+          "type": "object",
+          "required": [
+            "windows",
+            "unix"
+          ],
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "expectedLine": {
+          "type": "string"
+        }
+      }
+    },
+    "nativeEditor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "file",
+        "initial",
+        "input",
+        "saved",
+        "foreign",
+        "local",
+        "labels",
+        "performance"
+      ],
+      "properties": {
+        "directory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "initial": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "string",
+          "minLength": 1
+        },
+        "saved": {
+          "type": "string",
+          "minLength": 1
+        },
+        "foreign": {
+          "type": "string",
+          "minLength": 1
+        },
+        "local": {
+          "type": "string",
+          "minLength": 1
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "files",
+                "dirty",
+                "conflict",
+                "discard"
+              ],
+              "properties": {
+                "files": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "dirty": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "conflict": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "discard": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "de": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "files",
+                "dirty",
+                "conflict",
+                "discard"
+              ],
+              "properties": {
+                "files": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "dirty": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "conflict": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "discard": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        },
+        "performance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "entries",
+            "directory",
+            "file",
+            "prefix",
+            "line",
+            "tail",
+            "removedAscii",
+            "insert",
+            "loadMilliseconds",
+            "interactionMilliseconds"
+          ],
+          "properties": {
+            "bytes": {
+              "const": 1048576
+            },
+            "entries": {
+              "const": 4096
+            },
+            "directory": {
+              "const": "native-max"
+            },
+            "file": {
+              "const": "max.txt"
+            },
+            "prefix": {
+              "const": "START_OF_MAXIMUM\n"
+            },
+            "line": {
+              "const": "row é中\n"
+            },
+            "tail": {
+              "const": "DOCUMENT_END_"
+            },
+            "removedAscii": {
+              "const": 24
+            },
+            "insert": {
+              "const": "終👩‍💻"
+            },
+            "loadMilliseconds": {
+              "const": 5000
+            },
+            "interactionMilliseconds": {
+              "const": 1000
+            }
+          }
+        }
+      }
+    },
+    "hostScale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clamp",
+        "cases"
+      ],
+      "properties": {
+        "clamp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "const": 1
+            },
+            "max": {
+              "const": 16
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "report",
+              "cores",
+              "scale"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "report": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "cores": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "scale": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 16
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ownedExecutable": {
+      "type": "string",
+      "minLength": 1
+    },
+    "drop": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "right",
+        "bottom",
+        "label"
+      ],
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "right": {
+          "type": "boolean"
+        },
+        "bottom": {
+          "type": "boolean"
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "localizedText": {
+      "type": "object",
+      "required": [
+        "en",
+        "de"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

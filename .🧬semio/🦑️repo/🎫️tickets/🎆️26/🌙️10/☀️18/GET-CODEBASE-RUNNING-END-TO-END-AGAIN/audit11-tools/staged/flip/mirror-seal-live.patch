@@ -1,0 +1,7 @@
+--- mirror-tools/mirror.py (guarded)
++++ mirror-tools/mirror.py (guarded, proposed by audit11)
+@@ def guarded(name, argv, cwd, peers_ok, seal, allow, extra_env=None):
+-    env = dict(os.environ, SEMIO_MIRROR_ROOT=root, SEMIO_MIRROR_NAME=name)
++    env = dict(os.environ, SEMIO_MIRROR_ROOT=root, SEMIO_MIRROR_NAME=name)
++    env.setdefault("SEMIO_REPO_SEAL", "live")
+     env.update(extra_env or {})

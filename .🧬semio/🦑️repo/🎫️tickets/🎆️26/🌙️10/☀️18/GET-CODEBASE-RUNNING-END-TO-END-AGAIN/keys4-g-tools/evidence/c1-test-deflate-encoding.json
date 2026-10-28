@@ -1,0 +1,26 @@
+{
+ "target": "test-deflate-encoding",
+ "tag": "c1",
+ "declared": 367,
+ "rows": [
+  {
+   "leg": "cargo-deflate",
+   "crate": "semio-framework-deflate",
+   "test": "lib:semio_framework_deflate",
+   "kind": "cargo",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 14,
+   "tail": " | test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.56s |  | ",
+   "notes": [
+    "profiles:1",
+    "rules:268",
+    "capacity:600"
+   ]
+  }
+ ]
+}

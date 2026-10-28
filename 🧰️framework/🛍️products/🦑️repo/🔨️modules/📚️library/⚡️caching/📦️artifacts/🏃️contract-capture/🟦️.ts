@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { startNativeProgress } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { runtimeSpawnSyncV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
 /** 🏃️ Captures a bounded subprocess while retaining progress and cancellation. */
@@ -37,8 +38,7 @@ export async function captureArtifactContract(command: string, args: string[], c
   const stop = (): void => terminate("SIGTERM");
   process.once("SIGINT", interrupt);
   process.once("SIGTERM", stop);
-  const started = Date.now();
-  const progress = setInterval(() => console.log(`[artifact-package-contract] ${command} running elapsedMs=${Date.now() - started}`), 10_000);
+  const stopProgress = startNativeProgress(`artifact-package-contract:${command}`, 10_000, line => console.log(line));
   const timeout = setTimeout(() => terminate(`timeout ${timeoutMs}ms`), timeoutMs);
   try {
     const status = await new Promise<number>((accept, reject) => {
@@ -49,7 +49,7 @@ export async function captureArtifactContract(command: string, args: string[], c
     assert.equal(status, 0, stderr || `${command} exited with status ${status}`);
     return stdout;
   } finally {
-    clearInterval(progress);
+    stopProgress();
     clearTimeout(timeout);
     if (forceKill) clearTimeout(forceKill);
     process.off("SIGINT", interrupt);

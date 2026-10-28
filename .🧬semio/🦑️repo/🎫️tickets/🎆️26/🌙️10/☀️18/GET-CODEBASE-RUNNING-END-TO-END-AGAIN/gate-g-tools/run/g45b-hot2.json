@@ -1,0 +1,19 @@
+{
+ "label": "g45b-hot2",
+ "target": "@teaching/architecture-course:build",
+ "started": "18:54:12",
+ "wall_s": 801.2,
+ "peak_tree_mb": 4091,
+ "peak_processes": 5,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "45"
+  ],
+  "inferring": [
+   "43"
+  ]
+ }
+}

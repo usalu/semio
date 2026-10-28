@@ -7,7 +7,7 @@ import {tmpdir} from "node:os";
 import {dirname, join} from "node:path";
 import Ajv from "ajv";
 import {minimatch} from "minimatch";
-import {commandWordsV1, deriveInputsV1, dispatchBranchesV1, excludesV1, globMatchesV1, inputPrecisionLanguageV1, inputPrecisionTextV1, packageNameV1, parseJsoncV1, programInputsV1, readInputPrecisionV1, selectRuleV1, type InputPrecisionHostV1, type ProgramEventV1, type ProgramFactV1} from "../🟦️.ts";
+import {commandWordsV1, crateNamesV1, deriveInputsV1, dispatchBranchesV1, entryFilesV1, includeRootsV1, excludesV1, globMatchesV1, inputPrecisionLanguageV1, inputPrecisionTextV1, packageNameV1, parseJsoncV1, programInputsV1, readInputPrecisionV1, selectRuleV1, type InputPrecisionHostV1, type ProgramEventV1, type ProgramFactV1} from "../🟦️.ts";
 import fixtureSchema from "./🧬️schema/🔣️.json" with {type: "json"};
 import fixture from "./🔣️.json" with {type: "json"};
 import schema from "../🧬️schema/🔣️.json" with {type: "json"};
@@ -182,11 +182,11 @@ test("a document or derivation that cannot be bounded is refused with the stated
 });
 
 /** 📋️ The files `tsc -p <tsconfig> --listFilesOnly` lists for a tree: the third-party oracle of the program closure. */
-function tscListed(tree: Record<string, string>): string[] {
+function tscListed(tree: Record<string, string>, entries?: readonly string[]): string[] {
   const root = mkdtempSync(join(tmpdir(), "input-precision-"));
   try {
     for (const [path, text] of Object.entries(tree)) { mkdirSync(dirname(join(root, path)), {recursive: true}); writeFileSync(join(root, path), text); }
-    const tsc = join(workspace, "node_modules/typescript/bin/tsc"), run = spawnSync(process.execPath, [tsc, "-p", join(root, "app/tsconfig.json"), "--listFilesOnly"], {encoding: "utf8", cwd: root});
+    const tsc = join(workspace, "node_modules/typescript/bin/tsc"), run = spawnSync(process.execPath, [tsc, ...(entries ? [...entries.map((entry) => join(root, entry)), "--module", "ESNext", "--moduleResolution", "Bundler", "--allowImportingTsExtensions", "--noEmit", "--skipLibCheck", "--target", "ESNext", "--listFilesOnly"] : ["-p", join(root, "app/tsconfig.json"), "--listFilesOnly"])], {encoding: "utf8", cwd: root});
     expect(run.status, run.stderr + run.stdout).toBe(0);
     return run.stdout.split("\n").filter((line) => line.startsWith(root + "/") && !line.includes("/node_modules/")).map((line) => line.slice(root.length + 1)).sort();
   } finally {
@@ -202,6 +202,19 @@ test("a tsconfig program equals what tsc --listFilesOnly lists, and the fixture 
   expect(program.roots).not.toContain("app/src/skip/x.ts");
   expect(program.files).toContain("shared/package.json");
   expect(program.files).toContain("tsconfig.base.json");
+});
+
+/** 🔭️ A program rooted at entry globs is what `tsc <files> --listFilesOnly` lists for the files they select (type-only imports included), a negation removes a root, a glob that selects no TypeScript file is refused. */
+test("a program rooted at entries equals what tsc lists for those files", async () => {
+  for (const entries of [["{workspaceRoot}/app/src/main.ts"], ["{workspaceRoot}/app/src/**/*.ts", "!{workspaceRoot}/app/src/skip/**/*"]]) {
+    const roots = entryFilesV1(entries, fixtureHost()), listed = tscListed(files, roots), program = await programInputsV1("app/tsconfig.json", fixtureHost(), entries), declared = new Set([...program.roots, ...program.files.filter((file) => file.endsWith(".ts"))]);
+    expect(program.roots).toEqual(roots);
+    expect([...declared].sort(), entries.join(" ")).toEqual(listed);
+    expect(program.patterns).toEqual([]);
+    expect(program.files).toContain("shared/package.json");
+  }
+  expect(entryFilesV1(["{workspaceRoot}/app/src/**/*.ts", "!{workspaceRoot}/app/src/skip/**/*"], fixtureHost())).not.toContain("app/src/skip/x.ts");
+  await expect(programInputsV1("app/tsconfig.json", fixtureHost(), ["{workspaceRoot}/app/src/**/*.rs"])).rejects.toThrow(/no TypeScript file/u);
 });
 
 test("the program receipt makes a warm run derive nothing, an edit derive only what it touches, a cancelled run resume and every step equal a cold derivation", async () => {
@@ -293,4 +306,19 @@ test("the rules and the fixture point at their sibling schemas through $schema a
   expect(validate.validate(pointed(join(here, ".."), rules), rules), JSON.stringify(validate.errors)).toBe(true);
   expect(validate.validate(pointed(here, fixture), fixture), JSON.stringify(validate.errors)).toBe(true);
   expect(validate.validate(pointed(join(here, ".."), rules), {...rules, $schema: 1})).toBe(false);
+});
+
+test("answering the repository walks through the derived-walk ports derives exactly what walking in place derives", async () => {
+  const asked: string[] = [], ports = (base: InputPrecisionHostV1): InputPrecisionHostV1 => ({...base, crateNames: async () => { asked.push("crates"); return crateNamesV1(base.cargoManifests(), base.readText); }, sourceRoots: async (question) => { asked.push(question.mode); return question.mode === "entries" ? entryFilesV1(question.globs, base) : includeRootsV1(question.include, question.exclude, base); }});
+  for (const row of fixture.derive) {
+    const rule = selectRuleV1(document, row.identity as any)!;
+    if (rule.evidence === "assumed") continue;
+    expect(await deriveInputsV1(document, rule, row.identity as any, ports(fixtureHost())), JSON.stringify(row.identity)).toEqual(await deriveInputsV1(document, rule, row.identity as any, fixtureHost()));
+  }
+  expect(asked).toContain("crates");
+  const entries = ["{workspaceRoot}/app/src/**/*.ts", "!{workspaceRoot}/app/src/skip/**/*"];
+  expect(await programInputsV1("app/tsconfig.json", ports(fixtureHost()), entries)).toEqual(await programInputsV1("app/tsconfig.json", fixtureHost(), entries));
+  expect(await programInputsV1("app/tsconfig.json", ports(fixtureHost()))).toEqual(await programInputsV1("app/tsconfig.json", fixtureHost()));
+  expect(asked).toContain("entries");
+  expect(asked).toContain("include");
 });

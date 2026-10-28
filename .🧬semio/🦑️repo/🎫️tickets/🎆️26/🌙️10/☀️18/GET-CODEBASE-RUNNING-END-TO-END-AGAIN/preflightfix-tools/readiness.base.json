@@ -1,0 +1,168 @@
+{
+  "sourceProducer": "@teaching/architecture-course:typecheck",
+  "release": {
+    "nativeIngress": {
+      "stepId": "native-repo",
+      "shell": "bash",
+      "recipe": [
+        "native_repo_dir=\"$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo\"",
+        "native_repo_bin=\"$native_repo_dir/repo\"",
+        "if ! sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help; then",
+        "  sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run repo-mcp:build --skip-cache",
+        "fi",
+        "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help",
+        "printf '%s\\n' \"$native_repo_dir\" >> \"$GITHUB_PATH\""
+      ],
+      "envelope": "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true",
+      "ordinaryCommands": {
+        "check": [
+          [
+            "preflight"
+          ],
+          [
+            "dependencies",
+            "sync",
+            "--all"
+          ],
+          [
+            "run",
+            "@teaching/architecture-course:test"
+          ],
+          [
+            "run",
+            "@teaching/architecture-course:typecheck"
+          ],
+          [
+            "run",
+            "@teaching/architecture-course:ci-browser-prepare"
+          ],
+          [
+            "run",
+            "@teaching/architecture-course:test-e2e",
+            "--",
+            "--topology",
+            "rehearsal",
+            "--"
+          ]
+        ],
+        "site": [
+          [
+            "preflight"
+          ],
+          [
+            "dependencies",
+            "sync",
+            "--all"
+          ],
+          [
+            "run",
+            "@teaching/architecture-course:publish",
+            "--configuration=release"
+          ]
+        ],
+        "proctor": [
+          [
+            "preflight"
+          ],
+          [
+            "dependencies",
+            "sync",
+            "--all"
+          ],
+          [
+            "run",
+            "@teaching/architecture-course:docker-image-build"
+          ],
+          [
+            "run",
+            "@teaching/architecture-course:docker-image-publish"
+          ]
+        ]
+      }
+    },
+    "configurationJob": "configuration",
+    "runnerVariable": "ARCHITECTURE_COURSE_RUNNER",
+    "runner": "${{ needs.configuration.outputs.runner }}",
+    "consumerRunner": "${{ needs.check.outputs.runner }}",
+    "job": "check",
+    "condition": "${{ (inputs.site || inputs.proctor) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}",
+    "siteCondition": "${{ inputs.site && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}",
+    "proctorCondition": "${{ inputs.proctor && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}",
+    "commands": [
+      "native_repo_dir=\"$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo\"\nnative_repo_bin=\"$native_repo_dir/repo\"\nif ! sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help; then\n  sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run repo-mcp:build --skip-cache\nfi\nsudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help\nprintf '%s\\n' \"$native_repo_dir\" >> \"$GITHUB_PATH\"\n",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo preflight",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo dependencies sync --all",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run @teaching/architecture-course:test",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run @teaching/architecture-course:typecheck",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run @teaching/architecture-course:ci-browser-prepare",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run @teaching/architecture-course:test-e2e -- --topology rehearsal --"
+    ],
+    "consumers": [
+      "site",
+      "proctor"
+    ],
+    "siteCommands": [
+      "native_repo_dir=\"$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo\"\nnative_repo_bin=\"$native_repo_dir/repo\"\nif ! sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help; then\n  sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run repo-mcp:build --skip-cache\nfi\nsudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help\nprintf '%s\\n' \"$native_repo_dir\" >> \"$GITHUB_PATH\"\n",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo preflight",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo dependencies sync --all",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run @teaching/architecture-course:publish --configuration=release"
+    ],
+    "proctorSteps": [
+      "native_repo_dir=\"$GITHUB_WORKSPACE/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo\"\nnative_repo_bin=\"$native_repo_dir/repo\"\nif ! sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help; then\n  sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run repo-mcp:build --skip-cache\nfi\nsudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true \"$native_repo_bin\" --help\nprintf '%s\\n' \"$native_repo_dir\" >> \"$GITHUB_PATH\"\n",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo preflight",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo dependencies sync --all",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run @teaching/architecture-course:docker-image-build",
+      "docker/login-action",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true repo run @teaching/architecture-course:docker-image-publish"
+    ],
+    "imageBuildTarget": "docker-image-build",
+    "imagePublishTarget": "docker-image-publish"
+  },
+  "preflight": {
+    "arguments": [
+      "preflight"
+    ],
+    "linux": {
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "minimumAvailableBytes": 8589934592,
+      "tools": [
+        "cc",
+        "pkg-config"
+      ],
+      "exchange": true
+    },
+    "step": "Check generic host tools, capacity and filesystem support before allocation",
+    "documentation": [
+      "Generic host preflight",
+      "8 GiB",
+      "atomic directory exchange",
+      "case-sensitive",
+      "Debian 12 x64",
+      "ELF64",
+      "linux/amd64",
+      "proctor check"
+    ],
+    "obsolete": [
+      "CAP_SYS_ADMIN",
+      "/dev/loop-control",
+      "72 GiB",
+      "seven visible writable unused",
+      "working ext4 loop mounts"
+    ],
+    "imageGuards": [
+      "process.platform !== \"linux\" || process.arch !== \"x64\"",
+      "executable.mode !== \"release\"",
+      "header[4] !== 2",
+      "header[5] !== 1",
+      "header.readUInt16LE(18) !== machine"
+    ],
+    "runtimeCheck": [
+      "/usr/local/bin/proctor",
+      "check",
+      "/srv/course/content/🏛️architecture/📚️course/🔣️.json"
+    ]
+  }
+}

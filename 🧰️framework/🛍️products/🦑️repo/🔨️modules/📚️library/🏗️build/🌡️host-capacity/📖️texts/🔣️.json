@@ -8,7 +8,7 @@
   "messages": {
     "wait-cancelled": {
       "en": "Waiting for host capacity was cancelled by {signal}",
-      "de": "Das Warten auf Host-Kapazität wurde durch {signal} abgebrochen"
+      "de": "Das Warten auf Rechnerkapazität wurde durch {signal} abgebrochen"
     },
     "farm-wait-cancelled": {
       "en": "Waiting for farm capacity was cancelled",

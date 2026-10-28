@@ -1,0 +1,184 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph:provider-closures:v1",
+  "title": "Script Provider Closure References",
+  "description": "How a command closure names the closures many projects share: the group name of one script provider closure (prefix, port, separator, view) and of one tool closure (prefix, name, separator, view), the views a provider closure is published in (each one of the command walk views, with whether its group carries the external packages of the provider's modules), the declared target-independent tool commands (entry modules and resources relative to the providers project, the view they are read through) and how the providers project is recognized (its configuration file next to the designation and the project metadata key that names the designation).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "group",
+    "views",
+    "tools",
+    "project",
+    "contract"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prefix",
+        "separator"
+      ],
+      "properties": {
+        "prefix": {
+          "type": "string",
+          "pattern": "^[a-zA-Z]+:$"
+        },
+        "separator": {
+          "const": ":"
+        }
+      }
+    },
+    "views": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scheduling",
+        "native"
+      ],
+      "properties": {
+        "scheduling": {
+          "$ref": "#/definitions/View"
+        },
+        "native": {
+          "$ref": "#/definitions/View"
+        }
+      }
+    },
+    "tools": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prefix",
+        "closures"
+      ],
+      "properties": {
+        "prefix": {
+          "type": "string",
+          "pattern": "^[a-zA-Z]+:$"
+        },
+        "closures": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 16,
+          "propertyNames": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/Tool"
+          }
+        }
+      }
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basename",
+        "metadata"
+      ],
+      "properties": {
+        "basename": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[^/\\\\]+\\.json$"
+        },
+        "metadata": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z]*$"
+        }
+      }
+    },
+    "contract": {
+      "$ref": "#/definitions/Contract"
+    }
+  },
+  "definitions": {
+    "View": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "packages",
+        "contract"
+      ],
+      "properties": {
+        "packages": {
+          "type": "boolean"
+        },
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        }
+      }
+    },
+    "Contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600
+        }
+      }
+    },
+    "Tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entries",
+        "resources",
+        "view",
+        "contract"
+      ],
+      "properties": {
+        "entries": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Relative"
+          }
+        },
+        "resources": {
+          "type": "array",
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Relative"
+          }
+        },
+        "view": {
+          "enum": [
+            "scheduling",
+            "native"
+          ]
+        },
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        }
+      }
+    },
+    "Relative": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^(\\.\\./)*[^./][^\\\\]*$"
+    }
+  }
+}

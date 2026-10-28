@@ -740,7 +740,7 @@
             },
             {
               "id": "validation-record-deletes-middle",
-              "directoryName": "✔️validation-record-deletes-middle"
+              "directoryName": "✔️validation-delete-middle"
             },
             {
               "id": "priority-record-deletes-a",
@@ -792,7 +792,7 @@
             },
             {
               "id": "benchmark-record-deletes-middle",
-              "directoryName": "🏁️benchmark-record-deletes-middle"
+              "directoryName": "🏁️benchmark-delete-middle"
             },
             {
               "id": "activity-deletes-a",
@@ -964,7 +964,7 @@
             },
             {
               "id": "knowledge-record-deletes-middle",
-              "directoryName": "📚️knowledge-record-deletes-middle"
+              "directoryName": "📚️knowledge-delete-middle"
             },
             {
               "id": "regulatory-deletes-a",
@@ -1092,7 +1092,7 @@
             },
             {
               "id": "delivery-constraint-deletes-middle",
-              "directoryName": "🚚️delivery-constraint-deletes-middle"
+              "directoryName": "🚚️delete-middle"
             },
             {
               "id": "constraint-record-deletes-a",
@@ -1100,7 +1100,7 @@
             },
             {
               "id": "constraint-record-deletes-middle",
-              "directoryName": "🚧️constraint-record-deletes-middle"
+              "directoryName": "🚧️constraint-delete-middle"
             },
             {
               "id": "compliance-record-deletes-a",
@@ -1108,7 +1108,7 @@
             },
             {
               "id": "compliance-record-deletes-middle",
-              "directoryName": "🛂️compliance-record-deletes-middle"
+              "directoryName": "🛂️compliance-delete-middle"
             },
             {
               "id": "service-deletes",

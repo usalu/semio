@@ -1,0 +1,17 @@
+{
+ "label": "g35-ctest",
+ "target": "@teaching/architecture-course:test",
+ "started": "11:09:39",
+ "wall_s": 50.2,
+ "peak_tree_mb": 2794,
+ "peak_processes": 5,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "11",
+   "1 action cache hit, 6 disk cache hit, 2 internal, 3 local"
+  ]
+ }
+}

@@ -1,0 +1,19 @@
+/** 🧹️ Keeps the newest `keep` records of a memo directory within the byte budget of the retention schema and removes every plan and relevance file no kept record names (and none younger than the grace); the removal is the plan of `planGraphMemoCollectionV1`, and a removal the byte budget drove is announced once on stderr in English and German. */
+export function collectGraphMemoV1(directory:string,keep:number=GRAPH_MEMO_RETENTION_V1.recordsKept,maximumBytes:number=GRAPH_MEMO_RETENTION_V1.maximumDirectoryBytes):GraphMemoCollectionV1|undefined{
+ try{
+  const policy=GRAPH_MEMO_POLICY_V1,retention={...GRAPH_MEMO_RETENTION_V1,recordsKept:keep,maximumDirectoryBytes:maximumBytes},records:GraphMemoRecordV1[]=[],files:Record<string,GraphMemoFileV1>={};
+  for(const name of readdirSync(directory)){
+   try{
+    const facts=lstatSync(join(directory,name));
+    if(!name.endsWith(policy.recordSuffix)){files[name]={bytes:facts.size,mtimeMs:facts.mtimeMs};continue;}
+    const owned:string[]=[];
+    try{const value=JSON.parse(readFileSync(join(directory,name),"utf8")) as {relevance?:{id?:string;stamps?:string};plan?:{sha256?:string}};if(value.relevance?.id)owned.push(String(value.relevance.id)+policy.relevanceSuffix,String(value.relevance.id)+policy.recheckSuffix,String(value.relevance.stamps)+policy.stampSuffix);owned.push(String(value.plan?.sha256)+policy.planSuffix);}catch{}
+    records.push({name,bytes:facts.size,mtimeMs:facts.mtimeMs,owned});
+   }catch{}
+  }
+  const plan=planGraphMemoCollectionV1(records,files,Date.now(),retention);
+  for(const name of [...plan.removeRecords,...plan.removeFiles])rmSync(join(directory,name),{force:true});
+  if(plan.overBudget>0)process.stderr.write(formatGraphMemoCollectionV1(plan,"en",retention)+" / "+formatGraphMemoCollectionV1(plan,"de",retention)+"\n");
+  return plan;
+ }catch{return undefined;}
+}

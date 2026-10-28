@@ -1,0 +1,37 @@
+{
+  "title": "Windows Checkout Path Budget",
+  "emoji": "🎟",
+  "status": "closed",
+  "description": "Remove checked-in ticket copies whose repo-relative paths exceed the stock Windows MAX_PATH budget so a clone checks out on Windows.",
+  "summary": "Removed 228 checked-in ticket source copies whose paths exceed the stock Windows MAX_PATH budget.",
+  "goal": "zerotouchdevcontainer",
+  "sessions": [
+    "d5b299f1-0088-45ee-9345-3cf09698804a"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-28 17:01:16",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "cursor-chat",
+      "checkpoint": "f87d49a21e8820809827efd0b9970d4097cbee36",
+      "prompt": "Remove checked-in ticket copies whose repo-relative paths exceed the stock Windows MAX_PATH budget so a clone checks out on Windows.",
+      "llm": "grok-4"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-28 17:05:13",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "cursor-chat",
+      "checkpoint": "f87d49a21e8820809827efd0b9970d4097cbee36",
+      "summary": "Removed 228 checked-in ticket source copies whose paths exceed the stock Windows MAX_PATH budget.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️28/WINDOWS-CHECKOUT-PATH-BUDGET/removal.md"
+        }
+      ]
+    }
+  ]
+}

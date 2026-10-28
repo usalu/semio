@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/cargo-workspace/lock/v1",
+  "title": "Cargo.lock currency against the manifest set of a workspace",
+  "definitions": {
+    "Hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "Input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "sha256": { "$ref": "#/definitions/Hash" }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "lock", "manifests"],
+      "properties": {
+        "version": { "const": 1 },
+        "lock": { "$ref": "#/definitions/Input" },
+        "manifests": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 65536,
+          "items": { "$ref": "#/definitions/Input" }
+        }
+      }
+    },
+    "Policy": {
+      "const": {
+        "receiptSuffix": ".lock.json",
+        "resourcePrefix": "cargo-lock:",
+        "pollMilliseconds": 250,
+        "waitingReportMilliseconds": 10000,
+        "maximumOutputBytes": 16777216,
+        "maximumOutputLines": 65536,
+        "detailCharacters": 400,
+        "dependencyTables": ["dependencies", "dev-dependencies", "build-dependencies"],
+        "extraInputs": [".cargo/config.toml", ".cargo/config", "rust-toolchain.toml", "rust-toolchain"],
+        "staleMarkers": [
+          "cannot update the lock file",
+          "cannot create the lock file",
+          "lock file .* needs to be updated"
+        ],
+        "missingCrateMarkers": [
+          "no matching package named `([^`]+)` found",
+          "failed to select a version for the requirement `([^`\\s=]+)",
+          "failed to select a version for `([^`]+)`",
+          "searched package name: `([^`]+)`",
+          "failed to get `([^`]+)` as a dependency"
+        ]
+      }
+    },
+    "Messages": {
+      "const": {
+        "waiting": {
+          "en": "Waiting for another build to refresh the Cargo.lock of {workspace} ({seconds} s).",
+          "de": "Warte auf einen anderen Build, der die Cargo.lock von {workspace} aktualisiert ({seconds} s)."
+        },
+        "refreshing": {
+          "en": "The Cargo.lock of {workspace} is behind its manifests; refreshing it from the shared registry.",
+          "de": "Die Cargo.lock von {workspace} ist gegenüber ihren Manifesten veraltet; sie wird aus der gemeinsamen Registry aktualisiert."
+        },
+        "online": {
+          "en": "Crate {crate} is missing from the shared registry; fetching it online for {workspace}.",
+          "de": "Die Crate {crate} fehlt in der gemeinsamen Registry; sie wird für {workspace} online geholt."
+        },
+        "refreshed": {
+          "en": "The Cargo.lock of {workspace} is current again.",
+          "de": "Die Cargo.lock von {workspace} ist wieder aktuell."
+        },
+        "unresolvableOffline": {
+          "en": "The Cargo.lock of {workspace} cannot be refreshed: crate {crate} is not in the shared registry and this build has no network grant. Run `repo sync cargo` once with network access. {detail}",
+          "de": "Die Cargo.lock von {workspace} kann nicht aktualisiert werden: Die Crate {crate} fehlt in der gemeinsamen Registry und dieser Build hat keine Netzfreigabe. Führe einmal `repo sync cargo` mit Netzzugang aus. {detail}"
+        },
+        "unresolvable": {
+          "en": "The Cargo.lock of {workspace} cannot be refreshed: crate {crate} cannot be resolved. {detail}",
+          "de": "Die Cargo.lock von {workspace} kann nicht aktualisiert werden: Die Crate {crate} lässt sich nicht auflösen. {detail}"
+        },
+        "failed": {
+          "en": "The Cargo.lock of {workspace} cannot be refreshed. {detail}",
+          "de": "Die Cargo.lock von {workspace} kann nicht aktualisiert werden. {detail}"
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "files", "steps"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "online": { "type": "boolean" },
+        "manifest": { "type": "string" },
+        "files": { "type": "object", "additionalProperties": { "type": "string" } },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["do", "expect"],
+            "properties": {
+              "do": { "enum": ["ensure", "ensure-force", "ensure-concurrent", "write"] },
+              "files": { "type": "object", "additionalProperties": { "type": "string" } },
+              "expect": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "outcomes": { "type": "array", "items": { "enum": ["current", "refreshed"] } },
+                  "cargoCalls": { "type": "integer", "minimum": 0 },
+                  "oracle": { "enum": ["locked-ok", "locked-stale"] },
+                  "refusedCrate": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

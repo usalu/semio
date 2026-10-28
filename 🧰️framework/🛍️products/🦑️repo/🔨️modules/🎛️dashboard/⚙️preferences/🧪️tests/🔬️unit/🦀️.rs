@@ -195,9 +195,9 @@ fn the_language_resolves_explicit_layers_and_system_without_a_default() {
     assert_eq!(Preferences::default().language, None);
     append(&local_path(&root, &parsed), &Change::parse(r#"{"language":"en"}"#).unwrap()).unwrap();
     assert_eq!(load_in(&root, &parsed, &system).unwrap().language.as_deref(), Some("en"), "a stored choice beats the system");
-    let override_de = |name: &str| (name == "SEMIO_LOCALE").then(|| "de".to_string());
+    let override_de = |name: &str| (name == "SEMIO_LANGUAGE").then(|| "de".to_string());
     assert_eq!(load_in(&root, &parsed, &override_de).unwrap().language.as_deref(), Some("de"), "the environment override beats the stored choice");
-    assert!(load_in(&root, &parsed, &|name: &str| (name == "SEMIO_LOCALE").then(|| "xx".to_string())).is_err(), "the override stays strict");
+    assert!(load_in(&root, &parsed, &|name: &str| (name == "SEMIO_LANGUAGE").then(|| "xx".to_string())).is_err(), "the override stays strict");
     fs::remove_dir_all(root).unwrap();
 }
 

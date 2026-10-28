@@ -1,0 +1,12 @@
+{
+ "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🐕️pet-walk/🟦️.ts": {
+  "file": "walk.ts",
+  "base": "41f36889c6f1fb9b57f3f17fd3ebca2f608ca4914d69ec983d376405ed126c90",
+  "new": "e547b536beb2325bf1db3ea91f5a3d504b5c519b95d4e2e0657a5a276f189389"
+ },
+ "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🐕️pet-walk/🧰️pet-kit/🟦️.ts": {
+  "file": "kit.ts",
+  "base": "d3bfbac49fc9d50c62cb06f0279bb930b28213b9deb87dbb45bac0c7882f0b19",
+  "new": "08b4059088388364a420fbda3e35aa834e1f058a06c86141dbd564fb51a4e93e"
+ }
+}

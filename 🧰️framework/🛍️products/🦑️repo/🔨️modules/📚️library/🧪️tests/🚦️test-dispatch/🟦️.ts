@@ -112,8 +112,7 @@ test("public Go test dispatch uses canonical compiler inputs", async () => {
   }));
 }, 65_000);
 
-test("registered Go dispatch budget owns every nested process and overlay", async () => {
-  if (process.platform === "win32") return;
+test.skipIf(process.platform==="win32")("registered Go dispatch budget owns every nested process and overlay", async () => {
   const root = probeRoot;
   const temporary = join(root, "temporary");
   const output = { stdout: "", stderr: "" };

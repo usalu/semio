@@ -1,0 +1,115 @@
+{
+ "version": 1,
+ "files": {
+  "lib/a.ts": "import ./b\n",
+  "lib/b.ts": "import ./c\n",
+  "lib/c.ts": "",
+  "lib/d.ts": "",
+  "p1/main.ts": "import ../lib/a\n",
+  "p2/main.ts": "import ../lib/c\n",
+  "p3/main.ts": "",
+  "p1/project.json": "{}\n",
+  "p2/project.json": "{}\n",
+  "p3/project.json": "{}\n",
+  "p4/project.json": "{}\n"
+ },
+ "owners": [
+  {
+   "name": "p1",
+   "entry": "p1/main.ts"
+  },
+  {
+   "name": "p2",
+   "entry": "p2/main.ts"
+  },
+  {
+   "name": "p3",
+   "entry": "p3/main.ts"
+  },
+  {
+   "name": "p4",
+   "entry": "p1/main.ts"
+  }
+ ],
+ "steps": [
+  {
+   "name": "a cold build computes every project",
+   "edit": {},
+   "dirty": [
+    "p1",
+    "p2",
+    "p3",
+    "p4"
+   ],
+   "published": true
+  },
+  {
+   "name": "a comment in a file of the closure: the closure is the same, nobody is refreshed",
+   "edit": {
+    "lib/c.ts": "// a comment\n"
+   },
+   "dirty": [],
+   "published": true,
+   "held": 2
+  },
+  {
+   "name": "no further change: nothing to refresh",
+   "edit": {},
+   "dirty": [],
+   "published": false,
+   "held": 0
+  },
+  {
+   "name": "a new import of a file outside the closure: exactly the projects that reach the file",
+   "edit": {
+    "lib/b.ts": "import ./c\nimport ./d\n"
+   },
+   "dirty": [
+    "p1",
+    "p4"
+   ],
+   "published": true
+  },
+  {
+   "name": "a rewritten specifier that names the same file: the closure is the same",
+   "edit": {
+    "lib/b.ts": "import ./c.ts\nimport ./d.ts\n"
+   },
+   "dirty": [],
+   "published": true,
+   "held": 1
+  },
+  {
+   "name": "an import removed from the shared entry: the projects behind it",
+   "edit": {
+    "lib/a.ts": ""
+   },
+   "dirty": [
+    "p1",
+    "p4"
+   ],
+   "published": true
+  },
+  {
+   "name": "an edit of a file a project reads itself",
+   "edit": {
+    "p3/project.json": "{\"edited\":true}\n"
+   },
+   "dirty": [
+    "p3"
+   ],
+   "published": true
+  },
+  {
+   "name": "a new import that closes a cycle and reaches a new file",
+   "edit": {
+    "lib/c.ts": "import ./b\n"
+   },
+   "dirty": [
+    "p2"
+   ],
+   "published": true,
+   "held": 0
+  }
+ ]
+}

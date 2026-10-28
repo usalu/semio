@@ -1,0 +1,20 @@
+{
+ "label": "g34c-edit",
+ "target": "@teaching/architecture-course:build",
+ "started": "10:39:25",
+ "wall_s": 25.2,
+ "peak_tree_mb": 3005,
+ "peak_processes": 4,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "2",
+   "1 internal, 1 worker"
+  ],
+  "actions": [
+   "2"
+  ]
+ }
+}

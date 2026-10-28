@@ -1,0 +1,182 @@
+{
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "batches": [
+  {
+   "name": "bench2",
+   "code": "none (measurement only, the host-total patch is already live)",
+   "lane": "bench2-g",
+   "order": 5,
+   "edits": 2,
+   "summary": "Replaces the 'Not met' status line with the first honest baseline table. Land any time."
+  },
+  {
+   "name": "mirror",
+   "code": "none (ticket tooling mirror-tools/, exists)",
+   "lane": "mirror-g",
+   "order": 6,
+   "edits": 2,
+   "summary": "Names the shared mirror tool in the staging rule. Land any time."
+  },
+  {
+   "name": "guard-go",
+   "code": "none (guard-g edits are live, outside the library)",
+   "lane": "guard-g",
+   "order": 7,
+   "edits": 4,
+   "summary": "The Go test sandbox compares roots by identity and scratch leaves the checkout. Land any time."
+  },
+  {
+   "name": "quietfc",
+   "code": "quietfc-g-tools (apply.sh)",
+   "lane": "quietfc-g",
+   "order": 10,
+   "edits": 8,
+   "summary": "Needs the code batch applied first: its own guide edit adds the three bullets (quiet follow-up, envelopes, declared machine) with the word 'staged'; this batch turns that word into 'live', closes the 4b status, and adds the waiting row."
+  },
+  {
+   "name": "journal-fix",
+   "code": "verify2-g-tools/staged/journal-fix",
+   "lane": "verify2-g",
+   "order": 20,
+   "edits": 4,
+   "summary": "The change-journal service survives the live tree. Land before `vouch`."
+  },
+  {
+   "name": "vouch",
+   "code": "verify2-g-tools/staged/vouch",
+   "lane": "verify2-g",
+   "order": 21,
+   "edits": 2,
+   "summary": "The change journal narrows the dependency verification. Land after `journal-fix`."
+  },
+  {
+   "name": "probes",
+   "code": "toolsetup-g-tools/staged/probes (or probes-after-conv when conv-g landed first)",
+   "lane": "toolsetup-g",
+   "order": 22,
+   "edits": 4,
+   "summary": "The planner skip finally hits. The twin code batch `probes-after-conv` needs the same doc batch."
+  },
+  {
+   "name": "plan-once",
+   "code": "graphlat-g-tools/staged/plan-once",
+   "lane": "graphlat-g",
+   "order": 23,
+   "edits": 2,
+   "summary": "A scoped graph refresh plans once."
+  },
+  {
+   "name": "dashlock",
+   "code": "dashlock-g-tools/staged/dashlock",
+   "lane": "dashlock-g",
+   "order": 30,
+   "edits": 4,
+   "summary": "A running dashboard never fails or blocks a build; old executable digests are reclaimed when unheld."
+  },
+  {
+   "name": "purge",
+   "code": "purge-g-tools/staged/purge",
+   "lane": "purge-g",
+   "order": 31,
+   "edits": 4,
+   "summary": "The one purge law of ticket output (P0 data-loss guard). Go and Rust (`repo ticket purge-artifacts`) are already live; the TypeScript `repo clean` lands with the batch."
+  },
+  {
+   "name": "fleet",
+   "code": "obs-g-tools/staged/fleet",
+   "lane": "obs-g",
+   "order": 40,
+   "edits": 6,
+   "summary": "`repo fleet status` and the MCP tool `fleet_status`. Rows 1-4 are byte-identical to obs-g's own `apply_guide.py`, so either may land first."
+  },
+  {
+   "name": "census2",
+   "code": "census2-g-tools/staged (supersedes testmem2-g-tools/staged: land exactly one)",
+   "lane": "census2-g",
+   "order": 50,
+   "edits": 4,
+   "summary": "Per-file memory ceilings for every owned `bun test` process. The code batch's own bullet is in the test-runner paragraph; this batch adds the message row and the budget-table row."
+  },
+  {
+   "name": "fdleak-guard",
+   "code": "fdleak-g-tools/staged/guard (after census2)",
+   "lane": "fdleak-g",
+   "order": 51,
+   "edits": 6,
+   "summary": "The `bun test ./` rule, the open-files ceiling and the orphan guard. The code batch carries its own bullet in the test-runner paragraph; this batch adds the ENFILE and message rows and sharpens the single-file rule."
+  },
+  {
+   "name": "jobsrv",
+   "code": "jobsrv-g-tools/staged",
+   "lane": "jobsrv-g",
+   "order": 52,
+   "edits": 4,
+   "summary": "Cargo's job-token pool is handed on to build scripts and the compiler wrapper."
+  },
+  {
+   "name": "nxfix-core",
+   "code": "nxfix-g-tools/staged/core (its manifest entry for the guide)",
+   "lane": "nxfix-g",
+   "order": 59,
+   "edits": 2,
+   "summary": "nxfix-g's `core` replaces the WHOLE guide file (base sha256 must equal the live file) and refuses after any other guide edit. Land this batch instead and remove the guide entry from core's manifest, or land core before every other doc batch. The two blocks are byte-identical to core's, so either order ends in the same guide."
+  },
+  {
+   "name": "nxlock",
+   "code": "nxlock-g-tools/staged/nxlock (after nxfix-g core)",
+   "lane": "nxlock-g",
+   "order": 60,
+   "edits": 4,
+   "summary": "Nx daemon start order and the inert lease classes."
+  },
+  {
+   "name": "oracle2",
+   "code": "oracle2-g-tools/staged",
+   "lane": "oracle2-g",
+   "order": 61,
+   "edits": 2,
+   "summary": "The read oracle proves huge keys, waits for the unified log, and uses no local time stamp."
+  },
+  {
+   "name": "setup",
+   "code": "setup-g-tools/staged",
+   "lane": "setup-g",
+   "order": 70,
+   "edits": 2,
+   "summary": "Zero-touch native prerequisites: preflight names them, `repo tools setup all` builds the Node native core and the compiler helpers."
+  },
+  {
+   "name": "xplat3",
+   "code": "xplat3-g-tools/staged (apply.py)",
+   "lane": "xplat3-g",
+   "order": 80,
+   "edits": 2,
+   "summary": "Windows notes and the platform fixes of the Windows audit. Creates the section 'Windows, Linux and macOS'."
+  },
+  {
+   "name": "platforms",
+   "code": "xplat4-g-tools/staged/platforms",
+   "lane": "xplat4-g",
+   "order": 81,
+   "edits": 2,
+   "summary": "Explicit platform verdicts for all 220 suites; Windows rows in CI block."
+  },
+  {
+   "name": "freespace",
+   "code": "xplat4-g-tools/staged/freespace (after xplat3)",
+   "lane": "xplat4-g",
+   "order": 82,
+   "edits": 2,
+   "summary": "One free-space question that answers 'unknown'."
+  },
+  {
+   "name": "conv",
+   "code": "conv-g-tools/staged (after oracle2-g)",
+   "lane": "conv-g",
+   "order": 90,
+   "edits": 2,
+   "summary": "Policy numbers in schema JSON, bilingual refusals, audit rules."
+  }
+ ]
+}

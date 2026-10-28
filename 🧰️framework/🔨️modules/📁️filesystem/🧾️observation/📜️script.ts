@@ -17,10 +17,10 @@ class TestScript extends BundleScript{
   if(segments.length)throw new Error("physical observation test accepts no arguments");
   const sandbox=testSandboxEnvironmentV1(process.env,{route:"filesystem-observation",checkout:this.repoRoot});
   try{
-   await runOwnedCommand(process.execPath,["test",resolve(this.root,"🧪️tests/📁️descriptor/🟦️.ts"),resolve(this.root,"🧪️tests/📄️publication/🟦️.ts"),resolve(this.root,"🔁️churn/🧪️tests/🟦️.ts"),resolve(this.root,"🔁️churn/🧪️tests/🧾️refusals/🟦️.ts")],this.repoRoot,"filesystem:rooted-descriptors",cmdBudgetMs(),{env:sandbox.environment});
+   await runOwnedCommand(process.execPath,["test",resolve(this.root,"🧪️tests/📁️descriptor/🟦️.ts"),resolve(this.root,"🧪️tests/📄️publication/🟦️.ts"),resolve(this.root,"🔁️churn/🧪️tests/🟦️.ts"),resolve(this.root,"🔁️churn/🧪️tests/🧾️refusals/🟦️.ts"),resolve(this.root,"📜️changes/🧪️tests/🟦️.ts")],this.repoRoot,"filesystem:rooted-descriptors",cmdBudgetMs(),{env:sandbox.environment});
    await runOwnedCommand(process.execPath,[resolve(this.root,"📜️script.ts"),"test-worker"],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:sandbox.environment});
   }finally{sandbox.release();}
-  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",resolve(this.root,"🟦️.ts"),resolve(this.root,"📁️current/🟦️.ts"),resolve(this.root,"🔁️churn/🟦️.ts"),resolve(this.root,"🧪️tests/🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",resolve(this.root,"🟦️.ts"),resolve(this.root,"📁️current/🟦️.ts"),resolve(this.root,"🔁️churn/🟦️.ts"),resolve(this.root,"📜️changes/🟦️.ts"),resolve(this.root,"📜️changes/🧭️client/🟦️.ts"),resolve(this.root,"📜️changes/🌳️tree/🟦️.ts"),resolve(this.root,"🧪️tests/🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
  }
 }
 /** 🧪️ Executes the complete portable fixture roster in its defining source owner. */

@@ -1,0 +1,66 @@
+{
+ "tests": [
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🧪️tests/⏳️future/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧬️schema/🔣️.json"
+ ],
+ "knownRed": [],
+ "laws": [
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🧪️tests/⏳️future/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🧪️tests/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🧪️tests/💰️budget/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🧪️tests/📁️directory/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🧪️tests/🔬️verify/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🧪️tests/🚀️launch/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🧪️tests/🧶️units/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🧪️tests/♻️quota/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/👯️dedupe/🧪️tests/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🧮️sweep/🧪️tests/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/📏️needs/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/📐️model/🟦️.ts"
+  },
+  {
+   "kind": "bun",
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/🔮️sqlite/🟦️.ts"
+  }
+ ]
+}

@@ -6,13 +6,14 @@ import{existsSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,rmSync,symlinkSync
 import{isAbsolute,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{acquireQueuedResourceLease,acquireResourceLease,resourceLeasePathV1,resourceQueueClaimV1,resourceQueueTicketV1,retireIdleResourceLeasesV1,type ResourceLease,type ResourceLeaseControl}from"../../../🟦️.ts";
-import{withBuildTestInvocationV1}from"../../../../🧪️testing/📥️invocation/🟦️.ts";
+import{declareBuildTestEnvelopeV1,withBuildTestInvocationV1}from"../../../../🧪️testing/📥️invocation/🟦️.ts";
 import{testPythonV1}from"../../../../🧪️testing/🧰️toolchain/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{resourceLeaseRetirementIdlePolicyV1,resourceLeaseRetirementMessagesV1}from"../../🟦️.ts";
 import{formatResourceLeaseSweepFailureV1,formatResourceLeaseSweepV1,resourceLeaseSweepModeV1,sweepResourceLeaseStoreV1,type ResourceLeaseSweepV1}from"../🟦️.ts";
 import corpus from"./🔣️.json"with{type:"json"};
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
+declareBuildTestEnvelopeV1({owner:"test:leases",maximumElapsedMilliseconds:300000,capabilities:{artifacts:true}});
 const policy=resourceLeaseRetirementIdlePolicyV1,oracle=fileURLToPath(new URL("./🐍️.py",import.meta.url));
 const python=(mode:string,document:unknown,scratch:string):any=>{const file=join(scratch,"oracle-"+mode+".json");writeFileSync(file,JSON.stringify(document));const run=Bun.spawnSync([testPythonV1()??Bun.which("python3")??"python3","-I",oracle,mode,file]);if(run.exitCode!==0)throw Error("Python oracle failed: "+run.stderr.toString());return JSON.parse(run.stdout.toString());};
 const aged=(path:string,now:number,age:number)=>{const at=new Date(now-age);utimesSync(path,at,at);};
@@ -139,6 +140,14 @@ test("the sweep mode follows a SQLite model of the pressure rule",()=>{
  const model=new Database(":memory:");
  try{for(const row of corpus.modes){const mode=resourceLeaseSweepModeV1(row.freeRatio),expected=model.query("select ?1 < ?2 as pressure, case when ?1 < ?2 then ?3 else ?4 end as idle, case when ?1 < ?2 then ?5 else ?6 end as candidates").get(row.freeRatio,policy.pressureFreeRatio,policy.pressureIdleMilliseconds,policy.idleMilliseconds,policy.pressureCandidatesPerSlice,policy.candidatesPerSlice) as{pressure:number;idle:number;candidates:number};expect(mode.pressure,String(row.freeRatio)).toBe(row.pressure);expect(Boolean(expected.pressure)).toBe(row.pressure);expect(mode.idleMilliseconds).toBe(row.idleMilliseconds);expect(expected.idle).toBe(row.idleMilliseconds);expect(mode.candidates).toBe(row.candidates);expect(expected.candidates).toBe(row.candidates);}}
  finally{model.close();}
+});
+
+test("an unknown free share is the pressure mode, says so in both languages and never prints a made-up percentage",()=>{
+ expect(resourceLeaseSweepModeV1(undefined)).toEqual(resourceLeaseSweepModeV1(0));expect(resourceLeaseSweepModeV1(undefined).pressure).toBe(true);
+ const sweep:ResourceLeaseSweepV1={version:1,directory:"/x",pressure:true,idleMilliseconds:60000,databases:2,queues:1,claims:0,stores:0,kept:0,slices:1,freedBytes:1048576,freeRatioBefore:null,freeRatioAfter:null,complete:true,busy:false,cancelled:false};
+ const english=formatResourceLeaseSweepV1("en",sweep).join("\n"),german=formatResourceLeaseSweepV1("de",sweep).join("\n");
+ expect(english).toContain("could not be read");expect(english).toContain("? % free");expect(german).toContain("nicht gelesen werden");expect(german).toContain("? % frei");
+ for(const text of[english,german]){expect(text).not.toMatch(/\{[A-Za-z]+\}/u);expect(text).not.toContain("NaN");expect(text).not.toContain("100 %");}
 });
 
 test("English and German messages fill every placeholder and a quiet sweep says nothing",()=>{

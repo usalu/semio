@@ -6,9 +6,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🧬️Leaves
 #[path = "🎥️set-camera/🦀️.rs"]
 mod set_camera;
-#[path = "📏️set-layer-stroke-scale/🦀️.rs"]
+#[path = "📏️stroke-scale/🦀️.rs"]
 mod set_layer_stroke_scale;
-#[path = "👁️set-layer-visibility/🦀️.rs"]
+#[path = "👁️layer-visibility/🦀️.rs"]
 mod set_layer_visibility;
 #[path = "🔽️set-lod-mode/🦀️.rs"]
 mod set_lod_mode;

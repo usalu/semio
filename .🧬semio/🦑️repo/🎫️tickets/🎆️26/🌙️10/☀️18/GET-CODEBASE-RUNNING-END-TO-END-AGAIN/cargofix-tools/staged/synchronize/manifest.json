@@ -1,0 +1,52 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts": {
+  "file": "00.ts",
+  "base": "c0324746610185df19841a4e0dbce8020e1a5648f118f47bddb9759119e6ae28",
+  "new": "1567226439753d4c9d84f4386a71f7f31366434cd11389409c4b1297e60d73a4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts": {
+  "file": "01.ts",
+  "base": "5c3180a565d4653d013d752a82dafaf32ab8d178c971cd745a610e0ccdc9169f",
+  "new": "e53239eb83a048b9bf3b287ad0f04e7b67d01e8854f5a3d38f3cad1766088980"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts": {
+  "file": "02.ts",
+  "base": "4c8edc1db488907f98682bb552095a4c19aa2e49aa8034c31c10b08abf9b8406",
+  "new": "f984322ece46d8ae6896b1ac566d21aa9195972b91fb67ad34dc7f568517f29f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🧪️tests/🔬️script-commands/🟦️.ts": {
+  "file": "03.ts",
+  "base": "f98d4d2c8fe9db59e7b3ec89756e4d0d2720eb7f9e35b7649fd801184003a1aa",
+  "new": "6b967801f60e6fd1f6c03fa6f2b88dbfcc6ac2447ba6c38ae19c13a42c06333b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🏃️command/🟦️.ts": {
+  "file": "04.ts",
+  "base": "ae2146cf309fa3feff42d7af3427701390b303e4b276fa7c34c226d54fa03b80",
+  "new": "5d39428b68fb1b59eb885dbc9027841a7f6f314a7ab8d789137773ca235a7878"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/👁️witness/🟦️.ts": {
+  "file": "05.ts",
+  "base": null,
+  "new": "b86dd5be5b111fa79bf825fe44c560f8320ad09cccea1171fd260b7249062e34"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/👁️witness/🧬️schema/🔣️.json": {
+  "file": "06.json",
+  "base": null,
+  "new": "f513fdb02dbf32e018381ca526da409ff209a99f9620604fa818c14c79ea393e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/👁️witness/🧪️tests/🟦️.ts": {
+  "file": "07.ts",
+  "base": null,
+  "new": "9588ef85f652f7ef85963476f99f89591a1907f354ab84af0980ce0a60118d76"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/👁️witness/🧪️tests/🔣️.json": {
+  "file": "08.json",
+  "base": null,
+  "new": "4b88941238aad9d80834646a7a4938c97c37db864d6c52f0cc67854643ffa790"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/👁️witness/🧪️tests/🐍️.py": {
+  "file": "09.py",
+  "base": null,
+  "new": "ac2492c368d9dad8cd3f3ec9f57c234d9211d25d9238c494549cd986ebdd630d"
+ }
+}

@@ -9,11 +9,11 @@
     "verb": "build",
     "title": {
       "en": "Build Go Repository Commands",
-      "de": "Go-Repository-Befehle Bauen"
+      "de": "Go-Repository-Befehle bauen"
     },
     "description": {
       "en": "Build the current Go implementation used by repository tasks in the dashboard.",
-      "de": "Die aktuelle Go-Implementierung für Repository-Aufgaben im Dashboard bauen."
+      "de": "Die aktuelle Go-Implementierung für Repository-Tasks im Dashboard bauen."
     }
   },
   "module": "../../../💻️client/🔌️mcp"

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "cases": [
+    {"name": "today-reset-owner-inside-headroom", "ownerBytes": 105717, "maximumOwnerBytes": 262144, "maximumTextBytes": 262144, "headroomPercent": 25, "accepted": true},
+    {"name": "owner-exactly-at-headroom", "ownerBytes": 196608, "maximumOwnerBytes": 262144, "maximumTextBytes": 262144, "headroomPercent": 25, "accepted": true},
+    {"name": "owner-one-byte-over-headroom", "ownerBytes": 196609, "maximumOwnerBytes": 262144, "maximumTextBytes": 262144, "headroomPercent": 25, "accepted": false},
+    {"name": "empty-owner", "ownerBytes": 0, "maximumOwnerBytes": 262144, "maximumTextBytes": 262144, "headroomPercent": 25, "accepted": true},
+    {"name": "bootstrap-ceiling-equals-text-ceiling", "ownerBytes": 1000, "maximumOwnerBytes": 65536, "maximumTextBytes": 65536, "headroomPercent": 25, "accepted": true},
+    {"name": "bootstrap-ceiling-over-text-ceiling-of-the-1027-incident", "ownerBytes": 3000, "maximumOwnerBytes": 262144, "maximumTextBytes": 65536, "headroomPercent": 25, "accepted": false},
+    {"name": "reset-owner-over-bootstrap-ceiling-of-the-1028-incident", "ownerBytes": 105717, "maximumOwnerBytes": 65536, "maximumTextBytes": 65536, "headroomPercent": 25, "accepted": false},
+    {"name": "zero-headroom-allows-the-whole-ceiling", "ownerBytes": 262144, "maximumOwnerBytes": 262144, "maximumTextBytes": 262144, "headroomPercent": 0, "accepted": true},
+    {"name": "full-headroom-allows-no-byte", "ownerBytes": 1, "maximumOwnerBytes": 262144, "maximumTextBytes": 262144, "headroomPercent": 100, "accepted": false}
+  ]
+}

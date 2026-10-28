@@ -1,0 +1,1154 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Acceptance Scenarios and Budgets",
+ "description": "The acceptance scenarios of the build system (hot no-op, peer edit, one-line edit with byte-exact revert per product), the budgets they are held to, the record of every official run and the report of `repo bench acceptance`; every budget is a declared, bilingual row, every verdict a closed row.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  }
+ },
+ "definitions": {
+  "Policy": {
+   "const": {
+    "version": 1,
+    "id": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+    "taskId": "^\\S+:\\S+$",
+    "kinds": [
+     "noop",
+     "peer",
+     "edit"
+    ],
+    "rolesOfKind": {
+     "noop": [
+      "prime",
+      "hot"
+     ],
+     "peer": [
+      "prime",
+      "control",
+      "peer",
+      "follow"
+     ],
+     "edit": [
+      "prime",
+      "edit",
+      "revert"
+     ]
+    },
+    "roles": [
+     "prime",
+     "hot",
+     "control",
+     "peer",
+     "follow",
+     "edit",
+     "revert"
+    ],
+    "metrics": [
+     "wallMs",
+     "peakFootprintMb",
+     "executedActions"
+    ],
+    "units": {
+     "wallMs": "ms",
+     "peakFootprintMb": "MB",
+     "executedActions": "count"
+    },
+    "statistics": [
+     "max",
+     "min",
+     "p50"
+    ],
+    "minimumSamples": {
+     "max": 1,
+     "min": 1,
+     "p50": 3
+    },
+    "clockGrainMs": {
+     "exact": 0,
+     "poll": 5000
+    },
+    "primeRuns": 2,
+    "footprintIntervalMs": 1000,
+    "saturatedLoadPerCore": 1.5,
+    "quietLoadPerCore": 0.5,
+    "maximumPathLength": 255,
+    "maximumLogBytes": 268435456,
+    "maximumObservedLineCharacters": 4096,
+    "killGraceMs": 10000,
+    "closeGraceMs": 5000,
+    "journalDirectory": ".🧬semio/🦑️repo/⚡️cache/acceptance",
+    "journalFile": "journal.json",
+    "edit": {
+     "nonce": "^[0-9a-z]{6,32}$",
+     "marker": "[acceptance]"
+    },
+    "environment": {
+     "keep": [
+      "SEMIO_BUILD_BUDGET_MS"
+     ],
+     "prefixes": [
+      "SEMIO_REMOTE_CACHE_",
+      "SEMIO_HOST_CAPACITY_"
+     ]
+    },
+    "options": {
+     "valued": [
+      "--scenario"
+     ],
+     "plain": [
+      "--in-place"
+     ],
+     "shared": [
+      "--file",
+      "--markdown",
+      "--lang"
+     ],
+     "flag": [
+      "--json"
+     ]
+    },
+    "served": [
+     "^graph: \\d+ projects served from the memo",
+     "^graph: \\d+ Projekte aus dem Memo"
+    ],
+    "door": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts",
+    "tool": "bazel",
+    "statuses": [
+     "pass",
+     "fail",
+     "unproven"
+    ],
+    "reasons": [
+     "no-samples",
+     "run-failed",
+     "clock-grain",
+     "host-saturated",
+     "resident-only",
+     "not-landed",
+     "foreign-write",
+     "skipped",
+     "aborted"
+    ],
+    "verdicts": [
+     "pass",
+     "fail",
+     "unproven"
+    ],
+    "loadClasses": [
+     "quiet",
+     "busy",
+     "saturated",
+     "unknown"
+    ],
+    "outcomeStatuses": [
+     "ran",
+     "skipped",
+     "failed"
+    ],
+    "measures": [
+     "footprint",
+     "resident"
+    ],
+    "clockKinds": [
+     "exact",
+     "poll"
+    ],
+    "enforcements": [
+     "blocking",
+     "advisory"
+    ],
+    "languages": [
+     "en",
+     "de"
+    ]
+   }
+  },
+  "Id": {
+   "type": "string",
+   "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+  },
+  "TaskId": {
+   "type": "string",
+   "pattern": "^\\S+:\\S+$"
+  },
+  "Path": {
+   "type": "string",
+   "minLength": 1,
+   "maxLength": 255
+  },
+  "Text": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "en",
+    "de"
+   ],
+   "properties": {
+    "en": {
+     "type": "string",
+     "minLength": 1
+    },
+    "de": {
+     "type": "string",
+     "minLength": 1
+    }
+   }
+  },
+  "Kind": {
+   "enum": [
+    "noop",
+    "peer",
+    "edit"
+   ]
+  },
+  "Role": {
+   "enum": [
+    "prime",
+    "hot",
+    "control",
+    "peer",
+    "follow",
+    "edit",
+    "revert"
+   ]
+  },
+  "Metric": {
+   "enum": [
+    "wallMs",
+    "peakFootprintMb",
+    "executedActions"
+   ]
+  },
+  "Statistic": {
+   "enum": [
+    "max",
+    "min",
+    "p50"
+   ]
+  },
+  "Enforcement": {
+   "enum": [
+    "blocking",
+    "advisory"
+   ]
+  },
+  "Status": {
+   "enum": [
+    "pass",
+    "fail",
+    "unproven"
+   ]
+  },
+  "Reason": {
+   "oneOf": [
+    {
+     "enum": [
+      "no-samples",
+      "run-failed",
+      "clock-grain",
+      "host-saturated",
+      "resident-only",
+      "not-landed",
+      "foreign-write",
+      "skipped",
+      "aborted"
+     ]
+    },
+    {
+     "type": "null"
+    }
+   ]
+  },
+  "Verdict": {
+   "enum": [
+    "pass",
+    "fail",
+    "unproven"
+   ]
+  },
+  "LoadClass": {
+   "enum": [
+    "quiet",
+    "busy",
+    "saturated",
+    "unknown"
+   ]
+  },
+  "Labels": {
+   "type": "object",
+   "additionalProperties": {
+    "$ref": "#/definitions/Text"
+   }
+  },
+  "Product": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "title",
+    "target",
+    "edit"
+   ],
+   "properties": {
+    "id": {
+     "$ref": "#/definitions/Id"
+    },
+    "title": {
+     "$ref": "#/definitions/Text"
+    },
+    "target": {
+     "$ref": "#/definitions/TaskId"
+    },
+    "edit": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "file",
+      "comment"
+     ],
+     "properties": {
+      "file": {
+       "$ref": "#/definitions/Path"
+      },
+      "comment": {
+       "enum": [
+        "//",
+        "#"
+       ]
+      }
+     }
+    }
+   }
+  },
+  "Peer": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "trigger",
+    "unrelated",
+    "scheduling"
+   ],
+   "properties": {
+    "trigger": {
+     "type": "string",
+     "minLength": 1
+    },
+    "unrelated": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "file",
+       "comment"
+      ],
+      "properties": {
+       "file": {
+        "$ref": "#/definitions/Path"
+       },
+       "comment": {
+        "enum": [
+         "//",
+         "#"
+        ]
+       }
+      }
+     },
+     "minItems": 1
+    },
+    "scheduling": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "file",
+       "comment"
+      ],
+      "properties": {
+       "file": {
+        "$ref": "#/definitions/Path"
+       },
+       "comment": {
+        "enum": [
+         "//",
+         "#"
+        ]
+       }
+      }
+     },
+     "minItems": 1
+    }
+   }
+  },
+  "Scenario": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "kind",
+    "product",
+    "title",
+    "timeoutMs"
+   ],
+   "properties": {
+    "id": {
+     "$ref": "#/definitions/Id"
+    },
+    "kind": {
+     "$ref": "#/definitions/Kind"
+    },
+    "product": {
+     "$ref": "#/definitions/Id"
+    },
+    "title": {
+     "$ref": "#/definitions/Text"
+    },
+    "hot": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 20
+    },
+    "files": {
+     "enum": [
+      "unrelated",
+      "scheduling"
+     ]
+    },
+    "timeoutMs": {
+     "type": "integer",
+     "minimum": 1000
+    }
+   }
+  },
+  "Budget": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "title",
+    "scenario",
+    "role",
+    "metric",
+    "statistic",
+    "maximum",
+    "enforcement",
+    "source"
+   ],
+   "properties": {
+    "id": {
+     "$ref": "#/definitions/Id"
+    },
+    "title": {
+     "$ref": "#/definitions/Text"
+    },
+    "scenario": {
+     "$ref": "#/definitions/Id"
+    },
+    "role": {
+     "$ref": "#/definitions/Role"
+    },
+    "metric": {
+     "$ref": "#/definitions/Metric"
+    },
+    "statistic": {
+     "$ref": "#/definitions/Statistic"
+    },
+    "maximum": {
+     "type": "number",
+     "minimum": 0
+    },
+    "enforcement": {
+     "$ref": "#/definitions/Enforcement"
+    },
+    "source": {
+     "type": "string",
+     "minLength": 1
+    },
+    "slo": {
+     "$ref": "#/definitions/Id"
+    },
+    "note": {
+     "$ref": "#/definitions/Text"
+    }
+   }
+  },
+  "Set": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "labels",
+    "products",
+    "peer",
+    "scenarios",
+    "budgets"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "labels": {
+     "$ref": "#/definitions/Labels"
+    },
+    "products": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Product"
+     },
+     "minItems": 1
+    },
+    "peer": {
+     "$ref": "#/definitions/Peer"
+    },
+    "scenarios": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Scenario"
+     },
+     "minItems": 1
+    },
+    "budgets": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Budget"
+     },
+     "minItems": 1
+    }
+   }
+  },
+  "Clock": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "kind",
+    "grainMs"
+   ],
+   "properties": {
+    "kind": {
+     "enum": [
+      "exact",
+      "poll"
+     ]
+    },
+    "grainMs": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "Phases": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "number"
+   }
+  },
+  "Record": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "scenario",
+    "role",
+    "index",
+    "command",
+    "exit",
+    "killed",
+    "wallMs",
+    "clock",
+    "peakMb",
+    "measure",
+    "executed",
+    "served",
+    "inferred",
+    "phases",
+    "loadPerCore"
+   ],
+   "properties": {
+    "scenario": {
+     "$ref": "#/definitions/Id"
+    },
+    "role": {
+     "$ref": "#/definitions/Role"
+    },
+    "index": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "command": {
+     "type": "string",
+     "minLength": 1
+    },
+    "exit": {
+     "oneOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "killed": {
+     "oneOf": [
+      {
+       "enum": [
+        "timeout",
+        "abort"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "wallMs": {
+     "type": "number",
+     "minimum": 0
+    },
+    "clock": {
+     "$ref": "#/definitions/Clock"
+    },
+    "peakMb": {
+     "oneOf": [
+      {
+       "type": "number",
+       "minimum": 0
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "measure": {
+     "oneOf": [
+      {
+       "enum": [
+        "footprint",
+        "resident"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "executed": {
+     "oneOf": [
+      {
+       "type": "integer",
+       "minimum": 0
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "served": {
+     "type": "boolean"
+    },
+    "inferred": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "phases": {
+     "$ref": "#/definitions/Phases"
+    },
+    "loadPerCore": {
+     "oneOf": [
+      {
+       "type": "number",
+       "minimum": 0
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "Outcome": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "scenario",
+    "status",
+    "reason",
+    "restored",
+    "landed",
+    "merged"
+   ],
+   "properties": {
+    "scenario": {
+     "$ref": "#/definitions/Id"
+    },
+    "status": {
+     "enum": [
+      "ran",
+      "skipped",
+      "failed"
+     ]
+    },
+    "reason": {
+     "oneOf": [
+      {
+       "type": "string",
+       "minLength": 1
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "restored": {
+     "oneOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "landed": {
+     "oneOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "merged": {
+     "oneOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "Row": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "scenario",
+    "kind",
+    "role",
+    "metric",
+    "statistic",
+    "value",
+    "maximum",
+    "n",
+    "status",
+    "reason",
+    "enforcement",
+    "bound"
+   ],
+   "properties": {
+    "id": {
+     "$ref": "#/definitions/Id"
+    },
+    "scenario": {
+     "$ref": "#/definitions/Id"
+    },
+    "kind": {
+     "enum": [
+      "budget",
+      "invariant"
+     ]
+    },
+    "role": {
+     "oneOf": [
+      {
+       "$ref": "#/definitions/Role"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "metric": {
+     "oneOf": [
+      {
+       "$ref": "#/definitions/Metric"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "statistic": {
+     "oneOf": [
+      {
+       "$ref": "#/definitions/Statistic"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "value": {
+     "oneOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "maximum": {
+     "oneOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "n": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "status": {
+     "$ref": "#/definitions/Status"
+    },
+    "reason": {
+     "$ref": "#/definitions/Reason"
+    },
+    "enforcement": {
+     "$ref": "#/definitions/Enforcement"
+    },
+    "bound": {
+     "enum": [
+      "exact",
+      "upper"
+     ]
+    }
+   }
+  },
+  "Tally": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "pass",
+    "fail",
+    "unproven",
+    "blockingFailed",
+    "advisoryFailed",
+    "provenBlocking"
+   ],
+   "properties": {
+    "pass": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "fail": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "unproven": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "blockingFailed": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "advisoryFailed": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "provenBlocking": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "Host": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "platform",
+    "arch",
+    "cpus",
+    "memoryBytes",
+    "load1",
+    "loadPerCore",
+    "loadClass",
+    "hostClass"
+   ],
+   "properties": {
+    "platform": {
+     "type": "string",
+     "minLength": 1
+    },
+    "arch": {
+     "type": "string",
+     "minLength": 1
+    },
+    "cpus": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "memoryBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "load1": {
+     "oneOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "loadPerCore": {
+     "oneOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "loadClass": {
+     "$ref": "#/definitions/LoadClass"
+    },
+    "hostClass": {
+     "type": "string",
+     "minLength": 1
+    }
+   }
+  },
+  "Report": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "kind",
+    "startedAt",
+    "finishedAt",
+    "host",
+    "hostAfter",
+    "language",
+    "selected",
+    "records",
+    "outcomes",
+    "rows",
+    "tally",
+    "verdict"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "kind": {
+     "const": "acceptance-report"
+    },
+    "startedAt": {
+     "type": "string",
+     "minLength": 1
+    },
+    "finishedAt": {
+     "type": "string",
+     "minLength": 1
+    },
+    "host": {
+     "$ref": "#/definitions/Host"
+    },
+    "hostAfter": {
+     "$ref": "#/definitions/Host"
+    },
+    "language": {
+     "enum": [
+      "en",
+      "de"
+     ]
+    },
+    "selected": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Id"
+     }
+    },
+    "records": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Record"
+     }
+    },
+    "outcomes": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Outcome"
+     }
+    },
+    "rows": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Row"
+     }
+    },
+    "tally": {
+     "$ref": "#/definitions/Tally"
+    },
+    "verdict": {
+     "$ref": "#/definitions/Verdict"
+    }
+   }
+  },
+  "Line": {
+   "oneOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "array",
+     "minItems": 2,
+     "maxItems": 2,
+     "items": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "integer",
+       "minimum": 2
+      }
+     ]
+    }
+   ]
+  },
+  "Case": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "title",
+    "source",
+    "scenario",
+    "role",
+    "exit",
+    "wallMs",
+    "clock",
+    "peakResidentMb",
+    "log",
+    "expect"
+   ],
+   "properties": {
+    "id": {
+     "$ref": "#/definitions/Id"
+    },
+    "title": {
+     "$ref": "#/definitions/Text"
+    },
+    "source": {
+     "type": "string",
+     "minLength": 1
+    },
+    "scenario": {
+     "$ref": "#/definitions/Id"
+    },
+    "role": {
+     "$ref": "#/definitions/Role"
+    },
+    "exit": {
+     "type": "integer"
+    },
+    "wallMs": {
+     "type": "number"
+    },
+    "clock": {
+     "$ref": "#/definitions/Clock"
+    },
+    "peakResidentMb": {
+     "oneOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "log": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Line"
+     }
+    },
+    "expect": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "executed",
+      "served",
+      "rows"
+     ],
+     "properties": {
+      "executed": {
+       "oneOf": [
+        {
+         "type": "integer",
+         "minimum": 0
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "served": {
+       "type": "boolean"
+      },
+      "rows": {
+       "type": "object",
+       "additionalProperties": {
+        "$ref": "#/definitions/Status"
+       }
+      }
+     }
+    }
+   }
+  },
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "about",
+    "cases"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "about": {
+     "type": "string",
+     "minLength": 1
+    },
+    "cases": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Case"
+     },
+     "minItems": 1
+    }
+   }
+  }
+ }
+}

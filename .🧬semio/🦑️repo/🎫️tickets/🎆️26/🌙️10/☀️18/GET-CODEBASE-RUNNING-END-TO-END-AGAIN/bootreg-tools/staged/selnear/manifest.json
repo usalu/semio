@@ -1,0 +1,32 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts": {
+  "file": "00.ts",
+  "base": "1567226439753d4c9d84f4386a71f7f31366434cd11389409c4b1297e60d73a4",
+  "new": "fd9204914d138d81738849e8ce1274b306f42c3ea11f08fbc2aceaf38ec4d9bf"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts": {
+  "file": "01.ts",
+  "base": "43aba720b84fa2aef4a9fe991b045ed19a1c84afdf08f7fd3fc5422f8fbd23f8",
+  "new": "1983f477ed6b975f77008602f05433be880dccb18c66b00bd38b0ded771de1d4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧹️lint/🟦️.ts": {
+  "file": "02.ts",
+  "base": "d4368514dd3a5739e07c7983896708dafb38911133dcf179b207f9ecc1492cf2",
+  "new": "6cd58f8bbac14942792494e53be25f8ff90baed943acdc7dd4b6cb546b68b6c7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🪧️declared-selection/🔣️.json": {
+  "file": "03.json",
+  "base": null,
+  "new": "2327631f7d420aa9ad3f7e30e59183295c612f12208f1152805991644dc904cc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🧫️fixtures/🪧️declared-selection/🔣️.json": {
+  "file": "04.json",
+  "base": null,
+  "new": "58454d7d6c7e5f5bd34c5c33a726434a3893b7eecbc7ff1b55c6c6bc1a4f26d9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🪧️declared-selection/🟦️.ts": {
+  "file": "05.ts",
+  "base": null,
+  "new": "735bc9e51e710e4c5b19fee294156d81d0d639b75b8885bcffc6b3157e6080f3"
+ }
+}

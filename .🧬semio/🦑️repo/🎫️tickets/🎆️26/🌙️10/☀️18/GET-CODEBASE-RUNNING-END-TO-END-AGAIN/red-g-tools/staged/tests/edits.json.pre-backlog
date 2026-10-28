@@ -1,0 +1,53 @@
+{
+ "batch": "tests",
+ "files": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/🟦️.ts",
+   "base": "d5ad02775601f4b9048e07cba92accf75e379d77a8828b9cd70ebb03cbab8718",
+   "applied": "a7881eed07d56cee3e7f474c3414c5ae1c49e965b69ec5d69da2fe367724c893",
+   "edits": [
+    {
+     "old": "expect(guard.expression.getText()).toBe('buildOperationRequiresV1(command)===\"dependencies\"');",
+     "new": "expect(guard.expression.getText()).toBe('buildOperationRequiresV1(command)===\"dependencies\"&&process.env[BUILD_GRAPH_PLAN_OUT_V1]===undefined');"
+    }
+   ],
+   "keep": "d5ad02775601f4b9"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🔣️.json",
+   "base": "8ec1306a41523e0c709642b9b42b4391ce526fe7fe524fa858069e76237007a1",
+   "applied": "0763dc8ddf33f6cc95a95596f1a186a041cd6e210234f06a61c1d71fc193833e",
+   "edits": [
+    {
+     "old": "        \"🔌️backends\"\n      ]",
+     "new": "        \"🔌️backends\",\n        \"🔭️witness\"\n      ]"
+    }
+   ],
+   "keep": "8ec1306a41523e0c"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+   "base": "dea28d5442d28d6aa131039ed586fa68ddcd3b20e9c264087700d2282ea1d0f3",
+   "applied": "43a74700e837584b6aab5e42c9e13424ea69a7021c6a346d96e0f3a0a7045dfe",
+   "edits": [
+    {
+     "old": "\"🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/\"];expect",
+     "new": "\"🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/\",\"🧰️framework/📦️packages/🟦️typescript/⚙️runtime/\"];expect"
+    }
+   ],
+   "keep": "dea28d5442d28d6a"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🧪️tests/🟦️.ts",
+   "base": "f19756b2b6242d2ff7712a873a558c776148582de680b3af3d53a0d7bcdc26b9",
+   "applied": "3dd06fb4fea2f7f674b29f7816d6a49dbc65e7dd78b96a85bec118b401f115a7",
+   "edits": [
+    {
+     "old": "||path.startsWith(\"🧰️framework/🔨️modules/🧬️schema/✅️validator/\"))).toBe(true);",
+     "new": "||path.startsWith(\"🧰️framework/🔨️modules/🧬️schema/✅️validator/\")||path.startsWith(\"🧰️framework/📦️packages/🟦️typescript/⚙️runtime/\"))).toBe(true);"
+    }
+   ],
+   "keep": "f19756b2b6242d2f"
+  }
+ ]
+}

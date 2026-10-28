@@ -19,12 +19,29 @@ import (
 
 // #region 🗣️Language
 
-// 📖️LanguageProtocol is the part of the shared language protocol the launcher reads.
+// 📖️LanguageProtocol is the one language protocol of the repository (`⚙️runtime/🗣️language/🔣️.json`); every rule the launcher applies is read from it.
 type LanguageProtocol struct {
-	EnvironmentOrder       []string `json:"environmentOrder"`
-	ExplicitVariable       string   `json:"explicitVariable"`
-	PreferenceListVariable string   `json:"preferenceListVariable"`
-	NeutralTags            []string `json:"neutralTags"`
+	Flag                    string          `json:"flag"`
+	ArgumentsEnd            string          `json:"argumentsEnd"`
+	ExplicitVariable        string          `json:"explicitVariable"`
+	PreferenceListVariable  string          `json:"preferenceListVariable"`
+	PreferenceListSeparator string          `json:"preferenceListSeparator"`
+	EnvironmentOrder        []string        `json:"environmentOrder"`
+	SubtagSeparators        string          `json:"subtagSeparators"`
+	NeutralTags             []string        `json:"neutralTags"`
+	OsLocale                OsLocale        `json:"osLocale"`
+	Refusal                 map[string]Text `json:"refusal"`
+	separators              *regexp.Regexp
+}
+
+// 🖥️OsLocale says how the operating system language list is read.
+type OsLocale struct {
+	Darwin struct {
+		Command   string   `json:"command"`
+		Args      []string `json:"args"`
+		TimeoutMs int      `json:"timeoutMs"`
+		Pattern   string   `json:"pattern"`
+	} `json:"darwin"`
 }
 
 // 🏳️Resolution says which language was chosen and where it came from.
@@ -43,17 +60,18 @@ func LoadLanguageProtocol(root string, registry *Registry) (LanguageProtocol, er
 	if err == nil {
 		err = json.Unmarshal(raw, &protocol)
 	}
-	if err == nil && (protocol.ExplicitVariable == "" || len(protocol.EnvironmentOrder) == 0) {
+	if err == nil {
+		protocol.separators, err = regexp.Compile("[" + regexp.QuoteMeta(protocol.SubtagSeparators) + "]")
+	}
+	if err == nil && (protocol.Flag == "" || protocol.ArgumentsEnd == "" || protocol.ExplicitVariable == "" || protocol.PreferenceListSeparator == "" || protocol.SubtagSeparators == "" || len(protocol.EnvironmentOrder) == 0 || len(protocol.Refusal) == 0) {
 		err = RegistryError{Path: registry.Language.Protocol, Kind: "protocol"}
 	}
 	return protocol, err
 }
 
-var languageSeparators = regexp.MustCompile(`[._@-]`)
-
 // 🔤️LanguageSubtag reads the language subtag of a locale or tag; neutral locales carry none.
 func (p LanguageProtocol) LanguageSubtag(value string) string {
-	tag := languageSeparators.Split(strings.ToLower(strings.TrimSpace(value)), 2)[0]
+	tag := p.separators.Split(strings.ToLower(strings.TrimSpace(value)), 2)[0]
 	for _, neutral := range p.NeutralTags {
 		if tag == neutral {
 			return ""
@@ -62,25 +80,25 @@ func (p LanguageProtocol) LanguageSubtag(value string) string {
 	return tag
 }
 
-// 🏳️LanguageFlag reads the last --lang before the -- separator and says whether it was given.
-func LanguageFlag(args []string) (string, bool) {
+// 🏳️LanguageFlag reads the last language flag before the arguments end and says whether it was given.
+func (p LanguageProtocol) LanguageFlag(args []string) (string, bool) {
 	end := len(args)
 	for index, argument := range args {
-		if argument == "--" {
+		if argument == p.ArgumentsEnd {
 			end = index
 			break
 		}
 	}
 	value, given := "", false
 	for index := 0; index < end; index++ {
-		if args[index] == "--lang" {
+		if args[index] == p.Flag {
 			given, value = true, ""
 			if index+1 < end {
 				index++
 				value = args[index]
 			}
-		} else if strings.HasPrefix(args[index], "--lang=") {
-			given, value = true, strings.TrimPrefix(args[index], "--lang=")
+		} else if strings.HasPrefix(args[index], p.Flag+"=") {
+			given, value = true, strings.TrimPrefix(args[index], p.Flag+"=")
 		}
 	}
 	return value, given
@@ -95,13 +113,13 @@ func offers(languages []string, tag string) bool {
 	return false
 }
 
-// 🗣️ResolveLanguage chooses a language: --lang, SEMIO_LANGUAGE, LANGUAGE, the first set of LC_ALL, LC_MESSAGES, LANG, then the system list; unoffered sources are skipped except the two explicit ones.
-func (p LanguageProtocol) ResolveLanguage(languages, args []string, env Environment, system func() []string) (Resolution, *LanguageRefusal) {
-	if flag, given := LanguageFlag(args); given {
+// 🗣️ResolveLanguage chooses the language of a command by the protocol: the flag, the explicit variable, the preference list, the first set locale variable, then the operating system list; unoffered sources are skipped except the two explicit ones.
+func (p LanguageProtocol) ResolveLanguage(languages, args []string, env Environment, system func(OsLocale) []string) (Resolution, *LanguageRefusal) {
+	if flag, given := p.LanguageFlag(args); given {
 		if !offers(languages, flag) {
 			return Resolution{}, &LanguageRefusal{Kind: "flag", Value: flag}
 		}
-		return Resolution{flag, "--lang"}, nil
+		return Resolution{flag, p.Flag}, nil
 	}
 	if explicit := env(p.ExplicitVariable); explicit != "" {
 		if tag := p.LanguageSubtag(explicit); offers(languages, tag) {
@@ -109,7 +127,7 @@ func (p LanguageProtocol) ResolveLanguage(languages, args []string, env Environm
 		}
 		return Resolution{}, &LanguageRefusal{Kind: "variable", Name: p.ExplicitVariable, Value: explicit}
 	}
-	for _, entry := range strings.Split(env(p.PreferenceListVariable), ":") {
+	for _, entry := range strings.Split(env(p.PreferenceListVariable), p.PreferenceListSeparator) {
 		if tag := p.LanguageSubtag(entry); offers(languages, tag) {
 			return Resolution{tag, p.PreferenceListVariable}, nil
 		}
@@ -123,12 +141,25 @@ func (p LanguageProtocol) ResolveLanguage(languages, args []string, env Environm
 		}
 		break
 	}
-	for _, entry := range system() {
+	for _, entry := range system(p.OsLocale) {
 		if tag := p.LanguageSubtag(entry); offers(languages, tag) {
 			return Resolution{tag, "os"}, nil
 		}
 	}
 	return Resolution{}, &LanguageRefusal{Kind: "none"}
+}
+
+// 🌐️Refuse renders a refusal of the protocol in every offered language, one line each; a language without its own text reads the English one.
+func (p LanguageProtocol) Refuse(languages []string, refusal *LanguageRefusal) string {
+	lines := make([]string, 0, len(languages))
+	for _, language := range languages {
+		text, found := p.Refusal[refusal.Kind][language]
+		if !found {
+			text = p.Refusal[refusal.Kind]["en"]
+		}
+		lines = append(lines, Format(text, map[string]string{"choice": strings.Join(languages, "|"), "value": refusal.Value, "name": refusal.Name}))
+	}
+	return strings.Join(lines, "\n")
 }
 
 // ✍️Format fills {name} placeholders of one text.
@@ -142,16 +173,6 @@ func Format(text string, values map[string]string) string {
 // 💬️Say renders a registry text in one language.
 func (r *Registry) Say(language, id string, values map[string]string) string {
 	return Format(r.Messages[id][language], values)
-}
-
-// 🌐️Refusal renders a language refusal in every offered language, one line each.
-func (r *Registry) Refusal(refusal *LanguageRefusal) string {
-	id := map[string]string{"none": "languageRefusal", "flag": "languageUnknownFlag", "variable": "languageUnknownVariable"}[refusal.Kind]
-	lines := make([]string, 0, len(r.Languages))
-	for _, language := range r.Languages {
-		lines = append(lines, r.Say(language, id, map[string]string{"choice": strings.Join(r.Languages, "|"), "value": refusal.Value, "name": refusal.Name}))
-	}
-	return strings.Join(lines, "\n")
 }
 
 // 🌍️EverySay renders a registry text in every offered language, one line each.
@@ -170,7 +191,7 @@ var Builtin = map[string]Text{
 	"rootMalformed":         Text{"en": "The file {file} is not valid JSON.", "de": "Die Datei {file} ist kein gültiges JSON."},
 	"registry.unreadable":   Text{"en": "The runtime registry {path} cannot be read.", "de": "Die Laufzeitregistratur {path} ist nicht lesbar."},
 	"registry.malformed":    Text{"en": "The runtime registry {path} is malformed (field: {subject}).", "de": "Die Laufzeitregistratur {path} ist fehlerhaft aufgebaut (Feld: {subject})."},
-	"registry.contract":     Text{"en": "The runtime registry declares contract {found}, this launcher implements contract {expected}. Rebuild the launcher with the install script of the launcher module, or run repo run repo-mcp:install.", "de": "Die Laufzeitregistratur deklariert Vertrag {found}, dieser Launcher setzt Vertrag {expected} um. Baue den Launcher mit dem Installationsskript des Launcher-Moduls neu oder führe repo run repo-mcp:install aus."},
+	"registry.contract":     Text{"en": "The runtime registry declares contract {found}, this launcher implements contract {expected}. Rebuild and reinstall the launcher with: {command}", "de": "Die Laufzeitregistratur deklariert Vertrag {found}, dieser Launcher setzt Vertrag {expected} um. Baue den Launcher neu und installiere ihn mit: {command}"},
 	"registry.incomplete":   Text{"en": "The runtime registry {path} lacks languages, a language protocol, routing, a cache layout or implementation entries.", "de": "Der Laufzeitregistratur {path} fehlen Sprachen, ein Sprachprotokoll, die Routenwahl, das Cache-Layout oder Implementierungs-Einstiege."},
 	"registry.selected":     Text{"en": "The runtime registry {path} selects the undeclared runtime {subject}.", "de": "Die Laufzeitregistratur {path} wählt die nicht deklarierte Laufzeit {subject}."},
 	"registry.runtime":      Text{"en": "The runtime registry {path} declares an incomplete runtime: {subject}.", "de": "Die Laufzeitregistratur {path} deklariert eine unvollständige Laufzeit: {subject}."},

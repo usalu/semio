@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "checkout": "/repository",
+  "cases": [
+    {"name": "checkout passed to a store call", "source": "await withRepositoryCacheStoreV1(process.cwd(),\"products\",original,control,body);", "findings": [{"line": 1, "rule": "checkout-store-call"}]},
+    {"name": "checkout through an initialised identifier", "source": "const workspace=process.cwd(),label=\"x\";\nconst leases=repositoryLeaseDirectoryV1(workspace);", "findings": [{"line": 2, "rule": "checkout-store-call"}]},
+    {"name": "checkout through a chain of identifiers", "source": "const start=process.cwd();\nconst root=resolve(start);\nopenRepositoryCachePartitionV1(root,\"graph\",control);", "findings": [{"line": 3, "rule": "checkout-store-call"}]},
+    {"name": "checkout environment variable", "source": "const budget=repositoryCacheBudgetV1(process.env.SEMIO_WORKSPACE_ROOT!);", "findings": [{"line": 1, "rule": "checkout-store-call"}]},
+    {"name": "checkout environment variable by element access", "source": "repositoryCacheBudgetV1(process.env[\"SEMIO_WORKSPACE_ROOT\"]!);", "findings": [{"line": 1, "rule": "checkout-store-call"}]},
+    {"name": "checkout joined with a live lease directory", "source": "test(\"x\",async()=>{\n const live=join(process.cwd(),\".cache/b/l/m/data\");\n});", "findings": [{"line": 2, "rule": "checkout-store-path"}]},
+    {"name": "checkout in a template naming the graph store", "source": "const path=`${process.cwd()}/.cache/b/g/m`;", "findings": [{"line": 1, "rule": "checkout-store-path"}]},
+    {"name": "checkout joined with the rust partition", "source": "const rust=path.join(process.cwd(),\".🧬semio/🦑️repo/⚡️cache/rust/fixed\");", "findings": [{"line": 1, "rule": "checkout-store-path"}]},
+    {"name": "lease acquisition in the checkout's lease store", "source": "await acquireQueuedResourceLease({directory:join(process.cwd(),\".cache/b/l/m/data\"),resource:\"r\",mode:\"shared\"});", "findings": [{"line": 1, "rule": "checkout-store-call"}, {"line": 1, "rule": "checkout-store-path"}]},
+    {"name": "private repository root", "source": "const repository=await privateRepositoryWorkspaceV1();\nawait withRepositoryCacheStoreV1(repository.root,\"products\",original,control,body);\nconst live=join(repository.root,\".cache/b/l/m/data\");", "findings": []},
+    {"name": "checkout as the working directory of a child", "source": "await captureOwnedCommandV1(process.execPath,[\"test\",file],process.cwd(),{control});", "findings": []},
+    {"name": "store literal below another root", "source": "const lease=join(root,\".cache/b/l/m/data\");", "findings": []},
+    {"name": "property names are not identifiers", "source": "const workspace=process.cwd();\nconst options={workspace:1};\nrepositoryCacheBudgetV1(other.workspace);", "findings": []},
+    {"name": "conditional store callee", "source": "const run=async()=>{await (optional?withRepositoryBuildGraphPublicationFixtureV1:withRepositoryBuildGraphFixtureV1)(process.cwd(),original,control,body);};", "findings": [{"line": 1, "rule": "checkout-store-call"}]},
+    {"name": "a function that mentions the checkout is not the checkout", "source": "const workspaceOf=(kind:string)=>kind===\"nested\"?process.cwd():root;\nconst run=()=>reset(\"/repo/.cache/b/n\",workspaceOf(kind));", "findings": []},
+    {"name": "data read from a checkout file is not the checkout", "source": "const file=join(process.env.SEMIO_WORKSPACE_ROOT!,\"source.ts\"),text=readFileSync(file,\"utf8\");\nrepositoryCacheBudgetV1(text);\nrepositoryCacheBudgetV1(file);", "findings": [{"line": 3, "rule": "checkout-store-call"}]},
+    {"name": "the file's own directory walked up to the checkout", "path": "🧰️framework/a/🧪️tests/🟦️.ts", "source": "const root=resolve(import.meta.dir,\"../../..\");\nawait withRepositoryCacheStoreV1(root,\"tools\",original,control,body);\nconst near=resolve(import.meta.dir,\"../..\");\nrepositoryCacheBudgetV1(near);", "findings": [{"line": 2, "rule": "checkout-store-call"}]},
+    {"name": "checkout without a store", "source": "const manifest=readFileSync(join(process.cwd(),\"📋️project.json\"),\"utf8\");", "findings": []}
+  ]
+}

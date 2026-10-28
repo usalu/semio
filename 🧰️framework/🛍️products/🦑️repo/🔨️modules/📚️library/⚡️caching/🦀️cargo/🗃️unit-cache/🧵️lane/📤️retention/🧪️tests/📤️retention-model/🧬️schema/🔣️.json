@@ -1,0 +1,232 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "schema://repo.cargo/LaneRetentionModelV1",
+ "title": "Corpus of the Cargo lane retention rule: plan verdicts per kind and the compiler-origin ownership decisions",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "policy",
+  "plan",
+  "origin"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "policy": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "ledgerPattern",
+    "maximumFiles",
+    "maximumFileBytes",
+    "layout"
+   ],
+   "properties": {
+    "ledgerPattern": {
+     "type": "string",
+     "minLength": 1
+    },
+    "maximumFiles": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "maximumFileBytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "layout": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "lanes",
+      "build",
+      "target"
+     ],
+     "properties": {
+      "lanes": {
+       "type": "string",
+       "minLength": 1
+      },
+      "build": {
+       "type": "string",
+       "minLength": 1
+      },
+      "target": {
+       "type": "string",
+       "minLength": 1
+      }
+     }
+    }
+   }
+  },
+  "plan": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "$ref": "#/definitions/PlanCase"
+   }
+  },
+  "origin": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "$ref": "#/definitions/OriginCase"
+   }
+  }
+ },
+ "definitions": {
+  "Entry": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "name",
+    "sha256",
+    "bytes"
+   ],
+   "properties": {
+    "name": {
+     "type": "string",
+     "minLength": 1
+    },
+    "sha256": {
+     "type": "string",
+     "pattern": "^[a-f0-9]{64}$"
+    },
+    "bytes": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "Action": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "action",
+    "name",
+    "bytes"
+   ],
+   "properties": {
+    "action": {
+     "enum": [
+      "publish",
+      "same",
+      "conflict",
+      "refuse"
+     ]
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1
+    },
+    "bytes": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "PlanCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "lane",
+    "shared",
+    "expect"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "minLength": 1
+    },
+    "lane": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Entry"
+     }
+    },
+    "shared": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Entry"
+     }
+    },
+    "expect": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Action"
+     }
+    }
+   }
+  },
+  "Directories": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "build",
+    "target"
+   ],
+   "properties": {
+    "build": {
+     "type": "string",
+     "pattern": "^/"
+    },
+    "target": {
+     "type": "string",
+     "pattern": "^/"
+    }
+   }
+  },
+  "OriginCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "cacheRoot",
+    "shared",
+    "origin",
+    "expect",
+    "lane"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "minLength": 1
+    },
+    "cacheRoot": {
+     "type": "string",
+     "pattern": "^/"
+    },
+    "shared": {
+     "$ref": "#/definitions/Directories"
+    },
+    "origin": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "buildDirectory",
+      "targetDirectory"
+     ],
+     "properties": {
+      "buildDirectory": {
+       "type": "string",
+       "pattern": "^/"
+      },
+      "targetDirectory": {
+       "type": "string",
+       "pattern": "^/"
+      }
+     }
+    },
+    "expect": {
+     "type": "boolean"
+    },
+    "lane": {
+     "type": "boolean"
+    }
+   }
+  }
+ }
+}

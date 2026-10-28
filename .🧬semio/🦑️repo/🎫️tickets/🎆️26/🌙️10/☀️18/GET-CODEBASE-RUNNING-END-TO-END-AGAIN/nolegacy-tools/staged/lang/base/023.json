@@ -1,0 +1,178 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "Generation pin of a nested build command",
+ "description": "A nested `repo run` inside an orchestrated action of an Original run consumes the graph generation the Original already loaded: the Original names it in the environment variable `environment` as one closed JSON document (the pin) and every descendant inherits it with the rest of the environment; only the build tools whose every task environment is issued by the caller (`tools`) export it, because that issuer drops the pin for every task that is not an orchestrated one. The pin names the sealed generation by the digest of its manifest, the invocation that owns it (`owner`, the pid the descendants carry in `invocationEnvironment` or in the chain `chainEnvironment`) and, as a verified stamp over the owners of that manifest, exactly the projects the Original served from it. A nested command binds the pin only while `owner` is one of the invocations it answers to and that process is alive; any other pin is not its own and is ignored. A bound pin is the graph of the command: it reads that manifest by digest, never verifies the live tree, never takes the builder custody and never plans; when the generation was retired, belongs to another repository identity or lacks an owner of the closure the command needs, the command refuses in both languages instead of planning a graph of its own. A pin older than `maximumAgeMilliseconds` (measured from the time the Original began the load that served it) is not bound either: commands that a long-lived task starts hours later plan with the tree of their time, as before.",
+ "definitions": {
+  "Policy": {
+   "const": {
+    "version": 1,
+    "environment": "SEMIO_BUILD_GENERATION_PIN",
+    "invocationEnvironment": "SEMIO_BUILD_INVOCATION_PID",
+    "chainEnvironment": "SEMIO_BUILD_INVOCATION_PIDS",
+    "maximumBytes": 32768,
+    "tools": [
+     "bazel",
+     "semio"
+    ],
+    "maximumAgeMilliseconds": 14400000
+   }
+  },
+  "Messages": {
+   "const": {
+    "en": {
+     "uncovered": "graph: this command runs inside a build whose pinned graph generation {generation} does not cover {count} of the projects it needs ({names}); it does not plan a graph of its own: add them to the selection of the invoking build or run the command outside of it",
+     "retired": "graph: the graph generation {generation} pinned by the invoking build is no longer kept; this command does not plan a graph of its own: run the invoking build again",
+     "identity": "graph: the graph generation {generation} pinned by the invoking build belongs to another repository identity; this command does not plan a graph of its own",
+     "malformed": "graph: the generation pin of the invoking build is not a closed pin ({reason}); this command does not plan a graph of its own"
+    },
+    "de": {
+     "uncovered": "Graph: dieser Befehl läuft in einem Build, dessen angeheftete Graph-Generation {generation} {count} der benötigten Projekte nicht abdeckt ({names}); er plant keinen eigenen Graphen: die Projekte in die Auswahl des aufrufenden Builds aufnehmen oder den Befehl außerhalb davon ausführen",
+     "retired": "Graph: die vom aufrufenden Build angeheftete Graph-Generation {generation} wird nicht mehr aufbewahrt; dieser Befehl plant keinen eigenen Graphen: den aufrufenden Build erneut ausführen",
+     "identity": "Graph: die vom aufrufenden Build angeheftete Graph-Generation {generation} gehört zu einer anderen Repository-Identität; dieser Befehl plant keinen eigenen Graphen",
+     "malformed": "Graph: die Generations-Anheftung des aufrufenden Builds ist keine geschlossene Anheftung ({reason}); dieser Befehl plant keinen eigenen Graphen"
+    }
+   }
+  },
+  "Pin": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "owner",
+    "generation",
+    "manifest",
+    "covered"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "owner": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "generation": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "manifest": {
+     "type": "string",
+     "pattern": "^[a-f0-9]{64}$"
+    },
+    "covered": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "atMs",
+      "count",
+      "owners"
+     ],
+     "properties": {
+      "atMs": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "count": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 65536
+      },
+      "owners": {
+       "type": "string"
+      }
+     }
+    }
+   }
+  },
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "encode",
+    "accepted",
+    "refusals",
+    "states",
+    "opens",
+    "owners"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "encode": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "owner",
+       "generation",
+       "manifest",
+       "owners",
+       "covered",
+       "atMs"
+      ]
+     }
+    },
+    "accepted": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "text"
+      ]
+     }
+    },
+    "refusals": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "text"
+      ]
+     }
+    },
+    "states": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "environment",
+       "alive",
+       "expected"
+      ]
+     }
+    },
+    "opens": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "owners",
+       "covered",
+       "needed"
+      ]
+     }
+    },
+    "owners": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "environment",
+       "pid"
+      ]
+     }
+    }
+   }
+  }
+ }
+}

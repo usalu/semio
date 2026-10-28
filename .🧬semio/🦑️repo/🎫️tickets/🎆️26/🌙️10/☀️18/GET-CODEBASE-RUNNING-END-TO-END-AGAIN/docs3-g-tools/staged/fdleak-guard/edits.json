@@ -1,0 +1,53 @@
+{
+ "name": "fdleak-guard",
+ "code": "fdleak-g-tools/staged/guard (after census2)",
+ "lane": "fdleak-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "fdleak-enfile",
+   "lang": "en",
+   "kind": "replace",
+   "old": "| ENFILE / file table full | transient; commands retry (`busy`); stop runaway `bun test <path>` without `./` |",
+   "new": "| ENFILE, `Too many open files in system`, `kern.num_files` near 245,760 | the host file table is full. The 20:07 incident of 10-26 (122,880 descriptors = `kern.maxfilesperproc`, killing measured runs) was `bun test <path>` WITHOUT `./` (the 17:43 one has the same signature): bun reads such an operand as a FILTER, scans the whole checkout (465,000 files, 40 s, 2 GB), holds every directory open and runs no test. Find it with `ps` (a `bun test` with a bare path), stop that pid, never `pkill`; write `./path` or an absolute path. The owned runners now refuse it before any process starts (`[tests] bun test <operand> reads the operand as a filter, not as a path … Prefix it with ./`; also for `./` or `.` naming the checkout); `SEMIO_TEST_OPERAND_GUARD=off` lifts the guard. It cannot see a plain `bun test` typed in a shell or spawned by your own tool. Other ENFILE causes are transient and commands retry (`busy`). |"
+  },
+  {
+   "id": "fdleak-enfile",
+   "lang": "de",
+   "kind": "replace",
+   "old": "| ENFILE / Dateitabelle voll | vorübergehend; Befehle wiederholen (`busy`); außer Kontrolle geratene `bun test <Pfad>` ohne `./` beenden |",
+   "new": "| ENFILE, `Too many open files in system`, `kern.num_files` nahe 245.760 | die Dateitabelle des Rechners ist voll. Der Vorfall vom 26.10. um 20:07 (122.880 Deskriptoren = `kern.maxfilesperproc`, er tötete gemessene Läufe) war `bun test <Pfad>` OHNE `./` (der von 17:43 hat dieselbe Signatur): bun liest einen solchen Operanden als FILTER, durchsucht den ganzen Checkout (465.000 Dateien, 40 s, 2 GB), hält jedes Verzeichnis offen und führt keinen Test aus. Mit `ps` finden (ein `bun test` mit bloßem Pfad), diese pid beenden, nie `pkill`; `./Pfad` oder einen absoluten Pfad schreiben. Die eigenen Läufer lehnen es jetzt ab, bevor ein Prozess startet (`[tests] bun test <Operand> liest den Operanden als Filter, nicht als Pfad … Stelle ./ voran`; auch für `./` oder `.`, die den Checkout nennen); `SEMIO_TEST_OPERAND_GUARD=off` hebt den Wächter auf. Ein einfaches `bun test` in der Shell oder aus einem eigenen Werkzeug sieht er nicht. Andere ENFILE-Ursachen sind vorübergehend, Befehle wiederholen (`busy`). |"
+  },
+  {
+   "id": "fdleak-row",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "| `The runtime registry declares contract N, this launcher implements contract M. Rebuild and reinstall the launcher with: …` | the installed Go launcher is older than the registry; run the printed installer once (`🚀️launcher/📥️install`); there is one install location. |",
+   "where": "after",
+   "block": "| `[tests] <file> holds N open files in process P (<command>) and was stopped at its ceiling of C open files`, `[tests] the runner of this test process (P) is gone: ending process P and everything it started`, `[tests] <file> left N process(es) running after it ended; they were stopped: …` | the three guards of `bun test` processes (`🧪️testing/🟨️bun`): every `bun test` process caps its own open files (default 8192, `SEMIO_TEST_OPEN_FILES_CEILING`; the largest honest test needs 320), the owned runner stops a tree at 90 % of the cap by name, a test process whose runner died ends itself and everything it started (checked every 250 ms by a worker thread, +7 MB), and processes a finished test file left behind are stopped and named. Fix the test (close the files, stop the services it starts); `SEMIO_TEST_ORPHAN_GUARD=off` lifts the child side. The runner side tracks process trees through `ps`: on Windows only the child side runs. |"
+  },
+  {
+   "id": "fdleak-row",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "| `Die Laufzeitregistratur deklariert Vertrag N, dieser Launcher setzt Vertrag M um. Baue den Launcher neu und installiere ihn mit: …` | der installierte Go-Launcher ist älter als die Registratur; den ausgegebenen Installer einmal ausführen (`🚀️launcher/📥️install`); es gibt genau einen Installationsort. |",
+   "where": "after",
+   "block": "| `[tests] <Datei> hält N offene Dateien im Prozess P (<Befehl>) und wurde an seiner Obergrenze von C offenen Dateien angehalten`, `[tests] der Runner dieses Testprozesses (P) ist beendet: Prozess P und alles, was er gestartet hat, wird beendet`, `[tests] <Datei> hat N Prozess(e) nach seinem Ende laufen lassen; sie wurden beendet: …` | die drei Wächter der `bun test`-Prozesse (`🧪️testing/🟨️bun`): jeder `bun test`-Prozess begrenzt seine eigenen offenen Dateien (Standard 8192, `SEMIO_TEST_OPEN_FILES_CEILING`; der größte ehrliche Test braucht 320), der eigene Läufer hält einen Baum bei 90 % der Grenze namentlich an, ein Testprozess, dessen Läufer starb, beendet sich samt allem, was er gestartet hat (alle 250 ms von einem Worker-Thread geprüft, +7 MB), und Prozesse, die eine beendete Testdatei zurückließ, werden beendet und genannt. Den Test korrigieren (Dateien schließen, gestartete Dienste beenden); `SEMIO_TEST_ORPHAN_GUARD=off` hebt die Kindseite auf. Die Läuferseite verfolgt Prozessbäume über `ps`: unter Windows läuft nur die Kindseite. |"
+  },
+  {
+   "id": "fdleak-single-file",
+   "lang": "en",
+   "kind": "replace",
+   "old": "(a bare path is a filter and scans the whole directory)",
+   "new": "(a bare path is a filter: bun scans the whole directory, holds every folder open and runs nothing; `bun test ./` with nothing behind it names the checkout and is refused too)"
+  },
+  {
+   "id": "fdleak-single-file",
+   "lang": "de",
+   "kind": "replace",
+   "old": "(ein bloßer Pfad ist ein Filter und durchsucht das ganze Verzeichnis)",
+   "new": "(ein bloßer Pfad ist ein Filter: bun durchsucht das ganze Verzeichnis, hält jeden Ordner offen und führt nichts aus; `bun test ./` ohne weitere Angabe nennt den Checkout und wird ebenfalls abgelehnt)"
+  }
+ ]
+}

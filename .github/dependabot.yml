@@ -76,6 +76,7 @@ updates:
       - "/"
       - "/.github/actions/repo-launcher"
       - "/.github/actions/devcontainer-repo"
+      - "/.github/actions/devcontainer-suites"
       - "/.github/actions/cache-proof"
     schedule:
       interval: "weekly"

@@ -570,7 +570,7 @@
    "capability": "invalidation",
    "title": {
     "en": "Editing one input re-executes exactly the task that reads it and what depends on its output.",
-    "de": "Das Ändern einer Eingabe führt genau die lesende Aufgabe und ihre Abhängigen neu aus."
+    "de": "Das Ändern einer Eingabe führt genau die lesende Task und ihre Abhängigen neu aus."
    },
    "steps": [
     {
@@ -635,7 +635,7 @@
    "capability": "early-cutoff",
    "title": {
     "en": "A change that leaves a task's output identical does not re-execute its dependents.",
-    "de": "Eine Änderung, die die Ausgabe einer Aufgabe unverändert lässt, führt deren Abhängige nicht erneut aus."
+    "de": "Eine Änderung, die die Ausgabe einer Task unverändert lässt, führt deren Abhängige nicht erneut aus."
    },
    "steps": [
     {
@@ -693,7 +693,7 @@
    "capability": "uncached",
    "title": {
     "en": "A task that declares no cache executes on every run.",
-    "de": "Eine Aufgabe ohne Cache wird bei jedem Lauf ausgeführt."
+    "de": "Eine Task ohne Cache wird bei jedem Lauf ausgeführt."
    },
    "steps": [
     {
@@ -802,7 +802,7 @@
    "capability": "failure-isolation",
    "title": {
     "en": "A failing task fails the run, its dependents do not execute and independent tasks still finish.",
-    "de": "Eine fehlgeschlagene Aufgabe lässt den Lauf scheitern, ihre Abhängigen laufen nicht, unabhängige Aufgaben werden beendet."
+    "de": "Eine fehlgeschlagene Task lässt den Lauf scheitern, ihre Abhängigen laufen nicht, unabhängige Tasks werden beendet."
    },
    "steps": [
     {
@@ -838,7 +838,7 @@
    "capability": "failure-isolation",
    "title": {
     "en": "A failed task is never cached: it executes again on the next run.",
-    "de": "Eine fehlgeschlagene Aufgabe wird nie zwischengespeichert: sie läuft beim nächsten Lauf erneut."
+    "de": "Eine fehlgeschlagene Task wird nie zwischengespeichert: sie läuft beim nächsten Lauf erneut."
    },
    "steps": [
     {
@@ -979,7 +979,7 @@
    "capability": "cancellation",
    "title": {
     "en": "Cancelling stops the running task promptly and publishes nothing; the next run completes.",
-    "de": "Abbrechen stoppt die laufende Aufgabe zügig und veröffentlicht nichts; der nächste Lauf wird abgeschlossen."
+    "de": "Abbrechen stoppt die laufende Task zügig und veröffentlicht nichts; der nächste Lauf wird abgeschlossen."
    },
    "steps": [
     {
@@ -1022,7 +1022,7 @@
    "capability": "progress",
    "title": {
     "en": "The run reports a start and an end for every task it executes.",
-    "de": "Der Lauf meldet für jede ausgeführte Aufgabe einen Start und ein Ende."
+    "de": "Der Lauf meldet für jede ausgeführte Task einen Start und ein Ende."
    },
    "steps": [
     {
@@ -1047,7 +1047,7 @@
    "capability": "parallelism",
    "title": {
     "en": "Independent tasks overlap when allowed and never exceed the bound.",
-    "de": "Unabhängige Aufgaben überlappen, wenn erlaubt, und überschreiten die Grenze nie."
+    "de": "Unabhängige Tasks überlappen, wenn erlaubt, und überschreiten die Grenze nie."
    },
    "steps": [
     {
@@ -1077,7 +1077,7 @@
    "capability": "parallelism",
    "title": {
     "en": "With a bound of one, tasks never overlap.",
-    "de": "Mit der Grenze eins überlappen Aufgaben nie."
+    "de": "Mit der Grenze eins überlappen Tasks nie."
    },
    "steps": [
     {
@@ -1227,7 +1227,7 @@
    "capability": "run-record",
    "title": {
     "en": "The backend's own record names the restored tasks of a cached run.",
-    "de": "Die eigene Aufzeichnung des Backends nennt die wiederhergestellten Aufgaben eines zwischengespeicherten Laufs."
+    "de": "Die eigene Aufzeichnung des Backends nennt die wiederhergestellten Tasks eines zwischengespeicherten Laufs."
    },
    "steps": [
     {

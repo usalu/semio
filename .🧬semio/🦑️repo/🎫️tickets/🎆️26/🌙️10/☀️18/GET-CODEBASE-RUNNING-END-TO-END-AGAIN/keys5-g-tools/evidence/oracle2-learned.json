@@ -1,0 +1,56 @@
+{
+ "viz": {
+  "backend": "seatbelt",
+  "strength": "kernel-enforced",
+  "allowed": 26060,
+  "learned": [
+   "♻️mit-bestand/package.json",
+   "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/package.json",
+   "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/pkg/package.json",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧭️workspace-taxonomy-locator/⚡️cache/🟦️.ts",
+   "✏️s/package.json",
+   "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/package.json",
+   "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+   "✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript/package.json",
+   "🌎️hub/package.json",
+   "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+   "🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/package.json",
+   "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🟦️typescript/package.json",
+   "🎓️teaching/package.json",
+   "🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/package.json",
+   "🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/package.json",
+   "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/package.json",
+   "🏢️semio-tech/package.json",
+   "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/package.json",
+   "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json",
+   "🧰️framework/Cargo.toml",
+   "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg/package.json",
+   "🧰️framework/🔨️modules/🖼️assets/README.md",
+   "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/package.json",
+   "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/package.json",
+   "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🟦️typescript/package.json",
+   "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg/package.json",
+   "♻️mit-bestand/🧺️demonstrator/package.json",
+   "✏️s/🔌️plugins/🀄️wfc/📦️packages/🟦️typescript/package.json",
+   "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🟦️typescript/package.json"
+  ],
+  "rounds": 8
+ },
+ "fw": {
+  "backend": "mirror",
+  "strength": "output-equivalence",
+  "allowed": 18969,
+  "learned": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"
+  ],
+  "rounds": 2
+ },
+ "drs": {
+  "backend": "mirror",
+  "strength": "output-equivalence",
+  "allowed": 12259,
+  "learned": [],
+  "rounds": 1
+ }
+}

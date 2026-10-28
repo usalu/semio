@@ -1,0 +1,4 @@
+# 🧪 Shared helpers of the xplat5 verify scripts (sourced): law NAME CMD... prints GREEN/RED; negative NAME BATCH ROOT CMD... swaps the base files into the MIRROR root, expects the command to fail, restores the new files.
+FAILED=0
+law() { name=$1; shift; out=$("$@" 2>&1); code=$?; summary=$(printf '%s\n' "$out" | grep -E "^ *[0-9]+ (pass|fail|skip)$|^test result" | tr '\n' ' '); if [ $code -eq 0 ]; then echo "GREEN $name: $summary"; else echo "RED   $name: $summary"; printf '%s\n' "$out" | grep -E "^\(fail\)|^error|panicked" | head -8; FAILED=1; fi; }
+negative() { name=$1; batch=$2; root=$3; shift 3; python3 -I "$XPLAT5/swap.py" "$batch" "$root" base; out=$("$@" 2>&1); code=$?; python3 -I "$XPLAT5/swap.py" "$batch" "$root" new; if [ $code -eq 0 ]; then echo "RED   negative control '$name' DID NOT BITE on the base files"; FAILED=1; else echo "GREEN negative control '$name': red on the base files ($(printf '%s\n' "$out" | grep -cE '^\(fail\)') failing tests)"; fi; }

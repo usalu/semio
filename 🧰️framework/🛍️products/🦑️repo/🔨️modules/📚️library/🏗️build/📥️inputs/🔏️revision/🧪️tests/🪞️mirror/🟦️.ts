@@ -7,8 +7,8 @@ const framework=fileURLToPath(new URL("../../../../../../../../../",import.meta.
 const reader=fileURLToPath(new URL("../../",import.meta.url));
 const churn=join(framework,"🔨️modules","📁️filesystem","🧾️observation","🔁️churn");
 
-/** 📂️ The directory inside `root` that mirrors the reader's own place in the repository; the churn policy and its schema are copied beside it first. */
+/** 📂️ The directory inside `root` that mirrors the reader's own place in the repository; the churn policy, the race table it consults and their schemas are copied beside it first. */
 export function mirrorRevisionReaderDirectoryV1(root:string):string{
- for(const path of [join(churn,"🟦️.ts"),join(churn,"🧬️schema","🔣️.json")]){const copy=join(root,relative(framework,path));mkdirSync(dirname(copy),{recursive:true});copyFileSync(path,copy);}
+ for(const path of [join(churn,"🟦️.ts"),join(churn,"🧬️schema","🔣️.json"),join(churn,"🌊️races","🟦️.ts"),join(churn,"🧬️schema","🌊️races.json")]){const copy=join(root,relative(framework,path));mkdirSync(dirname(copy),{recursive:true});copyFileSync(path,copy);}
  const directory=join(root,relative(framework,reader));mkdirSync(directory,{recursive:true});return directory;
 }

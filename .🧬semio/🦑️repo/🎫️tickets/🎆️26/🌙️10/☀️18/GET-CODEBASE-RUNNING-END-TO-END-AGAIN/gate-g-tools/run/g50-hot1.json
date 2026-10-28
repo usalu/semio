@@ -1,0 +1,12 @@
+{
+ "label": "g50-hot1",
+ "target": "@teaching/architecture-course:build",
+ "started": "01:53:48",
+ "wall_s": 31.0,
+ "peak_tree_mb": 2575,
+ "peak_processes": 4,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

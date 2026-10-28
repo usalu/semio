@@ -1,0 +1,25 @@
+{
+ "name": "freespace",
+ "code": "xplat4-g-tools/staged/freespace (after xplat3)",
+ "lane": "xplat4-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "freespace-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- New macOS images are created sparse (64 MiB, then resized: cost = content; live). The existing fixed images (about 98 GiB on this machine) stay fully allocated until recreated in a quiet window (helper ready, not applied). `~/.sinc` and ticket `🗑️generated` folders are outside the ledger.",
+   "where": "after",
+   "block": "- **Free space is asked one way**: `freeSpaceSyncV1(path, {nearest?})` answers the free bytes (and the volume size where known) or `undefined` for unknown (the reader fails, an incoherent row, a missing path; `nearest` asks the nearest existing ancestor; on Windows `GetDiskFreeSpaceExW`), never a made-up number, and each site decides what unknown means: the lease sweep counts it as pressure, `cache dedupe` reports an unknown gain, the host free-bytes reader and the doctor storage probe answer `null`, elastic image sizing falls back to the minimum capacity, Bazel session pressure asks the nearest ancestor, and the unit-cache collection used to treat an unreadable volume as empty and capacity-sized without saying so and now keeps the same numbers but marks `unmeasured:true` and collects nothing on a guess. 6 of the 18 files with a production `statfsSync` call go through it; the other 12 stay raw, each named with its reason in a fixture, and a census law compares the raw calls with that list in TypeScript and in an independent Python walk."
+  },
+  {
+   "id": "freespace-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- Neue macOS-Abbilder entstehen spärlich (64 MiB, dann vergrößert: Kosten = Inhalt; live). Die vorhandenen festen Abbilder (rund 98 GiB auf dieser Maschine) bleiben voll belegt, bis sie in einem ruhigen Fenster neu angelegt werden (Helfer bereit, nicht angewandt). `~/.sinc` und die `🗑️generated`-Ordner der Tickets liegen außerhalb des Verzeichnisses.",
+   "where": "after",
+   "block": "- **Freier Platz wird auf eine Weise erfragt**: `freeSpaceSyncV1(path, {nearest?})` antwortet mit den freien Bytes (und der Volume-Größe, wo bekannt) oder `undefined` für unbekannt (der Leser scheitert, eine unstimmige Zeile, ein fehlender Pfad; `nearest` fragt den nächsten vorhandenen Vorfahren; unter Windows `GetDiskFreeSpaceExW`), nie mit einer erfundenen Zahl, und jede Stelle entscheidet, was unbekannt heißt: der Lease-Durchlauf zählt es als Druck, `cache dedupe` meldet einen unbekannten Gewinn, der Leser für freie Host-Bytes und die Speichersonde von doctor antworten `null`, die elastische Abbild-Größenbestimmung fällt auf die Mindestkapazität zurück, der Bazel-Sitzungsdruck fragt den nächsten Vorfahren, und die Unit-Cache-Sammlung behandelte ein unlesbares Volume früher still als leer und kapazitätsgroß, behält jetzt dieselben Zahlen, markiert aber `unmeasured:true` und sammelt nichts auf Verdacht. 6 der 18 Dateien mit einem produktiven `statfsSync`-Aufruf laufen darüber; die anderen 12 bleiben roh, jede mit Grund in einer Fixture benannt, und ein Zählgesetz vergleicht die rohen Aufrufe mit dieser Liste in TypeScript und in einem unabhängigen Python-Lauf."
+  }
+ ]
+}

@@ -39,7 +39,9 @@
       "app/test/data.json",
       "app/test/helper.ts",
       "app/test/one.test.ts",
-      "app/📜️script.ts"
+      "app/tsconfig.json",
+      "app/📜️script.ts",
+      "tsconfig.base.json"
     ],
     "oracleEntries": [
       "app/test/one.test.ts"
@@ -91,7 +93,9 @@
         "app/test/helper.ts",
         "app/test/one.test.ts",
         "app/test/second.test.ts",
-        "app/📜️script.ts"
+        "app/tsconfig.json",
+        "app/📜️script.ts",
+        "tsconfig.base.json"
       ],
       "digest": "changes"
     },

@@ -1,0 +1,42 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🏁️settlement/🧬️schema/🔣️.json": {
+  "file": "f00",
+  "base": "7e26acb66dc00b5c481face396f26a145d7a617d74c5dba2167d5657a91397b7",
+  "new": "29721c6e545853676f0f8aa0954448d32ad3327bb2d609ac008521729f8faacd"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🏁️settlement/🟦️.ts": {
+  "file": "f01",
+  "base": "a34815d23a2bd1e88212874633d5e7d741b963d9090e993c8e93d57325d4df9b",
+  "new": "e3afaa538404fff467ebf5247b2ceabb6a022627de0ef7fafde7fc38c396380c"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🏁️settlement/🧪️tests/🟦️.ts": {
+  "file": "f02",
+  "base": "efb4fc445a61b794a45f60160fa47b68b20f50987facf35ece76bc22d727b896",
+  "new": "6f96421d2d1d799c4287fccdea86d6ede501bf470f9fb06538359527d4eb69a2"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts": {
+  "file": "f03",
+  "base": "f759f31b7ae98ae8155ea4861f727364b02c3b5e58a3c67984fb0cae06fd201f",
+  "new": "0565cf415791fa18f7d14bba0caf6e0fa9166b77cd3ee4a8ad0a0a1214e66873"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json": {
+  "file": "f04",
+  "base": "4a59202c9869a9260aeb93396ed4a70b2c7a5897cc089bdd23c7dd1df7243d58",
+  "new": "528545a3ba7e7bbcad466b0faa17c4dfb6d2d3d01ac0fc7a8754775f97fc3cc5"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🟦️.ts": {
+  "file": "f05",
+  "base": "b0590df13263c8b8ae5ada747083cee508f3ef412a33342a859436d6ecf31d1d",
+  "new": "a6064dfabba483e379f5b9a113207d92328759faf992177200752018b08e5116"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🧪️tests/🟦️.ts": {
+  "file": "f06",
+  "base": "b0306c59869ae534d0fca4d56a6324a827a082f8d0dad384be46c7067e54eb96",
+  "new": "ab938bd80326c827bc68ba966c8e97bfcc0162b62a3869a0372d543ce08f4671"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "f07",
+  "base": null,
+  "new": "eea75cf1cd0f3bf2ab82048af10b2167df2226957f032820a1b909f598c3c9e8"
+ }
+}

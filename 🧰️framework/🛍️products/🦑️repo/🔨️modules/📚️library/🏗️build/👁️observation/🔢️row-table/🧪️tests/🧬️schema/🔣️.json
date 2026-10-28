@@ -1,0 +1,15 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Row table law fixture / Zeilentabelle Gesetzesdaten",
+ "description": "EN: Sequences of observation rows (kind, path, fact) whose equal rows must share one row and one number; a case is either a list of rows or a generated run. DE: Folgen von Beobachtungszeilen (Art, Pfad, Fakt), deren gleiche Zeilen eine Zeile und eine Nummer teilen müssen; ein Fall ist eine Liste oder ein erzeugter Lauf.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["version", "cases"],
+ "properties": {
+  "version": {"const": 1},
+  "cases": {"type": "array", "minItems": 1, "items": {"oneOf": [
+   {"type": "object", "additionalProperties": false, "required": ["name", "rows"], "properties": {"name": {"type": "string", "minLength": 1}, "rows": {"type": "array", "minItems": 1, "items": {"type": "array", "minItems": 3, "maxItems": 3, "items": [{"type": "string"}, {"type": "string"}, {}], "additionalItems": false}}}},
+   {"type": "object", "additionalProperties": false, "required": ["name", "generate"], "properties": {"name": {"type": "string", "minLength": 1}, "generate": {"type": "object", "additionalProperties": false, "required": ["rows", "paths", "kinds", "seed"], "properties": {"rows": {"type": "integer", "minimum": 1}, "paths": {"type": "integer", "minimum": 1}, "kinds": {"type": "array", "minItems": 1, "items": {"type": "string"}}, "seed": {"type": "integer"}}}}}
+  ]}}
+ }
+}

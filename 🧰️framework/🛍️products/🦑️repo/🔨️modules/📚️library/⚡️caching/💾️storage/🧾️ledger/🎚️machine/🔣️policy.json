@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "defaultTotalBytes": 130795175936,
+  "environment": "SEMIO_CACHE_BUDGET_BYTES",
+  "file": "🎚️machine-budget.json",
+  "hostFreeFloorBytes": 16106127360,
+  "alignBytes": 268435456,
+  "toleranceBytes": 1048576,
+  "dedupe": [
+    { "id": "bazel-outputs", "partition": "products", "directory": "bazel/outputs", "minimumBytes": 1048576, "quietMs": 3600000, "maximumFiles": 400000 },
+    { "id": "bazel-workspaces", "partition": "products", "directory": "bazel/workspaces", "minimumBytes": 1048576, "quietMs": 3600000, "maximumFiles": 400000 },
+    { "id": "vite-products", "partition": "products", "directory": "vite", "minimumBytes": 1048576, "quietMs": 3600000, "maximumFiles": 400000 },
+    { "id": "tools", "partition": "tools", "minimumBytes": 1048576, "quietMs": 3600000, "maximumFiles": 400000 }
+  ],
+  "stores": [
+    {
+      "id": "rust",
+      "partition": "rust",
+      "weightBasisPoints": 3940,
+      "floorBytes": 2147483648,
+      "headroomBasisPoints": 1500,
+      "purpose": { "en": "Cargo build units, registry and Nx artifacts in the compiler image.", "de": "Cargo-Build-Einheiten, Registry und Nx-Artefakte im Compiler-Image." }
+    },
+    {
+      "id": "products",
+      "partition": "products",
+      "weightBasisPoints": 1970,
+      "floorBytes": 1073741824,
+      "headroomBasisPoints": 1500,
+      "purpose": { "en": "Bazel and Semio action outputs, workspaces and browser/vite products.", "de": "Bazel- und Semio-Aktionsergebnisse, Workspaces sowie Browser- und Vite-Produkte." }
+    },
+    {
+      "id": "tools",
+      "partition": "tools",
+      "weightBasisPoints": 657,
+      "floorBytes": 536870912,
+      "headroomBasisPoints": 1500,
+      "purpose": { "en": "Pinned tool installs (Nx tooling, SDKs, Bazel, interpreters).", "de": "Gepinnte Werkzeug-Installationen (Nx-Tooling, SDKs, Bazel, Interpreter)." }
+    },
+    {
+      "id": "dependencies",
+      "partition": "dependencies",
+      "weightBasisPoints": 657,
+      "floorBytes": 536870912,
+      "headroomBasisPoints": 1500,
+      "purpose": { "en": "Package-manager caches and per-lockfile dependency trees.", "de": "Paketmanager-Caches und Abhängigkeitsbäume je Lock-Datei." }
+    },
+    {
+      "id": "graph",
+      "partition": "graph",
+      "weightBasisPoints": 493,
+      "floorBytes": 1073741824,
+      "headroomBasisPoints": 2000,
+      "purpose": { "en": "Retained build-graph inference, closures and publications.", "de": "Gehaltene Build-Graph-Inferenz, Abschlüsse und Veröffentlichungen." }
+    },
+    {
+      "id": "diagnostics",
+      "partition": "diagnostics",
+      "weightBasisPoints": 164,
+      "floorBytes": 268435456,
+      "headroomBasisPoints": 1500,
+      "purpose": { "en": "Test evidence, run logs and sandboxes.", "de": "Testnachweise, Laufprotokolle und Sandboxes." }
+    },
+    {
+      "id": "nx",
+      "partition": "nx",
+      "weightBasisPoints": 123,
+      "floorBytes": 268435456,
+      "headroomBasisPoints": 1500,
+      "purpose": { "en": "Nx graph namespaces.", "de": "Nx-Graph-Namensräume." }
+    },
+    {
+      "id": "leases",
+      "partition": "leases",
+      "weightBasisPoints": 5,
+      "floorBytes": 67108864,
+      "headroomBasisPoints": 1500,
+      "purpose": { "en": "Cross-process lease catalog.", "de": "Prozessübergreifender Lease-Katalog." }
+    },
+    {
+      "id": "loose",
+      "loose": true,
+      "weightBasisPoints": 1991,
+      "floorBytes": 268435456,
+      "headroomBasisPoints": 0,
+      "purpose": { "en": "Everything cached outside the images: Go, Playwright, toolchains, binaries, indexes.", "de": "Alles Zwischengespeicherte außerhalb der Images: Go, Playwright, Toolchains, Binärdateien, Indizes." }
+    }
+  ]
+}

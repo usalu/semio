@@ -1,0 +1,62 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🔢️row-table/🟨️.d.mts": {
+  "file": "f001",
+  "sha256": "8854a3316cccdc594dbd20ece25ea944e45fbca8bb0c1950ed373006de944f64",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🔢️row-table/🟨️.mjs": {
+  "file": "f002",
+  "sha256": "279f1a6c66f80d549c2128fca1caa01503488d12dd1398a118ceb032effa07d6",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🔢️row-table/🧪️tests/🐍️.py": {
+  "file": "f003",
+  "sha256": "52cedb780d1935e7a3b949932f71415695df3c469fb3b8eeb014d25ab4c3600b",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🔢️row-table/🧪️tests/🔣️.json": {
+  "file": "f004",
+  "sha256": "ee253a60d3032e3fe7fbff8994d74e301d4139edb447d9c7147fe60e272120b7",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🔢️row-table/🧪️tests/🟦️.ts": {
+  "file": "f005",
+  "sha256": "64628036cd930d6b5a4e60b73f1c5bccbff0bf52ad128961c86056425f44a9b3",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🔢️row-table/🧪️tests/🧬️schema/🔣️.json": {
+  "file": "f006",
+  "sha256": "18cd526fe55ed56057aa1a706b71d8e8e9532ae0612081378c10c78f2ff7689c",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🔢️row-cost/🔣️.json": {
+  "file": "f007",
+  "sha256": "f2b1a790dda860720208a65e68fc15db450c959aa1f56d286e7d3bca241bab65",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🔢️row-cost/🟦️.ts": {
+  "file": "f008",
+  "sha256": "eeb8b5cad798962a7b0c344b5b9cb513d22f5fa5f17105ae7e4a468cc1f404a0",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🔢️row-cost/🧬️schema/🔣️.json": {
+  "file": "f009",
+  "sha256": "0017bf1f627c60e74d3c6f99d728b39ea297d8b2cab7390e4802d602c1042ee6",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧾️row-sequence/🔣️.json": {
+  "file": "f010",
+  "sha256": "1d29cec3bffdac8f3c759c0b2826792e5f650080322f94aac09273185169d013",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧾️row-sequence/🟦️.ts": {
+  "file": "f011",
+  "sha256": "2f6cfc9afac1406d8e54a9ac44556844d9ac46da43f9a958fa46076995a4eec8",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧾️row-sequence/🧬️schema/🔣️.json": {
+  "file": "f012",
+  "sha256": "ef9c8bd52ae8193d6cafedf4245f54e3d07f2a5426933874fb1308a4f6de242e",
+  "mode": 420
+ }
+}

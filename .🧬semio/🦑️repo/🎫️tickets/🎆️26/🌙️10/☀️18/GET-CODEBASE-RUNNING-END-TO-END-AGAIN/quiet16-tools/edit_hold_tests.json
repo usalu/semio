@@ -1,0 +1,76 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️control/🟦️.ts": [
+  [
+   " const asts=await Promise.all([\"../../📜️script.ts\",\"../../🎬️executor/🟦️.ts\"].map(async path=>ts.createSourceFile(\"backend.ts\",await readFile(new URL(path,import.meta.url),\"utf8\"),ts.ScriptTarget.Latest,true))),names=[\"initializeBazelControlTextV1\",\"bazelBirthParametersAllowedV1\",\"bazelCancellationControl\"],upgrades:AbortSignal[]=[],body=names.map(name=>{for(const ast of asts){const node=ast.statements.find(value=>ts.isFunctionDeclaration(value)&&value.name?.text===name);if(node)return node.getText(ast).replace(/^export /u,\"\");}throw Error(\"Actual control function required\");}).join(\"\\n\"),factory=runInNewContext(ts.transpile(body+\"\\nbazelCancellationControl;\",{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}),{...routing,upgradeBuildCapacityV1:(signal:AbortSignal)=>{upgrades.push(signal);return upgradeBuildCapacityV1(signal,{});},validateJsonSchemaSubset,randomUUID,createServer,AbortController,Buffer,JSON,Error,Map,Set,Promise,setTimeout,clearTimeout,policy,birthSchema,componentSchema:birthSchemaComponent}),admit=new Ajv({strict:true}).compile(birthSchema.definitions.ControlRole),database=new Database(\":memory:\"),directory=join(process.env.SEMIO_TEST_ARTIFACT_DIR!,\"sc-\"+process.pid);await mkdir(directory,{recursive:false});",
+   " const asts=await Promise.all([\"../../📜️script.ts\",\"../../🎬️executor/🟦️.ts\",\"../../🌡️host-capacity/🟦️.ts\"].map(async path=>ts.createSourceFile(\"backend.ts\",await readFile(new URL(path,import.meta.url),\"utf8\"),ts.ScriptTarget.Latest,true))),names=[\"initializeBazelControlTextV1\",\"bazelBirthParametersAllowedV1\",\"createBazelActionWidthV1\",\"bazelCancellationControl\"],upgrades:AbortSignal[]=[],body=names.map(name=>{for(const ast of asts){const node=ast.statements.find(value=>ts.isFunctionDeclaration(value)&&value.name?.text===name);if(node)return node.getText(ast).replace(/^export /u,\"\");}throw Error(\"Actual control function required\");}).join(\"\\n\"),factory=runInNewContext(ts.transpile(body+\"\\nbazelCancellationControl;\",{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}),{...routing,bazelLiveHostJobsV1:()=>undefined,BUILD_HOST_CAPACITY_POLICY_V1:{wait:{pollMilliseconds:20}},process:{env:{}},setInterval,clearInterval,upgradeBuildCapacityV1:(signal:AbortSignal)=>{upgrades.push(signal);return upgradeBuildCapacityV1(signal,{});},validateJsonSchemaSubset,randomUUID,createServer,AbortController,Buffer,JSON,Error,Map,Set,Promise,setTimeout,clearTimeout,policy,birthSchema,componentSchema:birthSchemaComponent}),admit=new Ajv({strict:true}).compile(birthSchema.definitions.ControlRole),database=new Database(\":memory:\"),directory=join(process.env.SEMIO_TEST_ARTIFACT_DIR!,\"sc-\"+process.pid);await mkdir(directory,{recursive:false});"
+  ]
+ ],
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🚪️gate/🟦️.ts": [
+  [
+   "test(\"A run that asks for work on a full grant only records that it executed, and a quiet run that never asks is learned as quiet with the full jobs\",async()=>{",
+   "test(\"A run that asks for work on a full grant only records that it executed, and a quiet run that never asks and stays within its quiet reservation is learned as quiet with the full jobs\",async()=>{"
+  ],
+  [
+   " await withHostCapacityV1(options(directory,quietOf(quiet),{upgrade:quiet,learn:run=>{learned.push(run);},observe:async()=>900}),async()=>{await sleep(80);});",
+   " await withHostCapacityV1(options(directory,quietOf(quiet),{upgrade:quiet,learn:run=>{learned.push(run);},observe:async()=>450}),async()=>{await sleep(80);});"
+  ],
+  [
+   " expect(learned.map(run=>[run.executed,run.jobs,run.peakMegabytes])).toEqual([[true,2,1200],[false,2,900],[undefined,1,800]]);",
+   " expect(learned.map(run=>[run.executed,run.jobs,run.peakMegabytes])).toEqual([[true,2,1200],[false,2,450],[undefined,1,800]]);"
+  ],
+  [
+   "test(\"A nested invocation that inherits a quiet grant grows it before it runs its body\",async()=>{",
+   "test(\"A nested invocation that inherits a quiet grant runs its body at once and leaves the growth to the executors\",async()=>{"
+  ],
+  [
+   "  const nested=withHostCapacityV1(options(directory,sized(newHostCapacityIdV1(),9000),{environment:{...environmentOf(directory,handle),SEMIO_HOST_CAPACITY_PLAN:JSON.stringify(handle.plan)}}),async inherited=>{nestedRan++;expect(inherited.inherited).toBe(true);expect((await grants(directory)).grants.find(row=>row.id===handle.id)!.quiet).toBeUndefined();});\n  await sleep(300);expect(nestedRan,\"the body waits for the growth\").toBe(0);\n  big.release();await nested;expect(nestedRan).toBe(1);",
+   "  const nested=withHostCapacityV1(options(directory,sized(newHostCapacityIdV1(),9000),{environment:{...environmentOf(directory,handle),SEMIO_HOST_CAPACITY_PLAN:JSON.stringify(handle.plan)}}),async inherited=>{nestedRan++;expect(inherited.inherited).toBe(true);expect(inherited.jobs).toBe(handle.jobs);expect((await grants(directory)).grants.find(row=>row.id===handle.id)!.quiet).toBe(true);});\n  await sleep(300);expect(nestedRan,\"the body runs beside the full machine\").toBe(1);\n  await nested;"
+  ],
+  [
+   " await big.done;",
+   " big.release();await big.done;"
+  ]
+ ],
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/👥️agents/🟦️.ts": [
+  [
+   "/** 👥️ Contract: three agents run builds side by side on a declared 16 GB / 8-core machine. An agent session with nothing running gets its first job whenever memory fits, a growth that our other runs' cores leave short of jobs runs with the jobs they leave and keeps its whole memory, the project farm's elastic request never makes a run wait, a nested invocation that inherits a quiet grant works with the grant as it is after its growth, and the reduced growth says so in English and German; the decision equals the independent Python model on every agent-session world.",
+   "/** 👥️ Contract: three agents run builds side by side on a declared 16 GB / 8-core machine. An agent session with nothing running gets its first job whenever memory fits, a growth that our other runs' cores leave short of jobs runs with the jobs they leave and keeps its whole memory, the project farm's elastic request never makes a run wait, a nested invocation that inherits a quiet grant works with the jobs of the full request at once (never the quiet row's single job) and leaves the growth to the executors, and the reduced growth says so in English and German; the decision equals the independent Python model on every agent-session world."
+  ],
+  [
+   "test(\"A nested invocation that inherits a quiet grant works with the grant as it is after its growth, never with the quiet row's single job\",async()=>{",
+   "test(\"A nested invocation that inherits a quiet grant works with the jobs of the full request at once, never with the quiet row's single job, and follows the grant once it grew\",async()=>{"
+  ],
+  [
+   " setTimeout(()=>{const{quiet:_,...rest}=row;writeFileSync(join(directory,\"grants\",id+\".json\"),JSON.stringify({...rest,jobs:6,cpu:6,reservedMegabytes:3500,upgradedAtMs:Date.now(),resumedAtMs:Date.now()}));},150);",
+   " const grown=()=>{const{quiet:_,...rest}=row;writeFileSync(join(directory,\"grants\",id+\".json\"),JSON.stringify({...rest,jobs:6,cpu:6,reservedMegabytes:3500,upgradedAtMs:Date.now(),resumedAtMs:Date.now()}));};"
+  ],
+  [
+   " const seen=await withHostCapacityV1({directory,policy,request:quietHostRequestV1(request,{quiet:true,megabytes:2048,rampMilliseconds:60_000,samples:1,shareBasisPoints:10000}),upgrade:request,control,environment:{SEMIO_HOST_CAPACITY_DIRECTORY:directory,SEMIO_HOST_CAPACITY_GRANT:id,SEMIO_HOST_CAPACITY_PLAN:JSON.stringify(plan)},write:()=>undefined},async handle=>({inherited:handle.inherited,jobs:handle.jobs,cpu:handle.cpu,plan:handle.plan.jobs}));\n expect(seen).toEqual({inherited:true,jobs:6,cpu:6,plan:6});",
+   " const nested=()=>withHostCapacityV1({directory,policy,request:quietHostRequestV1(request,{quiet:true,megabytes:2048,rampMilliseconds:60_000,samples:1,shareBasisPoints:10000}),upgrade:request,control,environment:{SEMIO_HOST_CAPACITY_DIRECTORY:directory,SEMIO_HOST_CAPACITY_GRANT:id,SEMIO_HOST_CAPACITY_PLAN:JSON.stringify(plan)},write:()=>undefined},async handle=>({inherited:handle.inherited,jobs:handle.jobs,cpu:handle.cpu,plan:handle.plan.jobs,quiet:JSON.parse(readFileSync(join(directory,\"grants\",id+\".json\"),\"utf8\")).quiet}));\n expect(await nested(),\"at once, the full request's jobs, the grant still quiet\").toEqual({inherited:true,jobs:8,cpu:8,plan:8,quiet:true});\n grown();\n expect(await nested(),\"after the growth: the grant's jobs\").toEqual({inherited:true,jobs:6,cpu:6,plan:6,quiet:undefined});"
+  ]
+ ],
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/👥️agents/🥒️.feature": [
+  [
+   "  Scenario: A Nested Invocation Works With The Grown Grant",
+   "  Scenario: A Nested Invocation Works With The Full Jobs Of A Quiet Grant"
+  ],
+  [
+   "    When the grant grows before the invocation starts its tool\n    Then the invocation's jobs, cores and plan are the grant's after the growth, never the quiet row's single job",
+   "    When the invocation starts its tool\n    Then it starts at once with the jobs, cores and plan of the full request, never the quiet row's single job, and the grant stays quiet\n    And once an executor has grown the grant, a later invocation works with the grant's jobs after the growth"
+  ]
+ ],
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🔼️upgrade-before-custody/🟦️.ts": [
+  [
+   "/** 🔼️ Contract: a run that was forecast quiet asks for its full capacity before the graph builder custody is taken, never while holding it; the phase mark inside the custody is bookkeeping and waits for nothing. */",
+   "/** 🔼️ Contract: a run that was forecast quiet asks for its full capacity before the graph builder custody is taken, never while holding it, from every process of the run (one that only inherits the grant included, since inheriting grows nothing); the phase mark inside the custody is bookkeeping and waits for nothing. */"
+  ],
+  [
+   "import{readFileSync}from\"node:fs\";\nimport{upgradeBuildCapacityBeforeRebuildV1}from\"../../../🌡️host-capacity/🚏️marks/🟦️.ts\";",
+   "import{existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync}from\"node:fs\";\nimport{tmpdir}from\"node:os\";\nimport{join}from\"node:path\";\nimport{hostBootAtV1,hostUpgradePathV1,newHostCapacityIdV1}from\"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts\";\nimport{markBuildCapacityPhaseV1,upgradeBuildCapacityBeforeRebuildV1}from\"../../../🌡️host-capacity/🚏️marks/🟦️.ts\";"
+  ],
+  [
+   "test(\"a process under no grant, or one that only inherits it, asks for nothing\",async()=>{\n expect(await upgradeBuildCapacityBeforeRebuildV1({})).toBe(false);\n expect(await upgradeBuildCapacityBeforeRebuildV1({SEMIO_HOST_CAPACITY_GRANT:\"0\".repeat(24),SEMIO_HOST_CAPACITY_PHASE_MARKS:\"off\"})).toBe(false);",
+   "test(\"a process under no grant asks for nothing, one that only inherits a live grant asks its holder before a rebuild although its phase marks are off\",async()=>{\n const directory=mkdtempSync(join(tmpdir(),\"q16g-\")),id=newHostCapacityIdV1(),now=Date.now();\n try{\n  mkdirSync(join(directory,\"grants\"),{recursive:true});mkdirSync(join(directory,\"queue\"),{recursive:true});\n  writeFileSync(join(directory,\"grants\",id+\".json\"),JSON.stringify({id,operation:\"run\",jobs:8,cpu:8,reservedMegabytes:3000,admittedAtMs:now,observedMegabytes:null,pid:process.pid,bootAtMs:hostBootAtV1(directory,now)}));\n  const inheriting={SEMIO_HOST_CAPACITY_DIRECTORY:directory,SEMIO_HOST_CAPACITY_GRANT:id,SEMIO_HOST_CAPACITY_PHASE_MARKS:\"off\"};\n  expect(await upgradeBuildCapacityBeforeRebuildV1({})).toBe(false);\n  expect(await upgradeBuildCapacityBeforeRebuildV1({SEMIO_HOST_CAPACITY_DIRECTORY:directory,SEMIO_HOST_CAPACITY_GRANT:newHostCapacityIdV1(),SEMIO_HOST_CAPACITY_PHASE_MARKS:\"off\"}),\"a grant that is gone\").toBe(false);\n  expect(await upgradeBuildCapacityBeforeRebuildV1(inheriting)).toBe(true);\n  expect(existsSync(hostUpgradePathV1(directory,id)),\"the run is recorded as one that executed work\").toBe(true);\n  expect(await markBuildCapacityPhaseV1(\"rebuild\",inheriting),\"no phase mark under an inherited grant\").toBe(false);\n }finally{rmSync(directory,{recursive:true,force:true});}"
+  ]
+ ]
+}

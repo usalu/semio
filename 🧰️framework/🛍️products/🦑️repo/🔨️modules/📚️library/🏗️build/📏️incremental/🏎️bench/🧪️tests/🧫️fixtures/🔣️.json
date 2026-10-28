@@ -22152,5 +22152,386 @@
    "system": "linux",
    "rss": 3072
   }
+ ],
+ "observations": [
+  {
+   "name": "bazel-run-with-queue-graph-refresh-and-cache-hits",
+   "wallMs": 9000,
+   "lines": [
+    {
+     "at": 10,
+     "line": "$ repo ./door/script.ts repo --tool=bazel run a:build"
+    },
+    {
+     "at": 100,
+     "line": "[capacity] waiting 0s for run: not enough free memory (need 3584 MB; 100 MB spare above the 6553 MB floor, load 20, 4 running, 1 ahead)"
+    },
+    {
+     "at": 2100,
+     "line": "[capacity] waiting 2s for run: an earlier request is still waiting"
+    },
+    {
+     "at": 3000,
+     "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:source-admission\",\"stage\":\"running\"}"
+    },
+    {
+     "at": 3100,
+     "line": "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"dependencies:generation-verify:4096\"}}"
+    },
+    {
+     "at": 3500,
+     "line": "[script] repository:command · Verifying graph facts: 16384 of 66524 facts"
+    },
+    {
+     "at": 4000,
+     "line": "graph: refreshing 5 projects (generation 495)"
+    },
+    {
+     "at": 4100,
+     "line": "graph: @x/y is stale: the source analysis of f.ts changed"
+    },
+    {
+     "at": 4200,
+     "line": "[script] build:projects · Inferring projects: 0 of 5 projects"
+    },
+    {
+     "at": 4300,
+     "line": "[script] repository:command remains active on repository-graph-facts:/r:shard:7 (exclusive, 15 s)"
+    },
+    {
+     "at": 5000,
+     "line": "[bazel] ready 1/1"
+    },
+    {
+     "at": 5200,
+     "line": "INFO: Analyzed 5 targets (7 packages loaded, 46677 targets configured)."
+    },
+    {
+     "at": 5300,
+     "line": "[3 / 20] checking cached actions"
+    },
+    {
+     "at": 8000,
+     "line": "INFO: Elapsed time: 3.0s, Critical Path: 1.1s"
+    },
+    {
+     "at": 8001,
+     "line": "INFO: 23 processes: 4 action cache hit, 1 disk cache hit, 1 internal, 18 local, 3 worker."
+    },
+    {
+     "at": 8002,
+     "line": "INFO: Build completed successfully, 23 total actions"
+    }
+   ],
+   "phases": {
+    "boot": 100.0,
+    "queue-capacity": 2900.0,
+    "admission": 100.0,
+    "verify": 900.0,
+    "graph": 1000.0,
+    "tool-setup": 300.0,
+    "execute": 2700.0,
+    "finish": 1000.0
+   },
+   "executed": 21,
+   "inferred": 5
+  },
+  {
+   "name": "bazel-two-invocations-sum-and-nothing-executed-counts-zero",
+   "wallMs": 4000,
+   "lines": [
+    {
+     "at": 500,
+     "line": "[bazel] ready 1/1"
+    },
+    {
+     "at": 1000,
+     "line": "INFO: 8 processes: 7 disk cache hit, 1 internal."
+    },
+    {
+     "at": 2000,
+     "line": "[bazel] ready 1/1"
+    },
+    {
+     "at": 3000,
+     "line": "INFO: 3 processes: 2 remote cache hit, 1 internal."
+    }
+   ],
+   "phases": {
+    "boot": 500.0,
+    "tool-setup": 3500.0
+   },
+   "executed": 0,
+   "inferred": 0
+  },
+  {
+   "name": "bazel-hot-noop-one-internal-process-is-zero-executed",
+   "wallMs": 1500,
+   "lines": [
+    {
+     "at": 500,
+     "line": "[bazel] ready 1/1"
+    },
+    {
+     "at": 900,
+     "line": "INFO: Analyzed target //:t_1 (0 packages loaded, 0 targets configured)."
+    },
+    {
+     "at": 1000,
+     "line": "INFO: Elapsed time: 0.4s, Critical Path: 0.00s"
+    },
+    {
+     "at": 1001,
+     "line": "INFO: 1 process: 1 internal."
+    },
+    {
+     "at": 1002,
+     "line": "INFO: Build completed successfully, 1 total action"
+    }
+   ],
+   "phases": {
+    "boot": 500.0,
+    "tool-setup": 500.0,
+    "finish": 500.0
+   },
+   "executed": 0,
+   "inferred": 0
+  },
+  {
+   "name": "bazel-single-local-process-is-one-executed",
+   "wallMs": 1000,
+   "lines": [
+    {
+     "at": 500,
+     "line": "INFO: 1 process: 1 local."
+    }
+   ],
+   "phases": {
+    "boot": 1000.0
+   },
+   "executed": 1,
+   "inferred": 0
+  },
+  {
+   "name": "nx-tasks-with-cache-restores",
+   "wallMs": 6000,
+   "lines": [
+    {
+     "at": 100,
+     "line": "> nx run a:generate  [local cache]"
+    },
+    {
+     "at": 200,
+     "line": "> nx run a:build"
+    },
+    {
+     "at": 300,
+     "line": "> nx run b:build  [existing outputs match the cache, left as is]"
+    },
+    {
+     "at": 5900,
+     "line": " NX   Successfully ran target build for project a and 2 tasks they depend on"
+    }
+   ],
+   "phases": {
+    "boot": 100.0,
+    "execute": 5900.0
+   },
+   "executed": 1,
+   "inferred": 0
+  },
+  {
+   "name": "no-summary-no-graph-lines-is-all-boot-and-unknown-executed",
+   "wallMs": 1500,
+   "lines": [
+    {
+     "at": 5,
+     "line": "hello"
+    },
+    {
+     "at": 900,
+     "line": "world"
+    }
+   ],
+   "phases": {
+    "boot": 1500.0
+   },
+   "executed": null,
+   "inferred": 0
+  },
+  {
+   "name": "empty-output",
+   "wallMs": 250,
+   "lines": [],
+   "phases": {
+    "boot": 250.0
+   },
+   "executed": null,
+   "inferred": 0
+  },
+  {
+   "name": "overlong-line-is-cut-before-matching-and-unmatched-lines-keep-the-phase",
+   "wallMs": 3000,
+   "lines": [
+    {
+     "at": 100,
+     "line": "[capacity] waiting 0s for run"
+    },
+    {
+     "at": 200,
+     "line": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxgraph: refreshing 9 projects"
+    },
+    {
+     "at": 300,
+     "line": "INFO: 99 processes: 99 local.          "
+    },
+    {
+     "at": 2000,
+     "line": "a line no rule knows"
+    }
+   ],
+   "phases": {
+    "boot": 100.0,
+    "queue-capacity": 2900.0
+   },
+   "executed": 99,
+   "inferred": 0
+  },
+  {
+   "name": "inferring-count-takes-the-largest-and-malformed-rows-are-plain-lines",
+   "wallMs": 2000,
+   "lines": [
+    {
+     "at": 100,
+     "line": "graph: refreshing 3 projects (generation 1)"
+    },
+    {
+     "at": 200,
+     "line": "[script] build:projects · Inferring projects: 7 of 40 projects"
+    },
+    {
+     "at": 300,
+     "line": "[script] {not json}"
+    },
+    {
+     "at": 400,
+     "line": "[script] {\"command\":\"build:graph-plan\",\"stage\":\"running\"}"
+    },
+    {
+     "at": 1500,
+     "line": "graph: refreshing 2 projects"
+    }
+   ],
+   "phases": {
+    "boot": 100.0,
+    "graph": 1900.0
+   },
+   "executed": null,
+   "inferred": 40
+  }
+ ],
+ "history": [
+  {
+   "name": "newest of the host class",
+   "startedAt": "2026-10-26T09:00:00.123Z",
+   "hostClass": "darwin-arm64-10",
+   "fileName": "20261026T090000Z-darwin-arm64-10.json",
+   "files": [
+    "20261026T080000Z-darwin-arm64-10.json",
+    "20261026T090000Z-darwin-arm64-10.json",
+    "20261026T095959Z-linux-x64-8.json",
+    "notes.md",
+    "20261025T235959Z-darwin-arm64-10.json",
+    "index.jsonl",
+    "20261026T090000Z-darwin-arm64-12.json"
+   ],
+   "before": null,
+   "latest": "20261026T090000Z-darwin-arm64-10.json"
+  },
+  {
+   "name": "older than the newest",
+   "startedAt": "2026-10-26T08:00:00Z",
+   "hostClass": "darwin-arm64-10",
+   "fileName": "20261026T080000Z-darwin-arm64-10.json",
+   "files": [
+    "20261026T080000Z-darwin-arm64-10.json",
+    "20261026T090000Z-darwin-arm64-10.json",
+    "20261026T095959Z-linux-x64-8.json",
+    "notes.md",
+    "20261025T235959Z-darwin-arm64-10.json",
+    "index.jsonl",
+    "20261026T090000Z-darwin-arm64-12.json"
+   ],
+   "before": "20261026T090000Z-darwin-arm64-10.json",
+   "latest": "20261026T080000Z-darwin-arm64-10.json"
+  },
+  {
+   "name": "older than the oldest has none",
+   "startedAt": "2026-10-25T23:59:59Z",
+   "hostClass": "darwin-arm64-10",
+   "fileName": "20261025T235959Z-darwin-arm64-10.json",
+   "files": [
+    "20261026T080000Z-darwin-arm64-10.json",
+    "20261026T090000Z-darwin-arm64-10.json",
+    "20261026T095959Z-linux-x64-8.json",
+    "notes.md",
+    "20261025T235959Z-darwin-arm64-10.json",
+    "index.jsonl",
+    "20261026T090000Z-darwin-arm64-12.json"
+   ],
+   "before": "20261025T235959Z-darwin-arm64-10.json",
+   "latest": null
+  },
+  {
+   "name": "another host class is never mixed",
+   "startedAt": "2026-10-26T09:59:59.9Z",
+   "hostClass": "linux-x64-8",
+   "fileName": "20261026T095959Z-linux-x64-8.json",
+   "files": [
+    "20261026T080000Z-darwin-arm64-10.json",
+    "20261026T090000Z-darwin-arm64-10.json",
+    "20261026T095959Z-linux-x64-8.json",
+    "notes.md",
+    "20261025T235959Z-darwin-arm64-10.json",
+    "index.jsonl",
+    "20261026T090000Z-darwin-arm64-12.json"
+   ],
+   "before": null,
+   "latest": "20261026T095959Z-linux-x64-8.json"
+  },
+  {
+   "name": "unknown host class has none",
+   "startedAt": "2026-10-26T10:00:00Z",
+   "hostClass": "windows-x64-16",
+   "fileName": "20261026T100000Z-windows-x64-16.json",
+   "files": [
+    "20261026T080000Z-darwin-arm64-10.json",
+    "20261026T090000Z-darwin-arm64-10.json",
+    "20261026T095959Z-linux-x64-8.json",
+    "notes.md",
+    "20261025T235959Z-darwin-arm64-10.json",
+    "index.jsonl",
+    "20261026T090000Z-darwin-arm64-12.json"
+   ],
+   "before": null,
+   "latest": null
+  },
+  {
+   "name": "a before file of another host class or no history file has none",
+   "startedAt": "2026-10-26T10:00:00Z",
+   "hostClass": "darwin-arm64-10",
+   "fileName": "20261026T100000Z-darwin-arm64-10.json",
+   "files": [
+    "20261026T080000Z-darwin-arm64-10.json",
+    "20261026T090000Z-darwin-arm64-10.json",
+    "20261026T095959Z-linux-x64-8.json",
+    "notes.md",
+    "20261025T235959Z-darwin-arm64-10.json",
+    "index.jsonl",
+    "20261026T090000Z-darwin-arm64-12.json"
+   ],
+   "before": "20261026T095959Z-linux-x64-8.json",
+   "latest": null
+  }
  ]
 }

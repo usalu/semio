@@ -1,0 +1,47 @@
+{
+ "version": 1,
+ "products": [
+  {
+   "id": "dashboard",
+   "target": "@semio-tech/repo-dashboard-rs:build",
+   "editFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🦀️.rs",
+   "language": "rs",
+   "budgetEditMs": 120000
+  },
+  {
+   "id": "course",
+   "target": "@teaching/architecture-course:build",
+   "editFile": "🎓️teaching/🏛️architecture/📚️course/📚️course/🟦️.ts",
+   "language": "ts",
+   "budgetEditMs": 60000
+  },
+  {
+   "id": "print",
+   "target": "@semio-tech/print-rs:build",
+   "editFile": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🎨theme/🦀️.rs",
+   "language": "rs",
+   "budgetEditMs": 120000
+  }
+ ],
+ "peers": [
+  {
+   "id": "unrelated-ts",
+   "file": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/📜️script.ts",
+   "language": "ts",
+   "op": "comment"
+  },
+  {
+   "id": "scheduling",
+   "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts",
+   "language": "ts",
+   "op": "comment"
+  }
+ ],
+ "budgets": {
+  "noopWallMs": 10000,
+  "noopPeakRssBytes": 1610612736,
+  "peerExecuted": 0,
+  "peerGraphMs": 120000,
+  "peerPeakRssBytes": 2147483648
+ }
+}

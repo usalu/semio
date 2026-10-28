@@ -1,0 +1,180 @@
+{
+  "directory": "/w/.cache/b/l/m/data",
+  "sequences": [
+    {
+      "id": "client-run",
+      "note": "NxScript.runIssued: tools store, graph load, pin, provision, activation, tool use, then the namespace is bound inside the tool use",
+      "after": true,
+      "steps": [
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777272]", "mode": "shared", "via": "run", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777272]"},
+        {"op": "acquire", "resource": "build-graph:/w/.cache/b/g/m/snapshots/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.json", "mode": "shared", "via": "run"},
+        {"op": "acquire", "resource": "nx-tooling-provision", "mode": "exclusive", "via": "run"},
+        {"op": "release", "resource": "nx-tooling-provision"},
+        {"op": "acquire", "resource": "nx-tooling-activation", "mode": "exclusive", "via": "run"},
+        {"op": "acquire", "resource": "nx-authorizer-source:/w/x", "mode": "shared", "via": "run"},
+        {"op": "acquire", "resource": "nx-authorizer-compiler:/w/x", "mode": "shared", "via": "run"},
+        {"op": "release", "resource": "nx-authorizer-compiler:/w/x"},
+        {"op": "release", "resource": "nx-authorizer-source:/w/x"},
+        {"op": "release", "resource": "nx-tooling-activation"},
+        {"op": "acquire", "resource": "nx-tooling:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "run"},
+        {"op": "acquire", "resource": "nx-sdk-snapshot:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "run"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777273]", "mode": "shared", "via": "run", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777273]"},
+        {"op": "acquire", "resource": "nx:graph-pool:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "exclusive", "via": "run"},
+        {"op": "release", "resource": "nx:graph-pool:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+        {"op": "acquire", "resource": "nx:graph-namespace:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "shared", "via": "run"}
+      ],
+      "outOfOrder": [],
+      "holdAndWait": []
+    },
+    {
+      "id": "client-start",
+      "note": "withNxDaemonStartupV1 from a cache hook (tool use and fixed cache already held): store, birth (images, tool use, namespace), then the start lease",
+      "after": true,
+      "steps": [
+        {"op": "acquire", "resource": "nx-tooling:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "ambient"},
+        {"op": "acquire", "resource": "nx-sdk-snapshot:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "ambient"},
+        {"op": "acquire", "resource": "nx:fixed-cache:/w/.cache/b/n/m", "mode": "shared", "via": "ambient"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777272]", "mode": "shared", "via": "store", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777272]"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777273]", "mode": "shared", "via": "birth", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777273]"},
+        {"op": "acquire", "resource": "nx-tooling:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "birth"},
+        {"op": "acquire", "resource": "nx-sdk-snapshot:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "birth"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777273]", "mode": "shared", "via": "birth", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777273]"},
+        {"op": "acquire", "resource": "nx:graph-pool:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "exclusive", "via": "birth"},
+        {"op": "release", "resource": "nx:graph-pool:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+        {"op": "acquire", "resource": "nx:graph-namespace:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "shared", "via": "birth"},
+        {"op": "acquire", "resource": "nx:daemon-startup:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "exclusive", "via": "lease"}
+      ],
+      "outOfOrder": [],
+      "holdAndWait": []
+    },
+    {
+      "id": "client-start-lease-first",
+      "note": "the order before nxlock-g: the start lease is taken first and the birth waits for storage under it",
+      "after": false,
+      "steps": [
+        {"op": "acquire", "resource": "nx-tooling:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "ambient"},
+        {"op": "acquire", "resource": "nx-sdk-snapshot:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "ambient"},
+        {"op": "acquire", "resource": "nx:fixed-cache:/w/.cache/b/n/m", "mode": "shared", "via": "ambient"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777272]", "mode": "shared", "via": "store", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777272]"},
+        {"op": "acquire", "resource": "nx:daemon-startup:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "exclusive", "via": "lease"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777273]", "mode": "shared", "via": "birth", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777273]"},
+        {"op": "acquire", "resource": "nx-tooling:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "birth"},
+        {"op": "acquire", "resource": "nx-sdk-snapshot:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "birth"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777273]", "mode": "shared", "via": "birth", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777273]"},
+        {"op": "acquire", "resource": "nx:graph-pool:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "exclusive", "via": "birth"},
+        {"op": "release", "resource": "nx:graph-pool:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+        {"op": "acquire", "resource": "nx:graph-namespace:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "shared", "via": "birth"}
+      ],
+      "outOfOrder": [{"held": "nx:daemon-startup:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "requested": "native-storage:[16777229,449367157,1609564160,16777273]"}, {"held": "nx:daemon-startup:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "requested": "native-storage:[16777229,449367157,1609564160,16777273]"}, {"held": "nx:daemon-startup:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "requested": "nx:graph-pool:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}, {"held": "nx:daemon-startup:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "requested": "nx:graph-namespace:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}],
+      "holdAndWait": [{"held": "nx:daemon-startup:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "requested": "native-storage:[16777229,449367157,1609564160,16777273]"}, {"held": "nx:daemon-startup:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "requested": "native-storage:[16777229,449367157,1609564160,16777273]"}]
+    },
+    {
+      "id": "daemon-service",
+      "note": "withNxDaemonServiceV1: slot, store, tool use, the namespace is bound inside it, then the exclusive service lease",
+      "after": true,
+      "steps": [
+        {"op": "acquire", "resource": "nx:daemon-slot:f331ddb9bfed1724:finite:0", "mode": "exclusive", "via": "service"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777272]", "mode": "shared", "via": "service", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777272]"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777273]", "mode": "shared", "via": "service", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777273]"},
+        {"op": "acquire", "resource": "nx-tooling:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "service"},
+        {"op": "acquire", "resource": "nx-sdk-snapshot:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "service"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777273]", "mode": "shared", "via": "service", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777273]"},
+        {"op": "acquire", "resource": "nx:graph-pool:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "exclusive", "via": "service"},
+        {"op": "release", "resource": "nx:graph-pool:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+        {"op": "acquire", "resource": "nx:graph-namespace:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "shared", "via": "service"},
+        {"op": "acquire", "resource": "nx:daemon-service:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "exclusive", "via": "service"}
+      ],
+      "outOfOrder": [],
+      "holdAndWait": []
+    },
+    {
+      "id": "daemon-service-bind-first",
+      "note": "the order before nxlock-g: the namespace is bound before the toolkit is used",
+      "after": false,
+      "steps": [
+        {"op": "acquire", "resource": "nx:daemon-slot:f331ddb9bfed1724:finite:0", "mode": "exclusive", "via": "service"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777272]", "mode": "shared", "via": "service", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777272]"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777273]", "mode": "shared", "via": "service", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777273]"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777273]", "mode": "shared", "via": "service", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777273]"},
+        {"op": "acquire", "resource": "nx:graph-pool:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "exclusive", "via": "service"},
+        {"op": "release", "resource": "nx:graph-pool:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+        {"op": "acquire", "resource": "nx:graph-namespace:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "shared", "via": "service"},
+        {"op": "acquire", "resource": "nx-tooling:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "service"},
+        {"op": "acquire", "resource": "nx-sdk-snapshot:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "service"},
+        {"op": "acquire", "resource": "nx:daemon-service:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "exclusive", "via": "service"}
+      ],
+      "outOfOrder": [{"held": "nx:graph-namespace:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "requested": "nx-tooling:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}, {"held": "nx:graph-namespace:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "requested": "nx-sdk-snapshot:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}],
+      "holdAndWait": []
+    },
+    {
+      "id": "journal-reader",
+      "note": "withNxDaemonJournalReaderV1: store, tool use, namespace bound inside it",
+      "after": true,
+      "steps": [
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777272]", "mode": "shared", "via": "journal", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777272]"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777273]", "mode": "shared", "via": "journal", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777273]"},
+        {"op": "acquire", "resource": "nx-tooling:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "journal"},
+        {"op": "acquire", "resource": "nx-sdk-snapshot:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "journal"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777273]", "mode": "shared", "via": "journal", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777273]"},
+        {"op": "acquire", "resource": "nx:graph-pool:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "exclusive", "via": "journal"},
+        {"op": "release", "resource": "nx:graph-pool:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+        {"op": "acquire", "resource": "nx:graph-namespace:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "shared", "via": "journal"}
+      ],
+      "outOfOrder": [],
+      "holdAndWait": []
+    },
+    {
+      "id": "journal-reader-bind-first",
+      "note": "the order before nxlock-g",
+      "after": false,
+      "steps": [
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777272]", "mode": "shared", "via": "journal", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777272]"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777273]", "mode": "shared", "via": "journal", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777273]"},
+        {"op": "acquire", "resource": "native-storage:[16777229,449367157,1609564160,16777273]", "mode": "shared", "via": "journal", "waitedMilliseconds": 20000},
+        {"op": "release", "resource": "native-storage:[16777229,449367157,1609564160,16777273]"},
+        {"op": "acquire", "resource": "nx:graph-pool:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "exclusive", "via": "journal"},
+        {"op": "release", "resource": "nx:graph-pool:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+        {"op": "acquire", "resource": "nx:graph-namespace:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "mode": "shared", "via": "journal"},
+        {"op": "acquire", "resource": "nx-tooling:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "journal"},
+        {"op": "acquire", "resource": "nx-sdk-snapshot:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "journal"}
+      ],
+      "outOfOrder": [{"held": "nx:graph-namespace:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "requested": "nx-tooling:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}, {"held": "nx:graph-namespace:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "requested": "nx-sdk-snapshot:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}],
+      "holdAndWait": []
+    },
+    {
+      "id": "cache-put",
+      "note": "a task publishes its outputs into the shared Nx image: toolkit use, fixed cache, artifact path, put gate, put slot",
+      "after": true,
+      "steps": [
+        {"op": "acquire", "resource": "nx-tooling:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "ambient"},
+        {"op": "acquire", "resource": "nx-sdk-snapshot:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "mode": "shared", "via": "ambient"},
+        {"op": "acquire", "resource": "nx:fixed-cache:/w/.cache/b/n/m", "mode": "shared", "via": "ambient"},
+        {"op": "acquire", "resource": "artifact:/w/.cache/b/p/m/print/prototype/documents/print/paper", "mode": "exclusive", "via": "put"},
+        {"op": "acquire", "resource": "nx:put-gate:f331ddb9bfed1724", "mode": "exclusive", "via": "put"},
+        {"op": "acquire", "resource": "nx:put-slot:f331ddb9bfed1724:3", "mode": "exclusive", "via": "put"},
+        {"op": "release", "resource": "nx:put-gate:f331ddb9bfed1724"}
+      ],
+      "outOfOrder": [],
+      "holdAndWait": []
+    }
+  ]
+}

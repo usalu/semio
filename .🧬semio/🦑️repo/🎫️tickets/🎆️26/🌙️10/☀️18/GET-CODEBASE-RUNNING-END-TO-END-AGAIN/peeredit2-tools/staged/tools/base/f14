@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Provider Closure Law Corpus",
+  "description": "A tiny workspace with a script provider designation, its providers project, two providers (one naming the other), keyed, scheduling and native-keyed modules and two commands; cumulative mutations, each with the verdict per held fact (a viewed command closure, a native-role closure, a command without ports, and every provider group per view).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "designation", "schemaCopy", "providersProject", "products", "holders", "files", "mutations"],
+  "properties": {
+    "version": {"const": 1},
+    "designation": {"type": "string", "minLength": 1},
+    "schemaCopy": {"type": "string", "minLength": 1},
+    "providersProject": {"type": "string", "minLength": 1},
+    "products": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["product", "plain"],
+      "properties": {
+        "product": {"$ref": "#/definitions/Product"},
+        "plain": {"$ref": "#/definitions/Product"}
+      }
+    },
+    "holders": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "files": {"$ref": "#/definitions/Files"},
+    "mutations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "kind", "edit", "changed"],
+        "properties": {
+          "name": {"type": "string", "pattern": "^[a-z]+(-[a-z]+)*$"},
+          "kind": {"enum": ["no-roster-change", "scheduling-only", "keyed-provider", "native-keyed-provider", "product", "designation"]},
+          "edit": {"$ref": "#/definitions/Files"},
+          "changed": {"type": "object", "additionalProperties": {"type": "boolean"}}
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cwd", "entry"],
+      "properties": {"cwd": {"type": "string", "minLength": 1}, "entry": {"type": "string", "minLength": 1}}
+    },
+    "Files": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "string"}}
+  }
+}

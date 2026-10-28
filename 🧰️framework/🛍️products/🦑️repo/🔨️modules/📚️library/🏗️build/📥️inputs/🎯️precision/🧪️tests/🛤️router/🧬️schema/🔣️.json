@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Router read corpus",
+  "description": "🛤️ A router script with classes registered under command words, a fixture tree and the expected derivation: the class body equals the TypeScript parser's class, literals bound the target.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "tree",
+    "cargo",
+    "words",
+    "derived",
+    "refused",
+    "branches"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "tree": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "cargo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roots",
+        "sources",
+        "toolchain"
+      ],
+      "properties": {
+        "roots": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "sources": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "toolchain": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "words": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "command",
+          "words"
+        ],
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "words": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "derived": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "word",
+          "files",
+          "patterns"
+        ],
+        "properties": {
+          "word": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "patterns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "refused": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "word",
+          "message"
+        ],
+        "properties": {
+          "word": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "branches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "command",
+          "files",
+          "patterns"
+        ],
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "patterns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

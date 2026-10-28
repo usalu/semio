@@ -1,0 +1,26 @@
+{
+ "baseline": {},
+ "codes": {
+  "0-check": 0,
+  "1-apply": 0,
+  "2-check": 0,
+  "3-revert": 0,
+  "4-check": 0
+ },
+ "apply": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🔢️row-table/🟨️.d.mts": "8854a3316cccdc594dbd20ece25ea944e45fbca8bb0c1950ed373006de944f64",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🔢️row-table/🟨️.mjs": "279f1a6c66f80d549c2128fca1caa01503488d12dd1398a118ceb032effa07d6",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🔢️row-table/🧪️tests/🐍️.py": "52cedb780d1935e7a3b949932f71415695df3c469fb3b8eeb014d25ab4c3600b",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🔢️row-table/🧪️tests/🔣️.json": "ee253a60d3032e3fe7fbff8994d74e301d4139edb447d9c7147fe60e272120b7",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🔢️row-table/🧪️tests/🟦️.ts": "a70cbe80befa6edc82abfd71f069833aadb3e982776fd9b7339348fa31baa4ae",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🔢️row-table/🧪️tests/🧬️schema/🔣️.json": "18cd526fe55ed56057aa1a706b71d8e8e9532ae0612081378c10c78f2ff7689c",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs": "f83f05c676caafdbe44d0e01ba9f99f571681bb1b21c6b2eb646b1a2079ac2a3",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🔢️row-cost/🔣️.json": "f2b1a790dda860720208a65e68fc15db450c959aa1f56d286e7d3bca241bab65",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🔢️row-cost/🟦️.ts": "eeb8b5cad798962a7b0c344b5b9cb513d22f5fa5f17105ae7e4a468cc1f404a0",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🔢️row-cost/🧬️schema/🔣️.json": "0017bf1f627c60e74d3c6f99d728b39ea297d8b2cab7390e4802d602c1042ee6",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧾️row-sequence/🔣️.json": "1d29cec3bffdac8f3c759c0b2826792e5f650080322f94aac09273185169d013",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧾️row-sequence/🟦️.ts": "2f6cfc9afac1406d8e54a9ac44556844d9ac46da43f9a958fa46076995a4eec8",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧾️row-sequence/🧬️schema/🔣️.json": "ef9c8bd52ae8193d6cafedf4245f54e3d07f2a5426933874fb1308a4f6de242e"
+ },
+ "revert": {}
+}

@@ -4,7 +4,8 @@ import{createHash}from"node:crypto";
 import{fileURLToPath}from"node:url";
 import{runClosureReadCohortsV1}from"../../📡️session/🟦️.ts";
 import{physicalSourceOriginV1}from"../../../../../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
-import{MEMBER_INDEX_FILE_V1,appendMemberRowsV1,compactMemberIndexV1,encodeMemberRowV1,fullMemberRowV1,memberHashV1,memberGroupOfPathV1,memberKindOfV1,memberStampV1,parseMemberIndexV1,proveGroupV1,readMemberRowV1,type MemberRowV1}from"../🟨️.mjs";
+import{MEMBER_INDEX_FILE_V1,appendMemberRowsV1,compactMemberIndexV1,encodeMemberRowV1,fullMemberRowV1,memberHashV1,memberGroupOfPathV1,memberKindOfV1,memberGroupProtectedV1,memberStampV1,parseMemberIndexV1,proveGroupV1,readMemberRowV1,type MemberRowV1}from"../🟨️.mjs";
+import graphStorageSchema from"../../../../../../../../../🏗️build/📥️inputs/💾️storage/🧬️schema/🔣️.json"with{type:"json"};
 import closures from"../../🧬️schema/🔣️.json"with{type:"json"};
 import protocol from"../🧬️schema/🔣️.json"with{type:"json"};
 
@@ -17,7 +18,7 @@ export type MemberReadRequestV1=Readonly<{path:string;stamp:string;kind:string;b
 /** 📬️ The closure read child's answer for one leaf. */
 export type MemberReadAnswerV1=Readonly<{version:1;rows:readonly Readonly<{path:string;hash:string;expandedBytes:number;publicationGraph:string|null}>[];references:readonly string[];links:readonly Readonly<{path:string;missing:"block"|"forbidden"}>[]}>;
 /** 🔌️ What indexing needs from the repository: the per-namespace writer lease (never waited for) and the closure read child, which opens each requested leaf as a request of its own and reports every answer to `accept`. */
-export type MemberIndexPortsV1=Readonly<{lease(kind:"selection"|"dataset"|"canonical",identity:string):Promise<Readonly<{release():void}>|undefined>;read(requests:readonly MemberReadRequestV1[],accept:(request:MemberReadRequestV1,answer:MemberReadAnswerV1)=>void):Promise<void>}>;
+export type MemberIndexPortsV1=Readonly<{lease(kind:"selection"|"dataset"|"canonical",identity:string,urgent?:boolean):Promise<Readonly<{release():void}>|undefined>;read(requests:readonly MemberReadRequestV1[],accept:(request:MemberReadRequestV1,answer:MemberReadAnswerV1)=>void):Promise<void>}>;
 /** 📊️ What one indexing pass did. */
 export type MemberIndexReportV1=Readonly<{groups:number;skipped:number;busy:number;indexed:number;refused:number;compacted:number;cancelled:boolean}>;
 /** 📈️ What one deep verification found; mismatches list at most one hundred names. */
@@ -153,6 +154,11 @@ export async function indexBuildGraphMembersV1(root:string,ports:MemberIndexPort
  return Object.freeze({groups:seen,skipped,busy,indexed,refused:counters.refused,compacted,cancelled});
 }
 
+/** 🪢️ The writer lease port of a sweep: a group is first tried without waiting; a group whose blocks already exceed the inventory limit (`urgent`) then queues for the writer with a bounded wait, because a store whose inventory is exhausted refuses every command and the shared tickets of an overlapping cohort would otherwise starve a no-wait attempt for ever. The queued exclusive ticket holds nothing while it waits and makes later cohort arrivals wait behind it; a wait that times out is a busy group, as before. */
+export function createSweepLeasePortV1(input:Readonly<{acquire(kind:"selection"|"dataset"|"canonical",identity:string):Promise<Readonly<{release():void}>|undefined>;acquireQueued(kind:"selection"|"dataset"|"canonical",identity:string,timeoutMs:number):Promise<Readonly<{release():void}>|undefined>;waitMilliseconds:number}>):MemberIndexPortsV1["lease"]{
+ return async(kind,identity,urgent=false)=>(await input.acquire(kind,identity))??(urgent?await input.acquireQueued(kind,identity,input.waitMilliseconds):undefined);
+}
+
 export type SupersedeReportV1=Readonly<{groups:number;busy:number;skipped:number;headers:number;removed:number;bytes:number;cancelled:boolean}>;
 const recordDirectoriesV1:readonly Readonly<{name:string;pattern?:RegExp}>[]=Object.freeze([{name:"np"},{name:"ip"},{name:"rr"},{name:"inference",pattern:/^(?:emoji-project-json|test-cases)\.json$/u}]);
 
@@ -162,7 +168,7 @@ export async function supersedeBuildGraphObservationBlocksV1(root:string,ports:P
  let busy=0,skipped=0,headers=0,removed=0,bytes=0,cancelled=false,seen=0;
  for(let at=0;at<groups.length;at++){
   if(control.cancelled()){cancelled=true;break;}
-  const group=groups[at]!,[kind,identity]=group.split("/") as [string,string],lease=await ports.lease(kind==="contexts"?"dataset":"selection",identity);
+  const group=groups[at]!,[kind,identity]=group.split("/") as [string,string],blocks=recordDirectoriesV1.reduce((sum,directory)=>{try{return sum+readdirSync(join(root,"inference",...group.split("/"),directory.name,"ob")).length;}catch{return sum;}},0),lease=await ports.lease(kind==="contexts"?"dataset":"selection",identity,minimumBlocks>0&&blocks>=minimumBlocks);
   if(!lease){busy++;continue;}
   seen++;
   try{
@@ -182,8 +188,8 @@ export async function supersedeBuildGraphObservationBlocksV1(root:string,ports:P
 export type ClosureSupersedeReportV1=Readonly<{groups:number;unvouched:number;busy:number;candidates:number;removed:number;bytes:number;cancelled:boolean}>;
 const closurePrefixV1:Readonly<Record<string,string>>=Object.freeze({"build-input-closures":"source:","build-lock-closures":"lock:"});
 
-/** 💀️ Whether a read refusal says the leaf can never be decoded: its observation blocks are gone, so no reader can follow it to a closure. */
-const deadLeafV1=(error:unknown)=>(error as {closureReadFailure?:{worker?:{failure?:{message?:unknown}}}}|undefined)?.closureReadFailure?.worker?.failure?.message==="Authenticated observation closure block required";
+/** 💀️ Whether a read refusal says the leaf can never be decoded, so no reader can follow it to a closure: its observation blocks are gone, or its payload is no complete compressed stream (the child's inflation check failed with a truncated or corrupt stream error, which stays so; a memory or limit error says nothing about the bytes; a leaf is only judged once it is older than the grace). */
+const deadLeafV1=(error:unknown)=>{const worker=(error as {closureReadFailure?:{worker?:{failure?:{message?:unknown;code?:unknown};closurePayloadRefusal?:{check?:unknown}|null}}}|undefined)?.closureReadFailure?.worker,code=worker?.failure?.code;return worker?.failure?.message==="Authenticated observation closure block required"||((code==="Z_BUF_ERROR"||code==="Z_DATA_ERROR")&&worker?.closurePayloadRefusal?.check==="inflation");};
 /** 🧠️ What a sweep learned about a leaf by its path and physical stamp: the references it names, or null for a dead leaf; a leaf is read once per sweep, not once per pass. */
 /** 🔑️ One writer lease of a sweep: the namespace kind and its identity; groups that share a namespace (the shared one and the generations) share one lease, so it is taken once. */
 type LeaseKeyV1=readonly ["selection"|"dataset"|"canonical",string];
@@ -270,6 +276,54 @@ export async function supersedeBuildGraphClosuresV1(root:string,ports:Pick<Membe
   }finally{for(const lease of held)lease.release();}
  }
  return done();
+}
+
+/** 📉️ What one least-recently-used pass over the optional graph cache did: its bytes before and after (the logical size of every optional leaf, the measure of the optional ledger) against the ledger's fixed limit and the pass's target, and how many groups were retired, busy (their writer is taken), in use (an optional leaf written within the protected idle time) or excluded (the caller's own namespace). */
+export type OptionalLruReportV1=Readonly<{usedBytes:number;maximumBytes:number;targetBytes:number;remainingBytes:number;groups:number;retiredGroups:number;retiredFiles:number;retiredBytes:number;busy:number;protected:number;excluded:number;cancelled:boolean}>;
+type OptionalLeafV1=Readonly<{name:string;path:string;bytes:number;rank:number}>;
+const optionalLeafPatternV1=new RegExp(graphStorageSchema.definitions.OptionalQuota.optionalPath,"u");
+const optionalDirectoryOfV1=(root:string,group:string)=>join(root,"inference",...(group==="canonical"?[]:group.split("/")));
+
+/** 🗃️ Lists the optional leaves of one group (index files, receipts and publications never match the optional pattern), records before the packs they index and observation blocks last, so a pass cut short never leaves a record naming a removed block. */
+function optionalLeavesOfV1(root:string,group:string):{leaves:OptionalLeafV1[];newest:number}{
+ const directory=optionalDirectoryOfV1(root,group),prefix=group==="canonical"?"":group+"/",leaves:OptionalLeafV1[]=[],pending=[""];let newest=0;
+ while(pending.length){
+  const at=pending.pop()!;let entries;try{entries=readdirSync(join(directory,at),{withFileTypes:true});}catch(error){if(absent(error))continue;throw error;}
+  for(const entry of entries){
+   const name=at?at+"/"+entry.name:entry.name;
+   if(entry.isDirectory()){if(group==="canonical"&&!at&&(entry.name==="selections"||entry.name==="contexts"))continue;pending.push(name);continue;}
+   if(!entry.isFile()||!optionalLeafPatternV1.test(prefix+name))continue;
+   const path=join(directory,name);let row;try{row=lstatSync(path);}catch(error){if(absent(error))continue;throw error;}
+   if(!row.isFile()||row.nlink!==1)continue;newest=Math.max(newest,row.mtimeMs);
+   leaves.push({name,path,bytes:row.size,rank:/(?:^|\/)ob\//u.test(name)?2:/\.pack(?:\.[a-f0-9]{8}\.tmp)?$/u.test(name)?1:0});
+  }
+ }
+ return{leaves:leaves.sort((left,right)=>left.rank-right.rank||(left.name<right.name?-1:left.name>right.name?1:0)),newest};
+}
+
+/** ♻️ Retires optional graph cache groups least recently written first until the optional bytes are at most `targetBytes` (the ledger's low-water mark unless given), so an insertion into a full cache stores its records instead of being declined. Optional leaves are recomputable accelerators that no generation, pin or mandatory publication names; a group is retired only under its non-blocking writer lease (every reader and writer of a namespace holds it, so a busy group is skipped, never waited for), never when it is the caller's own (`exclude`) and never while an optional leaf of it is younger than the protected idle time. Its member index is compacted to the leaves that remain. Reports progress per group and stops at the next group when cancelled; `dryRun` only plans. */
+export async function retireBuildGraphOptionalGroupsLruV1(root:string,ports:Pick<MemberIndexPortsV1,"lease">,control:MemberScanControlV1,{targetBytes=graphStorageSchema.definitions.OptionalQuota.policy.lowWaterBytes,dryRun=false,exclude=[],protectedMilliseconds=M.groupProtectedIdleMilliseconds,now=Date.now()}:Readonly<{targetBytes?:number;dryRun?:boolean;exclude?:readonly string[];protectedMilliseconds?:number;now?:number}>):Promise<OptionalLruReportV1>{
+ if(!Number.isSafeInteger(targetBytes)||targetBytes<0)throw Error("exact-optional-graph-target-bytes-required");
+ const groups=["canonical",...listBuildGraphMemberGroupsV1(root).filter(group=>group.startsWith("selections/")||group.startsWith("contexts/"))].map(group=>{const{leaves,newest}=optionalLeavesOfV1(root,group);return{group,newest,bytes:leaves.reduce((sum,leaf)=>sum+leaf.bytes,0)};}).filter(row=>row.bytes>0).sort((left,right)=>left.newest-right.newest||(left.group<right.group?-1:left.group>right.group?1:0));
+ const usedBytes=groups.reduce((sum,row)=>sum+row.bytes,0);let remaining=usedBytes,retiredGroups=0,retiredFiles=0,retiredBytes=0,busy=0,protectedGroups=0,excluded=0,cancelled=false;
+ for(let at=0;at<groups.length&&remaining>targetBytes;at++){
+  if(control.cancelled()){cancelled=true;break;}
+  const row=groups[at]!;await control.progress(row.group,at,groups.length);await turn();
+  if(exclude.includes(row.group)){excluded++;continue;}
+  if(memberGroupProtectedV1(row.newest,now,protectedMilliseconds)){protectedGroups++;continue;}
+  if(dryRun){retiredGroups++;retiredBytes+=row.bytes;remaining-=row.bytes;continue;}
+  const[kind,identity]=row.group.split("/") as [string,string|undefined],lease=await ports.lease(kind==="contexts"?"dataset":kind==="selections"?"selection":"canonical",identity??"");
+  if(!lease){busy++;continue;}
+  try{
+   const{leaves,newest}=optionalLeavesOfV1(root,row.group);
+   if(memberGroupProtectedV1(newest,Date.now(),protectedMilliseconds)){protectedGroups++;continue;}
+   let bytes=0;for(const leaf of leaves){try{unlinkSync(leaf.path);}catch(error){if(absent(error))continue;throw error;}retiredFiles++;bytes+=leaf.bytes;}
+   const target=join(root,...directoryOf(row.group).split("/"),MEMBER_INDEX_FILE_V1),index=parseMemberIndexV1(indexText(root,row.group),row.group);
+   if(index.valid&&index.count){const live=new Map(leavesOf(root,row.group).map(leaf=>[leaf.name,leaf.stamp])),temporary=target+".tmp";writeFileSync(temporary,compactMemberIndexV1(index,row.group,live));renameSync(temporary,target);}
+   retiredGroups++;retiredBytes+=bytes;remaining-=row.bytes;
+  }finally{lease.release();}
+ }
+ return Object.freeze({usedBytes,maximumBytes:graphStorageSchema.definitions.OptionalQuota.policy.maximumBytes,targetBytes,remainingBytes:Math.max(0,remaining),groups:groups.length,retiredGroups,retiredFiles,retiredBytes,busy,protected:protectedGroups,excluded,cancelled});
 }
 
 /** 🧒️ Binds the closure read child: the captured worker, heap and wire bounds the closure proof uses, one cohort of requests per child under the caller's lease control, each leaf its own request so that its answer is its own. */

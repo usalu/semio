@@ -65,8 +65,7 @@ describe("owner-only files", () => {
     expect(counts).toEqual(ownerOnly.sddl.filter((row: { sddl: string }) => !row.sddl.includes("NO_ACCESS_CONTROL")).map((row: { violations: string[] }) => row.violations.length));
   });
 
-  test("POSIX: files become 0600 and directories 0700 whatever the umask left, and group/other access is refused (Python os.stat oracle)", () => {
-    if (process.platform === "win32") return;
+  test.skipIf(process.platform==="win32")("POSIX: files become 0600 and directories 0700 whatever the umask left, and group/other access is refused (Python os.stat oracle)", () => {
     const root = mkdtempSync(join(tmpdir(), "semio-owner-only-"));
     try {
       const directory = join(root, "hub-dev"), file = join(directory, "local-session-broker.json");

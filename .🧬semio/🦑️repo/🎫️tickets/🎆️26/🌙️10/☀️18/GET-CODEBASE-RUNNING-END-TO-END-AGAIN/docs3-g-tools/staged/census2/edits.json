@@ -1,0 +1,41 @@
+{
+ "name": "census2",
+ "code": "census2-g-tools/staged (supersedes testmem2-g-tools/staged: land exactly one)",
+ "lane": "census2-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "census-row",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "| `The runtime registry declares contract N, this launcher implements contract M. Rebuild and reinstall the launcher with: …` | the installed Go launcher is older than the registry; run the printed installer once (`🚀️launcher/📥️install`); there is one install location. |",
+   "where": "after",
+   "block": "| `[tests] <file> held N MB and was stopped at its ceiling of M MB (K MB declared in the test file budgets)` or `… (not declared in the test file budgets)` | a test file went above 150 % of its declared peak (3001 MB when undeclared, the runaway guard) and its process tree was ended once, by name; it holds for suite runs and for every `bun test` process the owned command runners start, whoever calls (`🧪️testing/🟨️bun/🧯️ceiling`; a process is held to the biggest budget of its files). German: `… belegte N MB und wurde an seiner Obergrenze von M MB angehalten`. If the peak is honest, declare it with the measured RSS in `🧪️testing/👷️workers/📏️file-budgets` (at least 64 MB); otherwise lower the memory of the test. `SEMIO_TEST_FILE_CEILING=off` lifts all ceilings, `SEMIO_TEST_FILE_BUDGETS=<json>` replaces the table. |"
+  },
+  {
+   "id": "census-row",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "| `Die Laufzeitregistratur deklariert Vertrag N, dieser Launcher setzt Vertrag M um. Baue den Launcher neu und installiere ihn mit: …` | der installierte Go-Launcher ist älter als die Registratur; den ausgegebenen Installer einmal ausführen (`🚀️launcher/📥️install`); es gibt genau einen Installationsort. |",
+   "where": "after",
+   "block": "| `[tests] <Datei> belegte N MB und wurde an seiner Obergrenze von M MB angehalten (K MB in den Test-Datei-Budgets deklariert)` oder `… (nicht in den Test-Datei-Budgets deklariert)` | eine Testdatei ging über 150 % ihrer deklarierten Spitze (3001 MB ohne Deklaration, der Ausreißer-Wächter), und ihr Prozessbaum wurde einmal namentlich beendet; es gilt für Suite-Läufe und für jeden `bun test`-Prozess, den die eigenen Befehlsläufer starten, gleich wer aufruft (`🧪️testing/🟨️bun/🧯️ceiling`; ein Prozess wird am größten Budget seiner Dateien gemessen). Englisch: `… held N MB and was stopped at its ceiling of M MB`. Ist die Spitze ehrlich, mit dem gemessenen RSS in `🧪️testing/👷️workers/📏️file-budgets` deklarieren (mindestens 64 MB); sonst den Speicher des Tests senken. `SEMIO_TEST_FILE_CEILING=off` hebt alle Obergrenzen auf, `SEMIO_TEST_FILE_BUDGETS=<json>` ersetzt die Tabelle. |"
+  },
+  {
+   "id": "census-table",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "  | test workers | one policy per runner, never beyond the grant |",
+   "where": "after",
+   "block": "  | test files | declared peak per file; a process stopped at 150 % (3 GB undeclared), by name |"
+  },
+  {
+   "id": "census-table",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "  | Test-Worker | eine Richtlinie je Läufer, nie über die Zusage |",
+   "where": "after",
+   "block": "  | Testdateien | deklarierte Spitze je Datei; ein Prozess wird bei 150 % angehalten (3 GB ohne Deklaration), namentlich |"
+  }
+ ]
+}

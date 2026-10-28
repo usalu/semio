@@ -1,0 +1,12 @@
+    "coalesceMilliseconds": { "type": "integer", "minimum": 0 },
+    "light": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["freshMilliseconds", "promoteAfterMilliseconds", "refuseAfterMilliseconds", "refreshDebounceMilliseconds"],
+      "properties": {
+        "freshMilliseconds": { "type": "integer", "minimum": 0 },
+        "promoteAfterMilliseconds": { "type": "integer", "minimum": 0 },
+        "refuseAfterMilliseconds": { "type": "integer", "minimum": 0 },
+        "refreshDebounceMilliseconds": { "type": "integer", "minimum": 0 }
+      }
+    },

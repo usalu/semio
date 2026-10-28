@@ -1,0 +1,171 @@
+{
+  "version": 1,
+  "maximumShardBudgetMinutes": 180,
+  "suiteSlackMinutes": 10,
+  "sampleSeconds": 10,
+  "tables": [
+    {
+      "id": "process",
+      "project": "@semio-tech/framework-process",
+      "projectFile": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+      "shards": 2
+    },
+    {
+      "id": "caching",
+      "project": "repo",
+      "projectFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+      "shards": 3
+    },
+    {
+      "id": "build",
+      "project": "repo",
+      "projectFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+      "shards": 2
+    }
+  ],
+  "mustRun": {
+    "all": [
+      {
+        "table": "process",
+        "suite": "leases",
+        "proves": {
+          "en": "The lease store and the physical compiler file lock exclude each other and survive their own failures on this kernel (flock on POSIX, LockFileEx on Windows, observed by an independent Python lock call).",
+          "de": "Der Lease-Speicher und die physische Compiler-Dateisperre schließen sich aus und überstehen eigene Fehler auf diesem Kernel (flock unter POSIX, LockFileEx unter Windows, beobachtet durch einen unabhängigen Python-Sperraufruf)."
+        }
+      },
+      {
+        "table": "process",
+        "suite": "descriptor-lifetime",
+        "proves": {
+          "en": "File descriptors and handles are released on every failure path of the lock and lease code.",
+          "de": "Dateideskriptoren und Handles werden auf jedem Fehlerpfad des Sperr- und Lease-Codes freigegeben."
+        }
+      },
+      {
+        "table": "process",
+        "suite": "process-tree-termination",
+        "proves": {
+          "en": "A real process tree is ended completely, by process group on POSIX and by taskkill /T on Windows.",
+          "de": "Ein echter Prozessbaum wird vollständig beendet, per Prozessgruppe unter POSIX und per taskkill /T unter Windows."
+        }
+      },
+      {
+        "table": "process",
+        "suite": "native-storage",
+        "proves": {
+          "en": "The native cache storage of this platform (sparse images on macOS, directory partitions on Linux and Windows) and, on Windows, the in-process boot clock against PowerShell.",
+          "de": "Der native Cache-Speicher dieser Plattform (Sparse-Images unter macOS, Verzeichnispartitionen unter Linux und Windows) und unter Windows die prozessinterne Boot-Uhr gegen PowerShell."
+        }
+      },
+      {
+        "table": "process",
+        "suite": "native-storage-platform",
+        "proves": {
+          "en": "The storage contract per platform: atomic directory exchange, case rules and pinned system programs.",
+          "de": "Der Speichervertrag je Plattform: atomarer Verzeichnistausch, Groß-/Kleinschreibungsregeln und festgelegte Systemprogramme."
+        }
+      }
+    ],
+    "darwin": [
+      {
+        "table": "process",
+        "suite": "native-image-observation",
+        "proves": {
+          "en": "The mounted sparse images of macOS are observed silently and tolerate a vanished image (hdiutil on a real image).",
+          "de": "Die eingehängten Sparse-Images von macOS werden still beobachtet und vertragen ein verschwundenes Image (hdiutil an einem echten Image)."
+        }
+      },
+      {
+        "table": "caching",
+        "suite": "nx-bounded-image",
+        "proves": {
+          "en": "The bounded Nx storage lives and is recovered on a real mounted image.",
+          "de": "Der begrenzte Nx-Speicher lebt und wird auf einem echten eingehängten Image wiederhergestellt."
+        }
+      }
+    ],
+    "linux": [],
+    "win32": [
+      {
+        "table": "process",
+        "suite": "windows-conditional-retirement",
+        "proves": {
+          "en": "Retirement of files that another Windows process still holds open.",
+          "de": "Das Ausmustern von Dateien, die ein anderer Windows-Prozess noch geöffnet hält."
+        }
+      },
+      {
+        "table": "process",
+        "suite": "build-facets",
+        "proves": {
+          "en": "The Windows process-table probe of the tree memory observer and the host counters against the real PowerShell output.",
+          "de": "Die Windows-Prozesstabelle des Baum-Speicherbeobachters und die Host-Zähler gegen die echte PowerShell-Ausgabe."
+        }
+      },
+      {
+        "table": "build",
+        "suite": "build-host-capacity",
+        "proves": {
+          "en": "The capacity status marks partial Windows counters instead of reporting a healthy host.",
+          "de": "Der Kapazitätsstatus kennzeichnet unvollständige Windows-Zähler, statt einen gesunden Host zu melden."
+        }
+      },
+      {
+        "table": "build",
+        "suite": "build-inputs-storage",
+        "proves": {
+          "en": "Input storage retirement under Windows sharing violations.",
+          "de": "Das Ausmustern des Eingabespeichers unter Windows-Freigabeverletzungen."
+        }
+      },
+      {
+        "table": "build",
+        "suite": "build-inputs-revision",
+        "proves": {
+          "en": "Revision reading on Windows: path rules and the PATHEXT resolution of the read-oracle mirror.",
+          "de": "Revisionslesen unter Windows: Pfadregeln und die PATHEXT-Auflösung des Lese-Orakel-Spiegels."
+        }
+      },
+      {
+        "table": "build",
+        "suite": "build-bazel-execution",
+        "proves": {
+          "en": "The Bazel runner on Windows: toolchain hard links, shim and taskkill tree kill.",
+          "de": "Der Bazel-Runner unter Windows: Toolchain-Hardlinks, Shim und taskkill-Baumbeendigung."
+        }
+      },
+      {
+        "table": "caching",
+        "suite": "storage-graph",
+        "proves": {
+          "en": "The graph storage under the Windows file semantics.",
+          "de": "Der Graph-Speicher unter den Windows-Dateisemantiken."
+        }
+      },
+      {
+        "table": "caching",
+        "suite": "bootstrap-dependencies",
+        "proves": {
+          "en": "The dependency bootstrap under the Windows free-space rules.",
+          "de": "Der Abhängigkeits-Bootstrap unter den Windows-Regeln für freien Speicher."
+        }
+      },
+      {
+        "table": "caching",
+        "suite": "cargo-unit-cache-processes",
+        "proves": {
+          "en": "The unit cache compiler stand-in on Windows is a native executable that hands Cargo's quoted arguments to the compiler unchanged, and a claim release never throws.",
+          "de": "Der Compiler-Stellvertreter des Unit-Caches ist unter Windows eine native Programmdatei, die Cargos zitierte Argumente unverändert an den Compiler gibt, und ein Freigeben der Beanspruchung wirft nie."
+        }
+      },
+      {
+        "table": "caching",
+        "suite": "laws-library-commit-hooks",
+        "proves": {
+          "en": "The commit hook shell lookup on Windows (sh.exe on PATH or in Git for Windows).",
+          "de": "Die Suche der Commit-Hook-Shell unter Windows (sh.exe im PATH oder in Git für Windows)."
+        }
+      }
+    ]
+  }
+}

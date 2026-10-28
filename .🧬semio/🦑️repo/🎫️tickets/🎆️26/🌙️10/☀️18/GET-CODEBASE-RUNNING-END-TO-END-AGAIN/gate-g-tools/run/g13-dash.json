@@ -1,0 +1,12 @@
+{
+ "label": "g13-dash",
+ "target": "@semio-tech/repo-dashboard-rs:build",
+ "started": "00:29:33",
+ "wall_s": 2711.8,
+ "peak_tree_mb": 158,
+ "peak_processes": 6,
+ "exit": 1,
+ "killed": "time",
+ "queued_s": 0.0,
+ "graph": {}
+}

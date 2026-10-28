@@ -4,7 +4,7 @@
  "messages": {
   "artifactInManagedParent": {
    "en": "The test artifact directory {path} lies inside the managed native parent {parent}: images mounted there are verified as the parent's own funded children and break every build while attached. Use a directory outside every managed native parent or leave SEMIO_TEST_ARTIFACT_DIR unset.",
-   "de": "Das Test-Artefaktverzeichnis {path} liegt im verwalteten nativen Elternteil {parent}: dort eingehaengte Abbilder werden als dessen eigene finanzierte Kinder geprueft und brechen jeden Build, solange sie eingehaengt sind. Ein Verzeichnis ausserhalb jedes verwalteten nativen Elternteils nutzen oder SEMIO_TEST_ARTIFACT_DIR nicht setzen."
+   "de": "Das Test-Artefaktverzeichnis {path} liegt im verwalteten nativen Elternteil {parent}: dort eingehängte Images werden als dessen eigene finanzierte Kinder geprüft und brechen jeden Build, solange sie eingehängt sind. Ein Verzeichnis außerhalb jedes verwalteten nativen Elternteils nutzen oder SEMIO_TEST_ARTIFACT_DIR nicht setzen."
   }
  },
  "environment": {
@@ -243,7 +243,7 @@
    "pattern": "\\b(writeFileSync|appendFileSync|mkdirSync|rmSync|rmdirSync|unlinkSync|renameSync|truncateSync|createWriteStream|writeFile|appendFile|mkdir|rm|rmdir|unlink|rename|truncate|Bun\\.write)\\(\\s*((path\\.)?(join|resolve)\\(\\s*)?\\b(repoRoot|repositoryRoot|REPO_ROOT|workspaceRoot|WORKSPACE_ROOT|checkoutRoot|SEMIO_WORKSPACE_ROOT)\\b|\\b(cpSync|copyFileSync|cp|copyFile|symlinkSync|symlink|linkSync|link|renameSync|rename)\\(\\s*[^,;\\n]{1,120},\\s*((path\\.)?(join|resolve)\\(\\s*)?\\b(repoRoot|repositoryRoot|REPO_ROOT|workspaceRoot|WORKSPACE_ROOT|checkoutRoot|SEMIO_WORKSPACE_ROOT)\\b",
    "message": {
     "en": "Writes below a variable named like the repository root; it must be a sandbox clone.",
-    "de": "Schreibt unterhalb einer Variable, die wie die Repository-Wurzel heisst; sie muss ein Sandbox-Klon sein."
+    "de": "Schreibt unterhalb einer Variable, die wie die Repository-Wurzel heißt; sie muss ein Sandbox-Klon sein."
    }
   },
   {
@@ -256,7 +256,7 @@
    "pattern": "\\b(writeFileSync|appendFileSync|mkdirSync|rmSync|rmdirSync|unlinkSync|renameSync|truncateSync|createWriteStream|writeFile|appendFile|mkdir|rm|rmdir|unlink|rename|truncate|Bun\\.write)\\(\\s*((path\\.)?(join|resolve)\\(\\s*)?((^|[^A-Za-z0-9_])\\.cache(/|\\b)|⚡️cache|\\.🧬semio/🦑️repo/⚡️cache)|\\b(cpSync|copyFileSync|cp|copyFile|symlinkSync|symlink|linkSync|link|renameSync|rename)\\(\\s*[^,;\\n]{1,120},\\s*((path\\.)?(join|resolve)\\(\\s*)?((^|[^A-Za-z0-9_])\\.cache(/|\\b)|⚡️cache|\\.🧬semio/🦑️repo/⚡️cache)",
    "message": {
     "en": "Mutates the shared repository cache or the native cache partitions.",
-    "de": "Veraendert den geteilten Repository-Cache oder die nativen Cache-Partitionen."
+    "de": "Verändert den geteilten Repository-Cache oder die nativen Cache-Partitionen."
    }
   },
   {
@@ -274,7 +274,7 @@
    ],
    "message": {
     "en": "Mutates the file system but never obtains a temporary or sandbox root.",
-    "de": "Veraendert das Dateisystem, bezieht aber nie eine temporaere oder Sandbox-Wurzel."
+    "de": "Verändert das Dateisystem, bezieht aber nie eine temporäre oder Sandbox-Wurzel."
    }
   },
   {
@@ -304,7 +304,7 @@
    "pattern": "(process\\.cwd\\(\\)|import\\.meta\\.(dir|dirname)|repoRoot|workspaceRoot)[^;\\n]{0,80}🎫️tickets[^;\\n]{0,160}🗑️generated",
    "message": {
     "en": "Uses the generated folder of a real ticket as scratch root; the folder is shared and swept by others.",
-    "de": "Nutzt den generated-Ordner eines echten Tickets als Scratch-Wurzel; der Ordner ist geteilt und wird von anderen aufgeraeumt."
+    "de": "Nutzt den generated-Ordner eines echten Tickets als Wegwerf-Wurzel; der Ordner ist geteilt und wird von anderen aufgeräumt."
    }
   },
   {
@@ -317,7 +317,7 @@
    "pattern": "\\b(withRepositoryBuildGraphFactStoreV1|withRepositoryBuildGraphArtifactV1|requireRepositoryBuildGraphWriterV1|withRepositoryBuildInferenceDatasetV1|withBuildGraphStateV1|withBuildGraphOptionalPublicationV1)\\(\\s*(process\\.cwd\\(\\)|workspace\\b)|\\bwithRepositoryCacheStoreV1\\(\\s*(process\\.cwd\\(\\)|workspace)\\s*,\\s*[\"'`](graph|dependencies|products|compiler|cargo|leases)[\"'`]",
    "message": {
     "en": "Opens a persistent cache partition (graph, dependencies, ...) of the real checkout; its exclusive lease blocks every graph build of every agent. Use a sandbox workspace.",
-    "de": "Oeffnet eine persistente Cache-Partition (Graph, Abhaengigkeiten, ...) des echten Checkouts; ihre exklusive Sperre blockiert jeden Graph-Build jedes Agenten. Sandbox-Workspace nutzen."
+    "de": "Öffnet eine persistente Cache-Partition (Graph, Abhängigkeiten, ...) des echten Checkouts; ihre exklusive Sperre blockiert jeden Graph-Build jedes Agenten. Sandbox-Workspace nutzen."
    }
   },
   {
@@ -330,7 +330,7 @@
    "pattern": "native-fixed-image:[^\\n]{0,80}(process\\.cwd\\(\\)|\\.cache/b/[a-z]\\b)",
    "message": {
     "en": "Leases a native image of the real checkout.",
-    "de": "Sperrt ein natives Abbild des echten Checkouts."
+    "de": "Sperrt ein natives Image des echten Checkouts."
    }
   },
   {
@@ -347,7 +347,7 @@
    "pattern": "🎫️tickets|🥅️goals",
    "message": {
     "en": "Names the real ticket/goal state; tests must use a throwaway repository.",
-    "de": "Benennt den echten Ticket-/Ziel-Zustand; Tests muessen ein Wegwerf-Repository nutzen."
+    "de": "Benennt den echten Ticket-/Ziel-Zustand; Tests müssen ein Wegwerf-Repository nutzen."
    }
   },
   {
@@ -360,7 +360,7 @@
    "pattern": "(^|[^\"'`A-Za-z0-9_$])(withNativePersistentStateV1|withNativePersistentStateTaskV1|openPersistentNativeImageV1|withPersistentNative\\w*StorageV1|withRepositoryDevelopmentState\\w*|withDevLocalHubSessionV1)\\s*[(<]",
    "message": {
     "en": "Opens a persistent partition or state child that outlives the process.",
-    "de": "Oeffnet eine persistente Partition oder ein Zustandskind, das den Prozess ueberlebt."
+    "de": "Öffnet eine persistente Partition oder ein Zustandskind, das den Prozess überlebt."
    }
   },
   {
@@ -378,7 +378,7 @@
    ],
    "message": {
     "en": "Creates or attaches disk images without any sandbox root, so a crash leaks a mount.",
-    "de": "Erzeugt oder haengt Abbilder ein ohne Sandbox-Wurzel, ein Absturz hinterlaesst einen Mount."
+    "de": "Erzeugt oder hängt Images ein ohne Sandbox-Wurzel, ein Absturz hinterlässt einen Mount."
    }
   },
   {
@@ -395,7 +395,7 @@
    "pattern": "\\b(listen|serve|Listen|ListenAndServe|ListenTCP)\\(\\s*(\\{[^}\\n]{0,120}\\bport\\s*:\\s*)?[1-9][0-9]{3,4}\\b|\\b(TcpListener|UdpSocket|UnixListener)::bind\\(\\s*\"[0-9.:a-zA-Z\\[\\]]*:[1-9][0-9]{3,4}\"|\\bnet\\.Listen\\(\"tcp[46]?\",\\s*\"[0-9.]*:[1-9][0-9]{3,4}\"|--port[ =]+[1-9][0-9]{3,4}\\b|\\bPORT=[1-9][0-9]{3,4}\\b",
    "message": {
     "en": "Binds a fixed TCP port; two concurrent runs collide.",
-    "de": "Bindet einen festen TCP-Port; zwei gleichzeitige Laeufe kollidieren."
+    "de": "Bindet einen festen TCP-Port; zwei gleichzeitige Läufe kollidieren."
    }
   },
   {
@@ -417,7 +417,7 @@
    ],
    "message": {
     "en": "Configures a fixed TCP port for a server.",
-    "de": "Konfiguriert einen festen TCP-Port fuer einen Server."
+    "de": "Konfiguriert einen festen TCP-Port für einen Server."
    }
   },
   {
@@ -457,7 +457,7 @@
    ],
    "message": {
     "en": "Uses a constant name below the shared temp directory; two concurrent runs collide.",
-    "de": "Nutzt einen konstanten Namen im gemeinsamen Temp-Verzeichnis; zwei gleichzeitige Laeufe kollidieren."
+    "de": "Nutzt einen konstanten Namen im gemeinsamen Temp-Verzeichnis; zwei gleichzeitige Läufe kollidieren."
    }
   },
   {
@@ -492,7 +492,7 @@
    "pattern": "\\.listen\\(\\s*(port|Number\\([^)]*\\.port\\))\\s*,|\\bBun\\.serve\\(\\{[^}\\n]{0,80}\\bport\\s*[,}]",
    "message": {
     "en": "Rebinds a port that was probed earlier; reserve it through the sandbox port lease instead.",
-    "de": "Bindet einen zuvor sondierten Port erneut; ueber die Sandbox-Portreservierung reservieren."
+    "de": "Bindet einen zuvor sondierten Port erneut; über die Sandbox-Portreservierung reservieren."
    }
   },
   {
@@ -544,7 +544,7 @@
    "pattern": "\\bprocess\\.chdir\\(|\\bos\\.Chdir\\(",
    "message": {
     "en": "Changes the process working directory; parallel tests in one process interfere.",
-    "de": "Aendert das Arbeitsverzeichnis des Prozesses; parallele Tests im selben Prozess stoeren sich."
+    "de": "Ändert das Arbeitsverzeichnis des Prozesses; parallele Tests im selben Prozess stören sich."
    }
   },
   {
@@ -562,7 +562,7 @@
    ],
    "message": {
     "en": "Go test mutates the file system without t.TempDir(), a sandbox root or a fixture repository.",
-    "de": "Go-Test veraendert das Dateisystem ohne t.TempDir(), Sandbox-Wurzel oder Fixture-Repository."
+    "de": "Go-Test verändert das Dateisystem ohne t.TempDir(), Sandbox-Wurzel oder Fixture-Repository."
    }
   },
   {
@@ -600,7 +600,7 @@
    ],
    "message": {
     "en": "The Go test owner has no TestMain bound to sandbox.Run, so its tests may resolve the real checkout.",
-    "de": "Der Go-Testbesitzer hat kein an sandbox.Run gebundenes TestMain, seine Tests koennen den echten Checkout aufloesen."
+    "de": "Der Go-Testeigentümer hat kein an sandbox.Run gebundenes TestMain, seine Tests können den echten Checkout auflösen."
    }
   },
   {
@@ -618,7 +618,7 @@
    ],
    "message": {
     "en": "Rust test mutates the file system without a temporary or sandbox root.",
-    "de": "Rust-Test veraendert das Dateisystem ohne temporaere oder Sandbox-Wurzel."
+    "de": "Rust-Test verändert das Dateisystem ohne temporäre oder Sandbox-Wurzel."
    }
   },
   {

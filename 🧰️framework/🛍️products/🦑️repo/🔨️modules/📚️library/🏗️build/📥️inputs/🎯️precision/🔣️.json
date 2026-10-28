@@ -13,7 +13,7 @@
   "texts": {
    "deriving": {
     "en": "Deriving the TypeScript program {tsconfig}: files without a valid receipt entry are analysed",
-    "de": "Leite das TypeScript-Programm {tsconfig} ab: Dateien ohne gültigen Belegeintrag werden analysiert"
+    "de": "Leite das TypeScript-Programm {tsconfig} ab: Dateien ohne gültigen Quittungseintrag werden analysiert"
    },
    "progress": {
     "en": "{tsconfig}: {files} files visited, {derived} analysed, {reused} reused ({seconds} s)",
@@ -114,6 +114,18 @@
     {
      "globs": [
       "{workspaceRoot}/**/{Cargo.toml,package.json,📋️project.json,pyproject.toml,go.mod}"
+     ]
+    }
+   ]
+  },
+  "schema-documents": {
+   "description": "The JSON documents the schema document index parses for their $id: every file below a schema directory of the repository, outside the dot, target, node_modules, dist, generated and package directories its walk skips (the fixture and test collections it skips stay in: they cannot be named without dropping a module called tests).",
+   "reads": [
+    {
+     "globs": [
+      "{workspaceRoot}/**/🧬️schema/**/*.json",
+      "!{workspaceRoot}/**/{target,node_modules,dist,🗑️generated,📦️packages}/**",
+      "!{workspaceRoot}/**/.*/**"
      ]
     }
    ]
@@ -1729,6 +1741,172 @@
   }
  ],
  "rules": [
+  {
+   "id": "framework-rs-tests",
+   "evidence": "static",
+   "description": "Each framework umbrella test runs the class its script router registers under the command word: the Cargo packages that class names (test targets and path-dependency closure included), the TypeScript tests it runs (import closure) and the files and directories it names, plus what bun reads at start. Listed here are only the targets whose every leg ran clean under the read oracle (keys4-g evidence); the others keep the default key.",
+   "select": {
+    "project": "@semio-tech/framework-rs",
+    "targets": [
+     "test-source-projection",
+     "test-directory-discovery",
+     "test-host-effect-invocation",
+     "test-artifact-kind-source",
+     "test-original-factory-admission-source",
+     "test-deflate-encoding",
+     "test-history-progress",
+     "test-snapshot-sqlite-native"
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "reads"
+   ],
+   "reads": [
+    {
+     "router": {
+      "source": "🧰️framework/📦️packages/🦀️rust/📜️script.ts",
+      "bases": [
+       "🧰️framework"
+      ]
+     }
+    },
+    {
+     "globs": [
+      "{workspaceRoot}/bunfig.toml",
+      "{workspaceRoot}/tsconfig.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⚙️runtime/🗣️language/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/**/*"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "framework-rs-tests-fixture-ownership",
+   "evidence": "static",
+   "description": "Like framework-rs-tests; the fixture ownership test also reads the pixel lock fixture that its hierarchy oracle compares (learned by the read oracle: a runtime path no static read can see).",
+   "select": {
+    "project": "@semio-tech/framework-rs",
+    "targets": [
+     "test-fixture-ownership-source"
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "reads"
+   ],
+   "reads": [
+    {
+     "router": {
+      "source": "🧰️framework/📦️packages/🦀️rust/📜️script.ts",
+      "bases": [
+       "🧰️framework"
+      ]
+     }
+    },
+    {
+     "globs": [
+      "{workspaceRoot}/bunfig.toml",
+      "{workspaceRoot}/tsconfig.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⚙️runtime/🗣️language/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/**/*"
+     ]
+    },
+    {
+     "globs": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "framework-rs-tests-sqlite-source",
+   "evidence": "static",
+   "description": "Like framework-rs-tests; the SQLite snapshot source test also reads the plugin schema and the fixture of the sqlite artifact (learned by the read oracle: runtime paths no static read can see).",
+   "select": {
+    "project": "@semio-tech/framework-rs",
+    "targets": [
+     "test-snapshot-sqlite-source"
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "reads"
+   ],
+   "reads": [
+    {
+     "router": {
+      "source": "🧰️framework/📦️packages/🦀️rust/📜️script.ts",
+      "bases": [
+       "🧰️framework"
+      ]
+     }
+    },
+    {
+     "globs": [
+      "{workspaceRoot}/bunfig.toml",
+      "{workspaceRoot}/tsconfig.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⚙️runtime/🗣️language/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/**/*"
+     ]
+    },
+    {
+     "globs": [
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "print-check",
+   "evidence": "traced",
+   "description": "print:check type-checks the package source and its five registered suites with `tsc --noEmit` and bundles the source, so it reads the TypeScript program of exactly those six entry files (type-only imports and declaration companions included) resolved with the root tsconfig options, never the product tree or the dependency umbrellas `reads` and `^default` stand for; the command closure of the target script is added by the graph inference.",
+   "select": {
+    "project": "@semio-tech/print",
+    "targets": [
+     "check"
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "reads"
+   ],
+   "reads": [
+    {
+     "program": {
+      "tsconfig": "tsconfig.json",
+      "entries": [
+       "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🟦️.ts",
+       "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+       "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️chart-mutations/🟦️.ts",
+       "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🧪️tests/📜️chart-inference-result/🟦️.ts",
+       "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts",
+       "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🟦️.ts"
+      ]
+     }
+    }
+   ]
+  },
   {
    "id": "workspace-owner-delegates",
    "evidence": "static",
@@ -3453,6 +3631,32 @@
        "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧬️schema/🟦️projection/📦️packages/🦀️rust"
       ]
      }
+    }
+   ]
+  },
+  {
+   "id": "dsl-schema-index",
+   "evidence": "static",
+   "description": "The schema document index (generate, check and preview) walks the schema directories of the repository and parses every JSON document there for its $id, so it reads those documents and the command closure its script lists, never the Rust crates, TypeScript trees or other-product files `default`, `^default` and the native source groups stand for; its own output (the schema document index) is written, not read.",
+   "select": {
+    "project": "@semio-tech/dsl-derive-rs",
+    "targets": [
+     "generate-schema-index",
+     "check-schema-index",
+     "preview-schema-index"
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources"
+   ],
+   "reads": [
+    {
+     "profile": "schema-documents"
     }
    ]
   }

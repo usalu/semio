@@ -1,0 +1,5 @@
+[workspace]
+resolver = "2"
+members = ["m1", "m2", "m3", "m4"]
+[workspace.dependencies]
+cc = { version = "=1.8.0", features = ["parallel"] }

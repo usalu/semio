@@ -1,0 +1,25 @@
+{
+ "name": "vouch",
+ "code": "verify2-g-tools/staged/vouch",
+ "lane": "verify2-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "vouch-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- TypeScript: warm incremental `tsc` is 6-7 CPU-s per check (state file per owner and compiler). The hermetic Bazel check is 24-41 CPU-s cold and 0.4-5 CPU-s in the persistent worker (graph-free corpus of 22 edit steps, identical diagnostics; official before/after not run). Bazel actions are shared across slots through one disk cache; a different selection in a slot costs about 10 s instead of a 28 s JVM restart.",
+   "where": "after",
+   "block": "- **Dependency verification asks the journal**: every run verifies the dependency generation receipt twice, a complete pass and a recheck, each over about 79,000 frontier rows, 5,600 input sources and 327 manifest texts (3.7-6.7 s and 5.4-7.7 s wall at load 33). With the change journal the first look of a receipt only takes a cursor and the second pass is answered by the journal; from the next look on both passes skip every path no change touched. `SEMIO_REPO_PROFILE=1` marks `dependencies.vouch` as `journal` (answered), `cursor` (first look, other receipt or restarted service), `walk:<reason>` (the journal refused: complete walks as before) or `off` (`SEMIO_REPO_CHANGES=off`). A vouch only narrows: paths in `.git`, `.cache`, `node_modules`, `target`, outside the workspace or below symbolic links are always walked, the cursor is stored only after both passes held and only in the journal's private runtime directory (never in the checkout), and any doubt gives today's complete walk. Measured on the live receipt: CPU of the two passes 2.2 s to 0.65 s, wall at load 42 15.3 s to 6.9-8.9 s (simulated end to end from the measured tiers). Not measured on a real run: the second `SEMIO_REPO_PROFILE=1 bun repo dependencies ensure` must show `dependencies.vouch` = `journal` and `dependencies.verify` plus `dependencies.recheck` well under 1 s."
+  },
+  {
+   "id": "vouch-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- TypeScript: warmes inkrementelles `tsc` kostet 6-7 CPU-s je Prüfung (Zustandsdatei je Eigner und Compiler). Die hermetische Bazel-Prüfung kostet kalt 24-41 CPU-s und im persistenten Worker 0,4-5 CPU-s (Korpus ohne Graph mit 22 Änderungsschritten, gleiche Diagnosen; offizielles Vorher/Nachher nicht gelaufen). Bazel-Aktionen werden über einen Disk-Cache zwischen Slots geteilt; eine andere Auswahl in einem Slot kostet rund 10 s statt 28 s JVM-Neustart.",
+   "where": "after",
+   "block": "- **Die Prüfung der Abhängigkeiten fragt das Journal**: jeder Lauf prüft den Beleg der Abhängigkeits-Generation zweimal, einen vollständigen Durchgang und eine Nachprüfung, je über rund 79.000 Frontier-Zeilen, 5.600 Eingabequellen und 327 Manifesttexte (3,7-6,7 s und 5,4-7,7 s Wanduhr bei Last 33). Mit dem Änderungsjournal nimmt der erste Blick auf einen Beleg nur einen Cursor, und der zweite Durchgang wird vom Journal beantwortet; ab dem nächsten Blick überspringen beide Durchgänge jeden Pfad, den keine Änderung berührte. `SEMIO_REPO_PROFILE=1` markiert `dependencies.vouch` als `journal` (beantwortet), `cursor` (erster Blick, anderer Beleg oder neu gestarteter Dienst), `walk:<Grund>` (das Journal lehnte ab: vollständige Läufe wie zuvor) oder `off` (`SEMIO_REPO_CHANGES=off`). Eine Bürgschaft verengt nur: Pfade in `.git`, `.cache`, `node_modules`, `target`, außerhalb des Workspace oder unter symbolischen Links werden immer durchlaufen, der Cursor wird erst gespeichert, nachdem beide Durchgänge hielten, und nur im privaten Laufzeitverzeichnis des Journals (nie im Checkout), und jeder Zweifel ergibt den heutigen vollständigen Lauf. Gemessen am lebenden Beleg: CPU der beiden Durchgänge 2,2 s auf 0,65 s, Wanduhr bei Last 42 15,3 s auf 6,9-8,9 s (von den gemessenen Stufen durchgängig simuliert). Nicht an einem echten Lauf gemessen: das zweite `SEMIO_REPO_PROFILE=1 bun repo dependencies ensure` muss `dependencies.vouch` = `journal` und `dependencies.verify` samt `dependencies.recheck` deutlich unter 1 s zeigen."
+  }
+ ]
+}

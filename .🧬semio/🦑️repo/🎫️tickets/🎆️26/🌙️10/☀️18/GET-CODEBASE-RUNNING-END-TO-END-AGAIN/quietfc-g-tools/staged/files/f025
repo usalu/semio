@@ -1,0 +1,411 @@
+{
+ "asks": [
+  {
+   "name": "run with explicit parallel names its target kind",
+   "args": [
+    "run",
+    "@semio-tech/x:typecheck",
+    "--parallel=6"
+   ],
+   "environment": {},
+   "expect": {
+    "operation": "run",
+    "preferredJobs": 6,
+    "kinds": [
+     "check"
+    ],
+    "targets": [
+     "typecheck"
+    ],
+    "lineage": [
+     "run",
+     "run:check",
+     "run:check:@semio-tech/x:typecheck"
+    ]
+   }
+  },
+  {
+   "name": "run reads parallel from the environment and drops the configuration segment",
+   "args": [
+    "run",
+    "@semio-tech/x:test:ci"
+   ],
+   "environment": {
+    "SEMIO_BUILD_PARALLEL": "3"
+   },
+   "expect": {
+    "operation": "run",
+    "preferredJobs": 3,
+    "kinds": [
+     "test"
+    ],
+    "targets": [
+     "test"
+    ],
+    "lineage": [
+     "run",
+     "run:test",
+     "run:test:@semio-tech/x:test:ci"
+    ]
+   }
+  },
+  {
+   "name": "run-many names every kind of its comma list",
+   "args": [
+    "run-many",
+    "--targets=build,test",
+    "--parallel",
+    "4"
+   ],
+   "environment": {},
+   "expect": {
+    "operation": "run-many",
+    "preferredJobs": 4,
+    "kinds": [
+     "build",
+     "test"
+    ],
+    "targets": [
+     "build",
+     "test"
+    ],
+    "lineage": [
+     "run-many",
+     "run-many:build+test",
+     "run-many:build+test:build,test"
+    ]
+   }
+  },
+  {
+   "name": "the short target flag works",
+   "args": [
+    "run-many",
+    "-t",
+    "lint"
+   ],
+   "environment": {
+    "SEMIO_BUILD_PARALLEL": "2"
+   },
+   "expect": {
+    "operation": "run-many",
+    "preferredJobs": 2,
+    "kinds": [
+     "check"
+    ],
+    "targets": [
+     "lint"
+    ],
+    "lineage": [
+     "run-many",
+     "run-many:check",
+     "run-many:check:lint"
+    ]
+   }
+  },
+  {
+   "name": "nothing after the separator is read",
+   "args": [
+    "affected",
+    "--target=typecheck",
+    "--parallel=2",
+    "--",
+    "--parallel=9",
+    "--target=build"
+   ],
+   "environment": {},
+   "expect": {
+    "operation": "affected",
+    "preferredJobs": 2,
+    "kinds": [
+     "check"
+    ],
+    "targets": [
+     "typecheck"
+    ],
+    "lineage": [
+     "affected",
+     "affected:check",
+     "affected:check:typecheck"
+    ]
+   }
+  },
+  {
+   "name": "an unclassified target is a script",
+   "args": [
+    "run",
+    "@x/y:dev",
+    "--parallel=1"
+   ],
+   "environment": {},
+   "expect": {
+    "operation": "run",
+    "preferredJobs": 1,
+    "kinds": [
+     "script"
+    ],
+    "targets": [
+     "dev"
+    ],
+    "lineage": [
+     "run",
+     "run:script",
+     "run:script:@x/y:dev"
+    ]
+   }
+  },
+  {
+   "name": "a graph load asks for the fixed block",
+   "args": [
+    "show",
+    "projects"
+   ],
+   "environment": {
+    "SEMIO_BUILD_PARALLEL": "5"
+   },
+   "expect": {
+    "operation": "show",
+    "preferredJobs": 5,
+    "kinds": [],
+    "targets": [],
+    "lineage": [
+     "show",
+     "show:projects"
+    ]
+   }
+  },
+  {
+   "name": "cargo prefers its own parallelism and ignores the build parallelism",
+   "args": [
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--parallelism=4",
+    "--",
+    "check"
+   ],
+   "environment": {
+    "SEMIO_BUILD_PARALLEL": "9"
+   },
+   "expect": {
+    "operation": "cargo",
+    "preferredJobs": 4,
+    "kinds": [],
+    "targets": [],
+    "lineage": [
+     "cargo",
+     "cargo:check"
+    ]
+   }
+  },
+  {
+   "name": "help is light",
+   "args": [
+    "run",
+    "--help"
+   ],
+   "environment": {},
+   "expect": null
+  },
+  {
+   "name": "tools is light",
+   "args": [
+    "tools",
+    "setup",
+    "bazel"
+   ],
+   "environment": {},
+   "expect": null
+  },
+  {
+   "name": "cache is light",
+   "args": [
+    "cache",
+    "status"
+   ],
+   "environment": {},
+   "expect": null
+  },
+  {
+   "name": "no arguments is light",
+   "args": [],
+   "environment": {},
+   "expect": null
+  }
+ ],
+ "rewrites": [
+  {
+   "args": [
+    "run",
+    "x:y",
+    "--parallel=8"
+   ],
+   "operation": "run",
+   "jobs": 3,
+   "expect": [
+    "run",
+    "x:y",
+    "--parallel=3"
+   ]
+  },
+  {
+   "args": [
+    "run",
+    "x:y",
+    "--parallel",
+    "8",
+    "--configuration=ci"
+   ],
+   "operation": "run",
+   "jobs": 3,
+   "expect": [
+    "run",
+    "x:y",
+    "--configuration=ci",
+    "--parallel=3"
+   ]
+  },
+  {
+   "args": [
+    "run-many",
+    "--targets=a"
+   ],
+   "operation": "run-many",
+   "jobs": 5,
+   "expect": [
+    "run-many",
+    "--targets=a",
+    "--parallel=5"
+   ]
+  },
+  {
+   "args": [
+    "run",
+    "x:y",
+    "--",
+    "--parallel=9"
+   ],
+   "operation": "run",
+   "jobs": 2,
+   "expect": [
+    "run",
+    "x:y",
+    "--parallel=2",
+    "--",
+    "--parallel=9"
+   ]
+  },
+  {
+   "args": [
+    "cargo",
+    "--store=shared",
+    "--parallelism=10",
+    "--",
+    "check"
+   ],
+   "operation": "cargo",
+   "jobs": 4,
+   "expect": [
+    "cargo",
+    "--store=shared",
+    "--parallelism=4",
+    "--",
+    "check"
+   ]
+  },
+  {
+   "args": [
+    "run",
+    "x:y",
+    "--parallelism=7"
+   ],
+   "operation": "run",
+   "jobs": 2,
+   "expect": [
+    "run",
+    "x:y",
+    "--parallelism=7",
+    "--parallel=2"
+   ]
+  }
+ ],
+ "nativeLaunch": {
+  "free": [
+   [
+    "run",
+    "@semio-tech/repo-dashboard-rs:run"
+   ],
+   [
+    "run",
+    "@semio-tech/repo-dashboard-rs:daemon",
+    "--",
+    "status"
+   ],
+   [
+    "run",
+    "@semio-tech/repo-dashboard-rs:preferences",
+    "--",
+    "show"
+   ]
+  ],
+  "asking": [
+   [
+    "run",
+    "@semio-tech/repo-dashboard-rs:build"
+   ],
+   [
+    "run",
+    "@semio-tech/repo-dashboard-rs:test-unit"
+   ],
+   [
+    "run",
+    "@semio-tech/repo-dashboard-rs:run",
+    "--graph=x"
+   ]
+  ]
+ },
+ "deferred": [
+  {
+   "args": [
+    "dependencies",
+    "ensure"
+   ],
+   "deferred": true
+  },
+  {
+   "args": [
+    "dependencies",
+    "sync",
+    "--all"
+   ],
+   "deferred": false
+  },
+  {
+   "args": [
+    "dependencies",
+    "lock",
+    "--all"
+   ],
+   "deferred": false
+  },
+  {
+   "args": [
+    "run",
+    "@x/y:build"
+   ],
+   "deferred": false
+  },
+  {
+   "args": [
+    "show",
+    "projects"
+   ],
+   "deferred": false
+  },
+  {
+   "args": [
+    "ensure"
+   ],
+   "deferred": false
+  }
+ ]
+}

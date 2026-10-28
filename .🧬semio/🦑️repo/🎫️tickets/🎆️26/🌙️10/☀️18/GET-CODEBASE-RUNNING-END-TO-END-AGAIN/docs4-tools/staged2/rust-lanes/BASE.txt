@@ -1,0 +1,3 @@
+document: 🧰️framework/🛍️products/🦑️repo/📓️build-guide.md
+sha256 at staging: e88fdd1b3edd95f1a46291cd1f2304ae9f06f3616faeeaa8a56826552197e872
+4 edit(s): rust-more[en], rust-more[de], order-pairs[en], order-pairs[de]

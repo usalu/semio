@@ -1,0 +1,32 @@
+import refusalSchema from "../🧬️schema/🧾️refusals.json" with {type:"json"};
+import {churnProtocolV1,concurrentEditV1,staleImplementationV1} from "../🟦️.ts";
+import {filesystemRaceOfTextV1} from "../🌊️races/🟦️.ts";
+
+const protocol=churnProtocolV1();
+const refusalTable=Object.freeze(refusalSchema.definitions.Table.const as unknown as Readonly<{classes:readonly Readonly<{id:string;disposition:"reobserve"|"reexec"|"fatal";messages:readonly Readonly<{text:string}>[]}>[]}>);
+const exhaustedPatterns=Object.freeze(Object.values(protocol.texts).map(table=>{const parts=table.exhausted.split(/\{[a-z]+\}/u);return Object.freeze({literals:Object.freeze(parts.filter(part=>part!=="")),pattern:new RegExp(parts.map(part=>part.replace(/[.*+?^${}()|[\]\\]/gu,"\\$&")).join(".+?"),"u")});}));
+/** 📜️ The refusal class a text names by its own words: a declared message names its class, and the exhausted text of the policy names a retried edit whose narrower layers gave up (`reobserve`, so a wider layer may run the step again). The decision looks at the text alone and never at where it ends, so a layer that reads output line by line may decide each line when it arrives. `undefined` when the text names no class. */
+export function declaredRefusalClassOfTextV1(text:string):Readonly<{id:string;disposition:"reobserve"|"reexec"|"fatal";message:string}>|undefined{
+ for(const row of refusalTable.classes)for(const message of row.messages)if(message.text!==""&&text.includes(message.text))return Object.freeze({id:row.id,disposition:row.disposition,message:message.text});
+ for(const {literals,pattern} of exhaustedPatterns){if(!literals.every(part=>text.includes(part)))continue;const found=pattern.exec(text);if(found)return Object.freeze({id:"retries-exhausted",disposition:"reobserve",message:found[0]});}
+ return;
+}
+
+/** 🔎️ The refusal class of a text captured from a failed child's output, for a layer that sees the output and not the error: the class the text names by its own words (`declaredRefusalClassOfTextV1`), else a filesystem error that ends the output (a read of a workspace path that a peer deleted, renamed or replaced, decided by the race table) is class `filesystem-race`, `reobserve`. `undefined` when the text names no class. */
+export function refusalClassOfTextV1(text:string):Readonly<{id:string;disposition:"reobserve"|"reexec"|"fatal";message:string}>|undefined{
+ const declared=declaredRefusalClassOfTextV1(text);if(declared)return declared;
+ const race=filesystemRaceOfTextV1(text);
+ if(race.disposition!=="none")return Object.freeze({id:"filesystem-race",disposition:"reobserve",message:race.path});
+ return;
+}
+
+/** 🔁️ Classifies a failed run by the output of its failed tasks, whichever build tool ran them: a task that yielded because its implementation is outdated makes the outermost command start again with the current one (the stale implementation error, class `reexec`), a task whose input an edit kept moving makes the lane run the build again (a concurrent edit of the `build` layer, class `reobserve`); `undefined` when no task names such a class (fatal classes included), so the failure stands. A stale task wins over an edit, in the order of the rows otherwise. */
+export function failureChurnOfTailsV1(rows:readonly Readonly<{task:string;text:string}>[]):Error|undefined{
+ let edit:Error|undefined;
+ for(const row of rows){
+  const hit=refusalClassOfTextV1(row.text);if(!hit||hit.disposition==="fatal")continue;
+  if(hit.disposition==="reexec")return staleImplementationV1(hit.message+" ("+row.task+")");
+  edit??=concurrentEditV1("input",row.task,"A task failed because its inputs were edited while it ran","build");
+ }
+ return edit;
+}

@@ -1,0 +1,20 @@
+{
+ "label": "g47-ctest",
+ "target": "@teaching/architecture-course:test",
+ "started": "21:10:06",
+ "wall_s": 138.0,
+ "peak_tree_mb": 5392,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "10",
+   "2 action cache hit, 6 disk cache hit, 1 internal, 3 local"
+  ],
+  "actions": [
+   "10"
+  ]
+ }
+}

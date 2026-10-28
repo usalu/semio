@@ -154,6 +154,7 @@
     "./testing": "./🧪️testing/🟦️.ts",
     "./test-values": "./🧪️test-values/🟦️.ts",
     "./testing/vitest": "./🧪️testing/🧪️vitest/🟦️.ts",
+    "./testing/workers": "./🧪️testing/👷️workers/🟦️.ts",
     "./testing/vitest/arguments": "./🧪️testing/🧪️vitest/📋️arguments/🟦️.ts",
     "./testing/workspace-exports": "./🧪️testing/📦️workspace-exports/🟦️.ts",
     "./testing/workspace-exports/fixtures.json": "./🧪️testing/📦️workspace-exports/🧫️fixtures/🔣️json/🟦️.ts",

@@ -135,7 +135,9 @@ test("a queued wait names the request it stands behind through the structured pr
   expect(structured.length).toBeGreaterThanOrEqual(1);
   const event=structured[0]!,payload=JSON.parse(event.activity.resource.slice("lease-queue:".length));
   expect(event.activity.elapsedMs).toBe(0);expect(event.activity.mode).toBe("shared");
-  expect(payload).toEqual({version:1,position:expected.expectedPosition,queued:expected.expectedQueued,holderMode:expected.holderMode,holderPid:process.pid,holderSeconds:payload.holderSeconds,resource});
+  const{holderState,holderPhase:_phase,holderDone:_done,holderTotal:_total,holderEtaMinutes:_eta,...base}=payload;
+  expect(base).toEqual({version:1,position:expected.expectedPosition,queued:expected.expectedQueued,holderMode:expected.holderMode,holderPid:process.pid,holderSeconds:payload.holderSeconds,resource});
+  expect(["progressing","silent"]).toContain(holderState);
   expect(payload.holderSeconds).toBeGreaterThanOrEqual(0);
   expect(writes.some(line=>line.startsWith("[script] ")&&!line.startsWith("[script] {")&&line.includes("Waiting for access to "+resource+" (shared): position 2 of 2, behind the request of process "+process.pid))).toBe(true);
   expect(writes.some(line=>line.includes('"resource":"'+resource+'"'))).toBe(true);

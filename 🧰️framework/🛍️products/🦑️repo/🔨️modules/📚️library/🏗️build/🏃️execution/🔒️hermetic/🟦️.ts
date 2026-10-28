@@ -2,6 +2,7 @@ import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬
 import schema from "../🧬️schema/🔒️hermetic-classes.json" with {type: "json"};
 import table from "./🔣️.json" with {type: "json"};
 import {runtimeCommandNameV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import {refuseBuildV1} from "../../📖️texts/🟦️.ts";
 
 if (validateJsonSchemaSubset(schema, table, schema).length) throw new Error("Closed hermetic class table required");
 
@@ -73,4 +74,19 @@ export function hermeticStrategiesV1(platform: string): readonly string[] {
   const row = (table.strategies as Record<string, readonly string[]>)[platform];
   if (!row) throw new Error(`Hermetic strategies required for platform: ${platform}`);
   return row.map(name => name === "isolated-root" ? "local" : name);
+}
+
+/** 🛎️ The persistent service one class uses: the engine's id, the module a worker imports, the environment variable that carries its loopback address to the action's commands and the idle time after which the worker releases it. */
+export type HermeticServiceV1 = {readonly id: string; readonly module: string; readonly environment: string; readonly idleMilliseconds: number};
+
+/** 🏷️ The Bazel mnemonic and instance bound shared by all service actions. */
+export const HERMETIC_SERVICES_V1 = table.services;
+
+/** 🔎️ Resolves the service of a class; `undefined` for a class that has none, a refusal for a class that names an engine the table does not declare. */
+export function hermeticServiceV1(classId: string): HermeticServiceV1 | undefined {
+  const name = (table.classes.find(entry => entry.id === classId) as {service?: string} | undefined)?.service;
+  if (name === undefined) return undefined;
+  const engine = (table.services.engines as Record<string, {module: string; environment: string; idleMilliseconds: number}>)[name];
+  if (!engine) throw refuseBuildV1("invalid", "hermetic.service-unknown", { name });
+  return {id: name, ...engine};
 }

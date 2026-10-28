@@ -1,0 +1,17 @@
+/** 🧹️ What every heavy command does about caches over their budget: it reads the size ledger (a small file, no tree is walked) and the stamp of the last launch and starts the detached, low-priority, single-flight `repo cache gc --area=…` of the due areas (the interval and over-budget rules of the sweep); never waits, never throws. Free-space triggers only fire when an image is nearly full, so loose and nested areas stayed over their budget for days until somebody ran `repo cache gc`. Returns the decision taken. */
+export async function launchBudgetSweepIfDueV1(workspace:string,overrides:Partial<GraphCollectorPortsV1>={},ledger:CacheLedgerV1=cacheLedgerV1(),sizes?:CacheSizeLedgerV1):Promise<BudgetSweepDecisionV1["decision"]|"failed">{
+ try{
+  const ports={...defaults(),...overrides},stamp=repoCacheDirectory(workspace,"build","budget-sweep.stamp"),log=repoCacheDirectory(workspace,"build","budget-sweep.log"),status=repoCacheDirectory(workspace,"build","budget-sweep.status.json"),now=ports.now();
+  const recorded=sizes??await readFile(join(cacheRootDirectoryV1(workspace,ledger,"repository"),CACHE_SIZE_FILE_V1),"utf8").then(text=>readCacheSizeLedgerV1(JSON.parse(text)),()=>({version:1 as const,records:{}})),decision=budgetSweepDecisionV1({ledger,sizes:recorded,nowMs:now,lastLaunchMs:await ports.readStamp(stamp)});
+  if(decision.decision!=="launch")return decision.decision;
+  try{await ports.writeStamp(stamp);ports.start(ports.execPath,[ports.script,"repo","cache","gc","--area="+decision.areas.join(",")],{cwd:workspace,env:graphCollectorEnvironmentV1(ports.environment),log});}
+  catch(error){
+   const message=String((error as Error).message);
+   try{await ports.writeStatus(status,JSON.stringify({version:1,atMs:now,state:"failed",message})+"\n");}catch(statusError){ports.report("status: "+String((statusError as Error).message));}
+   ports.report(["en","de"].map(language=>cacheTextV1(language as "en"|"de","gc.budget.launch.failed",{message})).join("\n"));
+   return "failed";
+  }
+  return "launch";
+ }catch{return "enough";}
+}
+

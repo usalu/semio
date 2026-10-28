@@ -8,8 +8,8 @@ use semio_repo_test_host::Adapter;
 mod subject {
     use semio_framework_repo_tickets::{
         ManagementProviders, NullManagementProvider,
-        join_path, normalize_ticket_file_inputs, parse_change_request, parse_close_request, parse_open_request, parse_reopen_request, FixedClock, MemoryTicketStore, RecordingEventSink, TicketCloseRequest, TicketId, TicketLayout, TicketOutcome,
-        TicketService, TicketStore, OVERSIZED_FILE_BYTES,
+        normalize_ticket_file_inputs, parse_change_request, parse_close_request, parse_open_request, parse_reopen_request, FixedClock, MemoryTicketStore, RecordingEventSink, TicketCloseRequest, TicketLayout, TicketOutcome,
+        TicketService,
     };
     use semio_repo_test_host::{Context, Json, Outcome};
 
@@ -141,24 +141,6 @@ mod subject {
         let close = parse_close_request(&text_of(&vectors, "close")).map_err(|error| error.message)?;
         Ok(Outcome::projection(Json::Object(vec![("input".to_string(), strings(close.files.clone())), ("normalised".to_string(), strings(normalize_ticket_file_inputs(&close.files)))])))
     }
-
-    /// 🧹️ An oversized artifact is purged.
-    pub fn an_oversized_artifact_is_purged(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.input_json(VECTORS)?;
-        let world = world(&vectors);
-        let outcome = opened(&world, &vectors)?;
-        let id = TicketId::parse(&outcome.id).map_err(|error| error.message)?;
-        let folder = world.layout.ticket_dir(&id);
-        let purge = vectors.get("purge").cloned().unwrap_or(Json::Null);
-        world.store.seed_sized_file(&join_path(&folder, &purge.str("oversizedFile")), OVERSIZED_FILE_BYTES + 1);
-        world.store.seed_sized_file(&join_path(&folder, &purge.str("smallFile")), 128);
-        let report = service(&world).purge_artifacts(&id).map_err(|error| error.message)?;
-        Ok(Outcome::projection(Json::Object(vec![
-            ("removedFiles".to_string(), strings(report.removed_files)),
-            ("removedDirectories".to_string(), strings(report.removed_directories)),
-            ("surviving".to_string(), strings(world.store.paths().into_iter().filter(|path| world.store.is_file(path)).collect())),
-        ])))
-    }
 }
 //#endregion 🔖️Scenarios
 
@@ -173,8 +155,7 @@ pub fn adapter() -> Adapter {
         .subject("a-reopen-restores-the-important-document", subject::a_reopen_restores_the_important_document)
         .subject("a-change-renames-the-folder", subject::a_change_renames_the_folder)
         .subject("a-close-refuses-a-ticket-that-is-not-open", subject::a_close_refuses_a_ticket_that_is_not_open)
-        .subject("file-inputs-are-normalised-before-they-are-recorded", subject::file_inputs_are_normalised_before_they_are_recorded)
-        .subject("an-oversized-artifact-is-purged", subject::an_oversized_artifact_is_purged);
+        .subject("file-inputs-are-normalised-before-they-are-recorded", subject::file_inputs_are_normalised_before_they_are_recorded);
     registered
 }
 //#endregion 🔖️Registration

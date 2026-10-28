@@ -1,0 +1,19 @@
+{
+ "base": 4,
+ "implementation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+ "otherImplementation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+ "wanted": ["a", "b", "c"],
+ "cases": [
+  {"id": "the custody is free and there is no claim", "builderHeld": false, "claims": [], "idle": true},
+  {"id": "a peer holds the builder custody", "builderHeld": true, "claims": [], "idle": false},
+  {"id": "a live running claim of this plan covers a wanted owner", "builderHeld": false, "claims": [{"state": "running", "live": true, "plan": "same", "owners": ["c", "z"]}], "idle": false},
+  {"id": "a live running claim of this plan covers only other owners", "builderHeld": false, "claims": [{"state": "running", "live": true, "plan": "same", "owners": ["y", "z"]}], "idle": true},
+  {"id": "a running claim of a dead command is no claim", "builderHeld": false, "claims": [{"state": "running", "live": false, "plan": "same", "owners": ["a"]}], "idle": true},
+  {"id": "a live running claim of an older plan covers a wanted owner", "builderHeld": false, "claims": [{"state": "running", "live": true, "plan": "base", "owners": ["a"]}], "idle": true},
+  {"id": "a live running claim of another implementation covers a wanted owner", "builderHeld": false, "claims": [{"state": "running", "live": true, "plan": "implementation", "owners": ["a"]}], "idle": true},
+  {"id": "a done claim covers a wanted owner", "builderHeld": false, "claims": [{"state": "done", "live": false, "plan": "same", "owners": ["a", "b"]}], "idle": true},
+  {"id": "a failed claim covers a wanted owner", "builderHeld": false, "claims": [{"state": "failed", "live": false, "plan": "same", "owners": ["b"]}], "idle": true},
+  {"id": "a held custody wins over free claims", "builderHeld": true, "claims": [{"state": "done", "live": false, "plan": "same", "owners": ["a"]}], "idle": false},
+  {"id": "one live claim among many dead ones decides", "builderHeld": false, "claims": [{"state": "running", "live": false, "plan": "same", "owners": ["a"]}, {"state": "running", "live": true, "plan": "same", "owners": ["b"]}, {"state": "done", "live": false, "plan": "same", "owners": ["c"]}], "idle": false}
+ ]
+}

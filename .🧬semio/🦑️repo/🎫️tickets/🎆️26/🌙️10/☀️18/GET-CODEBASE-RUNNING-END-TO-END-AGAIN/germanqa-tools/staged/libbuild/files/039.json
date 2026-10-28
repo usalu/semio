@@ -1,0 +1,11 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Claim by path law fixture / Gesetz der Beanspruchung nach Pfad",
+ "description": "EN: Shaping a partial inference claims, for every owner, the facts below its roots that its own record does not hold; it equals the independent Python model on seeded corpora and builds no set of keys per owner list: many owners that share a long block cost set insertions by the rows of the capture, not by owners times rows. DE: Das Formen einer Teilableitung beansprucht für jeden Eigentümer die Fakten unter seinen Wurzeln, die sein eigener Eintrag nicht enthält; es gleicht dem unabhängigen Python-Modell auf erzeugten Beständen und baut keine Schlüsselmenge je Besitzerliste: viele Eigentümer mit gemeinsamem langem Block kosten Mengeneinfügungen nach den Zeilen der Erfassung, nicht nach Eigentümern mal Zeilen.",
+ "type": "object", "additionalProperties": false, "required": ["version", "equality", "memory"],
+ "properties": {
+  "version": {"const": 1},
+  "equality": {"type": "object", "additionalProperties": false, "required": ["seeds"], "properties": {"seeds": {"type": "integer", "minimum": 1}}},
+  "memory": {"type": "object", "additionalProperties": false, "required": ["owners", "sharedRows", "foundRows", "maximumInsertionsPerRow"], "properties": {"owners": {"type": "integer", "minimum": 10}, "sharedRows": {"type": "integer", "minimum": 100}, "foundRows": {"type": "integer", "minimum": 1}, "maximumInsertionsPerRow": {"type": "integer", "minimum": 1}}}
+ }
+}

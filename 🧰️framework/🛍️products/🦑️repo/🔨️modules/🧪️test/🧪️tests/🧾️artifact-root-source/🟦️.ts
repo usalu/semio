@@ -14,7 +14,9 @@ import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-cap
 import {testReportPathV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🚦️protocol/🟦️.ts";
 import {withBuildTestInvocationV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import fixture from "../🧫️fixtures/🧾️artifact-root-source/🔣️.json" with {type:"json"};
-const root=process.cwd();
+import{privateRepositoryWorkspaceV1}from"../../../📚️library/🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
+const root=repository.root;
 
 /** 🎛️ Retains explicit test environment through its awaited body. */
 async function environment<T>(values:Record<string,string|undefined>,body:()=>Promise<T>):Promise<T>{const previous=Object.fromEntries(Object.keys(values).map(key=>[key,process.env[key]]));try{for(const[key,value]of Object.entries(values))if(value===undefined)delete process.env[key];else process.env[key]=value;return await body();}finally{for(const[key,value]of Object.entries(previous))if(value===undefined)delete process.env[key];else process.env[key]=value;}}

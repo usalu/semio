@@ -1,0 +1,35 @@
+{
+ "version": 1,
+ "edits": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+   "name": "import",
+   "old": "import{coverageOfV1,mergeVerifiedStampV1,readVerifiedStampV1,uncoveredOfV1}from\"./🔭️coverage/🟨️.mjs\";",
+   "new": "import{coverageOfV1,mergeVerifiedStampV1,readVerifiedStampV1,uncoveredOfV1}from\"./🔭️coverage/🟨️.mjs\";\nimport{INDEX_CHUNK_POLICY_V1,addOwnerRunsV1,bulkUpsertClassesV1,classesOfChunksV1,createChunkInternerV1}from\"./🧱️chunk-classes/🟨️.mjs\";"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+   "name": "create",
+   "old": "export function createFactIndexV1(ownerRows){\n const owners=[...ownerRows.keys()].sort(compareCodePointsV1),rows=[],byKey=new Map(),byObject=new Map(),lists=[],empty=[];let seen=new Int32Array(1<<16);\n owners.forEach((name,owner)=>{\n  const list=ownerRows.get(name),mine=new Uint32Array(list.length);let count=0;\n  for(const row of list){\n   let id=byObject.get(row);\n   if(id===undefined){const key=rowKeyV1(row);id=byKey.get(key);if(id===undefined){id=rows.length;byKey.set(key,id);rows.push(row);}byObject.set(row,id);}\n   if(id>=seen.length){const grown=new Int32Array(Math.max(seen.length*2,id+1));grown.set(seen);seen=grown;}\n   if(seen[id]!==owner+1){seen[id]=owner+1;mine[count++]=id;}\n  }\n  if(!count)empty.push({r:[],o:[owner]});\n  lists.push(mine.subarray(0,count));\n });\n const first=new Uint32Array(rows.length+1);\n for(const list of lists)for(const id of list)first[id+1]++;\n for(let id=0;id<rows.length;id++)first[id+1]+=first[id];\n const flat=new Uint32Array(first[rows.length]),fill=first.slice(0,rows.length);\n lists.forEach((list,owner)=>{for(const id of list)flat[fill[id]++]=owner;});\n const buckets=new Map(),classes=[];\n for(let id=0;id<rows.length;id++){\n  const from=first[id],to=first[id+1];let hash=to-from;\n  for(let at=from;at<to;at++)hash=(Math.imul(hash,0x9e3779b1)^flat[at])>>>0;\n  let chain=buckets.get(hash),group;\n  if(chain===undefined)buckets.set(hash,chain=[]);\n  for(const candidate of chain){\n   const other=candidate.span;if(other[1]-other[0]!==to-from)continue;\n   let same=true;for(let at=0;at<to-from;at++)if(flat[other[0]+at]!==flat[from+at]){same=false;break;}\n   if(same){group=candidate;break;}\n  }\n  if(group===undefined){group={r:[],o:Array.from(flat.subarray(from,to)),span:[from,to]};chain.push(group);classes.push(group);}\n  group.r.push(id);\n }\n return{version:1,owners,rows,classes:[...classes.map(({r,o})=>({r,o})),...empty]};\n}\n\n",
+   "new": "export function createFactIndexV1(ownerRows){\n const owners=[...ownerRows.keys()].sort(compareCodePointsV1),rows=[],byKey=new Map(),byObject=new Map(),empty=[],interner=createChunkInternerV1();let seen=new Int32Array(1<<16),scratch=new Uint32Array(1<<12);\n owners.forEach((name,owner)=>{\n  const list=ownerRows.get(name);if(scratch.length<list.length)scratch=new Uint32Array(Math.max(list.length,scratch.length*2));\n  let count=0;\n  for(const row of list){\n   let id=byObject.get(row);\n   if(id===undefined){const key=rowKeyV1(row);id=byKey.get(key);if(id===undefined){id=rows.length;byKey.set(key,id);rows.push(row);}byObject.set(row,id);}\n   if(id>=seen.length){const grown=new Int32Array(Math.max(seen.length*2,id+1));grown.set(seen);seen=grown;}\n   if(seen[id]!==owner+1){seen[id]=owner+1;scratch[count++]=id;}\n  }\n  if(!count){empty.push({r:[],o:[owner]});return;}\n  addOwnerRunsV1(interner,scratch,count,owner);\n });\n return{version:1,owners,rows,classes:[...classesOfChunksV1(rows.length,interner),...empty]};\n}\n\n"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+   "name": "patch signature",
+   "old": "export function patchFactIndexV1(index,{drop=[],upserts=new Map(),append=new Map()}){",
+   "new": "export function patchFactIndexV1(index,{drop=[],upserts=new Map(),append=new Map()},{bulkRows=INDEX_CHUNK_POLICY_V1.bulkUpsertRows}={}){"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+   "name": "patch bulk",
+   "old": " for(const name of[...upserts.keys()].sort(compareCodePointsV1))classes.push({r:rowIdsFor(upserts.get(name)),o:[ownerIds.get(name)]});\n",
+   "new": " let pairs=0;for(const list of upserts.values())pairs+=list.length;\n if(pairs>=bulkRows)bulkUpsertClassesV1({upserts,ownerIds,idOfRow,rowCount:rows.length,classes});\n else\n for(const name of[...upserts.keys()].sort(compareCodePointsV1))classes.push({r:rowIdsFor(upserts.get(name)),o:[ownerIds.get(name)]});\n"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.d.mts",
+   "name": "patch signature",
+   "old": "append?:ReadonlyMap<string,readonly GenerationRowV1[]>}):FactIndexV1;",
+   "new": "append?:ReadonlyMap<string,readonly GenerationRowV1[]>},options?:{bulkRows?:number}):FactIndexV1;"
+  }
+ ]
+}

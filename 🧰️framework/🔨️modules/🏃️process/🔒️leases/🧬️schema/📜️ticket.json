@@ -63,6 +63,12 @@
         },
         "yielding": {
           "const": true
+        },
+        "priority": {
+          "enum": [
+            "interactive",
+            "background"
+          ]
         }
       }
     },

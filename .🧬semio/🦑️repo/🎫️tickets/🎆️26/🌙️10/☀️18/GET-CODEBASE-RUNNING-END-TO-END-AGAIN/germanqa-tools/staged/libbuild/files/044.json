@@ -1,0 +1,34 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "Content-defined chunks of the fact index / Inhaltsdefinierte Abschnitte des Faktenindex",
+ "description": "EN: The declared constants of the chunked construction of the fact index classes. An owner's sorted list of row numbers is cut after every row number whose multiplicative hash is zero in `chunkCutBits` bits, so owners that share a long block of rows cut it at the same rows and the pairs (owner, row) of thousands of owners are never expanded; a patch that upserts at least `bulkUpsertRows` pairs builds its classes the same way. The module's code and this file spell the same numbers and a law keeps both equal. DE: Die erklärten Konstanten des abschnittsweisen Aufbaus der Klassen des Faktenindex. Die sortierte Liste der Zeilennummern eines Eigners wird nach jeder Zeilennummer geschnitten, deren multiplikativer Hash in `chunkCutBits` Bits null ist, sodass Eigner mit einem gemeinsamen langen Block ihn an denselben Zeilen schneiden und die Paare (Eigner, Zeile) tausender Eigner nie ausgebreitet werden; ein Patch mit mindestens `bulkUpsertRows` Paaren baut seine Klassen ebenso. Modul und Datei nennen dieselben Zahlen, ein Gesetz hält beide gleich.",
+ "definitions": {
+  "Policy": {
+   "const": {
+    "version": 1,
+    "chunkCutBits": 8,
+    "bulkUpsertRows": 1048576,
+    "scratchSlackRows": 1024,
+    "scratchInitialEntries": 4096
+   }
+  },
+  "PolicyDescriptions": {
+   "const": {
+    "en": {
+     "version": "The version of the policy.",
+     "chunkCutBits": "An owner's run list is cut after every row whose number hashes to zero in this many bits.",
+     "bulkUpsertRows": "A patch with at least this many owner and row pairs rebuilds the classes in bulk instead of row by row.",
+     "scratchSlackRows": "The headroom of the row marker table above the row count.",
+     "scratchInitialEntries": "The initial size of the scratch list of one owner."
+    },
+    "de": {
+     "version": "Die Version der Richtlinie.",
+     "chunkCutBits": "Die Laufliste eines Eigentümers wird nach jeder Zeile geschnitten, deren Nummer in so vielen Bits zu null hasht.",
+     "bulkUpsertRows": "Ein Patch mit mindestens so vielen Paaren aus Eigentümer und Zeile baut die Klassen im Ganzen statt Zeile für Zeile neu.",
+     "scratchSlackRows": "Der Spielraum der Zeilenmarkierungstabelle über der Zeilenzahl.",
+     "scratchInitialEntries": "Die Anfangsgrösse der Arbeitsliste eines Eigentümers."
+    }
+   }
+  }
+ }
+}

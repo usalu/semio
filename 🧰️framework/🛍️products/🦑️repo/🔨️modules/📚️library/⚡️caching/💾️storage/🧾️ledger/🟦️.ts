@@ -11,12 +11,12 @@ export type CacheLanguageV1="en"|"de";
 /** 🏠️ The two declared loose roots: the repository cache root and the native cache root. */
 export type CacheRootIdV1="repository"|"native";
 /** 🧑‍🔧️ Names who keeps an area within its budget when the generic collector must not. */
-export type CacheOwnerV1="image"|"control"|"cargo"|"nx"|"bazel"|"test-evidence"|"dashboard"|"graph"|"remote-cache"|"remote-execution";
+export type CacheOwnerV1="image"|"control"|"cargo"|"nx"|"nx-tooling"|"bazel"|"test-evidence"|"dashboard"|"graph"|"remote-cache"|"remote-execution";
 type Bilingual=Readonly<Record<CacheLanguageV1,string>>;
 /** 💰️ One declared budget: explicit bytes, a share of the partition, or whatever its siblings leave. */
 export type CacheBudgetV1=Readonly<{bytes:number}>|Readonly<{basisPoints:number}>|Readonly<{remainder:true}>;
-/** 🧹️ How an area is collected: how long it may stay unused, how long a unit must be quiet, and what proves a unit is in use. */
-export type CacheCollectV1=Readonly<{unusedAgeMs:number|null;quietMs:number;custody:"quiet"|"sqlite"|"lease";lease?:string}>;
+/** 🧹️ How an area is collected: how long it may stay unused, how long a unit must be quiet, what proves a unit is in use (`pid`: the unit name carries the process id, `(?<pid>…)` in `units`, and a live process holds it), whether a unit is a child (default) or a grandchild of the area directory, and which children of the directory are units at all (`units`, a nested area may then share its directory with the homes of other areas). */
+export type CacheCollectV1=Readonly<{unusedAgeMs:number|null;quietMs:number;custody:"quiet"|"sqlite"|"lease"|"pid";lease?:string;depth?:1|2;units?:string}>;
 /** 🚰️ The free space below which an owner is asked to reclaim in the background, and the free space it reclaims up to. */
 export type CacheReclaimV1=Readonly<{softAvailableBytes:number;targetAvailableBytes:number}>;
 /** 📏️ One part of a partition's measured need: its cap (an area's budget or explicit bytes) and what was measured. */
@@ -42,11 +42,13 @@ const segments=(path:string):string[]=>path.split("/");
 const portable=(path:string):string=>path.normalize("NFC").toLowerCase();
 const inside=(parent:readonly string[],child:readonly string[]):boolean=>parent.length<=child.length&&parent.every((part,index)=>part===child[index]);
 const bytesOf=(budget:CacheBudgetV1|undefined):number=>budget&&"bytes" in budget?budget.bytes:0;
+type NestedHome={path:string[];units:RegExp|undefined};
+const carved=(parent:NestedHome,child:NestedHome):boolean=>parent.units!==undefined&&parent.path.length<child.path.length&&inside(parent.path,child.path)&&!parent.units.test(child.path[parent.path.length]!);
 
 /** 📋️ Validates the entire ledger, its budgets and its disjointness before any cache read or write relies on it. */
 export function readCacheLedgerV1(value:unknown,partitions:CachePartitionBudgetsV1=budgetPolicy.partitions):CacheLedgerV1{
  const errors=validateJsonSchemaSubset(schema,value);if(errors.length)refuse(errors[0]!);
- const ledger=value as CacheLedgerV1,ids=new Set<string>(),claimed=new Map<CacheRootIdV1,string[][]>([["repository",[]],["native",[]]]),nested=new Map<string,{paths:string[][];explicit:number;remainders:number}>();
+ const ledger=value as CacheLedgerV1,ids=new Set<string>(),claimed=new Map<CacheRootIdV1,string[][]>([["repository",[]],["native",[]]]),nested=new Map<string,{paths:NestedHome[];explicit:number;remainders:number}>();
  for(const area of ledger.areas){
   if(ids.has(area.id))refuse("duplicate area "+area.id);ids.add(area.id);
   if(area.recreate!==undefined&&area.kind!=="partition")refuse("only a partition may declare how it is recreated: "+area.id);
@@ -54,12 +56,13 @@ export function readCacheLedgerV1(value:unknown,partitions:CachePartitionBudgets
   if(area.carry?.some(path=>segments(path).some(part=>part==="."||part===".."||part==="")))refuse("canonical carried directories required for "+area.id);
   if(area.directory!==undefined&&segments(area.directory).some(part=>part==="."||part===".."))refuse("canonical directory required for "+area.id);
   if(area.pattern!==undefined)try{new RegExp(area.pattern,"u");}catch{refuse("valid pattern required for "+area.id);}
+  if(area.collect&&((area.collect.custody==="pid")!==(area.collect.units?.includes("(?<pid>")===true)||area.collect.units!==undefined&&(area.kind!=="nested"||area.collect.depth===2)))refuse("pid custody needs a unit pattern with a (?<pid>) group, and unit patterns need a depth-1 nested area: "+area.id);
   const remainder=area.budget!==undefined&&"remainder" in area.budget;
   if(area.kind==="nested"){
    if(area.reclaim&&(area.reclaim.softAvailableBytes>=area.reclaim.targetAvailableBytes||area.partition==="graph"&&area.reclaim.targetAvailableBytes>2684354560))refuse("reclaim needs soft below target and, in the graph partition, a target within the headroom schema: "+area.id);
-   if(!area.partition||!Object.hasOwn(partitions,area.partition)||area.pattern!==undefined||area.collect!==undefined||!area.managed||!area.budget||remainder===(area.directory!==undefined))refuse("nested area "+area.id+" needs a declared partition, a manager and a budget");
+   if(!area.partition||!Object.hasOwn(partitions,area.partition)||area.pattern!==undefined||(area.collect===undefined)===(area.managed===undefined)||area.collect?.custody==="lease"||!area.budget||remainder===(area.directory!==undefined)||remainder&&area.collect!==undefined)refuse("nested area "+area.id+" needs a declared partition, exactly one of manager and collection, and a budget");
    const row=nested.get(area.partition!)??{paths:[],explicit:0,remainders:0};nested.set(area.partition!,row);
-   if(remainder)row.remainders++;else{const own=segments(area.directory!);if(row.paths.some(other=>inside(other,own)||inside(own,other)))refuse("overlapping nested areas in "+area.partition);row.paths.push(own);}
+   if(remainder)row.remainders++;else{let units:RegExp|undefined;try{units=area.collect?.units===undefined?undefined:new RegExp(area.collect.units,"u");}catch{refuse("valid unit pattern required for "+area.id);}const own:NestedHome={path:segments(area.directory!),units};if(row.paths.some(other=>(inside(other.path,own.path)||inside(own.path,other.path))&&!carved(other,own)&&!carved(own,other)))refuse("overlapping nested areas in "+area.partition);row.paths.push(own);}
    const limit=partitions[area.partition!]!.maximumLogicalBytes,budget=area.budget!;row.explicit+="bytes" in budget?budget.bytes:"basisPoints" in budget?Math.floor(limit*budget.basisPoints/10000):0;
    continue;
   }
@@ -127,10 +130,10 @@ export function cacheAreaDirectoryV1(workspace:string,ledger:CacheLedgerV1,area:
 /** 🗂️ Resolves a loose root to its absolute directory. */
 export function cacheRootDirectoryV1(workspace:string,ledger:CacheLedgerV1,root:CacheRootIdV1):string{return join(workspace,...segments(ledger.roots[root].directory));}
 
-/** 🚧️ Refuses a repository cache path whose first segments name no declared home; the one runtime door every TypeScript writer passes. */
-export function requireDeclaredCacheSegmentsV1(path:readonly string[],ledger:CacheLedgerV1=cacheLedgerV1()):void{
+/** 🚧️ Refuses a cache path whose first segments name no declared home of `root` (the repository cache root by default, `native` for `.cache`); the one runtime door every TypeScript writer of the repository root passes and the test of the native law. */
+export function requireDeclaredCacheSegmentsV1(path:readonly string[],ledger:CacheLedgerV1=cacheLedgerV1(),root:CacheRootIdV1="repository"):void{
  if(!path.length)return;
- const parts=path.flatMap(part=>part.split("/")),declared=ledger.areas.filter(area=>area.root==="repository"&&area.kind!=="nested");
+ const parts=path.flatMap(part=>part.split("/")),declared=ledger.areas.filter(area=>area.root===root&&area.kind!=="nested");
  if(declared.some(area=>area.directory!==undefined&&(inside(segments(area.directory),parts)||inside(parts,segments(area.directory)))||area.pattern!==undefined&&new RegExp(area.pattern,"u").test(parts[0]!)))return;
  throw Error(cacheTextV1("en","error.undeclared",{segment:parts.join("/")})+"\n"+cacheTextV1("de","error.undeclared",{segment:parts.join("/")}));
 }
@@ -162,6 +165,12 @@ export function formatCacheBytesV1(bytes:number):string{
  if(bytes<1024)return bytes+" B";
  const units=["KiB","MiB","GiB","TiB"];let value=bytes,index=-1;do{value/=1024;index++;}while(value>=1024&&index<units.length-1);
  return value.toFixed(2)+" "+units[index];
+}
+
+/** ⏳️ When a file was last used: its newest access or modification time that is not dated beyond `futureSkewMs` ahead of now (Bazel dates its installed files ten years ahead, and a skewed clock does the same), and the inode change time, which no tool can set, when every other time lies in the future; a future time never makes a file look recently used for ever. */
+export function cacheRecencyMsV1(times:Readonly<{mtimeMs:number;atimeMs:number;ctimeMs:number}>,nowMs:number,skewMs:number=CACHE_RUNTIME_V1.futureSkewMs):number{
+ const limit=nowMs+skewMs,past=[times.mtimeMs,times.atimeMs].filter(time=>time<=limit);
+ return past.length?Math.max(...past):Math.min(times.ctimeMs,nowMs);
 }
 
 /** 🧱️ One independently removable child of an area, with the newest file time inside it and the holder that proves it is in use. */
@@ -250,6 +259,7 @@ function areaLine(text:Text,row:CacheAreaRowV1,unit:(row:Measured,plain?:boolean
 
 /** 🏷️ Renders a removal reason in one language. */
 export function formatCacheReasonV1(language:CacheLanguageV1,reason:CacheRemovalV1["reason"],unusedAgeMs:number|null):string{
+ if(reason==="age"&&unusedAgeMs!==null&&unusedAgeMs<86400000)return cacheTextV1(language,"reason.ageHours",{hours:Math.max(1,Math.round(unusedAgeMs/3600000))});
  return cacheTextV1(language,"reason."+reason,{days:Math.round((unusedAgeMs??0)/86400000)});
 }
 

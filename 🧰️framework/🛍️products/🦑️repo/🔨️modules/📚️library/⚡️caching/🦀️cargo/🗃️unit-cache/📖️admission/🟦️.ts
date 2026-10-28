@@ -14,10 +14,21 @@ export type AdmissionMemoV1=Readonly<{version:1;key:string;stamps:readonly Admis
 export type AdmissionUnitV1=object;
 
 const canonical=(value:unknown):unknown=>Array.isArray(value)?value.map(canonical):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).sort(([left],[right])=>left<right?-1:left>right?1:0).map(([key,item])=>[key,canonical(item)])):value;
-/** 🔑️ Identity of one admission: the unit without its computed outputs, the policy and the toolchain. */
+/** 🧷️ The unit facts that decide an admission result. Run-specific facts (unit ids, dependency edges, planning and compilation digests, the configuration digest and the invoking process's paths) never enter the key, so two plans of one workspace share it. */
+export const ADMISSION_KEYED_FIELDS_V1:readonly string[]=Object.freeze(["packageId","packageName","packageVersion","edition","manifest","sourceRoot","provenance","entry","name","kind","operation","platform","roles","profileName","compilerProfile","profileDigest","compilerFlags","compilerArguments","features","boundary","support","compiler"]);
+/** 🌬️ The names a unit's compiler environment copies from the invoking process as paths; they are left out of the key and replaced by the current values when an admission is recalled. */
+export const ADMISSION_VOLATILE_ENVIRONMENT_V1:readonly string[]=Object.freeze(["PATH","SystemRoot","WINDIR","PATHEXT","RUSTUP_HOME"]);
+type EnvironmentV1=Readonly<Record<string,string|null>>|null;
+/** 🔑️ Identity of one admission: the keyed unit facts, the unit's compiler environment without its volatile names, the policy and the toolchain. */
 export function admissionMemoKeyV1(unit:AdmissionUnitV1,policy:unknown,toolchain:string):string{
- const rest=Object.fromEntries(Object.entries(unit).filter(([name])=>name!=="sourceInputs"&&name!=="compilerCfg"));
+ const row=unit as Record<string,unknown>,environment=(row.compilerEnvironment??null) as EnvironmentV1;
+ const rest={...Object.fromEntries(ADMISSION_KEYED_FIELDS_V1.map(name=>[name,row[name]??null])),environment:environment&&Object.fromEntries(Object.entries(environment).filter(([name])=>!ADMISSION_VOLATILE_ENVIRONMENT_V1.includes(name)))};
  return sha256V1(JSON.stringify(canonical([UNIT_CACHE_POLICY_V1.namespace,toolchain,policy,rest])));
+}
+/** 🌿️ A remembered compiler environment with the current values of the volatile names. */
+export function admissionEnvironmentV1(remembered:EnvironmentV1,unit:AdmissionUnitV1):EnvironmentV1{
+ const now=(unit as {compilerEnvironment?:EnvironmentV1}).compilerEnvironment;if(remembered===null||!now)return remembered;
+ const result:Record<string,string|null>={...remembered};for(const name of ADMISSION_VOLATILE_ENVIRONMENT_V1)if(name in now)result[name]=now[name]!;else delete result[name];return result;
 }
 
 /** 📸️ Stamps a path without following links; a missing path is a recorded absence. */
@@ -45,10 +56,11 @@ export function rememberAdmissionV1(root:string,key:string,result:Readonly<{inpu
  try{mkdirSync(dirname(target),{recursive:true});writeFileSync(temporary,JSON.stringify({version:1,key,stamps,inputs:result.inputs,cfg:result.cfg,environment:result.environment,createdMs:nowMs}));rmSync(target,{force:true});renameSync(temporary,target);return true;}catch{rmSync(temporary,{force:true});return false;}
 }
 
-/** 📝️ The memo port the source admission calls once per unit. */
+/** 📝️ The memo port the source admission calls once per unit: a unit is remembered under the key it was recalled with, because its admission rewrites the very fields the key reads. */
 export function unitAdmissionMemoV1(root:string,toolchain:string){
+ const keys=new WeakMap<object,string>();
  return Object.freeze({
-  recall(unit:AdmissionUnitV1,policy:unknown):Readonly<{inputs:AdmissionMemoV1["inputs"];cfg:readonly string[];environment:AdmissionMemoV1["environment"]}>|undefined{return recallAdmissionV1(root,admissionMemoKeyV1(unit,policy,toolchain));},
-  remember(unit:AdmissionUnitV1,policy:unknown,result:Readonly<{inputs:AdmissionMemoV1["inputs"];cfg:readonly string[];environment:AdmissionMemoV1["environment"];probed:readonly string[];startedMs:number}>):void{rememberAdmissionV1(root,admissionMemoKeyV1(unit,policy,toolchain),result);},
+  recall(unit:AdmissionUnitV1,policy:unknown):Readonly<{inputs:AdmissionMemoV1["inputs"];cfg:readonly string[];environment:AdmissionMemoV1["environment"]}>|undefined{const key=admissionMemoKeyV1(unit,policy,toolchain);keys.set(unit,key);const memo=recallAdmissionV1(root,key);return memo&&{inputs:memo.inputs,cfg:memo.cfg,environment:admissionEnvironmentV1(memo.environment,unit)};},
+  remember(unit:AdmissionUnitV1,policy:unknown,result:Readonly<{inputs:AdmissionMemoV1["inputs"];cfg:readonly string[];environment:AdmissionMemoV1["environment"];probed:readonly string[];startedMs:number}>):void{rememberAdmissionV1(root,keys.get(unit)??admissionMemoKeyV1(unit,policy,toolchain),result);},
  });
 }

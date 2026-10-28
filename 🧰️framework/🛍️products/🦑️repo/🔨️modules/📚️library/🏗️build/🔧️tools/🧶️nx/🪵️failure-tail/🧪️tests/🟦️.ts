@@ -34,6 +34,34 @@ test("an Nx transcript is classified like the failed Bazel task it corresponds t
  }
 });
 
+type Transcript={id:string;maximum:number;expect:"stale"|"none";chunks:{channel?:"stdout"|"stderr";text:string;repeat?:number}[]};
+const replay=(row:Transcript)=>{const tail=createNxFailureTailV1(row.maximum);for(const chunk of row.chunks)tail.push(chunk.text.repeat(chunk.repeat??1),chunk.channel??"stdout");return tail.text();};
+
+test("a refusal a task printed long before the invocation ended is still named: lines that name a class are kept besides the bounded tail, and an independent replay agrees on every transcript",()=>{
+ let oracle:Record<string,string>|undefined;
+ if(python){
+  const run=spawnSync(python,["-I",fileURLToPath(new URL("./🐍️.py",import.meta.url)),churn+"🧬️schema/🧾️refusals.json",churn+"🧬️schema/🔣️.json",fileURLToPath(new URL("../🧬️schema/🔣️.json",import.meta.url)),fileURLToPath(new URL("./🔣️.json",import.meta.url))],{encoding:"utf8",maxBuffer:1<<26});
+  expect(run.status,run.stderr).toBe(0);oracle=JSON.parse(run.stdout);
+ }
+ for(const row of fixture.transcripts as Transcript[]){
+  const text=replay(row);
+  if(oracle)expect(text,row.id).toBe(oracle[row.id]);
+  const error=nxFailureChurnV1(text,fixture.label);
+  if(row.expect==="stale")expect(STALE_IMPLEMENTATION_CODES_V1.has((error as Error&{code:string}).code),row.id).toBe(true);else expect(error,row.id).toBeUndefined();
+ }
+});
+
+test("the evidence is bounded and ordered: the tail forgets the early line, the evidence keeps it once, newest lines win at the bound, an endless line is not scanned twice",()=>{
+ const by=(id:string)=>(fixture.transcripts as Transcript[]).find(row=>row.id===id)!,policyOf=NX_FAILURE_TAIL_POLICY_V1;
+ const early=by("early-refusal-survives-megabytes-of-progress"),text=replay(early);
+ expect(text.length).toBeGreaterThan(early.maximum);expect(text.slice(text.length-early.maximum).includes("Another process kept editing")).toBe(false);expect(text.startsWith("@semio-tech/print:build-report: Another process kept editing /w/a.tex")).toBe(true);
+ expect(replay(by("the-same-line-is-kept-once")).split("then starting the command again").length).toBe(2);
+ const newest=replay(by("only-the-newest-lines-are-kept")),kept=newest.split("\n").filter(line=>line.startsWith("Another process kept editing"));
+ expect(kept.length).toBe(policyOf.maximumEvidenceLines);expect(kept[0]).toContain("/w/f6.tex");expect(kept.at(-1)).toContain("/w/f69.tex");
+ const started=performance.now();replay(by("one-endless-line-costs-nothing"));expect(performance.now()-started).toBeLessThan(2000);
+ const small=createNxFailureTailV1(10);small.push("ok\n");expect(small.text()).toBe("ok\n");
+});
+
 const rerunOf=(results:{code:number;tail:string}[])=>{let calls=0;return{calls:()=>calls,rerun:async()=>{calls++;const next=results.shift();if(!next)throw Error("unexpected rerun");return next;}};};
 const options=(over:object={})=>({environment:{LANG:"en_US.UTF-8"},sleep:async()=>undefined,onRetry:()=>undefined,...over});
 const text=(id:string)=>fixture.texts.find(row=>row.id===id)!.text;

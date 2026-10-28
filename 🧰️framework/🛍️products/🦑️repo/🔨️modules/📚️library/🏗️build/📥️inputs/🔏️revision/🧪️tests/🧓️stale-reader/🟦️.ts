@@ -6,7 +6,7 @@ import {dirname,join,relative} from "node:path";
 import {fileURLToPath} from "node:url";
 
 const framework=fileURLToPath(new URL("../../../../../../../../../",import.meta.url)),own=(path:string)=>fileURLToPath(new URL(path,import.meta.url));
-const mirrored=[own("../../🟨️.mjs"),own("../../🧬️schema/🔣️.json"),join(framework,"🔨️modules","📁️filesystem","🧾️observation","🔁️churn","🟦️.ts"),join(framework,"🔨️modules","📁️filesystem","🧾️observation","🔁️churn","🧬️schema","🔣️.json")];
+const mirrored=[own("../../🟨️.mjs"),own("../../🧬️schema/🔣️.json"),join(framework,"🔨️modules","📁️filesystem","🧾️observation","🔁️churn","🟦️.ts"),join(framework,"🔨️modules","📁️filesystem","🧾️observation","🔁️churn","🧬️schema","🔣️.json"),join(framework,"🔨️modules","📁️filesystem","🧾️observation","🔁️churn","🌊️races","🟦️.ts"),join(framework,"🔨️modules","📁️filesystem","🧾️observation","🔁️churn","🧬️schema","🌊️races.json")];
 const load=async()=>{
  const root=mkdtempSync(join(realpathSync(tmpdir()),"stale-reader-")),target=join(root,"target.txt");
  for(const path of mirrored){const copy=join(root,relative(framework,path));mkdirSync(dirname(copy),{recursive:true});copyFileSync(path,copy);}

@@ -1,0 +1,19 @@
+{
+ "label": "pd-act1",
+ "target": "@semio-tech/mit-bestand-demonstrator:activate-prototype",
+ "started": "16:45:01",
+ "wall_s": 757.5,
+ "peak_tree_mb": 3756,
+ "peak_processes": 10,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 5.0,
+ "graph": {
+  "refreshing": [
+   "1240"
+  ],
+  "inferring": [
+   "1240"
+  ]
+ }
+}

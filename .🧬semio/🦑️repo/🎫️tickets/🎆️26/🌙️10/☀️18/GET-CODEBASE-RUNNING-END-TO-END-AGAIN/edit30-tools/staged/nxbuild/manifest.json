@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts": {
+  "file": "00.ts",
+  "base": "3ee8463c2d6ed95e89edac578fe51203c6a79e6fa39049a73a59fae26d04fae7",
+  "new": "6b656bcfbcb8fc08dc1789ffcdb8b438d94f1b986e34cd20c924be92bea290b0"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/♻️cargo-metadata/🟦️.ts": {
+  "file": "01.ts",
+  "base": "a64d5c0e8b5299337c1681784a0b41de0a7bf23bee7f4604b37cccfe0467c269",
+  "new": "5999480dac56ee34212b764919d2c15f374d5b923e5063a602a3ae18ea4f3f18"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🧪️tests/🪜️steps/🟦️.ts": {
+  "file": "02.ts",
+  "base": "e9874b14ad22288f1f7439506262902595e97df989df59190d2f8b88f121a960",
+  "new": "02d89c9d23d59110ac15609b00b034be7b7db8997e434bbb2fa6e2e98a8c9bd3"
+ }
+}

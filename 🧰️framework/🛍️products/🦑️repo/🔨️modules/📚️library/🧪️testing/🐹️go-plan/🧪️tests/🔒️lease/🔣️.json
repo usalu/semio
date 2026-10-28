@@ -1,0 +1,101 @@
+{
+  "cases": [
+    {
+      "name": "Successful Build",
+      "fault": "none",
+      "events": [
+        "open",
+        "recheck",
+        "path",
+        "tools",
+        "build",
+        "recheck",
+        "close"
+      ],
+      "errors": []
+    },
+    {
+      "name": "Opening Failure",
+      "fault": "open",
+      "events": [
+        "open"
+      ],
+      "errors": [
+        "open"
+      ]
+    },
+    {
+      "name": "Physical Recheck Failure",
+      "fault": "recheck",
+      "events": [
+        "open",
+        "recheck",
+        "close"
+      ],
+      "errors": [
+        "recheck"
+      ]
+    },
+    {
+      "name": "Compiler Failure",
+      "fault": "build",
+      "events": [
+        "open",
+        "recheck",
+        "path",
+        "tools",
+        "build",
+        "close"
+      ],
+      "errors": [
+        "build"
+      ]
+    },
+    {
+      "name": "Close Failure",
+      "fault": "close",
+      "events": [
+        "open",
+        "recheck",
+        "path",
+        "tools",
+        "build",
+        "recheck",
+        "close"
+      ],
+      "errors": [
+        "close"
+      ]
+    },
+    {
+      "name": "Compiler And Close Failure",
+      "fault": "build-close",
+      "events": [
+        "open",
+        "recheck",
+        "path",
+        "tools",
+        "build",
+        "close"
+      ],
+      "errors": [
+        "build",
+        "close"
+      ]
+    },
+    {
+      "name": "Tools Store Admission Failure",
+      "fault": "tools",
+      "events": [
+        "open",
+        "recheck",
+        "path",
+        "tools",
+        "close"
+      ],
+      "errors": [
+        "tools"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+ "label": "g35-print",
+ "target": "@semio-tech/print-rs:test",
+ "started": "11:13:30",
+ "wall_s": 261.2,
+ "peak_tree_mb": 13943,
+ "peak_processes": 9,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 5.0,
+ "graph": {
+  "refreshing": [
+   "59"
+  ],
+  "inferring": [
+   "58"
+  ],
+  "published": [
+   "632",
+   "59",
+   "118"
+  ],
+  "processes": [
+   "7",
+   "2 action cache hit, 1 disk cache hit, 1 internal, 3 local, 2 worker"
+  ],
+  "actions": [
+   "7"
+  ]
+ }
+}

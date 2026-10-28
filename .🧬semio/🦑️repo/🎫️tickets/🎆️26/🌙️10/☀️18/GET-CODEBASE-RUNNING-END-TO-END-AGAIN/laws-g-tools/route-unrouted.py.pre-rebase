@@ -1,0 +1,62 @@
+"""Idempotently routes the law files that no route reached into the closed process and caching tables and adds their project targets. usage: python3 route-unrouted.py [--check]"""
+import json, sys
+R = '/Users/ueli/Documents/semio/'
+L = R + '🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/'
+P = R + '🧰️framework/🔨️modules/🏃️process/'
+PROCESS = {
+ 'laws-runtime-termination': ['../⚙️runtime/🧪️tests/🛑️termination/🟦️.ts'],
+ 'laws-io-control-retirement': ['../🚪️io/⏱️control/♻️retirement/🧪️tests/🟦️.ts'],
+ 'laws-filesystem-observation': ['../📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🔒️busy/🟦️.ts', '../📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🎲️fuzz/🟦️.ts', '../📁️filesystem/🧾️observation/🧪️tests/🎛️control/🟦️.ts'],
+}
+CACHING = {
+ 'laws-library-texts': ['../🕸️dependencies/📖️texts/🧪️tests/🟦️.ts', '../🕸️dependencies/🧭️direction/📖️texts/🧪️tests/🟦️.ts', '../🎛️commands/✅️verify/📖️texts/🧪️tests/🟦️.ts', '../🎛️commands/📝️commit/📖️texts/🧪️tests/🟦️.ts'],
+ 'laws-library-commit-hooks': ['../🎛️commands/📝️commit/🪝️hooks/🧪️tests/🟦️.ts'],
+ 'laws-library-direction-observation': ['../🕸️dependencies/🧭️direction/🧪️tests/🔁️observation/🟦️.ts'],
+ 'laws-library-workspace-exports-memo': ['../🧪️testing/📦️workspace-exports/🧠️memo/🧪️tests/🟦️.ts'],
+ 'laws-library-process': ['../🏃️process/📋️context/🔣️policy/🧪️tests/🟦️.ts', '../🏃️process/🧭️routing/🚪️entrypoint/🧪️tests/🟦️.ts', '../🏃️process/🦀️cargo/🎟️admission/🧪️tests/🟦️.ts', '../🏃️process/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts'],
+ 'laws-builder-admission': ['../../🖥️server/🎛️coordinator/🏗️builder/🎟️admission/🧪️tests/🟦️.ts'],
+ 'laws-dashboard-control-plane': ['../../🎛️dashboard/🧪️tests/🌀️control-plane/🟦️.ts'],
+ 'laws-plugin-initialization-retirement': ['../../../../💻️os/🔨️modules/🔌️plugin/🌱️initialization/♻️retirement/🧪️tests/🟦️.ts'],
+}
+def suites(table, rows):
+    have = {s['id'] for s in table['suites']}
+    added = []
+    for sid, files in rows.items():
+        if sid not in have:
+            table['suites'].append({'id': sid, 'budgetMs': 300000, 'typecheck': 'none', 'files': files}); added.append(sid)
+    return added
+def canonical(path):
+    raw = open(path, encoding='utf-8').read(); doc = json.loads(raw)
+    assert json.dumps(doc, ensure_ascii=False, indent=2) + '\n' == raw, path
+    return doc
+check = '--check' in sys.argv
+# process table + project
+pt = P + '🧪️testing/🗂️suites/🔣️.json'; doc = canonical(pt); added = suites(doc, PROCESS)
+pp = P + '📋️project.json'; proj = canonical(pp)
+live = {'cache': {'version': 1, 'class': 'live', 'reason': 'exercises-host-resources'}}
+pa = []
+for sid in PROCESS:
+    name = 'test-' + sid
+    if name not in proj['targets']:
+        proj['targets'][name] = {'executor': 'repo:script', 'cache': False, 'outputs': [], 'dependsOn': [], 'options': {'cwd': '🧰️framework/🔨️modules/🏃️process', 'command': 'repo ./📜️script.ts test ' + sid}, 'metadata': {'semio': {'execution': {'version': 1, 'kind': 'source'}, **live}}}; pa.append(name)
+print('process suites added:', added, 'targets added:', pa)
+if not check:
+    open(pt, 'w', encoding='utf-8').write(json.dumps(doc, ensure_ascii=False, indent=2) + '\n')
+    open(pp, 'w', encoding='utf-8').write(json.dumps(proj, ensure_ascii=False, indent=2) + '\n')
+# caching table + project (text splice: the file is not canonical)
+ct = L + '⚡️caching/🗂️suites/🔣️.json'; cdoc = canonical(ct); cadded = suites(cdoc, CACHING)
+cp = L + '⚡️caching/📋️project.json'; text = open(cp, encoding='utf-8').read(); tj = json.loads(text)['targets']
+anchor = '    "test-lease-bootstrap": {'
+assert text.count(anchor) == 1
+lines = []
+for sid in CACHING:
+    name = 'test-' + sid
+    if name not in tj:
+        row = {'executor': 'repo:script', 'cache': False, 'outputs': [], 'dependsOn': [], 'options': {'cwd': '🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching', 'command': 'repo ./📜️script.ts test ' + sid, 'forwardAllArgs': False}, 'metadata': {'semio': {'execution': {'version': 1, 'kind': 'source'}, **live}}}
+        lines.append('    ' + json.dumps(name, ensure_ascii=False) + ': ' + json.dumps(row, ensure_ascii=False, separators=(',', ':')) + ',\n')
+print('caching suites added:', cadded, 'targets added:', len(lines))
+if not check:
+    open(ct, 'w', encoding='utf-8').write(json.dumps(cdoc, ensure_ascii=False, indent=2) + '\n')
+    if lines:
+        json.loads(text.replace(anchor, ''.join(lines) + anchor, 1))
+        open(cp, 'w', encoding='utf-8').write(text.replace(anchor, ''.join(lines) + anchor, 1))

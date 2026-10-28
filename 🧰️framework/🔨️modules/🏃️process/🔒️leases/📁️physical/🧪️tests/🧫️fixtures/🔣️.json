@@ -1,1 +1,13 @@
-{"heldFile":"original.lock","oracle":"fcntl.flock","expectedWhileHeld":"blocked","expectedAfterClose":"acquired"}
+{
+  "heldFile": "original.lock",
+  "expectedWhileHeld": "blocked",
+  "expectedAfterClose": "acquired",
+  "oracles": {
+    "posix": "fcntl.flock",
+    "win32": "msvcrt.locking"
+  },
+  "windowsStructure": {
+    "information": "BY_HANDLE_FILE_INFORMATION",
+    "overlapped": "OVERLAPPED"
+  }
+}

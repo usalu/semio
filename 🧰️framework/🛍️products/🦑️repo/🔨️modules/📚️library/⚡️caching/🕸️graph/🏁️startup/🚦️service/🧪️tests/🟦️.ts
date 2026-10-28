@@ -13,10 +13,12 @@ import {withBuildTestInvocationV1} from "../../../../../../../../../🔨️modul
 import{withRepositoryCacheStoreV1}from"../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import{withRepositoryNxStorageV1,nxDaemonNamespaceResourceV1}from"../../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 import{nxToolingUseStorageV1}from"@semio-tech/nx-bootstrap-tools/use";
+import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 /** 🧪️ Actual Node provider scopes survive parent handoff and callback return until real server settlement. */
 test("issued daemon service holds its actual images and SDK after finite parent callback closes",async()=>withBuildTestInvocationV1(async original=>{
- const root=process.cwd(),toolkitRoot=process.env.SEMIO_NX_TOOLING_ROOT;if(!toolkitRoot)throw Error("Original loaded SDK root required");const identity=JSON.parse(readFileSync(join(toolkitRoot,".semio-nx-tooling.json"),"utf8")).digest,implementation=process.env.SEMIO_NX_IMPLEMENTATION_IDENTITY;if(!implementation)throw Error("Original Nx implementation identity required");
+ const root=repository.root,toolkitRoot=process.env.SEMIO_NX_TOOLING_ROOT;if(!toolkitRoot)throw Error("Original loaded SDK root required");const identity=JSON.parse(readFileSync(join(toolkitRoot,".semio-nx-tooling.json"),"utf8")).digest,implementation=process.env.SEMIO_NX_IMPLEMENTATION_IDENTITY;if(!implementation)throw Error("Original Nx implementation identity required");
  await withRepositoryCacheStoreV1(root,"diagnostics",original,createIssuedResourceControlV1(original,"cache:store-entry",0),async(diagnostics,diagnosticPhase)=>{const directory=mkdtempSync(join(diagnostics.root,"ds-")),entry=join(directory,"child.mjs");let child:ChildProcess|undefined,terminal:Promise<number|null>|undefined,timer:ReturnType<typeof setTimeout>|undefined,kill:ReturnType<typeof setTimeout>|undefined,errors="";
  try{
   await build({entryPoints:[resolve(import.meta.dir,"📜️script.ts")],bundle:true,platform:"node",format:"esm",target:"node24",outfile:entry,logLevel:"silent",define:{"import.meta.semioFrozenAuthorizers":"true"},external:["bun:sqlite"],banner:{js:"import {createRequire as __fixtureRequire} from 'node:module';const require=__fixtureRequire(import.meta.url);"}});

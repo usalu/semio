@@ -10,6 +10,8 @@ import { pathToFileURL } from "node:url";
 import {createRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type{ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{nativeCallerPhaseV1}from"../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import{privateRepositoryWorkspaceV1}from"../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 /** 🔒️ Keeps Trunk's build/serve Cargo invocation on the committed dependency lock. */
 export async function testTrunkLockfile(workspace: string,invocation:ScriptInvocation,parent:ResourceLeaseControl,native = false): Promise<void> {
@@ -33,7 +35,7 @@ export async function testTrunkLockfile(workspace: string,invocation:ScriptInvoc
     writeFileSync(join(temporary, "Cargo.lock"), `[[package]]\nname = "wasm-bindgen"\nversion = "${fixture.tooling.bindgenVersion}"\n`);
     for (const row of fixture.tooling.cases) {
       const commands: string[][] = [];
-      await prepareDependencies("trunk", temporary, invocation,{version:1,directory:workspace,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program},phase, async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean) => {
+      await prepareDependencies("trunk", temporary, invocation,{version:1,directory:workspace,leaseDirectory:repositoryCargoPreparationStorageV1(repository.root).leaseDirectory,program:repositoryCargoPreparationStorageV1(repository.root).program},phase, async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean) => {
         assert.equal(cwd, temporary); assert.equal(signal.aborted, false);
         if (capture) return command === "trunk" ? row.version : command === "wasm-bindgen" ? row.bindgen : row.targets;
         commands.push([command, ...args]); return "";
@@ -42,7 +44,7 @@ export async function testTrunkLockfile(workspace: string,invocation:ScriptInvoc
     }
     const controller = new AbortController(), failure = new Error("Cancelled dependency probe"), calls: string[][] = [];
     const cancelledPhase=nativeCallerPhaseV1(invocation,workspace,createRequestedIssuedResourceControlV1(parent,0,controller.signal));
-    await assert.rejects(prepareDependencies("trunk", temporary, invocation,{version:1,directory:workspace,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program},cancelledPhase, async (command: string, args: string[]) => {
+    await assert.rejects(prepareDependencies("trunk", temporary, invocation,{version:1,directory:workspace,leaseDirectory:repositoryCargoPreparationStorageV1(repository.root).leaseDirectory,program:repositoryCargoPreparationStorageV1(repository.root).program},cancelledPhase, async (command: string, args: string[]) => {
       calls.push([command, ...args]); controller.abort(failure); throw failure;
     }), error => error === failure);
     assert.deepEqual(calls, [["trunk", "--version"]], "Cancelling a probe must never start an installation");

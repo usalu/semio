@@ -40,9 +40,13 @@
             ]
           },
           "linux": {
-            "x64": "/lib/x86_64-linux-gnu/libc.so.6",
-            "arm64": "/lib/aarch64-linux-gnu/libc.so.6",
             "symbol": "renameat2",
+            "fallbackSymbol": "syscall",
+            "syscalls": {
+              "x64": 316,
+              "arm64": 276,
+              "riscv64": 276
+            },
             "flag": 2,
             "atFdcwd": -100,
             "error": "__errno_location",
@@ -117,6 +121,10 @@
           "caseUnverified": "The directory still folds case after the per-directory case-sensitivity flag was set",
           "windowsInUse": "Directory is held open by another process (Win32 sharing violation); close every user of the partition"
         },
+        "foldSafeRefusals": [
+          "caseFeature",
+          "caseBuild"
+        ],
         "childDepth": 2,
         "meter": {
           "intervalBytes": 16777216,
@@ -131,6 +139,10 @@
           "synchronousMaximumAgeMilliseconds": 60000
         },
         "swap": {
+          "retry": {
+            "attempts": 6,
+            "backoffMilliseconds": 150
+          },
           "intent": "swap.json",
           "temporary": "m.old",
           "maximumIntentBytes": 4096,
@@ -194,6 +206,9 @@
         },
         "underlying": {
           "$ref": "#/definitions/Identity"
+        },
+        "caseFold": {
+          "const": "insensitive"
         }
       }
     },

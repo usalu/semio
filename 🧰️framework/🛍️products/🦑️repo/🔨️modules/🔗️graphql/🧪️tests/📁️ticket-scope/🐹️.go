@@ -12,6 +12,7 @@ import (
  model "github.com/usalu/semio/repo/model"
  tickets "github.com/usalu/semio/repo/tickets"
  workspace "github.com/usalu/semio/repo/workspace"
+ sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 type ticketScopeVectors struct {
@@ -26,17 +27,17 @@ type ticketScopeVectors struct {
 
 // 🧭️TestTicketContextsKeepIndependentLifecycles exercises actual rooted GraphQL mutations.
 func TestTicketContextsKeepIndependentLifecycles(t *testing.T) {
- data,err:=os.ReadFile(filepath.FromSlash("../../🧪️tests/🌿️tickets/📁️scope/🔣️.json"));if err!=nil {t.Fatal(err)}
+ data,err:=os.ReadFile(sandbox.OriginPath("..","..","🧪️tests","🌿️tickets","📁️scope","🔣️.json"));if err!=nil {t.Fatal(err)}
  var vectors ticketScopeVectors;if err=json.Unmarshal(data,&vectors);err!=nil {t.Fatal(err)}
  parent:=os.Getenv("SEMIO_TEST_ARTIFACT_DIR")
  if !filepath.IsAbs(parent)||len(utf16.Encode([]rune(filepath.Join(parent,"tkt-"+strings.Repeat("x",32),"a/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️21/RENAMED-TICKET/📌️important/📝️.md"))))>256 {t.Fatal("bounded owned ticket artifact directory required")}
  base,err:=os.MkdirTemp(parent,"tkt-");if err!=nil {t.Fatal(err)};defer os.RemoveAll(base)
- ambient:=workspace.GetRootDir();cwd,err:=os.Getwd();if err!=nil {t.Fatal(err)}
+ ambient:=workspace.GetRootDir();cwd,err:=os.Stat(".");if err!=nil {t.Fatal(err)}
  contexts:=make([]*RepoContext,len(vectors.Roots));opened:=make([]*model.Ticket,len(vectors.Roots))
  for i,root:=range vectors.Roots {
   path:=filepath.Join(base,root.Name);if err=os.MkdirAll(filepath.Join(path,".🧬semio","🦑️repo","📝️drafts","seed"),0755);err!=nil {t.Fatal(err)}
   if err=os.WriteFile(filepath.Join(path,".🧬semio","🦑️repo","📝️drafts","seed","note.md"),[]byte(root.Draft),0644);err!=nil {t.Fatal(err)}
-  contexts[i]=NewRepoContext(path);contexts[i].tickets.Clock=tickets.NewFixedTicketClock(vectors.Clock.Year,vectors.Clock.Month,vectors.Clock.Day,vectors.Clock.Stamp);contexts[i].tickets.Events=tickets.NewRecordingEventSink()
+  contexts[i]=NewRepoContext(path).(*RepoContext);contexts[i].tickets.Clock=tickets.NewFixedTicketClock(vectors.Clock.Year,vectors.Clock.Month,vectors.Clock.Day,vectors.Clock.Stamp);contexts[i].tickets.Events=tickets.NewRecordingEventSink()
  }
  for i,c:=range contexts {opened[i],err=c.TicketOpen(vectors.Open);if err!=nil {t.Fatal(err)}}
  otherBefore,err:=os.ReadFile(opened[1].JsonPath);if err!=nil {t.Fatal(err)}
@@ -58,5 +59,5 @@ func TestTicketContextsKeepIndependentLifecycles(t *testing.T) {
  if ok,err:=contexts[0].TicketDelete(model.TicketDeleteInput{Year:reopened.Year,Month:reopened.Month,Day:reopened.Day,Slug:reopened.Slug,NoManagement:true});err!=nil||!ok {t.Fatalf("delete=%v %v",ok,err)}
  if _,err=os.Stat(reopened.FolderPath);!os.IsNotExist(err) {t.Fatalf("deleted ticket remains: %v",err)}
  if _,err=os.Stat(opened[1].JsonPath);err!=nil {t.Fatal(err)}
- current,_:=os.Getwd();if current!=cwd||workspace.GetRootDir()!=ambient {t.Fatal("repository context changed ambient root/cwd")}
+ current,err:=os.Stat(".");if err!=nil||!os.SameFile(cwd,current)||workspace.GetRootDir()!=ambient {t.Fatal("repository context changed ambient root/cwd")}
 }

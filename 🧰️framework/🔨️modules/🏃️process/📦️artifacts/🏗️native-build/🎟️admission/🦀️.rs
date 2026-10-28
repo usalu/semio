@@ -312,26 +312,89 @@ impl Broker {
     }
 }
 
+/// 🧵️ Bounds rustc's parallel front end to the cores the run was admitted: Cargo's `-Z threads=0` means every core of the host whatever the admission granted, and each extra front-end thread keeps its own arenas (measured on one 2.7 MB crate: 1 thread 2.9 GB peak, 4 threads 5.4 GB, 10 threads 5.2 GB). `tokens` is the admitted parallelism; a thread count of 0 becomes `tokens`, a larger one is capped to it, a smaller one stays. The rewrite happens only here, at the process that starts rustc, so Cargo's fingerprints and the unit cache keys still see the authored flag.
+/// @see ./🧪️tests/🧵️frontend-threads/🟦️.ts
+fn bounded_threads(args: &[OsString], tokens: Option<usize>) -> Vec<OsString> {
+    let Some(tokens) = tokens.filter(|count| *count >= 1) else { return args.to_vec() };
+    let bound = |value: &str| -> Option<String> {
+        let count: usize = value.parse().ok()?;
+        (count == 0 || count > tokens).then(|| tokens.to_string())
+    };
+    let mut result = Vec::with_capacity(args.len());
+    let mut index = 0;
+    while index < args.len() {
+        let text = args[index].to_str();
+        if text == Some("-Z") {
+            if let Some(value) = args.get(index + 1).and_then(|value| value.to_str()).and_then(|value| value.strip_prefix("threads=")) {
+                result.push(args[index].clone());
+                result.push(OsString::from(bound(value).map_or_else(|| format!("threads={value}"), |bounded| format!("threads={bounded}"))));
+                index += 2;
+                continue;
+            }
+        } else if let Some(value) = text.and_then(|text| text.strip_prefix("-Zthreads=")) {
+            result.push(OsString::from(bound(value).map_or_else(|| format!("-Zthreads={value}"), |bounded| format!("-Zthreads={bounded}"))));
+            index += 1;
+            continue;
+        }
+        result.push(args[index].clone());
+        index += 1;
+    }
+    result
+}
+
+/// 📎️ Applies the same bound inside `@file` arguments: Cargo hands very long rustc command lines over as an argument file (always on Windows), where an authored `threads=0` would otherwise stay unbounded. A file whose lines change is replaced by a bounded copy next to it (`<file>.semio-threads-<pid>`) and the argument points at the copy; the copies are returned so the caller removes them after rustc ended. A file that cannot be read or written keeps its argument, so the bound never stops a compile.
+/// @see ./🧪️tests/🧵️frontend-threads/🟦️.ts
+fn bounded_argfiles(args: &[OsString], tokens: Option<usize>) -> (Vec<OsString>, Vec<std::path::PathBuf>) {
+    let mut copies = Vec::new();
+    if tokens.filter(|count| *count >= 1).is_none() { return (args.to_vec(), copies) }
+    let result = args.iter().map(|arg| {
+        let Some(path) = arg.to_str().and_then(|text| text.strip_prefix('@')) else { return arg.clone() };
+        let Ok(text) = std::fs::read_to_string(path) else { return arg.clone() };
+        let lines: Vec<OsString> = text.lines().map(OsString::from).collect();
+        let bounded = bounded_threads(&lines, tokens);
+        if bounded == lines { return arg.clone() }
+        let copy = std::path::PathBuf::from(format!("{path}.semio-threads-{}", std::process::id()));
+        let body = bounded.iter().map(|line| line.to_string_lossy().into_owned()).collect::<Vec<_>>().join("\n");
+        match std::fs::write(&copy, body) {
+            Ok(()) => { let mut argument = OsString::from("@"); argument.push(copy.as_os_str()); copies.push(copy); argument }
+            Err(_) => arg.clone(),
+        }
+    }).collect();
+    (result, copies)
+}
+
+/// 🎟️ The admitted parallelism of this run, from the variable the launcher sets for every child of its jobserver.
+fn admitted_tokens() -> Option<usize> {
+    env::var("SEMIO_COMPILER_PARALLELISM").ok().and_then(|value| value.parse().ok())
+}
+
 /// 🏁️ Converts a rustc exit status into this process's exit code.
 fn exit_code(code: i32) -> ExitCode {
     ExitCode::from(u8::try_from(code).unwrap_or(1))
 }
 
-/// 🚪️ Runs rustc unchanged, replacing this process where the platform allows it.
-fn passthrough(rustc: &OsString, args: &[OsString]) -> ExitCode {
+/// 🚪️ Runs rustc unchanged and waits for it, so the caller can remove what it created for the run.
+fn waited(rustc: &OsString, args: &[OsString]) -> ExitCode {
+    match Command::new(rustc).args(args).status() {
+        Ok(status) => exit_code(status.code().unwrap_or(1)),
+        Err(error) => { eprintln!("semio-build-scheduler: cannot run {}: {error}", rustc.to_string_lossy()); ExitCode::from(127) }
+    }
+}
+
+/// 🚪️ Runs rustc unchanged, replacing this process where the platform allows it and nothing was created for the run (`waits`).
+fn passthrough(rustc: &OsString, args: &[OsString], waits: bool) -> ExitCode {
     #[cfg(unix)]
     {
         use std::os::unix::process::CommandExt;
+        if waits { return waited(rustc, args) }
         let error = Command::new(rustc).args(args).exec();
         eprintln!("semio-build-scheduler: cannot run {}: {error}", rustc.to_string_lossy());
         ExitCode::from(127)
     }
     #[cfg(windows)]
     {
-        match Command::new(rustc).args(args).status() {
-            Ok(status) => exit_code(status.code().unwrap_or(1)),
-            Err(error) => { eprintln!("semio-build-scheduler: cannot run {}: {error}", rustc.to_string_lossy()); ExitCode::from(127) }
-        }
+        let _ = waits;
+        waited(rustc, args)
     }
 }
 
@@ -401,13 +464,17 @@ fn main() -> ExitCode {
     let args: Vec<OsString> = arguments.collect();
     let text: Option<Vec<String>> = args.iter().map(|arg| arg.to_str().map(str::to_string)).collect();
     let unit = text.and_then(|text| parse_unit(&text, &|name| env::var(name).ok())).map(|unit| Unit { source: absolute(&unit.source), out_dir: absolute(&unit.out_dir), externs: unit.externs.iter().map(|path| absolute(path)).collect(), ..unit });
-    match (unit, env::var("SEMIO_BUILD_BROKER").ok(), env::var("SEMIO_BUILD_PASS").ok()) {
+    let tokens = admitted_tokens();
+    let (args, copies) = bounded_argfiles(&bounded_threads(&args, tokens), tokens);
+    let code = match (unit, env::var("SEMIO_BUILD_BROKER").ok(), env::var("SEMIO_BUILD_PASS").ok()) {
         (Some(unit), Some(endpoint), Some(pass)) => scheduled(&rustc, &args, &unit, &endpoint, &pass).unwrap_or_else(|error| {
             eprintln!("semio-build-scheduler: {error}");
             ExitCode::from(1)
         }),
-        _ => passthrough(&rustc, &args),
-    }
+        _ => passthrough(&rustc, &args, !copies.is_empty()),
+    };
+    for copy in copies { let _ = std::fs::remove_file(copy); }
+    code
 }
 
 #[cfg(test)]
@@ -448,6 +515,46 @@ mod tests {
             assert_eq!(calls, refusals + 1);
         }
         assert_eq!(await_admission(|| Err("broker closed".to_string())), Err("broker closed".to_string()));
+    }
+
+    /// 🧵️ The front end follows the admitted parallelism: 0 and larger counts become the grant, smaller ones stay, both spellings, nothing without a grant.
+    #[test]
+    fn bounds_front_end_threads() {
+        let os = |items: &[&str]| items.iter().map(OsString::from).collect::<Vec<_>>();
+        let cases: [(&[&str], Option<usize>, &[&str]); 8] = [
+            (&["-Z", "threads=0", "a.rs"], Some(3), &["-Z", "threads=3", "a.rs"]),
+            (&["-Zthreads=0", "a.rs"], Some(3), &["-Zthreads=3", "a.rs"]),
+            (&["-Z", "threads=8"], Some(3), &["-Z", "threads=3"]),
+            (&["-Z", "threads=2"], Some(3), &["-Z", "threads=2"]),
+            (&["-Z", "threads=0"], None, &["-Z", "threads=0"]),
+            (&["-Z", "threads=0"], Some(0), &["-Z", "threads=0"]),
+            (&["-C", "opt-level=0", "-Z", "macro-backtrace"], Some(1), &["-C", "opt-level=0", "-Z", "macro-backtrace"]),
+            (&["-Z", "threads=x", "-Z", "threads=0"], Some(2), &["-Z", "threads=x", "-Z", "threads=2"]),
+        ];
+        for (args, tokens, expected) in cases {
+            assert_eq!(bounded_threads(&os(args), tokens), os(expected), "{args:?} with {tokens:?}");
+        }
+    }
+
+    /// 📎️ An argument file is bounded like the command line: a changed file is replaced by a bounded copy that is listed for removal, an unchanged or unreadable one keeps its argument, nothing without a grant.
+    #[test]
+    fn bounds_front_end_threads_in_argument_files() {
+        let directory = std::env::temp_dir().join(format!("semio-argfile-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).unwrap();
+        let unbounded = directory.join("unbounded.args");
+        let calm = directory.join("calm.args");
+        std::fs::write(&unbounded, "-C\nopt-level=0\n-Z\nthreads=0\na.rs").unwrap();
+        std::fs::write(&calm, "-C\nopt-level=0\na.rs").unwrap();
+        let args: Vec<OsString> = vec![OsString::from("--edition=2021"), OsString::from(format!("@{}", unbounded.display())), OsString::from(format!("@{}", calm.display())), OsString::from("@/nonexistent/semio.args")];
+        let (bounded, copies) = bounded_argfiles(&args, Some(3));
+        assert_eq!(copies.len(), 1);
+        assert_eq!(std::fs::read_to_string(&copies[0]).unwrap(), "-C\nopt-level=0\n-Z\nthreads=3\na.rs");
+        assert_eq!(bounded[0], args[0]);
+        assert_eq!(bounded[1].to_str().unwrap(), format!("@{}", copies[0].display()));
+        assert_eq!(&bounded[2..], &args[2..]);
+        assert_eq!(bounded_argfiles(&args, None), (args.clone(), Vec::new()));
+        for copy in copies { std::fs::remove_file(copy).unwrap(); }
+        std::fs::remove_dir_all(&directory).unwrap();
     }
 
     /// 🔣️ Strings escape exactly the JSON control set.

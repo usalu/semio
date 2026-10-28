@@ -26,6 +26,21 @@
         "sinceVanishedMilliseconds": { "type": "integer", "minimum": 0 }
       }
     },
+    "Lost": {
+      "const": { "version": 1, "kind": "terminal-lost", "message": "Owned child terminal events lost" },
+      "description": "The refusal of a child whose process vanished while neither 'exit' nor 'close' ever arrived (Bun 1.4.2 loses every event of a fast child about once in forty fresh processes: the exit code is set, the output is gone). Status and output are unknown, so a capture is refused with this cause and only an idempotent reader may repeat."
+    },
+    "LostCause": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "kind", "program", "pid"],
+      "properties": {
+        "version": { "const": 1 },
+        "kind": { "const": "terminal-lost" },
+        "program": { "type": "string", "maxLength": 256 },
+        "pid": { "type": ["integer", "null"] }
+      }
+    },
     "Notice": {
       "const": {
         "labels": {

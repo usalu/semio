@@ -1,0 +1,49 @@
+name: repo launcher
+description: >-
+  Puts the native `repo` command on a fresh runner without any manual step and without installing a JavaScript runtime: the repository's Node pin (when
+  requested), then the launcher built from the checkout with the pinned Go (the installer finds it or downloads it from the bootstrap pins, https and SHA-256 checked,
+  so the runner needs no Go of its own). The launcher provisions the pinned JavaScript runtime itself from its registry (version and SHA-256 per operating system and
+  architecture), so this action holds no runtime pin. After this action every build step is `repo ...`.
+
+inputs:
+  node-version:
+    description: Pinned Node version; must equal engines.node of package.json. Leave empty when the job needs no Node.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      if: ${{ inputs.node-version != '' }}
+      with:
+        node-version: ${{ inputs.node-version }}
+        package-manager-cache: false
+    - name: Build and install the repo launcher (Linux, macOS)
+      if: ${{ runner.os != 'Windows' }}
+      shell: bash
+      run: |
+        dir="$RUNNER_TEMP/repo-launcher/bin"
+        bash "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📥️install/🐚️.sh" "$dir"
+        echo "$dir" >> "$GITHUB_PATH"
+    - name: Build and install the repo launcher (Windows)
+      if: ${{ runner.os == 'Windows' }}
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $dir = Join-Path $env:RUNNER_TEMP 'repo-launcher\bin'
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "🧰️framework\🛍️products\🦑️repo\🔨️modules\🚀️launcher\📥️install\🔵️.ps1" -Destination $dir
+        if ($LASTEXITCODE -ne 0) { throw "launcher install failed with exit code $LASTEXITCODE" }
+        Add-Content -Path $env:GITHUB_PATH -Value $dir -Encoding utf8
+    - name: Check that the workflow Node pin equals the repository pin
+      if: ${{ inputs.node-version != '' }}
+      shell: bash
+      env:
+        NODE_VERSION: ${{ inputs.node-version }}
+      run: |
+        repo tools exec --light node -- -e "const p=require('./package.json');if(p.engines.node!==process.env.NODE_VERSION)throw Error('package.json pins node '+p.engines.node+', the workflow pins '+process.env.NODE_VERSION)"
+    - name: Print the launcher, runtime and implementation versions
+      shell: bash
+      env:
+        SEMIO_LANGUAGE: en
+      run: repo --version

@@ -1,0 +1,15 @@
+{
+ "extends": "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/tsconfig.json",
+ "compilerOptions": { "noEmit": true, "incremental": false, "skipLibCheck": true, "rootDir": "/Users/ueli/Documents/semio" },
+ "include": [],
+ "exclude": [],
+ "files": [
+  "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🎭️e2e/🟦️.ts",
+  "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🎭️e2e/🔒️sessions/🟦️.ts",
+  "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🎭️e2e/🎚️config/🟦️.ts",
+  "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🧪️tests/🎭️sessions/🟦️.ts",
+  "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🧪️tests/🐕️pet-walk/🪜️mischief-ladder-and-phone/🟦️.ts",
+  "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🧪️tests/🐕️pet-walk/🟦️.ts",
+  "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🧪️tests/🗣️both-languages/🟦️.ts"
+ ]
+}

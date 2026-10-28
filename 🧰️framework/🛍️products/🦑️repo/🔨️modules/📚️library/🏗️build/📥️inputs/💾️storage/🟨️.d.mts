@@ -6,7 +6,7 @@ import type {RepositoryCacheStoreV1} from "../../../⚡️caching/💾️storage
 /** 🎟️ Runs producers within original fixed-volume custody. */
 export function withRepositoryBuildGraphFactStoreV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
 /** 🎯️ Holds one selected inference namespace within the original graph writer. */
-export function withRepositoryBuildGraphSelectionV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,identity:string,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>,options?:Readonly<{optionalCaches?:boolean}>):Promise<T>;
+export function withRepositoryBuildGraphSelectionV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,identity:string,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>,options?:Readonly<{optionalCaches?:boolean;shared?:boolean}>):Promise<T>;
 /** 🔒️ Checks live writer custody before synchronous publication. */
 export function requireRepositoryBuildGraphWriterV1(workspace:string):void;
 /** 📁️ Admits one closed directory on the original writer device. */

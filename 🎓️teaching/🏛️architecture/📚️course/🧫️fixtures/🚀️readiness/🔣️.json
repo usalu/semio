@@ -130,8 +130,21 @@
       "minimumAvailableBytes": 8589934592,
       "tools": [
         "cc",
-        "pkg-config"
+        "pkg-config",
+        "rust"
       ],
+      "apt": {
+        "cc": [
+          "build-essential"
+        ],
+        "pkg-config": [
+          "pkg-config"
+        ],
+        "rust": [
+          "curl",
+          "ca-certificates"
+        ]
+      },
       "exchange": true
     },
     "step": "Check generic host tools, capacity and filesystem support before allocation",

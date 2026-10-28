@@ -177,6 +177,42 @@ func TestProvisioningCancellation(t *testing.T) {
 }
 
 // 📥️Mirrors must be https or loopback, and the cache path stays within the path budget.
+// 🔁️A transient rename refusal is repeated after 10, 20, 40 … 1280 ms (eight waits, 2.55 s in all); success ends the waiting, any other error ends it at once, and the last transient error is reported.
+func TestProvisioningRenameRetriesTransient(t *testing.T) {
+	busy, other := errors.New("busy"), errors.New("other")
+	run := func(outcomes ...error) (error, []time.Duration, int) {
+		var waits []time.Duration
+		calls := 0
+		rename := func(string, string) error {
+			calls++
+			if calls <= len(outcomes) {
+				return outcomes[calls-1]
+			}
+			return busy
+		}
+		err := renameRetrying(rename, func(err error) bool { return errors.Is(err, busy) }, func(wait time.Duration) { waits = append(waits, wait) }, "staging", "final")
+		return err, waits, calls
+	}
+	ms := time.Millisecond
+	if err, waits, calls := run(busy, busy, nil); err != nil || calls != 3 || len(waits) != 2 || waits[0] != 10*ms || waits[1] != 20*ms {
+		t.Errorf("retry then land: %v %v %d", err, waits, calls)
+	}
+	if err, waits, calls := run(other); !errors.Is(err, other) || calls != 1 || len(waits) != 0 {
+		t.Errorf("other error: %v %v %d", err, waits, calls)
+	}
+	err, waits, calls := run()
+	var total time.Duration
+	for _, wait := range waits {
+		total += wait
+	}
+	if !errors.Is(err, busy) || calls != 9 || len(waits) != 8 || waits[7] != 1280*ms || total != 2550*ms {
+		t.Errorf("exhausted: %v %v %d", err, waits, calls)
+	}
+	if renameTransient(os.ErrNotExist) || renameTransient(nil) {
+		t.Error("a missing file or no error is never transient")
+	}
+}
+
 func TestProvisioningRefusals(t *testing.T) {
 	archive := zipOf(t, "bun-linux-x64/bun", syntheticRuntime(syntheticVersion))
 	fake := serveArchive(t, archive, http.StatusOK, nil)

@@ -1,7 +1,7 @@
 import {createHash} from "node:crypto";
 import {appendFileSync,mkdirSync,readdirSync,readFileSync,realpathSync,renameSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {homedir} from "node:os";
-import {join,resolve} from "node:path";
+import {isAbsolute,join,resolve} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {AGENT_SESSION_POLICY_V1,agentSessionSharesV1,agentSessionStateV1,isAgentSessionV1,type AgentSessionAnchorV1,type AgentSessionStateV1,type AgentSessionV1,type DerivedAgentSessionV1} from "../🪪️identity/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -21,7 +21,7 @@ const zero="0".repeat(policy.store.worktreeCharacters);
 /** 🗺️ The registry root: one directory per user shared by every checkout, next to the lease registry. */
 export function agentSessionRegistryRootV1(environment:Readonly<Record<string,string|undefined>>=process.env,platform:NodeJS.Platform=process.platform,home:string=homedir()):string{
  const override=environment[policy.environment.registry];if(override)return override;
- const base=platform==="darwin"?join(home,"Library","Caches"):platform==="win32"?environment.LOCALAPPDATA??join(home,"AppData","Local"):environment.XDG_CACHE_HOME??join(home,".cache");
+ const base=platform==="darwin"?join(home,"Library","Caches"):platform==="win32"?environment.LOCALAPPDATA??join(home,"AppData","Local"):isAbsolute(environment.XDG_CACHE_HOME??"")?environment.XDG_CACHE_HOME!:join(home,".cache");
  return join(base,"semio",policy.store.folder);
 }
 

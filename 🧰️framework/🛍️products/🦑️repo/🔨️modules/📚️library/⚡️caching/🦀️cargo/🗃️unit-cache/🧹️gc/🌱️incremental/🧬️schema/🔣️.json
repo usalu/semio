@@ -23,39 +23,39 @@
       "const": {
         "scan": {
           "en": "[repo cache] scanning Cargo incremental sessions below {root}",
-          "de": "[repo cache] durchsuche Cargo-Inkrementell-Sitzungen unter {root}"
+          "de": "[repo cache] durchsuche Cargo-Inkrementsitzungen unter {root}"
         },
         "progress": {
           "en": "[repo cache] incremental sessions {done}/{total}",
-          "de": "[repo cache] Inkrementell-Sitzungen {done}/{total}"
+          "de": "[repo cache] Inkrementsitzungen {done}/{total}"
         },
         "would": {
           "en": "[repo cache] would remove incremental session {path} ({bytes}, {reason})",
-          "de": "[repo cache] würde Inkrementell-Sitzung {path} entfernen ({bytes}, {reason})"
+          "de": "[repo cache] würde Inkrementsitzung {path} entfernen ({bytes}, {reason})"
         },
         "removed": {
           "en": "[repo cache] removed incremental session {path} ({bytes}, {reason})",
-          "de": "[repo cache] Inkrementell-Sitzung {path} entfernt ({bytes}, {reason})"
+          "de": "[repo cache] Inkrementsitzung {path} entfernt ({bytes}, {reason})"
         },
         "held": {
           "en": "[repo cache] kept incremental session {path}: a running compiler holds its lock",
-          "de": "[repo cache] Inkrementell-Sitzung {path} behalten: ein laufender Compiler hält ihre Sperre"
+          "de": "[repo cache] Inkrementsitzung {path} behalten: ein laufender Compiler hält ihre Sperre"
         },
         "summaryPlan": {
           "en": "[repo cache] incremental sessions: would remove {count} of {total} ({bytes}); {held} held by running compilers, {kept} kept",
-          "de": "[repo cache] Inkrementell-Sitzungen: würde {count} von {total} entfernen ({bytes}); {held} von laufenden Compilern gehalten, {kept} behalten"
+          "de": "[repo cache] Inkrementsitzungen: würde {count} von {total} entfernen ({bytes}); {held} von laufenden Compilern gehalten, {kept} behalten"
         },
         "summaryApply": {
           "en": "[repo cache] incremental sessions: removed {count} of {total} ({bytes}); {held} held by running compilers, {kept} kept",
-          "de": "[repo cache] Inkrementell-Sitzungen: {count} von {total} entfernt ({bytes}); {held} von laufenden Compilern gehalten, {kept} behalten"
+          "de": "[repo cache] Inkrementsitzungen: {count} von {total} entfernt ({bytes}); {held} von laufenden Compilern gehalten, {kept} behalten"
         },
         "reason.idle": {
           "en": "unused for {minutes} min and superseded",
-          "de": "seit {minutes} Min. ungenutzt und abgelöst"
+          "de": "seit {minutes} min ungenutzt und abgelöst"
         },
         "reason.budget": {
           "en": "over the incremental budget",
-          "de": "über dem Inkrementell-Budget"
+          "de": "über dem Inkrement-Budget"
         },
         "reason.pressure": {
           "en": "image above the high-water mark",

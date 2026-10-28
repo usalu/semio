@@ -1,4 +1,4 @@
-import {constants,createReadStream,existsSync,readdirSync,rmSync,statfsSync,writeFileSync} from "node:fs";
+import {constants,createReadStream,existsSync,readdirSync,rmSync,writeFileSync} from "node:fs";
 import {chmod,copyFile,lstat,mkdir,readdir,readFile,rename,rm,rmdir,stat,utimes,writeFile} from "node:fs/promises";
 import {createHash,randomBytes} from "node:crypto";
 import {dirname,join} from "node:path";
@@ -8,7 +8,9 @@ import {acquireQueuedResourceLease,acquireResourceLease,type ResourceLeaseContro
 import {waitingDelayV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import snapshotSchema from "../../📸️snapshot/🧬️schema/🔣️.json" with {type:"json"};
-import {BAZEL_SESSION_POLICY_V1 as policy,bazelSessionMessageV1,bazelSlotIdsV1,nextBazelSlotStateV1,planBazelSessionGarbageV1,requireBazelKeyV1,requireBazelSlotV1,type BazelGarbageV1,type BazelInventoryV1,type BazelLanguageV1,type BazelServerPlanV1,type BazelSlotKindV1,type BazelSlotPortV1,type BazelSlotStateV1,type BazelSlotWaiterV1} from "../🟦️.ts";
+import {readBazelServerPidSyncV1,readBazelSlotStateSyncV1} from "../📖️status/🟦️.ts";
+import {BAZEL_SESSION_POLICY_V1 as policy,bazelGrowthSlotIdsV1,bazelSessionMessageV1,bazelSlotIdsV1,nextBazelSlotStateV1,planBazelServerReapV1,planBazelSessionGarbageV1,requireBazelKeyV1,requireBazelSlotV1,type BazelGarbageV1,type BazelInventoryV1,type BazelLanguageV1,type BazelServerPlanV1,type BazelServerRowV1,type BazelSlotKindV1,type BazelSlotPortV1,type BazelSlotStateV1,type BazelSlotWaiterV1} from "../🟦️.ts";
+import {nativeFreeSpaceSyncV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 const temporaryName=snapshotSchema.definitions.Policy.const.temporary,slotPattern=new RegExp(policy.names.slotPattern),keyPattern=new RegExp(policy.names.keyPattern),missing=(error:unknown)=>["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""),busy=(error:unknown)=>error instanceof Error&&error.message.startsWith("Resource lease timed out: ");
 export type BazelSlotDirectoriesV1=Readonly<{leases:string;server:string;workspaces:string;pool?:string}>;
@@ -30,19 +32,19 @@ function registerWaiter(server:string,kind:BazelSlotKindV1):BazelSlotWaiterV1{
 }
 
 /** 🔌️ Maps the session port onto repository resource leases (one exclusive lease per slot, one fair queued lease for the short picker critical section, one small file per slot waiter) and one remembered-state file per slot beside its output base; a state is valid only while the slot's output base exists, so a reset, a cache clear or an unmounted partition never leaves a stale affinity behind and nothing is ever written below an unmounted partition; the lease directory is the checkout's own, so sessions of different checkouts never meet. */
-export function bazelSlotPortV1(directories:BazelSlotDirectoriesV1,options:Readonly<{control?:ResourceLeaseControl;write?:(line:string)=>void;spare?:()=>Promise<number>;imageFree?:()=>number|undefined}>={}):BazelSlotPortV1{
- let sampled={at:0,value:0};const control=options.control?{control:options.control}:{},file=(slot:string)=>join(directories.server,requireBazelSlotV1(slot)+policy.names.stateSuffix);
+export function bazelSlotPortV1(directories:BazelSlotDirectoriesV1,options:Readonly<{control?:ResourceLeaseControl;write?:(line:string)=>void;spare?:()=>Promise<number>;floorSpare?:()=>Promise<number>;imageFree?:()=>number|undefined}>={}):BazelSlotPortV1{
+ let sampled={at:0,value:0},sampledFloor={at:0,value:0};const control=options.control?{control:options.control}:{},file=(slot:string)=>join(directories.server,requireBazelSlotV1(slot)+policy.names.stateSuffix);
  return Object.freeze({
   async claim(slot,signal){try{const lease=await acquireResourceLease({directory:directories.leases,resource:policy.leases.slotPrefix+requireBazelSlotV1(slot),mode:"exclusive",signal,timeoutMs:0,...control});return()=>lease.release();}catch(error){if(busy(error))return undefined;throw error;}},
   async gate(signal,kind){const lease=await acquireQueuedResourceLease({directory:directories.leases,resource:kind==="build"?policy.leases.pickerResource:policy.leases.servicePickerResource,mode:"exclusive",owner:randomBytes(12).toString("base64url"),signal,...control});return()=>lease.release();},
   queued:kind=>liveWaiters(directories.server,kind).length,
-  async spare(){if(Date.now()-sampled.at<5000)return sampled.value;try{sampled={at:Date.now(),value:await options.spare?.()??0};}catch{sampled={at:Date.now(),value:0};}return sampled.value;},
+  async spare(){if(Date.now()-sampled.at<policy.limits.spareSampleMilliseconds)return sampled.value;try{sampled={at:Date.now(),value:await options.spare?.()??0};}catch{sampled={at:Date.now(),value:0};}return sampled.value;},
+  async floorSpare(){if(Date.now()-sampledFloor.at<policy.limits.spareSampleMilliseconds)return sampledFloor.value;try{sampledFloor={at:Date.now(),value:await options.floorSpare?.()??Infinity};}catch{sampledFloor={at:Date.now(),value:Infinity};}return sampledFloor.value;},
   async imageFree(){return options.imageFree?.()??Infinity;},
   enqueue:kind=>registerWaiter(directories.server,kind),
   async read(slot){
    if(!existsSync(join(directories.server,requireBazelSlotV1(slot))))return undefined;
-   try{const value=JSON.parse(await readFile(file(slot),"utf8"));return validateJsonSchemaSubset(schema.definitions.SlotState,value,schema).length||value.slot!==slot?undefined:value as BazelSlotStateV1;}
-   catch(error){if(missing(error)||error instanceof SyntaxError)return undefined;throw error;}
+   return readBazelSlotStateSyncV1(directories.server,slot);
   },
   async write(slot,state){if(!existsSync(join(directories.server,requireBazelSlotV1(slot))))return;const target=file(slot),temporary=`${target}.${process.pid}.tmp`;await writeFile(temporary,JSON.stringify(state)+"\n");await rename(temporary,target);},
   sleep:(milliseconds,signal)=>waitingDelayV1(milliseconds,undefined,{signal}).then(()=>undefined),
@@ -59,6 +61,26 @@ export async function stopBazelServerV1(outputBase:string,signal:AbortSignal,rul
  if(!Number.isSafeInteger(pid)||pid<1)return;
  const deadline=Date.now()+rules.timeoutMilliseconds;
  while(alive(pid)){signal.throwIfAborted();if(Date.now()>=deadline)throw Error("A Bazel server did not stop after its pid file was removed");await delay(rules.pollMilliseconds,undefined,{signal});}
+}
+
+/** 🔎️ The pid of the server living in an output base: its pid file names a process that still exists; undefined when there is none or the file is stale. */
+export async function readBazelServerPidV1(outputBase:string):Promise<number|undefined>{return readBazelServerPidSyncV1(outputBase);}
+
+/** 🧹️ Keeps the live servers of the host within its budget: when a session starts a server, the idle servers beyond what the budget leaves next to the held slots are stopped, least recently used first, each one only while the reaper holds its slot's claim (so no session can connect to a server that is going away) and without the Bazel binary. A server that does not stop is reported and left to its idle exit; the build never fails because of it. Returns the stopped slots. */
+export async function reapBazelServersV1(directories:BazelSlotDirectoriesV1,port:BazelSlotPortV1,plan:Pick<BazelServerPlanV1,"slots"|"services">,signal:AbortSignal,stop:(outputBase:string)=>Promise<void>,options:Readonly<{budget:number;progress?:(line:string)=>void;language:BazelLanguageV1}>):Promise<readonly string[]>{
+ const slots=[...bazelSlotIdsV1(plan,"build"),...bazelSlotIdsV1(plan,"service"),...bazelGrowthSlotIdsV1(plan)],live=new Set<string>();
+ for(const slot of slots)if(await readBazelServerPidV1(join(directories.server,slot))!==undefined)live.add(slot);
+ if(!live.size)return Object.freeze([]);
+ const rows:BazelServerRowV1[]=[];
+ for(const slot of slots){signal.throwIfAborted();const probe=await port.claim(slot,signal);probe?.();rows.push({slot,live:live.has(slot),held:probe===undefined,usedAt:(await port.read(slot))?.usedAt??0});}
+ const doomed=planBazelServerReapV1(rows,options.budget,await port.floorSpare()),stopped:string[]=[];
+ for(const slot of doomed){
+  const claimed=await port.claim(slot,signal);if(claimed===undefined)continue;
+  try{await stop(join(directories.server,slot));stopped.push(slot);options.progress?.(bazelSessionMessageV1("reaped",{slot,live:live.size,budget:options.budget},options.language));}
+  catch(error){signal.throwIfAborted();options.progress?.(bazelSessionMessageV1("reap-failed",{slot,reason:(error as Error).message},options.language));}
+  finally{claimed();}
+ }
+ return Object.freeze(stopped);
 }
 
 /** 🗑️ Removes a tree whose Bazel output directories may be read-only: a refused removal makes the tree writable and retries once. */
@@ -119,7 +141,7 @@ export async function collectBazelPoolV1(pool:string,signal:AbortSignal,options:
 
 /** 🌡️ The free bytes of the volume below a directory, undefined while nothing of the path exists (an unmounted image counts as no pressure). */
 export function bazelFreeBytesV1(directory:string):number|undefined{
- for(let path=directory;;path=dirname(path)){try{const space=statfsSync(path);return space.bavail*space.bsize;}catch(error){if(!missing(error)||dirname(path)===path)return undefined;}}
+ return nativeFreeSpaceSyncV1(directory,{nearest:true})?.availableBytes;
 }
 
 const allocated=(facts:{blocks:number;size:number})=>facts.blocks>0?facts.blocks*512:facts.size;
@@ -134,7 +156,7 @@ export async function measureBazelTreeBytesV1(path:string,signal:AbortSignal):Pr
  return bytes;
 }
 
-/** 🔎️ Lists what exists on disk below the server and workspace directories: per slot its output base, remembered state and generated packages with their leftover capture folder; every other directory is foreign (the hashed output bases and packages of the time before slots). With `measure` it also reads the bytes of every output base and package, the sizes the pressure rule frees by. */
+/** 📋️ Lists what exists on disk below the server and workspace directories: per slot its output base, remembered state and generated packages with their leftover capture folder; every other directory is foreign (the hashed output bases and packages of the time before slots). With `measure` it also reads the bytes of every output base and package, the sizes the pressure rule frees by. */
 export async function readBazelInventoryV1(directories:BazelSlotDirectoriesV1,port:BazelSlotPortV1,options:Readonly<{measure?:(path:string)=>Promise<number>;skip?:ReadonlySet<string>}>={}):Promise<BazelInventoryV1>{
  const listing=async(path:string)=>readdir(path,{withFileTypes:true}).catch(error=>{if(missing(error))return [];throw error;}),slots=new Map<string,{outputBase:boolean;packages:{key:string;modifiedAt:number;temporary?:boolean;bytes?:number}[]}>(),foreign:string[]=[],row=(slot:string)=>{const value=slots.get(slot)??{outputBase:false,packages:[]};slots.set(slot,value);return value;};
  for(const entry of await listing(directories.server))if(entry.isDirectory()){if(slotPattern.test(entry.name))row(entry.name).outputBase=true;else foreign.push("server/"+entry.name);}else{const match=entry.name.endsWith(policy.names.stateSuffix)?entry.name.slice(0,-policy.names.stateSuffix.length):undefined;if(match!==undefined&&slotPattern.test(match))row(match);}
@@ -151,7 +173,7 @@ export async function readBazelInventoryV1(directories:BazelSlotDirectoriesV1,po
  const inventory={slots:rows,foreign:foreign.sort()};if(validateJsonSchemaSubset(schema.definitions.Inventory,inventory,schema).length)throw Error("Closed Bazel session inventory required");return inventory;
 }
 
-/** 🧹️ Collects session garbage: for every slot that has something to collect it takes the slot's claim (a slot in use is skipped, except the one the caller already holds), stops its server before removing the output base, removes old packages, leftover capture folders and the remembered state of a retired slot, and removes foreign entries after stopping their servers. When `freeBytes` reports less free space than the soft threshold it measures the trees first and the plan frees the oldest unprotected packages and the longest idle output bases down to the target. Returns what was removed. */
+/** 🧲️ Collects session garbage: for every slot that has something to collect it takes the slot's claim (a slot in use is skipped, except the one the caller already holds), stops its server before removing the output base, removes old packages, leftover capture folders and the remembered state of a retired slot, and removes foreign entries after stopping their servers. When `freeBytes` reports less free space than the soft threshold it measures the trees first and the plan frees the oldest unprotected packages and the longest idle output bases down to the target. Returns what was removed. */
 export async function collectBazelSessionsV1(directories:BazelSlotDirectoriesV1,port:BazelSlotPortV1,plan:Pick<BazelServerPlanV1,"slots"|"services">,signal:AbortSignal,stop:(outputBase:string)=>Promise<void>,options:Readonly<{dryRun?:boolean;holding?:string;keep?:string;progress?:(line:string)=>void;freeBytes?:()=>number;reclaim?:Readonly<{softAvailableBytes:number;targetAvailableBytes:number}>;language:BazelLanguageV1}>):Promise<BazelGarbageV1>{
  const language=options.language,free=options.freeBytes?.(),reclaim=options.reclaim,pressured=free!==undefined&&reclaim!==undefined&&free<reclaim.softAvailableBytes;
  if(pressured)options.progress?.(bazelSessionMessageV1("pressure",{free:Math.floor(free/1048576),soft:Math.floor(reclaim.softAvailableBytes/1048576),target:Math.floor(reclaim.targetAvailableBytes/1048576)},language));

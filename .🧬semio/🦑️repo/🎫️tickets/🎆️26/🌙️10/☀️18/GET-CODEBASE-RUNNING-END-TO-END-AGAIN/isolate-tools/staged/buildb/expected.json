@@ -1,0 +1,151 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️scoped/🔄️lifetime/🍎️nx-recovery-after-maintenance/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "actual Nx recovery reopens after consumed Native maintenance: false",
+   "actual Nx recovery reopens after consumed Native maintenance: true"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️scoped/🟦️.ts": {
+  "mode": "env",
+  "pass": 1,
+  "fails": [
+   "(unnamed)",
+   "scoped optional maintenance refuses its own accepted reader"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/📒️ledger/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": [],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 11,
+  "fails": [
+   "(unnamed)",
+   "Build input storage component schema preserves every owned contract",
+   "Build input storage receiver retains one actual birth across test scopes",
+   "actual shared graph writer completes inside its retained graph artifact reader",
+   "graph writer releases exclusive facts before image maintenance can reacquire its reader",
+   "graph writer retains actual lease infrastructure without a second artifact reservation",
+   "lease continuations drain before acquisition releases its database after a genuine child stop",
+   "live maintenance verification retains exact source entries and Original native tests",
+   "optional graph maintenance defers actual retained readers and preserves exclusive custody",
+   "queued graph recovery retries optional retirement under its actual writer"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📂️membership/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "actual configured bytes retain metadata edits after finite membership admission",
+   "finite actual membership includes code and metadata assets against fast-glob"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🏗️compiler/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "actual command Source capture follows compiler imports and excludes dormant test DATA"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/📥️stream/🟦️.ts": {
+  "mode": "env",
+  "pass": 16,
+  "fails": [
+   "(unnamed)",
+   "actual auxiliary immutable loader binds eval bytes argv and physical Source",
+   "actual captured workspace CommonJS facades preserve public value behavior",
+   "actual immutable child invokes both CommonJS default-object factories"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/🔏️selection/🟦️.ts": {
+  "mode": "env",
+  "pass": 1,
+  "fails": [
+   "(unnamed)",
+   "actual admitted compiler binds child Source JSON and helper images under its Original"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/🚫️cache-root-refusal/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "a nested child under the issued cache artifact root is refused as an external implementation runtime dependency"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 15,
+  "fails": [],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🧪️tests/🔬️concurrency/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": [],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🧪️tests/🟦️.ts": {
+  "mode": "plain",
+  "pass": 9,
+  "fails": [
+   "ordinary CLI and dashboard compile declarations preserve their exact binary deliverables and installation barrier"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers/🧪️tests/📥️resolution/🟦️.ts": {
+  "mode": "env",
+  "pass": 1,
+  "fails": [
+   "(unnamed)",
+   "actual captured parser witness uses closed entries matching native resolution"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🏗️native/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": [],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts": {
+  "mode": "plain",
+  "pass": 5,
+  "fails": [
+   "each pinned publication receives a distinct Nx cache and never forces an older graph",
+   "nested consumers reuse the exact pinned authority and refuse a changed publication",
+   "nested graph handoff validates ancestor pins before fresh source admission under original control",
+   "private Nx nodes and dependencies require exact immutable publication pins",
+   "public pinned graph reuse delivers compact tokens verbatim and the generation host expands each closure with one verified read",
+   "public pinned graph reuse preserves ordinary nested metadata and execution arrays",
+   "public pinned graph reuse requires the exact closed all or task admission"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/📥️closure/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "project exclusion order matches actual Nx and unsupported target patterns refuse before dispatch",
+   "selected prerequisite closure follows indirect owners and mode against actual Nx"
+  ],
+  "artifacts": "short"
+ }
+}

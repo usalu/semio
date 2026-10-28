@@ -1,0 +1,5 @@
+(fail) an independent Python model derives the same dangling projects, rows and words
+(fail) assembly order: a withheld test project keeps its tag so the next run replaces it
+(fail) assembly order: a withheld test stub no longer hides files of a project that is back
+(fail) assembly order: the partial graph withholds before it derives the environment and the file map
+(fail) generation retirement refuses unproved manifests before any physical removal

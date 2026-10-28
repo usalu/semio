@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:process:native-build:units:capture:plan-memo:v1",
+  "title": "Cargo planning memo record",
+  "description": "One remembered pair of Cargo planning answers (resolved `cargo metadata` and `--unit-graph`) with every physical input Cargo derived them from; served only while each input still answers the same. / Ein gemerktes Paar von Cargo-Planungsantworten (aufgelöstes `cargo metadata` und `--unit-graph`) mit jeder physischen Eingabe, aus der Cargo sie abgeleitet hat; nur ausgeliefert, solange jede Eingabe gleich antwortet.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "key", "inputs", "metadata", "units"],
+  "properties": {
+    "version": {"const": 1},
+    "key": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "inputs": {"type": "array", "maxItems": 262144, "items": {"$ref": "#/definitions/Input"}},
+    "metadata": {"type": "object", "description": "The resolved `cargo metadata` answer. / Die aufgelöste `cargo metadata`-Antwort."},
+    "units": {"type": "object", "description": "The `--unit-graph` answer. / Die `--unit-graph`-Antwort."}
+  },
+  "definitions": {
+    "Input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "path", "answer"],
+      "properties": {
+        "kind": {"enum": ["text", "presence", "list"], "description": "`text`: sha-256 of the bytes or `absent`; `presence`: `true`/`false`; `list`: sha-256 of the sorted entry names or `absent`. / `text`: SHA-256 der Bytes oder `absent`; `presence`: `true`/`false`; `list`: SHA-256 der sortierten Eintragsnamen oder `absent`."},
+        "path": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "answer": {"type": "string", "pattern": "^(?:absent|true|false|[0-9a-f]{64})$"}
+      }
+    },
+    "Protocol": {
+      "const": {
+        "maximumRecords": 4,
+        "racyMilliseconds": 2000,
+        "environment": {"prefixes": ["CARGO_", "RUST"], "names": ["HOME", "PATH"], "excludedNames": ["CARGO_MAKEFLAGS", "CARGO_BUILD_JOBS"]},
+        "discovery": {"files": ["build.rs", "src/main.rs", "src/lib.rs"], "directories": ["src/bin", "examples", "tests", "benches"], "nested": "main.rs"},
+        "manifest": "Cargo.toml",
+        "lock": "Cargo.lock",
+        "memberGlob": ["*", "?", "["],
+        "suffix": ".plan.json.gz"
+      }
+    }
+  }
+}

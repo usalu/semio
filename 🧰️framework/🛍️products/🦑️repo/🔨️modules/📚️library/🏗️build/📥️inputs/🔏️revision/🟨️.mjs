@@ -4,11 +4,14 @@ import{AsyncLocalStorage}from"node:async_hooks";
 import{createHash}from"node:crypto";
 import{resolve,isAbsolute,parse,relative,sep,join}from"node:path";
 import{fileURLToPath}from"node:url";
-import{concurrentEditV1,retryOnConcurrentEditSyncV1,staleImplementationV1}from"../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import{churnProtocolV1,concurrentEditV1,retryOnConcurrentEditSyncV1,staleImplementationV1}from"../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import{filesystemShapeErrorV1}from"../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🌊️races/🟦️.ts";
 const schema=JSON.parse(JSON.stringify(schemaContract));
-const maximumSourceBytes=8388608,maximumTextBytes=65536,maximumChunkBytes=65536,maximumPathUnits=256,maximumAncestors=64;
+/** 📏️ The ceilings of the source revision capture; the schema file is their single source. */
+export const REVISION_POLICY_V1=Object.freeze({...schemaContract.definitions.Policy.const});
+const{maximumSourceBytes,maximumTextBytes,maximumChunkBytes,maximumPathUnits,maximumAncestors,settleMilliseconds,maximumSettledRevisions}=REVISION_POLICY_V1;
 /** 🧊️ Remembers one settled revision under its file identity, so an unchanged Source is hashed once instead of on every self-check. */
-const settledRevisions=new Map(),settleMilliseconds=2000,maximumSettledRevisions=4096;
+const settledRevisions=new Map();
 const stamp=row=>[row.dev,row.ino,row.mode,row.nlink,row.size,row.mtimeNs,row.ctimeNs].join(":");
 function capturedPhysicalSources(value,images){
  if(value===undefined)return undefined;
@@ -28,16 +31,27 @@ export function capturePhysicalSourceTextV1(url,maximumBytes){return captureBoun
 const capturedSources=capturedPhysicalSources(import.meta.semioCapturedPhysicalSources,import.meta.semioCapturedPhysicalSourceImages);
 function capturedReadRefusalV1(captured,path){const distance=relative(captured.root,path),inside=distance!==".."&&!distance.startsWith(".."+sep)&&!isAbsolute(distance);return Object.freeze({version:1,scope:inside?"workspace":"outside",path:inside?distance.split(sep).join("/"):null,sourceCount:captured.sources.size});}
 /** 🔁️ Captures one Source revision; a Source another process edits while it is read is captured again as the `read` layer of the churn policy declares. */
-function capture(path,maximumBytes,retainText){globalThis[Symbol.for("semio.sourceTrace.v1")]?.record("p",path);return retryOnConcurrentEditSyncV1("read",()=>captureOnce(path,maximumBytes,retainText));}
+const settleWindow=churnProtocolV1().settleMilliseconds,waiter=new Int32Array(new SharedArrayBuffer(4));
+/** 🕰️ A Source modified within the settle window of the churn policy may belong to a writer that paused halfway through a rewrite, which no stamp check can see (the file is stable, only incomplete): the capture waits out the rest of the window and captures again, and a second capture that differs is a Source still being written, a concurrent edit of the `read` layer. */
+function settledCapture(path,maximumBytes,retainText,first){
+ let row;try{row=lstatSync(path,{bigint:true});}catch{return first;}
+ const age=Date.now()-Number((row.mtimeNs>row.ctimeNs?row.mtimeNs:row.ctimeNs)/1000000n);
+ if(age<0||age>=settleWindow)return first;
+ Atomics.wait(waiter,0,0,settleWindow-age);
+ const second=captureOnce(path,maximumBytes,retainText);
+ if(second.sha256!==first.sha256||second.byteLength!==first.byteLength)throw concurrentEditV1("bytes",path,"Source revision still being written");
+ return second;
+}
+function capture(path,maximumBytes,retainText){globalThis[Symbol.for("semio.sourceTrace.v1")]?.record("p",path);return retryOnConcurrentEditSyncV1("read",()=>{const first=captureOnce(path,maximumBytes,retainText);return capturedSources?first:settledCapture(path,maximumBytes,retainText,first);});}
 function captureOnce(path,maximumBytes,retainText){
  const expected=capturedSources?.sources.get(path);if(capturedSources&&!expected)throw Error("Undeclared compiler-captured physical Source read refused: "+JSON.stringify(capturedReadRefusalV1(capturedSources,path)));
  const image=capturedSources?.images.get(path);if(image&&(!retainText||image.text!==undefined)){if(image.byteLength>maximumBytes)throw Error("Compiler-captured admitted Source image identity required");return Object.freeze({sha256:expected,byteLength:image.byteLength,text:retainText?image.text:null});}
  if(capturedSources){const bytes=readFileSync(path);if(bytes.length>maximumBytes||createHash("sha256").update(bytes).digest("hex")!==expected)throw Error("Compiler-captured admitted Source image identity required");return Object.freeze({sha256:expected,byteLength:bytes.length,text:retainText?new TextDecoder("utf-8",{fatal:true,ignoreBOM:true}).decode(bytes):null});}
  const base=parse(path).root,parts=relative(base,path).split(sep).filter(Boolean),parents=[];let current=base;
  if(parts.length>maximumAncestors)throw Error("Source revision ancestry capacity exceeded");
- for(const part of["",...parts.slice(0,-1)]){if(part)current=join(current,part);const row=lstatSync(current,{bigint:true});if(!row.isDirectory()||row.isSymbolicLink())throw Error("Physical Source revision ancestry required");parents.push({path:current,dev:row.dev,ino:row.ino,mode:row.mode});}
+ for(const part of["",...parts.slice(0,-1)]){if(part)current=join(current,part);const row=lstatSync(current,{bigint:true});if(!row.isDirectory()||row.isSymbolicLink())throw filesystemShapeErrorV1(row,current,"Physical Source revision ancestry required","ENOTDIR");parents.push({path:current,dev:row.dev,ino:row.ino,mode:row.mode});}
  const before=lstatSync(path,{bigint:true});
- if(!before.isFile()||before.isSymbolicLink()||before.nlink!==1n||before.size<0n||before.size>BigInt(maximumBytes))throw Error("Bounded physical Source revision required");
+ if(!before.isFile()||before.isSymbolicLink()||before.nlink!==1n||before.size<0n||before.size>BigInt(maximumBytes))throw filesystemShapeErrorV1(before,path,"Bounded physical Source revision required");
  const size=Number(before.size),identity=stamp(before),file=openSync(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0)|(constants.O_NONBLOCK??0));let failed=false,primary,value,window,retained;
  try{
  const verify=()=>{for(const before of parents){const row=lstatSync(before.path,{bigint:true});if(!row.isDirectory()||row.isSymbolicLink()||row.dev!==before.dev||row.ino!==before.ino||row.mode!==before.mode)throw concurrentEditV1("ancestry",before.path,"Source revision ancestry changed");}const linked=lstatSync(path,{bigint:true}),opened=fstatSync(file,{bigint:true});if(!linked.isFile()||linked.isSymbolicLink()||stamp(linked)!==identity||stamp(opened)!==identity)throw concurrentEditV1("descriptor",path,"Source revision descriptor or path changed");};

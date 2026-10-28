@@ -88,7 +88,7 @@ func normalizeRootPath(value string) string { if strings.HasPrefix(value, `\\?\U
 func SelectRepoRoot(start string, explicit *string) (string, error) {
  selected := ""
  if explicit == nil { selected = FindRepoRoot(start) } else { if *explicit == "" { return "", fmt.Errorf("repository directory required / Repository-Verzeichnis erforderlich") }; selected = *explicit; if !filepath.IsAbs(selected) { selected = strings.TrimRight(start, string(os.PathSeparator)) + string(os.PathSeparator) + selected } }
- if len(utf16.Encode([]rune(selected))) > 256 { return "", fmt.Errorf("repository path exceeds 256 units / Repository-Pfad ueberschreitet 256 Einheiten") }
+ if len(utf16.Encode([]rune(selected))) > 256 { return "", fmt.Errorf("repository path exceeds 256 units / Repository-Pfad überschreitet 256 Einheiten") }
  selected, err := filepath.EvalSymlinks(selected); if err != nil { return "", err }; selected, err = filepath.Abs(selected); if err != nil { return "", err }; selected = normalizeRootPath(selected); info, err := os.Stat(selected); if err != nil { return "", err }
  if !info.IsDir() || len(utf16.Encode([]rune(selected))) > 256 { return "", fmt.Errorf("bounded repository directory required / begrenztes Repository-Verzeichnis erforderlich") }; return selected, nil
 }

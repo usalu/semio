@@ -49,9 +49,9 @@ const mirrorFile = "🌐️zukunft-bau-entwerfen-mit-bestand.html";
 
 /** 🪄 Registers the archived Zukunft Bau page tests. */
 export function registerZukunftBauMirrorTests(kit: ProjektetageDeckTestKit): void {
-  const { describe, expect, it, source } = kit;
-  const packageDirectory = dirname(fileURLToPath(source.url));
-  const servedRoot = resolve(packageDirectory, "../../🌐️public");
+  const { describe, expect, it } = kit;
+  const packageDirectory = dirname(fileURLToPath(import.meta.url));
+  const servedRoot = resolve(packageDirectory, "../../../🌐️public");
   const htmlPath = resolve(servedRoot, mirrorFile);
   const html = readFileSync(htmlPath, "utf8");
   const references = htmlReferences(html);

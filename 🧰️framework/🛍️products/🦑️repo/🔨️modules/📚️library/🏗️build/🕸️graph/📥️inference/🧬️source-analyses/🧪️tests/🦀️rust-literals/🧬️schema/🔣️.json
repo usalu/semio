@@ -1,0 +1,41 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Rust literal law fixture / Gesetzesdaten der Rust-Literale",
+ "description": "EN: Rust sources and the module and include references the module derived from them before the string literal fast path (golden taken from the old module). DE: Rust-Quelltexte und die Modul- und Include-Verweise, die das Modul vor dem Schnellpfad für Zeichenkettenliterale daraus ableitete (Referenzwerte des alten Moduls).",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "cases"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "cases": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "source",
+     "references"
+    ],
+    "properties": {
+     "name": {
+      "type": "string",
+      "minLength": 1
+     },
+     "source": {
+      "type": "string"
+     },
+     "references": {
+      "type": "object"
+     }
+    }
+   }
+  }
+ }
+}

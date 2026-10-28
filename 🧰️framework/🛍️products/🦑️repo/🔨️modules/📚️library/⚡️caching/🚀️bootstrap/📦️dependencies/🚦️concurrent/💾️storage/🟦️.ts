@@ -5,7 +5,7 @@ import {dirname,join,resolve,sep} from "node:path";
 import {waitingDelayV1 as delay} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import {acquireResourceLease,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {concurrentEventV1,concurrentLeaseResourceV1,concurrentPinNamesV1,concurrentPinResourceV1,concurrentPointerNameV1,concurrentProtocolV1 as protocol,concurrentStaleTemporariesV1,concurrentTextV1,concurrentWaitStepV1,encodeConcurrentPointerV1,parseConcurrentPointerV1,type ConcurrentEventV1,type ConcurrentLeaseKindV1,type ConcurrentPointerV1} from "../🟦️.ts";
-import {resolveLanguageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 
 /** 🔌️ Are the effects of a politely waiting acquisition, replaceable by a law that must neither sleep nor touch a lease. */
 export type ConcurrentLeasePortsV1=Readonly<{

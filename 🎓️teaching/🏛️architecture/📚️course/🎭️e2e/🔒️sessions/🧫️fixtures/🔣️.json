@@ -1,9 +1,68 @@
 {
   "cases": [
-    { "serial": true, "failure": null, "trace": ["open rehearsal", "start rehearsal", "end rehearsal", "close rehearsal", "open dev", "start dev", "end dev", "close dev"] },
-    { "serial": false, "failure": null, "trace": ["open rehearsal", "open dev", "start rehearsal", "start dev", "end rehearsal", "end dev", "close dev", "close rehearsal"] },
-    { "serial": true, "failure": "rehearsal", "trace": ["open rehearsal", "start rehearsal", "fail rehearsal", "close rehearsal"] },
-    { "serial": false, "failure": "rehearsal", "trace": ["open rehearsal", "open dev", "start rehearsal", "start dev", "fail rehearsal", "end dev", "close dev", "close rehearsal"] },
-    { "serial": false, "failure": "open dev", "trace": ["open rehearsal", "open dev", "close dev", "close rehearsal"] }
+    {"serial": true, "failure": null, "trace": ["open rehearsal", "start rehearsal", "end rehearsal", "close rehearsal", "open dev", "start dev", "end dev", "close dev"]},
+    {"serial": false, "failure": null, "trace": ["open rehearsal", "open dev", "start rehearsal", "start dev", "end rehearsal", "end dev", "close dev", "close rehearsal"]},
+    {"serial": true, "failure": "rehearsal", "trace": ["open rehearsal", "start rehearsal", "fail rehearsal", "close rehearsal"]},
+    {"serial": false, "failure": "rehearsal", "trace": ["open rehearsal", "open dev", "start rehearsal", "start dev", "fail rehearsal", "end dev", "close dev", "close rehearsal"]},
+    {"serial": false, "failure": "open dev", "trace": ["open rehearsal", "open dev", "close dev", "close rehearsal"]}
+  ],
+  "arguments": [
+    {"args": [], "projects": [], "workers": null, "rest": []},
+    {"args": ["--grep", "x", "--project", "pets", "desktop", "--workers", "2", "--headed"], "projects": ["pets", "desktop"], "workers": "2", "rest": ["--grep", "x", "--headed"]},
+    {"args": ["--project=faults", "-j", "3"], "projects": ["faults"], "workers": "3", "rest": []},
+    {"args": ["-p", "pets", "--repeat-each", "5", "--workers=4"], "projects": ["pets"], "workers": "4", "rest": ["--repeat-each", "5"]},
+    {"args": ["--headed", "--project"], "projects": [], "workers": null, "rest": ["--headed"]}
+  ],
+  "matches": [
+    {"pattern": "pe*", "project": "pets", "matches": true},
+    {"pattern": "PETS", "project": "pets", "matches": true},
+    {"pattern": "pets", "project": "pets2", "matches": false},
+    {"pattern": "*", "project": "layout", "matches": true},
+    {"pattern": "l.yout", "project": "layout", "matches": false},
+    {"pattern": "*ts", "project": "pets", "matches": true},
+    {"pattern": "*a*y*", "project": "layout", "matches": true}
+  ],
+  "stacks": [
+    {"topology": "dev", "requested": [], "split": true, "stacks": [{"label": "dev-shared", "waves": [{"shard": "shared", "parallel": true, "projects": ["desktop", "phone", "layout", "pets"]}]}, {"label": "dev-exclusive", "waves": [{"shard": "exclusive", "parallel": false, "projects": ["presence", "shortage", "away", "faults"]}]}]},
+    {"topology": "dev", "requested": [], "split": false, "stacks": [{"label": "dev", "waves": [{"shard": "shared", "parallel": true, "projects": ["desktop", "phone", "layout", "pets"]}, {"shard": "exclusive", "parallel": false, "projects": ["presence", "shortage", "away", "faults"]}]}]},
+    {"topology": "rehearsal", "requested": [], "split": true, "stacks": [{"label": "rehearsal", "waves": [{"shard": "shared", "parallel": true, "projects": ["desktop", "phone", "layout", "pets"]}, {"shard": "exclusive", "parallel": false, "projects": ["presence", "shortage", "away", "faults"]}]}]},
+    {"topology": "dev", "requested": ["pets"], "split": true, "stacks": [{"label": "dev", "waves": [{"shard": "shared", "parallel": true, "projects": ["pets"]}]}]},
+    {"topology": "dev", "requested": ["faults", "desktop"], "split": true, "stacks": [{"label": "dev-shared", "waves": [{"shard": "shared", "parallel": true, "projects": ["desktop"]}]}, {"label": "dev-exclusive", "waves": [{"shard": "exclusive", "parallel": false, "projects": ["faults"]}]}]},
+    {"topology": "dev", "requested": ["boot"], "split": true, "stacks": [{"label": "dev", "waves": []}]},
+    {"topology": "dev", "requested": ["nonesuch"], "split": true, "stacks": [{"label": "dev", "waves": [{"shard": "other", "parallel": false, "projects": ["nonesuch"]}]}]},
+    {"topology": "dev", "requested": ["nonesuch", "faults"], "split": true, "stacks": [{"label": "dev-other", "waves": [{"shard": "other", "parallel": false, "projects": ["nonesuch"]}]}, {"label": "dev-exclusive", "waves": [{"shard": "exclusive", "parallel": false, "projects": ["faults"]}]}]},
+    {"topology": "rehearsal", "requested": ["pe*", "away"], "split": false, "stacks": [{"label": "rehearsal", "waves": [{"shard": "shared", "parallel": true, "projects": ["pets"]}, {"shard": "exclusive", "parallel": false, "projects": ["away"]}]}]}
+  ],
+  "schedules": [
+    {"topologies": ["rehearsal", "dev"], "requested": [], "granted": 3, "serial": false, "concurrent": true, "labels": ["rehearsal", "dev-shared", "dev-exclusive"]},
+    {"topologies": ["rehearsal", "dev"], "requested": [], "granted": 2, "serial": false, "concurrent": true, "labels": ["rehearsal", "dev"]},
+    {"topologies": ["rehearsal", "dev"], "requested": [], "granted": 1, "serial": false, "concurrent": false, "labels": ["rehearsal", "dev"]},
+    {"topologies": ["rehearsal", "dev"], "requested": [], "granted": 4, "serial": true, "concurrent": false, "labels": ["rehearsal", "dev"]},
+    {"topologies": ["dev"], "requested": [], "granted": 2, "serial": false, "concurrent": true, "labels": ["dev-shared", "dev-exclusive"]},
+    {"topologies": ["dev"], "requested": [], "granted": 1, "serial": false, "concurrent": false, "labels": ["dev"]},
+    {"topologies": ["dev"], "requested": ["pets"], "granted": 2, "serial": false, "concurrent": false, "labels": ["dev"]},
+    {"topologies": ["rehearsal", "dev"], "requested": ["faults"], "granted": 2, "serial": false, "concurrent": true, "labels": ["rehearsal", "dev"]}
+  ],
+  "allocations": [
+    {"parallel": [[true], [false]], "budget": 4, "concurrent": true, "workers": [[3], [1]]},
+    {"parallel": [[true], [false]], "budget": 1, "concurrent": true, "workers": [[1], [1]]},
+    {"parallel": [[true, false]], "budget": 4, "concurrent": false, "workers": [[4, 1]]},
+    {"parallel": [[true], [false], [true, false]], "budget": 4, "concurrent": true, "workers": [[2], [1], [1, 1]]},
+    {"parallel": [[true], [true]], "budget": 6, "concurrent": true, "workers": [[3], [3]]},
+    {"parallel": [[false]], "budget": 4, "concurrent": false, "workers": [[1]]},
+    {"parallel": [[true], [true], [false]], "budget": 5, "concurrent": true, "workers": [[2], [2], [1]]}
+  ],
+  "budgets": [
+    {"workers": 4, "memoryMegabytes": 8192, "workerMegabytes": 600, "stacksMegabytes": 3000, "budget": 4},
+    {"workers": 4, "memoryMegabytes": 4096, "workerMegabytes": 600, "stacksMegabytes": 3000, "budget": 1},
+    {"workers": 4, "memoryMegabytes": 5000, "workerMegabytes": 600, "stacksMegabytes": 3000, "budget": 3},
+    {"workers": 4, "memoryMegabytes": 1000, "workerMegabytes": 600, "stacksMegabytes": 3000, "budget": 1},
+    {"workers": 6, "memoryMegabytes": 32768, "workerMegabytes": 600, "stacksMegabytes": 3000, "budget": 6},
+    {"workers": 2, "memoryMegabytes": 32768, "workerMegabytes": 600, "stacksMegabytes": 0, "budget": 2}
+  ],
+  "waves": [
+    {"forwarded": ["--grep", "x", "--project", "a", "--workers", "2"], "wave": {"shard": "shared", "parallel": true, "projects": ["desktop", "pets"]}, "workers": 3, "explicit": "2", "args": ["--grep", "x", "--project", "desktop", "--project", "pets", "--workers", "2"]},
+    {"forwarded": [], "wave": {"shard": "exclusive", "parallel": false, "projects": ["presence"]}, "workers": 1, "explicit": "4", "args": ["--project", "presence", "--workers", "1"]},
+    {"forwarded": ["--headed"], "wave": {"shard": "shared", "parallel": true, "projects": ["desktop"]}, "workers": 3, "explicit": null, "args": ["--headed", "--project", "desktop", "--workers", "3"]}
   ]
 }

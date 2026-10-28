@@ -1,0 +1,37 @@
+tCommandV1(["repo","leases","status"],doorPolicy.light.map(row=>row.operation))).toBe(true);
+ expect(sealedLightCommandV1(["repo","run","x"],doorPolicy.light.map(row=>row.operation))).toBe(false);
+});
+
+import{existsSync as existsSyncV1,readFileSync as readTrampolineFileV1,rmSync as removeTrampolineFileV1,writeFileSync as writeTrampolineFileV1}from"node:fs";
+const backdateV1=(root:string,minutes:number)=>{const entry=sealedEntryOfV1(root,fixtureEntryV1),pointer=JSON.parse(readTrampolineFileV1(entry.pointer,"utf8"));pointer.promotedAtMs=Date.now()-minutes*60_000;writeTrampolineFileV1(entry.pointer,JSON.stringify(pointer));removeTrampolineFileV1(entry.checked,{force:true});return entry;};
+const waitForV1=async(condition:()=>boolean,milliseconds=90_000)=>{const end=Date.now()+milliseconds;while(Date.now()<end){if(condition())return true;await new Promise(accept=>setTimeout(accept,200));}return false;};
+
+test("a light command runs its snapshot untouched while the snapshot is young, runs a stale one while a detached process promotes (one notice, no repeat), promotes first when the snapshot is old, and is refused when it is far too old and the tree cannot be promoted",async()=>{
+ const root=await fresh();await promote(root);const entry=sealedEntryOfV1(root,fixtureEntryV1),first=readSealedPointerV1(entry)!;
+ setFixtureTreeV1(root,"B");
+ expect(await run(root,["leases","status"],{SEMIO_REPO_IMPLEMENTATION:"sealed"})).toMatchObject({code:0,out:"DOOR A leases,status\n",err:""});
+ expect(existsSyncV1(entry.checked)).toBe(false);
+ backdateV1(root,10);
+ const stale=await run(root,["leases","status"],{SEMIO_REPO_IMPLEMENTATION:"sealed",FIXTURE_PROMOTER:"broken"});
+ expect(stale).toMatchObject({code:0,out:"DOOR A leases,status\n"});expect(stale.err).toContain("minutes old and the live tree has changed");expect(stale.err).toContain("Minuten alt und der Arbeitsbaum hat sich geaendert");
+ const checked=JSON.parse(readTrampolineFileV1(entry.checked,"utf8"));expect(checked).toMatchObject({digest:first.digest,drifted:true});expect(checked.refreshedAtMs).toBeGreaterThan(0);
+ expect(await run(root,["--help"],{SEMIO_REPO_IMPLEMENTATION:"sealed",FIXTURE_PROMOTER:"broken"})).toMatchObject({code:0,out:"DOOR A --help\n",err:""});
+ writeTrampolineFileV1(entry.checked,JSON.stringify({...checked,atMs:checked.atMs-10*60_000,refreshedAtMs:Date.now()-1000}));
+ expect(await run(root,["leases","status"],{SEMIO_REPO_IMPLEMENTATION:"sealed",FIXTURE_PROMOTER:"broken"})).toMatchObject({code:0,out:"DOOR A leases,status\n",err:""});
+ writeTrampolineFileV1(entry.checked,JSON.stringify({...checked,atMs:checked.atMs-10*60_000,refreshedAtMs:Date.now()-10*60_000}));
+ const refresh=await run(root,["leases","status"],{SEMIO_REPO_IMPLEMENTATION:"sealed"});
+ expect(refresh).toMatchObject({code:0,out:"DOOR A leases,status\n"});expect(refresh.err).toContain("a new snapshot is prepared in the background");
+ expect(await waitForV1(()=>readSealedPointerV1(entry)?.digest!==first.digest)).toBe(true);
+ expect(await run(root,["leases","status"],{SEMIO_REPO_IMPLEMENTATION:"sealed"})).toMatchObject({code:0,out:"DOOR B leases,status\n",err:""});
+ setFixtureTreeV1(root,"C");backdateV1(root,40);
+ const old=await run(root,["leases","status"],{SEMIO_REPO_IMPLEMENTATION:"sealed"});
+ expect(old).toMatchObject({code:0,out:"DOOR C leases,status\n"});expect(old.err).toContain("Promoted the sealed snapshot");
+ setFixtureTreeV1(root,"S");backdateV1(root,25*60);
+ const refused=await run(root,["leases","status"],{SEMIO_REPO_IMPLEMENTATION:"sealed"});
+ expect(refused.code).toBe(75);expect(refused.out).toBe("");expect(refused.err).toContain("hours old, the live tree has changed and cannot be promoted: tool/helper.ts:1:16");expect(refused.err).toContain("Stunden alt, der Arbeitsbaum hat sich geaendert");
+ expect(await run(root,["leases","status"],{SEMIO_REPO_IMPLEMENTATION:"live"})).toMatchObject({code:0,out:"LIVE leases,status\n",err:""});
+ const heavy=await run(root,["x"],{SEMIO_REPO_IMPLEMENTATION:"sealed"});
+ expect(heavy.code).toBe(0);expect(heavy.out).toBe("DOOR C x\n");
+ setFixtureTreeV1(root,"B");
+ expect(await run(root,["x"],{SEMIO_REPO_IMPLEMENTATION:"sealed"})).toMatchObject({code:0,out:"DOOR B x\n"});
+},300_000);

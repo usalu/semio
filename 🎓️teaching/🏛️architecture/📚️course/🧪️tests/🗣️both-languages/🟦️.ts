@@ -41,10 +41,11 @@ async function storedNotice(device: Device): Promise<readonly string[]> {
 
 /** 🔤️ What the screen in front words: the names of its actions, its headings, labels and column heads, in order. What
  * no language changes (numbers, symbols, the names of the languages themselves) is left out. The same eight pet deeds
- * repeated for every member of the moving cast are read once. */
+ * repeated for every member of the moving cast are read once, and so is nothing inside a crowd figure (its columns are the
+ * answers of the learners who played at the same time) or in the roster of who is online: that is data of other learners, not wording of the client. */
 async function wording(device: Device, scope?: ReturnType<typeof screen>): Promise<readonly string[]> {
   const texts = await (scope ?? device.page.locator("#course-main, header, footer")).evaluateAll((roots) =>
-    roots.flatMap((root) => [...root.querySelectorAll<HTMLElement>("button, h1, h2, h3, h4, legend, label, th[scope=col], summary")].filter((element) => element.closest("[inert], [hidden], [aria-hidden=true]") === null && element.checkVisibility({ visibilityProperty: true }) && (element.closest("[data-pets-player]") === null || element.closest("[data-pets-player]") === element.closest("[data-pets-play]")?.querySelector("[data-pets-player]"))).map((element) => (element.getAttribute("aria-label") ?? element.innerText).replace(/\s+/gu, " ").trim())),
+    roots.flatMap((root) => [...root.querySelectorAll<HTMLElement>("button, h1, h2, h3, h4, legend, label, th[scope=col], summary")].filter((element) => element.closest("[inert], [hidden], [aria-hidden=true], [data-crowd-figure], [data-presence-footer] > ul") === null && element.checkVisibility({ visibilityProperty: true }) && (element.closest("[data-pets-player]") === null || element.closest("[data-pets-player]") === element.closest("[data-pets-play]")?.querySelector("[data-pets-player]"))).map((element) => (element.getAttribute("aria-label") ?? element.innerText).replace(/\s+/gu, " ").trim())),
   );
   return texts.filter((text) => /\p{L}{2,}/u.test(text) && !["English", "Deutsch"].includes(text));
 }

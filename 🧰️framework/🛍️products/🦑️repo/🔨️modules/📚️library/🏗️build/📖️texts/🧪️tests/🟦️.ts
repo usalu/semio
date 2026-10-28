@@ -8,7 +8,7 @@ import catalog from "../🔣️.json" with { type: "json" };
 import { BUILD_TEXTS_V1 } from "../🟦️.ts";
 
 const LANGUAGE_NEUTRAL: readonly string[] = [];
-const owner = join(import.meta.dir, "..", "..");
+const owner = join(import.meta.dir, "..", ".."), foreignOwners = [join(owner, "..", "⚡️caching", "🚀️bootstrap", "🔌️nx-plugin", "🧮️engine-digest"), join(owner, "..", "🗂️workspaces", "🦀️cargo", "🛠️preparation", "👁️witness"), join(owner, "..", "🧪️testing", "🌱️genuine-birth"), join(owner, "..", "🧹️normalization", "🔣️taxonomy", "🏭️generators-packages-and-exclusions")];
 const sources = (directory: string): string[] => readdirSync(directory, { withFileTypes: true }).flatMap((entry) => entry.isDirectory() ? (["🧪️tests", "📖️texts", "node_modules", ".cache"].includes(entry.name) ? [] : sources(join(directory, entry.name))) : /\.(?:ts|mjs)$/u.test(entry.name) ? [join(directory, entry.name)] : []);
 
 test("the catalog satisfies the strict independent validator and the language contract", () => {
@@ -30,7 +30,7 @@ test("every message renders in both languages with exactly its placeholders and 
 });
 
 test("every message is used by the code it belongs to and every key the code names exists", () => {
-  const code = [...sources(owner), join(import.meta.dir, "..", "..", "..", "🟨️.mjs")].map((path) => readFileSync(path, "utf8")).join("\n");
+  const code = [...sources(owner), ...foreignOwners.flatMap(sources), join(import.meta.dir, "..", "..", "..", "🟨️.mjs")].map((path) => readFileSync(path, "utf8")).join("\n");
   const keys = Object.keys(catalog.messages);
   for (const key of keys) expect(code.includes(JSON.stringify(key)), `${key} is unused`).toBe(true);
   for (const match of code.matchAll(/\b(?:refuseBuildV1)\(\s*(?:"(?:usage|invalid|missing|refused|failed|breach|stale|unsupported|cancelled)"\s*,\s*)?("(?:[^"\\]|\\.)*")/gu)) expect(keys, match[1]).toContain(JSON.parse(match[1]!));

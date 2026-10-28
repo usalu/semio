@@ -5,7 +5,8 @@ import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {afterAll} from "bun:test";
-import {closeSync,existsSync,ftruncateSync,mkdirSync,mkdtempSync,openSync,realpathSync,rmSync,writeFileSync} from "node:fs";
+import {closeSync,existsSync,ftruncateSync,mkdirSync,mkdtempSync,openSync,realpathSync,rmSync,utimesSync,writeFileSync} from "node:fs";
+import {spawnSync} from "node:child_process";
 import {tmpdir} from "node:os";
 import {sep} from "node:path";
 import {cleanRemovePath,runWorkspaceClean} from "../🟦️.ts";
@@ -18,14 +19,13 @@ const sparse=process.platform==="win32"||process.platform==="darwin"&&false;
 const posix=(path:string):string=>path.split(sep).join("/");
 const roots:string[]=[];
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
-const world=():string=>{const root=realpathSync(mkdtempSync(join(tmpdir(),"removal-")));roots.push(root);for(const node of corpus.nodes){const target=join(root,...node.path.split("/"));mkdirSync(dirname(target),{recursive:true});if((node as {size?:number}).size!==undefined){const fd=openSync(target,"w");ftruncateSync(fd,(node as {size:number}).size);closeSync(fd);}else writeFileSync(target,(node as {text?:string}).text??"");}return root;};
+const world=():string=>{const root=realpathSync(mkdtempSync(join(tmpdir(),"removal-")));roots.push(root);for(const node of corpus.nodes){const target=join(root,...node.path.split("/"));mkdirSync(dirname(target),{recursive:true});if((node as {size?:number}).size!==undefined){const fd=openSync(target,"w");ftruncateSync(fd,(node as {size:number}).size);closeSync(fd);}else writeFileSync(target,(node as {text?:string}).text??"");const old=new Date(Date.now()-7_200_000);utimesSync(target,old,old);}if(spawnSync("git",["init","-q"],{cwd:root}).status!==0)throw Error("git init failed for the removal fixture");return root;};
 const platformRows=(rows:{kind:string;path:string}[]):{kind:string;path:string}[]=>process.platform==="win32"?rows.filter(row=>row.kind!=="windows-illegal"):rows;
 const presence=(root:string,paths:string[]):Record<string,boolean>=>Object.fromEntries(paths.map(path=>[path,existsSync(join(root,...path.split("/")))]));
 const savedEnvironment:Record<string,string|undefined>={};
 const isolate=():void=>{for(const key of["CARGO_TARGET_DIR","CARGO_BUILD_TARGET_DIR","CARGO_BUILD_BUILD_DIR"]){savedEnvironment[key]=process.env[key];delete process.env[key];}};
 const restore=():void=>{for(const[key,value]of Object.entries(savedEnvironment))if(value===undefined)delete process.env[key];else process.env[key]=value;};
-test("a dry run lists every removable row, spares open tickets, managed storage and images, and deletes nothing",()=>{
- if(process.platform==="win32")return;
+test.skipIf(process.platform==="win32")("a dry run lists every removable row, spares open tickets, managed storage and images, and deletes nothing",()=>{
  isolate();const root=world();
  try{
   const report=runWorkspaceClean(root,true);
@@ -36,8 +36,7 @@ test("a dry run lists every removable row, spares open tickets, managed storage 
   expect(report.skippedProtected.map(posix).some(path=>path.includes("/OPEN"))).toBe(false);
  }finally{restore();}
 });
-test("an applied clean deletes exactly the listed rows",()=>{
- if(process.platform==="win32")return;
+test.skipIf(process.platform==="win32")("an applied clean deletes exactly the listed rows",()=>{
  isolate();const root=world();
  try{
   const report=runWorkspaceClean(root,false);
@@ -52,7 +51,7 @@ for(const row of corpus.removePath)test("remove path: "+row.name,()=>{
  isolate();const root=world();
  try{
   const target=join(root,...row.path.split("/"));
-  expect(cleanRemovePath(root,target,row.dry,[],row.ticket,row.illegal,row.cargo)).toBe(row.expected);
+  expect(cleanRemovePath(root,target,row.dry,[],row.illegal,row.cargo)).toBe(row.expected);
   expect(existsSync(target)).toBe(row.exists);
  }finally{restore();}
 });
@@ -65,7 +64,7 @@ test("a protected prefix blocks removal of everything inside it",()=>{
 });
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

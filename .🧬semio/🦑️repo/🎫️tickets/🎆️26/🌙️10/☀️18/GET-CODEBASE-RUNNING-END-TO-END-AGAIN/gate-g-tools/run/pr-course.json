@@ -1,0 +1,12 @@
+{
+ "label": "pr-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "16:30:12",
+ "wall_s": 259.6,
+ "peak_tree_mb": 2207,
+ "peak_processes": 6,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

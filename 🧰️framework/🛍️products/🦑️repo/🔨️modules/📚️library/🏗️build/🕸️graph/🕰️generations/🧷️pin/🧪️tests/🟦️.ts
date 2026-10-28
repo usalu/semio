@@ -71,7 +71,7 @@ test("an owner list that differs from the manifest of the pin refuses",()=>{
 test("the refusal texts are filled in both languages and name the unreadable key",()=>{
  expect(renderGenerationPinMessageV1("uncovered",{generation:4,count:2,names:"x, y"},"en")).toContain("generation 4 does not cover 2");
  expect(renderGenerationPinMessageV1("uncovered",{generation:4,count:2,names:"x, y"},"de")).toContain("Generation 4 2 der benötigten Projekte nicht abdeckt (x, y)");
- expect(()=>renderGenerationPinMessageV1("nope" as never,{},"en")).toThrow("Known generation pin message required");
+ expect(()=>renderGenerationPinMessageV1("nope" as never,{},"en")).toThrow("generation-pin-message-undeclared");
 });
 
 test("only an orchestrated task keeps the pin: the environment issuer drops it for every other task, with the name of the policy",()=>{

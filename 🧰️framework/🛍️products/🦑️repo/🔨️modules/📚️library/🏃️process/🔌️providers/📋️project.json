@@ -1,0 +1,12 @@
+{
+  "name": "@semio-tech/repo-script-providers",
+  "tags": [
+    "scope:repo"
+  ],
+  "metadata": {
+    "semio": {
+      "scriptProviders": "🔣️.json"
+    }
+  },
+  "targets": {}
+}

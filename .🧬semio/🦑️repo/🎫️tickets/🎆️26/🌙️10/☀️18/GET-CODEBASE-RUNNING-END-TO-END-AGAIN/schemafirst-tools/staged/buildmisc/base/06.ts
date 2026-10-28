@@ -1,0 +1,124 @@
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,scriptResourceProcessEnvironmentV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { join, resolve, dirname } from "node:path";
+import { readScriptPolicy,Script, ScriptRouter, findWorkspaceRoot, scriptInvocationBudget, scriptInvocationEnvironment,checkScriptInvocation,advanceScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import{withRepositoryCommandEnvironmentV1,withRepositoryCommandDiagnosticsV1}from"../📥️context/🟦️.ts";
+import{loadBuildInvocationGraphV1,loadBuildGraphInChildV1,buildGraphPlanInChildV1,writeBuildGraphPlanV1,BUILD_GRAPH_PLAN_OUT_V1}from"../../🧭️invocation/🕸️graph/🟦️.ts";
+import{runCapturedRepositoryKernelV1,type CapturedBuildCommandProofV1}from"../📥️entry/🟦️.ts";
+import {profileMarkV1} from "../../⏱️profile/🟨️.mjs";
+import {markBuildCapacityPhaseV1} from "../../🌡️host-capacity/🚏️marks/🟦️.ts";
+import {profilePhaseV1} from "../../⏱️profile/🟨️.mjs";
+import { runtimeSleepV1, runtimeSpawnV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
+import {runOwnedBuildInvocationV1} from "../../📜️script.ts";
+import {writeResultLineV1,machineOutputV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
+async function runAdmittedBuildInvocationV1(root:string,args:readonly string[],parent:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void> {
+ requireIssuedResourceControlInvocationV1(phaseControl,parent);checkResourceLeaseControl(phaseControl);const{readOwnedBuildInvocationV1}=await profilePhaseV1("invocation.load",()=>import("../../📥️caller/🟦️.ts"));profilePhaseV1("invocation.read",()=>readOwnedBuildInvocationV1(root,parent,args));
+ const{parseBuildInvocationV1,resolveBuildInvocationV1,buildInvocationRequestsHelpV1}=await profilePhaseV1("invocation.parse-load",()=>import("../../🧭️invocation/🟦️.ts")),selected=parseBuildInvocationV1(args,{SEMIO_BUILD_TOOL:(parent.capabilities as {tool?:string}).tool});
+ if(["preflight","dependencies","cache"].includes(selected.args[0]??""))throw Error("Runtime command kernel required");
+ const dashboard=selected.args[0]==="run"&&selected.args[1]?.startsWith("@semio-tech/repo-dashboard-rs:")?(await import("../../../⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts")).dashboardInvocation(selected.args):undefined;
+ if(buildInvocationRequestsHelpV1(selected.args)&&dashboard===undefined){const{buildHelpForArgumentsV1}=await import("../../⚙️operations/📖️help/🟦️.ts");writeResultLineV1(buildHelpForArgumentsV1(selected.args,process.env));return;}
+ if(selected.args[0]==="incremental"){const{runIncrementalV1}=await import("../../📏️incremental/⌨️command/🟦️.ts");await runIncrementalV1(root,selected.args,parent);return;}
+ if(selected.args[0]==="conformance"){const{runConformanceCommandV1}=await import("../../📐️conformance/⌨️command/🟦️.ts");await runConformanceCommandV1(root,selected.args,parent);return;}
+ if(selected.args[0]==="concurrency"){const{runConcurrencyV1}=await import("../../📏️incremental/🤝️concurrent/⌨️command/🟦️.ts");await runConcurrencyV1(root,selected.args,parent);return;}
+ if(selected.args[0]==="bench"){const{runBenchV1}=await import("../../📏️incremental/🏎️bench/⌨️command/🟦️.ts");await runBenchV1(root,selected.args,parent);return;}
+ if(selected.args[0]==="service"){const{resolveLanguageV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts"),{runResidentCommandV1}=await import("../../🏡️resident/⌨️command/🟨️.mjs"),{createForegroundRunnerV1}=await import("../../🏡️resident/🏗️composition/🟨️.mjs"),{fileURLToPath}=await import("node:url"),{createHash}=await import("node:crypto"),{readFileSync}=await import("node:fs");if(selected.args[1]==="executor"){const{openRepositoryCustodySessionV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/🧵️session/🟦️.ts"),{serveExecutorV1,readLinesV1}=await import("../../🏡️resident/🏭️executor/🟨️.mjs"),{holdServiceInvocationV1,createServiceAuditV1}=await import("../../📥️caller/🛰️service/🟦️.ts"),{createRevocationRegistryV1,endpointsV1,canonicalRootV1,readServiceKeyV1}=await import("../../📥️caller/🛰️service/🔑️session/🟨️.mjs"),{taskClosureV1}=await import("../../🏡️resident/🔌️ports/🗺️graph/🟨️.mjs"),{createReadStream,writeSync}=await import("node:fs"),runtime=endpointsV1(canonicalRootV1(root),process.env);let closureGraph:unknown;const admission=holdServiceInvocationV1(root,parent,{key:readServiceKeyV1(runtime.key),revocations:createRevocationRegistryV1(runtime.revoked),audit:createServiceAuditV1(parent,runtime.audit),bootstrap:(await import("../../📥️caller/📤️child/🟦️.ts")).createBuildBootstrapCapabilitiesV1,closure:async(named:readonly string[])=>taskClosureV1(closureGraph??=await loadBuildInvocationGraphV1(root,["graph","--graph-policy=current"],parent,parent,phaseControl,true),named)});await admission.warm();await serveExecutorV1({lines:readLinesV1(createReadStream("",{fd:3,autoClose:false,encoding:"utf8"})),write:(text:string)=>writeSync(3,text),limits:{maximumRequests:200,maximumAgeMilliseconds:600000,idleMilliseconds:20000},openSession:()=>openRepositoryCustodySessionV1({workspace:root,invocation:parent,control:phaseControl,partitions:["leases","diagnostics","dependencies","tools","graph"]}),run:(request:{argv:string[];cwd:string;client?:{token?:string;agent?:string;named?:string[]}},control:typeof phaseControl)=>admission.run({token:request.client?.token??"",agent:request.client?.agent??"",cwd:request.cwd,args:request.argv,named:request.client?.named},()=>runOwnedBuildInvocationV1(root,request.argv,parent,control))});return;}const language=resolveLanguageV1(["en","de"],selected.args,process.env).language,script=fileURLToPath(import.meta.url),library=resolve(dirname(script),".."),warm=JSON.parse(readFileSync(new URL("../../🏡️resident/🏗️composition/🔣️.json",import.meta.url),"utf8")).modules.map((module:string)=>join(library,module)),watcherBinary=await(async()=>{try{return await(await import("../../🏡️resident/🔭️watch/🏗️provision/🔌️tools/🟨️.mjs")).ensureResidentWatcherV1(root);}catch{return process.env.SEMIO_REPO_WATCH_BINARY;}})();const javascriptManagerV1=(await import("../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts")).selectPackageManagerV1("javascript");process.exitCode=await runResidentCommandV1({root,args:selected.args.slice(1),stdout:machineOutputV1,languages:[language,...["en","de"].filter((other:string)=>other!==language)],environment:process.env,scriptArguments:[script,"repo"],runForeground:createForegroundRunnerV1({loadGraph:()=>loadBuildInvocationGraphV1(root,["graph","--graph-policy=current"],parent,parent,phaseControl,true),script,warmModules:warm,watcherBinary,salt:()=>createHash("sha256").update(JSON.stringify([process.env.SEMIO_BUILD_TOOL??"",(parent.capabilities as {tool?:string}).tool??""])).digest("hex"),environmentPaths:["package.json",javascriptManagerV1.primaryLockName(),"nx.json","tsconfig.json","MODULE.bazel","Cargo.toml","Cargo.lock","rust-toolchain.toml","go.work",...javascriptManagerV1.configurationNames("scope")]})});return;}
+ if(selected.args[0]==="units"){const{runUnitsCliV1}=await import("../../🧩️units/⌨️command/🟦️.ts");await runUnitsCliV1(root,selected.args,parent);return;}
+ const{readNativeRepoRecoveryPlanV1}=await import("../../🚀️bootstrap/⌨️cli/🟦️.ts");
+ if(profilePhaseV1("invocation.recovery-plan",()=>readNativeRepoRecoveryPlanV1(root,resolveBuildInvocationV1(root,selected.args,{...process.env,SEMIO_BUILD_MODE:(parent.capabilities as {buildMode:string}).buildMode}).args))){await runOwnedBuildInLeasesV1(root,args,parent,phaseControl);return;}
+ await withRepositoryCommandDiagnosticsV1(root,parent,phaseControl,diagnosticPhase=>runOwnedBuildInLeasesV1(root,args,parent,diagnosticPhase));
+}
+async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void>{await withRepositoryCommandEnvironmentV1(root,args,parent,phaseControl,async({capabilities,selected,resolved,original,ancestor,invocation,previous})=>{
+    if(await profilePhaseV1("recovery.run",async()=>(await import("../../🚀️bootstrap/⌨️cli/🟦️.ts")).runNativeRepoRecoveryV1(root,resolved.args,invocation,phaseControl,(await import("../../🚀️bootstrap/⌨️cli/🔌️ports/🟦️.ts")).nativeRepoRecoveryPortsV1)))return;
+    if(resolved.args[0]==="run"&&resolved.args[1]?.startsWith("@semio-tech/repo-dashboard-rs:")){
+      const native=await import("../../../⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts"),mode=readBuildMode((capabilities as {buildMode?:unknown}).buildMode??resolved.env.SEMIO_BUILD_MODE??"prototype");
+      const nativeArguments=native.dashboardInvocation(resolved.args);
+      if(nativeArguments!==undefined){
+        const {readNativeCallerAuthorityV1}=await import("../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts");const code=await native.launchDashboard(root,nativeArguments,{invocation,workspace:root,mode,network:readNativeCallerAuthorityV1(invocation.capabilities).network,control:scriptCompilerAdmissionControlV1(invocation,"dashboard:launch",0)});
+        if(code!==0)throw new Error(`Dashboard invocation failed (${code})`);
+        return;
+      }
+    }
+    const command=resolved.args[0];
+    if(["run","run-many","affected","exec","watch"].includes(command)){
+      const {validateBuildTaskArgumentsV1}=await import("../../🧭️selection/🟦️.ts");
+      profilePhaseV1("selection.validate",()=>validateBuildTaskArgumentsV1(resolved.args));
+    }
+    if(command==="cargo"){
+      const {readRepositoryCargoLaunchV1,launchRepositoryCargoV1}=await import("../../../🏃️process/🦀️cargo/🚪️launcher/🟦️.ts");
+      process.exitCode=await launchRepositoryCargoV1(invocation,createIssuedResourceControlV1(invocation,"cargo:build-entry",0),root,readRepositoryCargoLaunchV1(resolved.args.slice(1),process.env),process.cwd(),process.env,{maximumMilliseconds:0,output:"stream"});return;
+    }
+    const {buildOperationRequiresV1}=await import("../../⚙️operations/🟦️.ts");
+    if(buildOperationRequiresV1(command)==="dependencies"&&process.env[BUILD_GRAPH_PLAN_OUT_V1]===undefined){const {ensureBuildEnvironmentV1,buildEnvironmentPlanV1}=await profilePhaseV1("dependencies.ensure-load",()=>import("../../🚀️bootstrap/🟦️.ts")),environmentPlan=buildEnvironmentPlanV1(root,selected.tool,process.env);if(!environmentPlan.closure){const {requireJavascriptLocksInSyncV1}=await profilePhaseV1("dependencies.locks-load",()=>import("../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔒️lock-sync/🟦️.ts"));profilePhaseV1("dependencies.locks",()=>requireJavascriptLocksInSyncV1(root,undefined,process.env));}await profilePhaseV1("dependencies.ensure",()=>ensureBuildEnvironmentV1(root,invocation,phaseControl,environmentPlan.install,undefined,environmentPlan.scope));}
+    if(command==="remote-execution"){
+      const {runRemoteExecutionCommandV1}=await import("../../🌐️remote-execution/⌨️command/🟦️.ts");
+      const entry=join(import.meta.dirname,"🌐️remote-execution","🏃️entry","🟦️.ts");
+      const spawnWorker=(args:readonly string[],environment:Readonly<Record<string,string>>)=>{
+        const child=runtimeSpawnV1([process.execPath,entry,...args],{cwd:root,env:{...process.env,...environment},stdin:"ignore",stdout:"inherit",stderr:"inherit"});
+        return {exited:child.exited,stop:async()=>{child.kill("SIGTERM");await Promise.race([child.exited,runtimeSleepV1(15000).then(()=>{child.kill("SIGKILL");})]);}};
+      };
+      const outcome=await runRemoteExecutionCommandV1(resolved.args.slice(1),{root,environment:process.env,signal:phaseControl.signal,progress:async stage=>{checkResourceLeaseControl(phaseControl);await advanceScriptInvocation(invocation,"build:"+stage,"running");},write:writeResultLineV1,spawnWorker});
+      if(outcome.result!==undefined)writeResultLineV1(JSON.stringify(outcome.result,null,2));
+      if(outcome.exitCode!==0)process.exitCode=outcome.exitCode;
+      return;
+    }
+    if(command==="tools"&&resolved.args[1]==="verify"){const{runToolsVerifyV1}=await import("../../🧰️tool-setup/⌨️command/🟦️.ts");process.exitCode=await runToolsVerifyV1(root,phaseControl,resolved.args.slice(2));return;}
+    const {withRepositoryCacheStoreV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");
+    profileMarkV1("dependencies.opening");await withRepositoryCacheStoreV1(root,"dependencies",parent,phaseControl,async(_dependencies,phaseControl)=>{profileMarkV1("dependencies.opened");
+    if(command==="tools"){
+      const {buildBackendIdsV1,buildBackendAlternationV1,loadBuildBackendV1,requireBuildBackendIdV1}=await import("../../🔌️backends/🟦️.ts");
+      if(resolved.args[1]!=="setup"||resolved.args.length>3)throw new Error(`Expected repo tools setup [${buildBackendAlternationV1()}|toolchains|all] or repo tools verify [tool...]`);
+      const tools=resolved.args[2]??selected.tool;
+      if(!["toolchains","all"].includes(tools))requireBuildBackendIdV1(tools);
+      if(tools==="toolchains"||tools==="all"){const{runToolchainsSetupV1}=await import("../../🧰️tool-setup/⌨️command/🟦️.ts"),{issueBuildTaskEnvironmentV1:issueToolsEnvironmentV1}=await import("../../📥️caller/🟦️.ts"),reports=await runToolchainsSetupV1(root,invocation,phaseControl,[],["bazel"],issueToolsEnvironmentV1(root,invocation,{kind:"noop"},[],process.env).CARGO_NET_OFFLINE==="true");if(reports.some(report=>report.status!=="ok"&&report.status!=="deferred"))process.exitCode=1;}
+      for(const id of tools==="toolchains"?[]:tools==="all"?buildBackendIdsV1():[tools])await(await loadBuildBackendV1(id)).setup({root,invocation,phase:phaseControl,args:resolved.args,tool:id});
+      return;
+    }
+    if(command==="reset"){
+      if(resolved.args.length!==1)throw new Error("Expected repo reset without task arguments");
+      await(await(await import("../../🔌️backends/🟦️.ts")).loadBuildBackendV1(selected.tool)).reset({root,invocation,phase:phaseControl,args:resolved.args,tool:selected.tool});
+      return;
+    }
+    await profilePhaseV1("graph.regrow",async()=>{if(!await(await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts")).regrowElasticImageIfQuiescentV1(invocation,phaseControl,"graph"))await(await import("../../🧹️cache-gc/🚀️launch/🟦️.ts")).launchGraphCollectorIfPressedV1(root);});
+    await profilePhaseV1("rust.regrow",async()=>{await(await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts")).regrowElasticImageIfQuiescentV1(invocation,phaseControl,"rust");});
+    await profilePhaseV1("products.regrow",async()=>{await(await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts")).regrowElasticImageIfQuiescentV1(invocation,phaseControl,"products");});
+    await profilePhaseV1("products.collect",async()=>{await(await import("../../🧹️cache-gc/🚀️launch/🟦️.ts")).launchProductsCollectorIfPressedV1(root);});
+    await profilePhaseV1("budget.sweep",async()=>{await(await import("../../🧹️cache-gc/🚀️launch/🟦️.ts")).launchBudgetSweepIfDueV1(root);});
+    if(["graph","show"].includes(command)){
+      await markBuildCapacityPhaseV1("plan");
+      const {loadBuildGraphV1}=await import("../../🕸️graph/🟦️.ts"),graph=await loadBuildGraphV1(root,invocation,phaseControl,{selection:{kind:"all"},reuse:process.env.SEMIO_BUILD_REUSE_GRAPH==="true",graph:{policy:selected.graphPolicy??"fresh",...(command==="show"&&resolved.args[1]==="project"&&resolved.args[2]?{closure:[resolved.args[2]]}:{}),...(command==="show"&&(resolved.args[1]==="projects"||resolved.args[1]==="targets")?{lean:true}:{})}});
+      const {buildOptionV1}=await import("../../🧭️selection/🟦️.ts");
+      let result:unknown=graph;
+      const describeWithheld=async()=>{const{describeUnavailableProjectV1}=await import("../../🕸️graph/🕰️generations/🔌️load/🟨️.mjs"),{resolveLanguageV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts"),{CATALOG_LANGUAGES_V1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts"),language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language;return(row:Parameters<typeof describeUnavailableProjectV1>[0])=>describeUnavailableProjectV1(row,language);};
+      if(graph.unavailable?.length){const describe=await describeWithheld();for(const row of graph.unavailable)console.error(describe(row));}
+      if(command==="show"){
+        const subject=resolved.args[1];
+        if(subject==="project"){const name=resolved.args[2];if(!name)throw new Error("Build project name required");result=graph.projects[name];const withheld=graph.unavailable?.find(row=>row.project===name);if(!result)throw new Error(withheld?(await describeWithheld())(withheld):`Unknown build project: ${name}`);}
+        else if(subject==="projects")result=Object.keys(graph.projects).sort();
+        else if(subject==="targets")result=[...new Set(Object.values(graph.projects).flatMap(project=>Object.keys(project.targets)))].sort();
+        else throw new Error("Expected repo show projects|project <name>|targets");
+      }
+      const output=buildOptionV1(resolved.args,"file");
+      if(output){const {withRepositoryBuildReportV1}=await import("../../📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(root,output,result,invocation,async artifact=>{writeResultLineV1(artifact.path);});}
+      else if(Array.isArray(result)&&!resolved.args.includes("--json"))writeResultLineV1(result.join("\n"));else{const {writeJsonStreamV1}=await import("../../🕸️graph/🕰️generations/🌊️json-stream/🟨️.mjs");await writeJsonStreamV1(result,text=>new Promise<void>((resolve,reject)=>{machineOutputV1.write(text,error=>error?reject(error):resolve());}),{signal:invocation.control.signal});machineOutputV1.write("\n");}
+      return;
+    }
+    if(process.env.SEMIO_BUILD_GRAPH_MEMO_DERIVE!==undefined){await profilePhaseV1("graph.memo-derive",async()=>(await import("../../🧭️invocation/🕸️graph/🧠️memo/🧮️derive/🟦️.ts")).answerGraphMemoDerivationV1(root,process.env,phaseControl.signal));return;}
+    const {prepareBuildToolStorageV1}=await profilePhaseV1("tools.storage-load",()=>import("../../🔧️tools/💾️storage/🟦️.ts"));await profilePhaseV1("tools.storage",()=>prepareBuildToolStorageV1(root,selected.tool,invocation,phaseControl,0));
+    const loadHere=async()=>loadBuildInvocationGraphV1(root,resolved.args,parent,invocation,phaseControl,process.env.SEMIO_BUILD_REUSE_GRAPH==="true",undefined,selected.graphPolicy,(await import("../../🔌️backends/🟦️.ts")).buildBackendCompactGraphV1(selected.tool)),planFile=process.env[BUILD_GRAPH_PLAN_OUT_V1];
+    if(planFile!==undefined){await profilePhaseV1("graph.plan",async()=>writeBuildGraphPlanV1(planFile,await loadHere(),phaseControl.signal));return;}
+    await markBuildCapacityPhaseV1("plan");
+    const baseline=await profilePhaseV1("graph.load",async()=>buildGraphPlanInChildV1(process.env,process.env.SEMIO_BUILD_REUSE_GRAPH==="true")?loadBuildGraphInChildV1(root,args,invocation,phaseControl):loadHere()),{withSelectedRustBuildGraphV1}=await profilePhaseV1("graph.rust-load",()=>import("../../🕸️graph/🦀️rust/🟦️.ts"));await withSelectedRustBuildGraphV1(root,baseline,resolved.args,invocation,phaseControl,async(prepared,rustPhase)=>{profileMarkV1("graph.rust-ready");const graph=prepared.graph;for(const[key,value]of Object.entries(prepared.environment)){previous[key]=process.env[key];process.env[key]=value;}
+    const {withRepositoryBuildGraphArtifactV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts"),{releaseBuildGraphV1:releaseGraph,sealedGenerationPinV1}=await import("../../🕸️graph/🟦️.ts");
+    profileMarkV1("graph.pinning");await withRepositoryBuildGraphArtifactV1(root,graph,invocation,rustPhase,async(pinned,artifactPhase)=>{profileMarkV1("graph.pinned");
+    process.env.SEMIO_BUILD_GRAPH_PATH=pinned.path;process.env.SEMIO_BUILD_GRAPH_DIGEST=pinned.digest;process.env.SEMIO_BUILD_REUSE_GRAPH="true";
+    const generationPin=command==="watch"?undefined:sealedGenerationPinV1(selected.tool);if(generationPin!==undefined){previous.SEMIO_BUILD_GENERATION_PIN=process.env.SEMIO_BUILD_GENERATION_PIN;process.env.SEMIO_BUILD_GENERATION_PIN=generationPin;}
+    if(command==="watch"){const selection=await import("../../🧭️selection/🟦️.ts"),{readOwnedBuildInvocationV1}=await import("../../📥️caller/🟦️.ts"),{runOwnedBuildChildInvocationV1}=await import("../../📥️caller/📤️child/🟦️.ts");await selection.watchBuildInvocationV1(root,graph,resolved.args,invocation,artifactPhase,{child:{readOwnedBuildInvocationV1,runOwnedBuildChildInvocationV1}});return;}
+    await markBuildCapacityPhaseV1("execution");
+    await(await(await import("../../🔌️backends/🟦️.ts")).loadBuildBackendV1(selected.tool)).execute({root,invocation,phase:artifactPhase,args:resolved.args,tool:selected.tool,graph,release:()=>releaseGraph(graph,baseline),...(resolved.watch===undefined?{}:{watch:resolved.watch})});
+    },additionalBytes=>prepareBuildToolStorageV1(root,selected.tool,invocation,rustPhase,additionalBytes));
+    });
+    });});}
+/** ⚙️ Executes the existing graph and tool command body inside its captured runtime kernel. */
+export async function runCapturedBuildSourceV1(args:readonly string[],proof:CapturedBuildCommandProofV1):Promise<void>{await runCapturedRepositoryKernelV1(args,proof,import.meta.semioCapturedImplementationIdentity,import.meta.semioCapturedLoaderIdentity,runAdmittedBuildInvocationV1);}

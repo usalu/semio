@@ -69,7 +69,7 @@ class InstallScript extends BundleScript {
 }
 
 class InstallationTestScript extends BundleScript {
- async run():Promise<void>{const {runRepositoryTestCommand}=await import("../../📚️library/📦️packages/🟦️typescript/🧪️testing/🎛️repository-command/🟦️.ts");await runRepositoryTestCommand(process.execPath,["test",join(this.root,"📥️installation/🧪️tests/🟦️.ts"),join(this.root,"../../📚️library/🔍️discovery/🐹️go-layout/🧪️tests/🟦️.ts")],{cwd:this.repoRoot});}
+ async run():Promise<void>{const {runRepositoryTestCommand}=await import("../../📚️library/📦️packages/🟦️typescript/🧪️testing/🎛️repository-command/🟦️.ts");await runRepositoryTestCommand(process.execPath,["test",join(this.root,"📥️installation/🧪️tests/🟦️.ts"),join(this.root,"../../📚️library/🔍️discovery/🐹️go-layout/🧪️tests/🟦️.ts"),join(this.root,"../../📚️library/🧪️testing/🐹️go-plan/🧪️tests/🔒️lease/🟦️.ts")],{cwd:this.repoRoot});}
 }
 
 /** 🔗️Invokes the native installer with the existing authenticated root invocation. */

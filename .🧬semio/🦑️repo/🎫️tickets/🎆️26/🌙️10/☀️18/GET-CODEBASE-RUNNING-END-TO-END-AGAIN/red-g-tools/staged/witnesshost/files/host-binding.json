@@ -1,0 +1,9 @@
+{
+  "namespace": "Bun",
+  "spawn": ["spawn", "spawnSync", "$"],
+  "unobserved": ["which", "resolve", "resolveSync", "build", "write"],
+  "write": "write",
+  "fileReader": "file",
+  "glob": "Glob",
+  "sqlite": "bun:sqlite"
+}

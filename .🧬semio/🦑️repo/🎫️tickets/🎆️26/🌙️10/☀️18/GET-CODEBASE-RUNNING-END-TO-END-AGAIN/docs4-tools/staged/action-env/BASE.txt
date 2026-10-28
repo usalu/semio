@@ -1,0 +1,3 @@
+document: 🧰️framework/🛍️products/🦑️repo/📓️build-guide.md
+sha256 at staging: 7b768aa704cb715daea331a3c60713677f3d915c4269d1fd9a93231de873fa50
+6 edit(s): env-bullets[en], env-bullets[de], env-table[en], env-table[de], env-row[en], env-row[de]

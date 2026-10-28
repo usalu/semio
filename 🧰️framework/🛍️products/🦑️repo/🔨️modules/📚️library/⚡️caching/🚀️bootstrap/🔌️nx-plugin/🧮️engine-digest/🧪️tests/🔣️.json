@@ -1,0 +1,143 @@
+{
+ "version": 1,
+ "checkoutFromTests": "../../../../../../../../../..",
+ "forgedPolicies": [
+  "duplicate-domain-id",
+  "nested-prefix",
+  "duplicate-prefix",
+  "parent-segment",
+  "extra-key",
+  "no-domains",
+  "bad-id",
+  "missing-german-contract",
+  "empty-prefixes",
+  "spawn-extra-key",
+  "spawn-absolute-reference",
+  "spawn-missing-german-contract"
+ ],
+ "families": [
+  "generic",
+  "native"
+ ],
+ "edits": [
+  {
+   "role": "scheduling-leases",
+   "select": {
+    "schedulingDomain": "leases"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
+  },
+  {
+   "role": "scheduling-capacity",
+   "select": {
+    "schedulingDomain": "capacity"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
+  },
+  {
+   "role": "scheduling-supervision",
+   "select": {
+    "schedulingDomain": "process-supervision"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
+  },
+  {
+   "role": "scheduling-retry",
+   "select": {
+    "schedulingDomain": "retry-observation"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
+  },
+  {
+   "role": "scheduling-progress",
+   "select": {
+    "schedulingDomain": "progress-reporting"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
+  },
+  {
+   "role": "scheduling-cargo-arguments",
+   "select": {
+    "nativeKeyed": true
+   },
+   "generic": "unchanged",
+   "native": "changed"
+  },
+  {
+   "role": "bazel-route",
+   "select": {
+    "engineDomain": "bazel-route"
+   },
+   "generic": "unchanged",
+   "native": "unchanged",
+   "optional": true
+  },
+  {
+   "role": "cache-retention",
+   "select": {
+    "engineDomain": "cache-retention"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
+  },
+  {
+   "role": "cargo-route",
+   "select": {
+    "engineDomain": "cargo-route"
+   },
+   "generic": "unchanged",
+   "native": "changed"
+  },
+  {
+   "role": "graph-derivation",
+   "select": {
+    "engineDomain": "graph-derivation"
+   },
+   "generic": "unchanged",
+   "native": "unchanged"
+  },
+  {
+   "role": "plugin",
+   "select": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"
+   },
+   "generic": "changed",
+   "native": "changed"
+  },
+  {
+   "role": "executor",
+   "select": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/🏃️execution/🟨️.mjs"
+   },
+   "generic": "changed",
+   "native": "changed"
+  },
+  {
+   "role": "digest-entry",
+   "select": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🟨️.mjs"
+   },
+   "generic": "changed",
+   "native": "changed"
+  }
+ ],
+ "spawnOnly": {
+  "mustLeave": [
+   "🏗️build/📜️script.ts",
+   "🏗️build/🚪️door/📜️script.ts",
+   "🏗️build/🩺️doctor/🟦️.ts"
+  ],
+  "mustStay": [
+   "🟨️.mjs",
+   "⚡️caching/🚀️bootstrap/🔌️nx-plugin/🏃️execution/🟨️.mjs",
+   "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+   "🏗️build/📤️arguments/🟨️.mjs",
+   "🏗️build/🧹️cache-gc/🚀️launch/🟦️.ts"
+  ]
+ }
+}

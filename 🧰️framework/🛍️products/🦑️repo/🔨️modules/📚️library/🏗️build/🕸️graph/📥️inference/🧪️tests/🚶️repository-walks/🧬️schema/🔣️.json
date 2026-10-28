@@ -1,0 +1,120 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Repository walk laws",
+ "description": "The tree, the questions and the recorded edit steps of the derived repository walks law; `changes` names the questions whose answer moves at a step (crates, entries1, ...): the steps not named keep every answer, and the support of the walks stays valid exactly where the walk never listed the touched directory.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "$schema",
+  "skip",
+  "questions",
+  "files",
+  "steps",
+  "random"
+ ],
+ "properties": {
+  "$schema": {
+   "type": "string"
+  },
+  "skip": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "paths",
+    "names"
+   ],
+   "properties": {
+    "paths": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "names": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "questions": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "object"
+   }
+  },
+  "files": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "string"
+   }
+  },
+  "steps": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "ops",
+     "changes"
+    ],
+    "properties": {
+     "name": {
+      "type": "string",
+      "minLength": 1
+     },
+     "ops": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "required": [
+        "op"
+       ],
+       "properties": {
+        "op": {
+         "enum": [
+          "write",
+          "mkdir",
+          "remove",
+          "rename",
+          "symlink"
+         ]
+        }
+       }
+      }
+     },
+     "changes": {
+      "type": "object",
+      "additionalProperties": {
+       "const": 1
+      }
+     }
+    }
+   }
+  },
+  "random": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "seed",
+    "sequences",
+    "steps"
+   ],
+   "properties": {
+    "seed": {
+     "type": "integer"
+    },
+    "sequences": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "steps": {
+     "type": "integer",
+     "minimum": 1
+    }
+   }
+  }
+ }
+}

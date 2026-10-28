@@ -7,6 +7,8 @@ import scenario from "./🧫️scenario.json";
 import {bazelCacheFlagsV1,bazelCacheLayoutV1,bazelServerBaseV1} from "../../../💾️storage/🟦️.ts";
 import {acquireBazelSessionV1,bazelRepositoryContentsV1,bazelSessionCommandV1,bazelSessionResourcesV1,bazelSessionStartupV1,bazelSessionWorkspaceV1,planBazelServersV1,withBazelSessionV1} from "../../🟦️.ts";
 import {bazelSlotPortV1,removeBazelTreeV1} from "../../🔌️port/🟦️.ts";
+import{privateRepositoryWorkspaceV1}from"../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 const binary=process.env.SEMIO_TEST_BAZEL_BINARY;
 type Run={status:number|null;stdout:string;stderr:string;ms:number};
@@ -15,7 +17,7 @@ const key=(index:number)=>(0xc0ffee00+index).toString(16).padStart(16,"0");
 /** 🔎️ Finds the prepared fixed module catalog (lock and repository cache) of the checkout; an explicit directory wins. */
 function catalogOf():string|undefined{
  const explicit=process.env.SEMIO_TEST_BAZEL_CATALOG;if(explicit)return explicit;
- const base=join(process.cwd(),".cache/b/d/m/bazel/modules");if(!existsSync(base))return undefined;
+ const base=join(repository.root,".cache/b/d/m/bazel/modules");if(!existsSync(base))return undefined;
  for(const name of readdirSync(base)){const directory=join(base,name);if(existsSync(join(directory,"workspace/MODULE.bazel.lock"))&&existsSync(join(directory,"repositories")))return directory;}
  return undefined;
 }

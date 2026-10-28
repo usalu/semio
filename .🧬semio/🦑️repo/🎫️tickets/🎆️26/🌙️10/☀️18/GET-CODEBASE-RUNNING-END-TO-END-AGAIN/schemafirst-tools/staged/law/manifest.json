@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🟦️.ts": {
+  "file": "00.ts",
+  "base": null,
+  "new": "f6e28d0a8f85c7b5a832f8e7616821a5c1f6ae3cb8d03bed7d9ebd8b57ab8980"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🐍️.py": {
+  "file": "01.py",
+  "base": null,
+  "new": "acab92ae12ebd2f164236376a26d4485b6e4f8631831f6b52a0dbe1d42cf4f6b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🧬️schema/🔣️.json": {
+  "file": "02.json",
+  "base": null,
+  "new": "ce6a92bed4f503b711745ca2947c6f047c99318559219f703704fd2256ab951e"
+ }
+}

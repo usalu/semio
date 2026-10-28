@@ -27,8 +27,22 @@ test("a policy with duplicate classes, duplicate matches or edges between unknow
 });
 
 test("every census family of the authored policy lands in the class its owner declared",()=>{
- const live=readLeaseOrderPolicyV1(authored),expected:Record<string,string>={"native-fixed-image:/w/.cache/b/d":"image","native-storage:abc":"image","repository-graph-facts:/w":"graph","nx:graph-pool:abc":"graph","nx:daemon-startup:abc":"tool-singleton","nx:daemon-slot:abc":"tool-singleton","build-graph-store:/r":"graph","bazel-workspace-x":"tool-singleton","bazel-snapshot-restore":"tool-singleton","cargo:registry:/h":"cargo-coordination","cargo:configuration-view:41":"toolchain","rustup:home":"toolchain","rustup:generation-shard:24":"toolchain","cargo-preparation:/w":"cargo-coordination",'["semio.cargo.build-lease/v1","/b"]':"cargo-coordination","rust-code:/c":"namespace","javascript-dependency-bindings:/w":"namespace","artifact:/a/b":"artifact","semio.compiler.cpu-picker/v1":"compiler-capacity","semio.compiler.cpu/v1/3":"compiler-capacity","nx-tooling-activation":"tool-singleton","some-future-resource":"unclassified"};
+ const live=readLeaseOrderPolicyV1(authored),expected:Record<string,string>={"native-fixed-image:/w/.cache/b/d":"image","native-storage:abc":"image","repository-graph-facts:/w":"graph","nx:graph-pool:abc":"graph","nx:daemon-startup:abc":"daemon-startup","nx:daemon-slot:abc":"daemon-slot","build-graph-store:/r":"graph","bazel-workspace-x":"tool-singleton","bazel-snapshot-restore":"tool-singleton","cargo:registry:/h":"cargo-coordination","cargo:configuration-view:41":"toolchain","rustup:home":"toolchain","rustup:generation-shard:24":"toolchain","cargo-preparation:/w":"cargo-coordination",'["semio.cargo.build-lease/v1","/b"]':"cargo-coordination","rust-code:/c":"pin","rust-code-publication:/c":"namespace","build-graph:/s/a.json":"pin","javascript-dependency-bindings:/w":"namespace","artifact:/a/b":"artifact","semio.compiler.cpu-picker/v1":"compiler-capacity","semio.compiler.cpu/v1/3":"compiler-capacity","nx-tooling-activation":"tool-singleton","nx:put-gate:abc":"image","nx:put-slot:abc:0":"image","some-future-resource":"unclassified"};
  for(const [resource,id] of Object.entries(expected))expect(`${resource} → ${classifyLeaseResourceV1(live,resource).id}`).toBe(`${resource} → ${id}`);
+});
+
+test("publishing into the shared Nx cache image follows the artifacts it publishes: the put gate and every put slot rank with the image, never with the graph, so a publication under a held artifact path is in order and the reverse is not",()=>{
+ const live=readLeaseOrderPolicyV1(authored),at=(resource:string,mode:"shared"|"exclusive")=>[{directory:"/w/.cache/b/l/m/data",resource,mode,atMs:1,task:1}];
+ const request=(resource:string)=>({directory:"/w/.cache/b/l/m/data",resource,mode:"exclusive" as const,nonblocking:false});
+ const artifact="artifact:/w/.cache/b/p/m/print/prototype/documents/print/paper",gate="nx:put-gate:f331ddb9bfed1724",slot="nx:put-slot:f331ddb9bfed1724:3";
+ for(const mode of ["shared","exclusive"] as const){
+  expect(checkLeaseOrderV1(live,at(artifact,mode),request(gate)),`gate under artifact ${mode}`).toBeUndefined();
+  expect(checkLeaseOrderV1(live,at(artifact,mode),request(slot)),`slot under artifact ${mode}`).toBeUndefined();
+ }
+ expect(checkLeaseOrderV1(live,at(gate,"exclusive"),request(slot))).toBeUndefined();
+ expect(checkLeaseOrderV1(live,at(slot,"exclusive"),request("native-fixed-image:/w/.cache/b/n"))).toBeUndefined();
+ expect(checkLeaseOrderV1(live,at(slot,"exclusive"),request(artifact))?.kind).toBe("out-of-order");
+ expect(checkLeaseOrderV1(live,at(gate,"exclusive"),request("nx:graph-pool:abc"))?.kind).toBe("out-of-order");
 });
 
 test("the lease-store image never orders: held shared it is the medium, any other image or mode still orders",()=>{
@@ -171,8 +185,82 @@ test("the toolchain and Cargo readers precede compiler capacity, which precedes 
 test("the authored policy lets a graph holder wait for the pinned graph snapshot, and still refuses an unrelated exclusive hold", () => {
   const authoredPolicy = leaseOrderPolicyV1(), directory = "/repo/.cache/b/l/m/data", held = (resource: string) => ({ directory, resource, mode: "exclusive" as const, atMs: 0, task: 1 });
   const request = { directory, resource: "build-graph:/repo/.cache/b/g/m/snapshots/" + "a".repeat(64) + ".json", mode: "shared" as const, nonblocking: false };
-  expect(classifyLeaseResourceV1(authoredPolicy, request.resource).id).toBe("graph");
+  expect(classifyLeaseResourceV1(authoredPolicy, request.resource).id).toBe("pin");
   expect(checkHoldAndWaitV1(authoredPolicy, [held("nx:daemon-service:" + "b".repeat(64))], request, 60000)).toBeUndefined();
   expect(checkHoldAndWaitV1(authoredPolicy, [held("artifact:/repo/out")], request, 60000)?.kind).toBe("hold-and-wait");
   expect(checkHoldAndWaitV1(authoredPolicy, [held("artifact:/repo/out")], request, 1000)).toBeUndefined();
+});
+
+test("the Bazel slot picker is the innermost lock: any held whole-build pin may precede it, and while it is held no other blocking lease may be requested", () => {
+  const live = readLeaseOrderPolicyV1(authored), directory = "/repo/.cache/b/l/m/data", held = (resource: string, mode: "shared" | "exclusive") => ({ directory, resource, mode, atMs: 0, task: 1 }), request = (resource: string, nonblocking = false) => ({ directory, resource, mode: "exclusive" as const, nonblocking });
+  const gates = ["bazel-slot-gate", "bazel-slot-gate:service"], holds = ["build-graph:/repo/.cache/b/g/m/snapshots/" + "a".repeat(64) + ".json", "build-graph-store:/repo/.cache/b/g/m", "rust-code:/repo/.cache/b/t/m/rc/" + "b".repeat(64), "repo:compiler-writer:/repo/.cache/rust/fixed/m", "rustup:home", "cargo:registry:/h", "semio.compiler.host-capacity/v1", "artifact:/a/b", "nx-tooling-activation", "bazel-slot-s0", "bazel-snapshot-restore"];
+  const highest = Math.max(...live.classes.filter(row => row.id !== "bazel-picker").map(row => row.rank));
+  for (const gate of gates) {
+    expect(classifyLeaseResourceV1(live, gate).id, gate).toBe("bazel-picker");
+    expect(classifyLeaseResourceV1(live, gate).rank, gate).toBeGreaterThan(highest);
+    for (const resource of holds) for (const mode of ["shared", "exclusive"] as const) expect(checkLeaseOrderV1(live, [held(resource, mode)], request(gate))?.requestedClass, `${gate} requested under ${resource} held ${mode}`).toBeUndefined();
+    for (const resource of ["rustup:home", "bazel-snapshot-restore", "semio.compiler.cpu/v1/3", "build-graph-store:/repo/.cache/b/g/m", "artifact:/a/b"]) expect(checkLeaseOrderV1(live, [held(gate, "exclusive")], request(resource))?.heldClass, `${resource} requested under ${gate}`).toBe("bazel-picker");
+    expect(checkLeaseOrderV1(live, [held(gate, "exclusive")], request("bazel-slot-s0", true)), "a slot claim cannot wait, so it may happen under the picker").toBeUndefined();
+    expect(checkHoldAndWaitV1(live, [held(gate, "exclusive")], request("rustup:home"), 60000)?.kind, "the picker is still never held while waiting").toBe("hold-and-wait");
+  }
+  for (const from of live.allowed.filter(edge => edge.to === "tool-singleton").map(edge => edge.from)) expect(live.allowed.some(edge => edge.from === from && edge.to === "bazel-picker"), `${from} keeps its declared edge to the picker`).toBe(true);
+  expect(live.allowed.filter(edge => edge.from === "bazel-picker"), "the picker declares no edge out of itself").toEqual([]);
+  for (const resource of ["bazel-slot-s0", "bazel-slot-d3", "bazel-snapshot-restore", "bazel-restore:x", "bazel-metrics"]) expect(classifyLeaseResourceV1(live, resource).id, resource).toBe("tool-singleton");
+});
+
+test("a shared whole-build pin that nobody waits for is unordered: nothing requested under the graph snapshot or the Rust code custody is out of order, while the compiler writer custody still orders", () => {
+  const live = readLeaseOrderPolicyV1(authored), directory = "/repo/.cache/b/l/m/data", held = (resource: string, mode: "shared" | "exclusive" = "shared") => ({ directory, resource, mode, atMs: 0, task: 1 }), request = (resource: string, mode: "shared" | "exclusive" = "exclusive") => ({ directory, resource, mode, nonblocking: false });
+  const pins = ["build-graph:/repo/.cache/b/g/m/snapshots/" + "a".repeat(64) + ".json", "rust-code:/repo/.cache/b/t/m/rc/" + "b".repeat(64)];
+  const inside = ["bazel-" + "c".repeat(64), "bazel-metrics", "bazel-modules-" + "d".repeat(64), "bazel-restore:", "bazel-restore:🎓️teaching/🏛️architecture", "bazel-slot-gate", "bazel-slot-gate:service", "rustup:bootstrap", "rustup:home", "rustup:generation-shard:24", "cargo:configuration-view:6", "cargo:configuration-publication", "cargo:registry:/repo/cargo/home", "build-graph-store:/repo/.cache/b/g/m", "build-graph:/repo/.cache/b/g/m/snapshots/" + "e".repeat(64) + ".json", "rust-code:/repo/.cache/b/t/m/rc/" + "f".repeat(64), "semio.compiler.cpu/v1/3", "artifact:/a/b"];
+  for (const pin of pins) {
+    expect(classifyLeaseResourceV1(live, pin).id, pin).toBe("pin");
+    expect(classifyLeaseResourceV1(live, pin).rank, pin).toBe(0);
+    for (const resource of inside) for (const mode of ["shared", "exclusive"] as const) expect(checkLeaseOrderV1(live, [held(pin)], request(resource, mode))?.requestedClass, `${resource} ${mode} requested under ${pin}`).toBeUndefined();
+  }
+  expect(classifyLeaseResourceV1(live, "rust-code-publication:/repo/.cache/b/t/m/rc").id, "the publication writer stays ordered").toBe("namespace");
+  expect(classifyLeaseResourceV1(live, "build-graph-store:/repo/.cache/b/g/m").id).toBe("graph");
+  for (const resource of ['["semio.cargo.build-lease/v1","/b","prototype"]', "artifact-capture:/a/b"]) expect(checkLeaseOrderV1(live, [held("repo:compiler-writer:/repo/.cache/rust/fixed/m")], request(resource, "shared"))?.heldClass, `${resource} under the compiler writer custody`).toBe("image");
+  const exclusive = (resource: string) => held(resource, "exclusive"), pinRequest = request(pins[1]!, "shared");
+  expect(checkHoldAndWaitV1(live, [exclusive("rust-code-publication:/repo/.cache/b/t/m/rc")], pinRequest, 60000)?.kind, "an exclusive namespace holder still may not wait for a pin").toBe("hold-and-wait");
+  for (const from of ["nx:daemon-service:" + "b".repeat(64), "semio.compiler.host-capacity/v1", '["semio.cargo.custody-lease/v1","/b","prototype"]']) expect(checkHoldAndWaitV1(live, [exclusive(from)], request(pins[0]!, "shared"), 60000), `${from} keeps its declared edge to the pin`).toBeUndefined();
+});
+
+test("the Rust descriptor namespace and its admission gate sit with the tool singletons: the session slot may precede them, graph, bazel and cargo leases follow them, and nothing ranked after them may take them", () => {
+  const live = readLeaseOrderPolicyV1(authored), directory = "/repo/.cache/b/l/m/data", held = (resource: string, mode: "shared" | "exclusive" = "shared") => ({ directory, resource, mode, atMs: 0, task: 1 }), request = (resource: string, mode: "shared" | "exclusive" = "exclusive") => ({ directory, resource, mode, nonblocking: false });
+  const namespace = "rust-descriptor-namespace:/repo/.repo/rust/fixed/m/cargo/prototype/captures/units", admission = "rust-descriptor-admission:/repo/.repo/rust/fixed/m/cargo/prototype/captures/units";
+  for (const resource of [namespace, admission]) expect(classifyLeaseResourceV1(live, resource).id, resource).toBe("descriptor-custody");
+  expect(classifyLeaseResourceV1(live, "rust-code-publication:/repo/rc").id).toBe("namespace");
+  for (const inside of ["build-graph-store:/repo/.cache/b/g/m", "bazel-" + "c".repeat(64), "bazel-metrics", "bazel-modules-" + "d".repeat(64), "bazel-restore:", "bazel-slot-gate", "cargo:configuration-publication", '["semio.cargo.store-lease/v1","/b"]', '["semio.cargo.custody-lease/v1","/b","prototype"]', "artifact-capture:/a", "repo:compiler-writer:/repo/.repo/rust/fixed/m", namespace]) for (const mode of ["shared", "exclusive"] as const) expect(checkLeaseOrderV1(live, [held(namespace)], request(inside, mode))?.requestedClass, `${inside} ${mode} under the namespace`).toBeUndefined();
+  for (const before of ["bazel-slot-s0", "bazel-snapshot-restore", admission, "build-graph:/repo/.cache/b/g/m/snapshots/" + "a".repeat(64) + ".json"]) expect(checkLeaseOrderV1(live, [held(before, "exclusive")], request(namespace, "shared")), `the namespace under ${before}`).toBeUndefined();
+  for (const after of ["build-graph-store:/repo/.cache/b/g/m", "artifact:/a", "repo:compiler-writer:/repo/.repo/rust/fixed/m"]) expect(checkLeaseOrderV1(live, [held(after, "exclusive")], request(namespace, "shared"))?.requestedClass, `the namespace requested under ${after} is a cycle risk`).toBe("descriptor-custody");
+  expect(checkHoldAndWaitV1(live, [held(admission, "exclusive")], request(namespace), 60000)?.kind, "a maintenance writer still may not queue for readers while it holds the gate").toBe("hold-and-wait");
+  expect(checkHoldAndWaitV1(live, [held('["semio.cargo.custody-lease/v1","/b","prototype"]', "exclusive")], request(namespace, "shared"), 60000), "the custody keeps its declared edge").toBeUndefined();
+});
+
+test("the start of an Nx daemon is the innermost lease: every image, tool and graph lease is in order before it, and nothing may be requested or awaited while it is held",()=>{
+ const live=readLeaseOrderPolicyV1(authored),directory="/w/.cache/b/l/m/data",start="nx:daemon-startup:"+"c".repeat(64),identity="b".repeat(64);
+ const at=(resource:string,mode:"shared"|"exclusive")=>[{directory,resource,mode,atMs:1,task:1}],request=(resource:string,mode:"shared"|"exclusive")=>({directory,resource,mode,nonblocking:false});
+ const before=["nx:fixed-cache:/w/m","nx:graph-namespace:"+identity,"nx-tooling:"+identity,"nx-sdk-snapshot:"+identity,"native-storage:[1,2,3,4]","artifact:/a/b","nx:put-slot:abc:0","build-graph:/w/.cache/b/g/m/snapshots/"+identity+".json"];
+ for(const held of before)for(const mode of ["shared","exclusive"] as const)expect(checkLeaseOrderV1(live,at(held,mode),request(start,"exclusive")),`${held} ${mode} before the start`).toBeUndefined();
+ for(const wanted of before.slice(0,5))expect(checkLeaseOrderV1(live,at(start,"exclusive"),request(wanted,"shared"))?.kind,`${wanted} under the start`).toBe("out-of-order");
+ const wait=(wanted:string,milliseconds:number)=>checkHoldAndWaitV1(live,at(start,"exclusive"),request(wanted,"shared"),milliseconds);
+ expect(wait("native-storage:[1,2,3,4]",14999)).toBeUndefined();
+ expect(wait("native-storage:[1,2,3,4]",15000)).toMatchObject({kind:"hold-and-wait",held:start,requestedClass:"image",heldClass:"daemon-startup"});
+ expect(wait("nx-tooling:"+identity,15000)?.kind).toBe("hold-and-wait");
+ expect(live.allowed.filter(edge=>edge.from==="daemon-startup")).toEqual([]);
+ expect(classifyLeaseResourceV1(live,start).rank).toBeGreaterThan(Math.max(...before.map(resource=>classifyLeaseResourceV1(live,resource).rank)));
+});
+
+test("a resident daemon slot is inert: held for a daemon's whole life it blocks no wait and orders against nothing, while any other exclusive hold still refuses the same wait",()=>{
+ const live=readLeaseOrderPolicyV1(authored),directory="/w/.cache/b/l/m/data",slot="nx:daemon-slot:f331ddb9bfed1724:finite:0",native="native-storage:[1,2,3,4]";
+ const at=(resource:string,mode:"shared"|"exclusive")=>[{directory,resource,mode,atMs:1,task:1}],request=(resource:string,mode:"shared"|"exclusive")=>({directory,resource,mode,nonblocking:false});
+ expect(classifyLeaseResourceV1(live,slot)).toMatchObject({id:"daemon-slot",inert:true});
+ for(const wanted of [native,"nx-tooling:"+"b".repeat(64),"nx:graph-namespace:"+"c".repeat(64),"artifact:/a/b","nx:daemon-service:"+"c".repeat(64)]){
+  expect(checkHoldAndWaitV1(live,at(slot,"exclusive"),request(wanted,"shared"),60000),`${wanted} under the slot`).toBeUndefined();
+  expect(checkLeaseOrderV1(live,at(slot,"exclusive"),request(wanted,"shared")),`${wanted} under the slot`).toBeUndefined();
+ }
+ expect(checkHoldAndWaitV1(live,at("artifact:/a/b","exclusive"),request(native,"shared"),60000)?.kind).toBe("hold-and-wait");
+ expect(checkHoldAndWaitV1(live,at(slot,"exclusive"),request(slot,"exclusive"),60000)).toBeUndefined();
+ expect(validatePolicy({...authored,classes:authored.classes.map(row=>row.id==="daemon-slot"?{...row,inert:"yes"}:row)})).toBe(false);
+ expect(validatePolicy({...authored,classes:authored.classes.map(row=>row.id==="daemon-slot"?{...row,quiet:true}:row)})).toBe(false);
 });

@@ -100,7 +100,7 @@ for(const row of corpus.testDomain)test("test domain: "+row.name,()=>{
 for(const row of corpus.composition)test("composition: "+row.path,()=>{expect(dependencyIsCompositionManifest(row.path)).toBe(row.expected);});
 for(const row of corpus.goModule)test("go.mod: "+row.name,()=>{expect(clean(dependencyParseGoModule(row.content))).toEqual(row.expected);});
 test("the independent Python model reaches the same verdicts",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

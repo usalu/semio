@@ -1,0 +1,12 @@
+{
+ "target": "test-snapshot-sqlite",
+ "crates": [
+  "semio-framework-io-sqlite-snapshot"
+ ],
+ "closureCrates": 1,
+ "depInfoUnits": 2,
+ "workspaceFilesRead": 12,
+ "declared": 456,
+ "undeclared": [],
+ "closureWithoutUnits": []
+}

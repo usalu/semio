@@ -6,7 +6,8 @@
     "version",
     "deadlineMilliseconds",
     "observationMilliseconds",
-    "cases"
+    "cases",
+    "drainCases"
   ],
   "properties": {
     "version": {
@@ -60,6 +61,42 @@
           },
           "waiterAcquired": {
             "const": false
+          }
+        }
+      }
+    },
+    "drainCases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "halt",
+          "settleAfterMilliseconds",
+          "drained"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "halt": {
+            "enum": [
+              "cancel",
+              "timeout"
+            ]
+          },
+          "settleAfterMilliseconds": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "drained": {
+            "type": "boolean"
           }
         }
       }

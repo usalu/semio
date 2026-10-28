@@ -1,11 +1,11 @@
 import{fileURLToPath}from"node:url";
-import{captureBoundedSourceRevisionV1,capturePhysicalSourceTextV1,physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
+import{REVISION_POLICY_V1,captureBoundedSourceRevisionV1,capturePhysicalSourceTextV1,physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
 import {createHash} from "node:crypto";
 import {resolve,relative,isAbsolute,sep} from "node:path";
-const schemaSource=Buffer.from(capturePhysicalSourceTextV1(new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),65536)),schema=JSON.parse(schemaSource.toString("utf8"));
-const nativeSchemaSource=Buffer.from(capturePhysicalSourceTextV1(new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),65536)),nativeSchema=JSON.parse(nativeSchemaSource.toString("utf8"));
+const schemaSource=Buffer.from(capturePhysicalSourceTextV1(new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),REVISION_POLICY_V1.maximumTextBytes)),schema=JSON.parse(schemaSource.toString("utf8"));
+const nativeSchemaSource=Buffer.from(capturePhysicalSourceTextV1(new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),REVISION_POLICY_V1.maximumTextBytes)),nativeSchema=JSON.parse(nativeSchemaSource.toString("utf8"));
 const key="SEMIO_OWNER_ARGUMENTS";
-const argumentSourceIdentity=(captured=false)=>createHash("sha256").update(JSON.stringify([captureBoundedSourceRevisionV1(fileURLToPath(new URL(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL))),8388608).sha256,...[captured?schemaSource:Buffer.from(capturePhysicalSourceTextV1(new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),65536)),captured?nativeSchemaSource:Buffer.from(capturePhysicalSourceTextV1(new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),65536))].map(bytes=>createHash("sha256").update(bytes).digest("hex"))])).digest("hex"),loadedArgumentSourceIdentity=import.meta.semioFrozenAuthorizers?undefined:argumentSourceIdentity(true);
+const argumentSourceIdentity=(captured=false)=>createHash("sha256").update(JSON.stringify([captureBoundedSourceRevisionV1(fileURLToPath(new URL(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL))),REVISION_POLICY_V1.maximumSourceBytes).sha256,...[captured?schemaSource:Buffer.from(capturePhysicalSourceTextV1(new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),REVISION_POLICY_V1.maximumTextBytes)),captured?nativeSchemaSource:Buffer.from(capturePhysicalSourceTextV1(new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),REVISION_POLICY_V1.maximumTextBytes))].map(bytes=>createHash("sha256").update(bytes).digest("hex"))])).digest("hex"),loadedArgumentSourceIdentity=import.meta.semioFrozenAuthorizers?undefined:argumentSourceIdentity(true);
 
 /** 🔏️ Binds the evaluated argument owner to its own unchanged physical implementation and contracts. */
 export function ownerArgumentsSourceIdentityV1(){if(!loadedArgumentSourceIdentity)throw Error("Live private Nx argument Source identity required");if(argumentSourceIdentity()!==loadedArgumentSourceIdentity)throw Error("Loaded private Nx argument Source changed");return loadedArgumentSourceIdentity;}
@@ -28,14 +28,17 @@ export function conformsOwnerContractV1(contract,value){
  return Object.hasOwn(contract,"const");
 }
 
-/** 🔤️ Reads a literal process command without evaluating shell operators or substitutions. */
+/** 🔤️ Whitespace and shell operator characters, compiled once instead of once per character. */
+const WHITESPACE_V1 = /\s/u, SHELL_OPERATOR_V1 = /[;&|<>`$"']/u;
+
+/** 📖️ Reads a literal process command without evaluating shell operators or substitutions. */
 export function literalCommandTokensV1(command){
  const tokens=[];let cursor=0;
- while(cursor<command.length){while(/\s/u.test(command[cursor]??"")&&cursor<command.length)cursor++;if(cursor===command.length)break;const start=cursor;
+ while(cursor<command.length){while(WHITESPACE_V1.test(command[cursor]??"")&&cursor<command.length)cursor++;if(cursor===command.length)break;const start=cursor;
   if(command[cursor]==='"'){cursor++;while(cursor<command.length){if(command[cursor]==="\\"){cursor+=2;continue;}if(command[cursor++]==='"')break;}tokens.push(JSON.parse(command.slice(start,cursor)));}
   else if(command[cursor]==="'"){cursor++;const end=command.indexOf("'",cursor);if(end<0)throw Error("Unclosed original native command");tokens.push(command.slice(cursor,end));cursor=end+1;}
-  else{while(cursor<command.length&&!/\s/u.test(command[cursor]))cursor++;const token=command.slice(start,cursor);if(/[;&|<>`$"']/u.test(token))throw Error("Native command requires literal discovered arguments");tokens.push(token);}
-  if(cursor<command.length&&!/\s/u.test(command[cursor]))throw Error("Native command requires distinct literal arguments");
+  else{while(cursor<command.length&&!WHITESPACE_V1.test(command[cursor]))cursor++;const token=command.slice(start,cursor);if(SHELL_OPERATOR_V1.test(token))throw Error("Native command requires literal discovered arguments");tokens.push(token);}
+  if(cursor<command.length&&!WHITESPACE_V1.test(command[cursor]))throw Error("Native command requires distinct literal arguments");
  }
  return tokens;
 }

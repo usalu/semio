@@ -2,6 +2,7 @@ import {withBuildTestInvocationV1} from "../../../../../../../🔨️modules/�
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { expect, test } from "bun:test";
 
+const repository=await privateRepositoryWorkspaceV1();
 type Mutable<T> = { -readonly [K in keyof T]: Mutable<T[K]> };
 import type { RuntimeBuildResourceObservationV1, RuntimeCargoObservationV1 } from "../🧬️schema/🟦️.ts";
 import { readFileSync, mkdirSync, readdirSync, writeFileSync, existsSync, mkdtempSync } from "node:fs";
@@ -18,6 +19,7 @@ import {withIssuedLawStorageV1,lawSourceBoundaryV1} from "../../../../../../../�
 import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { inspectRuntimeGraphV1, runtimeEcmaReferencesV1, runtimeFixturePathV1 } from "../🟦️.ts";
 import { cargoDepInfoChecksumsV1, cargoDepInfoResolvedChecksumsV1, cargoDepInfoSourcesV1, encodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import{privateRepositoryWorkspaceV1}from"../../../🧪️testing/🧫️private-repository/🟦️.ts";
 const owner = resolve(import.meta.dir, "..");
 const examples = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")).examples;
 const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
@@ -495,5 +497,5 @@ for(const vector of JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixt
 
 /** 🌊️ Actual runtime compiler fixtures retain their original incoming process authority. */
 async function originalCargoStreamingV1(args:readonly string[],cwd:string,environment:NodeJS.ProcessEnv,budgetMilliseconds:number):Promise<number>{
- return withBuildTestInvocationV1(invocation=>withIssuedLawStorageV1(invocation,new AbortController().signal,async law=>{const {cargoStreamingStatus}=await import("../../../🏃️process/🟦️.ts");const policy={version:1 as const,mode:readBuildMode(process.env.SEMIO_BUILD_MODE),cwd,compilerConfiguration:join(process.cwd(),".cargo/config.toml"),buildDirectory:environment.CARGO_BUILD_BUILD_DIR!,leaseDirectory:join(process.cwd(),".cache/b/l/m/data"),captureDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR!,budgetMs:budgetMilliseconds};return cargoStreamingStatus(args,cwd,{...environment,...law.environment},{invocation,control:scriptCompilerAdmissionControlV1(invocation,"runtime:cargo-streaming",budgetMilliseconds),policy,storage:law.storage,sourceBoundary:lawSourceBoundaryV1});}));
+ return withBuildTestInvocationV1(invocation=>withIssuedLawStorageV1(invocation,new AbortController().signal,async law=>{const {cargoStreamingStatus}=await import("../../../🏃️process/🟦️.ts");const policy={version:1 as const,mode:readBuildMode(process.env.SEMIO_BUILD_MODE),cwd,compilerConfiguration:join(process.cwd(),".cargo/config.toml"),buildDirectory:environment.CARGO_BUILD_BUILD_DIR!,leaseDirectory:join(repository.root,".cache/b/l/m/data"),captureDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR!,budgetMs:budgetMilliseconds};return cargoStreamingStatus(args,cwd,{...environment,...law.environment},{invocation,control:scriptCompilerAdmissionControlV1(invocation,"runtime:cargo-streaming",budgetMilliseconds),policy,storage:law.storage,sourceBoundary:lawSourceBoundaryV1});}));
 }

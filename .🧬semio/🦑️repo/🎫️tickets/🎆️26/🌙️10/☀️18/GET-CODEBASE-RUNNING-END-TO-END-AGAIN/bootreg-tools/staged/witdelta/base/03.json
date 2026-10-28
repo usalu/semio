@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "package": "synchronized_kernel",
+  "tool": "cargo 1.95.0-nightly (witness fixture)",
+  "cases": [
+    {"id": "unchanged", "edit": "none", "child": 0},
+    {"id": "unrelated-file", "edit": "unrelated-file", "child": 0},
+    {"id": "member-manifest", "edit": "member-manifest", "child": 1},
+    {"id": "owner-manifest", "edit": "owner-manifest", "child": 1},
+    {"id": "lock", "edit": "lock", "child": 1},
+    {"id": "new-directory", "edit": "new-directory", "child": 1},
+    {"id": "configuration", "edit": "configuration", "child": 1},
+    {"id": "environment", "edit": "environment", "child": 1},
+    {"id": "tool", "edit": "tool", "child": 1},
+    {"id": "receipt", "edit": "receipt", "child": 1},
+    {"id": "witness", "edit": "witness", "child": 1},
+    {"id": "no-tool-inputs", "edit": "no-tool-inputs", "child": 1}
+  ]
+}

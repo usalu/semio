@@ -1,0 +1,47 @@
+{
+ "version": 1,
+ "files": {
+  "lib/src/a.txt": "alpha\n",
+  "lib/src/b.txt": "beta\n",
+  "lib/secret.txt": "undeclared\n",
+  "lib/gen.ts": "import{mkdirSync,readFileSync,readdirSync,writeFileSync}from\"node:fs\";const base=process.env.SEMIO_WORKSPACE_ROOT+\"/lib\";mkdirSync(base+\"/gen\",{recursive:true});writeFileSync(base+\"/gen/out.txt\",readdirSync(base+\"/src\").sort().map(name=>readFileSync(base+\"/src/\"+name,\"utf8\").toUpperCase()).join(\"\"));"
+ },
+ "planned": {
+  "output": "ALPHA\nBETA\n",
+  "inputs": {
+   "lib/src/a.txt": "b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060",
+   "lib/src/b.txt": "f2c82decdd7181cf98945929a62598db7e6b477e11f6e0eb0ae97020eff151ad"
+  }
+ },
+ "afterPlanning": [
+  {
+   "op": "write",
+   "path": "lib/src/a.txt",
+   "text": "edited\n"
+  },
+  {
+   "op": "remove",
+   "path": "lib/src/b.txt"
+  },
+  {
+   "op": "write",
+   "path": "lib/src/c.txt",
+   "text": "new\n"
+  },
+  {
+   "op": "write",
+   "path": "lib/secret.txt",
+   "text": "still undeclared\n"
+  }
+ ],
+ "replanned": {
+  "output": "EDITED\nNEW\n",
+  "vanished": [
+   "lib/src/b.txt"
+  ],
+  "inputs": {
+   "lib/src/a.txt": "68f01b289aedcf28e96fce1f9444365e83b9bfc7e1bf32df20f1f15966835316",
+   "lib/src/c.txt": "7aa7a5359173d05b63cfd682e3c38487f3cb4f7f1d60659fe59fab1505977d4c"
+  }
+ }
+}

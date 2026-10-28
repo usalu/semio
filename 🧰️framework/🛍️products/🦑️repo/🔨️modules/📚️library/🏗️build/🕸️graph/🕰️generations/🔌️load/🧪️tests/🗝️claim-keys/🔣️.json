@@ -1,0 +1,5 @@
+{
+ "version": 1,
+ "equality": {"seeds": 60},
+ "memory": {"owners": 120, "sharedRows": 12000, "foundRows": 6, "maximumInsertionsPerRow": 4}
+}

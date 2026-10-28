@@ -1,0 +1,31 @@
+{
+ "label": "g47-print",
+ "target": "@semio-tech/print-rs:test",
+ "started": "21:17:49",
+ "wall_s": 1047.9,
+ "peak_tree_mb": 11032,
+ "peak_processes": 10,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 10.1,
+ "graph": {
+  "refreshing": [
+   "38"
+  ],
+  "inferring": [
+   "37"
+  ],
+  "published": [
+   "684",
+   "38",
+   "495"
+  ],
+  "processes": [
+   "7",
+   "2 action cache hit, 2 internal, 3 local, 2 worker"
+  ],
+  "actions": [
+   "7"
+  ]
+ }
+}

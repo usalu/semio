@@ -1,0 +1,20 @@
+{
+ "label": "g39p-revert",
+ "target": "@semio-tech/print-rs:test",
+ "started": "12:30:51",
+ "wall_s": 25.1,
+ "peak_tree_mb": 3335,
+ "peak_processes": 4,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "3",
+   "2 disk cache hit, 1 internal"
+  ],
+  "actions": [
+   "3"
+  ]
+ }
+}

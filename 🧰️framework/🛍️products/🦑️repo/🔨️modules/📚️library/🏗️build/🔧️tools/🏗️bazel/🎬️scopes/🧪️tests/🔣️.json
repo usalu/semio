@@ -60,6 +60,14 @@
     {
       "reason": "the owned execution starts the command itself",
       "fragment": "/🎛️owned-execution/🟦️.ts"
+    },
+    {
+      "reason": "the generation store packs and publishes the fact index, so its code decides stored bytes",
+      "fragment": "/🕸️graph/🕰️generations/🟨️.mjs"
+    },
+    {
+      "reason": "the churn protocol and its settle window decide which bytes a source capture accepts",
+      "fragment": "/🧾️observation/🔁️churn/🟦️.ts"
     }
   ],
   "schedulingSamples": [
@@ -76,8 +84,8 @@
       "fragment": "/🏪️store/🟦️.ts"
     },
     {
-      "reason": "the churn retry only decides when to read again",
-      "fragment": "/🧾️observation/🔁️churn/🟦️.ts"
+      "reason": "the churn refusal texts only name which failure counts as a race",
+      "fragment": "/🧾️observation/🔁️churn/🧾️refusals/🟦️.ts"
     },
     {
       "reason": "progress and refusal texts are shown to humans",

@@ -13,7 +13,6 @@ import (
 	time "time"
 
 	codebase "github.com/usalu/semio/repo/codebase"
-	workspace "github.com/usalu/semio/repo/workspace"
 	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
@@ -52,8 +51,8 @@ func readStatutesFixture(t *testing.T, folder string) string {
 	return string(content)
 }
 
-// 🏗️withMonorepoFixture builds a throwaway monorepo in `t.TempDir()` and points the
-// workspace at it, so the walk-backed queries assert against a tree this file owns
+// 🏗️withMonorepoFixture builds a throwaway monorepo in `t.TempDir()` and binds the
+// workspace to it as a repository of its own, so the walk-backed queries assert against a tree this file owns
 // instead of against the developer's own checkout.
 func withMonorepoFixture(t *testing.T) string {
 	t.Helper()
@@ -76,14 +75,33 @@ func withMonorepoFixture(t *testing.T) string {
 	write("compose/go/main.go", fixtureSectionedGo)
 	write("repo/client/AGENTS.md", "---\nbundle:\n  emoji: ⌨️\n---\n")
 	write("repo/client/main.go", fixtureSectionedGo)
-	previous := workspace.GetRootDir()
-	workspace.SetRootDir(root)
+	t.Cleanup(codebase.InvalidateTechnologyCache)
+	sandbox.BindRoot(t, root)
 	codebase.InvalidateTechnologyCache()
-	t.Cleanup(func() {
-		workspace.SetRootDir(previous)
-		codebase.InvalidateTechnologyCache()
-	})
 	return root
+}
+
+// 🩹️seedFixableTechnology writes a one-technology repository holding the fixable statute fixture into `root`, binds the workspace to it as a repository of its own and answers the repository-relative path of the fixture copy, so the autofix cases fix a tree this file owns instead of the developer's own checkout.
+func seedFixableTechnology(t *testing.T, root string, content string) string {
+	t.Helper()
+	relative := "compose/js/🟦️.tsx"
+	for path, body := range map[string]string{
+		"compose/README.md":    "---\nname: compose\nkind: user\n---\n\n# compose\n",
+		"compose/js/AGENTS.md": "---\nbundle:\n  emoji: 📜️\n---\n",
+		relative:               content,
+	} {
+		abs := filepath.Join(root, filepath.FromSlash(path))
+		if err := os.MkdirAll(filepath.Dir(abs), 0o755); err != nil {
+			t.Fatalf("mkdir %s: %v", path, err)
+		}
+		if err := os.WriteFile(abs, []byte(body), 0o644); err != nil {
+			t.Fatalf("write %s: %v", path, err)
+		}
+	}
+	t.Cleanup(codebase.InvalidateTechnologyCache)
+	sandbox.BindRoot(t, root)
+	codebase.InvalidateTechnologyCache()
+	return relative
 }
 
 func fixtureExecutor(t *testing.T) *Executor {

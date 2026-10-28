@@ -23,13 +23,13 @@
       "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
       "definition": "ImplementationPolicy",
       "removed": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/⚙️policy.json",
-      "sha256": "0867a1cace7e955ec25fa73db5ae934c4a0019fce294542563e90b75a7fee30e"
+      "sha256": "331e98a0ad573641f5890885c66774c342f9f93621694f19fccb654d2753ffb1"
     },
     {
       "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
       "definition": "Planner",
       "removed": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/📋️planner.json",
-      "sha256": "aee2629df3d475ef29549896e0bffe91480629544848600a152c372034d5771d"
+      "sha256": "668da2bbd2592258a1e281e36c3eb0f0bfc5ce59e244520f49634f103ba50849"
     },
     {
       "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
@@ -41,13 +41,13 @@
       "component": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
       "definition": "Command",
       "removed": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🎛️command/🧬️schema/🔣️.json",
-      "sha256": "2bb5b0acd8ff9a63031370b3d16abc0bef5cba55bf6f17c058f8e14c71f7f7dd"
+      "sha256": "a53e544b096fd8237f27c17d4aa6d66ac8b2eb46522628c78d9464c5618aa63f"
     },
     {
       "component": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
       "definition": "PreparationReceipt",
       "removed": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/📥️receipt.json",
-      "sha256": "11fc5fe658e283f3f4f33a3d1d372837be4829576e5c3c1bce9d3b72c8fa0818"
+      "sha256": "5fc3759d3c3eefc584ec2ae39f3ef1862127ed5cd13cd49b1a20a629d4d3794a"
     },
     {
       "component": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
@@ -71,7 +71,7 @@
       "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
       "definition": "StorageLayout",
       "removed": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧬️schema/🔣️.json",
-      "sha256": "e26909ffc36cc4bf690bc0a6449e14cbe6f57b97b5cadaf8bcbe02b4e1aee59e"
+      "sha256": "1bbc51c62ebf101b080755aab67c04e8d1662f88e95f8f68d4e43572c72f6fc9"
     }
   ],
   "vectors": [
@@ -215,6 +215,7 @@
         "workspace": "/owned/workspace",
         "outputs": "/owned/outputs",
         "actions": "/owned/actions",
+        "pool": "/owned/pool",
         "server": "/owned/server",
         "temporary": "/owned/temporary"
       },
@@ -231,6 +232,7 @@
         "workspace": "/owned/workspace",
         "outputs": "/owned/outputs",
         "actions": "/owned/actions",
+        "pool": "/owned/pool",
         "server": "/owned/server",
         "temporary": "/owned/temporary",
         "foreign": true

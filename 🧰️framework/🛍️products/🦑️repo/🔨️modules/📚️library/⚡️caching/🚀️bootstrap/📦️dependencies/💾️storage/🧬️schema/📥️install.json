@@ -5289,7 +5289,9 @@
         "allOutputsBeforeFirstPublication": true,
         "sourcePublication": "current-owned-conditional-file",
         "partialFailure": "retain-no-rollback",
-        "wholeAllocationRetired": false
+        "wholeAllocationRetired": false,
+        "ownershipProgressWork": 4096,
+        "ownershipFrontierBatchPaths": 64
       }
     },
     "SourceOwnerStoreLockCase": {

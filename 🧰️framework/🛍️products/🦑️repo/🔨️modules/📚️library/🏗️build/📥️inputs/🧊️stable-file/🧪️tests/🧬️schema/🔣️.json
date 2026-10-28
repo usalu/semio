@@ -30,7 +30,9 @@
           "errorCode": { "type": "string", "minLength": 1 },
           "cancelAt": { "type": "integer", "minimum": 1 },
           "mutateAt": { "type": "integer", "minimum": 1 },
-          "mutation": { "enum": ["append", "touch", "truncate"] }
+          "mutation": { "enum": ["append", "touch", "truncate"] },
+          "retried": { "const": true },
+          "finalSize": { "type": "integer", "minimum": 0 }
         }
       }
     }

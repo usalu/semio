@@ -9,10 +9,11 @@ import corpus from"./🔣️.json";
 import corpusSchema from"./🧬️schema/🔣️.json";
 import scanSchema from"../../🧬️schema/🔣️.json";
 import authoritySchema from"../../../🧬️schema/📜️ticket.json";
-import{registerBuildTestLawV1}from"../../../../🧪️testing/📥️invocation/🟦️.ts";
+import{declareBuildTestEnvelopeV1,registerBuildTestLawV1}from"../../../../🧪️testing/📥️invocation/🟦️.ts";
 import{withIssuedResourceControlV1,scriptInvocationEnvironment,type ScriptInvocation}from"../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type{ResourceLeaseControl}from"../../../🟦️.ts";
 import{captureOwnedCommandResultV1}from"../../../../🎛️owned-execution/📥️capture/🟦️.ts";
+declareBuildTestEnvelopeV1({owner:"test:leases",maximumElapsedMilliseconds:300000,capabilities:{artifacts:true}});
 const path=(name:string)=>fileURLToPath(new URL(name,import.meta.url)),routing=path("../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),lease=path("../../../🟦️.ts"),retirement=path("../../🟦️.ts");
 async function child(program:string,original:ScriptInvocation,control:ResourceLeaseControl){const result=await captureOwnedCommandResultV1(process.execPath,["-e",program],process.cwd(),{control,env:{...scriptInvocationEnvironment(original,process.env),BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0",NODE_DISABLE_COMPILE_CACHE:"1"},output:{maximumBytes:65536,maximumLines:256}});expect(result.signal).toBeNull();if(!result.stdout.trim())throw Error("Actual retirement frontier child omitted terminal DATA: "+result.stderr);return{status:result.status,stderr:result.stderr,data:JSON.parse(result.stdout.trim().split("\n").at(-1)??"")};}
 test("neutral queue claim cleanup preserves authored frontiers and bounded progress",()=>{expect(new Ajv({strict:true}).validate(corpusSchema,corpus)).toBe(true);const policy=authoritySchema.definitions.ClaimRetentionPolicy.properties;expect(policy.maximumClaimsPerTurn.const).toBe(corpus.maximumClaimsPerTurn);expect(policy.maximumDatabaseBytes.const).toBe(16384);expect(authoritySchema.definitions.RetirementPolicy.properties.maximumDirectoryEntries.const).toBe(corpus.maximumDirectoryEntries);expect(scanSchema.definitions.Scan.const).toEqual({entriesPerYield:128,entriesPerProgress:4096});});

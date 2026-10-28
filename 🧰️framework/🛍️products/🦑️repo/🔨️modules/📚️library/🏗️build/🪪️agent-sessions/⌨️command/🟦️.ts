@@ -1,11 +1,12 @@
 import {mkdirSync,readdirSync} from "node:fs";
 import {readHostCapacityStatusV1,hostCapacityDirectoryV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {readLeaseReportV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/📋️status/🟦️.ts";
-import {AgentSessionErrorV1,agentSessionAddressV1,agentSessionEnvironmentV1,agentSessionMessageV1,agentSessionPathsV1,agentSessionRegistryRootV1,agentSessionStoreV1,agentSessionWorktreeKeyV1,closeAgentSessionV1,collectAgentSessionsV1,currentAgentSessionV1,readAgentSessionTokenV1,isAgentSessionIdV1,listAgentSessionsV1,listSessionSandboxesV1,renderAgentSessionListV1,renderAgentSessionStatusV1,testSandboxParentV1,AGENT_SESSION_POLICY_V1,type AgentSessionRowV1,type AgentSessionV1,type AncestryPortV1,type CurrentAgentSessionOptionsV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
+import {listSessionSandboxesV1,testSandboxParentV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🏖️sandbox/🟦️.ts";
+import {AgentSessionErrorV1,agentSessionAddressV1,agentSessionEnvironmentV1,agentSessionMessageV1,agentSessionPathsV1,agentSessionRegistryRootV1,agentSessionStoreV1,agentSessionWorktreeKeyV1,closeAgentSessionV1,collectAgentSessionsV1,currentAgentSessionV1,readAgentSessionTokenV1,isAgentSessionIdV1,listAgentSessionsV1,renderAgentSessionListV1,renderAgentSessionStatusV1,AGENT_SESSION_POLICY_V1,type AgentSessionRowV1,type AgentSessionV1,type AncestryPortV1,type CurrentAgentSessionOptionsV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1} from "../../🌡️host-capacity/🟦️.ts";
 import {REPOSITORY_LEASE_DIRECTORY_V1} from "../../🔒️leases/⌨️command/🟦️.ts";
 import {agentSessionReclaimV1} from "../🟦️.ts";
-import {resolveLanguageV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {CATALOG_LANGUAGES_V1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 
 /** 📊️ What one session holds right now across the tools. */

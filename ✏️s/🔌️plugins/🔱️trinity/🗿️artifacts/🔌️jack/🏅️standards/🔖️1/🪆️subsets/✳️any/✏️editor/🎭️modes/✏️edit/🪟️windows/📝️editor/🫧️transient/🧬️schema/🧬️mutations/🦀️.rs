@@ -2,7 +2,7 @@
 
 use super::{JackEditorWindowTransient, JackEditorWindowTransientDiff};
 
-#[path = "🔤️set-editor-selection/🦀️.rs"]
+#[path = "🔤️editor-selection/🦀️.rs"]
 mod set_editor_selection;
 pub use set_editor_selection::SetEditorSelection;
 

@@ -76,7 +76,7 @@
      "support": "adapter",
      "note": {
       "en": "Task start and end are published by the repository adapter, not by Nx.",
-      "de": "Start und Ende einer Aufgabe veröffentlicht der Repository-Adapter, nicht Nx."
+      "de": "Start und Ende einer Task veröffentlicht der Repository-Adapter, nicht Nx."
      }
     },
     "parallelism": {
@@ -89,7 +89,7 @@
      "support": "missing",
      "note": {
       "en": "Two Nx processes on one workspace do not coordinate: a cold task can run in both.",
-      "de": "Zwei Nx-Prozesse auf einem Workspace stimmen sich nicht ab: eine kalte Aufgabe kann in beiden laufen."
+      "de": "Zwei Nx-Prozesse auf einem Workspace stimmen sich nicht ab: eine kalte Task kann in beiden laufen."
      }
     },
     "remote-cache": {
@@ -99,7 +99,7 @@
      "support": "native",
      "note": {
       "en": "Nx stores a run record with the cache status of every task.",
-      "de": "Nx speichert einen Laufbericht mit dem Cache-Status jeder Aufgabe."
+      "de": "Nx speichert einen Laufbericht mit dem Cache-Status jeder Task."
      }
     }
    }

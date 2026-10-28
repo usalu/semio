@@ -53,10 +53,11 @@ function decideRecord(f:Record<string,any>):Verdict{
 }
 function decideLeak(f:Record<string,any>):Verdict{
  if(f.backing==="absent")return act("backing-removed",[{action:"detach-image",target:f.key}]);
- if(f.location!=="scratch")return keep("owned");
+ const stale=f.location==="workspace"&&f.attachment!==undefined;
+ if(f.location!=="scratch"&&!stale)return keep("owned");
  if(!f.idle)return keep("live");
  if(f.lease==="unavailable")return keep("unleased");
- return f.lease==="free"?act("abandoned",[{action:"detach-image",target:f.key}]):keep("live");
+ return f.lease==="free"?act(stale?"stale-attachment":"abandoned",[{action:"detach-image",target:f.key}]):keep("live");
 }
 const bound=(binding:string,ok:string):Verdict=>binding==="mismatch"?refuse("identity-mismatch"):keep(binding==="not-applicable"?"settled":ok);
 

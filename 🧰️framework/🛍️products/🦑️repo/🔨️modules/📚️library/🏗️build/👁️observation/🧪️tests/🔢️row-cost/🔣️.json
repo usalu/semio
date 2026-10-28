@@ -1,0 +1,7 @@
+{
+ "version": 1,
+ "rows": 40000,
+ "pathCharacters": 150,
+ "budgetBytesPerRow": 900,
+ "reportedBeforeBytesPerRow": 1113
+}

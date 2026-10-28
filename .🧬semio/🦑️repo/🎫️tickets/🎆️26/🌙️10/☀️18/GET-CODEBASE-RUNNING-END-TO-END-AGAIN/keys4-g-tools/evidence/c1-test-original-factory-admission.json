@@ -1,0 +1,29 @@
+{
+ "target": "test-original-factory-admission",
+ "tag": "c1",
+ "declared": 2025,
+ "rows": [
+  {
+   "leg": "cargo-framework-action-bus",
+   "crate": "semio-framework",
+   "test": "lib:semio_framework",
+   "kind": "cargo",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [
+    "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🪪️manifest/🟦️.ts"
+   ],
+   "rounds": 2,
+   "seconds": 6,
+   "tail": " | test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s |  | ",
+   "notes": [
+    "profiles:4",
+    "rules:1302",
+    "capacity:600",
+    "profiles:4"
+   ]
+  }
+ ]
+}

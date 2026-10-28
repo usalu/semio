@@ -138,7 +138,7 @@ impl Workspace {
             ("SEMIO_DASHBOARD_CONFIG".into(), self.preference_path().display().to_string()),
             ("JOURNEY_TERMINAL_RECORD".into(), self.terminal_receipt_path().display().to_string()),
             ("JOURNEY_WIDTH_RECORD".into(), self.width_probe_path().display().to_string()),
-            ("SEMIO_LOCALE".into(), "en".into()),
+            ("SEMIO_LANGUAGE".into(), "en".into()),
             ("SEMIO_APPEARANCE".into(), String::new()),
             ("SEMIO_LOCKED_TERMINOLOGY".into(), String::new()),
             ("SEMIO_DASHBOARD_RENDERER".into(), String::new()),

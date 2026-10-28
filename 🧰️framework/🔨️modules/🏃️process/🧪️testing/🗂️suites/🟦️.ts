@@ -1,12 +1,13 @@
 import{existsSync,lstatSync,readFileSync,readdirSync}from"node:fs";
 import{dirname,join,relative,resolve,sep}from"node:path";
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import type{ProcessPlatformCauseV1}from"./🖥️platforms/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import table from"./🔣️.json"with{type:"json"};
 import{refuseProcessV1}from"../../📖️texts/🟦️.ts";
 
-/** 🗂️ Names one suite of the process module's route table: the files and trees it runs, its budget, its typecheck, the capabilities its route authors for every child birth and where its scratch directory lives (a per-run sandbox outside the checkout, or one inside the checkout for tests that read checkout-relative sources). */
-export type ProcessTestSuiteV1=Readonly<{id:string;budgetMs:number;typecheck:"none"|"strict"|"strict-indexed";files?:readonly string[];trees?:readonly string[];typecheckFiles?:readonly string[];function?:Readonly<{module:string;export:string}>;testNamePattern?:string;parallel?:number;capabilities?:Readonly<{artifacts?:true;command?:string}>;scratch?:"sandbox"|"checkout";fileLaunchers?:Readonly<Record<string,string>>}>;
+/** 🗂️ Names one suite of the process module's route table: the files and trees it runs, its budget, its typecheck, the capabilities its route authors for every child birth and where its scratch directory lives (a per-run sandbox outside the checkout, or one inside the checkout for tests that read checkout-relative sources), the hosts it can run on (any other host reports it skipped), the host-bound facts that keep a host out and the registered tools whose pinned binary its laws receive. */
+export type ProcessTestSuiteV1=Readonly<{id:string;budgetMs:number;typecheck:"none"|"strict"|"strict-indexed";files?:readonly string[];trees?:readonly string[];typecheckFiles?:readonly string[];function?:Readonly<{module:string;export:string}>;testNamePattern?:string;parallel?:number;capabilities?:Readonly<{artifacts?:true;command?:string}>;scratch?:"sandbox"|"checkout";fileLaunchers?:Readonly<Record<string,string>>;platforms?:readonly("darwin"|"linux"|"win32")[];platformCauses?:readonly ProcessPlatformCauseV1[];tools?:readonly string[]}>;
 /** 📋️ Carries the closed route table after schema admission. */
 export type ProcessTestTableV1=Readonly<{version:1;suites:readonly ProcessTestSuiteV1[];codeSuites:readonly string[];helpers:readonly string[]}>;
 const protocol=schema.definitions.Protocol.const,importers=protocol.importPatterns.map(pattern=>new RegExp(pattern,"u"));
@@ -53,6 +54,9 @@ export function routeProcessTestFilesV1(discovered:readonly string[],declared:Pr
  }
  return owners;
 }
+
+/** 🖥️ Tells whether a suite can run on a host: a suite without a platform tag runs everywhere, a tagged one only on the hosts it names. */
+export function processTestSuiteRunsOnV1(suite:ProcessTestSuiteV1,platform:string=process.platform):boolean{return suite.platforms===undefined||(suite.platforms as readonly string[]).includes(platform);}
 
 /** 🧮️ Expands one suite to its sorted unique files: the files it owns among the discovered ones plus its explicit files outside the module. */
 export function expandProcessTestSuiteV1(suite:ProcessTestSuiteV1,discovered:readonly string[],declared:ProcessTestTableV1=readProcessTestTableV1()):readonly string[]{

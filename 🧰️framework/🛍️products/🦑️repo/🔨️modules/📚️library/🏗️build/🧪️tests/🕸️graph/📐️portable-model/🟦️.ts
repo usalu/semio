@@ -25,7 +25,7 @@ test("portable configuration and Nx projection preserve command semantics",()=>{
   const target={executor:"repo:script",options:{command:"repo ./📜️script.ts build",cwd:"app",env:{BASE:"yes",OVERRIDE:"base"}},configurations:{release:{env:{MODE:"release",OVERRIDE:"release"}}},outputs:["dist"],dependsOn:["^build"]};
   const neutral=neutralBuildTargetV1(target),resolved=resolveBuildTargetV1(neutral,"release"),nx=projectBuildTargetForNxV1(neutral);
   expect(neutral.execution.kind).toBe("command");expect(neutral).not.toHaveProperty("executor");
-  expect(resolved.execution.env).toEqual({BASE:"yes",OVERRIDE:"release",MODE:"release"});expect(resolved.outputs).toEqual(["dist"]);expect(resolved.dependsOn).toEqual(["^build"]);expect(nx).toEqual({...target,executor:"@semio-tech/repo-lib:command",inputs:["default","^default",fixture.nxEngineNamedInput.name],configurations:{release:{...target.configurations.release,env:{BASE:"yes",OVERRIDE:"release",MODE:"release"}}}});
+  expect(resolved.execution.env).toEqual({BASE:"yes",OVERRIDE:"release",MODE:"release"});expect(resolved.outputs).toEqual(["dist"]);expect(resolved.dependsOn).toEqual(["^build"]);expect(nx).toEqual({...target,executor:"@semio-tech/repo-lib:command",cache:false,inputs:["default","^default",fixture.nxEngineNamedInput.name],configurations:{release:{...target.configurations.release,env:{BASE:"yes",OVERRIDE:"release",MODE:"release"}}}});
   const sdk=createRequire(resolve(process.cwd(),".nx/installation/package.json")),oracle=sdk("nx/src/utils/params").combineOptionsForExecutor({},"release",structuredClone(nx),sdk("nx/src/executors/run-commands/schema.json"),null,null);expect(oracle.env).toEqual(resolved.execution.env);
   expect(()=>resolveBuildTargetV1(neutral,"unknown")).toThrow();
 });

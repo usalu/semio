@@ -81,7 +81,7 @@ test("the real registry pins the Bun of package.json, and every guard text exist
 
 test("bunfig.toml preloads the guard for scripts and for the test runner",()=>{
   const text=readFileSync(join(root,"bunfig.toml"),"utf8"),parsed=Bun.TOML.parse(text) as any,guard=`./${launcher}/📌️runtime-pin/📜️script.ts`;
-  expect(parsed.preload).toEqual([guard]);expect(parsed.test.preload).toEqual([guard]);
+  expect(parsed.preload).toEqual([guard]);expect(parsed.test.preload).toEqual([guard,"./🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/📜️script.ts"]);
 });
 
 test("the Go launcher and the guard agree on where the provisioned Bun of this host is",()=>{
@@ -92,7 +92,7 @@ test("the Go launcher and the guard agree on where the provisioned Bun of this h
 });
 
 const realRegistry=(directory:string):{environment:Record<string,string>;pinPath:string}=>{
-  const registry=readRuntimePinRegistryV1(root),environment={SEMIO_LANGUAGE:"en",PATH:"/usr/bin:/bin"},host=systemRuntimePinHostV1(directory,environment),pin=pinnedRuntimeV1(registry,host);
+  const registry=readRuntimePinRegistryV1(root),environment={SEMIO_LANGUAGE:"en",PATH:"/usr/bin:/bin",HOME:directory,USERPROFILE:directory,LocalAppData:join(directory,"LocalAppData"),XDG_CACHE_HOME:join(directory,".cache")},host=systemRuntimePinHostV1(directory,environment),pin=pinnedRuntimeV1(registry,host);
   mkdirSync(join(directory,launcher,"🗂️registry"),{recursive:true});writeFileSync(join(directory,launcher,"🗂️registry/🔣️.json"),readFileSync(registryFile));
   return{environment,pinPath:pin.tools};
 };

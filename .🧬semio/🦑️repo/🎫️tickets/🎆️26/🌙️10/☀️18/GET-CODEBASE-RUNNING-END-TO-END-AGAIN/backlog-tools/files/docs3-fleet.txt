@@ -1,0 +1,2 @@
+fleet-bullet [de] - **Flottenstatus**: nicht eingespielt. Heute `bun repo leases status`
+fleet-bullet [en] - **Fleet status**: not landed. Today read `bun repo leases status`, `

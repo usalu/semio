@@ -24,7 +24,7 @@ import { requireNativeStoragePathV1 } from "../../../🧰️framework/🔨️mod
 import { pinExecutableArtifact } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts";
 import { withResourceLeases, checkResourceLeaseControl } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
-import { withRepositoryCompilerStoreV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import { withRepositoryCompilerStoreLaneV1, withRepositoryCompilerStoreV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import { repositoryCargoArtifactBuildPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { repositoryCargoPreparationStorageV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { readNativeCallerAuthorityV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
@@ -272,17 +272,17 @@ export async function buildProctor(repoRoot: string, invocation: ScriptInvocatio
       const sources = await proctorSourceDirectories(root, { signal: control.signal });
       let executable: string | undefined;
       try {
-        await buildCargoArtifacts(manifest, args, { ...policy, buildDirectory: store.buildDirectory, captureDirectory: store.captureDirectory }, {
-          control, storage: store.storage, sourceBoundary: store.sourceBoundary, environment: preparedEnvironment, output,
+        await withRepositoryCompilerStoreLaneV1(store, control, { crates: [PROCTOR_PACKAGE] }, (lane, laneControl) => buildCargoArtifacts(manifest, args, { ...policy, buildDirectory: lane.buildDirectory, captureDirectory: lane.captureDirectory }, {
+          control: laneControl, storage: lane.storage, sourceBoundary: lane.sourceBoundary, environment: { ...lane.environment, CARGO_NET_OFFLINE: String(network.offline) }, output,
           maximumObservationBytes: Math.min(CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1, authority.transport.maximumBytes),
-          withCargoInputs: repositoryCargoCompilerInputsV1({ invocation, consumption: { kind: "compiler", producer: "artifact", operation: "build" }, workspace: root, network, control, storage: store.storage }),
+          withCargoInputs: repositoryCargoCompilerInputsV1({ invocation, consumption: { kind: "compiler", producer: "artifact", operation: "build" }, workspace: root, network, control: laneControl, storage: lane.storage }),
           consume: capture => withCapturedCargoArtifactsTaskV1(capture, async view => {
             const source = view.files.get(process.platform === "win32" ? "proctor.exe" : "proctor");
             if (!source) throw Error("Completed proctor executable required");
             await view.recheck();
             executable = await pinExecutableArtifact(source, pinned, "teaching:proctor:" + mode, { control: view.control, signal: view.control.signal, leaseDirectory });
           }),
-        });
+        }));
       } finally {
         rmSync(output, { recursive: true, force: true });
       }

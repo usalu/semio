@@ -84,6 +84,15 @@ for(const row of rows){
   for(const item of row.classes){for(const path of [...item.traced.modules,...item.traced.reads,...item.traced.physical])expect(closure.has(normalize(join(checkout,path))),item.select.command+" "+item.select.workerKind+" "+path).toBe(true);expect(item.traced.processes).toBeGreaterThan(0);}
  });
 
+ test(`scope ${row.id}: no walked file names a bare package specifier, so no module the runtime trace opens can hide from the static walk (a workspace name resolves through an installed link the walk cannot follow)`,()=>{
+  const leaves=new Set(row.scope.leaves.map(path=>normalize(join(checkout,path)))),walked=[...compilerClosure(row.scope.roots,row.scope.leaves)].filter(path=>!leaves.has(path)&&!path.endsWith(".json")),isBare=(specifier:string)=>!specifier.startsWith(".")&&!/^(?:node:|bun:)/u.test(specifier)&&specifier!=="bun";
+  const actual=walked.flatMap(path=>[...staticSpecifiers(path),...dynamicSpecifiers(path)].filter(isBare).map(specifier=>relative(checkout,path)+" -> "+specifier)).sort();
+  const run=spawnSync(python,["-I",schedulingOracleFile],{input:JSON.stringify({entry,roots:row.scope.roots.map(path=>join(checkout,path)),leaves:row.scope.leaves.map(path=>join(checkout,path)),prefixes:[],ports:[]}),encoding:"utf8",maxBuffer:1<<26});
+  expect(run.status,run.stderr).toBe(0);
+  expect((JSON.parse(run.stdout) as {bare:string[][]}).bare.map(([path,specifier])=>relative(checkout,path!)+" -> "+specifier).sort()).toEqual(actual);
+  expect(actual).toEqual([]);
+ });
+
  test(`scope ${row.id}: every cheap dynamic edge of the executor is a declared root, so a rare path never meets an uncaptured module`,()=>{
   for(const path of cheapLazyEdges())expect(row.scope.roots,path).toContain(path);
  });

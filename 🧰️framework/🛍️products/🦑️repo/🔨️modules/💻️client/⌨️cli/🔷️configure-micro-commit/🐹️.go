@@ -169,5 +169,5 @@ func runMicroCommitScript(ctx context.Context, repoRoot string, args []string) e
 	return nil
 }
 
-// 🚀️repoExecutable is the running repo command: the micro-commit script starts through its script route, which provisions and runs the pinned runtime, so no runtime is looked up here.
-func repoExecutable() (string, error) { return os.Executable() }
+// 🚀️repoExecutable is the running repo command: the micro-commit script and the canonical Go test dispatcher start through its script route, which provisions and runs the pinned runtime, so no runtime is looked up here; a test binary is not that command, so tests replace it.
+var repoExecutable = os.Executable

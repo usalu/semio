@@ -1,18 +1,21 @@
 import {availableParallelism,setPriority} from "node:os";
-import {spawn} from "node:child_process";
+import {spawn,spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
-import {appendFileSync,chmodSync,closeSync,mkdirSync,openSync,readFileSync,renameSync,statSync,writeFileSync} from "node:fs";
+import {appendFileSync,chmodSync,closeSync,existsSync,mkdirSync,openSync,readFileSync,readdirSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {dirname,join} from "node:path";
-import {randomBytes} from "node:crypto";
+import {createHash,randomBytes} from "node:crypto";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
+import {jobserverProbeShellV1,shellQuoteV1} from "../🎰️jobserver/🟦️.ts";
 import {collectGarbageSingleFlightV1,gcOutOfSpaceV1,gcPressureV1,measureVolumeV1,type GcPressureV1} from "../🧹️gc/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 
 const policy=UNIT_CACHE_POLICY_V1;
 /** 📍️ The wrapper script Cargo runs in place of rustc. */
 export const UNIT_CACHE_SCRIPT_V1=fileURLToPath(new URL("../📜️script.ts",import.meta.url));
+/** 🏁️ The module a native compiler wrapper is built from. */
+export const UNIT_CACHE_ENTRY_V1=fileURLToPath(new URL("../🏁️entry.ts",import.meta.url));
 
-/** 🎯️ The package names a Cargo command line selects with `-p` or `--package`; their units compile incrementally in the lane instead of through the shared cache. */
+/** 🎯️ The package names a Cargo command line selects with `-p` or `--package`; their units always compile incrementally in the lane and are never published, while every other unit is served from the shared cache first (a workspace unit that misses still compiles with its incremental session in the lane). */
 export function focusFromCargoArgumentsV1(args:readonly string[]):string[]{
  const names:string[]=[],end=args.indexOf("--"),head=end<0?args:args.slice(0,end);
  for(let index=0;index<head.length;index++){
@@ -24,32 +27,65 @@ export function focusFromCargoArgumentsV1(args:readonly string[]):string[]{
  return[...new Set(names)].sort();
 }
 
-/** 🪞️ Where the executable stand-in for the compiler wrapper lives: Cargo runs it as `<wrapper> <rustc> <arguments>`. */
-export function unitCacheShimPathV1(cacheRoot:string,platform:NodeJS.Platform=process.platform):string{return join(cacheRoot,"bin",platform==="win32"?"rustc-wrapper.cmd":"rustc-wrapper");}
+/** 🪞️ Where the executable stand-in for the compiler wrapper lives: Cargo runs it as `<wrapper> <rustc> <arguments>`. On Windows it is a native executable named by the digest of the code it embeds (`rustc-wrapper-<digest>.exe`, see {@link ensureUnitCacheShimV1}), because Cargo passes arguments with quotes (`--cfg feature="std"`) and Rust refuses to hand those to a batch file. */
+export function unitCacheShimPathV1(cacheRoot:string,platform:NodeJS.Platform=process.platform,digest?:string):string{return join(cacheRoot,"bin",platform==="win32"?`rustc-wrapper-${digest??"native"}.exe`:"rustc-wrapper");}
 
-/** 📜️ The text of the stand-in: it names the runtime and the wrapper script by absolute path, so no `PATH` entry and no file mode of the tracked script matters. */
-export function unitCacheShimSourceV1(runtime:string,script:string,platform:NodeJS.Platform=process.platform):string{
- if(platform==="win32")return `@"${runtime}" "${script}" %*\r\n`;
- const quote=(text:string)=>"'"+text.replaceAll("'","'\\''")+"'";
- return `#!/bin/sh\nexec ${quote(runtime)} ${quote(script)} "$@"\n`;
+/** 📜️ The text of the POSIX stand-in: it names the runtime and the wrapper script by absolute path, so no `PATH` entry and no file mode of the tracked script matters. Before the runtime starts (and opens descriptors of its own at the lowest free numbers) it runs {@link jobserverProbeShellV1}, which exports the jobserver pair `CARGO_MAKEFLAGS` names only when both descriptors are open: a build script does not inherit them unless a stand-in hands them on, and the wrapper must never pass a descriptor that is not Cargo's. */
+export function unitCacheShimSourceV1(runtime:string,script:string):string{
+ return["#!/bin/sh",...jobserverProbeShellV1(),`exec ${shellQuoteV1(runtime)} ${shellQuoteV1(script)} "$@"`,""].join("\n");
 }
 
-/** 🛠️ Writes the stand-in once (atomically, executable) and returns its path. Build scripts that run `$RUSTC` reach the real compiler; only Cargo's own compiler calls go through the wrapper. */
-export function ensureUnitCacheShimV1(cacheRoot:string,runtime:string=process.execPath,script:string=UNIT_CACHE_SCRIPT_V1,platform:NodeJS.Platform=process.platform):string{
- const path=unitCacheShimPathV1(cacheRoot,platform),text=unitCacheShimSourceV1(runtime,script,platform);
+/** 🏗️ How a native wrapper is made: `bundle` answers the code the executable would embed (its digest names the executable), `compile` writes the executable. Injectable so a test can count and fail the steps. */
+export type UnitCacheNativeBuildV1=Readonly<{bundle:(runtime:string,entry:string)=>string;compile:(runtime:string,entry:string,outfile:string)=>void}>;
+
+/** ⚙️ The real build: the runtime's own bundler and `--compile`, so the executable embeds the runtime and needs no `PATH` entry, no batch file and no interpreter lookup at run time. */
+export const UNIT_CACHE_NATIVE_BUILD_V1:UnitCacheNativeBuildV1=Object.freeze({
+ bundle(runtime,entry){
+  const run=spawnSync(runtime,["build","--target=bun",entry],{encoding:"utf8",maxBuffer:1<<28,windowsHide:true});
+  if(run.status!==0||!run.stdout)throw Error(String(run.error?.message??run.stderr??"bundler failed").trim()||"bundler failed");
+  return run.stdout;
+ },
+ compile(runtime,entry,outfile){
+  const run=spawnSync(runtime,["build","--compile",entry,"--outfile",outfile],{encoding:"utf8",maxBuffer:1<<26,windowsHide:true});
+  if(run.status!==0)throw Error(String(run.error?.message??run.stderr??"compiler failed").trim()||"compiler failed");
+ },
+});
+
+/** 🚫️ Why no native wrapper could be made, in every language: the unit cache is switched off for that Cargo process, never half-working. */
+export function unitCacheWrapperRefusalV1(reason:string):string{return (["en","de"] as const).map(language=>laneMessageV1("wrapperUnavailable",{reason},language)).join("\n");}
+
+/** 🪟️ Makes the native wrapper: bundle, name by digest, compile once (a temporary name, then an atomic rename), and remove the executables of older code that no running Cargo holds. */
+function ensureNativeWrapperV1(cacheRoot:string,runtime:string,entry:string,platform:NodeJS.Platform,build:UnitCacheNativeBuildV1):string{
+ const digest=createHash("sha256").update(build.bundle(runtime,entry)).digest("hex").slice(0,16),path=unitCacheShimPathV1(cacheRoot,platform,digest);
+ if(existsSync(path))return path;
+ mkdirSync(dirname(path),{recursive:true});
+ const temporary=path+"."+randomBytes(4).toString("hex")+".tmp";
+ try{build.compile(runtime,entry,temporary);chmodSync(temporary,0o755);renameSync(temporary,path);}
+ catch(error){rmSync(temporary,{force:true});if(!existsSync(path))throw error;}
+ for(const name of readdirSync(dirname(path)))if(/^rustc-wrapper-[0-9a-f]+\.exe(\..*\.tmp)?$/u.test(name)&&join(dirname(path),name)!==path)try{rmSync(join(dirname(path),name),{force:true});}catch{}
+ return path;
+}
+
+/** 🛠️ Writes the stand-in once (atomically, executable) and returns its path. POSIX: a `/bin/sh` script. Windows: a native executable built from `🏁️entry.ts`; a build that fails throws, and {@link unitCacheEnvironmentV1} turns that into a bilingual refusal. Build scripts that run `$RUSTC` reach the real compiler; only Cargo's own compiler calls go through the wrapper. */
+export function ensureUnitCacheShimV1(cacheRoot:string,runtime:string=process.execPath,script:string=UNIT_CACHE_SCRIPT_V1,platform:NodeJS.Platform=process.platform,build:UnitCacheNativeBuildV1=UNIT_CACHE_NATIVE_BUILD_V1,entry:string=UNIT_CACHE_ENTRY_V1):string{
+ if(platform==="win32")return ensureNativeWrapperV1(cacheRoot,runtime,entry,platform,build);
+ const path=unitCacheShimPathV1(cacheRoot,platform),text=unitCacheShimSourceV1(runtime,script);
  let current:string|undefined;try{current=readFileSync(path,"utf8");}catch{}
  if(current!==text){mkdirSync(dirname(path),{recursive:true});const temporary=path+"."+randomBytes(4).toString("hex");writeFileSync(temporary,text);chmodSync(temporary,0o755);renameSync(temporary,path);}
  return path;
 }
 
-/** 🧩️ The environment block that routes every compiler call of one Cargo process through the unit cache: Cargo runs the stand-in as `<wrapper> <rustc> <arguments>`, the wrapper script serves a unit from the cache or falls back to the memory-admitting scheduler for every miss. `RUSTC` stays the real compiler, so build scripts that exec it work whatever the file mode of the script or `PATH`. A launcher adds this after its storage admission and never before. */
-export function unitCacheEnvironmentV1(input:Readonly<{cacheRoot:string;lane:string;laneRoot:string;scheduler:string;compiler:string;toolchain:string;focus:readonly string[];slots?:number;runtime?:string;features?:Readonly<{buildScripts?:boolean;brokerReplay?:boolean}>}>):Record<string,string>{
+/** 🧩️ The environment block that routes every compiler call of one Cargo process through the unit cache: Cargo runs the stand-in as `<wrapper> <rustc> <arguments>`, the wrapper script serves a unit from the cache or falls back to the memory-admitting scheduler for every miss. `RUSTC` stays the real compiler, so build scripts that exec it work whatever the file mode of the script or `PATH`. A launcher adds this after its storage admission and never before; without a `scheduler` a miss runs the compiler directly. */
+export function unitCacheEnvironmentV1(input:Readonly<{cacheRoot:string;lane:string;laneRoot:string;scheduler?:string;compiler:string;toolchain:string;focus:readonly string[];slots?:number;runtime?:string;platform?:NodeJS.Platform;build?:UnitCacheNativeBuildV1;features?:Readonly<{buildScripts?:boolean;brokerReplay?:boolean}>}>):Record<string,string>{
+ let wrapper:string;
+ try{wrapper=ensureUnitCacheShimV1(input.cacheRoot,input.runtime,undefined,input.platform,input.build);}
+ catch(error){return{RUSTC_WRAPPER:"",SEMIO_UNIT_CACHE:"off",SEMIO_UNIT_CACHE_REFUSAL:unitCacheWrapperRefusalV1(String((error as Error)?.message??error).split("\n")[0]!)};}
  return{
-  RUSTC_WRAPPER:ensureUnitCacheShimV1(input.cacheRoot,input.runtime),
+  RUSTC_WRAPPER:wrapper,
   SEMIO_UNIT_CACHE_ROOT:input.cacheRoot,
   SEMIO_UNIT_CACHE_LANE:input.lane,
   SEMIO_UNIT_CACHE_LANE_ROOT:input.laneRoot,
-  SEMIO_UNIT_CACHE_INNER:JSON.stringify([input.scheduler,input.compiler]),
+  SEMIO_UNIT_CACHE_INNER:JSON.stringify(input.scheduler===undefined?[input.compiler]:[input.scheduler,input.compiler]),
   SEMIO_UNIT_CACHE_TOOLCHAIN:input.toolchain,
   SEMIO_UNIT_CACHE_SLOTS:String(input.slots??availableParallelism()),
   SEMIO_UNIT_CACHE_FOCUS:input.focus.join(","),
@@ -57,6 +93,9 @@ export function unitCacheEnvironmentV1(input:Readonly<{cacheRoot:string;lane:str
   ...(input.features?.brokerReplay?{SEMIO_UNIT_CACHE_BROKER_REPLAY:"on"}:{}),
  };
 }
+
+/** 🧮️ The unit cache may fill the image only up to what the compiler workspace leaves free, so a cold writer is always admitted. */
+export const unitCacheCapacityBytesV1=(policy:Readonly<{capacityBytes:number;maximumWorkspaceBytes:number}>):number=>Math.max(0,policy.capacityBytes-policy.maximumWorkspaceBytes);
 
 /** 🗺️ Where the cache root lives beside the compiler store's own directories. */
 export function unitCacheRootV1(storeRoot:string):string{return join(storeRoot,"u");}

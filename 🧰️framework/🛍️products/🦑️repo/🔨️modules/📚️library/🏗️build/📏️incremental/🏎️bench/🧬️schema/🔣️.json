@@ -23,6 +23,7 @@
           "cli-help",
           "noop",
           "edit",
+          "peer",
           "graph",
           "cache",
           "concurrency"
@@ -31,6 +32,7 @@
           "cli-help",
           "noop",
           "edit",
+          "peer",
           "graph",
           "cache",
           "concurrency"
@@ -44,7 +46,12 @@
           },
           "noop": {
             "plain": [
-              "wallMs"
+              "wallMs",
+              "queueMs",
+              "graphMs",
+              "executeMs",
+              "executedActions",
+              "inferredProjects"
             ],
             "memory": [
               "peakRssBytes"
@@ -53,7 +60,25 @@
           "edit": {
             "plain": [
               "startMs",
-              "greenMs"
+              "greenMs",
+              "queueMs",
+              "graphMs",
+              "executeMs",
+              "executedActions",
+              "inferredProjects"
+            ],
+            "memory": [
+              "peakRssBytes"
+            ]
+          },
+          "peer": {
+            "plain": [
+              "wallMs",
+              "queueMs",
+              "graphMs",
+              "executeMs",
+              "executedActions",
+              "inferredProjects"
             ],
             "memory": [
               "peakRssBytes"
@@ -88,7 +113,12 @@
           "hitRatio": "ratio",
           "makespanMs": "ms",
           "maxUnrelatedWaitMs": "ms",
-          "speedup": "ratio"
+          "speedup": "ratio",
+          "queueMs": "ms",
+          "graphMs": "ms",
+          "executeMs": "ms",
+          "executedActions": "count",
+          "inferredProjects": "count"
         },
         "statistics": [
           "min",
@@ -142,7 +172,8 @@
           "hot-cache",
           "conc-harness",
           "provisional",
-          "boot-fast"
+          "boot-fast",
+          "product-budget"
         ],
         "reasons": [
           "no-samples",
@@ -172,7 +203,112 @@
           "incomparable",
           "new",
           "missing"
-        ]
+        ],
+        "maximumObservedLineCharacters": 4096,
+        "phases": {
+          "initial": "boot",
+          "rules": [
+            {
+              "id": "queue-capacity",
+              "patterns": [
+                "^\\[capacity\\] waiting"
+              ]
+            },
+            {
+              "id": "queue-graph",
+              "patterns": [
+                "Waiting for access to",
+                "lease-queue",
+                "^graph: waiting for the graph build"
+              ]
+            },
+            {
+              "id": "verify",
+              "patterns": [
+                "generation-verify",
+                "Verifying graph facts",
+                "resource-directory-admission",
+                "lease-sweep",
+                "boot-recovery",
+                "repository-cache-charge"
+              ]
+            },
+            {
+              "id": "admission",
+              "patterns": [
+                "build:source-admission"
+              ]
+            },
+            {
+              "id": "graph",
+              "patterns": [
+                "build:(graph-plan|discover|projects|graph-phase)",
+                "^graph: ",
+                "Assembling the graph",
+                "Inferring projects"
+              ]
+            },
+            {
+              "id": "tool-setup",
+              "patterns": [
+                "^\\[bazel\\] ",
+                "^Analyzing",
+                "^Loading",
+                "^Computing main repo",
+                "^INFO: (Invocation ID|Analyzed)"
+              ]
+            },
+            {
+              "id": "execute",
+              "patterns": [
+                "^\\[\\d+ / \\d+\\]",
+                "^> nx run ",
+                "^INFO: From ",
+                "^\\$ nx "
+              ]
+            },
+            {
+              "id": "finish",
+              "patterns": [
+                "^INFO: (Elapsed time|Build completed)",
+                "Build Event Protocol",
+                "^Successfully ran",
+                "^NX +Successfully"
+              ]
+            }
+          ],
+          "metrics": {
+            "queueMs": [
+              "queue-capacity",
+              "queue-graph"
+            ],
+            "graphMs": [
+              "verify",
+              "admission",
+              "graph"
+            ],
+            "executeMs": [
+              "tool-setup",
+              "execute",
+              "finish"
+            ]
+          }
+        },
+        "observation": {
+          "graphRefreshing": "^graph: refreshing (\\d+) projects",
+          "graphInferring": "Inferring projects: \\d+ of (\\d+) projects",
+          "bazelProcesses": "^INFO: (\\d+) process(?:es)?: (.*?)\\.?$",
+          "bazelIdle": [
+            "^internal$",
+            "cache hit$"
+          ],
+          "nxTask": "^> nx run ",
+          "nxCached": "^> nx run .*\\[(local cache|remote cache|existing outputs match the cache)"
+        },
+        "history": {
+          "name": "^([0-9]{8}T[0-9]{6}Z)-(.+)\\.json$",
+          "prefix": "history:"
+        }
       }
     },
     "Id": {
@@ -224,6 +360,7 @@
         "cli-help",
         "noop",
         "edit",
+        "peer",
         "graph",
         "cache",
         "concurrency"
@@ -244,7 +381,12 @@
         "hitRatio",
         "makespanMs",
         "maxUnrelatedWaitMs",
-        "speedup"
+        "speedup",
+        "queueMs",
+        "graphMs",
+        "executeMs",
+        "executedActions",
+        "inferredProjects"
       ]
     },
     "Statistic": {
@@ -267,7 +409,8 @@
       "enum": [
         "ms",
         "bytes",
-        "ratio"
+        "ratio",
+        "count"
       ]
     },
     "Enforcement": {
@@ -284,7 +427,8 @@
         "hot-cache",
         "conc-harness",
         "provisional",
-        "boot-fast"
+        "boot-fast",
+        "product-budget"
       ]
     },
     "Language": {
@@ -645,7 +789,17 @@
         "unsupported",
         "host-class",
         "schema",
-        "start-unobserved"
+        "start-unobserved",
+        "queueMs",
+        "graphMs",
+        "executeMs",
+        "executedActions",
+        "inferredProjects",
+        "count",
+        "peer",
+        "overBudget",
+        "budget",
+        "history"
       ],
       "properties": {
         "title": {
@@ -977,6 +1131,36 @@
         },
         "start-unobserved": {
           "$ref": "#/definitions/LocalizedText"
+        },
+        "queueMs": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "graphMs": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "executeMs": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "executedActions": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "inferredProjects": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "count": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "peer": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "overBudget": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "budget": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "history": {
+          "$ref": "#/definitions/LocalizedText"
         }
       }
     },
@@ -1054,6 +1238,26 @@
           "minimum": 0
         },
         "speedup": {
+          "type": "number",
+          "minimum": 0
+        },
+        "queueMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "graphMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "executeMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "executedActions": {
+          "type": "number",
+          "minimum": 0
+        },
+        "inferredProjects": {
           "type": "number",
           "minimum": 0
         }
@@ -1180,6 +1384,21 @@
           "$ref": "#/definitions/Stats"
         },
         "speedup": {
+          "$ref": "#/definitions/Stats"
+        },
+        "queueMs": {
+          "$ref": "#/definitions/Stats"
+        },
+        "graphMs": {
+          "$ref": "#/definitions/Stats"
+        },
+        "executeMs": {
+          "$ref": "#/definitions/Stats"
+        },
+        "executedActions": {
+          "$ref": "#/definitions/Stats"
+        },
+        "inferredProjects": {
           "$ref": "#/definitions/Stats"
         }
       }
@@ -1759,7 +1978,9 @@
         "selection",
         "mutations",
         "markers",
-        "memory"
+        "memory",
+        "observations",
+        "history"
       ],
       "properties": {
         "version": {
@@ -2133,6 +2354,133 @@
                   {
                     "type": "integer",
                     "minimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "lines",
+              "wallMs",
+              "phases",
+              "executed",
+              "inferred"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "lines": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "at",
+                    "line"
+                  ],
+                  "properties": {
+                    "at": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "line": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "wallMs": {
+                "type": "number",
+                "minimum": 0
+              },
+              "phases": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "executed": {
+                "oneOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "inferred": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "startedAt",
+              "hostClass",
+              "fileName",
+              "files",
+              "before",
+              "latest"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "startedAt": {
+                "type": "string",
+                "minLength": 1
+              },
+              "hostClass": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fileName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "before": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "latest": {
+                "oneOf": [
+                  {
+                    "type": "string"
                   },
                   {
                     "type": "null"

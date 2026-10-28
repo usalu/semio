@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "cases": [
+    {"id": "unchanged", "edit": "none", "served": true},
+    {"id": "source edit", "edit": "source", "served": true},
+    {"id": "unrelated file", "edit": "unrelated", "served": true},
+    {"id": "member manifest", "edit": "manifest", "served": false},
+    {"id": "workspace manifest", "edit": "workspace", "served": false},
+    {"id": "lockfile", "edit": "lock", "served": false},
+    {"id": "auto-discovered test target", "edit": "test-target", "served": false},
+    {"id": "auto-discovered nested binary", "edit": "nested-binary", "served": false},
+    {"id": "build script", "edit": "build-script", "served": false},
+    {"id": "Cargo-read environment", "edit": "environment", "served": false},
+    {"id": "unrelated environment", "edit": "unrelated-environment", "served": true},
+    {"id": "effective configuration", "edit": "configuration", "served": false},
+    {"id": "selected features", "edit": "features", "served": false},
+    {"id": "workspace glob member", "edit": "glob-member", "served": false}
+  ]
+}

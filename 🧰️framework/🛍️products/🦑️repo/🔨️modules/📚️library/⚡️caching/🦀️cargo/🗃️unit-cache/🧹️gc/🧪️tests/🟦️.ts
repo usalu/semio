@@ -10,7 +10,7 @@ import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import {UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
 import {relieveUnitCachePressureV1,retryWhenFullV1,startUnitCacheCollectorV1} from "../../🚪️launch/🟦️.ts";
 import {tryClaimV1} from "../../🔒️lock/🟦️.ts";
-import {applyGcYieldingV1,collectGarbageSingleFlightV1,gcNeedBytesV1,gcOutOfSpaceV1,gcPressureV1,planGcV1,watchUnitCachePressureV1,type GcPressureV1} from "../🟦️.ts";
+import {applyGcYieldingV1,collectGarbageSingleFlightV1,gcNeedBytesV1,gcOutOfSpaceV1,gcPressureV1,measureVolumeV1,planGcV1,watchUnitCachePressureV1,type GcPressureV1} from "../🟦️.ts";
 import {readFillSamplesV1} from "../📈️fill/🟦️.ts";
 import {retryAfterOutOfSpaceV1,withUnitPressureRecheckV1} from "../../🚪️launch/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
@@ -209,8 +209,8 @@ test("the watching collector collects whenever the image falls below its floor, 
   expect(quiet).toMatchObject({state:"done",reason:"quiet",collections:0});expect(quiet.state==="done"&&quiet.rounds).toBe(Math.floor(rules.watchQuietMilliseconds/rules.watchPollMilliseconds)+1);
   free=5*gib;const relieved=await watchUnitCachePressureV1(root,volume,{now:time.now,sleep:time.sleep,measure,collect});
   expect(relieved).toMatchObject({state:"done",reason:"quiet",collections:1});expect(collected).toBe(1);expect(relieved.state==="done"&&relieved.freedBytes).toBe(8*gib);
-  free=9*gib;const alert=await watchUnitCachePressureV1(root,volume,{now:time.now,sleep:time.sleep,measure,collect});
-  expect(alert).toMatchObject({state:"done",reason:"expired",collections:0});expect(alert.state==="done"&&alert.rounds).toBeGreaterThan(100);
+  free=9*gib;const alert=await watchUnitCachePressureV1(root,volume,{now:time.now,sleep:time.sleep,measure,collect:(async()=>({running:false as const,plan:{removeLanes:[],removeIncremental:[],removeObjects:[]},applied:{lanes:0,incremental:0,objects:0,sessions:0,units:0}})) as never});
+  expect(alert).toMatchObject({state:"done",reason:"expired",collections:Math.floor(rules.watchMaximumMilliseconds/rules.maintenanceIntervalMilliseconds)+1});expect(alert.state==="done"&&alert.rounds).toBeGreaterThan(100);
   free=2*gib;const stalled=await watchUnitCachePressureV1(root,volume,{now:time.now,sleep:time.sleep,measure,collect:(async()=>({running:false as const,plan:{removeLanes:[],removeIncremental:[],removeObjects:[]},applied:{lanes:0,incremental:0,objects:0,sessions:0,units:0}})) as never});
   expect(stalled).toMatchObject({state:"done",reason:"stalled",collections:rules.watchStalledRounds});
   expect(readFillSamplesV1(root).length).toBeGreaterThan(100);const scans=readFillSamplesV1(root).filter(row=>row.profiles!==undefined);expect(scans.length).toBeGreaterThan(2);expect(scans.some((row,index)=>index>0&&row.atMs-scans[index-1]!.atMs>=rules.watchScanMilliseconds),"a long watch scans the profiles again after the scan interval").toBe(true);expect(scans.filter(row=>row.atMs>1_000_000+rules.watchQuietMilliseconds*2).length).toBeGreaterThan(0);expect(readFillSamplesV1(root).every(row=>row.volumeBytes===volume)).toBe(true);
@@ -239,5 +239,15 @@ test("a long compile re-checks the image on a timer and stops checking when it e
   expect(value).toBe("ok");expect(runs).toBe(2);expect(lines.length).toBe(1);expect(lines[0]).toContain("ran out of space");
   await expect(retryAfterOutOfSpaceV1({store,language:"en",report:()=>undefined},async()=>{throw Error("type error");})).rejects.toThrow("type error");
   let twice=0;await expect(retryAfterOutOfSpaceV1({store,language:"de",report:()=>undefined},async()=>{twice++;throw Error("ENOSPC: no space");})).rejects.toThrow("ENOSPC");expect(twice).toBe(2);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("a cache root whose volume can be read reports its facts, one that cannot is flagged unmeasured and counts as empty so that no collection starts on a guess",()=>{
+ const root=mkdtempSync(join(tmpdir(),"unit-volume-"));
+ try{
+  const real=measureVolumeV1(root,1000),independent=JSON.parse(spawnSync(testPythonV1()!,["-I","-c","import json,os,sys\ns=os.statvfs(sys.argv[1])\nprint(json.dumps([s.f_blocks*s.f_frsize,s.f_bavail*s.f_frsize]))",root],{encoding:"utf8"}).stdout) as [number,number];
+  expect(real.unmeasured).toBeUndefined();expect(Math.abs(real.volumeBytes-independent[0])/independent[0]).toBeLessThan(0.01);expect(real.freeBytes).toBeLessThanOrEqual(real.volumeBytes);
+  expect(measureVolumeV1(join(root,"missing"),4096)).toEqual({volumeBytes:4096,freeBytes:4096,unmeasured:true});
+  expect(gcNeedBytesV1(4096,4096)).toBe(0);
  }finally{rmSync(root,{recursive:true,force:true});}
 });

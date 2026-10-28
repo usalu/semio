@@ -1,9 +1,11 @@
 import{expect,test}from"bun:test";
 import Ajv from"ajv";
 import{spawnSync}from"node:child_process";
-import{dirname,join}from"node:path";
+import{createHash}from"node:crypto";
+import{readFileSync}from"node:fs";
+import{dirname,join,sep}from"node:path";
 import{fileURLToPath}from"node:url";
-import{closureLiteralSitesV1,closurePackageNameV1,closureRefusalTextV1,closureRefusalMessagesV1,closureSpecifierKindV1}from"../🟦️.ts";
+import{closureLiteralSitesV1,closurePackageNameV1,closureRefusalCatalogPathV1,closureRefusalCatalogTableV1,closureRefusalTextV1,closureRefusalMessagesV1,closureSpecifierKindV1}from"../🟦️.ts";
 import{astSitesV1}from"./🔭️oracle/🟦️.ts";
 import fixture from"./🧫️fixtures/🔣️.json";
 import testSchema from"./🧬️schema/🔣️.json";
@@ -38,4 +40,12 @@ test("refusal texts exist in English and German and name the site and the fix",(
 test("specifier classes and package names",()=>{
  const rows:[string,string,string][]=[["node:fs","builtin","node:fs"],["fs/promises","builtin","fs"],["bun:sqlite","builtin","bun:sqlite"],["./a.ts","relative","."],["../b.json","relative",".."],["/abs/c.js","absolute","abs"],["file:///d.js","scheme","file:"],["typescript","package","typescript"],["typescript/lib/x.js","package","typescript"],["@iarna/toml","package","@iarna/toml"],["@scope/pkg/sub/file.js","package","@scope/pkg"]];
  for(const[specifier,kind,name]of rows){expect<string>(closureSpecifierKindV1(specifier),specifier).toBe(kind);if(kind==="package")expect(closurePackageNameV1(specifier),specifier).toBe(name);}
+});
+
+/** 📍️ The catalog path names this very schema file, and the table reader gives its messages only for bytes whose declared hash holds. */
+test("the catalog path names the schema file and the table reader refuses altered bytes",()=>{
+ const file=join(here,"..","🧬️schema","🔣️.json"),bytes=readFileSync(file),hash=(value:Uint8Array)=>createHash("sha256").update(value).digest("hex"),encoded=bytes.toString("base64"),sha=hash(bytes),bare=Buffer.from("{}"),open=Buffer.from("[");
+ expect(file.split(sep).join("/").endsWith("/"+closureRefusalCatalogPathV1),closureRefusalCatalogPathV1).toBe(true);
+ expect(closureRefusalCatalogTableV1(encoded,sha,hash)).toEqual(closureRefusalMessagesV1);
+ for(const[name,table]of[["wrong hash",closureRefusalCatalogTableV1(encoded,hash(bare),hash)],["absent bytes",closureRefusalCatalogTableV1(undefined,sha,hash)],["absent hash",closureRefusalCatalogTableV1(encoded,undefined,hash)],["not base64",closureRefusalCatalogTableV1("not base64!",sha,hash)],["no messages",closureRefusalCatalogTableV1(bare.toString("base64"),hash(bare),hash)],["not json",closureRefusalCatalogTableV1(open.toString("base64"),hash(open),hash)]] as const)expect(table,name).toBeUndefined();
 });

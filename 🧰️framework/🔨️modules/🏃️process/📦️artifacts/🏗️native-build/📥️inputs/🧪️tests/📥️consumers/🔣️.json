@@ -9,12 +9,13 @@
       "releaseFails": false,
       "settlement": "settles",
       "trace": [
-        "lease",
         "request:1",
+        "lease",
         "planning:1",
         "source:1",
-        "request:2",
-        "run:2",
+        "admit:1",
+        "writer:1",
+        "run:1",
         "stop",
         "remove",
         "release"
@@ -28,12 +29,13 @@
       "releaseFails": true,
       "settlement": "rejects",
       "trace": [
-        "lease",
         "request:1",
+        "lease",
         "planning:1",
         "source:1",
-        "request:2",
-        "run:2",
+        "admit:1",
+        "writer:1",
+        "run:1",
         "stop",
         "remove",
         "release"
@@ -47,12 +49,13 @@
       "releaseFails": true,
       "settlement": "rejects",
       "trace": [
-        "lease",
         "request:1",
+        "lease",
         "planning:1",
         "source:1",
-        "request:2",
-        "run:2",
+        "admit:1",
+        "writer:1",
+        "run:1",
         "stop",
         "remove",
         "release"
@@ -66,10 +69,11 @@
       "releaseFails": false,
       "settlement": "settles",
       "trace": [
-        "lease",
         "request:1",
+        "lease",
         "planning:1",
         "source:1",
+        "writer:1",
         "run:1",
         "stop",
         "release"
@@ -83,10 +87,11 @@
       "releaseFails": true,
       "settlement": "rejects",
       "trace": [
-        "lease",
         "request:1",
+        "lease",
         "planning:1",
         "source:1",
+        "writer:1",
         "run:1",
         "stop",
         "release"
@@ -100,10 +105,11 @@
       "releaseFails": true,
       "settlement": "rejects",
       "trace": [
-        "lease",
         "request:1",
+        "lease",
         "planning:1",
         "source:1",
+        "writer:1",
         "run:1",
         "stop",
         "release"
@@ -196,9 +202,7 @@
       "releaseFails": false,
       "settlement": "rejects",
       "trace": [
-        "lease",
-        "request:1",
-        "release"
+        "request:1"
       ]
     },
     {
@@ -209,12 +213,13 @@
       "releaseFails": true,
       "settlement": "rejects",
       "trace": [
-        "lease",
         "request:1",
+        "lease",
         "planning:1",
         "source:1",
-        "request:2",
-        "run:2",
+        "admit:1",
+        "writer:1",
+        "run:1",
         "stop",
         "remove",
         "release"
@@ -228,9 +233,7 @@
       "releaseFails": false,
       "settlement": "rejects",
       "trace": [
-        "lease",
-        "request:1",
-        "release"
+        "request:1"
       ]
     },
     {
@@ -241,10 +244,11 @@
       "releaseFails": true,
       "settlement": "rejects",
       "trace": [
-        "lease",
         "request:1",
+        "lease",
         "planning:1",
         "source:1",
+        "writer:1",
         "run:1",
         "stop",
         "release"

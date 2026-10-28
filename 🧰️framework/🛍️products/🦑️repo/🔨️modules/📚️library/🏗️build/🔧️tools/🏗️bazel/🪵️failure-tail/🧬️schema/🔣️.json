@@ -34,8 +34,8 @@
           "complete": "[bazel] task {task} failed; its complete output ({bytes} bytes), saved to {file}:"
         },
         "de": {
-          "failed": "[bazel] Aufgabe {task} fehlgeschlagen; letzte {bytes} Bytes ihrer Ausgabe ({dropped} frühere Bytes ausgelassen), gesichert in {file}:",
-          "complete": "[bazel] Aufgabe {task} fehlgeschlagen; ihre vollständige Ausgabe ({bytes} Bytes), gesichert in {file}:"
+          "failed": "[bazel] Task {task} fehlgeschlagen; letzte {bytes} Bytes ihrer Ausgabe ({dropped} frühere Bytes ausgelassen), gesichert in {file}:",
+          "complete": "[bazel] Task {task} fehlgeschlagen; ihre vollständige Ausgabe ({bytes} Bytes), gesichert in {file}:"
         }
       }
     }

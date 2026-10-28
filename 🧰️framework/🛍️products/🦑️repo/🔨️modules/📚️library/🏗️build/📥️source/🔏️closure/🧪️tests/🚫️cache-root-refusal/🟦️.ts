@@ -10,9 +10,11 @@ import{withBuildTestInvocationV1}from"../../../../../../../../../🔨️modules/
 import{withRepositoryTestArtifactsV1,repositoryTestArtifactRootV1}from"../../../../../../🧪️test/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import{createIssuedResourceControlV1,scriptResourceProcessEnvironmentV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{runOwnedCommand}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
+import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
-test("a nested child under the issued cache artifact root is refused as an external implementation runtime dependency",()=>withBuildTestInvocationV1(async original=>withRepositoryTestArtifactsV1(process.cwd(),original,createIssuedResourceControlV1(original,"test:cache-root-refusal-artifacts",0),async()=>{
- const workspace=process.cwd(),artifacts=repositoryTestArtifactRootV1(workspace),origin=physicalSourceOriginV1(import.meta.url,(import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL);
+test("a nested child under the issued cache artifact root is refused as an external implementation runtime dependency",()=>withBuildTestInvocationV1(async original=>withRepositoryTestArtifactsV1(repository.root,original,createIssuedResourceControlV1(original,"test:cache-root-refusal-artifacts",0),async()=>{
+ const workspace=process.cwd(),artifacts=repositoryTestArtifactRootV1(repository.root),origin=physicalSourceOriginV1(import.meta.url,(import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL);
  expect(artifacts.split(/[\\/]/u)).toContain(".cache");
  const area=await mkdtemp(join(artifacts,"cr-")),control=createIssuedResourceControlV1(original,"test:cache-root-refusal",90000),local=(name:string)=>relative(workspace,join(area,name)).replaceAll("\\","/"),specifier=(url:URL)=>{const name=relative(area,fileURLToPath(url)).replaceAll("\\","/");return name.startsWith(".")?name:"./"+name;};
  const owner=specifier(new URL("../../🟦️.ts",origin)),routing=specifier(new URL("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",origin));

@@ -10,7 +10,7 @@ export type BunWorkspaceSelection = Readonly<{kind:"all"}> | Readonly<{kind:"sco
 /** 📣️ Reports actual physical and ownership visits of one fresh verification. */
 export type BunWorkspaceProgress = Readonly<{ operation: "state" | "list" | "readText" | "membership" | "frontier" | "selection" | "publication"; path: string; completedOperations: number }>;
 /** 🎛️ Receives the original operation signal and continuation without constructing authority. */
-export interface BunWorkspaceControl { readonly signal: AbortSignal; advance(progress: BunWorkspaceProgress): Promise<void> }
+export interface BunWorkspaceControl { readonly signal: AbortSignal; readonly frontierBatchPaths?:number; advance(progress: BunWorkspaceProgress): Promise<void> }
 /** 🧾️ Publishes current native patterns and independently owned source packages after manifest revalidation. */
 export type BunWorkspaceOwnershipReport = Readonly<{ version: 1; scopes: readonly Readonly<{ manifest: string; beforeSha256: string; patterns: readonly string[]; packages: readonly string[] }>[]; packages: readonly string[] }>;
 /** 🪢️ Retains original fresh Source observations throughout one controlled callback. */

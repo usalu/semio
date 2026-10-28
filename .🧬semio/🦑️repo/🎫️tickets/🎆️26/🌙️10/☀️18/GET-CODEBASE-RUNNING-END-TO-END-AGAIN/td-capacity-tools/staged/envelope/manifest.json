@@ -1,0 +1,32 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🧭️liveness/🟦️.ts": {
+  "file": "00.ts",
+  "base": "39be2143a77efe29f1a291ea6e3d076959a37b8289b9dec433e7d2041f575124",
+  "new": "e4ee403529fae7b37f23e4aa69abd43aeb5f4a67853694a04ad4ff035770bca8"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🛟️custodian/🧪️tests/🟦️.ts": {
+  "file": "01.ts",
+  "base": "e1c2d339f7c255e6638000bab399661a0a26eb78eaef77f83f5900464b1c66ce",
+  "new": "256c26f10570c6c309ea39c702f3da79442b3ed28b941b080bb2d58032acc80b"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🔐️inheritance/🟦️.ts": {
+  "file": "02.ts",
+  "base": "fc80d2f56c92cc663728605c4de332122d1a2ebababa1c9a76b133f853b33557",
+  "new": "3c9fd958513439e5779069300d4636fe1804eca9a418969d85b194e2dd1f3fe2"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🟦️.ts": {
+  "file": "03.ts",
+  "base": "b14867e41d60d2ab377b5ca39101f4346e3fe2b313004a61cfd7daa4a967ed2d",
+  "new": "70b424def8050feef2455f25c989d517676fb4c7f066c20910bdde2787e8885c"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🪆️scope/🟦️.ts": {
+  "file": "04.ts",
+  "base": "090f485eb9aa466e359a567ed2885b15a515a6ef95da94475391ed2793ed027b",
+  "new": "f1043859e9cde9acd960428fdd4078f4dc160ce084499f4b3b33756e2a4d90f5"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🟦️.ts": {
+  "file": "05.ts",
+  "base": "399af8a5b098f59fe0ce80cf52fe4e3df1aba1693ae4c675dcb48dec64926cfb",
+  "new": "809b4790f2c5e1b95331398b1dc6e8d27b74f6e9444226f9e985351a93dddf5f"
+ }
+}

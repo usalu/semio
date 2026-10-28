@@ -1,0 +1,19 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "⚡️caching/🗃️records/🧬️schema/🔣️.json",
+ "definitions": [
+  "Limits"
+ ],
+ "sources": [
+  "⚡️caching/🗃️records/🟦️.ts"
+ ],
+ "minimumNumber": 30,
+ "allow": [
+  {
+   "source": "⚡️caching/🗃️records/🟦️.ts",
+   "value": 32,
+   "reason": "The number of hex digits of the value digest kept in the index (the schema pattern of the digest), not the descriptor limit."
+  }
+ ]
+}

@@ -1,0 +1,12 @@
+{
+ "version": 1,
+ "root": "library",
+ "schema": "🏗️build/📥️inputs/🔏️revision/🧬️schema/🔣️.json",
+ "definitions": [
+  "Policy"
+ ],
+ "sources": [
+  "🏗️build/👁️observation/🟨️.mjs"
+ ],
+ "minimumNumber": 8000
+}

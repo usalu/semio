@@ -1,0 +1,23 @@
+{
+ "label": "g46-hot1",
+ "target": "@teaching/architecture-course:build",
+ "started": "20:23:21",
+ "wall_s": 907.7,
+ "peak_tree_mb": 4121,
+ "peak_processes": 11,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 56.7,
+ "graph": {
+  "inferring": [
+   "94"
+  ],
+  "processes": [
+   "8",
+   "3 disk cache hit, 1 internal, 4 local"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

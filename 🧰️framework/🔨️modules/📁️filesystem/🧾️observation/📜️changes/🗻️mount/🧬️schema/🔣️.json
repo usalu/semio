@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "🗻️ Which file systems cannot report edits that are made on the other side of the mount (network shares, virtual and FUSE file systems of container and VM hosts, Windows network drives). A change journal on such a mount would vouch for files that changed unseen, so it refuses and the consumer hashes. The refusal text is `remote-file-system` of the change journal.",
+  "definitions": {
+    "TypeRule": {"type": "object", "additionalProperties": false, "required": ["exact", "prefixes"], "properties": {"exact": {"type": "array", "items": {"type": "string", "minLength": 1}}, "prefixes": {"type": "array", "items": {"type": "string", "minLength": 1}}}},
+    "Verdict": {"type": "object", "additionalProperties": false, "required": ["type", "mount"], "properties": {"type": {"type": "string", "minLength": 1}, "mount": {"type": "string", "minLength": 1}}},
+    "Policy": {"const": {
+      "version": 1,
+      "linux": {"exact": ["fakeowner", "virtiofs", "9p", "grpcfuse", "drvfs", "fuse", "cifs", "smb3", "smbfs", "nfs", "nfs4", "afs", "ceph", "glusterfs", "lustre", "beegfs"], "prefixes": ["fuse.", "nfs", "smb", "cifs", "ceph", "gluster"]},
+      "darwin": {"exact": ["nfs", "smbfs", "afpfs", "webdav", "cifs", "ftp", "autofs", "macfuse", "osxfuse", "fusefs", "fuse-t", "9p", "virtiofs"], "prefixes": ["fuse", "macfuse", "osxfuse", "nfs", "smb"]},
+      "darwinFirmlinkPrefix": "/System/Volumes/Data",
+      "darwinLocalFlag": "local",
+      "darwinLocalTypes": ["apfs", "hfs", "msdos", "exfat", "ufs", "tmpfs", "devfs"],
+      "windowsNetworkDriveType": "4",
+      "windowsUncPrefixes": ["\\\\", "//"],
+      "probeTimeoutMilliseconds": 15000
+    }}
+  }
+}

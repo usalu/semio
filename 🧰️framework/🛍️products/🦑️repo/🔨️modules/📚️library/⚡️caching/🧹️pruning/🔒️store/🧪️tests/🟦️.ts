@@ -11,10 +11,12 @@ import * as pruneApi from "../../🟦️.ts";
 import {createIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import{privateRepositoryWorkspaceV1}from"../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 test("Cargo cache maintenance excludes every live compiler profile and preserves cancellation",()=>withBuildTestInvocationV1(async original=>{
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Original ticket artifact directory required");
- mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"m-")),build=join(root,"b"),leaseRoot=join(process.cwd(),".cache/b/l/m/data");mkdirSync(leaseRoot,{recursive:true});const leases=mkdtempSync(join(leaseRoot,"m-")),controller=new AbortController(),held:Awaited<ReturnType<typeof leaseApi.acquireCargoBuildLeaseV1>>[]=[];
+ mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"m-")),build=join(root,"b"),leaseRoot=join(repository.root,".cache/b/l/m/data");mkdirSync(leaseRoot,{recursive:true});const leases=mkdtempSync(join(leaseRoot,"m-")),controller=new AbortController(),held:Awaited<ReturnType<typeof leaseApi.acquireCargoBuildLeaseV1>>[]=[];
  const control=(signal:AbortSignal)=>createIssuedResourceControlV1(original,"cache:store-law",30000,signal),lease=()=>{const issued=control(controller.signal);return{signal:issued.signal,control:issued};};
  let operation:Promise<unknown>|undefined;
  try{

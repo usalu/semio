@@ -1,5 +1,6 @@
 import {availableParallelism,totalmem} from "node:os";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {hostProfileV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🎯️ What a task does, derived from its target name and continuity, never from a build tool. */
@@ -47,7 +48,7 @@ export function workerActionKindV1(policy:WorkerPolicyV1,target:string,continuou
 }
 
 /** 🖥️ Reads the facts of the running host. */
-export function currentWorkerHostV1():WorkerHostV1{return Object.freeze({cores:availableParallelism(),memoryBytes:totalmem()});}
+export function currentWorkerHostV1(environment:Readonly<Record<string,string|undefined>>=process.env):WorkerHostV1{const host=hostProfileV1(environment,{totalMegabytes:Math.floor(totalmem()/1048576),cores:availableParallelism(),declared:false});return Object.freeze({cores:host.cores,memoryBytes:host.totalMegabytes*1048576});}
 
 /** 🧮️ Resolves the policy for one host: the local job count, the memory the pools may hold in total and how many instances each kind keeps. Every kind that uses workers first gets one instance, in the priority order test, check, generate, build, script, as far as the memory holds instances; the remaining instances then go to the kinds in the same order, up to their bound and the job count. A kind that finds no instance left runs without workers. */
 export function planWorkersV1(policy:WorkerPolicyV1,host:WorkerHostV1,overrides:WorkerOverridesV1={}):WorkerPlanV1{

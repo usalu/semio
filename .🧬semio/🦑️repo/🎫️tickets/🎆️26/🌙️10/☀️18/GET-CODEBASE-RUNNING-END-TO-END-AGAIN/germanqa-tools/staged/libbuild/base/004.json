@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "id": "capacity",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "wait-cancelled": {
+      "en": "Waiting for host capacity was cancelled by {signal}",
+      "de": "Das Warten auf Host-Kapazität wurde durch {signal} abgebrochen"
+    },
+    "farm-wait-cancelled": {
+      "en": "Waiting for farm capacity was cancelled",
+      "de": "Das Warten auf Farm-Kapazität wurde abgebrochen"
+    }
+  }
+}

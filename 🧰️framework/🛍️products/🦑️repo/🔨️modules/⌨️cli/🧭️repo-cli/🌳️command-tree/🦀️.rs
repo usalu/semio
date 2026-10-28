@@ -309,7 +309,7 @@ fn ticket_command() -> Command {
             ])
             .flags(vocabulary_flags(true, true, true))
             .run(verbs::ticket_reopen),
-        Command::new("purge-artifacts [path]", "Delete ticket-folder files above 5 MiB and subfolders above 10 MiB").flag(Flag::boolean("all", "Purge oversized artifacts in every ticket folder")).run(verbs::ticket_purge_artifacts),
+        Command::new("purge-artifacts [path]", "Plan the removal of generated output above 5 MiB (files) or 10 MiB (folders) from closed tickets; only --apply removes it | Plant das Entfernen von generierten Ausgaben über 5 MiB (Dateien) oder 10 MiB (Ordner) geschlossener Tickets; nur --apply entfernt sie").flag(Flag::boolean("apply", "Remove the planned output instead of only printing the plan | Geplante Ausgaben entfernen statt nur den Plan auszugeben")).run(verbs::ticket_purge_artifacts),
         Command::new("list", "List tickets")
             .args(Arity::None)
             .flags(vec![Flag::text("status", "", "Filter by status (open or closed)"), Flag::int("year", 0, "Ticket year"), Flag::int("month", 0, "Ticket month"), Flag::int("day", 0, "Ticket day")])

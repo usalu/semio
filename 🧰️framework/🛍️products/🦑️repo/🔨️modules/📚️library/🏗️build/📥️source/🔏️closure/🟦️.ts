@@ -63,8 +63,12 @@ export async function captureBuildSourceClosureV1(workspace:string,entry:string,
  const value:BuildSourceClosureV1=Object.freeze({version:1,root,entry,files:Object.freeze([...files].sort(([a],[b])=>names(a,b)).map(([path,bytes])=>Object.freeze({path,sha256:hash(bytes),base64:bytes.toString("base64"),imports:Object.freeze(Object.fromEntries(Object.entries(resolutions.get(path)!).filter(([,target])=>installedTargetV1(target)||files.has(target))))})))});if(validateJsonSchemaSubset(schema,value).length||Buffer.byteLength(JSON.stringify(value))>policy.maximumSnapshotBytes)throw Error("Closed implementation Source snapshot required");requireAdmittedBuildSourceClosureV1(value,original);checkScriptInvocation(original);return value;
 }
 
+const sealedClosureTextsV1=new WeakMap<BuildSourceClosureV1,Readonly<{text:string;sha256:string}>>();
+/** 📜️ The exact serialized text of one snapshot and its sha256, validated once: a deeply frozen snapshot (every capture freezes its rows) keeps them, so the bound check, the identity and the publication of one capture share one ~19 MB string instead of building four (the door kept ~90 MB more resident for the whole run). */
+export function buildSourceClosureTextV1(value:BuildSourceClosureV1):Readonly<{text:string;sha256:string}>{const kept=sealedClosureTextsV1.get(value);if(kept)return kept;if(validateJsonSchemaSubset(schema,value).length)throw Error("Closed implementation Source snapshot required");const text=JSON.stringify(value),sealed=Object.freeze({text,sha256:hash(text)});if(Object.isFrozen(value)&&Object.isFrozen(value.files)&&value.files.every(row=>Object.isFrozen(row)&&Object.isFrozen(row.imports)))sealedClosureTextsV1.set(value,sealed);return sealed;}
+
 /** 🏗️ Hashes the exact serialized executable images rather than mutable disk aliases. */
-export function buildSourceClosureIdentityV1(value:BuildSourceClosureV1):string{if(validateJsonSchemaSubset(schema,value).length)throw Error("Closed implementation Source snapshot required");return hash(JSON.stringify(value));}
+export function buildSourceClosureIdentityV1(value:BuildSourceClosureV1):string{return buildSourceClosureTextV1(value).sha256;}
 
 import { sourceClosureLoaderV1 } from "./🍞️bun/🟦️.ts";
 import { buildSchedulingOverlaySuffixV1, buildSchedulingPrefixesV1 } from "./🗓️scheduling/🟦️.ts";

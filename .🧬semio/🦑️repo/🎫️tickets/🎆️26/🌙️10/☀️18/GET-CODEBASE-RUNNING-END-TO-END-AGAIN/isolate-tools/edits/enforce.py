@@ -1,0 +1,7 @@
+"""🧫 [isolate] manual edits of batch `enforce` (after the codemod): the compiler capacity/pressure laws and the funded Nx namespace law name the private repository as their workspace (every use of that workspace is a store, a lease directory or the working directory of a Python oracle)."""
+E = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement"
+MANUAL = {
+    E + "/🏗️compiler/📏️capacity/🧪️tests/🟦️.ts": [("const api=await import(\"../🟦️.ts\"),workspace=process.cwd(),", "const api=await import(\"../🟦️.ts\"),workspace=repository.root,", 1), ("{const workspace=process.cwd(),control=scriptCompilerAdmissionControlV1(original,\"rust:historical-image-custod", "{const workspace=repository.root,control=scriptCompilerAdmissionControlV1(original,\"rust:historical-image-custod", 1), ("await import(\"@semio-tech/process/leases/physical\"),workspace=process.cwd(),", "await import(\"@semio-tech/process/leases/physical\"),workspace=repository.root,", 1)],
+    E + "/🏗️compiler/📏️capacity/🧪️tests/♻️pressure/🟦️.ts": [("recovery=await import(\"../../♻️recovery/🟦️.ts\"),workspace=process.cwd(),", "recovery=await import(\"../../♻️recovery/🟦️.ts\"),workspace=repository.root,", 1)],
+    E + "/🔌️nx/📦️graph/🧪️tests/🏦️funded/🟦️.ts": [("const root=process.cwd(),control=createIssuedResourceControlV1(original,\"nx:funded-namespace\",0)", "const root=repository.root,control=createIssuedResourceControlV1(original,\"nx:funded-namespace\",0)", 1)],
+}

@@ -1,0 +1,10 @@
+{
+ "version": 1,
+ "cases": [
+  {"name": "the deepest ancestor owns the file", "owners": [{"name": "outer", "root": "a"}, {"name": "inner", "root": "a/b"}], "paths": ["a/b/c.ts", "a/x.ts", "a/b", "a", "z/y.ts"], "expected": ["inner", "outer", "inner", "outer", null]},
+  {"name": "a sibling with a common prefix owns nothing", "owners": [{"name": "app", "root": "app"}], "paths": ["application/x.ts", "app/x.ts", "app-extra/x.ts"], "expected": [null, "app", null]},
+  {"name": "the workspace root owns nothing", "owners": [{"name": "workspace", "root": "."}, {"name": "pkg", "root": "pkg"}], "paths": ["x.ts", "pkg/x.ts"], "expected": [null, "pkg"]},
+  {"name": "equal roots keep the smallest name", "owners": [{"name": "b", "root": "r"}, {"name": "a", "root": "r"}, {"name": "c", "root": "r"}], "paths": ["r/f.ts"], "expected": ["a"]},
+  {"name": "emoji and spaced directories", "owners": [{"name": "e", "root": "🧰️x/🔨️y"}, {"name": "s", "root": "my dir"}], "paths": ["🧰️x/🔨️y/z.ts", "my dir/q/r.ts", "my/q.ts"], "expected": ["e", "s", null]}
+ ]
+}

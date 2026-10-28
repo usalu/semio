@@ -1,4 +1,4 @@
-"""🐍️ Independent oracle of the Bazel session garbage plan: reads {"policy": Policy, "rows": [{inventory, slots, services, now, held, pressure?}]} from stdin and prints the garbage of every row. It shares no code with the TypeScript planner."""
+"""🐍️ Independent oracle of the Bazel session decisions (mode `garbage`, the default; `plan`, `growth`, `reap`): reads {"policy": Policy, "rows": [{inventory, slots, services, now, held, pressure?}]} from stdin and prints the garbage of every row. It shares no code with the TypeScript planner."""
 import json
 import sys
 
@@ -102,5 +102,40 @@ def plan(row, policy):
     }
 
 
+def server_plan(row, policy):
+    servers, host, memory = policy["servers"], row["host"], row["memory"]
+    floor = min(memory["floorMaximumMegabytes"], max(memory["floorMinimumMegabytes"], host["memoryMegabytes"] * memory["floorBasisPoints"] // 10000))
+    spare = max(0, host["memoryMegabytes"] - floor)
+    budget = spare * servers["memoryShareBasisPoints"] // 10000
+    by_memory, by_cores = budget // servers["residentMegabytes"], host["cores"] // servers["coresPerServer"]
+    bounded = min(by_memory, by_cores, servers["maximum"])
+    slots = max(servers["minimum"], bounded)
+    limit = "floor" if bounded < servers["minimum"] else "memory" if bounded == by_memory else "cores" if bounded == by_cores else "policy"
+    overhead = servers["residentMegabytes"] - servers["heapMegabytes"]
+    heap = servers["heapMegabytes"] if by_memory >= 1 else max(servers["minimumHeapMegabytes"], min(servers["heapMegabytes"], budget - overhead))
+    return {"slots": slots, "services": servers["serviceMaximum"], "heapMegabytes": heap, "residentMegabytes": heap + overhead, "budgetMegabytes": budget, "cpuPerServer": max(1, host["cores"] // slots), "memoryPerServerMegabytes": max(256, (spare - budget) // slots), "limit": limit}
+
+
+def growth(row, policy):
+    servers = policy["servers"]
+    if row["kind"] != "build":
+        return "wait" if row["used"] >= row["services"] else "base"
+    if row["used"] < row["slots"]:
+        return "base"
+    allowance = row["idle"] // servers["growthSpareMegabytes"]
+    extra = servers["growthMaximum"] - row["slots"]
+    if row["growth"] and row["idle"] >= servers["growthSpareMegabytes"] and row["image"] >= servers["growthImageFreeBytes"] and row["busyGrowth"] < min(allowance, extra):
+        return "growth"
+    return "wait"
+
+
+def reap(row, policy):
+    held = sum(1 for entry in row["rows"] if entry["held"])
+    idle = sorted((entry for entry in row["rows"] if entry["live"] and not entry["held"]), key=lambda entry: (-entry["usedAt"], entry["slot"]))
+    keep = 0 if row.get("headroom") is not None and row["headroom"] < 0 else max(0, row["budget"] - held)
+    return [entry["slot"] for entry in reversed(idle[keep:])]
+
+
 request = json.load(sys.stdin)
-print(json.dumps([plan(row, request["policy"]) for row in request["rows"]]))
+mode = {"plan": server_plan, "growth": growth, "reap": reap}.get(request.get("mode", "garbage"), plan)
+print(json.dumps([mode(row, request["policy"]) for row in request["rows"]]))

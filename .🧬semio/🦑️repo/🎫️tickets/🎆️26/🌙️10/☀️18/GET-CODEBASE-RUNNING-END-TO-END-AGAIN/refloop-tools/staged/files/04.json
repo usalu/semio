@@ -1,0 +1,18 @@
+{
+  "contract": {
+    "entries": ["entry.ts"],
+    "generated": [],
+    "externalDependencies": []
+  },
+  "files": {
+    "entry.ts": "import { value } from \"./leaf.ts\";\nexport const result = value;\n",
+    "leaf.ts": "export const value = 1;\n"
+  },
+  "provider": "build:declared-source-imports:v1",
+  "graphPreparation": "analysesPrepared=():Promise<void>=>analyses??=import(\"./📥️inference/🟨️.mjs\").then(async producer=>{await producer.libraryBootstrap;producer.prepareSourceAnalysesV1();})",
+  "cases": [
+    { "id": "unchanged", "file": "entry.ts", "source": null, "holds": true },
+    { "id": "body-edit", "file": "entry.ts", "source": "import { value } from \"./leaf.ts\";\nexport const result = value + 1;\n", "holds": true },
+    { "id": "import-edit", "file": "entry.ts", "source": "import { value } from \"./other.ts\";\nexport const result = value;\n", "holds": false }
+  ]
+}

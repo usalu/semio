@@ -1,0 +1,32 @@
+--- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🟦️.ts	2026-10-27 13:00:32
++++ /var/folders/pm/zdg449hs6r33w_2gtsn23byc0000gn/T/sm/meder/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🟦️.ts	2026-10-27 13:54:50
+@@ -50,20 +50,23 @@
+  if(process.env.SEMIO_BUILD_GRAPH_MEMO_OUT!==undefined)await(await import("./🧠️memo/📤️relevance/🟦️.ts")).writeGraphMemoSidecarV1(process.cwd(),pin,process.env,signal);
+ }
+ 
+-/** 🏗️ Plans the graph in a child process of the same invocation and returns its slice: the child is the invocation's own declared request started directly from the snapshot this process runs from (no second front door, no second capture; it inherits the capacity grant and the issued phase), loads exactly what this process loaded, writes the slice and exits; nothing it allocated stays resident in the loader. */
++/** 🏗️ Plans the graph in a child process of the same invocation and returns its slice: the child is the invocation's own declared request started directly from the snapshot this process runs from (no second front door, no second capture; it inherits the capacity grant and the issued phase), loads exactly what this process loaded, writes the slice and exits; nothing it allocated stays resident in the loader. The memo asks the same launch (`build:graph-derive`) to settle the derived facts an edit touched. */
+ export async function loadBuildGraphInChildV1(root:string,args:readonly string[],parent:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<BuildGraphV1>{
+  requireIssuedResourceControlInvocationV1(phaseControl,parent);checkResourceLeaseControl(phaseControl);
+  const{mkdtempSync,rmSync,readFileSync,existsSync}=await import("node:fs"),{tmpdir}=await import("node:os"),{join}=await import("node:path"),{runAdoptedCapturedBuildSourceV1}=await import("../../📥️source/🔏️closure/🚪️command/🟦️.ts"),{projectOwnedBuildChildEnvironmentV1}=await import("../../📥️caller/📤️child/🟦️.ts"),{compilerAdmissionBudgetV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts"),{scriptInvocationBudget}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
+  const{openGraphMemoForCommandV1,planGraphWithMemoV1}=await import("./🧠️memo/🚪️command/🟦️.ts"),{profileMarkV1}=await import("../../⏱️profile/🟨️.mjs"),{graphChildHeapBytesV1}=await import("../../🧠️memory/🟨️.mjs"),{readBuildGraphV1,recordSealedGenerationPinV1}=await import("../../🕸️graph/🟦️.ts");
+- const memo=await openGraphMemoForCommandV1(root,args,parent.capabilities as {tool?:string;buildMode?:string},phaseControl.signal);
+  const directory=mkdtempSync(join(tmpdir(),"semio-graph-plan-")),file=join(directory,"graph.json");
++ const child=async(label:string,extra:Readonly<Record<string,string>>):Promise<void>=>{
++  const environment=await projectOwnedBuildChildEnvironmentV1(root,args,parent,phaseControl);checkResourceLeaseControl(phaseControl);
++  const progress=async()=>{checkResourceLeaseControl(phaseControl);await advanceScriptInvocation(parent,label,"running");checkResourceLeaseControl(phaseControl);};await progress();
++  await runAdoptedCapturedBuildSourceV1(args,parent,phaseControl,{label,cwd:root,budgetMilliseconds:scriptInvocationBudget(parent,compilerAdmissionBudgetV1(phaseControl)),environment:{...environment,[BUILD_GRAPH_PLAN_OUT_V1]:file,...extra,BUN_JSC_forceRAMSize:String(graphChildHeapBytesV1())},stdout:"stderr",onProgress:progress});
++  checkResourceLeaseControl(phaseControl);
++ };
+  try{
++  const memo=await openGraphMemoForCommandV1(root,args,parent.capabilities as {tool?:string;buildMode?:string},phaseControl.signal,process.env,environment=>child("build:graph-derive",environment));
+   const{graph,served}=await planGraphWithMemoV1<BuildGraphV1>({memo,stem:join(directory,"memo"),parse:text=>readBuildGraphV1(JSON.parse(text)),record:recordSealedGenerationPinV1,notice:text=>process.stderr.write(text+"\n"),mark:profileMarkV1,environment:process.env,
+    plan:async sidecar=>{
+-    const environment=await projectOwnedBuildChildEnvironmentV1(root,args,parent,phaseControl);checkResourceLeaseControl(phaseControl);
+-    const progress=async()=>{checkResourceLeaseControl(phaseControl);await advanceScriptInvocation(parent,"build:graph-plan","running");checkResourceLeaseControl(phaseControl);};await progress();
+-    await runAdoptedCapturedBuildSourceV1(args,parent,phaseControl,{label:"build:graph-plan",cwd:root,budgetMilliseconds:scriptInvocationBudget(parent,compilerAdmissionBudgetV1(phaseControl)),environment:{...environment,[BUILD_GRAPH_PLAN_OUT_V1]:file,...sidecar,BUN_JSC_forceRAMSize:String(graphChildHeapBytesV1())},stdout:"stderr",onProgress:progress});
+-    checkResourceLeaseControl(phaseControl);
++    await child("build:graph-plan",sidecar??{});
+     return{plan:readFileSync(file,"utf8"),pin:existsSync(file+BUILD_GRAPH_PLAN_PIN_SUFFIX_V1)?readFileSync(file+BUILD_GRAPH_PLAN_PIN_SUFFIX_V1,"utf8"):undefined};
+    }});
+   if(!served){

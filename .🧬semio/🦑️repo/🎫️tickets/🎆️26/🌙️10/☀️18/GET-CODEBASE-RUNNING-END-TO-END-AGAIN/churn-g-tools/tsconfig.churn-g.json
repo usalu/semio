@@ -1,0 +1,23 @@
+{
+ "extends": "../../../../../../../../🧰️framework/🛍️products/🦑️repo/tsconfig.json",
+ "compilerOptions": {
+  "noEmit": true,
+  "incremental": false,
+  "skipLibCheck": true,
+  "composite": false
+ },
+ "include": [],
+ "files": [
+  "../../../../../../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🌊️races/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/📸️snapshot/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧾️refusals/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🔄️restart/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🌊️races/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🌊️races/🔁️layers/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/📸️snapshot/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🎲️fuzz/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🧾️refusals/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🪵️failure-tail/🟦️.ts"
+ ]
+}

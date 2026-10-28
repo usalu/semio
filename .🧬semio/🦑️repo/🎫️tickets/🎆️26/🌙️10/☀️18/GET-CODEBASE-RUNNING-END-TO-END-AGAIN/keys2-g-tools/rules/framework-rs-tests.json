@@ -1,0 +1,61 @@
+{
+  "id": "framework-rs-tests",
+  "evidence": "static",
+  "description": "Each framework umbrella test runs the class its script router registers under the command word: the Cargo packages that class names (test targets and path-dependency closure included), the TypeScript tests it runs (import closure) and the files and directories it names, plus what bun reads at start (tsconfig, bunfig, the language messages of its preload). Never the product trees that `reads` and `^default` stand for.",
+  "select": {
+    "project": "@semio-tech/framework-rs",
+    "targets": [
+      "test-staged-payload-funding",
+      "test-retained-pack-encoding",
+      "test-window-utility-native",
+      "test-source-projection",
+      "test-directory-discovery",
+      "test-action-choices",
+      "test-tool-run-actions",
+      "test-history-edit-actions",
+      "test-mutation-inputs",
+      "test-host-effect-invocation",
+      "test-snapshot-sqlite",
+      "test-snapshot-sqlite-native",
+      "test-core-modules",
+      "test-deflate-encoding",
+      "test-wire-retirement-source",
+      "test-wire-retirement-native",
+      "test-package-descriptor-value-codec",
+      "test-artifact-kind-source",
+      "test-command-ingress-consumer",
+      "test-history-progress",
+      "test-snapshot-receiving-source",
+      "test-argument-retirement-native",
+      "test-original-factory-admission",
+      "test-original-factory-admission-source"
+    ]
+  },
+  "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "reads"
+  ],
+  "reads": [
+    {
+      "router": {
+        "source": "🧰️framework/📦️packages/🦀️rust/📜️script.ts",
+        "bases": [
+          "🧰️framework"
+        ]
+      }
+    },
+    {
+      "globs": [
+        "{workspaceRoot}/bunfig.toml",
+        "{workspaceRoot}/tsconfig.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/**/*"
+      ]
+    }
+  ]
+}

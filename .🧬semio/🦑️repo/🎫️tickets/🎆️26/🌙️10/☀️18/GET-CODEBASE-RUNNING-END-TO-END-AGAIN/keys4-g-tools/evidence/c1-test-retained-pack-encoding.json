@@ -1,0 +1,26 @@
+{
+ "target": "test-retained-pack-encoding",
+ "tag": "c1",
+ "declared": 1063,
+ "rows": [
+  {
+   "leg": "cargo-pack",
+   "crate": "semio-framework-pack",
+   "test": "lib:pack",
+   "kind": "cargo",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 1,
+   "tail": " | test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s |  | ",
+   "notes": [
+    "profiles:2",
+    "rules:741",
+    "capacity:600"
+   ]
+  }
+ ]
+}

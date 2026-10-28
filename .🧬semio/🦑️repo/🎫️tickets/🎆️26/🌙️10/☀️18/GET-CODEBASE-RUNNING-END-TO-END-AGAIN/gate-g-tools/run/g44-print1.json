@@ -1,0 +1,31 @@
+{
+ "label": "g44-print1",
+ "target": "@semio-tech/print-rs:test",
+ "started": "16:10:23",
+ "wall_s": 2164.6,
+ "peak_tree_mb": 6941,
+ "peak_processes": 9,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "1"
+  ],
+  "inferring": [
+   "1"
+  ],
+  "published": [
+   "665",
+   "351",
+   "1075"
+  ],
+  "processes": [
+   "9",
+   "1 disk cache hit, 3 internal, 5 local"
+  ],
+  "actions": [
+   "9"
+  ]
+ }
+}

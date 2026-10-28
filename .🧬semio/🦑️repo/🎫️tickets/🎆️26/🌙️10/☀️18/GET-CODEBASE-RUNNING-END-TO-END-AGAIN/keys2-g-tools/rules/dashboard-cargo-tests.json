@@ -1,0 +1,39 @@
+{
+  "id": "dashboard-cargo-tests",
+  "evidence": "static",
+  "description": "The dashboard unit and window tests run the branch of the dashboard task router that their command word selects: the Cargo packages that branch and the package lists it mentions name (test targets and path-dependency closure included) and the TypeScript tests it runs (import closure), plus bun's start-up reads and the schema and fixtures of the dashboard. Never the build library, the compiler or the rest of the dashboard tree that `reads` and `^default` stand for.",
+  "select": {
+    "project": "@semio-tech/repo-dashboard-rs",
+    "targets": [
+      "test-unit",
+      "test-windows"
+    ]
+  },
+  "replaces": [
+    "default",
+    "^default",
+    "nativeSources",
+    "^nativeSources",
+    "nativeTestSources",
+    "^nativeTestSources",
+    "reads"
+  ],
+  "reads": [
+    {
+      "router": {
+        "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts",
+        "classes": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🛤️task-routes/🟦️.ts"
+      }
+    },
+    {
+      "globs": [
+        "{workspaceRoot}/bunfig.toml",
+        "{workspaceRoot}/tsconfig.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧫️fixtures/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/**/*"
+      ]
+    }
+  ]
+}

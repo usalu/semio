@@ -1,0 +1,30 @@
+{
+ "version": 1,
+ "cases": [
+  {"name": "equal rows are one row, a changed kind, path or fact is another", "rows": [
+   ["exists", "/w/a", true], ["exists", "/w/a", true], ["exists", "/w/a", false], ["fileExists", "/w/a", true], ["exists", "/w/b", true], ["exists", "/w/a", true]]},
+  {"name": "the type of a primitive fact is part of its identity", "rows": [
+   ["stat", "/w/a", "1"], ["stat", "/w/a", 1], ["stat", "/w/a", true], ["stat", "/w/a", "true"], ["stat", "/w/a", null], ["stat", "/w/a", "null"], ["stat", "/w/a", 1], ["stat", "/w/a", "1"]]},
+  {"name": "flat file facts are equal by their stamp and digest, whatever the object", "rows": [
+   ["file", "/w/f", {"size": 3, "mtimeMs": 5, "ctimeMs": 6, "ino": 7, "sha256": "aa"}],
+   ["file", "/w/f", {"size": 3, "mtimeMs": 5, "ctimeMs": 6, "ino": 7, "sha256": "aa"}],
+   ["file", "/w/f", {"size": 3, "mtimeMs": 5, "ctimeMs": 6, "ino": 7, "sha256": "ab"}],
+   ["file", "/w/f", {"size": 4, "mtimeMs": 5, "ctimeMs": 6, "ino": 7, "sha256": "aa"}],
+   ["file", "/w/f", {"error": "ENOENT"}], ["file", "/w/f", {"error": "ENOENT"}], ["file", "/w/f", {"error": "EACCES"}]]},
+  {"name": "other object facts are equal by their JSON text, key order included", "rows": [
+   ["analysis", "/w/m.ts", {"provider": "p", "revision": "r", "nestedObservations": []}],
+   ["analysis", "/w/m.ts", {"provider": "p", "revision": "r", "nestedObservations": []}],
+   ["analysis", "/w/m.ts", {"revision": "r", "provider": "p", "nestedObservations": []}],
+   ["analysis", "/w/m.ts", {"provider": "p", "revision": "r", "nestedObservations": [{"kind": "exists", "path": "/w/x", "fact": true}]}],
+   ["analysis", "/w/m.ts", {"provider": "p", "revision": "r", "nestedObservations": [{"kind": "exists", "path": "/w/x", "fact": true}]}]]},
+  {"name": "paths that differ in one character or share a long prefix are distinct", "rows": [
+   ["readdir", "/w/dir/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1", "x"],
+   ["readdir", "/w/dir/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa2", "x"],
+   ["readdir", "/w/dir/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1", "x"],
+   ["readdir", "/w/dir/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1", "y"],
+   ["readdirNames", "/w/dir/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1", "x"]]},
+  {"name": "unicode and emoji paths keep their identity", "rows": [
+   ["exists", "/w/🧰️framework/a", true], ["exists", "/w/🧰️framework/a", true], ["exists", "/w/🧰framework/a", true], ["exists", "/w/ä/ö", false], ["exists", "/w/ä/ö", false]]},
+  {"name": "a large run of rows with repeats", "generate": {"rows": 3000, "paths": 700, "kinds": ["exists", "lstat", "readdir", "file"], "seed": 7}}
+ ]
+}

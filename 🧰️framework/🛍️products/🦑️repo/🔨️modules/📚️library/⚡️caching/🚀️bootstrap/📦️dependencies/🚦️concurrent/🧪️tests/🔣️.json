@@ -565,11 +565,13 @@
  "budget": [
   {
    "name": "linking backend",
-   "sharing": true
+   "sharing": true,
+   "requiredBytes": 6710886400
   },
   {
    "name": "copying backend",
-   "sharing": false
+   "sharing": false,
+   "requiredBytes": 33889976320
   }
  ],
  "stale": [

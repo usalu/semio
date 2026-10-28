@@ -1,0 +1,12 @@
+{
+ "label": "g49-mcp",
+ "target": "repo-mcp:test",
+ "started": "23:01:08",
+ "wall_s": 24.6,
+ "peak_tree_mb": 87,
+ "peak_processes": 2,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 15.1,
+ "graph": {}
+}

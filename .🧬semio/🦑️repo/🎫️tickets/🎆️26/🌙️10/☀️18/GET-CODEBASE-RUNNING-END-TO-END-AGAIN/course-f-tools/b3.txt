@@ -4,3 +4,6 @@ m3|@semio-tech/ui-rs,@semio-tech/ui-contract-rs,@semio-tech/course-rs,@semio-tec
 m4|@semio-tech/framework-server,@semio-tech/course,@semio-tech/framework-rs,@semio-tech/framework-actor-rs,@semio-tech/ui-styling-tokens|test
 m5|@semio-tech/ui-styling-tokens,@semio-tech/assets|check-generated
 m6|@teaching/proctor|build,test
+m1b|@semio-tech/course-react,@semio-tech/pets,@semio-tech/pets-react,@semio-tech/framework|typecheck,test
+m4b|@semio-tech/ui-styling-tokens|test
+m1c|@semio-tech/course-react,@semio-tech/pets,@semio-tech/pets-react,@semio-tech/framework|typecheck,test

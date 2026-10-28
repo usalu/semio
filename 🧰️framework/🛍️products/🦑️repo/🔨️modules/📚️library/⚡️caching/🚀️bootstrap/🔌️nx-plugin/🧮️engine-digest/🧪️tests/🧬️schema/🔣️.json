@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:nx-engine-unkeyed-domains:tests:v1",
+  "title": "Nx Engine Unkeyed Domain Corpus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "checkoutFromTests",
+    "forgedPolicies",
+    "families",
+    "edits",
+    "spawnOnly"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "checkoutFromTests": {
+      "type": "string",
+      "minLength": 1
+    },
+    "forgedPolicies": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "families": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "generic",
+          "native"
+        ]
+      }
+    },
+    "edits": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "role",
+          "select",
+          "generic",
+          "native"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "select": {
+            "type": "object",
+            "additionalProperties": false,
+            "minProperties": 1,
+            "maxProperties": 1,
+            "properties": {
+              "schedulingDomain": {
+                "type": "string"
+              },
+              "engineDomain": {
+                "type": "string"
+              },
+              "nativeKeyed": {
+                "const": true
+              },
+              "path": {
+                "type": "string"
+              }
+            }
+          },
+          "generic": {
+            "enum": [
+              "changed",
+              "unchanged"
+            ]
+          },
+          "native": {
+            "enum": [
+              "changed",
+              "unchanged"
+            ]
+          },
+          "optional": {
+            "const": true
+          }
+        }
+      }
+    },
+    "spawnOnly": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mustLeave",
+        "mustStay"
+      ],
+      "properties": {
+        "mustLeave": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "mustStay": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

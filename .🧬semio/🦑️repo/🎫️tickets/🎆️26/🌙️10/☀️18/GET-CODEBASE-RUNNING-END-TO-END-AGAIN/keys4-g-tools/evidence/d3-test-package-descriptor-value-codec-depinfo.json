@@ -1,0 +1,21 @@
+{
+ "target": "test-package-descriptor-value-codec",
+ "crates": [
+  "semio-framework-manifest-plugin"
+ ],
+ "closureCrates": 146,
+ "depInfoUnits": 173,
+ "workspaceFilesRead": 900,
+ "declared": 1861,
+ "undeclared": [
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/✂️span/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🚚️apply/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🦀️.rs"
+ ],
+ "closureWithoutUnits": []
+}

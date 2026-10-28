@@ -14,6 +14,8 @@ import {parseFreshProcessPolicyV1,type FreshProcessControlV1} from "../../🏭�
 import { setImmediate } from "node:timers/promises";
 import {createIssuedResourceControlV1,requireIssuedScriptInvocationV1,type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { captureFreshComponentInputs, freshRun, freshStage, stageFreshComponentInputs } from "../../🏭️fresh-component/🟦️.ts";
+import{privateRepositoryWorkspaceV1}from"../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 export function createFreshComponentTests(original:ScriptInvocation) {
   requireIssuedScriptInvocationV1(original);
@@ -370,7 +372,7 @@ export function createFreshComponentTests(original:ScriptInvocation) {
     const evidence = mkdtempSync(join(artifactRoot, "f-"));
     const {default:Ajv}=await import("ajv"),processFixture=(await import("../../🏭️fresh-component/🎛️control/🧪️tests/🧫️fixtures/🔣️.json")).default,processSchema=(await import("../../🏭️fresh-component/🎛️control/🧬️schema/🔣️.json")).default,entrySchema=(await import("@semio-tech/repo-lib/cargo")).cliEntrypointSchema,storageSchema=(await import("@semio-tech/repo-lib/cargo")).preparationStorageSchema,admit=new Ajv({strict:true}).addSchema(entrySchema).addSchema(storageSchema).compile(processSchema);assert.equal(admit(processFixture.policy),true);assert.deepEqual(parseFreshProcessPolicyV1(processFixture.policy),processFixture.policy);for(const field of processFixture.required){const invalid:Record<string,unknown>={...processFixture.policy};delete invalid[field];assert.equal(admit(invalid),false);assert.throws(()=>parseFreshProcessPolicyV1(invalid));}
     const requiredRoot=join(evidence,"missing-process-owner");mkdirSync(requiredRoot);const startedOwner=performance.now();await assert.rejects(freshRun(process.execPath,["-e","process.stdout.write('unauthorized owner executed')"],repoRoot,{...process.env},{diagnosticsRoot:requiredRoot,cancelled:()=>false,remainingMs:()=>Math.floor(5000-(performance.now()-startedOwner)),checkpoint:()=>{}} as unknown as FreshProcessControlV1,"missing-process-owner",0,1),/Fresh process policy required/);assert.deepEqual(readdirSync(requiredRoot),[]);
-    const processPolicy=parseFreshProcessPolicyV1({...processFixture.policy,storage:{version:1,directory:artifactRoot,program:repositoryCargoPreparationStorageV1(process.cwd()).program}});
+    const processPolicy=parseFreshProcessPolicyV1({...processFixture.policy,storage:{version:1,directory:artifactRoot,program:repositoryCargoPreparationStorageV1(repository.root).program}});
     for (const row of fixture.cases) {
       const root = join(evidence, row.name);
       mkdirSync(root);

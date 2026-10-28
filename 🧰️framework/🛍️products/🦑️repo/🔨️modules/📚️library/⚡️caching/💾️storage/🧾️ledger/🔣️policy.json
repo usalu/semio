@@ -9,7 +9,8 @@
       "ignored": [
         ".DS_Store",
         "🧭️prune-stamp.json",
-        "🧭️size-ledger.json"
+        "🧭️size-ledger.json",
+        "🎚️machine-budget.json"
       ]
     },
     "native": {
@@ -37,7 +38,7 @@
       ],
       "purpose": {
         "en": "Pinned toolchains: rustup, Bazel, Nx, SDKs.",
-        "de": "Fest eingebundene Werkzeugketten: rustup, Bazel, Nx, SDKs."
+        "de": "Gepinnte Toolchains: rustup, Bazel, Nx, SDKs."
       }
     },
     {
@@ -89,7 +90,7 @@
       ],
       "purpose": {
         "en": "Bazel workspaces, outputs, actions and receipts.",
-        "de": "Bazel-Arbeitsbereiche, -Ausgaben, -Aktionen und Belege."
+        "de": "Bazel-Arbeitsbereiche, -Ausgaben, -Aktionen und Quittungen."
       }
     },
     {
@@ -181,7 +182,7 @@
       ],
       "purpose": {
         "en": "Bootstrap control: SQLite lease catalogs, claims and queues.",
-        "de": "Bootstrap-Steuerung: SQLite-Lease-Kataloge, Claims und Warteschlangen."
+        "de": "Bootstrap-Steuerung: SQLite-Lease-Kataloge, Ansprüche und Warteschlangen."
       }
     },
     {
@@ -206,6 +207,69 @@
       }
     },
     {
+      "id": "command-store",
+      "root": "native",
+      "kind": "tree",
+      "directory": "command",
+      "budget": {
+        "bytes": 134217728
+      },
+      "collect": {
+        "unusedAgeMs": 604800000,
+        "quietMs": 3600000,
+        "custody": "quiet"
+      },
+      "writers": [
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Runtime state of the command runner (captures, scratch and coverage of ad-hoc test commands), never an input.",
+        "de": "Laufzeitzustand des Befehlsläufers (Mitschnitte, Arbeitsdateien und Abdeckung von Ad-hoc-Testbefehlen), nie ein Input."
+      }
+    },
+    {
+      "id": "typescript-project",
+      "root": "native",
+      "kind": "tree",
+      "directory": "semio",
+      "budget": {
+        "bytes": 67108864
+      },
+      "collect": {
+        "unusedAgeMs": 2592000000,
+        "quietMs": 3600000,
+        "custody": "quiet"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🔷️typescript-project/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Generated whole-workspace TypeScript project and logs of verify typescript (semio/typescript), derived from the checkout.",
+        "de": "Erzeugtes Gesamt-TypeScript-Projekt und Protokolle von verify typescript (semio/typescript), aus dem Checkout abgeleitet."
+      }
+    },
+    {
+      "id": "test-sandbox",
+      "root": "native",
+      "kind": "tree",
+      "directory": "test-sandbox",
+      "budget": {
+        "bytes": 33554432
+      },
+      "collect": {
+        "unusedAgeMs": 604800000,
+        "quietMs": 3600000,
+        "custody": "quiet"
+      },
+      "writers": [
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🏃️run/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Checkout scratch of sandboxed test runs (the sandbox protocol's checkoutScratchDirectory) and its reclaim stamp.",
+        "de": "Checkout-Arbeitsfläche sandboxbasierter Testläufe (checkoutScratchDirectory des Sandbox-Protokolls) und ihr Rückgewinnungsstempel."
+      }
+    },
+    {
       "id": "nx-artifacts",
       "root": "repository",
       "kind": "nested",
@@ -226,6 +290,99 @@
       }
     },
     {
+      "id": "compile-cache-rust",
+      "root": "repository",
+      "kind": "nested",
+      "directory": "nx/tmp/node-compile-cache",
+      "partition": "rust",
+      "budget": {
+        "bytes": 805306368
+      },
+      "collect": {
+        "unusedAgeMs": 604800000,
+        "quietMs": 600000,
+        "custody": "quiet",
+        "depth": 2
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Node and Bun compile caches of runs whose temporary directory is the Nx temp folder; derived per source hash, least recently used entries go first.",
+        "de": "Node- und Bun-Compile-Caches der Läufe, deren Temp-Ordner der Nx-Temp-Ordner ist; abgeleitet je Quell-Hash, zuletzt benutzte Einträge zuerst entfernt."
+      }
+    },
+    {
+      "id": "nx-tooling",
+      "root": "native",
+      "kind": "nested",
+      "directory": "nx",
+      "partition": "tools",
+      "budget": {
+        "bytes": 2147483648
+      },
+      "managed": {
+        "owner": "nx-tooling"
+      },
+      "reclaim": {
+        "softAvailableBytes": 2684354560,
+        "targetAvailableBytes": 4294967296
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Nx toolkit generations: one per patch, lock or package edit, bounded to the newest few plus the current activation and every generation a live reader holds.",
+        "de": "Nx-Werkzeuggenerationen: eine je Patch-, Lock- oder Paketänderung, begrenzt auf die neuesten paar sowie die aktuelle Aktivierung und jede von einem laufenden Leser gehaltene Generation."
+      }
+    },
+    {
+      "id": "nx-tmp",
+      "root": "repository",
+      "kind": "nested",
+      "directory": "nx/tmp",
+      "partition": "rust",
+      "budget": {
+        "bytes": 268435456
+      },
+      "collect": {
+        "unusedAgeMs": 3600000,
+        "quietMs": 600000,
+        "custody": "pid",
+        "units": "^tmp-(?<pid>[0-9]+)-[A-Za-z0-9]+$"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Temporary install trees of Nx processes (tmp-<pid>-<random>); a tree whose process is gone is removed, one a live process may still use never is.",
+        "de": "Temporäre Installationsbäume von Nx-Prozessen (tmp-<pid>-<zufall>); ein Baum, dessen Prozess beendet ist, wird entfernt, einer, den ein lebender Prozess noch nutzen kann, nie."
+      }
+    },
+    {
+      "id": "compile-cache-products",
+      "root": "repository",
+      "kind": "nested",
+      "directory": "tmp/node-compile-cache",
+      "partition": "products",
+      "budget": {
+        "bytes": 268435456
+      },
+      "collect": {
+        "unusedAgeMs": 604800000,
+        "quietMs": 600000,
+        "custody": "quiet",
+        "depth": 2
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Node and Bun compile caches of runs whose temporary directory lies in the products image; derived per source hash, least recently used entries go first.",
+        "de": "Node- und Bun-Compile-Caches der Läufe, deren Temp-Ordner im Produkt-Image liegt; abgeleitet je Quell-Hash, zuletzt benutzte Einträge zuerst entfernt."
+      }
+    },
+    {
       "id": "cargo-home",
       "root": "repository",
       "kind": "nested",
@@ -242,7 +399,7 @@
       ],
       "purpose": {
         "en": "Cargo home: the shared registry, git checkouts and pinned tool binaries, one for every workspace of the checkout.",
-        "de": "Cargo-Home: die gemeinsame Registry, Git-Checkouts und fest eingebundene Werkzeug-Binärdateien, eines für alle Workspaces des Checkouts."
+        "de": "Cargo-Home: die gemeinsame Registry, Git-Checkouts und gepinnte Werkzeug-Binärdateien, eines für alle Workspaces des Checkouts."
       }
     },
     {
@@ -346,7 +503,7 @@
       ],
       "purpose": {
         "en": "Content-addressed source closures of the graph.",
-        "de": "Inhaltsadressierte Quell-Closures des Graphen."
+        "de": "Inhaltsadressierte Quellabschlüsse des Graphen."
       }
     },
     {
@@ -366,7 +523,7 @@
       ],
       "purpose": {
         "en": "Content-addressed lock closures of the graph.",
-        "de": "Inhaltsadressierte Lock-Closures des Graphen."
+        "de": "Inhaltsadressierte Lock-Abschlüsse des Graphen."
       }
     },
     {
@@ -399,7 +556,7 @@
       "managed": { "owner": "bazel" },
       "reclaim": { "softAvailableBytes": 3221225472, "targetAvailableBytes": 6442450944 },
       "writers": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts"],
-      "purpose": { "en": "Generated Bazel packages with their source snapshots, one set per session slot; collected by the session collector, which frees the oldest unprotected packages when the products image runs low.", "de": "Generierte Bazel-Pakete mit ihren Quell-Schnappschüssen, je Sitzungs-Slot; vom Sitzungs-Collector aufgeräumt, der die ältesten ungeschützten Pakete freigibt, wenn das Produkt-Image knapp wird." }
+      "purpose": { "en": "Generated Bazel packages with their source snapshots, one set per session slot; collected by the session collector, which frees the oldest unprotected packages when the products image runs low.", "de": "Generierte Bazel-Pakete mit ihren Quell-Schnappschüssen, je Sitzungs-Slot; vom Sitzungssammler aufgeräumt, der die ältesten ungeschützten Pakete freigibt, wenn das Produkt-Image knapp wird." }
     },
     {
       "id": "bazel-outputs",
@@ -731,6 +888,27 @@
       }
     },
     {
+      "id": "acceptance",
+      "root": "repository",
+      "kind": "tree",
+      "directory": "acceptance",
+      "budget": {
+        "bytes": 16777216
+      },
+      "collect": {
+        "unusedAgeMs": null,
+        "quietMs": 3600000,
+        "custody": "quiet"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🛂️acceptance/⌨️command/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Edit journal of the build acceptance run: the original bytes of every file it edited, until a run has restored them.",
+        "de": "Änderungsjournal der Build-Abnahme: die Originalbytes jeder von ihr geänderten Datei, bis ein Lauf sie zurückgesetzt hat."
+      }
+    },
+    {
       "id": "build",
       "root": "repository",
       "kind": "tree",
@@ -750,6 +928,27 @@
       "purpose": {
         "en": "Nx plugin command captures.",
         "de": "Nx-Plugin-Befehlsmitschnitte."
+      }
+    },
+    {
+      "id": "implementation",
+      "root": "repository",
+      "kind": "tree",
+      "directory": "implementation",
+      "budget": {
+        "bytes": 536870912
+      },
+      "collect": {
+        "unusedAgeMs": 2592000000,
+        "quietMs": 600000,
+        "custody": "quiet"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/📤️promotion/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Sealed snapshots of the build tool's own implementation (one directory per entry; the promotion keeps the current and the previous snapshots itself).",
+        "de": "Versiegelte Schnappschüsse der eigenen Implementierung des Build-Werkzeugs (ein Verzeichnis pro Einstieg; die Beförderung behält den aktuellen und die vorherigen Schnappschüsse selbst)."
       }
     },
     {
@@ -934,7 +1133,7 @@
       ],
       "purpose": {
         "en": "Test evidence routed by the test output policy.",
-        "de": "Vom Testausgabe-Regelwerk geleitete Testbelege."
+        "de": "Vom Testausgabe-Regelwerk geleitete Testnachweise."
       }
     },
     {
@@ -953,7 +1152,7 @@
       ],
       "purpose": {
         "en": "Pinned test oracles.",
-        "de": "Fest gehaltene Test-Orakel."
+        "de": "Gepinnte Test-Orakel."
       }
     },
     {
@@ -1148,7 +1347,7 @@
       "quietMs": 86400000,
       "reason": {
         "en": "Closures moved into the graph partition (g/build-lock-closures).",
-        "de": "Closures liegen jetzt in der Graph-Partition (g/build-lock-closures)."
+        "de": "Abschlüsse liegen jetzt in der Graph-Partition (g/build-lock-closures)."
       }
     },
     {

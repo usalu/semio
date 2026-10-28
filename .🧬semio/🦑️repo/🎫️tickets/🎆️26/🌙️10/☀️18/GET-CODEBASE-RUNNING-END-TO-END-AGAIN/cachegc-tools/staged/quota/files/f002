@@ -1,0 +1,271 @@
+import{retireBuildGraphOptionalGroupsHeadroomV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts";
+import {repositoryCacheBudgetV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
+import {buildGraphWriterResourceV1} from "./🔒️writer/🟨️.mjs";
+import { requireNativePlatformImageWriterV1, requireNativePlatformImageBindingV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
+import {join,resolve,dirname,relative,sep,isAbsolute} from "node:path";
+import {randomBytes} from "node:crypto";
+import {statSync,lstatSync,mkdirSync,rmSync,openSync,fstatSync,readSync,writeSync,closeSync,readFileSync} from "node:fs";
+import {recordMemberLeafV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🟨️.mjs";
+import{nativeStatfsSyncV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {readdir,lstat} from "node:fs/promises";
+import { withRepositoryCacheStoreV1, withRequiredRepositoryCacheStoreConsumerV1, withRepositoryCacheGraphFixtureV1, classifyRepositoryCacheStoreObservationPathV1, requireRepositoryCacheStoreReadCustodyV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import {checkScriptInvocation,requireIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {openBuildGraphOptionalLedgerV1} from "./📒️ledger/🟨️.mjs";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import { acquireQueuedResourceLease, acquireResourceLease, checkResourceLeaseControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import { repositoryCachePartitionNativeImageV1, repositoryLeaseDirectoryV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"; import { openRepositoryCachePartitionV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts";
+import { requireNativeStoragePathV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import { schema, policy, requireCurrentRepositoryBuildGraphConsumerV1, stagings, writers, datasets, selections, backings, graphReadScopes, graphFixtureSchema } from "./🔧️custody/🟨️.mjs";
+const ledgerSchema=schema.definitions.OptionalLedger,quotaSchema=schema.definitions.OptionalQuota,datasetSchema=schema.definitions.InferenceDataset;
+
+/** 📏️ Observes bounded quota refusal DATA without granting publication capacity. */
+function optionalGraphQuotaObservationV1(state){
+ try{const object=state!==null&&typeof state==="object"&&!Array.isArray(state),kind=state===null?"null":Array.isArray(state)?"array":["object","number","string","boolean","undefined"].includes(typeof state)?typeof state:"other",schemaValid=validateJsonSchemaSubset(quotaSchema,state,schema).length===0,value=key=>object&&typeof state[key]==="number"&&Number.isFinite(state[key])?state[key]:null;return Object.freeze({version:1,observed:true,kind,fieldCount:object?Object.keys(state).length:null,schemaValid,maximumBytes:value("maximumBytes"),usedBytes:value("usedBytes"),availableBytes:value("availableBytes"),minimumAvailableBytes:value("minimumAvailableBytes"),reason:!schemaValid?"shape":state.usedBytes>state.maximumBytes?"retained":null,headroomSatisfied:schemaValid?state.minimumAvailableBytes<=state.availableBytes:null});}catch{return Object.freeze({version:1,observed:false});}
+}
+
+/** 🧮️ Reserves exact temporary peaks before optional retained cache bytes. */
+export function createBuildGraphOptionalQuotaV1(state,check=()=>{}){
+ if(validateJsonSchemaSubset(quotaSchema,state,schema).length||state.usedBytes>state.maximumBytes)throw Error("Closed optional graph cache quota required: "+JSON.stringify(optionalGraphQuotaObservationV1(state)));
+ let used=state.usedBytes,available=state.availableBytes,pending=0;
+ return Object.freeze({get usedBytes(){return used;},get pendingBytes(){return pending;},reserve(request){
+  check();if(!request||Object.keys(request).sort().join()!=="peakBytes,retainedDeltaBytes"||!Number.isSafeInteger(request.peakBytes)||request.peakBytes<0||!Number.isSafeInteger(request.retainedDeltaBytes)||request.retainedDeltaBytes>request.peakBytes||used+request.retainedDeltaBytes<0)throw Error("Exact optional graph publication peak required");
+  if(used+pending+request.peakBytes>state.maximumBytes||available-pending-request.peakBytes<state.minimumAvailableBytes)return undefined;
+  pending+=request.peakBytes;let live=true;return Object.freeze({commit(){check();if(!live)throw Error("Original optional graph reservation released");pending-=request.peakBytes;used+=request.retainedDeltaBytes;available-=request.retainedDeltaBytes;live=false;},release(){if(live){pending-=request.peakBytes;live=false;}}});
+ }});
+}
+
+/** 🏷️ Identifies only recomputable optional leaves, never producer or graph publications. */
+export function isBuildGraphOptionalCachePathV1(path){
+ return typeof path==="string"&&new RegExp(quotaSchema.optionalPath,"u").test(path);
+}
+
+/** 🗂️ Restricts isolated writers to immutable closures and their own inference directory. */
+export function buildGraphWriterDirectoryAdmittedV1(scope,namespace){
+ if(validateJsonSchemaSubset(ledgerSchema.definitions.WriterDirectory,{scope,namespace},schema).length)throw Error("Closed isolated graph writer directory required");return namespace!=="admission";
+}
+
+/** 🧷️ Refuses another writer's mutable optional cache namespace. */
+export function buildGraphWriterOptionalPathAdmittedV1(scope,path){
+ if(validateJsonSchemaSubset(ledgerSchema.definitions.WriterScope,scope,schema).length||typeof path!=="string")throw Error("Closed isolated graph optional path required");return path.startsWith((scope.kind==="selection"?"selections":"contexts")+"/"+scope.identity+"/")&&isBuildGraphOptionalCachePathV1(path);
+}
+
+/** 🪪️ Projects the retained writer namespace without accepting a caller supplied authority. */
+function isolatedGraphWriterScopeV1(current){if(!current.namespace)return undefined;const [kind,identity]=current.namespace.split(":");return {kind,identity};}
+
+/** 📏️ Inventories optional regular leaves without following another physical owner. */
+async function optionalInventoryV1(image,control){
+ const directory=join(image.root,"inference"),entries=[];let count=0;
+ const walk=async path=>{checkResourceLeaseControl(control);if(++count>ledgerSchema.protocol.inventoryEntryLimit)throw Error("Finite optional graph inventory exceeded");if(count%64===0){await control.publish({resource:"repository:graph-cache-inventory",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}let status;try{status=await lstat(path);}catch(error){if(error.code==="ENOENT")return;throw error;}if(status.isSymbolicLink()||status.dev!==statSync(image.root).dev)throw Error("Original graph cache physical ancestry required");if(status.isDirectory()){for(const name of(await readdir(path)).sort())await walk(join(path,name));return;}const name=relative(directory,path).split(sep).join("/");if(!isBuildGraphOptionalCachePathV1(name))return;if(!status.isFile()||status.nlink!==1)throw Error("Original optional graph cache leaf required");entries.push({path,bytes:status.size,modified:status.mtimeMs,device:status.dev,inode:status.ino});};
+ await walk(directory);return entries;
+}
+
+/** 📒️ Awaits original ledger initialization custody without retaining it through producer work. */
+async function openOriginalGraphLedgerV1(workspace,original,control){
+ const lease=await acquireQueuedResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:"repository-graph-optional-ledger:"+resolve(workspace),mode:"exclusive",owner:randomBytes(16).toString("base64url"),control:control,signal:control.signal});
+ try{for(;;){try{return await openBuildGraphOptionalLedgerV1({image:original.image,control:control,leaseDirectory:repositoryLeaseDirectoryV1(workspace),maximumBytes:quotaSchema.policy.maximumBytes,minimumAvailableBytes:quotaSchema.policy.minimumAvailableBytes});}catch(error){if(error?.code!=="SQLITE_BUSY"&&error?.errcode!==5&&error?.errno!==5)throw error;checkResourceLeaseControl(control);await control.publish({resource:"repository-graph-optional-ledger",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}}}finally{lease.release();}
+}
+
+/** 🚰️ Requests low-water optional headroom before pressure can deny later publication peaks. */
+export function buildGraphOptionalRetirementDueV1(usedBytes,availableBytes){
+ const policy=quotaSchema.policy;if(!Number.isSafeInteger(usedBytes)||usedBytes<0||!Number.isSafeInteger(availableBytes)||availableBytes<0)throw Error("Exact optional graph cache usage required");
+ return usedBytes>policy.lowWaterBytes||availableBytes<policy.minimumAvailableBytes;
+}
+
+/** 🚰️ Applies the same pressure recovery to every producer kind. */
+export function buildGraphWriterMaintenanceDueV1(request){
+ if(validateJsonSchemaSubset(ledgerSchema.definitions.Maintenance,request,schema).length)throw Error("Closed graph writer pressure required");return buildGraphOptionalRetirementDueV1(request.usedBytes,request.availableBytes);
+}
+
+/** 🧯️ Reports optional reclamation pressure under already held exclusive custody. */
+async function retireOptionalGraphHeadroomV1(image,custody,request){
+ requireNativePlatformImageWriterV1(image,custody);const minimumAvailableBytes=request.minimumAvailableBytes;if(validateJsonSchemaSubset(quotaSchema.definitions.Reclamation,{minimumAvailableBytes},schema).length)throw Error("Closed optional graph reclamation request required");const result=await retireBuildGraphOptionalGroupsHeadroomV1(image,custody,{minimumAvailableBytes});const entries=await optionalInventoryV1(image,custody.control);await image.recheck();checkResourceLeaseControl(custody.control);const free=nativeStatfsSyncV1(image.root);return Object.freeze({retainedOptionalBytes:entries.reduce((sum,row)=>sum+row.bytes,0),availableBytes:free.bavail*free.bsize,requiredAvailableBytes:minimumAvailableBytes,retiredBytes:result.retiredBytes,retiredFiles:result.retiredFiles,...(result.partial?{partial:true}:{})});
+}
+
+/** 🔐️ Retires optional leaves only under the original canonical image writer, without acquiring it again. */
+export async function retireBuildGraphOptionalHeadroomV1(image,custody,request){requireNativePlatformImageWriterV1(image,custody);if(validateJsonSchemaSubset(quotaSchema.definitions.Reclamation,request,schema).length)throw Error("Closed optional graph reclamation request required");return retireOptionalGraphHeadroomV1(image,custody,request);}
+
+/** 🧹️ Reclaims explicit optional leaves under actual exclusive custody and defers while readers remain. */
+export async function prepareBuildGraphOptionalHeadroomV1(image,control,request){
+ if(validateJsonSchemaSubset(quotaSchema.definitions.Headroom,request,schema).length)throw Error("Closed optional graph headroom request required");await image.recheck();const result=await image.withExclusiveMaintenance({version:1,wait:false},async(_port,custody)=>retireOptionalGraphHeadroomV1(repositoryCachePartitionNativeImageV1(image),custody,request));if(!result.acquired)return false;const value=result.value;if(value.partial)return false;if(value.retainedOptionalBytes>quotaSchema.policy.maximumBytes||value.availableBytes<value.requiredAvailableBytes)throw Error("Graph cache cannot admit original required publication headroom: "+JSON.stringify(value));return value.retiredFiles>0;
+}
+
+/** 🚰️ Preserves the ordinary producer low-water and mandatory publication floor. */
+export async function maintainBuildGraphOptionalCachesV1(image,control){return prepareBuildGraphOptionalHeadroomV1(image,control,{minimumAvailableBytes:quotaSchema.policy.minimumAvailableBytes});}
+
+/** 📊️ Copies only the current writer's finite accounting DATA while its original custody remains live. */
+export function buildGraphWriterOptionalQuotaFactsV1(workspace){requireRepositoryBuildGraphWriterV1(workspace);const quota=writers.getStore().optionalQuota;return Object.freeze({version:1,usedBytes:quota.usedBytes,pendingBytes:quota.pendingBytes});}
+
+/** 🛰️ Runs a body whose graph fact directories are private staging directories: a worker process publishes nothing into the graph backing, its parent adopts the files it staged under the original writer custody. `published` is told the absolute path of every optional leaf the body publishes. */
+export function withBuildGraphStagingV1(staging,body){
+ if(typeof staging?.root!=="string"||!isAbsolute(staging.root))throw Error("Absolute private graph staging root required");
+ return stagings.run(Object.freeze({root:resolve(staging.root),published:staging.published}),body);
+}
+
+/** 📌️ Tells the staging of the running body that a leaf outside the optional publication gate was written. */
+export function noteBuildGraphStagedLeafV1(path){stagings.getStore()?.published?.(resolve(path));}
+
+/** 🧷️ Admits only paths inside the private staging root. */
+function requireBuildGraphStagedPathV1(staged,path){
+ const local=relative(staged.root,resolve(path));if(local===""||local.startsWith("..")||isAbsolute(local))throw Error("Private graph staging path required");
+}
+
+/** 📦️ Admits optional cache bytes only within the current original serial writer. */
+export function withBuildGraphOptionalPublicationV1(path,plan,write){return withBuildGraphOptionalPublicationsV1([path],plan,write);}
+
+/** 📦️ Admits the optional cache leaves of one batch as one publication: one exact peak, one durable intent and one clean accounting for all of them, so a writer that adopts many leaves pays the ledger once. */
+export function withBuildGraphOptionalPublicationsV1(paths,plan,write){
+ if(!Array.isArray(paths)||!paths.length)throw Error("Explicit optional graph cache leaves required");
+ const staged=stagings.getStore();if(staged){for(const path of paths)requireBuildGraphStagedPathV1(staged,path);write();for(const path of paths)staged.published?.(resolve(path));return true;}
+ const scope=writers.getStore();for(const path of paths)requireRepositoryBuildGraphObservationPathV1(path,"write");if(!scope){write();return true;}
+ requireRepositoryBuildGraphWriterV1(scope.workspace);const backing=backings.getStore();backing?.observeOptionalPublication?.("attempted");const decline=()=>{backing?.observeOptionalPublication?.("declined");return false;};const isolated=isolatedGraphWriterScopeV1(scope);for(const path of paths){requireNativeStoragePathV1(scope.store.root,resolve(path));const name=relative(join(scope.store.root,"inference"),resolve(path)).split(sep).join("/");if(!isBuildGraphOptionalCachePathV1(name))throw Error("Explicit optional graph cache leaf required");if(isolated&&!buildGraphWriterOptionalPathAdmittedV1(isolated,name))throw Error("Original isolated graph optional namespace required");}const free=nativeStatfsSyncV1(scope.store.root),minimum=backing?backing.optionalMinimumAvailableBytes:quotaSchema.policy.minimumAvailableBytes;if(free.bavail*free.bsize-plan.peakBytes<minimum)return decline();const reservation=scope.optionalQuota.reserve(plan);if(!reservation)return decline();try{if(!scope.ledger.publish(plan,write))return decline();reservation.commit();for(const path of paths)recordBuildGraphOptionalMemberV1(scope.store.root,resolve(path));return true;}finally{reservation.release();}
+}
+
+/** 📇️ Seals a freshly published group leaf into its group's member index (name, size, kind, stamp and the hash of its bytes, taken once, now); a leaf the index cannot take stays unindexed for the background collector and never fails the publication. */
+function recordBuildGraphOptionalMemberV1(root,path){try{recordMemberLeafV1({openSync,fstatSync,readSync,writeSync,closeSync,lstatSync,readFileSync},root,path);}catch{}}
+
+/** 🔌️ Closes retained cache descriptors before releasing original image custody. */
+export function registerBuildGraphOptionalHandleV1(close){const scope=writers.getStore();if(!scope)return()=>{};scope.handles.add(close);return()=>{scope.handles.delete(close);};}
+
+/** 🪪️ Resolves only the source root admitted by a live original dataset. */
+function graphDatasetWorkspaceV1(workspace){
+ const root=resolve(workspace),fixture=backings.getStore();if(fixture){if(!fixture.live)throw Error("Graph fixture lifetime ended");if(root!==fixture.workspace)throw Error("Graph fixture workspace identity required");return fixture.workspace;}const dataset=datasets.getStore();if(!dataset)return root;
+ if(!dataset.live||root!==dataset.workspace&&root!==dataset.sourceRoot)throw Error("Original inference dataset lifetime and source root required");return dataset.workspace;
+}
+
+/** 🗂️ Names graph facts inside their sole authored finite backing. */
+export function repositoryBuildGraphDataDirectoryV1(workspace,namespace){
+ if(!schema.enum.includes(namespace))throw Error("Declared bounded graph fact namespace required");const staged=stagings.getStore();if(staged)return join(staged.root,namespace);
+ const owner=graphDatasetWorkspaceV1(workspace),fixture=backings.getStore(),root=fixture?join(fixture.root,namespace):join(owner,policy.partitions.graph.directory,"m",namespace),dataset=datasets.getStore(),selection=selections.getStore();if(namespace==="inference"&&selection){if(!selection.live||selection.workspace!==graphDatasetWorkspaceV1(workspace))throw Error("Original selected inference lifetime required");return join(root,"selections",selection.identity);}if(namespace!=="inference"||!dataset)return root;
+ if(!dataset.live||dataset.workspace!==graphDatasetWorkspaceV1(workspace))throw Error("Original inference dataset lifetime required");return join(root,"contexts",dataset.identity);
+}
+
+/** 🧭️ Bounds namespace writer lock catalogs independently of graph identity growth. */
+export {buildGraphWriterResourceV1,buildGraphPublicationWriterResourceV1} from "./🔒️writer/🟨️.mjs";
+
+/** 📥️ Retains an already-issued Graph reader through its actual private dataset mapping and consumer frame. */
+export function withRepositoryBuildGraphConsumerV1(workspace,control,body){requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);requireCurrentRepositoryBuildGraphConsumerV1();return withRequiredRepositoryCacheStoreConsumerV1(graphDatasetWorkspaceV1(workspace),"graph",control,async(store,actual)=>{requireCurrentRepositoryBuildGraphConsumerV1();return graphReadScopes.run({workspace:graphDatasetWorkspaceV1(workspace),store,control:actual},async()=>{const value=await body(store,actual);requireCurrentRepositoryBuildGraphConsumerV1();return value;});});}
+
+/** 🔐️ Admits only actual live Graph writer or accepted reader custody for issued managed observation paths. */
+export function requireRepositoryBuildGraphObservationPathV1(path,mode){
+ if(mode!=="read"&&mode!=="write")throw Error("Closed observation path mode required");requireCurrentRepositoryBuildGraphConsumerV1();const classified=classifyRepositoryCacheStoreObservationPathV1(path),reader=mode==="read"?graphReadScopes.getStore():undefined,writer=writers.getStore(),current=reader??writer;if(classified.kind==="ordinary"){if(current)throw Error("Managed observation scope path mismatch");return Object.freeze({kind:"ordinary"});}if(!current)throw Error("Original managed observation custody required");const store=current.store,control=reader?reader.control:writer.phaseControl;requireRepositoryCacheStoreReadCustodyV1(store,current.workspace,"graph");requireIssuedResourceControlInvocationV1(control,store.invocation);requireIssuedResourceControlRefinementV1(store.control,control);checkResourceLeaseControl(control);if(classified.root!==store.root)throw Error("Exact managed observation image required");requireNativeStoragePathV1(store.root,resolve(path));if(mode==="write")requireRepositoryBuildGraphWriterV1(current.workspace);return Object.freeze({kind:"managed",root:store.root,control});
+}
+
+/** 🎟️ Holds enforcing storage before any synchronous graph fact producer runs. */
+export async function withRepositoryBuildGraphFactStoreV1(workspace,invocation,phaseControl,body){return withGraphFactWriterV1(workspace,invocation,phaseControl,body);}
+
+/** 🪫️ Brings the optional cache down to its low-water mark before a writer inserts, instead of declining every later record: least recently written groups first, each under its own non-blocking writer lease, never the writer's own namespace or lease shard; returns whether anything was retired. */
+async function evictOptionalGraphLruV1(workspace,root,own,namespace,control){
+ const{retireBuildGraphOptionalGroupsLruV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),directory=repositoryLeaseDirectoryV1(workspace),[kind,identity]=namespace?namespace.split(":"):["canonical",""];
+ const lease=async(group,id)=>{const resource=group==="canonical"?"repository-graph-facts:"+resolve(workspace):buildGraphWriterResourceV1(workspace,group,id);if(resource===own)return undefined;try{return await acquireResourceLease({directory,resource,mode:"exclusive",timeoutMs:0,signal:control.signal,control});}catch(error){checkResourceLeaseControl(control);if(error instanceof Error&&error.message==="Resource lease timed out: "+resource)return undefined;throw error;}};
+ const report=await retireBuildGraphOptionalGroupsLruV1(root,{lease},{cancelled:()=>control.signal.aborted,progress:async()=>{checkResourceLeaseControl(control);await control.publish({resource:"repository:graph-optional-lru",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}},{exclude:[kind==="selection"?"selections/"+identity:kind==="dataset"?"contexts/"+identity:"canonical"]});
+ checkResourceLeaseControl(control);return report.retiredFiles>0;
+}
+
+/** 🔒️ Retains one physical inference namespace while shared quota commits stay short; `options.shared` takes the namespace writer lease as a shared cohort (a plain shared ticket waits for every earlier ticket, held ones included), so several computers of one dataset coexist while a sweep or a headroom recovery (exclusive, no wait) is kept away from all of them. */
+async function withGraphFactWriterV1(workspace,invocation,phaseControl,body,namespace,options){
+ requireCurrentRepositoryBuildGraphConsumerV1();requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);
+ const current=writers.getStore(),owner=graphDatasetWorkspaceV1(workspace),optional=options?.optionalCaches!==false;
+ if(current?.workspace===owner&&current.store.invocation===invocation&&(!namespace||current.namespace===namespace)){requireRepositoryBuildGraphWriterV1(workspace);requireIssuedResourceControlRefinementV1(current.phaseControl,phaseControl);const nested={...current,live:true,phaseControl};try{return await writers.run(nested,async()=>{checkResourceLeaseControl(phaseControl);const value=await body(current.store,phaseControl);requireRepositoryBuildGraphWriterV1(workspace);return value;});}finally{nested.live=false;}}
+ if(datasets.getStore()||current?.workspace===owner&&current.store.invocation!==invocation)throw Error("Original graph writer invocation identity changed");
+ const leasePhase=phaseControl,leases=await openRepositoryCachePartitionV1(workspace,schema.definitions.GraphWriterLeaseProtocol.const.partition,leasePhase);let leaseFailed=false;
+ try{
+  await leases.recheck();const check=()=>{checkResourceLeaseControl(phaseControl);checkResourceLeaseControl(leasePhase);};check();let maintained=false;
+  const maintain=async force=>{for(let again=true;again;force=false){again=false;const image=await openRepositoryCachePartitionV1(workspace,"graph",leasePhase);let failed=false;try{await image.recheck();check();const space=nativeStatfsSyncV1(image.root);if(force||space.bavail*space.bsize<quotaSchema.policy.minimumAvailableBytes){maintained=true;again=await maintainBuildGraphOptionalCachesV1(image,leasePhase);check();if(!force){const{launchGraphOptionalCollectorV1}=await import("../../🧹️cache-gc/🚀️launch/🟦️.ts");await launchGraphOptionalCollectorV1(workspace,nativeStatfsSyncV1(image.root).bavail*nativeStatfsSyncV1(image.root).bsize);}}else{{const{launchGraphOptionalCollectorV1}=await import("../../🧹️cache-gc/🚀️launch/🟦️.ts");await launchGraphOptionalCollectorV1(workspace,space.bavail*space.bsize);}await image.recheck();check();}}catch(error){failed=true;throw error;}finally{try{await image.close();}catch(error){if(!failed)throw error;}}}};
+  if(!current&&optional)await maintain(false);
+  const resource=namespace?buildGraphWriterResourceV1(workspace,...namespace.split(":")):"repository-graph-facts:"+resolve(workspace),request={directory:repositoryLeaseDirectoryV1(workspace),resource,mode:options?.shared===true?"shared":"exclusive",...(options?.shared===true?{sharedCohort:true}:{}),owner:randomBytes(16).toString("base64url"),control:leasePhase,signal:leasePhase.signal};
+  for(;;){
+   const result=await withRepositoryCacheStoreV1(workspace,"graph",invocation,leasePhase,async(original,actualControl)=>{
+    const checkActual=()=>{check();requireIssuedResourceControlRefinementV1(leasePhase,actualControl);checkResourceLeaseControl(actualControl);};checkActual();
+    let held;try{held=await acquireQueuedResourceLease({...request,timeoutMs:0});}catch(error){checkActual();if(error instanceof Error&&error.message==="Resource lease timed out: "+resource){if(current)throw Error("Nested graph writer cannot wait for a different namespace");return{waiting:true};}throw error;}
+    let primary;
+    try{
+     await leases.recheck();checkActual();
+     await original.recheck();checkActual();const status=statSync(original.root);let ledger=await openOriginalGraphLedgerV1(workspace,original,actualControl),failed=false;
+     try{
+      checkActual();let observed=ledger.observe();if(optional&&!current&&observed.usedBytes>quotaSchema.policy.lowWaterBytes&&await evictOptionalGraphLruV1(workspace,original.root,resource,namespace,actualControl)){ledger.close();ledger=await openOriginalGraphLedgerV1(workspace,original,actualControl);checkActual();observed=ledger.observe();}const space=nativeStatfsSyncV1(original.root);
+      if(optional&&!current&&!maintained&&buildGraphOptionalRetirementDueV1(observed.usedBytes,space.bavail*space.bsize))return{again:true};
+      const optionalQuota=current?.store.invocation===invocation?current.optionalQuota:createBuildGraphOptionalQuotaV1({maximumBytes:quotaSchema.policy.maximumBytes,usedBytes:observed.usedBytes,availableBytes:space.bavail*space.bsize,minimumAvailableBytes:quotaSchema.policy.minimumAvailableBytes},()=>{checkActual();requireRepositoryBuildGraphWriterV1(workspace);}),store=original,scope={workspace:resolve(workspace),store,device:status.dev,inode:status.ino,live:true,handles:new Set(),ledger,optionalQuota,namespace,phaseControl:actualControl};
+      try{return{value:await writers.run(scope,async()=>{let failed=false;try{const value=await body(store,actualControl);checkActual();return value;}catch(error){failed=true;throw error;}finally{let closeFailed=false,failure;for(const close of scope.handles)try{close();}catch(error){if(!closeFailed){closeFailed=true;failure=error;}}if(closeFailed&&!failed)throw failure;}})};}finally{scope.live=false;}
+     }catch(error){failed=true;throw error;}finally{try{ledger.close();}catch(error){if(!failed)throw error;}}
+    }catch(error){primary={error};throw error;}finally{try{held.release();}catch(error){if(!primary)throw error;if(primary.error instanceof Error&&Object.isExtensible(primary.error))try{Object.defineProperty(primary.error,"graphWriterLeaseReleaseFailure",{value:error});}catch{}}}
+   });
+   await leases.recheck();check();
+   if(result.waiting){let primary;const held=await acquireQueuedResourceLease(request);try{check();}catch(error){primary={error};throw error;}finally{try{held.release();}catch(error){if(!primary)throw error;}}continue;}
+   if(result.again){await maintain(true);continue;}
+   return result.value;
+  }
+ }catch(error){leaseFailed=true;throw error;}finally{try{await leases.close();}catch(error){if(!leaseFailed)throw error;}}
+}
+
+/** 🔒️ Refuses graph fact publication outside live original fixed-volume custody. */
+export function requireRepositoryBuildGraphWriterV1(workspace){
+ requireCurrentRepositoryBuildGraphConsumerV1();const current=writers.getStore();if(!current?.live||current.workspace!==graphDatasetWorkspaceV1(workspace))throw Error("Original bounded graph writer custody required");checkScriptInvocation(current.store.invocation);requireIssuedResourceControlInvocationV1(current.phaseControl,current.store.invocation);requireIssuedResourceControlRefinementV1(current.store.control,current.phaseControl);checkResourceLeaseControl(current.phaseControl);const actual=statSync(current.store.root);if(actual.dev!==current.device||actual.ino!==current.inode)throw Error("Original bounded graph writer volume changed");
+}
+
+/** 📁️ Admits the closed fact directory on the original mounted device before a writer follows it. */
+export function repositoryBuildGraphWriterDirectoryV1(workspace,namespace){
+ const staged=stagings.getStore();if(staged){if(!schema.enum.includes(namespace)||namespace==="admission")throw Error("Declared staged graph fact namespace required");const path=join(staged.root,namespace);mkdirSync(path,{recursive:true});return path;}
+ requireRepositoryBuildGraphWriterV1(workspace);const current=writers.getStore(),isolated=isolatedGraphWriterScopeV1(current);if(isolated&&!buildGraphWriterDirectoryAdmittedV1(isolated,namespace))throw Error("Original isolated graph directory required");const path=repositoryBuildGraphDataDirectoryV1(workspace,namespace);requireNativeStoragePathV1(current.store.root,path);try{mkdirSync(path);}catch(error){if(error?.code!=="EEXIST")throw error;}const status=lstatSync(path);if(!status.isDirectory()||status.isSymbolicLink()||status.dev!==current.device)throw Error("Original bounded graph fact directory required");return path;
+}
+
+/** 🎯️ Separates mutable selected facts inside the original fixed-volume writer custody. */
+export async function withRepositoryBuildGraphSelectionV1(workspace,invocation,phaseControl,identity,body,options){
+ requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);
+ if(!/^[a-f0-9]{64}$/u.test(identity)||selections.getStore()||datasets.getStore())throw Error("Closed original selected graph scope required");
+ return withGraphFactWriterV1(workspace,invocation,phaseControl,async(store,actualControl)=>{
+  const base=repositoryBuildGraphWriterDirectoryV1(workspace,"inference"),directories=[join(base,"selections"),join(base,"selections",identity)];
+  for(const path of directories){requireNativeStoragePathV1(store.root,path);try{mkdirSync(path);}catch(error){if(error?.code!=="EEXIST")throw error;}const status=lstatSync(path);if(!status.isDirectory()||status.isSymbolicLink()||status.dev!==writers.getStore().device)throw Error("Original selected graph directory required");}
+  const selection={workspace:resolve(workspace),identity,live:true};try{return await selections.run(selection,()=>body(store,actualControl));}finally{selection.live=false;}
+ },"selection:"+identity,options);
+}
+
+/** 🧬️ Admits a portable dataset identity without accepting filesystem or ambient authority. */
+export function readBuildInferenceDatasetV1(value){
+ if(validateJsonSchemaSubset(datasetSchema,value,schema).length)throw Error("Closed original inference dataset required");return Object.freeze({version:1,identity:value.identity,sourceRoot:value.sourceRoot});
+}
+
+/** 🧷️ Holds one logical inference namespace inside the actual original graph backing. */
+export async function withRepositoryBuildInferenceDatasetV1(workspace,invocation,phaseControl,value,body){
+ requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);
+ const dataset=readBuildInferenceDatasetV1(value);if(datasets.getStore())throw Error("Nested inference dataset refused");const actual=resolve(workspace),sourceRoot=resolve(actual,dataset.sourceRoot),distance=relative(actual,sourceRoot);if(sourceRoot.length>256||[...sourceRoot].length>256||!distance||distance===".."||distance.startsWith(".."+sep)||isAbsolute(distance)||dataset.sourceRoot.split("/").some(part=>!part||part==="."||part===".."))throw Error("Original inference dataset source root required");for(let path=sourceRoot;;path=dirname(path)){const status=lstatSync(path);if(!status.isDirectory()||status.isSymbolicLink())throw Error("Original inference dataset real source ancestry required");if(path===actual)break;}
+ return withGraphFactWriterV1(workspace,invocation,phaseControl,async(store,actualControl)=>{
+  const base=repositoryBuildGraphWriterDirectoryV1(workspace,"inference"),directory=join(base,"contexts",dataset.identity);
+  {for(const path of[join(base,"contexts"),directory]){requireNativeStoragePathV1(store.root,path);try{mkdirSync(path);}catch(error){if(error?.code!=="EEXIST")throw error;}const status=lstatSync(path);if(!status.isDirectory()||status.isSymbolicLink()||status.dev!==writers.getStore().device)throw Error("Original inference dataset directory required");}
+   const scope={workspace:actual,sourceRoot,identity:dataset.identity,live:true},pending=new Set();let retirement;
+   const retire=()=>{requireRepositoryBuildGraphWriterV1(workspace);if(!scope.live||datasets.getStore()!==scope)throw Error("Original inference dataset retirement lifetime required");if(retirement)return retirement;const operation=(async()=>{requireNativeStoragePathV1(store.root,directory);const status=lstatSync(directory);if(!status.isDirectory()||status.isSymbolicLink()||status.dev!==writers.getStore().device)throw Error("Original inference dataset retirement directory required");const writer=writers.getStore(),lease=await acquireQueuedResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:"repository-graph-optional-ledger:"+actual,mode:"exclusive",owner:randomBytes(16).toString("base64url"),control:actualControl,signal:actualControl.signal});try{for(;;){try{writer.ledger.retire(()=>rmSync(directory,{recursive:true}));break;}catch(error){if(error?.code!=="SQLITE_BUSY"&&error?.errcode!==5&&error?.errno!==5)throw error;checkResourceLeaseControl(actualControl);await actualControl.publish({resource:"repository-graph-optional-retirement",mode:"exclusive",elapsedMs:0});await actualControl.yieldContinuation();}}}finally{lease.release();}})();retirement=operation;pending.add(operation);void operation.then(()=>pending.delete(operation),()=>{});return operation;};
+   try{return await datasets.run(scope,async()=>{let failed=false;try{return await body({root:directory,retire},actualControl);}catch(error){failed=true;throw error;}finally{const results=await Promise.allSettled(pending);if(!failed){const failure=results.find(row=>row.status==="rejected");if(failure)throw failure.reason;}}});}finally{scope.live=false;}
+
+  }
+ },"dataset:"+dataset.identity);
+}
+
+/** 🫧️ Reclaims only quiescent isolated optional namespaces under their actual fact writers and durable ledger. */
+export async function recoverBuildGraphOptionalScopesHeadroomV1(workspace,image,control,request){
+ requireCurrentRepositoryBuildGraphConsumerV1();if(validateJsonSchemaSubset(quotaSchema.definitions.Headroom,request,schema).length)throw Error("Closed scoped optional headroom required");request=Object.freeze({minimumAvailableBytes:request.minimumAvailableBytes});const partition=repositoryCacheBudgetV1(workspace).partitions.graph,leaseDirectory=repositoryLeaseDirectoryV1(workspace);requireNativePlatformImageBindingV1(image,control,{directory:partition.directory,leaseDirectory,filesystemBytes:partition.filesystemBytes,maximumPhysicalBytes:partition.capacityBytes});checkResourceLeaseControl(control);await image.recheck();const maintenance=await image.withExclusiveMaintenance({version:1,wait:false},async(_port,custody)=>{requireNativePlatformImageWriterV1(image,custody);const value=await retireBuildGraphOptionalGroupsHeadroomV1(image,custody,request);checkResourceLeaseControl(custody.control);await image.recheck();const free=nativeStatfsSyncV1(image.root);return Object.freeze({availableBytes:free.bavail*free.bsize,retiredBytes:value.retiredBytes,retiredFiles:value.retiredFiles});});checkResourceLeaseControl(control);const result=Object.freeze(maintenance.acquired?{consumed:true,acquired:true,...maintenance.value}:{consumed:true,acquired:false,retiredBytes:0,retiredFiles:0});if(validateJsonSchemaSubset(schema.definitions.ScopedOptionalRecoveryResult,result,schema).length)throw Error("Closed scoped optional recovery result required");return result;
+}
+
+/** 🧭️ Retains a fixed disposable Graph backing under genuine Original diagnostics funding and private reader issuance. */
+async function withFixedRepositoryBuildGraphFixtureV1(workspace,invocation,phaseControl,body,publication){
+ requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);requireCurrentRepositoryBuildGraphConsumerV1();if(typeof body!=="function")throw Error("Graph fixture body required");workspace=graphDatasetWorkspaceV1(workspace);
+ return withRepositoryCacheStoreV1(workspace,"diagnostics",invocation,phaseControl,(parent,actual)=>withRepositoryCacheGraphFixtureV1(parent,invocation,async native=>{
+  const fixturePolicy={...graphFixtureSchema.definitions.Policy.const,...(publication?graphFixtureSchema.definitions.PublicationPolicy.const:{})},scope={workspace,root:native.root,get image(){return native.image;},invocation,control:native.control,live:true,accepting:true,optionalAttempts:0,optionalDeclined:0,observeOptionalPublication(kind){this[kind==="declined"?"optionalDeclined":"optionalAttempts"]++;},optionalMinimumAvailableBytes:fixturePolicy.optionalMinimumAvailableBytes},pending=new Set();let operations=0,maintenance=false,childFailed=false,childFailure;
+  if([scope.root,join(scope.root,"build-input-closures","f".repeat(64)+".json"),join(scope.root,"build-lock-closures","f".repeat(64)+".json")].some(path=>path.length>fixturePolicy.maximumPathUnits))throw Error("Graph fixture path exceeds256 units");
+  const accept=(kind,run)=>{try{if(!scope.live||!scope.accepting)throw Error("Graph fixture lifetime ended");checkResourceLeaseControl(native.control);if(typeof run!=="function"||++operations>fixturePolicy.maximumOperations||pending.size>=fixturePolicy.maximumPending)throw Error("Bounded Graph fixture operation required");if(maintenance||kind==="maintenance"&&pending.size)throw Error("Graph fixture has accepted readers or writers");if(kind==="maintenance")maintenance=true;const task=Promise.resolve().then(run);pending.add(task);void task.then(()=>{pending.delete(task);if(kind==="maintenance")maintenance=false;},error=>{if(!childFailed){childFailed=true;childFailure=error;}pending.delete(task);if(kind==="maintenance")maintenance=false;});return task;}catch(error){return Promise.reject(error);}};
+  const fixture=Object.freeze({root:scope.root,sourceRoot:workspace,get image(){return native.image;},optionalPublications:()=>{if(!scope.live||backings.getStore()!==scope)throw Error("Graph fixture lifetime ended");return Object.freeze({attempts:scope.optionalAttempts,declined:scope.optionalDeclined});},
+   withConsumer:run=>accept("reader",()=>native.withReader((_store,control)=>withRepositoryBuildGraphConsumerV1(workspace,control,run))),
+   withWriter:run=>accept("writer",()=>native.withReader(async(store,control)=>{
+    const leaseDirectory=repositoryLeaseDirectoryV1(workspace),lease=await acquireQueuedResourceLease({directory:leaseDirectory,resource:"repository-graph-fixture-writer:"+scope.root,mode:"exclusive",owner:randomBytes(12).toString("hex"),signal:control.signal,control});let ledger,failed=false;
+    try{ledger=await openBuildGraphOptionalLedgerV1({image:native.image,control,leaseDirectory,maximumBytes:fixturePolicy.optionalMaximumBytes,minimumAvailableBytes:fixturePolicy.optionalMinimumAvailableBytes});const status=lstatSync(store.root),space=nativeStatfsSyncV1(store.root),optionalQuota=createBuildGraphOptionalQuotaV1({maximumBytes:fixturePolicy.optionalMaximumBytes,usedBytes:ledger.observe().usedBytes,availableBytes:space.bavail*space.bsize,minimumAvailableBytes:fixturePolicy.optionalMinimumAvailableBytes},()=>checkResourceLeaseControl(control)),writer={workspace,store,device:status.dev,inode:status.ino,live:true,handles:new Set(),ledger,optionalQuota,phaseControl:control};
+     try{return await writers.run(writer,async()=>{let bodyFailed=false;try{return await withRepositoryBuildGraphFactStoreV1(workspace,invocation,control,run);}catch(error){bodyFailed=true;throw error;}finally{let closeFailed=false,closeFailure;for(const close of writer.handles)try{close();}catch(error){if(!closeFailed){closeFailed=true;closeFailure=error;}}if(closeFailed&&!bodyFailed)throw closeFailure;}});}finally{writer.live=false;}
+    }catch(error){failed=true;throw error;}finally{let cleanupFailed=false,cleanupFailure;try{ledger?.close();}catch(error){cleanupFailed=true;cleanupFailure=error;}try{lease.release();}catch(error){if(!cleanupFailed){cleanupFailed=true;cleanupFailure=error;}}if(cleanupFailed&&!failed)throw cleanupFailure;}
+   })),
+   withMaintenance:run=>accept("maintenance",async()=>{const result=await native.withMaintenance(async(image,custody)=>{if(custody.kind!=="kernel-ex")throw Error("Graph fixture actual kernel writer required");requireNativePlatformImageWriterV1(image,custody);return run(image,custody);});if(!result.acquired)throw Error("Graph fixture maintenance remained busy");return result.value;}),probeMaintenanceDeferral:()=>accept("maintenance",()=>native.probeMaintenanceDeferral())});
+  return backings.run(scope,async()=>{let value,failed=false,failure;try{value=await body(fixture);}catch(error){failed=true;failure=error;}finally{scope.accepting=false;while(pending.size)await Promise.allSettled([...pending]);scope.live=false;}if(failed)throw failure;if(childFailed)throw childFailure;return value;});
+ }));
+}
+
+/** 🪺️ Issues the fixed zero-quota diagnostic Graph for declined optional publication laws. */
+export function withRepositoryBuildGraphFixtureV1(workspace,invocation,phaseControl,body){return withFixedRepositoryBuildGraphFixtureV1(workspace,invocation,phaseControl,body,false);}
+
+/** 📦️ Issues the fixed one-MiB diagnostic Graph for genuine optional publication and retirement laws. */
+export function withRepositoryBuildGraphPublicationFixtureV1(workspace,invocation,phaseControl,body){return withFixedRepositoryBuildGraphFixtureV1(workspace,invocation,phaseControl,body,true);}

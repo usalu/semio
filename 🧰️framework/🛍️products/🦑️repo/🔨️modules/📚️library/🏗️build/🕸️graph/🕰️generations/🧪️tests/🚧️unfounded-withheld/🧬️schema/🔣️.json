@@ -1,0 +1,73 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/schema/unfounded-withheld-law.json",
+ "type": "object",
+ "required": [
+  "version",
+  "workspace",
+  "owners",
+  "unfounded"
+ ],
+ "additionalProperties": false,
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "workspace": {
+   "type": "string"
+  },
+  "owners": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "object",
+    "required": [
+     "kind",
+     "config",
+     "rows"
+    ],
+    "additionalProperties": false,
+    "properties": {
+     "kind": {
+      "enum": [
+       "project",
+       "unavailable"
+      ]
+     },
+     "config": {
+      "type": "string"
+     },
+     "tag": {
+      "type": "string"
+     },
+     "rows": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "required": [
+        "kind",
+        "path",
+        "fact"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "kind": {
+         "type": "string"
+        },
+        "path": {
+         "type": "string"
+        },
+        "fact": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "unfounded": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  }
+ }
+}

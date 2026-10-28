@@ -1,0 +1,29 @@
+{
+  "title": "Canonical Important",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "Prompt",
+  "goal": "TEST/GOAL",
+  "sessions": [
+    "important-create-session"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-26 17:16:12",
+      "author": "",
+      "system": "mac",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Prompt"
+    }
+  ],
+  "agents": [
+    {
+      "session": "terminal-session",
+      "contributor": "ueli",
+      "system": "mac",
+      "client": "copilot-chat"
+    }
+  ]
+}

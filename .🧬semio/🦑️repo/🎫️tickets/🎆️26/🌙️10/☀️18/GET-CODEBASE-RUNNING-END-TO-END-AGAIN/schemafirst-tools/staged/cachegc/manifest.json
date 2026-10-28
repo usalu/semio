@@ -1,0 +1,37 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🧬️schema/🔣️.json": {
+  "file": "00.json",
+  "base": null,
+  "new": "e55b7c00d94ce1f4491dc094874bf75a1cc8881fd026c0ff651c035a374b7cbd"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🧬️schema/🟦️.ts": {
+  "file": "01.ts",
+  "base": null,
+  "new": "791db8209cb8e156d67799a90a59994995dcb9bbfae78f18d3cf0fac84f1cac2"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/⌨️command/🟦️.ts": {
+  "file": "02.ts",
+  "base": "f673706e126dc2fb85f05544f5efde0a08672d7856a85007bc192e2bd7dd042f",
+  "new": "7b9dd95469b91bc3731d967cce8da10295a41f73cc8abd35f21df01b6dd0457c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🚀️launch/🟦️.ts": {
+  "file": "03.ts",
+  "base": "c4e73442a63f90900a2990e96e1a0a0bbe6314d44f040cc77e198afb0e9383ae",
+  "new": "796bf81e4c66d46407836a5d425f8d89098f334b92fc14218a5569d66196f2fd"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🏃️runner/🟦️.ts": {
+  "file": "04.ts",
+  "base": "7cf2fe720639a7c7be67e48d41fb1721cd883233abd355d37ea843a14ffd9651",
+  "new": "5952e39020b26ffce2bb48bb16df91d2fd8d725bfbe975448b21946369792a41"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/👯️dedupe/🟦️.ts": {
+  "file": "05.ts",
+  "base": "607bdc2c97ec7bc83f4cdb0b259f12b98251144ea2423b252742a7791fb14950",
+  "new": "fbd1a8e5e35d2c2e697c316067491aaa2e61561b5b63d7a5878a2747b72e757b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧬️policy-literals/🧹️cache-gc/🔣️.json": {
+  "file": "06.json",
+  "base": null,
+  "new": "8a2569d7e22d1a10733d7152699cc69188645440fc2addd15e1721970143e6f9"
+ }
+}

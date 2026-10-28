@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "systemRootToken": "{SystemRoot}",
+        "windows": {
+          "powershell": "{SystemRoot}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+        },
+        "systemRootPattern": "^[A-Za-z]:\\\\[^\\\\/:*?\"<>|\\u0000-\\u001f]+$",
+        "messages": {
+          "missing": {
+            "en": "The system program {program} is required for native storage but is missing or not executable on this host",
+            "de": "Das Systemprogramm {program} wird vom nativen Speicher benötigt, fehlt aber oder ist auf diesem Rechner nicht ausführbar"
+          },
+          "absolute": {
+            "en": "A system program must be named by an absolute path, never through PATH: {program}",
+            "de": "Ein Systemprogramm muss mit einem absoluten Pfad benannt werden, nie über PATH: {program}"
+          },
+          "systemRoot": {
+            "en": "A valid SystemRoot such as C:\\Windows is required to find {id}",
+            "de": "Ein gültiges SystemRoot wie C:\\Windows ist nötig, um {id} zu finden"
+          }
+        }
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resolutions"],
+      "properties": {
+        "resolutions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "program", "environment", "expected"],
+            "properties": {
+              "id": {"type": "string"},
+              "program": {"enum": ["powershell"]},
+              "environment": {"type": "object"},
+              "expected": {"type": "string"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

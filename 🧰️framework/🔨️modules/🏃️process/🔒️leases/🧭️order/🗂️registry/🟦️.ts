@@ -1,25 +1,29 @@
 import {createHash} from "node:crypto";
 import {appendFileSync,mkdirSync,readdirSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {homedir} from "node:os";
-import {join} from "node:path";
+import {isAbsolute,join} from "node:path";
 import type {LeaseCycleV1,LeaseModeV1,LeaseNodeV1,LeaseOrderPolicyV1,LeaseViolationV1} from "../📋️contract/🟦️.ts";
 import {agentSessionAddressOfEnvironmentV1} from "../../../🪪️agent-sessions/🗄️store/🟦️.ts";
+import {leaseHistoryKeyV1,leaseStandingSnapshotV1,observeLeaseStandingV1,probeLeaseActivityV1,type LeaseStandingV1} from "../../📈️standing/🟦️.ts";
+import standingSchema from "../../📈️standing/🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🗂️ One process's published leases for one lease directory: what it holds and what it waits for. */
-export type LeaseRegistryEntryV1=Readonly<{version:1;pid:number;startedAtMs:number;updatedAtMs:number;command:string;directory:string;session?:string;holds:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number}>[];waits:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number;queued:boolean}>[];ancestry?:Readonly<Record<string,readonly number[]>>}>;
+export type LeaseRegistryEntryV1=Readonly<{version:1;pid:number;startedAtMs:number;updatedAtMs:number;command:string;directory:string;session?:string;standing:LeaseStandingV1;holds:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number}>[];waits:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number;queued:boolean}>[];ancestry?:Readonly<Record<string,readonly number[]>>}>;
 type Snapshot=Readonly<{ancestry?:Readonly<Record<string,readonly number[]>>;holds:readonly Readonly<{directory:string;resource:string;mode:LeaseModeV1;atMs:number;task:number}>[];waits:readonly Readonly<{directory:string;resource:string;mode:LeaseModeV1;sinceMs:number;task:number;queued:boolean}>[]}>;
 type Source=Readonly<{snapshot:()=>Snapshot;cycle:(nodes:readonly LeaseNodeV1[],from:string)=>LeaseCycleV1|undefined}>;
 
 const HEARTBEAT_MILLISECONDS=60000,STALE_MILLISECONDS=300000;
 const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
 const key=(directory:string,resource:string):string=>`${directory}\0${resource}`;
-const startedAtMs=Date.now();
+const startedAtMs=Math.round(performance.timeOrigin);
+/** 🕰️ When this process started (the operating system's start time within a few ms, so another process can verify it): the identity of its registry entry, its yield request file and its history of holds. */
+export const leaseProcessStartedAtMsV1=startedAtMs;
 
-/** 🗺️ The registry root: one directory per user shared by every checkout, next to the host capacity gate. */
+/** 🗺️ The registry root: one directory per user shared by every checkout, next to the host capacity gate. An empty or relative `XDG_CACHE_HOME` is ignored as the XDG Base Directory Specification demands, so no working directory ever has a registry of its own. See https://specifications.freedesktop.org/basedir-spec/latest/ */
 export function leaseRegistryRootV1(environment:Readonly<Record<string,string|undefined>>=process.env,platform:NodeJS.Platform=process.platform,home:string=homedir()):string{
  const override=environment.SEMIO_LEASE_REGISTRY_DIRECTORY;
  if(override)return override;
- const base=platform==="darwin"?join(home,"Library","Caches"):platform==="win32"?environment.LOCALAPPDATA??join(home,"AppData","Local"):environment.XDG_CACHE_HOME??join(home,".cache");
+ const base=platform==="darwin"?join(home,"Library","Caches"):platform==="win32"?environment.LOCALAPPDATA??join(home,"AppData","Local"):isAbsolute(environment.XDG_CACHE_HOME??"")?environment.XDG_CACHE_HOME!:join(home,".cache");
  return join(base,"semio","lease-registry");
 }
 /** 🔑️ The per-lease-directory subfolder of the registry. */
@@ -28,7 +32,7 @@ export function leaseRegistryFolderV1(root:string,directory:string):string{retur
 const readJson=(path:string):unknown=>{try{return JSON.parse(readFileSync(path,"utf8"));}catch{return undefined;}};
 const validEntry=(value:unknown):value is LeaseRegistryEntryV1=>{
  const row=value as LeaseRegistryEntryV1|undefined;
- return !!row&&row.version===1&&Number.isSafeInteger(row.pid)&&Array.isArray(row.holds)&&Array.isArray(row.waits)&&typeof row.directory==="string"&&typeof row.updatedAtMs==="number";
+ return !!row&&row.version===1&&Number.isSafeInteger(row.pid)&&Array.isArray(row.holds)&&Array.isArray(row.waits)&&typeof row.directory==="string"&&typeof row.updatedAtMs==="number"&&row.standing?.version===1;
 };
 
 /** 📖️ Reads every live entry of one lease directory and removes the entries of dead or silent processes. */
@@ -89,14 +93,30 @@ function flush(directory:string):void{
  try{
   if(holds.length===0&&waits.length===0){rmSync(path,{force:true});written.delete(directory);return;}
   const folder=leaseRegistryFolderV1(rootNow(),directory);mkdirSync(folder,{recursive:true,mode:0o700});
-  if(!written.has(directory)){writeFileSync(join(folder,"directory.json"),JSON.stringify({version:1,directory}));if(!exitHooked){exitHooked=true;process.once("exit",()=>{for(const known of written)try{rmSync(entryPath(known),{force:true});}catch{}});}}
-  const address=agentSessionAddressOfEnvironmentV1(process.env),text=JSON.stringify({version:1,pid:process.pid,startedAtMs,updatedAtMs:Date.now(),command:command(),directory,...address===undefined?{}:{session:address},holds,waits,...Object.keys(ancestry).length?{ancestry}:{}});
+  if(!written.has(directory)){writeFileSync(join(folder,"directory.json"),JSON.stringify({version:1,directory}));if(!exitHooked){exitHooked=true;observeLeaseStandingV1(()=>{for(const known of written)leaseRegistryV1.changed(known,policies.get(known)!);});process.once("exit",()=>{for(const known of written)try{rmSync(entryPath(known),{force:true});}catch{}});}}
+  probeLeaseActivityV1();
+  const address=agentSessionAddressOfEnvironmentV1(process.env),text=JSON.stringify({version:1,pid:process.pid,startedAtMs,updatedAtMs:Date.now(),command:command(),directory,...address===undefined?{}:{session:address},standing:leaseStandingSnapshotV1(address!==undefined),holds,waits,...Object.keys(ancestry).length?{ancestry}:{}});
   if(text.length>(policy?.registry.maximumEntryBytes??65536))throw Error("Bounded lease registry entry required");
   const temporary=`${path}.tmp`;writeFileSync(temporary,text);renameSync(temporary,path);written.add(directory);
   if(!heartbeat){heartbeat=setInterval(()=>{for(const known of written)flush(known);},HEARTBEAT_MILLISECONDS);heartbeat.unref();}
  }catch{disabled=true;}
 }
 function drain():void{timer=undefined;for(const directory of [...dirty]){dirty.delete(directory);flush(directory);}}
+
+/** 🛑️ Appends one finished exclusive hold to the history of its kind (resource family and command kind); the file keeps about `maximumRows` rows. */
+export function appendLeaseHistoryV1(root:string,directory:string,key:string,heldMs:number,nowMs:number=Date.now()):void{
+ const rules=standingSchema.definitions.Policy.const.history,folder=leaseRegistryFolderV1(root,directory),path=join(folder,rules.file);
+ mkdirSync(folder,{recursive:true,mode:0o700});appendFileSync(path,JSON.stringify({key,ms:Math.round(heldMs),atMs:nowMs})+"\n");
+ const lines=readFileSync(path,"utf8").split("\n").filter(Boolean);
+ if(lines.length>rules.maximumRows*2){const temporary=`${path}.${process.pid}.tmp`;writeFileSync(temporary,lines.slice(-rules.maximumRows).join("\n")+"\n");renameSync(temporary,path);}
+}
+/** 🚀️ The recent hold durations of one kind, oldest first. */
+export function readLeaseHistoryV1(root:string,directory:string,key:string):readonly number[]{
+ let text="";try{text=readFileSync(join(leaseRegistryFolderV1(root,directory),standingSchema.definitions.Policy.const.history.file),"utf8");}catch{return [];}
+ const found:number[]=[];
+ for(const line of text.split("\n")){if(!line)continue;try{const row=JSON.parse(line) as {key?:unknown;ms?:unknown};if(row.key===key&&typeof row.ms==="number")found.push(row.ms);}catch{}}
+ return found;
+}
 
 /** 🗒️ The process's side of the registry: publishing, deadlock lookup and violation log. Every operation is best effort; a failing registry never fails a lease. */
 export const leaseRegistryV1=Object.freeze({
@@ -120,6 +140,15 @@ export const leaseRegistryV1=Object.freeze({
  },
  otherHolders(directory:string,resource:string):readonly number[]{
   return readLeaseRegistryEntriesV1(rootNow(),directory,Date.now(),false).filter(entry=>entry.pid!==process.pid&&entry.holds.some(row=>row.resource===resource)).map(entry=>entry.pid);
+ },
+ held(directory:string,resource:string,mode:LeaseModeV1,sinceMs:number):void{
+  const heldMs=Date.now()-sinceMs;
+  if(mode!=="exclusive"||disabled||heldMs<standingSchema.definitions.Policy.const.history.minimumHoldMilliseconds)return;
+  try{appendLeaseHistoryV1(rootNow(),directory,leaseHistoryKeyV1(resource,command()),heldMs);}catch{}
+ },
+ directories():readonly string[]{return [...written];},
+ ownHolds(directory:string):readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number}>[]{
+  return source?source.snapshot().holds.filter(row=>row.directory===directory).map(row=>({resource:row.resource,mode:row.mode,sinceMs:row.atMs})):[];
  },
  holderOf(directory:string,resource:string,mode:LeaseModeV1):Readonly<{pid:number;heldSeconds:number}>|undefined{
   for(const entry of readLeaseRegistryEntriesV1(rootNow(),directory,Date.now(),false)){

@@ -8,6 +8,7 @@ import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import{validateJsonSchemaSubset}from"../../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{nativeImageVolumeBytesV1,nativeImageVolumeMetadataBytesV1,nativeImageUsableBytesV1}from"../🟦️.ts";
 import{createNativeImageVolumeSilenceSeedV1,nativeImageSeededCreateArgumentsV1}from"../../🤫️silence/🟦️.ts";
+import{nativeImageSparseGrowArgumentsV1}from"../../🪶️sparse/🟦️.ts";
 const run=(program:string,args:readonly string[])=>{const result=spawnSync(program,[...args],{encoding:"utf8",env:{PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"}});return{status:result.status,stdout:result.stdout,stderr:result.stderr};};
 const statvfs=(path:string):{total:number;used:number}=>JSON.parse(run("/usr/bin/python3",["-I","-c","import os,sys,json;s=os.statvfs(sys.argv[1]);print(json.dumps({'total':s.f_blocks*s.f_frsize,'used':(s.f_blocks-s.f_bfree)*s.f_frsize}))",path]).stdout);
 test("the capacity corpus is schema-valid and the model matches every measured volume",()=>{
@@ -24,7 +25,7 @@ test.skipIf(process.platform!=="darwin")("the model agrees with statvfs and the 
  try{
   for(const megabytes of[32,63,128]){
    const imageBytes=megabytes*1048576,image=join(scratch,megabytes+".dmg"),mount=join(scratch,"m"+megabytes);mkdirSync(mount);
-   expect(run("/usr/bin/hdiutil",nativeImageSeededCreateArgumentsV1(imageBytes,image,seed.directory)).status).toBe(0);
+   expect(run("/usr/bin/hdiutil",nativeImageSeededCreateArgumentsV1(imageBytes,image,seed.directory)).status).toBe(0);const grow=nativeImageSparseGrowArgumentsV1(imageBytes,image);if(grow)expect(run("/usr/bin/hdiutil",grow).status).toBe(0);
    expect(run("/usr/bin/hdiutil",["attach","-nobrowse","-noautoopen","-owners","on","-mountpoint",mount,image]).status).toBe(0);attached.push(mount);
    const observed=statvfs(mount);expect(observed.total).toBe(nativeImageVolumeBytesV1(imageBytes));expect(observed.used).toBeLessThanOrEqual(nativeImageVolumeMetadataBytesV1(imageBytes));
   }

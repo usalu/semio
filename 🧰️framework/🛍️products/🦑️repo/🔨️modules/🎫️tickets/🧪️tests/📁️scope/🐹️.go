@@ -3,15 +3,16 @@ package tickets
 import (
  "encoding/json"
  "os"
- "path/filepath"
  "reflect"
  "testing"
  "unicode/utf16"
+
+ sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 // 🛡️TestTicketScopePortableSegments shares the language-neutral path vocabulary.
 func TestTicketScopePortableSegments(t *testing.T) {
- data,err:=os.ReadFile(filepath.FromSlash("../../../🔗️graphql/🧪️tests/🌿️tickets/📁️scope/🔣️.json"));if err!=nil {t.Fatal(err)}
+ data,err:=os.ReadFile(sandbox.OriginPath("..","..","..","🔗️graphql","🧪️tests","🌿️tickets","📁️scope","🔣️.json"));if err!=nil {t.Fatal(err)}
  var vectors struct {InvalidSegments,ValidSegments []string};if err=json.Unmarshal(data,&vectors);err!=nil {t.Fatal(err)}
  for _,value:=range vectors.InvalidSegments {if portableDraftSegment(value) {t.Errorf("invalid segment accepted: %q",value)}}
  for _,value:=range vectors.ValidSegments {if !portableDraftSegment(value) {t.Errorf("valid segment refused: %q",value)}}
@@ -40,7 +41,7 @@ func TestTicketScopeDraftSymlinksHaveNoEffects(t *testing.T) {
 
 // 📏️ticketScopeLongComponent reads the shared projected-path counterexample.
 func ticketScopeLongComponent(t *testing.T) string {
- t.Helper();data,err:=os.ReadFile(filepath.FromSlash("../../../🔗️graphql/🧪️tests/🌿️tickets/📁️scope/🔣️.json"));if err!=nil {t.Fatal(err)}
+ t.Helper();data,err:=os.ReadFile(sandbox.OriginPath("..","..","..","🔗️graphql","🧪️tests","🌿️tickets","📁️scope","🔣️.json"));if err!=nil {t.Fatal(err)}
  var vectors struct{ProjectedPathSegment string};if err=json.Unmarshal(data,&vectors);err!=nil {t.Fatal(err)};if vectors.ProjectedPathSegment=="" {t.Fatal("shared projected path vector required")};return vectors.ProjectedPathSegment
 }
 
@@ -71,14 +72,14 @@ func TestTicketScopeProjectedRetitleRefusesBeforeRename(t *testing.T) {
 
 // 💽️TestTicketScopeNamespaceSeparators preserves drive and UNC root identity.
 func TestTicketScopeNamespaceSeparators(t *testing.T) {
- data,err:=os.ReadFile(filepath.FromSlash("../../../🔗️graphql/🧪️tests/🌿️tickets/📁️scope/🔣️.json"));if err!=nil {t.Fatal(err)}
+ data,err:=os.ReadFile(sandbox.OriginPath("..","..","..","🔗️graphql","🧪️tests","🌿️tickets","📁️scope","🔣️.json"));if err!=nil {t.Fatal(err)}
  var vectors struct{SeparatorCases []struct{Input,Normalized,Parent string}};if err=json.Unmarshal(data,&vectors);err!=nil {t.Fatal(err)}
  for _,value:=range vectors.SeparatorCases {if actual:=NormalizeSeparators(value.Input);actual!=value.Normalized {t.Errorf("normalize %q=%q want %q",value.Input,actual,value.Normalized)};if actual:=DirName(value.Input);actual!=value.Parent {t.Errorf("parent %q=%q want %q",value.Input,actual,value.Parent)}}
 }
 
 // 🧾️TestTicketDocumentPreservesAllDeclaredState shares the durable Go/Rust document vector.
 func TestTicketDocumentPreservesAllDeclaredState(t *testing.T) {
- data,err:=os.ReadFile(filepath.FromSlash("../../🧪️tests/🧫️fixtures/📄️ticket-document-codec/📄️documents.json"));if err!=nil {t.Fatal(err)}
+ data,err:=os.ReadFile(sandbox.OriginPath("..","..","🧪️tests","🧫️fixtures","📄️ticket-document-codec","📄️documents.json"));if err!=nil {t.Fatal(err)}
  var vectors struct{Documents []struct{Source,Text string}};if err=json.Unmarshal(data,&vectors);err!=nil {t.Fatal(err)}
  var source string;for _,entry:=range vectors.Documents {if entry.Source=="DURABLE-TICKET-STATE" {source=entry.Text}}
  if source=="" {t.Fatal("durable ticket vector required")}

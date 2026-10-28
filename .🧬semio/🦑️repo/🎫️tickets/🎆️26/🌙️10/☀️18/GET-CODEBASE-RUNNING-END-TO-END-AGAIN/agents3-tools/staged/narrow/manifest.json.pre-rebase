@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json": {
+  "file": "00.json",
+  "base": "99f43068938f6efeaaa192199798346ae7e46f53c49656cf2bf2a155ef3375c9",
+  "new": "0667be01793cd9c243741a50b3e16c246f0eab1fcae33389d8e8a1b195e8a573"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🔼️upgrade/🟦️.ts": {
+  "file": "01.ts",
+  "base": "a50a941e54a22f3c32e5cfaeac60b8be7af21864758772373f235cc77ddecef2",
+  "new": "aad321ba8c1c6287c9ecac05560752d23c9d3baa32dc4a8a30f4b57b13bd529e"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/👥️agents/🟦️.ts": {
+  "file": "02.ts",
+  "base": "594292620fb6ffb2d83b43faf2121f04f178bdd23d7a925499437b37be63e3b8",
+  "new": "e3c3717189fbad09f7f69d97d72cc310d899a56692065829c038b1af5c3fcaa0"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/👥️agents/🥒️.feature": {
+  "file": "03.feature",
+  "base": "513a0688a739fe7feebcefc8e6458e9af94452ac5d0a11623faa6d7cde0f1871",
+  "new": "ad3169cd9bcd54070276177ac40d17130e65096bd5e441f1ddde9900293506ce"
+ }
+}

@@ -6,7 +6,7 @@ export interface OwnerConfigV1{name:string;root:string;deps?:readonly string[];t
 export interface StateConfigV1{owners:readonly OwnerConfigV1[];env?:{paths?:readonly string[];prefixes?:readonly string[]}}
 export type ChangeRowV1=readonly [string,number,string];
 export interface JournalChangeV1{path:string;kind:"added"|"removed"|"changed";directory:boolean;mode?:number;stamp?:[number,number]}
-export type JournalAnswerV1={complete:true;seq:number;changes:JournalChangeV1[]}|{complete:false;reason:"cursor"|"lost";scope?:string};
+export type JournalAnswerV1={complete:true;seq:number;changes:JournalChangeV1[]}|{complete:false;reason:"cursor"|"lost"|"trust";scope?:string};
 export interface WorkspaceStateV1{
  configure(config:StateConfigV1):void;reconfigure(config:StateConfigV1):void;load(listing:{directories:readonly (readonly [string,number,number])[];members:readonly (readonly [string,number])[]}):void;
  apply(rows:readonly ChangeRowV1[],at?:number):Promise<number>;lost(scope:string,reason:string,at?:number):number;reconcile(scope?:string):Promise<number>;

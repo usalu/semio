@@ -1,0 +1,25 @@
+{
+ "name": "conv",
+ "code": "conv-g-tools/staged (after oracle2-g)",
+ "lane": "conv-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "conv-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- Scheduling-domain edits (table above) cost nobody a rebuild; anything else re-keys and, after a framework-wide edit, re-infers the graph.",
+   "where": "after",
+   "block": "- **Numbers and texts live in schemas**: the evening convergence moved hard-coded values into policy JSON next to their schema (read-oracle `memoryLimitMegabytes` and `tailBytes`; authorizer memo 4 MiB and 24 lanes; TypeScript check retention 2 programs, at most 8, 2 GiB, 120 s; the frontier walk; store-bound `probePatienceMs`; host-capacity `wait.jitterBasisPoints` 2500; unit-cache lock and pool back-off `pollBackoffBasisPoints` 15000, the same integers as the old factor 1.5; change-journal `startPollMilliseconds` 20; sealed `maximumTextCharacters`, `maximumPathCharacters`, `maximumCommandLineCharacters`) and made the read-oracle CLI and refusals, the machine-budget policy errors (`machine.policy.*`) and the change-journal service refusal (`The change journal cannot vouch: <reason> / Der Änderungsjournal-Dienst kann nicht einstehen: <reason>`) bilingual. Audit rules: every exported symbol has a docstring that starts with an emoji unique within its file, no comments inside definitions, no English-only user text. Internal invariant throws and the progress keys `nx-tooling:census|probe|wait|retire` stay English by decision."
+  },
+  {
+   "id": "conv-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- Änderungen in Scheduling-Domänen (Tabelle oben) kosten niemanden einen Neuaufbau; alles andere schlüsselt neu und leitet nach einer Framework-weiten Änderung den Graphen neu ab.",
+   "where": "after",
+   "block": "- **Zahlen und Texte leben in Schemas**: die Angleichung des Abends verlegte fest verdrahtete Werte in Policy-JSON neben ihr Schema (Lese-Orakel `memoryLimitMegabytes` und `tailBytes`; Autorisierer-Memo 4 MiB und 24 Bahnen; Aufbewahrung der TypeScript-Prüfung 2 Programme, höchstens 8, 2 GiB, 120 s; der Frontier-Lauf; store-bound `probePatienceMs`; host-capacity `wait.jitterBasisPoints` 2500; Unit-Cache-Lock und -Pool-Backoff `pollBackoffBasisPoints` 15000, dieselben ganzen Zahlen wie der alte Faktor 1,5; Änderungsjournal `startPollMilliseconds` 20; versiegelt `maximumTextCharacters`, `maximumPathCharacters`, `maximumCommandLineCharacters`) und machte die Lese-Orakel-CLI samt Ablehnungen, die Policy-Fehler des Maschinenbudgets (`machine.policy.*`) und die Ablehnung des Änderungsjournal-Dienstes (`The change journal cannot vouch: <Grund> / Der Änderungsjournal-Dienst kann nicht einstehen: <Grund>`) zweisprachig. Prüfregeln: jedes exportierte Symbol hat einen Docstring, der mit einem in seiner Datei eindeutigen Emoji beginnt, keine Kommentare in Definitionen, kein rein englischer Nutzertext. Interne Invarianten-Würfe und die Fortschrittsschlüssel `nx-tooling:census|probe|wait|retire` bleiben per Beschluss englisch."
+  }
+ ]
+}

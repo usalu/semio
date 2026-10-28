@@ -1,0 +1,31 @@
+{
+ "label": "g40-ctest",
+ "target": "@teaching/architecture-course:test",
+ "started": "12:37:51",
+ "wall_s": 195.9,
+ "peak_tree_mb": 6868,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "171"
+  ],
+  "inferring": [
+   "169"
+  ],
+  "published": [
+   "644",
+   "172",
+   "84"
+  ],
+  "processes": [
+   "11",
+   "1 action cache hit, 6 disk cache hit, 2 internal, 3 local"
+  ],
+  "actions": [
+   "11"
+  ]
+ }
+}

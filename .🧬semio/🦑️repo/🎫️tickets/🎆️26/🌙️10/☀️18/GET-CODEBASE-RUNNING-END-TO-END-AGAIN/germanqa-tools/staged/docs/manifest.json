@@ -1,0 +1,37 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/README.md": {
+  "file": "000.md",
+  "base": "f66f82c09853efafc71fc7e21994025a7e14c9240482d48d5e7ece11c347d77b",
+  "new": "793bfffe723002c81d0a5296978ee11cfcaed37f28411d560e52a2094ea445ed"
+ },
+ "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md": {
+  "file": "001.md",
+  "base": "4902e9fe9a834a6565c3a5df35094a6c52464c83b4f835fc16cefc823be52f87",
+  "new": "c04a880339157ab924fa3ccdaab0418b11556a1995bacdf7fba515d93eefb622"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md": {
+  "file": "002.md",
+  "base": "17ad268b8696e5af4e6b95fc2ce6de5184bd393d515ff58e3ccd67ecc424aac7",
+  "new": "c4d18149cc0dd7a5e3287a9ec75aa8be9fca0f27fdd99c2fcbdf4cee5e0b241f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/README.md": {
+  "file": "003.md",
+  "base": "a487179d1100fc973e89d893ef72257c32baa1cdce27843e6f340ba36e7418b5",
+  "new": "ad6379107ebd8c0eb419729991be5688ce9045af6b2e91bb611e1af7ba66324b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/README.md": {
+  "file": "004.md",
+  "base": "317521566e5b89596d0ce1b9d63e2bc426889297dd5dd03caf012aa7a7929374",
+  "new": "817705dea0d21604e272bb38ed175de1461fe347fcf77c47f80384ea16a7be4f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/README.md": {
+  "file": "005.md",
+  "base": "c1fcd13a712e3bb7786e76ba174a753be787f4b4e6f55f6fc3c4be33edd56b57",
+  "new": "4c16a70f0e8c1466b32df78970192faba8858d5099a7b190776d1f65c29cb614"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/README.md": {
+  "file": "006.md",
+  "base": "e84d4833226cf935ee3decd36b6979e24c42a912cf6327f632e4e03f855250e8",
+  "new": "f724864fbd0609aabb2c6c7cdc714731d718448ed45209184260518ba8bfb4dc"
+ }
+}

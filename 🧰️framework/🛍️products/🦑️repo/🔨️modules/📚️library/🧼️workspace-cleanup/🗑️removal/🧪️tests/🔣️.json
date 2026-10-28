@@ -100,6 +100,16 @@
    "path": "scratch/plain2/a.txt",
    "kind": "file",
    "text": "p"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/📥️inputs/big.bin",
+   "kind": "file",
+   "size": 11534336
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/fat.bin",
+   "kind": "file",
+   "size": 6291456
   }
  ],
  "dryRun": {
@@ -111,10 +121,6 @@
    {
     "kind": "misplaced",
     "path": ".🧬semio/old-repo"
-   },
-   {
-    "kind": "ticket-file",
-    "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/fat.bin"
    },
    {
     "kind": "ticket-generated",
@@ -150,7 +156,9 @@
    ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/🗑️generated",
    ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/fat.bin",
    "bad:name.txt",
-   "trail."
+   "trail.",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/📥️inputs/big.bin",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/fat.bin"
   ]
  },
  "applied": {
@@ -159,7 +167,6 @@
    ".generation3d-foo-link",
    ".🧬semio/old-repo",
    ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/🗑️generated",
-   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/fat.bin",
    "bad:name.txt",
    "trail."
   ],
@@ -173,7 +180,10 @@
    ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/notes.md",
    ".cache/b/t/x",
    "imgs/vm/image.json",
-   "imgs/vm/fixed.dmg"
+   "imgs/vm/fixed.dmg",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/fat.bin",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/📥️inputs/big.bin",
+   ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/fat.bin"
   ]
  },
  "removePath": [
@@ -181,7 +191,6 @@
    "name": "an ordinary directory is removed",
    "path": "scratch/plain",
    "dry": false,
-   "ticket": false,
    "illegal": false,
    "cargo": false,
    "expected": true,
@@ -191,7 +200,6 @@
    "name": "a dry run reports success and keeps the directory",
    "path": "scratch/plain2",
    "dry": true,
-   "ticket": false,
    "illegal": false,
    "cargo": false,
    "expected": true,
@@ -201,7 +209,6 @@
    "name": "a missing path is refused",
    "path": "scratch/missing",
    "dry": false,
-   "ticket": false,
    "illegal": false,
    "cargo": false,
    "expected": false,
@@ -211,7 +218,6 @@
    "name": "a managed storage directory is refused",
    "path": ".cache/b/t/x",
    "dry": false,
-   "ticket": false,
    "illegal": false,
    "cargo": false,
    "expected": false,
@@ -221,17 +227,15 @@
    "name": "a native image directory is refused",
    "path": "imgs/vm",
    "dry": false,
-   "ticket": false,
    "illegal": false,
    "cargo": false,
    "expected": false,
    "exists": true
   },
   {
-   "name": "the generated output of an open ticket is refused even with ticket cleanup",
+   "name": "the generated output of an open ticket is refused",
    "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN/🗑️generated",
    "dry": false,
-   "ticket": true,
    "illegal": false,
    "cargo": false,
    "expected": false,
@@ -241,7 +245,6 @@
    "name": "an open ticket folder is refused",
    "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/OPEN",
    "dry": false,
-   "ticket": false,
    "illegal": false,
    "cargo": false,
    "expected": false,
@@ -251,17 +254,15 @@
    "name": "a path outside any cargo output root is refused for incremental removal",
    "path": "scratch/plain",
    "dry": false,
-   "ticket": false,
    "illegal": false,
    "cargo": true,
    "expected": false,
    "exists": true
   },
   {
-   "name": "the generated output of a closed ticket is removed with ticket cleanup",
+   "name": "the generated output of a closed ticket is removed",
    "path": ".🧬semio/🦑️repo/🎫️tickets/26/10/21/DONE/🗑️generated",
    "dry": false,
-   "ticket": true,
    "illegal": false,
    "cargo": false,
    "expected": true,

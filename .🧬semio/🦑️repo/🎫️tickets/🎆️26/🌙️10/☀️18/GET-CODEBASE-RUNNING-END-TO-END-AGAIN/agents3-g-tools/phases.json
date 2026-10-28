@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "initial": "boot",
+  "phases": [
+    {
+      "id": "queue-capacity",
+      "patterns": [
+        "^\\[capacity\\] (waiting|wartet)",
+        "^\\[capacity\\] [\\w-]+: (work has to run, waiting|es muss Arbeit laufen, wartet)"
+      ]
+    },
+    {
+      "id": "capacity",
+      "patterns": [
+        "^\\[capacity\\] (admitted|zugelassen|[\\w-]+: (sized at|auf \\d+% des|forecast quiet|ruhig prognostiziert|reservation grown|Reservierung nach|grown from|nach \\d+ s von|the request to grow|die Anfrage, die Reservierung))"
+      ]
+    },
+    {
+      "id": "queue-graph",
+      "patterns": [
+        "Waiting for access to",
+        "lease-queue",
+        "^[Gg]raph: (a peer builds the graph|ein Peer baut den Graphen|waiting for the graph build of a peer|wartet auf den Graph-Aufbau)"
+      ]
+    },
+    {
+      "id": "verify",
+      "patterns": [
+        "generation-verify",
+        "Verifying graph facts",
+        "resource-directory-admission",
+        "lease-sweep",
+        "boot-recovery",
+        "repository-cache-charge"
+      ]
+    },
+    {
+      "id": "admission",
+      "patterns": [
+        "build:source-admission"
+      ]
+    },
+    {
+      "id": "graph",
+      "patterns": [
+        "build:(graph-plan|discover|projects|graph-phase)",
+        "^[Gg]raph: ",
+        "Assembling the graph",
+        "Inferring projects"
+      ]
+    },
+    {
+      "id": "tool-setup",
+      "patterns": [
+        "^\\[bazel\\] ",
+        "^Analyzing",
+        "^Loading",
+        "^Computing main repo",
+        "^INFO: (Invocation ID|Analyzed)"
+      ]
+    },
+    {
+      "id": "execute",
+      "patterns": [
+        "^\\[\\d+ / \\d+\\]",
+        "^> nx run ",
+        "^INFO: From ",
+        "^\\$ nx "
+      ]
+    },
+    {
+      "id": "finish",
+      "patterns": [
+        "^INFO: (Elapsed time|Build completed)",
+        "Build Event Protocol",
+        "^Successfully ran",
+        "^NX +Successfully"
+      ]
+    }
+  ],
+  "graph": {
+    "refreshing": "^[Gg]raph: (?:refreshing (\\d+) projects|(\\d+) Projekte werden erneuert)",
+    "inferring": "Inferring projects: \\d+ of (\\d+) projects",
+    "published": "^[Gg]raph: (?:generation (\\d+) published, (\\d+) projects refreshed in (\\d+) s|Generation (\\d+) veröffentlicht, (\\d+) Projekte in (\\d+) s erneuert)"
+  },
+  "actions": {
+    "bazelProcesses": "^INFO: (\\d+) process(?:es)?: (.*?)\\.?$",
+    "bazelIdle": [
+      "internal",
+      "action cache hit",
+      "disk cache hit",
+      "remote cache hit"
+    ],
+    "bazelTotal": "^INFO: Build completed successfully, (\\d+) total actions?",
+    "nxTask": "^> nx run ",
+    "nxCached": "^> nx run .*\\[(local cache|remote cache|existing outputs match the cache)"
+  }
+}

@@ -4,6 +4,7 @@ import net from "node:net";
 import { join } from "node:path";
 import { decideListenV1, decideSpawnV1, decideWriteV1, guardContextFromEnvironmentV1, guardOpenWritesV1, guardWriteTargetsV1, type GuardViolationV1 } from "../../🟦️.ts";
 import { readTestSandboxProtocolV1 } from "../../../📐️layout/🟦️.ts";
+import "../../../../🟨️bun/🪦️orphans/📜️script.ts";
 
 const declared = readTestSandboxProtocolV1(), context = guardContextFromEnvironmentV1();
 

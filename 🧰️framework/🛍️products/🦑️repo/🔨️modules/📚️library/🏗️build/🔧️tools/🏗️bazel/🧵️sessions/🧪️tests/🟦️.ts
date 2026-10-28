@@ -1,17 +1,18 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv/dist/2020.js";
 import {Database} from "bun:sqlite";
-import {spawn} from "node:child_process";
+import {spawn,spawnSync} from "node:child_process";
 import {chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,realpathSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json";
 import fixtureSchema from "./🧫️fixtures/🧬️schema.json";
 import componentSchema from "../🧬️schema/🔣️.json";
-import {BAZEL_SESSION_POLICY_V1 as policy,acquireBazelSessionV1,bazelNestedServersV1,bazelRepositoryContentsV1,bazelRestoreResourcesV1,bazelServerOverrideV1,bazelSessionCommandV1,bazelSessionMessageV1,bazelSessionResourcesV1,bazelSessionStartupV1,bazelSessionStatusV1,bazelSessionWorkspaceV1,bazelSlotIdsV1,nextBazelSlotStateV1,planBazelServersV1,planBazelSessionGarbageV1,rankBazelSlotsV1,renderBazelSessionStatusV1,withBazelSessionV1,type BazelSlotPortV1,type BazelSlotStateV1} from "../🟦️.ts";
-import {bazelFreeBytesV1,bazelSlotPortV1,collectBazelPoolV1,dedupeBazelLaunchersV1,collectBazelSessionsV1,measureBazelTreeBytesV1,readBazelInventoryV1,removeBazelTreeV1,stopBazelServerV1} from "../🔌️port/🟦️.ts";
+import descriptorNamespaceSchema from "../../../../../⚡️caching/🦀️cargo/📦️units/📥️descriptor/🔒️namespace/🧬️schema/🔣️.json" with {type:"json"};
+import {BAZEL_SESSION_POLICY_V1 as policy,acquireBazelSessionV1,bazelGrowthAllowanceV1,bazelNestedServersV1,bazelRepositoryContentsV1,bazelRestoreResourcesV1,bazelServerOverrideV1,bazelSessionCommandV1,bazelSessionMessageV1,bazelSessionResourcesV1,bazelSessionStartupV1,bazelSessionStatusV1,bazelSessionWorkspaceV1,bazelSlotIdsV1,nextBazelSlotStateV1,planBazelServerReapV1,planBazelServersV1,planBazelSessionGarbageV1,rankBazelSlotsV1,renderBazelSessionStatusV1,withBazelSessionV1,type BazelSlotPortV1,type BazelSlotStateV1} from "../🟦️.ts";
+import {bazelFreeBytesV1,bazelSlotPortV1,collectBazelPoolV1,dedupeBazelLaunchersV1,collectBazelSessionsV1,measureBazelTreeBytesV1,readBazelInventoryV1,readBazelServerPidV1,reapBazelServersV1,removeBazelTreeV1,stopBazelServerV1} from "../🔌️port/🟦️.ts";
 import {startScriptProcessWatchdogV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
-import {resolveLanguageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {CATALOG_LANGUAGES_V1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 
 const ajv=new Ajv({strict:true,allErrors:true});ajv.addSchema(componentSchema,"sessions.json");
@@ -24,6 +25,7 @@ function memoryPort(onSleep:(count:number)=>void|Promise<void>=()=>undefined){
   async claim(slot){if(held.has(slot))return undefined;held.add(slot);return()=>{held.delete(slot);};},
   async gate(signal,kind){signal.throwIfAborted();const previous=tails.get(kind)??Promise.resolve();let open!:()=>void;tails.set(kind,new Promise<void>(done=>{open=done;}));await previous;gates++;events.push('gate');return()=>{gates--;events.push('open');open();};},
   async spare(){return idle.megabytes;},
+  async floorSpare(){return Infinity;},
   async imageFree(){return image.bytes;},
   queued:kind=>(queues.get(kind)??[]).length,
   enqueue:kind=>{const id=++tickets,list=queues.get(kind)??[];list.push(id);queues.set(kind,list);return {first:()=>list[0]===id,leave:()=>{const at=list.indexOf(id);if(at>=0)list.splice(at,1);}};},
@@ -57,7 +59,7 @@ test("the number of servers can be overridden explicitly and anything unreadable
   else{const plan=bazelServerOverrideV1(base,row.environment);expect(plan.slots as unknown).toBe(row.slots??base.slots);expect(plan.cpuPerServer).toBeGreaterThanOrEqual(1);expect(plan.memoryPerServerMegabytes).toBeGreaterThanOrEqual(256);}
  }
  expect(bazelSessionResourcesV1(base)).toEqual([`--local_resources=cpu=${base.cpuPerServer}`,`--local_resources=memory=${base.memoryPerServerMegabytes}`]);
- expect(bazelSessionStartupV1(base,120)).toEqual(["--max_idle_secs=120",`--host_jvm_args=-Xmx${base.heapMegabytes}m`]);expect(()=>bazelSessionStartupV1(base,0)).toThrow("Positive");
+ expect(bazelSessionStartupV1(base,600)).toEqual(["--max_idle_secs=600",`--host_jvm_args=-Xmx${base.heapMegabytes}m`,...policy.servers.jvmArguments.map(argument=>`--host_jvm_args=${argument}`)]);expect(policy.servers.jvmArguments).toEqual(["-XX:G1PeriodicGCInterval=10000","-XX:MinHeapFreeRatio=10","-XX:MaxHeapFreeRatio=30"]);expect(()=>bazelSessionStartupV1(base,0)).toThrow("Positive");
  expect(bazelSessionCommandV1("/c/contents")).toEqual(["--repo_contents_cache=/c/contents"]);expect(bazelRepositoryContentsV1("/p/bazel/outputs")).toBe("/p/bazel/contents");
 });
 
@@ -93,14 +95,14 @@ test("service slots have their own count and override and the plan carries both"
  expect(bazelNestedServersV1(base,true).services).toBe(base.services);
 });
 
-test("the slot order follows warm, kept, unused, then least recently used and agrees with an SQL ORDER BY",()=>{
+test("the slot order follows warm, unused, then least recently used and agrees with an SQL ORDER BY",()=>{
  const database=new Database(":memory:");
  try{
   for(const row of fixture.ranks){
    const states=row.states as Record<string,BazelSlotStateV1|undefined>,order=rankBazelSlotsV1(row.slots,states,row.key);expect(order as unknown,row.name).toEqual(row.expected);
    database.exec("DROP TABLE IF EXISTS slots;CREATE TABLE slots(slot TEXT,idx INTEGER,tier INTEGER,used INTEGER)");
-   for(const slot of row.slots){const state=states[slot],tier=state===undefined?2:state.key===row.key?0:state.keys.includes(row.key)?1:3;database.query("INSERT INTO slots VALUES(?1,?2,?3,?4)").run(slot,Number(slot.slice(1)),tier,state?.usedAt??0);}
-   const sql=database.query("SELECT slot FROM slots ORDER BY tier, CASE WHEN tier IN (0,1) THEN -used WHEN tier=3 THEN used ELSE 0 END, idx").all() as {slot:string}[];
+   for(const slot of row.slots){const state=states[slot],tier=state===undefined?1:state.key===row.key?0:2;database.query("INSERT INTO slots VALUES(?1,?2,?3,?4)").run(slot,Number(slot.slice(1)),tier,state?.usedAt??0);}
+   const sql=database.query("SELECT slot FROM slots ORDER BY tier, CASE WHEN tier=0 THEN -used WHEN tier=2 THEN used ELSE 0 END, idx").all() as {slot:string}[];
    expect(sql.map(entry=>entry.slot),row.name+" (sqlite)").toEqual(order as string[]);
   }
  }finally{database.close();}
@@ -111,6 +113,7 @@ test("package paths are short, slot-scoped and refuse every shape outside the au
  for(const row of fixture.workspaces.refused)expect(()=>bazelSessionWorkspaceV1(fixture.workspaces.root,row.slot,row.key),JSON.stringify(row)).toThrow("Bazel session");
  expect(()=>bazelSessionWorkspaceV1("/"+"x".repeat(250),"s0",key(1))).toThrow("256");
  expect(bazelSessionWorkspaceV1("/p",  "s0",key(1))).not.toBe(bazelSessionWorkspaceV1("/p","s1",key(1)));
+ expect(bazelSessionWorkspaceV1("/p","s0",key(1)),"every selection of a slot lives at the one path its server is bound to").toBe(bazelSessionWorkspaceV1("/p","s0",key(2)));expect(bazelSessionWorkspaceV1("/p","s0",key(1)).endsWith("/"+policy.names.stablePackage)).toBe(true);expect(policy.names.stablePackage).toMatch(new RegExp(policy.names.keyPattern));
 });
 
 test("messages render in English and German exactly like str.format and the language follows the environment",()=>{
@@ -166,7 +169,7 @@ test("garbage collection decisions agree with an independent Python implementati
  expect(()=>planBazelSessionGarbageV1({slots:[{slot:"x",outputBase:true,packages:[]}],foreign:[]} as never,{slots:1,services:4},0)).toThrow("Closed Bazel session inventory required");
 });
 
-const oracle=(rows:readonly unknown[]):unknown[]=>{const run=Bun.spawnSync(["python3","-I",join(import.meta.dir,"🐍️.py")],{stdin:new TextEncoder().encode(JSON.stringify({policy,rows}))});expect(run.exitCode,new TextDecoder().decode(run.stderr)).toBe(0);return JSON.parse(new TextDecoder().decode(run.stdout));};
+const oracle=(rows:readonly unknown[],mode:"garbage"|"plan"|"growth"|"reap"="garbage"):unknown[]=>{const run=Bun.spawnSync(["python3","-I",join(import.meta.dir,"🐍️.py")],{stdin:new TextEncoder().encode(JSON.stringify({policy,rows,mode}))});expect(run.exitCode,new TextDecoder().decode(run.stderr)).toBe(0);return JSON.parse(new TextDecoder().decode(run.stdout));};
 
 test("the garbage plan equals the independent Python oracle on every fixture row and on 400 seeded random inventories with pressure, sizes, held slots and leftover capture folders",()=>{
  const rows=fixture.garbage.map(row=>({inventory:row.inventory,slots:row.slots,services:row.services,now:row.now,held:row.held,...(row as {pressure?:unknown}).pressure?{pressure:(row as {pressure?:unknown}).pressure}:{}}));
@@ -418,8 +421,13 @@ test("slot growth follows the live host: with every planned slot in use a build 
  await expect(acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(13),signal:abort(),timeoutMilliseconds:0})).rejects.toThrow("timed out");
  expect(memory.lines.filter(line=>line.includes("products image")).length,"reported once per acquisition").toBe(1);memory.image.bytes=Infinity;
  await expect(acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(12),signal:abort(),timeoutMilliseconds:0,growth:false})).rejects.toThrow("timed out");
- const grown:Awaited<ReturnType<typeof acquireBazelSessionV1>>[]=[];
- for(let index=0;index<policy.servers.growthMaximum-plan.slots;index++)grown.push(await acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(20+index),signal:abort(),timeoutMilliseconds:0}));
+ const grown:Awaited<ReturnType<typeof acquireBazelSessionV1>>[]=[],more=(index:number)=>acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(index),signal:abort(),timeoutMilliseconds:0});
+ grown.push(await more(20));
+ await expect(more(21),"one margin of idle memory affords one extra server, however many sessions see the same headroom").rejects.toThrow("timed out");
+ memory.idle.megabytes=policy.servers.growthSpareMegabytes*2;grown.push(await more(22));
+ await expect(more(23),"two margins afford two").rejects.toThrow("timed out");
+ memory.idle.megabytes=policy.servers.growthSpareMegabytes*(policy.servers.growthMaximum-plan.slots);
+ for(let index=grown.length;index<policy.servers.growthMaximum-plan.slots;index++)grown.push(await more(30+index));
  expect(grown.map(row=>row.slot)).toEqual(Array.from({length:policy.servers.growthMaximum-plan.slots},(_,index)=>"s"+(plan.slots+index)));
  expect(memory.lines.filter(line=>line.includes("extra slot")).length).toBe(grown.length);
  await expect(acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(40),signal:abort(),timeoutMilliseconds:0})).rejects.toThrow("timed out");
@@ -429,20 +437,18 @@ test("slot growth follows the live host: with every planned slot in use a build 
  expect(bazelSessionMessageV1("grown",{slot:"s3",spare:5000},"de")).toContain("zusätzlichen Slot s3");
 });
 
-test("slot growth equals an independent Python model of the decision for every combination of used slots and idle memory",()=>{
- const rows:Array<{used:number;idle:number;image:number;kind:string;growth:boolean;slots:number}>=[];
- for(const used of [0,1,2,3,4,8,11,12])for(const idle of [0,2559,4095,4096,20000])for(const kind of ["build","service"])for(const image of [0,6442450943,6442450944,10**12])for(const growth of [true,false])rows.push({used,idle,image,kind,growth,slots:3});
- const program="import json,sys\nrows=json.load(sys.stdin)\nout=[]\nfor r in rows:\n  base=r['slots'];maximum=12;margin=4096;room=6442450944\n  if r['kind']!='build':out.append('wait' if r['used']>=2 else 'base')\n  elif r['used']<base:out.append('base')\n  elif r['growth'] and r['idle']>=margin and r['image']>=room and r['used']<maximum:out.append('growth')\n  else:out.append('wait')\nprint(json.dumps(out))";
- const run=Bun.spawnSync(["python3","-I","-c",program],{stdin:new TextEncoder().encode(JSON.stringify(rows))});expect(run.exitCode).toBe(0);
- const expected=JSON.parse(new TextDecoder().decode(run.stdout)) as string[];
- const decide=(row:typeof rows[number])=>{
-  const ids=row.kind==="build"?Array.from({length:row.slots},(_,index)=>"s"+index):Array.from({length:2},(_,index)=>"d"+index);
-  if(row.used<ids.length)return "base";
-  if(row.kind==="build"&&row.growth&&row.idle>=policy.servers.growthSpareMegabytes&&row.image>=policy.servers.growthImageFreeBytes&&row.used<policy.servers.growthMaximum)return "growth";
-  return "wait";
- };
- rows.forEach((row,index)=>expect(decide(row),JSON.stringify(row)).toBe(expected[index]));
- expect(policy.servers.growthMaximum).toBe(12);expect(policy.servers.growthSpareMegabytes).toBe(4096);
+test("slot growth equals an independent Python model of the decision for every combination of used slots, busy growth slots and idle memory",async()=>{
+ const rows:Array<{used:number;idle:number;image:number;kind:string;growth:boolean;slots:number;services:number;busyGrowth:number}>=[];
+ for(const busyGrowth of [0,1,2,3,9])for(const idle of [0,2559,4095,4096,8191,8192,20000,10**6])for(const kind of ["build","service"])for(const image of [0,6442450943,6442450944,10**12])for(const growth of [true,false])for(const used of kind==="build"?[0,2,3]:[0,1,2])rows.push({used,idle,image,kind,growth,slots:3,services:2,busyGrowth});
+ const expected=oracle(rows.map(row=>row),"growth") as string[];
+ for(const [index,row] of rows.entries()){
+  const memory=memoryPort();memory.idle.megabytes=row.idle;memory.image.bytes=row.image;const ids=row.kind==="build"?["s0","s1","s2"]:["d0","d1"];
+  for(const slot of ids.slice(0,row.used))memory.held.add(slot);
+  if(row.kind==="build"&&row.used>=3)for(let at=0;at<row.busyGrowth;at++)memory.held.add("s"+(3+at));
+  const outcome=await acquireBazelSessionV1(memory.port,{slots:3,services:2},{language:"en",key:key(1),signal:abort(),kind:row.kind as "build"|"service",growth:row.growth,timeoutMilliseconds:0}).then(session=>ids.includes(session.slot)?"base":"growth",()=>"wait");
+  expect(outcome,JSON.stringify(row)).toBe(expected[index]);
+ }
+ expect(policy.servers.growthMaximum).toBe(12);expect(policy.servers.growthSpareMegabytes).toBe(4096);expect(bazelGrowthAllowanceV1(8191)).toBe(1);expect(bazelGrowthAllowanceV1(-5)).toBe(0);
 });
 
 /** ⌛️ A child that holds the only slot, waits for it through the production port with the real stall watchdog on (stall 1 s, exit 124 like the envelope) and releases the slot after 3.5 s; `plain` swaps the port's wait for an undeclared timer. */
@@ -484,11 +490,20 @@ test("Bazel slot choice: concurrent agent sessions start on different slots, an 
  for(const preference of[0,1,2,3,4,5]){const ranked=rankBazelSlotsV1(slots,{},key,preference);expect(ranked[0]).toBe(slots[preference%3]);expect([...ranked].sort()).toEqual(["s0","s1","s2"]);}
  const states={s1:nextBazelSlotStateV1("s1",undefined,key,100)},kept=rankBazelSlotsV1(slots,states,key,2);expect(kept[0]).toBe("s1");
  const holds=new Set<string>(),written:Record<string,unknown>={};
- const port={async claim(slot:string){if(holds.has(slot))return undefined;holds.add(slot);return ()=>holds.delete(slot);},async gate(){return ()=>undefined;},queued(){return 0;},async spare(){return 0;},enqueue(){return {first:()=>true,leave(){}};},async read(slot:string){return written[slot] as never;},async write(slot:string,state:unknown){written[slot]=state;},async sleep(){},now:()=>1000,progress(){}};
+ const port={async claim(slot:string){if(holds.has(slot))return undefined;holds.add(slot);return ()=>holds.delete(slot);},async gate(){return ()=>undefined;},queued(){return 0;},async spare(){return 0;},async floorSpare(){return Infinity;},enqueue(){return {first:()=>true,leave(){}};},async read(slot:string){return written[slot] as never;},async write(slot:string,state:unknown){written[slot]=state;},async sleep(){},now:()=>1000,progress(){}};
  const signal=new AbortController().signal,first=await acquireBazelSessionV1(port as never,{slots:3,services:0},{language:"en",key,signal,preference:1,owner:{session:"0123456789ab.sa",agent:"alpha"}}),second=await acquireBazelSessionV1(port as never,{slots:3,services:0},{language:"en",key:"fedcba9876543210",signal,preference:1,owner:{session:"0123456789ab.sb",agent:"beta"}});
  expect([first.slot,second.slot]).toEqual(["s1","s2"]);await first.release();await second.release();
  expect(written.s1).toMatchObject({session:"0123456789ab.sa",agent:"alpha",key});expect(written.s2).toMatchObject({agent:"beta"});
  const again=await acquireBazelSessionV1(port as never,{slots:3,services:0},{language:"en",key,signal,preference:2});expect(again.slot).toBe("s1");expect(again.mode).toBe("warm");await again.release();
+});
+
+test("Bazel slot choice: selections that once shared a slot, and selections that alternate, each keep a slot of their own and stay warm",async()=>{
+ const a="0000000000000001",b="0000000000000002",c="0000000000000003",plan={slots:3,services:0},written:Record<string,BazelSlotStateV1>={s0:nextBazelSlotStateV1("s0",nextBazelSlotStateV1("s0",undefined,a,1),b,2)},holds=new Set<string>();let clock=10;
+ const port={async claim(slot:string){if(holds.has(slot))return undefined;holds.add(slot);return ()=>holds.delete(slot);},async gate(){return ()=>undefined;},queued(){return 0;},async spare(){return 0;},async floorSpare(){return Infinity;},enqueue(){return {first:()=>true,leave(){}};},async read(slot:string){return written[slot] as never;},async write(slot:string,state:unknown){written[slot]=state as BazelSlotStateV1;},async sleep(){},now:()=>clock++,progress(){}};
+ const signal=new AbortController().signal,seen:Record<string,{slot:string;mode:string}[]>={[a]:[],[b]:[],[c]:[]};
+ for(let round=0;round<4;round++)for(const key of[a,b,c]){const session=await acquireBazelSessionV1(port as never,plan,{language:"en",key,signal});await session.release();seen[key]!.push({slot:session.slot,mode:session.mode});}
+ for(const key of[a,b,c]){expect(new Set(seen[key]!.map(row=>row.slot)).size,key+" never moves").toBe(1);expect(seen[key]!.slice(1).map(row=>row.mode),key+" stays warm").toEqual(["warm","warm","warm"]);}
+ expect(new Set([a,b,c].map(key=>seen[key]![0]!.slot)).size).toBe(3);
 });
 
 test("launcher dedupe turns identical large launcher copies of an idle output base into clones of one file, leaves everything else alone and does not repeat, agreeing with an independent Python sha256",async()=>{
@@ -507,3 +522,116 @@ test("launcher dedupe turns identical large launcher copies of an idle output ba
  expect(await dedupeBazelLaunchersV1(join(root,"absent"),abort())).toEqual({files:0,bytes:0});
 });
 test("launcher dedupe messages exist in every language and the pressure collector reports them",()=>{for(const language of["en","de"] as const)expect(bazelSessionMessageV1("deduped",{slot:"s0",files:69,megabytes:4100},language)).toContain("69");});
+
+test("the server plan equals the independent Python oracle on a grid of hosts and both floor rules, and a 16 GB laptop gets two capped servers",()=>{
+ const rows:{host:{cores:number;memoryMegabytes:number};memory:{floorBasisPoints:number;floorMinimumMegabytes:number;floorMaximumMegabytes:number}}[]=[];
+ for(const cores of [1,2,3,4,8,10,16,32])for(const memoryMegabytes of [2048,4096,6144,8192,12288,16384,24576,32768,65536,131072])for(const memory of [{floorBasisPoints:2000,floorMinimumMegabytes:4096,floorMaximumMegabytes:8192},{floorBasisPoints:1250,floorMinimumMegabytes:1536,floorMaximumMegabytes:4096}])rows.push({host:{cores,memoryMegabytes},memory});
+ const expected=oracle(rows,"plan");rows.forEach((row,index)=>expect(planBazelServersV1(row.host,row.memory) as unknown,JSON.stringify(row)).toEqual(expected[index]));
+ const laptop=planBazelServersV1({cores:10,memoryMegabytes:16384},{floorBasisPoints:1250,floorMinimumMegabytes:1536,floorMaximumMegabytes:4096});
+ expect(laptop.slots).toBe(2);expect(laptop.heapMegabytes).toBe(1536);expect(laptop.slots*laptop.residentMegabytes,"the planned servers fit the authored share of the memory above the floor").toBeLessThanOrEqual((16384-2048)*policy.servers.memoryShareBasisPoints/10000);
+ expect(planBazelServersV1({cores:10,memoryMegabytes:32768},{floorBasisPoints:1250,floorMinimumMegabytes:1536,floorMaximumMegabytes:4096}).slots).toBe(5);
+});
+
+test("the reap plan keeps the most recently used idle servers the budget leaves room for, stops the others least recently used first, and equals the independent Python oracle",()=>{
+ const rows=[{slot:"s0",live:true,held:true,usedAt:5},{slot:"s1",live:true,held:false,usedAt:9},{slot:"s2",live:true,held:false,usedAt:1},{slot:"s3",live:true,held:false,usedAt:4},{slot:"s4",live:false,held:false,usedAt:7},{slot:"s5",live:false,held:true,usedAt:0}];
+ expect(planBazelServerReapV1(rows,3)).toEqual(["s2","s3"]);expect(planBazelServerReapV1(rows,2)).toEqual(["s2","s3","s1"]);expect(planBazelServerReapV1(rows,5)).toEqual([]);expect(planBazelServerReapV1(rows,1,100)).toEqual(["s2","s3","s1"]);
+ expect(planBazelServerReapV1(rows,5,-1),"below the memory floor no idle server stays").toEqual(["s2","s3","s1"]);expect(planBazelServerReapV1([],2)).toEqual([]);expect(()=>planBazelServerReapV1(rows,-1)).toThrow("budget");
+ let seed=7;const next=(limit:number)=>{seed=(seed*1103515245+12345)%2147483648;return seed%limit;},random:{rows:typeof rows;budget:number;headroom?:number}[]=[];
+ for(let index=0;index<500;index++)random.push({rows:Array.from({length:next(9)},(_,at)=>({slot:"s"+at,live:next(3)>0,held:next(3)===0,usedAt:next(6)})),budget:next(6),...next(4)===0?{headroom:next(3000)-1500}:{}});
+ const expected=oracle(random,"reap");random.forEach((row,index)=>expect(planBazelServerReapV1(row.rows,row.budget,row.headroom) as unknown,JSON.stringify(row)).toEqual(expected[index]));
+});
+
+test("the reaper stops surplus idle servers of free slots through their pid files, least recently used first, never a held slot, and reports in both languages; below the floor it stops every idle one",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"bazel-reap-")),directories={leases:join(root,"leases"),server:join(root,"p/server"),workspaces:join(root,"p/workspaces")},children:ReturnType<typeof spawn>[]=[];
+ try{
+  const watch=(slot:string,usedAt:number)=>{const base=join(directories.server,slot),file=join(base,"server/server.pid.txt");mkdirSync(join(base,"server"),{recursive:true});const child=spawn(process.execPath,["-e","const f=process.argv[1];setInterval(()=>{if(!require('fs').existsSync(f))process.exit(0)},50)",file],{stdio:"ignore"});children.push(child);writeFileSync(file,String(child.pid));writeFileSync(join(directories.server,slot+".session.json"),JSON.stringify({version:1,slot,key:key(1),keys:[key(1)],usedAt}));return new Promise<number|null>(done=>child.on("exit",code=>done(code)));};
+  const gone=async(exit:Promise<number|null>)=>await Promise.race([exit.then(()=>true),new Promise<boolean>(done=>setTimeout(()=>done(false),3000))]);
+  const exits={s0:watch("s0",30),s1:watch("s1",90),s2:watch("s2",10),s3:watch("s3",20)},lines:string[]=[],headroom={value:5000};
+  const port=bazelSlotPortV1(directories,{spare:async()=>headroom.value,floorSpare:async()=>headroom.value}),signal=abort(),held=await port.claim("s1",signal),plan={slots:3,services:1};
+  expect(await readBazelServerPidV1(join(directories.server,"s0"))).toBeGreaterThan(0);expect(await readBazelServerPidV1(join(directories.server,"s9"))).toBeUndefined();
+  const stopped=await reapBazelServersV1(directories,port,plan,signal,base=>stopBazelServerV1(base,signal),{budget:3,language:"en",progress:line=>lines.push(line)});
+  expect(stopped,"3 budget - 1 held = 2 idle kept (s0 30, s3 20); s2 is the oldest").toEqual(["s2"]);expect(await gone(exits.s2)).toBe(true);
+  expect(lines.length).toBe(1);expect(lines[0]).toBe(bazelSessionMessageV1("reaped",{slot:"s2",live:4,budget:3},"en"));expect(bazelSessionMessageV1("reaped",{slot:"s2",live:4,budget:3},"de")).toContain("untätigen Bazel-Server von Slot s2");
+  expect(await readBazelServerPidV1(join(directories.server,"s0"))).toBeGreaterThan(0);expect(await readBazelServerPidV1(join(directories.server,"s1"))).toBeGreaterThan(0);expect(await readBazelServerPidV1(join(directories.server,"s3"))).toBeGreaterThan(0);
+  expect(await reapBazelServersV1(directories,port,plan,signal,base=>stopBazelServerV1(base,signal),{budget:3,language:"en"}),"nothing more to stop").toEqual([]);
+  headroom.value=-100;const sampled=bazelSlotPortV1(directories,{spare:async()=>headroom.value,floorSpare:async()=>headroom.value}),pressed=await reapBazelServersV1(directories,sampled,plan,signal,base=>stopBazelServerV1(base,signal),{budget:3,language:"de",progress:line=>lines.push(line)});
+  expect(pressed,"below the floor every idle server stops, the held one stays").toEqual(["s3","s0"]);expect(await gone(exits.s3)).toBe(true);expect(await gone(exits.s0)).toBe(true);expect(await readBazelServerPidV1(join(directories.server,"s1"))).toBeGreaterThan(0);
+  expect(lines.at(-1)).toContain("untätigen");held!();
+  const failing=await reapBazelServersV1(directories,sampled,plan,signal,async()=>{throw Error("stuck");},{budget:0,language:"en",progress:line=>lines.push(line)});
+  expect(failing,"a server that does not stop is reported, never thrown").toEqual([]);expect(lines.at(-1)).toBe(bazelSessionMessageV1("reap-failed",{slot:"s1",reason:"stuck"},"en"));expect(bazelSessionMessageV1("reap-failed",{slot:"s1",reason:"stuck"},"de")).toContain("wurde nicht gestoppt");
+  expect(await gone(exits.s1)).toBe(false);
+ }finally{for(const child of children)child.kill("SIGKILL");rmSync(root,{recursive:true,force:true});}
+},40000);
+
+test("Law: the reaper measures memory pressure by the memory that is really free above the floor, never by the capacity ledger: a negative ledger headroom with gigabytes free keeps every budgeted idle server, a really starved host stops them",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"bazel-reap-floor-")),directories={leases:join(root,"leases"),server:join(root,"p/server"),workspaces:join(root,"p/workspaces")},children:ReturnType<typeof spawn>[]=[];
+ try{
+  const watch=(slot:string,usedAt:number)=>{const base=join(directories.server,slot),file=join(base,"server/server.pid.txt");mkdirSync(join(base,"server"),{recursive:true});const child=spawn(process.execPath,["-e","const f=process.argv[1];setInterval(()=>{if(!require('fs').existsSync(f))process.exit(0)},50)",file],{stdio:"ignore"});children.push(child);writeFileSync(file,String(child.pid));writeFileSync(join(directories.server,slot+".session.json"),JSON.stringify({version:1,slot,key:key(1),keys:[key(1)],usedAt}));return new Promise<number|null>(done=>child.on("exit",code=>done(code)));};
+  const exits={s0:watch("s0",30),s1:watch("s1",20)},plan={slots:3,services:1},signal=abort(),state={ledger:-5000,free:9000};
+  const port=bazelSlotPortV1(directories,{spare:async()=>state.ledger,floorSpare:async()=>state.free});
+  expect(await port.spare(),"the ledger says the machine is overcommitted while grants ramp").toBe(-5000);
+  const kept=await reapBazelServersV1(directories,port,plan,signal,base=>stopBazelServerV1(base,signal),{budget:3,language:"en"});
+  expect(kept,"nine gigabytes are really free: the two idle servers stay warm for the next session").toEqual([]);
+  expect(await readBazelServerPidV1(join(directories.server,"s0"))).toBeGreaterThan(0);expect(await readBazelServerPidV1(join(directories.server,"s1"))).toBeGreaterThan(0);
+  const starved=bazelSlotPortV1(directories,{spare:async()=>state.ledger,floorSpare:async()=>-300}),stopped=await reapBazelServersV1(directories,starved,plan,signal,base=>stopBazelServerV1(base,signal),{budget:3,language:"en"});
+  expect([...stopped].sort(),"a host that really lacks memory still gives it back").toEqual(["s0","s1"]);
+  await Promise.all([exits.s0,exits.s1]);
+ }finally{for(const child of children)child.kill("SIGKILL");rmSync(root,{recursive:true,force:true});}
+},30000);
+
+test.skipIf(!process.env.SEMIO_TEST_BAZEL_BINARY)("a real server whose client was killed mid-command stops through its pid file within the authored timeout, however busy it still is",async()=>{
+ const binary=process.env.SEMIO_TEST_BAZEL_BINARY!,root=mkdtempSync(join(realpathSync(tmpdir()),"bz-orphan-")),workspace=join(root,"w"),base=join(root,"b"),startup=[`--output_user_root=${join(root,"u")}`,`--output_base=${base}`,"--max_idle_secs=15","--nosystem_rc","--nohome_rc"],alive=(pid:number)=>{try{process.kill(pid,0);return true;}catch{return false;}},sleepers:number[]=[];
+ try{
+  mkdirSync(workspace,{recursive:true});writeFileSync(join(workspace,"MODULE.bazel"),'module(name="fx", version="0")\n');writeFileSync(join(workspace,"BUILD.bazel"),'genrule(name="slow",outs=["slow.out"],cmd="sleep 240; echo done > $@",tags=["no-sandbox","no-cache"])\n');
+  const waitFor=async<T,>(read:()=>T|undefined,seconds:number):Promise<T|undefined>=>{for(let tries=0;tries<seconds*5;tries++){const value=read();if(value!==undefined)return value;await new Promise(done=>setTimeout(done,200));}return undefined;};
+  const pidOf=()=>{try{return Number(readFileSync(join(base,"server/server.pid.txt"),"utf8").trim())||undefined;}catch{return undefined;}};
+  const children=(parent:number):number[]=>{const rows=spawnSync("ps",["-A","-o","pid=,ppid=,command="],{encoding:"utf8"}).stdout.split("\n"),found:number[]=[],pending=[parent];for(let at=pending.pop();at!==undefined;at=pending.pop())for(const row of rows){const match=/^\s*(\d+)\s+(\d+)\s+(.*)$/u.exec(row);if(match&&Number(match[2])===at){found.push(Number(match[1]));pending.push(Number(match[1]));if(match[3]!.includes("sleep 240"))sleepers.push(Number(match[1]));}}return found;};
+  const client=spawn(binary,[...startup,"build","--spawn_strategy=local","//:slow"],{cwd:workspace,stdio:"ignore"});
+  const server=await waitFor(pidOf,120);expect(server).toBeGreaterThan(0);await waitFor(()=>{children(server!);return sleepers.length?true:undefined;},120);await new Promise(done=>setTimeout(done,1500));children(server!);expect(sleepers.length,"the action is running").toBeGreaterThan(0);
+  client.kill("SIGKILL");await new Promise(done=>setTimeout(done,1000));expect(alive(server!),"the server does not notice the dead client while its action runs").toBe(true);
+  const started=Date.now();await stopBazelServerV1(base,abort());expect(Date.now()-started).toBeLessThan(policy.stop.timeoutMilliseconds);expect(alive(server!)).toBe(false);
+ }finally{for(const pid of sleepers)try{process.kill(pid,"SIGKILL");}catch{}rmSync(root,{recursive:true,force:true});}
+},180000);
+
+import {acquireQueuedResourceLease,acquireResourceLease,withResourceLeases} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+
+test("the production picker is granted under a held graph snapshot pin while the lock order is enforced",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"bazel-slots-")),directories={leases:join(root,"leases"),server:join(root,"p/server"),workspaces:join(root,"p/workspaces")},names=["SEMIO_LEASE_ORDER","SEMIO_LEASE_ORDER_POLICY","SEMIO_LEASE_REGISTRY_DIRECTORY"] as const,saved=names.map(name=>process.env[name]);
+ process.env.SEMIO_LEASE_ORDER="enforce";delete process.env.SEMIO_LEASE_ORDER_POLICY;process.env.SEMIO_LEASE_REGISTRY_DIRECTORY=join(root,"registry");
+ try{
+  const port=bazelSlotPortV1(directories,{write:()=>undefined}),signal=abort(),pin=await acquireQueuedResourceLease({directory:directories.leases,resource:"build-graph:"+join(root,"g/m/snapshots/"+"a".repeat(64)+".json"),mode:"shared",owner:"law",signal});
+  try{
+   const build=await acquireBazelSessionV1(port,{slots:2,services:2},{language:"en",key:key(1),signal,timeoutMilliseconds:20000});expect(build.slot).toBe("s0");await build.release();
+   const service=await acquireBazelSessionV1(port,{slots:2,services:2},{language:"en",key:key(2),signal,kind:"service",timeoutMilliseconds:20000});expect(service.slot).toBe("d0");await service.release();
+  }finally{pin.release();}
+ }finally{names.forEach((name,index)=>{if(saved[index]===undefined)delete process.env[name];else process.env[name]=saved[index];});rmSync(root,{recursive:true,force:true});}
+},60000);
+
+test("the leases a build takes under its graph snapshot pin and its Rust code pin are granted while the lock order is enforced",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"bazel-slots-")),leases=join(root,"leases"),names=["SEMIO_LEASE_ORDER","SEMIO_LEASE_ORDER_POLICY","SEMIO_LEASE_REGISTRY_DIRECTORY"] as const,saved=names.map(name=>process.env[name]);
+ process.env.SEMIO_LEASE_ORDER="enforce";delete process.env.SEMIO_LEASE_ORDER_POLICY;process.env.SEMIO_LEASE_REGISTRY_DIRECTORY=join(root,"registry");
+ try{
+  const signal=abort(),pins=[];
+  for(const resource of ["rust-code:"+join(root,"rc/"+"b".repeat(64)),"build-graph:"+join(root,"g/m/snapshots/"+"a".repeat(64)+".json")])pins.push(await acquireQueuedResourceLease({directory:leases,resource,mode:"shared",owner:"law",signal}));
+  try{
+   for(const resource of ["bazel-"+"c".repeat(64),"bazel-metrics","bazel-modules-"+"d".repeat(64)]){const lease=await acquireResourceLease({directory:leases,resource,mode:"exclusive",signal,timeoutMs:5000});lease.release();}
+   await withResourceLeases({directory:leases,signal,resources:[...bazelRestoreResourcesV1(["🎓️teaching/🏛️architecture/📦️course"])]},async()=>undefined);
+   const toolchain=await acquireResourceLease({directory:leases,resource:"rustup:home",mode:"shared",signal,timeoutMs:5000});toolchain.release();
+   const store=await acquireQueuedResourceLease({directory:leases,resource:"build-graph-store:"+join(root,"g/m"),mode:"exclusive",owner:"law",signal});store.release();
+  }finally{for(const pin of pins)pin.release();}
+ }finally{names.forEach((name,index)=>{if(saved[index]===undefined)delete process.env[name];else process.env[name]=saved[index];});rmSync(root,{recursive:true,force:true});}
+},60000);
+
+test("the leases a Rust descriptor consumer takes under its namespace, and the maintenance writer's gate then namespace, are granted while the lock order is enforced",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"bazel-slots-")),leases=join(root,"leases"),names=["SEMIO_LEASE_ORDER","SEMIO_LEASE_ORDER_POLICY","SEMIO_LEASE_REGISTRY_DIRECTORY"] as const,saved=names.map(name=>process.env[name]),protocol=descriptorNamespaceSchema.definitions.Protocol.const,namespace=join(root,"cargo/prototype/captures/units");
+ process.env.SEMIO_LEASE_ORDER="enforce";delete process.env.SEMIO_LEASE_ORDER_POLICY;process.env.SEMIO_LEASE_REGISTRY_DIRECTORY=join(root,"registry");
+ try{
+  const signal=abort(),slot=await acquireResourceLease({directory:leases,resource:"bazel-slot-s0",mode:"exclusive",signal,timeoutMs:0}),reader=await acquireResourceLease({directory:leases,resource:protocol.resourcePrefix+namespace,mode:"shared",signal,timeoutMs:5000});
+  try{
+   for(const resource of ["bazel-"+"c".repeat(64),"bazel-metrics","bazel-modules-"+"d".repeat(64)]){const lease=await acquireResourceLease({directory:leases,resource,mode:"exclusive",signal,timeoutMs:5000});lease.release();}
+   const store=await acquireQueuedResourceLease({directory:leases,resource:"build-graph-store:"+join(root,"g/m"),mode:"exclusive",owner:"law",signal});store.release();
+  }finally{reader.release();slot.release();}
+  const gate=await acquireResourceLease({directory:leases,resource:protocol.admissionPrefix+namespace,mode:"exclusive",signal,timeoutMs:5000});
+  try{const writer=await acquireResourceLease({directory:leases,resource:protocol.resourcePrefix+namespace,mode:"exclusive",signal,timeoutMs:5000});writer.release();}finally{gate.release();}
+ }finally{names.forEach((name,index)=>{if(saved[index]===undefined)delete process.env[name];else process.env[name]=saved[index];});rmSync(root,{recursive:true,force:true});}
+},60000);

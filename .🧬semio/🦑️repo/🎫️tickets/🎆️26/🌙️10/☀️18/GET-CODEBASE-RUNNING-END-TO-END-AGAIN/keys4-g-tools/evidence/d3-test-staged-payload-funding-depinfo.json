@@ -1,0 +1,22 @@
+{
+ "target": "test-staged-payload-funding",
+ "crates": [
+  "semio-framework-job",
+  "semio-framework-tool-run"
+ ],
+ "closureCrates": 90,
+ "depInfoUnits": 114,
+ "workspaceFilesRead": 598,
+ "declared": 1322,
+ "undeclared": [
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/✂️span/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🚚️apply/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🦀️.rs"
+ ],
+ "closureWithoutUnits": []
+}

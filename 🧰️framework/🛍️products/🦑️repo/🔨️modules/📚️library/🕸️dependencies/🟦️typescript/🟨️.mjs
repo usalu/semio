@@ -2,6 +2,7 @@ import { observedFs, observedRequireResolve, registerSourceAnalysisV1, observedS
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { createRequire, isBuiltin } from "node:module";
 import { createHash } from "node:crypto";
+import { readFileSync as readRegistrationBytes } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const { existsSync, readFileSync, realpathSync } = observedFs;
@@ -10,13 +11,15 @@ const require = createRequire(import.meta.url);
 const pathPattern = /^(?![/\\])(?![A-Za-z]:)(?!.*(?:^|\/)\.\.(?:\/|$))(?!.*\\).+$/;
 const packagePattern = /^(?:@[^/]+\/)?[^/]+$/;
 let importProvider;
+const importParsersV1 = globalThis[Symbol.for("semio.declaredSourceImports.v1")] ??= new Map();
 
-/** 🔏️ Binds declared source semantics to the current parser, schema and compiler bytes. */
-function sourceImportProviderV1() {
+/** 🔏️ Registers the declared-import parser under its parser, schema and compiler bytes without recording facts into the caller's scope (the revision itself guards those bytes), so a process that only verifies recorded facts can register it before checking them; every module instance of one revision registers the first instance's parser, so a revision-pinned and a plain load share one provider.
+ * @see ../../🏗️build/🕸️graph/📥️inference/🔁️bootstrap/🟨️.mjs the bootstrap registers it while loading this module */
+export function sourceImportProviderV1() {
   if (!importProvider) {
-    const compiler = observedRequireResolve(fileURLToPath(import.meta.url), "typescript");
-    const revision = createHash("sha256").update(readFileSync(fileURLToPath(import.meta.url))).update(readFileSync(new URL("./🔣️schema.json", import.meta.url))).update(readFileSync(compiler)).digest("hex");
-    importProvider = registerSourceAnalysisV1({ id: "build:declared-source-imports:v1", revision, analyze: parseRuntimeImports });
+    const revision = createHash("sha256").update(readRegistrationBytes(fileURLToPath(import.meta.url))).update(readRegistrationBytes(new URL("./🔣️schema.json", import.meta.url))).update(readRegistrationBytes(require.resolve("typescript"))).digest("hex");
+    if (!importParsersV1.has(revision)) importParsersV1.set(revision, parseRuntimeImports);
+    importProvider = registerSourceAnalysisV1({ id: "build:declared-source-imports:v1", revision, analyze: importParsersV1.get(revision) });
   }
   return importProvider;
 }

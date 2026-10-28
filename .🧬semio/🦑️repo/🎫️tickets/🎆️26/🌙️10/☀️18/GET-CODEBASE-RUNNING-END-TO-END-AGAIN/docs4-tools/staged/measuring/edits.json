@@ -1,0 +1,42 @@
+{
+ "name": "measuring",
+ "code": "envleak + hotpath + all of the above (live); measurements of 10-27",
+ "lane": "docs4",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "7b768aa704cb715daea331a3c60713677f3d915c4269d1fd9a93231de873fa50",
+ "needs": [],
+ "edits": [
+  {
+   "id": "measure-section",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "## 📍️ Status",
+   "where": "before",
+   "block": "## 📏️ Measuring a build\n\n- **A no-op is the third run.** After a landing of build-tool code the first run re-keys the graph memo and replans Bazel (sometimes it re-infers projects), the second seals the memo, the third and every later one is hot. Run `bun repo run <project>:<target>` three or four times in a row and report the last ones. A real build also writes the product's own store (the course: `.🧾️store/build.json`), so the first no-op after an executing build can be refused once (graph memo `changed: …/.🧾️store/build.json`).\n- **Measure from one clean environment.** Agent, desktop and session variables and `SEMIO_REPO_PROFILE` no longer re-key actions or end a plan, but every other variable the planner reads does (`planning again: e NAME changed`), and alternating between a shell with your variables and a script without them replans on every switch. Start measured runs from one fixed environment: the gate's `gate-g-tools/product.py` drops `CLAUDE*`, `ANTHROPIC*`, `__CF*`, `XPC_*`, `TERM_SESSION_ID` and `SEMIO_SCRIPT_STALL_MS`, sets `SEMIO_LANGUAGE=en`, runs at `nice -n 10`, ends its own process group above 20 GB or after 45 min of running time (time parked in a queue does not count) and records wall time, the peak resident memory of the whole process tree and the exit code; without it use `env -i` with `PATH`, `HOME` and `TMPDIR`.\n- **Read the proof lines, not only the wall time.** A hot no-op prints `graph: … served from the memo …`, `[bazel] plan reused: … observations …` and Bazel's `INFO: 1 process: 1 internal` (nothing executed). `7 worker` there means actions re-executed: compare the `t_*.input` files of two runs in the generated Bazel workspace to find the one that moved. Host load changes absolute seconds by a factor of 2-4 (compare CPU time), waiting in the capacity queue is not part of the build, and a peer's landing between two runs is one replan.\n- **`SEMIO_REPO_PROFILE=1|json`** prints the phase table of every process and is safe to leave on: its output goes to standard error, never keys an action and does not end a plan (it used to re-execute seven course actions on every run). One-line edit probe: append a line to a product source, run, restore the file byte for byte, run again; both runs must print `plan reused` and only the affected action executes.\n- **Measured 10-27** (32 GB Mac, load 11-55, 16 GB budget simulated by policy): architecture course hot no-op 10.0-10.1 s at 1.07-1.58 GB (memo served, plan reused), one-line edit 30.5 s, revert 45-50 s; print hot no-op 20-45 s, one-line edit 105 s, revert 20 s; dashboard build 140-190 s, plan reused.\n"
+  },
+  {
+   "id": "measure-section",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "## 📍️ Stand",
+   "where": "before",
+   "block": "## 📏️ Einen Build messen\n\n- **Ein No-op ist der dritte Lauf.** Nach einer Landung von Code des Build-Werkzeugs schlüsselt der erste Lauf das Graph-Memo neu und plant Bazel neu (manchmal leitet er Projekte neu ab), der zweite versiegelt das Memo, der dritte und jeder spätere ist heiß. `bun repo run <Projekt>:<Target>` drei- oder viermal hintereinander starten und die letzten berichten. Ein echter Build schreibt auch den eigenen Store des Produkts (der Kurs: `.🧾️store/build.json`), deshalb kann der erste No-op nach einem ausführenden Build einmal abgelehnt werden (Graph-Memo `changed: …/.🧾️store/build.json`).\n- **Aus einer sauberen Umgebung messen.** Variablen von Agent, Desktop und Sitzung und `SEMIO_REPO_PROFILE` schlüsseln Aktionen nicht mehr neu und beenden keinen Plan, jede andere Variable, die der Planer liest, tut es aber (`planning again: e NAME changed`), und der Wechsel zwischen einer Shell mit deinen Variablen und einem Skript ohne sie plant bei jedem Wechsel neu. Gemessene Läufe aus einer festen Umgebung starten: `gate-g-tools/product.py` des Tors entfernt `CLAUDE*`, `ANTHROPIC*`, `__CF*`, `XPC_*`, `TERM_SESSION_ID` und `SEMIO_SCRIPT_STALL_MS`, setzt `SEMIO_LANGUAGE=en`, läuft mit `nice -n 10`, beendet seine eigene Prozessgruppe über 20 GB oder nach 45 min Laufzeit (in einer Warteschlange geparkte Zeit zählt nicht) und hält Wanduhrzeit, den Spitzenwert des residenten Speichers des ganzen Prozessbaums und den Exit-Code fest; ohne es `env -i` mit `PATH`, `HOME` und `TMPDIR` nutzen.\n- **Die Beweiszeilen lesen, nicht nur die Wanduhrzeit.** Ein heißer No-op gibt `graph: … served from the memo …` (Deutsch: `aus dem Memo geliefert`), `[bazel] plan reused: … observations …` und das `INFO: 1 process: 1 internal` von Bazel aus (nichts ausgeführt). `7 worker` dort heißt: Aktionen liefen neu; die Dateien `t_*.input` zweier Läufe im erzeugten Bazel-Arbeitsbereich vergleichen, um die bewegte zu finden. Die Last des Rechners ändert absolute Sekunden um den Faktor 2-4 (CPU-Zeit vergleichen), das Warten in der Kapazitäts-Warteschlange gehört nicht zum Build, und die Landung eines Peers zwischen zwei Läufen ist ein Neuplanen.\n- **`SEMIO_REPO_PROFILE=1|json`** gibt die Phasentabelle jedes Prozesses aus und darf angeschaltet bleiben: seine Ausgabe geht auf die Standardfehlerausgabe, schlüsselt nie eine Aktion und beendet keinen Plan (früher führte er sieben Kurs-Aktionen bei jedem Lauf neu aus). Probe mit einer Zeile: eine Zeile an eine Produktquelle anhängen, starten, die Datei Byte für Byte zurücksetzen, erneut starten; beide Läufe müssen `plan reused` ausgeben, und nur die betroffene Aktion läuft.\n- **Gemessen 27.10.** (Mac mit 32 GB, Last 11-55, 16-GB-Budget per Policy simuliert): Architektur-Kurs heißer No-op 10,0-10,1 s bei 1,07-1,58 GB (Memo geliefert, Plan wiederverwendet), Ein-Zeilen-Änderung 30,5 s, Zurücksetzen 45-50 s; print heißer No-op 20-45 s, Ein-Zeilen-Änderung 105 s, Zurücksetzen 20 s; Dashboard-Build 140-190 s, Plan wiederverwendet.\n"
+  },
+  {
+   "id": "status-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- Met: dashboard rebuild after a one-line edit under 2 min and under 3 GB; no-wait admission of at least 4 runs on 16 GB with learned sizes; queue time 2.3x lower in the replay; graph-free `cache status` tree 580 MB (was 2363 MB), Bazel worker 98 MB (was 1770 MB), a waiting run 35-75 MB; graph builder flat at 3.7-5.0 GB (was 15-29 GB); one-project graph change 34 s; environment move 144-159 s to 43-52 s; test-owner rediscovery 69 s to 3-5 s.",
+   "where": "after",
+   "block": "- Met since 10-27 (see \"Measuring a build\"): the hot Bazel no-op of the line below is measurable now and takes 10 s at 1.1-1.6 GB for the architecture course (graph memo served, plan reused); a one-line course edit 30 s and a one-line print edit 105 s (targets 60 s and 2 min); the dashboard Rust build 140-190 s. Not met: a hot print no-op under 10 s (20-45 s)."
+  },
+  {
+   "id": "status-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- Erreicht: Dashboard-Neubau nach Ein-Zeilen-Änderung unter 2 min und unter 3 GB; Zulassung von mindestens 4 Läufen ohne Warten bei 16 GB mit gelernten Größen; Wartezeit im Replay 2,3x niedriger; `cache status` ohne Graph 580 MB Prozessbaum (vorher 2363 MB), Bazel-Worker 98 MB (vorher 1770 MB), ein wartender Lauf 35-75 MB; Graph-Erbauer flach bei 3,7-5,0 GB (vorher 15-29 GB); Ein-Projekt-Änderung am Graphen 34 s; Umgebungs-Verschiebung 144-159 s auf 43-52 s; Neu-Entdeckung der Test-Eigner 69 s auf 3-5 s.",
+   "where": "after",
+   "block": "- Erreicht seit 27.10. (siehe „Einen Build messen“): der heiße Bazel-No-op der Zeile darunter ist jetzt messbar und dauert für den Architektur-Kurs 10 s bei 1,1-1,6 GB (Graph-Memo geliefert, Plan wiederverwendet); eine Ein-Zeilen-Änderung des Kurses 30 s und eine Ein-Zeilen-Änderung von print 105 s (Ziele 60 s und 2 min); der Rust-Build des Dashboards 140-190 s. Nicht erreicht: ein heißer print-No-op unter 10 s (20-45 s)."
+  }
+ ]
+}

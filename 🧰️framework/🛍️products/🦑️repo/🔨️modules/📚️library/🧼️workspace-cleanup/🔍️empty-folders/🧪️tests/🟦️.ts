@@ -21,11 +21,11 @@ const world=():string=>{const root=realpathSync(mkdtempSync(join(tmpdir(),"folde
 const root=world();
 const absolute=(path:string):string=>join(root,...path.split("/"));
 for(const row of corpus.empty.dirs)test("empty directory "+row.path,()=>{expect(cleanDirectoryIsEmpty(absolute(row.path))).toBe(row.expected);});
-test("a symlink to an empty directory is not an empty directory",()=>{if(process.platform==="win32")return;const link=absolute("link-to-e");symlinkSync(absolute("e"),link);try{expect(cleanDirectoryIsEmpty(link)).toBe(false);}finally{rmSync(link);}});
+test.skipIf(process.platform==="win32")("a symlink to an empty directory is not an empty directory",()=>{const link=absolute("link-to-e");symlinkSync(absolute("e"),link);try{expect(cleanDirectoryIsEmpty(link)).toBe(false);}finally{rmSync(link);}});
 for(const row of corpus.empty.collect)test("empty folders with protected "+JSON.stringify(row.prefixes),()=>{const rows=cleanCollectEmptyFolderRemovals(root,row.prefixes.map(absolute));expect(rows.map(item=>posix(item.path))).toEqual(row.expected);expect(rows.every(item=>item.kind==="empty-folder"&&item.bytes===0)).toBe(true);});
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

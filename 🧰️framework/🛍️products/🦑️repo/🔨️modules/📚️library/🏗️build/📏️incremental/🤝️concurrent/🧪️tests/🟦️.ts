@@ -46,7 +46,7 @@ test("the schema is valid and validates the fixture, the workloads and the resul
 
 test("the authored workloads are closed, consistent, bilingual and name every executor and every lock class of the acceptance",()=>{
  expect(concurrentWorkloadIssuesV1(workloads)).toEqual([]);
- expect(set.workloads.map(row=>row.id)).toEqual(["disjoint-projects","same-target-cold","warm-fanout","readers-while-edit"]);
+ expect(set.workloads.map(row=>row.id)).toEqual(["disjoint-projects","same-target-cold","warm-fanout","readers-while-edit","product-agents"]);
  const disjoint=set.workloads[0]!;
  expect(disjoint.sessions.map(row=>row.area)).toEqual(["disjoint-ts","disjoint-rust","disjoint-go","disjoint-schema"]);
  expect(new Set(disjoint.sessions.map(row=>row.group)).size).toBe(4);
@@ -162,7 +162,7 @@ test("independence, workload admission, Nx run records, digests, lease traces, m
 });
 
 test("workloads are selected by id and session count, and reports and lists render in both languages with every label",()=>{
- expect(concurrentSelectV1(set,"all",undefined).map(row=>row.sessions.length)).toEqual([3,3,3,3]);
+ expect(concurrentSelectV1(set,"all",undefined).map(row=>row.sessions.length)).toEqual([3,3,3,3,3]);
  expect(concurrentSelectV1(set,["disjoint-projects"],4)[0]!.sessions.map(row=>row.id)).toEqual(["ts","rust","go","schema"]);
  expect(concurrentSelectV1(set,["warm-fanout"],1)[0]!.sessions.length).toBe(1);
  expect(()=>concurrentSelectV1(set,["nope"],undefined)).toThrow("Unknown workload: nope");

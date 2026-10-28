@@ -2,7 +2,7 @@ import {countedCompilerCapacityRequestV1} from "../../../../../../../../../🔨�
 import {verifyCapturedCargoArtifactsV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { readNativeCallerAuthorityV1, stageRepositoryArtifacts, withRepositoryArtifactDestinationV1, repositoryCargoPreparationStorageV1 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import {admitCargoSelectionV1,type CargoSourceBoundaryPolicyV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
-import { withRepositoryCompilerStoreV1, withRepositoryCacheStoreV1, type RepositoryCacheStoreV1, preparedBinaryen } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import { withRepositoryCompilerLaneV1, withRepositoryCacheStoreV1, type RepositoryCacheStoreV1, preparedBinaryen } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import{rendererWasmPublicationV1}from"./📦️publication/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import type {NativeStorageReservationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
@@ -35,7 +35,7 @@ export type TrunkRendererBuild = { readonly rustPackageRoot: string; readonly co
 export async function buildTrunkRenderer(options: TrunkRendererBuild): Promise<void> {
   requireIssuedResourceControlInvocationV1(options.control,options.invocation);const mode=readBuildMode(options.profile),original=scriptInvocationEnvironment(options.invocation,options.environment??process.env),control=createRequestedIssuedResourceControlV1(options.control,buildBudgetMs(),options.signal);
   if(original.SEMIO_BUILD_MODE!==undefined&&readBuildMode(original.SEMIO_BUILD_MODE)!==mode)throw new Error("Renderer mode contradicts its original environment");
-  await withRepositoryCacheStoreV1(options.workspace,"products",options.invocation,control,products=>withRepositoryCompilerStoreV1(options.workspace,mode,control,original,async (store,control)=>{
+  await withRepositoryCacheStoreV1(options.workspace,"products",options.invocation,control,products=>withRepositoryCompilerLaneV1(options.workspace,mode,control,original,{crates:[relative(options.workspace,resolve(options.rustPackageRoot)).replaceAll("\\","/")],unitCache:false},async (store,control)=>{
    await compileTrunkRenderer({...options,control,storage:store.storage,products,sourceBoundary:store.sourceBoundary,signal:control.signal,stateRoot:join(store.root,"trunk"),environment:buildModeEnvironment(mode,store.environment),compilerEnvironment:store.environment});
   }));
 }

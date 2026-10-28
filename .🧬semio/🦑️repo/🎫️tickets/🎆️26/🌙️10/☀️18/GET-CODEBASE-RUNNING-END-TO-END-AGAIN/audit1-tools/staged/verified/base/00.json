@@ -1,0 +1,301 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "🧠️ The graph memo: the slice a graph planner child produced once, kept beside the change journal and served again to the next identical request while the journal proves that nothing the planned generation read has changed. `relevance` is the closed table of what a fact row reads: `path` rows read the entry they name, `none` rows read nothing of the tree, `link` rows follow symbolic links, `resolve` rows resolve a request, `text` rows name their inputs inside their key. A kind this table does not name makes a generation unsealable (fail closed); a law keeps the table equal to the kinds the observation and generation schemas declare. Stamp refinement: the discovery frontier of a generation holds, per directory, the entry stamp (mtime, inode) captured with it; the planner itself treats a directory with an unmoved stamp (and not touched within the racy window of the capture) as one whose names, node types and absences cannot have moved (`stableDirectoriesV1`). A directory of the frontier whose facts are only entries and listings of kinds `Policy.stamped` is STAMPED: a row that adds, removes or renames a name directly inside it is relevant, a row that only says 'modified' (a content edit of a sibling no fact read; the kind is advisory) is settled by one lstat against the stamp kept in the table `.lst`. Directories a resolution or derived fact names, directories read by a kind of `Policy.following` (it follows symbolic links), and directories without a usable stamp are STRICT: every row directly inside is relevant (except the modification of a directory).",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "directory": "graph-memo",
+        "switch": "SEMIO_BUILD_GRAPH_MEMO",
+        "sidecar": "SEMIO_BUILD_GRAPH_MEMO_OUT",
+        "recordSuffix": ".json",
+        "planSuffix": ".plan",
+        "relevanceSuffix": ".rel",
+        "recheckSuffix": ".chk",
+        "stampSuffix": ".lst",
+        "maximumRecordBytes": 8192,
+        "maximumPlanBytes": 268435456,
+        "maximumRelevanceBytes": 67108864,
+        "maximumRecheckBytes": 268435456,
+        "maximumStampBytes": 67108864,
+        "maximumRows": 4000000,
+        "leafSymlinkCheckConcurrency": 64,
+        "environmentPrefixes": [
+          "SEMIO_BUILD_",
+          "SEMIO_GRAPH_",
+          "SEMIO_REPO_"
+        ],
+        "argumentsDenied": [
+          "--parallel"
+        ],
+        "stamped": [
+          "readdir",
+          "readdirNames"
+        ],
+        "following": [
+          "directories"
+        ],
+        "environmentDenied": [
+          "SEMIO_BUILD_GENERATION_PIN",
+          "SEMIO_BUILD_GRAPH_MEMO_EXPECT",
+          "SEMIO_BUILD_GRAPH_MEMO_OUT",
+          "SEMIO_BUILD_GRAPH_PLAN_OUT",
+          "SEMIO_BUILD_GRAPH_REQUESTED_AT",
+          "SEMIO_BUILD_GRAPH_YIELD_ROUND",
+          "SEMIO_BUILD_GRAPH_YIELD_TICKET",
+          "SEMIO_BUILD_INVOCATION_PID",
+          "SEMIO_BUILD_INVOCATION_PIDS",
+          "SEMIO_BUILD_PARALLEL",
+          "SEMIO_BUILD_REUSE_GRAPH",
+          "SEMIO_REPO_PROFILE"
+        ],
+        "relevance": {
+          "file": "path",
+          "exists": "path",
+          "stat": "path",
+          "lstat": "path",
+          "readdir": "path",
+          "readdirNames": "path",
+          "fileExists": "path",
+          "directoryExists": "path",
+          "directories": "path",
+          "typescriptText": "path",
+          "digest": "path",
+          "field": "path",
+          "analysis": "analysis",
+          "realpath": "link",
+          "realpathNative": "link",
+          "typescriptRealpath": "link",
+          "resolve": "resolve",
+          "derived": "text",
+          "closure": "none",
+          "stamp": "none",
+          "registry": "none"
+        },
+        "texts": {
+          "en": {
+            "served": "graph: {projects} projects served from the memo of {seconds} s ago; the journal vouches for {rows} facts and {rechecked} facts outside its sight held, no planner process was started",
+            "refused": "graph: the memo cannot serve this request ({reason}); the graph is planned"
+          },
+          "de": {
+            "served": "graph: {projects} Projekte aus dem Memo von vor {seconds} s geliefert; das Journal bürgt für {rows} Fakten, {rechecked} Fakten ausserhalb seiner Sicht gelten noch, es wurde kein Planer-Prozess gestartet",
+            "refused": "graph: das Memo kann diese Anfrage nicht bedienen ({reason}); der Graph wird geplant"
+          }
+        },
+        "expect": "SEMIO_BUILD_GRAPH_MEMO_EXPECT"
+      }
+    },
+    "Reason": {
+      "enum": [
+        "off",
+        "no-key",
+        "none",
+        "light",
+        "pointer",
+        "generation",
+        "journal",
+        "changed",
+        "stale",
+        "plan",
+        "pin",
+        "error"
+      ]
+    },
+    "Cursor": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}:[0-9]{1,15}$"
+    },
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "Record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "key",
+        "cursor",
+        "sealedAtMs",
+        "state",
+        "manifest",
+        "plan",
+        "pin",
+        "projects"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "key": {
+          "$ref": "#/definitions/Sha256"
+        },
+        "cursor": {
+          "$ref": "#/definitions/Cursor"
+        },
+        "sealedAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pointer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "file",
+            "generation",
+            "manifest"
+          ],
+          "properties": {
+            "file": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            "generation": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "manifest": {
+              "$ref": "#/definitions/Sha256"
+            }
+          }
+        },
+        "relevance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "stamps",
+            "rows",
+            "rechecked"
+          ],
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Sha256"
+            },
+            "stamps": {
+              "$ref": "#/definitions/Sha256"
+            },
+            "rows": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "rechecked": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "plan": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "bytes"
+          ],
+          "properties": {
+            "sha256": {
+              "$ref": "#/definitions/Sha256"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "pin": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "projects": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "state": {
+          "enum": [
+            "light",
+            "sealed"
+          ],
+          "$comment": "light: the slice and the generation it served, kept after the first planner run; sealed: with the relevance of the generation, written by the run that found the same generation again (so the sealing cost is paid only by a repeated request, never by an edit-and-run loop)."
+        },
+        "manifest": {
+          "$ref": "#/definitions/Sha256"
+        }
+      }
+    },
+    "Sidecar": {
+      "$comment": "The relevance of ONE served slice: `rows` counts the fact rows of the owners the served pin covers, of the environment owner and of the pseudo owners that support their derived facts (the selection the planner verified before it served the slice); a stale fact of an owner outside the slice never refuses it. A missing or foreign pin makes the sidecar unsealable (`pin`, `other-generation`).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "pointer",
+        "rows",
+        "rechecked",
+        "directories",
+        "strict",
+        "stamped",
+        "linked",
+        "unsealable"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "pointer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "file",
+            "generation",
+            "manifest"
+          ],
+          "properties": {
+            "file": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            "generation": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "manifest": {
+              "$ref": "#/definitions/Sha256"
+            }
+          }
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rechecked": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "directories": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "strict": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stamped": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "linked": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unsealable": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

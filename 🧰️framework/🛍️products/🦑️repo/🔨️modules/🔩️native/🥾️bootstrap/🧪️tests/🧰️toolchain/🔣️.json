@@ -1,0 +1,182 @@
+{
+  "versions": [
+    {
+      "actual": "0.8.0",
+      "required": "0.8.0",
+      "expected": true
+    },
+    {
+      "actual": "0.8.1",
+      "required": "0.8.0",
+      "expected": true
+    },
+    {
+      "actual": "0.10.0",
+      "required": "0.9.9",
+      "expected": true
+    },
+    {
+      "actual": "1.0.0",
+      "required": "0.99.99",
+      "expected": true
+    },
+    {
+      "actual": "0.8.0",
+      "required": "0.8.1",
+      "expected": false
+    },
+    {
+      "actual": "0.9.9",
+      "required": "0.10.0",
+      "expected": false
+    }
+  ],
+  "rustupRequiredArguments": [
+    "--no-modify-path",
+    "--default-toolchain",
+    "none"
+  ],
+  "linuxPackages": [
+    {
+      "manager": "dnf",
+      "required": [
+        "gcc",
+        "gcc-c++",
+        "libicu-devel",
+        "xdg-utils",
+        "vulkan-loader"
+      ]
+    },
+    {
+      "manager": "apt-get",
+      "required": [
+        "build-essential",
+        "libicu-dev",
+        "xdg-utils",
+        "libvulkan1"
+      ]
+    },
+    {
+      "manager": "pacman",
+      "required": [
+        "base-devel",
+        "icu",
+        "xdg-utils",
+        "vulkan-icd-loader"
+      ]
+    },
+    {
+      "manager": "zypper",
+      "required": [
+        "gcc",
+        "libicu-devel",
+        "xdg-utils",
+        "libvulkan1"
+      ]
+    }
+  ],
+  "rustupToolchainArguments": [
+    "toolchain",
+    "install",
+    "--no-self-update"
+  ],
+  "browserPackages": [
+    {
+      "manager": "dnf",
+      "command": [
+        "dnf",
+        "install",
+        "-y"
+      ],
+      "packages": [
+        "nss",
+        "nspr",
+        "atk",
+        "at-spi2-atk",
+        "cups-libs",
+        "libdrm",
+        "libxkbcommon",
+        "libXcomposite",
+        "libXdamage",
+        "libXfixes",
+        "libXrandr",
+        "mesa-libgbm",
+        "alsa-lib",
+        "libX11",
+        "libxcb",
+        "libXext",
+        "dbus-libs",
+        "expat",
+        "glib2",
+        "xorg-x11-server-Xvfb"
+      ]
+    },
+    {
+      "manager": "pacman",
+      "command": [
+        "pacman",
+        "-Sy",
+        "--needed",
+        "--noconfirm"
+      ],
+      "packages": [
+        "nss",
+        "nspr",
+        "at-spi2-core",
+        "libcups",
+        "libdrm",
+        "libxkbcommon",
+        "libxcomposite",
+        "libxdamage",
+        "libxfixes",
+        "libxrandr",
+        "mesa",
+        "alsa-lib",
+        "libx11",
+        "libxcb",
+        "libxext",
+        "dbus",
+        "expat",
+        "glib2",
+        "xorg-server-xvfb"
+      ]
+    },
+    {
+      "manager": "zypper",
+      "command": [
+        "zypper",
+        "--non-interactive",
+        "install",
+        "--no-recommends"
+      ],
+      "packages": [
+        "mozilla-nss",
+        "mozilla-nspr",
+        "libatk-1_0-0",
+        "libatk-bridge-2_0-0",
+        "libcups2",
+        "libdrm2",
+        "libxkbcommon0",
+        "libXcomposite1",
+        "libXdamage1",
+        "libXfixes3",
+        "libXrandr2",
+        "libgbm1",
+        "libasound2",
+        "libX11-6",
+        "libxcb1",
+        "libXext6",
+        "libdbus-1-3",
+        "libexpat1",
+        "libglib-2_0-0",
+        "xvfb-run",
+        "xorg-x11-server-Xvfb"
+      ]
+    }
+  ],
+  "imageRequiredPackages": [
+    "libvulkan1",
+    "mesa-vulkan-drivers",
+    "xdg-utils"
+  ]
+}

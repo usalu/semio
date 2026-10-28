@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "maximumBytes": 105226698752,
-  "maximumControlBytes": 1048576,
+  "maximumBytes": 135291469824,
+  "maximumControlBytes": 8388608,
   "elastic": {
     "graph": {
       "needBytes": 3221225472,
@@ -49,8 +49,8 @@
     },
     "dependencies": {
       "directory": ".cache/b/d",
-      "capacityBytes": 8589934592,
-      "maximumLogicalBytes": 8588886016
+      "capacityBytes": 38654705664,
+      "maximumLogicalBytes": 38653657088
     },
     "products": {
       "directory": ".cache/b/p",

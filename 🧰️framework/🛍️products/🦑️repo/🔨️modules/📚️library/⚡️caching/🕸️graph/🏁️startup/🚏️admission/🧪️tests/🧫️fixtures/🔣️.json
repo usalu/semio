@@ -2,17 +2,24 @@
   "schemaVersion": 1,
   "GiB": 1073741824,
   "limits": [
-    {"name": "defaults on 64 GiB", "environment": {}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
-    {"name": "8 GiB host", "environment": {}, "memoryGiB": 8, "expected": {"finite": 1, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
-    {"name": "4 GiB host has no finite daemon", "environment": {}, "memoryGiB": 4, "expected": {"finite": 0, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
-    {"name": "256 GiB host stays at the authored maximum", "environment": {}, "memoryGiB": 256, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
-    {"name": "override both", "environment": {"SEMIO_NX_DAEMONS": "4,3"}, "memoryGiB": 8, "expected": {"finite": 4, "watch": 3, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
-    {"name": "override off", "environment": {"SEMIO_NX_DAEMONS": "0"}, "memoryGiB": 64, "expected": {"finite": 0, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
-    {"name": "override capped at 16", "environment": {"SEMIO_NX_DAEMONS": "99,99"}, "memoryGiB": 64, "expected": {"finite": 16, "watch": 16, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
-    {"name": "garbage ignored", "environment": {"SEMIO_NX_DAEMONS": "x,-1", "SEMIO_NX_DAEMON_IDLE_MS": "1.5"}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
-    {"name": "drain override", "environment": {"SEMIO_NX_DAEMON_DRAIN_MS": "2500"}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 2500}},
-    {"name": "drain garbage ignored", "environment": {"SEMIO_NX_DAEMON_DRAIN_MS": "-3"}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
-    {"name": "idle override", "environment": {"SEMIO_NX_DAEMON_IDLE_MS": "1000"}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 1000, "drainMilliseconds": 60000}}
+    {"name": "defaults on 64 GiB", "environment": {}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000, "residentMegabytes": 2048}},
+    {"name": "8 GiB host", "environment": {}, "memoryGiB": 8, "expected": {"finite": 1, "watch": 6, "idleMilliseconds": 120000, "drainMilliseconds": 60000, "residentMegabytes": 1280}},
+    {"name": "4 GiB host has no finite daemon", "environment": {}, "memoryGiB": 4, "expected": {"finite": 0, "watch": 6, "idleMilliseconds": 120000, "drainMilliseconds": 60000, "residentMegabytes": 1280}},
+    {"name": "256 GiB host stays at the authored maximum", "environment": {}, "memoryGiB": 256, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000, "residentMegabytes": 2048}},
+    {"name": "override both", "environment": {"SEMIO_NX_DAEMONS": "4,3"}, "memoryGiB": 8, "expected": {"finite": 4, "watch": 3, "idleMilliseconds": 120000, "drainMilliseconds": 60000, "residentMegabytes": 1280}},
+    {"name": "override off", "environment": {"SEMIO_NX_DAEMONS": "0"}, "memoryGiB": 64, "expected": {"finite": 0, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000, "residentMegabytes": 2048}},
+    {"name": "override capped at 16", "environment": {"SEMIO_NX_DAEMONS": "99,99"}, "memoryGiB": 64, "expected": {"finite": 16, "watch": 16, "idleMilliseconds": 600000, "drainMilliseconds": 60000, "residentMegabytes": 2048}},
+    {"name": "garbage ignored", "environment": {"SEMIO_NX_DAEMONS": "x,-1", "SEMIO_NX_DAEMON_IDLE_MS": "1.5"}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000, "residentMegabytes": 2048}},
+    {"name": "drain override", "environment": {"SEMIO_NX_DAEMON_DRAIN_MS": "2500"}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 2500, "residentMegabytes": 2048}},
+    {"name": "drain garbage ignored", "environment": {"SEMIO_NX_DAEMON_DRAIN_MS": "-3"}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000, "residentMegabytes": 2048}},
+    {"name": "idle override", "environment": {"SEMIO_NX_DAEMON_IDLE_MS": "1000"}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 1000, "drainMilliseconds": 60000, "residentMegabytes": 2048}},
+    {"name": "16 GiB host is lean: two finite daemons, 2 min idle, 1280 MB budget", "environment": {}, "memoryGiB": 16, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 120000, "drainMilliseconds": 60000, "residentMegabytes": 1280}},
+    {"name": "24 GiB is still lean", "environment": {}, "memoryGiB": 24, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 120000, "drainMilliseconds": 60000, "residentMegabytes": 1280}},
+    {"name": "25 GiB is not lean", "environment": {}, "memoryGiB": 25, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000, "residentMegabytes": 2048}},
+    {"name": "idle override beats the lean default", "environment": {"SEMIO_NX_DAEMON_IDLE_MS": "5000"}, "memoryGiB": 16, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 5000, "drainMilliseconds": 60000, "residentMegabytes": 1280}},
+    {"name": "resident budget override", "environment": {"SEMIO_NX_DAEMON_RESIDENT_MB": "900"}, "memoryGiB": 16, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 120000, "drainMilliseconds": 60000, "residentMegabytes": 900}},
+    {"name": "resident budget off", "environment": {"SEMIO_NX_DAEMON_RESIDENT_MB": "0"}, "memoryGiB": 16, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 120000, "drainMilliseconds": 60000, "residentMegabytes": 0}},
+    {"name": "resident garbage ignored", "environment": {"SEMIO_NX_DAEMON_RESIDENT_MB": "1.5"}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000, "residentMegabytes": 2048}}
   ],
   "decisions": [
     {"name": "explicit false", "input": {"explicit": "false", "namespaceLive": true, "live": 0, "limit": 2}, "expected": {"enabled": false, "reason": "explicit"}},
@@ -29,6 +36,27 @@
     {"name": "watch never idles", "state": {"kind": "watch", "openRequests": 0, "lastActivity": 0, "now": 9999999, "idleMilliseconds": 600000}, "expected": false},
     {"name": "idle off", "state": {"kind": "finite", "openRequests": 0, "lastActivity": 0, "now": 9999999, "idleMilliseconds": 0}, "expected": false}
   ],
+  "retire": [
+    {"name": "idle finite over budget retires", "state": {"kind": "finite", "openRequests": 0, "residentBytes": 1500000000, "limitBytes": 1342177280}, "expected": true},
+    {"name": "idle finite under budget stays", "state": {"kind": "finite", "openRequests": 0, "residentBytes": 876320000, "limitBytes": 1342177280}, "expected": false},
+    {"name": "exactly at the budget stays", "state": {"kind": "finite", "openRequests": 0, "residentBytes": 1342177280, "limitBytes": 1342177280}, "expected": false},
+    {"name": "busy finite over budget finishes its work", "state": {"kind": "finite", "openRequests": 1, "residentBytes": 9000000000, "limitBytes": 1342177280}, "expected": false},
+    {"name": "budget off never retires", "state": {"kind": "finite", "openRequests": 0, "residentBytes": 9000000000, "limitBytes": 0}, "expected": false},
+    {"name": "watch daemons never retire", "state": {"kind": "watch", "openRequests": 0, "residentBytes": 9000000000, "limitBytes": 1342177280}, "expected": false}
+  ],
+  "resident": {
+    "now": 1000000,
+    "records": [
+      {"file": "100.json", "pid": 100, "kind": "finite", "rssBytes": 876320000, "atMs": 990000, "alive": true},
+      {"file": "200.json", "pid": 200, "kind": "watch", "rssBytes": 500000000, "atMs": 999000, "alive": true},
+      {"file": "300.json", "pid": 300, "kind": "finite", "rssBytes": 700000000, "atMs": 999000, "alive": false},
+      {"file": "400.json", "pid": 400, "kind": "finite", "rssBytes": 700000000, "atMs": 700000, "alive": true},
+      {"file": "500.json", "pid": 501, "kind": "finite", "rssBytes": 700000000, "atMs": 999000, "alive": true},
+      {"file": "600.json", "pid": 600, "kind": "other", "rssBytes": 700000000, "atMs": 999000, "alive": true}
+    ],
+    "expectedPids": [100, 200],
+    "expectedTotalBytes": 1376320000
+  },
   "yield": [
     {"name": "finite quiet and requested drains", "state": {"kind": "finite", "openRequests": 0, "requested": true}, "expected": true},
     {"name": "finite quiet and not requested stays", "state": {"kind": "finite", "openRequests": 0, "requested": false}, "expected": false},

@@ -1,3 +1,4 @@
+import{isUtf8}from"node:buffer";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
 /** 🧮️ The declared constants of the binary fact index; the schema file is the single source and spells the byte layout. */
@@ -191,4 +192,106 @@ export function decodeFactIndexV1(bytes,{maximumBytes=bytes.length,share=text=>t
  for(let cls=0;cls<classCount;cls++){const r=readList(rowCount),o=readList(ownerCount);classes[cls]={r,o};}
  if(at!==buffer.length)refuse();
  return{version:1,owners,rows,classes};
+}
+
+/**
+ * 🪶️ Opens a binary fact index for verification without building it: the strings stay as bytes of one blob and become text when a row asks for them, the facts stay in the document at their offsets, and a row becomes an object when it is first read. `owners` and `classes` are plain arrays and `rows` answers `length`, `rows[id]` and `rowKindOf(id)`, so what verifies stale facts runs on it unchanged while the resident size follows the rows that are read, not the rows that exist. Every bound the full decoder checks is checked here, including the well formed UTF-8 of every string.
+ */
+export function openFactIndexV1(bytes,{maximumBytes=bytes.length,share=text=>text}={}){
+ if(!(bytes instanceof Uint8Array)||bytes.length>maximumBytes)throw fail("Bounded fact index bytes required");
+ const buffer=Buffer.from(bytes.buffer,bytes.byteOffset,bytes.length),decoder=new TextDecoder("utf-8",{fatal:true});let at=0;
+ const refuse=()=>{throw fail("Closed binary fact index required");};
+ const varint=()=>{
+  let value=0,scale=1;
+  for(let count=0;count<P.maximumVarintBytes;count++){
+   if(at>=buffer.length)refuse();
+   const byte=buffer[at++];value+=(byte&127)*scale;
+   if(byte<128){if(!Number.isSafeInteger(value))refuse();return value;}
+   scale*=128;
+  }
+  return refuse();
+ };
+ const count=()=>{const value=varint();if(value>buffer.length-at)refuse();return value;};
+ if(buffer.length<MAGIC.length||Buffer.compare(buffer.subarray(0,MAGIC.length),MAGIC)!==0)refuse();
+ at=MAGIC.length;
+ const stringCount=count(),kindCount=count(),ownerCount=count(),factCount=count(),rowCount=count(),classCount=count();
+ const lcps=new Uint32Array(stringCount),suffixAt=new Uint32Array(stringCount),suffixLength=new Uint32Array(stringCount),shorter=new Int32Array(stringCount),open=[];let current=Buffer.allocUnsafe(256),currentLength=0;
+ for(let rank=0;rank<stringCount;rank++){
+  const lcp=varint(),suffix=varint();
+  if(lcp>currentLength||suffix>buffer.length-at)refuse();
+  if(rank===0?lcp!==0:lcp===currentLength?suffix===0:suffix===0||buffer[at]<=current[lcp])refuse();
+  const length=lcp+suffix;
+  if(length>current.length){const grown=Buffer.allocUnsafe(Math.max(length,current.length*2));current.copy(grown,0,0,currentLength);current=grown;}
+  buffer.copy(current,lcp,at,at+suffix);if(!isUtf8(current.subarray(0,length)))refuse();lcps[rank]=lcp;while(open.length&&lcps[open[open.length-1]]>=lcp)open.pop();shorter[rank]=open.length?open[open.length-1]:-1;open.push(rank);suffixAt[rank]=at;suffixLength[rank]=suffix;at+=suffix;currentLength=length;
+ }
+ const texts=new Map(),textAt=(id,remember=true)=>{
+  let text=remember?texts.get(id):undefined;
+  if(text===undefined){
+   const parts=[buffer.subarray(suffixAt[id],suffixAt[id]+suffixLength[id])];
+   for(let need=lcps[id],back=shorter[id];need>0;back=shorter[back]){const lcp=lcps[back];parts.push(buffer.subarray(suffixAt[back],suffixAt[back]+need-lcp));need=lcp;}
+   try{text=share(decoder.decode(parts.length===1?parts[0]:Buffer.concat(parts.reverse())));}catch{refuse();}
+   if(remember)texts.set(id,text);
+  }
+  return text;
+ };
+ const stringId=()=>{const id=varint();if(id>=stringCount)refuse();return id;};
+ const kinds=new Array(kindCount);for(let kind=0;kind<kindCount;kind++)kinds[kind]=textAt(stringId());
+ const owners=new Array(ownerCount);for(let owner=0;owner<ownerCount;owner++)owners[owner]=textAt(stringId());
+ const skipValue=depth=>{
+  if(at>=buffer.length)refuse();
+  const tag=buffer[at++];
+  if((tag===T.array||tag===T.object)&&depth>P.maximumDepth)refuse();
+  switch(tag){
+   case T.null:case T.false:case T.true:return;
+   case T.uint:varint();return;
+   case T.negint:if(varint()===0)refuse();return;
+   case T.float:if(buffer.length-at<8||!Number.isFinite(buffer.readDoubleLE(at)))refuse();at+=8;return;
+   case T.string:if(varint()>=stringCount)refuse();return;
+   case T.hex:if(buffer.length-at<32)refuse();at+=32;return;
+   case T.array:{const items=count();for(let item=0;item<items;item++)skipValue(depth+1);return;}
+   case T.object:{const items=count();let previous=-1;for(let item=0;item<items;item++){const key=varint();if(key>=stringCount||key<=previous)refuse();previous=key;skipValue(depth+1);}return;}
+   default:refuse();
+  }
+ };
+ const factAt=new Uint32Array(factCount);
+ for(let fact=0;fact<factCount;fact++){factAt[fact]=at;skipValue(1);}
+ const rowKind=new Uint16Array(rowCount),rowPath=new Uint32Array(rowCount),rowFact=new Uint32Array(rowCount);
+ for(let row=0;row<rowCount;row++){const kind=varint();if(kind>=kindCount)refuse();rowKind[row]=kind;rowPath[row]=stringId();const fact=varint();if(fact>=factCount)refuse();rowFact[row]=fact;}
+ const classes=new Array(classCount);
+ const readList=limit=>{
+  const items=count(),list=new Array(items);let previous=0;
+  for(let item=0;item<items;item++){const zigzag=varint();previous+=zigzag%2?-(zigzag+1)/2:zigzag/2;if(previous<0||previous>=limit)refuse();list[item]=previous;}
+  return list;
+ };
+ for(let cls=0;cls<classCount;cls++){const r=readList(rowCount),o=readList(ownerCount);classes[cls]={r,o};}
+ if(at!==buffer.length)refuse();
+ const readValue=depth=>{
+  const tag=buffer[at++];
+  switch(tag){
+   case T.null:return null;
+   case T.false:return false;
+   case T.true:return true;
+   case T.uint:return varint();
+   case T.negint:return-varint();
+   case T.float:{const value=buffer.readDoubleLE(at);at+=8;return value;}
+   case T.string:return textAt(varint());
+   case T.hex:{const text=buffer.toString("hex",at,at+32);at+=32;return share(text);}
+   case T.array:{const items=varint(),list=new Array(items);for(let item=0;item<items;item++)list[item]=readValue(depth+1);return list;}
+   default:{const items=varint(),out={};for(let item=0;item<items;item++){const name=textAt(varint()),value=readValue(depth+1);if(name==="__proto__")Object.defineProperty(out,name,{value,enumerable:true,writable:true,configurable:true});else out[name]=value;}return out;}
+  }
+ };
+ const materialized=new Array(rowCount),facts=new Array(factCount),rowAt=id=>{
+  let row=materialized[id];
+  if(row===undefined){let fact=facts[rowFact[id]];if(fact===undefined){const resume=at;at=factAt[rowFact[id]];fact=readValue(1);at=resume;facts[rowFact[id]]=fact;}row={fact,kind:kinds[rowKind[id]],path:textAt(rowPath[id],false)};materialized[id]=row;}
+  return row;
+ };
+ const rows=new Proxy([],{
+  get(target,key){
+   if(typeof key==="string"){const id=Number(key);if(Number.isInteger(id)&&id>=0&&id<rowCount&&String(id)===key)return rowAt(id);if(key==="length")return rowCount;}
+   const value=Reflect.get(target,key);
+   return typeof value==="function"?(...args)=>{for(let id=0;id<rowCount;id++)rowAt(id);target.length=rowCount;for(let id=0;id<rowCount;id++)target[id]=rowAt(id);return value.apply(target,args);}:value;
+  },
+ });
+ const rowKindOf=id=>kinds[rowKind[id]];
+ return{version:1,owners,rows,classes,rowKindOf,rowsRead:()=>materialized.reduce((total,row)=>total+(row===undefined?0:1),0)};
 }

@@ -1,0 +1,57 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/📣️diagnostics.json": {
+  "file": "00.json",
+  "base": null,
+  "new": "096964ed65be216ea986a84b0df89b2fa8eb0c65442d835c509eab98c838c6f5"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📣️diagnostics/🟦️.ts": {
+  "file": "01.ts",
+  "base": null,
+  "new": "782882d5321e4ae118ee841be3ea7d38295389f338551ec2a79720db04f6f50f"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📣️diagnostics/🧪️tests/🟦️.ts": {
+  "file": "02.ts",
+  "base": null,
+  "new": "04a690d1e4830274d034ca10a5c12710e005a293b14265f406937bcee00b9131"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts": {
+  "file": "03.ts",
+  "base": "30f8ca8e4490aeb2a690386200cdf08519de72a327d4f72f5f9858a830c76171",
+  "new": "f75baa379aee89e43e3e5c273f1d49dd5b0fd3605466e004e95996a235c884f3"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧪️tests/🟦️.ts": {
+  "file": "04.ts",
+  "base": "e679bd3b6f98f82e423b603345e0965742397a78a7028a0d7d6a8aa03f1388ba",
+  "new": "ce4f88fbc201dd471b75964c86eba1437524c9527f812e268c459c82ea8a1037"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts": {
+  "file": "05.ts",
+  "base": "389b048e0a58ed57e0445de799a42960bff3eee042684c3f0fd2de500d89f9cd",
+  "new": "8c722dcb7acc6b9374b6cf5125c33fe0fe2826519b83aa168db83c94b32842d8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts": {
+  "file": "06.ts",
+  "base": "081cc7fe0cc655c2d73df6fb2ade679043fe2a0e653b0d5b207d016deaa761f3",
+  "new": "24ed2b60779eaf934ecec9deac5a2cb51312e6cf23a1ae9c4152fdb110864e49"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🔣️.json": {
+  "file": "07.json",
+  "base": "eb2637c99f39e06a89d28443944e6af0413bc316a7dcdc231a6ba25e08c348a0",
+  "new": "edbe16e5343f3d71af63aea56db8f66bc3016ffda5fb768c9828efe6b4ca7b5a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "08.ts",
+  "base": "73e86e068147542f722f48a9d083f06b4c28efcaced09f26e7ba788fa88a85b1",
+  "new": "c5c98c536a3d7e0e16944b89dc38c672db7076e806ef1f3ac8d4123d457604b2"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🟦️.ts": {
+  "file": "09.ts",
+  "base": "6ad40cdb6daf3989f63bd23da3695db3b166d4de484f506a99e76b02f8c90bea",
+  "new": "b9bd82babddd335f23d03c647452c1489aea3a3c0a1a8f5088b0f9765066799c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔌️backend/🟦️.ts": {
+  "file": "10.ts",
+  "base": "340465144e523ff0a40ae3f2a316c8733f2a6b0f9c784b677853c08053152460",
+  "new": "08a2bcb0e9b85e7fcd10073965ff9811fe6fe1bcb65abd0898ba1cf2483d2389"
+ }
+}

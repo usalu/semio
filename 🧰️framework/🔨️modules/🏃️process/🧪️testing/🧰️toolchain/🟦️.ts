@@ -1,3 +1,4 @@
+import {noticeLanguagesV1} from "../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import{spawnSync}from"node:child_process";
 import{chmodSync,lstatSync,readdirSync}from"node:fs";
 import{join}from"node:path";
@@ -30,10 +31,9 @@ export function resolveTestToolV1(tool:TestToolNameV1,port:TestToolchainPortV1=s
  return Object.freeze({tool,path:null,tried});
 }
 
-/** 🗣️ Renders the missing-tool message in an explicit language: SEMIO_LANGUAGE, then the locale, then the first declared language. */
+/** 🗣️ Renders the missing-tool message in the language the language protocol chooses, one line per declared language when it chooses none. */
 export function describeMissingTestToolV1(resolution:TestToolResolutionV1,environment:Readonly<Record<string,string|undefined>>=process.env):string{
- const language=[environment.SEMIO_LANGUAGE,environment.LC_ALL,environment.LC_MESSAGES,environment.LANG].map(value=>value?.toLowerCase().split(/[._@-]/u)[0]).find(tag=>tag!==undefined&&(protocol.languages as readonly string[]).includes(tag))??protocol.languages[0]!;
- return protocol.messages.missing[language as "en"].replaceAll("{tool}",resolution.tool).replaceAll("{tried}",resolution.tried.join(", "));
+ return noticeLanguagesV1(protocol.languages as readonly ("en"|"de")[],environment).map(language=>protocol.messages.missing[language].replaceAll("{tool}",resolution.tool).replaceAll("{tried}",resolution.tried.join(", "))).join("\n");
 }
 
 const resolved=new Map<TestToolNameV1,TestToolResolutionV1>();

@@ -1,0 +1,12 @@
+import{resolve,join}from"node:path";
+import{buildSourceClosureIdentityV1}from"../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟦️.ts";
+import{captureNxAuthorizerSourcesV1,nxAuthorizerCapturedBytesV1,nxAuthorizerCapturedImportsV1}from"../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
+const root=resolve(import.meta.dirname,"../../../../../../../..");
+const c=await captureNxAuthorizerSourcesV1(root,process.argv[2]!,new AbortController().signal,{installed:true});
+const lap=(label:string,t:number)=>console.log(label,Math.round(performance.now()-t));
+let t=performance.now();const bytes=nxAuthorizerCapturedBytesV1(c);lap("bytes copy",t);
+t=performance.now();const imports=nxAuthorizerCapturedImportsV1(root,c);lap("imports projection",t);
+t=performance.now();const files=c.manifest.sources.map(r=>({...r,base64:Buffer.from(bytes.get(r.path)!).toString("base64"),imports:imports.get(r.path)!}));lap("base64",t);
+const snapshot={version:1 as const,root,entry:process.argv[2]!,files};
+t=performance.now();const id=buildSourceClosureIdentityV1(snapshot as never);lap("identity (validate+stringify+hash)",t);
+t=performance.now();const text=JSON.stringify(snapshot);lap("stringify",t);console.log("text bytes",text.length);

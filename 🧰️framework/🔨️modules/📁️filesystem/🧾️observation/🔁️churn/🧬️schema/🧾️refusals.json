@@ -329,6 +329,17 @@
             }
           },
           {
+            "id": "filesystem-race",
+            "disposition": "reobserve",
+            "layer": "snapshot",
+            "markers": [],
+            "messages": [],
+            "describe": {
+              "en": "A raw filesystem error (ENOENT, ENOTDIR, EISDIR, ESTALE, ELOOP; on Windows EBUSY, EPERM, EACCES) of a READ of a workspace path that a peer deleted, renamed, replaced or held, classified once by the race table and only when a directory around the path changed after the process started: a path that is back is read again by the layer that read it, a path that is gone is cured by a new snapshot or a new process and never by reading it again. Printed at the end of a failed child's output, the same table makes the lane run the step again.",
+              "de": "Ein roher Dateisystemfehler (ENOENT, ENOTDIR, EISDIR, ESTALE, ELOOP; unter Windows EBUSY, EPERM, EACCES) beim LESEN eines Arbeitsbereichspfads, den ein anderer Prozess löschte, umbenannte, ersetzte oder festhielt, einmal von der Wettlauftabelle eingeordnet und nur dann, wenn sich ein Verzeichnis um den Pfad nach dem Prozessstart änderte: ein Pfad, der wieder da ist, wird von der lesenden Schicht erneut gelesen, ein verschwundener Pfad wird durch einen neuen Schnappschuss oder einen neuen Prozess geheilt und nie durch erneutes Lesen. Steht der Fehler am Ende der Ausgabe eines gescheiterten Kindes, lässt dieselbe Tabelle die Bahn den Schritt erneut ausführen."
+            }
+          },
+          {
             "id": "stale-loaded-implementation",
             "disposition": "reexec",
             "markers": [
@@ -419,6 +430,18 @@
                 "sites": [
                   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs"
                 ]
+              },
+              {
+                "text": "Stale loaded closure-read protocol",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts"
+                ]
+              },
+              {
+                "text": "Stale loaded build command loader",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🟦️.ts"
+                ]
               }
             ],
             "describe": {
@@ -430,7 +453,20 @@
             "id": "escaped-concurrent-edit",
             "disposition": "reexec",
             "markers": [],
-            "messages": [],
+            "messages": [
+              {
+                "text": "then starting the command again with a new snapshot",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🧬️schema/🔣️.json"
+                ]
+              },
+              {
+                "text": "dann startet der Befehl mit einem neuen Schnappschuss erneut",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🧬️schema/🔣️.json"
+                ]
+              }
+            ],
             "describe": {
               "en": "A typed concurrent edit that left every layer of the process (a failure inside a tracked unit closes its owners, so nothing in the process can run the step again): the outermost command waits 2/8/30 s and starts again with a new snapshot, bounded, EN/DE announced; a command inside another only yields exit 75.",
               "de": "Eine getypte gleichzeitige Bearbeitung, die jede Schicht des Prozesses verlassen hat (ein Fehler in einer verfolgten Einheit schließt deren Besitzer, nichts im Prozess kann den Schritt wiederholen): der äußerste Befehl wartet 2/8/30 s und startet mit einem neuen Schnappschuss erneut, begrenzt, EN/DE gemeldet; ein Befehl in einem anderen meldet nur Exit 75."
@@ -463,7 +499,20 @@
             "id": "half-edited-module",
             "disposition": "reexec",
             "markers": [],
-            "messages": [],
+            "messages": [
+              {
+                "text": "edited by another process while this command loaded it",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🧬️schema/🔣️.json"
+                ]
+              },
+              {
+                "text": "von einem anderen Prozess bearbeitet, während dieser Befehl sie lud",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🧬️schema/🔣️.json"
+                ]
+              }
+            ],
             "describe": {
               "en": "A module of the implementation failed to parse, resolve or export while a peer was editing it: the outermost command waits and starts again, bounded.",
               "de": "Ein Modul der Implementierung ließ sich nicht parsen, auflösen oder exportieren, während ein Peer es bearbeitete: der äußerste Befehl wartet und startet neu, begrenzt."

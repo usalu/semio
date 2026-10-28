@@ -5,6 +5,8 @@ import {join} from "node:path";
 import {buildKeyEnvironmentV1,parseBuildDirectivesV1,sha256V1,toolchainIdentityV1,UNIT_CACHE_POLICY_V1,type RustcUnitV1} from "../🔏️key/🟦️.ts";
 import {acquireUnitClaimV1,type ClaimV1} from "../🔒️lock/🟦️.ts";
 import {digestFileV1,emitUnitEventV1,lookupBuildRunV1,publishBuildRunV1,restoreBuildRunV1,type UnitEventV1} from "../💾️store/🟦️.ts";
+import {jobserverChildEnvironmentV1,jobserverClosedMessageV1,jobserverPlanV1,jobserverProbeShellV1,jobserverStdioV1,shellQuoteV1} from "../🎰️jobserver/🟦️.ts";
+import {isMainModuleV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1;
 type Environment=Readonly<Record<string,string|undefined>>;
@@ -16,14 +18,13 @@ export function isBuildScriptUnitV1(unit:RustcUnitV1):boolean{return unit.crateN
 /** 🎚️ Whether build script runs are shared: switched on by the launcher, and only where an executable text file can stand in for a binary. */
 export function buildScriptsEnabledV1(environment:Environment,platform:NodeJS.Platform=process.platform):boolean{return environment.SEMIO_UNIT_CACHE_BUILD_SCRIPTS==="on"&&(policy.buildScript.platforms as readonly string[]).includes(platform);}
 
-/** 🪞️ The text of the stand-in Cargo runs instead of the compiled build script: it consults the cache and otherwise runs the real executable beside it. */
+/** 🪞️ The text of the stand-in Cargo runs instead of the compiled build script: a POSIX `sh` script, because it must look at the descriptors Cargo handed down BEFORE the runtime opens descriptors of its own ({@link jobserverProbeShellV1}), then it starts this module, which consults the cache and otherwise runs the real executable beside it with the pool of Cargo's job tokens handed on. */
 export function shimSourceV1(real:string,runtime:string=process.execPath):string{
- return `#!${runtime}\n// ${policy.buildScript.shimMarker}\nimport {runBuildScriptV1} from ${JSON.stringify(module)};\nprocess.exitCode=await runBuildScriptV1(${JSON.stringify(real)},process.argv.slice(2),process.env,process.cwd());\n`;
+ return["#!/bin/sh",`# ${policy.buildScript.shimMarker}`,...jobserverProbeShellV1(),`exec ${shellQuoteV1(runtime)} ${shellQuoteV1(module)} ${shellQuoteV1(real)} "$@"`,""].join("\n");
 }
 
 /** 🔁️ Replaces the compiled build script `artifact` by its stand-in; the real executable moves to `<artifact>.real`. Idempotent. */
 export function installBuildScriptShimV1(artifact:string,runtime:string=process.execPath):string|undefined{
- if(/\s/u.test(runtime))return undefined;
  const real=artifact+".real";
  if(!isShimV1(artifact)){rmSync(real,{force:true});renameSync(artifact,real);}
  rmSync(artifact,{force:true});writeFileSync(artifact,shimSourceV1(real,runtime));chmodSync(artifact,0o755);
@@ -37,7 +38,9 @@ export function isShimV1(path:string):boolean{
 
 function runReal(real:string,args:readonly string[],environment:Environment,cwd:string,capture:boolean):Promise<{status:number;stdout:string;stderr:string}>{
  return new Promise((done,fail)=>{
-  const child=spawn(real,[...args],{cwd,env:environment as NodeJS.ProcessEnv,stdio:capture?["inherit","pipe","pipe"]:"inherit"}),out:Buffer[]=[],err:Buffer[]=[];
+  const jobs=jobserverPlanV1(environment),message=jobserverClosedMessageV1(jobs);
+  if(message)process.stderr.write(message+"\n");
+  const child=spawn(real,[...args],{cwd,env:jobserverChildEnvironmentV1(environment,jobs),stdio:jobserverStdioV1(jobs.descriptors,capture)}),out:Buffer[]=[],err:Buffer[]=[];
   for(const signal of["SIGINT","SIGTERM"] as const)process.once(signal,()=>child.kill(signal));
   if(capture){child.stdout!.on("data",chunk=>{out.push(chunk);process.stdout.write(chunk);});child.stderr!.on("data",chunk=>{err.push(chunk);process.stderr.write(chunk);});}
   child.on("error",fail);
@@ -77,3 +80,8 @@ export async function runBuildScriptV1(real:string,args:readonly string[],enviro
   return 0;
  }finally{claim?.release();}
 }
+
+/** 🏁️ What the stand-in runs: the real executable is the first argument, the arguments Cargo passed follow. Resolves to the exit status. */
+export function runBuildScriptMainV1(argv:readonly string[],environment:Environment,cwd:string):Promise<number>{return runBuildScriptV1(argv[0]!,argv.slice(1),environment,cwd);}
+
+if(isMainModuleV1(import.meta.url))runBuildScriptMainV1(process.argv.slice(2),process.env,process.cwd()).then(status=>{process.exitCode=status;});

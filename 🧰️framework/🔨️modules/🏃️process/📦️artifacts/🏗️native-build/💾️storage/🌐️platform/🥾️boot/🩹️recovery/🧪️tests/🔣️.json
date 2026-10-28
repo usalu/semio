@@ -2357,6 +2357,216 @@
           }
         ]
       }
+    },
+    {
+      "name": "a workspace partition attached without owners and idle with a free lease is detached",
+      "source": "derived",
+      "observation": {
+        "version": 1,
+        "bootSession": "1E4A0CBE-3710-481F-9614-F8F1FCBD61D0",
+        "bootEpochMs": 1792504809039,
+        "facts": [
+          {
+            "family": "leaked-image",
+            "scope": "i",
+            "key": "bf971d32c5bf4e3917004378398cbab1ca8afb9802abcea93282580a2f3846ba",
+            "backing": "present",
+            "location": "workspace",
+            "idle": true,
+            "lease": "free",
+            "attachment": "noowners"
+          }
+        ]
+      },
+      "plan": {
+        "version": 1,
+        "bootSession": "1E4A0CBE-3710-481F-9614-F8F1FCBD61D0",
+        "steps": [
+          {
+            "index": 0,
+            "phase": 60,
+            "family": "leaked-image",
+            "scope": "i",
+            "action": "detach-image",
+            "target": "bf971d32c5bf4e3917004378398cbab1ca8afb9802abcea93282580a2f3846ba",
+            "reason": "stale-attachment"
+          }
+        ],
+        "retained": []
+      }
+    },
+    {
+      "name": "a workspace partition whose attach never mounted and whose lease is free is detached",
+      "source": "derived",
+      "observation": {
+        "version": 1,
+        "bootSession": "1E4A0CBE-3710-481F-9614-F8F1FCBD61D0",
+        "bootEpochMs": 1792504809039,
+        "facts": [
+          {
+            "family": "leaked-image",
+            "scope": "i",
+            "key": "bf971d32c5bf4e3917004378398cbab1ca8afb9802abcea93282580a2f3846ba",
+            "backing": "present",
+            "location": "workspace",
+            "idle": true,
+            "lease": "free",
+            "attachment": "unmounted"
+          }
+        ]
+      },
+      "plan": {
+        "version": 1,
+        "bootSession": "1E4A0CBE-3710-481F-9614-F8F1FCBD61D0",
+        "steps": [
+          {
+            "index": 0,
+            "phase": 60,
+            "family": "leaked-image",
+            "scope": "i",
+            "action": "detach-image",
+            "target": "bf971d32c5bf4e3917004378398cbab1ca8afb9802abcea93282580a2f3846ba",
+            "reason": "stale-attachment"
+          }
+        ],
+        "retained": []
+      }
+    },
+    {
+      "name": "a stale workspace attachment with a held lease is kept",
+      "source": "derived",
+      "observation": {
+        "version": 1,
+        "bootSession": "1E4A0CBE-3710-481F-9614-F8F1FCBD61D0",
+        "bootEpochMs": 1792504809039,
+        "facts": [
+          {
+            "family": "leaked-image",
+            "scope": "i",
+            "key": "bf971d32c5bf4e3917004378398cbab1ca8afb9802abcea93282580a2f3846ba",
+            "backing": "present",
+            "location": "workspace",
+            "idle": true,
+            "lease": "held",
+            "attachment": "noowners"
+          }
+        ]
+      },
+      "plan": {
+        "version": 1,
+        "bootSession": "1E4A0CBE-3710-481F-9614-F8F1FCBD61D0",
+        "steps": [],
+        "retained": [
+          {
+            "family": "leaked-image",
+            "scope": "i",
+            "verdict": "keep",
+            "reason": "live"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a stale workspace attachment recently written is kept",
+      "source": "derived",
+      "observation": {
+        "version": 1,
+        "bootSession": "1E4A0CBE-3710-481F-9614-F8F1FCBD61D0",
+        "bootEpochMs": 1792504809039,
+        "facts": [
+          {
+            "family": "leaked-image",
+            "scope": "i",
+            "key": "bf971d32c5bf4e3917004378398cbab1ca8afb9802abcea93282580a2f3846ba",
+            "backing": "present",
+            "location": "workspace",
+            "idle": false,
+            "lease": "unavailable",
+            "attachment": "unmounted"
+          }
+        ]
+      },
+      "plan": {
+        "version": 1,
+        "bootSession": "1E4A0CBE-3710-481F-9614-F8F1FCBD61D0",
+        "steps": [],
+        "retained": [
+          {
+            "family": "leaked-image",
+            "scope": "i",
+            "verdict": "keep",
+            "reason": "live"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a stale workspace attachment without a lease catalog is kept",
+      "source": "derived",
+      "observation": {
+        "version": 1,
+        "bootSession": "1E4A0CBE-3710-481F-9614-F8F1FCBD61D0",
+        "bootEpochMs": 1792504809039,
+        "facts": [
+          {
+            "family": "leaked-image",
+            "scope": "i",
+            "key": "bf971d32c5bf4e3917004378398cbab1ca8afb9802abcea93282580a2f3846ba",
+            "backing": "present",
+            "location": "workspace",
+            "idle": true,
+            "lease": "unavailable",
+            "attachment": "noowners"
+          }
+        ]
+      },
+      "plan": {
+        "version": 1,
+        "bootSession": "1E4A0CBE-3710-481F-9614-F8F1FCBD61D0",
+        "steps": [],
+        "retained": [
+          {
+            "family": "leaked-image",
+            "scope": "i",
+            "verdict": "keep",
+            "reason": "unleased"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a stale attachment of another location is never swept",
+      "source": "derived",
+      "observation": {
+        "version": 1,
+        "bootSession": "1E4A0CBE-3710-481F-9614-F8F1FCBD61D0",
+        "bootEpochMs": 1792504809039,
+        "facts": [
+          {
+            "family": "leaked-image",
+            "scope": "i",
+            "key": "bf971d32c5bf4e3917004378398cbab1ca8afb9802abcea93282580a2f3846ba",
+            "backing": "present",
+            "location": "other",
+            "idle": true,
+            "lease": "free",
+            "attachment": "noowners"
+          }
+        ]
+      },
+      "plan": {
+        "version": 1,
+        "bootSession": "1E4A0CBE-3710-481F-9614-F8F1FCBD61D0",
+        "steps": [],
+        "retained": [
+          {
+            "family": "leaked-image",
+            "scope": "i",
+            "verdict": "keep",
+            "reason": "owned"
+          }
+        ]
+      }
     }
   ],
   "identities": [

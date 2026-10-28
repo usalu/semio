@@ -1,0 +1,284 @@
+{
+ "files": {
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🔁️incremental/🟦️.ts": [
+   {
+    "old": "import {isAbsolute,join,resolve} from \"node:path\";\n",
+    "new": "import {isAbsolute,join,resolve} from \"node:path\";\nimport {runtimeCollectGarbageV1} from \"../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts\";\n"
+   },
+   {
+    "old": "collect=():void=>{const host=globalThis as {Bun?:{gc(force:boolean):void};gc?:()=>void};if(host.Bun)host.Bun.gc(true);else host.gc?.();},",
+    "new": "collect=():void=>runtimeCollectGarbageV1(true),"
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🟦️.ts": [
+   {
+    "old": "resolve(import.meta.dir,\"..\")",
+    "new": "resolve(import.meta.dirname,\"..\")"
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🟦️.ts": [
+   {
+    "old": "resolve(import.meta.dir,\"..\")",
+    "new": "resolve(import.meta.dirname,\"..\")"
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️ci-report/🗂️suites/🟦️.ts": [
+   {
+    "old": "resolve(import.meta.dir,\"..\",\"..\",",
+    "new": "resolve(import.meta.dirname,\"..\",\"..\","
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧊️memo/🟦️.ts": [
+   {
+    "old": "import{dirname,join,resolve}from\"node:path\";\n",
+    "new": "import{dirname,join,resolve}from\"node:path\";\nimport{runtimeKeyV1}from\"../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts\";\n"
+   },
+   {
+    "old": "String((globalThis as {Bun?:{version?:string}}).Bun?.version??process.version)+\"\\0\"",
+    "new": "runtimeKeyV1()+\"\\0\""
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/📤️promotion/🟦️.ts": [
+   {
+    "old": "import{Database}from\"bun:sqlite\";\n",
+    "new": "import{SqliteDatabaseV1}from\"../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗃️sqlite/🟦️.ts\";\nimport{TranspilerV1}from\"../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🔬️source/🟦️.ts\";\n"
+   },
+   {
+    "old": "compilers=new Map<string,InstanceType<typeof Bun.Transpiler>>()",
+    "new": "compilers=new Map<string,TranspilerV1>()"
+   },
+   {
+    "old": "new Bun.Transpiler({loader,target:\"bun\"})",
+    "new": "new TranspilerV1({loader,target:\"runtime\"})"
+   },
+   {
+    "old": "new Database(entry.lock)",
+    "new": "new SqliteDatabaseV1(entry.lock)"
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/⌨️main/🟦️.ts": [
+   {
+    "old": "import {runChangeJournalMainV1} from \"../🟦️.ts\";\n",
+    "new": "import {runChangeJournalMainV1} from \"../🟦️.ts\";\nimport {isMainModuleV1} from \"../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts\";\n"
+   },
+   {
+    "old": "if(import.meta.main)process.exit(",
+    "new": "if(isMainModuleV1(import.meta.url))process.exit("
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🚪️cli/🟦️.ts": [
+   {
+    "old": "import {onTerminationV1}",
+    "new": "import {isMainModuleV1, onTerminationV1}"
+   },
+   {
+    "old": "if (import.meta.main) process.exit(",
+    "new": "if (isMainModuleV1(import.meta.url)) process.exit("
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts": [
+   {
+    "old": "import {liveImplementationStartV1} from \"../🏛️sealed/🧭️mode/🟦️.ts\";\n",
+    "new": "import {liveImplementationStartV1} from \"../🏛️sealed/🧭️mode/🟦️.ts\";\nimport {realpathSync} from \"node:fs\";\n\n/** 🏁️ Tells whether this file is the process entry point; the door cannot import the runtime seam without leaving its startup module budget, so it compares the real paths itself, exactly as the seam does for every other module. */\nconst mainEntryV1=():boolean=>{const entry=process.argv[1];if(entry===undefined||entry===\"\")return false;try{const canonical=(path:string):string=>process.platform===\"win32\"?realpathSync(path).toLowerCase():realpathSync(path);return canonical(entry)===canonical(import.meta.filename);}catch{return false;}};\n"
+   },
+   {
+    "old": "if(import.meta.main){",
+    "new": "if(mainEntryV1()){"
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": [
+   {
+    "old": "execPath:process.execPath,bun:(globalThis as {Bun?:{version?:string}}).Bun?.version??process.version,platform:",
+    "new": "execPath:process.execPath,bun:runtimeIdentityV1().version,platform:"
+   },
+   {
+    "old": "executable = ctx.attr.bun",
+    "new": "executable = ctx.attr.runtime",
+    "count": 3
+   },
+   {
+    "old": "\"bun\": attr.string(mandatory = True)",
+    "new": "\"runtime\": attr.string(mandatory = True)",
+    "count": 3
+   },
+   {
+    "old": "    bun = ${quote(input.bun)},",
+    "new": "    runtime = ${quote(input.bun)},",
+    "count": 1
+   },
+   {
+    "old": "[\"bun\",quote(input.bun)]",
+    "new": "[\"runtime\",quote(input.bun)]",
+    "count": 1
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs": [
+   {
+    "old": "import { isRuntimeBuiltinSpecifierV1 }",
+    "new": "import { isRuntimeBuiltinSpecifierV1, runtimeIdsV1 }"
+   },
+   {
+    "old": "for(const condition of[\"development\",\"import\",\"default\",\"node\",\"bun\"])",
+    "new": "for(const condition of[\"development\",\"import\",\"default\",\"node\",...runtimeIdsV1()])"
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/⌨️command/🟦️.ts": [
+   {
+    "old": "const ffi=await import(\"bun:ffi\");",
+    "new": "const{runtimeNativeSystemV1}=await import(\"../../../../../../📦️packages/🟦️typescript/⚙️runtime/🧲️native/🟦️.ts\"),ffi=runtimeNativeSystemV1();"
+   },
+   {
+    "old": "return Bun.which(\"repo\",{PATH:environment.PATH??\"\"})??undefined;",
+    "new": "const extensions=process.platform===\"win32\"?(environment.PATHEXT??\".EXE;.CMD;.BAT\").split(\";\").filter(Boolean):[\"\"];\n  for(const directory of (environment.PATH??\"\").split(delimiter)){\n    if(directory===\"\")continue;\n    for(const extension of extensions){\n      const candidate=join(directory,\"repo\"+extension);\n      try{if(!lstatSync(candidate).isFile()&&!statSync(candidate).isFile())continue;if(process.platform!==\"win32\")accessSync(candidate,constants.X_OK);return candidate;}catch{}\n    }\n  }\n  return undefined;"
+   },
+   {
+    "old": "import{lstatSync,readFileSync,readdirSync}from\"node:fs\";",
+    "new": "import{accessSync,constants,lstatSync,readFileSync,readdirSync,statSync}from\"node:fs\";"
+   },
+   {
+    "old": "/** 🔎️ Finds the `repo` launcher on the PATH. */",
+    "new": "/** 🔎️ Finds the `repo` launcher on the PATH with plain file system calls: this module runs in the preload of every process, so it loads neither the runtime adapter nor the runtime seam. */"
+   },
+   {
+    "old": "export async function guardRuntimeV1(",
+    "new": "/** 🏷️ The version of the selected pinned runtime that is running this process, read from the `process.versions` entry named by the pin registry, so the preload names no runtime and loads nothing. */\nexport function runningVersionV1(root:string,environment:Readonly<Record<string,string|undefined>>):string{\n  const registry=readRuntimePinRegistryV1(root);\n  return (process.versions as Readonly<Record<string,string|undefined>>)[environment[registry.cache.runtimeEnvironment]||registry.selected]??\"\";\n}\n\nexport async function guardRuntimeV1("
+   },
+   {
+    "old": "options.running??process.versions.bun??\"\"",
+    "new": "options.running??runningVersionV1(root,environment)"
+   },
+   {
+    "old": "\"tools\",\"exec\",\"--light\",\"bun\",\"--\"",
+    "new": "\"tools\",\"exec\",\"--light\",check.name,\"--\""
+   },
+   {
+    "old": "userCacheDirectory:userCacheDirectoryV1(process.platform,environment,homedir())",
+    "new": "userCacheDirectory:userCacheDirectoryV1(process.platform,environment,environment.HOME||environment.USERPROFILE||homedir())"
+   }
+  ],
+  "🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts": [
+   {
+    "old": "/** 🔑️ Gives stable identity text for cache keys, such as `bun:1.3.14`. */",
+    "new": "/** 🔤️ Lists the names of the global namespace objects of every registered runtime in registry order: the detection key with a capital first letter, which source analyzers need to recognise runtime members in foreign code. */\nexport function runtimeNamespaceNamesV1(): string[] { return (RUNTIME_REGISTRY_V1.runtimes as readonly { detect: string }[]).map(row => row.detect.charAt(0).toUpperCase() + row.detect.slice(1)); }\n/** 🔑️ Gives stable identity text for cache keys, such as `bun:1.3.14`. */"
+   }
+  ],
+  "🧰️framework/📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts": [
+   {
+    "old": "runtimeKeyV1, ",
+    "new": "runtimeKeyV1, runtimeNamespaceNamesV1, "
+   }
+  ],
+  "🧰️framework/🔨️modules/⚙️runtime/🧪️tests/🟦️.ts": [
+   {
+    "old": "runtimeKeyV1, runtimeObserveSpawnV1,",
+    "new": "runtimeKeyV1, runtimeNamespaceNamesV1, runtimeObserveSpawnV1,"
+   },
+   {
+    "old": "    expect(runtimeIdsV1()).toEqual(ids);\n",
+    "new": "    expect(runtimeIdsV1()).toEqual(ids);\n    expect(runtimeNamespaceNamesV1()).toEqual(runtimeCommandNamesV1().map(word => word.charAt(0).toUpperCase() + word.slice(1)));\n"
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🗺️test-layout/🟦️.ts": [
+   {
+    "old": "import { runtimeParseTomlV1 } from \"../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts\";\n",
+    "new": "import { runtimeParseTomlV1 } from \"../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts\";\nimport { runtimeNamespaceNamesV1 } from \"../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts\";\n"
+   },
+   {
+    "old": "call.expression.text === \"Bun\" && call.name.text === \"file\"",
+    "new": "runtimeNamespaceNamesV1().includes(call.expression.text) && call.name.text === \"file\""
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📌️runtime-pin-contract/🟦️.ts": [
+   {
+    "old": "environment={SEMIO_LANGUAGE:\"en\",PATH:\"/usr/bin:/bin\"},host=systemRuntimePinHostV1(directory,environment)",
+    "new": "environment={SEMIO_LANGUAGE:\"en\",PATH:\"/usr/bin:/bin\",HOME:directory,USERPROFILE:directory,LocalAppData:join(directory,\"LocalAppData\"),XDG_CACHE_HOME:join(directory,\".cache\")},host=systemRuntimePinHostV1(directory,environment)"
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🟦️.ts": [
+   {
+    "old": "executable = ctx.attr.bun",
+    "new": "executable = ctx.attr.runtime",
+    "count": 1
+   },
+   {
+    "old": "\"bun\": attr.string(mandatory = True)",
+    "new": "\"runtime\": attr.string(mandatory = True)",
+    "count": 1
+   },
+   {
+    "old": "    bun = ${quote(input.bun)},",
+    "new": "    runtime = ${quote(input.bun)},",
+    "count": 1
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧾️witness/🟦️.ts": [
+   {
+    "old": "executable = ctx.attr.bun",
+    "new": "executable = ctx.attr.runtime",
+    "count": 1
+   },
+   {
+    "old": "\"bun\": attr.string(mandatory = True)",
+    "new": "\"runtime\": attr.string(mandatory = True)",
+    "count": 1
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️platform/🟦️.ts": [
+   {
+    "old": "executable = ctx.attr.bun",
+    "new": "executable = ctx.attr.runtime",
+    "count": 1
+   },
+   {
+    "old": "bun = ${JSON.stringify(windowsBun)}",
+    "new": "runtime = ${JSON.stringify(windowsBun)}",
+    "count": 2
+   },
+   {
+    "old": "bun = ${bun}",
+    "new": "runtime = ${bun}",
+    "count": 2
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/👷️workers/🧪️tests/🟦️.ts": [
+   {
+    "old": "executable = ctx.attr.bun",
+    "new": "executable = ctx.attr.runtime",
+    "count": 1
+   },
+   {
+    "old": "\"bun\": attr.string()",
+    "new": "\"runtime\": attr.string()",
+    "count": 1
+   },
+   {
+    "old": "bun = ${JSON.stringify(process.execPath)}",
+    "new": "runtime = ${JSON.stringify(process.execPath)}",
+    "count": 1
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️actions/🔣️.json": [
+   {
+    "old": "    \"    bun = \\\"/opt/bun\\\",\",",
+    "new": "    \"    runtime = \\\"/opt/bun\\\",\",",
+    "count": 5
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧪️tests/🟦️.ts": [
+   {
+    "old": "'    bun = %s,'%q(r['bun'])",
+    "new": "'    runtime = %s,'%q(r['bun'])"
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🟦️.ts": [
+   {
+    "old": "import {formatChangeCursorV1,parseChangeCursorV1,type ChangeRowV1} from \"../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🟦️.ts\";\n",
+    "new": "import {formatChangeCursorV1,parseChangeCursorV1,type ChangeRowV1} from \"../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🟦️.ts\";\nimport {runtimeIdentityV1} from \"../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts\";\n"
+   },
+   {
+    "old": "process.versions.bun??process.version]",
+    "new": "runtimeIdentityV1().version]"
+   }
+  ]
+ }
+}

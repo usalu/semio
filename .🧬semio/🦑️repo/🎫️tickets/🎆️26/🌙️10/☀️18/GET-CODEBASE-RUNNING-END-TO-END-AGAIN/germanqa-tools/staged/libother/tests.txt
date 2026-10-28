@@ -1,0 +1,5 @@
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🚷️raw-process-spawn/🧪️tests
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/📖️texts/🧪️tests
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/📖️texts/🧪️tests
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🗂️registry/🧪️tests
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/📖️texts/🧪️tests

@@ -588,8 +588,8 @@ pub fn select_repo_root(start: &Path, explicit: Option<&Path>) -> Result<PathBuf
         Some(path) => start.join(path),
         None => find_repo_root(start),
     };
-    if selected.to_string_lossy().encode_utf16().count() > 256 { return Err("Repository path exceeds 256 units / Repository-Pfad ueberschreitet 256 Einheiten".into()); }
-    let selected = strip_verbatim(&fs::canonicalize(&selected).map_err(|error| format!("Repository directory unavailable / Repository-Verzeichnis nicht verfuegbar: {error}"))?);
+    if selected.to_string_lossy().encode_utf16().count() > 256 { return Err("Repository path exceeds 256 units / Repository-Pfad überschreitet 256 Einheiten".into()); }
+    let selected = strip_verbatim(&fs::canonicalize(&selected).map_err(|error| format!("Repository directory unavailable / Repository-Verzeichnis nicht verfügbar: {error}"))?);
     if !selected.is_dir() || selected.to_string_lossy().encode_utf16().count() > 256 { return Err("Bounded repository directory required / Begrenztes Repository-Verzeichnis erforderlich".into()); }
     Ok(selected)
 }

@@ -13,7 +13,7 @@ export const CLEAN_CACHE_DIR_NAME = "⚡️cache";
 export const CLEAN_TICKET_GENERATED_OUTPUT_DIRS = new Set(["🗑️generated", TICKET_GENERATED_OUTPUT_DIRECTORY, "🧾️runs", "🧪️runs", "🧾️taxonomy-transaction"]);
 export const CLEAN_TICKET_GENERATED_PROBE_PREFIXES = ["🧪️purity-", "🧪️cli-", "🧪️inventory-"];
 
-export type CleanRemovalKind = "misplaced" | "gitignore" | "ticket-file" | "ticket-dir" | "build-artifact" | "ticket-generated" | "windows-illegal" | "root-transient" | "marker-only-folder" | "empty-folder" | "cargo-incremental";
+export type CleanRemovalKind = "misplaced" | "gitignore" | "build-artifact" | "ticket-generated" | "windows-illegal" | "root-transient" | "marker-only-folder" | "empty-folder" | "cargo-incremental";
 
 export type CleanRemoval = {
   kind: CleanRemovalKind;
@@ -312,7 +312,7 @@ export function cleanTicketFolderForPath(root: string, abs: string): string | un
 }
 
 /** 🗑️ Rejects a removal intersecting any non-closed ticket, unsafe path, or unreadable subtree without following symlinks. */
-export function cleanRemovalProtection(root: string, candidate: string, view: CleanProtectionView = CLEAN_PROTECTION_VIEW, allowedOpenTicket?: string): string[] {
+export function cleanRemovalProtection(root: string, candidate: string, view: CleanProtectionView = CLEAN_PROTECTION_VIEW, nestedLinks: "protect" | "unlink" = "protect"): string[] {
   const workspace = resolve(root),
     target = resolve(workspace, candidate);
   const local = relative(workspace, target);
@@ -326,7 +326,7 @@ export function cleanRemovalProtection(root: string, candidate: string, view: Cl
     const manifestKind = view.kind(join(directory, "🎫️ticket.json"));
     if (!cleanIsTicketFolderBoundary(workspace, directory) && manifestKind === "missing") return;
     if (cleanTicketManifestIsClosed(directory, view)) closedTickets.add(directory);
-    else if (directory !== allowedOpenTicket) protectedPaths.add(directory);
+    else protectedPaths.add(directory);
   };
   let ancestor = workspace;
   try {
@@ -358,7 +358,7 @@ export function cleanRemovalProtection(root: string, candidate: string, view: Cl
         const child = join(directory, name),
           kind = view.kind(child);
         if (kind === "directory") stack.push(child);
-        else if (kind !== "file") protectedPaths.add(child);
+        else if (kind !== "file" && !(kind === "symlink" && nestedLinks === "unlink")) protectedPaths.add(child);
       }
     }
     for (const entry of ancestors) if (view.kind(entry.path) !== entry.kind) protectedPaths.add(entry.path);
@@ -367,6 +367,12 @@ export function cleanRemovalProtection(root: string, candidate: string, view: Cl
     protectedPaths.add(ancestor);
   }
   return [...protectedPaths];
+}
+
+/** 🔗️ True when a candidate lies inside a generated-output folder of a ticket, where a nested link is unlinked with its folder and never followed. */
+export function cleanIsInsideTicketGeneratedOutput(root: string, abs: string): boolean {
+  const ticket = cleanTicketFolderForPath(root, abs);
+  return ticket !== undefined && relative(ticket, abs).split(sep).some((segment) => cleanIsTicketGeneratedOutputDir(segment));
 }
 
 /** 🧮️ Removes unsafe candidates before shallow deduplication so a protected parent cannot absorb eligible siblings. */
@@ -388,14 +394,7 @@ export function cleanProjectRemovals(root: string, removals: readonly CleanRemov
         for (const path of openGenerated) onProtected?.(path);
         return false;
       }
-      const allowedOpenTicket =
-        row.kind === "ticket-generated" || row.kind === "ticket-file" || row.kind === "ticket-dir" || row.kind === "gitignore"
-          ? cleanTicketGeneratedOutputTicketRoot(root, absolute) ?? cleanTicketFolderForPath(root, absolute)
-          : row.kind === "windows-illegal"
-            ? cleanTicketFolderForPath(root, absolute)
-            : undefined;
-      const applicablePrefixes = allowedOpenTicket ? protectedPrefixes.filter((prefix) => resolve(prefix) !== allowedOpenTicket) : protectedPrefixes;
-      const protectedPaths = cleanIntersectsProtected(absolute, applicablePrefixes) ? [absolute] : allowedOpenTicket ? [] : cleanRemovalProtection(root, row.path, view, allowedOpenTicket);
+      const protectedPaths = cleanIntersectsProtected(absolute, protectedPrefixes) ? [absolute] : cleanRemovalProtection(root, row.path, view, cleanIsInsideTicketGeneratedOutput(root, absolute) ? "unlink" : "protect");
       for (const path of protectedPaths) onProtected?.(path);
       return protectedPaths.length === 0;
     }),

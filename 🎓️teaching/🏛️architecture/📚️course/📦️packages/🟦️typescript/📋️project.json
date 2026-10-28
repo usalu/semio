@@ -77,6 +77,14 @@
       "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/🏗️builder/🌐️vite/**/*",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/📐️parametric/📝️assignment/**/*"
     ],
+    "tailwindScan": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/**/*",
+      "!{workspaceRoot}/{🧰️framework/🔨️modules/🖱️ui,🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react,🎓️teaching/🏛️architecture/📚️course}/**/{node_modules,.git,.nx,.cache,target,dist,📤️dist,build,out,coverage,test-results,playwright-report,storybook-static,.venv,__pycache__,bin,obj,⚡️cache,🗑️generated,.lake,pkg}/**/*",
+      "!{workspaceRoot}/{🧰️framework/🔨️modules/🖱️ui,🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react,🎓️teaching/🏛️architecture/📚️course}/**/{🧪️tests,🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples,📖️stories,🎭️e2e}/**/*",
+      "!{workspaceRoot}/{🧰️framework/🔨️modules/🖱️ui,🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react,🎓️teaching/🏛️architecture/📚️course}/**/*.{feature,stories.*,story.*,mdx}"
+    ],
     "workspaceManifests": [
       "{workspaceRoot}/bun.lock",
       "{workspaceRoot}/🎓️teaching/bun.lock",
@@ -91,6 +99,7 @@
       "{workspaceRoot}/🎓️teaching/🛂️proctor/🔨️modules/🗄️storage/🦀️.rs"
     ],
     "proctorCargoManifests": [
+      { "input": "cargoToolchain", "projects": ["@teaching/proctor"] },
       "{workspaceRoot}/Cargo.toml",
       "{workspaceRoot}/Cargo.lock",
       "{workspaceRoot}/🎓️teaching/Cargo.toml",
@@ -295,6 +304,9 @@
           "closure": {
             "typescript": [
               "{projectRoot}/tsconfig.site.json"
+            ],
+            "modules": [
+              "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/🏗️builder/🌐️vite/🟦️.ts"
             ]
           }
         }
@@ -321,7 +333,8 @@
           ]
         },
         "{workspaceRoot}/🎓️teaching/🏛️architecture/⚡️energy/**/❓️quiz/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*",
+        "tailwindScan"
       ],
       "outputs": [
         "{projectRoot}/.🧾️store/build.json"
@@ -576,8 +589,8 @@
                   "de": "Playwright-Worker"
                 },
                 "description": {
-                  "en": "Optional Playwright worker count or percentage; leave empty for one worker per topology.",
-                  "de": "Optionale Playwright-Workerzahl oder Prozentangabe; leer lassen für einen Worker je Topologie."
+                  "en": "Optional Playwright worker count of the shared specs; leave empty for the count the admitted memory and cores carry (the specs that need their proctor alone always run on one worker).",
+                  "de": "Optionale Playwright-Workerzahl der gemeinsamen Specs; leer lassen für die Zahl, die der zugelassene Speicher und die zugelassenen Kerne tragen (Specs, die ihren Proctor allein brauchen, laufen immer auf einem Worker)."
                 },
                 "kind": "text",
                 "valueFlag": "--workers"

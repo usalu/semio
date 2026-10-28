@@ -1,0 +1,77 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts": {
+  "file": "00.ts",
+  "base": "0f1f67cddfa98072f75847d7f6b139ae40a5499b263dda525d21c77db1594475",
+  "new": "a8d37a4f6cb662743b25f4a36e43ac55792e8153b5eac8130df5aae3f7d58ab2"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json": {
+  "file": "01.json",
+  "base": "8b2446ecf0a5bdf26deb387783349f943d7481c19b048eb2b80c0c23cef14c19",
+  "new": "667f0f4a14e301a993a77d57edc7683992c7d3b8215a88bc018b12e77fc1bd46"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts": {
+  "file": "02.ts",
+  "base": "d5a4372010c11d9dc442cd2c686d06f44b0354563803db2b5cead10a9e65543e",
+  "new": "3a859bb5dde519a1ee5217ea0526c1208a7c423a52d02ca656c235efb2e8f8a0"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🔼️upgrade/🟦️.ts": {
+  "file": "03.ts",
+  "base": "bc52111c900528214b06cf735a53ec9010ab50f438731e54321ca35a45a4a1c5",
+  "new": "dd55406fb87d3b13e596014a30a8db026693cf1070d96f4ab39ad8a6d920d180"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts": {
+  "file": "04.ts",
+  "base": "f3a6094ed5c39c4ea73338b13b38cce79a07cda6a132f47841f8be4cba93150c",
+  "new": "45f59aa2f378a6327a90350ceb7a3f21915719cc122d0f11600c4214076a09ed"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🟦️.ts": {
+  "file": "05.ts",
+  "base": "10ea31e4da7a8f7baf68347ae49e592edd60168b8b56c38722a85e86eb832a37",
+  "new": "0b085df3c5c8505b3075527e2c5585c7dfafd0e52c4d4f8b862aefa7510d3520"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🐍️oracle/🐍️.py": {
+  "file": "06.py",
+  "base": "cb41f7448dde0fe5402f676d953921289dcdf8d3653d6545406ede7670c5fa4a",
+  "new": "7c76759cc22eb7c80951799583434bce3d1aa11ee9b270bc6a3c77d553ea506f"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/🧫️fixtures/🔣️.json": {
+  "file": "07.json",
+  "base": "2344459afcf158f40ae3155a47c8b271d91985372654da523fcd6f2c0f00c265",
+  "new": "d36061ceae9d0d710a96201974e5024b169cda5facaf283a79750ad7af626ac6"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/👥️agents/🟦️.ts": {
+  "file": "08.ts",
+  "base": null,
+  "new": "a50c8969e9adcd3aabd97daa625a2a5314801f6402669ca13a99d3d07c77233a"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔼️upgrade/👥️agents/🥒️.feature": {
+  "file": "09.feature",
+  "base": null,
+  "new": "a5b028f0e8668b7e582829a46ce09830c6b3be5451d1d6a318ee39497a8b8628"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🧫️fixtures/🔣️.json": {
+  "file": "10.json",
+  "base": "b6d862a6f2aa19e0ca2f9b83a6cea9428fd9e04d18215063542caae927e43f24",
+  "new": "b06ae84fcde69f2b89220012f8b42a1f28b585e042a81aa72cdcfc02b4495fce"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📐️estimates/🐍️oracle/🐍️.py": {
+  "file": "11.py",
+  "base": "6599bc5144d0a673617887a6c62fa3fa919c797c7527bc2354f86ee1d378db21",
+  "new": "c7b830d3b839a7d03cbce58d6120ba65a6a2328f31db79a3de6864208a1042cb"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📐️estimates/🧫️fixtures/🔣️.json": {
+  "file": "12.json",
+  "base": "4fb54e27ea7e7cced5321c4aff9fa5e352d2cbbdc41aea5bf8fd14fb70a48d84",
+  "new": "42114bde459221ebccf31362d0e7a748399f351d736b5174b9fcde5cc1c5cdc5"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📐️estimates/🟦️.ts": {
+  "file": "13.ts",
+  "base": "f5c3b31ef3bfc352d18c96d513f51404546e8f4c53ccf16c2ff2a4ee4c98c398",
+  "new": "01cf39caef5384ce220c4cfdfc71d576ffde341568ea551a0876cf0a47a4e07d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/👥️agents/🟦️.ts": {
+  "file": "14.ts",
+  "base": null,
+  "new": "7d77631eaa9a2fe3d326d38c9ab75927ab05394e89b92790d5764bd1c3e6a4de"
+ }
+}

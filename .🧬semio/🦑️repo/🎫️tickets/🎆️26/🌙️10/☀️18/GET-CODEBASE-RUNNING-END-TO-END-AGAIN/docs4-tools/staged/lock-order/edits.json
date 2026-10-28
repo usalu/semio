@@ -1,0 +1,42 @@
+{
+ "name": "lock-order",
+ "code": "leaseord staged, staged2, staged3 + cargofix leaseorder-c (all live)",
+ "lane": "docs4",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "7b768aa704cb715daea331a3c60713677f3d915c4269d1fd9a93231de873fa50",
+ "needs": [],
+ "edits": [
+  {
+   "id": "order-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- **`SEMIO_LEASE_RECLAIM=report|request|terminate`** (default `request`): `report` only shows; `request` asks a stuck holder to give the resource up (it ends with exit 75, the outermost command restarts); `terminate` additionally stops one that ignored the request for 2 min and made no progress (matching OS start time, signalable, never itself; SIGTERM, SIGKILL of the tree after 15 s; `reclaim.jsonl`; not on Windows; a `legacy` holder only after 4 h). A holder on newer code asks a stale holder to yield; a healthy holder is never asked.",
+   "where": "after",
+   "block": "- **Lock order** (live, `🔒️leases/🧭️order/🔣️policy.json`): every lease belongs to a class with a rank, and a task that holds one may only wait for a lease of a higher rank, unless the policy lists the edge. Ranks: `pin` 0 (the pinned graph snapshot `build-graph:` and the Rust compiler code `rust-code:`, held shared around a whole build; nobody ever waits for them, so they constrain nothing and may precede any lease), `toolchain` 1 (Rust toolchain home and configuration view), `tool-singleton` 2 (Bazel binary download, session slots `bazel-slot-sN`, restore and metrics, tool activation), `cargo-coordination` 2 (Cargo registry, preparation, source admission, build leases), `cargo-custody` 2, `descriptor-custody` 2 (the Rust unit descriptor namespace and its maintenance gate), `compiler-capacity` 3, `graph` 4, `namespace` 5, `artifact` 6 and `native-whole-retirement` 6, `image` 7 (fixed images, native storage, the compiler writer custody `repo:compiler-writer:`), `registry-fetch` 8 and `bazel-picker` 9 (`bazel-slot-gate`, the innermost lock: a short critical section that only reads and writes slot files, so no blocking lease may be requested while it is held). `SEMIO_LEASE_ORDER=off|observe|enforce` overrides every rule at once. By default an out-of-order request is only observed: it prints `[lease-order] Lock order violated: <requested> (<class>, rank N) is requested while <held> (<class>, rank M) is held <mode>. Acquire locks in ascending rank or release <held> first.` once per class pair and process and records every violation in `lease-registry/<id>/violations.jsonl` of the host-capacity cache directory. Hold-and-wait (a holder that waits more than 15 s for another lease), self-deadlock, cycles and the strict waits of the compiler writer are enforced and refuse. A warning means the declared order and the acquisition order disagree: fix the code when a lease really nests the other way, fix the policy when the held lease is one nobody waits for (that is how `pin` and `bazel-picker` came to be: a hot course run printed one such line per run and every one was a wrong declaration, not a deadlock risk)."
+  },
+  {
+   "id": "order-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- **`SEMIO_LEASE_RECLAIM=report|request|terminate`** (Standard `request`): `report` zeigt nur; `request` bittet einen festhängenden Halter, die Ressource abzugeben (er endet mit Exit 75, der äußerste Befehl startet neu); `terminate` beendet zusätzlich einen, der die Bitte 2 min ignorierte und nicht vorankam (gleiche OS-Startzeit, signalisierbar, nie sich selbst; SIGTERM, nach 15 s SIGKILL des Baums; `reclaim.jsonl`; nicht unter Windows; ein `legacy`-Halter erst nach 4 h). Ein Halter mit neuerem Code bittet einen veralteten Halter nachzugeben; ein gesunder Halter wird nie gefragt.",
+   "where": "after",
+   "block": "- **Sperrreihenfolge** (live, `🔒️leases/🧭️order/🔣️policy.json`): jede Lease gehört zu einer Klasse mit einem Rang, und eine Task, die eine hält, darf nur auf eine Lease höheren Ranges warten, sofern die Policy die Kante nicht aufführt. Ränge: `pin` 0 (der angeheftete Graph-Schnappschuss `build-graph:` und der Rust-Compiler-Code `rust-code:`, geteilt um einen ganzen Build gehalten; auf sie wartet nie jemand, sie schränken nichts ein und dürfen jeder Lease vorausgehen), `toolchain` 1 (Rust-Toolchain-Home und Konfigurationssicht), `tool-singleton` 2 (Bazel-Binärdatei laden, Sitzungs-Slots `bazel-slot-sN`, Restore und Metriken, Werkzeug-Aktivierung), `cargo-coordination` 2 (Cargo-Registry, Aufbereitung, Quellzulassung, Build-Leases), `cargo-custody` 2, `descriptor-custody` 2 (der Namensraum der Rust-Unit-Deskriptoren und sein Wartungs-Tor), `compiler-capacity` 3, `graph` 4, `namespace` 5, `artifact` 6 und `native-whole-retirement` 6, `image` 7 (feste Images, nativer Speicher, die Compiler-Schreiber-Obhut `repo:compiler-writer:`), `registry-fetch` 8 und `bazel-picker` 9 (`bazel-slot-gate`, die innerste Sperre: ein kurzer kritischer Abschnitt, der nur Slot-Dateien liest und schreibt, daher darf bei gehaltener Sperre keine blockierende Lease angefordert werden). `SEMIO_LEASE_ORDER=off|observe|enforce` überschreibt alle Regeln auf einmal. Standardmäßig wird eine Anforderung außer der Reihe nur beobachtet: sie gibt `[lease-order] Sperrreihenfolge verletzt: <angefordert> (<Klasse>, Rang N) wird angefordert, während <gehalten> (<Klasse>, Rang M) <Modus> gehalten wird. Sperren in aufsteigendem Rang nehmen oder <gehalten> zuerst freigeben.` einmal je Klassenpaar und Prozess aus und hält jede Verletzung in `lease-registry/<id>/violations.jsonl` des Host-Capacity-Cache-Verzeichnisses fest. Hold-and-Wait (ein Halter, der länger als 15 s auf eine andere Lease wartet), Selbst-Deadlock, Zyklen und die strengen Wartepflichten des Compiler-Schreibers werden erzwungen und lehnen ab. Eine Warnung heißt: deklarierte Reihenfolge und Reihenfolge des Anforderns widersprechen sich; den Code korrigieren, wenn eine Lease wirklich andersherum verschachtelt, die Policy, wenn die gehaltene Lease eine ist, auf die niemand wartet (so entstanden `pin` und `bazel-picker`: ein heißer Kurs-Lauf gab eine solche Zeile je Lauf aus, und jede war eine falsche Deklaration, kein Deadlock-Risiko)."
+  },
+  {
+   "id": "order-row",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "| `The runtime registry declares contract N, this launcher implements contract M. Rebuild and reinstall the launcher with: …` | the installed Go launcher is older than the registry; run the printed installer once (`🚀️launcher/📥️install`); there is one install location. |",
+   "where": "after",
+   "block": "| `[lease-order] Lock order violated: <requested> (<class>, rank N) is requested while <held> (<class>, rank M) is held …` | a diagnostic (default `observe`), never fatal: a process asked for a lease of a lower rank than one it holds, and the build goes on. It is a defect of the declared or the acquisition order, not of your command. Report the pair of classes from `violations.jsonl` of the lease registry; `SEMIO_LEASE_ORDER=enforce` turns it into an error for tests. A hot course run and a cold dashboard build print none; two pairs remain on the Rust test path of print (`cargo:configuration-view` under the Cargo store lease, `cargo:configuration-publication` under the compiler writer). |"
+  },
+  {
+   "id": "order-row",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "| `Die Laufzeitregistratur deklariert Vertrag N, dieser Launcher setzt Vertrag M um. Baue den Launcher neu und installiere ihn mit: …` | der installierte Go-Launcher ist älter als die Registratur; den ausgegebenen Installer einmal ausführen (`🚀️launcher/📥️install`); es gibt genau einen Installationsort. |",
+   "where": "after",
+   "block": "| `[lease-order] Sperrreihenfolge verletzt: <angefordert> (<Klasse>, Rang N) wird angefordert, während <gehalten> (<Klasse>, Rang M) … gehalten wird` | eine Diagnose (Standard `observe`), nie tödlich: ein Prozess forderte eine Lease niedrigeren Ranges an als eine, die er hält, und der Build läuft weiter. Es ist ein Mangel der deklarierten oder der Anforderungs-Reihenfolge, nicht deines Befehls. Das Klassenpaar aus `violations.jsonl` der Lease-Registratur melden; `SEMIO_LEASE_ORDER=enforce` macht daraus für Tests einen Fehler. Ein heißer Kurs-Lauf und ein kalter Dashboard-Build geben keine aus; zwei Paare bleiben auf dem Rust-Testpfad von print (`cargo:configuration-view` unter der Cargo-Store-Lease, `cargo:configuration-publication` unter dem Compiler-Schreiber). |"
+  }
+ ]
+}

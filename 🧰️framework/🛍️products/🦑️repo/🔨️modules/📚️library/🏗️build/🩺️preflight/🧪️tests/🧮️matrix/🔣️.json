@@ -53,8 +53,9 @@
    "cc",
    "pkg-config",
    "hdiutil",
-   "a",
-   "extra"
+   "rust",
+   "msvc-linker",
+   "a"
   ],
   "exchange": [
    "supported",

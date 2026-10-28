@@ -1,0 +1,677 @@
+#!/usr/bin/env python3
+"""🪞 mirror.py: ONE shared, safe short-root overlay of the live tree for verifying staged batches (ticket tooling, not product code).
+A mirror is a real copy (APFS clonefile / Linux reflink / plain copy on Windows) of the git-visible files of some subtrees, never a symlink into the live tree.
+Usage (python3 -I mirror.py ...; stdlib only, macOS + Linux + Windows):
+  create <name> [--batch <stage-dir|command with {root}>] [--only <subtree>...] [--force] [--no-nm]
+  run    <name> [--cwd REL] [--peers-ok] [--no-seal] [--seal-allow SUBPATH]... -- <cmd...>
+  diff   <name>            lists files differing from live: M changed, A only in mirror, D only in live
+  list | drop <name>... | drop --prefix <lane>- [--sync] | drop --nm [--force]
+Environment: SEMIO_REPO (live root, default: found from this script), SEMIO_MIRROR_HOME (default $TMPDIR/sm).
+Exit codes: run returns the command's code, or 97 when the write-through guard saw the live tree change."""
+from concurrent.futures import ThreadPoolExecutor
+import argparse, bisect, ctypes, filecmp, hashlib, json, os, re, shlex, shutil, signal, subprocess, sys, tempfile, time
+
+MARKER = "📋️project.json"
+LIBRARY = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
+ALIASES = {
+    "library": LIBRARY,
+    "process": "🧰️framework/🔨️modules/🏃️process",
+    "launcher": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher",
+    "mcp": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp",
+    "repo": "🧰️framework/🛍️products/🦑️repo",
+    "framework": "🧰️framework",
+}
+DEFAULT_ONLY = ["library", "process", "launcher"]
+ROOT_DIRS = [".cargo", ".config"]
+SEAL_ALLOW = [".cache", ".nx", ".tmp", ".repo", ".venv", ".pytest_cache"]
+GUARD_EXIT = 97
+MAX_FILE = 64 * 1024 * 1024
+LIMIT = 256
+WORKERS = 4
+
+
+def say(text):
+    print(text, file=sys.stderr, flush=True)
+
+
+def find_repo():
+    given = os.environ.get("SEMIO_REPO")
+    probe = given or os.path.dirname(os.path.abspath(__file__))
+    while True:
+        if os.path.isfile(os.path.join(probe, MARKER)) and os.path.isfile(os.path.join(probe, "AGENTS.md")):
+            return probe
+        parent = os.path.dirname(probe)
+        if parent == probe:
+            raise SystemExit("mirror: live repository root not found (set SEMIO_REPO)")
+        probe = parent
+
+
+REPO = find_repo()
+HOME = os.environ.get("SEMIO_MIRROR_HOME") or os.path.join(tempfile.gettempdir(), "sm")
+META = os.path.join(HOME, ".meta")
+NMDIR = os.path.join(HOME, ".nm")
+
+
+def fail(text, code=2):
+    say("mirror: " + text)
+    raise SystemExit(code)
+
+
+def valid_name(name):
+    if not name or name.startswith(".") or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-" for c in name):
+        fail(f"bad mirror name {name!r} (letters, digits, . _ - only)")
+    return name
+
+
+def make_cloners():
+    """🧬 per-platform copy-on-write clone primitives (file, tree) with plain-copy fallbacks."""
+    if sys.platform == "darwin":
+        libc = ctypes.CDLL("libSystem.B.dylib", use_errno=True)
+        libc.clonefile.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint32]
+
+        def clone_file(src, dst):
+            if libc.clonefile(os.fsencode(src), os.fsencode(dst), 1) != 0:
+                shutil.copy2(src, dst, follow_symlinks=False)
+
+        def clone_tree(src, dst):
+            if libc.clonefile(os.fsencode(src), os.fsencode(dst), 1) != 0 and subprocess.call(["/bin/cp", "-Rc", src, dst]) != 0:
+                fail(f"cannot copy {src}")
+
+        return clone_file, clone_tree
+    if sys.platform.startswith("linux"):
+        import fcntl
+
+        def clone_file(src, dst):
+            try:
+                with open(src, "rb") as a, open(dst, "wb") as b:
+                    fcntl.ioctl(b.fileno(), 0x40049409, a.fileno())
+                shutil.copystat(src, dst)
+            except OSError:
+                shutil.copy2(src, dst)
+
+        def clone_tree(src, dst):
+            if subprocess.call(["cp", "-a", "--reflink=auto", src, dst]) != 0:
+                fail(f"cp --reflink=auto {src} failed")
+
+        return clone_file, clone_tree
+
+    def clone_file(src, dst):
+        shutil.copy2(src, dst)
+
+    def clone_tree(src, dst):
+        shutil.copytree(src, dst, symlinks=True)
+
+    return clone_file, clone_tree
+
+
+clone_file, clone_tree = make_cloners()
+
+
+def sha(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for block in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def git_list(*specs, untracked=True):
+    args = ["git", "-C", REPO, "ls-files", "-z", "-c"] + (["-o", "--exclude-standard"] if untracked else []) + ["--"] + list(specs)
+    raw = subprocess.run(args, capture_output=True, check=True).stdout
+    return {os.fsdecode(p) for p in raw.split(b"\0") if p}
+
+
+def resolve_only(values):
+    rels = []
+    for value in values or DEFAULT_ONLY:
+        rel = os.path.normpath(ALIASES.get(value, value)).replace(os.sep, "/")
+        if rel.startswith("..") or os.path.isabs(rel):
+            fail(f"--only {value!r} must be inside the repository")
+        if not os.path.lexists(os.path.join(REPO, rel)):
+            fail(f"--only {value!r}: {rel} does not exist in the live tree")
+        rels.append(rel)
+    return rels
+
+
+def select(only, extra=()):
+    """📋 the git-visible file set (requested subtrees: tracked + untracked non-ignored, so uncommitted live edits and new files ride along; root files and ancestor-level sibling files: tracked only, because listing untracked files walks the whole repository)."""
+    siblings = [":(glob)*"] + ROOT_DIRS
+    for sub in only:
+        parts = sub.split("/")
+        siblings += [":(glob)" + "/".join(parts[:depth]) + "/*" for depth in range(1, len(parts))]
+    rels = git_list(*siblings, untracked=False) | git_list(*only)
+    for rel in extra:
+        rels.add(rel)
+    return {r for r in rels if os.path.lexists(os.path.join(REPO, r)) and not r.endswith(".DS_Store")}
+
+
+def inside(path, base):
+    return path == base or path.startswith(base.rstrip(os.sep) + os.sep)
+
+
+def relocate(target, link_dir_in_root, root):
+    """🔗 an absolute symlink into the live tree is rewritten to the mirror (relative, mirror-independent); other targets are kept."""
+    if not os.path.isabs(target) or not inside(target, REPO):
+        return target
+    inner = os.path.relpath(target, REPO)
+    return os.path.relpath(os.path.join(root, inner), os.path.join(root, link_dir_in_root))
+
+
+SOURCE_EXT = (".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs")
+IMPORT = re.compile(r"""(?:\bfrom|\bimport|\brequire|\bimport\.meta\.resolve)\s*\(?\s*['"]([^'"\n]+)['"]""")
+CLOSURE_CAP = 60000
+
+
+def nm_links():
+    """🔗 workspace package name -> repo-relative project directory, from the absolute links of the managed root node_modules."""
+    base = os.path.realpath(os.path.join(REPO, "node_modules"))
+    found = {}
+    if not os.path.isdir(base):
+        return found
+    for name in os.listdir(base):
+        candidates = [name] if not name.startswith("@") else [name + "/" + n for n in os.listdir(os.path.join(base, name))]
+        for candidate in candidates:
+            path = os.path.join(base, candidate)
+            if os.path.islink(path) and os.path.isabs(os.readlink(path)) and inside(os.readlink(path), REPO):
+                found[candidate] = os.path.relpath(os.readlink(path), REPO).replace(os.sep, "/")
+    return found
+
+
+def closure(rels, only, cap):
+    """🕸 pulls in every project (nearest enclosing 📋️project.json directory) that the selected sources import, relative or via a workspace package name, transitively; returns (added files, project dirs added)."""
+    projects = {os.path.dirname(r) for r in git_list(":(glob)**/" + MARKER, untracked=False)}
+    links = nm_links()
+    included = set(only)
+    framework = sorted(git_list("🧰️framework"))
+
+    def files_under(project):
+        if not project.startswith("🧰️framework/"):
+            return git_list(project)
+        lo = bisect.bisect_left(framework, project + "/")
+        hi = bisect.bisect_left(framework, project + "0")
+        return set(framework[lo:hi])
+
+    def covered(rel):
+        parts = rel.split("/")
+        return any("/".join(parts[:n]) in included for n in range(len(parts), 0, -1))
+
+    def project_of(rel):
+        parts = rel.split("/")[:-1]
+        for n in range(len(parts), 0, -1):
+            if "/".join(parts[:n]) in projects:
+                return "/".join(parts[:n])
+        return None
+
+    pending = [r for r in rels if r.endswith(SOURCE_EXT)]
+    added, dirs = set(), []
+    while pending:
+        rel = pending.pop()
+        try:
+            with open(os.path.join(REPO, rel), encoding="utf-8", errors="ignore") as handle:
+                text = handle.read()
+        except OSError:
+            continue
+        for spec in set(IMPORT.findall(text)):
+            if spec.startswith("."):
+                target = os.path.normpath(os.path.join(os.path.dirname(rel), spec)).replace(os.sep, "/")
+                if target.startswith("..") or covered(target):
+                    continue
+                project = project_of(target)
+                if project is None:
+                    candidates = [target + ext for ext in ("",) + SOURCE_EXT] + [target + "/index" + ext for ext in SOURCE_EXT]
+                    new = {c for c in candidates if os.path.isfile(os.path.join(REPO, c)) and c not in rels and c not in added}
+                    added |= new
+                    pending += [c for c in new if c.endswith(SOURCE_EXT)]
+                    continue
+            else:
+                parts = spec.split("/")
+                name = "/".join(parts[:2]) if spec.startswith("@") else parts[0]
+                project = links.get(name)
+                if project is None or covered(project):
+                    continue
+            if project in included:
+                continue
+            included.add(project)
+            if len(rels) + len(added) > cap:
+                say(f"mirror: closure cap {cap} reached; not adding {project}")
+                continue
+            files = {f for f in files_under(project) if os.path.lexists(os.path.join(REPO, f))} - rels - added
+            added |= files
+            dirs.append(project)
+            pending += [f for f in files if f.endswith(SOURCE_EXT)]
+    return added, dirs
+
+
+def nm_sources(rels):
+    dirs = {""} | {os.path.dirname(r) for r in rels}
+    found = []
+    for directory in sorted(dirs):
+        if os.path.basename(directory) == "node_modules" or "/node_modules/" in "/" + directory + "/":
+            continue
+        has_manifest = os.path.join(directory, "package.json") in rels
+        candidate = os.path.join(REPO, directory, "node_modules")
+        if has_manifest and os.path.lexists(candidate):
+            found.append(directory)
+    return found
+
+
+def nm_cache(directory):
+    """📦 one shared REAL copy per distinct node_modules (the managed one lives on a separate DMG volume, so a clone from it is impossible); mirrors then clone from this copy."""
+    src = os.path.join(REPO, directory, "node_modules")
+    real = os.path.realpath(src)
+    stamps = [os.stat(real).st_mtime_ns] + [os.stat(p).st_mtime_ns for p in (os.path.join(real, ".bun"), os.path.join(REPO, "bun.lock")) if os.path.exists(p)]
+    key = hashlib.sha1(f"v3|{real}|{stamps}|{directory}".encode()).hexdigest()[:16]
+    cached = os.path.join(NMDIR, key, "node_modules")
+    if os.path.isdir(cached):
+        return cached, key
+    os.makedirs(NMDIR, exist_ok=True)
+    work = os.path.join(NMDIR, f"{key}.tmp{os.getpid()}")
+    shutil.rmtree(work, ignore_errors=True)
+    os.makedirs(work)
+    started = time.time()
+    clone_tree(real, os.path.join(work, "node_modules"))
+    links, loose = relocate_tree(os.path.join(work, "node_modules"), directory, real)
+    if time.time() - started > 1 or loose:
+        say(f"mirror: built the shared node_modules copy for {directory or '.'} from {real} in {time.time() - started:.1f} s ({links} links rewritten, {loose} unresolved)")
+    try:
+        os.rename(work, os.path.join(NMDIR, key))
+    except OSError:
+        shutil.rmtree(work, ignore_errors=True)
+    return cached, key
+
+
+def relocate_tree(tree, directory, real):
+    """🔗 rewrites, inside a node_modules copy, every absolute symlink into the live tree and every relative link that escaped to the repo-root node_modules (workspace installs link `../../../node_modules/.bun/...`), as if the copy sat at <mirror>/<directory>/node_modules. Returns (rewritten, unresolved)."""
+    rewritten = unresolved = 0
+    top = os.path.realpath(os.path.join(REPO, "node_modules"))
+    stack = [(tree, (directory + "/" if directory else "") + "node_modules", real)]
+    while stack:
+        path, inner, real_dir = stack.pop()
+        with os.scandir(path) as entries:
+            for entry in entries:
+                if entry.is_symlink():
+                    target = os.readlink(entry.path)
+                    new = target
+                    if os.path.isabs(target):
+                        new = relocate(target, inner, "/R")
+                    else:
+                        resolved = os.path.normpath(os.path.join(real_dir, target))
+                        if not inside(resolved, real):
+                            if inside(resolved, top):
+                                new = os.path.relpath(os.path.join("/R/node_modules", os.path.relpath(resolved, top)), os.path.join("/R", inner))
+                            else:
+                                unresolved += 1
+                    if new != target:
+                        os.unlink(entry.path)
+                        os.symlink(new, entry.path)
+                        rewritten += 1
+                elif entry.is_dir(follow_symlinks=False):
+                    stack.append((entry.path, inner + "/" + entry.name, os.path.join(real_dir, entry.name)))
+    return rewritten, unresolved
+
+
+def free_bytes():
+    st = os.statvfs(HOME if os.path.isdir(HOME) else os.path.dirname(HOME)) if hasattr(os, "statvfs") else None
+    return st.f_bavail * st.f_frsize if st else 0
+
+
+def materialize(root, rels, with_nm):
+    dirs = {os.path.dirname(r) for r in rels}
+    for directory in sorted(dirs):
+        os.makedirs(os.path.join(root, directory), exist_ok=True)
+    count = size = skipped = 0
+    big, plain = [], []
+    for rel in sorted(rels):
+        src = os.path.join(REPO, rel)
+        dst = os.path.join(root, rel)
+        if os.path.islink(src):
+            os.symlink(relocate(os.readlink(src), os.path.dirname(rel), root), dst)
+        elif os.path.isdir(src):
+            os.makedirs(dst, exist_ok=True)
+        elif os.lstat(src).st_size > MAX_FILE:
+            big.append(rel)
+            continue
+        else:
+            plain.append(rel)
+            size += os.lstat(src).st_size
+        count += 1
+    with ThreadPoolExecutor(WORKERS) as pool:
+        list(pool.map(lambda rel: clone_file(os.path.join(REPO, rel), os.path.join(root, rel)), plain))
+    skipped = len(big)
+    nm = []
+    if with_nm:
+        for directory in nm_sources(rels):
+            cached, key = nm_cache(directory)
+            target = os.path.join(root, directory, "node_modules")
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            clone_tree(cached, target)
+            nm.append(directory)
+    return count, size, skipped, big, nm
+
+
+def deep_paths(root):
+    longest = ("", 0)
+    real = os.path.realpath(root)
+    for base, dirs, names in os.walk(root):
+        dirs[:] = [d for d in dirs if d != "node_modules"]
+        for name in names:
+            length = len(os.path.join(real, os.path.relpath(os.path.join(base, name), root)))
+            if length > longest[1]:
+                longest = (os.path.join(base, name), length)
+    return longest
+
+
+def meta_path(name):
+    return os.path.join(META, valid_name(name) + ".json")
+
+
+def load(name):
+    try:
+        with open(meta_path(name)) as handle:
+            return json.load(handle)
+    except FileNotFoundError:
+        fail(f"no mirror named {name!r} (see: mirror.py list)")
+
+
+def root_of(name):
+    return os.path.join(HOME, valid_name(name))
+
+
+def guard_snapshot(rels):
+    files, dirs = {}, {}
+    for rel in rels:
+        try:
+            st = os.lstat(os.path.join(REPO, rel))
+            files[rel] = (st.st_mtime_ns, st.st_size)
+        except FileNotFoundError:
+            files[rel] = None
+    for directory in {os.path.dirname(r) for r in rels} | {""}:
+        try:
+            names = {n for n in os.listdir(os.path.join(REPO, directory)) if n != ".DS_Store"}
+        except OSError:
+            continue
+        dirs[directory] = names
+    return files, dirs
+
+
+def guard_compare(before, after):
+    changed = []
+    for rel, old in before[0].items():
+        new = after[0].get(rel)
+        if old != new:
+            changed.append(("D" if new is None else "M", rel))
+    for directory, names in before[1].items():
+        now = after[1].get(directory, set())
+        changed += [("A", os.path.join(directory, n)) for n in sorted(now - names)]
+        changed += [("D", os.path.join(directory, n)) for n in sorted(names - now) if ("D", os.path.join(directory, n)) not in changed]
+    return changed
+
+
+def sandbox_profile(allow):
+    base = os.path.realpath(REPO)
+    allowed = "".join(f'(allow file-write* (subpath "{os.path.join(base, a)}"))' for a in list(SEAL_ALLOW) + list(allow))
+    return f'(version 1)(allow default)(deny file-write* (subpath "{base}")){allowed}'
+
+
+def guarded(name, argv, cwd, peers_ok, seal, allow, extra_env=None):
+    meta = load(name)
+    root = root_of(name)
+    before = guard_snapshot(meta["files"])
+    started = time.time_ns()
+    env = dict(os.environ, SEMIO_MIRROR_ROOT=root, SEMIO_MIRROR_NAME=name)
+    env.update(extra_env or {})
+    command = list(argv)
+    sealed = bool(seal) and sys.platform == "darwin" and shutil.which("sandbox-exec")
+    if sealed:
+        command = ["sandbox-exec", "-p", sandbox_profile(allow)] + command
+    elif seal:
+        say("mirror: write seal is macOS-only (sandbox-exec); the post-run guard still applies")
+    say(f"mirror: run in {cwd} ({'sealed against live writes' if sealed else 'unsealed'}): {shlex.join(argv)}")
+    process = subprocess.Popen(command, cwd=cwd, env=env)
+    interrupted = False
+    while True:
+        try:
+            code = process.wait()
+            break
+        except KeyboardInterrupt:
+            interrupted = True
+            process.send_signal(signal.SIGINT)
+    after = guard_snapshot(meta["files"])
+    changed = guard_compare(before, after)
+    elapsed = (time.time_ns() - started) / 1e9
+    if changed:
+        mirror_touched = lambda rel: os.path.exists(os.path.join(root, rel)) and os.lstat(os.path.join(root, rel)).st_mtime_ns >= started
+        say(f"mirror: GUARD {'WARN' if peers_ok else 'FAIL'}: {len(changed)} live-tree path(s) changed during the {elapsed:.1f} s run (write-through, or a concurrent peer edit):")
+        for status, rel in changed[:60]:
+            tag = "also written in the mirror: WRITE-THROUGH SUSPECT" if status == "M" and mirror_touched(rel) else "mirror untouched: hard-coded live path or peer edit"
+            say(f"  {status} {rel}  [{tag}]")
+        if len(changed) > 60:
+            say(f"  ... {len(changed) - 60} more")
+        if not peers_ok:
+            return GUARD_EXIT
+    else:
+        say(f"mirror: guard clean: live tree unchanged over {len(meta['files'])} files / {len(meta['dirs'])} dirs during the {elapsed:.1f} s run")
+    return 130 if interrupted else code
+
+
+def apply_manifest(directory, root, force):
+    with open(os.path.join(directory, "manifest.json")) as handle:
+        manifest = json.load(handle)
+    pool = os.path.join(directory, "files")
+    conflicts = []
+    for rel, row in manifest.items():
+        dst = os.path.join(root, rel)
+        current = sha(dst) if os.path.isfile(dst) else None
+        if current not in (row["new"], row["base"]) and not force:
+            conflicts.append(rel)
+    if conflicts:
+        fail("batch base changed in the mirror (live moved since staging) for:\n  " + "\n  ".join(conflicts) + "\n(--force to overwrite)", 3)
+    applied = 0
+    for rel, row in manifest.items():
+        dst = os.path.join(root, rel)
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        temporary = dst + ".mirror-tmp"
+        shutil.copyfile(os.path.join(pool, row["file"]), temporary)
+        os.replace(temporary, dst)
+        applied += 1
+    return applied
+
+
+def is_manifest_dir(value):
+    if not os.path.isdir(value) or not os.path.isfile(os.path.join(value, "manifest.json")):
+        return False
+    with open(os.path.join(value, "manifest.json")) as handle:
+        data = json.load(handle)
+    return isinstance(data, dict) and bool(data) and all(isinstance(v, dict) and "file" in v and "new" in v for v in data.values())
+
+
+def cmd_create(args):
+    name = valid_name(args.name)
+    root = root_of(name)
+    if os.path.lexists(root) or os.path.exists(meta_path(name)):
+        if not args.force:
+            fail(f"mirror {name!r} exists (use --force or drop it)")
+        do_drop(name)
+    started = time.time()
+    only = resolve_only(args.only)
+    extra = set()
+    manifest_dir = bool(args.batch) and is_manifest_dir(args.batch)
+    if manifest_dir:
+        with open(os.path.join(args.batch, "manifest.json")) as handle:
+            for rel, row in json.load(handle).items():
+                if row.get("base") is not None and os.path.lexists(os.path.join(REPO, rel)):
+                    extra.add(rel)
+    rels = select(only, extra)
+    dirs = []
+    if not args.no_closure:
+        found, dirs = closure(rels, only, CLOSURE_CAP)
+        rels |= {f for f in found if os.path.lexists(os.path.join(REPO, f))}
+        say(f"mirror: import closure added {len(found)} files from {len(dirs)} project(s)")
+    say(f"mirror: {len(rels)} files from {len(only)} subtree(s) -> {root}")
+    os.makedirs(HOME, exist_ok=True)
+    free_before = free_bytes()
+    os.makedirs(root)
+    count, size, skipped, big, nm = materialize(root, rels, not args.no_nm)
+    t_clone = time.time() - started
+    say(f"mirror: cloned in {t_clone:.2f} s")
+    free_after = free_bytes()
+    deepest, length = deep_paths(root)
+    meta = {"name": name, "repo": REPO, "root": root, "created": time.time(), "only": only, "closure": dirs, "nm": nm, "files": sorted(r for r in rels if r not in big), "dirs": sorted({os.path.dirname(r) for r in rels})}
+    os.makedirs(META, exist_ok=True)
+    with open(meta_path(name), "w") as handle:
+        json.dump(meta, handle)
+    say(f"mirror: created {count} entries ({size / 1e6:.1f} MB logical), node_modules at {nm or 'none'} in {t_clone:.2f} s; disk free delta {(free_before - free_after) / 1e6:.1f} MB")
+    say(f"mirror: longest path {length} chars{' EXCEEDS ' + str(LIMIT) if length > LIMIT else ''}: {os.path.relpath(deepest, root) if deepest else ''}")
+    if skipped:
+        say(f"mirror: skipped {skipped} file(s) over {MAX_FILE >> 20} MB: {big[:3]}")
+    if args.batch:
+        if manifest_dir:
+            say(f"mirror: batch manifest applied to {apply_manifest(args.batch, root, args.force)} file(s) in the mirror")
+        else:
+            command = args.batch.replace("{root}", shlex.quote(root))
+            code = guarded(name, ["/bin/sh", "-c", command], root, args.peers_ok, not args.no_seal, args.seal_allow, {"SEMIO_STAGE_ROOT": root, "O2_ROOT": root})
+            if code != 0:
+                say(f"mirror: batch command exited {code}")
+                return code
+    return 0
+
+
+def cmd_run(args):
+    command = args.cmd
+    if not command:
+        fail("run needs a command after --")
+    root = root_of(args.name)
+    cwd = os.path.join(root, args.cwd) if args.cwd else root
+    if not os.path.isdir(cwd):
+        fail(f"cwd {cwd} does not exist in the mirror")
+    return guarded(args.name, command, cwd, args.peers_ok, not args.no_seal, args.seal_allow)
+
+
+def cmd_diff(args):
+    meta = load(args.name)
+    root = root_of(args.name)
+    seen = set()
+    rows = []
+    for base, dirs, names in os.walk(root):
+        dirs[:] = [d for d in dirs if d != "node_modules"]
+        for name in names:
+            if name == ".DS_Store":
+                continue
+            mine = os.path.join(base, name)
+            rel = os.path.relpath(mine, root)
+            seen.add(rel)
+            live = os.path.join(REPO, rel)
+            if not os.path.lexists(live):
+                rows.append(("A", rel))
+            elif os.path.islink(mine) or os.path.islink(live):
+                if not (os.path.islink(mine) and os.path.islink(live)):
+                    rows.append(("M", rel))
+            else:
+                a, b = os.lstat(mine), os.lstat(live)
+                if a.st_size != b.st_size or (a.st_mtime_ns != b.st_mtime_ns and not filecmp.cmp(mine, live, shallow=False)):
+                    rows.append(("M", rel))
+    rows += [("D", rel) for rel in meta["files"] if rel not in seen]
+    for status, rel in sorted(rows, key=lambda r: r[1]):
+        print(f"{status} {rel}")
+    say(f"mirror: {len(rows)} difference(s) from live")
+    return 0
+
+
+def reap(wait):
+    """🧹 deletes whatever sits in the trash (rename is instant, deleting 60k node_modules files is not): detached by default."""
+    trash = os.path.join(HOME, ".trash")
+    if not os.path.isdir(trash) or not os.listdir(trash):
+        return
+    if os.name == "posix" and not wait:
+        subprocess.Popen(["/bin/rm", "-rf", trash], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    else:
+        shutil.rmtree(trash, onerror=lambda f, p, e: (os.chmod(p, 0o700), f(p)))
+
+
+def do_drop(name, wait=False):
+    root = root_of(name)
+    if os.path.islink(root):
+        os.unlink(root)
+    elif os.path.isdir(root):
+        trash = os.path.join(HOME, ".trash")
+        os.makedirs(trash, exist_ok=True)
+        os.rename(root, os.path.join(trash, f"{name}-{time.time_ns()}"))
+        say(f"mirror: dropped {name} (deleting in the {'foreground' if wait else 'background'})")
+    try:
+        os.unlink(meta_path(name))
+    except FileNotFoundError:
+        pass
+    reap(wait)
+
+
+def cmd_drop(args):
+    existing = [n[:-5] for n in sorted(os.listdir(META)) if n.endswith(".json")] if os.path.isdir(META) else []
+    names = [n for n in existing if n.startswith(args.prefix)] if args.prefix else args.names
+    if not names and not args.nm:
+        fail("drop needs mirror names or --prefix <lane>- (mirrors are shared between lanes: never drop another lane's)")
+    for name in names:
+        do_drop(name, args.sync)
+    if args.nm:
+        left = [n for n in existing if n not in names]
+        if left and not args.force:
+            fail(f"--nm refused: mirrors still in use clone from it: {left} (--force to override)")
+        if os.path.isdir(NMDIR):
+            shutil.rmtree(NMDIR, ignore_errors=True)
+            say("mirror: dropped the shared node_modules copies")
+    return 0
+
+
+def cmd_list(args):
+    if not os.path.isdir(META):
+        return 0
+    for entry in sorted(os.listdir(META)):
+        if entry.endswith(".json"):
+            with open(os.path.join(META, entry)) as handle:
+                meta = json.load(handle)
+            print(f"{meta['name']}\t{(time.time() - meta['created']) / 60:.0f} min\t{len(meta['files'])} files\t{meta['root']}")
+    return 0
+
+
+def main(argv):
+    parser = argparse.ArgumentParser(prog="mirror.py", description=__doc__.split("\n")[0])
+    sub = parser.add_subparsers(dest="command", required=True)
+    flags = argparse.ArgumentParser(add_help=False)
+    flags.add_argument("--peers-ok", action="store_true", help="live changes during the run only warn")
+    flags.add_argument("--no-seal", action="store_true", help="do not deny writes to the live tree (macOS sandbox-exec)")
+    flags.add_argument("--seal-allow", action="append", default=[], metavar="SUBPATH", help="live subpath that stays writable")
+    p = sub.add_parser("create", parents=[flags])
+    p.add_argument("name")
+    p.add_argument("--batch")
+    p.add_argument("--only", nargs="+")
+    p.add_argument("--force", action="store_true")
+    p.add_argument("--no-nm", action="store_true")
+    p.add_argument("--no-closure", action="store_true", help="skip the import-closure projects (exactly --only)")
+    p.set_defaults(fn=cmd_create)
+    p = sub.add_parser("run", parents=[flags])
+    p.add_argument("name")
+    p.add_argument("--cwd")
+    p.set_defaults(fn=cmd_run)
+    p = sub.add_parser("diff")
+    p.add_argument("name")
+    p.set_defaults(fn=cmd_diff)
+    p = sub.add_parser("drop")
+    p.add_argument("names", nargs="*")
+    p.add_argument("--prefix", help="drop every mirror whose name starts with this lane prefix")
+    p.add_argument("--force", action="store_true")
+    p.add_argument("--nm", action="store_true", help="also drop the shared node_modules copies (only when no other mirror exists)")
+    p.add_argument("--sync", action="store_true", help="wait for the deletion")
+    p.set_defaults(fn=cmd_drop)
+    p = sub.add_parser("list")
+    p.set_defaults(fn=cmd_list)
+    command = []
+    if argv and argv[0] == "run" and "--" in argv:
+        split = argv.index("--")
+        argv, command = argv[:split], argv[split + 1:]
+    args = parser.parse_args(argv)
+    if args.command == "run":
+        args.cmd = command
+    return args.fn(args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

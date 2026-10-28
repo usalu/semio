@@ -1,4 +1,4 @@
-import {test,expect} from "bun:test";
+import {test,expect,spyOn} from "bun:test";
 import {mkdtempSync,mkdirSync,readdirSync,rmSync} from "node:fs";
 import {join,resolve,relative,sep} from "node:path";
 import {getEventListeners} from "node:events";
@@ -7,6 +7,7 @@ import {Database} from "bun:sqlite";
 import {acquireResourceLease,acquireQueuedResourceLease,resourceLeasePathV1,type ResourceLeaseControl} from "../../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
+import policySchema from "../🧬️schema/📜️policy.json";
 
 /** ⏱️ Observes settlement within the neutral test ceiling and removes the observation timer. */
 async function bounded<T>(pending:Promise<T>,milliseconds:number):Promise<T>{
@@ -52,4 +53,29 @@ for(const row of fixture.cases)test(`original resource observer ${row.id}`,async
   const owned=relative(root,directory);if(!owned.startsWith("lw-")||owned.includes(sep)||resolve(root,owned)!==directory)throw Error("Owned ticket lease fixture directory required");
   rmSync(directory,{recursive:true});
  }
+});
+
+/** 🚰️ Law: an accepted continuation is joined for at most the declared drain bound after the wait ended: one that settles inside the bound is drained before the wait fails (its lease database stays open until then), one that never settles is abandoned, the wait fails at once with the cancellation reason, and the notice is written in English and German. */
+const drainBound=policySchema.definitions.Policy.const.continuationDrainMilliseconds;
+for(const row of fixture.drainCases)test(`accepted continuation drain ${row.id}`,async()=>{
+ const output=process.env.SEMIO_TEST_ARTIFACT_DIR;
+ if(!output)throw Error("Explicit ticket generated artifact directory required");
+ const root=resolve(output);mkdirSync(root,{recursive:true});const directory=mkdtempSync(join(root,"ld-")),resource="drain-wait",reason=Error("drain wait cancelled");
+ const holder=await acquireResourceLease({directory,resource,mode:"exclusive",signal:new AbortController().signal}),controller=new AbortController(),writes:string[]=[],spy=spyOn(process.stderr,"write").mockImplementation(((text:unknown)=>{writes.push(String(text));return true;}) as typeof process.stderr.write);
+ let settledAt=0,finish!:()=>void,enter!:()=>void;const entered=new Promise<void>(done=>{enter=done;}),continuation=new Promise<void>(done=>{finish=()=>{settledAt=Date.now();done();};});
+ const startedAt=Date.now(),timeoutMs=row.halt==="timeout"?fixture.deadlineMilliseconds:undefined;
+ const pending=acquireResourceLease({directory,resource,mode:"shared",signal:controller.signal,...timeoutMs===undefined?{}:{timeoutMs},onWait:()=>{enter();return continuation;}}).then(()=>({error:undefined as unknown,at:Date.now()}),error=>({error:error as unknown,at:Date.now()}));
+ try{
+  await bounded(entered,fixture.observationMilliseconds);
+  const stopAt=row.halt==="cancel"?Date.now():startedAt+fixture.deadlineMilliseconds;
+  if(row.halt==="cancel")controller.abort(reason);
+  if(row.settleAfterMilliseconds!==null)setTimeout(finish,Math.max(0,stopAt+row.settleAfterMilliseconds-Date.now()));
+  const result=await bounded(pending,drainBound+fixture.observationMilliseconds);
+  if(row.halt==="cancel")expect(result.error).toBe(reason);else expect(String(result.error)).toMatch(/Resource lease timed out/);
+  if(row.drained){expect(settledAt).toBeGreaterThan(0);expect(result.at).toBeGreaterThanOrEqual(settledAt);expect(writes.join("")).not.toContain("abandoned");}
+  else{
+   expect(settledAt).toBe(0);expect(result.at-stopAt).toBeGreaterThanOrEqual(drainBound-20);expect(result.at-stopAt).toBeLessThan(drainBound+fixture.observationMilliseconds);
+   const text=writes.join("");expect(text).toContain("it is abandoned and its late outcome is ignored");expect(text).toContain("sie wird aufgegeben und ihr spätes Ergebnis ignoriert");
+  }
+ }finally{spy.mockRestore();controller.abort(reason);finish();await pending;holder.release();rmSync(directory,{recursive:true,force:true});}
 });

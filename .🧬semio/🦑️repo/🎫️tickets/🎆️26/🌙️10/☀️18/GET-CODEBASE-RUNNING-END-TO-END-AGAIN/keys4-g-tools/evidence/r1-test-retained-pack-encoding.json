@@ -1,0 +1,34 @@
+{
+ "target": "test-retained-pack-encoding",
+ "tag": "r1",
+ "declared": 1063,
+ "rows": [
+  {
+   "leg": "bun-pack",
+   "kind": "bun",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [
+    "rust-toolchain.toml",
+    "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔁️codec/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📝️text/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️output/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️output/📋️operations/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🦀️.rs"
+   ],
+   "rounds": 6,
+   "seconds": 108,
+   "tail": " 0 fail |  369 expect() calls | Ran 9 tests across 1 file. [7.61s] | ",
+   "notes": [
+    "profiles:2",
+    "rules:741",
+    "capacity:600",
+    "profiles:2"
+   ]
+  }
+ ]
+}

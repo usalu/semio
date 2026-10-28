@@ -7,6 +7,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 import { acquireQueuedResourceLease } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{privateRepositoryWorkspaceV1}from"../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🕰️queued-preparation/🔣️.json", import.meta.url), "utf8"));
 
@@ -17,7 +19,7 @@ test("queued native preparation survives waiting beyond one active recipe budget
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for queued native proofs");
   mkdirSync(artifactRoot, { recursive: true });
-  const storage={version:1 as const,directory:artifactRoot,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program};
+  const storage={version:1 as const,directory:artifactRoot,leaseDirectory:repositoryCargoPreparationStorageV1(repository.root).leaseDirectory,program:repositoryCargoPreparationStorageV1(repository.root).program};
   const root = mkdtempSync(join(artifactRoot, "cargo-queued-preparation-"));
   const put = (path: string, source: string): void => {
     mkdirSync(join(root, path, ".."), { recursive: true });

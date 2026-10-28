@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "group": {
+    "prefix": "scriptProvider:",
+    "separator": ":"
+  },
+  "views": {
+    "scheduling": {
+      "packages": true,
+      "contract": {
+        "en": "The provider closure a target's own command closure names (target-sources, generic-target, a scheduling-role closure): without the scheduling files, with the external packages its modules import.",
+        "de": "Der Anbieterabschluss, den der eigene Befehlsabschluss eines Targets nennt (target-sources, generic-target, ein Abschluss mit Scheduling-Rolle): ohne die Scheduling-Dateien, mit den externen Paketen, die seine Module importieren."
+      }
+    },
+    "native": {
+      "packages": false,
+      "contract": {
+        "en": "The provider closure a Rust command's closure names (native-target, native-command, a native-role closure): without the scheduling files a Rust compile may leave out; the native-build modules stay in.",
+        "de": "Der Anbieterabschluss, den der Abschluss eines Rust-Befehls nennt (native-target, native-command, ein Abschluss mit Native-Rolle): ohne die Scheduling-Dateien, die ein Rust-Kompilat auslassen darf; die Native-Build-Module bleiben drin."
+      }
+    }
+  },
+  "project": {
+    "basename": "📋️project.json",
+    "metadata": "scriptProviders"
+  },
+  "contract": {
+    "en": "A command closure read through a view names every script provider port it defines by one reference to the named input of the providers project (the project whose root holds the designation and declares it) instead of listing the provider's files: a library edit that changes a provider closure changes one group of one project, and every action that consumes the provider still keys on its files through the reference.",
+    "de": "Ein durch eine Sicht gelesener Befehlsabschluss nennt jeden Skriptanbieter-Port, den er definiert, mit einem Verweis auf die benannte Eingabe des Anbieterprojekts (des Projekts, dessen Wurzel die Bezeichnung enthält und sie deklariert), statt die Dateien des Anbieters aufzuzählen: eine Bibliotheksänderung, die einen Anbieterabschluss ändert, ändert eine Gruppe eines Projekts, und jede Aktion, die den Anbieter nutzt, schlüsselt über den Verweis weiterhin auf seine Dateien."
+  }
+}

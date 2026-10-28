@@ -1,0 +1,23 @@
+{
+ "name": "plan-once",
+ "code": "graphlat-g-tools/staged/plan-once",
+ "lane": "graphlat-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "plan-once",
+   "lang": "en",
+   "kind": "replace",
+   "old": "then one exclusive assembly publishes.",
+   "new": "then one exclusive assembly publishes. A refresh with a scope (every closure or slice build, that is each `run <project>:<target>`) keeps the plan it made and hands it to the builder instead of walking all directories and verifying the ~76,000 facts a second time inside the builder custody (15-30 s per refresh, and custody time is queue time for every peer); a refresh still plans again when the generation moved after its plan. A law proves one walk and one verification pass, the saving is not measured end to end. Open in a small refresh: the prefetch and the builder each repeat the whole-workspace setup (35-60 s) and the inference of the stale project (55-70 s), about 230 of 345 s in one measured one-project refresh."
+  },
+  {
+   "id": "plan-once",
+   "lang": "de",
+   "kind": "replace",
+   "old": "dann veröffentlicht ein exklusives Zusammensetzen.",
+   "new": "dann veröffentlicht ein exklusives Zusammensetzen. Ein Refresh mit Geltungsbereich (jeder Abschluss- oder Slice-Build, also jedes `run <Projekt>:<Target>`) behält den Plan, den er gemacht hat, und reicht ihn an den Erbauer weiter, statt alle Verzeichnisse erneut zu durchlaufen und die ~76.000 Fakten ein zweites Mal in der Obhut des Erbauers zu prüfen (15-30 s je Refresh, und Obhut-Zeit ist Wartezeit für jeden Peer); ein Refresh plant weiterhin neu, wenn sich die Generation nach seinem Plan bewegt hat. Ein Gesetz beweist einen Lauf und einen Prüfdurchgang, die Ersparnis ist nicht durchgängig gemessen. Offen bei einem kleinen Refresh: Vorab-Lauf und Erbauer wiederholen je die Aufbereitung des ganzen Workspace (35-60 s) und die Ableitung des veralteten Projekts (55-70 s), rund 230 von 345 s in einem gemessenen Ein-Projekt-Refresh."
+  }
+ ]
+}

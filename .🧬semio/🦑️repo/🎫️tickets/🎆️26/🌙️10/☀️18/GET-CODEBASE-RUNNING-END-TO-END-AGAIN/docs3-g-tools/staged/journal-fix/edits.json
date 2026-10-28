@@ -1,0 +1,41 @@
+{
+ "name": "journal-fix",
+ "code": "verify2-g-tools/staged/journal-fix",
+ "lane": "verify2-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "journal-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- The source closure of the build tool (about 1450 files) is captured once per user and remembered (`~/Library/Caches/semio-repo`, `$XDG_CACHE_HOME`, `%LOCALAPPDATA%`; hit 0.1 s against 8-30 s under load; any edit of the closure is a miss; `SEMIO_REPO_SOURCE_MEMO=on|off`).",
+   "where": "after",
+   "block": "- **Change journal service** (`SEMIO_REPO_CHANGES=on|off`, default on; native watcher `semio-repo-watch`, `SEMIO_REPO_WATCH_BINARY` names another): one detached service per checkout and user writes the append-only log of file changes that the plan-reuse check and the dependency verification ask; it ends after 2 h idle. Its memory cap is 128 MiB: with the former 50 MiB a burst of a few thousand rows (20 agents editing) ended it with reason `memory` within seconds on the live tree, so no consumer ever got a journal (a fresh service is 33-37 MB, one million rows peak at 62-68 MB). It stops itself, with its journal, when its workspace (`root-gone`) or its journal directory (`directory-gone`) vanished, and a watcher stop that never returns cannot keep it alive (stop wait 3 s, exit 9 s after SIGTERM). Leaked `bun` + `semio-repo-watch` pairs with parent 1 under `/var/folders/…/T/reuse-*` come from older code: they idle out after 2 h, or stop the `bun` pid with SIGTERM (never `pkill`)."
+  },
+  {
+   "id": "journal-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- Der Quell-Abschluss des Build-Werkzeugs (rund 1450 Dateien) wird einmal je Nutzer erfasst und gemerkt (`~/Library/Caches/semio-repo`, `$XDG_CACHE_HOME`, `%LOCALAPPDATA%`; Treffer 0,1 s gegen 8-30 s unter Last; jede Änderung des Abschlusses ist ein Fehltreffer; `SEMIO_REPO_SOURCE_MEMO=on|off`).",
+   "where": "after",
+   "block": "- **Änderungsjournal-Dienst** (`SEMIO_REPO_CHANGES=on|off`, Standard an; nativer Beobachter `semio-repo-watch`, `SEMIO_REPO_WATCH_BINARY` nennt einen anderen): ein losgelöster Dienst je Checkout und Nutzer schreibt das nur anhängende Protokoll der Dateiänderungen, das die Plan-Wiederverwendung und die Prüfung der Abhängigkeiten befragen; er endet nach 2 h Leerlauf. Seine Speichergrenze ist 128 MiB: mit den früheren 50 MiB beendete ihn ein Stoß von wenigen tausend Zeilen (20 Agenten, die bearbeiten) auf dem lebenden Baum binnen Sekunden mit dem Grund `memory`, sodass nie ein Verbraucher ein Journal bekam (ein frischer Dienst belegt 33-37 MB, eine Million Zeilen erreichen 62-68 MB). Er beendet sich samt Journal selbst, wenn sein Workspace (`root-gone`) oder sein Journal-Verzeichnis (`directory-gone`) verschwunden ist, und ein Stopp des Beobachters, der nie zurückkehrt, hält ihn nicht am Leben (Stoppwartezeit 3 s, Ende 9 s nach SIGTERM). Verwaiste Paare aus `bun` + `semio-repo-watch` mit Elternprozess 1 unter `/var/folders/…/T/reuse-*` stammen aus älterem Code: sie enden nach 2 h Leerlauf, oder die `bun`-pid mit SIGTERM beenden (nie `pkill`)."
+  },
+  {
+   "id": "journal-row",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "| `The runtime registry declares contract N, this launcher implements contract M. Rebuild and reinstall the launcher with: …` | the installed Go launcher is older than the registry; run the printed installer once (`🚀️launcher/📥️install`); there is one install location. |",
+   "where": "after",
+   "block": "| `The change journal cannot vouch: <reason>` or `The file watcher cannot vouch for every change (<detail>); the tree is walked.` | harmless: the journal refuses and the caller does the complete stat walk (slower, never wrong). Causes: portable watcher backend, failed canary or watch limit (`untrusted`), a root in a region the watcher never reports (`excluded`), a service restarted since the last run (`epoch`), a gap, lost events or more than N changed files (`gap`, `lost`, `overflow`). Use the native watcher, raise the OS watch limit, or switch the journal off with `SEMIO_REPO_CHANGES=off`. |"
+  },
+  {
+   "id": "journal-row",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "| `Die Laufzeitregistratur deklariert Vertrag N, dieser Launcher setzt Vertrag M um. Baue den Launcher neu und installiere ihn mit: …` | der installierte Go-Launcher ist älter als die Registratur; den ausgegebenen Installer einmal ausführen (`🚀️launcher/📥️install`); es gibt genau einen Installationsort. |",
+   "where": "after",
+   "block": "| `The change journal cannot vouch: <Grund>` oder `Der Dateibeobachter kann nicht für jede Änderung einstehen ({detail}); der Baum wird durchlaufen.` | harmlos: das Journal lehnt ab und der Aufrufer macht den vollständigen Stat-Lauf (langsamer, nie falsch). Ursachen: portabler Beobachter, gescheiterter Canary oder Watch-Limit (`untrusted`), eine Wurzel in einer Region, die der Beobachter nie meldet (`excluded`), ein seit dem letzten Lauf neu gestarteter Dienst (`epoch`), eine Lücke, verlorene Ereignisse oder mehr als N geänderte Dateien (`gap`, `lost`, `overflow`). Den nativen Beobachter nutzen, das Watch-Limit des Betriebssystems erhöhen oder das Journal mit `SEMIO_REPO_CHANGES=off` ausschalten. |"
+  }
+ ]
+}

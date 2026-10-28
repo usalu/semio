@@ -1,0 +1,28 @@
+{
+ "files": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/🟦️.ts": [
+   {
+    "old": "expect(guard.expression.getText()).toBe('buildOperationRequiresV1(command)===\"dependencies\"');",
+    "new": "expect(guard.expression.getText()).toBe('buildOperationRequiresV1(command)===\"dependencies\"&&process.env[BUILD_GRAPH_PLAN_OUT_V1]===undefined');"
+   }
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🔣️.json": [
+   {
+    "old": "        \"🔌️backends\"\n      ]",
+    "new": "        \"🔌️backends\",\n        \"🔭️witness\"\n      ]"
+   }
+  ],
+  "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts": [
+   {
+    "old": "\"🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/\"];expect",
+    "new": "\"🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/\",\"🧰️framework/📦️packages/🟦️typescript/⚙️runtime/\"];expect"
+   }
+  ],
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🧪️tests/🟦️.ts": [
+   {
+    "old": "||path.startsWith(\"🧰️framework/🔨️modules/🧬️schema/✅️validator/\"))).toBe(true);",
+    "new": "||path.startsWith(\"🧰️framework/🔨️modules/🧬️schema/✅️validator/\")||path.startsWith(\"🧰️framework/📦️packages/🟦️typescript/⚙️runtime/\"))).toBe(true);"
+   }
+  ]
+ }
+}

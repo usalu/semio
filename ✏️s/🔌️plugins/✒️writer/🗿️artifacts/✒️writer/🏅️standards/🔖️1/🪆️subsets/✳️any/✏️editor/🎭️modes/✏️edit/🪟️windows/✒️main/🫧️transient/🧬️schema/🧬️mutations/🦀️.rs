@@ -3,10 +3,10 @@ use super::{WriterMainWindowTransient, WriterMainWindowTransientDiff, WriterOpti
 #[path = "📐️set-editor-selection/🦀️.rs"]
 mod set_editor_selection;
 pub use set_editor_selection::SetEditorSelection;
-#[path = "🔍️set-lint-generation/🦀️.rs"]
+#[path = "🔍️lint-gen/🦀️.rs"]
 mod set_lint_generation;
 pub use set_lint_generation::SetLintGeneration;
-#[path = "💬️set-engagement-input/🦀️.rs"]
+#[path = "💬️engagement-input/🦀️.rs"]
 mod set_engagement_input;
 pub use set_engagement_input::SetEngagementInput;
 

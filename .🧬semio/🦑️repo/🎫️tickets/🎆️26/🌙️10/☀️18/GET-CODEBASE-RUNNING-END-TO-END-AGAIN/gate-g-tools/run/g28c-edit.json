@@ -1,0 +1,20 @@
+{
+ "label": "g28c-edit",
+ "target": "@teaching/architecture-course:build",
+ "started": "08:15:21",
+ "wall_s": 50.4,
+ "peak_tree_mb": 2763,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "2",
+   "1 internal, 1 local"
+  ],
+  "actions": [
+   "2"
+  ]
+ }
+}

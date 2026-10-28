@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts": {
+  "file": "000.ts",
+  "base": "f4ea1830e938d9e506515a572e94ba21ad9cd9f2ad4774aa10e03669faa9ad11",
+  "new": "fc0c97e67c8b8fb5897829a692a84c5ff7e340fffb2fa5ca22616f455ac940f0"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️changes/🧭️client/🟦️.ts": {
+  "file": "001.ts",
+  "base": "78307e7fd77f03d01e19d27caa1b0cb794d2c52334e0e564bd09e9b8d8a3b06b",
+  "new": "b077a8d6fbd3d346db777ebadc354d29b0f803f6090dc3ad476b6a80d6196fdf"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts": {
+  "file": "002.ts",
+  "base": "6b3705d83600fcaff0a3b22c44970f890414f769e8c2ddaf37a094aa6d2efaf5",
+  "new": "749f65954c7833c631bbc54c39ec57901d837d180ea0a4ac379ffde7cd59be2c"
+ }
+}

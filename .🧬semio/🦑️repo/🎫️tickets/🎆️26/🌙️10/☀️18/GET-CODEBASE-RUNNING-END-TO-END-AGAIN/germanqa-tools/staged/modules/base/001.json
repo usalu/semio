@@ -1,0 +1,182 @@
+{
+  "name": "@semio-tech/repo-cli-rs",
+  "namedInputs": {
+    "testEnv": [
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
+    ]
+  },
+  "$schema": "../../../📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "targets": {
+    "build": {
+      "executor": "repo:script",
+      "inputs": [
+        "production",
+        "^production",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts build"
+      },
+      "metadata": {
+        "semio": {
+          "rustBuildIntent": {
+            "version": 1,
+            "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/Cargo.toml",
+            "package": "semio-framework-repo-cli",
+            "scope": "package",
+            "fallback": {
+              "kind": "bounded-cargo",
+              "adapters": [
+                "foreign-source",
+                "binary",
+                "proc-macro",
+                "build-script",
+                "build-script-run",
+                "effective-profile"
+              ]
+            }
+          }
+        }
+      },
+      "cache": true
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/🧪️tests/🧫️fixtures/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/📄️resources/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/📄️resources/🧪️tests/🧫️fixtures/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🧭️root-selection/🧪️tests/🧫️fixtures/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🧭️root-selection/🧬️schema/🔣️.json",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/bun.lock"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts test"
+      },
+      "dependsOn": [
+        {
+          "target": "install",
+          "projects": [
+            "repo-mcp"
+          ]
+        }
+      ],
+      "metadata": {
+        "semio": {
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🔌️mcp-verb/📁️root-scope/🧪️installed/🟦️.ts"
+          ],
+          "dashboard": {
+            "verb": "test",
+            "title": {
+              "en": "Test Native Repository CLI and MCP Scope",
+              "de": "Native Repository-CLI und MCP-Geltungsbereich Testen"
+            },
+            "description": {
+              "en": "Run seven native crates and the authenticated installed SDK root-scope laws.",
+              "de": "Sieben native Crates und authentifizierte installierte SDK-Geltungsbereichsgesetze ausführen."
+            }
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "repo": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts repo",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "continuous": true,
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "continuous",
+            "reason": "serves-until-stopped"
+          }
+        }
+      }
+    },
+    "mcp": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts mcp",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "continuous": true,
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "continuous",
+            "reason": "serves-until-stopped"
+          }
+        }
+      }
+    },
+    "build-cli": {
+      "executor": "repo:script",
+      "inputs": [
+        "production",
+        "^production",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts build-cli"
+      },
+      "metadata": {
+        "semio": {
+          "rustBuildIntent": {
+            "version": 1,
+            "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/Cargo.toml",
+            "package": "semio-framework-repo-cli",
+            "scope": "binary",
+            "fallback": {
+              "kind": "bounded-cargo",
+              "adapters": [
+                "foreign-source",
+                "binary",
+                "proc-macro",
+                "build-script",
+                "build-script-run",
+                "effective-profile"
+              ]
+            },
+            "binary": "repo"
+          }
+        }
+      }
+    }
+  }
+}

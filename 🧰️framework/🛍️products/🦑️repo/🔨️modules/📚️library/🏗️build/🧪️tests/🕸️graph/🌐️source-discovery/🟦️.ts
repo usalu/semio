@@ -9,7 +9,7 @@ import fixture from "../../🧫️fixtures/🕸️graph/🔣️.json";
 import {readBuildOwnerRegistryV1} from "../../../🕸️graph/🚪️admission/🟦️.ts";
 import {workspaceBuildFilesV1} from "../../../🕸️graph/🟦️.ts";
 import {createIssuedResourceControlV1,createScriptProcessEnvelope,withScriptProcessEnvelope,advanceScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {independentGlobV1} from "../🧰️support/🟦️.ts";
+import {independentGlobV1,withCommandSourceControlV1} from "../🧰️support/🟦️.ts";
 
 const require=createRequire(import.meta.url),Ajv=require("ajv/dist/2020").default;
 test("Cargo edges resolve inherited paths against their actual nested workspace",async()=>{
@@ -45,14 +45,15 @@ test("bounded manifest discovery delegates original progress, continuation and c
     expect(phases).toEqual(["build:manifest-discovery"]);expect(continuations).toBe(fixture.inferenceControl.continuations);expect(invocation.control.remainingMilliseconds).toBe(original.control.remainingMilliseconds);
   }finally{await rm(root,{recursive:true,force:true});}
 }));
-test("primary native owner discovery retains its original phase cancellation before any fact write",()=>withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"owner-control-test",maximumElapsedMilliseconds:10000},{},Date.now()),async original=>{
- const root=await mkdtemp(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!),"oc-")),controller=new AbortController(),phases:string[]=[],files:string[]=[];let continuations=0;
- const invocation={...original,control:{...original.control,signal:AbortSignal.any([original.control.signal,controller.signal]),publish:(event:any)=>{phases.push(event.command);return original.control.publish(event);},yieldContinuation:async()=>{continuations++;controller.abort(Error("fixture-owner-cancelled"));await original.control.yieldContinuation();}}};
+test("primary native owner discovery retains its original phase cancellation before any fact write",async()=>{
+ const root=await mkdtemp(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!),"oc-")),files:string[]=[];
  try{
   for(let index=0;index<fixture.inferenceControl.owners;index++){const directory="owner-"+index,file=directory+"/Cargo.toml",manifest=fixture.inferenceControl.manifest.replaceAll("{{index}}",String(index));expect(require("@iarna/toml").parse(manifest).package.name).toBe(directory);await mkdir(join(root,directory));await writeFile(join(root,file),manifest);files.push(file);}
-  const owner=await import("../../../🕸️graph/📥️inference/🟨️.mjs");await owner.libraryBootstrap;await expect(owner.discoverNativeBuildOwnersV1(files,root,{workspaceRoot:root,invocation,phaseControl:createIssuedResourceControlV1(invocation,"graph:owner-source",0)})).rejects.toThrow("fixture-owner-cancelled");expect(phases).toEqual([fixture.inferenceControl.phase]);expect(continuations).toBe(fixture.inferenceControl.continuations);expect(invocation.control.remainingMilliseconds).toBe(original.control.remainingMilliseconds);await expect(access(join(root,".cache"))).rejects.toThrow();
+  const owner=await import("../../../🕸️graph/📥️inference/🟨️.mjs");await owner.libraryBootstrap;
+  await withCommandSourceControlV1(root,"owner-control-test",10000,Error("fixture-owner-cancelled"),async control=>{control.arm(fixture.inferenceControl.phase);const before=control.parent.control.remainingMilliseconds();await expect(owner.discoverNativeBuildOwnersV1(files,root,{workspaceRoot:root,invocation:control.invocation,phaseControl:control.phaseControl})).rejects.toThrow("fixture-owner-cancelled");expect(control.events).toEqual([fixture.inferenceControl.phase]);expect(control.continuations()).toBe(fixture.inferenceControl.continuations);expect(control.parent.control.remainingMilliseconds()).toBeLessThanOrEqual(before);expect(control.parent.control.signal.aborted).toBe(false);});
+  await expect(access(join(root,".cache"))).rejects.toThrow();
  }finally{await rm(root,{recursive:true,force:true});}
-}));
+});
 test("relative import resources retain physical bytes and source-only closure with bundler suffixes",async()=>{
  const row=fixture.relativeImportResources,root=await mkdtemp(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!),"ri-")),inference=await import("../../../🕸️graph/📥️inference/🟨️.mjs"),registry=readBuildOwnerRegistryV1({version:1,owners:[row.owner],catalogProviders:[]});
  try{for(const[path,source]of Object.entries({...row.files,[row.owner.manifest]:JSON.stringify(row.project)})){expect(join(root,path).length).toBeLessThanOrEqual(256);await mkdir(dirname(join(root,path)),{recursive:true});await writeFile(join(root,path),source);}await writeFile(join(root,row.binary.path),Buffer.from(row.binary.hex,"hex"));

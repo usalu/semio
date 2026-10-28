@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🚶️repository-walks/🐍️oracle/🐍️.py": {
+  "file": "f001",
+  "sha256": "e4d4060d7a4d99d38ee8d7a78b4e6f7ff2cb4b3edc9c6fb8383c5ae4dba4191a",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🚶️repository-walks/🔣️.json": {
+  "file": "f002",
+  "sha256": "575dd7e85abfd4cf1618c2515f0b42eff78303739b5720bfd0699d97ebf27262",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🚶️repository-walks/🟦️.ts": {
+  "file": "f003",
+  "sha256": "16dbbfee38972e6b1b588871f4eb97e6e6549bbfbd15902b1178b63dc096a028",
+  "mode": 420
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🚶️repository-walks/🧬️schema/🔣️.json": {
+  "file": "f004",
+  "sha256": "dbbb6ebbe2368fe365e918467d53aee0f7a71e2fbeaf85a1885f4c5aa5826c38",
+  "mode": 420
+ }
+}

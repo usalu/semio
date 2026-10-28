@@ -1,0 +1,67 @@
+{
+ "batches": [
+  {
+   "name": "memo-serve",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "e88fdd1b3edd95f1a46291cd1f2304ae9f06f3616faeeaa8a56826552197e872",
+   "code": "printhot carry + reseal, memoedit + derived, hotpath2 memoout, audit1 verified (all live)",
+   "order": 1,
+   "edits": 4,
+   "summary": "The graph memo across generations, edits and derived facts: the three info lines, what is served and what still plans, output directories."
+  },
+  {
+   "name": "plan-walk",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "e88fdd1b3edd95f1a46291cd1f2304ae9f06f3616faeeaa8a56826552197e872",
+   "code": "printhot gitrow + audit3 excluded (live)",
+   "order": 2,
+   "edits": 4,
+   "summary": "Bazel plan witness: the git row digests only admitted files, the source walk asks git about excluded names."
+  },
+  {
+   "name": "dashboard",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "e88fdd1b3edd95f1a46291cd1f2304ae9f06f3616faeeaa8a56826552197e872",
+   "code": "dashhot fresh + nestenv, audit5 profilefresh (live)",
+   "order": 3,
+   "edits": 2,
+   "summary": "The dashboard no-op: installed binary returned when Cargo's own source list holds, the profile policy in the digest, the measured numbers."
+  },
+  {
+   "name": "rust-lanes",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "e88fdd1b3edd95f1a46291cd1f2304ae9f06f3616faeeaa8a56826552197e872",
+   "code": "cargo2 incremental + sessions + testorder, bootreg selnear + witdelta + planmemo + nxmeta (all live)",
+   "order": 4,
+   "edits": 4,
+   "summary": "Rust test path: incremental workspace crates, lane quota, startup of a test action; the lease-order sentence loses its remaining pairs."
+  },
+  {
+   "name": "disk-memo",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "e88fdd1b3edd95f1a46291cd1f2304ae9f06f3616faeeaa8a56826552197e872",
+   "code": "diskbud (live since G40)",
+   "order": 5,
+   "edits": 2,
+   "summary": "The graph memo's 1 GiB budget and the sweep of abandoned journal state directories."
+  },
+  {
+   "name": "sealed-capacity",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "e88fdd1b3edd95f1a46291cd1f2304ae9f06f3616faeeaa8a56826552197e872",
+   "code": "sealflip + quietfc round 3 (live)",
+   "order": 6,
+   "edits": 4,
+   "summary": "The sealed bullet loses its stale 'gate batch 8'; the grown-reservation row mentions the jobs that memory carries."
+  },
+  {
+   "name": "status",
+   "doc": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+   "baseSha256": "e88fdd1b3edd95f1a46291cd1f2304ae9f06f3616faeeaa8a56826552197e872",
+   "code": "gate runs g23-g42 (measurements)",
+   "order": 7,
+   "edits": 14,
+   "summary": "Replaces the 10-26 status, the G34 note and the 10-26 baseline with today's measured numbers; updates the measured line of 'Measuring a build' and the graph-builder row."
+  }
+ ]
+}

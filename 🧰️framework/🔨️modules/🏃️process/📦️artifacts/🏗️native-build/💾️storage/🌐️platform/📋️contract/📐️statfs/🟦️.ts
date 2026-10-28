@@ -1,6 +1,7 @@
 import{lstatSync,statfsSync,type BigIntStatsFs,type StatsFs}from"node:fs";
 import{statfs}from"node:fs/promises";
 import{basename,dirname,join,resolve}from"node:path";
+import{freeSpaceSyncV1,type FreeSpaceV1}from"../../../../../../🆓️free-space/🟦️.ts";
 import{nativeStorageBackendsV1}from"../../../🔌️backends/🧭️selection/🟦️.ts";
 import{measureNativeDirectoryUsageV1,nativeDirectoryEntryBoundV1,nativeDirectoryHostAvailableBytesV1,nativeDirectoryProtocolV1,nativeDirectoryUsageV1,observeNativeDirectoryStateV1,readNativeDirectoryAnchorFileV1}from"../../../📁️directory/🟦️.ts";
 
@@ -65,4 +66,13 @@ export function nativeDirectoryUsedBytesSyncV1(usedRoot:string,maximumPhysicalBy
  if(known&&age<=protocol.usage.recentMilliseconds)return known.bytes;
  if(known&&age<=protocol.usage.synchronousMaximumAgeMilliseconds){cell.fresh().catch(()=>undefined);return known.bytes;}
  const bytes=measureNativeDirectoryUsageV1(usedRoot,nativeDirectoryEntryBoundV1(maximumPhysicalBytes)).allocatedBytes;cell.record(bytes,now());return bytes;
+}
+
+/** 🆓️ The free space of the volume that holds a path, below a directory partition the declared envelope. @see ../../../../../../🆓️free-space/🟦️.ts */
+export type NativeFreeSpaceV1=FreeSpaceV1;
+
+/** 🏷️ The partition-aware and Windows-aware free-space question: the one answer of the library, "unknown" (`undefined`) whenever the volume cannot be measured. Below a directory partition the volume is the declared envelope, a Windows host path asks the volume for its free bytes (`availableBytes` is the injection point of that call), every other path is the host's statfs. @see nativeStatfsSyncV1 */
+export function nativeFreeSpaceSyncV1(path:string,options?:{platform?:string;nearest?:boolean;availableBytes?:(path:string)=>number}):NativeFreeSpaceV1|undefined{
+ const platform=options?.platform??process.platform;
+ return freeSpaceSyncV1(path,{nearest:options?.nearest,read:target=>platform==="win32"&&!nativePartitionOfV1(target,platform)?Object.freeze({availableBytes:(options?.availableBytes??nativeDirectoryHostAvailableBytesV1)(target),totalBytes:undefined}):nativeStatfsSyncV1(target,{platform})});
 }

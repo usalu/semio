@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "const": {
+    "version": 1,
+    "purpose": "native-build-diagnostics",
+    "labels": {
+      "en": {
+        "diagnosticsHidden": "[cargo] {count} diagnostic line(s) not shown",
+        "diagnosticsHiddenLogged": "[cargo] {count} diagnostic line(s) not shown; complete log: {path}",
+        "staged": "[nx-native] staged {count} deliverable(s) in {directory}",
+        "repoCargoAdmittedShared": "[repo cargo] shared store, {tokens} of {cores} cores admitted, rustc memory budget {budget} GiB",
+        "repoCargoAdmittedIsolated": "[repo cargo] isolated store, {tokens} of {cores} cores admitted, rustc memory budget {budget} GiB",
+        "provenanceReading": "[cargo-provenance] reading build records: {work} file operation(s), {bytes} of {totalBytes} bytes",
+        "recipeReading": "[cargo-target-recipe] reading the target recipe inputs: {work} file operation(s), {bytes} of {totalBytes} bytes"
+      },
+      "de": {
+        "diagnosticsHidden": "[cargo] {count} Diagnosezeile(n) nicht angezeigt",
+        "diagnosticsHiddenLogged": "[cargo] {count} Diagnosezeile(n) nicht angezeigt; vollständiges Protokoll: {path}",
+        "staged": "[nx-native] {count} Ergebnisdatei(en) bereitgestellt in {directory}",
+        "repoCargoAdmittedShared": "[repo cargo] gemeinsamer Speicher, {tokens} von {cores} Kernen zugelassen, rustc-Speicherbudget {budget} GiB",
+        "repoCargoAdmittedIsolated": "[repo cargo] isolierter Speicher, {tokens} von {cores} Kernen zugelassen, rustc-Speicherbudget {budget} GiB",
+        "provenanceReading": "[cargo-provenance] Build-Dateien werden gelesen: {work} Dateivorgang/-vorgänge, {bytes} von {totalBytes} Bytes",
+        "recipeReading": "[cargo-target-recipe] Eingaben des Target-Rezepts werden gelesen: {work} Dateivorgang/-vorgänge, {bytes} von {totalBytes} Bytes"
+      }
+    }
+  }
+}

@@ -152,6 +152,17 @@ function oracleContributionPaths(workspaceRoot, vocabulary, ownerRel) {
     .filter((entry) => typeof entry.path === "string").map((entry) => localPackagePath(workspaceRoot, entry.path));
 }
 
+/** 🏷️ The build project identity of one native dependency root, remembered in the discovery state. */
+function projectNameOfRoot(workspaceRoot, root, state) {
+  if (!state.names.has(root)) {
+    const authored = join(workspaceRoot, root, "📋️project.json");
+    const name = existsSync(authored) ? JSON.parse(readFileSync(authored, "utf8")).name : cargoPackage(workspaceRoot, root)?.name;
+    if (!name) throw new Error(`Test dependency has no build project identity: ${root}`);
+    state.names.set(root, name);
+  }
+  return state.names.get(root);
+}
+
 /** 🦀️ Attaches Cargo source ownership and generator tasks to the phases that compile a native host. */
 function nativeInputsFor(workspaceRoot, vocabulary, ownerRel, adapters, phase, native, policy, state) {
   const filename = filenameForKind(vocabulary, vocabulary.testAdapterFileKinds["🦀️rust"]);
@@ -162,15 +173,7 @@ function nativeInputsFor(workspaceRoot, vocabulary, ownerRel, adapters, phase, n
   const packages = packagesForOwner(ownerContributions(workspaceRoot, vocabulary, ownerRel), ownerRel, "rust");
   const roots = [...new Set([`${vocabulary.testDomainPath}/📦️packages/🦀️rust`, ...(subject ? [subject.path] : []), ...packages.filter((entry) => typeof entry.path === "string").map((entry) => localPackagePath(workspaceRoot, entry.path))])];
   const dependencyRoots = [...new Set(roots.flatMap((root) => native.nativeDependencyRoots(root, workspaceRoot, false, state.manifests, state.closures)))];
-  const projects = dependencyRoots.map((root) => {
-    if (!state.names.has(root)) {
-      const authored = join(workspaceRoot, root, "📋️project.json");
-      const name = existsSync(authored) ? JSON.parse(readFileSync(authored, "utf8")).name : cargoPackage(workspaceRoot, root)?.name;
-      if (!name) throw new Error(`Test dependency has no build project identity: ${root}`);
-      state.names.set(root, name);
-    }
-    return state.names.get(root);
-  }).sort();
+  const projects = dependencyRoots.map((root) => projectNameOfRoot(workspaceRoot, root, state)).sort();
   const dependsOn = [...new Set(roots.flatMap((root) => native.nativePreparation(root, workspaceRoot, vocabulary.generatorContracts, false, state.manifests, state.closures)).map((contract) => contract.target))].sort();
   const cargo = policy.toolchains.cargo;
   const plan = {
@@ -218,12 +221,44 @@ function target(domain, command, inputs, cacheable = true, scope, forwardAllArgs
   });
 }
 
+/** 🧬️ The inputs every test project shares: the command closure of the testing domain's router and the toolchain files, environment and runtimes of the JavaScript policy. */
+async function commandInputsOf(context, vocabulary, native, javascript, createScriptInputCache) {
+  const { workspaceRoot } = context;
+  return commandInputsFrom(await native.relativeScriptInputs([join(workspaceRoot, vocabulary.testDomainPath, "📜️script.ts")], workspaceRoot, createScriptInputCache(context)), javascript, workspaceRoot);
+}
+
+/** 🧬️ The shared inputs of the test projects from the roster of the command walk of the testing domain. */
+function commandInputsFrom(roster, javascript, workspaceRoot) {
+  return compactSourceInputs([...roster, ...javascript.files.map((path) => `{workspaceRoot}/${path}`), ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime }))], workspaceRoot);
+}
+
+/** 🧬️ Computes what every test owner shares once, so a discovery of single owners neither repeats it nor hides the facts it read: the caller captures the observations of this call and holds them for every owner it discovers afterwards. The command walk of the testing domain (about 20 thousand rows, the same for every owner) is not part of those observations: `walk` carries the rows that support it and the derived fact that stands for it, so an owner holds one row for it and an edit of a file of the walk that keeps its answer leaves every test owner valid. */
+async function testShared(context) {
+  const { workspaceRoot } = context;
+  const vocabulary = taxonomy(workspaceRoot);
+  const authority = workspaceAdmission(workspaceRoot);
+  const policyPath = `${dirname(TAXONOMY_REL)}/⚡️caching/🔣️policy.json`;
+  if (!authority.file(policyPath)) throw new Error("Test discovery requires real no-follow cache policy authority");
+  const policy = JSON.parse(readFileSync(join(workspaceRoot, policyPath), "utf8"));
+  const { cacheInternals: native, libraryBootstrap, createScriptInputCache, resolveCommandWalkV1 } = await (await loadInferenceModuleV1()).loadCurrentImplementationV1();
+  await libraryBootstrap;
+  const walk = await resolveCommandWalkV1(workspaceRoot, [join(workspaceRoot, vocabulary.testDomainPath, "📜️script.ts")], createScriptInputCache({ ...context, lateClosures: true }));
+  const commandInputs = commandInputsFrom(walk.value, policy.toolchains.javascript, workspaceRoot);
+  const state = { manifests: new Map(), closures: new Map(), names: new Map() }, host = `${vocabulary.testDomainPath}/📦️packages/🦀️rust`;
+  if (existsSync(join(workspaceRoot, host))) {
+    for (const root of native.nativeDependencyRoots(host, workspaceRoot, false, state.manifests, state.closures)) projectNameOfRoot(workspaceRoot, root, state);
+    native.nativePreparation(host, workspaceRoot, vocabulary.generatorContracts, false, state.manifests, state.closures);
+  }
+  return Object.freeze({ commandInputs, state: Object.freeze(state), walk: Object.freeze({ rows: walk.rows, derived: walk.derived }) });
+}
+
 /**
  * 🕸️ Generates one project per test owner: `lint` runs the contract phase over every case, `test` runs the owner's cases with the level, facet and case
  * selection passed as arguments. Its inputs are the union of every case's inputs, so changing one case invalidates its owner's cached runs.
  */
 async function testCaseProjects(configFiles, _options, context) {
   const { workspaceRoot } = context;
+  const shared = context.testShared;
   const vocabulary = taxonomy(workspaceRoot);
   const authority = workspaceAdmission(workspaceRoot);
   const featureCandidates = candidateFiles(configFiles, vocabulary, authority);
@@ -234,10 +269,10 @@ async function testCaseProjects(configFiles, _options, context) {
   if (featureCandidates.length === 0) return results;
   const { cacheInternals: native, libraryBootstrap, createScriptInputCache } = await (await loadInferenceModuleV1()).loadCurrentImplementationV1();
   await libraryBootstrap;
-  const state = { manifests: new Map(), closures: new Map(), names: new Map(), plans: new Map() };
+  const state = shared ? { manifests: new Map(shared.state.manifests), closures: new Map(shared.state.closures), names: new Map(shared.state.names), plans: new Map() } : { manifests: new Map(), closures: new Map(), names: new Map(), plans: new Map() };
   const javascript = policy.toolchains.javascript;
   const owners = new Map();
-  let commandInputs;
+  let commandInputs = shared?.commandInputs;
 
   for (const configFile of featureCandidates) {
     if (configFile.includes("\uFFFD")) continue;
@@ -261,7 +296,7 @@ async function testCaseProjects(configFiles, _options, context) {
   }
 
   for (const [ownerRel, owner] of [...owners].sort(([left], [right]) => Buffer.compare(Buffer.from(left), Buffer.from(right)))) {
-    commandInputs ??= compactSourceInputs([...await native.relativeScriptInputs([join(workspaceRoot, vocabulary.testDomainPath, "📜️script.ts")], workspaceRoot,createScriptInputCache(context)), ...javascript.files.map((path) => `{workspaceRoot}/${path}`), ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime }))], workspaceRoot);
+    commandInputs ??= await commandInputsOf(context, vocabulary, native, javascript, createScriptInputCache);
     const name = projectNameFor(ownerRel, await ownerHash(ownerRel));
     const adapters = [...new Set(owner.cases.flatMap((row) => row.adapters))].sort();
     const inputs = [...new Map(owner.cases.flatMap((row) => inputsFor(workspaceRoot, vocabulary, ownerRel, row.caseRel, row.adapters)).map((input) => [JSON.stringify(input), input])).values()];
@@ -400,6 +435,9 @@ export function discoverCaseDirs(workspaceRoot) {
 
 /** 🏗️ Supplies portable test-owner projects without acquiring a task-runner runtime. */
 export async function discoverTestBuildProjectsV1(files,options,context) { return withTestInferenceWriterV1(context,async(invocation,phaseControl)=>{await testBootstrap;return testCaseProjects(files,options,{...context,invocation,phaseControl});}); }
+
+/** 🧬️ Computes the inputs all test owners share, to be passed back as `context.testShared` when single owners are discovered; the observations of this call belong to every one of them. */
+export async function discoverTestSharedV1(context) { return withTestInferenceWriterV1(context,async(invocation,phaseControl)=>{await testBootstrap;return testShared({...context,invocation,phaseControl});}); }
 
 /** 🪢️ Supplies test-owner dependency edges from the portable project inventory. */
 export async function discoverTestBuildDependenciesV1(options,context) { return withTestInferenceWriterV1(context,async(invocation,phaseControl)=>{await testBootstrap;return testCaseDependencies(options,{...context,invocation,phaseControl});}); }

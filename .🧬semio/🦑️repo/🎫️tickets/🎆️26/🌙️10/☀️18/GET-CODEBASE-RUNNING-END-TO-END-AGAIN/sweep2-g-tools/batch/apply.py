@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""sweep2-g batch: anchored, idempotent edits of the live files, byte backups in backup/, never a whole-file overwrite of a file a peer changed (every edit is derived from the LIVE text). usage: apply.py check|apply|revert"""
+import json, os, shutil, sys
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import stage
+ROOT = stage.ROOT
+BACKUP = os.environ.get("SWEEP2_BACKUP", os.path.join(HERE, "backup"))
+LAWS = {f"{stage.LIB}/🏗️build/📥️source/🔏️closure/🗓️scheduling/🧪️tests/🧵️unit-cache-lanes/🟦️.ts": "unit-cache-lanes.test.ts", f"{stage.LIB}/🏗️build/📥️inputs/🧪️tests/🔑️test-data-reads/🟦️.ts": "test-data-reads.test.ts"}
+def mask():
+    value = os.umask(0); os.umask(value); return value
+def edits():
+    table = stage.table_text(); lines = stage.exclusions(table)
+    rows = {stage.TABLE: table, stage.POLICY: stage.splice(stage.read(stage.POLICY), lines, "      "), stage.NX: stage.splice(stage.read(stage.NX), lines, "      ")}
+    for path, patch in json.load(open(os.path.join(HERE, "project-patches.json"))).items() if os.path.exists(os.path.join(HERE, "project-patches.json")) else []:
+        rows[path] = project_patch(path, patch)
+    return rows
+def project_patch(path, patch):
+    text = stage.read(path)
+    for old, new in patch:
+        if new in text: continue
+        assert text.count(old) == 1, f"anchor not unique in {path}: {old[:60]}"
+        text = text.replace(old, new)
+    json.loads(text)
+    return text
+def law(name):
+    return open(os.path.join(HERE, "laws", name), encoding="utf8").read()
+def state(rows):
+    out = {}
+    for path, text in rows.items(): out[path] = "applied" if stage.read(path) == text else "pending"
+    for path, name in LAWS.items():
+        target = os.path.join(ROOT, path)
+        out[path] = "applied" if os.path.exists(target) and open(target, encoding="utf8").read() == law(name) else "pending"
+    return out
+def main():
+    mode = sys.argv[1] if len(sys.argv) > 1 else "check"
+    if mode == "revert":
+        for name in sorted(os.listdir(BACKUP)):
+            meta = json.load(open(os.path.join(BACKUP, name, "meta.json")))
+            target = os.path.join(ROOT, meta["path"])
+            if meta["existed"]: shutil.copyfile(os.path.join(BACKUP, name, "bytes"), target)
+            elif os.path.exists(target): os.remove(target)
+            print("reverted", meta["path"])
+        return
+    rows = edits(); st = state(rows)
+    if mode == "check":
+        for path, value in st.items(): print(value, path)
+        return
+    assert mode == "apply"
+    os.makedirs(BACKUP, exist_ok=True)
+    work = dict(rows); work.update({path: law(name) for path, name in LAWS.items()})
+    for index, (path, text) in enumerate(work.items()):
+        if st[path] == "applied": continue
+        target = os.path.join(ROOT, path); box = os.path.join(BACKUP, f"{index:02d}")
+        if not os.path.exists(box):
+            os.makedirs(box); existed = os.path.exists(target)
+            if existed: shutil.copyfile(target, os.path.join(box, "bytes"))
+            json.dump({"path": path, "existed": existed}, open(os.path.join(box, "meta.json"), "w"), ensure_ascii=False)
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        tmp = target + ".sweep2.tmp"; open(tmp, "w", encoding="utf8").write(text); os.chmod(tmp, os.stat(target).st_mode & 0o7777 if os.path.exists(target) else 0o666 & ~mask()); os.replace(tmp, target)
+        print("applied", path)
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "🧹️ Retention of one graph memo directory: how many slices stay, the byte budget of the whole directory (a sealed slice is a plan of up to 256 MiB beside its relevance, recheck and stamp tables, so the count alone bounds nothing), the smallest set that is kept whatever it costs and the grace of a file no record names yet (a publication in flight).",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "recordsKept": 8,
+        "minimumRecordsKept": 2,
+        "maximumDirectoryBytes": 1073741824,
+        "graceMilliseconds": 60000
+      }
+    },
+    "Messages": {
+      "const": {
+        "collected": {
+          "en": "[repo graph] the graph memo exceeded its {budgetMib} MiB budget: removed {records} older slice(s) and {files} unnamed file(s) ({freedMib} MiB); {kept} slice(s) kept ({keptMib} MiB)",
+          "de": "[repo graph] Das Graph-Memo überschritt sein Budget von {budgetMib} MiB: {records} ältere Ausschnitt(e) und {files} unbenannte Datei(en) entfernt ({freedMib} MiB); {kept} Ausschnitt(e) behalten ({keptMib} MiB)"
+        }
+      }
+    },
+    "Language": { "enum": ["en", "de"] }
+  }
+}

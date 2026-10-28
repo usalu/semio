@@ -1,0 +1,28 @@
+{
+ "label": "rn-schema",
+ "target": "@semio-tech/dsl-derive-rs:check-schema-index",
+ "started": "23:31:18",
+ "wall_s": 373.8,
+ "peak_tree_mb": 4813,
+ "peak_processes": 6,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "31"
+  ],
+  "inferring": [
+   "29"
+  ],
+  "published": [
+   "692",
+   "32",
+   "123"
+  ],
+  "processes": [
+   "2",
+   "2 internal"
+  ]
+ }
+}

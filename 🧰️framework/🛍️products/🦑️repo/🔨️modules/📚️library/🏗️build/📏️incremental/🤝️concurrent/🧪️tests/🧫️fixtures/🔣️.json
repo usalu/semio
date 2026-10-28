@@ -2987,7 +2987,7 @@
       "excludeUncached": true,
       "title": {
        "en": "A task executes in one session only; the others execute no action for it",
-       "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+       "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
       },
       "owners": [
        "conc-bazel",
@@ -4578,7 +4578,7 @@
       "excludeUncached": true,
       "title": {
        "en": "A task executes in one session only; the others execute no action for it",
-       "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+       "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
       },
       "owners": [
        "conc-bazel",
@@ -4693,7 +4693,7 @@
       "excludeUncached": true,
       "title": {
        "en": "A task executes in one session only; the others execute no action for it",
-       "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+       "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
       },
       "owners": [
        "conc-bazel",
@@ -4808,7 +4808,7 @@
       "excludeUncached": true,
       "title": {
        "en": "A task executes in one session only; the others execute no action for it",
-       "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+       "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
       },
       "owners": [
        "conc-bazel",
@@ -4910,7 +4910,7 @@
       "excludeUncached": true,
       "title": {
        "en": "A task executes in one session only; the others execute no action for it",
-       "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+       "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
       },
       "owners": [
        "conc-bazel",
@@ -5016,7 +5016,7 @@
       "excludeUncached": true,
       "title": {
        "en": "A task executes in one session only; the others execute no action for it",
-       "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+       "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
       },
       "owners": [
        "conc-bazel",
@@ -5128,7 +5128,7 @@
       "excludeUncached": true,
       "title": {
        "en": "A task executes in one session only; the others execute no action for it",
-       "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+       "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
       },
       "owners": [
        "conc-bazel",
@@ -5202,7 +5202,7 @@
       "excludeUncached": true,
       "title": {
        "en": "A task executes in one session only; the others execute no action for it",
-       "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+       "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
       },
       "owners": [
        "conc-bazel",
@@ -6356,7 +6356,7 @@
         "excludeUncached": true,
         "title": {
          "en": "A task executes in one session only; the others execute no action for it",
-         "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+         "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
         },
         "owners": [
          "conc-bazel",
@@ -7389,7 +7389,7 @@
         "excludeUncached": true,
         "title": {
          "en": "A task executes in one session only; the others execute no action for it",
-         "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+         "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
         },
         "owners": [
          "conc-bazel",
@@ -8424,7 +8424,7 @@
         "excludeUncached": true,
         "title": {
          "en": "A task executes in one session only; the others execute no action for it",
-         "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+         "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
         },
         "owners": [
          "conc-bazel",
@@ -9460,7 +9460,7 @@
         "excludeUncached": true,
         "title": {
          "en": "A task executes in one session only; the others execute no action for it",
-         "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+         "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
         },
         "owners": [
          "conc-bazel",
@@ -10495,7 +10495,7 @@
         "excludeUncached": true,
         "title": {
          "en": "A task executes in one session only; the others execute no action for it",
-         "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+         "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
         },
         "owners": [
          "conc-bazel",
@@ -11534,7 +11534,7 @@
         "excludeUncached": true,
         "title": {
          "en": "A task executes in one session only; the others execute no action for it",
-         "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+         "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
         },
         "owners": [
          "conc-bazel",
@@ -12569,7 +12569,7 @@
         "excludeUncached": true,
         "title": {
          "en": "A task executes in one session only; the others execute no action for it",
-         "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+         "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
         },
         "owners": [
          "conc-bazel",
@@ -13606,7 +13606,7 @@
         "excludeUncached": true,
         "title": {
          "en": "A task executes in one session only; the others execute no action for it",
-         "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+         "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
         },
         "owners": [
          "conc-bazel",
@@ -14641,7 +14641,7 @@
         "excludeUncached": true,
         "title": {
          "en": "A task executes in one session only; the others execute no action for it",
-         "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+         "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
         },
         "owners": [
          "conc-bazel",
@@ -15687,7 +15687,7 @@
         "excludeUncached": true,
         "title": {
          "en": "A task executes in one session only; the others execute no action for it",
-         "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+         "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
         },
         "owners": [
          "conc-bazel",
@@ -16722,7 +16722,7 @@
         "excludeUncached": true,
         "title": {
          "en": "A task executes in one session only; the others execute no action for it",
-         "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+         "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
         },
         "owners": [
          "conc-bazel",
@@ -17772,7 +17772,7 @@
         "excludeUncached": true,
         "title": {
          "en": "A task executes in one session only; the others execute no action for it",
-         "de": "Ein Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
+         "de": "Eine Task läuft nur in einer Sitzung; die anderen führen dafür keine Aktion aus"
         },
         "owners": [
          "conc-bazel",

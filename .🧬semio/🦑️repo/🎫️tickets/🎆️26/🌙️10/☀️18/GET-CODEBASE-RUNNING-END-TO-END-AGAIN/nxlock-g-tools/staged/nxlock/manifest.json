@@ -1,0 +1,74 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🔣️policy.json": {
+  "file": "f00",
+  "base": "cef0ea13f3eb5d3b5deaaf60fcc686e98dee053c1e18d16bebc6fbbb9c8cfd92",
+  "coreBase": "4d31745bc041e377ae0f53ae3074af7ba064f3d3280a6f35a1520741898ff86c",
+  "new": "a5d168463d96b68d92421169c86e70e39ad37604536a7fcc8d9fe353ecdc8022"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/🟦️.ts": {
+  "file": "f01",
+  "base": "7449e215580df9a4b9575244d0cf87debff68ba2c5fe16754f5f3cc3e8efccd4",
+  "coreBase": "41a10de4c253b500ed0921fe28ea0f1631c93b7b284389e14f87e199db5e8571",
+  "new": "93a7ec4121fbcb44601226f214e1ac9b85568993ef2701cca786bc4970111e92"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🟦️.ts": {
+  "file": "f02",
+  "base": "323c2919f605882aa73ed9d0a3815c1ab519e10f9407de030a49a225e999b0ec",
+  "coreBase": null,
+  "new": "cde88db0b07d010db86db43ff585ba1a174b39fe269668fcd823aea0b2b5f816"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/📋️contract/🟦️.ts": {
+  "file": "f03",
+  "base": "c91fd7047f7a8363ac909c99a45f2482703c2c8aa19a2b82cf925a6a5d3fa793",
+  "coreBase": null,
+  "new": "6c444708246ea1c08d89b516565b1067bc59848d049da7d5e2cf5230fbff493e"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧬️schema/🔣️.json": {
+  "file": "f04",
+  "base": "93fdf74e0df6465c84bb4acb9b1c421d17657c33f773f3b2f5174a1f4982b765",
+  "coreBase": null,
+  "new": "ca6d92f2ce8a11721791907abebddeceab408399a6beb65a3a0f5fa9288fb87b"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/🧩️component-driver/🟦️.ts": {
+  "file": "f05",
+  "base": "f2bae38cb411ed9e00cc0158e7f8ff2210fde2a491675e7c5234de886594aa91",
+  "coreBase": null,
+  "new": "bccccbba7ac1f156df23206deb6133a190d211a43722d7a265ecb1860209a9c4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🟦️.ts": {
+  "file": "f06",
+  "base": "d42fdff5895aab90d6306fa89b0024287c5ef1f8e593339ac90aa300099dd11a",
+  "coreBase": null,
+  "new": "90425f4ea2202a7f3e985d3699e908fc86e2bddbb67a0abe3f81da75746b758b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts": {
+  "file": "f07",
+  "base": "130c09971136cde1f953f33695f0ea5aa8b7ce3087c2f92b6c38bd3ce7acb667",
+  "coreBase": null,
+  "new": "71ecad02da25f915153c06d759d8a87884748bd8672ec2365af133de2c9895c5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/📥️phase/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "f08",
+  "base": "7624e1a14a17f30f7471f280c793f2660838176d10f57f6ee24b421b84ebca8e",
+  "coreBase": null,
+  "new": "328820cceda71290073a92cd8cd50c15cba03d4e473cd9ea4a52b3f02cc2115a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🧪️tests/🟦️.ts": {
+  "file": "f09",
+  "base": null,
+  "coreBase": null,
+  "new": "86bcf8c666ccf1f2c288c38d65996ecd5626bd1155e06dbc06cb9a3df18a8f1a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "f10",
+  "base": null,
+  "coreBase": null,
+  "new": "7b08a87f9dbc3ca06a7b777eae8fa582c3341c15143dfc39c9f509f2b41f58ef"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🧪️tests/🐍️.py": {
+  "file": "f11",
+  "base": null,
+  "coreBase": null,
+  "new": "879549e6b58d231fe182234241589860a1e541d1f4b9db112851af99de2cd58f"
+ }
+}

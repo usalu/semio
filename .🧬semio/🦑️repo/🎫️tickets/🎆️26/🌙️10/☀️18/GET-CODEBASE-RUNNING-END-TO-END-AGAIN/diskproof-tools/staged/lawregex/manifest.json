@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/⚖️law/🟦️.ts": {
+  "file": "f000",
+  "base": "fd0bb48a74571b58f1c49a2c1ae8bf20ca31f64570d64c0c6c59921b35149027",
+  "new": "9089a101cdda7e613e097beb79dba04f6d1c74d4bce4954ee644f5b530cb6b4d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/⚖️law/🌐️native/🟦️.ts": {
+  "file": "f001",
+  "base": "a9dea76caab327df2aa8e3a8a619d78c39756391779a099425a00c01ed91a560",
+  "new": "8a0ed6f980a8817198d855755ddb8515a09e971856e37ce3f73a18cc79cea428"
+ }
+}

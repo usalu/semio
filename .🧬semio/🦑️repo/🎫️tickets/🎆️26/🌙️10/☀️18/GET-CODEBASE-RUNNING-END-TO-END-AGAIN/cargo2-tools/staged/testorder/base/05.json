@@ -1,0 +1,306 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "tests-success",
+      "kind": "tests",
+      "threads": false,
+      "outcome": "success",
+      "releaseFails": false,
+      "settlement": "settles",
+      "trace": [
+        "lease",
+        "request:1",
+        "planning:1",
+        "source:1",
+        "request:2",
+        "run:2",
+        "stop",
+        "remove",
+        "release"
+      ]
+    },
+    {
+      "name": "tests-undefined",
+      "kind": "tests",
+      "threads": false,
+      "outcome": "undefined",
+      "releaseFails": true,
+      "settlement": "rejects",
+      "trace": [
+        "lease",
+        "request:1",
+        "planning:1",
+        "source:1",
+        "request:2",
+        "run:2",
+        "stop",
+        "remove",
+        "release"
+      ]
+    },
+    {
+      "name": "tests-frozen",
+      "kind": "tests",
+      "threads": false,
+      "outcome": "frozen",
+      "releaseFails": true,
+      "settlement": "rejects",
+      "trace": [
+        "lease",
+        "request:1",
+        "planning:1",
+        "source:1",
+        "request:2",
+        "run:2",
+        "stop",
+        "remove",
+        "release"
+      ]
+    },
+    {
+      "name": "lint-success",
+      "kind": "lint",
+      "threads": false,
+      "outcome": "success",
+      "releaseFails": false,
+      "settlement": "settles",
+      "trace": [
+        "lease",
+        "request:1",
+        "planning:1",
+        "source:1",
+        "run:1",
+        "stop",
+        "release"
+      ]
+    },
+    {
+      "name": "lint-undefined",
+      "kind": "lint",
+      "threads": false,
+      "outcome": "undefined",
+      "releaseFails": true,
+      "settlement": "rejects",
+      "trace": [
+        "lease",
+        "request:1",
+        "planning:1",
+        "source:1",
+        "run:1",
+        "stop",
+        "release"
+      ]
+    },
+    {
+      "name": "lint-frozen",
+      "kind": "lint",
+      "threads": false,
+      "outcome": "frozen",
+      "releaseFails": true,
+      "settlement": "rejects",
+      "trace": [
+        "lease",
+        "request:1",
+        "planning:1",
+        "source:1",
+        "run:1",
+        "stop",
+        "release"
+      ]
+    },
+    {
+      "name": "wasm-success",
+      "kind": "wasm",
+      "threads": false,
+      "outcome": "success",
+      "releaseFails": false,
+      "settlement": "settles",
+      "trace": [
+        "lease",
+        "request:1",
+        "capacity:1",
+        "admit:1",
+        "run:1",
+        "consume",
+        "capacity-release",
+        "release",
+        "remove",
+        "remove"
+      ]
+    },
+    {
+      "name": "wasm-undefined",
+      "kind": "wasm",
+      "threads": false,
+      "outcome": "undefined",
+      "releaseFails": true,
+      "settlement": "rejects",
+      "trace": [
+        "lease",
+        "request:1",
+        "capacity:1",
+        "admit:1",
+        "run:1",
+        "capacity-release",
+        "release",
+        "remove",
+        "remove"
+      ]
+    },
+    {
+      "name": "wasm-frozen",
+      "kind": "wasm",
+      "threads": false,
+      "outcome": "frozen",
+      "releaseFails": true,
+      "settlement": "rejects",
+      "trace": [
+        "lease",
+        "request:1",
+        "capacity:1",
+        "admit:1",
+        "run:1",
+        "capacity-release",
+        "release",
+        "remove",
+        "remove"
+      ]
+    },
+    {
+      "name": "wasm-threaded",
+      "kind": "wasm",
+      "threads": true,
+      "outcome": "success",
+      "releaseFails": false,
+      "settlement": "settles",
+      "trace": [
+        "lease",
+        "request:1",
+        "capacity:1",
+        "admit:1",
+        "run:1",
+        "run:1",
+        "consume",
+        "capacity-release",
+        "release",
+        "remove",
+        "remove"
+      ]
+    },
+    {
+      "name": "tests-cancelled",
+      "kind": "tests",
+      "threads": false,
+      "outcome": "cancelled",
+      "releaseFails": false,
+      "settlement": "rejects",
+      "trace": [
+        "lease",
+        "request:1",
+        "release"
+      ]
+    },
+    {
+      "name": "tests-cleanup",
+      "kind": "tests",
+      "threads": false,
+      "outcome": "cleanup",
+      "releaseFails": true,
+      "settlement": "rejects",
+      "trace": [
+        "lease",
+        "request:1",
+        "planning:1",
+        "source:1",
+        "request:2",
+        "run:2",
+        "stop",
+        "remove",
+        "release"
+      ]
+    },
+    {
+      "name": "lint-cancelled",
+      "kind": "lint",
+      "threads": false,
+      "outcome": "cancelled",
+      "releaseFails": false,
+      "settlement": "rejects",
+      "trace": [
+        "lease",
+        "request:1",
+        "release"
+      ]
+    },
+    {
+      "name": "lint-cleanup",
+      "kind": "lint",
+      "threads": false,
+      "outcome": "cleanup",
+      "releaseFails": true,
+      "settlement": "rejects",
+      "trace": [
+        "lease",
+        "request:1",
+        "planning:1",
+        "source:1",
+        "run:1",
+        "stop",
+        "release"
+      ]
+    },
+    {
+      "name": "wasm-cancelled",
+      "kind": "wasm",
+      "threads": false,
+      "outcome": "cancelled",
+      "releaseFails": false,
+      "settlement": "rejects",
+      "trace": [
+        "lease",
+        "request:1",
+        "release",
+        "remove",
+        "remove"
+      ]
+    },
+    {
+      "name": "wasm-cleanup",
+      "kind": "wasm",
+      "threads": false,
+      "outcome": "cleanup",
+      "releaseFails": true,
+      "settlement": "rejects",
+      "trace": [
+        "lease",
+        "request:1",
+        "capacity:1",
+        "admit:1",
+        "run:1",
+        "consume",
+        "capacity-release",
+        "release",
+        "remove",
+        "remove"
+      ]
+    }
+  ],
+  "substitutions": [
+    {
+      "kind": "tests",
+      "occurrence": 0,
+      "port": "planning"
+    },
+    {
+      "kind": "lint",
+      "occurrence": 0,
+      "port": "planning"
+    },
+    {
+      "kind": "wasm",
+      "occurrence": 0,
+      "port": "admit"
+    }
+  ]
+}

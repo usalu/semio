@@ -1,0 +1,2 @@
+base sha256 of every touched file (2026-10-26 19:5x):
+0a8e905dc21c8e960eedcad4ea6e8c2376b61406f003ff8aa56e0b3e460f3283  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs

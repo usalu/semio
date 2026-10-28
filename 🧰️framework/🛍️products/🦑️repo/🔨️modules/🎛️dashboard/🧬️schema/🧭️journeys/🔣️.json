@@ -13,7 +13,8 @@
     "widthProbe",
     "domainLifecycle",
     "nativeSources",
-    "nativeEditor"
+    "nativeEditor",
+    "hostScale"
   ],
   "properties": {
     "nativeSources": {
@@ -579,6 +580,67 @@
             },
             "interactionMilliseconds": {
               "const": 1000
+            }
+          }
+        }
+      }
+    },
+    "hostScale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clamp",
+        "cases"
+      ],
+      "properties": {
+        "clamp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "const": 1
+            },
+            "max": {
+              "const": 16
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "report",
+              "cores",
+              "scale"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "report": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "cores": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "scale": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 16
+              }
             }
           }
         }

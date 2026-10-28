@@ -1,10 +1,13 @@
-import {chmod,lstat,mkdir,readdir,readFile,rename,rmdir,unlink,writeFile} from "node:fs/promises";
+import {chmod,lstat,mkdir,readdir,readFile,rename,rmdir,stat,unlink,utimes,writeFile} from "node:fs/promises";
 import {nativePartitionOfV1,nativeStatfsV1,nativeStorageBackendOfDirectoryV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {isAbsolute,join,relative,resolve,sep} from "node:path";
+import {CACHE_GC_LIMITS_V1} from "../🧬️schema/🟦️.ts";
 import ticket from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🧬️schema/📜️ticket/🔣️json/🟦️.ts";
 import budgetPolicy from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
-import {CACHE_RUNTIME_V1,CACHE_SIZE_FILE_V1,cacheAreaBudgetBytesV1,cacheAreaDirectoryV1,cacheRootDirectoryV1,cacheTextV1,classifyCachePathV1,formatCacheBytesV1,formatCacheReasonV1,planCacheCollectionV1,readCacheSizeLedgerV1,type CacheAreaRowV1,type CacheEntryRowV1,type CacheLanguageV1,type CacheLedgerV1,type CachePartitionBudgetsV1,type CachePartitionRowV1,type CacheRemovalV1,type CacheReportV1,type CacheRootIdV1,type CacheSizeLedgerV1,type CacheSizeRecordV1,type CacheSourceV1,type CacheTargetPlanV1,type CacheTargetV1,type CacheUnitV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
+import {CACHE_RUNTIME_V1,CACHE_SIZE_FILE_V1,cacheAreaBudgetBytesV1,cacheAreaDirectoryV1,cacheRootDirectoryV1,cacheTextV1,classifyCachePathV1,formatCacheBytesV1,cacheRecencyMsV1,formatCacheReasonV1,planCacheCollectionV1,readCacheSizeLedgerV1,type CacheAreaRowV1,type CacheEntryRowV1,type CacheLanguageV1,type CacheLedgerV1,type CachePartitionBudgetsV1,type CachePartitionRowV1,type CacheRemovalV1,type CacheReportV1,type CacheRootIdV1,type CacheSizeLedgerV1,type CacheSizeRecordV1,type CacheSourceV1,type CacheTargetPlanV1,type CacheTargetV1,type CacheUnitV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
+import {formatMachinePlanV1,planMachineBudgetV1,splitMachineBudgetV1,type MachinePlanV1,type MachinePolicyV1,type MachineSourceV1,type MachineUseV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
 import { SqliteDatabaseV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗃️sqlite/🟦️.ts";
+import {nativeFreeSpaceSyncV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 const runtime=CACHE_RUNTIME_V1,protocol=ticket.definitions.Protocol.const,mount="m",tickets=new RegExp(protocol.ticketPattern,"u");
 
@@ -16,8 +19,9 @@ export type CacheRunnerPortsV1=Readonly<{
  exclusive(resource:string):Promise<Readonly<{release():void}>|undefined>;
  alive(pid:number):boolean;
  sqliteFree(file:string):Promise<boolean>;
+ atimeReliable?(directory:string):Promise<boolean>;
  platform?:NodeJS.Platform;
- delegate?(owner:string,areaId:string,dryRun:boolean,language:CacheLanguageV1):Promise<string|undefined>;
+ delegate?(owner:string,areaId:string,dryRun:boolean,language:CacheLanguageV1,context?:Readonly<{machine:MachinePlanV1|null;selected:boolean}>):Promise<string|undefined>;
 }>;
 
 /** 🧟️ Asks the operating system whether a process still exists; a process we may not signal still exists. */
@@ -33,9 +37,17 @@ export async function cacheSqliteFreeV1(file:string):Promise<boolean>{
  finally{try{database?.close();}catch{}}
 }
 
+/** 🕰️ Proves that reading a file moves its access time on the volume of a directory: a probe file is dated two days back and read once. A volume mounted without access times (`noatime`, the default of Windows) never does, so the recency of a cache that is only read there says nothing about whether somebody uses it. */
+export async function cacheAtimeReliableV1(directory:string):Promise<boolean>{
+ const path=join(directory,`.atime-probe-${process.pid}-${Date.now()}`),past=new Date(Date.now()-CACHE_GC_LIMITS_V1.atimeProbeAgeMilliseconds);
+ try{await writeFile(path,"x");await utimes(path,past,past);await readFile(path);return (await stat(path)).atimeMs>past.getTime()+CACHE_GC_LIMITS_V1.atimeProbeToleranceMilliseconds;}
+ catch{return false;}
+ finally{await unlink(path).catch(()=>undefined);}
+}
+
 /** 🏭️ Completes the host ports with the portable defaults. */
 export function cacheRunnerPortsV1(ports:Pick<CacheRunnerPortsV1,"signal"|"progress"|"exclusive">&Partial<CacheRunnerPortsV1>):CacheRunnerPortsV1{
- return Object.freeze({now:()=>Date.now(),alive:cachePidAliveV1,sqliteFree:cacheSqliteFreeV1,...ports});
+ return Object.freeze({now:()=>Date.now(),alive:cachePidAliveV1,sqliteFree:cacheSqliteFreeV1,atimeReliable:cacheAtimeReliableV1,...ports});
 }
 
 type Ticker=()=>Promise<void>;
@@ -51,7 +63,7 @@ export type CacheMeasureV1=Readonly<{present:boolean;bytes:number;recencyMs:numb
 export async function measureCacheTreeV1(path:string,ports:CacheRunnerPortsV1,limit:number,stage:string=""):Promise<CacheMeasureV1>{
  let first;try{first=await lstat(path);}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return{present:false,bytes:0,recencyMs:0,entries:0,partial:false,sqlite:[],queues:[]};throw error;}
  const allocated=(info:{size:number;blocks?:number}):number=>info.blocks?info.blocks*512:info.size,seen=new Set<string>(),sqlite:string[]=[],queues:string[]=[],tick=ticker(ports,()=>stage);
- if(!first.isDirectory())return{present:true,bytes:first.isSymbolicLink()?0:allocated(first),recencyMs:Math.max(first.mtimeMs,first.atimeMs),entries:1,partial:false,sqlite:path.endsWith(".sqlite")?[path]:[],queues:[]};
+ if(!first.isDirectory())return{present:true,bytes:first.isSymbolicLink()?0:allocated(first),recencyMs:cacheRecencyMsV1(first,ports.now()),entries:1,partial:false,sqlite:path.endsWith(".sqlite")?[path]:[],queues:[]};
  let bytes=0,files=0,entries=0,partial=false;const stack=[path];let recency=0,directories=first.mtimeMs;
  while(stack.length){
   await tick();const directory=stack.pop()!;let children;
@@ -65,7 +77,7 @@ export async function measureCacheTreeV1(path:string,ports:CacheRunnerPortsV1,li
    let info;try{info=await lstat(full);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")recency=Math.max(recency,ports.now());continue;}
    if(info.isSymbolicLink())continue;
    if(info.nlink>1){const exact=Number.isSafeInteger(info.ino)?info:await lstat(full,{bigint:true}).catch(()=>info),key=exact.dev+":"+exact.ino;if(seen.has(key))continue;seen.add(key);}
-   bytes+=allocated(info);files++;recency=Math.max(recency,info.mtimeMs,info.atimeMs);
+   bytes+=allocated(info);files++;recency=Math.max(recency,cacheRecencyMsV1(info,ports.now()));
    if(child.name.endsWith(".sqlite")&&sqlite.length<runtime.sqliteProbesPerUnit)sqlite.push(full);
   }
  }
@@ -151,7 +163,7 @@ export async function reportCacheLedgerV1(workspace:string,ledger:CacheLedgerV1,
  const nested=ledger.areas.filter(area=>area.kind==="nested"&&selected(area.id)).sort((left,right)=>Number("remainder" in (left.budget??{}))-Number("remainder" in (right.budget??{})));
  for(const area of nested){
   await ports.progress("status:"+area.id);ports.signal.throwIfAborted();
-  const state=states.get(area.partition!)??await partitionStateV1(join(workspace,partitions[area.partition!]!.directory),ports,deep),directory=cacheAreaDirectoryV1(workspace,ledger,area,partitions)!,budget=cacheAreaBudgetBytesV1(ledger,area,partitions),remainder=area.budget&&"remainder" in area.budget,owner=area.managed!.owner;
+  const state=states.get(area.partition!)??await partitionStateV1(join(workspace,partitions[area.partition!]!.directory),ports,deep),directory=cacheAreaDirectoryV1(workspace,ledger,area,partitions)!,budget=cacheAreaBudgetBytesV1(ledger,area,partitions),remainder=area.budget&&"remainder" in area.budget,owner=area.managed?.owner??null;
   let row:CacheAreaRowV1;
   if(state.state==="detached"||state.state==="absent")row={id:area.id,root:area.root,partition:area.partition!,directory,present:false,measurable:false,usedBytes:null,budgetBytes:budget,entries:0,partial:false,over:false,owner,source:"unknown",recordedAtMs:null};
   else if(remainder){
@@ -162,7 +174,7 @@ export async function reportCacheLedgerV1(workspace:string,ledger:CacheLedgerV1,
     row={id:area.id,root:area.root,partition:area.partition!,directory,present:true,measurable:true,usedBytes:own,budgetBytes:budget,entries:0,partial:state.partial||siblings.some(row=>row!.partial),over:budget!==null&&own>budget,owner,source:recorded?"recorded":state.walked?"walked":"statfs",recordedAtMs:recorded?Math.min(...stamps):null};
    }
   }else{
-   const size=await sized(area.id,[directory],area.id);used.set(area.id,size);
+   const size=await sized(area.id,area.collect?.units===undefined?[directory]:await matching(directory,area.collect.units),area.id);used.set(area.id,size);
    row={id:area.id,root:area.root,partition:area.partition!,directory,present:size.present,measurable:true,usedBytes:size.usedBytes,budgetBytes:budget,entries:size.entries,partial:size.partial,over:budget!==null&&size.usedBytes!==null&&size.usedBytes>budget,owner,source:size.source,recordedAtMs:size.recordedAtMs};
   }
   areaRows.push(row);
@@ -229,45 +241,69 @@ export async function removeCacheTreeV1(path:string,ports:CacheRunnerPortsV1,sta
  }
 }
 
+/** 💽️ The bytes the host volume of a workspace still has free; unreadable is null. */
+export function machineHostFreeBytesV1(workspace:string):number|null{return nativeFreeSpaceSyncV1(workspace)?.availableBytes??null;}
+
+/** 🏬️ The machine budget uses read from a status report: the used bytes and fixed image allocation of every partition store, plus the loose caches (`evictableBytes` null means unknown, everything counts). */
+export function machineUsesV1(report:CacheReportV1,looseBytes:number,looseEvictableBytes:number|null):readonly MachineUseV1[]{
+ const uses:MachineUseV1[]=report.partitions.filter(row=>row.kind==="partition").map(row=>({id:row.id,usedBytes:row.usedBytes??0,envelopeBytes:row.envelopeBytes??row.capacityBytes,evictableBytes:null}));
+ uses.push({id:"loose",usedBytes:looseBytes,envelopeBytes:null,evictableBytes:looseEvictableBytes});
+ return uses;
+}
+
 /** 📤️ One line of collector output, already localized. */
 export type CacheOutputV1=Readonly<{write(line:string):void;language:CacheLanguageV1}>;
 /** 🧮️ What a collection did or would do. */
-export type CacheCollectionV1=Readonly<{dryRun:boolean;plans:readonly CacheTargetPlanV1[];removed:readonly CacheRemovalV1[];kept:number;failed:readonly Readonly<{target:string;name:string;message:string}>[];freedBytes:number;delegated:readonly Readonly<{owner:string;text:string}>[]}>;
+export type CacheCollectionV1=Readonly<{dryRun:boolean;plans:readonly CacheTargetPlanV1[];removed:readonly CacheRemovalV1[];kept:number;failed:readonly Readonly<{target:string;name:string;message:string}>[];freedBytes:number;delegated:readonly Readonly<{owner:string;text:string}>[];machine:MachinePlanV1|null}>;
 
-type Resolved=Readonly<{target:CacheTargetV1;base:string;prefix:string[];unusedAgeMs:number|null;release?:()=>void}>;
+type Resolved=Readonly<{target:CacheTargetV1;base:string;prefix:string[];unusedAgeMs:number|null;loose?:boolean;custody?:"quiet"|"sqlite"|"lease"|"pid";units?:RegExp;release?:()=>void}>;
 
 function insideBase(base:string,path:string):boolean{const distance=relative(base,path);return distance!==""&&!distance.startsWith(".."+sep)&&distance!==".."&&!isAbsolute(distance);}
 
-async function observe(base:string,names:readonly string[],id:string,custody:"quiet"|"sqlite"|"lease",ports:CacheRunnerPortsV1):Promise<CacheUnitV1[]>{
- const units:CacheUnitV1[]=[];
+async function unitNamesV1(base:string,depth:1|2):Promise<string[]>{
+ const children=await readdir(base).catch(()=>[] as string[]);
+ if(depth===1)return children;
+ const names:string[]=[];
+ for(const child of children){const grandchildren=await readdir(join(base,child)).catch(()=>null);if(grandchildren===null)names.push(child);else for(const grandchild of grandchildren)names.push(child+"/"+grandchild);}
+ return names;
+}
+
+/** 🏷️ Names the live process a unit directory belongs to when its name carries a process id (`(?<pid>…)` in the unit pattern); a process that cannot be signalled still counts as alive. */
+export function cachePidHolderV1(name:string,units:RegExp|undefined,ports:Pick<CacheRunnerPortsV1,"alive">):string|undefined{
+ const pid=Number(units?.exec(name)?.groups?.pid);
+ return Number.isSafeInteger(pid)&&pid>0&&ports.alive(pid)?"pid:"+pid:undefined;
+}
+
+async function observe(base:string,names:readonly string[],id:string,custody:"quiet"|"sqlite"|"lease"|"pid",ports:CacheRunnerPortsV1,pattern?:RegExp):Promise<CacheUnitV1[]>{
+ const units:CacheUnitV1[]=[];let current="";const tick=ticker(ports,()=>"scan:"+id+"/"+current);
  for(const name of names){
-  ports.signal.throwIfAborted();await ports.progress("scan:"+id+"/"+name);
+  current=name;await tick();
   const measure=await measureCacheTreeV1(join(base,...name.split("/")),ports,runtime.collectEntriesPerUnit,id);
   if(!measure.present)continue;
-  const held=custody==="lease"?undefined:await probeCacheHeldV1(measure,ports);
+  const held=custody==="lease"?undefined:custody==="pid"?cachePidHolderV1(name,pattern,ports)??await probeCacheHeldV1(measure,ports):await probeCacheHeldV1(measure,ports);
   units.push({name,bytes:measure.bytes,recencyMs:measure.recencyMs,...held?{held}:{}});
  }
  return units;
 }
 
 /** 🧹️ Plans and, unless asked to only plan, performs the collection: it scans every selected target, takes the area's exclusive lease without waiting, re-checks each unit right before removing it, and never touches a held or recently used one. */
-export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,request:Readonly<{dryRun:boolean;only?:ReadonlySet<string>}>,ports:CacheRunnerPortsV1,output:CacheOutputV1,partitions:CachePartitionBudgetsV1=budgetPolicy.partitions):Promise<CacheCollectionV1>{
- const text=(key:string,variables:Readonly<Record<string,string|number>>={})=>cacheTextV1(output.language,key,variables),selected=(id:string)=>request.only===undefined||request.only.has(id),resolved:Resolved[]=[],delegated:{owner:string;text:string}[]=[],notes:string[]=[],now=ports.now();
+export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,request:Readonly<{dryRun:boolean;only?:ReadonlySet<string>;machine?:Readonly<{totalBytes:number;source:MachineSourceV1;policy?:MachinePolicyV1}>}>,ports:CacheRunnerPortsV1,output:CacheOutputV1,partitions:CachePartitionBudgetsV1=budgetPolicy.partitions):Promise<CacheCollectionV1>{
+ const text=(key:string,variables:Readonly<Record<string,string|number>>={})=>cacheTextV1(output.language,key,variables),selected=(id:string)=>request.only===undefined||request.only.has(id),resolved:Resolved[]=[],delegated:{owner:string;text:string}[]=[],deferred:{slot:number;owner:string;id:string}[]=[],notes:string[]=[],now=ports.now();
  try{
   for(const area of ledger.areas){
    if(!selected(area.id))continue;
    if(area.managed&&area.kind!=="partition"&&area.kind!=="control"){
-    const answer=ports.delegate?await ports.delegate(area.managed.owner,area.id,request.dryRun,output.language):undefined;
-    if(answer!==undefined){delegated.push({owner:area.managed.owner,text:answer});notes.push(text("gc.owner",{owner:area.managed.owner,text:answer}));}else notes.push(text("gc.managed",{id:area.id,owner:area.managed.owner}));
+    deferred.push({slot:notes.length,owner:area.managed.owner,id:area.id});notes.push("");
     continue;
    }
    if(!area.collect)continue;
    const directory=cacheAreaDirectoryV1(workspace,ledger,area,partitions);let names:string[]=[],base:string;
-   if(directory!==null){base=directory;try{names=await readdir(directory);}catch{names=[];}}
+   const matcher=area.collect.units===undefined?undefined:new RegExp(area.collect.units,"u");
+   if(directory!==null){base=directory;names=(await unitNamesV1(directory,area.collect.depth??1)).filter(name=>matcher===undefined||matcher.test(name));}
    else{base=cacheRootDirectoryV1(workspace,ledger,area.root);const matcher=new RegExp(area.pattern!,"u");try{names=(await readdir(base)).filter(name=>matcher.test(name));}catch{names=[];}}
    const lease=area.collect.custody==="lease"?await ports.exclusive(area.collect.lease!):undefined,heldBy=area.collect.custody==="lease"&&!lease?area.collect.lease!:undefined;
-   const units=heldBy?[]:await observe(base,names,area.id,area.collect.custody,ports);
-   resolved.push({target:{id:area.id,kind:"area",budgetBytes:cacheAreaBudgetBytesV1(ledger,area,partitions),unusedAgeMs:area.collect.unusedAgeMs,quietMs:area.collect.quietMs,...heldBy?{heldBy}:{},units},base,prefix:[],unusedAgeMs:area.collect.unusedAgeMs,...lease?{release:()=>lease.release()}:{}});
+   const units=heldBy?[]:await observe(base,names,area.id,area.collect.custody,ports,matcher);
+   resolved.push({target:{id:area.id,kind:"area",budgetBytes:cacheAreaBudgetBytesV1(ledger,area,partitions),unusedAgeMs:area.collect.unusedAgeMs,quietMs:area.collect.quietMs,...heldBy?{heldBy}:{},units},base,prefix:[],unusedAgeMs:area.collect.unusedAgeMs,loose:area.kind==="tree"||area.kind==="control",custody:area.collect.custody,...matcher?{units:matcher}:{},...lease?{release:()=>lease.release()}:{}});
    if(heldBy)notes.push(text("gc.held",{path:area.id,holder:heldBy}));
   }
   if(request.only===undefined||request.only.has("retired"))for(const retirement of ledger.retirements){
@@ -277,27 +313,55 @@ export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,reque
   }
   if(request.only===undefined||request.only.has("undeclared"))for(const root of["repository","native"] as const){
    const base=cacheRootDirectoryV1(workspace,ledger,root),names=await undeclaredEntriesV1(workspace,ledger,root);
-   if(names.length)resolved.push({target:{id:root+":undeclared",kind:"undeclared",budgetBytes:null,unusedAgeMs:ledger.roots[root].undeclaredUnusedAgeMs,quietMs:ledger.roots[root].undeclaredQuietMs,units:await observe(base,names,root+":undeclared","quiet",ports)},base,prefix:[],unusedAgeMs:ledger.roots[root].undeclaredUnusedAgeMs});
+   if(names.length)resolved.push({target:{id:root+":undeclared",kind:"undeclared",budgetBytes:null,unusedAgeMs:ledger.roots[root].undeclaredUnusedAgeMs,quietMs:ledger.roots[root].undeclaredQuietMs,units:await observe(base,names,root+":undeclared","quiet",ports)},base,prefix:[],unusedAgeMs:ledger.roots[root].undeclaredUnusedAgeMs,loose:true});
   }
-  const plans=planCacheCollectionV1(resolved.map(row=>row.target),now),removed:CacheRemovalV1[]=[],failed:{target:string;name:string;message:string}[]=[],gone=new Map<string,number>(),goneNames=new Set<string>();let kept=0,freed=0;
+  let machine:MachinePlanV1|null=null,targets=resolved.map(row=>row.target);
+  if(request.machine){
+   const first=planCacheCollectionV1(targets,now),retained=new Map(first.map(plan=>[plan.id,plan.retainedBytes])),members=resolved.filter(row=>row.loose&&row.target.kind==="area"),looseBytes=resolved.filter(row=>row.loose).reduce((sum,row)=>sum+(retained.get(row.target.id)??0),0);
+   const report=await reportCacheLedgerV1(workspace,ledger,ports,partitions,undefined,{deep:false});
+   machine=planMachineBudgetV1({totalBytes:request.machine.totalBytes,hostFreeBytes:machineHostFreeBytesV1(workspace),uses:machineUsesV1(report,looseBytes,Math.min(looseBytes,resolved.filter(row=>row.loose&&row.target.heldBy===undefined).reduce((sum,row)=>sum+row.target.units.filter(unit=>unit.held===undefined&&now-unit.recencyMs>=row.target.quietMs).reduce((inner,unit)=>inner+unit.bytes,0),0)))},request.machine.policy);
+   const quota=machine.stores.find(store=>store.id==="loose");
+   if(quota){
+    const split=splitMachineBudgetV1(quota.contentLimitBytes,members.map(row=>({id:row.target.id,weight:Math.max(1,row.target.budgetBytes??retained.get(row.target.id)??1),floor:0,demand:retained.get(row.target.id)??0})),false);
+    const tightened:CacheTargetV1[]=[];
+    for(const target of targets){
+     const share=split.get(target.id),row=resolved.find(candidate=>candidate.target===target);
+     if(share===undefined||row===undefined||share>=(target.budgetBytes??Infinity)){tightened.push(share===undefined?target:{...target,budgetBytes:Math.min(target.budgetBytes??Infinity,share)});continue;}
+     if(row.custody!=="quiet"){tightened.push({...target,budgetBytes:share});continue;}
+     if(!await(ports.atimeReliable??cacheAtimeReliableV1)(row.base)){tightened.push(target);notes.push(text("machine.gc.atime",{id:target.id}));continue;}
+     tightened.push({...target,budgetBytes:share,quietMs:Math.max(target.quietMs,runtime.quotaQuietMs)});
+    }
+    targets=tightened;
+    notes.push(text("machine.gc.quota",{quota:formatCacheBytesV1(quota.contentLimitBytes),over:formatCacheBytesV1(quota.excessBytes)}));
+   }
+   for(const line of formatMachinePlanV1(output.language,machine,request.machine.source))notes.push(line);
+  }
+  for(const row of deferred){
+   const answer=ports.delegate?await ports.delegate(row.owner,row.id,request.dryRun,output.language,{machine,selected:request.only!==undefined}):undefined;
+   if(answer!==undefined){delegated.push({owner:row.owner,text:answer});notes[row.slot]=text("gc.owner",{owner:row.owner,text:answer});}else notes[row.slot]=text("gc.managed",{id:row.id,owner:row.owner});
+  }
+  const plans=planCacheCollectionV1(targets,now),removed:CacheRemovalV1[]=[],failed:{target:string;name:string;message:string}[]=[],gone=new Map<string,number>(),goneNames=new Set<string>();let kept=0,freed=0;
   output.write(text("gc.start",{count:plans.length,mode:text(request.dryRun?"gc.mode.plan":"gc.mode.apply")}));
   for(const note of notes)output.write(note);
   for(const[index,plan]of plans.entries()){
-   const row=resolved[index]!;ports.signal.throwIfAborted();
-   for(const unit of plan.kept){kept++;output.write(unit.reason==="held"?text("gc.held",{path:plan.id+"/"+unit.name,holder:row.target.units.find(candidate=>candidate.name===unit.name)?.held??row.target.heldBy??"?"}):text("gc.quiet",{path:plan.id+"/"+unit.name,minutes:Math.round(row.target.quietMs/60000)}));}
+   const row=resolved[index]!,quietMs=targets[index]!.quietMs;ports.signal.throwIfAborted();
+   for(const unit of plan.kept){kept++;output.write(unit.reason==="held"?text("gc.held",{path:plan.id+"/"+unit.name,holder:row.target.units.find(candidate=>candidate.name===unit.name)?.held??row.target.heldBy??"?"}):text("gc.quiet",{path:plan.id+"/"+unit.name,minutes:Math.round(quietMs/60000)}));}
+   let shown=0,hiddenCount=0,hiddenBytes=0;
+   const announce=(line:string,bytes:number):void=>{if(shown<runtime.listedRemovalsPerTarget){shown++;output.write(line);}else{hiddenCount++;hiddenBytes+=bytes;}};
    for(const removal of plan.removals){
     ports.signal.throwIfAborted();
     const path=resolve(row.base,...removal.name.split("/")),reason=formatCacheReasonV1(output.language,removal.reason,row.unusedAgeMs),label=plan.id+"/"+removal.name;
     if(!insideBase(resolve(row.base),path)){failed.push({target:plan.id,name:removal.name,message:text("error.refused",{path:label})});continue;}
-    if(request.dryRun){removed.push(removal);freed+=removal.bytes;output.write(text("gc.would",{path:label,bytes:formatCacheBytesV1(removal.bytes),reason}));continue;}
+    if(request.dryRun){removed.push(removal);freed+=removal.bytes;announce(text("gc.would",{path:label,bytes:formatCacheBytesV1(removal.bytes),reason}),removal.bytes);continue;}
     const again=await measureCacheTreeV1(path,ports,runtime.collectEntriesPerUnit,plan.id),unit=row.target.units.find(candidate=>candidate.name===removal.name)!;
     if(!again.present)continue;
-    const held=await probeCacheHeldV1(again,ports);
-    if(held||ports.now()-again.recencyMs<row.target.quietMs||again.recencyMs>unit.recencyMs){kept++;output.write(held?text("gc.held",{path:label,holder:held}):text("gc.changed",{path:label}));continue;}
-    output.write(text("gc.remove",{path:label,bytes:formatCacheBytesV1(removal.bytes),reason}));
+    const held=await probeCacheHeldV1(again,ports)??(row.custody==="pid"?cachePidHolderV1(removal.name,row.units,ports):undefined);
+    if(held||ports.now()-again.recencyMs<quietMs||again.recencyMs>unit.recencyMs){kept++;output.write(held?text("gc.held",{path:label,holder:held}):text("gc.changed",{path:label}));continue;}
+    announce(text("gc.remove",{path:label,bytes:formatCacheBytesV1(removal.bytes),reason}),removal.bytes);
     try{await removeCacheTreeV1(path,ports,"remove:"+label);removed.push(removal);freed+=removal.bytes;gone.set(plan.id,(gone.get(plan.id)??0)+removal.bytes);goneNames.add(plan.id+"/"+removal.name);}
     catch(error){if(ports.signal.aborted)throw error;failed.push({target:plan.id,name:removal.name,message:String((error as Error).message??error)});}
    }
+   if(hiddenCount)output.write(text("gc.more",{id:plan.id,count:hiddenCount,bytes:formatCacheBytesV1(hiddenBytes)}));
    if(!request.dryRun&&row.target.kind==="retired"&&plan.removals.length===row.target.units.length&&!failed.some(item=>item.target===plan.id))await rmdir(row.base).catch(()=>{});
   }
   output.write(text(request.dryRun?"gc.summary.plan":"gc.summary.apply",{count:removed.length,bytes:formatCacheBytesV1(freed),kept}));
@@ -309,6 +373,6 @@ export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,reque
    else for(const unit of row.target.units)updates["undeclared:"+row.target.id.slice(0,row.target.id.indexOf(":"))+":"+unit.name]=goneNames.has(plan.id+"/"+unit.name)?null:record(unit.bytes);
   }
   await recordCacheSizesV1(workspace,ledger,updates);
-  return Object.freeze({dryRun:request.dryRun,plans,removed,kept,failed,freedBytes:freed,delegated});
+  return Object.freeze({dryRun:request.dryRun,plans,removed,kept,failed,freedBytes:freed,delegated,machine});
  }finally{for(const row of resolved)try{row.release?.();}catch{}}
 }

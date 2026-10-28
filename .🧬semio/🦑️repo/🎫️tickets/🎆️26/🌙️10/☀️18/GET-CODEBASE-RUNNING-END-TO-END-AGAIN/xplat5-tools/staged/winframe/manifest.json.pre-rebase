@@ -1,0 +1,47 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔭️watch/🦀️rust/🦀️.rs": {
+  "file": "00.rs",
+  "base": "060f5aedf1312b13ea0fa60611952e19e3e6181d0c19f56a0be0da2509185319",
+  "new": "9d0fd74ab41c7305a479bdc60cc03de0f100a8a7bb0fd0e512780f0f85be7bf8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔭️watch/🦀️rust/🔣️.json": {
+  "file": "01.json",
+  "base": "97800ba432de1a16bd216814328ee8faedfd67fdce62f53258f4e28c4f5fdb94",
+  "new": "79f29ee2ba72bd1198d7ac6032965fdffd94d3b14d29afe66bfba455d536baa4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs": {
+  "file": "02.mjs",
+  "base": "09b7160030b6acf589d789fae322cf8169aa019a8687f6ab77c566e986cd28d0",
+  "new": "5fbe6926cc1a45c16bfbad9cbe27474bc7549638cd015df1e2cabeb0c7c0b727"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.d.mts": {
+  "file": "03.mts",
+  "base": "5dcabb33ca262eebdeda0b5c84f5814b3cd019f28e976f12e57d6e40ad6f3c96",
+  "new": "1ae64399a799c93d2cbc87710a011269d84bbe4f9a28aafc4be1dc0308d51a51"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🟦️.ts": {
+  "file": "04.ts",
+  "base": "71eacfd5424bb47062b4fb9ae1b31f6b128cb899d7758ed2bc53a9d0b1ce88f5",
+  "new": "e13a2a506c998c3b5a9464f8e4dfc1d5424cc3d4593e65b5a39e711595e8618e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🪟️native-frontier/🟦️.ts": {
+  "file": "05.ts",
+  "base": null,
+  "new": "d0cb4cf0cb62b9cdafb788128b459f2fcb8227972014421e593f49c3977dfa4c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🪟️native-frontier/🐍️oracle/🐍️.py": {
+  "file": "06.py",
+  "base": null,
+  "new": "700defcc9b0624af4b0b9f36ff67c11cc0da0d4abb6605780cf56af5e338fd94"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🪟️native-frontier/🧫️fixtures/🔣️.json": {
+  "file": "07.json",
+  "base": null,
+  "new": "84522b10eaa45d08ac3c6ab0c5160cecd09b1bd909fe7f5c51fdcd6bffbb4082"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🔭️watch/🟦️.ts": {
+  "file": "08.ts",
+  "base": "23114bf96725fb3c71344bb9ed375b7f35ed55e56c4c7c7546138fdf65e9225e",
+  "new": "1a7465e91ee42579da9ef533fee8adf3f74a826bec4f305972ddff78a7bd2c99"
+ }
+}

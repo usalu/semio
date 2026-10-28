@@ -1,0 +1,15 @@
+{
+ "version": 1,
+ "profile": "16 GB host",
+ "hostMegabytes": 16384,
+ "graphProcess": {
+  "peakResidentMegabytes": 2048,
+  "peakFootprintMegabytes": 1536,
+  "idleFootprintAfterReleaseMegabytes": 768,
+  "retainedLiveMegabytesGrowthPerChunk": 40
+ },
+ "texts": {
+  "en": {"peakResident": "peak resident set of the graph process", "peakFootprint": "peak physical footprint (dirty memory) of the graph process", "idle": "footprint after the caches were released", "growth": "live heap growth per released chunk", "pass": "within the declared budget", "fail": "above the declared budget"},
+  "de": {"peakResident": "Höchstwert der resident belegten Seiten des Graph-Prozesses", "peakFootprint": "Höchstwert des physischen Fußabdrucks (schmutziger Speicher) des Graph-Prozesses", "idle": "Fußabdruck nach dem Freigeben der Zwischenspeicher", "growth": "Wachstum des lebenden Heaps je freigegebenem Block", "pass": "im erklärten Budget", "fail": "über dem erklärten Budget"}
+ }
+}

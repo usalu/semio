@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "modeVariable": "SEMIO_REPO_SEAL",
+  "defaultMode": "live",
+  "modes": [
+    "sealed",
+    "live",
+    "promote"
+  ],
+  "languages": [
+    "en",
+    "de"
+  ],
+  "cacheDirectory": ".🧬semio/🦑️repo/⚡️cache/implementation",
+  "stampedFiles": [
+    "bun.lock",
+    "package.json"
+  ],
+  "keepPrevious": 2,
+  "quietMilliseconds": 600000,
+  "maximumBytes": 536870912,
+  "maximumTextCharacters": 256,
+  "maximumPathCharacters": 256,
+  "maximumCommandLineCharacters": 32767,
+  "settleMilliseconds": 1500,
+  "captureAttempts": 3,
+  "blockedRetryMilliseconds": 5000,
+  "coalesceMilliseconds": 0,
+  "light": {
+    "freshMilliseconds": 300000,
+    "promoteAfterMilliseconds": 1800000,
+    "refuseAfterMilliseconds": 86400000,
+    "refreshDebounceMilliseconds": 120000
+  },
+  "promotion": {
+    "rule": "explicit",
+    "agedMilliseconds": 86400000,
+    "noticeMilliseconds": 300000
+  },
+  "helpTokens": [
+    "--help",
+    "-h",
+    "help"
+  ],
+  "leadingWords": [
+    "repo",
+    "build",
+    "test"
+  ],
+  "maximumBlockedRows": 50,
+  "shownBlockedRows": 3,
+  "lock": {
+    "pollMilliseconds": 250,
+    "busyTimeoutMilliseconds": 25,
+    "waitMaximumMilliseconds": 90000
+  },
+  "check": {
+    "argument": "--semio-implementation-check=",
+    "maximumMilliseconds": 120000,
+    "maximumOutputBytes": 262144,
+    "commands": [
+      [
+        "repo",
+        "leases",
+        "status"
+      ],
+      [
+        "repo",
+        "capacity",
+        "status"
+      ]
+    ],
+    "commandMilliseconds": 60000
+  },
+  "readyDescriptor": 4,
+  "codeLoaders": {
+    ".ts": "ts",
+    ".mts": "ts",
+    ".cts": "ts",
+    ".tsx": "tsx",
+    ".js": "js",
+    ".mjs": "js",
+    ".cjs": "js",
+    ".jsx": "jsx"
+  },
+  "texts": {
+    "blocked": {
+      "en": "[implementation] The live tree is not promoted: {rows}. Running the sealed snapshot {digest} promoted at {promoted}. Fix the file(s) and run again, or use {variable}=live to run the live tree.",
+      "de": "[implementation] Der Arbeitsbaum wird nicht befördert: {rows}. Es läuft der versiegelte Schnappschuss {digest}, befördert um {promoted}. Die Datei(en) korrigieren und erneut starten, oder mit {variable}=live den Arbeitsbaum ausführen."
+    },
+    "blockedRow": {
+      "en": "{path}:{line}:{column} {message}",
+      "de": "{path}:{line}:{column} {message}"
+    },
+    "blockedMore": {
+      "en": "{count} more file(s)",
+      "de": "{count} weitere Datei(en)"
+    },
+    "none": {
+      "en": "[implementation] No sealed snapshot exists yet and the live tree cannot be promoted: {rows}. Fix the file(s) or use {variable}=live to see the raw error.",
+      "de": "[implementation] Es gibt noch keinen versiegelten Schnappschuss und der Arbeitsbaum lässt sich nicht befördern: {rows}. Die Datei(en) korrigieren oder mit {variable}=live den rohen Fehler sehen."
+    },
+    "stale": {
+      "en": "[implementation] The sealed snapshot {digest} is {minutes} minutes old and the live tree has changed; a new snapshot is prepared in the background (process {pid}). This command runs the snapshot.",
+      "de": "[implementation] Der versiegelte Schnappschuss {digest} ist {minutes} Minuten alt und der Arbeitsbaum hat sich geändert; ein neuer Schnappschuss wird im Hintergrund vorbereitet (Prozess {pid}). Dieser Befehl führt den Schnappschuss aus."
+    },
+    "unpromoted": {
+      "en": "[implementation] The live tree has {count} change(s) that are not promoted (first: {first}); running the sealed snapshot {digest} promoted at {promoted}. Promote them with {variable}=promote, or run the live tree with {variable}=live.",
+      "de": "[implementation] Der Arbeitsbaum hat {count} nicht beförderte Änderung(en) (zuerst: {first}); es läuft der versiegelte Schnappschuss {digest}, befördert um {promoted}. Mit {variable}=promote befördern oder mit {variable}=live den Arbeitsbaum ausführen."
+    },
+    "refused": {
+      "en": "[implementation] The sealed snapshot {digest} is {hours} hours old, the live tree has changed and cannot be promoted: {rows}. Fix the file(s) and run again, or use {variable}=live to run the live tree.",
+      "de": "[implementation] Der versiegelte Schnappschuss {digest} ist {hours} Stunden alt, der Arbeitsbaum hat sich geändert und lässt sich nicht befördern: {rows}. Die Datei(en) korrigieren und erneut starten, oder mit {variable}=live den Arbeitsbaum ausführen."
+    },
+    "promoting": {
+      "en": "[implementation] Promoting the live tree to a sealed snapshot of {entry}.",
+      "de": "[implementation] Der Arbeitsbaum wird zu einem versiegelten Schnappschuss von {entry} befördert."
+    },
+    "waiting": {
+      "en": "[implementation] Waiting for the promotion that process {pid} runs ({seconds} s).",
+      "de": "[implementation] Wartet auf die Beförderung, die Prozess {pid} ausführt ({seconds} s)."
+    },
+    "promoted": {
+      "en": "[implementation] Promoted the sealed snapshot {digest} of {entry}: {files} files, {seconds} s.",
+      "de": "[implementation] Versiegelter Schnappschuss {digest} von {entry} befördert: {files} Dateien, {seconds} s."
+    },
+    "unstable": {
+      "en": "[implementation] The live tree kept changing while it was captured ({files}); running the sealed snapshot {digest}.",
+      "de": "[implementation] Der Arbeitsbaum änderte sich während der Erfassung weiter ({files}); es läuft der versiegelte Schnappschuss {digest}."
+    },
+    "fallback": {
+      "en": "[implementation] The sealed layer failed ({reason}); running the live tree.",
+      "de": "[implementation] Die versiegelte Schicht ist ausgefallen ({reason}); es läuft der Arbeitsbaum."
+    },
+    "mode": {
+      "en": "Expected {variable}=sealed|live|promote, got \"{value}\".",
+      "de": "Erwartet {variable}=sealed|live|promote, erhalten \"{value}\"."
+    },
+    "startup": {
+      "en": "[implementation] The sealed front door did not start (exit {code}); running the live tree.",
+      "de": "[implementation] Die versiegelte Vordertür ist nicht gestartet (Exit {code}); es läuft der Arbeitsbaum."
+    },
+    "promoter": {
+      "en": "[implementation] The promotion of the live tree failed ({reason}); running the last sealed snapshot.",
+      "de": "[implementation] Die Beförderung des Arbeitsbaums ist fehlgeschlagen ({reason}); es läuft der letzte versiegelte Schnappschuss."
+    },
+    "promoteDone": {
+      "en": "[implementation] Sealed snapshot {digest} ({status}).",
+      "de": "[implementation] Versiegelter Schnappschuss {digest} ({status})."
+    },
+    "candidateLoader": {
+      "en": "the candidate was built for another loader than the one that started it",
+      "de": "der Kandidat wurde für einen anderen Loader gebaut als den, der ihn gestartet hat"
+    },
+    "candidateNotLoaded": {
+      "en": "the candidate did not load",
+      "de": "der Kandidat wurde nicht geladen"
+    },
+    "candidateNotLoadedWithin": {
+      "en": "the candidate did not load within {milliseconds} ms",
+      "de": "der Kandidat wurde nicht innerhalb von {milliseconds} ms geladen"
+    },
+    "selfCheckNotEnded": {
+      "en": "{command} did not end within {milliseconds} ms",
+      "de": "{command} endete nicht innerhalb von {milliseconds} ms"
+    },
+    "selfCheckEnded": {
+      "en": "{command} ended with status {code}: {message}",
+      "de": "{command} endete mit Status {code}: {message}"
+    },
+    "blockedRecordInvalid": {
+      "en": "[implementation] The record of the blocked promotion is not closed.",
+      "de": "[implementation] Der Beleg der blockierten Befoerderung ist nicht geschlossen."
+    },
+    "commandPublicationBounded": {
+      "en": "[implementation] The captured command exceeds the bound of its publication.",
+      "de": "[implementation] Der erfasste Befehl ueberschreitet die Grenze seiner Veroeffentlichung."
+    },
+    "compilerClosureBounded": {
+      "en": "[implementation] The admitted compiler closure exceeds its bound.",
+      "de": "[implementation] Der zugelassene Compiler-Abschluss ueberschreitet seine Grenze."
+    },
+    "compilerImageBounded": {
+      "en": "[implementation] The admitted compiler image exceeds its bound.",
+      "de": "[implementation] Das zugelassene Compiler-Abbild ueberschreitet seine Grenze."
+    },
+    "workspaceRootMissing": {
+      "en": "[implementation] No workspace root with paired build and package markers was found.",
+      "de": "[implementation] Es wurde keine Workspace-Wurzel mit zusammengehoerigen Build- und Paketmarken gefunden."
+    }
+  }
+}

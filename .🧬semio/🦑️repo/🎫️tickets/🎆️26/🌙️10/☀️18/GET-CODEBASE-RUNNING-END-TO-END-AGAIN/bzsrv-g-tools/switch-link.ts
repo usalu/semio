@@ -1,0 +1,13 @@
+import {mkdirSync,rmSync,appendFileSync,symlinkSync,renameSync} from "node:fs";
+import {join} from "node:path";
+import {bazel,flagsFor,shutdown} from "./probe.ts";
+const tools=import.meta.dir,S="/private/tmp/claude-501/-Users-ueli-Documents-semio/de5d5cb4-dca7-469c-b840-78655a0500ed/scratchpad/bz",root=join(S,"switchlink"),SRC="/Users/ueli/Documents/semio/.cache/b/p/m/bazel/workspaces/s0";
+rmSync(root,{recursive:true,force:true});mkdirSync(join(root,"ws"),{recursive:true});
+const a=join(root,"ws","keyA"),b=join(root,"ws","keyB"),cur=join(root,"ws","cur");
+Bun.spawnSync(["cp","-cR",join(S,"pkg-760c0f403769cd16"),a]);Bun.spawnSync(["cp","-cR",join(SRC,"f09935c0b06dacf6"),b]);symlinkSync(a,cur,"dir");
+const flags=flagsFor(tools,join(root,"p"),"s0",1536),rows:Record<string,unknown>[]=[];
+const run=async(label:string)=>{const r=await bazel(flags,[],cur,["build","--nobuild",...flags.command,"//:all"]);rows.push({label,wall:r.wall,code:r.code,line:/Elapsed time: [\d.]+s/.exec(r.log)?.[0],restarted:/restart|Starting local Bazel server/.test(r.log)});};
+await run("L cold keyA via symlink");await run("L hot keyA");
+const next=join(root,"ws","cur.next");symlinkSync(b,next,"dir");renameSync(next,cur);await run("L symlink repointed to keyB");await run("L hot keyB");
+const out=join(tools,"..","🗑️generated","bzsrv-g");appendFileSync(join(out,"switch.jsonl"),JSON.stringify(rows)+"\n");console.log(JSON.stringify(rows,null,1));
+shutdown(flags,cur);rmSync(root,{recursive:true,force:true});

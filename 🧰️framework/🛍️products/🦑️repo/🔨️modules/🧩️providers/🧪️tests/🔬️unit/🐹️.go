@@ -253,7 +253,7 @@ func TestResolvePostToolUse(t *testing.T) {
 
 // 🔌️#region 🏷️Provider
 func TestProviderRegistry(t *testing.T) {
-	mp := DefaultManagementProvider()
+	mp := DefaultManagementProvider(t.TempDir())
 	if mp == nil {
 		t.Fatal("DefaultManagementProvider() returned nil")
 	}

@@ -68,7 +68,7 @@ test("every install path asks the lock check before it queues, installs or repor
  expect(refusal).toBeLessThan(storage.indexOf("await failJavascriptDependencyInstallerV1(row.scope,terminal,control)"));
 });
 test("the independent Python model reaches the same verdicts",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json"),join(here,"..","🧬️schema","🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

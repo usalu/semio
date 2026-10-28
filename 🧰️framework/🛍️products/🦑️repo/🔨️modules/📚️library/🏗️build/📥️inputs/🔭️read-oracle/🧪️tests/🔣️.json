@@ -1,0 +1,444 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "version": 1,
+  "tree": {
+    "a.txt": "A",
+    "b.txt": "B",
+    "dir/c.txt": "C",
+    "dir/d.txt": "D",
+    "node_modules/m/x.js": "X",
+    "pkg/package.json": "{}",
+    "pkg/deep/f.txt": "F",
+    "other/e.txt": "E",
+    "tools/read.js": "const fs = require(\"fs\"), path = require(\"path\"); const mode = process.env.ORACLE_MODE || \"report\"; const say = (text) => { if (mode !== \"silent\") console.log(text); }; let bad = 0; for (const name of process.argv.slice(2)) { try { if (name.endsWith(\"/\")) say(\"list:\" + fs.readdirSync(name).sort().join(\",\")); else { fs.readFileSync(name); say(\"ok:\" + path.resolve(name)); } } catch (error) { say(\"denied:\" + path.resolve(name) + \":\" + error.code); bad = 1; } } process.exit(mode === \"report\" ? bad : 0);\n",
+    "many/m1.txt": "M1",
+    "many/m2.txt": "M2",
+    "many/m3.txt": "M3",
+    "many/m4.txt": "M4",
+    "many/m5.txt": "M5",
+    "many/m6.txt": "M6",
+    "many/m7.txt": "M7",
+    "many/m8.txt": "M8"
+  },
+  "policy": [
+    {
+      "id": "single-file",
+      "tree": ["a.txt", "b.txt", "dir/c.txt", "dir/d.txt", "node_modules/m/x.js", "pkg/package.json", "pkg/deep/f.txt", "other/e.txt", "tools/read.js"],
+      "allowed": ["a.txt"],
+      "ambient": [],
+      "names": [],
+      "refusals": true,
+      "rules": [{"effect": "allow", "kind": "literal", "path": "a.txt"}],
+      "readable": ["a.txt", "node_modules/m/x.js"]
+    },
+    {
+      "id": "whole-directory-collapses",
+      "tree": ["a.txt", "b.txt", "dir/c.txt", "dir/d.txt", "node_modules/m/x.js", "pkg/package.json", "pkg/deep/f.txt", "other/e.txt", "tools/read.js"],
+      "allowed": ["dir/c.txt", "dir/d.txt"],
+      "ambient": [],
+      "names": [],
+      "refusals": true,
+      "rules": [{"effect": "allow", "kind": "subpath", "path": "dir"}],
+      "readable": ["dir/c.txt", "dir/d.txt", "node_modules/m/x.js"]
+    },
+    {
+      "id": "partial-directory-stays-literal",
+      "tree": ["a.txt", "b.txt", "dir/c.txt", "dir/d.txt", "node_modules/m/x.js", "pkg/package.json", "pkg/deep/f.txt", "other/e.txt", "tools/read.js"],
+      "allowed": ["dir/c.txt", "a.txt"],
+      "ambient": [],
+      "names": [],
+      "refusals": true,
+      "rules": [{"effect": "allow", "kind": "literal", "path": "a.txt"}, {"effect": "allow", "kind": "literal", "path": "dir/c.txt"}],
+      "readable": ["a.txt", "dir/c.txt", "node_modules/m/x.js"]
+    },
+    {
+      "id": "names-are-readable-anywhere",
+      "tree": ["a.txt", "b.txt", "dir/c.txt", "dir/d.txt", "node_modules/m/x.js", "pkg/package.json", "pkg/deep/f.txt", "other/e.txt", "tools/read.js"],
+      "allowed": ["a.txt"],
+      "ambient": [],
+      "names": ["package.json"],
+      "refusals": true,
+      "rules": [{"effect": "allow", "kind": "literal", "path": "a.txt"}],
+      "readable": ["a.txt", "node_modules/m/x.js", "pkg/package.json"]
+    },
+    {
+      "id": "extra-ambient-tree",
+      "tree": ["a.txt", "b.txt", "dir/c.txt", "dir/d.txt", "node_modules/m/x.js", "pkg/package.json", "pkg/deep/f.txt", "other/e.txt", "tools/read.js"],
+      "allowed": [],
+      "ambient": ["other"],
+      "names": [],
+      "refusals": true,
+      "rules": [],
+      "readable": ["node_modules/m/x.js", "other/e.txt"]
+    },
+    {
+      "id": "nested-complete-directory",
+      "tree": ["a.txt", "b.txt", "dir/c.txt", "dir/d.txt", "node_modules/m/x.js", "pkg/package.json", "pkg/deep/f.txt", "other/e.txt", "tools/read.js"],
+      "allowed": ["pkg/package.json", "pkg/deep/f.txt"],
+      "ambient": [],
+      "names": [],
+      "refusals": true,
+      "rules": [{"effect": "allow", "kind": "subpath", "path": "pkg"}],
+      "readable": ["node_modules/m/x.js", "pkg/package.json", "pkg/deep/f.txt"]
+    },
+    {
+      "id": "big-tree-is-granted-and-its-exception-refused",
+      "tree": ["README.md", "docs/a.md", "docs/b.md", "scripts/s.sh", "tools/x.sh", "app/main.ts", "app/test/t1.ts", "app/test/t2.ts", "lib/a.ts", "lib/b.ts", "lib/c.ts", "lib/d.ts", "lib/e.ts", "lib/package.json", "lib/sub/f.ts", "lib/sub/g.ts", "lib/vendor/h.ts", "lib/vendor/i.ts", "lib/vendor/j.ts", "lib/vendor/k.ts", "node_modules/x/y.js"],
+      "allowed": ["lib/a.ts", "lib/b.ts", "lib/d.ts", "lib/e.ts", "lib/package.json", "lib/sub/f.ts", "lib/sub/g.ts", "lib/vendor/h.ts", "lib/vendor/i.ts", "lib/vendor/j.ts", "lib/vendor/k.ts", "lib/gone.ts"],
+      "ambient": [],
+      "names": [],
+      "refusals": true,
+      "rules": [{"effect": "allow", "kind": "subpath", "path": "lib"}, {"effect": "deny", "kind": "subpath", "path": "lib/c.ts"}],
+      "readable": ["lib/a.ts", "lib/b.ts", "lib/d.ts", "lib/e.ts", "lib/package.json", "lib/sub/f.ts", "lib/sub/g.ts", "lib/vendor/h.ts", "lib/vendor/i.ts", "lib/vendor/j.ts", "lib/vendor/k.ts", "node_modules/x/y.js"]
+    },
+    {
+      "id": "grants-only-plans-list-every-partial-directory",
+      "tree": ["README.md", "docs/a.md", "docs/b.md", "scripts/s.sh", "tools/x.sh", "app/main.ts", "app/test/t1.ts", "app/test/t2.ts", "lib/a.ts", "lib/b.ts", "lib/c.ts", "lib/d.ts", "lib/e.ts", "lib/package.json", "lib/sub/f.ts", "lib/sub/g.ts", "lib/vendor/h.ts", "lib/vendor/i.ts", "lib/vendor/j.ts", "lib/vendor/k.ts", "node_modules/x/y.js"],
+      "allowed": ["lib/a.ts", "lib/b.ts", "lib/d.ts", "lib/e.ts", "lib/package.json", "lib/sub/f.ts", "lib/sub/g.ts", "lib/vendor/h.ts", "lib/vendor/i.ts", "lib/vendor/j.ts", "lib/vendor/k.ts"],
+      "ambient": [],
+      "names": [],
+      "refusals": false,
+      "rules": [{"effect": "allow", "kind": "literal", "path": "lib/a.ts"}, {"effect": "allow", "kind": "literal", "path": "lib/b.ts"}, {"effect": "allow", "kind": "literal", "path": "lib/d.ts"}, {"effect": "allow", "kind": "literal", "path": "lib/e.ts"}, {"effect": "allow", "kind": "literal", "path": "lib/package.json"}, {"effect": "allow", "kind": "subpath", "path": "lib/sub"}, {"effect": "allow", "kind": "subpath", "path": "lib/vendor"}],
+      "readable": ["lib/a.ts", "lib/b.ts", "lib/d.ts", "lib/e.ts", "lib/package.json", "lib/sub/f.ts", "lib/sub/g.ts", "lib/vendor/h.ts", "lib/vendor/i.ts", "lib/vendor/j.ts", "lib/vendor/k.ts", "node_modules/x/y.js"]
+    },
+    {
+      "id": "refused-subtree-keeps-its-declared-file",
+      "tree": ["README.md", "docs/a.md", "docs/b.md", "scripts/s.sh", "tools/x.sh", "app/main.ts", "app/test/t1.ts", "app/test/t2.ts", "lib/a.ts", "lib/b.ts", "lib/c.ts", "lib/d.ts", "lib/e.ts", "lib/package.json", "lib/sub/f.ts", "lib/sub/g.ts", "lib/vendor/h.ts", "lib/vendor/i.ts", "lib/vendor/j.ts", "lib/vendor/k.ts", "node_modules/x/y.js"],
+      "allowed": ["lib/a.ts", "lib/b.ts", "lib/d.ts", "lib/e.ts", "lib/package.json", "lib/sub/f.ts", "lib/sub/g.ts", "lib/vendor/h.ts"],
+      "ambient": [],
+      "names": [],
+      "refusals": true,
+      "rules": [{"effect": "allow", "kind": "subpath", "path": "lib"}, {"effect": "deny", "kind": "subpath", "path": "lib/c.ts"}, {"effect": "deny", "kind": "subpath", "path": "lib/vendor"}, {"effect": "allow", "kind": "literal", "path": "lib/vendor/h.ts"}],
+      "readable": ["lib/a.ts", "lib/b.ts", "lib/d.ts", "lib/e.ts", "lib/package.json", "lib/sub/f.ts", "lib/sub/g.ts", "lib/vendor/h.ts", "node_modules/x/y.js"]
+    },
+    {
+      "id": "everything-but-one-file-grants-the-root",
+      "tree": ["README.md", "docs/a.md", "docs/b.md", "scripts/s.sh", "tools/x.sh", "app/main.ts", "app/test/t1.ts", "app/test/t2.ts", "lib/a.ts", "lib/b.ts", "lib/c.ts", "lib/d.ts", "lib/e.ts", "lib/package.json", "lib/sub/f.ts", "lib/sub/g.ts", "lib/vendor/h.ts", "lib/vendor/i.ts", "lib/vendor/j.ts", "lib/vendor/k.ts", "node_modules/x/y.js"],
+      "allowed": ["docs/a.md", "docs/b.md", "scripts/s.sh", "tools/x.sh", "app/main.ts", "app/test/t1.ts", "app/test/t2.ts", "lib/a.ts", "lib/b.ts", "lib/c.ts", "lib/d.ts", "lib/e.ts", "lib/package.json", "lib/sub/f.ts", "lib/sub/g.ts", "lib/vendor/h.ts", "lib/vendor/i.ts", "lib/vendor/j.ts", "lib/vendor/k.ts"],
+      "ambient": [],
+      "names": [],
+      "refusals": true,
+      "rules": [{"effect": "allow", "kind": "subpath", "path": ""}, {"effect": "deny", "kind": "subpath", "path": "README.md"}],
+      "readable": ["docs/a.md", "docs/b.md", "scripts/s.sh", "tools/x.sh", "app/main.ts", "app/test/t1.ts", "app/test/t2.ts", "lib/a.ts", "lib/b.ts", "lib/c.ts", "lib/d.ts", "lib/e.ts", "lib/package.json", "lib/sub/f.ts", "lib/sub/g.ts", "lib/vendor/h.ts", "lib/vendor/i.ts", "lib/vendor/j.ts", "lib/vendor/k.ts", "node_modules/x/y.js"]
+    },
+    {
+      "id": "ambient-trees-and-names-need-no-rule",
+      "tree": ["README.md", "docs/a.md", "docs/b.md", "scripts/s.sh", "tools/x.sh", "app/main.ts", "app/test/t1.ts", "app/test/t2.ts", "lib/a.ts", "lib/b.ts", "lib/c.ts", "lib/d.ts", "lib/e.ts", "lib/package.json", "lib/sub/f.ts", "lib/sub/g.ts", "lib/vendor/h.ts", "lib/vendor/i.ts", "lib/vendor/j.ts", "lib/vendor/k.ts", "node_modules/x/y.js"],
+      "allowed": ["lib/a.ts", "node_modules/x/y.js"],
+      "ambient": [],
+      "names": ["package.json"],
+      "refusals": true,
+      "rules": [{"effect": "allow", "kind": "literal", "path": "lib/a.ts"}],
+      "readable": ["lib/a.ts", "lib/package.json", "node_modules/x/y.js"]
+    },
+    {
+      "id": "a-whole-tree-and-a-lone-file",
+      "tree": ["README.md", "docs/a.md", "docs/b.md", "scripts/s.sh", "tools/x.sh", "app/main.ts", "app/test/t1.ts", "app/test/t2.ts", "lib/a.ts", "lib/b.ts", "lib/c.ts", "lib/d.ts", "lib/e.ts", "lib/package.json", "lib/sub/f.ts", "lib/sub/g.ts", "lib/vendor/h.ts", "lib/vendor/i.ts", "lib/vendor/j.ts", "lib/vendor/k.ts", "node_modules/x/y.js"],
+      "allowed": ["app/main.ts", "lib/a.ts", "lib/b.ts", "lib/c.ts", "lib/d.ts", "lib/e.ts", "lib/package.json", "lib/sub/f.ts", "lib/sub/g.ts", "lib/vendor/h.ts", "lib/vendor/i.ts", "lib/vendor/j.ts", "lib/vendor/k.ts"],
+      "ambient": [],
+      "names": [],
+      "refusals": true,
+      "rules": [{"effect": "allow", "kind": "literal", "path": "app/main.ts"}, {"effect": "allow", "kind": "subpath", "path": "lib"}],
+      "readable": ["app/main.ts", "lib/a.ts", "lib/b.ts", "lib/c.ts", "lib/d.ts", "lib/e.ts", "lib/package.json", "lib/sub/f.ts", "lib/sub/g.ts", "lib/vendor/h.ts", "lib/vendor/i.ts", "lib/vendor/j.ts", "lib/vendor/k.ts", "node_modules/x/y.js"]
+    }
+  ],
+  "seatbeltLog": [
+    {
+      "id": "denials-inside-root-only",
+      "root": "/w/ws",
+      "log": "2026-10-26 09:30:00.1 Df kernel: Sandbox: bun(1) deny(1) file-read-data /w/ws/b.txt\n2026-10-26 09:30:00.2 Df kernel: Sandbox: bun(1) deny(1) file-read-data /w/ws/dir/c.txt\n2026-10-26 09:30:00.3 Df kernel: Sandbox: bun(1) deny(1) file-read-data /w/elsewhere/z.txt\n2026-10-26 09:30:00.4 Df kernel: Sandbox: bun(2) deny(1) file-read-data /w/ws/b.txt\n2026-10-26 09:30:00.5 Df kernel: Sandbox: bun(1) deny(1) file-write-data /w/ws/w.txt\nnot a log line",
+      "denials": ["b.txt", "dir/c.txt"]
+    }
+  ],
+  "strace": [
+    {
+      "id": "read-opens-and-refusals",
+      "root": "/w/ws",
+      "cwd": "/w/ws",
+      "log": ["1201 execve(\"/usr/bin/bun\", [\"bun\", \"x\"], 0x7ffd /* 12 vars */) = 0", "1201 openat(AT_FDCWD</w/ws>, \"a.txt\", O_RDONLY|O_CLOEXEC) = 3</w/ws/a.txt>", "1201 openat(AT_FDCWD</w/ws>, \"b.txt\", O_RDONLY|O_CLOEXEC) = -1 EACCES (Permission denied)", "1201 openat(AT_FDCWD</w/ws>, \"missing.txt\", O_RDONLY) = -1 ENOENT (No such file or directory)", "1201 openat(AT_FDCWD</w/ws>, \"dir\", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 4</w/ws/dir>", "1201 openat(AT_FDCWD</w/ws>, \"out.txt\", O_WRONLY|O_CREAT|O_TRUNC, 0666) = 5</w/ws/out.txt>", "1201 openat(4</w/ws/dir>, \"c.txt\", O_RDONLY) = -1 EACCES (Permission denied)", "1201 open(\"/w/ws/other/e.txt\", O_RDWR) = 6</w/ws/other/e.txt>", "1201 openat(AT_FDCWD</w/ws>, \"/etc/hosts\", O_RDONLY) = 7</etc/hosts>", "1201 openat(AT_FDCWD</w/ws>, \"\\360\\237\\246\\221/e.txt\", O_RDONLY) = -1 EACCES (Permission denied)", "1201 openat(AT_FDCWD</w/ws>, \"\\x61\\x2e\\x74\\x78\\x74\", O_RDONLY) = 8</w/ws/a.txt>", "[pid 1202] openat(AT_FDCWD</w/ws>, \"dir/d.txt\", O_RDONLY <unfinished ...>", "[pid 1203] openat(AT_FDCWD</w/ws>, \"pkg/package.json\", O_RDONLY) = 9</w/ws/pkg/package.json>", "[pid 1202] <... openat resumed>) = -1 EACCES (Permission denied)", "1201 execve(\"/w/ws/tools/run.sh\", [\"run.sh\"], 0x7ffd /* 12 vars */) = -1 EACCES (Permission denied)", "1201 +++ exited with 1 +++"],
+      "opened": ["a.txt", "other/e.txt", "pkg/package.json"],
+      "denied": ["b.txt", "dir/c.txt", "dir/d.txt", "tools/run.sh", "🦑/e.txt"]
+    }
+  ],
+  "straceStrings": [{"literal": "plain", "text": "plain"}, {"literal": "\\360\\237\\246\\221", "text": "🦑"}, {"literal": "\\x61\\x62", "text": "ab"}, {"literal": "a\\nb\\\"c\\\\d", "text": "a\nb\"c\\d"}, {"literal": "caf\\303\\251", "text": "café"}],
+  "linuxGrants": [
+    {
+      "id": "everything-outside-the-root-plus-the-plan",
+      "root": "/w/ws",
+      "tree": {
+        "/": ["w", "etc", "usr", "tmp.log"],
+        "/w": ["ws", "ws2", "other"],
+        "/w/ws": ["a.txt", "b.txt", "dir", "node_modules", "pkg"],
+        "/w/ws/dir": ["c.txt", "d.txt"],
+        "/w/ws/pkg": ["package.json"],
+        "/w/ws/node_modules": ["m"],
+        "/w/ws2": ["y.txt"],
+        "/w/other": ["o.txt"],
+        "/etc": ["hosts"],
+        "/usr": ["lib"]
+      },
+      "directories": ["/", "/w", "/w/ws", "/w/ws/dir", "/w/ws/pkg", "/w/ws/node_modules", "/w/ws2", "/w/other", "/etc", "/usr"],
+      "allowed": ["dir/c.txt", "dir/d.txt"],
+      "ambient": ["node_modules"],
+      "names": ["package.json"],
+      "grants": ["/etc", "/tmp.log", "/usr", "/w/other", "/w/ws/dir", "/w/ws/node_modules", "/w/ws/pkg/package.json", "/w/ws2"],
+      "readable": ["/etc/hosts", "/tmp.log", "/usr/lib", "/w/other/o.txt", "/w/ws/dir/c.txt", "/w/ws/dir/d.txt", "/w/ws/node_modules/m", "/w/ws/pkg/package.json", "/w/ws2/y.txt"]
+    }
+  ],
+  "runs": [
+    {
+      "id": "declared-read",
+      "allowed": ["a.txt"],
+      "ambient": ["tools"],
+      "names": [],
+      "reads": ["a.txt"],
+      "mode": "report",
+      "rounds": 3,
+      "expect": {
+        "seatbelt": {
+          "clean": true,
+          "passed": true,
+          "learned": []
+        },
+        "landlock": {
+          "clean": true,
+          "passed": true,
+          "learned": []
+        },
+        "mirror": {
+          "clean": true,
+          "passed": true,
+          "learned": []
+        }
+      }
+    },
+    {
+      "id": "undeclared-read-is-named-and-learned",
+      "allowed": ["a.txt"],
+      "ambient": ["tools"],
+      "names": [],
+      "reads": ["a.txt", "b.txt", "dir/c.txt"],
+      "mode": "report",
+      "rounds": 4,
+      "expect": {
+        "seatbelt": {
+          "clean": true,
+          "passed": true,
+          "learned": ["b.txt", "dir/c.txt"]
+        },
+        "landlock": {
+          "clean": true,
+          "passed": true,
+          "learned": ["b.txt", "dir/c.txt"],
+          "needsTrace": true
+        },
+        "mirror": {
+          "clean": true,
+          "passed": true,
+          "learned": ["b.txt", "dir/c.txt"]
+        }
+      }
+    },
+    {
+      "id": "one-round-shows-the-denial",
+      "allowed": ["a.txt"],
+      "ambient": ["tools"],
+      "names": [],
+      "reads": ["a.txt", "b.txt"],
+      "mode": "report",
+      "rounds": 1,
+      "expect": {
+        "seatbelt": {
+          "clean": false,
+          "passed": false,
+          "learned": ["b.txt"],
+          "firstDenied": ["b.txt"],
+          "firstExit": 1
+        },
+        "landlock": {
+          "clean": false,
+          "passed": false,
+          "learned": ["b.txt"],
+          "firstExit": 1,
+          "needsTrace": true
+        },
+        "mirror": {
+          "clean": false,
+          "passed": false,
+          "learned": ["b.txt"],
+          "firstDenied": ["b.txt"],
+          "firstExit": 1
+        }
+      }
+    },
+    {
+      "id": "tolerated-read-is-still-an-undeclared-read",
+      "allowed": ["a.txt"],
+      "ambient": ["tools"],
+      "names": [],
+      "reads": ["a.txt", "b.txt"],
+      "mode": "tolerate",
+      "rounds": 1,
+      "expect": {
+        "seatbelt": {
+          "clean": false,
+          "passed": true,
+          "learned": ["b.txt"],
+          "firstDenied": ["b.txt"],
+          "firstExit": 0
+        },
+        "landlock": {
+          "clean": false,
+          "passed": true,
+          "learned": ["b.txt"],
+          "firstExit": 0,
+          "needsTrace": true,
+          "firstDenied": ["b.txt"]
+        },
+        "mirror": {
+          "clean": false,
+          "passed": false,
+          "learned": ["b.txt"],
+          "firstExit": 1,
+          "firstDenied": ["b.txt"]
+        }
+      }
+    },
+    {
+      "id": "silent-tolerated-read-is-invisible-to-the-mirror",
+      "allowed": ["a.txt"],
+      "ambient": ["tools"],
+      "names": [],
+      "reads": ["a.txt", "b.txt"],
+      "mode": "silent",
+      "rounds": 1,
+      "expect": {
+        "seatbelt": {
+          "clean": false,
+          "passed": true,
+          "learned": ["b.txt"],
+          "firstDenied": ["b.txt"],
+          "firstExit": 0
+        },
+        "landlock": {
+          "clean": false,
+          "passed": true,
+          "learned": ["b.txt"],
+          "firstExit": 0,
+          "needsTrace": true,
+          "firstDenied": ["b.txt"]
+        },
+        "mirror": {
+          "clean": true,
+          "passed": true,
+          "learned": []
+        }
+      }
+    },
+    {
+      "id": "ambient-trees-and-names-need-no-declaration",
+      "allowed": [],
+      "ambient": ["tools"],
+      "names": ["package.json"],
+      "reads": ["node_modules/m/x.js", "pkg/package.json"],
+      "mode": "report",
+      "rounds": 2,
+      "expect": {
+        "seatbelt": {
+          "clean": true,
+          "passed": true,
+          "learned": []
+        },
+        "landlock": {
+          "clean": true,
+          "passed": true,
+          "learned": []
+        },
+        "mirror": {
+          "clean": true,
+          "passed": true,
+          "learned": []
+        }
+      }
+    },
+    {
+      "id": "directories-stay-listable",
+      "allowed": [],
+      "ambient": ["tools"],
+      "names": [],
+      "reads": ["dir/"],
+      "mode": "report",
+      "rounds": 2,
+      "expect": {
+        "seatbelt": {
+          "clean": true,
+          "passed": true,
+          "learned": []
+        },
+        "landlock": {
+          "clean": true,
+          "passed": true,
+          "learned": []
+        }
+      }
+    },
+    {
+      "id": "children-inherit-the-restriction",
+      "allowed": [],
+      "ambient": [],
+      "names": [],
+      "reads": ["other/e.txt"],
+      "shell": "cat",
+      "mode": "report",
+      "rounds": 2,
+      "expect": {
+        "seatbelt": {
+          "clean": true,
+          "passed": true,
+          "learned": ["other/e.txt"]
+        },
+        "landlock": {
+          "clean": true,
+          "passed": true,
+          "learned": ["other/e.txt"],
+          "needsTrace": true
+        },
+        "mirror": {
+          "clean": false,
+          "passed": false,
+          "learned": []
+        }
+      }
+    },
+    {
+      "id": "split-profiles-learn-undeclared",
+      "allowed": ["many/m1.txt", "many/m3.txt", "many/m4.txt", "many/m6.txt", "many/m7.txt", "many/m8.txt"],
+      "ambient": ["tools"],
+      "names": [],
+      "reads": ["many/m1.txt", "many/m2.txt", "many/m5.txt"],
+      "mode": "report",
+      "rounds": 4,
+      "capacity": 2,
+      "expect": {
+        "seatbelt": {
+          "clean": true,
+          "passed": true,
+          "learned": ["many/m2.txt", "many/m5.txt"],
+          "firstDenied": ["many/m2.txt", "many/m5.txt"],
+          "firstExit": 1
+        },
+        "landlock": {
+          "clean": true,
+          "passed": true,
+          "learned": ["many/m2.txt", "many/m5.txt"],
+          "needsTrace": true
+        },
+        "mirror": {
+          "clean": true,
+          "passed": true,
+          "learned": ["many/m2.txt", "many/m5.txt"]
+        }
+      }
+    }
+  ]
+}

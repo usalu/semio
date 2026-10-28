@@ -1,0 +1,31 @@
+{
+ "label": "g32-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "09:58:10",
+ "wall_s": 125.8,
+ "peak_tree_mb": 5417,
+ "peak_processes": 4,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "7"
+  ],
+  "inferring": [
+   "7"
+  ],
+  "published": [
+   "623",
+   "7",
+   "51"
+  ],
+  "processes": [
+   "8",
+   "1 disk cache hit, 1 internal, 6 worker"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

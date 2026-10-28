@@ -45,7 +45,7 @@
    "name": "the environment is derived before the edges of the other owners are chosen",
    "function": "discoverBuildGraphPartV1",
    "before": "deriveEnvironmentV1({",
-   "after": "const edgeNames="
+   "after": "edgeNames=refresh.projects"
   },
   {
    "name": "edges are computed after the project nodes of the part exist",
@@ -77,9 +77,9 @@
    "text": "withRepositoryCacheStoreV1(root,\"graph\",invocation,phaseControl"
   },
   {
-   "name": "the builder queues on the one generation scope",
+   "name": "every builder holds a slice claim under the one generation scope",
    "function": "generationHostV1",
-   "text": "withBuildGraphStateV1(root,invocation,phaseControl,body,generationScopeV1)"
+   "text": "withGenerationCustodyV1(root,invocation,phaseControl,request,(store,control,claim)=>{image=store.root;return body(store,control,claim);})"
   },
   {
    "name": "the facts resource is the workspace graph facts lease",
@@ -137,9 +137,9 @@
    "text": "onOwnerObservations"
   },
   {
-   "name": "the part runs the test contributions over all features",
+   "name": "the part selects the features of the test owners it discovers again: all of them unless the generation is incremental",
    "function": "discoverBuildGraphPartV1",
-   "text": "discoverTestBuildProjectsV1(files.filter(file=>file.endsWith(\".feature\")),{},context)"
+   "text": "selectTestFeaturesV1(files.filter(file=>file.endsWith(\".feature\")),{all:!incremental,"
   },
   {
    "name": "the part keeps the policy contributions of unowned roots",
@@ -147,9 +147,14 @@
    "text": "!realRoots.has(dirname(file))"
   },
   {
-   "name": "the part replaces the virtual groups wholesale",
+   "name": "the part replaces the virtual groups wholesale unless the previous ones are kept or only the policy owners and the owners discovered again are replaced",
    "function": "discoverBuildGraphPartV1",
-   "text": "replaceTags:[\"tests\",\"policy\"]"
+   "text": "replaceTags:retained?[]:incremental?[\"policy\",POLICY_TAG_V1]:[\"tests\",\"policy\",TEST_TAG_V1,POLICY_TAG_V1]"
+  },
+  {
+   "name": "the part keeps the previous test and policy owners by the retention rule",
+   "function": "discoverBuildGraphPartV1",
+   "text": "taggedOwnersRetainedV1({cold:part.cold,changed:part.changed,"
   },
   {
    "name": "a reset withdraws the generation",

@@ -29,6 +29,6 @@ test("samples are appended to the telemetry file, a file above its maximum keeps
   writeFileSync(join(root,policy.file),Array.from({length:policy.keepRows+500},(_,index)=>JSON.stringify({atMs:index,freeBytes:1,volumeBytes:2,pad:"x".repeat(300)})).join("\n")+"\n");
   recordFillSampleV1(root,{atMs:10**9,freeBytes:1,volumeBytes:2});expect(readFillSamplesV1(root).length).toBeLessThanOrEqual(policy.keepRows+1);expect(readFillSamplesV1(root).at(-1)!.atMs).toBe(10**9);
   const rates=fillRatesV1(fixture.vectors[6]!.samples as never,fixture.vectors[6]!.nowMs),english=fillReportV1(rates,8*1073741824,"en"),german=fillReportV1(rates,8*1073741824,"de");
-  expect(english).toContain("GiB/h");expect(german).toContain("GiB/Std.");expect(english).toContain("prototype");expect(fillReportV1(fillRatesV1([],0),0,"en")).toContain("not enough");expect(fillReportV1(fillRatesV1([],0),0,"de")).toContain("zu wenige");
+  expect(english).toContain("GiB/h");expect(german).toContain("GiB/h");expect(english).toContain("prototype");expect(fillReportV1(fillRatesV1([],0),0,"en")).toContain("not enough");expect(fillReportV1(fillRatesV1([],0),0,"de")).toContain("zu wenige");
  }finally{rmSync(root,{recursive:true,force:true});}
 });

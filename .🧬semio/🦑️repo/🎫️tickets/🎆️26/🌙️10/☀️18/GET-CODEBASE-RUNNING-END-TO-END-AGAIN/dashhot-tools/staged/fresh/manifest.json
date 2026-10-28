@@ -1,0 +1,82 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md": {
+  "file": "00.md",
+  "base": "7ae1268b888a6ee574dc44298962013d5be1bdeae9dda8d1455100835a852c25",
+  "new": "681b5a562fea40419bf899ff437909cd2854bb6306627ec5ce9d05ebdcfc2727"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json": {
+  "file": "01.json",
+  "base": "12e54ee2dd15617e8e15e4306ee80e3a97ecc294649ac1443447983a9a14a9d5",
+  "new": "ff55e98b942d00a25c068cc354a1f4fcaab80ae5836398a2a3ce67cc72a156d3"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🛤️task-routes/🟦️.ts": {
+  "file": "02.ts",
+  "base": "6edcca8ac6bab540c56c1eee4d69f9f484713fa19d68f140d66298bb012ddfbd",
+  "new": "74b23db24a2d18401a446da1d99a537e3f7ff72592e7b5c490628ce5ac5cd1a1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🟦️.ts": {
+  "file": "03.ts",
+  "base": "b4a4354247966a15859b9a1b1ed51b4307362e29c085b7a295e2d5481171bf72",
+  "new": "3e15071fecee49140347bfb1c96e75f7a9286886d3a641531c3641d0c2c68f70"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🥒️.feature": {
+  "file": "04.feature",
+  "base": "285caa3c184815e1c0e541b86269305f882b15377557e797476abda64cfd501d",
+  "new": "9ea1462622b9a22178423d00d960cbde854c8db48b81334d33bd86756ab0fc16"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🧾️compiled/🟦️.ts": {
+  "file": "05.ts",
+  "base": null,
+  "new": "9a0542fdacc475624a28423e3eb94d7e9f2f0c76c927daafca993ffc582f9281"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧫️fixtures/🧊️execution/🧾️compiled.json": {
+  "file": "06.json",
+  "base": null,
+  "new": "68a1cfb8251fa2341392bbbb4e068c698198af687aebe0aca449adee7c530cc6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts": {
+  "file": "07.ts",
+  "base": "5b46fc062ba3e84c9b90f5aaebba97be6f919426c3f27b089b33ff34011c0ad6",
+  "new": "c0ff6ced3eaf8d912d64c7ede35e78714d3109db8ec03663addc9d1f8fadca1e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🔣️.json": {
+  "file": "08.json",
+  "base": "0ee6e62cb09cb72c33c47bf78a5c3af73a6621b725d65d1e075cfd039ecf22ee",
+  "new": "b538aeb9dba923334a563328a7c42172692fdc5cdd95d8f03e15c1b9a961c795"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📖️texts/🔣️.json": {
+  "file": "09.json",
+  "base": "a9e64441e88e9a08473e4227b234694a4e391e4028b495e73ec7cd326be40a38",
+  "new": "2722e85cc48f1251c968508d3fa411672fc5b10241ec8b3afcb8cb342de18f2d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🏃️routing/🟦️.ts": {
+  "file": "10.ts",
+  "base": "f0f19d847ab8b8ab24981b18996f45399000135817611806330aab4086af43a8",
+  "new": "8a77ddb306bfe8008cd88d3a7e1a98304823f31ee62f10c329101e165d1933d7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🟦️.ts": {
+  "file": "11.ts",
+  "base": "7ab2644761c7bc173bcfa29d599f6a97fb47b0af131f4fd6b19b1ee63d544e4e",
+  "new": "17b3d7cc6862e74ee6a371f906fe9afdfb8d15866b53896c090850f8cd5c68a2"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🧪️tests/🔣️.json": {
+  "file": "12.json",
+  "base": "7a01332984e5912ece8b17d45ea16dca9b840c92caa7583e9ec836dbbc6c8824",
+  "new": "6963f01dd8afded4d38b30e1eff9212917e73e5b723bd31ca077a0ce9520a9d8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🧪️tests/🟦️.ts": {
+  "file": "13.ts",
+  "base": "56c4db516c8b4f6bb87a9e5eb34e8484e2da04af2b18e781165e8be5091bbff8",
+  "new": "319255046ff84f4a7f2c12696cc16b7fa2058cee8edc01f56b609315f010df66"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🧬️schema/🔣️.json": {
+  "file": "14.json",
+  "base": "d9be5d2202890f98dabc8e66c6739249b253f39f9afb65848897e1084da92dec",
+  "new": "0bcb56f550e7b2f4ebe7f694c9725eff51c237f588d1393730d1240a6548ca73"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts": {
+  "file": "15.ts",
+  "base": "023109584a30c24cb0273f4649753e2ceb9850e7c28f8f511efa57c541dab16a",
+  "new": "442eee8e5f28d877840a56398cbeb243d6a4e96a3c5446e4cd6c852611ac77ba"
+ }
+}

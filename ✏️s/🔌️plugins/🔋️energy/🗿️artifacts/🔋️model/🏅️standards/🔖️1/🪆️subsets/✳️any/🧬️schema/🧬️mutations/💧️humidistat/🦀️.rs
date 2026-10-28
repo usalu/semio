@@ -81,14 +81,14 @@ pub mod delete_humidistat {
 
 #[path = "."]
 pub mod change_humidistat_dehumidifying_setpoint_schedule {
-    #[path = "🏝️change-dehumidifying-setpoint-schedule/🦀️.rs"]
+    #[path = "🏝️dehumidify-setpoint-schedule/🦀️.rs"]
     mod component;
     pub use component::*;
-    #[path = "🏝️change-dehumidifying-setpoint-schedule/🧊️reference/🦀️.rs"]
+    #[path = "🏝️dehumidify-setpoint-schedule/🧊️reference/🦀️.rs"]
     mod reference;
-    #[path = "🏝️change-dehumidifying-setpoint-schedule/🔺️diff/🦀️.rs"]
+    #[path = "🏝️dehumidify-setpoint-schedule/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🏝️change-dehumidifying-setpoint-schedule/↩️inverse/🦀️.rs"]
+    #[path = "🏝️dehumidify-setpoint-schedule/↩️inverse/🦀️.rs"]
     pub mod inverse;
 }
 

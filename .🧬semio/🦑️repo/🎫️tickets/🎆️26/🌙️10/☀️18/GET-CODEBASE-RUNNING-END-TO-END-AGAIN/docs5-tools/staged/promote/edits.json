@@ -1,0 +1,27 @@
+{
+ "name": "promote",
+ "code": "sealflip standing rule (live opt-in; default flip pending)",
+ "lane": "docs5",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "85cf39438347e94d0607db0d27d9bfa75e2bc58d1ebaf0e11e9a08515016bc74",
+ "needs": [],
+ "pending": [],
+ "edits": [
+  {
+   "id": "promote-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- **Fleet status**: `bun repo fleet status` (`--json`, `--limit=<n>`; MCP tool `fleet_status`) is one read-only picture in under a second without a lease or a graph: who runs what (phase, counter, time left, age, priority, code freshness, memory admitted against really used), every queue with a waiting-time estimate, Bazel servers, storage against its budgets, sealed implementation, graph generation and findings (stuck holders, pressure, long waits, low disk). Start here, then `bun repo leases status` or `bun repo capacity status` for detail.",
+   "where": "before",
+   "block": "- **Promote rule in sealed mode** (opt-in until the flip, the last batch to land): in `sealed` a command runs the promoted snapshot and only a promotion moves it, so a peer's half-finished edit cannot replan your hot run. Therefore (1) the landing gate is the only promoter: after EVERY landing whose files lie in the tool's closure (`📚️library/**` of the repo product, `🏃️process/**` of the framework and the schemas and packages they import; when unsure, promote, because promoting an unchanged tree answers `fresh` in under 1 s) it runs `SEMIO_REPO_SEAL=promote bun repo` and requires exit 0 BEFORE the verdict runs of that group and only between runs, else the verdict tests the old snapshot. (2) Exit 1 names the `path:line:col` that blocks: that landing is broken, revert it. (3) A lane that edits the tool runs with `SEMIO_REPO_SEAL=live` and never promotes. (4) Without the gate the tree heals itself: a restart after a format-stamp move promotes, and a snapshot older than 24 h promotes a drifted tree. (5) Expect: a peer edit between two landings costs nobody a replan (memo served, `[bazel] plan reused`, no `Promoting the live tree to a sealed snapshot` line, and at most once per 5 minutes `[implementation] The live tree has N change(s) that are not promoted (first: …); running the sealed snapshot …`); each landing costs exactly one memo miss and one replan per request, because the digest moved, then the run is hot again. A promotion takes 4-13 s on an idle host and 13-40 s under fleet load, one process at a time (`Waiting for the promotion that process P runs`). `SEMIO_REPO_IMPLEMENTATION=live` no longer selects the live tree: that name is the dashboard's `rust|go` selector."
+  },
+  {
+   "id": "promote-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- **Flottenstatus**: `bun repo fleet status` (`--json`, `--limit=<n>`; MCP-Werkzeug `fleet_status`) ist ein schreibgeschütztes Gesamtbild in unter einer Sekunde ohne Lease und ohne Graph: wer was ausführt (Phase, Zähler, Restzeit, Alter, Priorität, Aktualität des Codes, zugesagter gegen tatsächlich genutzten Speicher), jede Warteschlange mit Wartezeitschätzung, Bazel-Server, Speicher gegen seine Budgets, versiegelte Implementierung, Graph-Generation und Befunde (festhängende Halter, Druck, lange Wartezeiten, wenig Platz). Hier anfangen, danach `bun repo leases status` oder `bun repo capacity status` für Einzelheiten.",
+   "where": "before",
+   "block": "- **Beförderungsregel im versiegelten Modus** (Opt-in bis zum Umlegen, dem letzten Paket): in `sealed` führt ein Befehl den beförderten Schnappschuss aus, und nur eine Beförderung bewegt ihn, sodass die halbfertige Änderung eines anderen deinen heißen Lauf nicht neu planen lässt. Deshalb (1) ist das Landetor der einzige Befördernde: nach JEDER Landung, deren Dateien im Abschluss des Werkzeugs liegen (`📚️library/**` des Repo-Produkts, `🏃️process/**` des Frameworks und die Schemas und Pakete, die sie importieren; im Zweifel befördern, denn die Beförderung eines unveränderten Baums antwortet in unter 1 s mit `fresh`), führt es `SEMIO_REPO_SEAL=promote bun repo` aus und verlangt Exit 0 VOR den Urteilsläufen dieser Gruppe und nur zwischen Läufen, sonst prüft das Urteil den alten Schnappschuss. (2) Exit 1 nennt das blockierende `path:line:col`: diese Landung ist kaputt, mach sie rückgängig. (3) Eine Spur, die das Werkzeug bearbeitet, läuft mit `SEMIO_REPO_SEAL=live` und befördert nie. (4) Ohne das Tor heilt sich der Baum selbst: ein Neustart nach einer Bewegung des Formatstempels befördert, und ein Schnappschuss, der älter als 24 h ist, befördert einen abgewichenen Baum. (5) Erwarte: eine Änderung eines anderen zwischen zwei Landungen kostet niemanden einen Neuplan (Memo geliefert, `[bazel] plan reused`, keine Zeile `Promoting the live tree to a sealed snapshot` und höchstens alle 5 Minuten `[implementation] The live tree has N change(s) that are not promoted (first: …); running the sealed snapshot …`); jede Landung kostet genau einen Memo-Fehltreffer und einen Neuplan je Anfrage, weil der Digest sich bewegte, danach ist der Lauf wieder heiß. Eine Beförderung dauert auf einem ruhigen Rechner 4-13 s und unter Flottenlast 13-40 s, immer nur ein Prozess zugleich (`Waiting for the promotion that process P runs`). `SEMIO_REPO_IMPLEMENTATION=live` wählt den Live-Baum nicht mehr: dieser Name ist der `rust|go`-Wähler des Dashboards."
+  }
+ ]
+}

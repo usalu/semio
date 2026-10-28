@@ -9,7 +9,11 @@
 package launcher
 
 import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -157,6 +161,84 @@ func TestEveryPrintableTextIsBilingual(t *testing.T) {
 		if Builtin[id] == nil {
 			t.Fatalf("%s has no built-in text", id)
 		}
+	}
+}
+
+func withoutProse(value any) any {
+	switch typed := value.(type) {
+	case map[string]any:
+		kept := map[string]any{}
+		for key, member := range typed {
+			if key != "description" && key != "$comment" {
+				kept[key] = withoutProse(member)
+			}
+		}
+		return kept
+	case []any:
+		kept := make([]any, len(typed))
+		for index, member := range typed {
+			kept[index] = withoutProse(member)
+		}
+		return kept
+	}
+	return value
+}
+
+// 🗂️The shape of the registry belongs to its contract: the digest of the registry schema (prose left out) is pinned next to the contract it was published with, so a change of the shape that keeps the contract fails here, and a launcher built for the old shape never meets a registry of a shape it does not know under its own contract number.
+func TestRegistryShapeChangesBumpTheContract(t *testing.T) {
+	var fixture struct {
+		RegistryShape struct {
+			Contract     int
+			SchemaDigest string
+		}
+	}
+	readFixture(t, launcherFixture, &fixture)
+	var schema any
+	readFixture(t, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🧬️schema/🔣️.json", &schema)
+	var canonical bytes.Buffer
+	encoder := json.NewEncoder(&canonical)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(withoutProse(schema)); err != nil {
+		t.Fatal(err)
+	}
+	sum := sha256.Sum256(bytes.TrimSuffix(canonical.Bytes(), []byte("\n")))
+	if fixture.RegistryShape.Contract != Contract || hex.EncodeToString(sum[:]) != fixture.RegistryShape.SchemaDigest {
+		t.Fatalf("the registry schema changed (digest %s) while the contract is still %d: raise Contract in the launcher, the registry and its schema, and pin the new digest with the new contract in the launcher fixture; otherwise every installed launcher refuses the registry as malformed", hex.EncodeToString(sum[:]), Contract)
+	}
+}
+
+// 🗂️A launcher built before a registry change meets a registry of a later contract with a shape it does not know (the old-binary fixture is a registry of the next contract with a block this build has never seen): it refuses by contract, never as a malformed field, and prints the exact reinstall command in both languages.
+func TestRegistryOfALaterContractIsRefusedWithTheInstallCommand(t *testing.T) {
+	root := testRoot(t)
+	raw, err := os.ReadFile(filepath.Join(root, RegistryPath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	later := map[string]any{}
+	_ = json.Unmarshal(raw, &later)
+	later["contract"] = Contract + 1
+	later["blockOfALaterContract"] = map[string]any{"anything": []any{1, "two"}}
+	delete(later, "restart")
+	bytes, _ := json.Marshal(later)
+	path := filepath.Join(root, RegistryPath)
+	_, failure := DecodeRegistry(path, bytes)
+	var problem RegistryError
+	if !errors.As(failure, &problem) || problem.Kind != "contract" || problem.Found != Contract+1 {
+		t.Fatalf("a later contract must be refused as such, got %v", failure)
+	}
+	host, log := recordingHost(t, map[string]string{})
+	if code := host.ReportRegistry(failure); code != 2 {
+		t.Fatalf("exit code %d", code)
+	}
+	text := strings.Join(log.err, "\n")
+	command := InstallCommand(path)
+	for _, want := range []string{"Rebuild and reinstall the launcher with: " + command, "Baue den Launcher neu und installiere ihn mit: " + command} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("missing %q in %q", want, text)
+		}
+	}
+	if !strings.Contains(command, "📥️install") {
+		t.Fatalf("the install command must name the install script of the launcher module: %s", command)
 	}
 }
 

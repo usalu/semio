@@ -6,13 +6,6 @@
    "en",
    "de"
   ],
-  "languageEnvironment": [
-   "SEMIO_LANGUAGE",
-   "SEMIO_DASHBOARD_LOCALE",
-   "LC_ALL",
-   "LC_MESSAGES",
-   "LANG"
-  ],
   "minimumBudgetMegabytes": 1024,
   "maximumBudgetMegabytes": 16384,
   "hostShare": 0.25,
@@ -28,6 +21,8 @@
   "minimumInternedLength": 24,
   "maximumInternedCharacters": 67108864,
   "maximumCachedClosureEntries": 4194304,
+  "maximumParsedManifests": 256,
+  "childHeapMegabytes": 2048,
   "budgetEnvironment": "SEMIO_GRAPH_MEMORY_MB",
   "planEnvironment": "SEMIO_HOST_CAPACITY_PLAN"
  },
@@ -5179,17 +5174,6 @@
    "name": "explicit-language-wins",
    "environment": {
     "SEMIO_LANGUAGE": "de",
-    "SEMIO_DASHBOARD_LOCALE": "en",
-    "LANG": "en_US.UTF-8"
-   },
-   "expect": [
-    "de"
-   ]
-  },
-  {
-   "name": "dashboard-locale-before-system-locale",
-   "environment": {
-    "SEMIO_DASHBOARD_LOCALE": "de",
     "LANG": "en_US.UTF-8"
    },
    "expect": [
@@ -5215,12 +5199,13 @@
    ]
   },
   {
-   "name": "unsupported-locale-falls-through",
+   "name": "unsupported-lc-all-hides-lang",
    "environment": {
     "LC_ALL": "fr_FR.UTF-8",
     "LANG": "de_AT"
    },
    "expect": [
+    "en",
     "de"
    ]
   },
@@ -5249,6 +5234,16 @@
    },
    "expect": [
     "en",
+    "de"
+   ]
+  },
+  {
+   "name": "preference-list-before-locale",
+   "environment": {
+    "LANGUAGE": "fr:de",
+    "LANG": "en_US.UTF-8"
+   },
+   "expect": [
     "de"
    ]
   }

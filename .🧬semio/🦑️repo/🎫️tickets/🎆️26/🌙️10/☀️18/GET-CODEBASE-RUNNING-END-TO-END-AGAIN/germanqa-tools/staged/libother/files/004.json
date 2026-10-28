@@ -1,0 +1,3977 @@
+{
+  "name": "@semio-tech/repo-lib",
+  "$schema": "../../🏗️build/🧬️schema/📋️project/🔣️.json",
+  "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+  "projectType": "library",
+  "namedInputs": {
+    "workspaceMembershipSources": [
+      "sharedGlobals",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/**/package.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/**/*.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/{🪁️typecheck,🕸️dependency-lint,🗂️schema-read-inventory,🖼️repository-ui,🧱️fixture-ownership,🗺️general-execution-ownership}/🟦️.ts"
+    ],
+    "workspacePublicationSources": [
+      "workspaceMembershipSources",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️workspace-publication-source/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️workspace-publication-source/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🏭️owned-generator-preview-inventory/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️workspace-publication-source/🟦️.ts",
+      "{workspaceRoot}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/{🔧️write-handoff.mjs,🔧️update-handoff-tests.mjs,📋️registrar-handoff.json,📋️registrar-handoff.md,📌️important.md}"
+    ],
+    "wasmPackageWrapperSources": [
+      "sharedGlobals",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/package.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg/package.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg/framework_actor.js",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg/framework_actor.d.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg/framework_actor_bg.wasm",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg/framework_actor_bg.wasm.d.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/package.json",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg/package.json",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.js",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.d.ts",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle_bg.wasm",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle_bg.wasm.d.ts",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️wasm-package-wrappers/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️wasm-package-wrappers/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️wasm-package-wrappers/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/{🪁️typecheck,🕸️dependency-lint,🗂️schema-read-inventory,🖼️repository-ui,🧱️fixture-ownership,🗺️general-execution-ownership}/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"
+    ],
+    "cargoTransactionCommandSources": [
+      "sharedGlobals",
+      "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,🏛️trusted-catalog-fixtures/🪪️browser-actor-and-opened-root-fixtures,🏛️trusted-catalog-fixtures/🗺️gis-retained-collaboration-and-publication-fixtures,🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🔷️dotnet/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🦀️native/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🎛️native-input/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🧾️command-inputs/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️publication/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/command-boundaries/🛂️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧫️fixtures/command-boundaries/🧫️cases.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/💻️client/⌨️cli/🧫️fixtures/🚦️test-dispatch/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/{🪁️typecheck,🕸️dependency-lint,🗂️schema-read-inventory,🖼️repository-ui,🧱️fixture-ownership,🗺️general-execution-ownership}/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🏃️shard-execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📁️run-allocation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🧾️provenance/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🚀️apply/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️execution/🐹️go/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🐹️canonical-go-discovery/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/*/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚦️test-dispatch/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️cargo-transaction-command-source/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🐹️canonical-go-discovery/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️cargo-transaction-command-source/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🐹️canonical-go-discovery/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️cargo-transaction-command-source/🔣️.json"
+    ],
+    "libraryTransactionCommandSources": [
+      "sharedGlobals",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/{🪁️typecheck,🕸️dependency-lint,🗂️schema-read-inventory,🖼️repository-ui,🧱️fixture-ownership,🗺️general-execution-ownership}/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🏃️shard-execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📁️run-allocation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🧾️provenance/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/*/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*.ts"
+    ],
+    "libraryGoCommandSources": [
+      "sharedGlobals",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/💻️client/⌨️cli/🧫️fixtures/🚦️test-dispatch/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/{🪁️typecheck,🕸️dependency-lint,🗂️schema-read-inventory,🖼️repository-ui,🧱️fixture-ownership,🗺️general-execution-ownership}/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️execution/🐹️go/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🐹️canonical-go-discovery/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚦️test-dispatch/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🐹️canonical-go-discovery/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🐹️canonical-go-discovery/🔣️.json"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*"
+    ],
+    "testEnv": [
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
+    ]
+  },
+  "targets": {
+    "test-cargo-workspace-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/../../🗂️workspaces/🦀️cargo/**/*",
+        "{projectRoot}/📜️script.ts",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test cargo-workspace-ownership"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Verify Cargo Workspace Ownership",
+              "de": "Cargo-Arbeitsbereichszuordnung prüfen"
+            },
+            "description": {
+              "en": "Verify nested workspace members exclude foreign-owned packages without changing package ownership.",
+              "de": "Fremd zugeordnete Pakete aus verschachtelten Arbeitsbereichen ausschließen und Paketzuordnungen erhalten."
+            }
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🪆️ownership/🟦️.ts"
+          ]
+        }
+      }
+    },
+    "test-build-caller-birth": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/⏱️budget/**/*",
+        "{projectRoot}/../../🏗️build/**/*",
+        "{projectRoot}/../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/**/*",
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/♻️recovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test build-caller-birth"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Verify Build Caller Birth",
+              "de": "Build-Aufruferstart prüfen"
+            },
+            "description": {
+              "en": "Verify original process limits, compiler preparation and child deadline custody.",
+              "de": "Ursprüngliche Prozesslimits, Compiler-Vorbereitung und übergebene Fristen prüfen."
+            }
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/🟦️.ts"
+          ],
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/♻️recovery/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts"
+            ]
+          }
+        }
+      }
+    },
+    "test-tool-run-policy-source": {
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      },
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "repo ./📜️script.ts test-tool-run-policy-source"
+      }
+    },
+    "test-cargo-nextest-configuration": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test cargo-nextest-configuration"
+      }
+    },
+    "test-general-execution-ownership": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test-general-execution-ownership"
+      }
+    },
+    "test-fixture-ownership": {
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test-fixture-ownership"
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ]
+    },
+    "test-locale-law-ownership": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test locale-law-ownership"
+      }
+    },
+    "lint-dependency-direction": {
+      "executor": "repo:script",
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts lint dependency-direction"
+      },
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/**/package.json",
+        "{workspaceRoot}/🧰️framework/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️dependency-direction/**/*"
+      ]
+    },
+    "canonical-architecture": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test canonical-architecture"
+      },
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/**/package.json",
+        "{workspaceRoot}/🧰️framework/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️dependency-direction/**/*",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
+      ],
+      "outputs": []
+    },
+    "test-canonical-execution": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test canonical-execution"
+      }
+    },
+    "test-mutation-case-pair": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test mutation-case-pair"
+      }
+    },
+    "test-mutation-wire-witness": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test mutation-wire-witness"
+      }
+    },
+    "test-mutation-leaf-identity": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test mutation-leaf-identity"
+      }
+    },
+    "go-test": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts go-test",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "libraryGoCommandSources",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
+      ],
+      "outputs": []
+    },
+    "test-process-budgets": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test process-budgets"
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⏱️process-budgets/🟦️.ts"
+          ]
+        }
+      }
+    },
+    "test-exact-cargo-laws": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test exact-cargo-laws"
+      },
+      "outputs": []
+    },
+    "test-go-input-projection": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test go-input-projection"
+      },
+      "outputs": [],
+      "inputs": [
+        "libraryGoCommandSources"
+      ]
+    },
+    "test-runtime-corpus-behavior": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test runtime-corpus-behavior"
+      }
+    },
+    "test-go-dispatch": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test go-test-dispatch"
+      },
+      "outputs": [],
+      "inputs": [
+        "libraryGoCommandSources"
+      ]
+    },
+    "test-generated-source-topology": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test generated-source-topology"
+      }
+    },
+    "test-parser-projection": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test parser-projection"
+      }
+    },
+    "test-collection-catalog": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test collection-catalog"
+      }
+    },
+    "test-package-body-policy": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test package-body-policy"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*",
+        "{workspaceRoot}/**/📜️script.ts",
+        "{workspaceRoot}/**/package.json",
+        "{workspaceRoot}/**/📋️project.json",
+        "{workspaceRoot}/Cargo.lock",
+        "{workspaceRoot}/bun.lock"
+      ]
+    },
+    "test-cross-platform-bootstrap": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test cross-platform-bootstrap"
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "measures-environment"
+          }
+        }
+      }
+    },
+    "test-windows-command-paths": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test windows-command-paths"
+      }
+    },
+    "test-kind-only-basename": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test kind-only-basename"
+      },
+      "outputs": []
+    },
+    "test-framework-source-topology": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test framework-source-topology"
+      },
+      "outputs": []
+    },
+    "test-framework-root-source-topology": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test framework-root-source-topology"
+      },
+      "outputs": []
+    },
+    "test-root-artifact-dependency-source": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test root-artifact-dependency-source"
+      },
+      "outputs": []
+    },
+    "test-root-taxonomy-workflow-source": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test root-taxonomy-workflow-source"
+      },
+      "outputs": []
+    },
+    "test-root-schema-field-source": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test root-schema-field-source"
+      },
+      "outputs": []
+    },
+    "test-root-clean-scaffold-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️root-clean-scaffold-source/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️root-clean-scaffold-source/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-clean-scaffold-source/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/{🪪️identity,📇️direct-owner-index}/**/*.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test root-clean-scaffold-source"
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
+        }
+      },
+      "outputs": []
+    },
+    "test-crate-tree": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/*/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/**/*.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test crate-tree"
+      },
+      "outputs": []
+    },
+    "test-norm-definition-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️norm-definition-ownership/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️norm-definition-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/**/*.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🧾️definition/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/📦️packages/🦀️rust/📋️project.json"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test norm-definition-ownership"
+      },
+      "outputs": []
+    },
+    "test-cad-presence-retirement": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️cad-presence-retirement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/**/*.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🧫️fixtures/♻️retirement/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/♻️retirement/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/**/*.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧪️tests/🧫️fixtures/*.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/**/*.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🦀️.rs"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test cad-presence-retirement"
+      },
+      "outputs": []
+    },
+    "test-lib-wiring-budget": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📏️lib-wiring-budget/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/**/*.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test lib-wiring-budget"
+      },
+      "outputs": []
+    },
+    "test-rust-mount-emitters": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️rust-mount-emitters/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/**/*.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-mount-emitters"
+      },
+      "outputs": []
+    },
+    "test-mutation-family": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-family/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/**/*.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test mutation-family"
+      },
+      "outputs": []
+    },
+    "test-mutation-leaf-generics": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-leaf-generics/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/**/*.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test mutation-leaf-generics"
+      },
+      "outputs": []
+    },
+    "test-package-asset-constants": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️package-asset-constants/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/**/🔏️.digest"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test package-asset-constants"
+      },
+      "outputs": []
+    },
+    "test-root-artifact-schema-law-source": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗿️artifact/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️root-artifact-schema-law-source/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️root-artifact-schema-law-source/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-artifact-schema-law-source/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🪪️field-parity/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test root-artifact-schema-law-source"
+      },
+      "outputs": []
+    },
+    "test-root-surface-abstraction-law-source": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/{🗺️surface,🗿️artifact,📖️source-access}/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/{🔍️field-discovery,🗺️surface}/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/{🧬️schema,🧫️fixtures/🧪️abstraction-ownership}/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️root-surface-abstraction-law-source/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️root-surface-abstraction-law-source/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-surface-abstraction-law-source/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test root-surface-abstraction-law-source"
+      },
+      "outputs": []
+    },
+    "test-root-inference-law-source": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/{📖️source-access,🚶️file-walk,📍️source-coordinate}/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/{💡️inference,🔍️field-discovery}/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️root-inference-law-source/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️root-inference-law-source/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-inference-law-source/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎛️flat-position/{🦀️.rs,🧪️tests/🔬️unit/🦀️.rs}"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test root-inference-law-source"
+      },
+      "outputs": []
+    },
+    "test-cargo-transaction-command-source": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "cargoTransactionCommandSources"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test cargo-transaction-command-source"
+      }
+    },
+    "test-manifestless-source-closure": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️manifestless-source-closure/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️manifestless-source-closure/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️manifestless-source-closure/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet/🧪️Semio.Repo.Test.csproj",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/**/*.{ts,json}",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/{📜️script.ts,📋️project.json}",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test manifestless-source-closure"
+      },
+      "outputs": []
+    },
+    "test-plugin-publication-source-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📣️plugin-publication-source-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📣️plugin-publication-source-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📣️plugin-publication-source-ownership/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/**/*.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/**/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,🏛️trusted-catalog-fixtures/🪪️browser-actor-and-opened-root-fixtures,🏛️trusted-catalog-fixtures/🗺️gis-retained-collaboration-and-publication-fixtures,🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test plugin-publication-source-ownership"
+      },
+      "outputs": []
+    },
+    "test-app-verification-source-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📱️app-verification-source-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📱️app-verification-source-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📱️app-verification-source-ownership/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/{🧬️schema,🧫️fixtures,🧪️tests}/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/{🧬️schema,🧫️fixtures,🧪️tests}/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌿️vcs/{🧬️schema,🧫️fixtures,🧪️tests}/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔮️oracles/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/{➗️mathematical,🌍️gis,🌿️vcs}/📦️packages/*/{📜️script.ts,📋️project.json}",
+        "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/{📜️script.ts,📋️project.json}",
+        "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,🏛️trusted-catalog-fixtures/🪪️browser-actor-and-opened-root-fixtures,🏛️trusted-catalog-fixtures/🗺️gis-retained-collaboration-and-publication-fixtures,🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test app-verification-source-ownership"
+      },
+      "outputs": []
+    },
+    "test-vitest-configuration-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/**/📜️script.ts",
+        "{workspaceRoot}/**/📋️project.json",
+        "{workspaceRoot}/**/🧪️tests/🎚️config/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🎚️vitest-configuration-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🎚️vitest-configuration-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/{🧰️framework-root-source-topology,🖥️os-source-topology}/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎚️vitest-configuration-ownership/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🏃️run-vitest-config-argument-tokens/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test vitest-configuration-ownership"
+      },
+      "outputs": []
+    },
+    "test-tool-configuration-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/{🏗️builder/🌐️vite/🟦️.ts,📦️packages/🟦️typescript/{📋️project.json,📜️script.ts}}",
+        "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/{🏗️builder/🌐️vite/🟦️.ts,🔨️modules/{📦️site,🧩️runtime,🧪️e2e}/📜️script.ts,🔨️modules/🧪️e2e/🎚️config/🟦️.ts,📋️project.json}",
+        "{workspaceRoot}/🌎️hub/🔨️modules/🛡️admin/{🏗️builder/🌐️vite/🟦️.ts,📦️packages/🟦️typescript/{📋️project.json,📜️script.ts}}",
+        "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,🏛️trusted-catalog-fixtures/🪪️browser-actor-and-opened-root-fixtures,🏛️trusted-catalog-fixtures/🗺️gis-retained-collaboration-and-publication-fixtures,🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/{🏗️builder/🌐️vite/🟦️.ts,📦️packages/🟦️typescript/{📋️project.json,📜️script.ts},🧫️fixtures/{⚙️config-graph.json,🔌️staging-root.json},🧪️tests/🧪️ticket-owned-browser-host-staging/🚚️vendor-transport/🟦️.ts}",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️serve/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/{🌐️server/{🎚️config/🟦️.ts,📜️script.ts},📦️packages/🟦️typescript/📋️project.json}",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🧪️tests/🧫️fixtures/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/{💨️tailwind/🟦️.ts,🌓️theme/**/🟦️.ts,📦️packages/🟦️typescript/{📋️project.json,package.json}}",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/{🧹️lint/🟦️.ts,📦️packages/🟦️typescript/{📋️project.json,📜️script.ts,package.json}}",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🎨️styling/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.mts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/📐️source-policy/🟨️.mjs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🎚️tool-configuration-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎚️tool-configuration-ownership/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test tool-configuration-ownership"
+      },
+      "outputs": []
+    },
+    "test-repo-source-ownership": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test repo-source-ownership"
+      },
+      "outputs": []
+    },
+    "test-storybook-discovery": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test storybook-discovery"
+      },
+      "outputs": []
+    },
+    "test-os-source-topology": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test os-source-topology"
+      },
+      "outputs": []
+    },
+    "test-path-emoji-statutes": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test path-emoji-statutes"
+      }
+    },
+    "test-mutation-ticket-role-routing": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test mutation-ticket-role-routing"
+      }
+    },
+    "test-mutation-source-index-capture": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test mutation-source-index-capture"
+      }
+    },
+    "test-mutation-source-roster-roles": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test mutation-source-roster-roles"
+      }
+    },
+    "test-mutation-source-file-facts": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test mutation-source-file-facts"
+      }
+    },
+    "test-typescript-declaration-facts": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test typescript-declaration-facts"
+      }
+    },
+    "typecheck-project": {
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Check an authored TypeScript project",
+              "de": "Verfasstes TypeScript-Projekt prüfen"
+            },
+            "description": {
+              "en": "Select an authored configuration; the current compiler owner retains state, progress and cancellation.",
+              "de": "Verfasste Konfiguration auswählen; der aktuelle Compiler-Eigentümer verwaltet Zustand, Fortschritt und Abbruch."
+            },
+            "verb": "check",
+            "parameters": [
+              {
+                "id": "config",
+                "title": {
+                  "en": "Project configuration",
+                  "de": "Projektkonfiguration"
+                },
+                "description": {
+                  "en": "Choose an authored configuration used by the TypeScript compiler.",
+                  "de": "Verfasste Konfiguration für den TypeScript-Compiler auswählen."
+                },
+                "kind": "text",
+                "default": "tsconfig.json",
+                "valuePositional": true,
+                "suggestions": {
+                  "source": "configs"
+                }
+              },
+              {
+                "id": "diagnostics",
+                "title": {
+                  "en": "Diagnostic detail",
+                  "de": "Diagnoseumfang"
+                },
+                "kind": "choice",
+                "default": "none",
+                "values": [
+                  {
+                    "id": "none"
+                  },
+                  {
+                    "id": "basic",
+                    "args": [
+                      "--diagnostics"
+                    ]
+                  },
+                  {
+                    "id": "extended",
+                    "args": [
+                      "--extendedDiagnostics"
+                    ]
+                  },
+                  {
+                    "id": "files",
+                    "args": [
+                      "--listFiles"
+                    ]
+                  },
+                  {
+                    "id": "files-only",
+                    "args": [
+                      "--listFilesOnly"
+                    ]
+                  },
+                  {
+                    "id": "explain-files",
+                    "args": [
+                      "--explainFiles"
+                    ]
+                  },
+                  {
+                    "id": "resolution",
+                    "args": [
+                      "--traceResolution"
+                    ]
+                  },
+                  {
+                    "id": "full-errors",
+                    "args": [
+                      "--noErrorTruncation"
+                    ]
+                  },
+                  {
+                    "id": "pretty",
+                    "args": [
+                      "--pretty"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts typecheck project",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "typecheck-units": {
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "reads-caller-input"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Check TypeScript unit by unit",
+              "de": "TypeScript einheitenweise prüfen"
+            },
+            "description": {
+              "en": "Fast development check: only units whose sources or dependency declarations changed are checked; results are shared between sessions. The monolithic check stays the release gate.",
+              "de": "Schnelle Entwicklungsprüfung: nur Einheiten mit geänderten Quellen oder Abhängigkeitsdeklarationen werden geprüft; Ergebnisse werden zwischen Sitzungen geteilt. Die monolithische Prüfung bleibt das Freigabetor."
+            },
+            "verb": "check",
+            "parameters": [
+              {
+                "id": "config",
+                "title": {
+                  "en": "Project configuration",
+                  "de": "Projektkonfiguration"
+                },
+                "description": {
+                  "en": "Choose an authored configuration used by the TypeScript compiler.",
+                  "de": "Verfasste Konfiguration für den TypeScript-Compiler auswählen."
+                },
+                "kind": "text",
+                "default": "tsconfig.json",
+                "valuePositional": true,
+                "suggestions": {
+                  "source": "configs"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts typecheck units",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "typecheck": {
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts typecheck",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-regeneration-commands": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test regeneration-commands"
+      }
+    },
+    "test-transaction-v2": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test transaction-v2"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "libraryTransactionCommandSources"
+      ]
+    },
+    "test-artifact-support": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test artifact-support long"
+      }
+    },
+    "test-historical-package-owner-identity": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test historical-package-owner-identity"
+      }
+    },
+    "test-rust-physical-reference-context": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-physical-reference-context long"
+      }
+    },
+    "test-cargo-provider-binding-trace": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test cargo-provider-binding-trace"
+      }
+    },
+    "test-metadata-source-provider": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test metadata-source-provider long"
+      }
+    },
+    "test-taxonomy-cli-cancellation": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test taxonomy-cli-cancellation"
+      }
+    },
+    "test-inventory-artifact-shards": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test inventory-artifact-shards"
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "measures-environment"
+          }
+        }
+      },
+      "cache": false,
+      "outputs": []
+    },
+    "test-root-script-compiler": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test root-script-compiler"
+      }
+    },
+    "test-json-reference-owner-lookup": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test json-reference-owner-lookup"
+      }
+    },
+    "test-cargo-discovery-exclusions": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test cargo-discovery-exclusions"
+      }
+    },
+    "test-nested-cargo-collision-authority": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test nested-cargo-collision-authority"
+      }
+    },
+    "test-registry-import-language": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test registry-import-language"
+      }
+    },
+    "test-preflight-reference-basis": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test preflight-reference-basis"
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "measures-environment"
+          }
+        }
+      }
+    },
+    "test-typescript-path-collection": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test typescript-path-collection"
+      }
+    },
+    "test-frozen-markdown-coordinates": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test frozen-markdown-coordinates"
+      }
+    },
+    "test-historical-document-evidence": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test historical-document-evidence"
+      }
+    },
+    "test-cargo-target-discovery-skip": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test cargo-target-discovery-skip"
+      }
+    },
+    "test-registry-catalog-gitlink-boundary": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test registry-catalog-gitlink-boundary"
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "measures-environment"
+          }
+        }
+      }
+    },
+    "test-historical-json-source-encoding": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test historical-json-source-encoding"
+      }
+    },
+    "test-transaction-recovery-authority": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test transaction-recovery-authority"
+      }
+    },
+    "test-transaction-fixture-key-exactness": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test transaction-fixture-key-exactness"
+      }
+    },
+    "test-testing-readme-coordinates": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test testing-readme-coordinates"
+      }
+    },
+    "test-rust-finite-target-consumption": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-finite-target-consumption"
+      }
+    },
+    "test-readme-current-source-revision": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test readme-current-source-revision"
+      }
+    },
+    "test-rust-writable-path-authority": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-writable-path-authority"
+      }
+    },
+    "test-readme-move-source-authority": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test readme-move-source-authority"
+      }
+    },
+    "test-artifact-source-residue": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test artifact-source-residue"
+      }
+    },
+    "test-artifact-source-commit": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test artifact-source-commit"
+      }
+    },
+    "test-artifact-empty-facet-authority": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test artifact-empty-facet-authority"
+      }
+    },
+    "test-rust-divergence-callback-source": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-divergence-callback-source"
+      }
+    },
+    "test-rust-divergence-callback-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-divergence-callback-native"
+      }
+    },
+    "test-rust-divergence-callback-syn": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-divergence-callback-syn"
+      }
+    },
+    "test-readme-current-source-activation": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test readme-current-source-activation"
+      }
+    },
+    "test-artifact-io-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test artifact-io-ownership"
+      }
+    },
+    "lint-artifact-io-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts lint artifact-io-ownership"
+      }
+    },
+    "test-artifact-empty-facet-authoring": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test artifact-empty-facet-authoring"
+      }
+    },
+    "test-readme-reviewed-fixture-inputs": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test readme-reviewed-fixture-inputs"
+      }
+    },
+    "test-taxonomy-pattern-compiler-reuse": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test taxonomy-pattern-compiler-reuse"
+      }
+    },
+    "test-reference-coverage-selection": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test reference-coverage-selection"
+      }
+    },
+    "test-taxonomy-leading-grapheme": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test taxonomy-leading-grapheme"
+      }
+    },
+    "test-reference-coordinate-progress": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test reference-coordinate-progress"
+      }
+    },
+    "test-markdown-inline-references": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test markdown-inline-references"
+      }
+    },
+    "test-gherkin-description-inline-code": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test gherkin-description-inline-code"
+      }
+    },
+    "test-transaction-process-observer": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test transaction-process-observer"
+      }
+    },
+    "test-nx-workspace-root-file-reference": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test nx-workspace-root-file-reference"
+      }
+    },
+    "test-bare-reference-sibling-precedence": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test bare-reference-sibling-precedence"
+      }
+    },
+    "test-run-vitest-config-argument-tokens": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test run-vitest-config-argument-tokens"
+      }
+    },
+    "test-cargo-native-owner-discovery": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test cargo-native-owner-discovery"
+      }
+    },
+    "test-workspace-publication-source": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "workspacePublicationSources"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test workspace-publication-source"
+      },
+      "outputs": []
+    },
+    "test-wasm-package-wrappers": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "wasmPackageWrapperSources"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test wasm-package-wrappers"
+      },
+      "outputs": []
+    },
+    "workspaces-check": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts workspaces --check"
+      },
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "workspaceMembershipSources"
+      ],
+      "outputs": []
+    },
+    "workspaces-write": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts workspaces --write"
+      },
+      "inputs": [
+        "workspaceMembershipSources"
+      ],
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
+        }
+      }
+    },
+    "test-composition-policy": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "command": "repo ./📜️script.ts test composition-policy",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript"
+      }
+    },
+    "test-os-dev-composition-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧑‍💻os-dev-composition-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧑‍💻os-dev-composition-ownership/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📥️installation/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🏃️execution/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/👁️watch/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📊️size/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🏗️staging/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/📤️publication/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔐️lease/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🩺️readiness/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔍️freshness/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️serve/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️capability-policy/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️export-path-policy/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️host-handle-policy/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🏃️execution/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎬️studio/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🔬️catalog-smoke/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/✅️verification/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏗️structure/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🖼️pixels/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🔬️probe/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🌐️server-pool/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/📊️report/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏃️execution/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📥️source/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📋️plan/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏗️compiler/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📤️publication/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔍️freshness/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏃️execution/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📽️projection/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📤️publication/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/📋️plan/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🖥️host/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🌐️browser/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/📏️measured-row/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🏃️execution/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧬️schema/🛂️validation/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/📇️canonical-bootstrap-folder-mirror/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,🏛️trusted-catalog-fixtures/🪪️browser-actor-and-opened-root-fixtures,🏛️trusted-catalog-fixtures/🗺️gis-retained-collaboration-and-publication-fixtures,🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🧪️tests/🧫️fixtures/🔣️.json",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/🎛️commands/🪪️member-history-identity/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/🎛️commands/📚️member-history-dictionary/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🪪️initial-child-identity/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/🎭️profile/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+        "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test os-dev-composition-ownership"
+      },
+      "outputs": []
+    },
+    "test-cargo-dependency-direction": {
+      "executor": "repo:script",
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test cargo-dependency-direction"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "sharedGlobals",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/**/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️cargo/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️cargo-dependency-direction/**/*"
+      ]
+    },
+    "lint-cargo-dependency-direction": {
+      "executor": "repo:script",
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts lint cargo-dependency-direction"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "sharedGlobals",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/**/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️cargo/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️cargo-dependency-direction/**/*"
+      ]
+    },
+    "test-compute-constructor-owner": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "sharedGlobals",
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🧩️compute-constructor/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*",
+        "{workspaceRoot}/📜️script.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test compute-constructor-owner"
+      }
+    },
+    "test-dependency-direction": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test dependency-direction"
+      }
+    },
+    "test-rust-source-direction": {
+      "executor": "repo:script",
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-source-direction"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/**/*.rs",
+        "{workspaceRoot}/🧰️framework/**/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️rust-source-direction/**/*"
+      ]
+    },
+    "test-rust-source-scopes": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-source-direction scopes"
+      }
+    },
+    "test-canonical-json": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test canonical-json"
+      }
+    },
+    "test-mutation-authority-scaffolding": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test mutation-authority scaffolding"
+      }
+    },
+    "test-mutation-authority-inventory": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test mutation-authority inventory"
+      }
+    },
+    "test-mutation-authority-reachability": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test mutation-authority reachability"
+      }
+    },
+    "test-mutation-authority-type-origin": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test mutation-authority type-origin"
+      }
+    },
+    "test-rust-source-graph": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-source-direction graph"
+      }
+    },
+    "test-rust-source-attributes": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-source-direction attributes"
+      }
+    },
+    "lint-rust-source-direction": {
+      "executor": "repo:script",
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts lint rust-source-direction"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "sharedGlobals",
+        "{workspaceRoot}/*.rs",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/**/*.rs",
+        "{workspaceRoot}/🧰️framework/**/Cargo.toml",
+        "{workspaceRoot}/✏️s/**/*.rs",
+        "{workspaceRoot}/✏️s/**/Cargo.toml",
+        "{workspaceRoot}/🌎️hub/**/*.rs",
+        "{workspaceRoot}/🌎️hub/**/Cargo.toml",
+        "{workspaceRoot}/♻️mit-bestand/**/*.rs",
+        "{workspaceRoot}/♻️mit-bestand/**/Cargo.toml",
+        "{workspaceRoot}/🏢️semio-tech/**/*.rs",
+        "{workspaceRoot}/🏢️semio-tech/**/Cargo.toml",
+        "{workspaceRoot}/👴️leutwiler/**/*.rs",
+        "{workspaceRoot}/👴️leutwiler/**/Cargo.toml",
+        "{workspaceRoot}/🎓️teaching/**/*.rs",
+        "{workspaceRoot}/🎓️teaching/**/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️rust-source-direction/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/📏️ownership/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧬️schema/📍️binding-origin/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/📍️ownership/**/*"
+      ]
+    },
+    "test-native-dependencies": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts test native-dependencies",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "forwardAllArgs": false
+      }
+    },
+    "test-owned-script-routes": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test owned-script-routes"
+      }
+    },
+    "lint-framework-neutral-product-direction": {
+      "executor": "repo:script",
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts lint framework-neutral-product-direction"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "sharedGlobals",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/**/package.json",
+        "{workspaceRoot}/🧰️framework/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️dependency-direction/**/*"
+      ]
+    },
+    "lint-styling-pixels": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts lint styling-pixels"
+      }
+    },
+    "lint-styling-colors": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts lint styling-colors"
+      }
+    },
+    "test-native-source-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/♻️retirement/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test native-source-ownership"
+      }
+    },
+    "test-ui-router-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test ui-router-ownership"
+      }
+    },
+    "ui-storybook-dev": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts ui dev",
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "continuous": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+        "{workspaceRoot}/.storybook/**/*"
+      ],
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "continuous",
+            "reason": "serves-until-stopped"
+          }
+        }
+      }
+    },
+    "ui-storybook-build": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts ui build",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_OUTPUT_DIR": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/storybook-static"
+        }
+      },
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/storybook-static"
+      ],
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+        "{workspaceRoot}/.storybook/**/*"
+      ]
+    },
+    "check-ui-primitives": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts ui check-ui-primitives"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+        "{workspaceRoot}/.storybook/**/*",
+        "{workspaceRoot}/**/*.tsx",
+        "{workspaceRoot}/**/*.jsx"
+      ],
+      "cache": true
+    },
+    "check-chrome-i18n": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts ui check-chrome-i18n"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+        "{workspaceRoot}/.storybook/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/**/*",
+        "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/**/*",
+        "{workspaceRoot}/🏢️semio-tech/🎡️play/**/*"
+      ],
+      "cache": true
+    },
+    "test-fixture-law-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🧪️tests/🧱️fixture-ownership/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test fixture-law-ownership"
+      }
+    },
+    "test-native-owner-command-policy": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test native-owner-command-policy"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "sharedGlobals",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/**/Cargo.toml",
+        "{workspaceRoot}/.config/nextest.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
+      ],
+      "outputs": []
+    },
+    "test-dependency-policy-bootstrap": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test dependency-policy-bootstrap"
+      },
+      "outputs": [],
+      "dependsOn": [],
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/📋️project.json",
+        "{workspaceRoot}/nx.json",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/{🧰️framework,✏️s,🌎️hub,♻️mit-bestand}/**/package.json",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
+      ]
+    },
+    "test-rust-binding": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-binding"
+      },
+      "outputs": [],
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🟦️.ts"
+      ]
+    },
+    "test-rust-binding-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-binding native"
+      },
+      "outputs": [],
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🟦️.ts"
+      ]
+    },
+    "test-build-discovery": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/**/*"
+      ],
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      },
+      "options": {
+        "cwd": ".",
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test build-discovery"
+      }
+    },
+    "test-nx-project-inference": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧫️fixtures/🔁️graph-revision/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": ".",
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test nx-project-inference"
+      }
+    },
+    "test-nx-project-inference-revision": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧫️fixtures/🔁️graph-revision/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔁️graph-revision/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": ".",
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test nx-project-inference revision"
+      }
+    },
+    "test-nx-project-inference-imports": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧫️fixtures/🔁️graph-revision/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔗️import-edges/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧫️fixtures/import-edges/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/🔗️import-edges/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": ".",
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test nx-project-inference imports"
+      }
+    },
+    "test-nx-project-inference-facts": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔗️import-edges/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧫️fixtures/import-edges/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧫️fixtures/📁️source-facts/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/📁️source-facts/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": ".",
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test nx-project-inference facts"
+      }
+    },
+    "test-rust-source-participation": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️rust-source-direction/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-source-direction participation"
+      }
+    },
+    "test-source-services": {
+      "executor": "repo:script",
+      "outputs": [],
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧾️serialization/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test source-services"
+      }
+    },
+    "test-multi-scope-verification": {
+      "executor": "repo:script",
+      "outputs": [],
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test multi-scope-verification"
+      }
+    },
+    "test-rust-source-roots": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️rust-source-direction/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-source-direction roots"
+      }
+    },
+    "test-rust-fixture-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️rust-source-direction/🧫️fixture-ownership/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🔬️mutation-leaf-metadata/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🔬️mutation-source-authority/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🔬️component-unit/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📌️ChromePanels/🧪️tests/🧩️component/🟦️.tsx",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🖥️wgpu-display-conflicts-marketplace/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🖼️raster-residency/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖼️scene-raster-ownership/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-fixture-ownership"
+      }
+    },
+    "test-pool-use-ownership": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test pool-use-ownership"
+      }
+    },
+    "test-deferred-wake-ownership": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test deferred-wake-ownership"
+      }
+    },
+    "test-rust-family-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-family-ownership"
+      },
+      "outputs": [],
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/📍️ownership/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/📏️ownership/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧬️schema/📍️binding-origin/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*"
+      ]
+    },
+    "test-rust-family-ownership-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-family-ownership native"
+      },
+      "outputs": [],
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/📍️ownership/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/📏️ownership/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧬️schema/📍️binding-origin/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*"
+      ]
+    },
+    "test-rust-runtime-path-direction": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧬️schema,🧫️fixtures}/🧱️rust-source-direction/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test rust-runtime-path-direction",
+        "forwardAllArgs": true
+      }
+    },
+    "test-cargo-library-search-path": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test cargo-library-search-path"
+      }
+    },
+    "test-fixture-placement": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧭️fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🧪️tests/🧭️fixture-placement/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🧪️tests/📁fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/📁fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🧪️tests/🧭️fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧭️fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧭️fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧪️tests/🧭️fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧪️tests/🧭️fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/**/*",
+        "{workspaceRoot}/🌎️hub/**/*",
+        "{workspaceRoot}/🧪️tests/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️case-fixtures/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📐️test-layout/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧭️fixture-resolution/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🚷️discovery-boundaries/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🗂️schema-document-index/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📏️proportion/📃️flatness/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📏️proportion/↔️elongation/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📏️proportion/📏️slenderness/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📏️proportion/🖼️aspect-ratios/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/🥯️handles/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/🔢️genus/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/🕳️holes/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/🧮️euler-characteristic/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/➰️boundary-loops/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📦️size/↔️axis-aligned-bounds/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📦️size/📏️overall-size/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/**/*",
+        "{workspaceRoot}/✏️s/**/*",
+        "{workspaceRoot}/🎓️teaching/**/*",
+        "{workspaceRoot}/♻️mit-bestand/**/*",
+        "{workspaceRoot}/👴️leutwiler/**/*",
+        "{workspaceRoot}/🏢️semio-tech/**/*",
+        "{workspaceRoot}/🧬️schema/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔭️mutation-fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/🧪️scope-closure/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🗂️taxonomy/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🗺️test-layout/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📃️case-contract/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test fixture-placement"
+      }
+    },
+    "test-mutation-fixture-placement": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧭️fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🧪️tests/🧭️fixture-placement/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🧪️tests/📁fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/📁fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🧪️tests/🧭️fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧭️fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧭️fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧪️tests/🧭️fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧪️tests/🧭️fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/**/*",
+        "{workspaceRoot}/🌎️hub/**/*",
+        "{workspaceRoot}/🧪️tests/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️case-fixtures/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📐️test-layout/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧭️fixture-resolution/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🚷️discovery-boundaries/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🗂️schema-document-index/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📏️proportion/📃️flatness/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📏️proportion/↔️elongation/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📏️proportion/📏️slenderness/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📏️proportion/🖼️aspect-ratios/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/🥯️handles/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/🔢️genus/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/🕳️holes/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/🧮️euler-characteristic/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/🕸️topology/➰️boundary-loops/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📦️size/↔️axis-aligned-bounds/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/💡️inferences/📦️size/📏️overall-size/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/**/*",
+        "{workspaceRoot}/✏️s/**/*",
+        "{workspaceRoot}/🎓️teaching/**/*",
+        "{workspaceRoot}/♻️mit-bestand/**/*",
+        "{workspaceRoot}/👴️leutwiler/**/*",
+        "{workspaceRoot}/🏢️semio-tech/**/*",
+        "{workspaceRoot}/🧬️schema/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔭️mutation-fixture-placement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/🧪️scope-closure/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🗂️taxonomy/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🗺️test-layout/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📃️case-contract/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test mutation-fixture-placement"
+      }
+    },
+    "test-runtime-fixture-graph": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test runtime-fixture-graph"
+      },
+      "dependsOn": [
+        "workspace:deps-trunk",
+        "workspace:deps-wasm-opt"
+      ]
+    },
+    "test-artifact-command-extension": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test artifact-command-extension"
+      }
+    },
+    "test-generator-preview-receiving": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts test generator-preview-receiving",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript"
+      },
+      "cache": true
+    },
+    "test-selected-runtime-actor-port": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "command": "repo ./📜️script.ts test selected-runtime-actor-port",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript"
+      }
+    },
+    "test-nx-owner-arguments": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "command": "repo ./📜️script.ts test nx-owner-arguments",
+        "forwardAllArgs": false
+      }
+    },
+    "probe-nx-owner-arguments": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./📜️script.ts test nx-owner-arguments-probe",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "measures-environment"
+          }
+        }
+      }
+    },
+    "test-schema-reads": {
+      "executor": "repo:script",
+      "outputs": [],
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test schema-reads"
+      }
+    },
+    "schema-read-inventory": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts schema-read-inventory",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
+        }
+      }
+    },
+    "test-nx-native-child-issuance": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "command": "repo ./📜️script.ts test nx-native-child-issuance",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-original-command-control": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "repo ./📜️script.ts test original-command-control"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-original-exact-preparation-control": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "repo ./📜️script.ts test original-exact-preparation-control"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-decoder-absence": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "repo ./📜️script.ts test decoder-absence"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-target-execution": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      },
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "repo ./📜️script.ts test target-execution"
+      }
+    },
+    "test-original-default-preparation-control": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "repo ./📜️script.ts test original-default-preparation-control"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-go-executable-acceptance": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/../../🧪️tests/🐹️executable-owners/**/*",
+        "{projectRoot}/../../🧪️tests/🧫️fixtures/🐹️executable-owners/🔣️.json"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🐹️executable-owners",
+        "command": "repo ./📜️script.ts test runtime"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-go-executable-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{projectRoot}/../../🧪️tests/🐹️executable-owners/🧭️ownership/🟦️.ts",
+        "{projectRoot}/../../🧪️tests/🧫️fixtures/🐹️executable-ownership/🔣️.json"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🐹️executable-owners",
+        "command": "repo ./📜️script.ts test ownership"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "owner-command": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": ".",
+        "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\" owner-command --cwd . -- node --version",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "reads-caller-input"
+          }
+        }
+      }
+    },
+    "test-build-source-demand": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/📋️project.json",
+        "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎁️packs/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/package.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📖️opening-resolver/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🚨️fault/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📞️directory-client/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🪢️wire-contracts/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⚙️browser-build/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/📋️project.json"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test build-source-demand"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts"
+          ],
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/✏️s/🧑‍💻dev/📋️project.json",
+              "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📋️project.json",
+              "{workspaceRoot}/🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🎁️packs/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/package.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/📜️script.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📖️opening-resolver/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🚨️fault/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/📞️directory-client/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/⚖️replication-commands/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🪢️wire-contracts/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⚙️browser-build/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/📋️project.json"
+            ]
+          }
+        }
+      }
+    },
+    "test-build-mode": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test build-mode"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🧪️tests/🟦️.ts"
+          ]
+        }
+      }
+    },
+    "test-build-surfaces": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test build-surfaces"
+      }
+    },
+    "test-agent-clients": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test agent-clients"
+      }
+    },
+    "test-derived-config": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test derived-config"
+      }
+    },
+    "test-dashboard-control": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test dashboard-control"
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎛️dashboard-control/🟦️.ts"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -14,18 +14,13 @@ import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦
 import { isMainModuleV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 
 
-/** 🌱️ Launches a test file inside the genuine Original process birth of each declared birth identifier, so gates on the real build capabilities, setup purpose or installed Nx tooling see an authentic caller. @see ../🧪️testing/🌱️genuine-birth/🔣️.json */
-function genuineBirthLaunchersV1(script: string, root: string): Readonly<Record<string, (file: string) => readonly string[]>> {
-  return Object.fromEntries(["setup", "setup-sdk", "orchestration", "model"].map(birth => [birth, (file: string) => [script, "--file=" + file, "--birth=" + birth, "--root=" + root]]));
-}
-
 /** 🧪️ Runs a declared suite of the route table with every test file in its own process; any other `test` name loads the legacy proofs lazily. */
 class CacheTestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const { cachingTestRootV1, readCachingTestTableV1 } = await import("./🗂️suites/🟦️.ts"), table = readCachingTestTableV1();
     if (args.length === 1 && table.suites.some(suite => suite.id === args[0])) {
-      const { processTestCheckoutV1, runProcessTestSuiteV1, withProcessTestOutputV1 } = await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🏃️run/🟦️.ts"), checkout = processTestCheckoutV1(this.root, this.repoRoot);
-      await withProcessTestOutputV1(checkout, "cache-contract", output => runProcessTestSuiteV1({ invocation: this.invocation, root: cachingTestRootV1, checkout, table, suite: args[0]!, owner: "cache", output, environment: process.env, launchers: genuineBirthLaunchersV1(join(this.root, "../🧪️testing/🌱️genuine-birth/📜️script.ts"), checkout) }), table.suites.find(suite => suite.id === args[0])?.scratch);
+      const { processTestCheckoutV1, runProcessTestSuiteV1, withProcessTestOutputV1 } = await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🏃️run/🟦️.ts"), checkout = processTestCheckoutV1(this.root, this.repoRoot), { genuineBirthLaunchersV1 } = await import("../🧪️testing/🌱️genuine-birth/🚀️launchers/🟦️.ts"), { testWorkerLearningV1 } = await import("../🏗️build/🌡️host-capacity/🧪️workers/🟦️.ts"), launchers = genuineBirthLaunchersV1(join(this.root, "../🧪️testing/🌱️genuine-birth/📜️script.ts"), checkout);
+      await withProcessTestOutputV1(checkout, "cache-contract", output => runProcessTestSuiteV1({ invocation: this.invocation, root: cachingTestRootV1, checkout, table, suite: args[0]!, owner: "cache", output, environment: process.env, launchers, workers: { learning: testWorkerLearningV1(process.env) } }), table.suites.find(suite => suite.id === args[0])?.scratch);
       return;
     }
     const { TestScript } = await import("./🧪️tests/🔬️script-commands/🟦️.ts");

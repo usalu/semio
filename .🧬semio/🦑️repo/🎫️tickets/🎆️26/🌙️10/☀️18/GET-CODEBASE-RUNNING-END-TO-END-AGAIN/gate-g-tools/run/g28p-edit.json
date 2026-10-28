@@ -1,0 +1,31 @@
+{
+ "label": "g28p-edit",
+ "target": "@semio-tech/print-rs:test",
+ "started": "08:26:12",
+ "wall_s": 369.3,
+ "peak_tree_mb": 5353,
+ "peak_processes": 5,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "2"
+  ],
+  "inferring": [
+   "2"
+  ],
+  "published": [
+   "612",
+   "2",
+   "52"
+  ],
+  "processes": [
+   "3",
+   "1 internal, 2 local"
+  ],
+  "actions": [
+   "3"
+  ]
+ }
+}

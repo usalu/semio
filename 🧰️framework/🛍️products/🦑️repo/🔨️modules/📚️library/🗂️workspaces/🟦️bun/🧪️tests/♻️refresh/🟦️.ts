@@ -21,14 +21,14 @@ test("semantic frontier refresh outcomes match the independent SQLite contract",
  }} finally {database.close();}
 });
 
-for(const row of fixture.frontierRefresh) test("actual semantic frontier refresh: "+row.name, async () => {
+for(const frontierBatchPaths of [1,64]) for(const row of fixture.frontierRefresh) test("actual semantic frontier refresh: "+row.name+" Batch "+frontierBatchPaths, async () => {
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Owned refresh artifacts required");checked(join(output,"rf000000/r/members/empty/new/value.ts"));mkdirSync(output,{recursive:true});
  const container=mkdtempSync(join(output,"rf")),root=checked(join(container,"r")),stop=new AbortController(),reason=Object.freeze({refreshOriginal:row.name}),events:string[]=[];
  let body=false,sawDiscovery=false,changed=false,afterChanged=0,lastPath="",first:string|undefined,later:boolean|null=null,rejected=false,failure:unknown;
  try {
   put(container,"package.json",{name:"empty-parent",private:true,workspaces:[]});mkdirSync(root);
   put(root,"package.json",source("refresh",["members/**"],["*/package.json"]));put(root,"members/a/package.json",{name:"refresh-a",version:"1.0.0"});mkdirSync(checked(join(root,"members/empty")));mkdirSync(checked(join(root,"outside")));
-  const operation=ownership.withPublishedBunWorkspaceOwnershipV1(root,{kind:"all"},{signal:stop.signal,advance:async progress=>{
+  const operation=ownership.withPublishedBunWorkspaceOwnershipV1(root,{kind:"all"},{signal:stop.signal,frontierBatchPaths,advance:async progress=>{
    if(!body)return;events.push(progress.operation);if(progress.operation==="state"||progress.operation==="list")sawDiscovery=true;
    if(changed&&progress.operation==="frontier")afterChanged++;
    if(!changed&&sawDiscovery&&row.finalMutation!=="none"&&progress.operation==="frontier"&&progress.path===lastPath){

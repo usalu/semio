@@ -1,0 +1,125 @@
+{
+ "$id": "semio:repo/authorizers/sites",
+ "title": "Closure site analysis and refusal texts",
+ "$defs": {
+  "Policy": {
+   "const": {
+    "installedScheme": "installed:",
+    "rootScheme": "semio-root:",
+    "maximumSitesPerFile": 4096,
+    "languages": [
+     "en",
+     "de"
+    ]
+   }
+  },
+  "Message": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "en",
+    "de"
+   ],
+   "properties": {
+    "en": {
+     "$ref": "#/$defs/Text"
+    },
+    "de": {
+     "$ref": "#/$defs/Text"
+    }
+   }
+  },
+  "Text": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "refusal",
+    "fix"
+   ],
+   "properties": {
+    "refusal": {
+     "type": "string",
+     "minLength": 1
+    },
+    "fix": {
+     "type": "string",
+     "minLength": 1
+    }
+   }
+  },
+  "Messages": {
+   "const": {
+    "import": {
+     "en": {
+      "refusal": "Uncaptured implementation import refused: {specifier} (imported by {importer})",
+      "fix": "Fix: import it literally (static import or import(\"...\")) from a file the capture reaches, or declare the computed site once in ComputedImportSites (authorizers schema, roots)."
+     },
+     "de": {
+      "refusal": "Nicht erfasster Implementierungs-Import verweigert: {specifier} (importiert von {importer})",
+      "fix": "Behebung: Importiere ihn literal (statischer Import oder import(\"...\")) aus einer Datei, die die Erfassung erreicht, oder deklariere die berechnete Stelle einmalig in ComputedImportSites (Authorizers-Schema, roots)."
+     }
+    },
+    "require": {
+     "en": {
+      "refusal": "Uncaptured implementation require refused: {specifier} (required by {importer})",
+      "fix": "Fix: pass a literal specifier to require(\"...\") or createRequire(...)(\"...\") so the capture derives it, install the package if it is third-party, or declare the computed site once in ComputedImportSites (authorizers schema, roots)."
+     },
+     "de": {
+      "refusal": "Nicht erfasstes Implementierungs-Require verweigert: {specifier} (angefordert von {importer})",
+      "fix": "Behebung: Übergib require(\"...\") oder createRequire(...)(\"...\") einen literalen Specifier, damit die Erfassung ihn ableitet, installiere das Paket bei Drittanbietern oder deklariere die berechnete Stelle einmalig in ComputedImportSites (Authorizers-Schema, roots)."
+     }
+    },
+    "declaring-module": {
+     "en": {
+      "refusal": "Captured require declaring module required: {importer} is outside the captured closure and may only resolve paths",
+      "fix": "Fix: load code with a literal import from a captured file; createRequire(base) with a base outside the closure may only call .resolve()."
+     },
+     "de": {
+      "refusal": "Erfasstes deklarierendes Require-Modul erforderlich: {importer} liegt außerhalb der erfassten Closure und darf nur Pfade auflösen",
+      "fix": "Behebung: Lade Code mit einem literalen Import aus einer erfassten Datei; createRequire(base) mit einer Basis außerhalb der Closure darf nur .resolve() aufrufen."
+     }
+    },
+    "schema-read": {
+     "en": {
+      "refusal": "Uncaptured implementation schema read refused: {specifier} (its owning module is captured but the schema is not)",
+      "fix": "Fix: keep the schema in the owning module's sibling schema folder or name it with a literal relative path so the capture admits it."
+     },
+     "de": {
+      "refusal": "Nicht erfasster Implementierungs-Schema-Zugriff verweigert: {specifier} (das besitzende Modul ist erfasst, das Schema nicht)",
+      "fix": "Behebung: Lege das Schema in den benachbarten Schema-Ordner des besitzenden Moduls oder benenne es mit einem literalen relativen Pfad, damit die Erfassung es aufnimmt."
+     }
+    },
+    "installed-drift": {
+     "en": {
+      "refusal": "Installed package changed since capture: {specifier} ({detail})",
+      "fix": "Fix: rerun the command so the capture records the installed version again, or restore the pinned dependency generation."
+     },
+     "de": {
+      "refusal": "Installiertes Paket seit der Erfassung verändert: {specifier} ({detail})",
+      "fix": "Behebung: Starte den Befehl erneut, damit die Erfassung die installierte Version neu aufnimmt, oder stelle die gepinnte Dependency-Generation wieder her."
+     }
+    },
+    "unresolved": {
+     "en": {
+      "refusal": "Closure site cannot be resolved: {specifier} (in {importer})",
+      "fix": "Fix: install the package (bun install) or correct the specifier; optional dependencies must be required inside try/catch with a literal specifier."
+     },
+     "de": {
+      "refusal": "Closure-Stelle nicht auflösbar: {specifier} (in {importer})",
+      "fix": "Behebung: Installiere das Paket (bun install) oder korrigiere den Specifier; optionale Abhängigkeiten muessen mit literalem Specifier in try/catch angefordert werden."
+     }
+    },
+    "computed-site": {
+     "en": {
+      "refusal": "Computed import site not declared: {importer} holds {detail}",
+      "fix": "Fix: add the owner once to ComputedImportSites (authorizers schema) with its site count and the roots the site may load."
+     },
+     "de": {
+      "refusal": "Berechnete Import-Stelle nicht deklariert: {importer} enthält {detail}",
+      "fix": "Behebung: Trage den Besitzer einmalig in ComputedImportSites (Authorizers-Schema) mit Stellenzahl und den ladbaren roots ein."
+     }
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts": {
+  "file": "00.ts",
+  "base": "534ca2166a07fe5854ab055e3bfaadd2b0653441879576d1ede1ef78ff4a411d",
+  "new": "cd20c397efa39f7f0770290c0c7f0a55c7174114851b2003a7c32af33b37fa06"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🗄️store/🟦️.ts": {
+  "file": "01.ts",
+  "base": "6a6d1de2b408a58618b9efc2dde17da17c9981a5b61dadfebef4e96751b74e7a",
+  "new": "507c7976aa460deb35b335c6ec6dbd3d41b83bdd3c4e5aea1a8b6806bd839d9d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧊️memo/🟦️.ts": {
+  "file": "02.ts",
+  "base": "14aa33b498c1b3c82e8a68bbe63ae845549045bd854ed0914c1c562c79b91c8a",
+  "new": "029822f4330640453a95b659cf9d5198506fe662d937681bdc27949cfef3385d"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/🪟️registry-root/🟦️.ts": {
+  "file": "03.ts",
+  "base": "882fd6e55709fa6155df7f8e0379970c6ceed9b634e962386bc28c7f6b78d1ab",
+  "new": "a194727a9f1e44087e632341027d085343083f24705752b3844adcde2a7c0f2d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🧊️memo/🟦️.ts": {
+  "file": "04.ts",
+  "base": "399f2d2604c8cbbbdcab693e74e34ad777169b71656a559fcf0d90fc240136b9",
+  "new": "2efc0cbd2871ab4f7ed81786df17dc63eee8c3d29be4eebbd1124294218d6e3e"
+ }
+}

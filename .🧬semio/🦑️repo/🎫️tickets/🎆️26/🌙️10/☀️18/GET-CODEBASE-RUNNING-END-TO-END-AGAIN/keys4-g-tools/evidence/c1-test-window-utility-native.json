@@ -1,0 +1,29 @@
+{
+ "target": "test-window-utility-native",
+ "tag": "c1",
+ "declared": 1983,
+ "rows": [
+  {
+   "leg": "cargo-framework",
+   "crate": "semio-framework",
+   "test": "lib:semio_framework",
+   "kind": "cargo",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [
+    "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🪪️manifest/🟦️.ts"
+   ],
+   "rounds": 2,
+   "seconds": 4,
+   "tail": " | test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s |  | ",
+   "notes": [
+    "profiles:3",
+    "rules:1288",
+    "capacity:600",
+    "profiles:3"
+   ]
+  }
+ ]
+}

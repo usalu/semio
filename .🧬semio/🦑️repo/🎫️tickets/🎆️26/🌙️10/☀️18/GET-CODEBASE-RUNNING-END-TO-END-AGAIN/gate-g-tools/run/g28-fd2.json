@@ -1,0 +1,12 @@
+{
+ "label": "g28-fd2",
+ "target": "@semio-tech/framework-rs:test-directory-discovery",
+ "started": "08:36:08",
+ "wall_s": 25.3,
+ "peak_tree_mb": 2644,
+ "peak_processes": 4,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

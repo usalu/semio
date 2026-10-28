@@ -1,0 +1,1 @@
+ lru?(image:object,dryRun:boolean):Promise<Readonly<{usedBytes:number;maximumBytes:number;targetBytes:number;remainingBytes:number;retiredGroups:number;retiredFiles:number;retiredBytes:number;busy:number;protected:number;cancelled:boolean}>>;

@@ -1,0 +1,23 @@
+{
+ "label": "g48-print",
+ "target": "@semio-tech/print-rs:test",
+ "started": "22:04:05",
+ "wall_s": 935.4,
+ "peak_tree_mb": 5120,
+ "peak_processes": 9,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 80.4,
+ "graph": {
+  "inferring": [
+   "128"
+  ],
+  "processes": [
+   "8",
+   "1 action cache hit, 1 disk cache hit, 2 internal, 5 local"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

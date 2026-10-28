@@ -83,14 +83,24 @@
             "clockTicksPerSecond": 100
           },
           "win32": {
-            "program": "powershell.exe",
             "arguments": [
               "-NoProfile",
               "-NonInteractive",
               "-Command",
               "(Get-CimInstance Win32_OperatingSystem).LastBootUpTime.ToUniversalTime().ToString('o')"
             ],
-            "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\\.([0-9]{1,7}))?Z\\s*$"
+            "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\\.([0-9]{1,7}))?Z\\s*$",
+            "native": {
+              "library": "ntdll.dll",
+              "symbol": "NtQuerySystemInformation",
+              "class": 3,
+              "lengths": [
+                48,
+                32
+              ],
+              "bootTimeOffset": 0,
+              "fileTimeEpochOffsetMs": 11644473600000
+            }
           },
           "maximumBytes": 65536
         },
@@ -730,6 +740,12 @@
             "free",
             "held",
             "unavailable"
+          ]
+        },
+        "attachment": {
+          "enum": [
+            "unmounted",
+            "noowners"
           ]
         }
       }

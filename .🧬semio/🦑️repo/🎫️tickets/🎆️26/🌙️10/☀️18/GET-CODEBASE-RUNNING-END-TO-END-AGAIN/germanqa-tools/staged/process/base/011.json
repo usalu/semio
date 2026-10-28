@@ -1,0 +1,1326 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "schema://framework.process/ResourceLeaseStandingV1",
+ "definitions": {
+  "PolicySchema": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "priority",
+    "progress",
+    "eta",
+    "freshness",
+    "yield",
+    "reclaim",
+    "history"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "priority": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "environment",
+      "default",
+      "classes"
+     ],
+     "properties": {
+      "environment": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64
+      },
+      "default": {
+       "enum": [
+        "interactive",
+        "agent",
+        "background"
+       ]
+      },
+      "classes": {
+       "type": "array",
+       "minItems": 3,
+       "maxItems": 3,
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "id",
+         "rank",
+         "advanceMilliseconds"
+        ],
+        "properties": {
+         "id": {
+          "enum": [
+           "interactive",
+           "agent",
+           "background"
+          ]
+         },
+         "rank": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+         },
+         "advanceMilliseconds": {
+          "type": "integer",
+          "minimum": -86400000,
+          "maximum": 86400000
+         }
+        }
+       }
+      }
+     }
+    },
+    "progress": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "publishIntervalMilliseconds",
+      "maximumPhaseCharacters",
+      "families",
+      "counter",
+      "ignoredPrefixes"
+     ],
+     "properties": {
+      "publishIntervalMilliseconds": {
+       "type": "integer",
+       "minimum": 250,
+       "maximum": 600000
+      },
+      "maximumPhaseCharacters": {
+       "type": "integer",
+       "minimum": 16,
+       "maximum": 256
+      },
+      "families": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "prefix",
+         "pattern"
+        ],
+        "properties": {
+         "prefix": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+         },
+         "pattern": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+         }
+        }
+       }
+      },
+      "counter": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 256
+      },
+      "ignoredPrefixes": {
+       "type": "array",
+       "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+       }
+      }
+     }
+    },
+    "eta": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "minimumFraction",
+      "minimumSamples",
+      "maximumSamples",
+      "minimumHoldMilliseconds",
+      "overdueFactor"
+     ],
+     "properties": {
+      "minimumFraction": {
+       "type": "number",
+       "exclusiveMinimum": 0,
+       "maximum": 1
+      },
+      "minimumSamples": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 64
+      },
+      "maximumSamples": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 512
+      },
+      "minimumHoldMilliseconds": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 3600000
+      },
+      "overdueFactor": {
+       "type": "number",
+       "minimum": 1,
+       "maximum": 100
+      }
+     }
+    },
+    "freshness": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "silentAfterMilliseconds",
+      "stuckAfterMilliseconds",
+      "activityProbeMilliseconds",
+      "activityMinimumCpuMilliseconds"
+     ],
+     "properties": {
+      "silentAfterMilliseconds": {
+       "type": "integer",
+       "minimum": 1000,
+       "maximum": 86400000
+      },
+      "stuckAfterMilliseconds": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "prefix",
+         "milliseconds"
+        ],
+        "properties": {
+         "prefix": {
+          "type": "string",
+          "maxLength": 128
+         },
+         "milliseconds": {
+          "type": "integer",
+          "minimum": 60000,
+          "maximum": 604800000
+         }
+        }
+       }
+      },
+      "activityProbeMilliseconds": {
+       "type": "integer",
+       "minimum": 1000,
+       "maximum": 3600000
+      },
+      "activityMinimumCpuMilliseconds": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 60000
+      }
+     }
+    },
+    "yield": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "pollMilliseconds",
+      "requestMaximumAgeMilliseconds",
+      "directory",
+      "stuckReason",
+      "staleReason"
+     ],
+     "properties": {
+      "pollMilliseconds": {
+       "type": "integer",
+       "minimum": 250,
+       "maximum": 600000
+      },
+      "requestMaximumAgeMilliseconds": {
+       "type": "integer",
+       "minimum": 1000,
+       "maximum": 86400000
+      },
+      "directory": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 32
+      },
+      "stuckReason": {
+       "const": "stuck"
+      },
+      "staleReason": {
+       "const": "stale"
+      }
+     }
+    },
+    "reclaim": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "mode",
+      "environment",
+      "graceMilliseconds",
+      "killGraceMilliseconds",
+      "identityToleranceMilliseconds",
+      "logFile"
+     ],
+     "properties": {
+      "mode": {
+       "enum": [
+        "report",
+        "request",
+        "terminate"
+       ]
+      },
+      "environment": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64
+      },
+      "graceMilliseconds": {
+       "type": "integer",
+       "minimum": 1000,
+       "maximum": 3600000
+      },
+      "killGraceMilliseconds": {
+       "type": "integer",
+       "minimum": 1000,
+       "maximum": 600000
+      },
+      "identityToleranceMilliseconds": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 60000
+      },
+      "logFile": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64
+      }
+     }
+    },
+    "history": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "file",
+      "maximumRows",
+      "minimumHoldMilliseconds"
+     ],
+     "properties": {
+      "file": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64
+      },
+      "maximumRows": {
+       "type": "integer",
+       "minimum": 16,
+       "maximum": 100000
+      },
+      "minimumHoldMilliseconds": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 3600000
+      }
+     }
+    }
+   }
+  },
+  "Policy": {
+   "const": {
+    "version": 1,
+    "priority": {
+     "environment": "SEMIO_LEASE_PRIORITY",
+     "default": "agent",
+     "classes": [
+      {
+       "id": "interactive",
+       "rank": 0,
+       "advanceMilliseconds": 3600000
+      },
+      {
+       "id": "agent",
+       "rank": 1,
+       "advanceMilliseconds": 0
+      },
+      {
+       "id": "background",
+       "rank": 2,
+       "advanceMilliseconds": -3600000
+      }
+     ]
+    },
+    "progress": {
+     "publishIntervalMilliseconds": 5000,
+     "maximumPhaseCharacters": 96,
+     "families": [
+      {
+       "prefix": "build:graph-phase:",
+       "pattern": "^build:graph-phase:([a-z]+):([0-9]+):([0-9]+)"
+      }
+     ],
+     "counter": "^(.{1,80}?):([0-9]+)$",
+     "ignoredPrefixes": [
+      "lease-queue:",
+      "lease-sweep:",
+      "claim-retirement-scan:"
+     ]
+    },
+    "eta": {
+     "minimumFraction": 0.02,
+     "minimumSamples": 2,
+     "maximumSamples": 32,
+     "minimumHoldMilliseconds": 5000,
+     "overdueFactor": 1.5
+    },
+    "freshness": {
+     "silentAfterMilliseconds": 60000,
+     "stuckAfterMilliseconds": [
+      {
+       "prefix": "repository-graph-facts:",
+       "milliseconds": 1200000
+      },
+      {
+       "prefix": "build-graph-state:",
+       "milliseconds": 1200000
+      },
+      {
+       "prefix": "",
+       "milliseconds": 3600000
+      }
+     ],
+     "activityProbeMilliseconds": 30000,
+     "activityMinimumCpuMilliseconds": 200
+    },
+    "yield": {
+     "pollMilliseconds": 5000,
+     "requestMaximumAgeMilliseconds": 600000,
+     "directory": "yield",
+     "stuckReason": "stuck",
+     "staleReason": "stale"
+    },
+    "reclaim": {
+     "mode": "request",
+     "environment": "SEMIO_LEASE_RECLAIM",
+     "graceMilliseconds": 120000,
+     "killGraceMilliseconds": 15000,
+     "identityToleranceMilliseconds": 3000,
+     "logFile": "reclaim.jsonl"
+    },
+    "history": {
+     "file": "history.jsonl",
+     "maximumRows": 512,
+     "minimumHoldMilliseconds": 5000
+    }
+   }
+  },
+  "Implementation": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "digest",
+    "loadedAtMs",
+    "components"
+   ],
+   "properties": {
+    "digest": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{16}$"
+    },
+    "loadedAtMs": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 281474976710655
+    },
+    "components": {
+     "type": "object",
+     "maxProperties": 64,
+     "propertyNames": {
+      "maxLength": 64
+     },
+     "additionalProperties": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{12}$"
+     }
+    }
+   }
+  },
+  "Standing": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "priority",
+    "implementation",
+    "progressAtMs"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "priority": {
+     "enum": [
+      "interactive",
+      "agent",
+      "background"
+     ]
+    },
+    "implementation": {
+     "$ref": "#/definitions/Implementation"
+    },
+    "phase": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 256
+    },
+    "done": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "total": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "phaseStartedAtMs": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 281474976710655
+    },
+    "progressAtMs": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 281474976710655
+    },
+    "parentPid": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9999999999
+    },
+    "chain": {
+     "type": "array",
+     "maxItems": 16,
+     "items": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9999999999
+     }
+    }
+   }
+  },
+  "YieldRequest": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "holderPid",
+    "holderStartedAtMs",
+    "requesterPid",
+    "requesterStartedAtMs",
+    "resource",
+    "reason",
+    "atMs",
+    "requesterComponents"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "holderPid": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9999999999
+    },
+    "holderStartedAtMs": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 281474976710655
+    },
+    "requesterPid": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9999999999
+    },
+    "requesterStartedAtMs": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 281474976710655
+    },
+    "resource": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 4096
+    },
+    "reason": {
+     "enum": [
+      "stale",
+      "stuck"
+     ]
+    },
+    "atMs": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 281474976710655
+    },
+    "requesterComponents": {
+     "type": "object",
+     "maxProperties": 64,
+     "propertyNames": {
+      "maxLength": 64
+     },
+     "additionalProperties": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{12}$"
+     }
+    }
+   }
+  },
+  "Messages": {
+   "const": {
+    "holderProgress": {
+     "en": "{phase}: {done} of {total}",
+     "de": "{phase}: {done} von {total}"
+    },
+    "holderCount": {
+     "en": "{phase}: {done}",
+     "de": "{phase}: {done}"
+    },
+    "priority.interactive": {
+     "en": "interactive",
+     "de": "interaktiv"
+    },
+    "priority.agent": {
+     "en": "agent",
+     "de": "Agent"
+    },
+    "priority.background": {
+     "en": "background",
+     "de": "Hintergrund"
+    },
+    "holderPhase": {
+     "en": "{phase}",
+     "de": "{phase}"
+    },
+    "holderIdle": {
+     "en": "no phase reported",
+     "de": "keine Phase gemeldet"
+    },
+    "eta": {
+     "en": "about {minutes} min left",
+     "de": "noch etwa {minutes} min"
+    },
+    "etaOverdue": {
+     "en": "longer than usual",
+     "de": "länger als üblich"
+    },
+    "state.progressing": {
+     "en": "progressing",
+     "de": "macht Fortschritt"
+    },
+    "state.silent": {
+     "en": "silent for {seconds} s",
+     "de": "seit {seconds} s ohne Fortschritt"
+    },
+    "state.stuck": {
+     "en": "STUCK: no progress for {minutes} min",
+     "de": "FESTGEFAHREN: seit {minutes} min kein Fortschritt"
+    },
+    "state.stale": {
+     "en": "STALE: runs older code ({ids}); its result would be discarded",
+     "de": "VERALTET: läuft mit älterem Code ({ids}); sein Ergebnis würde verworfen"
+    },
+    "state.unknown": {
+     "en": "standing unknown: no live registry entry",
+     "de": "Zustand unbekannt: kein lebender Registereintrag"
+    },
+    "status.standing": {
+     "en": "        priority {priority} · code loaded {age} s ago · {progress}{eta} · {state}{chain}{request}",
+     "de": "        Priorität {priority} · Code vor {age} s geladen · {progress}{eta} · {state}{chain}{request}"
+    },
+    "status.unknown": {
+     "en": "        {state}",
+     "de": "        {state}"
+    },
+    "status.chain": {
+     "en": " · started by {chain}",
+     "de": " · gestartet von {chain}"
+    },
+    "status.request": {
+     "en": " · yield requested by process {pid} ({reason})",
+     "de": " · Freigabe angefordert von Prozess {pid} ({reason})"
+    },
+    "yield.stale": {
+     "en": "Yielding {resource}: process {pid} runs newer code ({ids}); this result would be discarded.",
+     "de": "Gebe {resource} frei: Prozess {pid} läuft mit neuerem Code ({ids}); dieses Ergebnis würde verworfen."
+    },
+    "yield.stuck": {
+     "en": "Yielding {resource}: no progress for {minutes} min and process {pid} is waiting.",
+     "de": "Gebe {resource} frei: seit {minutes} min kein Fortschritt und Prozess {pid} wartet."
+    },
+    "request.sent": {
+     "en": "Asked process {pid} to yield {resource} ({reason}).",
+     "de": "Prozess {pid} gebeten, {resource} freizugeben ({reason})."
+    },
+    "reclaim.terminated": {
+     "en": "Stopped process {pid}: it held {resource} for {minutes} min without progress and ignored the yield request.",
+     "de": "Prozess {pid} beendet: hielt {resource} seit {minutes} min ohne Fortschritt und ignorierte die Freigabebitte."
+    },
+    "reclaim.refused": {
+     "en": "Not stopping process {pid}: {reason}.",
+     "de": "Prozess {pid} wird nicht beendet: {reason}."
+    },
+    "refusal.identity": {
+     "en": "its start time does not match the registered one",
+     "de": "seine Startzeit passt nicht zur registrierten"
+    },
+    "refusal.progressed": {
+     "en": "it made progress since the request",
+     "de": "er hat seit der Bitte Fortschritt gemacht"
+    },
+    "refusal.owner": {
+     "en": "it belongs to another user",
+     "de": "er gehört einem anderen Benutzer"
+    },
+    "refusal.unknown": {
+     "en": "its start time cannot be read on this platform",
+     "de": "seine Startzeit ist auf dieser Plattform nicht lesbar"
+    },
+    "refusal.grace": {
+     "en": "the grace period after the request has not ended",
+     "de": "die Schonfrist nach der Bitte läuft noch"
+    }
+   }
+  },
+  "Corpus": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "priorityCases",
+    "simulations",
+    "stateCases",
+    "etaCases",
+    "progressCases",
+    "yieldCases",
+    "terminateCases",
+    "activityCases"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "priorityCases": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "environment",
+       "agentSession",
+       "interactiveTerminal",
+       "expected"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+       },
+       "environment": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "string"
+        }
+       },
+       "agentSession": {
+        "type": "boolean"
+       },
+       "interactiveTerminal": {
+        "type": "boolean"
+       },
+       "expected": {
+        "enum": [
+         "interactive",
+         "agent",
+         "background"
+        ]
+       }
+      }
+     }
+    },
+    "simulations": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "jobs"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+       },
+       "source": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+       },
+       "resource": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+       },
+       "spanSeconds": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 10000000
+       },
+       "jobs": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "id",
+          "class",
+          "arrival",
+          "service"
+         ],
+         "properties": {
+          "id": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 64
+          },
+          "class": {
+           "enum": [
+            "interactive",
+            "agent",
+            "background"
+           ]
+          },
+          "arrival": {
+           "type": "integer",
+           "minimum": 0,
+           "maximum": 10000000
+          },
+          "service": {
+           "type": "integer",
+           "minimum": 0,
+           "maximum": 10000000
+          },
+          "lane": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 64
+          },
+          "observedWait": {
+           "type": "integer",
+           "minimum": 0,
+           "maximum": 10000000
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "stateCases": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "nowMs",
+       "holdSinceMs",
+       "resource",
+       "expected"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+       },
+       "nowMs": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 281474976710655
+       },
+       "holdSinceMs": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 281474976710655
+       },
+       "resource": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+       },
+       "standing": {
+        "$ref": "#/definitions/Standing"
+       },
+       "waiter": {
+        "$ref": "#/definitions/Implementation"
+       },
+       "bound": {
+        "type": "array",
+        "items": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 64
+        }
+       },
+       "expected": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "state"
+        ],
+        "properties": {
+         "state": {
+          "enum": [
+           "unknown",
+           "progressing",
+           "silent",
+           "stuck",
+           "stale"
+          ]
+         },
+         "staleIds": {
+          "type": "array",
+          "items": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 64
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "progressCases": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "resource",
+       "expected"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+       },
+       "resource": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+       },
+       "expected": {
+        "oneOf": [
+         {
+          "type": "null"
+         },
+         {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+           "phase"
+          ],
+          "properties": {
+           "phase": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+           },
+           "done": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+           },
+           "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+           }
+          }
+         }
+        ]
+       }
+      }
+     }
+    },
+    "etaCases": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "elapsedMs",
+       "phaseElapsedMs",
+       "historyMs",
+       "expected"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+       },
+       "elapsedMs": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 86400000000
+       },
+       "phaseElapsedMs": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 86400000000
+       },
+       "done": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+       },
+       "total": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+       },
+       "historyMs": {
+        "type": "array",
+        "items": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 86400000000
+        }
+       },
+       "expected": {
+        "oneOf": [
+         {
+          "type": "null"
+         },
+         {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+           "seconds",
+           "source",
+           "overdue"
+          ],
+          "properties": {
+           "seconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 31536000
+           },
+           "source": {
+            "enum": [
+             "progress",
+             "history"
+            ]
+           },
+           "overdue": {
+            "type": "boolean"
+           }
+          }
+         }
+        ]
+       }
+      }
+     }
+    },
+    "yieldCases": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "request",
+       "pid",
+       "startedAtMs",
+       "nowMs",
+       "holdsExclusive",
+       "holdSinceMs",
+       "standing",
+       "bound",
+       "expected",
+       "moved"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+       },
+       "request": {
+        "$ref": "#/definitions/YieldRequest"
+       },
+       "pid": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9999999999
+       },
+       "startedAtMs": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 281474976710655
+       },
+       "nowMs": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 281474976710655
+       },
+       "holdsExclusive": {
+        "type": "boolean"
+       },
+       "holdSinceMs": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 281474976710655
+       },
+       "standing": {
+        "$ref": "#/definitions/Standing"
+       },
+       "bound": {
+        "type": "array",
+        "items": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 64
+        }
+       },
+       "expected": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "accept"
+        ],
+        "properties": {
+         "accept": {
+          "type": "boolean"
+         },
+         "refusal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+         },
+         "ids": {
+          "type": "array",
+          "items": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 64
+          }
+         }
+        }
+       },
+       "moved": {
+        "type": "array",
+        "items": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 64
+        }
+       }
+      }
+     }
+    },
+    "terminateCases": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "input",
+       "expected"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+       },
+       "input": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "mode",
+         "state",
+         "nowMs",
+         "progressAtMs",
+         "signalable",
+         "self"
+        ],
+        "properties": {
+         "mode": {
+          "enum": [
+           "report",
+           "request",
+           "terminate"
+          ]
+         },
+         "state": {
+          "enum": [
+           "unknown",
+           "progressing",
+           "silent",
+           "stuck",
+           "stale"
+          ]
+         },
+         "nowMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 281474976710655
+         },
+         "requestAtMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 281474976710655
+         },
+         "progressAtMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 281474976710655
+         },
+         "registeredStartedAtMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 281474976710655
+         },
+         "osStartedAtMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 281474976710655
+         },
+         "signalable": {
+          "type": "boolean"
+         },
+         "self": {
+          "type": "boolean"
+         }
+        }
+       },
+       "expected": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "terminate"
+        ],
+        "properties": {
+         "terminate": {
+          "type": "boolean"
+         },
+         "refusal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+         }
+        }
+       }
+      }
+     }
+    },
+    "activityCases": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "nowMs",
+       "progressAtMs",
+       "sample",
+       "expected"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+       },
+       "nowMs": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 281474976710655
+       },
+       "progressAtMs": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 281474976710655
+       },
+       "lastProbeAtMs": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 281474976710655
+       },
+       "sample": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "treeActive",
+         "cpuDeltaMilliseconds"
+        ],
+        "properties": {
+         "treeActive": {
+          "type": "boolean"
+         },
+         "cpuDeltaMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+         }
+        }
+       },
+       "expected": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "sampled",
+         "progressAtMs"
+        ],
+        "properties": {
+         "sampled": {
+          "type": "boolean"
+         },
+         "progressAtMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 281474976710655
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

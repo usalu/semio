@@ -1,0 +1,12 @@
+{
+ "label": "g6b-course",
+ "target": "@teaching/architecture-course:build",
+ "started": "22:50:48",
+ "wall_s": 15.1,
+ "peak_tree_mb": 1156,
+ "peak_processes": 9,
+ "exit": 1,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

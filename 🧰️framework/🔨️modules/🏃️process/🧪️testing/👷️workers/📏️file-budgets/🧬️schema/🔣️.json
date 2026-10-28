@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/testing/workers/file-budgets.json",
+  "title": "TestFileBudgetsV1",
+  "description": "The declared memory of the test files that hold more than a typical one: the peak resident megabytes of the process tree of ONE test file (every test file runs in its own process). A file above its ceiling (the declared megabytes times ceilingBasisPoints, a file nobody declared above unlistedCeilingMegabytes) is stopped and refused by name, and the files of a cohort start only while the megabytes held by the running ones and the budget of the next fit the share the run was admitted.",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "observeMilliseconds": 1000,
+        "ceilingSwitch": "SEMIO_TEST_FILE_CEILING"
+      }
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "megabytes", "reason"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "maxLength": 240, "pattern": "^[^\\\\\\u0000]+$" },
+        "megabytes": { "type": "integer", "minimum": 64, "maximum": 16384 },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 240 }
+      }
+    },
+    "Table": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "ceilingBasisPoints", "unlistedCeilingMegabytes", "files"],
+      "properties": {
+        "version": { "const": 1 },
+        "ceilingBasisPoints": { "type": "integer", "minimum": 10000, "maximum": 100000 },
+        "unlistedCeilingMegabytes": { "type": "integer", "minimum": 64, "maximum": 65536 },
+        "files": { "type": "array", "maxItems": 512, "items": { "$ref": "#/definitions/Entry" } }
+      }
+    },
+    "Vector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "input", "expect"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["limits", "admit", "ratio"] },
+        "input": { "type": "object" },
+        "expect": {}
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "table", "cases"],
+      "properties": {
+        "version": { "const": 1 },
+        "table": { "$ref": "#/definitions/Table" },
+        "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Vector" } }
+      }
+    },
+    "Messages": {
+      "const": {
+        "en": {
+          "exceeded": "[tests] {file} held {peak} MB and was stopped at its ceiling of {ceiling} MB ({budget})",
+          "budgets": { "declared": "{budget} MB declared in the test file budgets", "unlisted": "not declared in the test file budgets" },
+          "errors": { "table": "The test file budgets are invalid: {detail}" }
+        },
+        "de": {
+          "exceeded": "[tests] {file} belegte {peak} MB und wurde an seiner Obergrenze von {ceiling} MB angehalten ({budget})",
+          "budgets": { "declared": "{budget} MB in den Testdatei-Budgets deklariert", "unlisted": "nicht in den Testdatei-Budgets deklariert" },
+          "errors": { "table": "Die Testdatei-Budgets sind ungültig: {detail}" }
+        }
+      }
+    }
+  }
+}

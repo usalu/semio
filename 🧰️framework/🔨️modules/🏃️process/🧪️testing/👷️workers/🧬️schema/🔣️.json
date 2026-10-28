@@ -1,0 +1,399 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/testing/workers/v1.json",
+  "title": "Test workers: how many workers a test runner may start under the memory and cores it was admitted",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "maximumWorkers": 64,
+        "estimateOperation": "test-worker",
+        "observeMilliseconds": 1000,
+        "runners": [
+          "bun-test",
+          "vitest",
+          "cargo-test",
+          "playwright",
+          "e2e-stacks"
+        ]
+      }
+    },
+    "RunnerId": {
+      "enum": [
+        "bun-test",
+        "vitest",
+        "cargo-test",
+        "playwright",
+        "e2e-stacks"
+      ]
+    },
+    "Runner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "override",
+        "baseMegabytes",
+        "workerMegabytes",
+        "wanted",
+        "maximum",
+        "oversubscription"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/RunnerId"
+        },
+        "override": {
+          "type": "string",
+          "pattern": "^SEMIO_[A-Z0-9_]+$"
+        },
+        "baseMegabytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "workerMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "wanted": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64
+            },
+            {
+              "const": "cores"
+            }
+          ]
+        },
+        "maximum": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "oversubscription": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        }
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "hostShareBasisPoints",
+        "runners"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "hostShareBasisPoints": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 10000
+        },
+        "runners": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/definitions/Runner"
+          }
+        }
+      }
+    },
+    "Facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "cores",
+        "hostCores",
+        "memoryMegabytes"
+      ],
+      "properties": {
+        "source": {
+          "enum": [
+            "grant",
+            "host"
+          ]
+        },
+        "cores": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "hostCores": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "memoryMegabytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4194304
+        }
+      }
+    },
+    "Bound": {
+      "enum": [
+        "override",
+        "request",
+        "wanted",
+        "maximum",
+        "cores",
+        "memory"
+      ]
+    },
+    "Plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runner",
+        "workers",
+        "wanted",
+        "bound",
+        "source",
+        "cores",
+        "memoryMegabytes",
+        "workerMegabytes",
+        "declaredMegabytes",
+        "ratioBasisPoints"
+      ],
+      "properties": {
+        "runner": {
+          "$ref": "#/definitions/RunnerId"
+        },
+        "workers": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "wanted": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "bound": {
+          "$ref": "#/definitions/Bound"
+        },
+        "source": {
+          "enum": [
+            "grant",
+            "host"
+          ]
+        },
+        "cores": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "memoryMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "workerMegabytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "declaredMegabytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ratioBasisPoints": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "runner",
+        "facts",
+        "expect"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runner": {
+          "$ref": "#/definitions/RunnerId"
+        },
+        "facts": {
+          "$ref": "#/definitions/Facts"
+        },
+        "request": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "ratioBasisPoints": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 100000
+        },
+        "override": {
+          "type": "string"
+        },
+        "expect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "workers",
+            "bound"
+          ],
+          "properties": {
+            "workers": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64
+            },
+            "bound": {
+              "$ref": "#/definitions/Bound"
+            }
+          }
+        },
+        "refuse": {
+          "type": "string"
+        }
+      }
+    },
+    "FactsCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "environment",
+        "host",
+        "expect"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "host": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cores",
+            "totalMegabytes"
+          ],
+          "properties": {
+            "cores": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "totalMegabytes": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "expect": {
+          "$ref": "#/definitions/Facts"
+        }
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy",
+        "cases",
+        "facts"
+      ],
+      "properties": {
+        "policy": {
+          "$ref": "#/definitions/Policy"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Case"
+          }
+        },
+        "facts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/FactsCase"
+          }
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "en": {
+          "reduced": "[tests] {runner}: {workers} of {wanted} worker(s), bounded by {bound} ({memory} MB and {cores} core(s) {source}, about {each} MB per worker)",
+          "bounds": {
+            "override": "the override",
+            "request": "the request",
+            "maximum": "the maximum",
+            "cores": "the admitted cores",
+            "memory": "the admitted memory",
+            "wanted": "the runner's default"
+          },
+          "sources": {
+            "grant": "of the admitted grant",
+            "host": "of the host, not admitted"
+          },
+          "runners": {
+            "bun-test": "bun test",
+            "vitest": "Vitest",
+            "cargo-test": "Cargo test",
+            "playwright": "Playwright",
+            "e2e-stacks": "end-to-end stack"
+          },
+          "errors": {
+            "override": "{variable} must be an integer from 1 to {maximum}, not '{value}'",
+            "runner": "No test runner named '{runner}' in the test worker policy",
+            "policy": "The test worker policy is invalid: {detail}"
+          }
+        },
+        "de": {
+          "reduced": "[tests] {runner}: {workers} von {wanted} Worker(n), begrenzt durch {bound} ({memory} MB und {cores} Kern(e) {source}, etwa {each} MB je Worker)",
+          "bounds": {
+            "override": "die Vorgabe",
+            "request": "die Anforderung",
+            "maximum": "das Maximum",
+            "cores": "die zugelassenen Kerne",
+            "memory": "den zugelassenen Speicher",
+            "wanted": "die Voreinstellung des Läufers"
+          },
+          "sources": {
+            "grant": "des zugelassenen Anteils",
+            "host": "des Rechners, nicht zugelassen"
+          },
+          "runners": {
+            "bun-test": "bun test",
+            "vitest": "Vitest",
+            "cargo-test": "Cargo-Test",
+            "playwright": "Playwright",
+            "e2e-stacks": "Ende-zu-Ende-Stack"
+          },
+          "errors": {
+            "override": "{variable} muss eine ganze Zahl von 1 bis {maximum} sein, nicht '{value}'",
+            "runner": "Kein Testläufer namens '{runner}' in der Richtlinie für Test-Worker",
+            "policy": "Die Richtlinie für Test-Worker ist ungültig: {detail}"
+          }
+        }
+      }
+    }
+  }
+}

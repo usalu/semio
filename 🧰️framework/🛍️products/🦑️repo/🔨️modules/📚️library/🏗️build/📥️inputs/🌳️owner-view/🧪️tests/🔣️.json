@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "deliveryScopeNames": ["📦️packages", "🎯️targets"],
+  "views": [{ "owner": "fw", "private": ["🛍️products"] }],
+  "owners": [
+    { "root": "fw/📦️packages/🦀️rust", "owner": "fw", "view": true },
+    { "root": "fw/🔨️modules/a/📦️packages/🟦️typescript", "owner": "fw/🔨️modules/a", "view": false },
+    { "root": "fw/🔨️modules/a/🎯️targets/⚛️react/📦️packages/🟦️typescript", "owner": "fw/🔨️modules/a", "view": false },
+    { "root": "plain/project", "owner": "plain/project", "view": false }
+  ],
+  "tree": [
+    "fw/package.json", "fw/README.md", "fw/.cache/x.ts", "fw/.hidden.json",
+    "fw/📦️packages/🦀️rust/🟦️.ts", "fw/🔨️modules/a/🟦️.ts", "fw/🔨️modules/a/data/🔣️.json", "fw/🔨️modules/a/lib.rs",
+    "fw/🛍️products/p/🟦️.ts", "fw/🛍️products/p/🔣️.json", "fw/🛍️products/q/css/x.css",
+    "fw/🧪️tests/🟦️.ts", "fw/⚙️configuration/🔣️.json"
+  ],
+  "extensions": "{json,ts,css}"
+}

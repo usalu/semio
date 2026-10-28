@@ -34,6 +34,13 @@ test("declared module globs join the matched modules and their import closure, a
  expect(got.packages).toBeUndefined();
 }));
 
+test("the closure a target reports still answers the command modules it compiled, so no dependency edge of its command sources is lost to the scheduling split",()=>withFixture(async root=>{
+ const cache=createScriptInputCache(),got=await cacheInternals.targetScriptSources({metadata:corpus.modules.metadata,options:{cwd:corpus.projectRoot,command:corpus.command}},root,cache,corpus.projectRoot),compiled=cache.compiledNames.get(got.closure);
+ expect(compiled,"compiled names of the reported closure").toBeDefined();
+ for(const entry of corpus.modules.oracleEntries)for(const path of (await esbuildOracle(root,entry)).filter(name=>/\.(?:[cm]?[jt]s)$/u.test(name)))expect(compiled!.has("{workspaceRoot}/"+path),path).toBe(true);
+ expect([...compiled!].every((name:string)=>got.closure.includes(name))).toBe(true);
+}));
+
 test("a declared TypeScript project joins exactly the files and packages `tsc --listFilesOnly` reads",()=>withFixture(async root=>{
  const got=await sources(root,"typescript"),oracle=tscOracle(root);
  expect(strip(got.closure)).toEqual([...corpus.typescript.closure].sort());
@@ -44,7 +51,7 @@ test("a declared TypeScript project joins exactly the files and packages `tsc --
 
 test("a target that declares no closure metadata is unchanged",()=>withFixture(async root=>{
  const got=await cacheInternals.targetScriptSources({inputs:["{projectRoot}/test/**/*.ts"],options:{cwd:corpus.projectRoot,command:corpus.command}},root,createScriptInputCache(),corpus.projectRoot);
- expect(strip(got.closure)).toEqual(["app/src/a.ts","app/📜️script.ts"]);
+ expect(strip(got.closure)).toEqual(["app/src/a.ts","app/tsconfig.json","app/📜️script.ts","tsconfig.base.json"]);
 }));
 
 test("closure and digest move exactly with the declared sources",async()=>{

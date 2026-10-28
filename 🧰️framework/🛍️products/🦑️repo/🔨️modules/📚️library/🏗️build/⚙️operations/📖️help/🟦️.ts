@@ -1,6 +1,6 @@
 import {buildBackendAlternationV1} from "../../🔌️backends/🟦️.ts";
 import catalogue from "../🔣️catalog.json" with { type: "json" };
-import { resolveLanguageV1, type LanguageEnvironmentV1, type OsLanguageListV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import { resolveLanguageV1, type LanguageEnvironmentV1, type OsLanguageListV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import { normalizeBuildOptionsV1 } from "../🔤️options/🟦️.ts";
 
 /** 🌐️ A text in every language the catalogue declares. */

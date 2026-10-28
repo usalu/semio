@@ -1,0 +1,482 @@
+import {expect,test} from "bun:test";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import {Database} from "bun:sqlite";
+import Ajv from "ajv";
+import {spawn,spawnSync} from "node:child_process";
+import {chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join,resolve} from "node:path";
+import {fileURLToPath} from "node:url";
+import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
+import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import {expandRustcArgumentsV1,keyEnvironmentV1,normalizeRustcArgumentsV1,parseDepInfoV1,parseRustcUnitV1,rustcBypassV1,unitKeyV1,UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
+import {planGcV1,type GcInputV1} from "../🧹️gc/🟦️.ts";
+import {enterLaneV1,lanePathsV1,readLaneV1} from "../🧵️lane/🟦️.ts";
+import {acquirePooledLaneV1} from "../🧵️lane/🏊️pool/🟦️.ts";
+import {listObjectsV1,lookupBuildRunV1,pruneEntriesV1,publishBuildRunV1} from "../💾️store/🟦️.ts";
+import {admissionMemoKeyV1,recallAdmissionV1,rememberAdmissionV1,unitAdmissionMemoV1} from "../📖️admission/🟦️.ts";
+import {ensureUnitCacheShimV1,focusFromCargoArgumentsV1,laneMessageV1,unitCacheEnvironmentV1,unitCacheRootV1,unitCacheShimPathV1,unitCacheShimSourceV1} from "../🚪️launch/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import {CATALOG_LANGUAGES_V1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
+
+/** 🏁️ Every Cargo child runs with the scratch workspace as its working directory, so no repository `.cargo/config.toml` can leak in. Separate OS processes prove the claims, the slot queue and the cache: three sessions build disjoint crates of one workspace at once and compile each shared unit exactly once, a fourth session gets only hits, and no wait exceeds its bound. sccache (hit/miss counts; it keys on the output directory, so its runs reuse one wiped directory while ours cross lanes) and a plain Cargo build (artifact bytes) are the independent oracles; the key, dependency-file, lane and cleanup vectors are language-agnostic JSON. */
+const here=fileURLToPath(new URL(".",import.meta.url)),script=resolve(here,"../📜️script.ts"),worker=resolve(here,"📥️worker/🟦️.ts"),slow=resolve(here,"⏳️slow/🟦️.ts"),policy=UNIT_CACHE_POLICY_V1;
+const base=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir());mkdirSync(base,{recursive:true});
+const scratch=()=>mkdtempSync(join(base,"uc-"));
+const ajv=new Ajv({strict:true});ajv.addSchema(schema);
+const validator=(name:string)=>{const validate=ajv.getSchema(`${schema.$id}#/definitions/${name}`);if(!validate)throw Error("Missing schema definition "+name);return validate;};
+
+test("the schema is closed and every vector, entry and event validates against it", () => {
+ for(const row of fixture.keyVectors)expect(validator("KeyVector")(row)).toBe(true);
+ for(const row of fixture.depInfoVectors)expect(validator("DepInfoVector")(row)).toBe(true);
+ for(const row of fixture.gcVectors){expect(validator("GcInput")(row.input)).toBe(true);expect(validator("GcPlan")(row.plan)).toBe(true);}
+ expect(validator("KeyVector")({name:"x",arguments:[],cacheable:true,extra:1})).toBe(false);
+ expect(validator("LaneId")("Upper")).toBe(false);
+});
+
+test("command lines parse, normalise and bypass as the vectors say", () => {
+ const digests=new Map(Object.entries(fixture.externDigests));
+ for(const row of fixture.keyVectors){
+  const unit=parseRustcUnitV1(row.arguments),reason=rustcBypassV1(unit,row.arguments);
+  expect(reason===undefined,row.name).toBe(row.cacheable);
+  if(!row.cacheable){expect(reason,row.name).toBe(row.reason!);continue;}
+  expect(unit.crateName,row.name).toBe(row.crateName!);expect(unit.outDir,row.name).toBe(row.outDir!);expect(unit.source,row.name).toBe(row.source!);
+  expect(unit.externs.map(extern=>extern.name),row.name).toEqual(row.externs!);
+  expect(normalizeRustcArgumentsV1(row.arguments,digests,fixture.laneRoot),row.name).toEqual(row.normalized!);
+ }
+});
+
+test("response files expand like rustc's", () => {
+ const directory=scratch();writeFileSync(join(directory,"args.txt"),"--crate-name\nfoo\n\n--edition=2021\n");
+ expect(expandRustcArgumentsV1(["@args.txt","x.rs","@missing"],directory)).toEqual(["--crate-name","foo","--edition=2021","x.rs","@missing"]);
+});
+
+test("dependency files parse as the vectors say", () => {
+ for(const row of fixture.depInfoVectors){const parsed=parseDepInfoV1(row.text);expect(parsed.dependencies,row.name).toEqual(row.dependencies);expect(parsed.environment,row.name).toEqual(row.environment);}
+});
+
+test("the first-level key equals an independent Python serialisation and moves with every input", () => {
+ const input={toolchain:"rustc 1.99.0-nightly",normalized:["--crate-name","foo","--emit=link"],sourceSha256:"a".repeat(64),externs:[{name:"bar",sha256:"b".repeat(64)}],environment:[["CARGO_PKG_NAME","foo"]] as [string,string][]};
+ const preimage=[policy.namespace,input.toolchain,input.normalized,input.sourceSha256,input.externs.map(row=>[row.name,row.sha256]),input.environment];
+ const python=spawnSync(testPythonV1()??"python3",["-I","-c","import hashlib,json,sys;v=json.load(sys.stdin);print(hashlib.sha256(json.dumps(v,separators=(',',':'),ensure_ascii=False).encode()).hexdigest())"],{input:JSON.stringify(preimage),encoding:"utf8"});
+ expect(python.status).toBe(0);expect(unitKeyV1(input)).toBe(python.stdout.trim());
+ const variants=[{...input,toolchain:"other"},{...input,normalized:[...input.normalized,"-O"]},{...input,sourceSha256:"c".repeat(64)},{...input,externs:[{name:"bar",sha256:"d".repeat(64)}]},{...input,environment:[["CARGO_PKG_NAME","baz"]] as [string,string][]}];
+ for(const variant of variants)expect(unitKeyV1(variant)).not.toBe(unitKeyV1(input));
+ expect(keyEnvironmentV1({CARGO_PKG_NAME:"foo",CARGO_MANIFEST_DIR:"/lane/x",HOME:"/h",PATH:"/p",CARGO_TARGET_DIR:"/lane/t"},"/lane")).toEqual([["CARGO_MANIFEST_DIR","@@semio-lane@@/x"],["CARGO_PKG_NAME","foo"]]);
+});
+
+test("lane identifiers are validated, and a lane records the session and agent that own it", async () => {
+ for(const bad of fixture.invalidLanes)expect(()=>lanePathsV1(scratch(),bad),bad).toThrow();
+ const cache=scratch(),lane=await acquirePooledLaneV1(cache,{crates:["a"],quotaBytes:Number.MAX_SAFE_INTEGER,owner:{session:"0123456789ab.a1b2",agent:"reviewer"}});
+ try{expect(readLaneV1(cache,lane.paths.id)).toMatchObject({id:lane.paths.id,session:"0123456789ab.a1b2",agent:"reviewer"});}finally{lane.release();}
+ const plain=enterLaneV1(cache,"plain");try{expect(readLaneV1(cache,"plain")?.session).toBeUndefined();}finally{plain.release();}
+});
+
+function oracleShares(input:GcInputV1,rules:typeof policy.gc){
+ const db=new Database(":memory:"),cap=(share:number)=>Math.floor(input.capacityBytes*share);
+ db.run("create table lanes(id text,bytes integer,inc integer,last integer,live integer)");db.run("create table objects(digest text,bytes integer,last integer)");
+ for(const row of input.lanes)db.run("insert into lanes values(?,?,?,?,?)",[row.id,row.bytes,row.incrementalBytes,row.lastUsedMs,row.live?1:0]);
+ for(const row of input.objects)db.run("insert into objects values(?,?,?)",[row.digest,row.bytes,row.lastUsedMs]);
+ const liveBytes=(db.query("select coalesce(sum(bytes),0) as v from lanes where live=1").get() as {v:number}).v,liveInc=(db.query("select coalesce(sum(inc),0) as v from lanes where live=1").get() as {v:number}).v;
+ const lanes=(db.query("select id from (select id,sum(bytes) over (order by last desc,id asc rows between unbounded preceding and current row) as run from lanes where live=0) where run>?").all(Math.max(0,cap(rules.laneShare)-liveBytes)) as {id:string}[]).map(row=>row.id).sort();
+ const kept=db.query("select id,inc,last from lanes where live=0").all() as {id:string;inc:number;last:number}[];
+ db.run("create table rest(id text,inc integer,last integer)");for(const row of kept)if(!lanes.includes(row.id))db.run("insert into rest values(?,?,?)",[row.id,row.inc,row.last]);
+ const incremental=(db.query("select id from (select id,inc,sum(inc) over (order by last desc,id asc rows between unbounded preceding and current row) as run from rest) where run>? and inc>0").all(Math.max(0,cap(rules.incrementalShare)-liveInc)) as {id:string}[]).map(row=>row.id).sort();
+ const objects=(db.query("select digest from (select digest,sum(bytes) over (order by last desc,digest asc rows between unbounded preceding and current row) as run from objects) where run>?").all(cap(rules.casShare)) as {digest:string}[]).map(row=>row.digest).sort();
+ return{removeLanes:lanes,removeIncremental:incremental,removeObjects:objects};
+}
+
+function seeded(seed:number){let state=seed>>>0;return()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};}
+
+test("cleanup plans follow the vectors, agree with a SQLite window oracle on the share rules and keep their invariants", () => {
+ for(const row of fixture.gcVectors)expect(planGcV1(row.input),row.name).toEqual(row.plan);
+ const random=seeded(20261020),rules=policy.gc;
+ for(let round=0;round<300;round++){
+  const capacityBytes=1_000_000+Math.floor(random()*9_000_000),now=1_000_000_000,pick=(limit:number)=>Math.floor(random()*limit);
+  const lanes=Array.from({length:pick(12)},(_,index)=>{const bytes=pick(400_000);return{id:"l"+index.toString(36),bytes,incrementalBytes:pick(bytes+1),lastUsedMs:now-pick(3_000_000),live:random()<0.25};});
+  const objects=Array.from({length:pick(40)},(_,index)=>({digest:index.toString(16).padStart(64,"0"),bytes:pick(300_000),lastUsedMs:now-pick(3_000_000)}));
+  const calm:GcInputV1={capacityBytes,volumeBytes:capacityBytes,freeBytes:capacityBytes,nowMs:now,lanes,objects},plan=planGcV1(calm),oracle=oracleShares(calm,rules);
+  expect(plan.removeLanes,"lanes "+round).toEqual(oracle.removeLanes);expect(plan.removeIncremental.filter(id=>!oracle.removeLanes.includes(id)),"incremental "+round).toEqual(oracle.removeIncremental.filter(id=>!oracle.removeLanes.includes(id)));expect(plan.removeObjects,"objects "+round).toEqual(oracle.removeObjects);
+  const pressured:GcInputV1={...calm,freeBytes:pick(Math.floor(capacityBytes*0.05)),lanes:lanes.map((lane,index)=>index%3===0?{...lane,lastUsedMs:0}:lane)},hard=planGcV1(pressured),live=new Set(lanes.filter(row=>row.live).map(row=>row.id));
+  for(const id of[...hard.removeLanes,...hard.removeIncremental])expect(live.has(id),"live lane removed "+round).toBe(false);
+  expect(planGcV1(pressured)).toEqual(hard);
+  const left=lanes.filter(row=>!hard.removeLanes.includes(row.id)).reduce((sum,row)=>sum+row.bytes-(hard.removeIncremental.includes(row.id)?row.incrementalBytes:0),0),liveSum=lanes.filter(row=>row.live).reduce((sum,row)=>sum+row.bytes,0);
+  expect(left<=Math.max(liveSum,Math.floor(capacityBytes*rules.laneShare)),"lane bound "+round).toBe(true);
+  expect(objects.filter(row=>!hard.removeObjects.includes(row.digest)).reduce((sum,row)=>sum+row.bytes,0)<=Math.floor(capacityBytes*rules.casShare),"object bound "+round).toBe(true);
+ }
+});
+
+type Interval={asked:number;acquired:number;released:number;held?:boolean;pid:number};
+function launch(args:string[]):Promise<Interval>{
+ return new Promise((done,fail)=>{const child=spawn(process.execPath,[worker,...args],{stdio:["ignore","pipe","inherit"]});let text="";child.stdout.on("data",chunk=>{text+=chunk;});child.on("close",()=>{try{done(JSON.parse(text.trim().split("\n").pop()!));}catch(error){fail(error);}});});
+}
+const overlaps=(rows:readonly Interval[])=>rows.some((left,index)=>rows.slice(index+1).some(right=>left.acquired<right.released&&right.acquired<left.released));
+
+test("a per-unit claim serialises six processes, never overlaps and bounds every wait", async()=>{
+ const directory=scratch(),rows=await Promise.all(Array.from({length:6},()=>launch(["claim",directory,"unit","150"])));
+ expect(rows.every(row=>row.held)).toBe(true);expect(overlaps(rows)).toBe(false);
+ expect(Math.max(...rows.map(row=>row.acquired-row.asked))).toBeLessThan(6*150+4000);
+ expect(readdirSync(directory).filter(name=>name.endsWith(".lock"))).toEqual([]);
+},60000);
+
+test("a holder killed with SIGKILL is replaced within a few seconds", async()=>{
+ const directory=scratch(),child=spawn(process.execPath,[worker,"die",directory,"unit"],{stdio:["ignore","pipe","inherit"]});
+ await new Promise<void>(done=>child.stdout.once("data",()=>done()));
+ const killed=Date.now();child.kill("SIGKILL");
+ const row=await launch(["claim",directory,"unit","10"]);
+ expect(row.held).toBe(true);expect(row.acquired-killed).toBeLessThan(5000);
+},60000);
+
+test("compile slots never exceed their count and are granted first-in-first-out", async()=>{
+ const root=scratch(),rows:Promise<Interval>[]=[];
+ for(let index=0;index<6;index++){rows.push(launch(["slot",root,"2","300"]));await new Promise(done=>setTimeout(done,60));}
+ const done=await Promise.all(rows);
+ for(const row of done)expect(done.filter(other=>other.acquired<=row.acquired&&row.acquired<other.released).length).toBeLessThanOrEqual(2);
+ for(const left of done)for(const right of done)if(left.asked+40<right.asked)expect(left.acquired<=right.acquired+15,"first in first out").toBe(true);
+},60000);
+
+const cargo=process.env.SEMIO_TEST_CARGO??"cargo";
+function writeCrate(root:string,name:string,manifest:string,source:string,extra:Record<string,string>={}){const directory=join(root,name);mkdirSync(join(directory,"src"),{recursive:true});writeFileSync(join(directory,"Cargo.toml"),manifest);writeFileSync(join(directory,"src",source.startsWith("fn main")||source.includes("fn main()")?"main.rs":"lib.rs"),source);for(const [file,text] of Object.entries(extra))writeFileSync(join(directory,file),text);}
+function writeWorkspace(root:string,libraries:readonly string[],full:boolean){
+ mkdirSync(root,{recursive:true});
+ const members=["core",...(full?["mac","app",...fixture.scenario.leaves]:libraries)];
+ writeFileSync(join(root,"Cargo.toml"),`[workspace]\nresolver = "2"\nmembers = [${members.map(name=>`"${name}"`).join(",")}]\n[profile.dev]\ndebug = 0\n`);
+ const manifest=(name:string,dependencies:string,extra="")=>`[package]\nname = "${name}"\nversion = "0.1.0"\nedition = "2021"\n${extra}[dependencies]\n${dependencies}`;
+ writeCrate(root,"core",manifest("core",""),"pub fn id() -> u32 { 1 }\n");
+ if(full){
+  writeCrate(root,"mac",manifest("mac","","[lib]\nproc-macro = true\n"),"use proc_macro::TokenStream;\n#[proc_macro]\npub fn five(_: TokenStream) -> TokenStream { \"5\".parse().unwrap() }\n");
+  fixture.scenario.leaves.forEach((name,index)=>writeCrate(root,name,manifest(name,"core = { path = \"../core\" }\nmac = { path = \"../mac\" }\n","build = \"build.rs\"\n"),"pub fn f() -> u32 { core::id() + mac::five!() + env!(\"LEAF_ID\").parse::<u32>().unwrap() }\n",{"build.rs":`fn main() { println!("cargo:rustc-env=LEAF_ID=${index+1}"); }\n`}));
+  writeCrate(root,"app",manifest("app",fixture.scenario.leaves.map(name=>`${name} = { path = "../${name}" }`).join("\n")+"\n"),`fn main() { println!("{}", ${fixture.scenario.leaves.map(name=>`${name}::f()`).join(" + ")}); }\n`);
+ }else libraries.forEach((name,index)=>writeCrate(root,name,manifest(name,"core = { path = \"../core\" }\n"),`pub fn f() -> u32 { core::id() + ${index+1} }\n`));
+}
+
+type Session={code:number;output:string;milliseconds:number;lane:string};
+function session(workspace:string,cache:string,lane:string,args:string[],extra:Record<string,string|undefined>={}):Promise<Session>{
+ const laneRoot=join(cache,"l",lane);mkdirSync(laneRoot,{recursive:true});
+ const environment={...process.env,RUSTC_WRAPPER:process.execPath,RUSTC:script,SEMIO_UNIT_CACHE_ROOT:cache,SEMIO_UNIT_CACHE_LANE:lane,SEMIO_UNIT_CACHE_LANE_ROOT:laneRoot,SEMIO_UNIT_CACHE_SLOTS:"4",SEMIO_UNIT_CACHE_INNER:JSON.stringify([process.execPath,slow,fixture.scenario.bounds.slowCrate,String(fixture.scenario.bounds.slowMilliseconds),"--","rustc"]),CARGO_TARGET_DIR:join(laneRoot,"t"),CARGO_TERM_COLOR:"never",...extra};
+ for(const name of["RUSTC_WORKSPACE_WRAPPER","CARGO_BUILD_RUSTC_WRAPPER"])delete (environment as Record<string,string|undefined>)[name];
+ return new Promise(done=>{const started=Date.now(),child=spawn(cargo,["build","--manifest-path",join(workspace,"Cargo.toml"),...args],{cwd:workspace,env:environment as NodeJS.ProcessEnv,stdio:["ignore","pipe","pipe"]});let output="";child.stdout.on("data",chunk=>{output+=chunk;});child.stderr.on("data",chunk=>{output+=chunk;});child.on("close",code=>done({code:code??1,output,milliseconds:Date.now()-started,lane}));});
+}
+type Event={kind:string;crate:string;key:string|null;waitedMs:number;reason?:string;lane:string};
+function events(cache:string,lane?:string):Event[]{
+ const directory=join(cache,"x");if(!existsSync(directory))return[];
+ return readdirSync(directory).filter(name=>!lane||name===lane+".jsonl").flatMap(name=>readFileSync(join(directory,name),"utf8").split("\n").filter(Boolean).map(line=>JSON.parse(line) as Event));
+}
+const count=(rows:readonly Event[],kind:string,crate?:string)=>rows.filter(row=>row.kind===kind&&(crate===undefined||row.crate===crate)).length;
+
+test("three sessions build disjoint crates at once, share each unit exactly once, a fourth gets only hits and no lock wait exceeds its bound", async()=>{
+ const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache"),bounds=fixture.scenario.bounds;writeWorkspace(workspace,[],true);
+ const first=await Promise.all(fixture.scenario.leaves.map((leaf,index)=>session(workspace,cache,"s"+(index+1),["-p",leaf])));
+ for(const row of first)expect(row.code,row.output).toBe(0);
+ const parallel=events(cache);
+ for(const shared of fixture.scenario.sharedCrates)expect(count(parallel,"miss",shared),shared+" compiled once").toBe(1);
+ expect(count(parallel,"hit","core")).toBe(2);expect(count(parallel,"hit","mac")).toBe(2);
+ for(const leaf of fixture.scenario.leaves)expect(count(parallel,"miss",leaf),leaf).toBe(1);
+ expect(count(parallel,"failed")).toBe(0);expect(count(parallel,"bypass")).toBe(0);
+ expect(Math.max(...parallel.map(row=>row.waitedMs))).toBeLessThan(bounds.maximumLockWaitMs);
+ expect(parallel.some(row=>row.kind==="hit"&&row.reason==="after-wait"||row.kind==="lock-wait")).toBe(true);
+ const fourth=await session(workspace,cache,"s4",fixture.scenario.leaves.flatMap(leaf=>["-p",leaf]));
+ expect(fourth.code,fourth.output).toBe(0);
+ const warm=events(cache,"s4");
+ expect(count(warm,"miss")+count(warm,"bypass")+count(warm,"failed")).toBe(0);
+ expect(count(warm,"hit")).toBe(2+fixture.scenario.leaves.length*2);
+ const event=validator("Event");for(const row of parallel.concat(warm))expect(event(row),JSON.stringify(row)).toBe(true);
+ const entries=readdirSync(join(cache,"e")).flatMap(shard=>readdirSync(join(cache,"e",shard)).flatMap(key=>readdirSync(join(cache,"e",shard,key)).map(file=>JSON.parse(readFileSync(join(cache,"e",shard,key,file),"utf8")))));
+ expect(entries.length).toBe(2+fixture.scenario.leaves.length*2);for(const entry of entries)expect(validator("Entry")(entry),JSON.stringify(entry)).toBe(true);
+
+ const app=await session(workspace,cache,"s4",["-p","app"]);expect(app.code,app.output).toBe(0);
+ const run=spawnSync(join(cache,"l","s4","t","debug","app"),{encoding:"utf8"});expect(run.stdout.trim()).toBe(String(7+8+9));
+ const appEvents=events(cache,"s4").slice(warm.length);expect(count(appEvents,"miss")).toBe(1);expect(count(appEvents,"miss","app")).toBe(1);
+
+ const changed=join(workspace,"leaf2","src","lib.rs");writeFileSync(changed,readFileSync(changed,"utf8")+"pub fn extra() -> u32 { 2 }\n");
+ const edit=await session(workspace,cache,"s5",["-p","leaf2"]);expect(edit.code,edit.output).toBe(0);
+ const edited=events(cache,"s5");expect(count(edited,"miss")).toBe(1);expect(count(edited,"miss","leaf2")).toBe(1);expect(count(edited,"hit")).toBe(3);
+ const old=await session(workspace,cache,"s4",["-p","leaf1"]);expect(old.code,old.output).toBe(0);
+ expect(count(events(cache,"s4").slice(warm.length+appEvents.length),"miss")).toBe(0);
+},180000);
+
+test("the focused crate compiles incrementally in its own lane, is never published, and its neighbours stay shared", async()=>{
+ const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache");writeWorkspace(workspace,[],true);
+ const warm=await session(workspace,cache,"w1",["-p","leaf2"]);expect(warm.code,warm.output).toBe(0);
+ const changed=join(workspace,"leaf2","src","lib.rs");
+ for(const round of[1,2]){writeFileSync(changed,readFileSync(changed,"utf8")+`pub fn r${round}() -> u32 { ${round} }\n`);const run=await session(workspace,cache,"f1",["-p","leaf2"],{SEMIO_UNIT_CACHE_FOCUS:"leaf2"});expect(run.code,run.output).toBe(0);}
+ const rows=events(cache,"f1");expect(count(rows,"incremental","leaf2")).toBe(2);expect(count(rows,"publish","leaf2")).toBe(0);expect(count(rows,"hit","core")).toBe(1);
+ const incremental=spawnSync("find",[join(cache,"l","f1"),"-name","incremental","-type","d"],{encoding:"utf8"}).stdout.trim();expect(incremental.length).toBeGreaterThan(0);
+ expect(readdirSync(incremental.split("\n")[0]!).length).toBeGreaterThan(0);
+},180000);
+
+function artifactDigests(target:string){
+ const directory=join(target,"debug","deps"),rows:string[]=[];
+ for(const name of readdirSync(directory).filter(file=>/\.(rlib|rmeta)$/u.test(file)).sort())rows.push(name+" "+new Bun.CryptoHasher("sha256").update(readFileSync(join(directory,name))).digest("hex"));
+ return rows;
+}
+
+test("cached artifacts equal the bytes of a plain Cargo build, and sccache reaches the same hit and miss counts on library units", async()=>{
+ const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache"),libraries=["l1","l2","l3"];writeWorkspace(workspace,libraries,false);
+ const plan=[["a",["-p","l1"]],["b",["-p","l2"]],["c",["-p","l1","-p","l2","-p","l3"]]] as const;
+ for(const [lane,args] of plan){const run=await session(workspace,cache,lane,[...args],{CARGO_INCREMENTAL:"0",SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"])});expect(run.code,run.output).toBe(0);}
+ const rows=events(cache);expect(count(rows,"miss")).toBe(4);expect(count(rows,"hit")).toBe(4);
+ const reference=join(directory,"reference"),plain=spawnSync(cargo,["build","--manifest-path",join(workspace,"Cargo.toml"),"-p","l1","-p","l2","-p","l3"],{cwd:workspace,env:{...process.env,CARGO_TARGET_DIR:reference,CARGO_INCREMENTAL:"0"},encoding:"utf8"});
+ expect(plain.status,plain.stderr).toBe(0);expect(artifactDigests(join(cache,"l","c","t"))).toEqual(artifactDigests(reference));
+ const sccache=process.env.SEMIO_TEST_SCCACHE??"sccache";
+ if(spawnSync(sccache,["--version"]).status!==0)return;
+ const store=join(directory,"sccache"),port=String(20000+Math.floor(Math.random()*20000)),environment={...process.env,SCCACHE_DIR:store,SCCACHE_SERVER_PORT:port,SCCACHE_IDLE_TIMEOUT:"0",CARGO_INCREMENTAL:"0",RUSTC_WRAPPER:sccache};
+ try{
+  spawnSync(sccache,["--stop-server"],{env:environment});spawnSync(sccache,["--start-server"],{env:environment});
+  for(const [,args] of plan){rmSync(join(directory,"sc"),{recursive:true,force:true});const built=spawnSync(cargo,["build","--manifest-path",join(workspace,"Cargo.toml"),...args],{cwd:workspace,env:{...environment,CARGO_TARGET_DIR:join(directory,"sc")},encoding:"utf8"});expect(built.status,built.stderr).toBe(0);}
+  const stats=JSON.parse(spawnSync(sccache,["--show-stats","--stats-format=json"],{env:environment,encoding:"utf8"}).stdout).stats as {cache_hits:{counts:Record<string,number>};cache_misses:{counts:Record<string,number>}};
+  const total=(counts:Record<string,number>)=>Object.values(counts).reduce((sum,value)=>sum+value,0);
+  expect({hits:total(stats.cache_hits.counts),misses:total(stats.cache_misses.counts)}).toEqual({hits:count(rows,"hit"),misses:count(rows,"miss")});
+ }finally{spawnSync(sccache,["--stop-server"],{env:environment});}
+},180000);
+
+test("a compiler failure is returned unchanged and publishes nothing", async()=>{
+ const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache");writeWorkspace(workspace,["l1"],false);
+ writeFileSync(join(workspace,"l1","src","lib.rs"),"pub fn f() -> u32 { missing_symbol }\n");
+ const run=await session(workspace,cache,"e1",["-p","l1"],{SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"])});
+ expect(run.code).not.toBe(0);expect(run.output).toContain("missing_symbol");
+ const rows=events(cache,"e1");expect(count(rows,"failed","l1")).toBe(1);expect(count(rows,"publish","l1")).toBe(0);
+ writeFileSync(join(workspace,"l1","src","lib.rs"),"pub fn f() -> u32 { 1 }\n");
+ const fixed=await session(workspace,cache,"e1",["-p","l1"],{SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"])});expect(fixed.code,fixed.output).toBe(0);
+ expect(statSync(join(cache,"e")).isDirectory()).toBe(true);
+},120000);
+
+test("cleanup removes by recency inside its bounds, keeps a lane with a live marker, drops entries of removed objects and leaves the cache usable", async()=>{
+ const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache");writeWorkspace(workspace,["l1"],false);
+ const inner={SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"])};
+ expect((await session(workspace,cache,"g1",["-p","l1"],inner)).code).toBe(0);expect((await session(workspace,cache,"g2",["-p","l1"],inner)).code).toBe(0);
+ const live=enterLaneV1(cache,"g2");
+ try{
+  expect(listObjectsV1(cache).length).toBeGreaterThan(0);
+  const run=spawnSync(process.execPath,[script,"--semio-unit-cache","gc","--root",cache,"--capacity","4000"],{encoding:"utf8"});expect(run.status,run.stderr).toBe(0);
+  const result=JSON.parse(run.stdout) as {plan:{removeLanes:string[];removeObjects:string[]};applied:{lanes:number;objects:number}};
+  expect(result.plan.removeLanes).toContain("g1");expect(result.plan.removeLanes).not.toContain("g2");
+  expect(existsSync(join(cache,"l","g2","t"))).toBe(true);expect(existsSync(join(cache,"l","g1"))).toBe(false);
+  expect(listObjectsV1(cache).reduce((sum,row)=>sum+row.bytes,0)).toBeLessThanOrEqual(Math.floor(4000*policy.gc.casShare));
+  const stats=JSON.parse(spawnSync(process.execPath,[script,"--semio-unit-cache","stats","--root",cache],{encoding:"utf8"}).stdout) as {totals:Record<string,number>};expect(stats.totals.publish).toBeGreaterThan(0);
+ }finally{live.release();}
+ const again=await session(workspace,cache,"g3",["-p","l1"],inner);expect(again.code,again.output).toBe(0);
+ expect(count(events(cache,"g3"),"miss")).toBeGreaterThan(0);
+},180000);
+
+test("one Cargo process owns a lane at a time: concurrent commands get distinct lanes up to the live maximum, the next one waits and a released lane is taken again", async()=>{
+ const cache=scratch(),maximum=policy.pool.maximumLiveLanes,big=Number.MAX_SAFE_INTEGER,held=[];
+ for(let index=0;index<maximum;index++)held.push(await acquirePooledLaneV1(cache,{crates:["agent"],quotaBytes:big}));
+ expect(new Set(held.map(row=>row.paths.id)).size).toBe(maximum);
+ await expect(acquirePooledLaneV1(cache,{crates:["agent"],quotaBytes:big},{signal:AbortSignal.timeout(300)})).rejects.toBeDefined();
+ const id=held[1]!.paths.id;held[1]!.release();
+ const again=await acquirePooledLaneV1(cache,{crates:["agent"],quotaBytes:big});expect(again.paths.id).toBe(id);expect(again.choice).toBe("warm");
+ again.release();for(const row of held)row.release();
+});
+
+test("the launcher block selects the wrapper chain and the focus follows the package selection", () => {
+ expect(focusFromCargoArgumentsV1(["check","-p","a","--package","b@1.0.0","--package=c","-pd","--","-p","zzz"])).toEqual(["a","b","c","d"]);
+ expect(focusFromCargoArgumentsV1(["build","--workspace"])).toEqual([]);
+ const cacheRoot=join(scratch(),"u"),block=unitCacheEnvironmentV1({cacheRoot,lane:"abc",laneRoot:join(cacheRoot,"l","abc"),scheduler:"/t/scheduler",compiler:"rustc",toolchain:"tc",focus:["a","b"],slots:6,runtime:"/bin/bun"});
+ expect(block.RUSTC_WRAPPER).toBe(unitCacheShimPathV1(cacheRoot));expect("RUSTC" in block,"the compiler stays the real one").toBe(false);
+ expect(readFileSync(block.RUSTC_WRAPPER,"utf8")).toBe(unitCacheShimSourceV1("/bin/bun",script));expect(statSync(block.RUSTC_WRAPPER).mode&0o111).toBe(0o111);
+ expect(ensureUnitCacheShimV1(cacheRoot,"/bin/bun")).toBe(block.RUSTC_WRAPPER);
+ const quoted=unitCacheShimSourceV1("/o'p/bun","/s/it's.ts");expect(quoted.startsWith("#!/bin/sh\n")).toBe(true);expect(quoted.endsWith("exec '/o'\\''p/bun' '/s/it'\\''s.ts' \"$@\"\n")).toBe(true);expect(unitCacheShimPathV1("/u","win32","abc").endsWith("rustc-wrapper-abc.exe"),"a native executable, never a batch file").toBe(true);
+ expect(JSON.parse(block.SEMIO_UNIT_CACHE_INNER)).toEqual(["/t/scheduler","rustc"]);expect(block.SEMIO_UNIT_CACHE_FOCUS).toBe("a,b");expect(block.SEMIO_UNIT_CACHE_SLOTS).toBe("6");
+ expect(unitCacheRootV1("/store")).toBe("/store/u");
+});
+
+test("an admission memo holds until a probed path changes, appears, vanishes or was too fresh to trust", () => {
+ const directory=scratch(),root=join(directory,"memo"),source=join(directory,"lib.rs"),other=join(directory,"other.rs"),absent=join(directory,"mod.rs");
+ writeFileSync(source,"pub fn a() {}\n");writeFileSync(other,"pub fn b() {}\n");
+ const unit={id:"a 0.1.0",packageName:"a",manifest:"/ws/a/Cargo.toml",sourceInputs:[],compilerCfg:null,kind:"library"},policy={maxSourceBytes:10},key=admissionMemoKeyV1(unit,policy,"tc");
+ const result={inputs:[{path:source,digest:"d",bytes:14}],cfg:["unix"],environment:{A:"1",B:null},probed:[source,absent],startedMs:Date.now()+10000};
+ expect(rememberAdmissionV1(root,key,result)).toBe(true);
+ expect(validator("AdmissionMemo")(JSON.parse(readFileSync(join(root,"a",key.slice(0,2),key+".json"),"utf8")))).toBe(true);
+ expect(recallAdmissionV1(root,key)?.cfg).toEqual(["unix"]);
+ expect(admissionMemoKeyV1({...unit,sourceInputs:[{path:"x"}],compilerCfg:["y"]},policy,"tc")).toBe(key);
+ for(const changed of[{...unit,kind:"binary"},{...unit,packageName:"b"}])expect(admissionMemoKeyV1(changed,policy,"tc")).not.toBe(key);
+ expect(admissionMemoKeyV1(unit,{maxSourceBytes:11},"tc")).not.toBe(key);expect(admissionMemoKeyV1(unit,policy,"other")).not.toBe(key);
+ writeFileSync(other,"pub fn c() {}\n");expect(recallAdmissionV1(root,key),"unprobed file").toBeDefined();
+ writeFileSync(absent,"");expect(recallAdmissionV1(root,key),"probed path appeared").toBeUndefined();rmSync(absent);expect(recallAdmissionV1(root,key),"and vanished again").toBeDefined();
+ const later=new Date(Date.now()+2000);writeFileSync(source,"pub fn a() {}\n");utimesSync(source,later,later);expect(recallAdmissionV1(root,key),"probed file touched").toBeUndefined();
+ expect(rememberAdmissionV1(root,key,{...result,startedMs:Date.now()}),"fresh file is not trusted").toBe(false);
+ const port=unitAdmissionMemoV1(join(directory,"port"),"tc");port.remember(unit,policy,{...result,startedMs:Date.now()+10000});
+ const recalled=port.recall({...unit,sourceInputs:[]},policy);expect(recalled?.inputs).toEqual(result.inputs);expect(recalled?.environment).toEqual({A:"1",B:null});
+ writeFileSync(join(root,"a",key.slice(0,2),key+".json"),"{broken");expect(recallAdmissionV1(root,key)).toBeUndefined();
+});
+
+test("operator messages exist in English and German and fill every placeholder", () => {
+ const pick=(environment:Record<string,string>)=>resolveLanguageV1(CATALOG_LANGUAGES_V1,[],environment,()=>[]).language;expect(pick({SEMIO_LANGUAGE:"de"})).toBe("de");expect(pick({LANG:"de_DE.UTF-8"})).toBe("de");expect(pick({LANG:"en_US.UTF-8"})).toBe("en");expect(()=>pick({})).toThrow("--lang=en|de");
+ for(const kind of["overflow","collected","trimmed","poolBusy"] as const)for(const language of["en","de"] as const){const text=laneMessageV1(kind,{busy:1,total:2,lane:"a1",lanes:1,incremental:2,objects:3,count:4,quotaMib:5,removed:6,live:7,maximum:8,sessions:0,units:0},language);expect(text).not.toMatch(/\{\w+\}/u);expect(text.length).toBeGreaterThan(20);}
+ expect(laneMessageV1("overflow",{busy:1,total:2,lane:"a1"},"de")).toContain("neue Lane a1");
+});
+
+const generator=`use std::{env,fs,io::Write};
+fn main() {
+    let out = env::var("OUT_DIR").unwrap();
+    if let Ok(log) = env::var("SCRIPT_RUN_LOG") { let mut file = fs::OpenOptions::new().create(true).append(true).open(log).unwrap(); writeln!(file, "gen").unwrap(); }
+    let seed = env::var("GEN_SEED").unwrap_or_default();
+    fs::write(format!("{out}/gen.rs"), format!("pub const SEED: &str = {:?};\npub const WHERE: &str = {:?};\n", seed, out)).unwrap();
+    fs::create_dir_all(format!("{out}/nested")).unwrap();
+    fs::write(format!("{out}/nested/blob.bin"), [0u8, 1, 2, 3, seed.len() as u8]).unwrap();
+    println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=data.txt");
+    println!("cargo:rerun-if-env-changed=GEN_SEED");
+    println!("cargo:rustc-env=GEN_OUT={}", out);
+    println!("cargo:rustc-cfg=generated");
+    println!("cargo:warning=gen ran");
+}
+`,undeclared=`use std::{env,fs,io::Write};
+fn main() {
+    let out = env::var("OUT_DIR").unwrap();
+    if let Ok(log) = env::var("SCRIPT_RUN_LOG") { let mut file = fs::OpenOptions::new().create(true).append(true).open(log).unwrap(); writeln!(file, "nodir").unwrap(); }
+    fs::write(format!("{out}/payload.rs"), format!("pub const PAYLOAD: &str = {:?};\n", fs::read_to_string("src/payload.txt").unwrap().trim())).unwrap();
+}
+`;
+function writeScriptWorkspace(root:string){
+ mkdirSync(root,{recursive:true});
+ writeFileSync(join(root,"Cargo.toml"),'[workspace]\nresolver = "2"\nmembers = ["gen","nodir","app"]\n[profile.dev]\ndebug = 0\n');
+ const manifest=(name:string,dependencies:string)=>`[package]\nname = "${name}"\nversion = "0.1.0"\nedition = "2021"\nbuild = "build.rs"\n[dependencies]\n${dependencies}`;
+ writeCrate(root,"gen",manifest("gen",""),'include!(concat!(env!("OUT_DIR"), "/gen.rs"));\npub const OUT: &str = env!("GEN_OUT");\n#[cfg(generated)]\npub fn on() -> bool { true }\npub fn blob() -> &\'static [u8] { include_bytes!(concat!(env!("OUT_DIR"), "/nested/blob.bin")) }\npub fn data() -> &\'static str { include_str!("../data.txt") }\n',{"build.rs":generator,"data.txt":"data one\n"});
+ writeCrate(root,"nodir",manifest("nodir",""),'include!(concat!(env!("OUT_DIR"), "/payload.rs"));\n',{"build.rs":undeclared});
+ writeFileSync(join(root,"nodir","src","payload.txt"),"payload one\n");
+ mkdirSync(join(root,"app","src"),{recursive:true});
+ writeCrate(root,"app",`[package]\nname = "app"\nversion = "0.1.0"\nedition = "2021"\n[dependencies]\ngen = { path = "../gen" }\nnodir = { path = "../nodir" }\n`,'fn main() { println!("{} {} {} {} {} {}", gen::SEED, gen::on(), gen::blob().len(), gen::data().trim(), nodir::PAYLOAD, gen::WHERE.ends_with("/out")); }\n');
+}
+
+test("build script runs are shared between lanes: one run per distinct input, declared and undeclared facts decide, OUT_DIR and cargo: lines are restored, and Cargo's own results are the oracle",async()=>{
+ const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache"),log=join(directory,"runs.log");writeScriptWorkspace(workspace);
+ const on={SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"]),SEMIO_UNIT_CACHE_BUILD_SCRIPTS:"on",SCRIPT_RUN_LOG:log,CARGO_INCREMENTAL:"0"};
+ const runs=()=>existsSync(log)?readFileSync(log,"utf8").split("\n").filter(Boolean):[];
+ const ran=(lane:string)=>spawnSync(join(cache,"l",lane,"t","debug","app"),{encoding:"utf8"}).stdout.replace(/\n$/u,"");
+ const build=async(lane:string,extra:Record<string,string|undefined>={})=>{const run=await session(workspace,cache,lane,["-p","app"],{...on,...extra});expect(run.code,run.output).toBe(0);return run;};
+ await build("a");expect(runs().sort()).toEqual(["gen","nodir"]);const first=ran("a");expect(first).toBe(" true 5 data one payload one true");
+ const b=await build("b");expect(runs().length,"second lane runs nothing").toBe(2);expect(ran("b")).toBe(first);expect(b.output).toContain("gen ran");
+ expect(count(events(cache,"b"),"script-hit")).toBe(2);expect(count(events(cache,"b"),"script-miss")).toBe(0);
+ await build("c",{GEN_SEED:"seed2"});expect(runs().length,"declared variable reruns only gen").toBe(3);expect(ran("c")).toBe("seed2 true 5 data one payload one true");
+ writeFileSync(join(workspace,"gen","data.txt"),"data two\n");await build("d");expect(runs().length,"declared file reruns only gen").toBe(4);expect(ran("d")).toBe(" true 5 data two payload one true");
+ writeFileSync(join(workspace,"nodir","src","payload.txt"),"payload two\n");await build("e");expect(runs().filter(row=>row==="nodir").length,"undeclared package file reruns the script without directives").toBe(2);expect(runs().filter(row=>row==="gen").length).toBe(3);expect(ran("e")).toBe(" true 5 data two payload two true");
+ const genSource=join(workspace,"gen","src","lib.rs");writeFileSync(genSource,readFileSync(genSource,"utf8")+"pub fn more() -> u32 { 1 }\n");await build("f");expect(runs().filter(row=>row==="gen").length,"a Rust edit does not rerun a script that declares its inputs").toBe(3);
+ const noSource=join(workspace,"nodir","src","lib.rs");writeFileSync(noSource,readFileSync(noSource,"utf8")+"pub fn more() -> u32 { 1 }\n");await build("g");expect(runs().filter(row=>row==="nodir").length,"a Rust edit reruns a script without directives").toBe(3);
+ const before=runs().length;
+ const parallel=await Promise.all(["h","i","j"].map(lane=>session(workspace,cache,lane,["-p","app"],{...on,GEN_SEED:"parallel"})));
+ for(const row of parallel)expect(row.code,row.output).toBe(0);
+ expect(runs().slice(before),"three lanes at once run the new script input once").toEqual(["gen"]);for(const lane of["h","i","j"])expect(ran(lane)).toBe("parallel true 5 data two payload two true");
+ expect(count(events(cache),"script-hit")).toBeGreaterThan(8);
+ const reference=join(directory,"reference"),plain=spawnSync(cargo,["build","--manifest-path",join(workspace,"Cargo.toml"),"-p","app"],{cwd:workspace,env:{...process.env,CARGO_TARGET_DIR:reference,CARGO_INCREMENTAL:"0",GEN_SEED:"parallel",SCRIPT_RUN_LOG:join(directory,"plain.log")},encoding:"utf8"});
+ expect(plain.status,plain.stderr).toBe(0);expect(spawnSync(join(reference,"debug","app"),{encoding:"utf8"}).stdout.replace(/\n$/u,"")).toBe(ran("h"));
+ const tree=(base:string,pick:string)=>{const found=spawnSync("find",[base,"-path","*/build/gen-*/out/"+pick,"-type","f"],{encoding:"utf8"}).stdout.trim().split("\n").filter(Boolean);return found.map(file=>readFileSync(file,"utf8").split(base).join("@")).sort();};
+ expect(tree(join(cache,"l","h","t"),"nested/blob.bin").length).toBeGreaterThan(0);
+ const normalised=(path:string,base:string)=>readFileSync(path,"utf8").split(base).join("@");
+ const out=(base:string)=>spawnSync("find",[base,"-path","*/build/gen-*/out/gen.rs"],{encoding:"utf8"}).stdout.trim().split("\n").filter(Boolean).map(file=>normalised(file,base).replace(/\/build\/gen-[0-9a-f]+\/out/gu,"/OUT"));
+ expect(out(join(cache,"l","h","t")).sort()).toEqual(out(reference).sort());
+ const entries=readdirSync(join(cache,"r")).flatMap(shard=>readdirSync(join(cache,"r",shard)).flatMap(key=>readdirSync(join(cache,"r",shard,key)).map(file=>JSON.parse(readFileSync(join(cache,"r",shard,key,file),"utf8")))));
+ expect(entries.length).toBeGreaterThan(3);for(const entry of entries)expect(validator("BuildEntry")(entry),JSON.stringify(entry)).toBe(true);
+},240000);
+
+test("a build script run that lost the object of a stream it replays is a miss and cleanup drops it",()=>{
+ const root=scratch(),cwd=join(root,"package"),outDir=join(root,"out");mkdirSync(join(cwd,"src"),{recursive:true});mkdirSync(outDir,{recursive:true});writeFileSync(join(cwd,"src","lib.rs"),"");
+ const key="ab"+"c".repeat(62),context={cwd,laneRoot:undefined,environment:{},stampDirectory:undefined};
+ const entry=publishBuildRunV1(root,{key,package:"fixture",cwd,laneRoot:undefined,directives:{files:[],variables:[]},environment:{},outDir,stdout:'cargo:rustc-cfg=fast_arithmetic="64"\n',stderr:"",stampDirectory:undefined});
+ expect(typeof entry?.stdout).toBe("string");expect(lookupBuildRunV1(root,key,context)?.stdout).toBe(entry!.stdout);
+ rmSync(join(root,"o",entry!.stdout!.slice(0,2),entry!.stdout!),{force:true});
+ expect(lookupBuildRunV1(root,key,context),"an empty replay would drop every cargo: directive").toBeUndefined();
+ expect(pruneEntriesV1(root,Date.now()).entries).toBe(1);expect(existsSync(join(root,"r",key.slice(0,2),key))).toBe(false);
+});
+
+const schedulerManifest=resolve(here,"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"),brokerModule=resolve(here,"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts");
+
+test("cache hits are reported to the build broker with the measurements recorded when the unit was built, the real scheduler is the compiler behind the cache, and history keeps real compiles only",async()=>{
+ if(!existsSync(schedulerManifest)||!existsSync(brokerModule))return;
+ const broker=await import(brokerModule);
+ const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache"),target=join(directory,"scheduler");writeWorkspace(workspace,[],true);
+ const built=spawnSync(cargo,["build","--release","--manifest-path",schedulerManifest,"--bins"],{cwd:directory,env:{...process.env,CARGO_TARGET_DIR:target},encoding:"utf8"});expect(built.status,built.stderr).toBe(0);
+ const scheduler=join(target,"release","semio-build-scheduler"),started=await (broker as any).startAdmissionBrokerV1({physicalBytes:64*2**30,history:new Map()}) as {endpoint:string;registerPass(row:object):void;units():readonly any[];close():Promise<void>};
+ try{
+  started.registerPass({id:"p1",profile:"dev",target:"host"});
+  const env={SEMIO_UNIT_CACHE_INNER:JSON.stringify([scheduler,"rustc"]),SEMIO_BUILD_BROKER:started.endpoint,SEMIO_BUILD_PASS:"p1",SEMIO_UNIT_CACHE_BROKER_REPLAY:"on",SEMIO_UNIT_CACHE_BUILD_SCRIPTS:"on",CARGO_INCREMENTAL:"0"};
+  const first=await session(workspace,cache,"ba",["-p","app"],env);expect(first.code,first.output).toBe(0);
+  await new Promise(done=>setTimeout(done,300));
+  const compiled=started.units().slice();expect(compiled.length).toBeGreaterThanOrEqual(7);expect(compiled.every(row=>row.exit===0&&!row.cache&&row.predictedBytes>0)).toBe(true);
+  const second=await session(workspace,cache,"bb",["-p","app"],env);expect(second.code,second.output).toBe(0);
+  const served=started.units().slice(compiled.length),identity=(row:any)=>`${row.package}/${row.crate}/${[...row.crateTypes].sort().join(",")}`;
+  expect(served.map(identity).sort(),"every unit of the first build is reported again").toEqual(compiled.map(identity).sort());
+  for(const row of served){const original=compiled.find(other=>identity(other)===identity(row))!;expect(row.cache).toEqual({key:expect.stringMatching(/^[a-f0-9]{64}$/u),recorded:true});expect(row.peakRssBytes,identity(row)).toBe(original.peakRssBytes);expect(row.userMs).toBe(original.userMs);expect(row.endMs-row.startMs).toBe(0);expect(row.artifact.includes("/bb/")).toBe(true);expect(row.dependencies.length).toBe(original.dependencies.length);}
+  const rows=events(cache,"bb");expect(count(rows,"broker-replay")).toBe(served.length);expect(count(rows,"broker-unreachable")).toBe(0);
+  const entries=readdirSync(join(cache,"e")).flatMap(shard=>readdirSync(join(cache,"e",shard)).flatMap(key=>readdirSync(join(cache,"e",shard,key)).map(file=>JSON.parse(readFileSync(join(cache,"e",shard,key,file),"utf8")))));
+  expect(entries.length).toBeGreaterThan(0);for(const entry of entries){expect(validator("Entry")(entry),JSON.stringify(entry)).toBe(true);expect(validator("Provenance")(entry.provenance),JSON.stringify(entry)).toBe(true);}
+  const before=started.units().length,third=await session(workspace,cache,"bc",["-p","app"],{...env,SEMIO_UNIT_CACHE_BROKER_REPLAY:"off"});expect(third.code,third.output).toBe(0);
+  expect(started.units().length,"replay off reports nothing").toBe(before);
+ }finally{await started.close();}
+},240000);
+
+test("build scripts that exec $RUSTC work from a bare PATH and a non-executable tracked script, in a fresh lane and from the cache; the wrapper accepts Cargo's <rustc> argument",async()=>{
+ const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache");mkdirSync(join(workspace,"src"),{recursive:true});
+ writeFileSync(join(workspace,"Cargo.toml"),'[package]\nname = "probe"\nversion = "0.1.0"\nedition = "2021"\nbuild = "build.rs"\n');
+ writeFileSync(join(workspace,"build.rs"),`use std::process::Command;
+fn main() {
+    let rustc = std::env::var("RUSTC").unwrap();
+    for arguments in [vec!["--version"], vec!["--print", "cfg"], vec!["-vV"]] {
+        let output = Command::new(&rustc).args(&arguments).output().expect("failed to check rustc");
+        assert!(output.status.success(), "{:?}", output);
+    }
+    println!("cargo:rerun-if-changed=build.rs");
+}
+`);
+ writeFileSync(join(workspace,"src","lib.rs"),"pub fn f() {}\n");
+ const bare=`${process.env.HOME}/.cargo/bin:/usr/bin:/bin`,lanes:string[]=[];
+ expect(statSync(script).mode&0o111,"the tracked script itself is executable").not.toBe(0);
+ for(const lane of["x1","x2"]){
+  const laneRoot=join(cache,"l",lane);mkdirSync(laneRoot,{recursive:true});lanes.push(lane);
+  const block=unitCacheEnvironmentV1({cacheRoot:cache,lane,laneRoot,scheduler:"unused",compiler:"rustc",toolchain:"tc",focus:[],slots:2,features:{buildScripts:true}});
+  const run=await new Promise<{code:number;output:string}>(done=>{const child=spawn(cargo,["build"],{cwd:workspace,env:{HOME:process.env.HOME,PATH:bare,...block,SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"]),CARGO_TARGET_DIR:join(laneRoot,"t"),CARGO_INCREMENTAL:"0"} as NodeJS.ProcessEnv,stdio:["ignore","pipe","pipe"]});let output="";child.stdout.on("data",chunk=>{output+=chunk;});child.stderr.on("data",chunk=>{output+=chunk;});child.on("close",code=>done({code:code??1,output}));});
+  expect(run.code,run.output).toBe(0);
+ }
+ const second=events(cache,"x2");expect(count(second,"miss")+count(second,"failed")).toBe(0);expect(count(second,"hit")).toBeGreaterThan(0);
+},120000);
+
+test("a build script that runs the compiler through RUSTC_WRAPPER (libc does) works in a cold lane although the jobserver numbers in its environment name descriptors it does not have",async()=>{
+ const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache");mkdirSync(join(workspace,"src"),{recursive:true});
+ writeFileSync(join(workspace,"Cargo.toml"),'[package]\nname = "probe"\nversion = "0.1.0"\nedition = "2021"\nbuild = "build.rs"\n');
+ writeFileSync(join(workspace,"build.rs"),`use std::process::Command;
+fn main() {
+    let rustc = std::env::var("RUSTC").unwrap();
+    let wrapper = std::env::var("RUSTC_WRAPPER").unwrap();
+    for arguments in [vec!["--version"], vec!["-vV"]] {
+        let output = Command::new(&wrapper).arg(&rustc).args(&arguments).env("CARGO_MAKEFLAGS", "-j --jobserver-fds=3,5 --jobserver-auth=3,5").output().expect("failed to run rustc");
+        assert!(output.status.success(), "{:?}", output);
+        assert!(String::from_utf8_lossy(&output.stdout).starts_with("rustc"), "{:?}", output);
+    }
+    println!("cargo:rerun-if-changed=build.rs");
+}
+`);
+ writeFileSync(join(workspace,"src","lib.rs"),"pub fn f() {}\n");
+ const laneRoot=join(cache,"l","w1");mkdirSync(laneRoot,{recursive:true});
+ const block=unitCacheEnvironmentV1({cacheRoot:cache,lane:"w1",laneRoot,scheduler:"unused",compiler:"rustc",toolchain:"tc",focus:[],slots:2,features:{buildScripts:true}});
+ const run=await new Promise<{code:number;output:string}>(done=>{const child=spawn(cargo,["build"],{cwd:workspace,env:{HOME:process.env.HOME,PATH:`${process.env.HOME}/.cargo/bin:/usr/bin:/bin`,...block,SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"]),CARGO_TARGET_DIR:join(laneRoot,"t"),CARGO_INCREMENTAL:"0"} as NodeJS.ProcessEnv,stdio:["ignore","pipe","pipe"]});let output="";child.stdout.on("data",chunk=>{output+=chunk;});child.stderr.on("data",chunk=>{output+=chunk;});child.on("close",code=>done({code:code??1,output}));});
+ expect(run.code,run.output).toBe(0);
+},120000);
+
+test("the stand-in survives jobserver numbers whose descriptors are not open, where the runtime holds its own descriptors at the lowest numbers",()=>{
+ const cacheRoot=join(scratch(),"u"),laneRoot=join(cacheRoot,"l","s");mkdirSync(laneRoot,{recursive:true});
+ const block=unitCacheEnvironmentV1({cacheRoot,lane:"s",laneRoot,compiler:"rustc",toolchain:"tc",focus:[],slots:1});
+ for(const flags of["-j --jobserver-fds=3,5 --jobserver-auth=3,5","-j --jobserver-auth=3,4","-j --jobserver-auth=4,5","-j --jobserver-auth=3,3","-j --jobserver-auth=fifo:/nonexistent"]){
+  const run=spawnSync(block.RUSTC_WRAPPER,["rustc","--version"],{env:{HOME:process.env.HOME,PATH:`${process.env.HOME}/.cargo/bin:/usr/bin:/bin`,...block,CARGO_MAKEFLAGS:flags},encoding:"utf8",stdio:["ignore","pipe","pipe"]});
+  expect(run.stderr,flags).toContain("job-token pool");expect(run.stderr,flags).toContain("Job-Token-Pool");expect(run.status,flags).toBe(0);expect(run.stdout.startsWith("rustc "),flags).toBe(true);
+ }
+});
+
+test("the stand-in reports exactly the jobserver descriptors that are open before the runtime starts, as an independent Python census of the same descriptors sees them",()=>{
+ const shim=join(scratch(),"rustc-wrapper");writeFileSync(shim,unitCacheShimSourceV1("/usr/bin/printenv","SEMIO_UNIT_CACHE_JOBSERVER_FDS"));chmodSync(shim,0o755);
+ const stdioOf=(open:readonly number[])=>{const stdio:Array<"ignore"|"pipe">=["ignore","pipe","pipe"];for(let index=3;index<=Math.max(2,...open);index++)stdio[index]=open.includes(index)?"pipe":"ignore";return stdio;};
+ const python=testPythonV1()??"python3",census="import os,sys\nfor n in map(int,sys.argv[1:]):\n try: os.fstat(n); print(n)\n except OSError: pass\n";
+ const openAccordingToPython=(open:readonly number[],candidates:readonly number[])=>spawnSync(python,["-I","-c",census,...candidates.map(String)],{stdio:stdioOf(open),encoding:"utf8"}).stdout.split("\n").filter(Boolean).map(Number);
+ const reported=(flags:string,open:readonly number[],extra:Readonly<Record<string,string>>={},variable="CARGO_MAKEFLAGS")=>spawnSync(shim,[],{env:{PATH:"/usr/bin:/bin",[variable]:flags,...extra},stdio:stdioOf(open),encoding:"utf8"}).stdout.trim();
+ for(const [flags,pair,open] of[["-j --jobserver-fds=3,5 --jobserver-auth=3,5",[3,5],[3,5]],["-j --jobserver-auth=7,9",[7,9],[7,9]],["-j --jobserver-fds=3,5 --jobserver-auth=3,5",[3,5],[3]],["-j --jobserver-fds=3,5 --jobserver-auth=3,5",[3,5],[5]],["-j --jobserver-fds=3,5 --jobserver-auth=3,5",[3,5],[]],["-j --jobserver-auth=4,6",[4,6],[3,4,5]]] as const){
+  const live=openAccordingToPython(open,pair);expect(reported(flags,open),flags+" with "+open.join(",")+" open").toBe(live.length===2?pair.join(","):"");
+ }
+ expect(reported("-j --jobserver-auth=fifo:/tmp/jobs",[3,5]),"a named pipe is no descriptor pair").toBe("");
+ expect(reported("-j --jobserver-auth=3",[3])).toBe("");
+ expect(reported("-j --jobserver-auth=3,5,7",[3,5,7])).toBe("");
+ expect(reported("-j",[3,5])).toBe("");
+ expect(reported("-j --jobserver-auth=3,5",[3,5],{},"MAKEFLAGS"),"MAKEFLAGS is read when CARGO_MAKEFLAGS is absent").toBe("3,5");
+ expect(reported("-j --jobserver-auth=3,5",[],{SEMIO_UNIT_CACHE_JOBSERVER_FDS:"3,5"}),"a value inherited from a parent wrapper is never trusted").toBe("");
+ expect(reported("-j --jobserver-auth=3,5",[3,5],{},"MFLAGS"),"MFLAGS is the last variable read").toBe("3,5");
+ expect(reported("",[3,5],{MAKEFLAGS:"-j --jobserver-auth=3,5"}),"the first variable that is set decides, even an empty one, like the jobserver crate").toBe("");
+});

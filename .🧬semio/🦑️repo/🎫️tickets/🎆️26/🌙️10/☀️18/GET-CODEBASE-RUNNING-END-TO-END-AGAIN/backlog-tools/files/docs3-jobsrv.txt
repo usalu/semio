@@ -1,0 +1,2 @@
+jobsrv-rust [de] `1 of 10 cores admitted` begrenzt auch die rustc-Threads.
+jobsrv-rust [en] `1 of 10 cores admitted` also bounds rustc threads.

@@ -1,0 +1,15 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Observation row cost law fixture / Gesetz der Kosten einer Beobachtungszeile",
+ "description": "EN: A recorded observation row (kind, path, fact) must cost at most the declared bytes of live JavaScript memory, measured on the real record path with a realistic path length; the number before the row table is reported for comparison. DE: Eine aufgezeichnete Beobachtungszeile (Art, Pfad, Fakt) darf höchstens die erklärten Bytes lebenden JavaScript-Speichers kosten, gemessen auf dem echten Aufzeichnungspfad mit realistischer Pfadlänge; die Zahl vor der Zeilentabelle steht zum Vergleich.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["version", "rows", "pathCharacters", "budgetBytesPerRow", "reportedBeforeBytesPerRow"],
+ "properties": {
+  "version": {"const": 1},
+  "rows": {"type": "integer", "minimum": 1000},
+  "pathCharacters": {"type": "integer", "minimum": 50},
+  "budgetBytesPerRow": {"type": "integer", "minimum": 100},
+  "reportedBeforeBytesPerRow": {"type": "integer", "minimum": 100}
+ }
+}

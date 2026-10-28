@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🟦️.ts": {
+  "file": "00.ts",
+  "base": "a79682cb3dd4204bc610c3810074da4ae081d9dac3b72dd5aca0fafee50d1df4",
+  "new": "24d79a784f0deeafcbb4a390ac678f317f34dbeccd430551620333e57613d4e0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🔣️.json": {
+  "file": "01.json",
+  "base": "848969dee4334234b5eec87ba7b001242426d8de412164352af2027d371754a2",
+  "new": "6d0ea707d00336dc763bb19aee76c28a220e976e23a11c85ce36b7d645d29ec2"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🧬️schema/🔣️.json": {
+  "file": "02.json",
+  "base": "bcdb8dab1db504a4bd1bd343b8121b246e46553c4943549c1f286475a70f886e",
+  "new": "3f12b84007e7320dfdae27a1930db7bf18ac870c7d067194f097879d11e3d488"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🧪️tests/🟦️.ts": {
+  "file": "03.ts",
+  "base": "b01bb87b61cb4beb362bca2b3bd4a4b91f014c25d7275465d07afcda8a3b1acd",
+  "new": "f4f7ae8d854f6a5e08c1cf498f57958c03fe02b9860cd9de82a28ddb4ebd8381"
+ }
+}

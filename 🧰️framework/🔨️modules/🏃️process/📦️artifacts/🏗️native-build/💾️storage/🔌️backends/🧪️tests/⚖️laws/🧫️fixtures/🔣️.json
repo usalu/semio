@@ -27,6 +27,8 @@
     "🧹️cleanup/♻️retirement/📋️contract/🟦️.ts -> directory-partition: 📁️directory/🟦️.ts",
     "🧹️cleanup/🎛️command/🟦️.ts -> directory-partition: 🧱️fixed/🟦️.ts",
     "🧹️cleanup/📋️state/🟦️.ts -> mounted-image: 🧹️cleanup/🎛️command/🧬️schema/🔣️.json",
+    "🧹️whole/🟦️.ts -> directory-partition: 📁️directory/🟦️.ts",
+    "🧹️whole/🟦️.ts -> directory-partition: 🧱️fixed/🧬️schema/🔣️.json",
     "🧾️metadata/🟦️.ts -> directory-partition: 📁️directory/🟦️.ts",
     "🍎️image/🟦️.ts -> directory-partition: 🧱️fixed/🟦️.ts"
   ],

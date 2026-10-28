@@ -1,0 +1,467 @@
+{
+  "version": 1,
+  "presentationResources": [
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json"
+  ],
+  "javascriptInstall": "all",
+  "javascriptInstallRoots": [],
+  "remoteCache": {
+    "version": 1,
+    "environment": {
+      "endpoint": "SEMIO_REMOTE_CACHE_ENDPOINT",
+      "instance": "SEMIO_REMOTE_CACHE_INSTANCE",
+      "access": "SEMIO_REMOTE_CACHE_ACCESS",
+      "upload": "SEMIO_REMOTE_CACHE_UPLOAD",
+      "compression": "SEMIO_REMOTE_CACHE_COMPRESSION",
+      "download": "SEMIO_REMOTE_CACHE_DOWNLOAD",
+      "timeoutSeconds": "SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS",
+      "retries": "SEMIO_REMOTE_CACHE_RETRIES",
+      "tokenEnvironment": "SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT"
+    },
+    "defaults": {
+      "endpoint": null,
+      "instance": "main",
+      "access": "read-only",
+      "upload": true,
+      "compression": true,
+      "download": "toplevel",
+      "timeoutSeconds": 30,
+      "retries": 3,
+      "tokenEnvironment": "SEMIO_REMOTE_CACHE_TOKEN"
+    },
+    "server": {
+      "host": "127.0.0.1",
+      "port": 6090,
+      "directory": ".🧬semio/🦑️repo/⚡️cache/remote-cache",
+      "maximumBytes": 2684354560,
+      "maximumEntryBytes": 536870912,
+      "maximumAgeDays": 30,
+      "readOnly": false,
+      "tls": null,
+      "actionResults": "complete",
+      "maximumActionResultBytes": 4194304,
+      "maintenanceSeconds": 300,
+      "environment": {
+        "readOnly": "SEMIO_REMOTE_CACHE_SERVER_READ_ONLY",
+        "tlsCertificate": "SEMIO_REMOTE_CACHE_SERVER_TLS_CERTIFICATE",
+        "tlsKey": "SEMIO_REMOTE_CACHE_SERVER_TLS_KEY"
+      },
+      "tokenEnvironment": {
+        "read": "SEMIO_REMOTE_CACHE_SERVER_READ_TOKEN",
+        "write": "SEMIO_REMOTE_CACHE_SERVER_WRITE_TOKEN"
+      }
+    }
+  },
+  "graphMembers": {
+    "description": "Workspace files whose presence the portable graph consumes; every other file reaches inference only through observed facts, so adding or removing it cannot change the graph.",
+    "basenames": [
+      "📋️project.json",
+      "Cargo.toml",
+      "package.json",
+      "go.mod"
+    ],
+    "lockEcosystems": [
+      "javascript"
+    ],
+    "suffixes": [
+      ".patch",
+      ".feature",
+      ".js",
+      ".jsx",
+      ".ts",
+      ".tsx",
+      ".cjs",
+      ".cjsx",
+      ".mjs",
+      ".mjsx",
+      ".cts",
+      ".ctsx",
+      ".mts",
+      ".mtsx"
+    ]
+  },
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
+    "sharedGlobals": [
+      {
+        "runtime": "repo tools exec --light node -- -p \"process.platform.concat(process.arch)\""
+      },
+      {
+        "runtime": "repo tools exec --light bun -- --version"
+      },
+      {
+        "env": "SEMIO_BUILD_MODE"
+      }
+    ],
+    "schemaSources": [
+      "sharedGlobals",
+      "{workspaceRoot}/**/🧬️schema/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts"
+    ],
+    "production": [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+      "!{projectRoot}/**/🧪️tests/**/*",
+      "!{projectRoot}/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*",
+      "!{projectRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*",
+      "!{projectRoot}/**/?(*.)+(stories|story|mdx).[cmjtshx]?([sx])?(.snap)?",
+      "!{projectRoot}/.storybook/**"
+    ],
+    "testSourceExclusions": [
+      "!{workspaceRoot}/**/🧪️tests/**/*",
+      "!{workspaceRoot}/**/*.feature",
+      "!{workspaceRoot}/**/*.stories.{ts,tsx}"
+    ],
+    "schedulingSourceExclusions": [
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/💾️state/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📖️texts/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/💾️state/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/💾️cache/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🔒️leases/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🪓️termination/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🌊️races/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧾️refusals/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/📥️entry/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔭️coverage/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧷️pin/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/**/*"
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/rustfmt.toml",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/📜️script.ts"
+    ],
+    "go": [
+      "{projectRoot}/**/*.go",
+      "{projectRoot}/go.mod",
+      "{projectRoot}/go.sum",
+      "{workspaceRoot}/go.work",
+      "{workspaceRoot}/go.work.sum"
+    ],
+    "uv": [
+      "{projectRoot}/**/*.py",
+      "{projectRoot}/pyproject.toml",
+      "{projectRoot}/uv.lock"
+    ],
+    "dotnet": [
+      "{projectRoot}/**/*.cs",
+      "{projectRoot}/**/*.csproj",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json"
+    ],
+    "nativeSources": [
+      "production"
+    ],
+    "nativeTestSources": [
+      "default"
+    ]
+  },
+  "hostCapacity": {
+    "version": 1,
+    "enabled": true,
+    "memory": {
+      "floorBasisPoints": 1250,
+      "floorMinimumMegabytes": 1536,
+      "floorMaximumMegabytes": 4096,
+      "budgetBasisPoints": 10000,
+      "rampMilliseconds": 60000,
+      "maximumRamping": 2,
+      "maximumQuiet": 4
+    },
+    "swap": {
+      "ceilingBasisPoints": 2500,
+      "outMegabytesPerSecond": 64
+    },
+    "pressure": {
+      "psiWarnPercent": 10,
+      "psiCriticalPercent": 30,
+      "availableWarnBasisPoints": 1500,
+      "availableCriticalBasisPoints": 600,
+      "compressedWarnBasisPoints": 3500,
+      "compressedCriticalBasisPoints": 5500
+    },
+    "load": {
+      "perCoreCeiling": 2,
+      "overrideAfterMilliseconds": 120000
+    },
+    "files": {
+      "ceilingBasisPoints": 8000
+    },
+    "attaches": {
+      "maximum": 32
+    },
+    "wait": {
+      "pollMilliseconds": 1000,
+      "progressMilliseconds": 5000,
+      "heartbeatMilliseconds": 15000,
+      "staleMilliseconds": 21600000,
+      "lockStaleMilliseconds": 10000,
+      "sampleMaximumAgeMilliseconds": 1000,
+      "maximumWaiters": 256,
+      "bypassMilliseconds": 30000,
+      "maximumBypasses": 6,
+      "agingMilliseconds": 300000,
+      "lendAfterMilliseconds": 5000
+    },
+    "kinds": {
+      "test": {
+        "cpu": 1,
+        "megabytes": 1536
+      },
+      "check": {
+        "cpu": 1,
+        "megabytes": 4096
+      },
+      "generate": {
+        "cpu": 1,
+        "megabytes": 1024
+      },
+      "build": {
+        "cpu": 1,
+        "megabytes": 2048
+      },
+      "script": {
+        "cpu": 1,
+        "megabytes": 768
+      },
+      "service": {
+        "cpu": 1,
+        "megabytes": 2048
+      }
+    },
+    "operations": [
+      {
+        "name": "run",
+        "shape": "tasks",
+        "fixedMegabytes": 1536,
+        "cpu": 1,
+        "priority": "batch",
+        "forecast": true
+      },
+      {
+        "name": "run-many",
+        "shape": "tasks",
+        "fixedMegabytes": 1536,
+        "cpu": 1,
+        "priority": "batch",
+        "forecast": true
+      },
+      {
+        "name": "affected",
+        "shape": "tasks",
+        "fixedMegabytes": 1536,
+        "cpu": 1,
+        "priority": "batch",
+        "forecast": true
+      },
+      {
+        "name": "exec",
+        "shape": "tasks",
+        "fixedMegabytes": 1536,
+        "cpu": 1,
+        "priority": "batch"
+      },
+      {
+        "name": "watch",
+        "shape": "tasks",
+        "fixedMegabytes": 1536,
+        "cpu": 1,
+        "priority": "interactive"
+      },
+      {
+        "name": "cargo",
+        "shape": "tasks",
+        "kind": "build",
+        "fixedMegabytes": 1536,
+        "cpu": 1,
+        "priority": "batch"
+      },
+      {
+        "name": "show",
+        "shape": "fixed",
+        "fixedMegabytes": 5120,
+        "cpu": 2,
+        "priority": "batch"
+      },
+      {
+        "name": "graph",
+        "shape": "fixed",
+        "fixedMegabytes": 5120,
+        "cpu": 2,
+        "priority": "batch"
+      },
+      {
+        "name": "dependencies",
+        "shape": "fixed",
+        "fixedMegabytes": 6144,
+        "cpu": 2,
+        "priority": "batch"
+      },
+      {
+        "name": "command",
+        "shape": "fixed",
+        "fixedMegabytes": 2048,
+        "cpu": 1,
+        "priority": "batch"
+      }
+    ],
+    "estimates": {
+      "halfLifeMilliseconds": 259200000,
+      "quantileBasisPoints": 9000,
+      "marginBasisPoints": 2500,
+      "minimumSamples": 3,
+      "maximumSamples": 16,
+      "maximumClasses": 256,
+      "minimumRatioBasisPoints": 3000,
+      "maximumRatioBasisPoints": 20000,
+      "minimumMegabytes": 512,
+      "quickMilliseconds": 120000,
+      "maximumShareBasisPoints": 5000,
+      "defaultRampMilliseconds": 300000,
+      "maximumRampMilliseconds": 1800000,
+      "phaseReferenceMegabytes": 1024,
+      "rebuildPriorMegabytes": 4096,
+      "rebuildShareBasisPoints": 5000,
+      "maximumRebuildSlots": 4,
+      "quietReferenceMegabytes": 2048,
+      "quietShareBasisPoints": 8000,
+      "quietMinimumSamples": 2,
+      "quietMaximumMegabytes": 4096
+    }
+  },
+  "workers": {
+    "version": 1,
+    "enabled": true,
+    "protocol": "json",
+    "localJobs": {
+      "maximum": 8
+    },
+    "memory": {
+      "hostShareBasisPoints": 3000,
+      "perWorkerMegabytes": 512
+    },
+    "sandboxing": false,
+    "cancellation": true,
+    "resetAfterRequests": 256,
+    "classification": [
+      {
+        "kind": "service",
+        "continuous": true
+      },
+      {
+        "kind": "test",
+        "pattern": "^(?:test|smoke|mutation|bench|e2e)(?:-|$)"
+      },
+      {
+        "kind": "check",
+        "pattern": "^(?:check|lint|verify|typecheck|format-check|contract|schema|stdio)(?:-|$)|-check$"
+      },
+      {
+        "kind": "generate",
+        "pattern": "(?:^|[^a-z])(?:generate|generator)(?:-|$)"
+      },
+      {
+        "kind": "build",
+        "pattern": "^(?:build|prepare|activate|wasm|native|package|bundle|cpp|publish|canonical|preview|setup|deps)(?:-|$)"
+      }
+    ],
+    "defaultKind": "script",
+    "kinds": {
+      "test": {
+        "workers": true,
+        "maxInstances": 8,
+        "multiplex": false,
+        "inProcess": true
+      },
+      "check": {
+        "workers": true,
+        "maxInstances": 8,
+        "multiplex": false,
+        "inProcess": true
+      },
+      "generate": {
+        "workers": true,
+        "maxInstances": 4,
+        "multiplex": false,
+        "inProcess": true
+      },
+      "build": {
+        "workers": true,
+        "maxInstances": 2,
+        "multiplex": false,
+        "inProcess": true
+      },
+      "script": {
+        "workers": true,
+        "maxInstances": 4,
+        "multiplex": false,
+        "inProcess": true
+      },
+      "service": {
+        "workers": false,
+        "maxInstances": 1,
+        "multiplex": false,
+        "inProcess": false
+      }
+    }
+  },
+  "remoteExecution": {
+    "version": 1,
+    "environment": {
+      "endpoint": "SEMIO_REMOTE_EXECUTION_ENDPOINT",
+      "platform": "SEMIO_REMOTE_EXECUTION_PLATFORM",
+      "instance": "SEMIO_REMOTE_EXECUTION_INSTANCE",
+      "properties": "SEMIO_REMOTE_EXECUTION_PROPERTIES",
+      "jobs": "SEMIO_REMOTE_EXECUTION_JOBS",
+      "scheduler": "SEMIO_REMOTE_EXECUTION_SCHEDULER",
+      "workerToken": "SEMIO_REMOTE_EXECUTION_WORKER_TOKEN"
+    },
+    "server": {
+      "host": "127.0.0.1",
+      "port": 8980,
+      "workerPort": 8981,
+      "defaultInstance": "main",
+      "localWorkers": 1,
+      "unmatchedSeconds": 120,
+      "lingerSeconds": 5,
+      "leaseSeconds": 30,
+      "maximumAttempts": 3,
+      "defaultActionSeconds": 3600,
+      "maximumQueued": 100000,
+      "maximumMessageBytes": 33554432,
+      "maximumBatchBytes": 4194304
+    },
+    "worker": {
+      "concurrency": 0,
+      "heartbeatSeconds": 5,
+      "pollSeconds": 20,
+      "directory": ".🧬semio/🦑️repo/⚡️cache/remote-execution",
+      "materialize": "clone",
+      "maximumBlobBytes": 268435456,
+      "sandbox": "auto",
+      "inlineOutputBytes": 4096
+    }
+  }
+}

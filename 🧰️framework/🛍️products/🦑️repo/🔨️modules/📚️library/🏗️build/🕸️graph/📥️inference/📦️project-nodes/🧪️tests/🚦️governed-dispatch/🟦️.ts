@@ -24,3 +24,17 @@ test("every project inference starts through the memory governor, bounded by the
  const ends=all.filter(call=>call.callee==="phases?.end"&&call.text.includes('"inference"'));
  expect(ends.length).toBe(1);expect(ends[0]!.text).toContain("governor.stats()");
 });
+
+test("the running projects are named in the inference phase while they run, removed when they end and the tick stops with the loops",()=>{
+ const all=calls(),named=all.filter(call=>call.callee==="phases?.running"&&call.text.includes('"inference"'));
+ expect(named.length).toBe(1);expect(named[0]!.text).toContain("active");
+ const inferences=all.filter(call=>call.callee==="inferProject");
+ for(const inference of inferences)expect(inference.ancestors.some(node=>ts.isTryStatement(node)&&node.finallyBlock!==undefined&&node.finallyBlock.getText(tree).includes("active.delete(job.name)")),inference.text).toBe(true);
+ expect(all.some(call=>call.callee==="clearInterval"&&call.text==="clearInterval(ticker)"&&call.ancestors.some(node=>ts.isTryStatement(node)&&node.finallyBlock?.getText(tree).includes("clearInterval(ticker)")===true))).toBe(true);
+});
+
+test("the memory governor of a call is disposed in the finally of the same call, so its abort listener never keeps the environment of a finished chunk alive",()=>{
+ const found=calls().filter(call=>call.callee==="governor?.dispose");
+ expect(found.length).toBe(1);
+ expect(found[0]!.ancestors.some(node=>ts.isTryStatement(node)&&node.finallyBlock!==undefined&&node.finallyBlock.getText(tree).includes("governor?.dispose()"))).toBe(true);
+});

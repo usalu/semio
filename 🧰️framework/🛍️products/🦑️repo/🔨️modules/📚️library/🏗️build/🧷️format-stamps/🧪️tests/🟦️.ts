@@ -33,7 +33,7 @@ test("the declared table is closed under its schema and the fixture under its ow
  expect(new Set(ids).size).toBe(ids.length);
  expect(new Set(protocol.resources.map(row=>row.prefix)).size).toBe(protocol.resources.length);
  for(const row of protocol.resources)for(const id of row.stamps)expect(ids,row.prefix+" binds "+id).toContain(id);
- expect(protocol.exitCode).toBe(75);expect(protocol.maximumReexecutions).toBe(3);
+ expect(protocol.exitCode).toBe(75);expect(protocol.maximumReexecutions).toBe(6);
  expect(new Ajv({strict:true}).validate(fixtureSchema,fixture),"fixture").toBe(true);
 });
 
@@ -42,7 +42,7 @@ test("every message exists in EN and DE with the same placeholders and a differe
  expect(Object.keys(protocol.texts.en).sort()).toEqual(Object.keys(protocol.texts.de).sort());
  for(const key of Object.keys(protocol.texts.en)){expect(placeholders(protocol.texts.en[key]!),key).toBe(placeholders(protocol.texts.de[key]!));expect(protocol.texts.en[key]).not.toBe(protocol.texts.de[key]);}
  expect(protocol.languages).toEqual(["en","de"]);
- expect(formatStampLanguagesV1({SEMIO_LANGUAGE:"de"})).toEqual(["de"]);expect(formatStampLanguagesV1({LANG:"en_US.UTF-8"})).toEqual(["en"]);expect(formatStampLanguagesV1({LANG:"C"})).toEqual(["en","de"]);expect(formatStampLanguagesV1({SEMIO_LANGUAGE:"fr",LANG:"de_CH.UTF-8"})).toEqual(["de"]);
+ expect(formatStampLanguagesV1({SEMIO_LANGUAGE:"de"})).toEqual(["de"]);expect(formatStampLanguagesV1({LANG:"en_US.UTF-8"})).toEqual(["en"]);expect(formatStampLanguagesV1({LANG:"C"})).toEqual(["en","de"]);expect(formatStampLanguagesV1({SEMIO_LANGUAGE:"fr",LANG:"de_CH.UTF-8"}),"an unoffered explicit choice chooses nothing").toEqual(["en","de"]);
  expect(()=>formatStampTextV1("fr","moved",{})).toThrow();
  expect(()=>formatStampTextV1("en","moved",{id:"x"})).toThrow("placeholder");
 });
@@ -108,9 +108,9 @@ const opening=text("⚡️caching","💾️storage","🔒️enforcement","📦�
  expect(format).toContain('declareFormatStampV1("cache.graph-image",schema)');expect(format).toContain('requireCurrentFormatStampsV1(["cache.graph-image"],"graph cache image","refuse")');
  expect(text("🏗️build","⌨️command","📥️entry","🟦️.ts")).toContain("catch(error){exitIfStaleImplementationV1(error);throw error;}");
  const script=text("🏗️build","📜️script.ts");
- expect(script).toContain("runWithStaleReexecV1(()=>runBuildCliV1(root,argv,environment)");expect(script).toContain("outermost:environment[SCRIPT_PROCESS_INVOCATION_ENV]===undefined");expect(script).toContain("if(isMainModuleV1(import.meta.url)){");expect(script).toContain("runBuildMainV1(findWorkspaceRoot(import.meta.dirname)");
+ expect(text("🏗️build","🚪️door","🔄️restart","🟦️.ts")).toContain("outermost=environment[invocationEnvironmentV1]===undefined");expect(script).toContain("if(isMainModuleV1(import.meta.url)){");expect(script).toContain("runBuildMainV1(findWorkspaceRoot(import.meta.dirname)");
  expect(text("🏗️build","🕸️graph","📥️inference","🔖️stamps","🧬️schema","🔣️.json")).toContain('"🏗️build/🧷️format-stamps/"');
-  const door=text("🏗️build","🚪️door","📜️script.ts");expect(door).toContain("runBuildCliWithRestartV1(root,argv)");expect(door).not.toContain("runBuildCliV1(");expect(script).toContain("useProcessWideImplementationPinV1()");expect(script).toContain("export async function runBuildCliWithRestartV1(");
+  const door=text("🏗️build","🚪️door","📜️script.ts"),restart=text("🏗️build","🚪️door","🔄️restart","🟦️.ts");expect(door).toContain("runBuildWithRestartV1(async()=>{const{runBuildCliV1}=await import(\"../📜️script.ts\");");expect(restart).toContain("useProcessWideImplementationPinV1()");expect(restart).toContain("runWithStaleReexecV1(run,{environment,outermost,yielded:");expect(script).toContain("runBuildWithRestartV1(()=>runBuildCliV1(root,argv,environment),argv,environment)");expect(script).toContain("export async function runBuildCliWithRestartV1(");
 
 });
 
@@ -196,9 +196,9 @@ test("the outermost command re-executes once with the current implementation; ne
  expect(await runWithStaleReexecV1(async()=>{},{...options,outermost:true})).toEqual({status:"completed"});
  expect(await runWithStaleReexecV1(async()=>{throw stale();},{...options,outermost:true})).toEqual({status:"reexecuted",code:0});
  expect(calls.length).toBe(1);expect(calls[0]!.args).toEqual(["/repo/script.ts","repo","show","targets"]);expect(calls[0]!.environment.SEMIO_STALE_REEXEC).toBe("1");
- expect(written.join("")).toContain("Restarting with the current implementation (1 of 3).");
+ expect(written.join("")).toContain("Restarting with the current implementation (1 of "+protocol.maximumReexecutions+").");
  expect(await runWithStaleReexecV1(async()=>{throw exitFailure();},{...options,outermost:true})).toEqual({status:"reexecuted",code:0});expect(calls.length).toBe(2);
- expect(await runWithStaleReexecV1(async()=>{throw stale();},{...options,environment:{SEMIO_LANGUAGE:"de",SEMIO_STALE_REEXEC:"3"},outermost:true})).toEqual({status:"exhausted",code:75});
+ expect(await runWithStaleReexecV1(async()=>{throw stale();},{...options,environment:{SEMIO_LANGUAGE:"de",SEMIO_STALE_REEXEC:String(protocol.maximumReexecutions)},outermost:true})).toEqual({status:"exhausted",code:75});
  expect(calls.length).toBe(2);expect(written.join("")).toContain("Die Stempel wechselten nach dem Neustart erneut");
  expect(await runWithStaleReexecV1(async()=>{throw stale();},{...options,outermost:false})).toEqual({status:"yielded",code:75});expect(calls.length).toBe(2);
  await expect(runWithStaleReexecV1(async()=>{throw new Error("ordinary");},{...options,outermost:true})).rejects.toThrow("ordinary");expect(calls.length).toBe(2);
@@ -227,7 +227,7 @@ catch(error){exitIfStaleImplementationV1(error);throw error;}
  const outcome=await runWithStaleReexecV1(runChild,{environment:{...process.env,SEMIO_LANGUAGE:"en"},outermost:true,argv:[process.execPath,child,base,directory,output],execPath:process.execPath,execArgv:[],write:text=>{written.push(text);}});
  expect(outcome).toEqual({status:"reexecuted",code:0});
  expect(captured[0]).toContain("moved from A to B");
- expect(written.join("")).toContain("(1 of 3)");
+ expect(written.join("")).toContain("(1 of "+protocol.maximumReexecutions+")");
  expect(readFileSync(output,"utf8")).toBe("B\n");
 },60000);
 
@@ -237,7 +237,7 @@ test("a reader whose own source changed on disk after it loaded it is a stale im
  const calls:{environment:Record<string,string|undefined>}[]=[],written:string[]=[];
  const options={environment:{SEMIO_LANGUAGE:"en"},argv:["bun","/repo/script.ts","repo","run","a:b"],execPath:"bun",execArgv:[],launch:async(row:{environment:Record<string,string|undefined>})=>{calls.push(row);return 0;},write:(text:string)=>{written.push(text);},outermost:true};
  expect(await runWithStaleReexecV1(async()=>{throw error;},options)).toEqual({status:"reexecuted",code:0});
- expect(calls[0]!.environment.SEMIO_STALE_REEXEC).toBe("1");expect(written.join("")).toContain("Stale loaded Source revision reader; restart required");expect(written.join("")).toContain("(1 of 3)");
+ expect(calls[0]!.environment.SEMIO_STALE_REEXEC).toBe("1");expect(written.join("")).toContain("Stale loaded Source revision reader; restart required");expect(written.join("")).toContain("(1 of "+protocol.maximumReexecutions+")");
  expect(await runWithStaleReexecV1(async()=>{throw error;},{...options,environment:{SEMIO_LANGUAGE:"en",SEMIO_STALE_REEXEC:String(protocol.maximumReexecutions)}})).toEqual({status:"exhausted",code:75});
  expect(calls.length).toBe(1);
 });

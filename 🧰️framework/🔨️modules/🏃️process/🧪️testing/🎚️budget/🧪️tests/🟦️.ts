@@ -49,7 +49,7 @@ test("suites that start processes declare a level whose budget covers a contende
     expect(declared.get(row.suite)!, `${row.suite}: ${row.reason}`).toBeGreaterThanOrEqual(fixture.levels[row.minimum as keyof typeof fixture.levels]);
   }
   const python = testPythonV1();
-  if (python === null) return;
+  if(!python)throw Error("Independent Python oracle required");
   const oracle = "import json,sys\ntable=json.load(open(sys.argv[2],encoding='utf8'));budget={row['id']:row['budgetMs'] for row in table['suites']};print(json.dumps({name:budget[name] for name in json.loads(sys.argv[1])}))";
   const answer = Bun.spawnSync([python, "-c", oracle, JSON.stringify(fixture.processSuites.map(row => row.suite)), resolve(import.meta.dir, "../../🗂️suites/🔣️.json")], { stdout: "pipe", stderr: "pipe" });
   expect(answer.exitCode, answer.stderr.toString()).toBe(0);

@@ -1,0 +1,10 @@
+/** 🪪️ Child fixture of the declared-birth law: declares the envelope `SEMIO_DECLARED_CASE` names and reports what its one callback receives. */
+import{test}from"bun:test";
+import{existsSync}from"node:fs";
+import{declareBuildTestEnvelopeV1,withBuildTestInvocationV1}from"../../🟦️.ts";
+const kind=process.env.SEMIO_DECLARED_CASE,writer={owner:"test:declared-writer",maximumElapsedMilliseconds:60000,capabilities:{artifacts:true as const,command:"writer"}};
+if(kind==="artifacts")declareBuildTestEnvelopeV1({owner:"test:declared-artifacts",maximumElapsedMilliseconds:60000,capabilities:{artifacts:true}});
+else if(kind!=="undeclared")declareBuildTestEnvelopeV1(writer);
+if(kind==="repeated")declareBuildTestEnvelopeV1({owner:writer.owner,maximumElapsedMilliseconds:writer.maximumElapsedMilliseconds,capabilities:{command:"writer",artifacts:true}});
+if(kind==="different")declareBuildTestEnvelopeV1({...writer,capabilities:{artifacts:true}});
+test("declared birth "+kind,()=>withBuildTestInvocationV1(async original=>{const facts=original.capabilities as{artifacts?:string;command?:string};console.log("[TRACE] Declared birth "+JSON.stringify({artifacts:facts.artifacts??null,command:facts.command??null,published:process.env.SEMIO_TEST_ARTIFACT_DIR??null,exists:facts.artifacts!==undefined&&existsSync(facts.artifacts)}));}));

@@ -1,0 +1,31 @@
+{
+ "label": "g28p-revert",
+ "target": "@semio-tech/print-rs:test",
+ "started": "08:32:21",
+ "wall_s": 95.5,
+ "peak_tree_mb": 5452,
+ "peak_processes": 6,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "2"
+  ],
+  "inferring": [
+   "2"
+  ],
+  "published": [
+   "613",
+   "2",
+   "35"
+  ],
+  "processes": [
+   "3",
+   "2 disk cache hit, 1 internal"
+  ],
+  "actions": [
+   "3"
+  ]
+ }
+}

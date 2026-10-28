@@ -1,0 +1,20 @@
+{
+ "label": "g31q-edit",
+ "target": "@semio-tech/print-rs:test",
+ "started": "09:36:48",
+ "wall_s": 257.3,
+ "peak_tree_mb": 3805,
+ "peak_processes": 6,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "processes": [
+   "3",
+   "1 internal, 2 local"
+  ],
+  "actions": [
+   "3"
+  ]
+ }
+}

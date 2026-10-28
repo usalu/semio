@@ -1,0 +1,54 @@
+"""🎞️ harness3: replays a recorded product log as if it were a build, for dry runs of the harnesses without any official run.
+
+`fakebuild.py <log> [--delay S] [--exit N] [--exit-75-once STATE] [--language de]`
+Lines come out one by one with `--delay` seconds between them (default 0.01); `--exit-75-once STATE` exits 75 on the first call
+(creating the STATE file) and 0 afterwards, the way a yielded build is retried; `--language de` swaps the English templates of the
+log for their German twins so the bilingual parsers can be exercised.
+"""
+import argparse, os, re, sys, time
+
+BEHIND = r"(?:; behind (.*))?$"
+HINTER = r"; hinter \\5"
+SWAPS = [
+    (r"^\[capacity\] (\S+): sized at (\d+)% of the default from (\d+) earlier run\(s\) of its class", r"[capacity] \1: auf \2% des Standardwerts bemessen, aus \3 früheren Läufen seiner Klasse"),
+    (r"^\[capacity\] admitted (\S+): (\d+) job\(s\), (\d+) MB reserved \((\d+) MB available, (\d+) MB floor\)", r"[capacity] zugelassen \1: \2 Job(s), \3 MB reserviert (\4 MB verfügbar, Untergrenze \5 MB)"),
+    (r"^graph: (\d+) projects served from the memo of (\d+) s ago; the journal vouches for (\d+) facts and (\d+) facts outside its sight held, no planner process was started", r"graph: \1 Projekte aus dem Memo von vor \2 s geliefert; das Journal bürgt für \3 Fakten, \4 Fakten außerhalb seiner Sicht gelten noch, es wurde kein Planer-Prozess gestartet"),
+    (r"^graph: the memo cannot serve this request \((.*)\); the graph is planned", r"graph: das Memo kann diese Anfrage nicht bedienen (\1); der Graph wird geplant"),
+    (r"^graph: (\d+) projects planned by a child process that has exited", r"Graph: \1 Projekte von einem beendeten Kindprozess geplant"),
+    (r"^graph: a peer builds the graph; this run waits as its front door alone", r"graph: ein Peer baut den Graphen; dieser Lauf wartet nur als Vordertür"),
+    (r"^\[bazel\] plan reused: (\d+) observations of the world hold since (\d+) s, the planner was not started \(([\d.]+) s\)", r"[bazel] Plan wiederverwendet: \1 Beobachtungen der Welt gelten seit \2 s, der Planer wurde nicht gestartet (\3 s)"),
+    (r"^\[bazel\] planning again: (.*)", r"[bazel] Plan wird neu erstellt: \1"),
+    (r"^\[capacity\] waiting (\d+)s for (\S+): (.*?) \(need (\d+) MB; (-?\d+) MB spare above the (\d+) MB floor, load ([\d.]+); (\d+) running, (\d+) ahead\)(?:; behind (.*))?$", r"[capacity] wartet seit \1 s auf \2: \3 (benötigt \4 MB; \5 MB frei oberhalb der Untergrenze von \6 MB, Last \7; \8 laufen, \9 davor); hinter \10"),
+    (r"^\[capacity\] (\S+): forecast quiet because the earlier run of its class finished (\d+)s ago and left its results cached: (\d+) MB reserved now, the full (\d+) MB only if work has to run", r"[capacity] \1: ruhig prognostiziert, weil der frühere Lauf seiner Klasse vor \2 s endete und seine Ergebnisse zwischengespeichert hinterließ: jetzt \3 MB reserviert, die vollen \4 MB nur, wenn Arbeit laufen muss"),
+    (r"^\[capacity\] (\S+): forecast quiet because the last run of its class executed nothing \((\d+) quiet run\(s\) behind its size, (\d+)% of the recent runs\): (\d+) MB reserved now, the full (\d+) MB only if work has to run", r"[capacity] \1: ruhig prognostiziert, weil der letzte Lauf seiner Klasse nichts ausführte (\2 ruhige Läufe hinter ihrer Größe, \3% der jüngsten Läufe): jetzt \4 MB reserviert, die vollen \5 MB nur, wenn Arbeit laufen muss"),
+    (r"^\[capacity\] (\S+): reservation grown from (\d+) MB to (\d+) MB of the (\d+) MB it asked for, after (\d+)s: nothing else of ours is running \(other runs of ours only wait to grow\) and only that much memory is free \((\d+) MB available, (\d+) MB floor\); the run goes on with (\d+) of (\d+) job\(s\)", r"[capacity] \1: Reservierung nach \5 s von \2 MB auf \3 MB der angefragten \4 MB vergrößert: nichts anderes von uns läuft (andere Läufe von uns warten nur auf ihr Wachstum) und mehr Speicher ist nicht frei (\6 MB verfügbar, Untergrenze \7 MB); der Lauf geht mit \8 von \9 Job(s) weiter"),
+    (r"^\[capacity\] (\S+): reservation grown from (\d+) MB to (\d+) MB after (\d+)s \((\d+) job\(s\), (\d+) MB available, (\d+) MB floor\)", r"[capacity] \1: Reservierung nach \4 s von \2 MB auf \3 MB vergrößert (\5 Job(s), \6 MB verfügbar, Untergrenze \7 MB)"),
+    (r"^\[capacity\] (\S+): work has to run, waiting (\d+)s to grow the reservation from (\d+) MB to (\d+) MB: (.*?) \((-?\d+) MB spare above the (\d+) MB floor; (\d+) running, (\d+) ahead\)(?:; behind (.*))?$", r"[capacity] \1: es muss Arbeit laufen, wartet seit \2 s darauf, die Reservierung von \3 MB auf \4 MB zu vergrößern: \5 (\6 MB frei oberhalb der Untergrenze von \7 MB; \8 laufen, \9 davor); hinter \10"),
+    (r"^graph: ", "Graph: "),
+]
+
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("log")
+    p.add_argument("--delay", type=float, default=0.01)
+    p.add_argument("--exit", type=int, default=0)
+    p.add_argument("--exit-75-once", default=None)
+    p.add_argument("--language", default=os.environ.get("SEMIO_LANGUAGE", "en"))
+    args = p.parse_args()
+    code = args.exit
+    if args.exit_75_once and not os.path.exists(args.exit_75_once):
+        open(args.exit_75_once, "w").close()
+        code = 75
+    rules = [(re.compile(a), b) for a, b in SWAPS] if args.language == "de" else []
+    with open(args.log, encoding="utf8", errors="replace") as handle:
+        for line in handle:
+            line = line.rstrip("\n")
+            for rx, to in rules:
+                line = rx.sub(to, line)
+            print(line, flush=True)
+            time.sleep(args.delay)
+    sys.exit(code)
+
+
+main()

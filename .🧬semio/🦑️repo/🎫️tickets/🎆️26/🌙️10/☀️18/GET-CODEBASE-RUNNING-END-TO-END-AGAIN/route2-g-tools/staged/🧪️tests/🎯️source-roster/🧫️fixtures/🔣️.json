@@ -1,0 +1,383 @@
+{
+  "version": 1,
+  "sourceInputObservation": "freshness",
+  "cases": [
+    {
+      "index": 0,
+      "target": "workspace:test-workspace-build",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧪️tests/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏗️scheduling/🧪️tests/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🔣️.json"
+      ]
+    },
+    {
+      "index": 1,
+      "target": "workspace:verify-zero-touch",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🧾️taxonomy-lanes/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🛗️zero-touch-closure/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🧾️taxonomy-lanes/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🔬️interactivity-lanes/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts"
+      ]
+    },
+    {
+      "index": 2,
+      "target": "@semio-tech/repo-lib:test-build-caller-birth",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🧷️fixture-and-nx-routes/🟦️.ts"
+      ]
+    },
+    {
+      "index": 3,
+      "target": "@semio-tech/repo-lib:test-cargo-workspace-ownership",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🪆️ownership/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🧷️fixture-and-nx-routes/🟦️.ts"
+      ]
+    },
+    {
+      "index": 4,
+      "target": "@semio-tech/repo-lib:test-process-budgets",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⏱️process-budgets/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🏗️build-and-direction-routes/🟦️.ts"
+      ]
+    },
+    {
+      "index": 5,
+      "target": "@semio-tech/value-rs:test-borrowed-observations-source",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/⚖️observation/🧪️tests/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts"
+      ]
+    },
+    {
+      "index": 6,
+      "target": "@semio-tech/ui-rs:test-crate-boundaries",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️crate-boundaries/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts"
+      ]
+    },
+    {
+      "index": 7,
+      "target": "@semio-tech/ui-rs:test-text-editor-source",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔤️Textarea/🧪️tests/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts"
+      ]
+    },
+    {
+      "index": 8,
+      "target": "@semio-tech/repo-dashboard-rs:test-source-freshness",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🟦️.ts"
+      ],
+      "dataEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📂️sources/🧪️tests/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📂️sources/🧪️tests/🧬️schema/🔣️.json"
+      ],
+      "dispatchOwners": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🛤️task-routes/🟦️.ts"
+      ]
+    },
+    {
+      "index": 9,
+      "target": "repo-mcp:test-install",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧪️tests/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🐹️go-layout/🧪️tests/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts"
+      ]
+    },
+    {
+      "index": 10,
+      "target": "@semio-tech/repo-cli-go:test-entrypoint-source",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧪️tests/🚪️entrypoint/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📜️script.ts"
+      ]
+    },
+    {
+      "index": 11,
+      "target": "@semio-tech/framework-os-mcp:test-native-staging",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🏗️staging/🧪️tests/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/📜️script.ts"
+      ]
+    },
+    {
+      "index": 12,
+      "target": "@semio-tech/framework-source-workspace:test-source",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/📝️workspace/🧪️tests/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📜️script.ts"
+      ]
+    },
+    {
+      "index": 13,
+      "target": "@semio-tech/value-rs:test-owned-projection-source",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts"
+      ],
+      "dataEntries": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📽️projection/🧬️schema/📦️owned.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/🧫️fixtures/📦️owned/🔣️.json"
+      ],
+      "dispatchOwners": [
+        "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts"
+      ]
+    },
+    {
+      "index": 14,
+      "target": "@semio-tech/value-rs:test-immutable-projection",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts"
+      ],
+      "dataEntries": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📽️projection/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/🧫️fixtures/🔣️.json"
+      ],
+      "dispatchOwners": [
+        "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts"
+      ]
+    },
+    {
+      "index": 15,
+      "target": "@semio-tech/repo-dashboard-rs:test-dispatch",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🛤️task-routes/🟦️.ts"
+      ]
+    },
+    {
+      "index": 16,
+      "target": "@semio-tech/repo-lib:test-dashboard-control",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎛️dashboard-control/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/⚖️ownership-law-routes/🟦️.ts"
+      ]
+    },
+    {
+      "index": 17,
+      "target": "repo:test-workspace-ownership",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔬️script-commands/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🔣️.json"
+      ]
+    },
+    {
+      "index": 18,
+      "target": "@semio-tech/framework-process:test-runtime-environment",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🎛️environment/🧪️tests/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json"
+      ]
+    },
+    {
+      "index": 19,
+      "target": "@semio-tech/framework-process:test-native-image-observation",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤫️silence/🧪️tests/🟦️.ts"
+      ],
+      "dataEntries": [
+        "{projectRoot}/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts",
+        "{projectRoot}/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts",
+        "{projectRoot}/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🟦️.ts"
+      ],
+      "dispatchOwners": [
+        "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json"
+      ]
+    },
+    {
+      "index": 20,
+      "target": "@semio-tech/framework-process:test-cargo-source-admission",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🧪️tests/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json"
+      ]
+    },
+    {
+      "index": 21,
+      "target": "@semio-tech/framework-process:test-process-progress",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json"
+      ]
+    },
+    {
+      "index": 22,
+      "target": "@semio-tech/framework-process:test-execution-budget",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/⏱️budget/🧪️tests/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json"
+      ]
+    },
+    {
+      "index": 23,
+      "target": "@semio-tech/framework-process:test-native-cache-descriptors",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json"
+      ]
+    },
+    {
+      "index": 24,
+      "target": "@semio-tech/framework-process:test-descriptor-lifetime",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧪️tests/📂️descriptors/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json"
+      ]
+    },
+    {
+      "index": 25,
+      "target": "repo:test-cargo-retirement",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/🧪️tests/🟦️.ts"
+      ],
+      "dataEntries": [],
+      "dispatchOwners": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔬️script-commands/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🔣️.json"
+      ]
+    }
+  ],
+  "supplemental": [
+    {
+      "target": "repo:test-rustup-protocol",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/🟦️.ts"
+      ],
+      "compileEntries": [],
+      "dispatchOwner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🔣️.json"
+    },
+    {
+      "target": "repo:test-authorizers",
+      "typedCompiler": true,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts"
+      ],
+      "compileEntries": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📤️receipt/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts"
+      ],
+      "dispatchOwner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🔣️.json"
+    },
+    {
+      "target": "@semio-tech/value-rs:test-close-demand-source",
+      "typedCompiler": false,
+      "runtimeEntries": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🟦️.ts"
+      ],
+      "compileEntries": [],
+      "dispatchOwner": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts"
+    }
+  ]
+}

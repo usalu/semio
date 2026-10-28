@@ -1,3 +1,4 @@
+import {noticeLanguagesV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {stat} from "node:fs/promises";
 import {isAbsolute,join,resolve} from "node:path";
 import {readRemoteCachePolicyV1,readRemoteCacheTokenV1,remoteCacheBaseUrlV1,remoteCacheEffectiveUploadV1,requireRemoteCacheShapeV1,resolveRemoteCacheContractV1,type RemoteCacheContractV1,type RemoteCacheRenderingV1} from "../🟦️.ts";
@@ -39,14 +40,13 @@ export function remoteCacheTextV1(language:RemoteCacheLanguageV1,key:string,vari
  return message[language].replace(/\{([a-z]+)\}/gu,(_,name:string)=>{const value=variables[name];if(value===undefined)throw Error(`Remote cache message variable missing: ${name}`);return String(value);});
 }
 
-/** ☁️ Picks the output languages: the explicit request, else the one the environment names (`SEMIO_LANGUAGE`, then the locale), else all of them, because no language is the default. */
+/** ☁️ Picks the output languages: the explicit request, else the one the language protocol chooses, else all of them, because no language is the default. */
 export function remoteCacheLanguagesV1(requested:string|undefined,environment:Readonly<Record<string,string|undefined>>):readonly RemoteCacheLanguageV1[]{
  if(requested!==undefined){
   if(!LANGUAGES.includes(requested as RemoteCacheLanguageV1))throw Error(both("error.language",{language:requested}));
   return [requested as RemoteCacheLanguageV1];
  }
- for(const value of[environment.SEMIO_LANGUAGE,environment.LC_ALL,environment.LC_MESSAGES,environment.LANG]){const head=value?.slice(0,2).toLowerCase();if(head&&LANGUAGES.includes(head as RemoteCacheLanguageV1))return [head as RemoteCacheLanguageV1];}
- return LANGUAGES;
+ return noticeLanguagesV1(LANGUAGES,environment);
 }
 
 function both(key:string,variables:Readonly<Record<string,string|number>>={}):string{return LANGUAGES.map(language=>remoteCacheTextV1(language,key,variables)).join("\n");}

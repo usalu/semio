@@ -1,0 +1,12 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Graph process memory budget / Speicherbudget des Graph-Prozesses",
+ "description": "EN: The declared memory budget of one graph process (claims prefetch loop or builder) on the stated host profile, checked on a harness run: resident set and physical footprint at their peak, footprint after release, live growth per chunk. DE: Das erklärte Speicherbudget eines Graph-Prozesses (Vorabberechnung oder Aufbau) auf dem genannten Rechnerprofil, geprüft an einem Messlauf: resident belegte Seiten und physischer Fußabdruck im Höchstwert, Fußabdruck nach der Freigabe, lebendes Wachstum je Block.",
+ "type": "object", "additionalProperties": false, "required": ["version", "profile", "hostMegabytes", "graphProcess", "texts"],
+ "properties": {
+  "version": {"const": 1}, "profile": {"type": "string"}, "hostMegabytes": {"type": "integer", "minimum": 1024},
+  "graphProcess": {"type": "object", "additionalProperties": false, "required": ["peakResidentMegabytes", "peakFootprintMegabytes", "idleFootprintAfterReleaseMegabytes", "retainedLiveMegabytesGrowthPerChunk"], "properties": {"peakResidentMegabytes": {"type": "integer", "minimum": 1}, "peakFootprintMegabytes": {"type": "integer", "minimum": 1}, "idleFootprintAfterReleaseMegabytes": {"type": "integer", "minimum": 1}, "retainedLiveMegabytesGrowthPerChunk": {"type": "integer", "minimum": 0}}},
+  "texts": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"$ref": "#/definitions/Texts"}, "de": {"$ref": "#/definitions/Texts"}}}
+ },
+ "definitions": {"Texts": {"type": "object", "additionalProperties": false, "required": ["peakResident", "peakFootprint", "idle", "growth", "pass", "fail"], "properties": {"peakResident": {"type": "string"}, "peakFootprint": {"type": "string"}, "idle": {"type": "string"}, "growth": {"type": "string"}, "pass": {"type": "string"}, "fail": {"type": "string"}}}}
+}

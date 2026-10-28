@@ -1,0 +1,31 @@
+{
+ "label": "g42-print1",
+ "target": "@semio-tech/print-rs:test",
+ "started": "13:54:50",
+ "wall_s": 599.3,
+ "peak_tree_mb": 10336,
+ "peak_processes": 9,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {
+  "refreshing": [
+   "355"
+  ],
+  "inferring": [
+   "351"
+  ],
+  "published": [
+   "654",
+   "356",
+   "283"
+  ],
+  "processes": [
+   "8",
+   "1 action cache hit, 1 disk cache hit, 2 internal, 3 local, 2 worker"
+  ],
+  "actions": [
+   "8"
+  ]
+ }
+}

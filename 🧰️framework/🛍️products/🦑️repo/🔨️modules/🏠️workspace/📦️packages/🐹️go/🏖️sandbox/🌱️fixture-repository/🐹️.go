@@ -29,12 +29,24 @@ type T interface {
 func BindRoot(t T, dir string) {
 	t.Helper()
 	previous, bound := workspace.LookupRootDir()
+	fenceRepositoryRoot(t, dir)
 	workspace.SetRootDir(dir)
 	t.Cleanup(func() {
 		if bound {
 			workspace.SetRootDir(previous)
 		}
 	})
+}
+
+// 🧱️fenceRepositoryRoot makes dir a repository of its own when it has no `.git`, so root discovery and git itself end in dir even where the test directory lies inside a checkout (a bare marker directory would let git answer for the enclosing checkout).
+func fenceRepositoryRoot(t T, dir string) {
+	t.Helper()
+	if _, err := os.Lstat(filepath.Join(dir, ".git")); err == nil {
+		return
+	}
+	if output, err := workspace.ToolCommand("git", "-C", dir, "init", "-q").CombinedOutput(); err != nil {
+		t.Fatalf("git init %s: %v\n%s", dir, err, output)
+	}
 }
 
 // 🌱️NewRepository creates a throwaway git repository with one empty commit, binds it as the workspace root until the test ends and returns its path.

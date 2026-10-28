@@ -3,7 +3,7 @@ use super::{WriterMainWindowConfig, WriterMainWindowConfigDiff};
 #[path = "📷️set-camera/🦀️.rs"]
 mod set_camera;
 pub use set_camera::SetCamera;
-#[path = "⚙️set-editor-settings/🦀️.rs"]
+#[path = "⚙️editor-settings/🦀️.rs"]
 mod set_editor_settings;
 pub use set_editor_settings::SetEditorSettings;
 

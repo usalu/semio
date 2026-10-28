@@ -1,0 +1,22 @@
+{
+  "distributions": [
+    {"id": "debian-12-x64", "platform": "linux", "arch": "x64", "loadable": ["libc.so.6"], "expected": "libc.so.6"},
+    {"id": "ubuntu-24.04-arm64", "platform": "linux", "arch": "arm64", "loadable": ["libc.so.6"], "expected": "libc.so.6"},
+    {"id": "fedora-42-x64", "platform": "linux", "arch": "x64", "loadable": ["libc.so.6"], "expected": "libc.so.6"},
+    {"id": "rhel-9-arm64", "platform": "linux", "arch": "arm64", "loadable": ["libc.so.6"], "expected": "libc.so.6"},
+    {"id": "archlinux-x64", "platform": "linux", "arch": "x64", "loadable": ["libc.so.6"], "expected": "libc.so.6"},
+    {"id": "nixos-x64", "platform": "linux", "arch": "x64", "loadable": ["libc.so.6"], "expected": "libc.so.6"},
+    {"id": "debian-13-riscv64", "platform": "linux", "arch": "riscv64", "loadable": ["libc.so.6"], "expected": "libc.so.6"},
+    {"id": "alpine-3.20-x64", "platform": "linux", "arch": "x64", "loadable": ["libc.musl-x86_64.so.1"], "expected": "libc.musl-x86_64.so.1"},
+    {"id": "alpine-3.20-arm64", "platform": "linux", "arch": "arm64", "loadable": ["libc.musl-aarch64.so.1"], "expected": "libc.musl-aarch64.so.1"},
+    {"id": "alpine-gcompat-x64", "platform": "linux", "arch": "x64", "loadable": ["libc.so.6", "libc.musl-x86_64.so.1"], "expected": "libc.so.6"},
+    {"id": "alpine-musl-name-of-the-wrong-arch", "platform": "linux", "arch": "x64", "loadable": ["libc.musl-aarch64.so.1"], "expected": "missing"},
+    {"id": "linux-without-libc", "platform": "linux", "arch": "x64", "loadable": [], "expected": "missing"},
+    {"id": "linux-ia32", "platform": "linux", "arch": "ia32", "loadable": ["libc.so.6"], "expected": "unsupported-architecture"},
+    {"id": "linux-ppc64", "platform": "linux", "arch": "ppc64", "loadable": ["libc.so.6"], "expected": "unsupported-architecture"},
+    {"id": "macos-27-arm64", "platform": "darwin", "arch": "arm64", "loadable": ["/usr/lib/libSystem.B.dylib"], "expected": "/usr/lib/libSystem.B.dylib"},
+    {"id": "macos-without-system-library", "platform": "darwin", "arch": "x64", "loadable": [], "expected": "missing"},
+    {"id": "freebsd-x64", "platform": "freebsd", "arch": "x64", "loadable": ["libc.so.7"], "expected": "unsupported-platform"},
+    {"id": "windows-x64", "platform": "win32", "arch": "x64", "loadable": [], "expected": "unsupported-platform"}
+  ]
+}

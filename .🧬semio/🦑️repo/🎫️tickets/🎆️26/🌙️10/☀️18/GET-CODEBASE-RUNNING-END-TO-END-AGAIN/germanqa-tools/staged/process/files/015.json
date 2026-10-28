@@ -1,0 +1,638 @@
+{
+ "version": 1,
+ "owner": "repository:test-sandbox",
+ "messages": {
+  "artifactInManagedParent": {
+   "en": "The test artifact directory {path} lies inside the managed native parent {parent}: images mounted there are verified as the parent's own funded children and break every build while attached. Use a directory outside every managed native parent or leave SEMIO_TEST_ARTIFACT_DIR unset.",
+   "de": "Das Test-Artefaktverzeichnis {path} liegt im verwalteten nativen Elternteil {parent}: dort eingehängte Images werden als dessen eigene finanzierte Kinder geprüft und brechen jeden Build, solange sie eingehängt sind. Ein Verzeichnis außerhalb jedes verwalteten nativen Elternteils nutzen oder SEMIO_TEST_ARTIFACT_DIR nicht setzen."
+  }
+ },
+ "environment": {
+  "sandbox": "SEMIO_TEST_SANDBOX",
+  "artifacts": "SEMIO_TEST_ARTIFACT_DIR",
+  "images": "SEMIO_TEST_IMAGE_ROOT",
+  "cache": "SEMIO_TEST_CACHE_ROOT",
+  "guard": "SEMIO_TEST_GUARD",
+  "report": "SEMIO_TEST_GUARD_REPORT",
+  "checkout": "SEMIO_TEST_CHECKOUT_ROOT"
+ },
+ "layout": {
+  "parent": "st",
+  "owner": "owner.json",
+  "directories": [
+   "artifacts",
+   "tmp",
+   "images",
+   "cache"
+  ],
+  "maximumRootLength": 90,
+  "sessionRootCharacters": 6,
+  "idCharacters": 8,
+  "heartbeatMilliseconds": 30000,
+  "staleHeartbeatMilliseconds": 3600000,
+  "graceMilliseconds": 60000,
+  "reclaimIntervalMilliseconds": 300000,
+  "stamp": "reclaim.stamp"
+ },
+ "ports": {
+  "minimum": 49152,
+  "maximum": 65000,
+  "attempts": 64,
+  "directory": "ports"
+ },
+ "guard": {
+  "modes": [
+   "off",
+   "report",
+   "enforce"
+  ],
+  "defaultMode": "off",
+  "writeTargets": {
+   "writeFileSync": [
+    0
+   ],
+   "appendFileSync": [
+    0
+   ],
+   "mkdirSync": [
+    0
+   ],
+   "rmSync": [
+    0
+   ],
+   "rmdirSync": [
+    0
+   ],
+   "unlinkSync": [
+    0
+   ],
+   "renameSync": [
+    0,
+    1
+   ],
+   "copyFileSync": [
+    1
+   ],
+   "cpSync": [
+    1
+   ],
+   "truncateSync": [
+    0
+   ],
+   "symlinkSync": [
+    1
+   ],
+   "linkSync": [
+    1
+   ],
+   "createWriteStream": [
+    0
+   ],
+   "writeFile": [
+    0
+   ],
+   "appendFile": [
+    0
+   ],
+   "mkdir": [
+    0
+   ],
+   "rm": [
+    0
+   ],
+   "rmdir": [
+    0
+   ],
+   "unlink": [
+    0
+   ],
+   "rename": [
+    0,
+    1
+   ],
+   "copyFile": [
+    1
+   ],
+   "cp": [
+    1
+   ],
+   "truncate": [
+    0
+   ],
+   "symlink": [
+    1
+   ],
+   "link": [
+    1
+   ]
+  },
+  "openFunctions": [
+   "openSync",
+   "open"
+  ],
+  "sqliteTargets": {
+   "Database": [
+    0
+   ]
+  },
+  "kernelPrograms": [
+   "hdiutil",
+   "diskutil"
+  ],
+  "killPrograms": [
+   "pkill",
+   "killall"
+  ],
+  "kernelVerbs": [
+   "attach",
+   "create",
+   "convert",
+   "resize",
+   "mount",
+   "detach",
+   "eject",
+   "unmount"
+  ],
+  "protectedCheckoutPrefixes": [
+   ".cache",
+   ".🧬semio",
+   ".git",
+   "node_modules"
+  ],
+  "allowedCheckoutPrefixes": [
+   ".cache/b/o/m/tests"
+  ],
+  "scratchRoots": [
+   "/private/tmp",
+   "/private/var/folders",
+   "/var/tmp",
+   "/tmp"
+  ]
+ },
+ "scan": {
+  "testSegment": "🧪️tests",
+  "skipSegments": [
+   "🧫️fixtures",
+   "node_modules",
+   "dist",
+   "target",
+   "🗑️generated"
+  ],
+  "extensions": {
+   "ts": [
+    "ts",
+    "tsx",
+    "mts",
+    "cts",
+    "js",
+    "mjs",
+    "cjs"
+   ],
+   "go": [
+    "go"
+   ],
+   "rs": [
+    "rs"
+   ],
+   "py": [
+    "py"
+   ],
+   "sh": [
+    "sh",
+    "bash",
+    "zsh"
+   ]
+  },
+  "maximumBytes": 1500000,
+  "suite": {
+   "ts": "from\\s*[\"'](bun:test|vitest|node:test)[\"']|registerBuildTestLawV1|\\b(test|it|describe)\\(",
+   "go": "func Test\\w+\\(|func Main\\(|package adapter",
+   "rs": "#\\[(test|tokio::test)\\]|#\\[cfg\\(test\\)\\]|fn main\\(",
+   "py": "\\bdef test_|import unittest|import pytest",
+   "sh": ".*"
+  },
+  "commentLine": {
+   "ts": "^\\s*(//|/\\*|\\*)",
+   "go": "^\\s*(//|/\\*|\\*)",
+   "rs": "^\\s*(//|/\\*|\\*)",
+   "py": "^\\s*#",
+   "sh": "^\\s*#"
+  }
+ },
+ "rules": [
+  {
+   "id": "checkout-write",
+   "severity": "error",
+   "languages": [
+    "ts"
+   ],
+   "scope": "line",
+   "pattern": "\\b(writeFileSync|appendFileSync|mkdirSync|rmSync|rmdirSync|unlinkSync|renameSync|truncateSync|createWriteStream|writeFile|appendFile|mkdir|rm|rmdir|unlink|rename|truncate|Bun\\.write)\\(\\s*((path\\.)?(join|resolve)\\(\\s*)?(process\\.cwd\\(\\)|import\\.meta\\.(dir|dirname|path|url)\\b|__dirname|__filename)|\\b(cpSync|copyFileSync|cp|copyFile|symlinkSync|symlink|linkSync|link|renameSync|rename)\\(\\s*[^,;\\n]{1,120},\\s*((path\\.)?(join|resolve)\\(\\s*)?(process\\.cwd\\(\\)|import\\.meta\\.(dir|dirname|path|url)\\b|__dirname|__filename)",
+   "message": {
+    "en": "Writes relative to the process directory or the test source directory, i.e. into the real checkout.",
+    "de": "Schreibt relativ zum Prozessverzeichnis oder Testquellverzeichnis, also in den echten Checkout."
+   }
+  },
+  {
+   "id": "checkout-write-named",
+   "severity": "warn",
+   "languages": [
+    "ts"
+   ],
+   "scope": "line",
+   "pattern": "\\b(writeFileSync|appendFileSync|mkdirSync|rmSync|rmdirSync|unlinkSync|renameSync|truncateSync|createWriteStream|writeFile|appendFile|mkdir|rm|rmdir|unlink|rename|truncate|Bun\\.write)\\(\\s*((path\\.)?(join|resolve)\\(\\s*)?\\b(repoRoot|repositoryRoot|REPO_ROOT|workspaceRoot|WORKSPACE_ROOT|checkoutRoot|SEMIO_WORKSPACE_ROOT)\\b|\\b(cpSync|copyFileSync|cp|copyFile|symlinkSync|symlink|linkSync|link|renameSync|rename)\\(\\s*[^,;\\n]{1,120},\\s*((path\\.)?(join|resolve)\\(\\s*)?\\b(repoRoot|repositoryRoot|REPO_ROOT|workspaceRoot|WORKSPACE_ROOT|checkoutRoot|SEMIO_WORKSPACE_ROOT)\\b",
+   "message": {
+    "en": "Writes below a variable named like the repository root; it must be a sandbox clone.",
+    "de": "Schreibt unterhalb einer Variable, die wie die Repository-Wurzel heißt; sie muss ein Sandbox-Klon sein."
+   }
+  },
+  {
+   "id": "cache-write",
+   "severity": "error",
+   "languages": [
+    "ts"
+   ],
+   "scope": "line",
+   "pattern": "\\b(writeFileSync|appendFileSync|mkdirSync|rmSync|rmdirSync|unlinkSync|renameSync|truncateSync|createWriteStream|writeFile|appendFile|mkdir|rm|rmdir|unlink|rename|truncate|Bun\\.write)\\(\\s*((path\\.)?(join|resolve)\\(\\s*)?((^|[^A-Za-z0-9_])\\.cache(/|\\b)|⚡️cache|\\.🧬semio/🦑️repo/⚡️cache)|\\b(cpSync|copyFileSync|cp|copyFile|symlinkSync|symlink|linkSync|link|renameSync|rename)\\(\\s*[^,;\\n]{1,120},\\s*((path\\.)?(join|resolve)\\(\\s*)?((^|[^A-Za-z0-9_])\\.cache(/|\\b)|⚡️cache|\\.🧬semio/🦑️repo/⚡️cache)",
+   "message": {
+    "en": "Mutates the shared repository cache or the native cache partitions.",
+    "de": "Verändert den geteilten Repository-Cache oder die nativen Cache-Partitionen."
+   }
+  },
+  {
+   "id": "unsandboxed-writer",
+   "severity": "warn",
+   "languages": [
+    "ts"
+   ],
+   "scope": "file",
+   "all": [
+    "\\b(writeFileSync|appendFileSync|mkdirSync|rmSync|renameSync|copyFileSync|cpSync|Bun\\.write)\\("
+   ],
+   "none": [
+    "\\b(mkdtemp(Sync)?|tmpdir\\(\\)|createTestSandbox\\w*|withTestSandbox\\w*|SEMIO_TEST_SANDBOX|SEMIO_TEST_ARTIFACT_DIR|testSandbox\\w*|repoTestArtifactEnvironment|temporaryDirectory|withTemporary\\w*|createTemporary\\w*|scratchRoot\\w*|ScratchRoot\\w*)\\b"
+   ],
+   "message": {
+    "en": "Mutates the file system but never obtains a temporary or sandbox root.",
+    "de": "Verändert das Dateisystem, bezieht aber nie eine temporäre oder Sandbox-Wurzel."
+   }
+  },
+  {
+   "id": "real-cache-path",
+   "severity": "warn",
+   "languages": [
+    "ts",
+    "go",
+    "rs",
+    "py",
+    "sh"
+   ],
+   "scope": "line",
+   "pattern": "(^|[^A-Za-z0-9_])\\.cache/b(\\b|/)|⚡️cache|\\.🧬semio/🦑️repo/⚡️cache",
+   "message": {
+    "en": "Names the shared native cache partitions or the repository cache directly.",
+    "de": "Benennt die geteilten nativen Cache-Partitionen oder das Repository-Cache-Verzeichnis direkt."
+   }
+  },
+  {
+   "id": "ticket-scratch-root",
+   "severity": "error",
+   "languages": [
+    "ts"
+   ],
+   "scope": "line",
+   "pattern": "(process\\.cwd\\(\\)|import\\.meta\\.(dir|dirname)|repoRoot|workspaceRoot)[^;\\n]{0,80}🎫️tickets[^;\\n]{0,160}🗑️generated",
+   "message": {
+    "en": "Uses the generated folder of a real ticket as scratch root; the folder is shared and swept by others.",
+    "de": "Nutzt den generated-Ordner eines echten Tickets als Wegwerf-Wurzel; der Ordner ist geteilt und wird von anderen aufgeräumt."
+   }
+  },
+  {
+   "id": "real-graph-image",
+   "severity": "error",
+   "languages": [
+    "ts"
+   ],
+   "scope": "line",
+   "pattern": "\\b(withRepositoryBuildGraphFactStoreV1|withRepositoryBuildGraphArtifactV1|requireRepositoryBuildGraphWriterV1|withRepositoryBuildInferenceDatasetV1|withBuildGraphStateV1|withBuildGraphOptionalPublicationV1)\\(\\s*(process\\.cwd\\(\\)|workspace\\b)|\\bwithRepositoryCacheStoreV1\\(\\s*(process\\.cwd\\(\\)|workspace)\\s*,\\s*[\"'`](graph|dependencies|products|compiler|cargo|leases)[\"'`]",
+   "message": {
+    "en": "Opens a persistent cache partition (graph, dependencies, ...) of the real checkout; its exclusive lease blocks every graph build of every agent. Use a sandbox workspace.",
+    "de": "Öffnet eine persistente Cache-Partition (Graph, Abhängigkeiten, ...) des echten Checkouts; ihre exklusive Sperre blockiert jeden Graph-Build jedes Agenten. Sandbox-Workspace nutzen."
+   }
+  },
+  {
+   "id": "real-image-lease",
+   "severity": "error",
+   "languages": [
+    "ts"
+   ],
+   "scope": "line",
+   "pattern": "native-fixed-image:[^\\n]{0,80}(process\\.cwd\\(\\)|\\.cache/b/[a-z]\\b)",
+   "message": {
+    "en": "Leases a native image of the real checkout.",
+    "de": "Sperrt ein natives Image des echten Checkouts."
+   }
+  },
+  {
+   "id": "ticket-state-path",
+   "severity": "warn",
+   "languages": [
+    "ts",
+    "go",
+    "rs",
+    "py",
+    "sh"
+   ],
+   "scope": "line",
+   "pattern": "🎫️tickets|🥅️goals",
+   "message": {
+    "en": "Names the real ticket/goal state; tests must use a throwaway repository.",
+    "de": "Benennt den echten Ticket-/Ziel-Zustand; Tests müssen ein Wegwerf-Repository nutzen."
+   }
+  },
+  {
+   "id": "persistent-native-state",
+   "severity": "error",
+   "languages": [
+    "ts"
+   ],
+   "scope": "line",
+   "pattern": "(^|[^\"'`A-Za-z0-9_$])(withNativePersistentStateV1|withNativePersistentStateTaskV1|openPersistentNativeImageV1|withPersistentNative\\w*StorageV1|withRepositoryDevelopmentState\\w*|withDevLocalHubSessionV1)\\s*[(<]",
+   "message": {
+    "en": "Opens a persistent partition or state child that outlives the process.",
+    "de": "Öffnet eine persistente Partition oder ein Zustandskind, das den Prozess überlebt."
+   }
+  },
+  {
+   "id": "native-image-unsandboxed",
+   "severity": "error",
+   "languages": [
+    "ts"
+   ],
+   "scope": "file",
+   "all": [
+    "(^|[^\"'`A-Za-z0-9_$])(withNativeImageStorageV1|openNativeImageStorageV1|publishNativeImagePublicationV1|openNativeDirectoryImageStorageV1|withIssuedNativeImageV1)\\s*[(<]|\\b(spawnSync|execFileSync|spawn|execFile|runCmd|captureOwnedCommandV1)\\(\\s*[\"']hdiutil[\"']"
+   ],
+   "none": [
+    "\\b(createTestSandbox\\w*|withTestSandbox\\w*|testSandbox\\w*|testScratchRootV1|SEMIO_TEST_SANDBOX|SEMIO_TEST_ARTIFACT_DIR|SEMIO_TEST_IMAGE_ROOT|repoTestArtifactEnvironment|repositoryTestArtifact\\w*|withRepositoryTestArtifacts\\w*)\\b"
+   ],
+   "message": {
+    "en": "Creates or attaches disk images without any sandbox root, so a crash leaks a mount.",
+    "de": "Erzeugt oder hängt Images ein ohne Sandbox-Wurzel, ein Absturz hinterlässt einen Mount."
+   }
+  },
+  {
+   "id": "fixed-port-bind",
+   "severity": "error",
+   "languages": [
+    "ts",
+    "go",
+    "rs",
+    "py",
+    "sh"
+   ],
+   "scope": "line",
+   "pattern": "\\b(listen|serve|Listen|ListenAndServe|ListenTCP)\\(\\s*(\\{[^}\\n]{0,120}\\bport\\s*:\\s*)?[1-9][0-9]{3,4}\\b|\\b(TcpListener|UdpSocket|UnixListener)::bind\\(\\s*\"[0-9.:a-zA-Z\\[\\]]*:[1-9][0-9]{3,4}\"|\\bnet\\.Listen\\(\"tcp[46]?\",\\s*\"[0-9.]*:[1-9][0-9]{3,4}\"|--port[ =]+[1-9][0-9]{3,4}\\b|\\bPORT=[1-9][0-9]{3,4}\\b",
+   "message": {
+    "en": "Binds a fixed TCP port; two concurrent runs collide.",
+    "de": "Bindet einen festen TCP-Port; zwei gleichzeitige Läufe kollidieren."
+   }
+  },
+  {
+   "id": "fixed-port-config",
+   "severity": "warn",
+   "languages": [
+    "ts",
+    "py",
+    "sh"
+   ],
+   "scope": "line",
+   "pattern": "\\bport\\s*(:|=)\\s*[1-9][0-9]{3,4}\\b",
+   "flags": "i",
+   "also": [
+    "(serve|listen|server|host|vite|http|websocket|socket)"
+   ],
+   "exempt": [
+    "(mock|stub|refus|reject)"
+   ],
+   "message": {
+    "en": "Configures a fixed TCP port for a server.",
+    "de": "Konfiguriert einen festen TCP-Port für einen Server."
+   }
+  },
+  {
+   "id": "fixed-port-url",
+   "severity": "warn",
+   "languages": [
+    "ts",
+    "go",
+    "rs",
+    "py",
+    "sh"
+   ],
+   "scope": "line",
+   "pattern": "(localhost|127\\.0\\.0\\.1|\\[::1\\]|0\\.0\\.0\\.0):[1-9][0-9]{3,4}\\b",
+   "message": {
+    "en": "Names a fixed local TCP port in an address.",
+    "de": "Nennt einen festen lokalen TCP-Port in einer Adresse."
+   }
+  },
+  {
+   "id": "fixed-tmp-dir",
+   "severity": "error",
+   "languages": [
+    "ts",
+    "go",
+    "rs",
+    "py",
+    "sh"
+   ],
+   "scope": "line",
+   "pattern": "\\b(join|resolve)\\(\\s*(os\\.)?tmpdir\\(\\)\\s*,\\s*[\"'`][^\"'`$\\n]+[\"'`]\\s*\\)|temp_dir\\(\\)\\s*\\.join\\(\"[^\"{]*\"\\)|filepath\\.Join\\(os\\.TempDir\\(\\),\\s*\"[^\"]+\"\\)|[\"'`](/tmp|/private/tmp|/var/tmp)/[A-Za-z0-9._-]+[\"'`]\\s*[,)]\\s*(\\{[^}\\n]*recursive|[^;\\n]{0,40}(mkdir|writeFile|rmSync|rm\\())",
+   "exempt": [
+    "mkdtemp",
+    "MkdirTemp",
+    "tempfile",
+    "\\bexpect\\("
+   ],
+   "message": {
+    "en": "Uses a constant name below the shared temp directory; two concurrent runs collide.",
+    "de": "Nutzt einen konstanten Namen im gemeinsamen Temp-Verzeichnis; zwei gleichzeitige Läufe kollidieren."
+   }
+  },
+  {
+   "id": "fixed-tmp-literal",
+   "severity": "warn",
+   "languages": [
+    "ts",
+    "go",
+    "rs",
+    "py",
+    "sh"
+   ],
+   "scope": "line",
+   "pattern": "[\"'`](/tmp|/private/tmp|/var/tmp)/[A-Za-z0-9._{$-]",
+   "exempt": [
+    "mkdtemp",
+    "MkdirTemp",
+    "tempfile"
+   ],
+   "message": {
+    "en": "Names a literal path below the shared temp directory.",
+    "de": "Benennt einen literalen Pfad unterhalb des gemeinsamen Temp-Verzeichnisses."
+   }
+  },
+  {
+   "id": "port-variable-bind",
+   "severity": "warn",
+   "languages": [
+    "ts"
+   ],
+   "scope": "line",
+   "pattern": "\\.listen\\(\\s*(port|Number\\([^)]*\\.port\\))\\s*,|\\bBun\\.serve\\(\\{[^}\\n]{0,80}\\bport\\s*[,}]",
+   "message": {
+    "en": "Rebinds a port that was probed earlier; reserve it through the sandbox port lease instead.",
+    "de": "Bindet einen zuvor sondierten Port erneut; über die Sandbox-Portreservierung reservieren."
+   }
+  },
+  {
+   "id": "real-home",
+   "severity": "warn",
+   "languages": [
+    "ts",
+    "go",
+    "rs",
+    "py",
+    "sh"
+   ],
+   "scope": "line",
+   "pattern": "\\bhomedir\\(\\)|process\\.env\\.(HOME|USERPROFILE)\\b|os\\.UserHomeDir|dirs::home_dir|env::var\\(\"HOME\"\\)",
+   "message": {
+    "en": "Reads or writes below the real home directory.",
+    "de": "Liest oder schreibt unterhalb des echten Home-Verzeichnisses."
+   }
+  },
+  {
+   "id": "global-process-kill",
+   "severity": "error",
+   "languages": [
+    "ts",
+    "go",
+    "rs",
+    "py",
+    "sh"
+   ],
+   "scope": "line",
+   "pattern": "\\b(pkill|killall)\\b",
+   "flags": "i",
+   "exempt": [
+    "(expect|assert|toBe|toEqual|toContain|refus|forbid|never)"
+   ],
+   "message": {
+    "en": "Kills processes by name; it would hit other agents' processes.",
+    "de": "Beendet Prozesse nach Name; trifft Prozesse anderer Agenten."
+   }
+  },
+  {
+   "id": "process-global-state",
+   "severity": "warn",
+   "languages": [
+    "ts",
+    "go"
+   ],
+   "scope": "line",
+   "pattern": "\\bprocess\\.chdir\\(|\\bos\\.Chdir\\(",
+   "message": {
+    "en": "Changes the process working directory; parallel tests in one process interfere.",
+    "de": "Ändert das Arbeitsverzeichnis des Prozesses; parallele Tests im selben Prozess stören sich."
+   }
+  },
+  {
+   "id": "go-unsandboxed-writer",
+   "severity": "error",
+   "languages": [
+    "go"
+   ],
+   "scope": "file",
+   "all": [
+    "\\bos\\.(WriteFile|MkdirAll|Mkdir|Create|Remove|RemoveAll|Rename|OpenFile)\\("
+   ],
+   "none": [
+    "\\b(t|b)\\.TempDir\\(\\)|os\\.MkdirTemp|ioutil\\.TempDir|os\\.CreateTemp|sandbox\\.|withMonorepoFixture|withExhaustiveRepo|withExhaustiveMonorepo|withTempRepo|scratchRepo|withGoalFixture|withSealedFixture|withSectionFixture|initTestGitRepo|setupTicketDir|setupImportantTicket|testStore|ctx\\.(WorkDir|ArtifactDir)|WorkDir"
+   ],
+   "message": {
+    "en": "Go test mutates the file system without t.TempDir(), a sandbox root or a fixture repository.",
+    "de": "Go-Test verändert das Dateisystem ohne t.TempDir(), Sandbox-Wurzel oder Fixture-Repository."
+   }
+  },
+  {
+   "id": "go-checkout-relative",
+   "severity": "error",
+   "languages": [
+    "go"
+   ],
+   "scope": "line",
+   "pattern": "\\bos\\.(WriteFile|MkdirAll|Mkdir|Create|Remove|RemoveAll|Rename|OpenFile)\\([^;\\n]{0,200}?(\\.\\./|os\\.Getwd|runtime\\.Caller)",
+   "exempt": [
+    "tmpDir",
+    "TempDir",
+    "tempDir",
+    "WorkDir"
+   ],
+   "message": {
+    "en": "Go test writes relative to the source tree.",
+    "de": "Go-Test schreibt relativ zum Quellbaum."
+   }
+  },
+  {
+   "id": "go-owner-unsandboxed",
+   "severity": "error",
+   "languages": [
+    "go"
+   ],
+   "scope": "owner",
+   "all": [
+    "func Test\\w+\\(t \\*testing\\.T\\)",
+    "\\b(os\\.Getwd|workspace\\.(FindRepoRoot|GetRootDir|ResolveRepoRoot)|runtime\\.Caller)\\b"
+   ],
+   "none": [
+    "\\bsandbox\\.Run\\("
+   ],
+   "message": {
+    "en": "The Go test owner has no TestMain bound to sandbox.Run, so its tests may resolve the real checkout.",
+    "de": "Der Go-Testeigentümer hat kein an sandbox.Run gebundenes TestMain, seine Tests können den echten Checkout auflösen."
+   }
+  },
+  {
+   "id": "rust-unsandboxed-writer",
+   "severity": "warn",
+   "languages": [
+    "rs"
+   ],
+   "scope": "file",
+   "all": [
+    "\\b(fs::(write|create_dir_all|create_dir|remove_dir_all|remove_file|copy|rename)|File::create|OpenOptions::new)\\("
+   ],
+   "none": [
+    "\\b(temp_dir|tempfile|TempDir|CARGO_TARGET_TMPDIR|scratch|unique_dir|SEMIO_TEST_SANDBOX|SEMIO_TEST_ARTIFACT_DIR)\\b"
+   ],
+   "message": {
+    "en": "Rust test mutates the file system without a temporary or sandbox root.",
+    "de": "Rust-Test verändert das Dateisystem ohne temporäre oder Sandbox-Wurzel."
+   }
+  },
+  {
+   "id": "rust-checkout-write",
+   "severity": "error",
+   "languages": [
+    "rs"
+   ],
+   "scope": "line",
+   "pattern": "\\b(fs::(write|create_dir_all|create_dir|remove_dir_all|remove_file|copy|rename)|File::create)\\([^;\\n]{0,200}?(CARGO_MANIFEST_DIR|current_dir\\(\\))",
+   "message": {
+    "en": "Rust test writes relative to the crate or working directory.",
+    "de": "Rust-Test schreibt relativ zum Crate- oder Arbeitsverzeichnis."
+   }
+  }
+ ]
+}

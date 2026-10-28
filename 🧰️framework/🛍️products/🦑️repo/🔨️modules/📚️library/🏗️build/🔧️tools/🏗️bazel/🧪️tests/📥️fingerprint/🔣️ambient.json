@@ -1,0 +1,64 @@
+{
+ "rows": [
+  {
+   "name": "no ambient variable",
+   "ambient": {},
+   "sameAsFirst": true
+  },
+  {
+   "name": "the phase profile as json",
+   "ambient": {
+    "SEMIO_REPO_PROFILE": "json"
+   },
+   "sameAsFirst": true
+  },
+  {
+   "name": "the phase profile as table",
+   "ambient": {
+    "SEMIO_REPO_PROFILE": "1"
+   },
+   "sameAsFirst": true
+  },
+  {
+   "name": "an agent session",
+   "ambient": {
+    "CLAUDE_CODE_SESSION_ID": "s-1",
+    "CLAUDECODE": "1",
+    "ANTHROPIC_BASE_URL": "https://example.invalid"
+   },
+   "sameAsFirst": true
+  },
+  {
+   "name": "another agent session with desktop and terminal variables",
+   "ambient": {
+    "CLAUDE_CODE_SESSION_ID": "s-2",
+    "XPC_FLAGS": "0x1",
+    "__CFBundleIdentifier": "app",
+    "TERM_SESSION_ID": "w1t0p0",
+    "SECURITYSESSIONID": "q2"
+   },
+   "sameAsFirst": true
+  },
+  {
+   "name": "an undeclared custom variable",
+   "ambient": {
+    "FIXTURE_UNDECLARED": "x"
+   },
+   "sameAsFirst": true
+  },
+  {
+   "name": "the declared variable",
+   "ambient": {
+    "FIXTURE_DECLARED": "x"
+   },
+   "sameAsFirst": false
+  },
+  {
+   "name": "the build mode",
+   "ambient": {
+    "SEMIO_BUILD_MODE": "release"
+   },
+   "sameAsFirst": true
+  }
+ ]
+}

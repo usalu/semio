@@ -49,6 +49,7 @@ test("every case captures, refuses and spends the budget as authored, with the a
   try{bytes=readStableBuildFile(path,row.maximum,admission,check);}catch(error){failure=error as Error;}
   expect(admission.remaining,row.name).toBe(row.remainingAfter);
   expect(checks,row.name).toBe(row.checks);
+  if((row as any).retried){const finalSize=(row as any).finalSize as number;expect(failure,row.name+" "+failure?.message).toBeUndefined();expect(bytes!.byteLength,row.name).toBe(finalSize);expect(Buffer.from(bytes!).subarray(0,Math.min(row.size,finalSize)).equals(content(row.size).subarray(0,Math.min(row.size,finalSize))),row.name).toBe(true);if(row.mutation==="append")expect(bytes![row.size],row.name).toBe("x".charCodeAt(0));continue;}
   if((row as any).ok){
    expect(failure,row.name+" "+failure?.message).toBeUndefined();
    expect(bytes!.byteLength).toBe(row.size);

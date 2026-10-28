@@ -1,0 +1,3 @@
+document: 🧰️framework/🛍️products/🦑️repo/📓️build-guide.md
+sha256 at staging: 85cf39438347e94d0607db0d27d9bfa75e2bc58d1ebaf0e11e9a08515016bc74
+4 edit(s): provider-rows[en], provider-rows[de], provider-bullet[en], provider-bullet[de]

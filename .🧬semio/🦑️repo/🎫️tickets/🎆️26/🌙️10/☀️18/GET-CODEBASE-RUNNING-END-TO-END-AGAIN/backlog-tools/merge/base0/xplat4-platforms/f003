@@ -1,0 +1,1011 @@
+{
+  "version": 1,
+  "suites": [
+    {
+      "id": "cache-reset",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "cargo-retirement",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🧹️pruning/🏪️budget/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "rustup-protocol",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "cargo-ingress",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "files": [
+        "💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "compiler-headroom",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "files": [
+        "💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🤝️shared/🟦️.ts"
+      ]
+    },
+    {
+      "id": "cargo-launcher",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🏃️process/🦀️cargo/🚪️launcher/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "runtime-verification-storage",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🔍️discovery/🕸️runtime/🔎️verification/💾️storage/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "cache-scope",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "files": [
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🏪️scope/🟦️.ts"
+      ]
+    },
+    {
+      "id": "javascript-storage",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "javascript-installed-paths",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/📏️paths/🟦️.ts"
+      ]
+    },
+    {
+      "id": "javascript-endpoint-fence",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🚧️fence/🟦️.ts"
+      ]
+    },
+    {
+      "id": "javascript-provider-walk",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/🟦️.ts"
+      ]
+    },
+    {
+      "id": "package-manager-seam",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "javascript-incremental-sync",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "javascript-adopt",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/📦️dependencies/🪞️adopt/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "javascript-concurrent-generations",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/📦️dependencies/🚦️concurrent/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "javascript-generation",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "javascript-generation-ingress",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🚪️ingress/🟦️.ts"
+      ]
+    },
+    {
+      "id": "javascript-generation-followup",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🛡️followup/🟦️.ts"
+      ]
+    },
+    {
+      "id": "toolkit-preflight",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/🛠️tools/🔏️authorizers/📥️loading/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "storage-budget",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "💾️storage/🔒️enforcement/📦️budget/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "graph-bounded",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "repository-exact",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🏃️process/🦀️cargo/🎯️exact/🧪️tests/🍎️image/🟦️.ts"
+      ]
+    },
+    {
+      "id": "nx-bounded-image",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🔒️bounded/🧪️tests/🍎️image/🟦️.ts"
+      ]
+    },
+    {
+      "id": "nx-bounded",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🔒️bounded/🧪️tests/🟦️.ts"
+      ],
+      "fileLaunchers": {
+        "📦️artifacts/🔒️bounded/🧪️tests/🟦️.ts": "setup-sdk"
+      }
+    },
+    {
+      "id": "rust-units",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🦀️cargo/📦️units/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "caller-environment",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🧪️tests/🌍️caller-environment/🟦️.ts"
+      ]
+    },
+    {
+      "id": "toolkit-outputs",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "toolkit-retention",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/🛠️tools/🧹️retention/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "graph-publication",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "files": [
+        "🕸️graph/📤️publication/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "task-child",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📬️task-child/🟦️.ts"
+      ]
+    },
+    {
+      "id": "toolkit-use",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/🛠️tools/📥️use/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "playground-preparation-source",
+      "budgetMs": 300000,
+      "typecheck": "strict",
+      "files": [
+        "🧪️tests/🎮️playground-preparation/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "bootstrap-original-invocation",
+      "budgetMs": 300000,
+      "typecheck": "strict",
+      "files": [
+        "🚀️bootstrap/📥️invocation/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "pruning",
+      "budgetMs": 300000,
+      "typecheck": "strict-indexed",
+      "files": [
+        "🧹️pruning/⏱️continuation/🧪️tests/🟦️.ts",
+        "🧹️pruning/🔒️store/🧪️tests/🟦️.ts",
+        "🧹️pruning/🔒️incremental/🧪️tests/🟦️.ts"
+      ],
+      "typecheckFiles": [
+        "🧹️pruning/🟦️.ts"
+      ]
+    },
+    {
+      "id": "sdk-snapshot",
+      "budgetMs": 15000,
+      "typecheck": "strict-indexed",
+      "files": [
+        "🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/📦️sdk/📊️material/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧪️tests/🟦️.ts"
+      ],
+      "typecheckFiles": [
+        "🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🟦️.ts"
+      ]
+    },
+    {
+      "id": "journal-source",
+      "budgetMs": 15000,
+      "typecheck": "strict-indexed",
+      "files": [
+        "🕸️graph/🔏️seal/📥️membership/📥️journal/🧪️tests/🟦️.ts"
+      ],
+      "typecheckFiles": [
+        "🕸️graph/🔏️seal/📥️membership/📥️journal/🟦️.ts"
+      ]
+    },
+    {
+      "id": "authorizers",
+      "budgetMs": 300000,
+      "typecheck": "strict-indexed",
+      "files": [
+        "🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts"
+      ],
+      "typecheckFiles": [
+        "🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🔏️authorizers/📜️script.ts",
+        "🚀️bootstrap/🛠️tools/🔏️authorizers/📤️receipt/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🟦️.ts"
+      ],
+      "scratch": "checkout"
+    },
+    {
+      "id": "graph-cache-waiter",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🕸️graph/🏇️waiter/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "selected-graph",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🕸️graph/🔏️seal/🎯️selection/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "graph-seal",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🕸️graph/🔏️seal/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "artifact-source",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🧪️tests/🗿️artifact-source/🟦️.ts"
+      ]
+    },
+    {
+      "id": "cache-command-source",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🧪️tests/🧱️command-source/🟦️.ts"
+      ]
+    },
+    {
+      "id": "cargo-provenance",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🧪️tests/🧾️cargo-provenance/🟦️.ts"
+      ]
+    },
+    {
+      "id": "native-input-vocabulary",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🧪️tests/⚡️production-cache-input-boundary/🟦️.ts"
+      ]
+    },
+    {
+      "id": "law-coverage",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "💾️storage/🔒️enforcement/🧵️session/🏊️pool/🧪️tests/🧮️lifecycle/🟦️.ts",
+        "📦️artifacts/🟦️typescript/🔗️binding/🧪️tests/🟦️.ts",
+        "📦️bundle/🟦️bun/📤️stream/🧪️tests/🟦️.ts",
+        "🕸️graph/🏁️startup/🚦️service/🧪️tests/🧮️handoff/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/⚙️operations/🧪️tests/🧮️arguments/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🌡️host-capacity/🧪️tests/🧮️settings/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/👷️workers/🧪️tests/🧮️mapping/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📐️projection/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/📋️plan/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/📦️sdk/🪪️identity/🧪️tests/🧮️keys/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🟦️bun/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🩹️patch/🧪️tests/🟦️.ts",
+        "🚦️ci/🧭️baseline/🏃️resolve/🧪️tests/🧮️matrix/🟦️.ts",
+        "🦀️cargo/📦️units/🏗️compiler/📍️workspace/🧪️tests/🟦️.ts",
+        "🦀️cargo/🗃️unit-cache/🔏️key/🧪️tests/🟦️.ts",
+        "🧹️pruning/⏱️recency/🧪️tests/🟦️.ts",
+        "🧹️pruning/🌐️workspace/🧪️tests/🧮️projection/🟦️.ts",
+        "🧹️pruning/🧪️tests/🧮️plan/🟦️.ts"
+      ]
+    },
+    {
+      "id": "law-coverage-fixes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🧪️tests/🧮️fetch/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🧪️tests/🧮️restore/🟦️.ts"
+      ]
+    },
+    {
+      "id": "law-coverage-tests",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/🛠️tools/🧪️tests/📦️install-images/🟦️.ts",
+        "🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🎟️capacity/🧪️tests/🟦️.ts",
+        "🦀️cargo/🗃️unit-cache/💾️store/🧪️tests/📦️contract/🟦️.ts"
+      ]
+    },
+    {
+      "id": "import-edges",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "trees": [
+        "🧪️tests/🔗️import-edges"
+      ]
+    },
+    {
+      "id": "vite",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "🌐️vite"
+      ]
+    },
+    {
+      "id": "vite-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🌐️vite/💾️storage/🧪️tests/🟦️.ts",
+        "🌐️vite/📥️environment/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "storage-compiler",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "💾️storage/🔒️enforcement/🏗️compiler"
+      ]
+    },
+    {
+      "id": "storage-compiler-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "💾️storage/🔒️enforcement/🏗️compiler/📍️layout/🧪️tests/🟦️.ts",
+        "💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/♻️pressure/🟦️.ts",
+        "💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/⛓️cpu-last/🟦️.ts",
+        "💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🔒️exclusive-writer/🟦️.ts",
+        "💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🟦️.ts",
+        "💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts",
+        "💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "storage-opening",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening"
+      ]
+    },
+    {
+      "id": "storage-opening-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/🆔️identity/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️phase/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️queued/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️required/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/📂️parents/🧪️tests/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🧵️prepared-worker/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/📐️layout/🍎️physical/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🧹️stamp/🟦️.ts"
+      ]
+    },
+    {
+      "id": "storage-graph",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph"
+      ]
+    },
+    {
+      "id": "storage-graph-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📇️records/🧪️tests/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🔀️selected-state-recovery/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🔁️revalidation/🍎️withdrawn-cleanup-recheck/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🧪️tests/👷️child/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🧪️tests/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🧪️tests/🧱️resolve/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🧪️tests/🧹️supersede/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/♻️groups/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📁️census/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📤️packet/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔢️batch/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "storage-budgets-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts"
+      ],
+      "trees": [
+        "💾️storage/🔒️enforcement/📦️budget"
+      ]
+    },
+    {
+      "id": "storage-nx",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "💾️storage/🔒️enforcement/🔌️nx"
+      ]
+    },
+    {
+      "id": "storage-nx-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🧪️tests/🟦️.ts",
+        "💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🎛️operation/🟦️.ts",
+        "💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🏦️funded/🟦️.ts",
+        "💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/📜️script.ts",
+        "💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🔓️pool-order/🟦️.ts",
+        "💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+        "💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🤝️yield/🟦️.ts"
+      ]
+    },
+    {
+      "id": "storage-session",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "💾️storage/🔒️enforcement/🧵️session",
+        "💾️storage/🧾️ledger"
+      ]
+    },
+    {
+      "id": "storage-session-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "💾️storage/🔒️enforcement/🧵️session/🏊️pool/🧪️tests/🟦️.ts",
+        "💾️storage/🧾️ledger/🧪️tests/⚖️law/🟦️.ts"
+      ]
+    },
+    {
+      "id": "tools-sdk",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "🚀️bootstrap/🛠️tools/📦️sdk"
+      ]
+    },
+    {
+      "id": "tools-sdk-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/⚠️failure/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📤️copy/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "tools-authorizers",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "🚀️bootstrap/🛠️tools/🔏️authorizers"
+      ]
+    },
+    {
+      "id": "tools-authorizers-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/🛠️tools/🔏️authorizers/📦️workspace/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📦️compiler-init/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🧭️closure-law/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🔏️authorizers/🧭️sites/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "tools-retention",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "🚀️bootstrap/🛠️tools/🧹️retention"
+      ]
+    },
+    {
+      "id": "tools-retention-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🧹️retention/📦️generation/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "tools",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "🚀️bootstrap/🛠️tools"
+      ]
+    },
+    {
+      "id": "tools-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/🛠️tools/⚙️operations/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🌡️host-capacity/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🏗️bazel/🧪️tests/📥️pins/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/👷️workers/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🧰️native/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "bootstrap-dependencies",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "🚀️bootstrap/📦️dependencies"
+      ]
+    },
+    {
+      "id": "bootstrap-dependencies-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/🔒️lock-sync/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "bootstrap",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "🚀️bootstrap"
+      ]
+    },
+    {
+      "id": "bootstrap-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
+        "🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🔌️nx-plugin/🧪️tests/🦀️native-dependency-closures/🟦️.ts"
+      ]
+    },
+    {
+      "id": "cargo-units",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "🦀️cargo/📦️units"
+      ]
+    },
+    {
+      "id": "cargo-units-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🎟️funding/🟦️.ts",
+        "🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🟦️.ts",
+        "🦀️cargo/📦️units/🏗️compiler/🔏️code/🧪️tests/📖️reader/🟦️.ts",
+        "🦀️cargo/📦️units/🏗️compiler/🦀️rustc/📚️dependencies/🧪️tests/🟦️.ts",
+        "🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🧾️invocation/🧪️tests/🟦️.ts",
+        "🦀️cargo/📦️units/📋️plan/🧪️tests/🔗️binding/🟦️.ts",
+        "🦀️cargo/📦️units/📋️plan/🧪️tests/🟦️.ts",
+        "🦀️cargo/📦️units/📤️receipt/🧪️tests/🟦️.ts",
+        "🦀️cargo/📦️units/📥️descriptor/🎯️selection/📥️configuration/🧪️tests/📦️batch/🟦️.ts",
+        "🦀️cargo/📦️units/📥️descriptor/🎯️selection/📥️configuration/🧪️tests/🟦️.ts",
+        "🦀️cargo/📦️units/📥️descriptor/🎯️selection/🧪️tests/🧫️fixture/🧪️tests/🟦️.ts",
+        "🦀️cargo/📦️units/📥️descriptor/💾️cache/📂️files/🗄️catalog/🧪️tests/🟦️.ts",
+        "🦀️cargo/📦️units/📥️descriptor/💾️cache/📤️publication/🧪️tests/🟦️.ts",
+        "🦀️cargo/📦️units/📥️descriptor/💾️cache/🧪️tests/🟦️.ts",
+        "🦀️cargo/📦️units/📥️descriptor/📖️read/🧪️tests/🟦️.ts",
+        "🦀️cargo/📦️units/📥️descriptor/📖️read/🧪️tests/🧺️batch/🟦️.ts",
+        "🦀️cargo/📦️units/📥️descriptor/🕸️nodes/🧪️tests/♻️composition/🟦️.ts",
+        "🦀️cargo/📦️units/📥️descriptor/🕸️nodes/🧪️tests/🟦️.ts",
+        "🦀️cargo/📦️units/📥️inputs/🔏️snapshot/🧪️tests/🟦️.ts",
+        "🦀️cargo/📦️units/📥️inputs/🧪️tests/🟦️.ts",
+        "🦀️cargo/📦️units/🧪️tests/📐️profile/♻️preparation/🟦️.ts",
+        "🦀️cargo/📦️units/🧪️tests/📥️source/🟦️.ts",
+        "🦀️cargo/📦️units/🧭️context/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "cargo-unit-cache-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🦀️cargo/🗃️unit-cache/🧪️tests/🟦️.ts",
+        "🦀️cargo/🗃️unit-cache/🧹️gc/🌱️incremental/🧪️tests/🟦️.ts",
+        "🦀️cargo/🗃️unit-cache/🧹️gc/📈️fill/🧪️tests/🟦️.ts",
+        "🦀️cargo/🗃️unit-cache/🧹️gc/🧪️tests/🟦️.ts",
+        "🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧪️tests/🟦️.ts"
+      ],
+      "trees": [
+        "🦀️cargo/🗃️unit-cache"
+      ]
+    },
+    {
+      "id": "graph",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "🕸️graph"
+      ]
+    },
+    {
+      "id": "graph-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🕸️graph/🏁️startup/🚏️admission/🧪️tests/🟦️.ts",
+        "🕸️graph/🏁️startup/🚦️service/🧪️tests/🟦️.ts",
+        "🕸️graph/🏗️scheduling/🧪️tests/🟦️.ts",
+        "🕸️graph/📤️publication/🧪️tests/📦️transaction/🟦️.ts",
+        "🕸️graph/🔏️seal/🎯️selection/📥️scope/🧪️tests/🟦️.ts",
+        "🕸️graph/🔏️seal/📌️generation/🧪️tests/🟦️.ts",
+        "🕸️graph/🔏️seal/📦️facts/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "artifacts",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "📦️artifacts"
+      ]
+    },
+    {
+      "id": "artifacts-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/💾️storage/🧪️tests/📥️physical/🟦️.ts",
+        "📦️artifacts/💾️storage/🧪️tests/🟦️.ts",
+        "📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-cmd-policy/🟦️.ts",
+        "📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
+        "📦️artifacts/📋️native-orchestration/🧪️tests/🗺️owner-test-manifests/🟦️.ts",
+        "📦️artifacts/🟦️typescript/🧪️tests/🧭️bundle-runtime/🟦️.ts",
+        "📦️artifacts/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "bundle",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "📦️bundle"
+      ]
+    },
+    {
+      "id": "texts",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "📖️texts"
+      ]
+    },
+    {
+      "id": "inference",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "📥️inference"
+      ]
+    },
+    {
+      "id": "inference-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📥️inference/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "records",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "🗃️records"
+      ]
+    },
+    {
+      "id": "records-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🗃️records/🧪️tests/🔌️descriptor-limit/🟦️.ts"
+      ]
+    },
+    {
+      "id": "pruning-laws",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "🧹️pruning"
+      ]
+    },
+    {
+      "id": "pruning-laws-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🧹️pruning/⏱️measurement/🧪️tests/🟦️.ts",
+        "🧹️pruning/🏪️budget/📜️history/🧪️tests/📏️recensus/🟦️.ts",
+        "🧹️pruning/🏪️budget/📜️history/🧪️tests/📦️compact/🟦️.ts",
+        "🧹️pruning/🏪️budget/📜️history/🧪️tests/🟦️.ts",
+        "🧹️pruning/📉️pressure/🧪️tests/🟦️.ts",
+        "🧹️pruning/📦️metadata/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "pruning-recency",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "capabilities": {
+        "artifacts": true,
+        "command": "recency"
+      },
+      "files": [
+        "🧹️pruning/🧪️tests/⏱️recency/🟦️.ts"
+      ]
+    },
+    {
+      "id": "module-tests",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "trees": [
+        "🧪️tests"
+      ]
+    },
+    {
+      "id": "module-tests-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🧪️tests/📐️phases/🟦️.ts",
+        "🧪️tests/📚️library-search-path/🟦️.ts"
+      ]
+    },
+    {
+      "id": "route-table-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🗂️suites/🧪️tests/🟦️.ts"
+      ],
+      "trees": [
+        "🗂️suites"
+      ]
+    },
+    {
+      "id": "checkout-scratch-processes",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📡️session/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔏️admission/🧪️admitted-worker-harness/🟦️.ts",
+        "📦️artifacts/🏗️native-build/📥️published/🧪️tests/🟦️.ts"
+      ],
+      "scratch": "checkout"
+    },
+    {
+      "id": "laws-library-texts",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🕸️dependencies/📖️texts/🧪️tests/🟦️.ts",
+        "../🕸️dependencies/🧭️direction/📖️texts/🧪️tests/🟦️.ts",
+        "../🎛️commands/✅️verify/📖️texts/🧪️tests/🟦️.ts",
+        "../🎛️commands/📝️commit/📖️texts/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "laws-library-commit-hooks",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🎛️commands/📝️commit/🪝️hooks/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "laws-library-direction-observation",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🕸️dependencies/🧭️direction/🧪️tests/🔁️observation/🟦️.ts"
+      ]
+    },
+    {
+      "id": "laws-library-workspace-exports-memo",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🧪️testing/📦️workspace-exports/🧠️memo/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "laws-library-process",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🏃️process/📋️context/🔣️policy/🧪️tests/🟦️.ts",
+        "../🏃️process/🧭️routing/🚪️entrypoint/🧪️tests/🟦️.ts",
+        "../🏃️process/🦀️cargo/🎟️admission/🧪️tests/🟦️.ts",
+        "../🏃️process/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "laws-builder-admission",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../../🖥️server/🎛️coordinator/🏗️builder/🎟️admission/🧪️tests/🟦️.ts"
+      ]
+    },
+    {
+      "id": "laws-dashboard-control-plane",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../../🎛️dashboard/🧪️tests/🌀️control-plane/🟦️.ts"
+      ]
+    },
+    {
+      "id": "laws-plugin-initialization-retirement",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../../../../💻️os/🔨️modules/🔌️plugin/🌱️initialization/♻️retirement/🧪️tests/🟦️.ts"
+      ]
+    }
+  ],
+  "codeSuites": [
+    "daemon-journal",
+    "binaryen-partition",
+    "bazel-storage-runtime",
+    "runtime-verification-storage-runtime",
+    "javascript-partition",
+    "lease-queue",
+    "leases-partition",
+    "rustup-toolchain",
+    "rustup-generation",
+    "tools-partition",
+    "build-mode",
+    "next-runtime",
+    "web-build",
+    "cache-policy",
+    "cargo-build-lease",
+    "graph-revision",
+    "devcontainer-lifecycle",
+    "runtime-bootstrap",
+    "native-dependencies",
+    "workspace-ownership",
+    "sdk-material"
+  ],
+  "helpers": []
+}

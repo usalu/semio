@@ -1,0 +1,46 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Policy literal law row / Zeile des Gesetzes der Richtlinien-Literale",
+ "description": "EN: One module whose policy constants live in a schema file (the single source) and whose sources must hold none of their values as a literal; roots name the repository subtree the paths start in, container names the schema object that holds the definitions (definitions by default or $defs), definitions name the schema definitions whose const is the policy (each has a sibling <Name>Descriptions with the same keys in en and de), document and pointer name instead a data document and the path of the object in it that holds the values (the schema definition then describes its properties with EN: and DE: texts), exports name the frozen policy objects that must equal the schema const, allow lists the few literals that merely share a value with a policy constant and say why. DE: Ein Modul, dessen Richtlinien-Konstanten in einer Schemadatei stehen (die einzige Quelle) und dessen Quellen keinen ihrer Werte als Literal enthalten duerfen; roots nennt den Teilbaum des Repositorys, in dem die Pfade beginnen, container das Schema-Objekt, das die Definitionen enthaelt (standardmaessig definitions oder $defs), definitions die Schema-Definitionen, deren const die Richtlinie ist (jede hat eine Geschwister-Definition <Name>Descriptions mit denselben Schluesseln in en und de), exports die eingefrorenen Richtlinien-Objekte, die dem Schema-const gleichen muessen, allow die wenigen Literale, die nur zufaellig einen Wert teilen, samt Begruendung.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["version", "root", "schema", "definitions", "sources"],
+ "properties": {
+  "version": { "const": 1 },
+  "root": { "enum": ["library", "process", "repository"] },
+  "schema": { "type": "string", "minLength": 1 },
+  "definitions": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$" } },
+  "container": { "enum": ["definitions", "$defs"] },
+  "document": { "type": "string", "minLength": 1 },
+  "pointer": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+  "sources": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+  "exports": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["source", "name", "definition"],
+    "properties": {
+     "source": { "type": "string", "minLength": 1 },
+     "name": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+     "definition": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$" }
+    }
+   }
+  },
+  "minimumNumber": { "type": "integer", "minimum": 1 },
+  "minimumText": { "type": "integer", "minimum": 1 },
+  "allow": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["source", "value", "reason"],
+    "properties": {
+     "source": { "type": "string", "minLength": 1 },
+     "value": { "anyOf": [{ "type": "number" }, { "type": "string" }] },
+     "reason": { "type": "string", "minLength": 20 }
+    }
+   }
+  }
+ }
+}

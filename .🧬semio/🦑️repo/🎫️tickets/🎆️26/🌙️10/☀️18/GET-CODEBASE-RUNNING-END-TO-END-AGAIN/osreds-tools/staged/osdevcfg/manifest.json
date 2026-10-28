@@ -1,0 +1,27 @@
+{
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️config/🟦️.ts": {
+  "file": "f01.ts",
+  "base": "a8d3ab29eacffe9aa04b2a5e5de3458af7634a34d5a1f3c11a5622b21a3b2d8f",
+  "new": "8865a0a9e20cec5f98767cf32e468b91366408e7eacf3c14202b8b4fb18f976e"
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts": {
+  "file": "f02.ts",
+  "base": "6e54550bad782f3610c52f67e1d6d797bc3b747c58990a3926ae15a0aa0e1e67",
+  "new": "2c631418ebf04c420f4ae338d3fc32a33f857967fc68e9487e3512e029c7a6b4"
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts": {
+  "file": "f03.ts",
+  "base": "c2afc89c3cb099d46d1441eb26d639dc97dc4e7da42663c4c0123dc9ac46a310",
+  "new": "801ebd209289c04987e3a487d7bf75d2441f8e569074d34147b533e5411e19df"
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/⚙️config-graph.json": {
+  "file": "f04.json",
+  "base": "83f9377ff47edd8be0a2bba4024ec0a75632fce614f9c03eb168f7ea306b789b",
+  "new": "a000db137512174f4b6028147c9bec477738eb42c2bd4ba33c6ccb1c7cd72a2b"
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🌐️browser-graph.json": {
+  "file": "f05.json",
+  "base": "de58ca011663fb7fb488969758e7feab321bef69e062a3f01a5cc90706cc0335",
+  "new": "e10bec019518a795222a701783b9317f877eec4ab2a9492e1fec3c9a48fead44"
+ }
+}

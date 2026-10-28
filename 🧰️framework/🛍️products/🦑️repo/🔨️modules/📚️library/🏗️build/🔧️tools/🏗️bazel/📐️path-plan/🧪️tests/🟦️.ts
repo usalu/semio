@@ -60,8 +60,7 @@ test("the short output root is ASCII, short, stable per checkout, distinct acros
  const root=bazelHermeticRootV1("win32",undefined)!;expect(root.units).toBe(units("C:\\b\\w\\000000\\r\\"));expect(bazelHermeticRootV1("darwin",undefined)!.units).toBe(units("/tmp/000000000000/r/"));
 });
 
-test("the short root is a link to the real output base directory, reconciled idempotently and never over a real directory",()=>{
- if(process.platform==="win32")return;
+test.skipIf(process.platform==="win32")("the short root is a link to the real output base directory, reconciled idempotently and never over a real directory",()=>{
  const directory=mkdtempSync(join(tmpdir(),"path-root-")),real=join(directory,"real"),other=join(directory,"other"),root=join(directory,"x/b/abcd1234");
  try{
   mkdirSync(real);mkdirSync(other);linkBazelOutputRootV1(root,real);expect(readlinkSync(root)).toBe(real);const before=lstatSync(root,{bigint:true}).ino;

@@ -1,0 +1,158 @@
+{
+  "version": 1,
+  "probe": {
+    "timeoutMilliseconds": 8000,
+    "parallelism": 4,
+    "timeoutOverrides": {
+      "tools": 30000
+    }
+  },
+  "leases": {
+    "waitWarnSeconds": 60,
+    "waitErrorSeconds": 300,
+    "holdWarnSeconds": 900,
+    "holdErrorSeconds": 1800,
+    "queueDepthWarn": 5,
+    "registryOrphanFoldersWarn": 50,
+    "violationsLimit": 20
+  },
+  "capacity": {
+    "waitWarnSeconds": 30,
+    "waitErrorSeconds": 300,
+    "idleGrantSeconds": 600,
+    "idleObservedPercent": 25
+  },
+  "host": {
+    "lowMemoryHeadroomPercent": 25,
+    "swapWarnMegabytes": 4096,
+    "swapOutWarnMegabytesPerSecond": 64,
+    "loadPerCoreWarn": 2,
+    "loadPerCoreError": 4,
+    "openFilesWarnPercent": 80,
+    "imagesWarn": 28,
+    "imagesError": 32
+  },
+  "storage": {
+    "freePercentWarn": 15,
+    "freePercentError": 5,
+    "floorBytes": {
+      "graph": 1073741824
+    },
+    "hostFreeWarnBytes": 21474836480,
+    "hostFreeErrorBytes": 5368709120,
+    "publicationErrorSeconds": 600
+  },
+  "tools": {
+    "essential": [
+      "repo",
+      "git"
+    ]
+  },
+  "sessions": {
+    "crowdedLive": 8
+  },
+  "graph": {
+    "implementationRoots": [
+      "🏗️build/🕸️graph",
+      "🏗️build/👁️observation"
+    ],
+    "implementationSkip": [
+      "🧪️tests",
+      "🧫️fixtures"
+    ],
+    "walkEntries": 20000
+  },
+  "dependencies": {
+    "orphanCountWarn": 12,
+    "unreadyAgeSeconds": 3600
+  },
+  "caches": {
+    "deadPublications": [
+      {
+        "partition": "graph",
+        "path": [
+          "m",
+          "inference",
+          "selections",
+          "*",
+          "inference"
+        ],
+        "prefix": "p-"
+      }
+    ],
+    "deadPublicationWarnBytes": 104857600,
+    "deadPublicationQuietSeconds": 60,
+    "walkEntries": 200000,
+    "retiredNamesShown": 5
+  },
+  "processes": {
+    "patterns": [
+      "(^|[\\s/])repo(\\s|$)",
+      "script\\.ts",
+      "\\bcargo\\b",
+      "\\brustc\\b",
+      "\\bbazel(isk)?\\b",
+      "\\bnx\\b",
+      "\\bvitest\\b",
+      "\\bbun test\\b",
+      "\\btsc\\b",
+      "\\bhdiutil\\b"
+    ],
+    "exclude": [
+      "\\brepo (dev )?mcp\\b",
+      "\\bdev mcp stdio\\b",
+      "\\brepo doctor\\b",
+      "\\bps -axo\\b"
+    ],
+    "orphanAgeSeconds": 600,
+    "idleHolderSeconds": 600,
+    "idleCpuPercent": 1
+  },
+  "repairs": [
+    {
+      "id": "caches-dead-publications",
+      "area": "caches",
+      "rules": [
+        "caches.dead-publication"
+      ],
+      "summary": {
+        "en": "Remove the per-process producer publications (p-<pid>) of processes that no longer run.",
+        "de": "Entfernt die prozessbezogenen Erzeuger-Veröffentlichungen (p-<pid>) von Prozessen, die nicht mehr laufen."
+      },
+      "safety": {
+        "en": "Only directories named p-<digits> directly inside a declared publication folder, whose process does not exist on this machine and that were quiet for 60 seconds; links are never followed and every target is checked again right before removal. The content is cache and is recomputed on demand.",
+        "de": "Nur Verzeichnisse namens p-<Ziffern> direkt in einem deklarierten Veröffentlichungsordner, deren Prozess auf diesem Rechner nicht existiert und die 60 Sekunden ruhig waren; Verknüpfungen werden nie verfolgt und jedes Ziel wird unmittelbar vor dem Entfernen erneut geprüft. Der Inhalt ist Cache und wird bei Bedarf neu berechnet."
+      }
+    },
+    {
+      "id": "leases-registry",
+      "area": "leases",
+      "rules": [
+        "leases.registry-stale"
+      ],
+      "summary": {
+        "en": "Remove lease registry rows of processes that are gone and registry folders of lease directories that no longer exist.",
+        "de": "Entfernt Lease-Registerzeilen von Prozessen, die nicht mehr existieren, und Registerordner von Lease-Verzeichnissen, die nicht mehr existieren."
+      },
+      "safety": {
+        "en": "Uses the registry's own liveness rule (process missing, or silent for five minutes); a folder goes only when its lease directory outside this checkout is gone and no living process is registered in it (directories inside the checkout may sit on a detached image and are never judged gone). The rows are diagnostics; no lease depends on them.",
+        "de": "Verwendet die eigene Lebendigkeitsregel des Registers (Prozess fehlt oder fünf Minuten still); ein Ordner verschwindet nur, wenn sein Lease-Verzeichnis außerhalb dieses Arbeitsverzeichnisses nicht mehr existiert und kein lebender Prozess darin eingetragen ist (Verzeichnisse innerhalb des Arbeitsverzeichnisses können auf einem ausgehängten Image liegen und gelten nie als verschwunden). Die Zeilen sind Diagnose; keine Lease hängt von ihnen ab."
+      }
+    },
+    {
+      "id": "agent-sessions",
+      "area": "sessions",
+      "rules": [
+        "sessions.gone"
+      ],
+      "summary": {
+        "en": "Collect agent sessions whose agent is gone.",
+        "de": "Sammelt Agent-Sitzungen ein, deren Agent nicht mehr existiert."
+      },
+      "safety": {
+        "en": "Delegates to the session owner: the resources of a session are reclaimed first, a session whose sandbox still runs is kept and the default session is never collected.",
+        "de": "Delegiert an den Eigentümer der Sitzungen: Die Ressourcen einer Sitzung werden zuerst zurückgegeben, eine Sitzung mit laufender Sandbox bleibt bestehen und die Standardsitzung wird nie eingesammelt."
+      }
+    }
+  ]
+}

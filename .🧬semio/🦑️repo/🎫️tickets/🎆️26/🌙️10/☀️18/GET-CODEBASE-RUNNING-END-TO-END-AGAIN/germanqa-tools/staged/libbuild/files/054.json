@@ -1,0 +1,33 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Owner claim law fixture / Gesetz der Zuordnung von Fakten zu Eigentümern",
+ "description": "EN: Every owner claims the facts of its own inference plus every consumed fact of the part below its root or native root; a claimed fact is never repeated for the same content, unclaimed facts belong to the environment, row order is the order of the part. DE: Jeder Eigentümer beansprucht die Fakten seiner eigenen Ableitung und jeden verbrauchten Fakt des Teils unterhalb seiner Wurzel oder nativen Wurzel; ein Fakt gleichen Inhalts wird nie wiederholt, unbeanspruchte Fakten gehören zur Umgebung, die Reihenfolge ist die des Teils.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["version", "worlds"],
+ "definitions": {
+  "Row": { "type": "object", "additionalProperties": false, "required": ["kind", "path", "fact"], "properties": { "kind": { "type": "string" }, "path": { "type": "string" }, "fact": {} } },
+  "Indices": { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+ },
+ "properties": {
+  "version": { "const": 1 },
+  "worlds": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["workspaceRoot", "rows", "owners", "edgeOnly", "stubs", "partRows", "expect"],
+    "properties": {
+     "workspaceRoot": { "type": "string" },
+     "rows": { "type": "array", "items": { "$ref": "#/definitions/Row" } },
+     "owners": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "root", "nodeRows"], "properties": { "name": { "type": "string" }, "root": { "type": "string" }, "nativeRoot": { "type": "string" }, "nodeRows": { "$ref": "#/definitions/Indices" } } } },
+     "edgeOnly": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name"], "properties": { "name": { "type": "string" } } } },
+     "stubs": { "type": "object", "additionalProperties": { "type": "object", "additionalProperties": false, "required": ["root", "kind", "targets"], "properties": { "root": { "type": "string" }, "nativeRoot": { "type": "string" }, "kind": { "const": "project" }, "targets": { "type": "array" } } } },
+     "partRows": { "$ref": "#/definitions/Indices" },
+     "expect": { "type": "object", "additionalProperties": false, "required": ["owners", "environment"], "properties": { "owners": { "type": "object", "additionalProperties": { "$ref": "#/definitions/Indices" } }, "environment": { "$ref": "#/definitions/Indices" } } }
+    }
+   }
+  }
+ }
+}

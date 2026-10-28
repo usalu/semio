@@ -1,0 +1,15 @@
+{
+  "vectors": [
+    { "name": "a live owner with a fresh heartbeat", "pid": 4242, "alive": true, "heartbeatAgeMilliseconds": 1000, "ageMilliseconds": 60000, "held": true },
+    { "name": "a live owner still inside its start timeout", "pid": 4242, "alive": true, "heartbeatAgeMilliseconds": 600000, "ageMilliseconds": 1000, "held": true },
+    { "name": "a live owner with a stale heartbeat after the start timeout", "pid": 4242, "alive": true, "heartbeatAgeMilliseconds": 600000, "ageMilliseconds": 60000, "held": false },
+    { "name": "a dead owner with a fresh heartbeat", "pid": 4242, "alive": false, "heartbeatAgeMilliseconds": 1000, "ageMilliseconds": 60000, "held": false },
+    { "name": "an owner that is not written yet and a lock directory younger than the start timeout", "pid": null, "alive": false, "heartbeatAgeMilliseconds": 600000, "ageMilliseconds": 10, "held": true },
+    { "name": "an owner that is not written and a lock directory older than the start timeout", "pid": null, "alive": false, "heartbeatAgeMilliseconds": 600000, "ageMilliseconds": 60000, "held": false },
+    { "name": "process id 0 names a process group on POSIX and no process on Windows", "pid": 0, "alive": true, "heartbeatAgeMilliseconds": 600000, "ageMilliseconds": 10, "held": true },
+    { "name": "process id 0 in an old lock", "pid": 0, "alive": true, "heartbeatAgeMilliseconds": 600000, "ageMilliseconds": 60000, "held": false },
+    { "name": "a negative process id in an old lock", "pid": -1, "alive": true, "heartbeatAgeMilliseconds": 1000, "ageMilliseconds": 60000, "held": false },
+    { "name": "a fractional process id in an old lock", "pid": 1.5, "alive": true, "heartbeatAgeMilliseconds": 1000, "ageMilliseconds": 60000, "held": false },
+    { "name": "a text process id in an old lock", "pid": "4242", "alive": true, "heartbeatAgeMilliseconds": 1000, "ageMilliseconds": 60000, "held": false }
+  ]
+}

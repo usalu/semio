@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "input": {
+    "toolchain": "rustc 1.99.0-nightly\nhost: aarch64-apple-darwin\n",
+    "normalized": ["--crate-name", "libc", "--edition=2021", "-C", "metadata=abc"],
+    "sourceSha256": "cafe1fc6498cc4c972cabc7a6efb4e244d7d68e002eda108cfd5ae045f33331c",
+    "externs": [{"name": "core", "sha256": "builtin"}, {"name": "dep", "sha256": "0123"}],
+    "environment": [["CARGO_PKG_NAME", "libc"], ["SDKROOT", "/sdk"]]
+  },
+  "variants": [
+    {"name": "toolchain", "changes": "toolchain", "set": {"toolchain": "rustc other\n"}},
+    {"name": "arguments", "changes": "args", "set": {"normalized": ["--crate-name", "libc", "--edition=2021", "-C", "metadata=abd"]}},
+    {"name": "source", "changes": "source", "set": {"sourceSha256": "00"}},
+    {"name": "externs", "changes": "externs", "set": {"externs": [{"name": "core", "sha256": "builtin"}, {"name": "dep", "sha256": "0124"}]}},
+    {"name": "environment", "changes": "environment", "set": {"environment": [["CARGO_PKG_NAME", "libc"], ["SDKROOT", "/other"]]}}
+  ]
+}

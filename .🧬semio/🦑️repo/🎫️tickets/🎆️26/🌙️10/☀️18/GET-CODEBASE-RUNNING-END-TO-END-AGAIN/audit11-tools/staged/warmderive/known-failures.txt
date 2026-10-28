@@ -1,0 +1,2 @@
+ :: a real router command reaches fewer files than its whole script, never invents one, and reaches scheduling code only through declared ports
+ :: on the real scripts of the repository the reading only removes specifiers and prunes the routers the corpus bounds

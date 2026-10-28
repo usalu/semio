@@ -50,7 +50,7 @@ function observe(path: string): Promise<PhysicalObservation> {
   return new Promise((resolve, reject) => { const id = ++oracleId; requests.set(id, { resolve, reject }); oracleProcess!.stdin!.write(JSON.stringify({ id, path }) + "\n"); });
 }
 afterAll(async () => {
-  if (!oracleProcess) return;
+  if(!oracleProcess)throw Error("Independent Python oracle required");
   oracleProcess.stdin?.end();
   const cancel = setTimeout(() => oracleProcess!.kill(), 1_000);
   try { expect(await oracleCompletion).toBe(0); } finally { clearTimeout(cancel); }

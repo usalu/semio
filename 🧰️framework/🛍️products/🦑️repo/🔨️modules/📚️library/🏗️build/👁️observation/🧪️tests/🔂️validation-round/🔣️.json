@@ -1,0 +1,10 @@
+{
+ "version": 1,
+ "scenarios": [
+  {"name": "unchanged files are reused by every hit", "files": 5, "ops": [["hit"], ["hit"], ["hit"], ["hit"]]},
+  {"name": "an edit between hits is seen at once without a round and by the next round with one", "files": 5, "ops": [["hit"], ["hit"], ["edit", 2], ["hit"], ["hit"], ["round"], ["hit"], ["hit"]]},
+  {"name": "a file edited before the first check of a round is seen by that round", "files": 4, "ops": [["hit"], ["round"], ["edit", 0], ["hit"], ["hit"], ["edit", 3], ["hit"], ["round"], ["hit"]]},
+  {"name": "two edits and rounds in turn", "files": 3, "ops": [["hit"], ["edit", 1], ["round"], ["hit"], ["edit", 1], ["edit", 2], ["hit"], ["round"], ["hit"], ["hit"]]},
+  {"name": "many files, many hits", "files": 40, "ops": [["hit"], ["hit"], ["hit"], ["edit", 39], ["round"], ["hit"], ["hit"], ["edit", 0], ["hit"], ["round"], ["hit"]]}
+ ]
+}

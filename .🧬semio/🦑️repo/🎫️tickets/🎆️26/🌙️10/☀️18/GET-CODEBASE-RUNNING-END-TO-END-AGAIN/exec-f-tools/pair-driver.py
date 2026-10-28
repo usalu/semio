@@ -11,7 +11,7 @@ def say(text): log.write(time.strftime("%H:%M:%S ") + text + "\n")
 def run(name):
     d = os.path.join(out, name); os.makedirs(os.path.join(d, "ev"), exist_ok=True)
     env = {k: v for k, v in os.environ.items() if k != "SEMIO_SCRIPT_STALL_MS"}
-    env["SEMIO_BUILD_EVIDENCE_DIR"] = os.path.join(d, "ev"); env["SEMIO_BUILD_IMPLEMENTATION_SCOPES"] = candidate; env.setdefault("SEMIO_BUILD_GRAPH_POLICY", "current")
+    env["SEMIO_BUILD_EVIDENCE_DIR"] = os.path.join(d, "ev"); env["SEMIO_BUILD_IMPLEMENTATION_SCOPES"] = candidate; (env.update(SEMIO_BUILD_GRAPH_POLICY=os.environ["GRAPH_POLICY"]) if os.environ.get("GRAPH_POLICY") else env.pop("SEMIO_BUILD_GRAPH_POLICY", None))
     started = time.time(); say(f"{name} start")
     with open(os.path.join(d, "run.log"), "wb") as handle:
         code = subprocess.call(["nice", "-n", "10", "bun", "repo", "--tool=bazel", "run", target], cwd=root, env=env, stdout=handle, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)

@@ -4,7 +4,7 @@
   "runBazelTasksInStorageV1": {
    "file": "🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
    "start": "async function runBazelTasksInStorageV1(",
-   "end": "/** 📖️ Reads finite birth material"
+   "end": "/** 🏃️ Executes only the checksum-bound captured backend"
   },
   "runBazelTasksV1": {
    "file": "🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
@@ -59,7 +59,7 @@
    "name": "the graph is released before the Bazel build starts",
    "function": "runBazelTasksInStorageV1",
    "before": "await planned?.();",
-   "after": "building=runOwnedCommand(bazel,[...startup,batch.verb"
+   "after": "building=runBazelBatchWithChurnV1(failures,()=>profilePhaseV1(\"bazel.invoke\",()=>runOwnedCommand(bazel,[...startup,batch.verb"
   },
   {
    "name": "the graph is released before a continuous task starts",

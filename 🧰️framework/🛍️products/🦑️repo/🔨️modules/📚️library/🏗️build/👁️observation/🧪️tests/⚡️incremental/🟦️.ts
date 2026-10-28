@@ -18,6 +18,8 @@ import {scriptInvocationEnvironment} from "../../../../../../../../🔨️module
 import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import{privateRepositoryWorkspaceV1,testNxToolkitDirectoryV1}from"../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1();
 
 type Snapshot=Record<string,string>;
 type Outcome={result:string;counts:Record<string,number>;raced?:boolean;persisted?:{records:number;foreignLibraryFacts:number;authorityRows:number}};
@@ -40,7 +42,7 @@ write(fixture.stale.extra.path,fixture.stale.extra.content);write(fixture.stale.
 const declaration=originalRead(join(cwd,fixture.unparseable.source),'utf8');write(fixture.unparseable.source,fixture.unparseable.content);age(fixture.unparseable.source,fixture.unparseable.ageMilliseconds);out.unparseable={result:await run(fixture.concurrency.parallel),counts:counts()};
 write(fixture.unparseable.source,declaration);out.restored={result:await run(fixture.concurrency.parallel),counts:counts()};
 write(fixture.halfWritten.source,fixture.halfWritten.partial);setTimeout(()=>write(fixture.halfWritten.source,declaration),fixture.halfWritten.completeAfterMilliseconds);out.halfWritten={result:await run(fixture.concurrency.parallel),counts:counts()};
-const library=process.env.SEMIO_G1_LIBRARY,directory=join(scope.root,'np'),records=fs.existsSync(directory)?fs.readdirSync(directory).filter(name=>name.endsWith('.json')):[];let foreignLibraryFacts=0,authorityRows=0;for(const name of records){const text=originalRead(join(directory,name),'utf8'),header=JSON.parse(text.slice(0,text.indexOf('\\n')));authorityRows+=header.authorityObservations.length;foreignLibraryFacts+=header.observations.filter(row=>row.kind==='file'&&row.path.startsWith(library)).length;}
+const library=process.env.SEMIO_G1_LIBRARY,directory=join(scope.root,'np'),records=fs.existsSync(directory)?fs.readdirSync(directory).filter(name=>name.endsWith('.json')):[];let foreignLibraryFacts=0,authorityRows=0;for(const name of records){const header=observation.readInferenceHeaderV1(join(directory,name));authorityRows+=header.authorityObservations.length;foreignLibraryFacts+=header.observations.filter(row=>row.kind==='file'&&row.path.startsWith(library)).length;}
 out.halfWritten.persisted={records:records.length,foreignLibraryFacts,authorityRows};console.log(JSON.stringify(out));}));})().catch(error=>{console.error(error);process.exit(1)});`;
 
 /** 🧫️ Materializes one source snapshot in its own artifact root. */
@@ -49,7 +51,7 @@ function materializeV1(root:string,files:Snapshot):void{for(const[path,content]o
 test("parallel incremental inference settles concurrent edits onto serial full inference and withholds only unparseable projects",async()=>{
  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR,identity=process.env.SEMIO_NX_TOOLING_IDENTITY;if(!artifacts||!identity)throw Error("Original artifact namespace and immutable SDK required");
- const sdk=createRequire(join(process.cwd(),".cache/b/t/m/nx",identity,"package.json")),compiler=sdk.resolve("typescript"),library=resolve("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"),input=join(mkdtempSync(join(artifacts,"g1-")),"fixture.json");writeFileSync(input,JSON.stringify(fixture));
+ const sdk=createRequire(join(testNxToolkitDirectoryV1(identity),"package.json")),compiler=sdk.resolve("typescript"),library=resolve("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"),input=join(mkdtempSync(join(artifacts,"g1-")),"fixture.json");writeFileSync(input,JSON.stringify(fixture));
  const initial:Snapshot={...fixture.files},raced:Snapshot={...initial,[fixture.race.path]:fixture.race.content,[fixture.race.extra.path]:fixture.race.extra.content},stale:Snapshot={...raced,[fixture.stale.path]:fixture.stale.content,[fixture.stale.extra.path]:fixture.stale.extra.content},broken:Snapshot={...stale,[fixture.unparseable.source]:fixture.unparseable.content};
  const runs=[{name:"scenario",files:initial},{name:"raced",files:raced},{name:"stale",files:stale},{name:"broken",files:broken}].map(run=>{const root=mkdtempSync(join(artifacts,"g1-"+run.name+"-"));materializeV1(root,run.files);return {...run,root,dataset:{version:1,identity:createHash("sha256").update(root).digest("hex"),sourceRoot:relative(process.cwd(),root).replaceAll("\\","/")}};});
  try{
@@ -81,7 +83,7 @@ test("parallel incremental inference settles concurrent edits onto serial full i
   expect(scenario.halfWritten!.persisted!.foreignLibraryFacts).toBe(fixture.foreignLibraryFacts);
   expect(scenario.halfWritten!.persisted!.authorityRows).toBe(0);
  }finally{
-  try{await withBuildTestInvocationV1(original=>Promise.all(runs.map(run=>withRepositoryBuildInferenceDatasetV1(process.cwd(),original,scriptCompilerAdmissionControlV1(original,"graph:dataset-retirement",0),run.dataset,async scope=>{await scope.retire();expect(existsSync(scope.root)).toBe(false);}))));}
+  try{await withBuildTestInvocationV1(original=>Promise.all(runs.map(run=>withRepositoryBuildInferenceDatasetV1(repository.root,original,scriptCompilerAdmissionControlV1(original,"graph:dataset-retirement",0),run.dataset,async scope=>{await scope.retire();expect(existsSync(scope.root)).toBe(false);}))));}
   finally{for(const run of runs)rmSync(run.root,{recursive:true,force:true});rmSync(dirname(input),{recursive:true,force:true});}
  }
 },300_000);

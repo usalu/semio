@@ -1,0 +1,166 @@
+{
+ "note": "darwin cases marked recorded are the verbatim output of `footprint -f bytes --noCategories -p …` and `ps -A -o pid=,ppid=,rss=` on macOS (Darwin 27.0.0) on 2026-10-26; authored cases are written from the documented formats (footprint(1) summary, proc(5) smaps_rollup, PowerShell table). The Windows table was not run on Windows.",
+ "darwin": {
+  "cases": [
+   {
+    "name": "recorded: a shell with two children",
+    "source": "recorded",
+    "root": 16997,
+    "ps": "    1     0  13968\n  102     1  42064\n  105     1   4576\n16997 16995   2096\n16999 16997   1040\n17000 16997   1088\n",
+    "output": "======================================================================\nbash [16997]: 64-bit    Footprint: 1278312 B (16384 bytes per page)\n======================================================================\n\nAuxiliary data:\n    phys_footprint: 1278312 B\n    phys_footprint_peak: 1278312 B\n\n======================================================================\nsleep [17000]: 64-bit    Footprint: 1114352 B (16384 bytes per page)\n======================================================================\n\nAuxiliary data:\n    phys_footprint: 1114352 B\n    phys_footprint_peak: 1147120 B\n\n======================================================================\nsleep [16999]: 64-bit    Footprint: 1065200 B (16384 bytes per page)\n======================================================================\n\nAuxiliary data:\n    phys_footprint: 1065200 B\n    phys_footprint_peak: 1097968 B\n\n======================================================================\nSummary Footprint: 3392328 B\n======================================================================\n\n"
+   },
+   {
+    "name": "recorded: one child vanished between the process table and footprint",
+    "source": "recorded",
+    "root": 16997,
+    "ps": "    1     0  13968\n  102     1  42064\n  105     1   4576\n16997 16995   2096\n16999 16997   1040\n17000 16997   1088\n",
+    "output": "footprint: Unable to find pid for process matching '17000'\n======================================================================\nbash [16997]: 64-bit    Footprint: 1278312 B (16384 bytes per page)\n======================================================================\n\nAuxiliary data:\n    phys_footprint: 1278312 B\n    phys_footprint_peak: 1278312 B\n\n======================================================================\nsleep [16999]: 64-bit    Footprint: 1065200 B (16384 bytes per page)\n======================================================================\n\nAuxiliary data:\n    phys_footprint: 1065200 B\n    phys_footprint_peak: 1097968 B\n\n======================================================================\nSummary Footprint: 2310744 B\n======================================================================\n\n"
+   },
+   {
+    "name": "recorded: footprint printed nothing for the tree",
+    "source": "recorded",
+    "root": 16997,
+    "ps": "    1     0  13968\n  102     1  42064\n  105     1   4576\n16997 16995   2096\n16999 16997   1040\n17000 16997   1088\n",
+    "output": "footprint: Unable to find pid for process matching '16997'\n"
+   },
+   {
+    "name": "authored: a process that freed memory holds a high resident set and a small footprint",
+    "source": "authored",
+    "root": 500,
+    "ps": "  500     1   40960\n  510   500 6291456\n  511   510 1048576\n  900     1  102400\n",
+    "output": "======================================================================\nnode [510]: 64-bit    Footprint: 2684354560 B (16384 bytes per page)\n======================================================================\n\nAuxiliary data:\n    phys_footprint: 2684354560 B\n    phys_footprint_peak: 6442450944 B\n\n======================================================================\nsleep [511]: 64-bit    Footprint: 104857600 B (16384 bytes per page)\n======================================================================\n\nAuxiliary data:\n    phys_footprint: 104857600 B\n    phys_footprint_peak: 104857600 B\n\n======================================================================\nSummary Footprint: 2789212160 B\n======================================================================\n"
+   },
+   {
+    "name": "authored: a name with spaces and brackets",
+    "source": "authored",
+    "root": 512,
+    "ps": "  512     1   99999\n",
+    "output": "======================================================================\nGoogle Chrome Helper (Renderer) [512]: 64-bit    Footprint: 52428800 B (16384 bytes per page)\n======================================================================\n\nAuxiliary data:\n    phys_footprint: 52428800 B\n\n"
+   },
+   {
+    "name": "authored: the root is not running",
+    "source": "authored",
+    "root": 4242,
+    "ps": "    1     0  13968\n  102     1  42064\n  105     1   4576\n16997 16995   2096\n16999 16997   1040\n17000 16997   1088\n",
+    "output": ""
+   }
+  ]
+ },
+ "linux": {
+  "fields": [
+   "Pss",
+   "SwapPss"
+  ],
+  "smaps": [
+   "00400000-ffffffffff601000 ---p 00000000 00:00 0                          [rollup]\nRss:               11300 kB\nPss:                5090 kB\nPss_Dirty:          3570 kB\nPss_Anon:           3570 kB\nPss_File:           1520 kB\nPss_Shmem:             0 kB\nShared_Clean:       7280 kB\nShared_Dirty:          0 kB\nPrivate_Clean:       450 kB\nPrivate_Dirty:      3570 kB\nReferenced:        11300 kB\nAnonymous:          3570 kB\nLazyFree:              0 kB\nAnonHugePages:         0 kB\nShmemPmdMapped:        0 kB\nFilePmdMapped:         0 kB\nShared_Hugetlb:        0 kB\nPrivate_Hugetlb:       0 kB\nSwap:               2048 kB\nSwapPss:            2048 kB\nLocked:                0 kB\n",
+   "00400000-ffffffffff601000 ---p 00000000 00:00 0                          [rollup]\nRss:               11300 kB\nPss:                5090 kB\nPss_Dirty:          3570 kB\nPss_Anon:           3570 kB\nPss_File:           1520 kB\nPss_Shmem:             0 kB\nShared_Clean:       7280 kB\nShared_Dirty:          0 kB\nPrivate_Clean:       450 kB\nPrivate_Dirty:      3570 kB\nReferenced:        11300 kB\nAnonymous:          3570 kB\nLazyFree:              0 kB\nAnonHugePages:         0 kB\nShmemPmdMapped:        0 kB\nFilePmdMapped:         0 kB\nShared_Hugetlb:        0 kB\nPrivate_Hugetlb:       0 kB\nSwap:               2048 kB\nLocked:                0 kB\n",
+   "garbage\n",
+   "Pss:\t12 kB\n"
+  ],
+  "trees": [
+   {
+    "name": "authored: three processes, one without smaps_rollup",
+    "root": 10,
+    "listing": [
+     "1",
+     "10",
+     "11",
+     "12",
+     "self",
+     "net"
+    ],
+    "files": {
+     "/proc/10/status": "Name:\tproc10\nState:\tS (sleeping)\nTgid:\t10\nPid:\t10\nPPid:\t1\nVmRSS:\t4000 kB\n",
+     "/proc/11/status": "Name:\tproc11\nState:\tS (sleeping)\nTgid:\t11\nPid:\t11\nPPid:\t10\nVmRSS:\t8000 kB\n",
+     "/proc/12/status": "Name:\tproc12\nState:\tS (sleeping)\nTgid:\t12\nPid:\t12\nPPid:\t10\nVmRSS:\t1000 kB\n",
+     "/proc/1/status": "Name:\tproc1\nState:\tS (sleeping)\nTgid:\t1\nPid:\t1\nPPid:\t0\nVmRSS:\t900 kB\n",
+     "/proc/10/smaps_rollup": "00400000-ffffffffff601000 ---p 00000000 00:00 0                          [rollup]\nRss:               11300 kB\nPss:                5090 kB\nPss_Dirty:          3570 kB\nPss_Anon:           3570 kB\nPss_File:           1520 kB\nPss_Shmem:             0 kB\nShared_Clean:       7280 kB\nShared_Dirty:          0 kB\nPrivate_Clean:       450 kB\nPrivate_Dirty:      3570 kB\nReferenced:        11300 kB\nAnonymous:          3570 kB\nLazyFree:              0 kB\nAnonHugePages:         0 kB\nShmemPmdMapped:        0 kB\nFilePmdMapped:         0 kB\nShared_Hugetlb:        0 kB\nPrivate_Hugetlb:       0 kB\nSwap:               2048 kB\nSwapPss:            2048 kB\nLocked:                0 kB\n",
+     "/proc/11/smaps_rollup": "00400000-ffffffffff601000 ---p 00000000 00:00 0                          [rollup]\nRss:               11300 kB\nPss:                5090 kB\nPss_Dirty:          3570 kB\nPss_Anon:           3570 kB\nPss_File:           1520 kB\nPss_Shmem:             0 kB\nShared_Clean:       7280 kB\nShared_Dirty:          0 kB\nPrivate_Clean:       450 kB\nPrivate_Dirty:      3570 kB\nReferenced:        11300 kB\nAnonymous:          3570 kB\nLazyFree:              0 kB\nAnonHugePages:         0 kB\nShmemPmdMapped:        0 kB\nFilePmdMapped:         0 kB\nShared_Hugetlb:        0 kB\nPrivate_Hugetlb:       0 kB\nSwap:               2048 kB\nLocked:                0 kB\n",
+     "/proc/1/smaps_rollup": "00400000-ffffffffff601000 ---p 00000000 00:00 0                          [rollup]\nRss:               11300 kB\nPss:                5090 kB\nPss_Dirty:          3570 kB\nPss_Anon:           3570 kB\nPss_File:           1520 kB\nPss_Shmem:             0 kB\nShared_Clean:       7280 kB\nShared_Dirty:          0 kB\nPrivate_Clean:       450 kB\nPrivate_Dirty:      3570 kB\nReferenced:        11300 kB\nAnonymous:          3570 kB\nLazyFree:              0 kB\nAnonHugePages:         0 kB\nShmemPmdMapped:        0 kB\nFilePmdMapped:         0 kB\nShared_Hugetlb:        0 kB\nPrivate_Hugetlb:       0 kB\nSwap:               2048 kB\nSwapPss:            2048 kB\nLocked:                0 kB\n"
+    }
+   },
+   {
+    "name": "authored: the root is not running",
+    "root": 99,
+    "listing": [
+     "1",
+     "10"
+    ],
+    "files": {
+     "/proc/10/status": "Name:\tproc10\nState:\tS (sleeping)\nTgid:\t10\nPid:\t10\nPPid:\t1\nVmRSS:\t4000 kB\n",
+     "/proc/11/status": "Name:\tproc11\nState:\tS (sleeping)\nTgid:\t11\nPid:\t11\nPPid:\t10\nVmRSS:\t8000 kB\n",
+     "/proc/12/status": "Name:\tproc12\nState:\tS (sleeping)\nTgid:\t12\nPid:\t12\nPPid:\t10\nVmRSS:\t1000 kB\n",
+     "/proc/1/status": "Name:\tproc1\nState:\tS (sleeping)\nTgid:\t1\nPid:\t1\nPPid:\t0\nVmRSS:\t900 kB\n",
+     "/proc/10/smaps_rollup": "00400000-ffffffffff601000 ---p 00000000 00:00 0                          [rollup]\nRss:               11300 kB\nPss:                5090 kB\nPss_Dirty:          3570 kB\nPss_Anon:           3570 kB\nPss_File:           1520 kB\nPss_Shmem:             0 kB\nShared_Clean:       7280 kB\nShared_Dirty:          0 kB\nPrivate_Clean:       450 kB\nPrivate_Dirty:      3570 kB\nReferenced:        11300 kB\nAnonymous:          3570 kB\nLazyFree:              0 kB\nAnonHugePages:         0 kB\nShmemPmdMapped:        0 kB\nFilePmdMapped:         0 kB\nShared_Hugetlb:        0 kB\nPrivate_Hugetlb:       0 kB\nSwap:               2048 kB\nSwapPss:            2048 kB\nLocked:                0 kB\n",
+     "/proc/11/smaps_rollup": "00400000-ffffffffff601000 ---p 00000000 00:00 0                          [rollup]\nRss:               11300 kB\nPss:                5090 kB\nPss_Dirty:          3570 kB\nPss_Anon:           3570 kB\nPss_File:           1520 kB\nPss_Shmem:             0 kB\nShared_Clean:       7280 kB\nShared_Dirty:          0 kB\nPrivate_Clean:       450 kB\nPrivate_Dirty:      3570 kB\nReferenced:        11300 kB\nAnonymous:          3570 kB\nLazyFree:              0 kB\nAnonHugePages:         0 kB\nShmemPmdMapped:        0 kB\nFilePmdMapped:         0 kB\nShared_Hugetlb:        0 kB\nPrivate_Hugetlb:       0 kB\nSwap:               2048 kB\nLocked:                0 kB\n",
+     "/proc/1/smaps_rollup": "00400000-ffffffffff601000 ---p 00000000 00:00 0                          [rollup]\nRss:               11300 kB\nPss:                5090 kB\nPss_Dirty:          3570 kB\nPss_Anon:           3570 kB\nPss_File:           1520 kB\nPss_Shmem:             0 kB\nShared_Clean:       7280 kB\nShared_Dirty:          0 kB\nPrivate_Clean:       450 kB\nPrivate_Dirty:      3570 kB\nReferenced:        11300 kB\nAnonymous:          3570 kB\nLazyFree:              0 kB\nAnonHugePages:         0 kB\nShmemPmdMapped:        0 kB\nFilePmdMapped:         0 kB\nShared_Hugetlb:        0 kB\nPrivate_Hugetlb:       0 kB\nSwap:               2048 kB\nSwapPss:            2048 kB\nLocked:                0 kB\n"
+    }
+   }
+  ]
+ },
+ "win32": {
+  "table": "4 0 100\n100 4 51200\n101 100 25600\n102 100 1024\n200 4 4096\n",
+  "roots": [
+   100,
+   200,
+   300
+  ]
+ },
+ "expect": {
+  "darwin": [
+   {
+    "bytes": {
+     "16997": 1278312,
+     "17000": 1114352,
+     "16999": 1065200
+    },
+    "megabytes": 3
+   },
+   {
+    "bytes": {
+     "16997": 1278312,
+     "16999": 1065200
+    },
+    "megabytes": 3
+   },
+   {
+    "bytes": {},
+    "megabytes": 4
+   },
+   {
+    "bytes": {
+     "510": 2684354560,
+     "511": 104857600
+    },
+    "megabytes": 2700
+   },
+   {
+    "bytes": {
+     "512": 52428800
+    },
+    "megabytes": 50
+   },
+   {
+    "bytes": {},
+    "megabytes": null
+   }
+  ],
+  "linux": {
+   "smaps": [
+    7138,
+    5090,
+    null,
+    12
+   ],
+   "trees": [
+    12,
+    null
+   ]
+  },
+  "win32": [
+   76,
+   4,
+   null
+  ]
+ }
+}

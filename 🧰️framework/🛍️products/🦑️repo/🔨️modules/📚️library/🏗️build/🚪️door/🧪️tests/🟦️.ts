@@ -1,4 +1,5 @@
 import {afterAll,expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
 import {spawnSync} from "node:child_process";
 import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -18,7 +19,7 @@ import {buildInvocationRequestsHelpV1,parseBuildInvocationV1} from "../../🧭�
 const scratch=mkdtempSync(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir()),"door-"));
 afterAll(()=>rmSync(scratch,{recursive:true,force:true}));
 const operations=catalogue.operations.map(operation=>operation.name).join(", "),subcommandsOf=(name:string)=>(catalogue.operations.find(operation=>operation.name===name)?.subcommands??[]).map(row=>row.name).join(", "),rules=policy as unknown as BuildDoorPolicyV1;
-const entry=resolve(import.meta.dir,"../📜️script.ts"),script=resolve(import.meta.dir,"../../📜️script.ts"),cleanEnvironment=Object.fromEntries(Object.entries(process.env).filter(([key])=>!key.startsWith("SEMIO_SCRIPT")&&!key.startsWith("SEMIO_BUILD_")&&key!=="SEMIO_LANGUAGE"));
+const entry=resolve(import.meta.dir,"../📜️script.ts"),script=resolve(import.meta.dir,"../../📜️script.ts"),cleanEnvironment={...Object.fromEntries(Object.entries(process.env).filter(([key])=>!key.startsWith("SEMIO_SCRIPT")&&!key.startsWith("SEMIO_BUILD_")&&key!=="SEMIO_LANGUAGE")),SEMIO_REPO_SEAL:"live"};
 const run=(program:string,args:readonly string[],language:string,extra:Record<string,string>={})=>spawnSync(process.execPath,[program,...args],{encoding:"utf8",timeout:60_000,env:{...cleanEnvironment,SEMIO_LANGUAGE:language,...extra}});
 
 test("the policy is closed, every refusal is bilingual with the same placeholders, and it only names what the catalogue declares",()=>{
@@ -131,4 +132,58 @@ test("the real front door prints the same help as the build script, refuses befo
  const unknown=run(entry,["repo","nonsense"],"en");
  expect(unknown.status).toBe(rules.refusedExitCode);
  expect(unknown.stderr).toContain(operations);
+});
+
+test("a command whose synopsis opens with a required positional is refused by the front door when it is missing, in both languages, checked against yargs-parser and an independent synopsis reading, and before any capacity wait", () => {
+  const route = (typed: string[]) => planBuildDoorV1(typed, {}, { language: () => "en" }).route as { kind: string; id?: string; values?: Record<string, string> };
+  let refused = 0;
+  for (const operation of catalogue.operations) {
+    const lead = /^\S+\s+(<\S*)/u.exec(operation.synopsis)?.[1];
+    for (const typed of [[operation.name], [operation.name, "--dry-run"], ["repo", operation.name]]) {
+      const planned = route(typed);
+      if (lead === undefined) expect(planned.id, typed.join(" ")).not.toBe("missingArgument");
+      else { refused++; expect([planned.kind, planned.id, planned.values?.command, planned.values?.usage], typed.join(" ")).toEqual(["refused", "missingArgument", operation.name, lead]); expect(yargsParser(typed.slice(typed[0] === "repo" ? 2 : 1).filter(argument => !argument.startsWith("-")))._.length).toBe(0); }
+    }
+    if (lead !== undefined) {
+      expect(route([operation.name, "p:t"]).id).not.toBe("missingArgument");
+      expect(yargsParser([operation.name, "p:t"])._.length).toBe(2);
+      expect(route([operation.name, "--help"]).kind).toBe("help");
+      expect(route([operation.name, "--", "x"]).id).toBe("missingArgument");
+    }
+  }
+  expect(refused).toBeGreaterThanOrEqual(6);
+  const texts = rules.texts as unknown as Record<string, Record<string, string>>;
+  const placeholders = (text: string) => [...text.matchAll(/\{([A-Za-z]+)\}/gu)].map(match => match[1]).sort().join(",");
+  expect(placeholders(texts.missingArgument!.en!)).toBe(placeholders(texts.missingArgument!.de!));
+  expect(renderBuildDoorRefusalV1({ kind: "refused", id: "missingArgument", values: { command: "run", usage: "<project:target[:configuration]>" } }, "de")).toBe('"repo run" braucht <project:target[:configuration]>. "repo run --help" zeigt die Hilfe.');
+  const first = run(entry, ["run"], "de"), second = run(entry, ["--lang=en", "run", "--dry-run"], "en");
+  expect([first.status, second.status]).toEqual([2, 2]);
+  expect(first.stderr).toContain("braucht <project:target[:configuration]>");
+  expect(second.stderr).toContain('needs <project:target[:configuration]>');
+  for (const result of [first, second]) expect(result.stderr + result.stdout).not.toMatch(/\[capacity\]|\[script\]/u);
+});
+
+test("the front door says what it works on at the declared cadence, in the chosen language or both, checked against SQLite", async () => {
+  const { startBuildDoorLivenessV1 } = await import("../🟦️.ts"), database = new Database(":memory:");
+  try {
+    expect(rules.liveness.delaysSeconds).toEqual([5, 10, 20]);
+    expect(rules.liveness.repeatSeconds).toBe(30);
+    const holes = (text: string) => [...text.matchAll(/\{([a-z]+)\}/gu)].map(match => match[1]).sort().join(",");
+    expect(holes(rules.liveness.texts.en)).toBe(holes(rules.liveness.texts.de));
+    const cases: [Record<string, string>, string[]][] = [[{ SEMIO_LANGUAGE: "de" }, ["de"]], [{ SEMIO_LANGUAGE: "en" }, ["en"]], [{}, ["en", "de"]]];
+    for (const [environment, languages] of cases) {
+      const lines: string[] = [], stop = startBuildDoorLivenessV1(environment as NodeJS.ProcessEnv, { write: line => lines.push(line), phase: () => "source.capture", delaysMilliseconds: [5, 10, 20], repeatMilliseconds: 10 });
+      await Bun.sleep(120); stop();
+      const count = lines.length;
+      expect(count, JSON.stringify(environment)).toBeGreaterThanOrEqual(languages.length * 3);
+      for (let index = 0; index < languages.length; index++) {
+        const oracle = database.query("select replace(replace(json_extract(?1,'$.'||?2),'{seconds}',?3),'{phase}','source.capture') text").get(JSON.stringify(rules.liveness.texts), languages[index], /after (\d+) s|seit (\d+) s/u.exec(lines[index]!)?.slice(1).find(Boolean) ?? "") as { text: string };
+        expect(lines[index], JSON.stringify(environment)).toBe(oracle.text);
+      }
+      await Bun.sleep(40); expect(lines.length).toBe(count);
+    }
+    const unknown: string[] = [], stopUnknown = startBuildDoorLivenessV1({ SEMIO_LANGUAGE: "en" } as NodeJS.ProcessEnv, { write: line => unknown.push(line), phase: () => undefined, delaysMilliseconds: [1], repeatMilliseconds: 1000 });
+    await Bun.sleep(30); stopUnknown();
+    expect(unknown[0]).toContain(`last phase started: ${rules.liveness.unknownPhase}`);
+  } finally { database.close(); }
 });

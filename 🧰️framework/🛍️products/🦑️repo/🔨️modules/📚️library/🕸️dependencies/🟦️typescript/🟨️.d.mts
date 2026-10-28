@@ -4,6 +4,7 @@ export interface SourceInputContractV1 {entries:readonly string[];generated:read
 export interface SourceInputClosureV1 {files:string[];externalDependencies:string[]}
 export function sourceInputContract(value:unknown):SourceInputContractV1;
 export function readSourceInputContract(path:string):SourceInputContractV1;
+export function sourceImportProviderV1():Readonly<{id:string;revision:string}>;
 export function sourceRuntimeImportsV1(path:string):string[];
 export function sourceRuntimeImportsFromBytesV1(path:string,bytes:Uint8Array):string[];
 export function assertGeneratedSources(value:unknown,workspace:string):void;

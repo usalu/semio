@@ -63,7 +63,7 @@ export function lookupUnitV1(root:string,key:string,context:Readonly<{cwd:string
 
 function resolveStored(cwd:string,path:string):string{return isAbsolute(path)?path:resolve(cwd,path);}
 
-/** ♻️ Writes a cached compilation into `outDir` as the compiler would have: output files by reflink where the filesystem supports it (a copy elsewhere, never a shared inode), the dependency file rewritten for this lane, and the compiler's messages returned for replay. */
+/** ♻️ Writes a cached compilation into `outDir` as the compiler would have: output files by reflink where the filesystem supports it (a copy elsewhere, never a shared inode) stamped with the restore time as a compile writes them (a reflink or Windows copy keeps the cache object's last-use time, which Cargo reads as an output older than a dependency's and re-runs the unit on every later build; see https://doc.rust-lang.org/nightly/nightly-rustc/cargo/core/compiler/fingerprint/index.html), the dependency file rewritten for this lane, and the compiler's messages returned for replay. */
 export function restoreUnitV1(root:string,entry:UnitEntryV1,context:Readonly<{outDir:string;laneRoot:string|undefined;stampDirectory:string|undefined}>):{stdout:string;stderr:string}{
  const render=(text:string)=>laneRestoreV1(text.split(policy.key.outputToken).join(context.outDir),context.laneRoot);
  ensure(context.outDir);
@@ -72,7 +72,8 @@ export function restoreUnitV1(root:string,entry:UnitEntryV1,context:Readonly<{ou
   const source=objectPath(root,row.sha256);
   if(row.template){writeFileSync(destination,render(readFileSync(source,"utf8")));}
   else{copyFileSync(source,destination,constants.COPYFILE_FICLONE);if(row.executable)chmodSync(destination,0o755);}
-  try{const now=new Date();utimesSync(source,now,now);}catch{}
+  const now=new Date();try{utimesSync(source,now,now);}catch{}
+  if(!row.template)utimesSync(destination,now,now);
   if(!row.template&&context.stampDirectory)stampFile(destination,row.sha256,context.stampDirectory);
  }
  const text=(sha:string|null)=>sha===null?"":render(readObject(root,sha)?.toString("utf8")??"");

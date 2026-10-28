@@ -2,6 +2,7 @@
  *
  * @see ../🟦️.ts — the pets in a real browser, as the second round made them
  */
+import type { Page } from "@playwright/test";
 import { HANG_ROD } from "@semio-tech/pets";
 import {QUIZZES, enter, expect, pane, playQuiz, swipeTo, test, type Device, activeOverview} from "../../../🎭️e2e/🚶️learner/🟦️.ts";
 import { ANSWER_MS, APPEAR_MS, bodies, eventually, type Body, CARD_PARTS, carry, castOf, choosePets, CONTROLS, enterWithPets, expectCast, expectPerched, floorSpot, HASTE, hasten, HOME, hoverOf, instrumented, type Instruments, KINDS, LANDING_MS, layer, MISCHIEF_HASTE, MISCHIEF_QUIZ, misplaced, pets, reachable, RECAST_MS, ROPE_MS, ROPE_REACH, ROPE_ROUND_MS, stagePasses, standing, TEMPO, trailOf, WALK_MS } from "../🧰️pet-kit/🟦️.ts";
@@ -40,9 +41,8 @@ for (const reclaim of ["hover", "focus"] as const) test(`a pet lifts a copy of a
   if (reclaim === "focus") await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
 });
 
-test("a pet that cannot hop to a perch above raises its ladder or shoots its grapple there: on a quiz's page a climber raises its ladder against the lowest card of the column, and on the home screen a grappler on the footer line reels itself up a rope to a card", async ({ device }) => {
-  test.setTimeout(30 * 60_000);
-  const learner = await device("en");
+/** 🪄️ Lets the pets of a learner's device pass their time eight times as fast, signs the learner in, chooses the lively pets and leaves the preferences on the home screen. */
+async function lively(learner: Device): Promise<void> {
   const page = learner.page;
   await page.addInitScript(hasten, { attribute: TEMPO, tempo: HASTE });
   await enterWithPets(learner);
@@ -51,6 +51,18 @@ test("a pet that cannot hop to a perch above raises its ladder or shoots its gra
   await choosePets(learner, "lively");
   await page.keyboard.press("Escape");
   await expect(pane(page, "prefs")).not.toHaveAttribute("data-opened", "");
+}
+
+/** 🧗️ The pets that have stood on `footing` (a ladder, a rope) since the instruments were put in. */
+function carriedOn(page: Page, footing: string): Promise<readonly string[]> {
+  return page.evaluate((wanted) => Object.entries((window as unknown as { petWalk: Instruments }).petWalk.trails).flatMap(([id, trail]) => (trail.some((line) => line.split("/")[1] === wanted) ? [id] : [])), footing);
+}
+
+test("a pet that cannot hop to a perch above raises its ladder: on a quiz's page a climber raises its ladder against the lowest card of the column", async ({ device }) => {
+  test.setTimeout(30 * 60_000);
+  const learner = await device("en");
+  const page = learner.page;
+  await lively(learner);
   const climber = (id: string): boolean => ["climb", "ladder"].every((gear) => KINDS[id]?.gear.includes(gear) === true);
   const gutters = QUIZZES.find((quiz) => castOf(quiz.id).core.some(climber));
   expect(gutters, "a quiz whose cast has a climber with a ladder in its core").toBeDefined();
@@ -58,17 +70,30 @@ test("a pet that cannot hop to a perch above raises its ladder or shoots its gra
   await expect(pane(page, gutters!.id)).toHaveAttribute("data-opened", "");
   await expectCast(learner, gutters!.id, true);
   await instrumented(page);
-  const carried = (footing: string): Promise<readonly string[]> => page.evaluate((wanted) => Object.entries((window as unknown as { petWalk: Instruments }).petWalk.trails).flatMap(([id, trail]) => (trail.some((line) => line.split("/")[1] === wanted) ? [id] : [])), footing);
-  await eventually(page, () => carried("ladder"), (seen) => seen.length > 0, { stageMs: WALK_MS * HASTE, message: `a pet on a ladder on the page of ${gutters!.id}` });
+  await eventually(page, () => carriedOn(page, "ladder"), (seen) => seen.length > 0, { stageMs: WALK_MS * HASTE, message: `a pet on a ladder on the page of ${gutters!.id}` });
+  const laddered = await carriedOn(page, "ladder");
+  test.info().annotations.push({ type: "gear", description: `on a ladder: ${laddered.join(", ")}` });
+  expect(laddered.every((id) => KINDS[id]!.gear.some((gear) => gear !== "parachute")), `only pets with gear are on a ladder: ${laddered.join(", ")}`).toBe(true);
+});
+
+test("a pet that cannot hop to a perch above shoots its grapple there: on the home screen a grappler on the footer line reels itself up a rope to a card", async ({ device }) => {
+  test.setTimeout(30 * 60_000);
+  const learner = await device("en");
+  const page = learner.page;
+  await lively(learner);
+  const visited = QUIZZES[0]!.id;
+  await page.evaluate((id) => (window.location.hash = id), visited);
+  await expect(pane(page, visited)).toHaveAttribute("data-opened", "");
+  await expectCast(learner, visited, true);
   await page.keyboard.press("Escape");
-  await expect(pane(page, gutters!.id)).not.toHaveAttribute("data-opened", "");
+  await expect(pane(page, visited)).not.toHaveAttribute("data-opened", "");
   await expectCast(learner, HOME, true);
   await instrumented(page);
   const grappling = (body: Body): boolean => KINDS[body.id]?.gear.includes("grapple") === true;
   const moved: string[] = [];
   const held: string[] = [];
   const ropeRound = async (): Promise<void> => {
-    if ((await carried("rope")).length > 0) return;
+    if ((await carriedOn(page, "rope")).length > 0) return;
     const footer = (await page.locator(".course-app > footer").boundingBox())!;
     const raised = (body: Body): number => footer.y - body.bottom - hoverOf(body.id);
     for (const body of (await bodies(page)).filter((candidate) => grappling(candidate) && candidate.footing === "perch" && raised(candidate) > 2)) {
@@ -84,15 +109,14 @@ test("a pet that cannot hop to a perch above raises its ladder or shoots its gra
       await expectPerched(page, pet.id, LANDING_MS).catch(() => undefined);
       if ((await bodies(page)).some((landed) => landed.id === pet.id && landed.footing === "perch" && raised(landed) <= 2)) break;
     }
-    const shown = (await bodies(page)).filter((body) => body.opacity > 0.99);
-    const grounded = shown.filter((body) => grappling(body) && body.footing === "perch" && raised(body) <= 2);
-    expect(grounded.length, `a grappler on the footer line among ${shown.map((body) => `${body.id} ${body.footing}`).join(", ")}`).toBeGreaterThan(0);
+    const groundedNow = async (): Promise<readonly Body[]> => (await bodies(page)).filter((body) => body.opacity > 0.99 && grappling(body) && body.footing === "perch" && raised(body) <= 2);
+    const grounded = await eventually(page, groundedNow, (seen) => seen.length > 0, { stageMs: ROPE_ROUND_MS * HASTE, message: "a grappler on the footer line" });
     const reach = Math.max(...grounded.map((body) => ROPE_REACH * KINDS[body.id]!.size.height));
     const sitting = (body: Body): boolean => !grappling(body) && raised(body) > 2 && raised(body) <= reach;
     let round = 0;
     let holding = false;
     try {
-      while (round < ROPE_ROUND_MS * HASTE && (await carried("rope")).length === 0) {
+      while (round < ROPE_ROUND_MS * HASTE && (await carriedOn(page, "rope")).length === 0) {
         const sitter = await reachable(page, sitting).catch(() => undefined);
         if (sitter !== undefined) {
           if (holding) await page.mouse.up();
@@ -105,7 +129,7 @@ test("a pet that cannot hop to a perch above raises its ladder or shoots its gra
     } finally {
       if (holding) await page.mouse.up();
     }
-    expect(await carried("rope"), "a grappler on the footer line reels itself up a rope").not.toEqual([]);
+    expect(await carriedOn(page, "rope"), "a grappler on the footer line reels itself up a rope").not.toEqual([]);
   };
   for (let attempt = 1; ; attempt++) {
     try {
@@ -115,11 +139,10 @@ test("a pet that cannot hop to a perch above raises its ladder or shoots its gra
       if (attempt >= ROPE_MS / ROPE_ROUND_MS) throw failure;
     }
   }
-  const [laddered, roped] = await Promise.all([carried("ladder"), carried("rope")]);
-  test.info().annotations.push({ type: "gear", description: `on a ladder: ${laddered.join(", ")}; on a rope: ${roped.join(", ")}; taken to the footer line by the hand: ${moved.join(", ") || "nobody"}; held off a perch in reach of a rope: ${held.join(", ") || "nobody"}` });
+  const roped = await carriedOn(page, "rope");
+  test.info().annotations.push({ type: "gear", description: `on a rope: ${roped.join(", ")}; taken to the footer line by the hand: ${moved.join(", ") || "nobody"}; held off a perch in reach of a rope: ${held.join(", ") || "nobody"}` });
   for (const id of roped) test.info().annotations.push({ type: "trail", description: `${id}: ${(await trailOf(page, id)).join(" → ")}` });
   expect(roped.every((id) => KINDS[id]?.gear.includes("grapple") === true), `only grapplers are on a rope: ${roped.join(", ")}`).toBe(true);
-  expect(laddered.every((id) => KINDS[id]!.gear.some((gear) => gear !== "parachute")), `only pets with gear are on a ladder: ${laddered.join(", ")}`).toBe(true);
 });
 
 test("a phone shows at most two small pets, on edges it shows and never on a control", async ({ browser }, info) => {

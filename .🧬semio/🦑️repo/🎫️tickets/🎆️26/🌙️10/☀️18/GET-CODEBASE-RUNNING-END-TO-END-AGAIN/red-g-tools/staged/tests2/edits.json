@@ -1,0 +1,37 @@
+{
+ "batch": "tests2",
+ "files": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🔣️.json",
+   "base": "44a8463ebbd7f8783aed989b42941454e54bbda182afa7e7a717cbc1ef835cc8",
+   "applied": "cfbb79702e66b9db8d1661911a0e0f43cc66d573602fb11304d34762914f6b0a",
+   "edits": [
+    {
+     "old": "        \"💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts\"\n      ]",
+     "new": "        \"💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts\",\n        \"💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🧪️tests/🟦️.ts\"\n      ]"
+    },
+    {
+     "old": "        \"💾️storage/🧾️ledger/🧪️tests/⚖️law/🟦️.ts\"\n      ]",
+     "new": "        \"💾️storage/🧾️ledger/🧪️tests/⚖️law/🟦️.ts\",\n        \"💾️storage/🧾️ledger/🎚️machine/🧪️tests/🟦️.ts\"\n      ]"
+    },
+    {
+     "old": "        \"🚀️bootstrap/🔌️nx-plugin/🧪️tests/🦀️native-dependency-closures/🟦️.ts\"\n      ]",
+     "new": "        \"🚀️bootstrap/🔌️nx-plugin/🧪️tests/🦀️native-dependency-closures/🟦️.ts\",\n        \"🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🧪️tests/🟦️.ts\"\n      ]"
+    }
+   ],
+   "keep": "44a8463ebbd7f878"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🧪️tests/🟦️.ts",
+   "base": "96a99a3fd8ea711fdf33783f22b45125241660429f6d0950385d70286be1eaf5",
+   "applied": "bc0e8df71a93198868b9752d997c5c9c99d71214b7f0922ded6f5bb34e6d48fd",
+   "edits": [
+    {
+     "old": "const match=pattern.exec(target.options?.command??\"\");if(match&&match[1]!==undefined&&(target.options?.cwd===undefined||target.options.cwd.endsWith(\"⚡️caching\")))",
+     "new": "const command=target.options?.command??\"\",match=pattern.exec(command);if(match&&match[1]!==undefined&&(target.options?.cwd===undefined||target.options.cwd===\"{projectRoot}\"||target.options.cwd.endsWith(\"⚡️caching\")||command.includes(\"⚡️caching/📜️script.ts\")))"
+    }
+   ],
+   "keep": "96a99a3fd8ea711f"
+  }
+ ]
+}

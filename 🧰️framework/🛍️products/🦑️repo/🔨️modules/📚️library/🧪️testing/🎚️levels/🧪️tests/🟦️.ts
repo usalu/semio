@@ -13,17 +13,17 @@ const here=dirname(fileURLToPath(import.meta.url)),python=testPythonV1();
 const withEnv=<T,>(values:Record<string,string|undefined>,action:()=>T):T=>{const saved:Record<string,string|undefined>={};for(const key of Object.keys(values)){saved[key]=process.env[key];if(values[key]===undefined)delete process.env[key];else process.env[key]=values[key];}try{return action();}finally{for(const[key,value]of Object.entries(saved))if(value===undefined)delete process.env[key];else process.env[key]=value;}};
 const clean={SEMIO_TEST_BUDGET_MS:undefined,SEMIO_TEST_LEVEL:undefined};
 for(const row of corpus.levels)test("level arguments of "+row.level,()=>{withEnv(clean,()=>{
- const level=row.level as "fundamental";expect(goLevelTestArgs(level)).toEqual(row.go);expect(vitestLevelArgs(level)).toEqual(row.vitest);expect(bunTestLevelArgs(level)).toEqual(row.bun);expect(pytestLevelArgs(level)).toEqual(row.pytest);expect(dotnetLevelArgs(level)).toEqual(row.dotnet);expect(playwrightTestTimeoutMs(level)).toBe(row.playwright);
+ const level=row.level as "fundamental";expect(goLevelTestArgs(level,1)).toEqual(row.go);expect(vitestLevelArgs(level,1)).toEqual(row.vitest);expect(bunTestLevelArgs(level,1)).toEqual(row.bun);expect(pytestLevelArgs(level,1)).toEqual(row.pytest);expect(dotnetLevelArgs(level,1)).toEqual(row.dotnet);expect(playwrightTestTimeoutMs(level,1)).toBe(row.playwright);
 });});
-test("a budget override changes every timeout, rounding seconds up",()=>{withEnv({SEMIO_TEST_BUDGET_MS:corpus.override.budgetMs,SEMIO_TEST_LEVEL:undefined},()=>{expect(goLevelTestArgs("fundamental")).toEqual(corpus.override.go);expect(pytestLevelArgs("fundamental")).toEqual(corpus.override.pytest);expect(bunTestLevelArgs("fundamental")).toEqual(corpus.override.bun);expect(playwrightTestTimeoutMs("fundamental")).toBe(corpus.override.playwright);});});
+test("a budget override changes every timeout, rounding seconds up",()=>{withEnv({SEMIO_TEST_BUDGET_MS:corpus.override.budgetMs,SEMIO_TEST_LEVEL:undefined},()=>{expect(goLevelTestArgs("fundamental",1)).toEqual(corpus.override.go);expect(pytestLevelArgs("fundamental",1)).toEqual(corpus.override.pytest);expect(bunTestLevelArgs("fundamental",1)).toEqual(corpus.override.bun);expect(playwrightTestTimeoutMs("fundamental",1)).toBe(corpus.override.playwright);});});
 test("the active level comes from the environment and an unknown value falls back to fundamental",()=>{
- withEnv({SEMIO_TEST_BUDGET_MS:undefined,SEMIO_TEST_LEVEL:corpus.default.env},()=>{expect(bunTestLevelArgs()).toEqual(corpus.default.expectedBun);});
- withEnv({SEMIO_TEST_BUDGET_MS:undefined,SEMIO_TEST_LEVEL:"nonsense"},()=>{expect(bunTestLevelArgs()).toEqual(corpus.invalidEnvDefaultsToFundamental);});
- withEnv(clean,()=>{expect(bunTestLevelArgs()).toEqual(corpus.invalidEnvDefaultsToFundamental);});
+ withEnv({SEMIO_TEST_BUDGET_MS:undefined,SEMIO_TEST_LEVEL:corpus.default.env},()=>{expect(bunTestLevelArgs(undefined,1)).toEqual(corpus.default.expectedBun);});
+ withEnv({SEMIO_TEST_BUDGET_MS:undefined,SEMIO_TEST_LEVEL:"nonsense"},()=>{expect(bunTestLevelArgs(undefined,1)).toEqual(corpus.invalidEnvDefaultsToFundamental);});
+ withEnv(clean,()=>{expect(bunTestLevelArgs(undefined,1)).toEqual(corpus.invalidEnvDefaultsToFundamental);});
 });
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

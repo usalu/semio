@@ -1,0 +1,145 @@
+{
+ "title": "🏷️ Staged batch `cp-names` (lane compliance): fixtures and test folders that shared their emoji with a sibling (or had none) get their own handpicked emoji; the references follow; the flat reference model of the index chunks no longer calls itself legacy.",
+ "files": [
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧪️tests/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/🟦️.ts"
+ ],
+ "manual": [
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/🟦️.ts",
+   "old": "📜️holder.ts",
+   "new": "🤲️holder.ts",
+   "count": "any"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/🟦️.ts",
+   "old": "📜️leaver.ts",
+   "new": "🚪️leaver.ts",
+   "count": "any"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/🟦️.ts",
+   "old": "📜️limit.ts",
+   "new": "📏️limit.ts",
+   "count": "any"
+  },
+  {
+   "rel": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/🟦️.ts",
+   "old": "📜️runner.ts",
+   "new": "🏃️runner.ts",
+   "count": "any"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧪️tests/🟦️.ts",
+   "old": "🐍️realise.py",
+   "new": "🪄️realise.py",
+   "count": "any"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🟦️.ts",
+   "old": "📼️g5.json",
+   "new": "🎞️g5.json",
+   "count": "any"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🟦️.ts",
+   "old": "📼️g29.json",
+   "new": "📹️g29.json",
+   "count": "any"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🟦️.ts",
+   "old": "📼️g34.json",
+   "new": "🎥️g34.json",
+   "count": "any"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/🗜️flat-reference.ts",
+   "old": "legacyCreateFactIndexV1",
+   "new": "flatReferenceFactIndexV1",
+   "count": "any"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/🟦️.ts",
+   "old": "legacyCreateFactIndexV1",
+   "new": "flatReferenceFactIndexV1",
+   "count": "any"
+  },
+  {
+   "rel": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/🟦️.ts",
+   "old": "\"./legacy.ts\"",
+   "new": "\"./🗜️flat-reference.ts\"",
+   "count": 1
+  }
+ ],
+ "moves": [
+  {
+   "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/👶️fixture/📜️holder.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/👶️fixture/🤲️holder.ts"
+  },
+  {
+   "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/👶️fixture/📜️leaver.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/👶️fixture/🚪️leaver.ts"
+  },
+  {
+   "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/👶️fixture/📜️limit.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/👶️fixture/📏️limit.ts"
+  },
+  {
+   "from": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/👶️fixture/📜️runner.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/👶️fixture/🏃️runner.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧪️tests/🧫️fixtures/🐍️realise.py",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧪️tests/🧫️fixtures/🪄️realise.py"
+  },
+  {
+   "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🧫️fixtures/📼️g5.json",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🧫️fixtures/🎞️g5.json"
+  },
+  {
+   "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🧫️fixtures/📼️g29.json",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🧫️fixtures/📹️g29.json"
+  },
+  {
+   "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🧫️fixtures/📼️g34.json",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🌤️followup/🧫️fixtures/🎥️g34.json"
+  },
+  {
+   "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🧪️tests/🔁️plan-stability/🔣️.json",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🧪️tests/⚓️plan-stability/🔣️.json"
+  },
+  {
+   "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🧪️tests/🔁️plan-stability/🐍️.py",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🧪️tests/⚓️plan-stability/🐍️.py"
+  },
+  {
+   "from": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🧪️tests/🔁️plan-stability/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🧪️tests/⚓️plan-stability/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧾️row-sequence/🔣️.json",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🪜️row-sequence/🔣️.json"
+  },
+  {
+   "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧾️row-sequence/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🪜️row-sequence/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧾️row-sequence/🧬️schema/🔣️.json",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🪜️row-sequence/🧬️schema/🔣️.json"
+  },
+  {
+   "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🧪️tests/🦀️source-inputs-memo/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🧪️tests/🧠️source-inputs-memo/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/legacy.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/🗜️flat-reference.ts"
+  }
+ ],
+ "emoji": [],
+ "verify": []
+}

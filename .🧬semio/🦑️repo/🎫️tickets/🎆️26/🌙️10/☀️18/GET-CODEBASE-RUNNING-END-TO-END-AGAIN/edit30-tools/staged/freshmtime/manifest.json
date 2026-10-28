@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/💾️store/🟦️.ts": {
+  "file": "00.ts",
+  "base": "71fea8287935acc58040839b5bafbfb4328b80540728aea889ce91b9ecbcb84e",
+  "new": "ea646f507f45b2dc3abbada93b5e43d05579b687db32724281c8563a97c448c3"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🕰️freshness/🟦️.ts": {
+  "file": "01.ts",
+  "base": null,
+  "new": "e7b61d38ad099b4e5c9c1196ddce83c3a8b7d2c284bd06e2b7dbdc3dfab82487"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🕰️freshness/🔣️.json": {
+  "file": "02.json",
+  "base": null,
+  "new": "d1282e5f3f1b12ecb5d9245fe45a5274036e7e0a5bbd6d1f8c7e441796bd8a82"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🕰️freshness/🐍️.py": {
+  "file": "03.py",
+  "base": null,
+  "new": "8fc03ed02d72e73c007bc806340a3f562ff7204a69052237c606daaa85a92d4e"
+ }
+}

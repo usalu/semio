@@ -1,0 +1,2174 @@
+diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
+--- a/dist/src/daemon/client/client.js
++++ b/dist/src/daemon/client/client.js
+@@ -197,6 +197,42 @@
+             this.currentSpinner = null;
+         }
+     }
++    async getSemioFilesystemJournalV1(scope, control) {
++        if (!control || !(control.signal instanceof AbortSignal) || typeof control.remainingMilliseconds !== 'function' || typeof control.publish !== 'function' || typeof control.yieldContinuation !== 'function') throw new Error('Original filesystem journal caller required');
++        const check = () => { control.signal.throwIfAborted(); const budget = control.remainingMilliseconds(); if (budget !== null && (!Number.isFinite(budget) || budget <= 0)) throw new Error('Filesystem journal original deadline exhausted'); return budget; };
++        check(); const started = performance.now();
++        if (process.env.NX_DAEMON === 'false' || !this.enabled()) return null;
++        const loaded = await new Promise((accept, reject) => {
++            let done = false; const finish = (error, value = null) => { if (done) return; done = true; clearTimeout(timer); control.signal.removeEventListener('abort', abort); error ? reject(error) : accept(value); };
++            const abort = () => finish(control.signal.reason || new Error('Filesystem journal original caller cancelled')), budget = check();
++            const timer = budget === null ? undefined : setTimeout(() => { try { check(); finish(new Error('Filesystem journal original deadline exhausted')); } catch (error) { finish(error); } }, Math.max(1, Math.ceil(budget)));
++            control.signal.addEventListener('abort', abort, { once: true });
++            require('../../utils/workspace-context').loadSemioGraphAuthorizersV1().then(value => { try { check(); finish(null, value); } catch (error) { finish(error); } }, () => { try { check(); finish(null); } catch (error) { finish(error); } });
++            if (control.signal.aborted) abort();
++        }); if (!loaded) return null;
++        const owner = loaded.authorizers, identity = loaded.toolingIdentity, metadata = (0, cache_1.readDaemonProcessJsonCache)(), service = require('../../utils/workspace-context').readSemioGraphJournalServiceV1(identity, workspace_root_1.workspaceRoot);
++        check();
++        if (!identity || metadata?.semioToolingIdentity !== identity || !service || service.processId !== metadata.processId) return null;
++        const remaining = check(), deadlineUnixMilliseconds = remaining === null ? null : Math.floor(Date.now() + remaining);
++        const request = owner.readFilesystemJournalRpcRequestV1({ type: 'GET_SEMIO_FILESYSTEM_JOURNAL', version: 1, scope, deadlineUnixMilliseconds });
++        return new Promise((accept, reject) => {
++            let socket, messenger, timer, progress, done = false;
++            const finish = (error, value = null) => { if (done) return; done = true; clearTimeout(timer); clearInterval(progress); control.signal.removeEventListener('abort', abort); messenger?.close(); socket?.destroy(); if (error) reject(error); else accept(value); };
++            const abort = () => finish(control.signal.reason || new Error('Filesystem journal original caller cancelled'));
++            try {
++                const remaining = check();
++                if (remaining !== null) timer = setTimeout(() => { try { check(); finish(new Error('Filesystem journal original deadline exhausted')); } catch (error) { finish(error); } }, Math.max(1, Math.ceil(remaining)));
++                progress = setInterval(() => { try { check(); Promise.resolve(control.publish({ resource: 'filesystem-journal:rpc', mode: 'shared', elapsedMs: performance.now() - started })).then(() => control.yieldContinuation()).catch(error => finish(error)); } catch (error) { finish(error); } }, 250);
++                control.signal.addEventListener('abort', abort, { once: true });
++                socket = net_1.connect(service.socketPath);
++                messenger = new daemon_socket_messenger_1.DaemonSocketMessenger(socket).listen(bytes => {
++                    try { check(); const response = (0, consume_messages_from_socket_1.parseMessage)(bytes); const witness = owner.readFilesystemJournalRpcResponseV1(response, identity), current = require('../../utils/workspace-context').readSemioGraphJournalServiceV1(identity, workspace_root_1.workspaceRoot); finish(null, witness && current?.generation === service.generation && current.processId === service.processId && current.socketPath === service.socketPath ? response : null); } catch (error) { try { check(); finish(null); } catch (original) { finish(original); } }
++                }, () => finish(null), () => finish(null));
++                socket.once('connect', () => { try { check(); messenger.sendMessage({ ...request }, 'json'); } catch (error) { finish(error); } });
++                if (control.signal.aborted) abort();
++            } catch (error) { finish(error); }
++        });
++    }
+     async getAllFileData() {
+         return await this.sendToDaemonViaQueue({ type: 'REQUEST_FILE_DATA' });
+     }
+@@ -222,7 +258,7 @@
+     }
+     async registerFileWatcher(config, callback) {
+         try {
+-            await this.getProjectGraphAndSourceMaps();
++            if (config.watchProjects !== 'all' || !config.includeGlobalWorkspaceFiles) await this.getProjectGraphAndSourceMaps();
+         }
+         catch (e) {
+             if (config.allowPartialGraph && e instanceof error_types_1.ProjectGraphError) {
+@@ -792,6 +828,10 @@
+         return (await this.probeServer()).available;
+     }
+     async startDaemonIfNecessary() {
++        if (this._daemonStatus == DaemonStatus.CONNECTED) return;
++        const frozen = await require('../../utils/workspace-context').loadSemioGraphAuthorizersV1();
++        if (!frozen || typeof frozen.authorizers.withNxDaemonStartupV1 !== 'function') throw Error('Original immutable daemon startup owner required');
++        return frozen.authorizers.withNxDaemonStartupV1(require('../../utils/cache-directory').workspaceDataDirectory, frozen.toolingIdentity, process.env, async (control, semioBirthEnvironment) => {
+         if (this._daemonStatus == DaemonStatus.CONNECTED) {
+             return;
+         }
+@@ -814,7 +854,7 @@
+             }
+             if (!probe.available) {
+                 // Carried as a value so no other caller's probe can substitute for it.
+-                daemonPid = await this.startInBackground(probe.refusal);
++                daemonPid = await this.startInBackground(probe.refusal, control, semioBirthEnvironment);
+             }
+             this.setUpConnection();
+             this._daemonStatus = DaemonStatus.CONNECTED;
+@@ -829,6 +869,7 @@
+             // Fire-and-forget - don't block daemon connection by waiting for metrics registration
+             this.registerDaemonProcessWithMetricsService(daemonPid);
+         }
++        });
+     }
+     async sendToDaemonViaQueue(messageToDaemon, parser) {
+         return this.queue.sendToQueue(async () => {
+@@ -951,6 +992,8 @@
+      * Used for reconnection - throws VersionMismatchError if daemon version differs.
+      */
+     async waitForServerToBeAvailable(options) {
++        const control = options.semioControl, check = () => { if (!control) return; control.signal.throwIfAborted(); const remaining = control.remainingMilliseconds(); if (remaining !== null && remaining <= 0) throw Error('Original daemon startup deadline exhausted'); };
++        check();
+         logger_1.clientLogger.log(`[Client] Waiting for server (max: ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts, ${WAIT_FOR_SERVER_CONFIG.delayMs}ms interval)`);
+         // Poll-scoped, not instance state: reconnect paths have their own flags, so
+         // several attempts can be in flight and a shared slot would let one report
+@@ -958,6 +1001,7 @@
+         let stoppedOnRefusal = false;
+         let refusal;
+         const socket = await (0, wait_for_socket_connection_1.waitForSocketConnection)(() => {
++            check();
+             try {
+                 return this.getSocketPath();
+             }
+@@ -973,6 +1017,7 @@
+         }, {
+             maxAttempts: WAIT_FOR_SERVER_CONFIG.maxAttempts,
+             delayMs: WAIT_FOR_SERVER_CONFIG.delayMs,
++            signal: control?.signal,
+             onConnectError: (error, socketPath) => {
+                 refusal = { error, socketPath };
+                 // A refusal is not expected to become an acceptance, so polling the
+@@ -984,6 +1029,7 @@
+                 return (stoppedOnRefusal = (0, permission_errors_1.isPermissionDenied)(error));
+             },
+         });
++        check();
+         if (socket) {
+             socket.destroy();
+             logger_1.clientLogger.log(`[Client] Server available`);
+@@ -998,6 +1044,7 @@
+         return { available: false, refusal };
+     }
+     async sendMessageToDaemon(message, force) {
++        if (!global.NX_PLUGIN_WORKER && process.env.SEMIO_SCRIPT_PROCESS_INVOCATION !== undefined) { message.semioOriginalScriptProcessInvocation = process.env.SEMIO_SCRIPT_PROCESS_INVOCATION; message.semioSourceProof = { version: 1, sourceMembership: process.env.SEMIO_NX_GRAPH_SOURCE_MEMBERSHIP ?? null }; }
+         // the first message sent to the daemon includes an env prop
+         // that updates the process.env values on the daemon.
+         if (!this.envReflectionSent && !global.NX_PLUGIN_WORKER) {
+@@ -1082,7 +1129,9 @@
+      *        when a daemon refuses us and then exits — the poll cannot reproduce it
+      *        once the process json is gone. `nx daemon --start` passes nothing.
+      */
+-    async startInBackground(probeRefusal) {
++    async startInBackground(probeRefusal, semioControl, semioBirthEnvironment) {
++        if (!semioControl || !semioBirthEnvironment?.SEMIO_NX_DAEMON_SERVICE_BIRTH) throw Error('Original daemon service birth owner required');
++        const birth = JSON.parse(semioBirthEnvironment.SEMIO_NX_DAEMON_SERVICE_BIRTH).birth;
+         if (global.NX_PLUGIN_WORKER) {
+             throw new Error('Fatal Error: Something unexpected has occurred. Plugin Workers should not start a new daemon process. Please report this issue.');
+         }
+@@ -1089,3 +1138,3 @@
+-        (0, node_fs_1.mkdirSync)(tmp_dir_1.DAEMON_DIR_FOR_CURRENT_WORKSPACE, { recursive: true });
++        (0, node_fs_1.mkdirSync)((0, path_1.dirname)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE), { recursive: true });
+         if (!(0, node_fs_1.existsSync)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE)) {
+             (0, node_fs_1.writeFileSync)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE, '');
+@@ -1104,11 +1153,11 @@
+             (0, path_1.join)(__dirname, `../server/start.js`),
+         ], {
+             cwd: workspace_root_1.workspaceRoot,
+-            stdio: ['ignore', outFd, errFd],
++            stdio: ['ignore', outFd, errFd, 'ipc'],
+             detached: true,
+             windowsHide: true,
+             shell: false,
+-            env: (0, daemon_environment_1.getDaemonSpawnEnv)(),
++            env: { ...(0, daemon_environment_1.getDaemonSpawnEnv)(), SEMIO_NX_DAEMON_SERVICE_BIRTH: semioBirthEnvironment.SEMIO_NX_DAEMON_SERVICE_BIRTH },
+         });
+         // The child now owns dup'd copies of the descriptors, so release ours.
+         (0, node_fs_1.closeSync)(outFd);
+@@ -1119,8 +1168,20 @@
+         // EPERM/EACCES, which is the only way that errno reaches this process.
+         // Attached before `unref` so the listener is registered before the child can
+         // exit; `unref` only stops the child holding the event loop open.
++        const terminal = new Promise(resolve => backgroundProcess.once('close', resolve));
++        let admitted = false;
++        const acquired = new Promise((resolve, reject) => {
++            backgroundProcess.on('message', message => { if (message?.type === 'SEMIO_NX_DAEMON_ACQUIRED' && message.generation === birth.generation && message.toolingIdentity === birth.toolingIdentity) { admitted = true; resolve(); } });
++            backgroundProcess.once('exit', (code, signal) => { if (!admitted) reject(Error('Original daemon child exited before acquisition: code=' + code + ' signal=' + signal)); });
++            backgroundProcess.once('error', reject);
++        });
++        void acquired.catch(() => {});
++        let killTimer;
++        const cancel = () => { if (killTimer || !backgroundProcess.pid || backgroundProcess.exitCode !== null || backgroundProcess.signalCode !== null) return; backgroundProcess.kill('SIGTERM'); killTimer = setTimeout(() => backgroundProcess.kill('SIGKILL'), 2000); };
++        void terminal.then(() => clearTimeout(killTimer));
++        semioControl.signal.addEventListener('abort', cancel, { once: true });
+         let daemonRefusedSocket = false;
+         backgroundProcess.once('exit', (code) => {
+             daemonRefusedSocket = code === socket_refused_exit_code_1.SOCKET_REFUSED_EXIT_CODE;
+         });
+         // if this process is the process that spawned the daemon,
+@@ -1130,9 +1191,12 @@
+         /**
+          * Ensure the server is actually available to connect to via IPC before resolving
+          */
+-        const { available, refusal: polled } = await this.waitForServerToBeAvailable({ ignoreVersionMismatch: true });
++        try {
++        await acquired;
++        const { available, refusal: polled } = await this.waitForServerToBeAvailable({ ignoreVersionMismatch: true, semioControl });
+         if (available) {
+             logger_1.clientLogger.log(`[Client] Daemon server started, pid=${backgroundProcess.pid}`);
++            if (backgroundProcess.connected) backgroundProcess.disconnect();
+             return backgroundProcess.pid;
+         }
+         else {
+@@ -1159,22 +1223,33 @@
+                     ? (0, sandbox_socket_hint_1.sandboxSocketHint)({ certain: daemonRefusedSocket })
+                     : []),
+             ].join('\n'));
++        }
++        } catch (error) {
++            cancel();
++            await terminal;
++            let daemonLog = '';
++            try { daemonLog = (0, node_fs_1.readFileSync)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE, 'utf8').slice(-4000); } catch (readError) { daemonLog = String(readError); }
++            throw Error(String(error && error.message || error) + '\n' + daemonLog);
++        } finally {
++            semioControl.signal.removeEventListener('abort', cancel);
+         }
+     }
+-    async stop() {
+-        try {
+-            const pid = (0, cache_1.getDaemonProcessIdSync)();
+-            if (pid) {
+-                process.kill(pid, 'SIGTERM');
+-            }
+-        }
+-        catch (err) {
+-            if (err.code !== 'ESRCH') {
+-                output_1.output.error({
+-                    title: err?.message ||
+-                        'Something unexpected went wrong when stopping the daemon server',
+-                });
+-            }
+-        }
+-        (0, tmp_dir_1.removeSocketDir)();
+-    }
++    async stop() {
++        const frozen = await require('../../utils/workspace-context').loadSemioGraphAuthorizersV1();
++        if (!frozen) throw Error('Original immutable daemon stop owner required');
++        return frozen.authorizers.withNxDaemonStartupV1(require('../../utils/cache-directory').workspaceDataDirectory, frozen.toolingIdentity, process.env, async control => {
++            control.signal.throwIfAborted();
++            if (!(await this.probeServer()).available) return;
++            await this.requestShutdown();
++            const started = performance.now();
++            while ((await this.probeServer()).available) {
++                control.signal.throwIfAborted();
++                const remaining = control.remainingMilliseconds();
++                if (remaining !== null && remaining <= 0) throw Error('Original daemon shutdown deadline exhausted');
++                await control.publish({ resource: 'nx-daemon:shutdown', mode: 'exclusive', elapsedMs: performance.now() - started });
++                await control.yieldContinuation();
++                await require('node:timers/promises').setTimeout(Math.min(100, remaining ?? 100), undefined, { signal: control.signal });
++            }
++            this.reset();
++        });
++    }
+@@ -1235,7 +1310,18 @@
+     // which is exactly when the daemon is most likely to fail to start.
+     let body = message;
+     try {
+-        let log = (0, node_fs_1.readFileSync)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE).toString().split('\n');
++        const descriptor = (0, node_fs_1.openSync)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE, 'r');
++        let bytes;
++        try {
++            const size = (0, node_fs_1.fstatSync)(descriptor).size;
++            bytes = Buffer.alloc(Math.min(size, 65536));
++            const length = (0, node_fs_1.readSync)(descriptor, bytes, 0, bytes.length, Math.max(0, size - bytes.length));
++            bytes = bytes.subarray(0, length);
++        }
++        finally {
++            (0, node_fs_1.closeSync)(descriptor);
++        }
++        let log = bytes.toString().split('\n');
+         if (log.length > 20) {
+             log = log.slice(log.length - 20);
+         }
+diff --git a/dist/src/daemon/client/daemon-environment.js b/dist/src/daemon/client/daemon-environment.js
+--- a/dist/src/daemon/client/daemon-environment.js
++++ b/dist/src/daemon/client/daemon-environment.js
+@@ -12,9 +12,9 @@
+     NX_CACHE_PROJECTS_CONFIG: 'false',
+ };
+ const DAEMON_ENV_OVERRIDABLE_SETTINGS = {
+-    NX_VERBOSE_LOGGING: 'true',
+-    NX_PERF_LOGGING: 'true',
+-    NX_NATIVE_LOGGING: 'nx=debug',
++    NX_VERBOSE_LOGGING: 'false',
++    NX_PERF_LOGGING: 'false',
++    NX_NATIVE_LOGGING: 'nx=warn',
+ };
+ /**
+  * Env vars that should NOT be sent to the daemon because they cannot affect
+@@ -65,6 +65,41 @@
+     'NX_PROFILE',
+     'NX_DAEMON_VERBOSE_LOGGING',
+     'NX_ORIGINAL_FORCE_COLOR',
++    // Repository task controls preserve one graph across callers.
++    'SEMIO_TICKET_DIR',
++    'SEMIO_PRINT_OUTPUT_DIR',
++    'SEMIO_BUILD_MODE',
++    'SEMIO_PLUGIN',
++    'SEMIO_RENDERER',
++    'CODEX_SESSION_ID',
++    'NX_PROJECT_NAME',
++    'NX_FILE_CHANGES',
++    'SEMIO_TEST_ARTIFACT_DIR',
++    'SEMIO_SCRIPT_PROCESS_INVOCATION',
++    'SEMIO_NX_DAEMON_SERVICE_BIRTH',
++    'SEMIO_SCRIPT_CAPABILITIES',
++    'SEMIO_SCRIPT_POLICY',
++    'SEMIO_PROCESS_OWNER_CONTEXT',
++    'SEMIO_BUILD_BUDGET_MS',
++    'SEMIO_CMD_BUDGET_MS',
++    'SEMIO_TEST_BUDGET_MS',
++    'SEMIO_TEST_LEVEL',
++    'SEMIO_COVERAGE',
++    'SEMIO_COMMAND_STORE',
++    'SEMIO_COMMAND_WORKSPACE',
++    'SEMIO_CARGO_ARTIFACT_POLICY',
++    'SEMIO_CARGO_TEST_POLICY',
++    'SEMIO_CARGO_TEST_POLICIES',
++    'SEMIO_VITEST_POLICY',
++    'SEMIO_NX_OUTPUT_LOG',
++    'SEMIO_BUILD_PROFILE_INPUTS',
++    'SEMIO_NX_TASK_USE_OWNER_PID',
++    'SEMIO_NX_SELECTED_GRAPH_RECEIPT',
++    'SEMIO_NX_GRAPH_SEAL_REUSE',
++    'SEMIO_NX_GRAPH_SOURCE_MEMBERSHIP',
++    'NX_MAX_CACHE_SIZE',
++    'NX_PARALLEL',
++    'NX_FORCE_REUSE_CACHED_GRAPH',
+     // AI agent detection vars (the daemon itself is not an AI agent)
+     'CLAUDECODE',
+     'CLAUDE_CODE',
+@@ -264,14 +299,14 @@
+ function normalizedLoadDotEnvFiles() {
+     return process.env.NX_LOAD_DOT_ENV_FILES === 'false' ? 'false' : 'true';
+ }
+-function getDaemonEnv() {
++function getDaemonEnv(source = process.env) {
+     const env = { ...DAEMON_ENV_OVERRIDABLE_SETTINGS };
+-    for (const key in process.env) {
+-        if (!isExcludedEnvVar(key)) {
+-            env[key] = process.env[key];
++    for (const key in source) {
++        if (Object.hasOwn(DAEMON_ENV_OVERRIDABLE_SETTINGS, key) || !isExcludedEnvVar(key)) {
++            env[key] = source[key];
+         }
+     }
+-    env.NX_LOAD_DOT_ENV_FILES = normalizedLoadDotEnvFiles();
++    env.NX_LOAD_DOT_ENV_FILES = source.NX_LOAD_DOT_ENV_FILES === 'false' ? 'false' : 'true';
+     return Object.assign(env, DAEMON_ENV_REQUIRED_SETTINGS);
+ }
+ let clientEnvGeneration = 0;
+@@ -341,6 +376,8 @@
+  * previous client is stale all the same.
+  */
+ function applyDaemonEnvFromClient(newEnv) {
++    const pinned = require('../../utils/handle-import').loadedSemioGraphAuthorizersV1()?.nxDaemonPinnedEnvironmentV1();
++    if (pinned) { newEnv = { ...newEnv, ...pinned }; for (const key of Object.keys(pinned)) if (pinned[key] === undefined) delete newEnv[key]; }
+     const changedKeys = new Set();
+     const allKeys = new Set([
+         ...Object.keys(process.env),
+diff --git a/dist/src/daemon/logger.js b/dist/src/daemon/logger.js
+--- a/dist/src/daemon/logger.js
++++ b/dist/src/daemon/logger.js
+@@ -12,10 +12,43 @@
+  */
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.clientLogger = exports.serverLogger = void 0;
++exports.pruneDaemonLog = pruneDaemonLog;
+ const fs_1 = require("fs");
+ const versions_1 = require("../utils/versions");
+ const client_socket_context_1 = require("./server/client-socket-context");
+ const tmp_dir_1 = require("./tmp-dir");
++const path_1 = require("node:path");
++const daemonLogLimit = 8 * 1024 * 1024;
++const daemonLogTail = 64 * 1024;
++/** 🪵️ Bounds derived diagnostics in place so the daemon's inherited append descriptors remain valid. */
++function pruneDaemonLog() {
++    let descriptor;
++    try {
++        const path = tmp_dir_1.DAEMON_OUTPUT_LOG_FILE;
++        const stat = (0, fs_1.lstatSync)(path);
++        if (!stat.isFile() || stat.nlink > 1 || stat.size <= daemonLogLimit) return;
++        for (let parent = path_1.dirname(path); path_1.dirname(parent) !== parent; parent = path_1.dirname(parent)) if ((0, fs_1.lstatSync)(parent).isSymbolicLink()) return;
++        descriptor = (0, fs_1.openSync)(path, fs_1.constants.O_RDWR | (fs_1.constants.O_NOFOLLOW || 0));
++        const current = (0, fs_1.fstatSync)(descriptor);
++        if (!current.isFile() || current.nlink > 1 || current.ino !== stat.ino || current.dev !== stat.dev || current.size <= daemonLogLimit) return;
++        let tail = Buffer.alloc(Math.min(current.size, daemonLogTail));
++        const length = (0, fs_1.readSync)(descriptor, tail, 0, tail.length, current.size - tail.length);
++        tail = tail.subarray(0, length);
++        const newline = tail.indexOf(10);
++        if (newline >= 0) tail = tail.subarray(newline + 1);
++        (0, fs_1.ftruncateSync)(descriptor, 0);
++        let offset = 0;
++        while (offset < tail.length) {
++            const written = (0, fs_1.writeSync)(descriptor, tail, offset, tail.length - offset, offset);
++            if (!written) break;
++            offset += written;
++        }
++    }
++    catch {}
++    finally { if (descriptor !== undefined) try { (0, fs_1.closeSync)(descriptor); } catch {} }
++}
++const retention = setInterval(() => { if (global.NX_DAEMON) pruneDaemonLog(); }, 30000);
++retention.unref();
+ class DaemonLogger {
+     constructor(source) {
+         this.source = source;
+@@ -32,6 +65,7 @@
+         if (this.source === 'Server') {
+             // Server's stdout is redirected to daemon.log
+             console.log(message);
++            pruneDaemonLog();
+         }
+         else {
+             // Client writes directly to the log file
+@@ -63,7 +97,9 @@
+-            if (!(0, fs_1.existsSync)(tmp_dir_1.DAEMON_DIR_FOR_CURRENT_WORKSPACE)) {
+-                (0, fs_1.mkdirSync)(tmp_dir_1.DAEMON_DIR_FOR_CURRENT_WORKSPACE, { recursive: true });
++            const directory = path_1.dirname(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE);
++            if (!(0, fs_1.existsSync)(directory)) {
++                (0, fs_1.mkdirSync)(directory, { recursive: true });
+             }
+             (0, fs_1.appendFileSync)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE, message + '\n');
++            pruneDaemonLog();
+         }
+         catch {
+             // Ignore write errors
+diff --git a/dist/src/daemon/server/project-graph-incremental-recomputation.js b/dist/src/daemon/server/project-graph-incremental-recomputation.js
+--- a/dist/src/daemon/server/project-graph-incremental-recomputation.js
++++ b/dist/src/daemon/server/project-graph-incremental-recomputation.js
+@@ -3,6 +3,8 @@
+ exports.currentSourceMaps = exports.currentProjectGraph = exports.currentProjectFileMapCache = exports.fileMapWithFiles = void 0;
+ exports.getCachedSerializedProjectGraphPromise = getCachedSerializedProjectGraphPromise;
+ exports.scheduleProjectGraphRecomputation = scheduleProjectGraphRecomputation;
++exports.hasSemioGraphDemandV1 = hasSemioGraphDemandV1;
++exports.registerSemioPassiveProjectGraphListenerV1 = registerSemioPassiveProjectGraphListenerV1;
+ exports.registerProjectGraphRecomputationListener = registerProjectGraphRecomputationListener;
+ exports.invalidateGraphCache = invalidateGraphCache;
+ exports.getRecomputationGeneration = getRecomputationGeneration;
+@@ -28,6 +30,9 @@
+ const watcher_1 = require("./watcher");
+ const logger_1 = require("../logger");
+ let cachedSerializedProjectGraphPromise;
++let activeRecomputePromise;
++let activeGraphRequests = 0;
++const semioPassiveGraphListeners = new Set();
+ // Maps file path to a version counter that increments on each modification.
+ // This lets us detect mid-flight re-modifications when clearing processed files.
+ const collectedUpdatedFiles = new Map();
+@@ -61,12 +66,22 @@
+  * return a graph built against a stale plugin set
+  * (see spread.test.ts "middle plugin" flake).
+  */
+-function kickOffRecompute() {
++function hasSemioGraphDemandV1(value) {
++    return value.requests > 0 || value.computing || value.callbacks > 0 || value.sockets;
++}
++function semioGraphDemand() {
++    return hasSemioGraphDemandV1({ version: 1, requests: activeGraphRequests, computing: Boolean(activeRecomputePromise), callbacks: projectGraphRecomputationListeners.size - semioPassiveGraphListeners.size, sockets: (0, project_graph_listener_sockets_1.hasRegisteredProjectGraphListenerSockets)() });
++}
++function kickOffRecompute(predecessor) {
++    if (activeRecomputePromise && activeRecomputePromise !== predecessor) {
++        cachedSerializedProjectGraphPromise = activeRecomputePromise;
++        return;
++    }
+     // The cached pointer is about to hold an unsettled promise, so whatever the
+     // previous state described is no longer what the cache serves.
+     servedGraphState = null;
+     let myPromise;
+-    myPromise = (async () => {
++    myPromise = Promise.resolve().then(async () => {
+         // Must resolve, never reject: kickOffRecompute() runs fire-and-forget, so
+         // a rejected myPromise crashes the daemon (unhandled rejection). A throwing
+         // prologue (e.g. plugin load fails) becomes an errorResult the next requester surfaces.
+@@ -75,13 +90,14 @@
+             // what would otherwise be two independent nx.json reads (our snap +
+             // the plugin loader's) into one, so the snap hash and the plugin
+             // set the compute uses always reflect the same disk state.
++            const semioPublicationContext = (0, nx_deps_cache_1.captureSemioGraphPublicationContextV1)();
+             const nxJson = (0, nx_json_1.readNxJson)(workspace_root_1.workspaceRoot);
+             const myPluginsHash = (0, file_hasher_1.hashObject)(nxJson.plugins ?? []);
+             const plugins = await (0, get_plugins_1.getPluginsSeparated)(nxJson, workspace_root_1.workspaceRoot);
+             // Plugin set we just loaded may already be stale vs disk.
+             if (isStale(myPluginsHash))
+                 return chainToSuccessor(myPromise);
+-            const result = await processFilesAndCreateAndSerializeProjectGraph(plugins);
++            const result = await processFilesAndCreateAndSerializeProjectGraph(plugins, myPromise);
+             // Compute may have run against plugins that are now stale.
+             if (isStale(myPluginsHash))
+                 return chainToSuccessor(myPromise);
+@@ -94,14 +110,18 @@
+                     servedGraphState = servedGraphCandidate;
+                 }
+                 notifyProjectGraphRecomputationListeners(result.projectGraph, result.sourceMaps, result.error);
+-                persistProjectGraphToDisk(result);
++                await persistProjectGraphToDisk(result, semioPublicationContext);
+             }
+             return result;
+         }
+         catch (e) {
+             return errorResult(e);
+         }
+-    })();
++        finally {
++            if (activeRecomputePromise === myPromise) activeRecomputePromise = undefined;
++        }
++    });
++    activeRecomputePromise = myPromise;
+     cachedSerializedProjectGraphPromise = myPromise;
+ }
+ function isStale(expectedHash) {
+@@ -115,8 +135,8 @@
+  */
+ function chainToSuccessor(myPromise) {
+     logger_1.serverLogger.log('Discarding stale recompute result (nx.json plugins changed mid-compute).');
+-    if (cachedSerializedProjectGraphPromise === myPromise)
+-        kickOffRecompute();
++    if (!cachedSerializedProjectGraphPromise || cachedSerializedProjectGraphPromise === myPromise)
++        kickOffRecompute(myPromise);
+     return cachedSerializedProjectGraphPromise;
+ }
+ function readNxJsonPluginsHash() {
+@@ -130,6 +150,7 @@
+     if (socket) {
+         (0, client_socket_context_1.subscribeClientToTopic)(socket, progress_topics_1.ProgressTopics.GraphConstruction);
+     }
++    ++activeGraphRequests;
+     try {
+         // Drain anything the native watcher has buffered before deciding
+         // whether the cached graph is fresh. Without this, a file change
+@@ -196,1 +217,1 @@
+-            (0, nx_deps_cache_1.writeCacheIfStale)(result.projectFileMapCache, result.projectGraph, result.sourceMaps, extractErrors(result.error));
++            await (0, nx_deps_cache_1.writeCacheIfStale)(result.projectFileMapCache, result.projectGraph, result.sourceMaps, extractErrors(result.error));
+@@ -217,6 +238,7 @@
+         };
+     }
+     finally {
++        --activeGraphRequests;
+         if (socket) {
+             (0, client_socket_context_1.unsubscribeClientFromTopic)(socket, progress_topics_1.ProgressTopics.GraphConstruction);
+         }
+@@ -236,7 +258,7 @@
+     perf_hooks_1.performance.mark('hash-watched-changes-start');
+-    const changedFileHashes = createdFiles.length > 0 ||
++    const changedFileHashes = { ...(0, watcher_1.getSemioChangedFileHashesV1)([...createdFiles, ...updatedFiles]), ...(createdFiles.length > 0 ||
+         updatedFiles.length > 0 ||
+         deletedFiles.length > 0
+         ? ((0, workspace_context_1.updateFilesInContext)(workspace_root_1.workspaceRoot, [...createdFiles, ...updatedFiles], deletedFiles) ?? {})
+-        : {};
++        : {}) };
+     perf_hooks_1.performance.mark('hash-watched-changes-end');
+@@ -259,11 +281,11 @@
+         // would also bump on first resume, but only after its first await —
+         // a window during which the old compute could falsely pass.
+         ++recomputationGeneration;
+-        kickOffRecompute();
++        if (semioGraphDemand()) kickOffRecompute();
+     }
+     else {
+         // First call (initial startup) — no events but we still need a graph.
+-        if (!cachedSerializedProjectGraphPromise) {
++        if (!cachedSerializedProjectGraphPromise && semioGraphDemand()) {
+             kickOffRecompute();
+         }
+     }
+@@ -271,6 +293,10 @@
+ function registerProjectGraphRecomputationListener(listener) {
+     projectGraphRecomputationListeners.add(listener);
+ }
++function registerSemioPassiveProjectGraphListenerV1(listener) {
++    semioPassiveGraphListeners.add(listener);
++    projectGraphRecomputationListeners.add(listener);
++}
+ function computeWorkspaceConfigHash(projectsConfigurations) {
+     const projectConfigurationStrings = Object.entries(projectsConfigurations)
+         .sort(([projectNameA], [projectNameB]) => projectNameA.localeCompare(projectNameB))
+@@ -367,7 +393,7 @@
+     }
+     return knownWorkspaceFiles.has(path);
+ }
+-async function processFilesAndCreateAndSerializeProjectGraph(separatedPlugins) {
++async function processFilesAndCreateAndSerializeProjectGraph(separatedPlugins, myPromise) {
+     const plugins = [
+         ...separatedPlugins.specifiedPlugins,
+         ...separatedPlugins.defaultPlugins,
+@@ -394,8 +420,8 @@
+         // there is nothing to chain to. Returning undefined lets `if (stale)
+         // return stale` fall through and the compute commits stale data.
+         // Kick off a successor so we always have a real promise to chain to.
+-        if (!cachedSerializedProjectGraphPromise) {
+-            kickOffRecompute();
++        if (!cachedSerializedProjectGraphPromise || cachedSerializedProjectGraphPromise === myPromise) {
++            kickOffRecompute(myPromise);
+         }
+         return cachedSerializedProjectGraphPromise;
+     };
+@@ -550,13 +576,13 @@
+         return [];
+     return error instanceof error_types_1.DaemonProjectGraphError ? error.errors : [error];
+ }
+-function persistProjectGraphToDisk(result) {
++async function persistProjectGraphToDisk(result, semioPublicationContext) {
+     if (!result.projectGraph ||
+         !result.projectFileMapCache ||
+         !result.sourceMaps) {
+         return;
+     }
+-    (0, nx_deps_cache_1.writeCache)(result.projectFileMapCache, result.projectGraph, result.sourceMaps, extractErrors(result.error));
++    await (0, nx_deps_cache_1.writeCache)(result.projectFileMapCache, result.projectGraph, result.sourceMaps, extractErrors(result.error), semioPublicationContext);
+     cacheHasBeenPersisted = true;
+ }
+ function copyFileData(d) {
+diff --git a/dist/src/tasks-runner/task-orchestrator.js b/dist/src/tasks-runner/task-orchestrator.js
+--- a/dist/src/tasks-runner/task-orchestrator.js
++++ b/dist/src/tasks-runner/task-orchestrator.js
+@@ -324,1 +324,6 @@
+     async applyCachedResults(tasks) {
++        if (process.env.SEMIO_NX_FIXED_STORAGE === undefined) return this.applyCachedResultsWithCustodyV1(tasks);
++        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1();
++        return frozen.authorizers.withOriginalNxFixedCacheV1(workspace_root_1.workspaceRoot, frozen.toolingIdentity, process.env, [], 'shared', () => this.applyCachedResultsWithCustodyV1(tasks));
++    }
++    async applyCachedResultsWithCustodyV1(tasks) {
+@@ -810,1 +815,6 @@
+     async resolveCachedTasks(doNotSkipCache, tasks, groupId) {
++        if (process.env.SEMIO_NX_FIXED_STORAGE === undefined) return this.resolveCachedTasksWithCustodyV1(doNotSkipCache, tasks, groupId);
++        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1();
++        return frozen.authorizers.withOriginalNxFixedCacheV1(workspace_root_1.workspaceRoot, frozen.toolingIdentity, process.env, [], 'shared', () => this.resolveCachedTasksWithCustodyV1(doNotSkipCache, tasks, groupId));
++    }
++    async resolveCachedTasksWithCustodyV1(doNotSkipCache, tasks, groupId) {
+@@ -1061,7 +1071,8 @@
+         }
+     }
+     async startContinuousTask(task, groupId) {
+-        if (this.runningTasksService &&
++        const share = this.projects[task.target.project].targets[task.target.target].metadata?.semio?.continuousSharing !== false;
++        if (share && this.runningTasksService &&
+             this.runningTasksService.getRunningTasks([task.id]).length) {
+             await this.preRunSteps([task], { groupId });
+             if (this.tuiEnabled) {
+@@ -1097,15 +1108,15 @@
+             : (0, task_env_1.getEnvVariablesForTask)(task, taskSpecificEnv, undefined, this.options.skipNxCache, this.options.captureStderr, temporaryOutputPath, streamOutput);
+         this.detectTaskInvocationLoop(task);
+         const childProcess = await this.runTask(task, streamOutput, env, temporaryOutputPath, pipeOutput);
+-        this.runningTasksService?.addRunningTask(task.id);
++        if (share) this.runningTasksService?.addRunningTask(task.id);
+         this.runningContinuousTasks.set(task.id, {
+             runningTask: childProcess,
+             groupId,
+-            ownsRunningTasksService: true,
++            ownsRunningTasksService: share,
+         });
+         this.continuousTaskExitHandled.set(task.id, new Promise((resolve) => {
+             childProcess.onExit(async (code) => {
+-                await this.handleContinuousTaskExit(code, task, groupId, true);
++                await this.handleContinuousTaskExit(code, task, groupId, share);
+                 resolve();
+             });
+         }));
+diff --git a/dist/src/tasks-runner/run-command.js b/dist/src/tasks-runner/run-command.js
+--- a/dist/src/tasks-runner/run-command.js
++++ b/dist/src/tasks-runner/run-command.js
+@@ -328,2 +328,7 @@
+ async function runCommand(projectsToRun, currentProjectGraph, { nxJson }, nxArgs, overrides, initiatingProject, extraTargetDependencies, extraOptions) {
++    const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1();
++    if (!frozen || typeof frozen.authorizers.withNxLoadedToolingUseV1 !== 'function') throw Error('Original immutable task toolkit owner required');
++    return frozen.authorizers.withNxLoadedToolingUseV1(process.env, () => runCommandWithOriginalToolingUseV1(projectsToRun, currentProjectGraph, { nxJson }, nxArgs, overrides, initiatingProject, extraTargetDependencies, extraOptions));
++}
++async function runCommandWithOriginalToolingUseV1(projectsToRun, currentProjectGraph, { nxJson }, nxArgs, overrides, initiatingProject, extraTargetDependencies, extraOptions) {
+     const status = await (0, handle_errors_1.handleErrors)(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
+@@ -885,6 +890,9 @@ function getRunnerOptions(runner, nxJson, nxArgs, isCloudDefault) {
+     if (nxJson.parallel) {
+         result.parallel ??= nxJson.parallel;
+     }
++    else {
++        result.parallel ??= (require('os').availableParallelism?.() ?? require('os').cpus().length);
++    }
+     if (nxJson.cacheDirectory) {
+         result.cacheDirectory ??= nxJson.cacheDirectory;
+     }
+diff --git a/dist/src/project-graph/build-project-graph.js b/dist/src/project-graph/build-project-graph.js
+--- a/dist/src/project-graph/build-project-graph.js
++++ b/dist/src/project-graph/build-project-graph.js
+@@ -50,50 +50,74 @@
+         ? (maybeRustReferences ?? null)
+         : rustReferencesOrAllFiles;
+ }
+-async function buildProjectGraphUsingProjectFileMap(projectRootMap, externalNodes, fileMap, rustReferences, fileMapCache, plugins, sourceMap) {
+-    storedFileMap = fileMap;
+-    storedRustReferences = rustReferences;
+-    const projects = {};
+-    for (const root in projectRootMap) {
+-        const project = projectRootMap[root];
+-        projects[project.name] = project;
+-    }
+-    const errors = [];
+-    const nxJson = (0, configuration_1.readNxJson)();
+-    const projectGraphVersion = '6.0';
+-    try {
+-        (0, assert_workspace_validity_1.assertWorkspaceValidity)(projects, nxJson);
+-    }
+-    catch (e) {
+-        if ((0, error_types_1.isWorkspaceValidityError)(e)) {
+-            errors.push(e);
+-        }
+-    }
+-    const packageJsonDeps = readCombinedDeps();
+-    const rootTsConfig = readRootTsConfig();
+-    const externalNodesHash = hashExternalNodes(externalNodes);
+-    let filesToProcess;
+-    let cachedFileData;
+-    const useCacheData = fileMapCache &&
+-        !(0, nx_deps_cache_1.shouldRecomputeWholeGraph)(fileMapCache, packageJsonDeps, projects, nxJson, rootTsConfig, externalNodesHash);
+-    if (useCacheData) {
+-        const fromCache = (0, nx_deps_cache_1.extractCachedFileData)(fileMap, fileMapCache);
+-        filesToProcess = fromCache.filesToProcess;
+-        cachedFileData = fromCache.cachedFileData;
+-    }
+-    else {
+-        filesToProcess = fileMap;
+-        cachedFileData = {
+-            nonProjectFiles: {},
+-            projectFileMap: {},
+-        };
+-    }
+-    let projectGraph;
+-    let projectFileMapCache;
+-    try {
+-        const context = createContext(projects, nxJson, externalNodes, fileMap, filesToProcess);
+-        projectGraph = await buildProjectGraphUsingContext(externalNodes, context, cachedFileData, projectGraphVersion, plugins, sourceMap);
+-        projectFileMapCache = (0, nx_deps_cache_1.createProjectFileMapCache)(nxJson, packageJsonDeps, fileMap, rootTsConfig, externalNodesHash);
++/** 🏛️ Reads each declared owned dependency authority as a bounded digest, without evaluating import resolution callbacks. */
++async function readDependencyResolutionAuthority(nxJson, projects) {
++    const declarations = Object.entries(nxJson.pluginsConfig ?? {}).filter(([, value]) => value?.dependencyResolutionAuthority).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0);
++    if (!declarations.length) return null;
++    if (declarations.length > 16) throw new Error('Too many dependency resolution authorities');
++    const hash = require('node:crypto').createHash('sha256');
++    for (const [name, options] of declarations) {
++        const descriptor = options.dependencyResolutionAuthority;
++        if (typeof descriptor.module !== 'string' || typeof descriptor.export !== 'string') throw new Error('Invalid dependency resolution authority declaration');
++        const path = path_1.resolve(workspace_root_1.workspaceRoot, descriptor.module), local = path_1.relative(workspace_root_1.workspaceRoot, path);
++        if (path_1.isAbsolute(local) || local === '..' || local.startsWith('..' + path_1.sep)) throw new Error('Dependency resolution authority must belong to the workspace');
++        const owner = await import(require('node:url').pathToFileURL(path).href);
++        if (typeof owner[descriptor.export] !== 'function') throw new Error('Dependency resolution authority is missing its owned interface');
++        const value = await owner[descriptor.export](workspace_root_1.workspaceRoot, projects);
++        if (typeof value !== 'string' || !/^[a-f0-9]{64}$/.test(value)) throw new Error('Invalid dependency resolution authority digest');
++        hash.update(JSON.stringify([name, descriptor.module, descriptor.export, value]));
++    }
++    return hash.digest('hex');
++}
++
++
++async function buildProjectGraphUsingProjectFileMap(projectRootMap, externalNodes, fileMap, rustReferences, fileMapCache, plugins, sourceMap) {
++    storedFileMap = fileMap;
++    storedRustReferences = rustReferences;
++    const projects = {};
++    for (const root in projectRootMap) {
++        const project = projectRootMap[root];
++        projects[project.name] = project;
++    }
++    const errors = [];
++    const nxJson = (0, configuration_1.readNxJson)();
++    const projectGraphVersion = '6.0';
++    try {
++        (0, assert_workspace_validity_1.assertWorkspaceValidity)(projects, nxJson);
++    }
++    catch (e) {
++        if ((0, error_types_1.isWorkspaceValidityError)(e)) {
++            errors.push(e);
++        }
++    }
++    const packageJsonDeps = readCombinedDeps();
++    const rootTsConfig = readRootTsConfig();
++    const externalNodesHash = hashExternalNodes(externalNodes);
++    fileMap = { ...fileMap, projectFileMap: Object.fromEntries(Object.entries(fileMap.projectFileMap).map(([project, files]) => [project, files.map(({ deps, ...file }) => file)])), nonProjectFiles: fileMap.nonProjectFiles.map(({ deps, ...file }) => file) }; storedFileMap = fileMap;
++    const dependencyResolutionAuthority = await readDependencyResolutionAuthority(nxJson, projects);
++    let filesToProcess;
++    let cachedFileData;
++    const useCacheData = fileMapCache &&
++        !(0, nx_deps_cache_1.shouldRecomputeWholeGraph)(fileMapCache, packageJsonDeps, projects, nxJson, rootTsConfig, externalNodesHash, dependencyResolutionAuthority);
++    if (useCacheData) {
++        const fromCache = (0, nx_deps_cache_1.extractCachedFileData)(fileMap, fileMapCache);
++        filesToProcess = fromCache.filesToProcess;
++        cachedFileData = fromCache.cachedFileData;
++    }
++    else {
++        filesToProcess = fileMap;
++        cachedFileData = {
++            nonProjectFiles: {},
++            projectFileMap: {},
++        };
++    }
++    let projectGraph;
++    let projectFileMapCache;
++    try {
++        const context = createContext(projects, nxJson, externalNodes, fileMap, filesToProcess);
++        projectGraph = await buildProjectGraphUsingContext(externalNodes, context, cachedFileData, projectGraphVersion, plugins, sourceMap);
++        if (await readDependencyResolutionAuthority(nxJson, projects) !== dependencyResolutionAuthority) throw new Error("Dependency resolution authority changed during graph construction");
++        projectFileMapCache = (0, nx_deps_cache_1.createProjectFileMapCache)(nxJson, packageJsonDeps, fileMap, rootTsConfig, externalNodesHash, dependencyResolutionAuthority);
+     }
+     catch (e) {
+         // we need to include the workspace validity errors in the final error
+diff --git a/dist/src/project-graph/nx-deps-cache.js b/dist/src/project-graph/nx-deps-cache.js
+--- a/dist/src/project-graph/nx-deps-cache.js
++++ b/dist/src/project-graph/nx-deps-cache.js
+@@ -5,8 +5,11 @@
+ exports.readFileMapCache = readFileMapCache;
+ exports.readProjectGraphCache = readProjectGraphCache;
+ exports.readSourceMapsCache = readSourceMapsCache;
++exports.readSemioGraphSnapshotV1 = readSemioGraphSnapshotV1;
+ exports.createProjectFileMapCache = createProjectFileMapCache;
+ exports.writeCache = writeCache;
++exports.captureSemioGraphPublicationContextV1 = captureSemioGraphPublicationContextV1;
++exports.publishSemioGraphCustodyV1 = publishSemioGraphCustodyV1;
+ exports.writeCacheIfStale = writeCacheIfStale;
+ exports.shouldRecomputeWholeGraph = shouldRecomputeWholeGraph;
+ exports.extractCachedFileData = extractCachedFileData;
+@@ -45,82 +48,27 @@
+         }
+     }
+ }
++function readSemioGraphSnapshotV1(names) {
++    const authorizers = require('../utils/handle-import').loadedSemioGraphAuthorizersV1();
++    if (!authorizers || typeof authorizers.readGraphPublicationSnapshotV1 !== 'function') throw Error('Original graph snapshot owner required');
++    return authorizers.readGraphPublicationSnapshotV1(cache_directory_1.workspaceDataDirectory, names, process.env);
++}
+ function readFileMapCache() {
++    return readSemioGraphSnapshotV1(['file-map.json'])?.['file-map.json'] ?? null;
+-    perf_hooks_1.performance.mark('read cache:start');
+-    ensureCacheDirectory();
+-    let data = null;
+-    try {
+-        if ((0, fileutils_1.fileExists)(exports.nxFileMap)) {
+-            data = (0, fileutils_1.readJsonFile)(exports.nxFileMap);
+-        }
+-    }
+-    catch (error) {
+-        console.log(`Error reading '${exports.nxFileMap}'. Continue the process without the cache.`);
+-        console.log(error);
+-    }
+-    perf_hooks_1.performance.mark('read cache:end');
+-    perf_hooks_1.performance.measure('read cache', 'read cache:start', 'read cache:end');
+-    return data ?? null;
+ }
++function readProjectGraphCache(minimumComputedAt, snapshot) {
++    if (snapshot === undefined) snapshot = readSemioGraphSnapshotV1(['project-graph.json', 'source-maps.json']);
++    const value = snapshot?.['project-graph.json'];
++    if (!value) { if (minimumComputedAt) throw new error_types_1.StaleProjectGraphCacheError(); return null; }
++    const { computedAt, errors, ...graph } = value;
++    if (minimumComputedAt && (!computedAt || computedAt < minimumComputedAt)) throw new error_types_1.StaleProjectGraphCacheError();
++    if (errors?.length) { if (!minimumComputedAt) return null; throw new error_types_1.ProjectGraphError(errors, graph, snapshot['source-maps.json']); }
++    return graph;
+-function readProjectGraphCache(minimumComputedAt) {
+-    perf_hooks_1.performance.mark('read project-graph:start');
+-    ensureCacheDirectory();
+-    try {
+-        if ((0, fileutils_1.fileExists)(exports.nxProjectGraph)) {
+-            const { computedAt, errors, ...projectGraphCache } = (0, fileutils_1.readJsonFile)(exports.nxProjectGraph);
+-            if (minimumComputedAt &&
+-                (!computedAt || computedAt < minimumComputedAt)) {
+-                throw new error_types_1.StaleProjectGraphCacheError();
+-            }
+-            if (errors && errors.length > 0) {
+-                if (!minimumComputedAt) {
+-                    // If you didn't pass minimum computed at, we do not know if
+-                    // the errors on the cached graph would be relevant to what you
+-                    // are running. Prior to adding error handling here, the graph
+-                    // would not have been written to the cache. As such, this matches
+-                    // existing behavior of the public API.
+-                    return null;
+-                }
+-                throw new error_types_1.ProjectGraphError(errors, projectGraphCache, readSourceMapsCache());
+-            }
+-            return projectGraphCache;
+-        }
+-        else {
+-            return null;
+-        }
+-    }
+-    catch (error) {
+-        if (error instanceof error_types_1.StaleProjectGraphCacheError ||
+-            error instanceof error_types_1.ProjectGraphError) {
+-            throw error;
+-        }
+-        console.log(`Error reading '${exports.nxProjectGraph}'. Continue the process without the cache.`);
+-        console.log(error);
+-        return null;
+-    }
+-    finally {
+-        perf_hooks_1.performance.mark('read project-graph:end');
+-        perf_hooks_1.performance.measure('read cache', 'read project-graph:start', 'read project-graph:end');
+-    }
+ }
+ function readSourceMapsCache() {
++    return readSemioGraphSnapshotV1(['source-maps.json'])?.['source-maps.json'] ?? null;
+-    perf_hooks_1.performance.mark('read source-maps:start');
+-    ensureCacheDirectory();
+-    let data = null;
+-    try {
+-        if ((0, fileutils_1.fileExists)(exports.nxSourceMaps)) {
+-            data = (0, fileutils_1.readJsonFile)(exports.nxSourceMaps);
+-        }
+-    }
+-    catch (error) {
+-        console.log(`Error reading '${exports.nxSourceMaps}'. Continue the process without the cache.`);
+-        console.log(error);
+-    }
+-    perf_hooks_1.performance.mark('read source-maps:end');
+-    perf_hooks_1.performance.measure('read cache', 'read source-maps:start', 'read source-maps:end');
+-    return data ?? null;
+ }
++function createProjectFileMapCache(nxJson, packageJsonDeps, fileMap, tsConfig, externalNodesHash, dependencyResolutionAuthority) {
+-function createProjectFileMapCache(nxJson, packageJsonDeps, fileMap, tsConfig, externalNodesHash) {
+     const nxJsonPlugins = getNxJsonPluginsData(nxJson, packageJsonDeps);
+     const newValue = {
+         version: '6.0',
+@@ -131,6 +79,7 @@
+         pluginsConfig: nxJson?.pluginsConfig,
+         fileMap,
+         externalNodesHash,
++        dependencyResolutionAuthority,
+     };
+     return newValue;
+ }
+@@ -140,65 +89,20 @@
+  * when no external process has modified the cache file since the last write.
+  */
+ let lastWrittenCacheMtimeMs;
++async function writeCache(cache, projectGraph, sourceMaps, errors, context) {
+-function writeCache(cache, projectGraph, sourceMaps, errors) {
+     perf_hooks_1.performance.mark('write cache:start');
++    const ownsInference = context !== undefined; context ??= captureSemioGraphPublicationContextV1();
++    try {
++        const owner = require('../daemon/client/daemon-environment'), frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1();
++        if (!frozen) throw Error('Original immutable graph publication authorizer required');
++        await frozen.authorizers.publishGraphFilesV1({ directory: cache_directory_1.workspaceDataDirectory, toolingIdentity: frozen.toolingIdentity, environment: { ...context.environment, SEMIO_SCRIPT_PROCESS_INVOCATION: context.invocation }, generationHolds: () => context.pid === process.pid && owner.getDaemonClientEnvGeneration() === context.generation, published: ownsInference && errors.length === 0 ? publication => publishSemioGraphCustodyV1(context, publication) : undefined, files: [{ name: 'project-graph.json', value: { ...projectGraph, errors, computedAt: Date.now() } }, { name: 'source-maps.json', value: sourceMaps }, ...(errors.length === 0 ? [{ name: 'file-map.json', value: cache }] : [])] });
++        lastWrittenCacheMtimeMs = (0, node_fs_1.statSync)(exports.nxProjectGraph).mtimeMs;
++        if ((0, is_on_daemon_1.isOnDaemon)()) logger_1.serverLogger.log(`Wrote project graph cache to ${exports.nxProjectGraph}${errors.length > 0 ? ' with errors' : ''}`);
++    }
++    finally {
++        perf_hooks_1.performance.mark('write cache:end');
++        perf_hooks_1.performance.measure('write cache', 'write cache:start', 'write cache:end');
+-    let retry = 1;
+-    let done = false;
+-    do {
+-        // write first to a unique temporary filename and then do a
+-        // rename of the file to the correct filename
+-        // this is to avoid any problems with half-written files
+-        // in case of crash and/or partially written files due
+-        // to multiple parallel processes reading and writing this file
+-        const unique = (Math.random().toString(16) + '0000000').slice(2, 10);
+-        const tmpProjectGraphPath = `${exports.nxProjectGraph}~${unique}`;
+-        const tmpFileMapPath = `${exports.nxFileMap}~${unique}`;
+-        const tmpSourceMapPath = `${exports.nxSourceMaps}~${unique}`;
+-        try {
+-            (0, fileutils_1.writeJsonFile)(tmpProjectGraphPath, {
+-                ...projectGraph,
+-                errors,
+-                computedAt: Date.now(),
+-            });
+-            (0, node_fs_1.renameSync)(tmpProjectGraphPath, exports.nxProjectGraph);
+-            (0, fileutils_1.writeJsonFile)(tmpSourceMapPath, sourceMaps);
+-            (0, node_fs_1.renameSync)(tmpSourceMapPath, exports.nxSourceMaps);
+-            // only write the file map if there are no errors
+-            // if there were errors, the errors make the filemap invalid
+-            // TODO: We should be able to keep the valid part of the filemap if the errors being thrown told us which parts of the filemap were invalid
+-            if (errors.length === 0) {
+-                (0, fileutils_1.writeJsonFile)(tmpFileMapPath, cache);
+-                (0, node_fs_1.renameSync)(tmpFileMapPath, exports.nxFileMap);
+-            }
+-            if ((0, is_on_daemon_1.isOnDaemon)()) {
+-                logger_1.serverLogger.log(`Wrote project graph cache to ${exports.nxProjectGraph}${errors.length > 0 ? ' with errors' : ''}`);
+-            }
+-            try {
+-                lastWrittenCacheMtimeMs = (0, node_fs_1.statSync)(exports.nxProjectGraph).mtimeMs;
+-            }
+-            catch {
+-                lastWrittenCacheMtimeMs = undefined;
+-            }
+-            done = true;
+-        }
+-        catch (err) {
+-            if (err instanceof Error) {
+-                console.log(`ERROR (${retry}) when writing \n${err.message}\n${err.stack}`);
+-            }
+-            else {
+-                console.log(`ERROR  (${retry}) unknown error when writing ${exports.nxProjectGraph} and ${exports.nxFileMap}`);
+-            }
+-            ++retry;
+-        }
+-    } while (!done && retry < 5);
+-    if (!done) {
+-        logger_2.logger.warn(`Failed to write project graph cache to ${exports.nxProjectGraph} and ${exports.nxFileMap} after 5 attempts. Continuing without cache.`);
+-        tryRemoveFile(exports.nxProjectGraph);
+-        tryRemoveFile(exports.nxFileMap);
+-        tryRemoveFile(exports.nxSourceMaps);
+     }
+-    perf_hooks_1.performance.mark('write cache:end');
+-    perf_hooks_1.performance.measure('write cache', 'write cache:start', 'write cache:end');
+ }
+ /**
+  * Writes the cache only if the on-disk cache file has been modified since
+@@ -209,7 +113,7 @@
+  * be served multiple times without changing (e.g. the daemon responding
+  * to repeated client requests).
+  */
++async function writeCacheIfStale(cache, projectGraph, sourceMaps, errors) {
+-function writeCacheIfStale(cache, projectGraph, sourceMaps, errors) {
+     if (lastWrittenCacheMtimeMs !== undefined) {
+         try {
+             const currentMtimeMs = (0, node_fs_1.statSync)(exports.nxProjectGraph).mtimeMs;
+@@ -221,9 +125,10 @@
+             // File doesn't exist or can't be stat'd — proceed with write
+         }
+     }
++    await writeCache(cache, projectGraph, sourceMaps, errors);
+-    writeCache(cache, projectGraph, sourceMaps, errors);
+ }
++function shouldRecomputeWholeGraph(cache, packageJsonDeps, projects, nxJson, tsConfig, externalNodesHash, dependencyResolutionAuthority) {
++    if (cache.dependencyResolutionAuthority !== dependencyResolutionAuthority) return true;
+-function shouldRecomputeWholeGraph(cache, packageJsonDeps, projects, nxJson, tsConfig, externalNodesHash) {
+     if (cache.version !== '6.0') {
+         return true;
+     }
+@@ -323,16 +228,6 @@
+         }
+     }
+ }
+-function tryRemoveFile(path) {
+-    try {
+-        if ((0, node_fs_1.existsSync)(path)) {
+-            (0, node_fs_1.rmSync)(path);
+-        }
+-    }
+-    catch {
+-        // Best effort
+-    }
+-}
+ function getNxJsonPluginsData(nxJson, packageJsonDeps) {
+     return (nxJson?.plugins || []).map((p) => {
+         const [plugin, options] = typeof p === 'string' ? [p] : [p.plugin, p.options];
+@@ -343,3 +238,25 @@
+         };
+     });
+ }
++
++function captureSemioGraphPublicationContextV1() {
++    const owner = require('../daemon/client/daemon-environment');
++    return Object.freeze({ pid: process.pid, startedAt: Date.now(), generation: owner.getDaemonClientEnvGeneration(), environment: Object.freeze({ ...owner.getDaemonEnv() }), invocation: process.env.SEMIO_SCRIPT_PROCESS_INVOCATION, membership: process.env.SEMIO_NX_GRAPH_SOURCE_MEMBERSHIP });
++}
++async function publishSemioGraphCustodyV1(context, publication) {
++    const environment = require('../daemon/client/daemon-environment');
++    if (!context || context.pid !== process.pid || environment.getDaemonClientEnvGeneration() !== context.generation) return false;
++    const workspace = require('../utils/workspace-root').workspaceRoot, data = require('../utils/cache-directory').workspaceDataDirectory, frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1();
++    if (!frozen || environment.getDaemonClientEnvGeneration() !== context.generation) return false;
++    const observer = require('../daemon/server/watcher'), toolingIdentity = observer.getSemioFilesystemJournalToolingIdentityV1();
++    const publish = body => publication ? body(publication.control) : frozen.authorizers.withGraphPublisherControlV1({ ...context.environment, SEMIO_SCRIPT_PROCESS_INVOCATION: context.invocation }, body);
++    let sealed = false;
++    if (toolingIdentity && toolingIdentity === frozen.toolingIdentity) {
++        sealed = await publish(control => frozen.authorizers.writeSelectedGraphPublisherReceiptV1(workspace, data, context.startedAt, { toolingIdentity, environment: context.environment, control, publication, generationHolds: () => context.pid === process.pid && environment.getDaemonClientEnvGeneration() === context.generation, capture: async scope => { const witness = await observer.captureSemioFilesystemJournalV1(scope, control); if (!witness) throw Error('Original live graph observer unavailable'); return witness; } })).catch(() => false);
++    }
++    if (environment.getDaemonClientEnvGeneration() !== context.generation) return false;
++    if (/^[a-f0-9]{64}$/.test(context.membership ?? '')) {
++        await publish(control => frozen.authorizers.writeNxGraphSeal(workspace, data, process.pid, context.startedAt, context.membership, process.env, control.signal)).catch(() => false);
++    }
++    return sealed;
++}
+diff --git a/dist/src/tasks-runner/create-task-graph.js b/dist/src/tasks-runner/create-task-graph.js
+--- a/dist/src/tasks-runner/create-task-graph.js
++++ b/dist/src/tasks-runner/create-task-graph.js
+@@ -81,6 +81,7 @@
+             this.continuousDependencies[d].length === 0);
+     }
+     processTask(task, projectUsedToDeriveDependencies, configuration, overrides) {
++        configuration ??= task.target.configuration;
+         const seenKey = `${task.id}-${projectUsedToDeriveDependencies}`;
+         if (this.seen.has(seenKey)) {
+             return;
+@@ -210,6 +211,14 @@
+         };
+     }
+     resolveConfiguration(project, target, configuration) {
++        const policy = project.data.targets?.[target]?.metadata?.semio?.buildMode;
++        if (policy) configuration ??= policy.fixed ?? process.env.SEMIO_BUILD_MODE;
++        if (policy && configuration !== undefined && !policy.modes.includes(configuration)) {
++            throw new Error(`Build configuration must be prototype or release: ${project.name}:${target}:${configuration}`);
++        }
++        if (policy?.fixed && configuration !== undefined && configuration !== policy.fixed) {
++            throw new Error(`Conflicting build mode for ${project.name}:${target}: requires ${policy.fixed}, received ${configuration}`);
++        }
+         const defaultConfiguration = project.data.targets?.[target]?.defaultConfiguration;
+         configuration ??= defaultConfiguration;
+         return (0, project_graph_utils_1.projectHasTargetAndConfiguration)(project, target, configuration)
+diff --git a/dist/src/command-line/run/run-one.js b/dist/src/command-line/run/run-one.js
+--- a/dist/src/command-line/run/run-one.js
++++ b/dist/src/command-line/run/run-one.js
+@@ -45,6 +45,7 @@
+             open: true,
+             view: 'tasks',
+             targets: nxArgs.targets,
++            configuration: nxArgs.configuration,
+             projects: projectNames,
+             file,
+         }, projectNames);
+diff --git a/dist/src/command-line/run-many/run-many.js b/dist/src/command-line/run-many/run-many.js
+--- a/dist/src/command-line/run-many/run-many.js
++++ b/dist/src/command-line/run-many/run-many.js
+@@ -35,6 +35,7 @@
+             view: 'tasks',
+             all: nxArgs.all && (!nxArgs.projects || nxArgs.projects.length === 0),
+             targets: nxArgs.targets,
++            configuration: nxArgs.configuration,
+             projects: projectNames,
+             file,
+         }, projectNames);
+diff --git a/dist/src/command-line/affected/affected.js b/dist/src/command-line/affected/affected.js
+--- a/dist/src/command-line/affected/affected.js
++++ b/dist/src/command-line/affected/affected.js
+@@ -41,6 +41,7 @@
+                         open: true,
+                         view: 'tasks',
+                         targets: nxArgs.targets,
++                        configuration: nxArgs.configuration,
+                         all: nxArgs.all &&
+                             (!nxArgs.projects || nxArgs.projects.length === 0),
+                         projects: projectNames,
+diff --git a/dist/src/command-line/graph/graph.js b/dist/src/command-line/graph/graph.js
+--- a/dist/src/command-line/graph/graph.js
++++ b/dist/src/command-line/graph/graph.js
+@@ -231,7 +231,7 @@
+     let html = (0, node_fs_1.readFileSync)((0, node_path_1.join)(__dirname, '../../core/graph/index.html'), 'utf-8');
+     prunedGraph = filterGraph(prunedGraph, args.focus || null, excludePatterns);
+     if (args.print || args.file === 'stdout') {
+-        console.log(JSON.stringify(await createJsonOutput(prunedGraph, rawGraph, args.projects, args.targets), null, 2));
++        console.log(JSON.stringify(await createJsonOutput(prunedGraph, rawGraph, args.projects, args.targets, args.configuration), null, 2));
+         await output_1.output.drain();
+         await new Promise((res) => setImmediate(res));
+         process.exit(0);
+@@ -258,7 +258,7 @@
+             });
+             const { projectGraphClientResponse } = await createProjectGraphAndSourceMapClientResponse(affectedProjects);
+             const taskGraphClientResponse = args.targets
+-                ? await createTaskGraphForTargetsAndProjects(args.targets, args.projects)
++                ? await createTaskGraphForTargetsAndProjects(args.targets, args.projects, args.configuration)
+                 : await createTaskGraphClientResponse();
+             const taskInputsReponse = await createExpandedTaskInputResponse(taskGraphClientResponse, projectGraphClientResponse);
+             const environmentJs = buildEnvironmentJs(excludePatterns, args.watch, !!args.file && args.file.endsWith('html') ? 'build' : 'serve', projectGraphClientResponse, taskGraphClientResponse, taskInputsReponse, sourceMaps);
+@@ -275,7 +275,7 @@
+         }
+         else if (ext === '.json') {
+             (0, node_fs_1.mkdirSync)((0, node_path_1.dirname)(fullFilePath), { recursive: true });
+-            const json = await createJsonOutput(prunedGraph, rawGraph, args.projects, args.targets);
++            const json = await createJsonOutput(prunedGraph, rawGraph, args.projects, args.targets, args.configuration);
+             (0, fileutils_1.writeJsonFile)(fullFilePath, json);
+             output_1.output.success({
+                 title: `JSON output created in ${fileFolderPath}`,
+@@ -943,12 +943,12 @@
+     workspaceRootsExpanded.sort();
+     return workspaceRootsExpanded;
+ }
+-async function createJsonOutput(prunedGraph, rawGraph, projects, targets) {
++async function createJsonOutput(prunedGraph, rawGraph, projects, targets, configuration) {
+     const response = {
+         graph: prunedGraph,
+     };
+     if (targets?.length) {
+-        const taskGraph = (0, create_task_graph_1.createTaskGraph)(rawGraph, {}, projects, targets, undefined, {});
++        const taskGraph = (0, create_task_graph_1.createTaskGraph)(rawGraph, {}, projects, targets, configuration, {});
+         const hasher = (0, create_task_hasher_1.createTaskHasher)(rawGraph, (0, configuration_1.readNxJson)());
+         let tasks = Object.values(taskGraph.tasks);
+         // Match the runtime path: each task is hashed against its own env so
+@@ -959,10 +959,11 @@
+         }
+         const hashes = await hasher.hashTasks(tasks, taskGraph, perTaskEnvs);
+         response.tasks = taskGraph;
+-        response.taskPlans = tasks.reduce((acc, task, index) => {
++        const frozen = await require('../../utils/workspace-context').loadSemioGraphAuthorizersV1(); if (!frozen || typeof frozen.authorizers.compactTaskPlans !== 'function') throw Error('Immutable compactTaskPlans authority required'); const { compactTaskPlans } = frozen.authorizers;
++        response.taskPlans = compactTaskPlans(tasks.reduce((acc, task, index) => {
+             acc[task.id] = Object.keys(hashes[index].details.nodes).sort();
+             return acc;
+-        }, {});
++        }, {}));
+     }
+     return response;
+ }
+diff --git a/dist/src/command-line/graph/graph.d.ts b/dist/src/command-line/graph/graph.d.ts
+--- a/dist/src/command-line/graph/graph.d.ts
++++ b/dist/src/command-line/graph/graph.d.ts
+@@ -46,6 +46,7 @@
+     projects?: string[];
+     all?: boolean;
+     targets?: string[];
++    configuration?: string;
+     focus?: string;
+     exclude?: string[];
+     affected?: boolean;
+@@ -62,7 +63,7 @@
+     /**
+      * The plans for hashing a task in the task graph
+      */
+-    taskPlans?: Record<string, string[]>;
++    taskPlans?: { version: 1; instructions: string[]; tasks: Record<string, number[]> };
+     /**
+      * The project graph
+      */
+diff --git a/dist/src/hasher/native-task-hasher-impl.js b/dist/src/hasher/native-task-hasher-impl.js
+--- a/dist/src/hasher/native-task-hasher-impl.js
++++ b/dist/src/hasher/native-task-hasher-impl.js
+@@ -8,6 +8,7 @@
+ const fileutils_1 = require("../utils/fileutils");
+ class NativeTaskHasherImpl {
+     constructor(workspaceRoot, nxJson, projectGraph, externals, options) {
++        this.workspaceRoot = workspaceRoot; this.semioProjectGraph = projectGraph;
+         this.projectGraphRef = (0, native_1.transferProjectGraph)((0, transform_objects_1.transformProjectGraphForRust)(projectGraph));
+         this.allWorkspaceFilesRef = externals.allWorkspaceFiles;
+         this.projectFileMapRef = externals.projectFiles;
+@@ -29,10 +30,20 @@
+         return hashes[0];
+     }
+     async hashTasks(tasks, taskGraph, perTaskEnvs, cwd, collectInputs) {
++        if (process.env.SEMIO_NX_SELECTED_GRAPH_RECEIPT !== undefined) { const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1(); if (!frozen || !await frozen.authorizers.originalSelectedGraphHandoffHoldsV1(this.workspaceRoot, __filename)) throw Error('Dependency resolution authority changed during graph construction'); }
++        const started = Date.now(), measured = tasks.length >= 128 || process.env.SEMIO_BUILD_PROFILE_INPUTS === "1";
++        if (measured) console.log(`[nx] Planning native task hashes tasks=${tasks.length}`);
+         const plans = this.planner.getPlansReference(tasks.map((t) => t.id), taskGraph);
+-        const shouldCollectInputs = collectInputs ?? (0, task_io_service_1.getTaskIOService)().hasTaskInputSubscribers();
++        const shouldCollectInputs = process.env.SEMIO_NX_NATIVE_SOURCE_SNAPSHOT !== undefined || (collectInputs ?? (0, task_io_service_1.getTaskIOService)().hasTaskInputSubscribers());
+-        const hashes = this.hasher.hashPlans(plans, perTaskEnvs, cwd ?? process.cwd(), shouldCollectInputs);
+-        return tasks.map((t) => hashes[t.id]);
++        const instructions = this.planner.getPlans(tasks.map((t) => t.id), taskGraph);
++        const planned = Date.now();
++        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1(); if (!frozen || typeof frozen.authorizers.sourceClosureTaskEnvironments !== 'function') throw Error('Immutable sourceClosureTaskEnvironments authority required'); const { sourceClosureTaskEnvironments } = frozen.authorizers;
++        const sourceEnvironments = await sourceClosureTaskEnvironments(this.workspaceRoot, instructions, perTaskEnvs, process.env);
++        const observed = Date.now();
++        const hashes = this.hasher.hashPlans(plans, sourceEnvironments, cwd ?? process.cwd(), shouldCollectInputs); if (process.env.SEMIO_NX_NATIVE_SOURCE_SNAPSHOT !== undefined) { frozen.authorizers.selectedNativeWorkspaceRootV1(this.workspaceRoot); for (const task of tasks) { const target = this.semioProjectGraph.nodes[task.target.project]?.data.targets?.[task.target.target]; if (target?.metadata?.semio?.rustUnit?.version !== 1) continue; const actual = new Set(hashes[task.id]?.inputs?.files ?? []); for (const input of target.inputs ?? []) if (typeof input === "string" && input.startsWith("{workspaceRoot}/") && !actual.has(input.slice("{workspaceRoot}/".length))) throw Error("Admitted compiler Source absent from actual Native hashing instructions: " + input); } }
++        const hashed = Date.now(), result = tasks.map((t) => ({ ...hashes[t.id], semioRustUnit: frozen.authorizers.readNxRustCacheExpectationV1(this.semioProjectGraph.nodes[t.target.project]?.data.targets?.[t.target.target]?.metadata?.semio?.rustUnit), semioSourceInputs: { version: 1, values: Object.fromEntries(Object.entries(sourceEnvironments[t.id]).filter(([name]) => /^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_[a-f0-9]{64}$/.test(name) && instructions[t.id].includes(`env:${name}`))) } }));
++        if (measured) console.log(`[nx] Native task hashes tasks=${tasks.length} planMs=${planned - started} sourceMs=${observed - planned} nativeMs=${hashed - observed} receiptMs=${Date.now() - hashed}`);
++        return result;
+     }
+ }
+ exports.NativeTaskHasherImpl = NativeTaskHasherImpl;
+diff --git a/dist/src/hasher/task-hasher.js b/dist/src/hasher/task-hasher.js
+--- a/dist/src/hasher/task-hasher.js
++++ b/dist/src/hasher/task-hasher.js
+@@ -83,6 +83,8 @@
+             value: (0, file_hasher_1.hashArray)([res.value, command]),
+             details: {
+                 command,
++                semioSourceInputs: res.semioSourceInputs,
++                semioRustUnit: res.semioRustUnit,
+                 nodes: res.details,
+                 implicitDeps: {},
+                 runtime: {},
+diff --git a/dist/src/tasks-runner/cache.js b/dist/src/tasks-runner/cache.js
+--- a/dist/src/tasks-runner/cache.js
++++ b/dist/src/tasks-runner/cache.js
+@@ -58,7 +58,7 @@
+     constructor(options) {
+         this.options = options;
+         this.nxJson = (0, nx_json_1.readNxJson)();
+-        this.cache = new native_1.NxCache(workspace_root_1.workspaceRoot, cache_directory_1.cacheDir, (0, db_connection_1.getDbConnection)(), undefined, resolveMaxCacheSize(this.nxJson));
++        this.cache = new native_1.NxCache(workspace_root_1.workspaceRoot, cache_directory_1.cacheDir, (0, db_connection_1.getDbConnection)({ directory: cache_directory_1.cacheDir }), undefined, resolveMaxCacheSize(this.nxJson));
+         this.isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+     }
+     async init() {
+@@ -82,7 +82,7 @@
+             // attempt remote cache
+             const res = await this.remoteCache.retrieve(task.hash, this.cache.cacheDirectory);
+             if (res) {
+-                this.applyRemoteCacheResults(task.hash, res, task.outputs);
++                if (!await this.applyRemoteCacheResults(task, res, task.outputs)) return null;
+                 return {
+                     ...res,
+                     terminalOutput: res.terminalOutput ?? '',
+@@ -134,7 +134,7 @@
+             await Promise.all(remoteMisses.map(async (task) => {
+                 const res = await this.remoteCache.retrieve(task.hash, this.cache.cacheDirectory);
+                 if (res) {
+-                    this.applyRemoteCacheResults(task.hash, res, task.outputs);
++                    if (!await this.applyRemoteCacheResults(task, res, task.outputs)) return;
+                     results.set(task.hash, {
+                         ...res,
+                         terminalOutput: res.terminalOutput ?? '',
+@@ -148,21 +148,48 @@
+     getUsedCacheSpace() {
+         return this.cache.getCacheSize();
+     }
+-    applyRemoteCacheResults(hash, res, outputs) {
+-        return this.cache.applyRemoteCacheResults(hash, res, outputs);
++    recordCacheTaskDetails(task) {
++        if (!task?.target || typeof task.hash !== 'string' || typeof task.target.project !== 'string' || typeof task.target.target !== 'string') throw Error('Exact hashed task target required for artifact index');
++        new native_1.TaskDetails((0, db_connection_1.getDbConnection)({ directory: cache_directory_1.cacheDir })).recordTaskDetails([{ hash: task.hash, project: task.target.project, target: task.target.target, configuration: task.target.configuration }]);
++    }
++    async applyRemoteCacheResults(task, res, outputs) {
++        const publish = async () => { if (!await frozen.authorizers.sourceClosureReceiptHolds(workspace_root_1.workspaceRoot, task.hashDetails?.semioSourceInputs, process.env)) return false; if (process.env.SEMIO_NX_SELECTED_GRAPH_RECEIPT !== undefined && !await frozen.authorizers.originalSelectedGraphHandoffHoldsV1(workspace_root_1.workspaceRoot, __filename)) return false; if (!await frozen.authorizers.requireOriginalNxRustCachePromotionV1(task.hashDetails?.semioRustUnit, outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output)), res.outputsPath)) return false; this.recordCacheTaskDetails(task); this.cache.applyRemoteCacheResults(task.hash, res, outputs); return true; };
++        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1();
++        if (!frozen || typeof frozen.authorizers.withOriginalNxFixedCacheV1 !== 'function') throw Error('Immutable fixed cache custody required');
++        return frozen.authorizers.withOriginalNxFixedCacheV1(workspace_root_1.workspaceRoot, frozen.toolingIdentity, process.env, [cache_directory_1.cacheDir, cache_directory_1.workspaceDataDirectory, res.outputsPath, ...outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output))], 'exclusive', async () => publish());
+     }
+     async put(task, terminalOutput, outputs, code) {
+-        return tryAndRetry(async () => {
+-            const expandedOutputs = this.cache.put(task.hash, terminalOutput, outputs, code);
+-            // Notify TaskIOService of actual output files
+-            (0, task_io_service_1.getTaskIOService)().notifyTaskOutputs(task.id, expandedOutputs);
+-            if (this.remoteCache) {
+-                await this.remoteCache.store(task.hash, this.cache.cacheDirectory, terminalOutput, code);
+-            }
+-        });
+-    }
+-    copyFilesFromCache(_, cachedResult, outputs) {
+-        return tryAndRetry(async () => this.cache.copyFilesFromCache(cachedResult, outputs));
++        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1();
++        if (!frozen || typeof frozen.authorizers.requireOriginalNxRustCachePromotionV1 !== 'function') throw Error('Immutable Rust cache promotion authority required');
++        const verifySource = async () => {
++            if (!await frozen.authorizers.sourceClosureReceiptHolds(workspace_root_1.workspaceRoot, task.hashDetails?.semioSourceInputs, process.env)) return false;
++            if (process.env.SEMIO_NX_SELECTED_GRAPH_RECEIPT !== undefined && !await frozen.authorizers.originalSelectedGraphHandoffHoldsV1(workspace_root_1.workspaceRoot, __filename)) return false;
++            return true;
++        };
++        if (!await verifySource()) return;
++        const promote = async () => {
++            if (!await verifySource()) return;
++            if (!await frozen.authorizers.requireOriginalNxRustCachePromotionV1(task.hashDetails?.semioRustUnit, outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output)))) { console.log(`[nx] Output changed during ${task.id}; cache promotion withheld`); return; }
++            return tryAndRetry(async () => {
++                if (Buffer.byteLength(terminalOutput ?? '', 'utf8') > 134217728) throw Error('Native cache terminal output exceeds Original publication budget');
++                this.recordCacheTaskDetails(task);
++                const expandedOutputs = this.cache.put(task.hash, terminalOutput, outputs, code);
++                (0, task_io_service_1.getTaskIOService)().notifyTaskOutputs(task.id, expandedOutputs);
++                if (this.remoteCache) {
++                    if (!await verifySource()) return;
++                    await this.remoteCache.store(task.hash, this.cache.cacheDirectory, terminalOutput, code);
++                }
++                return expandedOutputs;
++            });
++        };
++        return frozen.authorizers.withOriginalNxFixedCacheV1(workspace_root_1.workspaceRoot, frozen.toolingIdentity, process.env, [cache_directory_1.cacheDir, cache_directory_1.workspaceDataDirectory, ...outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output))], 'exclusive', promote);
++    }
++    async copyFilesFromCache(_, cachedResult, outputs) {
++        const copy = () => tryAndRetry(async () => this.cache.copyFilesFromCache(cachedResult, outputs));
++        if (process.env.SEMIO_NX_FIXED_STORAGE === undefined) return copy();
++        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1();
++        if (!frozen || typeof frozen.authorizers.withOriginalNxFixedCacheV1 !== 'function') throw Error('Immutable fixed cache custody required');
++        return frozen.authorizers.withOriginalNxFixedCacheV1(workspace_root_1.workspaceRoot, frozen.toolingIdentity, process.env, [cache_directory_1.cacheDir, cache_directory_1.workspaceDataDirectory, cachedResult.outputsPath, ...outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output))], 'shared', copy);
+     }
+     removeOldCacheRecords() {
+         return this.cache.removeOldCacheRecords();
+@@ -369,10 +396,12 @@
+         return results;
+     }
+     async put(task, terminalOutput, outputs, code) {
++        if (process.env.SEMIO_NX_SELECTED_GRAPH_RECEIPT !== undefined) { const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1(); if (!frozen || !await frozen.authorizers.originalSelectedGraphHandoffHoldsV1(workspace_root_1.workspaceRoot, __filename)) { console.log(`[nx] Selected graph source changed during ${task.id}; cache promotion withheld`); return; } }
++        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1(); if (!frozen || typeof frozen.authorizers.sourceClosureReceiptHolds !== 'function') throw Error('Immutable sourceClosureReceiptHolds authority required'); const { sourceClosureReceiptHolds } = frozen.authorizers;
++        if (!await sourceClosureReceiptHolds(workspace_root_1.workspaceRoot, task.hashDetails?.semioSourceInputs, process.env)) { console.log(`[nx] Source changed during ${task.id}; cache promotion withheld`); return; }
+         return tryAndRetry(async () => {
+             /**
+-             * This is the directory with the cached artifacts
+-             */
++             * This is the directory with the cached artifacts             */
+             const td = (0, path_1.join)(this.cachePath, task.hash);
+             const tdCommit = (0, path_1.join)(this.cachePath, `${task.hash}.commit`);
+             // might be left overs from partially-completed cache invocations
+diff --git a/dist/src/project-graph/project-graph.js b/dist/src/project-graph/project-graph.js
+--- a/dist/src/project-graph/project-graph.js
++++ b/dist/src/project-graph/project-graph.js
+@@ -38,8 +38,8 @@
+  * @param {number} [minimumComputedAt] - The minimum timestamp that the cached ProjectGraph must have been computed at.
+  * @throws {Error} if there is no cached ProjectGraph to read from
+  */
++function readCachedProjectGraph(minimumComputedAt, snapshot) {
++    const projectGraphCache = (0, nx_deps_cache_1.readProjectGraphCache)(minimumComputedAt, snapshot);
+-function readCachedProjectGraph(minimumComputedAt) {
+-    const projectGraphCache = (0, nx_deps_cache_1.readProjectGraphCache)(minimumComputedAt);
+     if (!projectGraphCache) {
+         const angularSpecificError = (0, fileutils_1.fileExists)(`${workspace_root_1.workspaceRoot}/angular.json`)
+             ? (0, strip_indents_1.stripIndents) `
+@@ -84,6 +84,7 @@
+     };
+ }
+ async function buildProjectGraphAndSourceMapsWithoutDaemon() {
++    const semioPublicationContext = (0, nx_deps_cache_1.captureSemioGraphPublicationContextV1)();
+     preventRecursionInGraphConstruction();
+     global.NX_GRAPH_CREATION = true;
+     const nxJson = (0, nx_json_1.readNxJson)();
+@@ -136,7 +137,7 @@
+         ...(projectGraphError?.errors ?? []),
+     ];
+     if (cacheEnabled) {
++        await (0, nx_deps_cache_1.writeCache)(projectFileMapCache, projectGraph, sourceMaps, errors, semioPublicationContext);
+-        (0, nx_deps_cache_1.writeCache)(projectFileMapCache, projectGraph, sourceMaps, errors);
+     }
+     if (errors.length > 0) {
+         throw new error_types_1.ProjectGraphError(errors, projectGraph, sourceMaps);
+@@ -178,14 +179,15 @@
+     }
+ }
+ async function readCachedGraphAndHydrateFileMap(minimumComputedAt) {
++    const snapshot = (0, nx_deps_cache_1.readSemioGraphSnapshotV1)(['project-graph.json', 'source-maps.json']);
++    const graph = readCachedProjectGraph(minimumComputedAt, snapshot);
+-    const graph = readCachedProjectGraph(minimumComputedAt);
+     const projectRootMap = Object.fromEntries(Object.entries(graph.nodes).map(([project, { data }]) => [
+         data.root,
+         project,
+     ]));
+     const { fileMap, rustReferences } = await (0, retrieve_workspace_files_1.retrieveWorkspaceFiles)(workspace_root_1.workspaceRoot, projectRootMap);
+     (0, build_project_graph_1.hydrateFileMap)(fileMap, rustReferences);
++    return { projectGraph: graph, sourceMaps: snapshot['source-maps.json'] };
+-    return graph;
+ }
+ /**
+  * Computes and returns a ProjectGraph.
+@@ -216,7 +218,7 @@
+         try {
+             // If no cached graph is found, we will fall through to the normal flow
+             const graph = await readCachedGraphAndHydrateFileMap();
++            return graph.projectGraph;
+-            return graph;
+         }
+         catch (e) {
+             if (e instanceof error_types_1.ProjectGraphError) {
+@@ -277,8 +279,7 @@
+                 // Ensuring that computedAt was after this process started
+                 // waiting for the graph to complete, means that the graph
+                 // was computed by the process was already working.
++                const { projectGraph: graph, sourceMaps } = await readCachedGraphAndHydrateFileMap(start);
+-                const graph = await readCachedGraphAndHydrateFileMap(start);
+-                const sourceMaps = (0, nx_deps_cache_1.readSourceMapsCache)();
+                 if (!sourceMaps) {
+                     throw new Error('The project graph was computed in another process, but the source maps are missing.');
+                 }
+@@ -350,10 +351,11 @@
+                     title: `Unable to start Nx Daemon due to the limited amount of inotify watches, continuing without the daemon.`,
+                     bodyLines: [
+                         'For more information read: https://askubuntu.com/questions/1088272/inotify-add-watch-failed-no-space-left-on-device',
++                        'Nx Daemon is disabled for this command; later commands retry normally.',
+-                        'Nx Daemon is going to be disabled until you run "nx reset".',
+                     ],
+                 });
++                (0, tmp_dir_1.disableDaemonForThisProcess)(e.message);
++                client_1.daemonClient.reset();
+-                (0, tmp_dir_1.markDaemonAsDisabled)(e.message);
+                 return buildProjectGraphAndSourceMapsWithoutDaemon();
+             }
+             if (e.daemonPermissionError) {
+@@ -391,19 +393,10 @@
+                         `Please file an issue at https://github.com/nrwl/nx`,
+                         sandboxed
+                             ? 'Nx Daemon is disabled for this command.'
++                            : 'Nx Daemon is disabled for this command; later commands retry normally.',
+-                            : 'Nx Daemon is going to be disabled until you run "nx reset".',
+                     ],
+                 });
++                (0, tmp_dir_1.disableDaemonForThisProcess)(e.message);
+-                // A sandbox refusal describes the environment, not the workspace. The
+-                // on-disk marker would follow the checkout into an ordinary terminal
+-                // and survive the user fixing their allowlist, since only `nx reset`
+-                // clears it.
+-                if (sandboxed) {
+-                    (0, tmp_dir_1.disableDaemonForThisProcess)(e.message);
+-                }
+-                else {
+-                    (0, tmp_dir_1.markDaemonAsDisabled)(e.message);
+-                }
+                 // Both writes are only read through `isDaemonDisabled()`, which
+                 // `enabled()` consults once and then memoizes. Without clearing that,
+                 // every later daemon consumer in this process — task hashing, workspace
+diff --git a/dist/src/daemon/server/watcher.js b/dist/src/daemon/server/watcher.js
+--- a/dist/src/daemon/server/watcher.js
++++ b/dist/src/daemon/server/watcher.js
+@@ -1,6 +1,10 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.watchWorkspace = watchWorkspace;
++exports.initializeSemioFilesystemJournalV1 = initializeSemioFilesystemJournalV1;
++exports.captureSemioFilesystemJournalV1 = captureSemioFilesystemJournalV1;
++exports.getSemioFilesystemJournalToolingIdentityV1 = getSemioFilesystemJournalToolingIdentityV1;
++exports.getSemioChangedFileHashesV1 = getSemioChangedFileHashesV1;
+ exports.flushPendingWorkspaceChanges = flushPendingWorkspaceChanges;
+ exports.watchOutputFiles = watchOutputFiles;
+ exports.convertChangeEventsToLogMessage = convertChangeEventsToLogMessage;
+@@ -15,9 +19,99 @@
+ // force-flushed events through the same handling as the async callback.
+ // Definite-assignment: dispatchWorkspaceChanges only runs after
+ // watchWorkspace has set both, so reading them as non-nullable is safe.
++let semioOwners, semioJournal, semioJournalPromise, semioWatcher, semioPolicy, semioToolingIdentity;
++let semioError, semioPending = [], semioThread, semioChangedFileHashes;
++const semioSubscribers = new Set(); let semioLifetime = new AbortController(), semioGeneration = 0;
++async function loadSemioFilesystemJournalOwners() {
++    const loaded = await require('../../utils/workspace-context').loadSemioGraphAuthorizersV1();
++    if (!loaded) throw Error('Immutable graph authorizer custody refused');
++    semioToolingIdentity = loaded.toolingIdentity;
++    return [loaded.authorizers, loaded.authorizers, loaded.authorizers];
++}
++function semioExcluded(path) {
++    return semioPolicy && (semioPolicy.roots.some(root => path === root || path.startsWith(root + '/')) || path.split('/').some(part => semioPolicy.names.includes(part)));
++}
++function semioReceive(error, events) {
++    if (error) semioError = error;
++    const selected = (events || []).filter(event => !semioExcluded(event.path));
++    if (semioSubscribers.size) for (const receive of semioSubscribers) receive(error, selected);
++    else { semioPending.push(...selected); if (semioPending.length > 200000) semioError = new Error('Filesystem journal initial event overflow'); }
++}
++function semioControl(maximum = null, caller) {
++    const started = performance.now(), signal = caller ? AbortSignal.any([caller.signal, semioLifetime.signal]) : semioLifetime.signal;
++    return { signal, remainingMilliseconds() { signal.throwIfAborted(); const original = caller?.remainingMilliseconds() ?? null, phase = maximum === null ? null : maximum - (performance.now() - started); return original === null ? phase : phase === null ? original : Math.min(original, phase); }, publish: caller ? progress => caller.publish(progress) : async progress => require('../logger').serverLogger.log('[filesystem-journal]', progress.resource), yieldContinuation: caller ? () => caller.yieldContinuation() : () => new Promise(resolve => setImmediate(resolve)) };
++}
++function semioNativeChanges(events) {
++    if (!events.length) return [];
++    const context = require("../../utils/workspace-context"), fs = require("node:fs"), changed = new Map(), pending = [...events].reverse(), reconciled = new Set(), known = new Set();
++    let inspected = 0;
++    while (pending.length) {
++        const event = pending.pop();
++        if (++inspected > 200000) throw new Error("Native watcher structural membership overflow");
++        if (semioExcluded(event.path)) continue;
++        if (event.type === "delete") {
++            const members = context.globWithWorkspaceContextSync(workspace_root_1.workspaceRoot, [event.path + "/**"]);
++            for (const path of members.length ? members : [event.path]) if (!semioExcluded(path)) changed.set(path, { type: "delete", path });
++            const parent = path_1.dirname(event.path);
++            if (members.length && !reconciled.has(parent)) {
++                reconciled.add(parent);
++                const census = context.globWithWorkspaceContextSync(workspace_root_1.workspaceRoot, [parent === "." ? "**/*" : parent + "/**"]);
++                if (census.length > 200000) throw new Error("Native watcher structural census overflow");
++                for (const path of census) known.add(path);
++                pending.push({ type: "reconcile", path: parent });
++            }
++            continue;
++        }
++        let stat;
++        try { stat = fs.lstatSync(path_1.join(workspace_root_1.workspaceRoot, event.path)); }
++        catch (error) { if (error.code === "ENOENT" || error.code === "ENOTDIR") continue; throw error; }
++        if (stat.isFile()) { if (event.type !== "reconcile" || !known.has(event.path)) changed.set(event.path, { type: event.type === "reconcile" ? "create" : event.type, path: event.path }); }
++        else if (stat.isDirectory()) for (const name of fs.readdirSync(path_1.join(workspace_root_1.workspaceRoot, event.path))) pending.push({ type: event.type, path: event.path === "." ? name : event.path + "/" + name });
++    }
++    const files = [...changed.values()], updated = files.filter(event => event.type !== "delete").map(event => event.path), deleted = files.filter(event => event.type === "delete").map(event => event.path);
++    if (!updated.length && !deleted.length) return [];
++    semioChangedFileHashes = context.updateFilesInContext(workspace_root_1.workspaceRoot, updated, deleted) || {};
++    const admitted = new Set(updated.length ? context.globWithWorkspaceContextSync(workspace_root_1.workspaceRoot, updated) : []);
++    return files.filter(event => event.type === "delete" || admitted.has(event.path));
++}
++function getSemioChangedFileHashesV1(paths) {
++    return Object.fromEntries(paths.filter(path => Object.hasOwn(semioChangedFileHashes || {}, path)).map(path => [path, semioChangedFileHashes[path]]));
++}
++function stopSemioJournalThreadV1(thread) {
++    return new Promise(resolve => {
++        let finished = false; const finish = () => { if (finished) return; finished = true; clearTimeout(timer); resolve(); };
++        const timer = setTimeout(() => { void thread.terminate().then(finish, finish); }, 1000); timer.unref();
++        thread.once('exit', finish); try { thread.postMessage({ type: 'stop' }); } catch { finish(); }
++    });
++}
++async function initializeSemioFilesystemJournalV1() {
++    if (semioJournalPromise || !semioWatcher) return semioJournalPromise;
++    const generation = semioGeneration, lifetime = semioLifetime;
++    semioJournalPromise = (async () => {
++        const loaded = await require('../../utils/workspace-context').loadSemioGraphAuthorizersV1();
++        if (!loaded || generation !== semioGeneration || lifetime.signal.aborted) return null;
++        const workerGeneration = require('node:crypto').randomBytes(16).toString('hex'), directory = path_1.join(require('../../utils/cache-directory').workspaceDataDirectory, 'semio-journal'), socketPath = process.platform === 'win32' ? '\\\\.\\pipe\\semio-journal-' + workerGeneration : require('../socket-utils').getFullOsSocketPath().replace(/d\.sock$/u, 'j.sock');
++        semioThread = loaded.authorizers.createNxDaemonJournalWorkerV1(socketPath, deployment => new (require('node:worker_threads').Worker)(loaded.entry, { workerData: deployment }));
++        const owned = semioThread; lifetime.signal.addEventListener('abort', () => { void stopSemioJournalThreadV1(owned); }, { once: true });
++        semioThread.on('message', message => { if (generation !== semioGeneration) return; if (message.type === 'refused') { semioError = new Error(message.reason); void owned.terminate(); } else if (message.type === 'progress') require('../logger').serverLogger.log('[filesystem-journal]', message.progress.resource); });
++        semioThread.on('error', error => { if (generation === semioGeneration) semioError = error; });
++        return semioThread;
++    })().catch(error => { if (generation === semioGeneration) semioError = error; return null; });
++    return semioJournalPromise;
++}
++async function captureSemioFilesystemJournalV1(scope, control) {
++    if (!semioWatcher || semioError || semioLifetime.signal.aborted || !semioToolingIdentity) return null;
++    const current = semioControl(null, control);
++    try { const response = await require('../client/client').daemonClient.getSemioFilesystemJournalV1(scope, current); return response?.witness || null; }
++    catch (error) { if (control) { control.signal.throwIfAborted(); const budget = control.remainingMilliseconds(); if (budget !== null && budget <= 0) throw error; } return null; }
++}
++function getSemioFilesystemJournalToolingIdentityV1() { return semioToolingIdentity || null; }
+ let activeServer;
+ let workspaceChangesCallback;
+-function dispatchWorkspaceChanges(events) {
++function dispatchWorkspaceChanges(events, observe = true) {
++    events = events.filter(event => !semioExcluded(event.path));
++    if (!events.length) return;
++    if (observe) semioReceive(null, events);
+     for (const event of events) {
+         if (event.path.endsWith('.gitignore') || event.path === '.nxignore') {
+             // If the ignore files themselves have changed we need to dynamically
+@@ -29,15 +123,31 @@
+             });
+         }
+     }
+-    return workspaceChangesCallback(null, events);
++    const admitted = semioPolicy ? semioNativeChanges(events) : events;
++    try { return admitted.length ? workspaceChangesCallback(null, admitted) : undefined; }
++    finally { semioChangedFileHashes = undefined; }
+ }
+ async function watchWorkspace(server, cb) {
+     const { Watcher } = await (0, handle_import_1.handleImport)('../../native/index.js', __dirname);
+     activeServer = server;
++    const generation = ++semioGeneration, lifetime = new AbortController();
++    semioLifetime = lifetime; semioJournal = undefined; semioJournalPromise = undefined; semioError = undefined; semioPending = []; semioSubscribers.clear();
+     workspaceChangesCallback = cb;
+-    const watcher = new Watcher(workspace_root_1.workspaceRoot);
++    try {
++        const [backend, , rpc] = await loadSemioFilesystemJournalOwners();
++        semioPolicy = await backend.repositoryFilesystemJournalPolicyV1(workspace_root_1.workspaceRoot);
++        if (!semioToolingIdentity) throw Error('Actual immutable graph authorizer identity required');
++    } catch (error) { semioError = error; }
++    const globs = semioPolicy ? [...semioPolicy.roots.map(root => '!/' + root + '/**'), ...semioPolicy.names.map(name => '!**/' + name + '/**')] : undefined;
++    const watcher = new Watcher(workspace_root_1.workspaceRoot, globs, semioPolicy ? false : undefined);
++    semioWatcher = watcher;
++    const stop = watcher.stop.bind(watcher);
++    let stopped = false;
++    watcher.stop = async () => { if (stopped) return; stopped = true; lifetime.abort(new Error('Native filesystem journal watcher closed')); if (generation === semioGeneration) { semioReceive(new Error('Native filesystem journal watcher closed'), []); if (semioJournal) await semioJournal.close(); if (semioThread) { const owned = semioThread; semioThread = undefined; await stopSemioJournalThreadV1(owned); } } await stop(); };
+     watcher.watch((err, events) => {
++        if (generation !== semioGeneration || lifetime.signal.aborted) return;
+         if (err) {
++            semioReceive(err, []);
+             return cb(err, null);
+         }
+         dispatchWorkspaceChanges(events);
+diff --git a/dist/src/daemon/server/server.js b/dist/src/daemon/server/server.js
+--- a/dist/src/daemon/server/server.js
++++ b/dist/src/daemon/server/server.js
+@@ -79,7 +79,7 @@
+     socket.on('data', (0, consume_messages_from_socket_1.consumeMessagesFromSocket)(async (message) => {
+         // A rejection here would otherwise be unhandled and take the daemon
+         // down with it, failing every other client's request too.
+-        await handleMessage(socket, message).catch(async (e) => {
++        await require("../../utils/handle-import").loadSemioGraphAuthorizersV1().then(frozen => { if (!frozen) throw Error("Original daemon request owner required"); return frozen.authorizers.withNxDaemonRequestV1(() => handleMessage(socket, message)); }).catch(async (e) => {
+             await (0, shutdown_utils_1.respondWithError)(socket, 'Error handling message', e);
+         });
+     }, (err) => {
+@@ -134,6 +134,26 @@
+             return;
+         }
+     }
++    if (payload.type === 'GET_SEMIO_FILESYSTEM_JOURNAL') {
++        await handleResult(socket, payload.type, async () => {
++            if (Object.keys(payload).some(key => !['type', 'version', 'scope', 'deadlineUnixMilliseconds', 'workspaceRoot'].includes(key)) || typeof payload.workspaceRoot !== 'string') return { response: null, description: 'filesystem journal refused' };
++            try { const loaded = await (0, workspace_context_1.loadSemioGraphAuthorizersV1)(); if (!loaded) return { response: null, description: 'filesystem journal unavailable' }; loaded.authorizers.readFilesystemJournalRpcRequestV1({ type: payload.type, version: payload.version, scope: payload.scope, deadlineUnixMilliseconds:payload.deadlineUnixMilliseconds }); } catch { return { response: null, description: 'filesystem journal refused' }; }
++            const stop = new AbortController(), abort = () => stop.abort(new Error('Filesystem journal request socket closed'));
++            socket.once('close', abort);
++            try {
++                const control = { signal: stop.signal, remainingMilliseconds: () => payload.deadlineUnixMilliseconds === null ? null : payload.deadlineUnixMilliseconds - Date.now(), publish: async progress => logger_1.serverLogger.log('[filesystem-journal]', progress.resource), yieldContinuation: () => new Promise(resolve => setImmediate(resolve)) };
++                const witness = await (0, watcher_1.captureSemioFilesystemJournalV1)(payload.scope, control), toolingIdentity = (0, watcher_1.getSemioFilesystemJournalToolingIdentityV1)();
++                return { response: witness && toolingIdentity ? { version: 1, toolingIdentity, witness } : null, description: 'filesystem journal' };
++            } catch { return { response: null, description: 'filesystem journal unavailable' }; }
++            finally { socket.removeListener('close', abort); }
++        }, mode);
++        return;
++    }
++    if (typeof payload.semioOriginalScriptProcessInvocation === 'string') process.env.SEMIO_SCRIPT_PROCESS_INVOCATION = payload.semioOriginalScriptProcessInvocation;
++    if (payload.semioSourceProof !== undefined) {
++        const frozen = await (0, workspace_context_1.loadSemioGraphAuthorizersV1)(); if (!frozen || typeof payload.semioOriginalScriptProcessInvocation !== 'string') throw Error('Original graph source proof caller required');
++        const proof = frozen.authorizers.readNxGraphSourceProofV1(payload.semioSourceProof); if (proof.sourceMembership === null) delete process.env.SEMIO_NX_GRAPH_SOURCE_MEMBERSHIP; else process.env.SEMIO_NX_GRAPH_SOURCE_MEMBERSHIP = proof.sourceMembership;
++    }
+     if ((0, daemon_message_1.isDaemonMessage)(payload) && payload.env) {
+         await (0, handle_client_env_1.handleClientEnv)(payload.env);
+     }
+@@ -349,6 +369,9 @@
+     }
+ };
+ async function startServer() {
++    const frozen = await require('../../utils/handle-import').loadSemioGraphAuthorizersV1();
++    if (!frozen) throw Error('Original immutable daemon server owner required');
++    frozen.authorizers.registerNxDaemonServerV1(reason => (0, shutdown_utils_1.handleServerProcessTermination)({ server, reason, sockets: exports.openSockets }));
+     // Watch before scan: a file written during boot must be visible to the
+     // watcher or the scan below. Scan-first left a blind window where such
+     // files stayed invisible to both until an unrelated change arrived.
+@@ -357,6 +380,7 @@
+         logger_1.serverLogger.watcherLog(`Subscribed to changes within: ${workspace_root_1.workspaceRoot} (native)`);
+     }
+     (0, workspace_context_1.setupWorkspaceContext)(workspace_root_1.workspaceRoot);
++    void (0, watcher_1.initializeSemioFilesystemJournalV1)();
+     // Initialize analytics for daemon process
+     await (0, analytics_1.startAnalytics)();
+     const socketPath = (0, socket_utils_1.getFullOsSocketPath)();
+@@ -370,6 +394,7 @@
+         processId: process.pid,
+         socketPath,
+         nxVersion: versions_1.nxVersion,
++        semioToolingIdentity: (0, watcher_1.getSemioFilesystemJournalToolingIdentityV1)(),
+     });
+     // See notes in socket-command-line-utils.ts on OS differences regarding clean up of existings connections.
+     if (!socket_utils_1.isWindows) {
+@@ -415,7 +440,7 @@
+         // sees only a missing socket and cannot tell a refusal from a cold start.
+         server.on('error', (error) => {
+             logger_1.serverLogger.log(`Failed to listen on: ${socketPath} (${error.message})`);
+-            process.exit((0, permission_errors_1.isPermissionDenied)(error) ? socket_refused_exit_code_1.SOCKET_REFUSED_EXIT_CODE : 1);
++            reject(Object.assign(error, { semioExitCode: (0, permission_errors_1.isPermissionDenied)(error) ? socket_refused_exit_code_1.SOCKET_REFUSED_EXIT_CODE : 1 }));
+         });
+         try {
+             server.listen(socketPath, async () => {
+@@ -438,7 +463,7 @@
+                         (0, shutdown_utils_1.storeOutputWatcherInstance)(await (0, watcher_1.watchOutputFiles)(server, handle_outputs_changes_1.handleOutputsChanges));
+                     }
+                     // listen for project graph recomputation events to collect and schedule sync generators
+-                    (0, project_graph_incremental_recomputation_1.registerProjectGraphRecomputationListener)(sync_generators_1.collectAndScheduleSyncGenerators);
++                    (0, project_graph_incremental_recomputation_1.registerSemioPassiveProjectGraphListenerV1)(sync_generators_1.collectAndScheduleSyncGenerators);
+                     // register file change listener to invalidate sync generator cache
+                     (0, file_change_events_1.registerFileChangeListener)(sync_generators_1.clearSyncGeneratorsCache);
+                     // trigger an initial project graph recomputation
+diff --git a/dist/src/daemon/tmp-dir.js b/dist/src/daemon/tmp-dir.js
+--- a/dist/src/daemon/tmp-dir.js
++++ b/dist/src/daemon/tmp-dir.js
+@@ -71,14 +71,19 @@
+ exports.InvalidSocketDirConfigured = InvalidSocketDirConfigured;
+ exports.DAEMON_DIR_FOR_CURRENT_WORKSPACE = (0, path_1.join)(cache_directory_1.workspaceDataDirectory, 'd');
+-exports.DAEMON_OUTPUT_LOG_FILE = (0, path_1.join)(exports.DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'daemon.log');
++function getOriginalNxDaemonLogFileV1() {
++    const authorizers = require('../utils/handle-import').loadedSemioGraphAuthorizersV1();
++    if (!authorizers || typeof authorizers.requireNxGraphDiagnosticDirectoryV1 !== 'function') throw Error('Original graph diagnostics owner required');
++    return (0, path_1.join)(authorizers.requireNxGraphDiagnosticDirectoryV1(require('../utils/workspace-root').workspaceRoot, process.env), 'daemon.log');
++}
++Object.defineProperty(exports, 'DAEMON_OUTPUT_LOG_FILE', { enumerable: true, get: getOriginalNxDaemonLogFileV1 });
+ const getDaemonSocketDir = () => (0, path_1.join)(getSocketDir(), 
+ // Kept intentionally short to stay under the socket/named pipe path length
+ // limit enforced by `assertValidSocketPath` in socket-utils.ts.
+ 'd.sock');
+ exports.getDaemonSocketDir = getDaemonSocketDir;
+ function writeDaemonLogs(error) {
+-    const file = (0, path_1.join)(exports.DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'daemon-error.log');
++    const file = (0, path_1.join)((0, path_1.dirname)(getOriginalNxDaemonLogFileV1()), 'daemon-error.log');
+     (0, node_fs_1.writeFileSync)(file, error);
+     return file;
+ }
+ function markDaemonAsDisabled(reason) {
+@@ -85,2 +90,5 @@
++    const authorizers = require('../utils/handle-import').loadedSemioGraphAuthorizersV1();
++    if (!authorizers || typeof authorizers.nxGraphDaemonDisabledMarkerV1 !== 'function') throw Error('Original semantic daemon marker owner required');
++    authorizers.requireNxGraphNativeDirectoryV1(require('../utils/workspace-root').workspaceRoot, process.env);
+-    (0, node_fs_1.writeFileSync)((0, path_1.join)(exports.DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'disabled'), reason);
++    (0, node_fs_1.writeFileSync)((0, path_1.join)(exports.DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'disabled'), authorizers.nxGraphDaemonDisabledMarkerV1(reason));
+ }
+diff --git a/dist/src/tasks-runner/running-tasks/batch-process.js b/dist/src/tasks-runner/running-tasks/batch-process.js
+--- a/dist/src/tasks-runner/running-tasks/batch-process.js
++++ b/dist/src/tasks-runner/running-tasks/batch-process.js
+@@ -10,3 +10,8 @@
+ const batch_messages_1 = require("../batch/batch-messages");
++function getOriginalNxBatchOutputDirectoryV1() {
++    const authorizers = require('../../utils/handle-import').loadedSemioGraphAuthorizersV1();
++    if (!authorizers || typeof authorizers.requireNxGraphDiagnosticDirectoryV1 !== 'function') throw Error('Original graph diagnostics owner required');
++    return (0, path_1.join)(authorizers.requireNxGraphDiagnosticDirectoryV1(require('../../utils/workspace-root').workspaceRoot, process.env), 'batch-outputs');
++}
+ class BatchProcess {
+     constructor(childProcess, executorName) {
+@@ -133,5 +138,5 @@
+         try {
+             if (this.capturedOutputFd === undefined) {
+-                const dir = (0, path_1.join)(cache_directory_1.workspaceDataDirectory, 'batch-outputs');
++                const dir = getOriginalNxBatchOutputDirectoryV1();
+                 (0, fs_1.mkdirSync)(dir, { recursive: true });
+                 const name = `${this.executorName.replace(/[^a-zA-Z0-9]+/g, '-')}-${process.pid}-${++BatchProcess.capturedOutputCount}.log`;
+diff --git a/dist/src/utils/db-connection.js b/dist/src/utils/db-connection.js
+--- a/dist/src/utils/db-connection.js
++++ b/dist/src/utils/db-connection.js
+@@ -21,20 +21,25 @@
+     return _sharedDir;
+ }
++function requireOriginalNxNativeDirectoryV1() {
++    const authorizers = require('./handle-import').loadedSemioGraphAuthorizersV1();
++    if (!authorizers || typeof authorizers.requireNxGraphNativeDirectoryV1 !== 'function') throw Error('Original native graph storage owner required');
++    return authorizers.requireNxGraphNativeDirectoryV1(workspace_root_1.workspaceRoot, process.env);
++}
+ function getDbConnection(opts = {}) {
+-    opts.directory ??= sharedWorkspaceDataDirectory(workspace_root_1.workspaceRoot);
+-    const key = `${opts.directory}:${opts.dbName ?? 'default'}`;
+-    const connection = getEntryOrSet(dbConnectionMap, key, () => (0, native_1.connectToNxDb)(opts.directory, opts.dbName));
++    const directory = opts.directory ?? requireOriginalNxNativeDirectoryV1();
++    const key = `${directory}:${opts.dbName ?? 'default'}`;
++    const connection = getEntryOrSet(dbConnectionMap, key, () => (0, native_1.connectToNxDb)(directory, opts.dbName));
+     return connection;
+ }
+ /**
+  * Returns a DB connection scoped to the local worktree (not shared).
+  * Use this for data that is inherently local to a worktree, such as
+  * running task tracking, where sharing across worktrees would cause
+  * false conflicts.
+  */
+ function getLocalDbConnection(opts = {}) {
+-    const directory = (0, cache_directory_1.workspaceDataDirectoryForWorkspace)(workspace_root_1.workspaceRoot);
++    const directory = requireOriginalNxNativeDirectoryV1();
+     const key = `${directory}:${opts.dbName ?? 'default'}`;
+     const connection = getEntryOrSet(dbConnectionMap, key, () => (0, native_1.connectToNxDb)(directory, opts.dbName));
+     return connection;
+ }
+diff --git a/dist/src/utils/workspace-context.js b/dist/src/utils/workspace-context.js
+--- a/dist/src/utils/workspace-context.js
++++ b/dist/src/utils/workspace-context.js
+@@ -1,5 +1,21 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
++const semio_authorizers_1 = require('./handle-import');
++const loadSemioGraphAuthorizersV1 = semio_authorizers_1.loadSemioGraphAuthorizersV1;
++exports.loadSemioGraphAuthorizersV1 = loadSemioGraphAuthorizersV1;
++exports.readSemioGraphJournalServiceV1 = readSemioGraphJournalServiceV1;
++function readSemioGraphJournalServiceV1(identity, root) {
++    try {
++        const fs = require('node:fs'), path = require('node:path'), file = path.join(require('./cache-directory').workspaceDataDirectory, 'semio-journal/service.json'), ancestry = [];
++        for (let directory = path.dirname(file); ; directory = path.dirname(directory)) { const status = fs.lstatSync(directory, { bigint: true }); if (!status.isDirectory() || status.isSymbolicLink()) return null; ancestry.push([directory, status]); if (path.dirname(directory) === directory) break; }
++        const before = fs.lstatSync(file, { bigint: true });
++        if (!before.isFile() || before.isSymbolicLink() || before.size > 4096n) return null;
++        const value = JSON.parse(fs.readFileSync(file, 'utf8')), after = fs.lstatSync(file, { bigint: true });
++        if (['dev', 'ino', 'size', 'mtimeNs', 'ctimeNs'].some(key => before[key] !== after[key]) || Object.keys(value).sort().join(',') !== 'generation,processId,root,socketPath,toolingIdentity,version' || value.version !== 1 || value.root !== root || value.toolingIdentity !== identity || !Number.isSafeInteger(value.processId) || value.processId < 1 || !/^[a-f0-9]{32}$/u.test(value.generation) || typeof value.socketPath !== 'string' || value.socketPath.length > 95) return null;
++        if (ancestry.some(([directory, status]) => { const after = fs.lstatSync(directory, { bigint: true }); return status.dev !== after.dev || status.ino !== after.ino || !after.isDirectory() || after.isSymbolicLink(); })) return null;
++        return value;
++    } catch { return null; }
++}
+ exports.setupWorkspaceContext = setupWorkspaceContext;
+ exports.getNxWorkspaceFilesFromContext = getNxWorkspaceFilesFromContext;
+ exports.globWithWorkspaceContextSync = globWithWorkspaceContextSync;
+@@ -18,18 +34,31 @@
+ const is_on_daemon_1 = require("../daemon/is-on-daemon");
+ const client_1 = require("../daemon/client/client");
+ const handle_import_1 = require("./handle-import");
+-let workspaceContext;
++let workspaceContext, workspaceContextAuthorityRoot, workspaceContextNativeDirectory;
++function requireOriginalNxNativeDirectoryV1(workspaceRoot) {
++    const authorizers = semio_authorizers_1.loadedSemioGraphAuthorizersV1();
++    if (!authorizers || typeof authorizers.requireNxGraphNativeDirectoryV1 !== 'function') throw Error('Original native graph storage owner required');
++    return authorizers.requireNxGraphNativeDirectoryV1(workspaceRoot, process.env);
++}
+ function setupWorkspaceContext(workspaceRoot) {
+     const { WorkspaceContext } = require('../native');
+     perf_hooks_1.performance.mark('workspace-context');
+-    workspaceContext = new WorkspaceContext(workspaceRoot, (0, cache_directory_1.workspaceDataDirectoryForWorkspace)(workspaceRoot));
++    const nativeDirectory = requireOriginalNxNativeDirectoryV1(workspaceRoot);
++    const selected = process.env.SEMIO_NX_NATIVE_SOURCE_SNAPSHOT === undefined ? undefined : semio_authorizers_1.loadedSemioGraphAuthorizersV1()?.selectedNativeWorkspaceRootV1(workspaceRoot);
++    if (process.env.SEMIO_NX_NATIVE_SOURCE_SNAPSHOT !== undefined && !selected) throw Error('Original selected Native Source reader required');
++    workspaceContextAuthorityRoot = workspaceRoot;
++    workspaceContext = new WorkspaceContext(selected ?? workspaceRoot, nativeDirectory);
++    workspaceContextNativeDirectory = nativeDirectory;
++    if (selected) { const inventory = semio_authorizers_1.loadedSemioGraphAuthorizersV1().selectedNativeWorkspaceInventoryV1(workspaceRoot); if (!inventory) throw Error("Original explicit Native inventory required"); workspaceContext.glob(["**/*"]); workspaceContext.incrementalUpdate(inventory.files, [inventory.initializationFile]); const actual = workspaceContext.allFileData().map(row => row.file).sort(); if (JSON.stringify(actual) !== JSON.stringify([...inventory.files].sort())) throw Error("Actual selected Native inventory differs from admitted Source"); }
+     perf_hooks_1.performance.mark('workspace-context:end');
+     perf_hooks_1.performance.measure('workspace context init', 'workspace-context', 'workspace-context:end');
+ }
+ async function getNxWorkspaceFilesFromContext(workspaceRoot, projectRootMap, useDaemonProcess = true) {
+     if (!useDaemonProcess || (0, is_on_daemon_1.isOnDaemon)() || !client_1.daemonClient.enabled()) {
+         ensureContextAvailable(workspaceRoot);
+-        return workspaceContext.getWorkspaceFiles(projectRootMap);
++        const files = workspaceContext.getWorkspaceFiles(projectRootMap);
++        if (process.env.SEMIO_NX_NATIVE_SOURCE_SNAPSHOT !== undefined) semio_authorizers_1.loadedSemioGraphAuthorizersV1().requireSelectedNativeFileCoverageV1(workspaceRoot, files);
++        return files;
+     }
+     return client_1.daemonClient.getWorkspaceFiles(projectRootMap);
+ }
+@@ -110,11 +139,13 @@
+ function updateProjectFiles(projectRootMappings, rustReferences, updatedFiles, deletedFiles) {
++    if (workspaceContext) ensureContextAvailable(workspaceContextAuthorityRoot);
+     return workspaceContext?.updateProjectFiles(projectRootMappings, rustReferences.projectFiles, rustReferences.globalFiles, updatedFiles, deletedFiles);
+ }
+ function ensureContextAvailable(workspaceRoot) {
+-    if (!workspaceContext || workspaceContext?.workspaceRoot !== workspaceRoot) {
++    const nativeDirectory = requireOriginalNxNativeDirectoryV1(workspaceRoot);
++    if (!workspaceContext || workspaceContextAuthorityRoot !== workspaceRoot || workspaceContextNativeDirectory !== nativeDirectory) {
+         setupWorkspaceContext(workspaceRoot);
+     }
+ }
+ function resetWorkspaceContext() {
+-    workspaceContext = undefined;
+-}
++    workspaceContext = undefined; workspaceContextAuthorityRoot = undefined; workspaceContextNativeDirectory = undefined;
++}
+diff --git a/dist/src/project-graph/nx-deps-cache.d.ts b/dist/src/project-graph/nx-deps-cache.d.ts
+--- a/dist/src/project-graph/nx-deps-cache.d.ts
++++ b/dist/src/project-graph/nx-deps-cache.d.ts
+@@ -26,7 +26,7 @@
+         };
+     };
+ }, externalNodesHash: string): FileMapCache;
+-export declare function writeCache(cache: FileMapCache, projectGraph: ProjectGraph, sourceMaps: ConfigurationSourceMaps, errors: ProjectGraphErrorTypes[]): void;
++export declare function writeCache(cache: FileMapCache, projectGraph: ProjectGraph, sourceMaps: ConfigurationSourceMaps, errors: ProjectGraphErrorTypes[]): Promise<void>;
+ /**
+  * Writes the cache only if the on-disk cache file has been modified since
+  * this process last wrote it (i.e. an external process overwrote it), or
+@@ -36,7 +36,7 @@
+  * be served multiple times without changing (e.g. the daemon responding
+  * to repeated client requests).
+  */
+-export declare function writeCacheIfStale(cache: FileMapCache, projectGraph: ProjectGraph, sourceMaps: ConfigurationSourceMaps, errors: ProjectGraphErrorTypes[]): void;
++export declare function writeCacheIfStale(cache: FileMapCache, projectGraph: ProjectGraph, sourceMaps: ConfigurationSourceMaps, errors: ProjectGraphErrorTypes[]): Promise<void>;
+ export declare function shouldRecomputeWholeGraph(cache: FileMapCache, packageJsonDeps: Record<string, string>, projects: Record<string, ProjectConfiguration>, nxJson: NxJsonConfiguration, tsConfig: {
+     compilerOptions: {
+         paths: {
+diff --git a/dist/src/daemon/client/daemon-environment.d.ts b/dist/src/daemon/client/daemon-environment.d.ts
+--- a/dist/src/daemon/client/daemon-environment.d.ts
++++ b/dist/src/daemon/client/daemon-environment.d.ts
+@@ -8,7 +8,7 @@
+ export declare function hashDaemonClientEnv(): string;
+-export declare function getDaemonEnv(): NodeJS.ProcessEnv & {
++export declare function getDaemonEnv(source?: NodeJS.ProcessEnv): NodeJS.ProcessEnv & {
+     NX_PROJECT_GLOB_CACHE: string;
+     NX_CACHE_PROJECTS_CONFIG: string;
+ };
+ /**
+  * Count of client env applications that changed at least one variable, in
+diff --git a/dist/bin/run-executor.js b/dist/bin/run-executor.js
+--- a/dist/bin/run-executor.js
++++ b/dist/bin/run-executor.js
+@@ -57,7 +57,9 @@
+ process.on('message', async (message) => {
+     try {
+-        const statusCode = await (0, run_1.run)(process.cwd(), process.env.NX_WORKSPACE_ROOT, message.targetDescription, message.overrides, message.isVerbose, message.taskGraph);
++        const frozen = await require('../src/utils/workspace-context').loadSemioGraphAuthorizersV1();
++        if (!frozen || typeof frozen.authorizers.withNxLoadedToolingUseV1 !== 'function' || typeof frozen.authorizers.withOriginalNxGraphNativeStorageV1 !== 'function') throw Error('Original immutable task executor toolkit owner required');
++        const statusCode = await frozen.authorizers.withNxLoadedToolingUseV1(process.env, () => frozen.authorizers.withOriginalNxGraphNativeStorageV1(process.env.NX_WORKSPACE_ROOT, process.env, () => (0, run_1.run)(process.cwd(), process.env.NX_WORKSPACE_ROOT, message.targetDescription, message.overrides, message.isVerbose, message.taskGraph)));
+         process.exit(statusCode);
+     }
+     catch (e) {
+         console.error(e);
+diff --git a/dist/src/project-graph/plugins/get-plugins.js b/dist/src/project-graph/plugins/get-plugins.js
+--- a/dist/src/project-graph/plugins/get-plugins.js
++++ b/dist/src/project-graph/plugins/get-plugins.js
+@@ -392,4 +392,5 @@
+ function getDefaultPlugins(root) {
++    if (process.env.SEMIO_BUILD_GRAPH_PATH) return [];
+     return [
+         (0, node_path_1.join)(__dirname, '../../plugins/js'),
+         ...((0, angular_json_1.shouldMergeAngularProjects)(root, false)
+diff --git a/dist/src/project-graph/plugins/resolve-plugin.js b/dist/src/project-graph/plugins/resolve-plugin.js
+--- a/dist/src/project-graph/plugins/resolve-plugin.js
++++ b/dist/src/project-graph/plugins/resolve-plugin.js
+@@ -25,7 +25,7 @@
+     // never workspace-local. Skip the project load entirely for them to avoid
+     // recursing through `retrieveProjectConfigurationsWithoutPluginInference`,
+     // which itself triggers default-plugin loading.
+-    if (!path.isAbsolute(moduleName)) {
++    if (!path.isAbsolute(moduleName) && !/^\.\.?[\\/]/.test(moduleName)) {
+         let resolvedFromNode;
+         try {
+             resolvedFromNode = require.resolve(moduleName, { paths });
+diff --git a/dist/src/utils/cache-directory.js b/dist/src/utils/cache-directory.js
+--- a/dist/src/utils/cache-directory.js
++++ b/dist/src/utils/cache-directory.js
+@@ -27,2 +27,7 @@
+ function cacheDirectory(root, cacheDirectory) {
++    if (cacheDirectory === '.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/nx/artifacts') {
++        const declared = absolutePath(root, cacheDirectory);
++        const owned = (0, path_1.dirname)((0, path_1.dirname)(declared));
++        if (process.env.SEMIO_NX_FIXED_STORAGE !== owned || process.env.NX_CACHE_DIRECTORY !== declared) throw Error('Original bounded Nx namespace required');
++    }
+     const cacheDirFromEnv = process.env.NX_CACHE_DIRECTORY;
+diff --git a/dist/bin/nx.js b/dist/bin/nx.js
+--- a/dist/bin/nx.js
++++ b/dist/bin/nx.js
+@@ -30,6 +30,12 @@
+ const isTsExt = (0, path_1.extname)(__filename).endsWith('.ts');
+ const pathToPkgJson = isTsExt ? '../package.json' : '../../package.json';
+ async function main() {
++    if (process.argv[2] === '--version') return mainWithOriginalNativeSnapshotV1();
++    const workspace = (0, find_workspace_root_1.findWorkspaceRoot)(process.cwd()), frozen = await require('../src/utils/workspace-context').loadSemioGraphAuthorizersV1();
++    if (!workspace || !frozen || typeof frozen.authorizers.withOriginalSelectedNativeSnapshotV1 !== 'function' || typeof frozen.authorizers.withOriginalNxGraphNativeStorageV1 !== 'function') throw Error('Original immutable Native snapshot authority required');
++    return frozen.authorizers.withOriginalNxGraphNativeStorageV1(workspace.dir, process.env, () => process.env.SEMIO_NX_NATIVE_SOURCE_SNAPSHOT === undefined ? mainWithOriginalNativeSnapshotV1() : frozen.authorizers.withOriginalSelectedNativeSnapshotV1(workspace.dir, process.env, mainWithOriginalNativeSnapshotV1));
++}
++async function mainWithOriginalNativeSnapshotV1() {
+     // Tab-completion fast path. Bare env-var read so nothing runs before
+     // the try/catch — a throw here would splice a stack trace into the
+     // user's command line.
+diff --git a/dist/bin/init-local.js b/dist/bin/init-local.js
+--- a/dist/bin/init-local.js
++++ b/dist/bin/init-local.js
+@@ -45,1 +45,1 @@
+-            nx_commands_1.commandsObject.parse(process.argv.slice(2));
++            await nx_commands_1.commandsObject.parseAsync(process.argv.slice(2));
+@@ -56,1 +56,1 @@
+-                nx_commands_1.commandsObject.parse(newArgs);
++                await nx_commands_1.commandsObject.parseAsync(newArgs);
+@@ -60,1 +60,1 @@
+-            nx_commands_1.commandsObject.parse(process.argv.slice(2));
++            await nx_commands_1.commandsObject.parseAsync(process.argv.slice(2));
+diff --git a/dist/src/utils/handle-import.js b/dist/src/utils/handle-import.js
+--- a/dist/src/utils/handle-import.js
++++ b/dist/src/utils/handle-import.js
+@@ -1,3 +1,54 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.handleImport = handleImport;
++exports.loadSemioGraphAuthorizersV1 = loadSemioGraphAuthorizersV1;
++let semioGraphAuthorizers;
++async function loadSemioGraphAuthorizersV1() {
++    const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto'), url = require('node:url');
++    const digest = bytes => crypto.createHash('sha256').update(bytes).digest('hex'), stable = (left, right) => ['dev', 'ino', 'size', 'mtimeNs', 'ctimeNs'].every(key => left[key] === right[key]);
++    const read = (root, relative) => {
++        if (!relative || path.isAbsolute(relative) || /[\\\0]/u.test(relative) || relative.split('/').some(part => !part || part === '.' || part === '..')) throw Error('Immutable authorizer relative file required');
++        let current = root; const ancestry = [];
++        for (const part of ['', ...relative.split('/').slice(0, -1)]) { if (part) current = path.join(current, part); const status = fs.lstatSync(current, { bigint: true }); if (!status.isDirectory() || status.isSymbolicLink()) throw Error('Immutable authorizer no-follow directory required'); ancestry.push([current, status]); }
++        const file = path.join(root, relative), before = fs.lstatSync(file, { bigint: true });
++        if (!before.isFile() || before.isSymbolicLink() || before.size > 16777216n) throw Error('Immutable authorizer regular bounded file required');
++        const bytes = fs.readFileSync(file), after = fs.lstatSync(file, { bigint: true }); if (!stable(before, after)) throw Error('Immutable authorizer file changed');
++        for (const [directory, status] of ancestry) { const current = fs.lstatSync(directory, { bigint: true }); if (!current.isDirectory() || current.isSymbolicLink() || current.dev !== status.dev || current.ino !== status.ino) throw Error('Immutable authorizer ancestry changed'); }
++        return { file, bytes, status: before };
++    };
++    const inspect = () => {
++        let directory = fs.realpathSync(__dirname), sdk;
++        for (;;) {
++            try { if (JSON.parse(fs.readFileSync(path.join(directory, 'package.json'), 'utf8')).name === 'nx') sdk = directory; } catch {}
++            if (fs.existsSync(path.join(directory, '.semio-nx-tooling.json'))) {
++                if (!sdk) throw Error('Actual loaded Nx package required');
++                const receipt = read(directory, '.semio-nx-tooling.json'), marker = JSON.parse(receipt.bytes), authorizers = marker.authorizers;
++                if (marker.version !== 1 || !/^[a-f0-9]{64}$/u.test(marker.digest) || path.basename(directory) !== marker.digest || !authorizers || Object.keys(authorizers).sort().join(',') !== 'entry,mode,outputs,sourceSha256,version' || authorizers.version !== 1 || authorizers.mode !== 'release' || authorizers.entry !== 'semio-authorizers.mjs' || !/^[a-f0-9]{64}$/u.test(authorizers.sourceSha256) || !Array.isArray(authorizers.outputs) || authorizers.outputs.length !== 1) throw Error('Immutable release authorizer receipt required');
++                const version = JSON.parse(read(sdk, 'package.json').bytes).version, patch = marker.patches?.['nx@' + version];
++                if (patch?.version !== 1 || !patch.files || !Object.keys(patch.files).length) throw Error('Actual loaded Nx patch receipt required');
++                for (const [relative, expected] of Object.entries(patch.files)) if (!/^[a-f0-9]{64}$/u.test(expected) || digest(read(sdk, relative).bytes) !== expected) throw Error('Actual loaded Nx patch bytes changed');
++                const source = read(directory, '.semio-authorizer-source.json'), manifest = JSON.parse(source.bytes);
++                if (digest(source.bytes) !== authorizers.sourceSha256 || Object.keys(manifest).sort().join(',') !== 'entry,mode,resolutions,sources,version' || manifest.version !== 1 || manifest.mode !== 'release' || typeof manifest.entry !== 'string' || !manifest.entry || !Array.isArray(manifest.sources) || !manifest.sources.length || manifest.sources.length > 2048 || !Array.isArray(manifest.resolutions) || manifest.resolutions.length > 256) throw Error('Immutable source authority receipt required');
++                let previous; const sourcePaths = new Set();
++                for (const row of manifest.sources) { if (!row || Object.keys(row).sort().join(',') !== 'path,sha256' || typeof row.path !== 'string' || !row.path || row.path.length > 256 || path.isAbsolute(row.path) || /[:\\\0]/u.test(row.path) || row.path.split('/').some(part => !part || part === '.' || part === '..') || !/^[a-f0-9]{64}$/u.test(row.sha256) || previous && Buffer.compare(Buffer.from(previous), Buffer.from(row.path)) >= 0) throw Error('Closed original source authority required'); previous = row.path; sourcePaths.add(row.path); }
++                if (!sourcePaths.has(manifest.entry)) throw Error('Original authorizer entry census required');
++                let previousResolution; for (const row of manifest.resolutions) { if (!row || Object.keys(row).sort().join(',') !== 'path,specifier' || typeof row.specifier !== 'string' || !row.specifier || row.specifier.length > 256 || /[\\\0%?#]/u.test(row.specifier) || row.specifier.split('/').some(part => !part || part === '.' || part === '..' || part === 'node_modules') || typeof row.path !== 'string' || !sourcePaths.has(row.path) || previousResolution && Buffer.compare(Buffer.from(previousResolution), Buffer.from(row.specifier)) >= 0) throw Error('Closed original source resolution required'); previousResolution = row.specifier; }
++                const output = authorizers.outputs[0];
++                if (Object.keys(output).sort().join(',') !== 'path,sha256' || output.path !== authorizers.entry || !/^[a-f0-9]{64}$/u.test(output.sha256)) throw Error('Immutable authorizer output required');
++                const bundle = read(directory, output.path); if (digest(bundle.bytes) !== output.sha256) throw Error('Immutable authorizer body changed');
++                const after = read(directory, '.semio-nx-tooling.json'); if (!stable(receipt.status, after.status) || digest(receipt.bytes) !== digest(after.bytes)) throw Error('Immutable toolchain marker changed');
++                return { toolingIdentity: marker.digest, entry: bundle.file, authority: authorizers.sourceSha256, markerSha256: digest(receipt.bytes), outputSha256: output.sha256 };
++            }
++            const parent = path.dirname(directory); if (parent === directory) return null; directory = parent;
++        }
++    };
++    try {
++        const original = inspect(); if (!original) return null;
++        if (semioGraphAuthorizers && (semioGraphAuthorizers.identity !== original.toolingIdentity || semioGraphAuthorizers.markerSha256 !== original.markerSha256 || semioGraphAuthorizers.outputSha256 !== original.outputSha256)) return null;
++        if (!semioGraphAuthorizers) semioGraphAuthorizers = { identity: original.toolingIdentity, markerSha256: original.markerSha256, outputSha256: original.outputSha256, module: import(url.pathToFileURL(original.entry).href) };
++        const authorizers = await semioGraphAuthorizers.module, current = inspect(); semioGraphAuthorizers.value = authorizers;
++        if (!current || current.toolingIdentity !== original.toolingIdentity || current.authority !== original.authority || current.markerSha256 !== original.markerSha256 || current.outputSha256 !== original.outputSha256 || ['createRepositoryFilesystemJournalV1', 'repositoryFilesystemJournalPolicyV1', 'readFilesystemJournalRpcRequestV1', 'readFilesystemJournalRpcResponseV1', 'isGlobalGraphIdentityPathV1', 'writeSelectedGraphPublisherReceiptV1', 'selectedTaskScopeV1', 'nativeSelectedTaskPlannerV1', 'withNxDaemonServiceV1', 'withNxDaemonRequestV1', 'requestNxDaemonShutdownV1', 'completeNxDaemonShutdownV1', 'beginNxDaemonShutdownV1', 'markNxDaemonServerClosedV1', 'requireNxGraphNativeDirectoryV1', 'withOriginalNxGraphNativeStorageV1', 'requireNxGraphDiagnosticDirectoryV1', 'readGraphPublicationSnapshotV1', 'nxGraphDaemonDisabledMarkerV1'].some(name => typeof authorizers[name] !== 'function')) return null;
++        return { toolingIdentity: original.toolingIdentity, authorizers, entry: original.entry };
++    } catch (error) { return null; }
++}
++exports.loadedSemioGraphAuthorizersV1 = () => semioGraphAuthorizers?.value;
+diff --git a/dist/src/daemon/server/start.js b/dist/src/daemon/server/start.js
+--- a/dist/src/daemon/server/start.js
++++ b/dist/src/daemon/server/start.js
+@@ -1,20 +1,17 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+-const tslib_1 = require("tslib");
+-// Must be the first import — see enable-compile-cache.ts.
+-require("../../utils/enable-compile-cache");
+-const output_1 = require("../../utils/output");
+-const server_1 = require("./server");
+-const process = tslib_1.__importStar(require("process"));
+ (async () => {
+     try {
+-        await (0, server_1.startServer)();
+-    }
+-    catch (err) {
+-        output_1.output.error({
+-            title: err?.message ||
+-                'Something unexpected went wrong when starting the server',
++        const frozen = await require("../../utils/handle-import").loadSemioGraphAuthorizersV1();
++        if (!frozen) throw Error("Original immutable daemon service loader required");
++        await frozen.authorizers.withNxDaemonServiceV1(process.env, async service => {
++            require("../../utils/enable-compile-cache");
++            await require("./server").startServer();
++            await service.ready();
++            await service.waitForTerminal();
+         });
+-        process.exit(1);
++    } catch (error) {
++        console.error("Original detached daemon refused:", process.env.NX_VERBOSE_LOGGING === 'true' ? error?.stack ?? String(error) : error?.message ?? String(error));
++        process.exitCode = error?.semioExitCode || 1;
+     }
+ })();
+diff --git a/dist/src/daemon/server/shutdown-utils.js b/dist/src/daemon/server/shutdown-utils.js
+--- a/dist/src/daemon/server/shutdown-utils.js
++++ b/dist/src/daemon/server/shutdown-utils.js
+@@ -20,47 +20,7 @@
+ const consume_messages_from_socket_1 = require("../../utils/consume-messages-from-socket");
+ const latest_nx_1 = require("./latest-nx");
+ const analytics_1 = require("../../analytics");
+-const child_process_1 = require("child_process");
+-const path_1 = require("path");
+-const node_fs_1 = require("node:fs");
+-const promises_1 = require("fs/promises");
+-const tmp_dir_1 = require("../tmp-dir");
+ exports.SERVER_INACTIVITY_TIMEOUT_MS = 10800000; // 10800000 ms = 3 hours
+-async function startNewDaemonInBackground() {
+-    (0, node_fs_1.mkdirSync)(tmp_dir_1.DAEMON_DIR_FOR_CURRENT_WORKSPACE, { recursive: true });
+-    if (!(0, node_fs_1.existsSync)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE)) {
+-        (0, node_fs_1.writeFileSync)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE, '');
+-    }
+-    const out = await (0, promises_1.open)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE, 'a');
+-    const err = await (0, promises_1.open)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE, 'a');
+-    // Use require.resolve to find the currently installed version's start.js
+-    // instead of using __dirname which points to the old running daemon's path
+-    // Resolve from workspace root to pick up the correct symlink target
+-    let startScriptPath;
+-    try {
+-        startScriptPath = require.resolve('nx/src/daemon/server/start.js', {
+-            paths: [workspace_root_1.workspaceRoot],
+-        });
+-    }
+-    catch (e) {
+-        // Fall back to using __dirname if resolution fails
+-        logger_1.serverLogger.log(`Failed to resolve nx package, falling back to __dirname: ${e.message}`);
+-        startScriptPath = (0, path_1.join)(__dirname, '../server/start.js');
+-    }
+-    logger_1.serverLogger.log(`Restarting daemon with script: ${startScriptPath}`);
+-    logger_1.serverLogger.log(`Old daemon __dirname: ${__dirname}`);
+-    logger_1.serverLogger.log(`Current process.execPath: ${process.execPath}`);
+-    const backgroundProcess = (0, child_process_1.spawn)(process.execPath, [startScriptPath], {
+-        cwd: workspace_root_1.workspaceRoot,
+-        stdio: ['ignore', out.fd, err.fd],
+-        detached: true,
+-        windowsHide: true,
+-        shell: false,
+-        env: process.env,
+-    });
+-    backgroundProcess.unref();
+-    logger_1.serverLogger.log('Started new daemon process in background');
+-}
+ let watcherInstance;
+ function storeWatcherInstance(instance) {
+     watcherInstance = instance;
+@@ -78,42 +38,33 @@
+ async function handleServerProcessTermination({ server, reason, sockets, }) {
+     await performShutdown(server, reason, sockets);
+ }
+-async function handleServerProcessTerminationWithRestart({ server, reason, sockets, }) {
+-    // Clean up old daemon cache before starting new instance
+-    (0, cache_1.deleteDaemonJsonProcessCache)();
+-    // Start new daemon before shutting down
+-    await startNewDaemonInBackground();
++async function handleServerProcessTerminationWithRestart({ server, reason, sockets }) {
+     await performShutdown(server, reason, sockets);
+ }
++let semioShutdownPromise;
+ async function performShutdown(server, reason, sockets) {
+-    try {
+-        await new Promise((res) => {
+-            server.close(() => {
+-                res(null);
++    return semioShutdownPromise ??= (async () => {
++        const frozen = await require('../../utils/handle-import').loadSemioGraphAuthorizersV1();
++        if (!frozen) throw Error('Original immutable daemon shutdown owner required');
++        frozen.authorizers.beginNxDaemonShutdownV1();
++        try {
++            await new Promise(resolve => {
++                server.close(() => resolve());
++                for (const socket of sockets) socket.destroy();
+             });
+-            for (const socket of sockets) {
+-                socket.destroy();
+-            }
+-        });
+-        if (watcherInstance) {
+-            await watcherInstance.stop();
+-            logger_1.serverLogger.watcherLog(`Stopping the watcher for ${workspace_root_1.workspaceRoot} (sources)`);
++            frozen.authorizers.markNxDaemonServerClosedV1();
++            if (watcherInstance) await watcherInstance.stop();
++            if (outputWatcherInstance) await outputWatcherInstance.stop();
++            (0, cache_1.deleteDaemonJsonProcessCache)();
++            await (0, get_plugins_1.cleanupPlugins)();
++            await (0, latest_nx_1.cleanupLatestNx)();
++            await (0, analytics_1.flushAnalytics)();
++            logger_1.serverLogger.log(`Server stopped because: "${reason}"`);
++        } finally {
++            await frozen.authorizers.completeNxDaemonShutdownV1();
++            process.exit(0);
+         }
+-        if (outputWatcherInstance) {
+-            await outputWatcherInstance.stop();
+-            logger_1.serverLogger.watcherLog(`Stopping the watcher for ${workspace_root_1.workspaceRoot} (outputs)`);
+-        }
+-        (0, cache_1.deleteDaemonJsonProcessCache)();
+-        (0, get_plugins_1.cleanupPlugins)();
+-        // Clean up shared latest Nx installation
+-        (0, latest_nx_1.cleanupLatestNx)();
+-        // Flush analytics before exiting
+-        (0, analytics_1.flushAnalytics)();
+-        logger_1.serverLogger.log(`Server stopped because: "${reason}"`);
+-    }
+-    finally {
+-        process.exit(0);
+-    }
++    })();
+ }
+ let serverInactivityTimerId;
+ function resetInactivityTimeout(cb) {
+@@ -154,6 +105,8 @@
+     await respondWithError(socket, description, error);
+     // Project Graph errors are okay. Restarting the daemon won't help with this.
+     if (!(error instanceof error_types_1.DaemonProjectGraphError)) {
+-        process.exit(1);
++        const frozen = await require('../../utils/handle-import').loadSemioGraphAuthorizersV1();
++        if (!frozen) throw Error('Original daemon fatal-request owner required');
++        frozen.authorizers.requestNxDaemonShutdownV1('Fatal daemon request: ' + description);
+     }
+ }
+diff --git a/dist/src/command-line/daemon/daemon.js b/dist/src/command-line/daemon/daemon.js
+--- a/dist/src/command-line/daemon/daemon.js
++++ b/dist/src/command-line/daemon/daemon.js
+@@ -11,1 +11,2 @@
+-        const pid = await daemonClient.startInBackground();
++        await daemonClient.startDaemonIfNecessary();
++        const pid = (0, cache_1.getDaemonProcessIdSync)();

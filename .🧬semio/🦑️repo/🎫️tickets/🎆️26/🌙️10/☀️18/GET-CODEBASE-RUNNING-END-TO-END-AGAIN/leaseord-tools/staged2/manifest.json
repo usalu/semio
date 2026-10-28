@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🔣️policy.json": {
+  "file": "00.json",
+  "base": "475dab636b504963bf5a771b432d61ea5c8831c18d1f31a18653e4ddbc10cde0",
+  "new": "6224b82126e417245c26681a7684259306a1ed11774cbf9570d029a0d6ab0a3a"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/🟦️.ts": {
+  "file": "01.ts",
+  "base": "5967b3e8751f9a81f0e745cd2a96d37302e07aab66fd29faadcd8fe917ca5cdc",
+  "new": "25efe40856f03f14fc79c8ec841fc9cc76557cd6eba1bc45227c25f90bc435e7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🧪️tests/🟦️.ts": {
+  "file": "02.ts",
+  "base": "6f37cd2436214f6742e39c2e93cd752e9e656d0e661eb57680d262992bc84b6e",
+  "new": "f244edfaa2f1f326eb09a81e1fedeb96c12e76d13e3890f7e06c0a77448e86c1"
+ }
+}

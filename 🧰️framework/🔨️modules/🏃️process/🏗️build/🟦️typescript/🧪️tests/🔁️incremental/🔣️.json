@@ -1,0 +1,227 @@
+{
+  "version": 1,
+  "files": {
+    "tsconfig.json": "{\n \"compilerOptions\": {\n  \"target\": \"ES2022\",\n  \"module\": \"ESNext\",\n  \"moduleResolution\": \"bundler\",\n  \"strict\": true,\n  \"noEmit\": true,\n  \"resolveJsonModule\": true,\n  \"allowImportingTsExtensions\": true,\n  \"skipLibCheck\": true,\n  \"types\": [],\n  \"lib\": [\n   \"ES2022\"\n  ]\n },\n \"include\": [\n  \"*.ts\"\n ]\n}\n",
+    "a.ts": "export const n: number = 1;\nexport function f(x: number): number {\n  return x;\n}\n",
+    "b.ts": "import { f, n } from \"./a.ts\";\n\nexport const m = f(n);\n",
+    "c.ts": "import { m } from \"./b.ts\";\nimport d from \"./d.json\";\n\nconst arr: number[] = [1];\nexport const s: string = String(m);\nexport const k: number = d.k;\nexport const first: number = arr[0];\nexport const mm: number = m;\n",
+    "d.json": "{ \"k\": 1 }\n"
+  },
+  "steps": [
+    {
+      "name": "base",
+      "expected": []
+    },
+    {
+      "name": "body-edit",
+      "write": {
+        "a.ts": "export const n: number = 1;\nexport function f(x: number): number {\n  return x + 0;\n}\n"
+      },
+      "expected": []
+    },
+    {
+      "name": "signature-break",
+      "write": {
+        "a.ts": "export const n: number = 1;\nexport function f(x: string): number {\n  return x.length;\n}\n"
+      },
+      "expected": [
+        "b.ts:TS2345"
+      ]
+    },
+    {
+      "name": "signature-restore",
+      "write": {
+        "a.ts": "export const n: number = 1;\nexport function f(x: number): number {\n  return x;\n}\n"
+      },
+      "expected": []
+    },
+    {
+      "name": "transitive-break",
+      "write": {
+        "a.ts": "export const n: number = 1;\nexport function f(x: number): string {\n  return String(x);\n}\n"
+      },
+      "expected": [
+        "c.ts:TS2322"
+      ]
+    },
+    {
+      "name": "transitive-restore",
+      "write": {
+        "a.ts": "export const n: number = 1;\nexport function f(x: number): number {\n  return x;\n}\n"
+      },
+      "expected": []
+    },
+    {
+      "name": "local-error",
+      "write": {
+        "c.ts": "import { m } from \"./b.ts\";\nimport d from \"./d.json\";\n\nconst arr: number[] = [1];\nexport const s: number = String(m);\nexport const k: number = d.k;\nexport const first: number = arr[0];\nexport const mm: number = m;\n"
+      },
+      "expected": [
+        "c.ts:TS2322"
+      ]
+    },
+    {
+      "name": "local-fix",
+      "write": {
+        "c.ts": "import { m } from \"./b.ts\";\nimport d from \"./d.json\";\n\nconst arr: number[] = [1];\nexport const s: string = String(m);\nexport const k: number = d.k;\nexport const first: number = arr[0];\nexport const mm: number = m;\n"
+      },
+      "expected": []
+    },
+    {
+      "name": "json-key-renamed",
+      "write": {
+        "d.json": "{ \"k2\": 1 }\n"
+      },
+      "expected": [
+        "c.ts:TS2339"
+      ]
+    },
+    {
+      "name": "json-key-restored",
+      "write": {
+        "d.json": "{ \"k\": 1 }\n"
+      },
+      "expected": []
+    },
+    {
+      "name": "module-missing",
+      "write": {
+        "c.ts": "import { m } from \"./b.ts\";\nimport d from \"./d.json\";\nimport { xv } from \"./x.ts\";\n\nconst arr: number[] = [1];\nexport const s: string = String(m);\nexport const k: number = d.k;\nexport const first: number = arr[0];\nexport const mm: number = m;\nexport const xr = xv;\n"
+      },
+      "expected": [
+        "c.ts:TS2307"
+      ]
+    },
+    {
+      "name": "module-created",
+      "write": {
+        "x.ts": "export const xv = 1;\n"
+      },
+      "expected": []
+    },
+    {
+      "name": "module-deleted",
+      "delete": [
+        "x.ts"
+      ],
+      "expected": [
+        "c.ts:TS2307"
+      ]
+    },
+    {
+      "name": "module-import-removed",
+      "write": {
+        "c.ts": "import { m } from \"./b.ts\";\nimport d from \"./d.json\";\n\nconst arr: number[] = [1];\nexport const s: string = String(m);\nexport const k: number = d.k;\nexport const first: number = arr[0];\nexport const mm: number = m;\n"
+      },
+      "expected": []
+    },
+    {
+      "name": "nested-missing",
+      "write": {
+        "c.ts": "import { m } from \"./b.ts\";\nimport d from \"./d.json\";\nimport { yv } from \"./sub/y.ts\";\n\nconst arr: number[] = [1];\nexport const s: string = String(m);\nexport const k: number = d.k;\nexport const first: number = arr[0];\nexport const mm: number = m;\nexport const yr: number = yv;\n"
+      },
+      "expected": [
+        "c.ts:TS2307"
+      ]
+    },
+    {
+      "name": "nested-created",
+      "write": {
+        "sub/y.ts": "export const yv = 1;\n"
+      },
+      "expected": []
+    },
+    {
+      "name": "nested-retyped",
+      "write": {
+        "sub/y.ts": "export const yv = \"s\";\n"
+      },
+      "expected": [
+        "c.ts:TS2322"
+      ]
+    },
+    {
+      "name": "nested-deleted",
+      "delete": [
+        "sub/y.ts"
+      ],
+      "expected": [
+        "c.ts:TS2307"
+      ]
+    },
+    {
+      "name": "nested-import-removed",
+      "write": {
+        "c.ts": "import { m } from \"./b.ts\";\nimport d from \"./d.json\";\n\nconst arr: number[] = [1];\nexport const s: string = String(m);\nexport const k: number = d.k;\nexport const first: number = arr[0];\nexport const mm: number = m;\n"
+      },
+      "expected": []
+    },
+    {
+      "name": "global-used",
+      "write": {
+        "c.ts": "import { m } from \"./b.ts\";\nimport d from \"./d.json\";\n\nconst arr: number[] = [1];\nexport const s: string = String(m);\nexport const k: number = d.k;\nexport const first: number = arr[0];\nexport const mm: number = m;\nexport const loud: string = \"x\".shout();\n"
+      },
+      "expected": [
+        "c.ts:TS2339"
+      ]
+    },
+    {
+      "name": "global-augmented",
+      "write": {
+        "aug.ts": "declare global {\n  interface String {\n    shout(): string;\n  }\n}\nexport {};\n"
+      },
+      "expected": []
+    },
+    {
+      "name": "global-removed",
+      "delete": [
+        "aug.ts"
+      ],
+      "expected": [
+        "c.ts:TS2339"
+      ]
+    },
+    {
+      "name": "global-use-removed",
+      "write": {
+        "c.ts": "import { m } from \"./b.ts\";\nimport d from \"./d.json\";\n\nconst arr: number[] = [1];\nexport const s: string = String(m);\nexport const k: number = d.k;\nexport const first: number = arr[0];\nexport const mm: number = m;\n"
+      },
+      "expected": []
+    },
+    {
+      "name": "option-on",
+      "write": {
+        "tsconfig.json": "{\n \"compilerOptions\": {\n  \"target\": \"ES2022\",\n  \"module\": \"ESNext\",\n  \"moduleResolution\": \"bundler\",\n  \"strict\": true,\n  \"noEmit\": true,\n  \"resolveJsonModule\": true,\n  \"allowImportingTsExtensions\": true,\n  \"skipLibCheck\": true,\n  \"types\": [],\n  \"lib\": [\n   \"ES2022\"\n  ],\n  \"noUncheckedIndexedAccess\": true\n },\n \"include\": [\n  \"*.ts\"\n ]\n}\n"
+      },
+      "expected": [
+        "c.ts:TS2322"
+      ]
+    },
+    {
+      "name": "option-off",
+      "write": {
+        "tsconfig.json": "{\n \"compilerOptions\": {\n  \"target\": \"ES2022\",\n  \"module\": \"ESNext\",\n  \"moduleResolution\": \"bundler\",\n  \"strict\": true,\n  \"noEmit\": true,\n  \"resolveJsonModule\": true,\n  \"allowImportingTsExtensions\": true,\n  \"skipLibCheck\": true,\n  \"types\": [],\n  \"lib\": [\n   \"ES2022\"\n  ]\n },\n \"include\": [\n  \"*.ts\"\n ]\n}\n"
+      },
+      "expected": []
+    },
+    {
+      "name": "two-files-broken",
+      "write": {
+        "a.ts": "export const n: number = \"x\";\nexport function f(x: number): number {\n  return x;\n}\n",
+        "d.json": "{ \"k2\": 1 }\n"
+      },
+      "expected": [
+        "a.ts:TS2322",
+        "c.ts:TS2339"
+      ]
+    },
+    {
+      "name": "both-fixed",
+      "write": {
+        "a.ts": "export const n: number = 1;\nexport function f(x: number): number {\n  return x;\n}\n",
+        "d.json": "{ \"k\": 1 }\n"
+      },
+      "expected": []
+    }
+  ]
+}

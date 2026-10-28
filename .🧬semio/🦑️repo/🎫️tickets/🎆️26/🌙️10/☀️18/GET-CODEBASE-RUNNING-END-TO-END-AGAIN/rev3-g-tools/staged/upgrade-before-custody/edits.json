@@ -1,0 +1,25 @@
+{
+ "edits": [
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🚏️marks/🟦️.ts",
+   "old": " return(await import(\"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts\")).markHostCapacityPhaseV1(environment,phase);\n}\n",
+   "new": " return(await import(\"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts\")).markHostCapacityPhaseV1(environment,phase);\n}\n\n/** ⏫️ Grows a quiet forecast grant into its full request BEFORE the graph builder custody is taken: the wait for capacity is a fair queue with no timer, so it must not happen while a custody is held that every other builder queues for, and not while other runs hold full grants and wait for that custody (each would wait for the other); a process under no grant, or one that only inherits it, asks for nothing. */\nexport async function upgradeBuildCapacityBeforeRebuildV1(environment:Readonly<Record<string,string|undefined>>=process.env):Promise<boolean>{\n if(environment[\"SEMIO_HOST_CAPACITY_GRANT\"]===undefined||environment[\"SEMIO_HOST_CAPACITY_PHASE_MARKS\"]===\"off\")return false;\n await(await import(\"../🟦️.ts\")).upgradeBuildCapacityV1(undefined,environment);return true;\n}\n"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "old": "import{markBuildCapacityPhaseV1}from\"../🌡️host-capacity/🚏️marks/🟦️.ts\";",
+   "new": "import{markBuildCapacityPhaseV1,upgradeBuildCapacityBeforeRebuildV1}from\"../🌡️host-capacity/🚏️marks/🟦️.ts\";"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "old": "      let image:string|undefined;\n      const result=await withBuildGraphStateV1(root,invocation,phaseControl,(store,control)=>{image=store.root;return body(store,control);},generationScopeV1);",
+   "new": "      await upgradeBuildCapacityBeforeRebuildV1();\n      let image:string|undefined;\n      const result=await withBuildGraphStateV1(root,invocation,phaseControl,(store,control)=>{image=store.root;return body(store,control);},generationScopeV1);"
+  }
+ ],
+ "newFiles": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🔼️upgrade-before-custody/🟦️.ts",
+   "from": "files/upgrade-law.ts"
+  }
+ ]
+}

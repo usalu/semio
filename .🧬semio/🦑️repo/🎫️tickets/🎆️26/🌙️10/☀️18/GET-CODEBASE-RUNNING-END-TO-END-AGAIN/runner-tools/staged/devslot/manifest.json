@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧬️schema/🔣️.json": {
+  "file": "f01.json",
+  "base": "a2463653ca21b689c683e3513c1e1327e89ae64bf55c62dac261ff3a96cc1fa4",
+  "new": "f6247ae05a924f23e7ecb0d0e8aee1f7ac1cf29f5f4a344492ab316d84602db7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts": {
+  "file": "f02.ts",
+  "base": "1ca325db6d3e5092a10ede532965fb2f072c1ec33904d21a76d5cca930cd1b5f",
+  "new": "41ad02e92be1dbca7f092a4455e5b8352f8c3871a389af048fa96d2145b100e7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🎟️capacity/🟦️.ts": {
+  "file": "f03.ts",
+  "base": null,
+  "new": "8c70c88a3607e2d7e86c5235264513c6f6c597183fed0111744df5718588421e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧪️tests/🎟️service-capacity/🟦️.ts": {
+  "file": "f04.ts",
+  "base": null,
+  "new": "6ec45d020869d2ac7009c4f22818f7ae4c9348207f2b69fdee0789f4cf9c87b6"
+ }
+}

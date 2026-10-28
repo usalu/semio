@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "f00.ts",
+  "base": "7459dde346d0bbe9c72868530b2ffa6aaf50018978fbf3d9d48977bd82a05b1b",
+  "new": "73e86e068147542f722f48a9d083f06b4c28efcaced09f26e7ba788fa88a85b1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧾️witness/🧪️tests/🟦️.ts": {
+  "file": "f01.ts",
+  "base": "88498f4555f67b354a946c5c84e5a6c5512c10a6f18a816e59cca2acb4275900",
+  "new": "3a300eb7e22a9e6a9328c263185899ca308c1df107d818cf3178db0f1fd0e6ef"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️coverage/🟦️.ts": {
+  "file": "f02.ts",
+  "base": "3c289833b3a18644213d1d0241ea40760827d189917f3a609a96a63a7271f4e1",
+  "new": "02f09d3a56cf5495619efdd956db3ace3b2edcdd0de9a0de62b08a80bc076b16"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️platform/🟦️.ts": {
+  "file": "f03.ts",
+  "base": "020e7affbb8d4961d0884f5ac6ed12922d3620fa97d518d2edf61fd5cb8bfb98",
+  "new": "7035bd77fe7048e772e189c652789959ea4d921a8ba585405cabed7f97b1cdb3"
+ }
+}

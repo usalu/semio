@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:repo:library:testing:genuine-birth",
+  "title": "Genuine test birth ladder",
+  "description": "Closed declaration of how a bun test file receives a genuine Original process birth: the build bootstrap capabilities of one real repository request, optionally inside the installed Nx tooling scope. Births are tried in order; a birth with `after` is only tried when the previous failure output matches it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "owner", "maximumElapsedMilliseconds", "childTimeoutMilliseconds", "buildMode", "artifactRoute", "births"],
+  "properties": {
+    "version": { "const": 1 },
+    "owner": { "type": "string", "pattern": "^repository:[a-z][a-z0-9-]*$" },
+    "maximumElapsedMilliseconds": { "type": "integer", "minimum": 1000, "maximum": 3600000 },
+    "childTimeoutMilliseconds": { "type": "integer", "minimum": 1000, "maximum": 3600000 },
+    "buildMode": { "enum": ["prototype", "release"] },
+    "artifactRoute": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,127}$" },
+    "births": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "arguments", "sdk", "environment"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "arguments": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+          "sdk": { "type": "boolean" },
+          "environment": { "type": "object", "additionalProperties": { "type": "string" } },
+          "after": { "type": "string", "minLength": 1 },
+          "preparation": { "description": "Work done once beneath this birth before the file starts: `target-execution` prepares the inventory of all emitted targets and hands its path and sha256 to the file as SEMIO_TARGET_EXECUTION_INVENTORY_FILE and SEMIO_TARGET_EXECUTION_INVENTORY_SHA256, then verifies that every consumed fact and the producer still hold.", "enum": ["target-execution"] }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "header": "(?<![\\w.])(?:test|it|describe)((?:\\.[A-Za-z]+(?:\\([^)]*\\))?)*)\\s*\\(",
+  "gatedModifier": "skipIf|\\.skip\\b|todo",
+  "lineGate": "process\\.platform|\\bwin32\\b|\\bposix\\b|available|symlinks\\b",
+  "condition": "win32|process\\.platform|\\bposix\\b|platform\\s*[!=]==|isWindows|Windows|available\\b",
+  "window": {
+    "linesBeforeWithoutHeader": 15,
+    "linesBeforeMarker": 3
+  },
+  "causes": [
+    {
+      "id": "posix-program",
+      "lineGate": false,
+      "markers": [
+        "\\b(?:spawn|spawnSync|exec|execSync|execFile|execFileSync|captureOwnedCommandV1|runOwnedCommandV1|runOwnedCommand|captureOwnedCommand|Bun\\.spawn|Bun\\.spawnSync|system|run)\\s*\\(\\s*(?:\\[\\s*)?[\"'`](?:/usr/bin/|/bin/)?(?:sh|bash|zsh|dash|ps|kill|chmod|flock|ln|cp|mv|rm|cat|ls|touch|sleep|true|false|id|uname|stat|df|du|mount|umount|lsof|pgrep|pkill|find|grep|sed|awk|head|tail|wc|sort|mkfifo|which|yes|tee|dd|nice|renice|taskset|hdiutil|diskutil|sandbox-exec|sysctl|vm_stat|codesign|xattr|launchctl)[\"'`]",
+        "[\"'`]/(?:usr/bin|bin|usr/sbin|sbin)/(?:python3|hdiutil|diskutil|sandbox-exec|sh|bash|ps|kill|ls|cat|chmod|df|stat)\\b"
+      ]
+    },
+    {
+      "id": "posix-shell-script",
+      "lineGate": false,
+      "markers": [
+        "#!/(?:bin|usr)|/bin/(?:sh|bash)\\b|[\"'`]sh[\"'`]\\s*,\\s*\\[?\\s*[\"'`]-c|\\bexecSync\\s*\\("
+      ]
+    },
+    {
+      "id": "python3-command",
+      "lineGate": false,
+      "markers": [
+        "\\b(?:spawn|spawnSync|exec|execSync|execFile|execFileSync|captureOwnedCommandV1|runOwnedCommandV1|runOwnedCommand|captureOwnedCommand|Bun\\.spawn|Bun\\.spawnSync|system|run)\\s*\\(\\s*(?:\\[\\s*)?[\"'`]python3[\"'`]"
+      ]
+    },
+    {
+      "id": "symlink",
+      "lineGate": true,
+      "markers": [
+        "\\bsymlinkSync\\s*\\(|\\bfs\\.symlink\\w*\\(|\\bawait\\s+symlink\\s*\\("
+      ]
+    },
+    {
+      "id": "permission-bits",
+      "lineGate": true,
+      "markers": [
+        "\\bchmodSync\\s*\\(|\\bfs\\.chmod\\w*\\(|mode\\s*&\\s*0o"
+      ]
+    },
+    {
+      "id": "posix-process-control",
+      "lineGate": true,
+      "markers": [
+        "process\\.kill\\(\\s*-|\\bSIGSTOP|\\bSIGCONT|\\bSIGUSR[12]|\\bmkfifo|\\bimport\\s+fcntl|\\bfcntl\\.flock|O_NOFOLLOW|\\bos\\.getuid|\\bprocess\\.getuid\\(\\)"
+      ]
+    }
+  ]
+}

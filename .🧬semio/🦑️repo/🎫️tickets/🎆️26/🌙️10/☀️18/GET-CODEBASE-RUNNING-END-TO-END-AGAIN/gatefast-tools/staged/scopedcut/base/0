@@ -1,0 +1,33 @@
+import type {FactIndexV1,GenerationRowV1} from "../🟨️.mjs";
+/** ✂️ The declared constants of the derived fact cutoff. */
+export interface CutoffPolicyV1{readonly version:1;readonly kind:"derived";readonly ownerPrefix:string;readonly nameDigestCharacters:number;readonly deriveConcurrency:number;readonly maximumSuspects:number}
+/** 📐️ The declared constants of the derived fact cutoff. */
+export const CUTOFF_POLICY_V1:CutoffPolicyV1;
+/** 🧵️ What a computation answers when it is asked again: the digest of the answer and every raw row it read. */
+export interface DerivedAnswerV1{fact:unknown;rows:readonly GenerationRowV1[]}
+/** 🪢️ A derived fact a project record produced: its row and the raw rows that support it. */
+export interface DerivedFactV1{row:GenerationRowV1;support:readonly GenerationRowV1[]}
+/** 🏷️ Whether a row is a derived fact: the answer of a question, never a raw fact that can be checked against the disk. */
+export function isDerivedRowV1(row:GenerationRowV1):boolean;
+/** 👻️ Whether an owner name is the pseudo owner that holds a derived fact together with its support. */
+export function isDerivedOwnerV1(name:string):boolean;
+/** 🪪️ The pseudo owner of one derived fact, named by the whole row. */
+export function derivedOwnerNameV1(row:GenerationRowV1):string;
+/** 🧾️ The ids of the derived rows of an index. */
+export function derivedRowIdsV1(index:FactIndexV1):ReadonlySet<number>;
+/** 🚫️ Drops the derived rows from the row ids that are checked against the disk. */
+export function verifiableRowIdsV1(index:FactIndexV1,ids:readonly number[]):number[];
+/** 🎯️ Adds to a set of project names the pseudo owners that support the derived facts those projects hold. */
+export function scopeWithDerivedV1(index:FactIndexV1,names:ReadonlySet<string>):Set<string>;
+/** 🔀️ Splits the consumers of the stale raw rows into projects that read a stale row themselves and pseudo owners whose derived fact has to be asked again. */
+export function splitStaleConsumersV1(index:FactIndexV1,classes:readonly number[],stale:ReadonlySet<number>):{direct:Set<string>;suspects:Set<string>};
+/** 👥️ The projects that hold the derived fact of each pseudo owner. */
+export function holdersOfDerivedV1(index:FactIndexV1,pseudoOwners:Iterable<string>):Map<string,Set<string>>;
+/** ❓️ Asks every suspect question again: an equal answer holds, a different answer or a failing computation changes the fact. */
+export function settleSuspectsV1(options:{index:FactIndexV1;suspects:ReadonlySet<string>;derive?:(row:GenerationRowV1,signal?:AbortSignal)=>Promise<DerivedAnswerV1>;signal?:AbortSignal;progress?:(event:{phase:"verification";done:number;total:number})=>Promise<void>|void}):Promise<{held:Map<string,GenerationRowV1[]>;changed:Map<string,GenerationRowV1>;failed:number}>;
+/** 🧱️ The rows of the pseudo owners a build writes: the fresh facts with their support and the supports of the questions that still held. */
+export function derivedUpsertsV1(derived:readonly DerivedFactV1[],held?:ReadonlyMap<string,readonly GenerationRowV1[]>):Map<string,GenerationRowV1[]>;
+/** 🧹️ The pseudo owners whose derived fact no project holds any more. */
+export function orphanedDerivedOwnersV1(index:FactIndexV1):string[];
+/** 🚨️ The derived rows that projects hold and no pseudo owner supports. */
+export function unsupportedDerivedV1(index:FactIndexV1):GenerationRowV1[];

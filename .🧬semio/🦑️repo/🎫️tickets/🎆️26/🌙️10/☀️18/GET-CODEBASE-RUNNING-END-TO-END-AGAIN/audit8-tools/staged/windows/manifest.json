@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/📏️windows/🔣️.json": {
+  "file": "00.json",
+  "base": "37ebd032483eb5738d8927c5de0bfa54df9e5a91b13ee3e9f37aa9ec60d0d2a3",
+  "new": "82098afe93dba4b0d01c5d8ec3c211a66d92e8d4b1c671fb1b05708298146491"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/📏️windows/🟦️.ts": {
+  "file": "01.ts",
+  "base": "cd50dfb11e18b52df4339fd7f7f29945767672c7e162784cd23665fbcaef8170",
+  "new": "0fa634725b4f80ac14c91cda3db9203807f081b07dc998b41b57c00cb597688f"
+ }
+}

@@ -2,7 +2,7 @@
   "version": 1,
   "workspace": "../..",
   "workspaceManifest": "../../Cargo.toml",
-  "store": "../../🤖️generated/process",
+  "store": "../../../.cache/command",
   "vitest": "../../../node_modules/vitest/vitest.mjs",
   "runtime": "node",
   "coverageRuntime": "node",
@@ -18,6 +18,6 @@
     "long": 900000,
     "exhaustive": 1800000
   },
-  "assertionThreads": "available-minus-quarter",
+  "assertionThreads": "planned",
   "rustMinStack": "134217728"
 }

@@ -1,0 +1,21 @@
+{
+ "target": "test-action-choices",
+ "crates": [
+  "semio-framework-manifest-app-surface"
+ ],
+ "closureCrates": 147,
+ "depInfoUnits": 173,
+ "workspaceFilesRead": 902,
+ "declared": 1899,
+ "undeclared": [
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/✂️span/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🚚️apply/🦀️.rs",
+  "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🦀️.rs"
+ ],
+ "closureWithoutUnits": []
+}

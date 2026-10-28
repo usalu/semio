@@ -1,0 +1,1 @@
+export interface TrampolineOptionsV1{readonly entry?:string;readonly promote?:(root:string,entry:string,environment:NodeJS.ProcessEnv,write:(text:string)=>void)=>Promise<TrampolinePromotionV1>;readonly refresh?:(argv:readonly string[],environment:NodeJS.ProcessEnv)=>number|undefined}

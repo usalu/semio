@@ -2,7 +2,7 @@
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
-// 🛡️root-guard records every root resolution and binding that lands inside the checkout a test binary was started in.
+// 🛡️root-guard records every root resolution and binding that lands on the root of the checkout a test binary was started in.
 
 // #endregion 🧲️Header
 
@@ -10,6 +10,7 @@ package sandbox
 
 import (
 	fmt "fmt"
+	os "os"
 	filepath "path/filepath"
 	runtime "runtime"
 	sort "sort"
@@ -21,10 +22,10 @@ import (
 
 // #region 🛡️Root Guard
 
-// 🛡️Guard records every root resolution and binding that lands inside the real checkout a test binary was started in.
+// 🛡️Guard records every resolution and binding that lands on the root of the real checkout a test binary was started in; a repository nested below the checkout is a root of its own and never counts.
 type Guard struct {
 	real       string
-	owned      []string
+	abort      bool
 	mu         sync.Mutex
 	violations []string
 }
@@ -34,32 +35,58 @@ func NewGuard(real string) *Guard {
 	return &Guard{real: real}
 }
 
-// 🏠️Own declares a directory the test binary created for itself, such as its sandbox repository inside an issued artifact folder below the checkout: resolutions and bindings within it never count as touching the checkout.
-func (g *Guard) Own(path string) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-	g.owned = append(g.owned, path)
+// ⛔️AbortOnTouch makes the guard panic at the first resolution of the checkout root, before the offending test can write anything into the real repository; the violation stays recorded for the report.
+func (g *Guard) AbortOnTouch() *Guard {
+	g.abort = true
+	return g
 }
 
+// 🎯️touchesCheckout reports whether path, once resolved to the repository root it belongs to, is the root of the checkout itself, which is how a directory below the checkout without a `.git` marker of its own is caught.
 func (g *Guard) touchesCheckout(path string) bool {
-	if !PathWithin(g.real, path) {
-		return false
-	}
-	for _, owned := range g.owned {
-		if PathWithin(owned, path) {
-			return false
-		}
-	}
-	return true
+	return path != "" && SameDirectory(g.real, workspace.ResolveRepoRoot(path))
 }
 
-// 📏️PathWithin reports whether path is root or lies below it, never matching a sibling that merely shares a name prefix.
+// 📏️PathWithin reports whether path is root or lies below it, never matching a sibling that merely shares a name prefix and comparing by directory identity, so symlinks, case and Unicode normalisation of the file system never hide a match.
 func PathWithin(root string, path string) bool {
 	if root == "" || path == "" {
 		return false
 	}
-	root, path = workspace.CanonicalPath(root), workspace.CanonicalPath(path)
-	return path == root || strings.HasPrefix(path, root+string(filepath.Separator))
+	for current := workspace.CanonicalPath(path); ; current = filepath.Dir(current) {
+		if SameDirectory(root, current) {
+			return true
+		}
+		if filepath.Dir(current) == current {
+			return false
+		}
+	}
+}
+
+// 🪞️SameDirectory reports whether two spellings name one directory: the deepest existing ancestors must be one file system object (symlinks, separators, dot segments, case and Unicode normalisation of the file system, Windows drive letters and short names all compare by identity, see https://pkg.go.dev/os#SameFile) and the missing remainders must be spelled alike.
+func SameDirectory(first string, second string) bool {
+	if first == "" || second == "" {
+		return false
+	}
+	firstAnchor, firstTail := anchor(first)
+	secondAnchor, secondTail := anchor(second)
+	return firstTail == secondTail && os.SameFile(firstAnchor, secondAnchor)
+}
+
+// ⚓️anchor returns the file system object of the deepest existing ancestor of path and the cleaned remainder below it.
+func anchor(path string) (os.FileInfo, string) {
+	absolute, err := filepath.Abs(path)
+	if err != nil {
+		absolute = filepath.Clean(path)
+	}
+	tail := ""
+	for current := absolute; ; current = filepath.Dir(current) {
+		if info, err := os.Stat(current); err == nil {
+			return info, tail
+		}
+		if filepath.Dir(current) == current {
+			return nil, absolute
+		}
+		tail = filepath.Join(filepath.Base(current), tail)
+	}
 }
 
 // 🔎️callingTests names the test functions on the current stack.
@@ -82,14 +109,18 @@ func callingTests() string {
 	return strings.Join(names, " < ")
 }
 
-// 👁️Observe records a resolution that landed inside the guarded checkout together with the tests on the stack.
+// 👁️Observe records a resolution that landed on the root of the guarded checkout together with the tests on the stack, and aborts at once when the guard was told to.
 func (g *Guard) Observe(resolved string) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
 	if !g.touchesCheckout(resolved) {
 		return
 	}
-	g.violations = append(g.violations, fmt.Sprintf("resolved %s via %s", resolved, callingTests()))
+	violation := fmt.Sprintf("resolved %s via %s", resolved, callingTests())
+	g.mu.Lock()
+	g.violations = append(g.violations, violation)
+	g.mu.Unlock()
+	if g.abort {
+		panic("FAIL: a test resolved the real repository root before writing anything: " + violation)
+	}
 }
 
 // 📋️Report returns the recorded resolutions plus every named binding (the workspace root and the extra roots the caller holds) that still points into the guarded checkout.

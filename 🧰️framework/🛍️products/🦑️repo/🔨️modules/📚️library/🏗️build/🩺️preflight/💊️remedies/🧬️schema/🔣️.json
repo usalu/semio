@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/repo/preflight-remedies/v1",
+  "definitions": {
+    "Text": {
+      "type": "object", "additionalProperties": false, "required": ["en", "de"],
+      "properties": {"en": {"type": "string", "minLength": 20, "maxLength": 900}, "de": {"type": "string", "minLength": 20, "maxLength": 900}}
+    },
+    "ByPlatform": {
+      "type": "object", "additionalProperties": false, "required": ["linux", "darwin", "win32"],
+      "properties": {"linux": {"$ref": "#/definitions/Text"}, "darwin": {"$ref": "#/definitions/Text"}, "win32": {"$ref": "#/definitions/Text"}}
+    },
+    "Texts": {
+      "type": "object", "additionalProperties": false, "required": ["version", "labels", "exchange", "exchangeContainer", "caseFolding", "tools"],
+      "properties": {
+        "version": {"const": 1},
+        "labels": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string"}, "de": {"type": "string"}}},
+        "exchange": {"$ref": "#/definitions/Text"},
+        "exchangeContainer": {"$ref": "#/definitions/Text"},
+        "caseFolding": {"$ref": "#/definitions/ByPlatform"},
+        "tools": {
+          "type": "object", "additionalProperties": {
+            "type": "object", "additionalProperties": false, "properties": {"linux": {"$ref": "#/definitions/Text"}, "darwin": {"$ref": "#/definitions/Text"}, "win32": {"$ref": "#/definitions/Text"}}
+          }
+        }
+      }
+    }
+  }
+}

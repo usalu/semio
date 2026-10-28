@@ -1,0 +1,100 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "a seal is refused for another process's receipts or a graph older than the invocation",
+   "each fixture scenario holds exactly when nothing graph-relevant changed",
+   "verified immutable whole graph readers preserve the portable custody corpus and refuse a foreign owner"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🧪️tests/📖️reader/🟦️.ts": {
+  "mode": "env",
+  "pass": 2,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🌍️caller-environment/🟦️.ts": {
+  "mode": "env",
+  "pass": 1,
+  "fails": [
+   "(unnamed)",
+   "actual Node lock reader reuses parsing only for exact original lock bytes",
+   "actual SDK daemon failures disable only their original invocation",
+   "actual frozen graph publisher retains original accepted inference publications",
+   "actual immutable Node SDK sends original membership outside graph environment",
+   "actual immutable Node SDK uses the original launch environment for selected graph custody",
+   "actual immutable Node daemon startup admits one producer across parallel clients",
+   "immutable SDK admits only closed original graph proof transport",
+   "owned watch daemon startup settles under original control without marker deletion"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎯️selected-runtime/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔁️graph-revision/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔒️trunk-lockfile/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🦀️cleanup-boundary/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🔒️incremental/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 1,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🔒️store/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 1,
+  "fails": []
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📥️source/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": [
+   "genuine rustc dep-info independently confirms neutral Source closure membership"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 11,
+  "fails": [
+   "(unnamed)",
+   "actual Cargo crate environment agrees with resolved metadata and emitted library bytes",
+   "actual Cargo recompiles a changed crate and its consumer while retaining an unchanged sibling",
+   "actual Cargo unit materialization compiles a renamed dependency and invalidates only its Source consumers",
+   "actual Rust compiler consumed-byte checksum algorithm and ABA oracle",
+   "actual Rust compiler consumed-byte guard rejects restored Source with a different compiled value",
+   "actual io-base64 Cargo package becomes an exact independent compiler unit descriptor",
+   "actual rustc library output is captured inside a fixed physical compiler backing",
+   "actual script owner plans exact managed units and refuses an unbound compile before compiler dispatch",
+   "actual selected Rust graph producer persists original descriptors inside repository enforcing storage",
+   "exact artifact receipts refuse stray files, stale identities, symlinks and oversized output",
+   "full owned data capture preserves Unicode beyond the diagnostic tail and refuses cap-plus-one",
+   "installed Nx schedules exact crate predecessor receipts and never caches a mutable Cargo tree",
+   "neutral Rust environment rejects invented compiler authority before physical reads",
+   "ordinary selected Nx TaskOrchestrator restores exact Rust units and invalidates only changed Source consumers",
+   "sealed Rust compiler entry agrees with actual Bun CLI planning and retains Original code custody",
+   "selected Rust producer leaves source-only graph requests free of compiler/storage activity"
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/🟦️.ts": {
+  "mode": "env",
+  "pass": 1,
+  "fails": [
+   "(unnamed)",
+   "actual authenticated image scope rejects copies and drains accepted work before its owner returns"
+  ]
+ }
+}

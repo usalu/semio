@@ -30,7 +30,7 @@ class DevScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   async run(): Promise<void> {
-    await runCanonicalGoBuild(join(this.repoRoot, REPO_CLI_MAIN), ["-o", resolveCliBin(this.repoRoot), "."], { control: scriptCompilerAdmissionControlV1(this.invocation, "go:build", 0), 
+    await runCanonicalGoBuild(join(this.repoRoot, REPO_CLI_MAIN), ["-o", resolveCliBin(this.repoRoot), "."], { invocation:this.invocation, control: scriptCompilerAdmissionControlV1(this.invocation, "go:build", 0), 
       env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
       budgetMs: buildBudgetMs(),
       

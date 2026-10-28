@@ -1,0 +1,107 @@
+import {expect,test} from "bun:test";
+import Ajv from "ajv";
+import {spawnSync} from "node:child_process";
+import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import buildPolicy from "../../../../🔣️policy.json" with {type:"json"};
+import schema from "../../../../👷️workers/🧬️schema/🔣️.json" with {type:"json"};
+import {WORKER_ACTION_KINDS_V1,planWorkersV1,readWorkerPolicyV1,workerContractFieldsV1} from "../../../../👷️workers/🟦️.ts";
+import {BAZEL_LAUNCHER_MNEMONIC_V1,bazelWorkerMnemonicV1,bazelWorkerSettingsV1} from "../🟦️.ts";
+import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
+
+const api=await import("../../📜️script.ts"),root=join(import.meta.dir,"../../../../../../../../../..").replace(/[\\/]+$/u,"");
+
+/** 🧬️ Applies dotted-path changes to a copy of the authored worker policy. */
+function changed(changes:Readonly<Record<string,unknown>>){
+ const policy=structuredClone(buildPolicy.workers) as Record<string,any>;
+ for(const[path,value]of Object.entries(changes)){const parts=path.split(".");let at=policy;for(const part of parts.slice(0,-1))at=at[part];at[parts.at(-1)!]=value;}
+ return readWorkerPolicyV1(policy);
+}
+
+/** 🔎️ Finds the provisioned Bazel binary, or the one the environment names. */
+function bazelBinary():string|undefined{
+ if(process.env.SEMIO_BAZEL_BINARY)return process.env.SEMIO_BAZEL_BINARY;
+ const base=join(root,".cache/b/t/m/bazel/bin");
+ if(!existsSync(base))return undefined;
+ for(const directory of readdirSync(base)){const candidate=join(base,directory,process.platform==="win32"?"bazel.exe":"bazel");if(existsSync(candidate))return candidate;}
+ return undefined;
+}
+
+test("the worker plan becomes exactly the reviewed Bazel flags and every contract field is reported once",()=>{
+ for(const row of fixture.scenarios){
+  const plan=planWorkersV1(changed(row.policy),row.host,row.overrides),settings=bazelWorkerSettingsV1(plan);
+  expect(settings.flags,row.name).toEqual(row.flags);
+  expect(settings.mapping.map(entry=>entry.field).sort(),row.name).toEqual([...workerContractFieldsV1()].sort());
+  for(const flag of settings.flags)expect(settings.mapping.some(entry=>entry.setting.includes(flag.split("=")[0]!)),flag).toBe(true);
+  expect(settings.flags.filter(flag=>flag.startsWith("--jobs=")),row.name).toEqual([`--jobs=${plan.localJobs}`]);
+  for(const kind of WORKER_ACTION_KINDS_V1.filter(kind=>kind!=="service"))expect(settings.flags.some(flag=>flag.startsWith(`--strategy=${bazelWorkerMnemonicV1(kind)}=${plan.kinds[kind].workers?"worker,":""}sandboxed,local`)),`${row.name} ${kind}`).toBe(true);
+ }
+ expect(Object.fromEntries(WORKER_ACTION_KINDS_V1.map(kind=>[kind,bazelWorkerMnemonicV1(kind)]))).toEqual(fixture.mnemonics);
+ expect(BAZEL_LAUNCHER_MNEMONIC_V1).toBe("RepoLauncher");
+});
+
+test("every task action carries its neutral kind and mnemonic, launchers carry none, and the BUILD file names them",()=>{
+ const graph=fixture.graph as any,plan=api.planBazelTasksV1(graph,{tasks:Object.keys(fixture.actions).concat("p:serve")}),emitted=api.bazelActionsV1(graph,plan,false);
+ for(const[id,expected]of Object.entries(fixture.actions))expect(emitted.get(id)!.worker,id).toEqual(expected as never);
+ expect(emitted.get("p:serve")!.kind).toBe("launch");expect(emitted.get("p:serve")!.worker).toBeUndefined();
+ const text=api.renderBazelBuildV1({actions:[...emitted.values()],groups:new Map(),bun:"/opt/bun",sourceIdentity:"a".repeat(64),extension:""});
+ for(const expected of Object.values(fixture.actions))expect(text.includes(`    mnemonic = "${expected.mnemonic}",\n    multiplex = ${expected.multiplex?"True":"False"},`),expected.mnemonic).toBe(true);
+ expect(text.match(/mnemonic = /gu)?.length).toBe(Object.keys(fixture.actions).length);
+});
+
+test("the generated rule declares the JSON worker protocol, cancellation and one flagfile, and keeps the implementation as tools",()=>{
+ const rules=api.bazelStarlarkRulesV1();
+ for(const needle of ['requirements["supports-workers"] = "1"','requirements["requires-worker-protocol"] = "json"','requirements["supports-worker-cancellation"] = "1"','requirements["supports-multiplex-workers"] = "1"','request.use_param_file("@%s", use_always = True)','request.set_param_file_format("multiline")','tools = [ctx.file.runner, ctx.file.source]','mnemonic = ctx.attr.mnemonic','"work-action", request]'])expect(rules.includes(needle),needle).toBe(true);
+ expect(rules.includes("birth-action")).toBe(false);
+ expect(rules.match(/_requirements\(ctx, True\)/gu)?.length).toBe(1);
+ expect(rules.match(/_requirements\(ctx\)/gu)?.length).toBe(3);
+});
+
+const binary=bazelBinary();
+
+test.skipIf(process.env.SEMIO_BAZEL_INTEGRATION!=="1"||!binary)("Bazel itself accepts every flag of every scenario and its persistent workers serve the requests this runtime answers",async()=>{
+ const run=(directory:string,args:string[])=>spawnSync(binary!,[`--output_user_root=${join(directory,"root")}`,`--install_base=${join(directory,"install")}`,"--nosystem_rc","--nohome_rc","--max_idle_secs=60","--host_jvm_args=-Xmx1g",...args],{cwd:join(directory,"ws"),encoding:"utf8",env:{...process.env,LANG:"en_US.UTF-8",LC_ALL:"en_US.UTF-8"}});
+ const directory=mkdtempSync(join(tmpdir(),"bazel-workers-")),workspace=join(directory,"ws");
+ try{
+  mkdirSync(workspace,{recursive:true});
+  const help=run(directory,["help","build","--long"]);expect(help.status,help.stderr).toBe(0);
+  const known=new Set([...help.stdout.matchAll(/^ {2}--(?:\[no\])?([a-z_]+)/gmu)].map(match=>match[1]!));
+  for(const row of fixture.scenarios)for(const flag of row.flags){const name=flag.slice(2).split("=")[0]!;expect(known.has(name)||known.has(name.replace(/^no/u,"")),flag).toBe(true);}
+  const protocol=join(import.meta.dir,"../../../../👷️workers/📨️protocol/🟦️.ts").replaceAll("\\","/"),log=join(directory,"requests.log").replaceAll("\\","/");
+  writeFileSync(join(workspace,"MODULE.bazel"),'module(name = "workers_fixture", version = "0.0.0")\n');
+  writeFileSync(join(workspace,"rules.bzl"),`def _impl(ctx):
+    out = ctx.actions.declare_file(ctx.label.name + ".out")
+    request = ctx.actions.args()
+    request.use_param_file("@%s", use_always = True)
+    request.set_param_file_format("multiline")
+    request.add(out.path)
+    request.add(ctx.attr.payload)
+    ctx.actions.run(executable = ctx.attr.bun, arguments = [ctx.file.worker.path, "work-action", request], tools = [ctx.file.worker], outputs = [out], mnemonic = ctx.attr.mnemonic, execution_requirements = {"supports-workers": "1", "requires-worker-protocol": "json", "supports-worker-cancellation": "1", "no-sandbox": "1"}, use_default_shell_env = True)
+    return [DefaultInfo(files = depset([out]))]
+fixture_work = rule(implementation = _impl, attrs = {"worker": attr.label(allow_single_file = True), "payload": attr.string(), "bun": attr.string(), "mnemonic": attr.string()})
+`);
+  const worker=`import {appendFileSync,readFileSync,writeFileSync} from "node:fs";
+import {serveWorkerV1} from ${JSON.stringify(protocol)};
+if(process.argv.includes("--persistent_worker")){
+ const input=(async function*(){for await(const chunk of Bun.stdin.stream()){appendFileSync(${JSON.stringify(log)},Buffer.from(chunk).toString("utf8"));yield chunk;}})();
+ await serveWorkerV1({input,write:text=>{process.stdout.write(text);},handler:async request=>{const[out,payload]=request.arguments;writeFileSync(out!,"worker:"+payload+":"+process.pid);return{exitCode:0,output:"ok "+payload};}});
+}else{const lines=readFileSync(process.argv.at(-1)!.slice(1),"utf8").split("\\n").filter(Boolean);writeFileSync(lines[0]!,"oneshot:"+lines[1]+":"+process.pid);}
+`;
+  writeFileSync(join(workspace,"worker.ts"),worker);
+  const targets=[["a","RepoTest","one"],["b","RepoCheck","two"],["c","RepoTest","three"]];
+  const build=(suffix:string)=>writeFileSync(join(workspace,"BUILD.bazel"),'load(":rules.bzl", "fixture_work")\n'+targets.map(([name,mnemonic,payload])=>`fixture_work(name = "${name}", worker = "worker.ts", payload = "${payload}${suffix}", bun = ${JSON.stringify(process.execPath)}, mnemonic = "${mnemonic}")`).join("\n")+"\n");
+  const plan=planWorkersV1(readWorkerPolicyV1(buildPolicy.workers),{cores:4,memoryBytes:8*1024**3},{jobs:3}),flags=bazelWorkerSettingsV1(plan).flags.filter(flag=>!flag.startsWith("--experimental_worker_cancellation"));
+  const arguments_=["build","//:a","//:b","//:c","--lockfile_mode=off","--incompatible_autoload_externally=",...flags];
+  build("");const first=run(directory,arguments_);expect(first.status,first.stderr).toBe(0);
+  expect(first.stderr).toMatch(/3 worker/u);
+  const pidOf=(name:string)=>readFileSync(join(workspace,"bazel-bin",name+".out"),"utf8").split(":").at(-1);
+  const before=pidOf("a");expect(readFileSync(join(workspace,"bazel-bin","a.out"),"utf8").startsWith("worker:one:")).toBe(true);
+  build("-again");const second=run(directory,arguments_);expect(second.status,second.stderr).toBe(0);expect(second.stderr).toMatch(/3 worker/u);
+  expect(pidOf("a")).toBe(before);
+  const requests=readFileSync(log.replaceAll("/",process.platform==="win32"?"\\":"/"),"utf8").split("\n").filter(Boolean),validate=new Ajv({strict:true,allowUnionTypes:true}).compile({$schema:schema.$schema,definitions:schema.definitions,$ref:"#/definitions/WorkRequest"});
+  expect(requests.length).toBe(6);
+  for(const line of requests){const request=JSON.parse(line);expect(validate(request),line).toBe(true);expect(request.arguments.length).toBe(2);expect(request.inputs.some((input:{path:string})=>input.path==="worker.ts")).toBe(true);}
+  run(directory,["shutdown"]);
+ }finally{run(directory,["shutdown"]);rmSync(directory,{recursive:true,force:true});}
+},300000);

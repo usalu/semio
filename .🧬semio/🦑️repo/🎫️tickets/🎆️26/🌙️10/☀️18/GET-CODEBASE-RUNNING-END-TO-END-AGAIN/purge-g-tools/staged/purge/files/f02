@@ -1,0 +1,372 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🛡️protection/🟦️.ts",
+      "directoryName": "🛡️protection",
+      "parentKindId": "repo-workspace-cleanup",
+      "kindId": "repo-workspace-cleanup-protection",
+      "declarations": [
+        "CLEAN_BUILD_DIR_NAMES",
+        "CLEAN_CACHE_DIR_NAME",
+        "CLEAN_CANONICAL_REPO_DIR",
+        "CLEAN_CANONICAL_TICKETS_DIR",
+        "CLEAN_NATIVE_IMAGE_BACKING_NAMES",
+        "CLEAN_PROTECTION_VIEW",
+        "CLEAN_RUST_INCREMENTAL_MAX_BYTES",
+        "CLEAN_TICKET_GENERATED_OUTPUT_DIRS",
+        "CLEAN_TICKET_GENERATED_PROBE_PREFIXES",
+        "CLEAN_WINDOWS_FORBIDDEN_CHARS",
+        "CLEAN_WINDOWS_RESERVED_DEVICE_NAMES",
+        "CleanProtectionNodeKind",
+        "CleanProtectionView",
+        "CleanRemoval",
+        "CleanRemovalKind",
+        "CleanRustIncrementalCrate",
+        "CleanRustIncrementalDirectory",
+        "cleanChildDirectories",
+        "cleanDedupePreferShallowest",
+        "cleanEndsWithAscii",
+        "cleanIntersectsProtected",
+        "cleanIsBuildArtifactDirName",
+        "cleanIsCanonicalRepoDir",
+        "cleanIsCanonicalTicketsDir",
+        "cleanIsCargoTargetDir",
+        "cleanIsCargoTargetDirName",
+        "cleanIsInsideTicketGeneratedOutput",
+        "cleanIsMisplacedRepoDir",
+        "cleanIsMisplacedTicketsDir",
+        "cleanIsNativeImagePath",
+        "cleanIsProtected",
+        "cleanIsRootTransientName",
+        "cleanIsRustIncrementalRemovalPath",
+        "cleanIsSemioRootName",
+        "cleanIsTicketFolderBoundary",
+        "cleanIsTicketGeneratedOutputDir",
+        "cleanIsWindowsIllegalName",
+        "cleanManagedStoragePrefixes",
+        "cleanOpenTicketGeneratedOutputProtection",
+        "cleanProjectRemovals",
+        "cleanProtectedPrefixes",
+        "cleanRemovalProtection",
+        "cleanRustIncrementalHasWorkingSession",
+        "cleanRustIncrementalSearchRoots",
+        "cleanSelectHugeRustIncremental",
+        "cleanTicketFolderForPath",
+        "cleanTicketGeneratedOutputTicketRoot",
+        "cleanTicketManifestIsClosed"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🔍️candidate-discovery/🟦️.ts",
+      "directoryName": "🔍️candidate-discovery",
+      "parentKindId": "repo-workspace-cleanup",
+      "kindId": "repo-workspace-cleanup-candidate-discovery",
+      "declarations": [
+        "CLEAN_BUILD_ARTIFACT_MAX_BYTES",
+        "CLEAN_GENERATED_LIVE_WRITER_MS",
+        "CLEAN_GENERATED_OVERSIZED_FILE_BYTES",
+        "CLEAN_GENERATED_OVERSIZED_FOLDER_BYTES",
+        "CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES",
+        "CLEAN_RUST_INCREMENTAL_HEAVY_DIRS",
+        "CLEAN_TICKET_GENERATED_DIRECTORY",
+        "CleanGeneratedPlan",
+        "CleanGeneratedRemoval",
+        "CleanGeneratedSelection",
+        "CleanGeneratedSkip",
+        "CleanTrackedFiles",
+        "cleanBuildArtifactRemovals",
+        "cleanByteOrder",
+        "cleanCollectMisplaced",
+        "cleanCollectRootTransient",
+        "cleanCollectRustIncrementalRemovals",
+        "cleanCollectWindowsIllegal",
+        "cleanDedupePreferDeepest",
+        "cleanDiscoverTicketFolders",
+        "cleanDiscoverTicketRoots",
+        "cleanGitTrackedFiles",
+        "cleanGitignoredMapForTicketRoots",
+        "cleanOversizedIgnoredRemovals",
+        "cleanPathBytes",
+        "cleanPlanGeneratedDirectory",
+        "cleanPlanTicketGeneratedPurge",
+        "cleanRustIncrementalBytes",
+        "cleanRustIncrementalDirectoryRemoval",
+        "cleanTicketGeneratedOutputRemovals",
+        "cleanWalkDirs"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🗑️removal/🟦️.ts",
+      "directoryName": "🗑️removal",
+      "parentKindId": "repo-workspace-cleanup",
+      "kindId": "repo-workspace-cleanup-removal",
+      "declarations": [
+        "cleanRemovePath",
+        "runWorkspaceClean"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts",
+      "directoryName": "🎮️command",
+      "parentKindId": "repo-workspace-cleanup",
+      "kindId": "repo-workspace-cleanup-command",
+      "declarations": [
+        "CleanScript",
+        "readWorkspaceCleanupEntryV1"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts",
+      "directoryName": "🔁️workflow",
+      "parentKindId": "repo-normalization-command-contract",
+      "kindId": "repo-normalization-command-workflow",
+      "declarations": [
+        "runTaxonomyCliWorkflow"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🧱️contract/🟦️.ts",
+      "directoryName": "🧱️contract",
+      "parentKindId": "repo-authoring",
+      "kindId": "repo-authoring-contract",
+      "declarations": [
+        "NEW_SCAFFOLD_MARKER",
+        "NEW_SCAFFOLD_TICKET_PATH",
+        "newScaffoldEmptyFacetMarkdown",
+        "newScaffoldRustLeaf",
+        "newScaffoldTsLeaf"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🗿️artifact-tree/🟦️.ts",
+      "directoryName": "🗿️artifact-tree",
+      "parentKindId": "repo-authoring",
+      "kindId": "repo-authoring-artifact-tree",
+      "declarations": [
+        "newScaffoldArtifactTree",
+        "newScaffoldIoTree",
+        "newScaffoldStandardTree",
+        "newScaffoldSubsetTree",
+        "newScaffoldWriteIfAbsent"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🧬️mutation-tree/🟦️.ts",
+      "directoryName": "🧬️mutation-tree",
+      "parentKindId": "repo-authoring",
+      "kindId": "repo-authoring-mutation-tree",
+      "declarations": [
+        "MutationCrateBudgetAssessment",
+        "NewMutationFamilyPlan",
+        "NewMutationScaffoldOptions",
+        "NewMutationScaffoldOwnedPath",
+        "NewMutationSemanticParts",
+        "assessMutationCrateBudget",
+        "newMutationCheckCancellation",
+        "newMutationDescriptor",
+        "newMutationFamilyPlan",
+        "newMutationFamilyRoot",
+        "newMutationRustLeaf",
+        "newMutationScaffoldEnsureParents",
+        "newMutationScaffoldLstat",
+        "newMutationScaffoldOwnPath",
+        "newMutationScaffoldPath",
+        "newMutationScaffoldRemoveOwnedDirectory",
+        "newMutationScaffoldRemoveOwnedFile",
+        "newMutationSemanticParts",
+        "newMutationUpdateAggregate",
+        "newScaffoldMutationTree",
+        "readWorkspacePointer",
+        "registerMutationFamilyCrate"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🎮️command/🟦️.ts",
+      "directoryName": "🎮️command",
+      "parentKindId": "repo-authoring",
+      "kindId": "repo-authoring-command",
+      "declarations": [
+        "CleanMechanismNewScript",
+        "crateBudgetFlags",
+        "newScaffoldDestinationV1"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📇️direct-owner-index/🟦️.ts",
+      "directoryName": "📇️direct-owner-index",
+      "parentKindId": "repo-normalization-mutation",
+      "kindId": "repo-normalization-mutation-direct-owner-index",
+      "declarations": [
+        "MUTATION_DIRECTORY_VIEW",
+        "MutationDirectoryView",
+        "policyListMutationDirs"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+      "directoryName": "🧪️test-output",
+      "parentKindId": "repo-process-environment",
+      "kindId": "repo-process-environment-test-output",
+      "declarations": [
+        "repoTestArtifactEnvironment"
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "directoryName": "🧼️workspace-cleanup",
+      "parentKindId": "members-of-modules",
+      "kindId": "repo-workspace-cleanup"
+    },
+    {
+      "directoryName": "🛡️protection",
+      "parentKindId": "repo-workspace-cleanup",
+      "kindId": "repo-workspace-cleanup-protection"
+    },
+    {
+      "directoryName": "🔍️candidate-discovery",
+      "parentKindId": "repo-workspace-cleanup",
+      "kindId": "repo-workspace-cleanup-candidate-discovery"
+    },
+    {
+      "directoryName": "🗑️removal",
+      "parentKindId": "repo-workspace-cleanup",
+      "kindId": "repo-workspace-cleanup-removal"
+    },
+    {
+      "directoryName": "🎮️command",
+      "parentKindId": "repo-workspace-cleanup",
+      "kindId": "repo-workspace-cleanup-command"
+    },
+    {
+      "directoryName": "🔁️workflow",
+      "parentKindId": "repo-normalization-command-contract",
+      "kindId": "repo-normalization-command-workflow"
+    },
+    {
+      "directoryName": "🏗️authoring",
+      "parentKindId": "members-of-modules",
+      "kindId": "repo-authoring"
+    },
+    {
+      "directoryName": "🧱️contract",
+      "parentKindId": "repo-authoring",
+      "kindId": "repo-authoring-contract"
+    },
+    {
+      "directoryName": "🗿️artifact-tree",
+      "parentKindId": "repo-authoring",
+      "kindId": "repo-authoring-artifact-tree"
+    },
+    {
+      "directoryName": "🧬️mutation-tree",
+      "parentKindId": "repo-authoring",
+      "kindId": "repo-authoring-mutation-tree"
+    },
+    {
+      "directoryName": "🎮️command",
+      "parentKindId": "repo-authoring",
+      "kindId": "repo-authoring-command"
+    },
+    {
+      "directoryName": "📇️direct-owner-index",
+      "parentKindId": "repo-normalization-mutation",
+      "kindId": "repo-normalization-mutation-direct-owner-index"
+    },
+    {
+      "directoryName": "🏃️process",
+      "parentKindId": "members-of-modules",
+      "kindId": "process"
+    },
+    {
+      "directoryName": "🌿️environment",
+      "parentKindId": "process",
+      "kindId": "repo-process-environment"
+    },
+    {
+      "directoryName": "🧪️test-output",
+      "parentKindId": "repo-process-environment",
+      "kindId": "repo-process-environment-test-output"
+    }
+  ],
+  "consumers": [
+    {
+      "path": "📜️script.ts",
+      "owners": [
+        "🧼️workspace-cleanup/🎮️command/🟦️.ts",
+        "🏗️authoring/🎮️command/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/✍️handcrafted-mutation/🟦️.ts",
+      "owners": [
+        "🧹️normalization/🧬️mutation/📇️direct-owner-index/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️exact-cargo-laws/🟦️.ts",
+      "owners": [
+        "🧼️workspace-cleanup/🎮️command/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧹️clean-ticket-runs/🟦️.ts",
+      "owners": [
+        "🧼️workspace-cleanup/🎮️command/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛑️taxonomy-cli-cancellation/🟦️.ts",
+      "owners": [
+        "🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts",
+        "🧼️workspace-cleanup/🎮️command/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🎫️ticket-protection/🟦️.ts",
+      "owners": [
+        "🧼️workspace-cleanup/🛡️protection/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧿️mutation-ownership/🟠️requires-one-enabled-reachable/🟦️.ts",
+      "owners": [
+        "🏗️authoring/🧬️mutation-tree/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪶️artifact-empty-facet-authoring/🟦️.ts",
+      "owners": [
+        "🏗️authoring/🗿️artifact-tree/🟦️.ts",
+        "🏃️process/🌿️environment/🧪️test-output/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔏️path-emoji-statutes/🟦️.ts",
+      "owners": [
+        "🧹️normalization/🧬️mutation/📇️direct-owner-index/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "owners": []
+    }
+  ],
+  "artifactEnvironment": {
+    "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+    "defaultRelativeRoot": ".🧬semio/🦑️repo/⚡️cache/🧪️tests",
+    "explicitRelativeRoot": "🗑️generated/caller-owned-test-artifacts",
+    "routes": [
+      "process-budgets",
+      "exact-cargo-laws",
+      "taxonomy-cli-cancellation",
+      "artifact-empty-facet-authoring",
+      "workspace-contract"
+    ]
+  },
+  "route": {
+    "target": "test-root-clean-scaffold-source",
+    "command": "repo ./📜️script.ts test root-clean-scaffold-source"
+  }
+}

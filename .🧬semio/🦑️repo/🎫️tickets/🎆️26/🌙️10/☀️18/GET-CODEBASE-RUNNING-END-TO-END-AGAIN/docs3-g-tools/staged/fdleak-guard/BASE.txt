@@ -1,0 +1,3 @@
+guide: 🧰️framework/🛍️products/🦑️repo/📓️build-guide.md
+sha256 at staging: 38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c
+6 edit(s): fdleak-enfile[en], fdleak-enfile[de], fdleak-row[en], fdleak-row[de], fdleak-single-file[en], fdleak-single-file[de]

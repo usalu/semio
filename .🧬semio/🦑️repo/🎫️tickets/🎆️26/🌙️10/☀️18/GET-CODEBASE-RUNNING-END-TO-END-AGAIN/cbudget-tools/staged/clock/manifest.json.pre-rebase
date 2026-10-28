@@ -1,0 +1,47 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🟦️.ts": {
+  "file": "00.ts",
+  "base": null,
+  "new": "5059fbea3d07a53cd1e92b3df99645cb5794bd1f1b1f2b6a95827c7cf4a2ceb6"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🔣️.json": {
+  "file": "01.json",
+  "base": null,
+  "new": "929b0ffdcf20ae9697bbf1ecb8ad7f7e464d77075512f5716b18ec4761426258"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🧬️schema/🔣️.json": {
+  "file": "02.json",
+  "base": null,
+  "new": "4fd41ad995d37513abb896d4f9f4bacf1ce9f30636ff88d35afb75a84f0c16a0"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🧪️tests/🟦️.ts": {
+  "file": "03.ts",
+  "base": null,
+  "new": "845bb9bcf99e440cea454f0db0227d13d55175cfd47850a01e63e803500e99bc"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "04.json",
+  "base": null,
+  "new": "39c6858479ef69f81d554ca68c9aeeab0e395118d89558f5eecb2ebb5033cc9b"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🧪️tests/🐍️oracle/🐍️.py": {
+  "file": "05.py",
+  "base": null,
+  "new": "e2dfb6eff76413c3cad68a6a09402603b9877314b17b055108bf7206b878d296"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts": {
+  "file": "06.ts",
+  "base": "2291446035a5547ff9ff6008c783f2f6b71b48d58173934c12ce21f33f9c7897",
+  "new": "4032194dd974e71317bd1e8962a2e04311d6ddef1ff047f04d31f62348cc38a3"
+ },
+ "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json": {
+  "file": "07.json",
+  "base": "902e9351d151aa67d3c277c5936ad82a260a5207ecd5ae0875f4ac0e707b8e36",
+  "new": "902e9351d151aa67d3c277c5936ad82a260a5207ecd5ae0875f4ac0e707b8e36"
+ },
+ "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md": {
+  "file": "08.md",
+  "base": "85cf39438347e94d0607db0d27d9bfa75e2bc58d1ebaf0e11e9a08515016bc74",
+  "new": "cad28f15d472796ce1bd8356b6036b25afe13f6c81876aa2d1eec2c301878c6a"
+ }
+}

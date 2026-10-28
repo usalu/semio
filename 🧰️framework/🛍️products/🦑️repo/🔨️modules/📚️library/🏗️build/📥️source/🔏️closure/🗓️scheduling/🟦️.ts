@@ -4,17 +4,20 @@ import table from"./🔣️.json" with { type: "json" };
 import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🗓️ One scheduling domain: directory prefixes of code that only schedules, admits, stores or reports an action, its contract in English and German, and the ports through which keyed code may import it. See `./🔣️.json` (the policy) and `./🧪️tests/🟦️.ts` (the law). */
-export interface BuildSchedulingDomainV1{readonly id:string;readonly contract:{readonly en:string;readonly de:string};readonly prefixes:readonly string[];readonly ports:readonly string[]}
+export interface BuildSchedulingDomainV1{readonly id:string;readonly contract:{readonly en:string;readonly de:string};readonly prefixes:readonly string[];readonly nativeKeyed?:readonly string[];readonly ports:readonly string[]}
 
-/** 📚️ The closed policy of all scheduling domains. */
-export interface BuildSchedulingV1{readonly version:1;readonly domains:readonly BuildSchedulingDomainV1[]}
+/** 🏝️ One content island: a file or directory that derives, encodes, digests or accepts the bytes an output depends on and sits next to scheduling code; it stays keyed, and no scheduling prefix may contain it or lie inside it. */
+export interface BuildSchedulingKeyedV1{readonly path:string;readonly reason:{readonly en:string;readonly de:string}}
+
+/** 📚️ The closed policy of all scheduling domains and of the content islands that must stay keyed. */
+export interface BuildSchedulingV1{readonly version:1;readonly domains:readonly BuildSchedulingDomainV1[];readonly keyed:readonly BuildSchedulingKeyedV1[]}
 
 /** 🏷️ The file name suffix that turns a snapshot name into the name of its unkeyed scheduling overlay. */
 export const buildSchedulingOverlaySuffixV1=".scheduling.json";
 
 let declared:BuildSchedulingV1|undefined;
 
-/** 🔐️ Admits a policy: closed by its schema, unique domain ids, prefixes that are clean directories no other prefix contains, ports inside their own domain; any other table is refused so nothing is left unkeyed by accident. */
+/** 🔐️ Admits a policy: closed by its schema, unique domain ids, prefixes that are clean directories no other prefix contains, ports inside their own domain, and no prefix that contains or lies inside a content island; any other table is refused so nothing is left unkeyed by accident. */
 export function buildSchedulingV1(candidate:unknown=table):BuildSchedulingV1{
  if(candidate===table&&declared)return declared;
  if(validateJsonSchemaSubset(schema,candidate).length)throw refuseBuildV1("invalid","scheduling.table-required");
@@ -23,8 +26,10 @@ export function buildSchedulingV1(candidate:unknown=table):BuildSchedulingV1{
   if(ids.has(domain.id))throw refuseBuildV1("invalid","scheduling.table-required");ids.add(domain.id);
   for(const prefix of domain.prefixes){if(prefix.split("/").slice(0,-1).some(part=>part===""||part==="."||part===".."))throw refuseBuildV1("invalid","scheduling.table-required");prefixes.push(prefix);}
   for(const port of domain.ports)if(!domain.prefixes.some(prefix=>port.startsWith(prefix))||port.endsWith("/"))throw refuseBuildV1("invalid","scheduling.table-required");
+  for(const keyed of domain.nativeKeyed??[])if(!domain.prefixes.some(prefix=>keyed.startsWith(prefix))||keyed.split("/").slice(0,-1).some(part=>part===""||part==="."||part===".."))throw refuseBuildV1("invalid","scheduling.table-required");
  }
  for(const [index,prefix] of prefixes.entries())if(prefixes.some((other,at)=>at!==index&&other.startsWith(prefix)))throw refuseBuildV1("invalid","scheduling.table-required");
+ for(const island of value.keyed){if(island.path.split("/").slice(0,-1).some(part=>part===""||part==="."||part==="..")||value.keyed.some(other=>other!==island&&other.path===island.path)||prefixes.some(prefix=>prefix.startsWith(island.path)||island.path.startsWith(prefix)))throw refuseBuildV1("invalid","scheduling.table-required");}
  const frozen=Object.freeze(value);if(candidate===table)declared=frozen;return frozen;
 }
 
@@ -38,6 +43,15 @@ function selected(value:BuildSchedulingV1,ids?:readonly string[]):readonly Build
 export function buildSchedulingPrefixesV1(value:BuildSchedulingV1=buildSchedulingV1(),ids?:readonly string[]):readonly string[]{
  return [...new Set(selected(value,ids).flatMap(domain=>domain.prefixes))].sort();
 }
+
+/** 🦀️ The prefixes that may leave the key of a command that compiles Rust: every scheduling prefix except the `nativeKeyed` ones, which build the Cargo arguments and stay keyed there (the Bazel executor identity still treats them as scheduling). */
+export function buildSchedulingNativePrefixesV1(value:BuildSchedulingV1=buildSchedulingV1()):readonly string[]{
+ const keyed=value.domains.flatMap(domain=>domain.nativeKeyed??[]);
+ return buildSchedulingPrefixesV1(value).filter(prefix=>!keyed.some(row=>row.startsWith(prefix)||prefix.startsWith(row)));
+}
+
+/** 🏝️ The content islands of a policy: what must stay keyed next to scheduling code. */
+export function buildSchedulingKeyedPathsV1(value:BuildSchedulingV1=buildSchedulingV1()):readonly string[]{return value.keyed.map(island=>island.path).sort();}
 
 /** 🔎️ The id of the domain a workspace-relative path belongs to, or nothing when the path stays keyed. */
 export function buildSchedulingDomainOfV1(path:string,value:BuildSchedulingV1=buildSchedulingV1()):string|undefined{

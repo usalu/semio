@@ -1,0 +1,108 @@
+.bg-\[\#ff4d6d\]
+.bg-emphasized
+.bg-foreground
+.bg-gradient-to-br
+.bg-muted\/10
+.bg-muted\/10 >> @supports (color: color-mix(in lab, red, red))
+.bg-muted\/20
+.bg-muted\/20 >> @supports (color: color-mix(in lab, red, red))
+.border-b-current
+.border-emphasized
+.border-l
+.bottom-2
+.capitalize
+.col-1
+.data-\[panel-group-direction\=horizontal\]\:w-single[data-panel-group-direction="horizontal"]
+.data-\[state\=on\]\:bg-hover-interactive-fill[data-state="on"]
+.data-\[state\=open\]\:border-normal[data-state="open"]
+.focus\:h-medium:focus
+.font-bold
+.from-accent
+.gap-0\.5
+.gap-4
+.gap-8
+.grid-cols-2
+.grid-cols-3
+.grid-cols-8
+.grid-rows-3
+.h-100
+.h-40
+.h-60
+.h-64
+.h-96
+.h-\[20rem\]
+.h-\[25rem\]
+.h-\[26\.25rem\]
+.h-\[30rem\]
+.h-\[31\.25rem\]
+.h-\[36rem\]
+.h-\[50\.75rem\]
+.h-layout-story
+.inset-y-0
+.justify-around
+.left-28
+.left-3
+.left-48
+.left-68
+.left-double
+.max-w-5xl
+.max-w-lg
+.max-w-xs
+.mb-2
+.ml-2
+.ml-6
+.ml-auto
+.mt-1
+.p-4
+.p-6
+.pb-2
+.px-3
+.px-4
+.py-4
+.ring-\[3px\]
+.rounded-\[9999px\]
+.row-1
+.row-2
+.row-3
+.row-6
+.row-7
+.row-9
+.scroll-my-double
+.size-30
+.size-40
+.size-48
+.text-3xl
+.text-white
+.top-20
+.top-36
+.w-1\/3
+.w-2
+.w-56
+.w-64
+.w-70
+.w-80
+.w-90
+.w-96
+.w-\[13\.75rem\]
+.w-\[13px\]
+.w-\[20rem\]
+.w-\[22\.5rem\]
+.w-\[23\.4375rem\]
+.w-\[26\.25rem\]
+.w-\[30rem\]
+.w-\[37\.5rem\]
+.w-\[45rem\]
+.w-\[50rem\]
+.w-\[9999px\]
+.w-layout-floating-menu-lg
+.w-layout-story-lg
+.w-layout-story-md
+.z-\[9999\]
+:where(.space-x-4 > :not(:last-child))
+:where(.space-y-1 > :not(:last-child))
+:where(.space-y-4 > :not(:last-child))
+@media (hover: hover) >> .hover\:bg-active-base:hover
+@media (hover: hover) >> .hover\:bg-hover-base:hover
+@media (hover: hover) >> .hover\:h-large:hover
+@media (hover: hover) >> .hover\:px-single:hover
+@media (hover: hover) >> .hover\:px-tiny:hover

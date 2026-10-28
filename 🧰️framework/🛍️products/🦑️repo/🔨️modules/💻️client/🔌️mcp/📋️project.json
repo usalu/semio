@@ -40,8 +40,8 @@
       "options": { "command": "repo ./📜️script.ts install" },
       "metadata": { "semio": { "dashboard": {
         "verb": "setup",
-        "title": { "en": "Install Native Repository Command", "de": "Nativen Repository-Befehl Installieren" },
-        "description": { "en": "Publish the native repo command and persist its user PATH selection.", "de": "Den nativen repo-Befehl veröffentlichen und seinen Benutzer-PATH dauerhaft auswählen." }
+        "title": { "en": "Install Native Repository Command", "de": "Nativen Repository-Befehl installieren" },
+        "description": { "en": "Publish the native repo command and persist its user PATH selection.", "de": "Den nativen repo-Befehl veröffentlichen und seinen Nutzer-PATH dauerhaft auswählen." }
       },
       "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" } } }
     },
@@ -61,7 +61,7 @@
             "verb": "test",
             "title": {
               "en": "Test Native Command Installation",
-              "de": "Native Befehlsinstallation Testen"
+              "de": "Native Befehlsinstallation testen"
             },
             "description": {
               "en": "Check native installation, PATH and atomic publication against neutral vectors.",
@@ -76,7 +76,8 @@
           "sourceInputObservation": "freshness",
           "runtimeSourceEntries": [
             "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📥️installation/🧪️tests/🟦️.ts",
-            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🐹️go-layout/🧪️tests/🟦️.ts"
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🐹️go-layout/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🧪️tests/🔒️lease/🟦️.ts"
           ]
         }
       }

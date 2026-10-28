@@ -1,0 +1,46 @@
+{
+ "target": "test-staged-payload-funding",
+ "tag": "r1",
+ "declared": 1322,
+ "rows": [
+  {
+   "leg": "bun-job",
+   "kind": "bun",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [],
+   "rounds": 1,
+   "seconds": 6,
+   "tail": " 0 fail |  22 expect() calls | Ran 2 tests across 1 file. [1158.00ms] | ",
+   "notes": [
+    "profiles:2",
+    "rules:903",
+    "capacity:600"
+   ]
+  },
+  {
+   "leg": "bun-tool-run",
+   "kind": "bun",
+   "backend": "seatbelt",
+   "strength": "kernel-enforced",
+   "passed": true,
+   "clean": true,
+   "learned": [
+    "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛫️encode/🧪️tests/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛫️encode/🦀️.rs",
+    "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛫️encode/🧬️schema/🔣️.json"
+   ],
+   "rounds": 3,
+   "seconds": 15,
+   "tail": " 0 fail |  841 expect() calls | Ran 6 tests across 5 files. [568.00ms] | ",
+   "notes": [
+    "profiles:2",
+    "rules:903",
+    "capacity:600",
+    "profiles:2"
+   ]
+  }
+ ]
+}

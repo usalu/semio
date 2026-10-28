@@ -8,21 +8,24 @@ import{readFileSync}from"node:fs";
 import{compilerCapacitySubdivisionV1,withCompilerCapacityScopeV1}from"../../🪆️scope/🟦️.ts";
 import schema from"../../🪆️scope/🧬️schema/🔣️.json";
 import fixture from"./🧫️fixtures/🔣️.json";
+const artifactOutput=process.env.SEMIO_TEST_ARTIFACT_DIR??mkdtempSync(join(tmpdir(),"semio-capacity-"));if(process.env.SEMIO_TEST_ARTIFACT_DIR===undefined)process.once("exit",()=>{rmSync(artifactOutput,{recursive:true,force:true});});
 /** 🪆️ Admits closed language-neutral subdivisions without inventing inherited machine credits. */
 test("neutral compiler capacity subdivisions preserve the finite parent grant",()=>{const oracle=new Ajv({strict:true}),db=new Database(":memory:");try{for(const row of fixture.subdivisions){const request={parent:row.parent,requested:row.requested},projected=db.query("select case json_extract(?2,'$.kind') when 'whole-host' then ?1 when 'available' then min(?1,json_extract(?2,'$.maximumParallelism')) when 'exact' then case when json_extract(?2,'$.parallelism') between 1 and ?1 then json_extract(?2,'$.parallelism') else null end else null end as count").get(row.parent,JSON.stringify(row.requested))as{count:number|null};expect(projected.count).toBe(row.expected);if(row.expected===null)expect(()=>compilerCapacitySubdivisionV1(row.parent,row.requested as import("../../🟦️.ts").CompilerCapacityRequestV1)).toThrow();else{expect(oracle.validate(schema.definitions.Request,request)).toBe(true);expect(compilerCapacitySubdivisionV1(row.parent,row.requested as import("../../🟦️.ts").CompilerCapacityRequestV1)).toBe(row.expected);}}}finally{db.close();}});
 
 import{mkdirSync,mkdtempSync,rmSync}from"node:fs";
 import{join}from"node:path";
 import{fileURLToPath}from"node:url";
-import{availableParallelism}from"node:os";
+import{availableParallelism,tmpdir}from"node:os";
 import{resourceLeasePathV1}from"../../../../🔒️leases/🟦️.ts";
 import{captureOwnedCommandResultV1}from"../../../../🎛️owned-execution/📥️capture/🟦️.ts";
-import{receiveScriptProcessInvocation,withIssuedResourceOperationV1}from"../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{withIssuedResourceOperationV1}from"../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{declareBuildTestEnvelopeV1,withBuildTestInvocationV1}from"../../../../🧪️testing/📥️invocation/🟦️.ts";
+declareBuildTestEnvelopeV1({owner:"test:compiler-capacity-scope",maximumElapsedMilliseconds:300000,capabilities:{}});
 import{scriptCompilerAdmissionControlV1,acquireCompilerCapacityLeaseV1}from"../../🟦️.ts";
 import capacitySchema from"../../🧬️schema/🔣️.json";
 /** 🔒️ Exercises a genuine parent EX and bounded same-process credits through actual detached canonical work. */
-test("actual compiler capacity scope retains real SQLite ownership and fair bounded children",()=>receiveScriptProcessInvocation(process.env,async original=>{
- const control=scriptCompilerAdmissionControlV1(original,"test:compiler-scope",30000),output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Actual ticket output required");mkdirSync(output,{recursive:true});const directory=mkdtempSync(join(output,"scope-")),gate=resourceLeasePathV1(directory,capacitySchema.properties.resource.const),python=process.platform==="win32"?"python":"python3",limits={maximumBytes:65536,maximumLines:128};
+test("actual compiler capacity scope retains real SQLite ownership and fair bounded children",()=>withBuildTestInvocationV1(async original=>{
+ const control=scriptCompilerAdmissionControlV1(original,"test:compiler-scope",30000),output=artifactOutput;mkdirSync(output,{recursive:true});const directory=mkdtempSync(join(output,"scope-")),gate=resourceLeasePathV1(directory,capacitySchema.properties.resource.const),python=process.platform==="win32"?"python":"python3",limits={maximumBytes:65536,maximumLines:128};
  const probe=async()=>{const result=await captureOwnedCommandResultV1(python,["-c","import sqlite3,sys\nd=sqlite3.connect(sys.argv[1],timeout=0)\ntry:\n d.execute('begin exclusive');print('free');d.rollback()\nexcept sqlite3.OperationalError as e:\n if 'locked' not in str(e):raise\n print('busy')\nfinally:d.close()",gate],process.cwd(),{control,output:limits});expect(result.status,result.stderr).toBe(0);return result.stdout.trim();};
  let active=0,peak=0,detached=false;const order:number[]=[],db=new Database(":memory:");db.exec("create table actual_capacity_event(id integer primary key,delta integer not null)");
  try{

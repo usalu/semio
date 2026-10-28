@@ -1,4 +1,4 @@
-import { dirname, resolve } from "node:path";
+import { dirname, resolve, sep } from "node:path";
 
 /** 🔒️ Resource lease admission control: the access descriptor, the awaited wait progress, the caller control and the materialized path bound every lease owner shares; a leaf, so leases, retirement and routing never import each other for these. */
 export type ResourceAccess = { readonly resource: string; readonly mode: "shared" | "exclusive" };
@@ -34,10 +34,18 @@ export function watchResourceLeaseControlDeadlineV1(control: ResourceLeaseContro
   return () => { active = false; if (timer !== undefined) clearTimeout(timer); };
 }
 
-/** 📏️ Checks the complete resolved materialized path in both portable string measures. */
+/** 🚧️ The directories this process must never materialize a path in, each with its refusal; one table per process on a registered symbol, so every loaded copy of this leaf shares it. */
+const fencedDirectories: Map<string, string> = ((globalThis as Record<symbol, Map<string, string> | undefined>)[Symbol.for("semio.process.materialized-path-fences.v1")] ??= new Map());
+/** 🚧️ Fences directories for the rest of this process: every later materialized path at or below one of them is refused with its reason (a test process fences the checkout's live store this way). */
+export function fenceMaterializedPathsV1(directories: readonly string[], reason: string): void {
+  for (const directory of directories) fencedDirectories.set(resolve(directory), reason);
+}
+
+/** 📏️ Checks the complete resolved materialized path in both portable string measures and refuses one inside a fenced directory. */
 export function requireMaterializedPathV1(path: string): string {
   const absolute = resolve(path);
   if (absolute.includes("\0") || absolute.length > 256 || [...absolute].length > 256) throw Error("Materialized absolute path exceeds 256 characters");
+  for (const [directory, reason] of fencedDirectories) if (absolute === directory || absolute.startsWith(directory + sep)) throw Error(reason + ": " + absolute);
   return absolute;
 }
 

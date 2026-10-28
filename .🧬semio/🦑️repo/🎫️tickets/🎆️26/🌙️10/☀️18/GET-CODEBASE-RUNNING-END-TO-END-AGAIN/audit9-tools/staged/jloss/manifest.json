@@ -1,0 +1,17 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔭️watch/🦀️rust/🦀️.rs": {
+  "file": "00.rs",
+  "base": "9d0fd74ab41c7305a479bdc60cc03de0f100a8a7bb0fd0e512780f0f85be7bf8",
+  "new": "bcd550c288ed1f30d6023cda33fa6147574d071ea1cfbdebfd590413eab8c452"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔭️watch/🦀️rust/🔣️.json": {
+  "file": "01.json",
+  "base": "79f29ee2ba72bd1198d7ac6032965fdffd94d3b14d29afe66bfba455d536baa4",
+  "new": "75bf5a261c03d41f4c638ce93a756c1902527d9af68f3289688496014b3b3aee"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🔭️watch/🕳️drops/🟦️.ts": {
+  "file": "02.ts",
+  "base": null,
+  "new": "31cb0fde7bcc277141e8f547025f09aa49c37a697b505ec0d00047e2e0339dbd"
+ }
+}

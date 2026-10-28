@@ -1,0 +1,42 @@
+{
+ "files": {
+  "package.json": "{\"name\":\"fx\",\"workspaces\":[\"*\"]}\n",
+  "project.json": "{}\n",
+  ".gitignore": "target*\n!**/🧫️fixtures/**\n",
+  "p/script.ts": "//\n",
+  "p/src/a.ts": "export const a=1;\n",
+  "p/.🧬semio/🦑️repo/keep.md": "k\n",
+  "p/🧫️fixtures/f/target/debug/keep.txt": "k\n",
+  "p/target/old.rs": "// ignored build output\n",
+  "docs/readme.md": "r\n"
+ },
+ "graph": {
+  "version": 1,
+  "projects": {
+   "p": {
+    "name": "p",
+    "root": "p",
+    "targets": {
+     "t": {
+      "execution": {
+       "kind": "command",
+       "command": "repo ./script.ts t"
+      },
+      "outputs": [],
+      "cache": true,
+      "inputs": [
+       "{projectRoot}/**/*"
+      ]
+     }
+    }
+   }
+  },
+  "dependencies": []
+ },
+ "request": {
+  "tasks": [
+   "p:t"
+  ],
+  "args": []
+ }
+}

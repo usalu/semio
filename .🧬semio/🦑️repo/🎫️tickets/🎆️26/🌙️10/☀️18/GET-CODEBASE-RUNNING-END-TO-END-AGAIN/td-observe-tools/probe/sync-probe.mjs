@@ -1,0 +1,2 @@
+/** 🔬️ [td-observe] does syncBuiltinESMExports reach named and namespace imports of node:fs under this runtime? */
+import fs from "node:fs";import{syncBuiltinESMExports}from"node:module";const m=await import("./m.mjs");let hits=0;const real=fs.lstatSync;fs.lstatSync=(...a)=>{hits++;return real(...a);};syncBuiltinESMExports();m.viaNamed(".");const named=hits;m.viaNs(".");console.log("[DEBUG]",process.versions.bun?"bun "+process.versions.bun:"node "+process.version,"named",named,"namespace",hits-named);

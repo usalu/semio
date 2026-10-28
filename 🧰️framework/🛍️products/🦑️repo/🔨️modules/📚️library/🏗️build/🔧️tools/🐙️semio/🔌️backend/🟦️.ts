@@ -95,7 +95,7 @@ async function run(context:BackendExecutionContextV1,request:BuildTaskRequestV1,
    const selected=parseBuildInvocationV1(original.selection.slice(1),{...process.env,SEMIO_BUILD_TOOL:original.tool,SEMIO_BUILD_MODE:original.buildMode}),resolved=resolveBuildInvocationV1(root,selected.args,{...process.env,SEMIO_BUILD_MODE:original.buildMode});
    reachable=new Set(Object.keys(planBuildTasksV1(graph,semioAuthorizedRequestV1(await selectBuildTasksV1(root,graph,resolved.args,invocation),original.buildMode)).tasks));
   }
-  if(!reachable.has(task.id))throw Error(both("Original orchestration task is unreachable","Ursprüngliche Orchestrierungsaufgabe ist nicht erreichbar"));
+  if(!reachable.has(task.id))throw Error(both("Original orchestration task is unreachable","Ursprüngliche Orchestrierungs-Task ist nicht erreichbar"));
  };
  const scope:SemioEnvironmentScopeV1=async(task,body)=>{
   const delegation=(task.definition.metadata as {semio?:{execution?:{kind?:string;children?:unknown}}}|undefined)?.semio?.execution;
@@ -113,7 +113,7 @@ async function run(context:BackendExecutionContextV1,request:BuildTaskRequestV1,
    if(event.kind==="end")console.log(`[semio] ${event.status} ${event.task} (${event.done}/${event.total})`);
   },...(startWatch?{onSettled:startWatch}:{})});
   const yielded=record.exitCode===0?undefined:record.tasks.find(task=>task.status==="failed"&&task.exitCode===formatStampProtocolV1().exitCode);
-  if(yielded)throw staleImplementationV1(both(`Task ${yielded.id} yielded: its process needs a fresh start (exit ${yielded.exitCode})`,`Aufgabe ${yielded.id} gab ab: ihr Prozess braucht einen frischen Start (Exit ${yielded.exitCode})`));
+  if(yielded)throw staleImplementationV1(both(`Task ${yielded.id} yielded: its process needs a fresh start (exit ${yielded.exitCode})`,`Task ${yielded.id} gab ab: ihr Prozess braucht einen frischen Start (Exit ${yielded.exitCode})`));
   if(record.exitCode!==0)throw Error(both(`Build invocation failed (${record.exitCode}): ${record.tasks.filter(task=>task.status==="failed").map(task=>task.id).join(", ")||"cancelled"}`,`Build-Aufruf fehlgeschlagen (${record.exitCode}): ${record.tasks.filter(task=>task.status==="failed").map(task=>task.id).join(", ")||"abgebrochen"}`));
  };
  if(watch===undefined){await openStore(context,async store=>execute(store,new AbortController()));return;}

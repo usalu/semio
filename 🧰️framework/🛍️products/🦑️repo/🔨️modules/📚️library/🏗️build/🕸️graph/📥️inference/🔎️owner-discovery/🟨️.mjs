@@ -11,6 +11,7 @@ import { pathToFileURL } from "node:url";
 import * as loadedProjectInputs from "../../../../🏗️build/📥️inputs/🟨️.mjs";
 import ownerAdmissionSchema from "../../../🧬️schema/🚪️admission.json" with { type: "json" };
 import { buildRelativeImportProjectV1, buildInputSourceRoleV1, buildSourceDemandV1, buildNativeSourceObservationV1 } from "../../🚪️admission/🟦️.ts";
+import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
 const { existsSync, lstatSync, readFileSync, readdirSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
@@ -45,7 +46,7 @@ export function walkCargoToml(workspaceRoot) {
   return found.sort();
 }
 
-/** 🦀️ Discovers the same complete canonical manifest scope through the caller's bounded continuation. */
+/** 🧠️ Discovers the same complete canonical manifest scope through the caller's bounded continuation. */
 export async function walkCargoTomlControlledV1(workspaceRoot, control) {
   const found = [], directories = [""];let visited=0;
   while(directories.length){
@@ -62,11 +63,6 @@ export async function walkCargoTomlControlledV1(workspaceRoot, control) {
   return found.sort();
 }
 
-/**
- * @param {string[]} configFiles
- * @param {unknown} options
- * @param {{ workspaceRoot: string }} context
- */
 /** 🛡️ Admits callback candidates through fresh raw physical workspace ancestry. */
 export function inferenceCandidates(configFiles, workspaceRoot) {
   if (typeof workspaceRoot !== "string" || !workspaceRoot || workspaceRoot.includes("\0") || workspaceRoot.split(/[\\/]/u).some(part => part === "." || part === "..")) throw Error("Build inference requires raw real workspace ancestry");
@@ -101,7 +97,7 @@ export async function catalogNativeManifestCandidatesV1(workspaceRoot,registry,a
  return result;
 }
 
-/** 🔌️ Loads only the caller-declared optional providers and verifies current producer authority. */
+/** 📖️ Loads only the caller-declared optional providers and verifies current producer authority. */
 export async function catalogBuildContributionsV1(workspaceRoot,providers) {
   const catalogContributions=await loadCatalogBuildProvidersV1(providers,{
     readText(path){return readFileSync(join(workspaceRoot,path),"utf8");},
@@ -137,9 +133,12 @@ export async function discoverNativeBuildOwnersV1(configFiles,workspaceRoot,cont
   return {files:inferenceCandidates([...nativeCandidates],workspaceRoot),nativeCache,nativeClosures};
 }
 
+/** 🚧️ The characters a generated import path may not hold, compiled once. */
+const UNSAFE_GENERATED_PATH_V1 = /[\\%*?#[\]{}]/u;
+
 /** 🏭️ Resolves only one exact ignored output contract to its physical authored task owner. */
 export function readBuildGeneratedCompileOutputV1(path,workspaceRoot,contracts,registry,context){
- const local=buildPath(relative(workspaceRoot,path)),safe=value=>typeof value==="string"&&value!=="."&&value!==""&&!isAbsolute(value)&&posix.normalize(value)===value&&!value.startsWith("../")&&!/[\\%*?#[\]{}]/u.test(value);const refusal=()=>Error("Canonical generated import path required: "+JSON.stringify({path:local.slice(0,256),...(typeof context?.importer==="string"?{importer:context.importer.slice(0,256)}:{}),...(typeof context?.specifier==="string"?{specifier:context.specifier.slice(0,256)}:{})}));if(local==="."||local===""||isAbsolute(local)||posix.normalize(local)!==local||local.startsWith("../")||local.includes("\0"))throw refusal();const matches=[],declared=new Set();
+ const local=buildPath(relative(workspaceRoot,path)),safe=value=>typeof value==="string"&&value!=="."&&value!==""&&!isAbsolute(value)&&posix.normalize(value)===value&&!value.startsWith("../")&&!UNSAFE_GENERATED_PATH_V1.test(value);const refusal=()=>Error("Canonical generated import path required: "+JSON.stringify({path:local.slice(0,256),...(typeof context?.importer==="string"?{importer:context.importer.slice(0,256)}:{}),...(typeof context?.specifier==="string"?{specifier:context.specifier.slice(0,256)}:{})}));if(local==="."||local===""||isAbsolute(local)||posix.normalize(local)!==local||local.startsWith("../")||local.includes("\0"))throw refusal();const matches=[],declared=new Set();
  const resolution=ownerAdmissionSchema.$defs.generatedImportResolution.const,extensionless=posix.extname(local)==="";
  for(const contract of Object.values(contracts)){if(contract.ownership!=="owned")continue;for(const output of contract.outputRoots??[]){if(output.inclusion!=="ignored")continue;if(!safe(output.path))throw Error("Canonical generated output root required");declared.add(output.path);const exact=local===output.path||local.startsWith(output.path+"/"),inferred=extensionless&&resolution.files.some(suffix=>local+suffix===output.path);if(exact||inferred)matches.push({output,producer:output.producer??contract,inferred:!exact});}}
  if(!matches.length)return undefined;if(!safe(local))throw refusal();if(matches.length!==1)throw Error("Ambiguous generated compile output producer");const {output,producer,inferred}=matches[0];if(inferred&&resolution.probes.some(suffix=>{const candidate=local+suffix;if(candidate===output.path)return false;const absolute=join(workspaceRoot,candidate);return declared.has(candidate)||existsSync(absolute)&&!lstatSync(absolute).isDirectory();}))throw Error("Ambiguous generated compile output resolution");const separator=producer.target?.lastIndexOf(":"),project=producer.target?.slice(0,separator),target=producer.target?.slice(separator+1);if(!project||!target||!safe(producer.ownerPath)&&producer.ownerPath!==".")throw Error("Exact generated task owner required");const manifest=buildPath(join(producer.ownerPath,PROJECT_BASENAME)),owner=registry?.owners.find(owner=>owner.name===project);if(registry)recordRegistryOwnerV1(workspaceRoot,project,owner);if(registry&&(!owner||owner.root!==producer.ownerPath||owner.manifest!==manifest))throw Error("Canonical generated task owner absent");const declaration=JSON.parse(readPhysicalSource(join(workspaceRoot,manifest)).toString("utf8"));if(declaration.name!==project||!declaration.targets?.[target])throw Error("Authored generated producer task absent");return Object.freeze({project,target:producer.target,manifest,output:output.path});
@@ -181,8 +180,8 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
  const commandModules=new Map(),commandResources=new Map();
  for(const [name,target] of Object.entries(selected)){
   const sources=await targetScriptSources(target,workspaceRoot,scripts,owner.root,owner.manifest.endsWith("Cargo.toml")?owner.manifest:json.metadata?.nativeRoot?buildPath(join(json.metadata.nativeRoot,"Cargo.toml")):undefined);
-  const compiled=scripts.compiledNames.get(sources.closure)??new Set(),absolute=path=>join(workspaceRoot,path.slice("{workspaceRoot}/".length));commandModules.set(name,new Set([...compiled].map(absolute)));commandResources.set(name,new Set((sources.closure??[]).filter(path=>!compiled.has(path)).map(absolute)));
-  for(const input of sources.closure??[])if(typeof input==="string"&&input.startsWith("{workspaceRoot}/"))addFile(input.slice("{workspaceRoot}/".length));
+  const compiled=scripts.compiledNames.get(sources.closure)??new Set(),absolute=path=>join(workspaceRoot,path.slice("{workspaceRoot}/".length));commandModules.set(name,new Set([...compiled].map(absolute)));commandResources.set(name,new Set((sources.closure??[]).filter(path=>typeof path==="string"&&!compiled.has(path)).map(absolute)));
+  for(const input of sources.closure??[]){if(typeof input==="string"){if(input.startsWith("{workspaceRoot}/"))addFile(input.slice("{workspaceRoot}/".length));}else if(input!==null&&typeof input==="object"&&!Array.isArray(input)&&Object.keys(input).length===2&&typeof input.input==="string"&&Array.isArray(input.projects)&&input.projects.length>0)for(const project of input.projects)addInput(project,input.input);else throw refuseBuildV1("invalid","graph.command-closure-reference-required",{input:JSON.stringify(input).slice(0,256)});}
 
  }
  const packageFile=join(workspaceRoot,owner.root,"package.json");if(existsSync(packageFile)){const manifest=JSON.parse(readFileSync(packageFile,"utf8"));addFile(buildPath(relative(workspaceRoot,packageFile)));for(const name of inputRole==="compile"?Object.keys({...manifest.dependencies,...manifest.peerDependencies,...manifest.optionalDependencies}):[]){const owner=byPackage.get(name);if(owner&&owner!==json.name)dependencies.add(owner);}}

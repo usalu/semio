@@ -1,0 +1,328 @@
+🧰️framework/🔨️modules/🏃️process/💾️state/🧪️tests/🟦️.ts	TABLE	process:native-storage-platform
+🧰️framework/🔨️modules/🏃️process/📖️texts/🧪️tests/🟦️.ts	TABLE	process:module-basics
+🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️react-package-export/🟦️.ts	NOT-A-TEST-FILE
+🧰️framework/🔨️modules/⚙️runtime/🧪️tests/🛑️termination/🟦️.ts	TABLE	process:laws-runtime-termination
+🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/🟦️.ts	NOT-A-TEST-FILE
+🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🟦️.ts	TABLE	process:cargo-driver
+🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧪️tests/🐍️.py	TABLE	process:testing
+🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧪️tests/🟦️.ts	TABLE	process:testing
+🧰️framework/🛍️products/🐾️pets/🧪️tests/🏞️terrain-walking/🦀️.rs	COMPANION(rs)
+🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🧪️tests/🟦️.ts	TABLE	process:testing
+🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/🧪️tests/🟦️.ts	TABLE	process:testing
+🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/🧪️tests/🐍️model.py	TABLE	process:leases
+🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/🧪️tests/🟦️.ts	TABLE	process:resource-lease-standing
+🧰️framework/🔨️modules/🏃️process/🔒️leases/⏳️wait/🧪️tests/🟦️.ts	TABLE	process:resource-lease-waits
+🧰️framework/🔨️modules/🏃️process/🔒️leases/⚖️fairness/🧪️tests/🟦️.ts	TABLE	process:resource-lease-fairness
+🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/🟦️.ts	TABLE	process:resource-lease-order
+🧰️framework/🔨️modules/🚪️io/⏱️control/♻️retirement/🧪️tests/🦀️.rs	COMPANION(rs)
+🧰️framework/🔨️modules/🚪️io/⏱️control/♻️retirement/🧪️tests/🟦️.ts	TABLE	process:laws-io-control-retirement
+🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧪️tests/🦀️.rs	COMPANION(rs)
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🟦️.ts	TABLE	process:build-facets
+🧰️framework/🔨️modules/🔲️pixels/🧪️tests/🥣️companion/🖊️coverage/🦀️.rs	COMPANION(rs)
+🧰️framework/🔨️modules/🔲️pixels/🧪️tests/🥣️companion/🗂️layers/🦀️.rs	COMPANION(rs)
+🧰️framework/🔨️modules/🔲️pixels/🧪️tests/🥣️companion/🧩️compositing/🦀️.rs	COMPANION(rs)
+🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🧪️tests/🟦️.ts	TABLE	process:build-facets
+🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/🟦️.ts	TABLE	process:command
+🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧪️tests/🦀️.rs	COMPANION(rs)
+🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧪️tests/🟦️.ts	TEST-NOT-IN-TABLE
+🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🐍️.py	COMPANION(py)
+🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🟦️.ts	TEST-NOT-IN-TABLE
+🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/🎛️control/🟦️.ts	TABLE	process:laws-filesystem-observation
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧪️tests/🟦️.ts	TABLE	process:native-storage
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🟦️.ts	TABLE	process:native-artifacts
+🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎟️admission/🧪️tests/🟦️.ts	TABLE	process:testing
+🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts	TABLE	process:exact-cargo-laws
+🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/♻️retirement/🧪️tests/🦀️.rs	COMPANION(rs)
+🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🧪️tests/🐍️oracle/🐍️.py	TABLE	process:testing
+🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/📁️files/🧪️tests/🟦️.ts	TABLE	process:testing
+🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/🧪️tests/🐍️oracle/🐍️.py	TABLE	process:testing
+🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/🧪️tests/📐️learning/🟦️.ts	TABLE	process:testing
+🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/🧪️tests/🧱️capped-run/🟦️.ts	TABLE	process:testing
+🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/🧩️component-driver/🟦️.ts	TABLE	process:resource-lease-order-component-driver
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📡️sampling/🟦️.ts	TABLE	process:build-facets
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🤝️handover/🟦️.ts	TABLE	process:build-facets
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪟️windows/🟦️.ts	TABLE	process:build-facets
+🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🧪️tests/🔁️incremental/🟦️.ts	TABLE	process:compiler-state
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📐️estimates/🟦️.ts	TABLE	process:build-facets
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🚪️gate/🟦️.ts	TABLE	process:build-facets
+🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/🏠️runtime-store/🟦️.ts	TABLE	process:routing-owners
+🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📤️publication/🧪️tests/🦀️.rs	COMPANION(rs)
+🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🧾️refusals/🟦️.ts	TEST-NOT-IN-TABLE
+🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🎲️fuzz/🐍️.py	COMPANION(py)
+🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🎲️fuzz/🟨️.mjs	COMPANION(mjs)
+🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🎲️fuzz/🟦️.ts	TABLE	process:laws-filesystem-observation
+🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🔒️busy/🟦️.ts	TABLE	process:laws-filesystem-observation
+🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts	NOT-A-TEST-FILE
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🧪️tests/🟦️.ts	TABLE	process:cargo-source-admission
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🪶️extent/🧪️tests/🟦️.ts	TABLE	process:native-storage
+🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts	NOT-A-TEST-FILE
+🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🧪️tests/🧰️vitest-setup/🟦️.ts	NOT-A-TEST-FILE
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🔓️unit-lock-model/🐍️.py	TABLE	process:native-build
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🔓️unit-lock-model/🟦️.ts	TABLE	process:native-build
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🧵️frontend-threads/🐍️.py	TABLE	process:native-build
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🧵️frontend-threads/🟦️.ts	TABLE	process:native-build
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts	NOT-A-TEST-FILE
+🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/📥️inputs/🟦️.ts	TABLE	process:testing
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🟦️.ts	TABLE	build:build-workspace-laws
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔧️build-surfaces/🟦️.ts	TEST-NOT-IN-TABLE
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts	TEST-NOT-IN-TABLE
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️authority/🟦️.ts	TEST-NOT-IN-TABLE
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🌀️control-plane/🟦️.ts	TABLE	caching:laws-dashboard-control-plane
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🏗️build-surface/🟦️.ts	NOT-A-TEST-FILE
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🚷️discovery-boundaries/🟦️.ts	TEST-NOT-IN-TABLE
+🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🧪️tests/🚪️admission/🟦️.ts	SYMLINK-VIEW
+🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/🧩️component-driver/🔀️interleaving-oracle/🐍️.py	TABLE	process:leases
+🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🐍️oracle/🐍️.py	COMPANION(py)
+🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📐️estimates/🐍️oracle/🐍️.py	TABLE	process:build-facets
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🧪️tests/🟦️.ts	TABLE	process:native-build
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🧪️tests/🟦️.ts	TABLE	process:native-storage
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/⏳️wait/🧪️tests/🟦️.ts	TABLE	process:native-storage
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🔀️exchange/🧪️tests/🟦️.ts	TABLE	process:native-storage
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🧪️tests/🪞️fold/🟦️.ts	TABLE	process:native-storage
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤫️silence/🧪️tests/🟦️.ts	TABLE	process:native-storage+native-image-observation
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📏️capacity/🧪️tests/🟦️.ts	TABLE	process:native-storage
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🪶️sparse/🧪️tests/🐍️.py	TABLE	process:native-storage
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🪶️sparse/🧪️tests/🟦️.ts	TABLE	process:native-storage
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🤲️continuations/🧪️tests/🐍️oracle/🐍️.py	TABLE	process:native-build
+🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/♻️retirement/🧪️tests/🦀️.rs	COMPANION(rs)
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧪️tests/✅️conformance/🟦️.ts	TABLE	process:native-storage
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧪️tests/⚖️laws/🟦️.ts	TABLE	process:native-storage
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🔸️raw-close/🟦️.ts	NOT-A-TEST-FILE
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟠️mutations/🟦️.ts	NOT-A-TEST-FILE
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌱️initialization/♻️retirement/🧪️tests/🟦️.ts	TABLE	caching:laws-plugin-initialization-retirement
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/♻️retirement/🧪️tests/🟦️.ts	TEST-NOT-IN-TABLE
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/📖️generated-projection/🟦️.ts	NOT-A-TEST-FILE
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️.ts	TEST-NOT-IN-TABLE
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧪️tests/🟦️.ts	TEST-NOT-IN-TABLE
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/🟦️.ts	TABLE	build:build-inputs-revision
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🟦️.ts	TABLE	build:build-command-line
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🧪️tests/🟦️.ts	TABLE	build:build-command-line
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🧪️tests/🟦️.ts	TABLE	build:build-incremental
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts	TABLE	build:build-observation
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🧪️tests/🟦️.ts	TABLE	build:build-command-line
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🟦️.ts	TABLE	build:build-command-line
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🧪️tests/🐍️.py	TABLE	build:build-doctor-preflight
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🧪️tests/🟦️.ts	TABLE	build:build-doctor-preflight
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🟦️.ts	TABLE	build:build-resident
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📊️reporting/🧪️tests/🟦️.ts	TABLE	build:build-reporting
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🐍️.py	TABLE	build:build-resident
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/🧪️tests/🟦️.ts	TABLE	build:build-command-line
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🧪️tests/🟦️.ts	TABLE	build:build-cache-gc
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🎟️phase/🟦️.ts	TABLE	build:build-workspace-phase-laws
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🎯️source-roster/🟦️.ts	TABLE	build:build-workspace-phase-laws
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🧪️tests/🟦️.ts	TABLE	build:build-targets-selection
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🧪️tests/🟦️.ts	TABLE	caching:route-table-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🕸️wasm-bindgen-locks/🟦️.ts	TABLE	caching:module-tests
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️store-receipt/🧪️tests/🟦️.ts	TABLE	build:build-doctor-preflight
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🧪️tests/🟦️.ts	TABLE	build:build-route-table
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🧪️tests/🟦️.ts	TABLE	build:build-command-line
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👷️workers/🧪️tests/🟦️.ts	TABLE	build:build-workers
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🟦️.ts	TABLE	build:build-host-capacity
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🧪️tests/🟦️.ts	TABLE	build:build-tool-setup
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🏗️build-and-direction-routes/🟦️.ts	NOT-A-TEST-FILE
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/🧪️tests/🟦️.ts	TABLE	caching:texts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/📖️texts/🧪️tests/🟦️.ts	TABLE	caching:laws-library-texts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts	TEST-NOT-IN-TABLE
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts	TEST-NOT-IN-TABLE
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🧪️tests/🐍️.py	TABLE	process:native-storage
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🧪️tests/🟦️.ts	TABLE	process:native-storage
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🍎️mounted-image/✍️sealing/🧪️tests/🟦️.ts	TABLE	process:native-storage
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/⭐️default/🧪️tests/🟦️.ts	NOT-A-TEST-FILE
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/🧪️tests/🚧️withheld-task/🟦️.ts	TABLE	build:build-targets-selection
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧊️stable-file/🧪️tests/🟦️.ts	TABLE	build:build-inputs-revision
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️selected/🧪️tests/🟦️.ts	TABLE	build:build-inputs-selected
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🌳️owner-view/🧪️tests/🟦️.ts	TABLE	build:build-inputs-revision
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🟦️.ts	TABLE	build:build-inputs-revision
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/🟦️.ts	TABLE	build:build-targets-selection
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/⌨️command/🧪️tests/🟦️.ts	TABLE	build:build-remote-execution
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/🧪️tests/🟦️.ts	TABLE	build:build-inputs-revision
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🦀️resolution/🧪️tests/🟦️.ts	TABLE	build:build-inputs-revision
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🟦️.ts	TABLE	build:build-inputs-storage
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️agent-sessions/⌨️command/🧪️tests/🟦️.ts	TABLE	build:build-doctor-preflight
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🧪️tests/📝️plan-file/🟦️.ts	TABLE	build:build-command-line
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/🧪️tests/🌱️plan-child/🟦️.ts	TABLE	build:build-command-line
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🧪️tests/🔎️probes/🟦️.ts	TABLE	build:build-doctor-preflight
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🧪️tests/🔗️process-chain/🟦️.ts	TABLE	build:build-command-line
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🧪️tests/🟦️.ts	TABLE	build:build-incremental-concurrent
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/🟦️.ts	TABLE	build:build-caller-birth
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🧪️tests/🟦️.ts	TABLE	build:build-incremental-bench
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/👯️dedupe/🧪️tests/🟦️.ts	TABLE	build:build-cache-gc
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧲️owner-claims/🐍️.py	TABLE	build:build-workspace-graph-laws
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧲️owner-claims/🟦️.ts	TABLE	build:build-workspace-graph-laws
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/👯️dedupe/🧪️tests/🐍️.py	TABLE	build:build-cache-gc
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts	TABLE	build:build-workspace-graph-laws
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts	TABLE	build:build-workspace-graph-laws
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts	TABLE	build:build-workspace-graph-laws
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔭️observed-facts/🟦️.ts	TABLE	build:build-workspace-graph-laws
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🏛️service/🟦️.ts	TABLE	build:build-resident
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🐍️.py	TABLE	build:build-generations
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🟦️.ts	TABLE	build:build-generations
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts	TABLE	build:build-workspace-graph-laws
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🧪️tests/💰️budget/🟦️.ts	TABLE	build:build-cache-gc
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/♻️tagged-retention/🟦️.ts	TABLE	build:build-graph-protocol
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🔗️edge-refresh/🟦️.ts	TABLE	build:build-graph-protocol
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🌱️native-scope/🟦️.ts	TABLE	build:build-workspace-graph-laws
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧰️support/🟦️.ts	TABLE	build:build-workspace-graph-laws
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🕰️generation-protocol/🐍️.py	TABLE	build:build-graph-protocol
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🕰️generation-protocol/🟦️.ts	TABLE	build:build-graph-protocol
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/⏱️phases/🧪️tests/🐍️model.py	TABLE	build:build-graph-protocol
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/⏱️phases/🧪️tests/🟦️.ts	TABLE	build:build-graph-protocol
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🧪️tests/🟦️.ts	TABLE	caching:vite-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🟦️.ts	TABLE	build:build-inference
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🧪️tests/🐍️oracle/🐍️.py	TABLE	caching:route-table-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔗️import-edges/📁️paths/🟦️.ts	TABLE	caching:import-edges
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/💾️storage/🧪️tests/🟦️.ts	TABLE	build:build-storybook
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧭️mode/🧪️tests/🟦️.ts	TABLE	build:build-sealed
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/📖️texts/🧪️tests/🟦️.ts	TABLE	build:build-host-capacity
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🧪️tests/🐍️oracle/🐍️.py	TABLE	build:build-route-table
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🧪️tests/🚦️startup/🟦️.ts	TABLE	build:build-command-line
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/📋️context/🔣️policy/🧪️tests/🟦️.ts	TABLE	caching:laws-library-process
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🔁️restart/🟦️.ts	TABLE	build:build-host-capacity
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/📈️memory-fit/🟦️.ts	TABLE	build:build-host-capacity
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🧪️workers/🟦️.ts	TABLE	build:build-host-capacity
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🚪️entrypoint/🧪️tests/🟦️.ts	TABLE	caching:laws-library-process
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📖️texts/🧪️tests/🟦️.ts	TABLE	caching:bootstrap
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🧪️tests/🟦️.ts	TABLE	caching:laws-library-process
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🟦️.ts	TABLE	build:build-bazel-contracts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts	TABLE	caching:tools-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts	TABLE	caching:laws-library-process
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts	TABLE	caching:rust-units
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/🧪️tests/🟦️.ts	TABLE	caching:cargo-retirement
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/📖️texts/🧪️tests/🟦️.ts	TABLE	caching:laws-library-texts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🪝️hooks/🧪️tests/🟦️.ts	TABLE	caching:laws-library-commit-hooks
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/📖️texts/🧪️tests/🟦️.ts	TABLE	caching:laws-library-texts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/📖️texts/🧪️tests/🟦️.ts	TABLE	caching:laws-library-texts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🧪️tests/🔁️observation/🐍️.py	COMPANION(py)
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🧪️tests/🔁️observation/🟦️.ts	TABLE	caching:laws-library-direction-observation
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📦️workspace-exports/🧠️memo/🧪️tests/🟦️.ts	TABLE	caching:laws-library-workspace-exports-memo
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🧪️tests/🟦️.ts	TEST-NOT-IN-TABLE
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🧪️tests/🟦️.ts	TEST-NOT-IN-TABLE
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🎟️admission/🧪️tests/🟦️.ts	TABLE	caching:laws-builder-admission
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🧪️tests/🩺️heal/🟦️.ts	TABLE	process:native-storage
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🎟️request/♻️retirement/🧪️tests/🦀️.rs	COMPANION(rs)
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🎟️request/♻️retirement/🧪️tests/🟦️.ts	TEST-NOT-IN-TABLE
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🧪️tests/🐍️oracle/🐍️.py	TABLE	build:build-inputs-revision
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔭️read-oracle/🧪️tests/🪟️windows/🟦️.ts	TABLE	build:build-inputs-revision
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧩️units/🧪️tests/🐍️oracle/🌐️tex-aux-oracle/🐍️.py	TABLE	build:build-targets-selection
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🪛️toolchain-activation/🧪️tests/🐍️oracle/🐍️.py	TABLE	build:build-inputs-revision
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🧪️tests/🟦️.ts	TABLE	build:build-source-closure
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/📥️consumption/🟦️.ts	TABLE	build:build-targets-selection
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🌳️owner-view/🧪️tests/🏝️reach/🟦️.ts	TABLE	build:build-inputs-revision
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🚪️admission/🟦️.ts	TABLE	build:build-inputs-storage
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/📒️ledger/🟦️.ts	TABLE	build:build-inputs-storage
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🧪️tests/🔗️process-chain/🧫️fixtures/🪆️relaunch.ts	TABLE	build:build-command-line
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/🧪️tests/🔒️batch-snapshot/🟦️.ts	TABLE	build:build-inputs-revision
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🗓️scheduling/🧪️tests/🟦️.ts	TABLE	build:build-source-closure
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🏎️bench/🧪️tests/🐍️oracle/🐍️.py	TABLE	build:build-incremental-bench
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧷️pin/🧪️tests/🟦️.ts	TABLE	build:build-generation-pin
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️scoped/🟦️.ts	TABLE	build:build-inputs-storage
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🤝️shared-writer/🟦️.ts	TABLE	build:build-inputs-storage
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🌱️patch-growth/🟦️.ts	TABLE	build:build-generations
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🔏️closure/🟦️.ts	TABLE	build:build-inputs-storage
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🚧️unfounded-withheld/🟦️.ts	TABLE	build:build-generations
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🏃️world/🟦️.ts	TABLE	build:build-generations
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/✂️derived-walks/🟦️.ts	TABLE	build:build-inference
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/♻️tagged-retention/🐍️oracle/🐍️.py	TABLE	build:build-graph-protocol
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🔗️edge-refresh/🐍️oracle/🐍️.py	TABLE	build:build-graph-protocol
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔭️coverage/🧪️tests/🟦️.ts	TABLE	build:build-generation-coverage
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚏️admission/🧪️tests/🐍️.py	TABLE	caching:graph
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚏️admission/🧪️tests/🟦️.ts	TABLE	caching:graph-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🎯️test-owners/🧪️tests/🐍️oracle/🐍️.py	TABLE	build:build-graph-test-owners
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🚧️withheld-rows/🟦️.ts	TABLE	build:build-inference
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🧷️closure-facts/🐍️.py	TABLE	build:build-inference
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🧷️closure-facts/🟦️.ts	TABLE	build:build-inference
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/♻️revision/🧪️tests/🟦️.ts	TABLE	build:build-inference
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🧪️tests/🐍️.py	TABLE	build:build-generation-load
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🧪️tests/🟦️.ts	TABLE	build:build-generation-load
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/✂️cutoff/🧪️tests/🟦️.ts	TABLE	build:build-generations
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🎚️machine/🧪️tests/🐍️.py	TABLE	caching:storage-session
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🎚️machine/🧪️tests/🟦️.ts	TABLE	caching:storage-session
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️admission/💾️storage/🧪️tests/🟦️.ts	TABLE	caching:bootstrap
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🧪️tests/🟦️.ts	TABLE	caching:bootstrap
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🔁️restart/📜️child/🟦️.ts	TABLE	build:build-host-capacity
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🟦️.ts	TABLE	caching:javascript-storage
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧪️tests/🦀️native-dependency-closures/🟦️.ts	TABLE	caching:bootstrap-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧪️tests/🟦️.ts	TABLE	build:build-bazel-host
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🎬️scopes/🧪️tests/🟦️.ts	TABLE	build:build-bazel-execution
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📤️arguments/🟦️.ts	TABLE	build:build-bazel-contracts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🟦️.ts	TABLE	build:build-bazel-execution
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/🟦️.ts	TABLE	build:build-bazel-host
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️environment/🟦️.ts	TABLE	build:build-bazel-contracts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧰️toolchains/🧪️tests/🟦️.ts	TABLE	build:build-bazel-host
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts	TABLE	caching:authorizers
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧪️tests/📥️physical/🟦️.ts	TABLE	caching:artifacts-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🚀️runtime-bootstrap/🟦️.ts	TABLE	caching:artifacts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/📜️script.ts	TABLE	build:build-bazel-contracts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/🟦️.ts	TABLE	build:build-bazel-contracts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🌡️host-capacity/🧪️tests/🟦️.ts	TABLE	caching:tools-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📸️snapshot/🧪️tests/🟦️.ts	TABLE	build:build-bazel-snapshots
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️coverage/🟦️.ts	TABLE	build:build-bazel-contracts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/♻️plan-reuse/🧪️tests/🟦️.ts	TABLE	build:build-bazel-contracts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/👷️workers/🧪️tests/🟦️.ts	TABLE	caching:tools-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/🧪️tests/🟦️.ts	TABLE	caching:toolkit-retention
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📐️profile/🟦️.ts	TABLE	caching:cargo-units
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🟦️.ts	TABLE	caching:cargo-unit-cache-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/👷️workers/🧪️tests/🟦️.ts	TABLE	build:build-bazel-host
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️inputs/🧪️tests/🟦️.ts	TABLE	caching:cargo-units-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🧪️tests/🐍️.py	TABLE	build:build-bazel-sessions
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🧪️tests/🟦️.ts	TABLE	build:build-bazel-sessions
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🧪️tests/🟦️.ts	TABLE	build:build-bazel-execution
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/🟦️.ts	TABLE	caching:pruning-laws-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🧪️tests/🟦️.ts	TABLE	caching:tools-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🌐️workspace/🧪️tests/🔗️imports/🟦️.ts	TABLE	caching:pruning-laws
+🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/⏳️wait/🧪️tests/🟦️.ts	SYMLINK-VIEW
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs	COMPANION(rs)
+🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs	COMPANION(rs)
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧷️pin/🧪️tests/🐍️oracle/🐍️.py	TABLE	build:build-generation-pin
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧷️pin/🧪️tests/🤝️nested/🟦️.ts	TABLE	build:build-generation-pin
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🧪️tests/🏷️loader-identity/🟦️.ts	TABLE	build:build-source-closure
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🔬️source-guard/📜️child/🟨️.mjs	TABLE	build:build-workspace-graph-laws
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🔀️router/🧪️tests/🟦️.ts	TABLE	build:build-inference-script-inputs
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️scoped/🔄️lifetime/🟦️.ts	TABLE	build:build-inputs-storage
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️scoped/⚠️scoped-retirement-and-bridge/🟦️.ts	TABLE	build:build-inputs-storage
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🚧️unfounded-withheld/🐍️oracle/🐍️.py	TABLE	build:build-generations
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🎯️target-policy/🧪️tests/🐍️oracle/🐍️.py	TABLE	build:build-inference-policy
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🧪️tests/🔁️observation/🟦️.ts	TABLE	build:build-inference-projects
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🔬️source-guard/📜️preload/🟨️.mjs	TABLE	build:build-workspace-graph-laws
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔭️coverage/🧪️tests/🐍️oracle/🐍️.py	TABLE	build:build-generation-coverage
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🧪️tests/🚦️governed-dispatch/🟦️.ts	TABLE	build:build-inference-projects
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🧪️tests/🟦️.ts	TABLE	caching:graph-bounded
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🧪️tests/🟦️.ts	TABLE	caching:storage-compiler
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🗓️scheduling/🧪️tests/🐍️oracle/🐍️.py	TABLE	build:build-source-closure
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🟦️.ts	TABLE	caching:storage-compiler-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts	TABLE	caching:storage-nx-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/✂️cutoff/🧪️tests/🐍️oracle/🐍️.py	TABLE	build:build-generations
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/✂️cutoff/🧪️tests/🏪️store/🐍️.py	TABLE	build:build-generations
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/✂️cutoff/🧪️tests/🏪️store/🟦️.ts	TABLE	build:build-generations
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🧪️tests/🐍️oracle/🐍️.py	TABLE	caching:bootstrap
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🎬️scopes/🧪️tests/🐍️oracle/🐍️.py	TABLE	build:build-bazel-execution
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/🟦️.ts	TABLE	caching:tools-sdk-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/♻️revision/🧪️tests/🐍️oracle/🐍️.py	TABLE	build:build-inference
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/🧪️tests/🐍️oracle/🐍️.py	TABLE	build:build-generation-claims
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🧪️tests/🕊️early-release/🟦️.ts	TABLE	build:build-generation-load
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🌿️frontier-walk/🧪️tests/🐍️oracle/🐍️.py	TABLE	build:build-generations
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/🌱️birth/🟦️.ts	TABLE	build:build-bazel-contracts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/👷️worker/🟦️.ts	TABLE	build:build-bazel-execution
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🎬️executor/🧪️tests/🐍️oracle/🐍️.py	TABLE	build:build-bazel-execution
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/🧪️tests/🟦️.ts	TABLE	build:build-bazel-contracts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🪟️toolchain-link/🟦️.ts	TABLE	build:build-bazel-execution
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📦️generation/🧪️tests/🟦️.ts	TABLE	caching:tools-retention-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📐️profile/♻️preparation/🟦️.ts	TABLE	caching:cargo-units-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🟦️.ts	TABLE	caching:cargo-units-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📥️data/🟦️.ts	TABLE	caching:tools-authorizers
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🧊️memo/🟦️.ts	TABLE	caching:tools-authorizers
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🧭️ancestry/🟦️.ts	TABLE	caching:tools-authorizers
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/🟦️.ts	TABLE	caching:storage-opening-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️scoped/🔄️lifetime/🧰️harness/🟦️.ts	TABLE	build:build-inputs-storage
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/♻️scoped/🔄️lifetime/🍎️nx-recovery-after-maintenance/🟦️.ts	TABLE	build:build-inputs-storage
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/👁️evidence/♨️warm/🧪️tests/🐍️oracle/🐍️.py	TABLE	build:build-bazel-evidence
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/🧪️tests/🌱️birth/🟦️.ts	TABLE	build:build-bazel-contracts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️store/🟦️.ts	TABLE	caching:storage-nx
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/♻️pressure/🟦️.ts	TABLE	caching:storage-compiler-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🎯️selection/📥️configuration/🧪️tests/🟦️.ts	TABLE	caching:cargo-units-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/👷️worker/🔒️real-bazel/🟦️.ts	TABLE	build:build-bazel-execution
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🎟️capacity/🧪️tests/🟦️.ts	TABLE	caching:law-coverage-tests
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/💾️cache/📤️publication/🧪️tests/🟦️.ts	TABLE	caching:cargo-units-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/📖️read/🧪️tests/🧺️batch/🟦️.ts	TABLE	caching:cargo-units-processes
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/🧪️tests/🟦️.ts	TABLE	caching:storage-nx
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🎟️capacity/🧪️tests/🐍️oracle/🐍️.py	TABLE	caching:cargo-units

@@ -1,0 +1,72 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📋️project.json": {
+  "file": "000.json",
+  "base": "c4c08f4f6a1cbff0c3b97f641c78f96f410935367b9e6675d27c6c1c7c5a947d",
+  "new": "3224ff6f9d812fd1121d9cec954425bf773910afee93b1e7d74710aa8549290c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📋️project.json": {
+  "file": "001.json",
+  "base": "67cd433cfffa60686aad98c5302f03c1fe7a247dfcc2ed53c0ad03e12ff1cfb5",
+  "new": "5190f42c2b799a4ed39ae35454aefa7d2b30597f9228194e3c50d1bd2d83dbc5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🏗️build/🔣️.json": {
+  "file": "002.json",
+  "base": "f0a678456a2f53c2431c2d05fd107c6a6ca6a98ae588ac2daa5c38cc59d97eab",
+  "new": "5dc7d837a55a8bc659abefe3b7a1bb303affbeb66de8c0e68b9c586643e27ac1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⌨️usage/🦀️.rs": {
+  "file": "003.rs",
+  "base": "4dc6e38d0073a943999e8d59a9a71e62be1ec09866df9a909c0a2d150fbdf504",
+  "new": "f3e3549ba4b4bde269da49e2f4f42086ff945fcc64ae7e4e2e12470615a4e7af"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json": {
+  "file": "004.json",
+  "base": "7168b24fa8851b7721907a7e63cec521b465b12b46a6f8d74cf0549e7348f958",
+  "new": "1b9c8b51917281a51b858d9ccdd8168bc4479f109267f2d3cdff511ac2069d6e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🌐️labels/🦀️.rs": {
+  "file": "005.rs",
+  "base": "04b7a690e9004008ea51c9cbc5c7971180f5d946327d859409cdf07375f491be",
+  "new": "cfae21c03d57201c7f087f0b0fde6fb77438986875d924f91411a12e550ba1a1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🔬️unit/🔗️open-ready/🦀️.rs": {
+  "file": "006.rs",
+  "base": "075ca9aa2d831e8cf779b1cbfd3d15a5072ec12da6017138d9a21ab949f6fea8",
+  "new": "c3e49093a5972e5279b0e508d3d39381619309e74b4cfafeb5cc3af4949a4da3"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧫️fixtures/🌐️open/🔣️.json": {
+  "file": "007.json",
+  "base": "d46692b45de06fa553580ccfc49b3d7e40795b85b2209f0f3e52ae5ecd607b18",
+  "new": "839bdf071fa9e63cb1e4b691a058904de942ba47789e6d58fbf32c3f59045de0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/🏛️core/🐹️.go": {
+  "file": "008.go",
+  "base": "a37408b5ab3222389500e4563c580ac7144ed68fdd93995e455a3a5d9d898770",
+  "new": "be074aaffe7b34a59e4f2b77155dde5558fd48e2e4b4c4434600ddf610ece6ba"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🦀️.rs": {
+  "file": "009.rs",
+  "base": "60450211491ccc7eea383a85e4dd5691228d5806fa21cb5679157e447bbbf8eb",
+  "new": "1106ecb45adb6bc139e7bfea2e21aecb1783d637de599740110d45cdd223ffaf"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json": {
+  "file": "010.json",
+  "base": "f58798fa55eb821259aa5750a036468924b34960f8796b5f8a449feb388909a1",
+  "new": "afbb104b4d0baa85ea5a6ea5c8d8df5a8274669da15a911bf7693d6629a80727"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust/📋️project.json": {
+  "file": "011.json",
+  "base": "33d590b34799450fb914d8ffd028a98932884e39844a5fbdce742eb14acffb59",
+  "new": "2c3c5afe097f2fa7e1760c8c2f334822686be129cb272a0c1e7ec0b8fa140a8b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json": {
+  "file": "012.json",
+  "base": "8bf4b1365cddb23445598c46d268a4ec1fd93d45a752366b46f714b055e66ce9",
+  "new": "1fb3c7d5074b630311cc995af26bf8630e79c58380f2e05a58b3029c90b785c7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🎚️config/🔣️.json": {
+  "file": "013.json",
+  "base": "d40c76c15f221f2a147b84697da383c18f7d0515cc436b5d542a2564887da695",
+  "new": "6126f9efa6fc0b6c8fb45726b6b6afebca5f63b757808ec1917106e589e6319e"
+ }
+}

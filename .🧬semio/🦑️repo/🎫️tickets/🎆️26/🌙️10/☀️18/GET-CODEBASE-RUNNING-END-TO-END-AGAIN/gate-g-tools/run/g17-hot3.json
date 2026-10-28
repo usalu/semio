@@ -1,0 +1,12 @@
+{
+ "label": "g17-hot3",
+ "target": "@teaching/architecture-course:build",
+ "started": "01:36:00",
+ "wall_s": 30.4,
+ "peak_tree_mb": 2528,
+ "peak_processes": 6,
+ "exit": 0,
+ "killed": null,
+ "queued_s": 0.0,
+ "graph": {}
+}

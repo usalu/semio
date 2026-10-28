@@ -74,7 +74,7 @@
       ]
      },
      "script-inputs": {
-      "stamp": "semio.graph-inferrer.script-inputs/1",
+      "stamp": "semio.graph-inferrer.script-inputs/2",
       "scope": "project",
       "sources": [
        "🏗️build/🕸️graph/📥️inference/🧭️script-inputs/",
@@ -107,7 +107,7 @@
       ]
      },
      "project-assembly": {
-      "stamp": "semio.graph-inferrer.project-assembly/1",
+      "stamp": "semio.graph-inferrer.project-assembly/2",
       "scope": "project",
       "sources": [
        "🏗️build/🕸️graph/📥️inference/🧱️project-assembly/"

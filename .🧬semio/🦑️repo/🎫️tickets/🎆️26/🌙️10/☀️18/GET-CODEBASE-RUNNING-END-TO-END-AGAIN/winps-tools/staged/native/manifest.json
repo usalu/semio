@@ -1,0 +1,37 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧭️ancestry/🪟️native/🟦️.ts": {
+  "file": "00.ts",
+  "base": null,
+  "new": "b8798f357b7fdf3db978bf2d6fc46a378ea5efed644b2c12f6903585f081af04"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧭️ancestry/🪟️native/🧪️tests/🟦️.ts": {
+  "file": "01.ts",
+  "base": null,
+  "new": "372a25f8927aa0cbe5ad96ecd039e1b465f6dcd3f3ca4b8fd12dbedb575d06bc"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧭️ancestry/🪟️native/🧪️tests/🐍️oracle/🐍️.py": {
+  "file": "02.py",
+  "base": null,
+  "new": "60984f5cd07a1a0d711f0b044fd23b42f4bf5d080b63f63b871c254c5ec780ed"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧭️ancestry/🟦️.ts": {
+  "file": "03.ts",
+  "base": "074625b2bf519b66343a54257c0a2ccf5c906a3ae8659e0adc835e5bdce2085d",
+  "new": "605cf8714a636a0ecc20b938df43fe864f7e9e410e93180443320cbc384281b2"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🟦️.ts": {
+  "file": "04.ts",
+  "base": "447486f07ac06c4ffb41d12f37037e88db181c34498e30f87603063e67ddf900",
+  "new": "268c8ae2dc83be31ea96a2b379cbcbbb5f7fec38790309a33f65fcb813484637"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧬️schema/🔣️.json": {
+  "file": "05.json",
+  "base": "d4edde0deffbc91288078b989cc0b9e1538aa13e2a71cf924779e7f5fd8a6a7d",
+  "new": "b77f6e1f82b3a6d172accbe9b4b0dc3d269f192d0bdbfb5194b180d6505c89e8"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json": {
+  "file": "06.json",
+  "base": "99ee31b97f8f6a21dd61fe3ea903153a026021ef7e114bd90c68b58518222ae6",
+  "new": "57b94f009372a25ff4b6e619989b48ee50c36a76a9cdf6b318414359cd1e032f"
+ }
+}

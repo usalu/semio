@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "orders": [["base", "derive", "consumer"], ["derive", "base", "consumer"]],
+  "liveManifest": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/Cargo.toml"
+}

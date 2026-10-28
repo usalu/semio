@@ -3,7 +3,7 @@ import{join}from"node:path";
 import{ensureCargoLockV1,registerCargoLockEnsurerV1,type CargoLockEnsureRequestV1,type CargoLockOutcomeV1,type CargoLockPortV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import{acquireResourceLease,checkResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{captureOwnedCommandResultV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import{resolveLanguageV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
+import{resolveLanguageV1}from"../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import{CATALOG_LANGUAGES_V1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import{repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import{cargoInvocationManifestV1}from"../🟦️.ts";

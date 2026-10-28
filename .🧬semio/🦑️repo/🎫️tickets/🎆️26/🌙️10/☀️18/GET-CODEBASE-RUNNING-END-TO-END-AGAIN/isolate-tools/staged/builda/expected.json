@@ -1,0 +1,82 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/🧪️tests/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": [],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/🎭️roles/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "pinned Cargo observes host and dual-role compiler profile consumption"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🦀️rlib-context/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": [],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "pinned Cargo exposes actual emitted profile flags and tiny library artifacts"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/🦀️profile-precedence/🟦️.ts": {
+  "mode": "env",
+  "pass": 0,
+  "fails": [
+   "(unnamed)",
+   "pinned Cargo exposes actual emitted profile flags and tiny library artifacts",
+   "pinned Cargo observes every neutral effective-profile precedence case without compilation",
+   "pinned Cargo observes host and dual-role compiler profile consumption"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/⚡️incremental/🟦️.ts": {
+  "mode": "plain",
+  "pass": 2,
+  "fails": [
+   "parallel incremental inference settles concurrent edits onto serial full inference and withholds only unparseable projects"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/📦️projects/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": [
+   "actual Node dependency publication reuses settled bytes and preserves current parser facts",
+   "real Node project admission reuses unchanged owners and rebuilds reverse command imports"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📊️reporting/🧪️tests/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": [],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️selected/📦️snapshot/🧪️tests/🟦️.ts": {
+  "mode": "plain",
+  "pass": 1,
+  "fails": [
+   "closed physical selected Source snapshot retains genuine funding and Native reader until settlement"
+  ],
+  "artifacts": "short"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️selected/🧪️tests/🟦️.ts": {
+  "mode": "plain",
+  "pass": 0,
+  "fails": [
+   "native selected maps match physical context and refuse incomplete compiler Source references"
+  ],
+  "artifacts": "short"
+ }
+}

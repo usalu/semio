@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:repository:workspace:cargo:declared-selection:v1",
+  "title": "Declared Cargo package selection corpus",
+  "description": "A physical workspace tree and the package selections that must be answered from the declaring workspace's literal members (declared) or deferred to the whole-repository inventory (deferred). / Ein physischer Workspace-Baum und die Paketauswahlen, die aus den wörtlichen Mitgliedern des deklarierenden Workspaces beantwortet (declared) oder dem gesamten Repository-Inventar überlassen (deferred) werden müssen.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "workspaces", "packages", "cases", "stale"],
+  "definitions": {
+    "Path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?![A-Za-z]:/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"},
+    "Name": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+    "Workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["directory", "members", "exclude", "memberManifests", "excludePatterns"],
+      "properties": {
+        "directory": {"type": "string", "description": "Workspace directory relative to the corpus root, `.` for the root. / Workspace-Verzeichnis relativ zur Korpuswurzel, `.` für die Wurzel."},
+        "members": {"type": "array", "items": {"$ref": "#/definitions/Path"}, "description": "The `[workspace].members` Cargo reads. / Die `[workspace].members`, die Cargo liest."},
+        "exclude": {"type": "array", "items": {"$ref": "#/definitions/Path"}},
+        "memberManifests": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Path"}},
+        "excludePatterns": {"type": "array", "items": {"$ref": "#/definitions/Path"}}
+      }
+    },
+    "Package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["directory", "name"],
+      "properties": {"directory": {"$ref": "#/definitions/Path"}, "name": {"$ref": "#/definitions/Name"}}
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "near", "names", "expect"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "near": {"$ref": "#/definitions/Path", "description": "Manifest whose workspace declares the candidates. / Manifest, dessen Workspace die Kandidaten deklariert."},
+        "names": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Name"}},
+        "expect": {"enum": ["declared", "deferred"]}
+      }
+    }
+  },
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "workspaces": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Workspace"}},
+    "packages": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Package"}},
+    "cases": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Case"}},
+    "stale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["remove", "near", "kept", "gone"],
+      "description": "A declared member whose directory disappears: its name defers, a sibling stays declared. / Ein deklariertes Mitglied, dessen Verzeichnis verschwindet: sein Name wird überlassen, ein Geschwister bleibt deklariert.",
+      "properties": {"remove": {"$ref": "#/definitions/Path"}, "near": {"$ref": "#/definitions/Path"}, "kept": {"$ref": "#/definitions/Name"}, "gone": {"$ref": "#/definitions/Name"}}
+    }
+  }
+}

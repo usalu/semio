@@ -1,0 +1,24 @@
+{
+  "$comment": "🧫️ Spellings of directories whose sameness the sandbox root guard decides. Expectations come from the Python reference (os.path.samefile for existing directories, os.path.realpath for missing ones) run by the ticket oracle; `folds-case` and `folds-normalization` hold only on file systems that fold case or Unicode normalisation (APFS, NTFS), and the test probes the file system it runs on.",
+  "schema": "semio.repo.workspace.same-directory-vectors/1",
+  "oracle": "python3 os.path.samefile + os.path.realpath",
+  "cases": [
+    { "name": "identical", "ops": [["mkdir", "repo"]], "a": "repo", "b": "repo", "same": true },
+    { "name": "trailing-separator", "ops": [["mkdir", "repo"]], "a": "repo", "b": "repo/", "same": true },
+    { "name": "dot-segments", "ops": [["mkdir", "repo/sub"]], "a": "repo", "b": "repo/./sub/..", "same": true },
+    { "name": "symlink", "ops": [["mkdir", "repo"], ["symlink", "link", "repo"]], "a": "repo", "b": "link", "same": true },
+    { "name": "symlink-chain", "ops": [["mkdir", "repo"], ["symlink", "first", "repo"], ["symlink", "second", "first"]], "a": "repo", "b": "second", "same": true },
+    { "name": "symlink-to-child", "ops": [["mkdir", "repo/child"], ["symlink", "link", "repo/child"]], "a": "repo", "b": "link", "same": false },
+    { "name": "nested-child", "ops": [["mkdir", "repo/child"]], "a": "repo", "b": "repo/child", "same": false },
+    { "name": "nested-child-with-marker", "ops": [["mkdir", "repo/child/.git"]], "a": "repo", "b": "repo/child", "same": false },
+    { "name": "parent", "ops": [["mkdir", "repo/child"]], "a": "repo/child", "b": "repo", "same": false },
+    { "name": "sibling-sharing-a-name-prefix", "ops": [["mkdir", "repo"], ["mkdir", "repo-sibling"]], "a": "repo", "b": "repo-sibling", "same": false },
+    { "name": "case-variant", "ops": [["mkdir", "Repo"]], "a": "Repo", "b": "rEPO", "same": "folds-case" },
+    { "name": "normalization-variant", "ops": [["mkdir", "café"]], "a": "café", "b": "café", "same": "folds-normalization" },
+    { "name": "missing-both-identical", "ops": [], "a": "gone", "b": "gone/", "same": true },
+    { "name": "missing-both-different", "ops": [], "a": "gone-a", "b": "gone-b", "same": false },
+    { "name": "missing-below-existing", "ops": [["mkdir", "repo"]], "a": "repo", "b": "repo/missing", "same": false },
+    { "name": "missing-below-symlink", "ops": [["mkdir", "repo"], ["symlink", "link", "repo"]], "a": "link/missing", "b": "repo/missing", "same": true },
+    { "name": "missing-below-different-symlinks", "ops": [["mkdir", "one"], ["mkdir", "two"], ["symlink", "link", "one"]], "a": "link/missing", "b": "two/missing", "same": false }
+  ]
+}

@@ -1,6 +1,7 @@
 import {join} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
 
 const policy=schema.definitions.Policy.const,slotPattern=new RegExp(policy.names.slotPattern),keyPattern=new RegExp(policy.names.keyPattern),day=86400000;
 /** 🔢️ The authored numbers of the session slots. */
@@ -24,7 +25,7 @@ export function planBazelServersV1(host:BazelServerHostV1,memory:BazelMemoryPoli
  const floor=Math.min(memory.floorMaximumMegabytes,Math.max(memory.floorMinimumMegabytes,Math.floor(host.memoryMegabytes*memory.floorBasisPoints/10000))),spare=Math.max(0,host.memoryMegabytes-floor),budget=Math.floor(spare*rules.servers.memoryShareBasisPoints/10000);
  const byMemory=Math.floor(budget/rules.servers.residentMegabytes),byCores=Math.floor(host.cores/rules.servers.coresPerServer),bounded=Math.min(byMemory,byCores,rules.servers.maximum),slots=Math.max(rules.servers.minimum,bounded);
  const limit:BazelServerPlanV1["limit"]=bounded<rules.servers.minimum?"floor":bounded===byMemory?"memory":bounded===byCores?"cores":"policy",overhead=rules.servers.residentMegabytes-rules.servers.heapMegabytes,heap=byMemory>=1?rules.servers.heapMegabytes:Math.max(rules.servers.minimumHeapMegabytes,Math.min(rules.servers.heapMegabytes,budget-overhead));
- const plan={slots,services:rules.servers.serviceMaximum,heapMegabytes:heap,residentMegabytes:heap+overhead,budgetMegabytes:budget,cpuPerServer:Math.max(1,Math.floor(host.cores/slots)),memoryPerServerMegabytes:Math.max(256,Math.floor((spare-budget)/slots)),limit};
+ const plan={slots,services:rules.servers.serviceMaximum,heapMegabytes:heap,residentMegabytes:heap+overhead,budgetMegabytes:budget,cpuPerServer:Math.max(1,Math.floor(host.cores/slots)),memoryPerServerMegabytes:Math.max(policy.limits.minimumMemoryPerServerMegabytes,Math.floor((spare-budget)/slots)),limit};
  if(validateJsonSchemaSubset(schema.definitions.ServerPlan,plan,schema).length)throw Error("Closed Bazel server plan required");return Object.freeze(plan);
 }
 
@@ -34,6 +35,8 @@ export function bazelNestedServersV1(plan:BazelServerPlanV1,nested:boolean,rules
  if(validateJsonSchemaSubset(schema.definitions.ServerPlan,widened,schema).length)throw Error("Closed Bazel server plan required");return Object.freeze(widened);
 }
 
+/** 🏗️ How many extra build slots the idle memory affords at once: one per authored margin, so a burst of sessions that all see the same headroom can never open more servers than the memory holds. */
+export function bazelGrowthAllowanceV1(spareMegabytes:number,rules:BazelSessionPolicyV1=policy):number{return Math.max(0,Math.floor(spareMegabytes/rules.servers.growthSpareMegabytes));}
 /** 🌱️ The extra build slots beyond the planned ones: a session opens one only while every planned slot is in use, the host admission reports idle memory for another server and the products image has room for another workspace and output base, so the slot count follows the live machine and its disk instead of a fixed budget. */
 export function bazelGrowthSlotIdsV1(plan:Pick<BazelServerPlanV1,"slots">,rules:BazelSessionPolicyV1=policy):readonly string[]{return Object.freeze(Array.from({length:Math.max(0,rules.servers.growthMaximum-plan.slots)},(_,index)=>"s"+(plan.slots+index)));}
 /** 🏷️ Names the slots of a plan: short ASCII ids that keep every output base far inside the path budgets of all platforms; `s0...` are build slots, `d0...` service slots for the long-running tasks that must not pin a build slot. */
@@ -44,14 +47,14 @@ export function requireBazelSlotV1(slot:string):string{if(!slotPattern.test(slot
 /** 🔐️ Admits only selection keys of the authored shape. */
 export function requireBazelKeyV1(key:string):string{if(!keyPattern.test(key))throw Error(`Bazel session key required: ${key}`);return key;}
 
-/** 📁️ Names the generated package of one selection inside one slot; two sessions never share it because a slot has one holder, and the same selection in two slots has two packages. */
+/** 📁️ Names the generated package of one slot: one stable path for every selection the slot serves, because a Bazel server is bound to the path of its package (a package at another path restarts the JVM and analyses from scratch, 28 s against 9.6 s for a replaced content and 1.3 s for an unchanged one on a 20,000 target package); the planner replaces the content in place. Two sessions never share it because a slot has one holder, and two slots have two packages. */
 export function bazelSessionWorkspaceV1(workspaces:string,slot:string,key:string):string{
- const path=join(workspaces,requireBazelSlotV1(slot),requireBazelKeyV1(key));if(path.length>256)throw Error("Bazel storage path exceeds 256 characters");return path;
+ requireBazelKeyV1(key);const path=join(workspaces,requireBazelSlotV1(slot),policy.names.stablePackage);if(path.length>policy.limits.pathUnits)throw Error("Bazel storage path exceeds "+policy.limits.pathUnits+" characters");return path;
 }
 
-/** 🥇️ Orders every slot by how well it serves a selection: the slot whose last selection it is (warm server, warm package), then slots that still keep its package, then slots never used, then the least recently used; ties go to the slot the agent session prefers (its preference modulo the slot count) and then keep the slot number order, so concurrent agents start on different slots. */
+/** 🥇️ Orders every slot by how well it serves a selection: the slot whose last selection it is (warm server, and the package and plan record it still holds), then slots never used, then the least recently used; a slot holds the package of its last selection only, so a slot that merely remembers the key in `keys` is an ordinary used slot and choosing it would evict the plan record of the selection it holds. Ties go to the slot the agent session prefers (its preference modulo the slot count) and then keep the slot number order, so concurrent agents start on different slots. */
 export function rankBazelSlotsV1(slots:readonly string[],states:Readonly<Record<string,BazelSlotStateV1|undefined>>,key:string,preference?:number):readonly string[]{
- const tier=(slot:string)=>{const state=states[slot];return state===undefined?2:state.key===key?0:state.keys.includes(key)?1:3;},index=(slot:string)=>preference===undefined?Number(slot.slice(1)):(slots.indexOf(slot)-preference%slots.length+slots.length)%slots.length,recency=(left:string,right:string)=>{const first=tier(left);return first<2?states[right]!.usedAt-states[left]!.usedAt:first===3?states[left]!.usedAt-states[right]!.usedAt:0;};
+ const tier=(slot:string)=>{const state=states[slot];return state===undefined?1:state.key===key?0:2;},index=(slot:string)=>preference===undefined?Number(slot.slice(1)):(slots.indexOf(slot)-preference%slots.length+slots.length)%slots.length,recency=(left:string,right:string)=>{const first=tier(left);return first===0?states[right]!.usedAt-states[left]!.usedAt:first===2?states[left]!.usedAt-states[right]!.usedAt:0;};
  return Object.freeze([...slots].sort((left,right)=>tier(left)-tier(right)||(tier(left)===tier(right)?recency(left,right):0)||index(left)-index(right)));
 }
 
@@ -69,6 +72,8 @@ export type BazelSlotPortV1=Readonly<{
  gate(signal:AbortSignal,kind:BazelSlotKindV1):Promise<()=>void>;
  queued(kind:BazelSlotKindV1):number;
  spare():Promise<number>;
+ /** 🧠️ The memory that is really free above the host floor (what the operating system reports, not what the capacity ledger has promised away): the reaper's measure of memory pressure. */
+ floorSpare():Promise<number>;
  imageFree?():Promise<number>;
  enqueue(kind:BazelSlotKindV1):BazelSlotWaiterV1;
  read(slot:string):Promise<BazelSlotStateV1|undefined>;
@@ -104,8 +109,9 @@ export async function acquireBazelSessionV1(port:BazelSlotPortV1,plan:Pick<Bazel
     const spare=await port.spare(),image=port.imageFree?await port.imageFree():Infinity;
     if(spare>=rules.servers.growthSpareMegabytes&&image<rules.servers.growthImageFreeBytes&&!imageReported){imageReported=true;await port.progress(bazelSessionMessageV1("growth-image",{free:Math.floor(image/1048576),need:Math.floor(rules.servers.growthImageFreeBytes/1048576),slot:growth[0]!},language));}
     if(spare>=rules.servers.growthSpareMegabytes&&image>=rules.servers.growthImageFreeBytes){
-     const extra:Record<string,BazelSlotStateV1|undefined>={};for(const slot of growth)extra[slot]=await port.read(slot);
-     for(const slot of rankBazelSlotsV1(growth,extra,request.key,request.preference)){
+     let busy=0;for(const slot of growth){const probe=await port.claim(slot,signal);if(probe===undefined)busy++;else probe();}
+     const extra:Record<string,BazelSlotStateV1|undefined>={},open=busy<bazelGrowthAllowanceV1(spare,rules);if(open)for(const slot of growth)extra[slot]=await port.read(slot);
+     for(const slot of open?rankBazelSlotsV1(growth,extra,request.key,request.preference):[]){
       const claimed=await port.claim(slot,signal);if(claimed===undefined)continue;
       let released=false,before:BazelSlotStateV1|undefined;
       try{before=await port.read(slot);const mode:BazelSessionV1["mode"]=before===undefined?"fresh":before.key===request.key?"warm":"switch";await port.progress(bazelSessionMessageV1("grown",{slot,spare:Math.floor(spare)},language));await port.progress(bazelSessionMessageV1("claimed",{slot,mode:bazelSessionMessageV1(mode,{},language)},language));
@@ -138,9 +144,9 @@ export async function withBazelSessionV1<T>(port:BazelSlotPortV1,plan:Pick<Bazel
  try{return await body(session);}catch(error){failed=true;throw error;}finally{try{await session.release();}catch(error){if(!failed)throw error;}}
 }
 
-/** 🚀️ The startup options one slot's server needs beyond the output base: idle exit and a heap bounded by the plan. */
-export function bazelSessionStartupV1(plan:Pick<BazelServerPlanV1,"heapMegabytes">,idleSeconds:number):readonly string[]{
- if(!Number.isSafeInteger(idleSeconds)||idleSeconds<1)throw Error("Positive Bazel server idle seconds required");return Object.freeze([`--max_idle_secs=${idleSeconds}`,`--host_jvm_args=-Xmx${plan.heapMegabytes}m`]);
+/** 🚀️ The startup options one slot's server needs beyond the output base: idle exit, a heap bounded by the plan and the authored JVM arguments that hand an idle server's heap back to the operating system. */
+export function bazelSessionStartupV1(plan:Pick<BazelServerPlanV1,"heapMegabytes">,idleSeconds:number,rules:BazelSessionPolicyV1=policy):readonly string[]{
+ if(!Number.isSafeInteger(idleSeconds)||idleSeconds<1)throw Error("Positive Bazel server idle seconds required");return Object.freeze([`--max_idle_secs=${idleSeconds}`,`--host_jvm_args=-Xmx${plan.heapMegabytes}m`,...rules.servers.jvmArguments.map(argument=>`--host_jvm_args=${argument}`)]);
 }
 
 /** 📦️ Decides what to collect: output bases and packages of slots beyond the current capacity, packages beyond the retained count or age (the newest and the slot's last package always stay), output bases idle beyond the authored age, leftover capture folders of the packages that stay, and every entry that is not a slot. Under pressure (free bytes below the soft threshold) it also takes the oldest unprotected packages (all but the newest of a slot and its remembered selection, none younger than the grace) and then the longest idle output bases until the target free space is reached; bytes that were not measured count as nothing, so an unmeasured inventory takes every candidate. A slot that a session holds is never touched. */
@@ -208,6 +214,15 @@ export function renderBazelSessionStatusV1(rows:readonly BazelSlotStatusV1[],lan
  return [bazelSessionMessageV1("status-header",{},language),...rows.map(row=>`${row.slot.padEnd(6)}${bazelSessionMessageV1(row.held?"status-held":"status-free",{},language).padEnd(8)}${(row.state?.key??"-").padEnd(18)}${row.state?new Date(row.state.usedAt).toISOString():"-"}`)].join("\n");
 }
 
+/** 🔭️ What the reaper knows of one slot: whether a server process lives in its output base, whether a session holds the slot (a held slot is demand even before its server starts) and when the slot was last used. */
+export type BazelServerRowV1=Readonly<{slot:string;live:boolean;held:boolean;usedAt:number}>;
+/** 🧹️ Decides which idle servers to stop so that held slots plus kept idle servers never exceed the budget: an idle server is a live server in a slot nobody holds; the most recently used ones stay while the budget has room (a warm server of a recent selection pays off, an old one does not), the rest are returned least recently used first. A host whose really free memory is below its floor (negative `floorSpareMegabytes`, never the ledger's headroom, which turns negative while grants ramp although gigabytes are free) keeps none, because every idle server then costs memory somebody else needs. */
+export function planBazelServerReapV1(rows:readonly BazelServerRowV1[],budget:number,floorSpareMegabytes?:number):readonly string[]{
+ if(!Number.isSafeInteger(budget)||budget<0)throw refuseBuildV1("invalid","bazel.server-budget-invalid");
+ const held=rows.filter(row=>row.held).length,idle=rows.filter(row=>row.live&&!row.held).sort((left,right)=>right.usedAt-left.usedAt||(left.slot<right.slot?-1:left.slot>right.slot?1:0)),keep=floorSpareMegabytes!==undefined&&floorSpareMegabytes<0?0:Math.max(0,budget-held);
+ return Object.freeze(idle.slice(keep).reverse().map(row=>row.slot));
+}
+
 /** 🗂️ Names the repository contents cache shared by every slot: beside the outputs on the same partition, so external repositories are fetched once and linked into each output base. */
 export function bazelRepositoryContentsV1(outputs:string):string{return join(outputs,"..","contents");}
 /** 🧰️ The command options that share what slots fetch: one repository contents cache for all output bases. */
@@ -218,6 +233,6 @@ export function bazelSessionResourcesV1(plan:Pick<BazelServerPlanV1,"cpuPerServe
 export function bazelServerOverrideV1(plan:BazelServerPlanV1,environment:Readonly<Record<string,string|undefined>>):BazelServerPlanV1{
  const read=(name:string):number|undefined=>{const raw=environment[name];if(raw===undefined||raw==="")return undefined;const value=Number(raw);if(!/^[0-9]{1,2}$/u.test(raw)||value<1)throw Error(`${name} must be an integer from 1 to 99`);return value;};
  const slots=read("SEMIO_BAZEL_SERVERS")??plan.slots,services=read("SEMIO_BAZEL_SERVICES")??plan.services;if(slots===plan.slots&&services===plan.services)return plan;
- const overridden={...plan,slots,services,cpuPerServer:Math.max(1,Math.floor(plan.cpuPerServer*plan.slots/slots)),memoryPerServerMegabytes:Math.max(256,Math.floor(plan.memoryPerServerMegabytes*plan.slots/slots))};
+ const overridden={...plan,slots,services,cpuPerServer:Math.max(1,Math.floor(plan.cpuPerServer*plan.slots/slots)),memoryPerServerMegabytes:Math.max(policy.limits.minimumMemoryPerServerMegabytes,Math.floor(plan.memoryPerServerMegabytes*plan.slots/slots))};
  if(validateJsonSchemaSubset(schema.definitions.ServerPlan,overridden,schema).length)throw Error("Closed Bazel server plan required");return Object.freeze(overridden);
 }

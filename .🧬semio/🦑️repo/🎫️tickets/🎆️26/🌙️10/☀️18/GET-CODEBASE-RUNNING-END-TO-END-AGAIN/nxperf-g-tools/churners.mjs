@@ -1,0 +1,11 @@
+import {pathToFileURL} from "node:url";
+import {statSync} from "node:fs";
+const lib=process.cwd()+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/";
+const m=await import(pathToFileURL(lib+"🟨️.mjs").href),e=await import(pathToFileURL(lib+"⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🟦️.ts").href);
+const minutes=Number(process.argv[2]??60),now=Date.now();
+const {keyed,unkeyed}=e.splitNxEngineFilesV1(m.nxBuildEngineClosureV1().files);
+const recent=f=>now-statSync(f).mtimeMs<minutes*60000;
+const short=p=>p.replace("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/","LIB/").replace("🧰️framework/🔨️modules/","FM/");
+const k=keyed.filter(recent),u=unkeyed.filter(recent);
+console.log(`last ${minutes} min: keyed changed ${k.length}/${keyed.length}, unkeyed changed ${u.length}/${unkeyed.length}`);
+for(const f of k.slice(0,40))console.log(Math.round((now-statSync(f).mtimeMs)/60000)+"m",short(f));

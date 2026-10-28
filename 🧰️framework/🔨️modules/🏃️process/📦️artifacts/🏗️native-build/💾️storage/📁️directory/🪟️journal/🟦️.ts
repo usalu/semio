@@ -13,6 +13,13 @@ const same=(row:NativeDirectoryIdentityV1|undefined,expected:NativeDirectoryIden
 export function nativeDirectorySwapIntentBytesV1(input:Intent):Buffer{if(validateJsonSchemaSubset(schema.definitions.SwapIntent,input,schema).length)throw Error("Closed directory swap intent required");const bytes=Buffer.from(JSON.stringify(input)+"\n");if(bytes.length>protocol.swap.maximumIntentBytes)throw Error("Bounded directory swap intent required");return bytes;}
 /** 📖️ Admits only canonical bounded intent bytes. */
 export function readNativeDirectorySwapIntentV1(bytes:Uint8Array):Intent{if(bytes.byteLength>protocol.swap.maximumIntentBytes)throw Error("Bounded directory swap intent required");const text=new TextDecoder("utf-8",{fatal:true}).decode(bytes),row=JSON.parse(text);if(validateJsonSchemaSubset(schema.definitions.SwapIntent,row,schema).length||nativeDirectorySwapIntentBytesV1(row).toString()!==text)throw Error("Canonical directory swap intent required");return row as Intent;}
+const pause=(milliseconds:number)=>{Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,milliseconds);};
+/** ⏳️ Retries the first rename of a swap while an antivirus scanner or indexer holds a handle (sharing violation or access denied), with a bounded linear backoff; nothing has moved yet, so a retry cannot tear the swap. */
+export function moveNativeDirectoryWithRetryV1(host:NativeWindowsHostPortV1,from:string,to:string,sleep:(milliseconds:number)=>void=pause):NativeWindowsResultV1{
+ const retry=protocol.swap.retry;let result=host.moveFile(from,to);
+ for(let attempt=1;attempt<retry.attempts&&!result.ok&&(result.error===errors.sharing||result.error===errors.accessDenied);attempt++){sleep(retry.backoffMilliseconds*attempt);result=host.moveFile(from,to);}
+ return result;
+}
 const refuseMove=(label:string,result:NativeWindowsResultV1)=>{if(result.ok)return;throw Error(protocol.refusals.windowsRename+" ("+label+", Win32 error "+result.error+")"+(result.error===errors.accessDenied||result.error===errors.sharing?": "+protocol.refusals.windowsOpenHandle:""));};
 
 /** 🪟️ Swaps two sibling directories with three durable write-through renames guarded by an intent receipt; only the lease holder may call it, so no reader exists while the name `m` is briefly absent. */
@@ -49,7 +56,7 @@ export function createNativeDirectoryJournaledPortV1(host:NativeWindowsHostPortV
    try{closeSync(descriptor);}catch(error){if(!failed){failed=true;failure=error;}}
    if(failed){try{unlinkSync(intent);}catch{}throw failure;}
    flushDirectory(directory);
-   const result=host.moveFile(first,temporary);if(!result.ok){removeIntent(directory);refuseMove("first to temporary",result);}
+   const result=moveNativeDirectoryWithRetryV1(host,first,temporary);if(!result.ok){removeIntent(directory);refuseMove("first to temporary",result);}
    const entering=host.moveFile(second,first);if(!entering.ok){const back=host.moveFile(temporary,first);if(!back.ok)throw new AggregateError([Error(protocol.refusals.windowsRename+" (second to first, Win32 error "+entering.error+")"),Error(protocol.refusals.windowsRename+" (rollback, Win32 error "+back.error+")")],protocol.refusals.interrupted);removeIntent(directory);refuseMove("second to first",entering);}
    forward(directory,record,first,second,temporary);
   },

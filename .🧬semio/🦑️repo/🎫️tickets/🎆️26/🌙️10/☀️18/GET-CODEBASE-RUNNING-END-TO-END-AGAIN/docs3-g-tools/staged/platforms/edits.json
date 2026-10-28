@@ -1,0 +1,25 @@
+{
+ "name": "platforms",
+ "code": "xplat4-g-tools/staged/platforms",
+ "lane": "xplat4-g",
+ "guide": "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md",
+ "baseSha256": "38412f96781d2985b7d09a375ced44a5318be8cea76592a588294d45f79b2a4c",
+ "edits": [
+  {
+   "id": "platforms-bullet",
+   "lang": "en",
+   "kind": "insert",
+   "anchor": "- Census (route-g, 10-26): of 353 build-library files 270 were green in official mode; the 83 others are classed (52 stale expectations, 16 birth or Nx gated, 7 real defects, 5 peer, 2 load); fixes for them are pending gate (route2-g).",
+   "where": "after",
+   "block": "- **Platform verdicts**: every suite of the three route tables (220: process 67, caching 102, build 51) has an explicit `platforms` verdict derived from evidence in its test files, with its reasons in `platformCauses` (six causes: `posix-program`, `posix-shell-script`, `python3-command`, `symlink`, `permission-bits`, `posix-process-control`; closed rules in `🗂️suites/🖥️platforms/🔣️.json`, an independent Python reading as the oracle). 147 suites are Windows-capable (process 54 of 67, caching 68 of 102, build 25 of 51), 73 are POSIX-only (darwin, linux). A POSIX-only suite on Windows prints `SKIPPED, not passed` (exit 0) and counts as skipped, never passed, and its project target is uncacheable (`live`) so a skip is never replayed as a pass. In `.github/workflows/build-system.yml` no row is advisory any more and the `suites` job has no `continue-on-error`: every Windows-capable suite blocks. After adding a suite or a platform-specific test re-derive the verdicts with `python3 -I .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/tag.py`. Eight suites that the CI policy already requires on Windows still carry unconditioned POSIX facts (`descriptor-lifetime`, `process-tree-termination`, `build-facets`, `native-storage`, `leases`, `cargo-unit-cache-processes`, `build-inputs-revision`, `build-bazel-execution`): the first Windows run decides whether they get gates or leave `mustRun`. The evidence is static; it cannot see path separators in expectations, CRLF, the 256-character limit or a missing tool."
+  },
+  {
+   "id": "platforms-bullet",
+   "lang": "de",
+   "kind": "insert",
+   "anchor": "- Zählung (route-g, 26.10.): von 353 Dateien der Build-Bibliothek waren 270 im offiziellen Modus grün; die 83 übrigen sind eingeordnet (52 veraltete Erwartungen, 16 geburts- oder Nx-gesteuert, 7 echte Defekte, 5 Peers, 2 Last); die Korrekturen warten auf das Tor (route2-g).",
+   "where": "after",
+   "block": "- **Plattform-Urteile**: jede Suite der drei Routing-Tabellen (220: process 67, caching 102, build 51) hat ein ausdrückliches `platforms`-Urteil, abgeleitet aus Belegen in ihren Testdateien, mit den Gründen in `platformCauses` (sechs Ursachen: `posix-program`, `posix-shell-script`, `python3-command`, `symlink`, `permission-bits`, `posix-process-control`; geschlossene Regeln in `🗂️suites/🖥️platforms/🔣️.json`, ein unabhängiges Python-Lesen als Orakel). 147 Suiten sind Windows-fähig (process 54 von 67, caching 68 von 102, build 25 von 51), 73 nur POSIX (darwin, linux). Eine reine POSIX-Suite gibt unter Windows `SKIPPED, not passed` aus (Exit 0) und zählt als übersprungen, nie als bestanden, und ihr Projekt-Target ist nicht cachebar (`live`), damit ein Überspringen nie als Bestehen wiedergegeben wird. In `.github/workflows/build-system.yml` ist keine Zeile mehr beratend und der Job `suites` hat kein `continue-on-error`: jede Windows-fähige Suite blockiert. Nach dem Hinzufügen einer Suite oder eines plattformspezifischen Tests die Urteile mit `python3 -I .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/xplat4-g-tools/staged/platforms/tag.py` neu ableiten. Acht Suiten, die die CI-Policy schon unter Windows verlangt, tragen noch unbedingte POSIX-Fakten (`descriptor-lifetime`, `process-tree-termination`, `build-facets`, `native-storage`, `leases`, `cargo-unit-cache-processes`, `build-inputs-revision`, `build-bazel-execution`): der erste Windows-Lauf entscheidet, ob sie Gates bekommen oder `mustRun` verlassen. Der Beleg ist statisch; er sieht keine Pfadtrenner in Erwartungen, CRLF, das 256-Zeichen-Limit oder ein fehlendes Werkzeug."
+  }
+ ]
+}

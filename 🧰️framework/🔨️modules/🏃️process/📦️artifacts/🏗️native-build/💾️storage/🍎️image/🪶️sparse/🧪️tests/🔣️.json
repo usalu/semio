@@ -1,0 +1,12 @@
+{
+  "initialAllocatedLimitBytes": 134217728,
+  "measured": [
+    {"imageBytes": 104857600, "backingBytes": 104898560, "volumeBytes": 104857600},
+    {"imageBytes": 536870912, "backingBytes": 536911872, "volumeBytes": 536870912},
+    {"imageBytes": 2147483648, "backingBytes": 2147524608, "volumeBytes": 2147483648},
+    {"imageBytes": 2148532224, "backingBytes": 2148573184, "volumeBytes": 2148532224},
+    {"imageBytes": 3221225472, "backingBytes": 3221266432, "volumeBytes": 3221225472},
+    {"imageBytes": 8589934592, "backingBytes": 8589975552, "volumeBytes": 8589934592},
+    {"imageBytes": 25769803776, "backingBytes": 25769844736, "volumeBytes": 25769803776}
+  ]
+}

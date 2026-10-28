@@ -528,7 +528,7 @@
     "texts": {
       "host": {
         "en": "No pinned native toolchain for the host {host}.",
-        "de": "Kein gepinntes natives Toolchain-Paket für den Host {host}."
+        "de": "Kein gepinntes natives Toolchain-Paket für den Rechner {host}."
       },
       "missing": {
         "en": "The pinned {tool} {version} is not provisioned; run `repo tools setup toolchains` (it downloads the checksum-pinned archive once).",

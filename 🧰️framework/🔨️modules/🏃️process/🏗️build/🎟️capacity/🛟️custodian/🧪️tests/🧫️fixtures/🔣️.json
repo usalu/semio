@@ -1,5 +1,6 @@
 {
   "parallelism": 1,
+  "idleDeadlineMilliseconds": 3000,
   "output": {
     "maximumBytes": 65536,
     "maximumLines": 128

@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Language Resolution",
+  "description": "The one protocol every runtime (TypeScript, Go, Rust, Python oracle) reads to choose the language of texts; no language is ever assumed. A command refuses without a choice, a notice is written in every offered language.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "flag", "argumentsEnd", "explicitVariable", "preferenceListVariable", "preferenceListSeparator", "environmentOrder", "subtagSeparators", "neutralTags", "withoutChoice", "osLocale", "refusal"],
+  "properties": {
+    "version": { "const": 1 },
+    "flag": { "description": "The command-line flag, as `--lang <value>` or `--lang=<value>`; the last one before `argumentsEnd` counts.", "type": "string", "pattern": "^--[a-z]+$" },
+    "argumentsEnd": { "description": "Arguments after this one belong to a child command and are never read.", "const": "--" },
+    "explicitVariable": { "description": "The variable that chooses the language explicitly; it must name an offered language.", "$ref": "#/definitions/Variable" },
+    "preferenceListVariable": { "description": "The GNU preference list; its first offered entry counts.", "$ref": "#/definitions/Variable" },
+    "preferenceListSeparator": { "type": "string", "minLength": 1, "maxLength": 1 },
+    "environmentOrder": { "description": "The POSIX locale variables; only the first non-empty one is read (LC_ALL=C overrides LANG).", "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/definitions/Variable" } },
+    "subtagSeparators": { "description": "Characters that end the language subtag of a locale or tag (`de_CH.UTF-8@euro`, `en-US`).", "type": "string", "pattern": "^[^a-zA-Z0-9]+$" },
+    "neutralTags": { "description": "Locales that name no language.", "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z]+$" } },
+    "withoutChoice": {
+      "description": "What happens when the arguments and the environment name no offered language: a command reads the operating system language list and refuses with every way to choose a language when that names none either; a notice (progress, warning, refusal text of a library) is written in every offered language and never reads the operating system, so one environment gives the same notice on every machine. A command exports its choice as `explicitVariable` to its children, so their notices speak its language.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commands", "notices"],
+      "properties": { "commands": { "const": "operatingSystemThenRefuse" }, "notices": { "const": "everyOffered" } }
+    },
+    "osLocale": {
+      "description": "The operating system language list, read last and by commands only.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["darwin", "win32"],
+      "properties": {
+        "darwin": { "type": "object", "additionalProperties": false, "required": ["command", "args", "timeoutMs", "pattern"], "properties": { "command": { "type": "string", "minLength": 1 }, "args": { "type": "array", "items": { "type": "string" } }, "timeoutMs": { "type": "integer", "minimum": 100 }, "pattern": { "description": "Its first capture group is one language tag of the command output.", "type": "string", "minLength": 1 } } },
+        "win32": { "type": "object", "additionalProperties": false, "required": ["userDefaultLocaleName"], "properties": { "userDefaultLocaleName": { "const": true } } }
+      }
+    },
+    "refusal": {
+      "description": "The refusal of a command, one line per offered language; `{choice}` lists the offered languages.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["none", "flag", "variable"],
+      "properties": { "none": { "$ref": "#/definitions/Bilingual" }, "flag": { "$ref": "#/definitions/Bilingual" }, "variable": { "$ref": "#/definitions/Bilingual" } }
+    }
+  },
+  "definitions": {
+    "Variable": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+    "Bilingual": { "type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": { "en": { "type": "string", "minLength": 1 }, "de": { "type": "string", "minLength": 1 } } }
+  }
+}

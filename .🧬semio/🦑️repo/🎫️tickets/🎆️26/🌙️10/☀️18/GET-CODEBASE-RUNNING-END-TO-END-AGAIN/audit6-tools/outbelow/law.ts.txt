@@ -1,0 +1,17 @@
+
+test("an output directory stays a watched name while a vouched fact reads an entry below it: replacing the whole directory by a rename (the journal names only the directory) is relevant, and the engine confirms the read entry changed while the listing holds",async()=>{
+ const root=realpathSync(mkdtempSync(join(tmpdir(),"memo-out-"))),insensitive=process.platform==="darwin"||process.platform==="win32";
+ try{
+  const store=join(root,"out/.🧾️store");mkdirSync(store,{recursive:true});writeFileSync(join(store,"build.json"),"{\"v\":1}\n");
+  const captured=await observation.captureObservedSourceInputsV1(()=>{observation.observedFs.readdirSync(store);observation.observedFs.readFileSync(join(store,"build.json"),"utf8");},undefined,false),rows=captured.observations as unknown as MemoRowV1[];
+  const built=await buildGraphMemoRelevanceV1({root,rows:()=>rows,frontier:{directories:[],members:[]},excluded:()=>false,isLink:async()=>false});
+  expect(built.unsealable).toBeNull();
+  const relevance=unpackMemoRelevanceV1(packMemoRelevanceV1(built.directories,insensitive,built.strict,built.stamped))!;
+  mkdirSync(join(root,"out/next"));writeFileSync(join(root,"out/next/build.json"),"{\"v\":2}\n");rmSync(store,{recursive:true});renameSync(join(root,"out/next"),store);
+  const journal:ChangeRowV1[]=[["a",1,"out/next"],["a",0,"out/next/build.json"],["r",1,"out/.🧾️store"],["n",1,"out/next"],["n",1,"out/.🧾️store"]];
+  expect(await observation.observationsHold(rows.filter(row=>row.kind!=="file") as never,64,new Set(),true),"the listing alone still holds").toBe(true);
+  expect(await observation.observationsHold(rows as never,64,new Set(),true),"the entry the fact read changed").toBe(false);
+  expect(relevance.holds("out/.🧾️store"),"the output directory is a name a change must not touch while an entry below it is read").toBe(true);
+  expect(classifyMemoChangesV1(relevance,journal).changed?.[2],"the rename over the output directory is relevant").toBe("out/.🧾️store");
+ }finally{rmSync(root,{recursive:true,force:true});}
+});

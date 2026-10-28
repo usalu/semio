@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": {
+  "file": "f01.ts",
+  "base": "0ccd4fc71f8361b89c234e1b20ee27e9e4147729d2b0e0f60df200acaae718bd",
+  "new": "9d555c635b0459ae5809dd5197011d7f7e80b543c00fde5bbb158fe1f19e1b5d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🟦️.ts": {
+  "file": "f02.ts",
+  "base": "2505627060871ac7ba0bb801a31a2b1ba28178c10ddd6d9f0d7a73af0cf9b4e1",
+  "new": "a92aa4670cced458c37f61e2f76d5c73f38815a17d2a61ee4c7890fe18dd9eb2"
+ }
+}

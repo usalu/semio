@@ -60,7 +60,7 @@
   "hostRequirements": {
     "cpus": 4,
     "memory": "8gb",
-    "storage": "128gb"
+    "storage": "200gb"
   },
   "forwardPorts": [
     8787,

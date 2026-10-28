@@ -1,0 +1,823 @@
+{
+ "version": 1,
+ "engines": [
+  "ws",
+  "parity",
+  "input"
+ ],
+ "rows": [
+  {
+   "pattern": "*.ts",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a.ts",
+    ".ts",
+    "x.y.ts"
+   ],
+   "rejects": [
+    "a/b.ts",
+    "a.tsx",
+    "ts",
+    "a.ts/b"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "a/*.ts",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a/b.ts",
+    "a/.ts"
+   ],
+   "rejects": [
+    "a/b/c.ts",
+    "b/b.ts",
+    "a.ts",
+    "xa/b.ts"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "a/**",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a/b",
+    "a/b/c",
+    "a/.x/y"
+   ],
+   "rejects": [
+    "a",
+    "b/a/c",
+    "ab/c"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "a/**/b",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a/b",
+    "a/x/b",
+    "a/x/y/b",
+    "a/.x/b"
+   ],
+   "rejects": [
+    "a/bb",
+    "a/b/c",
+    "ab",
+    "b",
+    "x/a/b"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "**/b",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "b",
+    "x/b",
+    "x/y/b",
+    ".x/b"
+   ],
+   "rejects": [
+    "bb",
+    "b/c",
+    "xb",
+    "x/bb"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "**",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a",
+    "a/b/c",
+    ".x",
+    "é/ü"
+   ],
+   "rejects": [],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "**/*.ts",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a.ts",
+    "x/a.ts",
+    "x/y/a.ts",
+    "x/.ts"
+   ],
+   "rejects": [
+    "a.tsx",
+    "x/a.js",
+    "a.ts/b"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "*",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a",
+    ".x",
+    "é"
+   ],
+   "rejects": [
+    "a/b"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "*/x",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a/x",
+    ".h/x"
+   ],
+   "rejects": [
+    "x",
+    "a/b/x",
+    "a/xx"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "a/*/b",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a/x/b"
+   ],
+   "rejects": [
+    "a/b",
+    "a/x/y/b"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": ".x/*",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    ".x/y",
+    ".x/.y"
+   ],
+   "rejects": [
+    ".x/y/z",
+    "x/y",
+    ".x"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "a/b",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a/b"
+   ],
+   "rejects": [
+    "a/b/c",
+    "x/a/b",
+    "a/bb",
+    "a",
+    "A/b"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "a.b+c",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a.b+c"
+   ],
+   "rejects": [
+    "aXb+c",
+    "a.bbc",
+    "a.b+cc",
+    "a.bc"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "(a)",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "(a)"
+   ],
+   "rejects": [
+    "a"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "a|b",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a|b"
+   ],
+   "rejects": [
+    "a",
+    "b"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "$x",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "$x"
+   ],
+   "rejects": [
+    "x",
+    ""
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "^a$",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "^a$"
+   ],
+   "rejects": [
+    "a"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "é/*.ts",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "é/a.ts"
+   ],
+   "rejects": [
+    "e/a.ts",
+    "é/a/b.ts"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "📜️script.ts",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "📜️script.ts"
+   ],
+   "rejects": [
+    "📜script.ts",
+    "x/📜️script.ts"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "**/📜️script.ts",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "📜️script.ts",
+    "p/📜️script.ts",
+    "p/q/📜️script.ts"
+   ],
+   "rejects": [
+    "📜script.ts",
+    "p/📜️script.tsx"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "a/**",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a/b\nc",
+    "a/b/c\nd"
+   ],
+   "rejects": [
+    "a\nb/c"
+   ],
+   "minimatch": "agrees",
+   "note": "a path with a line break is still a path"
+  },
+  {
+   "pattern": "*",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a\nb",
+    "\n"
+   ],
+   "rejects": [
+    "a\n/b"
+   ],
+   "minimatch": "agrees",
+   "note": "a path with a line break is still a path"
+  },
+  {
+   "pattern": "a?b",
+   "engines": [
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "aXb",
+    "a?b",
+    "aéb",
+    "a.b"
+   ],
+   "rejects": [
+    "ab",
+    "a/b",
+    "aXXb"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "a?b",
+   "engines": [
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a😀b"
+   ],
+   "rejects": [
+    "a😀😀b"
+   ],
+   "minimatch": "differs",
+   "note": "a question mark stands for one code point"
+  },
+  {
+   "pattern": "a?b",
+   "engines": [
+    "ws"
+   ],
+   "matches": [
+    "a?b"
+   ],
+   "rejects": [
+    "aXb",
+    "a.b"
+   ],
+   "minimatch": "differs",
+   "note": "the workspace unit compiler has no question mark wildcard"
+  },
+  {
+   "pattern": "a/?",
+   "engines": [
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a/b"
+   ],
+   "rejects": [
+    "a",
+    "a/",
+    "a/bc",
+    "a/b/c"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "{a,b}/c",
+   "engines": [
+    "input"
+   ],
+   "matches": [
+    "a/c",
+    "b/c"
+   ],
+   "rejects": [
+    "c/c",
+    "a/b/c",
+    "{a,b}/c",
+    "ab/c"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "{a,b}/c",
+   "engines": [
+    "ws",
+    "parity"
+   ],
+   "matches": [
+    "{a,b}/c"
+   ],
+   "rejects": [
+    "a/c",
+    "b/c"
+   ],
+   "minimatch": "differs",
+   "note": "only the input compiler expands braces"
+  },
+  {
+   "pattern": "x{a,b}y{c,d}z",
+   "engines": [
+    "input"
+   ],
+   "matches": [
+    "xaycz",
+    "xaydz",
+    "xbycz",
+    "xbydz"
+   ],
+   "rejects": [
+    "xyz",
+    "xabycz",
+    "xay,cz"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "{a,{b,c}}/x",
+   "engines": [
+    "input"
+   ],
+   "matches": [
+    "a/x",
+    "b/x",
+    "c/x"
+   ],
+   "rejects": [
+    "d/x",
+    "{b,c}/x",
+    "a,b/x"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "a,b",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a,b"
+   ],
+   "rejects": [
+    "a",
+    "b"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "a}",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a}"
+   ],
+   "rejects": [
+    "a"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "{a}",
+   "engines": [
+    "input"
+   ],
+   "matches": [
+    "a"
+   ],
+   "rejects": [
+    "{a}",
+    ""
+   ],
+   "minimatch": "differs",
+   "note": "a single member group is a group"
+  },
+  {
+   "pattern": "x{}",
+   "engines": [
+    "input"
+   ],
+   "matches": [
+    "x"
+   ],
+   "rejects": [
+    "x{}"
+   ],
+   "minimatch": "differs",
+   "note": "an empty brace group selects nothing extra"
+  },
+  {
+   "pattern": "{a,b}",
+   "engines": [
+    "input"
+   ],
+   "matches": [
+    "a",
+    "b"
+   ],
+   "rejects": [
+    "ab",
+    "a,b"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "a/{b,c}.ts",
+   "engines": [
+    "input"
+   ],
+   "matches": [
+    "a/b.ts",
+    "a/c.ts"
+   ],
+   "rejects": [
+    "a/d.ts",
+    "a/b/c.ts",
+    "a/b,c.ts"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "a/[bc].ts",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a/[bc].ts"
+   ],
+   "rejects": [
+    "a/b.ts",
+    "a/c.ts"
+   ],
+   "minimatch": "differs",
+   "note": "character classes are literal"
+  },
+  {
+   "pattern": "a\\b",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a\\b"
+   ],
+   "rejects": [
+    "ab",
+    "a/b"
+   ],
+   "minimatch": "differs",
+   "note": "a backslash is literal, not an escape"
+  },
+  {
+   "pattern": "a**b",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "ab",
+    "a/b",
+    "axxb",
+    "a/x/b"
+   ],
+   "rejects": [
+    "a",
+    "b",
+    "ba"
+   ],
+   "minimatch": "differs",
+   "note": "a double star inside a segment still crosses directories"
+  },
+  {
+   "pattern": "a/b**",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a/b",
+    "a/bc",
+    "a/b/c"
+   ],
+   "rejects": [
+    "a/",
+    "b",
+    "a"
+   ],
+   "minimatch": "differs",
+   "note": "a double star inside a segment still crosses directories"
+  },
+  {
+   "pattern": "***",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a",
+    "a/b",
+    ""
+   ],
+   "rejects": [],
+   "minimatch": "differs",
+   "note": "three stars are a double star and a star"
+  },
+  {
+   "pattern": "**/**",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a",
+    "a/b/c"
+   ],
+   "rejects": [],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "a/**/**/b",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a/b",
+    "a/x/b",
+    "a/x/y/b"
+   ],
+   "rejects": [
+    "a/bb",
+    "a/x/c"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "**/",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a/",
+    "a/b/"
+   ],
+   "rejects": [
+    "a",
+    "a/b"
+   ],
+   "minimatch": "agrees"
+  },
+  {
+   "pattern": "a//b",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "a//b"
+   ],
+   "rejects": [
+    "a/b"
+   ],
+   "minimatch": "differs",
+   "note": "no path normalisation"
+  },
+  {
+   "pattern": "./a",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    "./a"
+   ],
+   "rejects": [
+    "a"
+   ],
+   "minimatch": "agrees",
+   "note": "no path normalisation"
+  },
+  {
+   "pattern": "",
+   "engines": [
+    "ws",
+    "parity",
+    "input"
+   ],
+   "matches": [
+    ""
+   ],
+   "rejects": [
+    "a"
+   ],
+   "minimatch": "agrees"
+  }
+ ],
+ "errors": [
+  {
+   "pattern": "{a,b",
+   "engine": "input",
+   "name": "an unterminated brace group is refused by the expression compiler"
+  },
+  {
+   "pattern": "a,{b",
+   "engine": "input",
+   "name": "an unterminated brace group after a comma is refused"
+  }
+ ]
+}

@@ -29,19 +29,17 @@ test("the binaries resolve from the environment, else from the cache by build mo
  withEnv({REPO_CLI_BIN:"   ",REPO_MCP_BIN:""},()=>{expect(resolveCliBin(root,"release")).toBe(join(directory,"release","repo","repo"+(process.platform==="win32"?".exe":"")));});
 });
 test("the library root is the neighbouring packages directory",()=>{expect(getLibRoot().endsWith("\u{1F4E6}\ufe0fpackages")).toBe(true);});
-for(const[name,spec]of Object.entries(corpus.fake))test("graphql through the CLI: "+name,()=>{
- if(process.platform==="win32")return;
+for(const[name,spec]of Object.entries(corpus.fake))test.skipIf(process.platform==="win32")("graphql through the CLI: "+name,()=>{
  const root=scratch(),bin=executable(root,spec as never);
  withEnv({REPO_CLI_BIN:bin},()=>{const run=()=>runCliGraphql("query { x }",{v:1},{repoRoot:root,cwd:root});const row=spec as {expected?:unknown;message?:string};if(row.message!==undefined)expect(run).toThrow(row.message);else expect(run()).toEqual(row.expected);});
 });
-test("the query, variables and repository are passed as arguments",()=>{
- if(process.platform==="win32")return;
+test.skipIf(process.platform==="win32")("the query, variables and repository are passed as arguments",()=>{
  const root=scratch(),path=join(root,"echo-repo");writeFileSync(path,"#!/usr/bin/env node\nconsole.log(JSON.stringify({data:{argv:process.argv.slice(2),cwd:process.cwd()}}));\n");chmodSync(path,0o755);
  withEnv({REPO_CLI_BIN:path},()=>{const data=runCliGraphql("query Q { y }",{a:1},{repoRoot:root,cwd:root}) as {argv:string[];cwd:string};expect(data.argv).toEqual(["--repo",root,"--json","graphql","--query","query Q { y }","-v",'{"a":1}']);expect(realpathSync(data.cwd)).toBe(root);});
 });
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
- if(!python)return;
+ if(!python)throw Error("Independent Python oracle required");
  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

@@ -1,0 +1,62 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json": {
+  "file": "f000",
+  "base": "2c9a92e5f6b3f93b4bb90bcb43bbfbe2db66527195427cb8c0f1f9ab21e88175",
+  "new": "509be476ee31142bcd746f5c9f148a1e5c535780ccbb74b40e0696423e3bf717"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/📈️standing/⚖️priority/🟦️.ts": {
+  "file": "f001",
+  "base": null,
+  "new": "1d93c9e021f1d5802cc29ef1c2f9db7187ca4872cbf545c6e77b12012b349c04"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/📋️status/🟦️.ts": {
+  "file": "f002",
+  "base": null,
+  "new": "70ee7ffdd8a71896904a3a3038479b3e17bb2158a42e0e0df48e9e2cce695fcf"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🧬️schema/🔣️json/🟦️.ts": {
+  "file": "f003",
+  "base": null,
+  "new": "b2df8aca6cb4785a0c2419bc0175b1f7e089a33fc17744808fff6ba6d2de4eba"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts": {
+  "file": "f004",
+  "base": "80f126f6abf031ae81351a4c3a7455213dfb65030fbb8f2a4e4adf4b37b5cfde",
+  "new": "adaf03d7e6b96f13b1c4f3e92cc58d24da312963867b2439bff7ad35b5f784b9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🟦️.ts": {
+  "file": "f005",
+  "base": "398bc8c3dc88c2b71d0b462ad18c603aae1980da9cd37ea694dfc899713ae376",
+  "new": "10ea31e4da7a8f7baf68347ae49e592edd60168b8b56c38722a85e86eb832a37"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🎛️control/🟦️.ts": {
+  "file": "f006",
+  "base": null,
+  "new": "6305d569b5669dd8a7da75667c8e7a9a23961075f053ee72678262b6360fe7cc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/⌨️command/🟦️.ts": {
+  "file": "f007",
+  "base": "741c6bcdec15c7cabc85797b938bee9f2492fcf1369670586661495fe280e0ba",
+  "new": "1b69fb558efa409a17a8fa55b4a1bdbc5310c58cad9bcf4924aba1fb6cc4038f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔒️leases/⌨️command/🟦️.ts": {
+  "file": "f008",
+  "base": "7ef98b769531130b0c8d80964770f5d0cd1e6624e5f02c8004f97f7415f507b3",
+  "new": "e84d6efc26dc038a239b2bd590379d7c0119912b9d5277c771a46bb503aff272"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🔎️probes/🎫️capacity/🟦️.ts": {
+  "file": "f009",
+  "base": "893bacaf6f7c16fe10aa58d7ac1b0b0a1bcbcf40e79eb365338bec54aeecedb1",
+  "new": "b62586e8cf830ac72cde500bd226dc3f7dc642b647302d64c14b3ffbc843c4f6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts": {
+  "file": "f010",
+  "base": "791a71e694ef441d4d1bd2b89cd04538d256e097dadbf9a2d594b005c0806fd7",
+  "new": "393b734fbb83d91474a89c208c8f082ec1778264b5c58b785d2dd92a4ea32484"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🧪️tests/🚦️startup/🔣️.json": {
+  "file": "f011",
+  "base": "083e17dab0c0da7cbe229a804cab8c40f457e04eb6e8bb6afa9860052de0da61",
+  "new": "9c63afc549aeba10ef1ba9da38a139feca6bd0c7921ad8357efd6893dc70fd4c"
+ }
+}

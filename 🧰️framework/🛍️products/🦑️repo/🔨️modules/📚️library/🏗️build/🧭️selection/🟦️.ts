@@ -77,6 +77,14 @@ export function affectedBuildProjectsV1(graph:BuildGraphV1,files:readonly string
   return [...affected].sort();
 }
 
+/** 🚧️ The error of a task that names no project or target: a project the graph withholds says why (the source that does not parse, or the projects it waits for) in the language of the caller instead of claiming that the task does not exist. */
+export async function unknownBuildTaskV1(graph:BuildGraphV1,project:string,task:string):Promise<Error> {
+  const withheld=graph.unavailable?.find(row=>row.project===project);
+  if(!withheld)return Error(`Unknown build task: ${task}`);
+  const{describeUnavailableProjectV1}=await import("../🕸️graph/🕰️generations/🔌️load/🟨️.mjs"),{resolveLanguageV1}=await import("../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts"),{CATALOG_LANGUAGES_V1}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts");
+  return Error(describeUnavailableProjectV1(withheld as never,resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language));
+}
+
 /** 🧮️ Resolves portable execution selections and forwards literal task arguments. */
 export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:readonly string[],invocation:ScriptInvocation,affectedProjects:(files:readonly string[])=>Promise<readonly string[]>|readonly string[]=files=>affectedBuildProjectsV1(graph,files)):Promise<{tasks:string[];args:string[];parallel?:number;workers?:boolean;skipCache:boolean;skipRemoteCache:boolean;excludeDependencies:boolean;bail:boolean;verbose:boolean;outputStyle?:"stream"|"stream-without-prefixes"|"static"}> {
   checkScriptInvocation(invocation);
@@ -88,7 +96,7 @@ export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:rea
     const parts=head[1]?.split(":")??[];
     if(parts.length<2||parts.length>3||parts.some(part=>!part))throw Error("Expected repo run project:target[:configuration]");
     const project=graph.projects[parts[0]!];
-    if(!project||!project.targets[parts[1]!])throw Error(`Unknown build task: ${head[1]}`);
+    if(!project||!project.targets[parts[1]!])throw await unknownBuildTaskV1(graph,parts[0]!,head[1]!);
     if(configuration&&parts[2]&&parts[2]!==configuration)throw Error("Conflicting task configurations");
     const mode=parts[2]??configuration??(process.env.SEMIO_BUILD_MODE&&project.targets[parts[1]!]!.configurations?.[process.env.SEMIO_BUILD_MODE]?process.env.SEMIO_BUILD_MODE:undefined);
     tasks=[parts.slice(0,2).join(":")+(mode?":"+mode:"")];
