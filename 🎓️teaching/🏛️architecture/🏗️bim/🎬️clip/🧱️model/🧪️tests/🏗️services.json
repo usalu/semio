@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "source": "CSIC2022-Annex1-registered-r17",
+  "uncertainty_m": 0.04,
+  "hoist": {
+    "outer": [
+      [
+        10.768392,
+        10.814626
+      ],
+      [
+        12.373297,
+        10.814626
+      ],
+      [
+        12.373297,
+        12.882653
+      ],
+      [
+        10.768392,
+        12.882653
+      ]
+    ],
+    "clear": [
+      [
+        11.156676,
+        11.305782
+      ],
+      [
+        11.959128,
+        11.305782
+      ],
+      [
+        11.959128,
+        12.391497
+      ],
+      [
+        11.156676,
+        12.391497
+      ]
+    ],
+    "host": "SL-GROUND-CELLAR",
+    "opening": "OP-HOIST-HATCH",
+    "passage": "OP-HOIST-CELLAR",
+    "assembly": "CELLAR-HOIST-PIT",
+    "cover": "COVER-HOIST",
+    "jib": "HOIST-JIB"
+  },
+  "coal": {
+    "outer": [
+      [
+        2.485014,
+        15.519388
+      ],
+      [
+        4.866485,
+        15.519388
+      ],
+      [
+        4.866485,
+        16.372449
+      ],
+      [
+        2.485014,
+        16.372449
+      ]
+    ],
+    "clear": [
+      [
+        2.666213,
+        15.67449
+      ],
+      [
+        4.659401,
+        15.67449
+      ],
+      [
+        4.659401,
+        16.217347
+      ],
+      [
+        2.666213,
+        16.217347
+      ]
+    ],
+    "terminal_pixels": [
+      709,
+      782,
+      727,
+      806
+    ],
+    "terminal": [
+      [
+        2.56267,
+        15.648639
+      ],
+      [
+        3.02861,
+        15.648639
+      ],
+      [
+        3.02861,
+        16.269048
+      ],
+      [
+        2.56267,
+        16.269048
+      ]
+    ],
+    "host": "SL-GROUND-CELLAR",
+    "opening": "OP-COAL-HATCH",
+    "passage": "OP-COAL-CELLAR",
+    "assembly": "CELLAR-COAL-CHUTE",
+    "cover": "COVER-COAL",
+    "floor_inner": -2.42,
+    "floor_outer": -0.5
+  },
+  "new_tags": [
+    "CELLAR-HOIST-PIT",
+    "CELLAR-COAL-CHUTE",
+    "OP-HOIST-HATCH",
+    "OP-COAL-HATCH",
+    "OP-HOIST-CELLAR",
+    "OP-COAL-CELLAR",
+    "COVER-HOIST",
+    "COVER-COAL",
+    "HOIST-JIB"
+  ]
+}

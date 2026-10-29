@@ -1,0 +1,4254 @@
+{
+ "version": 1,
+ "file": "Nakagin.xlsx",
+ "names": {
+  "theta_i": "Climate!$B$2",
+  "theta_e": "Climate!$B$3",
+  "theta_base": "Climate!$B$4",
+  "heating_degree_days": "Climate!$B$5",
+  "attached_factor": "Climate!$B$6",
+  "air_change": "Climate!$B$7",
+  "air_heat_capacity": "Climate!$B$8",
+  "u_roof": "Energy!$B$11",
+  "u_floor": "Energy!$B$12",
+  "u_wall": "Energy!$B$13",
+  "u_window": "Energy!$B$14"
+ },
+ "sheets": [
+  {
+   "name": "Program",
+   "title": {
+    "en": "Program",
+    "de": "Programm"
+   },
+   "widths": {
+    "A": 26,
+    "B": 17,
+    "C": 17,
+    "D": 12,
+    "E": 12,
+    "F": 17,
+    "H": 12,
+    "I": 8,
+    "J": 10,
+    "K": 9,
+    "L": 6,
+    "M": 10,
+    "N": 17
+   },
+   "cells": {
+    "A1": {
+     "text": {
+      "en": "Capsule program",
+      "de": "Kapselprogramm"
+     }
+    },
+    "A3": {
+     "text": {
+      "en": "Type",
+      "de": "Typ"
+     }
+    },
+    "B3": {
+     "text": {
+      "en": "Count",
+      "de": "Anzahl"
+     }
+    },
+    "C3": {
+     "text": {
+      "en": "Area",
+      "de": "Nettogrundfläche"
+     }
+    },
+    "D3": {
+     "text": {
+      "en": "Total",
+      "de": "Gesamt"
+     }
+    },
+    "E3": {
+     "text": {
+      "en": "Volume",
+      "de": "Volumen"
+     }
+    },
+    "F3": {
+     "text": {
+      "en": "Share",
+      "de": "Anteil"
+     }
+    },
+    "A10": {
+     "text": {
+      "en": "Tower",
+      "de": "Turm"
+     }
+    },
+    "F10": {
+     "text": {
+      "en": "Net area",
+      "de": "Nettogrundfläche"
+     }
+    },
+    "A14": {
+     "text": {
+      "en": "Look-up",
+      "de": "Nachschlagen"
+     }
+    },
+    "B14": {
+     "text": {
+      "en": "Net area",
+      "de": "Nettogrundfläche"
+     }
+    },
+    "C14": {
+     "text": {
+      "en": "Capsules",
+      "de": "Kapseln"
+     }
+    },
+    "A15": {
+     "text": {
+      "en": "Type C",
+      "de": "Typ C"
+     }
+    },
+    "B15": {
+     "formula": "=XLOOKUP(A15,$A$4:$A$7,$C$4:$C$7)",
+     "format": "0.0 \"m²\""
+    },
+    "C15": {
+     "formula": "=XLOOKUP(A15,$A$4:$A$7,$B$4:$B$7)",
+     "format": "0"
+    },
+    "A9": {
+     "text": {
+      "en": "Sum m²",
+      "de": "Summe m²"
+     }
+    },
+    "B9": {
+     "formula": "=SUMPRODUCT(B4:B7,C4:C7)",
+     "format": "#,##0.0 \"m²\""
+    },
+    "A16": {
+     "text": {
+      "en": "Total area",
+      "de": "Gesamte Nettogrundfläche"
+     }
+    },
+    "B16": {
+     "formula": "=B9",
+     "format": "#,##0.0 \"m²\""
+    },
+    "A17": {
+     "text": {
+      "en": "Building",
+      "de": "Gebäude"
+     }
+    },
+    "B17": {
+     "value": 140,
+     "format": "0"
+    },
+    "A18": {
+     "text": {
+      "en": "Check",
+      "de": "Prüfung"
+     }
+    },
+    "B18": {
+     "formula": "=AND(B8=ROWS(Capsules[Type]),B8=B17)"
+    },
+    "A4": {
+     "text": {
+      "en": "Type A",
+      "de": "Typ A"
+     }
+    },
+    "B4": {
+     "formula": "=COUNTIF(Capsules[Type],A4)",
+     "format": "0"
+    },
+    "C4": {
+     "formula": "='Type A'!B9",
+     "format": "0.0 \"m²\""
+    },
+    "D4": {
+     "formula": "=B4*C4",
+     "format": "0.0 \"m²\""
+    },
+    "E4": {
+     "formula": "=B4*'Type A'!B10",
+     "format": "0.0 \"m³\""
+    },
+    "F4": {
+     "formula": "=D4/$D$8",
+     "format": "0.0%"
+    },
+    "B10": {
+     "text": {
+      "en": "Type A",
+      "de": "Typ A"
+     }
+    },
+    "A5": {
+     "text": {
+      "en": "Type B",
+      "de": "Typ B"
+     }
+    },
+    "B5": {
+     "formula": "=COUNTIF(Capsules[Type],A5)",
+     "format": "0"
+    },
+    "C5": {
+     "formula": "='Type B'!B9",
+     "format": "0.0 \"m²\""
+    },
+    "D5": {
+     "formula": "=B5*C5",
+     "format": "0.0 \"m²\""
+    },
+    "E5": {
+     "formula": "=B5*'Type B'!B10",
+     "format": "0.0 \"m³\""
+    },
+    "F5": {
+     "formula": "=D5/$D$8",
+     "format": "0.0%"
+    },
+    "C10": {
+     "text": {
+      "en": "Type B",
+      "de": "Typ B"
+     }
+    },
+    "A6": {
+     "text": {
+      "en": "Type C",
+      "de": "Typ C"
+     }
+    },
+    "B6": {
+     "formula": "=COUNTIF(Capsules[Type],A6)",
+     "format": "0"
+    },
+    "C6": {
+     "formula": "='Type C'!B9",
+     "format": "0.0 \"m²\""
+    },
+    "D6": {
+     "formula": "=B6*C6",
+     "format": "0.0 \"m²\""
+    },
+    "E6": {
+     "formula": "=B6*'Type C'!B10",
+     "format": "0.0 \"m³\""
+    },
+    "F6": {
+     "formula": "=D6/$D$8",
+     "format": "0.0%"
+    },
+    "D10": {
+     "text": {
+      "en": "Type C",
+      "de": "Typ C"
+     }
+    },
+    "A7": {
+     "text": {
+      "en": "Type D",
+      "de": "Typ D"
+     }
+    },
+    "B7": {
+     "formula": "=COUNTIF(Capsules[Type],A7)",
+     "format": "0"
+    },
+    "C7": {
+     "formula": "='Type D'!B9",
+     "format": "0.0 \"m²\""
+    },
+    "D7": {
+     "formula": "=B7*C7",
+     "format": "0.0 \"m²\""
+    },
+    "E7": {
+     "formula": "=B7*'Type D'!B10",
+     "format": "0.0 \"m³\""
+    },
+    "F7": {
+     "formula": "=D7/$D$8",
+     "format": "0.0%"
+    },
+    "E10": {
+     "text": {
+      "en": "Type D",
+      "de": "Typ D"
+     }
+    },
+    "A8": {
+     "text": {
+      "en": "Total",
+      "de": "Summe"
+     }
+    },
+    "B8": {
+     "formula": "=SUM(B4:B7)",
+     "format": "0"
+    },
+    "C8": {
+     "formula": "=D8/B8",
+     "format": "0.0 \"m²\""
+    },
+    "D8": {
+     "formula": "=SUM(D4:D7)",
+     "format": "#,##0.0 \"m²\""
+    },
+    "E8": {
+     "formula": "=SUM(E4:E7)",
+     "format": "#,##0.0 \"m³\""
+    },
+    "F8": {
+     "formula": "=SUM(F4:F7)",
+     "format": "0%"
+    },
+    "A11": {
+     "text": {
+      "en": "A",
+      "de": "A"
+     }
+    },
+    "B11": {
+     "formula": "=COUNTIFS(Capsules[Tower],$A11,Capsules[Type],B$10)",
+     "format": "0"
+    },
+    "C11": {
+     "formula": "=COUNTIFS(Capsules[Tower],$A11,Capsules[Type],C$10)",
+     "format": "0"
+    },
+    "D11": {
+     "formula": "=COUNTIFS(Capsules[Tower],$A11,Capsules[Type],D$10)",
+     "format": "0"
+    },
+    "E11": {
+     "formula": "=COUNTIFS(Capsules[Tower],$A11,Capsules[Type],E$10)",
+     "format": "0"
+    },
+    "F11": {
+     "formula": "=SUMIF(Capsules[Tower],$A11,Capsules[Net area])",
+     "format": "0.0 \"m²\""
+    },
+    "A12": {
+     "text": {
+      "en": "B",
+      "de": "B"
+     }
+    },
+    "B12": {
+     "formula": "=COUNTIFS(Capsules[Tower],$A12,Capsules[Type],B$10)",
+     "format": "0"
+    },
+    "C12": {
+     "formula": "=COUNTIFS(Capsules[Tower],$A12,Capsules[Type],C$10)",
+     "format": "0"
+    },
+    "D12": {
+     "formula": "=COUNTIFS(Capsules[Tower],$A12,Capsules[Type],D$10)",
+     "format": "0"
+    },
+    "E12": {
+     "formula": "=COUNTIFS(Capsules[Tower],$A12,Capsules[Type],E$10)",
+     "format": "0"
+    },
+    "F12": {
+     "formula": "=SUMIF(Capsules[Tower],$A12,Capsules[Net area])",
+     "format": "0.0 \"m²\""
+    },
+    "A13": {
+     "text": {
+      "en": "Total",
+      "de": "Summe"
+     }
+    },
+    "B13": {
+     "formula": "=SUM(B11:B12)",
+     "format": "0"
+    },
+    "C13": {
+     "formula": "=SUM(C11:C12)",
+     "format": "0"
+    },
+    "D13": {
+     "formula": "=SUM(D11:D12)",
+     "format": "0"
+    },
+    "E13": {
+     "formula": "=SUM(E11:E12)",
+     "format": "0"
+    },
+    "F13": {
+     "formula": "=SUM(F11:F12)",
+     "format": "#,##0.0 \"m²\""
+    },
+    "A20": {
+     "text": {
+      "en": "Type",
+      "de": "Typ"
+     }
+    },
+    "B20": {
+     "text": {
+      "en": "Count",
+      "de": "Anzahl"
+     }
+    },
+    "C20": {
+     "text": {
+      "en": "Free",
+      "de": "Frei"
+     }
+    },
+    "D20": {
+     "text": {
+      "en": "Total",
+      "de": "Gesamt"
+     }
+    },
+    "A25": {
+     "text": {
+      "en": "Total",
+      "de": "Summe"
+     }
+    },
+    "B25": {
+     "formula": "=SUM(B21:B24)",
+     "format": "0"
+    },
+    "D25": {
+     "formula": "=SUM(D21:D24)",
+     "format": "#,##0.0 \"m²\""
+    },
+    "A26": {
+     "text": {
+      "en": "Free m²",
+      "de": "Frei m²"
+     }
+    },
+    "B26": {
+     "formula": "=SUMPRODUCT(B21:B24,C21:C24)",
+     "format": "#,##0.0 \"m²\""
+    },
+    "A27": {
+     "text": {
+      "en": "Type C",
+      "de": "Typ C"
+     }
+    },
+    "B27": {
+     "formula": "=XLOOKUP(A27,$A$21:$A$24,$B$21:$B$24)",
+     "format": "0"
+    },
+    "C27": {
+     "formula": "=XLOOKUP(A27,$A$21:$A$24,$C$21:$C$24)",
+     "format": "0.00 \"m²\""
+    },
+    "A21": {
+     "formula": "=A4"
+    },
+    "B21": {
+     "formula": "=B4",
+     "format": "0"
+    },
+    "C21": {
+     "formula": "='Type A'!B16",
+     "format": "0.00 \"m²\""
+    },
+    "D21": {
+     "formula": "=B21*C21",
+     "format": "#,##0.0 \"m²\""
+    },
+    "A22": {
+     "formula": "=A5"
+    },
+    "B22": {
+     "formula": "=B5",
+     "format": "0"
+    },
+    "C22": {
+     "formula": "='Type B'!B16",
+     "format": "0.00 \"m²\""
+    },
+    "D22": {
+     "formula": "=B22*C22",
+     "format": "#,##0.0 \"m²\""
+    },
+    "A23": {
+     "formula": "=A6"
+    },
+    "B23": {
+     "formula": "=B6",
+     "format": "0"
+    },
+    "C23": {
+     "formula": "='Type C'!B16",
+     "format": "0.00 \"m²\""
+    },
+    "D23": {
+     "formula": "=B23*C23",
+     "format": "#,##0.0 \"m²\""
+    },
+    "A24": {
+     "formula": "=A7"
+    },
+    "B24": {
+     "formula": "=B7",
+     "format": "0"
+    },
+    "C24": {
+     "formula": "='Type D'!B16",
+     "format": "0.00 \"m²\""
+    },
+    "D24": {
+     "formula": "=B24*C24",
+     "format": "#,##0.0 \"m²\""
+    }
+   },
+   "table": {
+    "name": "Capsules",
+    "title": {
+     "en": "Capsules",
+     "de": "Kapseln"
+    },
+    "at": "H1",
+    "columns": [
+     {
+      "key": "id",
+      "header": {
+       "en": "Capsule",
+       "de": "Kapsel"
+      },
+      "formula": "=[@Tower]&\"-\"&IF([@Storey]<10,\"0\",\"\")&[@Storey]&\"-\"&[@Facade]&\"-\"&[@Item]"
+     },
+     {
+      "key": "tower",
+      "header": {
+       "en": "Tower",
+       "de": "Turm"
+      },
+      "labels": {
+       "A": {
+        "en": "A",
+        "de": "A"
+       },
+       "B": {
+        "en": "B",
+        "de": "B"
+       }
+      }
+     },
+     {
+      "key": "storey",
+      "header": {
+       "en": "Storey",
+       "de": "Geschoss"
+      },
+      "format": "0"
+     },
+     {
+      "key": "facade",
+      "header": {
+       "en": "Facade",
+       "de": "Fassade"
+      },
+      "labels": {
+       "N": {
+        "en": "N",
+        "de": "N"
+       },
+       "E": {
+        "en": "E",
+        "de": "O"
+       },
+       "S": {
+        "en": "S",
+        "de": "S"
+       },
+       "W": {
+        "en": "W",
+        "de": "W"
+       }
+      }
+     },
+     {
+      "key": "item",
+      "header": {
+       "en": "Item",
+       "de": "Platz"
+      },
+      "format": "0"
+     },
+     {
+      "key": "type",
+      "header": {
+       "en": "Type",
+       "de": "Typ"
+      },
+      "labels": {
+       "Type A": {
+        "en": "Type A",
+        "de": "Typ A"
+       },
+       "Type B": {
+        "en": "Type B",
+        "de": "Typ B"
+       },
+       "Type C": {
+        "en": "Type C",
+        "de": "Typ C"
+       },
+       "Type D": {
+        "en": "Type D",
+        "de": "Typ D"
+       }
+      }
+     },
+     {
+      "key": "area",
+      "header": {
+       "en": "Net area",
+       "de": "Nettogrundfläche"
+      },
+      "formula": "=XLOOKUP([@Type],$A$4:$A$7,$C$4:$C$7)",
+      "format": "0.0 \"m²\""
+     }
+    ],
+    "rows": [
+     [
+      "A",
+      1,
+      "N",
+      1,
+      "Type A"
+     ],
+     [
+      "A",
+      1,
+      "N",
+      2,
+      "Type B"
+     ],
+     [
+      "A",
+      1,
+      "E",
+      1,
+      "Type C"
+     ],
+     [
+      "A",
+      1,
+      "E",
+      2,
+      "Type D"
+     ],
+     [
+      "A",
+      1,
+      "S",
+      1,
+      "Type A"
+     ],
+     [
+      "A",
+      1,
+      "S",
+      2,
+      "Type B"
+     ],
+     [
+      "A",
+      2,
+      "N",
+      1,
+      "Type B"
+     ],
+     [
+      "A",
+      2,
+      "N",
+      2,
+      "Type C"
+     ],
+     [
+      "A",
+      2,
+      "E",
+      1,
+      "Type D"
+     ],
+     [
+      "A",
+      2,
+      "E",
+      2,
+      "Type A"
+     ],
+     [
+      "A",
+      2,
+      "S",
+      1,
+      "Type B"
+     ],
+     [
+      "A",
+      2,
+      "S",
+      2,
+      "Type C"
+     ],
+     [
+      "A",
+      3,
+      "N",
+      1,
+      "Type C"
+     ],
+     [
+      "A",
+      3,
+      "N",
+      2,
+      "Type D"
+     ],
+     [
+      "A",
+      3,
+      "E",
+      1,
+      "Type A"
+     ],
+     [
+      "A",
+      3,
+      "E",
+      2,
+      "Type B"
+     ],
+     [
+      "A",
+      3,
+      "S",
+      1,
+      "Type C"
+     ],
+     [
+      "A",
+      3,
+      "S",
+      2,
+      "Type D"
+     ],
+     [
+      "A",
+      4,
+      "N",
+      1,
+      "Type D"
+     ],
+     [
+      "A",
+      4,
+      "N",
+      2,
+      "Type A"
+     ],
+     [
+      "A",
+      4,
+      "E",
+      1,
+      "Type B"
+     ],
+     [
+      "A",
+      4,
+      "E",
+      2,
+      "Type C"
+     ],
+     [
+      "A",
+      4,
+      "S",
+      1,
+      "Type D"
+     ],
+     [
+      "A",
+      4,
+      "S",
+      2,
+      "Type A"
+     ],
+     [
+      "A",
+      5,
+      "N",
+      1,
+      "Type A"
+     ],
+     [
+      "A",
+      5,
+      "N",
+      2,
+      "Type B"
+     ],
+     [
+      "A",
+      5,
+      "E",
+      1,
+      "Type C"
+     ],
+     [
+      "A",
+      5,
+      "E",
+      2,
+      "Type D"
+     ],
+     [
+      "A",
+      5,
+      "S",
+      1,
+      "Type A"
+     ],
+     [
+      "A",
+      5,
+      "S",
+      2,
+      "Type B"
+     ],
+     [
+      "A",
+      6,
+      "N",
+      1,
+      "Type B"
+     ],
+     [
+      "A",
+      6,
+      "N",
+      2,
+      "Type C"
+     ],
+     [
+      "A",
+      6,
+      "E",
+      1,
+      "Type D"
+     ],
+     [
+      "A",
+      6,
+      "E",
+      2,
+      "Type A"
+     ],
+     [
+      "A",
+      6,
+      "S",
+      1,
+      "Type B"
+     ],
+     [
+      "A",
+      6,
+      "S",
+      2,
+      "Type C"
+     ],
+     [
+      "A",
+      7,
+      "N",
+      1,
+      "Type C"
+     ],
+     [
+      "A",
+      7,
+      "N",
+      2,
+      "Type D"
+     ],
+     [
+      "A",
+      7,
+      "E",
+      1,
+      "Type A"
+     ],
+     [
+      "A",
+      7,
+      "E",
+      2,
+      "Type B"
+     ],
+     [
+      "A",
+      7,
+      "S",
+      1,
+      "Type C"
+     ],
+     [
+      "A",
+      7,
+      "S",
+      2,
+      "Type D"
+     ],
+     [
+      "A",
+      8,
+      "N",
+      1,
+      "Type D"
+     ],
+     [
+      "A",
+      8,
+      "N",
+      2,
+      "Type A"
+     ],
+     [
+      "A",
+      8,
+      "E",
+      1,
+      "Type B"
+     ],
+     [
+      "A",
+      8,
+      "E",
+      2,
+      "Type C"
+     ],
+     [
+      "A",
+      8,
+      "S",
+      1,
+      "Type D"
+     ],
+     [
+      "A",
+      8,
+      "S",
+      2,
+      "Type A"
+     ],
+     [
+      "A",
+      9,
+      "N",
+      1,
+      "Type A"
+     ],
+     [
+      "A",
+      9,
+      "N",
+      2,
+      "Type B"
+     ],
+     [
+      "A",
+      9,
+      "E",
+      1,
+      "Type C"
+     ],
+     [
+      "A",
+      9,
+      "E",
+      2,
+      "Type D"
+     ],
+     [
+      "A",
+      9,
+      "S",
+      1,
+      "Type A"
+     ],
+     [
+      "A",
+      9,
+      "S",
+      2,
+      "Type B"
+     ],
+     [
+      "B",
+      1,
+      "N",
+      1,
+      "Type B"
+     ],
+     [
+      "B",
+      1,
+      "N",
+      2,
+      "Type C"
+     ],
+     [
+      "B",
+      1,
+      "E",
+      1,
+      "Type D"
+     ],
+     [
+      "B",
+      1,
+      "E",
+      2,
+      "Type A"
+     ],
+     [
+      "B",
+      1,
+      "S",
+      1,
+      "Type B"
+     ],
+     [
+      "B",
+      1,
+      "S",
+      2,
+      "Type C"
+     ],
+     [
+      "B",
+      1,
+      "W",
+      1,
+      "Type D"
+     ],
+     [
+      "B",
+      1,
+      "W",
+      2,
+      "Type A"
+     ],
+     [
+      "B",
+      2,
+      "N",
+      1,
+      "Type C"
+     ],
+     [
+      "B",
+      2,
+      "N",
+      2,
+      "Type D"
+     ],
+     [
+      "B",
+      2,
+      "E",
+      1,
+      "Type A"
+     ],
+     [
+      "B",
+      2,
+      "E",
+      2,
+      "Type B"
+     ],
+     [
+      "B",
+      2,
+      "S",
+      1,
+      "Type C"
+     ],
+     [
+      "B",
+      2,
+      "S",
+      2,
+      "Type D"
+     ],
+     [
+      "B",
+      2,
+      "W",
+      1,
+      "Type A"
+     ],
+     [
+      "B",
+      2,
+      "W",
+      2,
+      "Type B"
+     ],
+     [
+      "B",
+      3,
+      "N",
+      1,
+      "Type D"
+     ],
+     [
+      "B",
+      3,
+      "N",
+      2,
+      "Type A"
+     ],
+     [
+      "B",
+      3,
+      "E",
+      1,
+      "Type B"
+     ],
+     [
+      "B",
+      3,
+      "E",
+      2,
+      "Type C"
+     ],
+     [
+      "B",
+      3,
+      "S",
+      1,
+      "Type D"
+     ],
+     [
+      "B",
+      3,
+      "S",
+      2,
+      "Type A"
+     ],
+     [
+      "B",
+      3,
+      "W",
+      1,
+      "Type B"
+     ],
+     [
+      "B",
+      3,
+      "W",
+      2,
+      "Type C"
+     ],
+     [
+      "B",
+      4,
+      "N",
+      1,
+      "Type A"
+     ],
+     [
+      "B",
+      4,
+      "N",
+      2,
+      "Type B"
+     ],
+     [
+      "B",
+      4,
+      "E",
+      1,
+      "Type C"
+     ],
+     [
+      "B",
+      4,
+      "E",
+      2,
+      "Type D"
+     ],
+     [
+      "B",
+      4,
+      "S",
+      1,
+      "Type A"
+     ],
+     [
+      "B",
+      4,
+      "S",
+      2,
+      "Type B"
+     ],
+     [
+      "B",
+      4,
+      "W",
+      1,
+      "Type C"
+     ],
+     [
+      "B",
+      4,
+      "W",
+      2,
+      "Type D"
+     ],
+     [
+      "B",
+      5,
+      "N",
+      1,
+      "Type B"
+     ],
+     [
+      "B",
+      5,
+      "N",
+      2,
+      "Type C"
+     ],
+     [
+      "B",
+      5,
+      "E",
+      1,
+      "Type D"
+     ],
+     [
+      "B",
+      5,
+      "E",
+      2,
+      "Type A"
+     ],
+     [
+      "B",
+      5,
+      "S",
+      1,
+      "Type B"
+     ],
+     [
+      "B",
+      5,
+      "S",
+      2,
+      "Type C"
+     ],
+     [
+      "B",
+      5,
+      "W",
+      1,
+      "Type D"
+     ],
+     [
+      "B",
+      5,
+      "W",
+      2,
+      "Type A"
+     ],
+     [
+      "B",
+      6,
+      "N",
+      1,
+      "Type C"
+     ],
+     [
+      "B",
+      6,
+      "N",
+      2,
+      "Type D"
+     ],
+     [
+      "B",
+      6,
+      "E",
+      1,
+      "Type A"
+     ],
+     [
+      "B",
+      6,
+      "E",
+      2,
+      "Type B"
+     ],
+     [
+      "B",
+      6,
+      "S",
+      1,
+      "Type C"
+     ],
+     [
+      "B",
+      6,
+      "S",
+      2,
+      "Type D"
+     ],
+     [
+      "B",
+      6,
+      "W",
+      1,
+      "Type A"
+     ],
+     [
+      "B",
+      6,
+      "W",
+      2,
+      "Type B"
+     ],
+     [
+      "B",
+      7,
+      "N",
+      1,
+      "Type D"
+     ],
+     [
+      "B",
+      7,
+      "N",
+      2,
+      "Type A"
+     ],
+     [
+      "B",
+      7,
+      "E",
+      1,
+      "Type B"
+     ],
+     [
+      "B",
+      7,
+      "E",
+      2,
+      "Type C"
+     ],
+     [
+      "B",
+      7,
+      "S",
+      1,
+      "Type D"
+     ],
+     [
+      "B",
+      7,
+      "S",
+      2,
+      "Type A"
+     ],
+     [
+      "B",
+      7,
+      "W",
+      1,
+      "Type B"
+     ],
+     [
+      "B",
+      7,
+      "W",
+      2,
+      "Type C"
+     ],
+     [
+      "B",
+      8,
+      "N",
+      1,
+      "Type A"
+     ],
+     [
+      "B",
+      8,
+      "N",
+      2,
+      "Type B"
+     ],
+     [
+      "B",
+      8,
+      "E",
+      1,
+      "Type C"
+     ],
+     [
+      "B",
+      8,
+      "E",
+      2,
+      "Type D"
+     ],
+     [
+      "B",
+      8,
+      "S",
+      1,
+      "Type A"
+     ],
+     [
+      "B",
+      8,
+      "S",
+      2,
+      "Type B"
+     ],
+     [
+      "B",
+      8,
+      "W",
+      1,
+      "Type C"
+     ],
+     [
+      "B",
+      8,
+      "W",
+      2,
+      "Type D"
+     ],
+     [
+      "B",
+      9,
+      "N",
+      1,
+      "Type B"
+     ],
+     [
+      "B",
+      9,
+      "N",
+      2,
+      "Type C"
+     ],
+     [
+      "B",
+      9,
+      "E",
+      1,
+      "Type D"
+     ],
+     [
+      "B",
+      9,
+      "E",
+      2,
+      "Type A"
+     ],
+     [
+      "B",
+      9,
+      "S",
+      1,
+      "Type B"
+     ],
+     [
+      "B",
+      9,
+      "S",
+      2,
+      "Type C"
+     ],
+     [
+      "B",
+      9,
+      "W",
+      1,
+      "Type D"
+     ],
+     [
+      "B",
+      9,
+      "W",
+      2,
+      "Type A"
+     ],
+     [
+      "B",
+      10,
+      "N",
+      1,
+      "Type C"
+     ],
+     [
+      "B",
+      10,
+      "N",
+      2,
+      "Type D"
+     ],
+     [
+      "B",
+      10,
+      "E",
+      1,
+      "Type A"
+     ],
+     [
+      "B",
+      10,
+      "E",
+      2,
+      "Type B"
+     ],
+     [
+      "B",
+      10,
+      "S",
+      1,
+      "Type C"
+     ],
+     [
+      "B",
+      10,
+      "S",
+      2,
+      "Type D"
+     ],
+     [
+      "B",
+      10,
+      "W",
+      1,
+      "Type A"
+     ],
+     [
+      "B",
+      10,
+      "W",
+      2,
+      "Type B"
+     ],
+     [
+      "B",
+      11,
+      "N",
+      1,
+      "Type D"
+     ],
+     [
+      "B",
+      11,
+      "N",
+      2,
+      "Type A"
+     ],
+     [
+      "B",
+      11,
+      "E",
+      1,
+      "Type B"
+     ],
+     [
+      "B",
+      11,
+      "E",
+      2,
+      "Type C"
+     ],
+     [
+      "B",
+      11,
+      "S",
+      1,
+      "Type D"
+     ],
+     [
+      "B",
+      11,
+      "S",
+      2,
+      "Type A"
+     ]
+    ]
+   }
+  },
+  {
+   "name": "Type A",
+   "title": {
+    "en": "Type A",
+    "de": "Typ A"
+   },
+   "widths": {
+    "A": 24,
+    "B": 14,
+    "C": 20,
+    "D": 10,
+    "E": 17,
+    "F": 13,
+    "G": 10
+   },
+   "cells": {
+    "A1": {
+     "text": {
+      "en": "Type",
+      "de": "Typ"
+     }
+    },
+    "B1": {
+     "text": {
+      "en": "Residence",
+      "de": "Wohnkapsel"
+     }
+    },
+    "C1": {
+     "text": {
+      "en": "Single residence with bed, bathroom unit and storage",
+      "de": "Einzelwohnung mit Bett, Nasszelle und Stauraum"
+     }
+    },
+    "A2": {
+     "text": {
+      "en": "Width",
+      "de": "Breite"
+     }
+    },
+    "B2": {
+     "value": 2.5,
+     "from": "capsule.width",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "wikipedia"
+    },
+    "A3": {
+     "text": {
+      "en": "Length",
+      "de": "Länge"
+     }
+    },
+    "B3": {
+     "value": 4.0,
+     "from": "capsule.length",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "wikipedia"
+    },
+    "A4": {
+     "text": {
+      "en": "Height",
+      "de": "Höhe"
+     }
+    },
+    "B4": {
+     "value": 2.5,
+     "from": "capsule.height",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "wikipedia"
+    },
+    "A5": {
+     "text": {
+      "en": "Interior width",
+      "de": "Innenbreite"
+     }
+    },
+    "B5": {
+     "value": 2.3,
+     "from": "capsule.interior.width",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "archiweb"
+    },
+    "A6": {
+     "text": {
+      "en": "Interior length",
+      "de": "Innenlänge"
+     }
+    },
+    "B6": {
+     "value": 3.8,
+     "from": "capsule.interior.length",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "archiweb"
+    },
+    "A7": {
+     "text": {
+      "en": "Interior height",
+      "de": "Innenhöhe"
+     }
+    },
+    "B7": {
+     "value": 2.1,
+     "from": "capsule.interior.height",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "archiweb"
+    },
+    "A8": {
+     "text": {
+      "en": "Window diameter",
+      "de": "Fensterdurchmesser"
+     }
+    },
+    "B8": {
+     "value": 1.3,
+     "from": "types.A.window_diameter",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "archeyes"
+    },
+    "A9": {
+     "text": {
+      "en": "Net floor area",
+      "de": "Nettogrundfläche"
+     }
+    },
+    "B9": {
+     "formula": "=B5*B6",
+     "format": "0.0 \"m²\""
+    },
+    "A10": {
+     "text": {
+      "en": "Volume",
+      "de": "Volumen"
+     }
+    },
+    "B10": {
+     "formula": "=B9*B7",
+     "format": "0.0 \"m³\""
+    },
+    "A11": {
+     "text": {
+      "en": "Transmission H_T",
+      "de": "Transmissionsverlust H_T"
+     }
+    },
+    "B11": {
+     "formula": "=SUM(F3:F9)",
+     "format": "0.00 \"W/K\""
+    },
+    "A12": {
+     "text": {
+      "en": "Ventilation H_V",
+      "de": "Lüftung H_V"
+     }
+    },
+    "B12": {
+     "formula": "=air_heat_capacity*air_change*B10",
+     "format": "0.00 \"W/K\""
+    },
+    "A13": {
+     "text": {
+      "en": "Heating load",
+      "de": "Heizlast"
+     }
+    },
+    "B13": {
+     "formula": "=(B11+B12)*(theta_i-theta_e)",
+     "format": "#,##0 \"W\""
+    },
+    "A14": {
+     "text": {
+      "en": "Annual heating demand",
+      "de": "Jahresheizwärmebedarf"
+     }
+    },
+    "B14": {
+     "formula": "=(B11+B12)*heating_degree_days*24/1000",
+     "format": "#,##0 \"kWh/a\""
+    },
+    "A15": {
+     "text": {
+      "en": "Demand per area",
+      "de": "Bedarf je Fläche"
+     }
+    },
+    "B15": {
+     "formula": "=B14/B9",
+     "format": "0 \"kWh/(m²·a)\""
+    },
+    "A16": {
+     "text": {
+      "en": "Free floor area",
+      "de": "Freie Fläche"
+     }
+    },
+    "B16": {
+     "formula": "=B9-G16",
+     "format": "0.0 \"m²\""
+    },
+    "C2": {
+     "text": {
+      "en": "Surface",
+      "de": "Bauteil"
+     }
+    },
+    "D2": {
+     "text": {
+      "en": "Area",
+      "de": "Fläche"
+     }
+    },
+    "E2": {
+     "text": {
+      "en": "U-value",
+      "de": "U-Wert"
+     }
+    },
+    "F2": {
+     "text": {
+      "en": "U·A",
+      "de": "U·A"
+     }
+    },
+    "C11": {
+     "text": {
+      "en": "Fitting",
+      "de": "Einbau"
+     }
+    },
+    "D11": {
+     "text": {
+      "en": "Width",
+      "de": "Breite"
+     }
+    },
+    "E11": {
+     "text": {
+      "en": "Length",
+      "de": "Länge"
+     }
+    },
+    "F11": {
+     "text": {
+      "en": "Count",
+      "de": "Anzahl"
+     }
+    },
+    "G11": {
+     "text": {
+      "en": "Area",
+      "de": "Fläche"
+     }
+    },
+    "C3": {
+     "text": {
+      "en": "Roof",
+      "de": "Dach"
+     }
+    },
+    "D3": {
+     "formula": "=B2*B3",
+     "format": "0.0 \"m²\""
+    },
+    "E3": {
+     "formula": "=u_roof",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F3": {
+     "formula": "=D3*E3",
+     "format": "0.00 \"W/K\""
+    },
+    "C4": {
+     "text": {
+      "en": "Floor",
+      "de": "Boden"
+     }
+    },
+    "D4": {
+     "formula": "=B2*B3",
+     "format": "0.0 \"m²\""
+    },
+    "E4": {
+     "formula": "=u_floor",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F4": {
+     "formula": "=D4*E4",
+     "format": "0.00 \"W/K\""
+    },
+    "C5": {
+     "text": {
+      "en": "Left side wall",
+      "de": "Linke Seitenwand"
+     }
+    },
+    "D5": {
+     "formula": "=B4*B3",
+     "format": "0.0 \"m²\""
+    },
+    "E5": {
+     "formula": "=u_wall",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F5": {
+     "formula": "=D5*E5",
+     "format": "0.00 \"W/K\""
+    },
+    "C6": {
+     "text": {
+      "en": "Right side wall",
+      "de": "Rechte Seitenwand"
+     }
+    },
+    "D6": {
+     "formula": "=B4*B3",
+     "format": "0.0 \"m²\""
+    },
+    "E6": {
+     "formula": "=u_wall",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F6": {
+     "formula": "=D6*E6",
+     "format": "0.00 \"W/K\""
+    },
+    "C7": {
+     "text": {
+      "en": "Front wall",
+      "de": "Frontwand"
+     }
+    },
+    "D7": {
+     "formula": "=B2*B4-D8",
+     "format": "0.0 \"m²\""
+    },
+    "E7": {
+     "formula": "=u_wall",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F7": {
+     "formula": "=D7*E7",
+     "format": "0.00 \"W/K\""
+    },
+    "C8": {
+     "text": {
+      "en": "Window",
+      "de": "Fenster"
+     }
+    },
+    "D8": {
+     "formula": "=PI()*B8^2/4",
+     "format": "0.0 \"m²\""
+    },
+    "E8": {
+     "formula": "=u_window",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F8": {
+     "formula": "=D8*E8",
+     "format": "0.00 \"W/K\""
+    },
+    "C9": {
+     "text": {
+      "en": "Back wall to core",
+      "de": "Rückwand zum Kern"
+     }
+    },
+    "D9": {
+     "formula": "=B2*B4",
+     "format": "0.0 \"m²\""
+    },
+    "E9": {
+     "formula": "=u_wall",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F9": {
+     "formula": "=D9*E9*attached_factor",
+     "format": "0.00 \"W/K\""
+    },
+    "C12": {
+     "text": {
+      "en": "Bed",
+      "de": "Bett"
+     }
+    },
+    "D12": {
+     "value": 0.9,
+     "from": "types.A.fittings.bed.width",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "E12": {
+     "value": 2.0,
+     "from": "types.A.fittings.bed.length",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "F12": {
+     "value": 1,
+     "from": "types.A.fittings.bed.count",
+     "basis": "assumed",
+     "format": "0"
+    },
+    "G12": {
+     "formula": "=D12*E12*F12",
+     "format": "0.0 \"m²\""
+    },
+    "C13": {
+     "text": {
+      "en": "Bathroom unit",
+      "de": "Nasszelle"
+     }
+    },
+    "D13": {
+     "value": 1.0,
+     "from": "types.A.fittings.bath.width",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "E13": {
+     "value": 1.2,
+     "from": "types.A.fittings.bath.length",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "F13": {
+     "value": 1,
+     "from": "types.A.fittings.bath.count",
+     "basis": "assumed",
+     "format": "0"
+    },
+    "G13": {
+     "formula": "=D13*E13*F13",
+     "format": "0.0 \"m²\""
+    },
+    "C14": {
+     "text": {
+      "en": "Storage",
+      "de": "Stauraum"
+     }
+    },
+    "D14": {
+     "value": 0.5,
+     "from": "types.A.fittings.storage.width",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "E14": {
+     "value": 1.2,
+     "from": "types.A.fittings.storage.length",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "F14": {
+     "value": 1,
+     "from": "types.A.fittings.storage.count",
+     "basis": "assumed",
+     "format": "0"
+    },
+    "G14": {
+     "formula": "=D14*E14*F14",
+     "format": "0.0 \"m²\""
+    },
+    "C16": {
+     "text": {
+      "en": "Fitting area",
+      "de": "Einbaufläche"
+     }
+    },
+    "G16": {
+     "formula": "=SUM(G12:G15)",
+     "format": "0.0 \"m²\""
+    },
+    "A17": {
+     "text": {
+      "en": "Occupants",
+      "de": "Nutzer"
+     }
+    },
+    "B17": {
+     "value": 1,
+     "from": "types.A.occupants",
+     "basis": "assumed",
+     "format": "0"
+    }
+   }
+  },
+  {
+   "name": "Type B",
+   "title": {
+    "en": "Type B",
+    "de": "Typ B"
+   },
+   "widths": {
+    "A": 24,
+    "B": 14,
+    "C": 20,
+    "D": 10,
+    "E": 17,
+    "F": 13,
+    "G": 10
+   },
+   "cells": {
+    "A1": {
+     "text": {
+      "en": "Type",
+      "de": "Typ"
+     }
+    },
+    "B1": {
+     "text": {
+      "en": "Residence with desk",
+      "de": "Wohnkapsel mit Schreibtisch"
+     }
+    },
+    "C1": {
+     "text": {
+      "en": "Residence for working, with desk next to the window",
+      "de": "Wohnkapsel zum Arbeiten, mit Schreibtisch am Fenster"
+     }
+    },
+    "A2": {
+     "text": {
+      "en": "Width",
+      "de": "Breite"
+     }
+    },
+    "B2": {
+     "value": 2.5,
+     "from": "capsule.width",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "wikipedia"
+    },
+    "A3": {
+     "text": {
+      "en": "Length",
+      "de": "Länge"
+     }
+    },
+    "B3": {
+     "value": 4.0,
+     "from": "capsule.length",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "wikipedia"
+    },
+    "A4": {
+     "text": {
+      "en": "Height",
+      "de": "Höhe"
+     }
+    },
+    "B4": {
+     "value": 2.5,
+     "from": "capsule.height",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "wikipedia"
+    },
+    "A5": {
+     "text": {
+      "en": "Interior width",
+      "de": "Innenbreite"
+     }
+    },
+    "B5": {
+     "value": 2.3,
+     "from": "capsule.interior.width",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "archiweb"
+    },
+    "A6": {
+     "text": {
+      "en": "Interior length",
+      "de": "Innenlänge"
+     }
+    },
+    "B6": {
+     "value": 3.8,
+     "from": "capsule.interior.length",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "archiweb"
+    },
+    "A7": {
+     "text": {
+      "en": "Interior height",
+      "de": "Innenhöhe"
+     }
+    },
+    "B7": {
+     "value": 2.1,
+     "from": "capsule.interior.height",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "archiweb"
+    },
+    "A8": {
+     "text": {
+      "en": "Window diameter",
+      "de": "Fensterdurchmesser"
+     }
+    },
+    "B8": {
+     "value": 1.3,
+     "from": "types.B.window_diameter",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "archeyes"
+    },
+    "A9": {
+     "text": {
+      "en": "Net floor area",
+      "de": "Nettogrundfläche"
+     }
+    },
+    "B9": {
+     "formula": "=B5*B6",
+     "format": "0.0 \"m²\""
+    },
+    "A10": {
+     "text": {
+      "en": "Volume",
+      "de": "Volumen"
+     }
+    },
+    "B10": {
+     "formula": "=B9*B7",
+     "format": "0.0 \"m³\""
+    },
+    "A11": {
+     "text": {
+      "en": "Transmission H_T",
+      "de": "Transmissionsverlust H_T"
+     }
+    },
+    "B11": {
+     "formula": "=SUM(F3:F9)",
+     "format": "0.00 \"W/K\""
+    },
+    "A12": {
+     "text": {
+      "en": "Ventilation H_V",
+      "de": "Lüftung H_V"
+     }
+    },
+    "B12": {
+     "formula": "=air_heat_capacity*air_change*B10",
+     "format": "0.00 \"W/K\""
+    },
+    "A13": {
+     "text": {
+      "en": "Heating load",
+      "de": "Heizlast"
+     }
+    },
+    "B13": {
+     "formula": "=(B11+B12)*(theta_i-theta_e)",
+     "format": "#,##0 \"W\""
+    },
+    "A14": {
+     "text": {
+      "en": "Annual heating demand",
+      "de": "Jahresheizwärmebedarf"
+     }
+    },
+    "B14": {
+     "formula": "=(B11+B12)*heating_degree_days*24/1000",
+     "format": "#,##0 \"kWh/a\""
+    },
+    "A15": {
+     "text": {
+      "en": "Demand per area",
+      "de": "Bedarf je Fläche"
+     }
+    },
+    "B15": {
+     "formula": "=B14/B9",
+     "format": "0 \"kWh/(m²·a)\""
+    },
+    "A16": {
+     "text": {
+      "en": "Free floor area",
+      "de": "Freie Fläche"
+     }
+    },
+    "B16": {
+     "formula": "=B9-G16",
+     "format": "0.0 \"m²\""
+    },
+    "C2": {
+     "text": {
+      "en": "Surface",
+      "de": "Bauteil"
+     }
+    },
+    "D2": {
+     "text": {
+      "en": "Area",
+      "de": "Fläche"
+     }
+    },
+    "E2": {
+     "text": {
+      "en": "U-value",
+      "de": "U-Wert"
+     }
+    },
+    "F2": {
+     "text": {
+      "en": "U·A",
+      "de": "U·A"
+     }
+    },
+    "C11": {
+     "text": {
+      "en": "Fitting",
+      "de": "Einbau"
+     }
+    },
+    "D11": {
+     "text": {
+      "en": "Width",
+      "de": "Breite"
+     }
+    },
+    "E11": {
+     "text": {
+      "en": "Length",
+      "de": "Länge"
+     }
+    },
+    "F11": {
+     "text": {
+      "en": "Count",
+      "de": "Anzahl"
+     }
+    },
+    "G11": {
+     "text": {
+      "en": "Area",
+      "de": "Fläche"
+     }
+    },
+    "C3": {
+     "text": {
+      "en": "Roof",
+      "de": "Dach"
+     }
+    },
+    "D3": {
+     "formula": "=B2*B3",
+     "format": "0.0 \"m²\""
+    },
+    "E3": {
+     "formula": "=u_roof",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F3": {
+     "formula": "=D3*E3",
+     "format": "0.00 \"W/K\""
+    },
+    "C4": {
+     "text": {
+      "en": "Floor",
+      "de": "Boden"
+     }
+    },
+    "D4": {
+     "formula": "=B2*B3",
+     "format": "0.0 \"m²\""
+    },
+    "E4": {
+     "formula": "=u_floor",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F4": {
+     "formula": "=D4*E4",
+     "format": "0.00 \"W/K\""
+    },
+    "C5": {
+     "text": {
+      "en": "Left side wall",
+      "de": "Linke Seitenwand"
+     }
+    },
+    "D5": {
+     "formula": "=B4*B3",
+     "format": "0.0 \"m²\""
+    },
+    "E5": {
+     "formula": "=u_wall",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F5": {
+     "formula": "=D5*E5",
+     "format": "0.00 \"W/K\""
+    },
+    "C6": {
+     "text": {
+      "en": "Right side wall",
+      "de": "Rechte Seitenwand"
+     }
+    },
+    "D6": {
+     "formula": "=B4*B3",
+     "format": "0.0 \"m²\""
+    },
+    "E6": {
+     "formula": "=u_wall",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F6": {
+     "formula": "=D6*E6",
+     "format": "0.00 \"W/K\""
+    },
+    "C7": {
+     "text": {
+      "en": "Front wall",
+      "de": "Frontwand"
+     }
+    },
+    "D7": {
+     "formula": "=B2*B4-D8",
+     "format": "0.0 \"m²\""
+    },
+    "E7": {
+     "formula": "=u_wall",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F7": {
+     "formula": "=D7*E7",
+     "format": "0.00 \"W/K\""
+    },
+    "C8": {
+     "text": {
+      "en": "Window",
+      "de": "Fenster"
+     }
+    },
+    "D8": {
+     "formula": "=PI()*B8^2/4",
+     "format": "0.0 \"m²\""
+    },
+    "E8": {
+     "formula": "=u_window",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F8": {
+     "formula": "=D8*E8",
+     "format": "0.00 \"W/K\""
+    },
+    "C9": {
+     "text": {
+      "en": "Back wall to core",
+      "de": "Rückwand zum Kern"
+     }
+    },
+    "D9": {
+     "formula": "=B2*B4",
+     "format": "0.0 \"m²\""
+    },
+    "E9": {
+     "formula": "=u_wall",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F9": {
+     "formula": "=D9*E9*attached_factor",
+     "format": "0.00 \"W/K\""
+    },
+    "C12": {
+     "text": {
+      "en": "Bed",
+      "de": "Bett"
+     }
+    },
+    "D12": {
+     "value": 0.9,
+     "from": "types.B.fittings.bed.width",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "E12": {
+     "value": 2.0,
+     "from": "types.B.fittings.bed.length",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "F12": {
+     "value": 1,
+     "from": "types.B.fittings.bed.count",
+     "basis": "assumed",
+     "format": "0"
+    },
+    "G12": {
+     "formula": "=D12*E12*F12",
+     "format": "0.0 \"m²\""
+    },
+    "C13": {
+     "text": {
+      "en": "Bathroom unit",
+      "de": "Nasszelle"
+     }
+    },
+    "D13": {
+     "value": 1.0,
+     "from": "types.B.fittings.bath.width",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "E13": {
+     "value": 1.2,
+     "from": "types.B.fittings.bath.length",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "F13": {
+     "value": 1,
+     "from": "types.B.fittings.bath.count",
+     "basis": "assumed",
+     "format": "0"
+    },
+    "G13": {
+     "formula": "=D13*E13*F13",
+     "format": "0.0 \"m²\""
+    },
+    "C14": {
+     "text": {
+      "en": "Desk",
+      "de": "Schreibtisch"
+     }
+    },
+    "D14": {
+     "value": 0.6,
+     "from": "types.B.fittings.desk.width",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "E14": {
+     "value": 1.2,
+     "from": "types.B.fittings.desk.length",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "F14": {
+     "value": 1,
+     "from": "types.B.fittings.desk.count",
+     "basis": "assumed",
+     "format": "0"
+    },
+    "G14": {
+     "formula": "=D14*E14*F14",
+     "format": "0.0 \"m²\""
+    },
+    "C15": {
+     "text": {
+      "en": "Storage",
+      "de": "Stauraum"
+     }
+    },
+    "D15": {
+     "value": 0.5,
+     "from": "types.B.fittings.storage.width",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "E15": {
+     "value": 1.2,
+     "from": "types.B.fittings.storage.length",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "F15": {
+     "value": 1,
+     "from": "types.B.fittings.storage.count",
+     "basis": "assumed",
+     "format": "0"
+    },
+    "G15": {
+     "formula": "=D15*E15*F15",
+     "format": "0.0 \"m²\""
+    },
+    "C16": {
+     "text": {
+      "en": "Fitting area",
+      "de": "Einbaufläche"
+     }
+    },
+    "G16": {
+     "formula": "=SUM(G12:G15)",
+     "format": "0.0 \"m²\""
+    },
+    "A17": {
+     "text": {
+      "en": "Occupants",
+      "de": "Nutzer"
+     }
+    },
+    "B17": {
+     "value": 1,
+     "from": "types.B.occupants",
+     "basis": "assumed",
+     "format": "0"
+    }
+   }
+  },
+  {
+   "name": "Type C",
+   "title": {
+    "en": "Type C",
+    "de": "Typ C"
+   },
+   "widths": {
+    "A": 24,
+    "B": 14,
+    "C": 20,
+    "D": 10,
+    "E": 17,
+    "F": 13,
+    "G": 10
+   },
+   "cells": {
+    "A1": {
+     "text": {
+      "en": "Type",
+      "de": "Typ"
+     }
+    },
+    "B1": {
+     "text": {
+      "en": "Studio",
+      "de": "Atelier"
+     }
+    },
+    "C1": {
+     "text": {
+      "en": "Small studio for two with large window, no bed",
+      "de": "Kleines Atelier für zwei mit grossem Fenster, ohne Bett"
+     }
+    },
+    "A2": {
+     "text": {
+      "en": "Width",
+      "de": "Breite"
+     }
+    },
+    "B2": {
+     "value": 2.5,
+     "from": "capsule.width",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "wikipedia"
+    },
+    "A3": {
+     "text": {
+      "en": "Length",
+      "de": "Länge"
+     }
+    },
+    "B3": {
+     "value": 4.0,
+     "from": "capsule.length",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "wikipedia"
+    },
+    "A4": {
+     "text": {
+      "en": "Height",
+      "de": "Höhe"
+     }
+    },
+    "B4": {
+     "value": 2.5,
+     "from": "capsule.height",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "wikipedia"
+    },
+    "A5": {
+     "text": {
+      "en": "Interior width",
+      "de": "Innenbreite"
+     }
+    },
+    "B5": {
+     "value": 2.3,
+     "from": "capsule.interior.width",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "archiweb"
+    },
+    "A6": {
+     "text": {
+      "en": "Interior length",
+      "de": "Innenlänge"
+     }
+    },
+    "B6": {
+     "value": 3.8,
+     "from": "capsule.interior.length",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "archiweb"
+    },
+    "A7": {
+     "text": {
+      "en": "Interior height",
+      "de": "Innenhöhe"
+     }
+    },
+    "B7": {
+     "value": 2.1,
+     "from": "capsule.interior.height",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "archiweb"
+    },
+    "A8": {
+     "text": {
+      "en": "Window diameter",
+      "de": "Fensterdurchmesser"
+     }
+    },
+    "B8": {
+     "value": 1.6,
+     "from": "types.C.window_diameter",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "A9": {
+     "text": {
+      "en": "Net floor area",
+      "de": "Nettogrundfläche"
+     }
+    },
+    "B9": {
+     "formula": "=B5*B6",
+     "format": "0.0 \"m²\""
+    },
+    "A10": {
+     "text": {
+      "en": "Volume",
+      "de": "Volumen"
+     }
+    },
+    "B10": {
+     "formula": "=B9*B7",
+     "format": "0.0 \"m³\""
+    },
+    "A11": {
+     "text": {
+      "en": "Transmission H_T",
+      "de": "Transmissionsverlust H_T"
+     }
+    },
+    "B11": {
+     "formula": "=SUM(F3:F9)",
+     "format": "0.00 \"W/K\""
+    },
+    "A12": {
+     "text": {
+      "en": "Ventilation H_V",
+      "de": "Lüftung H_V"
+     }
+    },
+    "B12": {
+     "formula": "=air_heat_capacity*air_change*B10",
+     "format": "0.00 \"W/K\""
+    },
+    "A13": {
+     "text": {
+      "en": "Heating load",
+      "de": "Heizlast"
+     }
+    },
+    "B13": {
+     "formula": "=(B11+B12)*(theta_i-theta_e)",
+     "format": "#,##0 \"W\""
+    },
+    "A14": {
+     "text": {
+      "en": "Annual heating demand",
+      "de": "Jahresheizwärmebedarf"
+     }
+    },
+    "B14": {
+     "formula": "=(B11+B12)*heating_degree_days*24/1000",
+     "format": "#,##0 \"kWh/a\""
+    },
+    "A15": {
+     "text": {
+      "en": "Demand per area",
+      "de": "Bedarf je Fläche"
+     }
+    },
+    "B15": {
+     "formula": "=B14/B9",
+     "format": "0 \"kWh/(m²·a)\""
+    },
+    "A16": {
+     "text": {
+      "en": "Free floor area",
+      "de": "Freie Fläche"
+     }
+    },
+    "B16": {
+     "formula": "=B9-G16",
+     "format": "0.0 \"m²\""
+    },
+    "C2": {
+     "text": {
+      "en": "Surface",
+      "de": "Bauteil"
+     }
+    },
+    "D2": {
+     "text": {
+      "en": "Area",
+      "de": "Fläche"
+     }
+    },
+    "E2": {
+     "text": {
+      "en": "U-value",
+      "de": "U-Wert"
+     }
+    },
+    "F2": {
+     "text": {
+      "en": "U·A",
+      "de": "U·A"
+     }
+    },
+    "C11": {
+     "text": {
+      "en": "Fitting",
+      "de": "Einbau"
+     }
+    },
+    "D11": {
+     "text": {
+      "en": "Width",
+      "de": "Breite"
+     }
+    },
+    "E11": {
+     "text": {
+      "en": "Length",
+      "de": "Länge"
+     }
+    },
+    "F11": {
+     "text": {
+      "en": "Count",
+      "de": "Anzahl"
+     }
+    },
+    "G11": {
+     "text": {
+      "en": "Area",
+      "de": "Fläche"
+     }
+    },
+    "C3": {
+     "text": {
+      "en": "Roof",
+      "de": "Dach"
+     }
+    },
+    "D3": {
+     "formula": "=B2*B3",
+     "format": "0.0 \"m²\""
+    },
+    "E3": {
+     "formula": "=u_roof",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F3": {
+     "formula": "=D3*E3",
+     "format": "0.00 \"W/K\""
+    },
+    "C4": {
+     "text": {
+      "en": "Floor",
+      "de": "Boden"
+     }
+    },
+    "D4": {
+     "formula": "=B2*B3",
+     "format": "0.0 \"m²\""
+    },
+    "E4": {
+     "formula": "=u_floor",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F4": {
+     "formula": "=D4*E4",
+     "format": "0.00 \"W/K\""
+    },
+    "C5": {
+     "text": {
+      "en": "Left side wall",
+      "de": "Linke Seitenwand"
+     }
+    },
+    "D5": {
+     "formula": "=B4*B3",
+     "format": "0.0 \"m²\""
+    },
+    "E5": {
+     "formula": "=u_wall",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F5": {
+     "formula": "=D5*E5",
+     "format": "0.00 \"W/K\""
+    },
+    "C6": {
+     "text": {
+      "en": "Right side wall",
+      "de": "Rechte Seitenwand"
+     }
+    },
+    "D6": {
+     "formula": "=B4*B3",
+     "format": "0.0 \"m²\""
+    },
+    "E6": {
+     "formula": "=u_wall",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F6": {
+     "formula": "=D6*E6",
+     "format": "0.00 \"W/K\""
+    },
+    "C7": {
+     "text": {
+      "en": "Front wall",
+      "de": "Frontwand"
+     }
+    },
+    "D7": {
+     "formula": "=B2*B4-D8",
+     "format": "0.0 \"m²\""
+    },
+    "E7": {
+     "formula": "=u_wall",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F7": {
+     "formula": "=D7*E7",
+     "format": "0.00 \"W/K\""
+    },
+    "C8": {
+     "text": {
+      "en": "Window",
+      "de": "Fenster"
+     }
+    },
+    "D8": {
+     "formula": "=PI()*B8^2/4",
+     "format": "0.0 \"m²\""
+    },
+    "E8": {
+     "formula": "=u_window",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F8": {
+     "formula": "=D8*E8",
+     "format": "0.00 \"W/K\""
+    },
+    "C9": {
+     "text": {
+      "en": "Back wall to core",
+      "de": "Rückwand zum Kern"
+     }
+    },
+    "D9": {
+     "formula": "=B2*B4",
+     "format": "0.0 \"m²\""
+    },
+    "E9": {
+     "formula": "=u_wall",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F9": {
+     "formula": "=D9*E9*attached_factor",
+     "format": "0.00 \"W/K\""
+    },
+    "C12": {
+     "text": {
+      "en": "Bathroom unit",
+      "de": "Nasszelle"
+     }
+    },
+    "D12": {
+     "value": 1.0,
+     "from": "types.C.fittings.bath.width",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "E12": {
+     "value": 1.2,
+     "from": "types.C.fittings.bath.length",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "F12": {
+     "value": 1,
+     "from": "types.C.fittings.bath.count",
+     "basis": "assumed",
+     "format": "0"
+    },
+    "G12": {
+     "formula": "=D12*E12*F12",
+     "format": "0.0 \"m²\""
+    },
+    "C13": {
+     "text": {
+      "en": "Desk",
+      "de": "Schreibtisch"
+     }
+    },
+    "D13": {
+     "value": 0.7,
+     "from": "types.C.fittings.desk.width",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "E13": {
+     "value": 1.6,
+     "from": "types.C.fittings.desk.length",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "F13": {
+     "value": 2,
+     "from": "types.C.fittings.desk.count",
+     "basis": "assumed",
+     "format": "0"
+    },
+    "G13": {
+     "formula": "=D13*E13*F13",
+     "format": "0.0 \"m²\""
+    },
+    "C14": {
+     "text": {
+      "en": "Sofa",
+      "de": "Sofa"
+     }
+    },
+    "D14": {
+     "value": 0.8,
+     "from": "types.C.fittings.sofa.width",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "E14": {
+     "value": 1.8,
+     "from": "types.C.fittings.sofa.length",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "F14": {
+     "value": 1,
+     "from": "types.C.fittings.sofa.count",
+     "basis": "assumed",
+     "format": "0"
+    },
+    "G14": {
+     "formula": "=D14*E14*F14",
+     "format": "0.0 \"m²\""
+    },
+    "C15": {
+     "text": {
+      "en": "Storage",
+      "de": "Stauraum"
+     }
+    },
+    "D15": {
+     "value": 0.5,
+     "from": "types.C.fittings.storage.width",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "E15": {
+     "value": 1.2,
+     "from": "types.C.fittings.storage.length",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "F15": {
+     "value": 1,
+     "from": "types.C.fittings.storage.count",
+     "basis": "assumed",
+     "format": "0"
+    },
+    "G15": {
+     "formula": "=D15*E15*F15",
+     "format": "0.0 \"m²\""
+    },
+    "C16": {
+     "text": {
+      "en": "Fitting area",
+      "de": "Einbaufläche"
+     }
+    },
+    "G16": {
+     "formula": "=SUM(G12:G15)",
+     "format": "0.0 \"m²\""
+    },
+    "A17": {
+     "text": {
+      "en": "Occupants",
+      "de": "Nutzer"
+     }
+    },
+    "B17": {
+     "value": 2,
+     "from": "types.C.occupants",
+     "basis": "assumed",
+     "format": "0"
+    }
+   }
+  },
+  {
+   "name": "Type D",
+   "title": {
+    "en": "Type D",
+    "de": "Typ D"
+   },
+   "widths": {
+    "A": 24,
+    "B": 14,
+    "C": 20,
+    "D": 10,
+    "E": 17,
+    "F": 13,
+    "G": 10
+   },
+   "cells": {
+    "A1": {
+     "text": {
+      "en": "Type",
+      "de": "Typ"
+     }
+    },
+    "B1": {
+     "text": {
+      "en": "Splayed residence",
+      "de": "Gefächerte Wohnkapsel"
+     }
+    },
+    "C1": {
+     "text": {
+      "en": "Residence with side window, turned 5 degrees on its plane (teaching variant)",
+      "de": "Wohnkapsel mit seitlichem Fenster, 5 Grad auf ihrer Ebene gedreht (Lehrvariante)"
+     }
+    },
+    "A2": {
+     "text": {
+      "en": "Width",
+      "de": "Breite"
+     }
+    },
+    "B2": {
+     "value": 2.5,
+     "from": "capsule.width",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "wikipedia"
+    },
+    "A3": {
+     "text": {
+      "en": "Length",
+      "de": "Länge"
+     }
+    },
+    "B3": {
+     "value": 4.0,
+     "from": "capsule.length",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "wikipedia"
+    },
+    "A4": {
+     "text": {
+      "en": "Height",
+      "de": "Höhe"
+     }
+    },
+    "B4": {
+     "value": 2.5,
+     "from": "capsule.height",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "wikipedia"
+    },
+    "A5": {
+     "text": {
+      "en": "Interior width",
+      "de": "Innenbreite"
+     }
+    },
+    "B5": {
+     "value": 2.3,
+     "from": "capsule.interior.width",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "archiweb"
+    },
+    "A6": {
+     "text": {
+      "en": "Interior length",
+      "de": "Innenlänge"
+     }
+    },
+    "B6": {
+     "value": 3.8,
+     "from": "capsule.interior.length",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "archiweb"
+    },
+    "A7": {
+     "text": {
+      "en": "Interior height",
+      "de": "Innenhöhe"
+     }
+    },
+    "B7": {
+     "value": 2.1,
+     "from": "capsule.interior.height",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "archiweb"
+    },
+    "A8": {
+     "text": {
+      "en": "Window diameter",
+      "de": "Fensterdurchmesser"
+     }
+    },
+    "B8": {
+     "value": 1.3,
+     "from": "types.D.window_diameter",
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "archeyes"
+    },
+    "A9": {
+     "text": {
+      "en": "Net floor area",
+      "de": "Nettogrundfläche"
+     }
+    },
+    "B9": {
+     "formula": "=B5*B6",
+     "format": "0.0 \"m²\""
+    },
+    "A10": {
+     "text": {
+      "en": "Volume",
+      "de": "Volumen"
+     }
+    },
+    "B10": {
+     "formula": "=B9*B7",
+     "format": "0.0 \"m³\""
+    },
+    "A11": {
+     "text": {
+      "en": "Transmission H_T",
+      "de": "Transmissionsverlust H_T"
+     }
+    },
+    "B11": {
+     "formula": "=SUM(F3:F9)",
+     "format": "0.00 \"W/K\""
+    },
+    "A12": {
+     "text": {
+      "en": "Ventilation H_V",
+      "de": "Lüftung H_V"
+     }
+    },
+    "B12": {
+     "formula": "=air_heat_capacity*air_change*B10",
+     "format": "0.00 \"W/K\""
+    },
+    "A13": {
+     "text": {
+      "en": "Heating load",
+      "de": "Heizlast"
+     }
+    },
+    "B13": {
+     "formula": "=(B11+B12)*(theta_i-theta_e)",
+     "format": "#,##0 \"W\""
+    },
+    "A14": {
+     "text": {
+      "en": "Annual heating demand",
+      "de": "Jahresheizwärmebedarf"
+     }
+    },
+    "B14": {
+     "formula": "=(B11+B12)*heating_degree_days*24/1000",
+     "format": "#,##0 \"kWh/a\""
+    },
+    "A15": {
+     "text": {
+      "en": "Demand per area",
+      "de": "Bedarf je Fläche"
+     }
+    },
+    "B15": {
+     "formula": "=B14/B9",
+     "format": "0 \"kWh/(m²·a)\""
+    },
+    "A16": {
+     "text": {
+      "en": "Free floor area",
+      "de": "Freie Fläche"
+     }
+    },
+    "B16": {
+     "formula": "=B9-G16",
+     "format": "0.0 \"m²\""
+    },
+    "C2": {
+     "text": {
+      "en": "Surface",
+      "de": "Bauteil"
+     }
+    },
+    "D2": {
+     "text": {
+      "en": "Area",
+      "de": "Fläche"
+     }
+    },
+    "E2": {
+     "text": {
+      "en": "U-value",
+      "de": "U-Wert"
+     }
+    },
+    "F2": {
+     "text": {
+      "en": "U·A",
+      "de": "U·A"
+     }
+    },
+    "C11": {
+     "text": {
+      "en": "Fitting",
+      "de": "Einbau"
+     }
+    },
+    "D11": {
+     "text": {
+      "en": "Width",
+      "de": "Breite"
+     }
+    },
+    "E11": {
+     "text": {
+      "en": "Length",
+      "de": "Länge"
+     }
+    },
+    "F11": {
+     "text": {
+      "en": "Count",
+      "de": "Anzahl"
+     }
+    },
+    "G11": {
+     "text": {
+      "en": "Area",
+      "de": "Fläche"
+     }
+    },
+    "C3": {
+     "text": {
+      "en": "Roof",
+      "de": "Dach"
+     }
+    },
+    "D3": {
+     "formula": "=B2*B3",
+     "format": "0.0 \"m²\""
+    },
+    "E3": {
+     "formula": "=u_roof",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F3": {
+     "formula": "=D3*E3",
+     "format": "0.00 \"W/K\""
+    },
+    "C4": {
+     "text": {
+      "en": "Floor",
+      "de": "Boden"
+     }
+    },
+    "D4": {
+     "formula": "=B2*B3",
+     "format": "0.0 \"m²\""
+    },
+    "E4": {
+     "formula": "=u_floor",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F4": {
+     "formula": "=D4*E4",
+     "format": "0.00 \"W/K\""
+    },
+    "C5": {
+     "text": {
+      "en": "Left side wall",
+      "de": "Linke Seitenwand"
+     }
+    },
+    "D5": {
+     "formula": "=B4*B3",
+     "format": "0.0 \"m²\""
+    },
+    "E5": {
+     "formula": "=u_wall",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F5": {
+     "formula": "=D5*E5",
+     "format": "0.00 \"W/K\""
+    },
+    "C6": {
+     "text": {
+      "en": "Right side wall",
+      "de": "Rechte Seitenwand"
+     }
+    },
+    "D6": {
+     "formula": "=B4*B3",
+     "format": "0.0 \"m²\""
+    },
+    "E6": {
+     "formula": "=u_wall",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F6": {
+     "formula": "=D6*E6",
+     "format": "0.00 \"W/K\""
+    },
+    "C7": {
+     "text": {
+      "en": "Front wall",
+      "de": "Frontwand"
+     }
+    },
+    "D7": {
+     "formula": "=B2*B4-D8",
+     "format": "0.0 \"m²\""
+    },
+    "E7": {
+     "formula": "=u_wall",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F7": {
+     "formula": "=D7*E7",
+     "format": "0.00 \"W/K\""
+    },
+    "C8": {
+     "text": {
+      "en": "Window",
+      "de": "Fenster"
+     }
+    },
+    "D8": {
+     "formula": "=PI()*B8^2/4",
+     "format": "0.0 \"m²\""
+    },
+    "E8": {
+     "formula": "=u_window",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F8": {
+     "formula": "=D8*E8",
+     "format": "0.00 \"W/K\""
+    },
+    "C9": {
+     "text": {
+      "en": "Back wall to core",
+      "de": "Rückwand zum Kern"
+     }
+    },
+    "D9": {
+     "formula": "=B2*B4",
+     "format": "0.0 \"m²\""
+    },
+    "E9": {
+     "formula": "=u_wall",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "F9": {
+     "formula": "=D9*E9*attached_factor",
+     "format": "0.00 \"W/K\""
+    },
+    "C12": {
+     "text": {
+      "en": "Bed",
+      "de": "Bett"
+     }
+    },
+    "D12": {
+     "value": 0.9,
+     "from": "types.D.fittings.bed.width",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "E12": {
+     "value": 2.0,
+     "from": "types.D.fittings.bed.length",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "F12": {
+     "value": 1,
+     "from": "types.D.fittings.bed.count",
+     "basis": "assumed",
+     "format": "0"
+    },
+    "G12": {
+     "formula": "=D12*E12*F12",
+     "format": "0.0 \"m²\""
+    },
+    "C13": {
+     "text": {
+      "en": "Bathroom unit",
+      "de": "Nasszelle"
+     }
+    },
+    "D13": {
+     "value": 1.0,
+     "from": "types.D.fittings.bath.width",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "E13": {
+     "value": 1.2,
+     "from": "types.D.fittings.bath.length",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "F13": {
+     "value": 1,
+     "from": "types.D.fittings.bath.count",
+     "basis": "assumed",
+     "format": "0"
+    },
+    "G13": {
+     "formula": "=D13*E13*F13",
+     "format": "0.0 \"m²\""
+    },
+    "C14": {
+     "text": {
+      "en": "Storage",
+      "de": "Stauraum"
+     }
+    },
+    "D14": {
+     "value": 0.5,
+     "from": "types.D.fittings.storage.width",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "E14": {
+     "value": 1.2,
+     "from": "types.D.fittings.storage.length",
+     "basis": "assumed",
+     "format": "0.00 \"m\""
+    },
+    "F14": {
+     "value": 1,
+     "from": "types.D.fittings.storage.count",
+     "basis": "assumed",
+     "format": "0"
+    },
+    "G14": {
+     "formula": "=D14*E14*F14",
+     "format": "0.0 \"m²\""
+    },
+    "C16": {
+     "text": {
+      "en": "Fitting area",
+      "de": "Einbaufläche"
+     }
+    },
+    "G16": {
+     "formula": "=SUM(G12:G15)",
+     "format": "0.0 \"m²\""
+    },
+    "A17": {
+     "text": {
+      "en": "Occupants",
+      "de": "Nutzer"
+     }
+    },
+    "B17": {
+     "value": 1,
+     "from": "types.D.occupants",
+     "basis": "assumed",
+     "format": "0"
+    }
+   }
+  },
+  {
+   "name": "Climate",
+   "title": {
+    "en": "Climate",
+    "de": "Klima"
+   },
+   "widths": {
+    "A": 26,
+    "B": 12,
+    "C": 4,
+    "D": 12,
+    "E": 10,
+    "F": 8
+   },
+   "cells": {
+    "A1": {
+     "text": {
+      "en": "Climate Tokyo",
+      "de": "Klima Tokio"
+     }
+    },
+    "A2": {
+     "text": {
+      "en": "Interior temperature θi",
+      "de": "Innentemperatur θi"
+     }
+    },
+    "B2": {
+     "value": 20.0,
+     "from": "energy.indoor_temperature",
+     "basis": "assumed",
+     "format": "0.0 \"°C\""
+    },
+    "A3": {
+     "text": {
+      "en": "Design temperature θe",
+      "de": "Auslegungstemperatur θe"
+     }
+    },
+    "B3": {
+     "value": 0.0,
+     "from": "energy.design_temperature",
+     "basis": "assumed",
+     "format": "0.0 \"°C\""
+    },
+    "A4": {
+     "text": {
+      "en": "Heating limit",
+      "de": "Heizgrenze"
+     }
+    },
+    "B4": {
+     "value": 18.0,
+     "from": "energy.heating_base",
+     "basis": "assumed",
+     "format": "0.0 \"°C\""
+    },
+    "A5": {
+     "text": {
+      "en": "Heating degree days",
+      "de": "Heizgradtage"
+     }
+    },
+    "B5": {
+     "formula": "=SUMPRODUCT((B4-E3:E14>0)*(B4-E3:E14)*F3:F14)",
+     "format": "#,##0 \"K·d\""
+    },
+    "A6": {
+     "text": {
+      "en": "Attached factor b",
+      "de": "Anbindungsfaktor b"
+     }
+    },
+    "B6": {
+     "value": 0.5,
+     "from": "energy.attached_factor",
+     "basis": "assumed",
+     "format": "0.00"
+    },
+    "A7": {
+     "text": {
+      "en": "Air change rate n",
+      "de": "Luftwechselrate n"
+     }
+    },
+    "B7": {
+     "value": 0.5,
+     "from": "energy.air_change",
+     "basis": "assumed",
+     "format": "0.00 \"1/h\""
+    },
+    "A8": {
+     "text": {
+      "en": "Air heat capacity",
+      "de": "Luftwärmekapazität"
+     }
+    },
+    "B8": {
+     "value": 0.34,
+     "from": "energy.air_heat_capacity",
+     "basis": "assumed",
+     "format": "0.00 \"Wh/(m³·K)\""
+    },
+    "D2": {
+     "text": {
+      "en": "Month",
+      "de": "Monat"
+     }
+    },
+    "E2": {
+     "text": {
+      "en": "Mean",
+      "de": "Mittel"
+     }
+    },
+    "F2": {
+     "text": {
+      "en": "Days",
+      "de": "Tage"
+     }
+    },
+    "D3": {
+     "text": {
+      "en": "January",
+      "de": "Januar"
+     }
+    },
+    "E3": {
+     "value": 5.4,
+     "from": "climate.months.01.mean",
+     "basis": "sourced",
+     "format": "0.0 \"°C\"",
+     "source": "jma-tokyo-normals"
+    },
+    "F3": {
+     "value": 31,
+     "from": "climate.months.01.days",
+     "basis": "sourced",
+     "format": "0",
+     "source": "wikipedia"
+    },
+    "D4": {
+     "text": {
+      "en": "February",
+      "de": "Februar"
+     }
+    },
+    "E4": {
+     "value": 6.1,
+     "from": "climate.months.02.mean",
+     "basis": "sourced",
+     "format": "0.0 \"°C\"",
+     "source": "jma-tokyo-normals"
+    },
+    "F4": {
+     "value": 28,
+     "from": "climate.months.02.days",
+     "basis": "sourced",
+     "format": "0",
+     "source": "wikipedia"
+    },
+    "D5": {
+     "text": {
+      "en": "March",
+      "de": "März"
+     }
+    },
+    "E5": {
+     "value": 9.4,
+     "from": "climate.months.03.mean",
+     "basis": "sourced",
+     "format": "0.0 \"°C\"",
+     "source": "jma-tokyo-normals"
+    },
+    "F5": {
+     "value": 31,
+     "from": "climate.months.03.days",
+     "basis": "sourced",
+     "format": "0",
+     "source": "wikipedia"
+    },
+    "D6": {
+     "text": {
+      "en": "April",
+      "de": "April"
+     }
+    },
+    "E6": {
+     "value": 14.3,
+     "from": "climate.months.04.mean",
+     "basis": "sourced",
+     "format": "0.0 \"°C\"",
+     "source": "jma-tokyo-normals"
+    },
+    "F6": {
+     "value": 30,
+     "from": "climate.months.04.days",
+     "basis": "sourced",
+     "format": "0",
+     "source": "wikipedia"
+    },
+    "D7": {
+     "text": {
+      "en": "May",
+      "de": "Mai"
+     }
+    },
+    "E7": {
+     "value": 18.8,
+     "from": "climate.months.05.mean",
+     "basis": "sourced",
+     "format": "0.0 \"°C\"",
+     "source": "jma-tokyo-normals"
+    },
+    "F7": {
+     "value": 31,
+     "from": "climate.months.05.days",
+     "basis": "sourced",
+     "format": "0",
+     "source": "wikipedia"
+    },
+    "D8": {
+     "text": {
+      "en": "June",
+      "de": "Juni"
+     }
+    },
+    "E8": {
+     "value": 21.9,
+     "from": "climate.months.06.mean",
+     "basis": "sourced",
+     "format": "0.0 \"°C\"",
+     "source": "jma-tokyo-normals"
+    },
+    "F8": {
+     "value": 30,
+     "from": "climate.months.06.days",
+     "basis": "sourced",
+     "format": "0",
+     "source": "wikipedia"
+    },
+    "D9": {
+     "text": {
+      "en": "July",
+      "de": "Juli"
+     }
+    },
+    "E9": {
+     "value": 25.7,
+     "from": "climate.months.07.mean",
+     "basis": "sourced",
+     "format": "0.0 \"°C\"",
+     "source": "jma-tokyo-normals"
+    },
+    "F9": {
+     "value": 31,
+     "from": "climate.months.07.days",
+     "basis": "sourced",
+     "format": "0",
+     "source": "wikipedia"
+    },
+    "D10": {
+     "text": {
+      "en": "August",
+      "de": "August"
+     }
+    },
+    "E10": {
+     "value": 26.9,
+     "from": "climate.months.08.mean",
+     "basis": "sourced",
+     "format": "0.0 \"°C\"",
+     "source": "jma-tokyo-normals"
+    },
+    "F10": {
+     "value": 31,
+     "from": "climate.months.08.days",
+     "basis": "sourced",
+     "format": "0",
+     "source": "wikipedia"
+    },
+    "D11": {
+     "text": {
+      "en": "September",
+      "de": "September"
+     }
+    },
+    "E11": {
+     "value": 23.3,
+     "from": "climate.months.09.mean",
+     "basis": "sourced",
+     "format": "0.0 \"°C\"",
+     "source": "jma-tokyo-normals"
+    },
+    "F11": {
+     "value": 30,
+     "from": "climate.months.09.days",
+     "basis": "sourced",
+     "format": "0",
+     "source": "wikipedia"
+    },
+    "D12": {
+     "text": {
+      "en": "October",
+      "de": "Oktober"
+     }
+    },
+    "E12": {
+     "value": 18.0,
+     "from": "climate.months.10.mean",
+     "basis": "sourced",
+     "format": "0.0 \"°C\"",
+     "source": "jma-tokyo-normals"
+    },
+    "F12": {
+     "value": 31,
+     "from": "climate.months.10.days",
+     "basis": "sourced",
+     "format": "0",
+     "source": "wikipedia"
+    },
+    "D13": {
+     "text": {
+      "en": "November",
+      "de": "November"
+     }
+    },
+    "E13": {
+     "value": 12.5,
+     "from": "climate.months.11.mean",
+     "basis": "sourced",
+     "format": "0.0 \"°C\"",
+     "source": "jma-tokyo-normals"
+    },
+    "F13": {
+     "value": 30,
+     "from": "climate.months.11.days",
+     "basis": "sourced",
+     "format": "0",
+     "source": "wikipedia"
+    },
+    "D14": {
+     "text": {
+      "en": "December",
+      "de": "Dezember"
+     }
+    },
+    "E14": {
+     "value": 7.7,
+     "from": "climate.months.12.mean",
+     "basis": "sourced",
+     "format": "0.0 \"°C\"",
+     "source": "jma-tokyo-normals"
+    },
+    "F14": {
+     "value": 31,
+     "from": "climate.months.12.days",
+     "basis": "sourced",
+     "format": "0",
+     "source": "wikipedia"
+    }
+   }
+  },
+  {
+   "name": "Energy",
+   "title": {
+    "en": "Energy",
+    "de": "Energie"
+   },
+   "widths": {
+    "A": 30,
+    "B": 14,
+    "C": 14,
+    "D": 14,
+    "E": 17,
+    "F": 14
+   },
+   "cells": {
+    "A1": {
+     "text": {
+      "en": "Heating energy",
+      "de": "Heizenergie"
+     }
+    },
+    "A3": {
+     "text": {
+      "en": "Type",
+      "de": "Typ"
+     }
+    },
+    "B3": {
+     "text": {
+      "en": "Capsules",
+      "de": "Kapseln"
+     }
+    },
+    "C3": {
+     "text": {
+      "en": "Per capsule",
+      "de": "Je Kapsel"
+     }
+    },
+    "D3": {
+     "text": {
+      "en": "Total",
+      "de": "Gesamt"
+     }
+    },
+    "E3": {
+     "text": {
+      "en": "Net area",
+      "de": "Nettogrundfläche"
+     }
+    },
+    "F3": {
+     "text": {
+      "en": "Per area",
+      "de": "Je Fläche"
+     }
+    },
+    "A8": {
+     "text": {
+      "en": "Total",
+      "de": "Summe"
+     }
+    },
+    "B8": {
+     "formula": "=SUM(B4:B7)",
+     "format": "0"
+    },
+    "D8": {
+     "formula": "=SUM(D4:D7)",
+     "format": "#,##0 \"kWh/a\""
+    },
+    "E8": {
+     "formula": "=SUM(E4:E7)",
+     "format": "#,##0.0 \"m²\""
+    },
+    "F8": {
+     "formula": "=D8/E8",
+     "format": "0 \"kWh/(m²·a)\""
+    },
+    "A10": {
+     "text": {
+      "en": "What-if: U-values",
+      "de": "Was-wäre-wenn: U-Werte"
+     }
+    },
+    "A11": {
+     "text": {
+      "en": "Roof U",
+      "de": "Dach U"
+     }
+    },
+    "B11": {
+     "value": 0.5,
+     "from": "energy.u_roof",
+     "basis": "assumed",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "A12": {
+     "text": {
+      "en": "Floor U",
+      "de": "Boden U"
+     }
+    },
+    "B12": {
+     "value": 0.6,
+     "from": "energy.u_floor",
+     "basis": "assumed",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "A13": {
+     "text": {
+      "en": "Wall U",
+      "de": "Wand U"
+     }
+    },
+    "B13": {
+     "value": 0.6,
+     "from": "energy.u_wall",
+     "basis": "assumed",
+     "format": "0.00 \"W/(m²·K)\""
+    },
+    "A14": {
+     "text": {
+      "en": "Window U",
+      "de": "Fenster U"
+     }
+    },
+    "B14": {
+     "value": 2.33,
+     "from": "energy.u_window",
+     "basis": "sourced",
+     "format": "0.00 \"W/(m²·K)\"",
+     "source": "tokyo-window-2019"
+    },
+    "A16": {
+     "text": {
+      "en": "Heating load, one of each type",
+      "de": "Heizlast, je ein Typ"
+     }
+    },
+    "B16": {
+     "formula": "=SUM('Type A:Type D'!B13)",
+     "format": "#,##0 \"W\""
+    },
+    "A4": {
+     "text": {
+      "en": "Type A",
+      "de": "Typ A"
+     }
+    },
+    "B4": {
+     "formula": "=Program!B4",
+     "format": "0"
+    },
+    "C4": {
+     "formula": "='Type A'!B14",
+     "format": "#,##0 \"kWh/a\""
+    },
+    "D4": {
+     "formula": "=B4*C4",
+     "format": "#,##0 \"kWh/a\""
+    },
+    "E4": {
+     "formula": "=Program!D4",
+     "format": "0.0 \"m²\""
+    },
+    "F4": {
+     "formula": "=D4/E4",
+     "format": "0 \"kWh/(m²·a)\""
+    },
+    "A5": {
+     "text": {
+      "en": "Type B",
+      "de": "Typ B"
+     }
+    },
+    "B5": {
+     "formula": "=Program!B5",
+     "format": "0"
+    },
+    "C5": {
+     "formula": "='Type B'!B14",
+     "format": "#,##0 \"kWh/a\""
+    },
+    "D5": {
+     "formula": "=B5*C5",
+     "format": "#,##0 \"kWh/a\""
+    },
+    "E5": {
+     "formula": "=Program!D5",
+     "format": "0.0 \"m²\""
+    },
+    "F5": {
+     "formula": "=D5/E5",
+     "format": "0 \"kWh/(m²·a)\""
+    },
+    "A6": {
+     "text": {
+      "en": "Type C",
+      "de": "Typ C"
+     }
+    },
+    "B6": {
+     "formula": "=Program!B6",
+     "format": "0"
+    },
+    "C6": {
+     "formula": "='Type C'!B14",
+     "format": "#,##0 \"kWh/a\""
+    },
+    "D6": {
+     "formula": "=B6*C6",
+     "format": "#,##0 \"kWh/a\""
+    },
+    "E6": {
+     "formula": "=Program!D6",
+     "format": "0.0 \"m²\""
+    },
+    "F6": {
+     "formula": "=D6/E6",
+     "format": "0 \"kWh/(m²·a)\""
+    },
+    "A7": {
+     "text": {
+      "en": "Type D",
+      "de": "Typ D"
+     }
+    },
+    "B7": {
+     "formula": "=Program!B7",
+     "format": "0"
+    },
+    "C7": {
+     "formula": "='Type D'!B14",
+     "format": "#,##0 \"kWh/a\""
+    },
+    "D7": {
+     "formula": "=B7*C7",
+     "format": "#,##0 \"kWh/a\""
+    },
+    "E7": {
+     "formula": "=Program!D7",
+     "format": "0.0 \"m²\""
+    },
+    "F7": {
+     "formula": "=D7/E7",
+     "format": "0 \"kWh/(m²·a)\""
+    }
+   }
+  }
+ ]
+}

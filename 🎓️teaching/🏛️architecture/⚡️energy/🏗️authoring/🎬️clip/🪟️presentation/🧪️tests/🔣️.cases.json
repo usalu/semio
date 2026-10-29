@@ -218,11 +218,76 @@
     },
     {
       "id": "grasshopper",
-      "videos": []
+      "videos": [
+        {
+          "id": "grasshopper_anatomy",
+          "title": {
+            "en": "Anatomy of a Grasshopper Script",
+            "de": "Aufbau eines Grasshopper-Skripts"
+          }
+        },
+        {
+          "id": "grasshopper_capsule",
+          "title": {
+            "en": "One Capsule, Parametric",
+            "de": "Eine Kapsel, parametrisch"
+          }
+        },
+        {
+          "id": "grasshopper_tower",
+          "title": {
+            "en": "From One Capsule to the Tower",
+            "de": "Von der Kapsel zum Turm"
+          }
+        },
+        {
+          "id": "grasshopper_casting",
+          "title": {
+            "en": "Casting: When Types Meet",
+            "de": "Casting: Wenn Typen sich treffen"
+          }
+        },
+        {
+          "id": "grasshopper_trees",
+          "title": {
+            "en": "Data Trees on the Tower",
+            "de": "Datenbäume am Turm"
+          }
+        }
+      ]
     },
     {
       "id": "excel",
-      "videos": []
+      "videos": [
+        {
+          "id": "excel_anatomy",
+          "title": {
+            "en": "The Anatomy of a Workbook",
+            "de": "Aufbau einer Arbeitsmappe"
+          }
+        },
+        {
+          "id": "excel_references",
+          "title": {
+            "en": "Cell References",
+            "de": "Zellbezüge"
+          }
+        },
+        {
+          "id": "excel_program",
+          "title": {
+            "en": "The Room Program in Excel",
+            "de": "Das Raumprogramm in Excel"
+          }
+        },
+        {
+          "id": "excel_energy",
+          "title": {
+            "en": "Heating Demand in the Nakagin Workbook",
+            "de": "Heizwärmebedarf in der Nakagin-Arbeitsmappe"
+          }
+        }
+      ]
     },
     {
       "id": "optimization",

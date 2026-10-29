@@ -10,6 +10,7 @@ import re
 import sys
 import unittest
 import uuid
+from collections import Counter
 from pathlib import Path
 
 import numpy as np
@@ -21,7 +22,8 @@ ROOT = next(parent for parent in CLIP.parents if (parent / "🧰️framework").i
 sys.path.insert(0, str(ROOT))
 ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$"
 GLOBAL_ID = re.compile(r"^[0-3][0-9A-Za-z_$]{21}$")
-SOURCE_ID = re.compile(r"^VS-\d+(\.\d+)*$")
+SOURCE_TOKEN = r"(?:VS-\d+(?:\.\d+)*|(?:CSIC2022|SAB2024|Savoye-as-[Bb]uilt|SavoyeAsBuilt2024|FLC)[-A-Za-z0-9.]+|teaching-services-original)"
+SOURCE_ID = re.compile(r"^(?:" + SOURCE_TOKEN + r"(?:;\s*" + SOURCE_TOKEN + r")*|https://[^\s]+)$")
 
 
 def model_api():
@@ -62,16 +64,43 @@ def shoelace(points):
     return abs(float(np.dot(p[:, 0], np.roll(p[:, 1], -1)) - np.dot(p[:, 1], np.roll(p[:, 0], -1)))) / 2
 
 
+def profile_area(profile, outline, holes=()):
+    """🕳️ Integrate native analytic profile dimensions and independent GEOS hole polygons."""
+    from shapely.geometry import Polygon
+    def area(item,ring):
+        if item["shape"]=="circle":
+            return float(np.pi)*(item["diameter"]["value"]/2)**2
+        if item["shape"]=="ellipse":
+            return float(np.pi)*item["width"]["value"]*item["depth"]["value"]/4
+        if item["shape"]=="rectangle":
+            return item["width"]["value"]*item["depth"]["value"]
+        return Polygon(ring).area
+    gross=area(profile,outline)
+    voids=profile.get("voids",[])
+    return gross-sum(area(hole,hole.get("outline",[])) for hole in voids) if voids else gross-sum(Polygon(hole).area for hole in holes)
+
+
+def sampling_candidates(polygon, points):
+    """📦 Keep every point inside the inclusive polygon bounds before exact ray casting."""
+    p,q=np.asarray(polygon,dtype=float),np.asarray(points,dtype=float).reshape(-1,2)
+    low,high=p.min(axis=0),p.max(axis=0)
+    return np.flatnonzero((q[:,0]>=low[0])&(q[:,0]<=high[0])&(q[:,1]>=low[1])&(q[:,1]<=high[1]))
+
+
 def inside(polygon, points):
     """📍 Test points against a polygon by vectorised ray casting."""
     p, q = np.asarray(polygon, dtype=float), np.asarray(points, dtype=float).reshape(-1, 2)
+    indices=sampling_candidates(p,q)
+    output=np.zeros(len(q),dtype=bool)
+    q=q[indices]
     result = np.zeros(len(q), dtype=bool)
     for (x0, y0), (x1, y1) in zip(p, np.roll(p, -1, axis=0)):
         crosses = (y0 > q[:, 1]) != (y1 > q[:, 1])
         with np.errstate(divide="ignore", invalid="ignore"):
             cut = x0 + (q[:, 1] - y0) * (x1 - x0) / (y1 - y0)
         result ^= crosses & (q[:, 0] < cut)
-    return result
+    output[indices]=result
+    return output
 
 
 def sample_surface(outer, holes, step):
@@ -280,35 +309,125 @@ class ModelCase(unittest.TestCase):
     def slab(self, tag):
         return next(slab for slab in self.geometry["slabs"] if slab["tag"] == tag)
 
+    def entry_obstruction(self, model):
+        """🚘 Measure the facing aboveground outlines, excluding square stems below vehicle occupancy."""
+        from shapely.geometry import Polygon
+        geometry=self.api.building_geometry(model)
+        columns={p["tag"]:p for p in geometry["pilotis"]}
+        ground=geometry["storeys"]["ground"]
+        top=ground+model["car"]["height"]["value"]
+        widths=[]
+        for index,tag in enumerate(self.api.car_path(model)["entry_pair"]):
+            column=columns[tag]
+            outlines=[Polygon(part["outline"]) for part in column["parts"] if part["z0"]<top and part["z1"]>ground]
+            widths.append(max(shape.bounds[2]-column["x"] if index==0 else column["x"]-shape.bounds[0] for shape in outlines))
+        return sum(widths)
+
+    def assert_partition(self, polygons, expected, tolerance=1e-6):
+        """🧩 Prove coverage using summed area, containment and indexed pair intersections without a fragment union."""
+        from shapely.strtree import STRtree
+        self.assertTrue(expected.is_valid)
+        self.assertTrue(all(p.is_valid and p.area>1e-12 for p in polygons))
+        total=sum(p.area for p in polygons)
+        outside=sum(p.difference(expected).area for p in polygons if not expected.covers(p))
+        overlap=0.0
+        tree=STRtree(polygons)
+        for index,polygon in enumerate(polygons):
+            for other in tree.query(polygon):
+                if int(other)>index:
+                    overlap+=polygon.intersection(polygons[int(other)]).area
+        self.assertAlmostEqual(total,expected.area,places=6)
+        self.assertLess(abs(total-expected.area)+overlap+2*outside,tolerance)
+
+    def slab_domain(self, slab):
+        """📐 Reconstruct primary slab occupancy from its source boundary and native void rings."""
+        from shapely.geometry import Polygon
+        from shapely.ops import unary_union
+        return Polygon(slab["outline"]).difference(unary_union([Polygon(ring) for ring in slab["voids"]]))
+
+    def physical_supports(self, model, slab):
+        """🏛️ Independently intersect actual profile prisms with occupied regional soffits."""
+        from shapely.geometry import Polygon
+        geometry=self.api.building_geometry(model)
+        supports=[]
+        for pil in geometry["pilotis"]:
+            if any(part["z0"] < region["z0"]+1e-8 and part["z1"] >= region["z0"]-1e-8 and Polygon(part["outline"]).intersection(Polygon(region["outline"])).area > 1e-9
+                   for part in pil["parts"] for region in slab["full_parts"]):
+                supports.append(pil)
+        return supports
+
+    def load_patches(self, model, level):
+        """⚖️ Independently authored local load patches use GEOS geometry and explicit material densities."""
+        from shapely.geometry import Polygon
+        items=registry(model)
+        slab=next(s for s in self.api.building_geometry(model)["slabs"] if s["tag"]==self.api.role({"first":"floor","roof":"roof"}[level],model))
+        comp=items[slab["tag"]]["geometry"]["composite"]
+        t,b,p=(comp[k]["value"] for k in ("compression_layer","rib_width","rib_pitch"))
+        rc,clay=(items[comp[k]]["density"]["value"] for k in ("concrete","ceramic"))
+        if level=="roof":
+            layers=items["LS-ROOF"]["layers"]
+            nominal=next(l["thickness"]["value"] for l in layers if l["id"]=="structural")
+            finish=next(l for l in layers if l["id"]=="paving")
+            density=items[finish["material"]]["density"]["value"]
+            solarium=Polygon(slab["zones"]["solarium"])
+        patches=[]
+        for part in slab["full_parts"]:
+            shape=Polygon(part["outline"])
+            h=part["thickness"]
+            c=t+b/p*(h-t)
+            own=rc*c+clay*(h-c) if part["material"]=="MAT-HOLLOW-SLAB" else items[part["material"]]["density"]["value"]*h
+            zones=[("slab",shape)] if level=="first" else [("solarium",shape.intersection(solarium)),("roof",shape.difference(solarium))]
+            for zone,polygon in zones:
+                if polygon.area<1e-12:
+                    continue
+                finish_weight=model["loads"]["finishes"]["first"]["value"] if level=="first" else density*(finish["thickness"]["value"]-(h-nominal))
+                imposed=model["loads"]["imposed"]["first" if level=="first" else zone]["value"]
+                patches.append({"shape":polygon,"area":polygon.area,"q":own+finish_weight+imposed,"zone":zone,"depth":h,"self_weight":own,"finish":finish_weight,"imposed":imposed,"region":part["region"]})
+        return patches
+
     def roof_zones(self, model):
-        geometry = self.api.building_geometry(model)
-        roof = next(slab for slab in geometry["slabs"] if slab["kind"] == "ROOF")
-        imposed = model["loads"]["imposed"]
-        load = lambda zone, extra: sum(l["thickness"] * l["density"] for l in roof["layers"] if not l["zones"] or zone in l["zones"]) + extra
-        return roof, {"solarium": load("solarium", imposed["solarium"]["value"]), "planted": load("planted", imposed["roof_planted"]["value"])}
+        """⚖️ Independently average source material patches within each actual roof zone."""
+        roof=next(s for s in self.api.building_geometry(model)["slabs"] if s["tag"]==self.api.role("roof",model))
+        patches=self.load_patches(model,"roof")
+        return roof,{zone:sum(p["area"]*p["q"] for p in patches if p["zone"]==zone)/sum(p["area"] for p in patches if p["zone"]==zone) for zone in ("roof","solarium")}
+
 
     def roof_load(self, model):
-        roof, loads = self.roof_zones(model)
-        solarium = shoelace(roof["zones"]["solarium"])
-        net = self.api.quantities(roof["tag"], model)["area"]
-        return (loads["solarium"] * solarium + loads["planted"] * (net - solarium)) / net
+        """⚖️ Weight the independently integrated zones by actual occupied area."""
+        from shapely.geometry import Polygon
+        roof,loads=self.roof_zones(model)
+        occupied=self.slab_domain(roof)
+        solarium=occupied.intersection(Polygon(roof["zones"]["solarium"])).area
+        return (loads["solarium"]*solarium+loads["roof"]*(occupied.area-solarium))/occupied.area
+
+
+    @staticmethod
+    def points_in_patch(shape,points):
+        """🔬 Exact GEOS interior membership after a conservative NumPy bounds filter."""
+        from shapely import contains_xy
+        xmin,ymin,xmax,ymax=shape.bounds
+        candidates=np.flatnonzero((points[:,0]>=xmin)&(points[:,0]<=xmax)&(points[:,1]>=ymin)&(points[:,1]<=ymax))
+        inside=np.zeros(len(points),dtype=bool)
+        inside[candidates]=contains_xy(shape,points[candidates,0],points[candidates,1])
+        return inside
 
     def roof_reactions(self, model, step=0.025):
+        """📐 SciPy nearest-support sampling integrates independent material/zone patch weights."""
         from scipy.spatial import cKDTree
+        roof,_=self.roof_zones(model)
+        points=sample_surface(roof["outline"],roof["voids"],step)
+        supports=self.physical_supports(model,roof)
+        nearest=cKDTree(np.array([[p["x"],p["y"]] for p in supports])).query(points)[1]
+        q=np.zeros(len(points))
+        for patch in self.load_patches(model,"roof"):
+            q[self.points_in_patch(patch["shape"],points)]=patch["q"]
+        return {pil["tag"]:float(q[nearest==i].sum()*step*step) for i,pil in enumerate(supports)}
 
-        roof, loads = self.roof_zones(model)
-        geometry = self.api.building_geometry(model)
-        points = sample_surface(roof["outline"], roof["voids"], step)
-        nearest = cKDTree(np.array([[p["x"], p["y"]] for p in geometry["pilotis"]])).query(points)[1]
-        solarium = inside(roof["zones"]["solarium"], points)
-        cell = step * step
-        return {pil["tag"]: float(((nearest == i) & solarium).sum() * cell * loads["solarium"] + ((nearest == i) & ~solarium).sum() * cell * loads["planted"])
-                for i, pil in enumerate(geometry["pilotis"])}
 
     def floor_load(self, model):
-        floor = next(slab for slab in self.api.building_geometry(model)["slabs"] if slab["kind"] == "FLOOR")
-        concrete = registry(model)["MAT-RC"]["density"]["value"]
-        return floor["thickness"] * concrete + model["loads"]["finishes"]["first"]["value"] + model["loads"]["imposed"]["first"]["value"]
+        """🧱 Composite fields and solid RC beam strips use their own physical local weights."""
+        patches=self.load_patches(model,"first")
+        return sum(p["area"]*p["q"] for p in patches)/sum(p["area"] for p in patches)
 
 
 class BimGlobalIdContract(ModelCase):
@@ -367,6 +486,80 @@ class BimGlobalIdContract(ModelCase):
                 self.api.element(key, self.model)
 
 
+class BimPartitionOracleContract(unittest.TestCase):
+    """🧮 Bounded independent partition proofs retain coverage, disjointness and containment."""
+
+    def test_partition_proof_matches_geos_for_coverage_overlap_and_leaks(self):
+        from shapely.geometry import Polygon
+        from shapely.ops import unary_union
+        fixture=CASES["partition_oracle"]
+        expected=Polygon(fixture["domain"])
+        for case in fixture["cases"]:
+            with self.subTest(case=case["id"]):
+                polygons=[Polygon(ring) for ring in case["pieces"]]
+                union=unary_union(polygons)
+                independent=union.symmetric_difference(expected).area<1e-9 and abs(sum(p.area for p in polygons)-union.area)<1e-9
+                self.assertEqual(independent,case["valid"])
+                if case["valid"]:
+                    ModelCase.assert_partition(self,polygons,expected)
+                else:
+                    with self.assertRaises(AssertionError):
+                        ModelCase.assert_partition(self,polygons,expected)
+
+
+    def test_patch_sampling_preserves_holes_and_boundaries(self):
+        from shapely.geometry import shape
+        from shapely import contains_xy
+        fixture=CASES["patch_sampling"]
+        points=np.asarray(fixture["points"],dtype=float)
+        for patch in fixture["patches"]:
+            polygon=shape(patch["shape"])
+            expected=np.zeros(len(points),dtype=bool)
+            expected[patch["inside"]]=True
+            np.testing.assert_array_equal(contains_xy(polygon,points[:,0],points[:,1]),expected)
+            np.testing.assert_array_equal(ModelCase.points_in_patch(polygon,points),expected)
+
+
+    def test_slab_load_and_support_oracles_use_full_semantic_member_scope(self):
+        from types import SimpleNamespace
+        from shapely.geometry import Polygon
+        import numpy as np
+        case=CASES['slab_scope']
+        def part(outline):
+            return {'outline':outline,'z0':6.34,'z1':6.51,'thickness':.17,'material':'MAT-HOLLOW-SLAB','region':'R'}
+        slab={'tag':'SL-R','outline':case['outline'],'voids':[],'zones':{'solarium':case['outline']},'parts':[part(ring) for ring in case['owned']],'full_parts':[part(case['outline'])]}
+        column={'tag':'C','x':.5,'y':.5,'parts':[{'outline':case['column'],'z0':3.14,'z1':9.03}]}
+        geometry={'slabs':[slab],'pilotis':[column]}
+        model={key:[] for key in ('elements','types','spaces','storeys','materials','relations')}
+        model.update({key:{'tag':key} for key in ('project','site','building')})
+        quantity=lambda value:{'value':value}
+        model['elements']=[{'tag':'SL-R','geometry':{'composite':{'compression_layer':quantity(.055),'rib_width':quantity(.08),'rib_pitch':quantity(.5),'concrete':'RC','ceramic':'CLAY'}}}]
+        model['materials']=[{'tag':'RC','density':quantity(25)},{'tag':'CLAY','density':quantity(14)},{'tag':'PAVING','density':quantity(22)},{'tag':'LS-ROOF','layers':[{'id':'structural','thickness':quantity(.17)},{'id':'paving','thickness':quantity(.09),'material':'PAVING'}]}]
+        model['loads']={'finishes':{'first':quantity(1)},'imposed':{'first':quantity(2),'roof':quantity(1),'solarium':quantity(1.5)}}
+        helper=ModelCase()
+        helper.api=SimpleNamespace(building_geometry=lambda model:geometry,role=lambda key,model:'SL-R')
+        self.assertAlmostEqual(sum(Polygon(p['outline']).area for p in slab['parts']),case['owned_area'])
+        self.assertEqual([p['tag'] for p in helper.physical_supports(model,slab)],['C'])
+        patches=helper.load_patches(model,'roof')
+        self.assertAlmostEqual(sum(p['area'] for p in patches),case['area'])
+        concrete=.055+.08/.5*(.17-.055)
+        independent=float(np.dot([concrete,.17-concrete,.09,1],[25,14,22,1.5]))
+        self.assertAlmostEqual(independent,case['load'])
+        self.assertAlmostEqual(sum(p['area']*p['q'] for p in patches),case['load'])
+        slab['zones']['solarium']=[[0,0],[.7,0],[.7,1],[0,1]]
+        self.assertAlmostEqual(helper.roof_load(model),independent-.15)
+
+    def test_dense_sampling_candidates_preserve_ray_boundary_semantics(self):
+        from shapely.geometry import Polygon,Point
+        case=CASES['sampling_candidates']
+        points=np.asarray(case['points'],dtype=float)
+        np.testing.assert_array_equal(sampling_candidates(case['polygon'],points),case['indices'])
+        np.testing.assert_array_equal(inside(case['polygon'],points),case['inside'])
+        polygon=Polygon(case['polygon'])
+        for point,expected in zip(points,case['inside']):
+            if polygon.boundary.distance(Point(point))>1e-12:
+                self.assertEqual(polygon.contains(Point(point)),expected)
+
 class BimModelStructureContract(ModelCase):
     """🧬 The authored JSON is bilingual, sourced or assumed, and referentially complete."""
 
@@ -411,7 +604,7 @@ class BimModelStructureContract(ModelCase):
         box = self.model["building"]["box"]
         for name in ("length", "width", "height"):
             self.assertEqual(box[name]["value"], sourced["box"][name])
-            self.assertEqual(box[name]["basis"], "inferred")
+            self.assertEqual(box[name]["basis"], sourced["box_basis"][name])
         grid = self.model["grid"]
         self.assertEqual((grid["spacing"]["value"], grid["spacing"]["basis"]), (sourced["spacing"], "sourced"))
         self.assertEqual((grid["initial_spacing"]["value"], grid["initial_spacing"]["basis"]), (sourced["initial_spacing"], "sourced"))
@@ -420,32 +613,35 @@ class BimModelStructureContract(ModelCase):
             self.assertEqual(years[name], year)
         self.assertEqual(self.model["building"]["architects"], sourced["architects"])
         self.assertEqual(self.model["site"]["name"]["en"], sourced["site"])
-        for tag, area in (("SP-TERRACE", sourced["roof_garden_area"]), ("SP-SOLARIUM", sourced["solarium_area"])):
-            reference = self.items[tag]["reference_area"]
-            self.assertEqual((reference["value"], reference["basis"], reference["unit"]), (area, "sourced", "m²"))
-            self.assertLessEqual(abs(self.api.quantities(tag, self.model)["area"] / area - 1), sourced["area_tolerance"])
+        for tag in ("SP-TERRACE", "SP-SOLARIUM"):
+            self.assertNotIn("reference_area", self.items[tag])
+            self.assertAlmostEqual(self.api.quantities(tag, self.model)["area"], shoelace(self.items[tag]["outline"]), places=6)
 
-    def test_assumed_values_are_plausible_for_a_villa_of_1929(self):
+    def test_measured_geometry_and_assumed_vehicle_dimensions_are_plausible(self):
         diameter = self.items[CASES["tags"]["piloti_type"]]["profile"]["diameter"]
-        self.assertEqual(diameter["basis"], "assumed")
+        self.assertEqual(diameter["basis"], "sourced")
         self.assertTrue(0.2 <= diameter["value"] <= 0.6)
         levels = [storey["elevation"]["value"] for storey in self.model["storeys"]]
-        self.assertEqual(levels[0], 0)
+        self.assertAlmostEqual(levels[0], -2.42)
         self.assertEqual(levels, sorted(levels))
-        self.assertTrue(3.0 <= levels[1] <= 4.5)
+        self.assertEqual(levels[1], 0)
+        self.assertAlmostEqual(levels[2], 3.17)
         self.assertLess(levels[-1], self.model["building"]["box"]["height"]["value"])
         for tag in CASES["tags"]["slabs"]:
             slab = self.slab(tag)
-            self.assertTrue(0.1 <= slab["thickness"] <= 0.5)
+            minimum=0.005 if tag in CASES["tags"]["covers"] else 0.05
+            self.assertTrue(minimum <= slab["thickness"] <= 0.5)
         self.assertTrue(1.0 <= self.model["car"]["width"]["value"] <= 2.2)
         self.assertTrue(3.0 <= self.model["car"]["length"]["value"] <= 6.0)
 
     def test_every_element_is_complete_and_references_exist(self):
-        required = {"guid", "tag", "class", "predefined_type", "name", "storey", "geometry", "attributes", "psets", "metadata"}
+        required = {"guid", "tag", "class", "name", "storey", "geometry", "attributes", "psets", "metadata"}
         domains = set(CASES["model"]["domains"])
         for element in self.model["elements"]:
             with self.subTest(tag=element["tag"]):
                 self.assertTrue(required <= set(element))
+                attributes = {name for level in self.api.class_chain(element["class"],self.model) for name in level["adds"]}
+                self.assertEqual("predefined_type" in element,"PredefinedType" in attributes)
                 self.assertIn(element["class"], self.model["classes"])
                 self.assertIn(element["storey"], {storey["tag"] for storey in self.model["storeys"]})
                 if "type" in element:
@@ -459,21 +655,40 @@ class BimModelStructureContract(ModelCase):
         tags = [item["tag"] for group in ("elements", "types", "spaces", "storeys", "materials", "relations") for item in self.model[group]]
         self.assertEqual(len(tags), len(set(tags)))
 
-    def test_opening_and_window_chain_is_authored_for_every_wall(self):
+    def test_every_opening_has_a_native_host_and_optional_filling(self):
         openings = {e["tag"]: e for e in self.model["elements"] if e["class"] == "IfcOpeningElement"}
-        windows = {e["tag"]: e for e in self.model["elements"] if e["class"] == "IfcWindow"}
-        walls = {e["tag"]: e for e in self.model["elements"] if e["class"] == "IfcWall" and e["predefined_type"] == "STANDARD"}
-        self.assertEqual(sorted(walls), sorted(CASES["tags"]["walls"]))
-        self.assertEqual(sorted(openings), sorted(CASES["tags"]["openings"]))
-        self.assertEqual(sorted(windows), sorted(CASES["tags"]["windows"]))
-        for tag, opening in openings.items():
-            self.assertIn(opening["geometry"]["wall"], walls)
-        self.assertEqual(sorted(w["geometry"]["opening"] for w in windows.values()), sorted(openings))
-        self.assertEqual(len({o["geometry"]["wall"] for o in openings.values()}), len(openings))
+        fillings = [e for e in self.model["elements"] if "opening" in e["geometry"]]
+        hosts = {e["tag"]:e["class"] for e in self.model["elements"] if e["class"] in {"IfcWall","IfcSlab","IfcCurtainWall"}}
+        self.assertEqual(set(openings), set(CASES["tags"]["openings"]))
+        for opening in openings.values():
+            choices = [(field,cls) for field,cls in (("wall","IfcWall"),("slab","IfcSlab"),("curtain_wall","IfcCurtainWall")) if field in opening["geometry"]]
+            self.assertEqual(len(choices),1)
+            field,cls = choices[0]
+            self.assertEqual(hosts[opening["geometry"][field]],cls)
+        self.assertEqual(sorted(e["geometry"]["opening"] for e in fillings), sorted(set(openings) - set(CASES["tags"]["unfilled_openings"])))
+        self.assertEqual(dict(Counter(e["class"] for e in self.model["elements"])), CASES["model"]["class_counts"])
+        self.assertEqual({e["tag"] for e in self.model["elements"] if e["class"]=="IfcFooting"},set(CASES["tags"]["foundations"]))
+
+    def test_service_bore_labels_match_all_explicit_model_memberships(self):
+        """🕳️ Named native service bores retain their physical host and agreed discipline labels."""
+        case=CASES['service_bore_domains']
+        expected=set(case['models'])
+        explicit=[];labels=[]
+        for tag in case['tags']:
+            with self.subTest(tag=tag):
+                opening=self.items[tag]
+                self.assertEqual(opening['class'],'IfcOpeningElement')
+                self.assertIn('slab',opening['geometry'])
+                members={model['id'] for model in self.model['models'] if tag in model['element_tags']}
+                self.assertEqual(members,expected)
+                self.assertEqual(set(opening['metadata']['domains']),expected)
+                explicit.append([name in members for name in CASES['models']['ids']])
+                labels.append([name in opening['metadata']['domains'] for name in CASES['models']['ids']])
+        np.testing.assert_array_equal(np.asarray(labels,dtype=bool),np.asarray(explicit,dtype=bool))
 
     def test_class_registry_reaches_ifc_root_for_every_used_class(self):
         classes = self.model["classes"]
-        used = {item["class"] for item in self.model["elements"]} | {"IfcSpace", "IfcBuildingStorey", "IfcProject", "IfcSite", "IfcBuilding"}
+        used = {item["class"] for group in ("elements","types") for item in self.model[group]} | {"IfcSpace", "IfcBuildingStorey", "IfcProject", "IfcSite", "IfcBuilding"}
         for name in sorted(used):
             with self.subTest(name=name):
                 chain, current = [], name
@@ -494,18 +709,18 @@ class BimModelStructureContract(ModelCase):
             self.api.demo_event("unknown", base)
 
     def test_element_returns_independent_resolved_copies(self):
-        column = self.api.element("B3", self.model)
+        column = self.api.element(self.api.role("column_example", self.model), self.model)
         self.assertEqual(column["psets"]["Pset_ColumnCommon"]["LoadBearing"]["value"], True)
         self.assertEqual(column["material"]["tag"], "MAT-RC")
-        self.assertEqual(column["guid"], oracle_global_id("B3"))
+        self.assertEqual(column["guid"], oracle_global_id(self.api.role("column_example", self.model)))
         column["psets"].clear()
         column["name"]["en"] = "changed"
-        self.assertEqual(self.api.element("B3", self.model)["name"]["en"], self.items["B3"]["name"]["en"])
+        self.assertEqual(self.api.element(self.api.role("column_example", self.model), self.model)["name"]["en"], self.items[self.api.role("column_example", self.model)]["name"]["en"])
         self.assertTrue(self.api.element("SL-R", self.model)["material"]["layers"])
 
 
 class BimGridContract(ModelCase):
-    """🏛️ The structural grid and the 25 pilotis follow the sourced 4.75 m spacing."""
+    """🏛️ The numbered support register preserves its measured profiles and axes."""
 
     def test_grid_lines_are_equally_spaced_and_labelled(self):
         grid, expected = self.model["grid"], CASES["grid"]
@@ -518,113 +733,147 @@ class BimGridContract(ModelCase):
         self.assertTrue(np.allclose(np.diff(grid["x"]), spacing))
         self.assertGreater(grid["initial_spacing"]["value"], spacing)
 
-    def test_twenty_five_pilotis_sit_on_the_grid_inside_the_box(self):
-        pilotis, grid, box = self.geometry["pilotis"], self.model["grid"], self.geometry["box"]
-        self.assertEqual(len(pilotis), CASES["grid"]["pilotis"])
-        self.assertEqual({p["tag"] for p in pilotis}, {row + column for row in CASES["grid"]["rows"] for column in CASES["grid"]["columns"]})
-        radius = self.piloti_radius()
-        for pil in pilotis:
-            with self.subTest(tag=pil["tag"]):
-                row, column = pil["tag"][0], pil["tag"][1:]
-                self.assertAlmostEqual(pil["x"], grid["x"][grid["labels_x"].index(column)])
-                self.assertAlmostEqual(pil["y"], grid["y"][grid["labels_y"].index(row)])
-                self.assertAlmostEqual(pil["radius"], radius)
-                self.assertTrue(0 <= pil["x"] <= box["length"] and 0 <= pil["y"] <= box["width"])
-                self.assertGreaterEqual(pil["x"] - radius, -1e-9)
-                self.assertLessEqual(pil["x"] + radius, box["length"] + 1e-9)
-                self.assertEqual(pil["base"], 0)
-                self.assertEqual(pil["guid"], oracle_global_id(pil["tag"]))
-        points = np.array([[p["x"], p["y"]] for p in pilotis])
-        self.assertEqual(len({tuple(p) for p in points.tolist()}), 25)
-        distances = np.linalg.norm(points[:, None, :] - points[None, :, :], axis=2) + np.eye(25) * 99
-        self.assertGreaterEqual(distances.min(), grid["spacing"]["value"] - 1e-9)
-
-    def test_pilotis_carry_the_first_floor_slab_from_ground_to_soffit(self):
-        floor = self.slab(CASES["tags"]["slabs"][0])
+    def test_authored_columns_preserve_grid_and_off_grid_axes(self):
+        """📍 Registered sections preserve measured axes and their real footprints."""
+        from shapely.geometry import Polygon
+        self.assertEqual([p["tag"] for p in self.geometry["pilotis"]], CASES["grid"]["column_tags"])
+        self.assertEqual({str(i) for i in range(1, 34)} - set(self.items), set())
         for pil in self.geometry["pilotis"]:
-            self.assertAlmostEqual(pil["top"], floor["top"] - floor["thickness"])
-        self.assertEqual(self.geometry["storeys"]["first"], floor["top"])
+            authored = self.items[pil["tag"]]
+            np.testing.assert_allclose([pil["x"], pil["y"]], authored["geometry"]["axis"], atol=1e-9)
+            self.assertEqual(pil["guid"], oracle_global_id(pil["tag"]))
+            for part in pil["parts"]:
+                profile = part["profile"]
+                expected=profile_area(profile,part["outline"],part.get("holes",[]))
+                self.assertAlmostEqual(part["area"], expected, delta=2e-5)
+                self.assertGreater(part["z1"], part["z0"])
 
-    def test_piloti_type_has_twenty_five_occurrences_in_grid_order(self):
-        tags = self.api.type_occurrences(CASES["tags"]["piloti_type"], self.model)
-        self.assertEqual(tags, [row + column for row in CASES["grid"]["rows"] for column in CASES["grid"]["columns"]])
-        for key in ("A1", "MISSING"):
+
+    def test_columns_connect_their_storey_to_their_authored_slab_soffit(self):
+        """🏛️ Explicit numbered sections retain physical vertical extents, including cellar lengths."""
+        for pil in self.geometry["pilotis"]:
+            self.assertGreater(pil["top"], pil["base"])
+            self.assertAlmostEqual(pil["base"], min(part["z0"] for part in pil["parts"]))
+            self.assertAlmostEqual(pil["top"], max(part["z1"] for part in pil["parts"]))
+        self.assertAlmostEqual(next(p for p in self.geometry["pilotis"] if p["tag"] == "19")["top"], 2.91)
+        self.assertLess(next(p for p in self.geometry["pilotis"] if p["tag"] == "14")["base"], 0)
+
+
+    def test_each_column_type_has_its_explicit_occurrences_in_source_order(self):
+        for type_tag, expected in CASES["grid"]["type_occurrences"].items():
+            tags = self.api.type_occurrences(type_tag, self.model)
+            self.assertEqual(tags, expected)
+            self.assertTrue(all(self.items[tag]["type"] == type_tag for tag in tags))
+        for key in (self.api.role("column_example", self.model), "MISSING"):
             with self.subTest(key=key), self.assertRaises(ValueError):
                 self.api.type_occurrences(key, self.model)
 
 
 class BimGeometryContract(ModelCase):
-    """🗺️ Drawings read one consistent building geometry; nothing floats outside the box."""
+    """🗺️ Drawings preserve the actual source geometry, datums and occupied regions."""
 
     def test_box_and_storeys_come_from_the_authored_values(self):
         box = self.geometry["box"]
         self.assertEqual((box["length"], box["width"], box["height"]), tuple(CASES["sourced"]["box"][k] for k in ("length", "width", "height")))
         self.assertEqual(self.geometry["storeys"], {s["id"]: s["elevation"]["value"] for s in self.model["storeys"]})
 
-    def test_slabs_are_polygons_with_voids_inside_the_outline(self):
+    def test_primary_slabs_and_canopy_match_their_authored_footprints(self):
+        from shapely.geometry import Polygon
+
+        self.assertEqual({slab["tag"] for slab in self.geometry["slabs"]}, set(CASES["tags"]["slabs"]))
         for tag in CASES["tags"]["slabs"]:
             slab = self.slab(tag)
             with self.subTest(tag=tag):
-                self.assertAlmostEqual(shoelace(slab["outline"]), self.geometry["box"]["length"] * self.geometry["box"]["width"])
+                authored = self.items[tag]["geometry"]
+                np.testing.assert_allclose(slab["outline"], authored["outline"], atol=1e-9)
                 self.assertGreater(slab["thickness"], 0)
-                self.assertTrue(slab["voids"])
+                outline = Polygon(slab["outline"])
+                self.assertTrue(outline.is_valid)
                 for void in slab["voids"]:
-                    low, high = np.asarray(void).min(axis=0), np.asarray(void).max(axis=0)
-                    self.assertTrue((low >= 0).all() and high[0] <= self.geometry["box"]["length"] and high[1] <= self.geometry["box"]["width"])
-                    self.assertGreater(shoelace(void), 0)
-                    self.assertTrue(inside(slab["outline"], np.asarray(void).mean(axis=0)).all())
-        voids = [np.asarray(v) for slab in self.geometry["slabs"] for v in slab["voids"]]
-        self.assertGreaterEqual(len(voids), 2)
+                    aperture = Polygon(void)
+                    self.assertTrue(aperture.is_valid)
+                    self.assertGreater(outline.intersection(aperture).area,0)
+                    self.assertGreater(aperture.area, 0)
+                from shapely.ops import unary_union
+                gross=unary_union([Polygon(region["outline"]) for region in authored.get("regions",[{"outline":authored["outline"]}])])
+                net = gross.difference(unary_union([Polygon(void) for void in slab["voids"]]))
+                self.assertAlmostEqual(net.area, self.api.quantities(tag, self.model)["area"], places=6)
+        self.assertFalse(self.slab("SL-KIOSK")["voids"])
+        self.assertLess(shoelace(self.slab("SL-KIOSK")["outline"]), shoelace(self.slab("SL-R")["outline"]))
 
     def test_slab_levels_match_storeys(self):
-        floor, roof = self.slab("SL-1"), self.slab("SL-R")
+        """🥞 Finished datums remain distinct from regional structural top levels."""
+        floor, roof = self.slab(self.api.role("floor", self.model)), self.slab(self.api.role("roof", self.model))
         self.assertEqual(floor["kind"], "FLOOR")
         self.assertEqual(roof["kind"], "ROOF")
-        self.assertEqual(floor["top"], self.geometry["storeys"]["first"])
-        self.assertEqual(roof["top"], self.geometry["storeys"]["roof"])
-        self.assertAlmostEqual(roof["total_thickness"], sum(layer["thickness"] for layer in roof["layers"]))
-        self.assertEqual([layer["id"] for layer in roof["layers"]][0], "concrete")
-        self.assertIn("soil", [layer["id"] for layer in roof["layers"]])
+        self.assertAlmostEqual(self.geometry["storeys"]["first"], 3.17)
+        self.assertAlmostEqual(self.geometry["storeys"]["roof"], 6.60)
+        self.assertEqual({round(region["thickness"], 2) for region in floor["regions"]}, {.17, .20, .23})
+        self.assertEqual({round(region["thickness"], 2) for region in roof["regions"]}, {.17, .23})
+        self.assertEqual({round(part["z0"], 2) for part in floor["parts"]}, {2.91})
+        self.assertEqual({round(part["z0"], 2) for part in roof["parts"]}, {6.34})
+        self.assertEqual([layer["id"] for layer in roof["layers"]], ["structural", "paving"])
 
-    def test_walls_lie_inside_the_box_and_openings_inside_the_walls(self):
-        box, floor = self.geometry["box"], self.geometry["storeys"]["first"]
-        self.assertEqual([w["tag"] for w in self.geometry["walls"]], CASES["tags"]["walls"])
+
+    def test_walls_and_openings_follow_the_authored_storeys(self):
+        box = self.geometry["box"]
         for wall in self.geometry["walls"]:
-            with self.subTest(tag=wall["tag"]):
-                start, end = np.asarray(wall["start"]), np.asarray(wall["end"])
-                length = float(np.linalg.norm(end - start))
-                self.assertAlmostEqual(length, wall["length"])
-                for point in (start, end):
-                    self.assertTrue(-1e-9 <= point[0] <= box["length"] + 1e-9 and -1e-9 <= point[1] <= box["width"] + 1e-9)
-                self.assertGreater(wall["thickness"], 0)
-                self.assertEqual(wall["base"], floor)
-                self.assertGreater(wall["top"], wall["base"])
-                self.assertLessEqual(wall["top"], self.geometry["storeys"]["roof"] + 1e-9)
-                self.assertEqual(len(wall["openings"]), 1)
-                for opening in wall["openings"]:
-                    self.assertTrue(0 <= opening["start"] < opening["end"] <= length)
-                    self.assertTrue(0 <= opening["sill"] < opening["head"] <= wall["top"] - wall["base"])
-                    self.assertEqual(opening["guid"], oracle_global_id(opening["tag"]))
-                    self.assertEqual(opening["window_guid"], oracle_global_id(opening["window_tag"]))
-                    self.assertNotEqual(opening["guid"], opening["window_guid"])
+            start, end = np.asarray(wall["start"]), np.asarray(wall["end"])
+            self.assertAlmostEqual(float(np.linalg.norm(end - start)), wall["length"])
+            for point in (start, end):
+                self.assertTrue(np.isfinite(point).all())
+            np.testing.assert_allclose(start, self.items[wall["tag"]]["geometry"]["path"][0], atol=1e-9)
+            np.testing.assert_allclose(end, self.items[wall["tag"]]["geometry"]["path"][-1], atol=1e-9)
+            self.assertGreater(wall["thickness"], 0)
+            self.assertGreater(wall["top"], wall["base"])
+            for opening in wall["openings"]:
+                self.assertTrue(0 <= opening["start"] < opening["end"] <= wall["length"])
+                self.assertTrue(0 <= opening["sill"] < opening["head"] <= wall["top"] - wall["base"])
+                self.assertEqual(opening["guid"], oracle_global_id(opening["tag"]))
+                if opening["tag"] in CASES["tags"]["unfilled_openings"]:
+                    self.assertIsNone(opening["fill_tag"])
+                    self.assertIsNone(opening["fill_guid"])
+                    self.assertIsNone(opening["fill_class"])
+                else:
+                    self.assertIn(opening["fill_class"], {"IfcWindow", "IfcDoor"})
+                    self.assertEqual(opening["fill_guid"], oracle_global_id(opening["fill_tag"]))
+                    self.assertNotEqual(opening["guid"], opening["fill_guid"])
 
-    def test_curtain_wall_follows_the_turning_circle_of_the_assumed_car(self):
-        wall, car = self.geometry["curtain_wall"], self.model["car"]
-        path, centre = np.asarray(wall["path"]), np.asarray(wall["centre"])
-        radius = car["turning_radius"]["value"] - car["width"]["value"] - car["wall_clearance"]["value"]
-        self.assertAlmostEqual(wall["radius"], radius)
-        arc = path[1:-1]
-        self.assertTrue(np.allclose(np.linalg.norm(arc - centre, axis=1), radius, atol=1e-5))
-        angles = np.unwrap(np.arctan2(arc[:, 1] - centre[1], arc[:, 0] - centre[0]))
-        self.assertAlmostEqual(abs(angles[-1] - angles[0]), math.pi, places=5)
-        self.assertTrue(np.all(np.diff(angles) < 0))
-        self.assertAlmostEqual(path[0][0], centre[0] - radius)
-        self.assertAlmostEqual(path[-1][0], centre[0] + radius)
-        self.assertAlmostEqual(path[0][1], path[-1][1])
-        self.assertEqual(wall["base"], 0)
-        self.assertAlmostEqual(wall["top"], self.slab("SL-1")["top"] - self.slab("SL-1")["thickness"])
-        self.assertTrue(path[:, 0].min() >= 0 and path[:, 0].max() <= self.geometry["box"]["length"])
-        self.assertLess(radius, car["turning_radius"]["value"] - car["width"]["value"])
+    def test_curtain_wall_paths_preserve_registered_stations_and_native_portals(self):
+        from scipy.interpolate import BPoly
+        from shapely.geometry import LineString
+        wall=self.geometry["curtain_wall"]
+        spec=self.items["CW-1"]["geometry"]
+        self.assertEqual(len(wall["paths"]),len(spec["glazing_paths"]))
+        for drawn,authored in zip(wall["paths"],spec["glazing_paths"]):
+            reference=np.asarray(drawn["reference_path"])
+            literals=[point for point in authored["path"] if isinstance(point,list)]
+            curves=[point for point in authored["path"] if isinstance(point,dict)]
+            self.assertEqual(drawn["tag"],authored["tag"])
+            self.assertEqual(drawn["stations"],authored["stations"])
+            for point in reference:
+                matched=any(np.allclose(point,p,atol=1e-6) for p in literals)
+                for curve in curves:
+                    if "arc" in curve:
+                        arc=curve["arc"]
+                        matched|=abs(np.linalg.norm(point-arc["centre"])-arc["radius"])<1e-5
+                    if "bezier" in curve:
+                        controls=np.asarray(curve["bezier"],dtype=float)
+                        expected=BPoly(controls[:,None,:],[0,1])(np.linspace(0,1,33))
+                        matched|=bool(np.any(np.all(np.isclose(expected,point,atol=1e-6),axis=1)))
+                self.assertTrue(matched,point)
+            line=LineString(reference)
+            self.assertAlmostEqual(drawn["length"],line.length,places=7)
+            stations=[s["position"]["value"] for s in authored["stations"]]
+            self.assertTrue(all(b>a for a,b in zip(stations,stations[1:])))
+            self.assertAlmostEqual(stations[0],0)
+            self.assertAlmostEqual(stations[-1],line.length,places=7)
+            np.testing.assert_allclose(drawn["path"],[line.interpolate(s).coords[0] for s in stations],atol=1e-8)
+        hosts={e["tag"] for e in self.model["elements"] if e["class"]=="IfcOpeningElement" and e["geometry"].get("curtain_wall")==wall["tag"]}
+        self.assertEqual(set(wall["opening_tags"]),hosts)
+        self.assertEqual(hosts,{"OP-D-ENTRY","OP-D-SERVICE"})
+        self.assertEqual(wall["base"],0)
+        self.assertAlmostEqual(wall["top"],min(p["z0"] for p in self.slab("SL-1")["parts"]))
 
     def test_ramp_flights_climb_one_storey_at_a_constant_gentle_slope(self):
         storeys = self.geometry["storeys"]
@@ -637,6 +886,8 @@ class BimGeometryContract(ModelCase):
             flights = ramp["flights"]
             with self.subTest(ramp=ramp["tag"]):
                 self.assertEqual(len(flights), 2)
+                for before, after in zip(flights, flights[1:]):
+                    self.assertAlmostEqual(before["z1"], after["z0"])
                 self.assertAlmostEqual(flights[0]["z0"], storeys[low])
                 self.assertAlmostEqual(flights[-1]["z1"], storeys[high])
                 self.assertAlmostEqual(flights[0]["z1"], flights[1]["z0"])
@@ -651,23 +902,33 @@ class BimGeometryContract(ModelCase):
                         self.assertTrue(any((np.asarray(point) >= void_low[t] - 1e-9).all() and (np.asarray(point) <= void_high[t] + 1e-9).all() for t in void_low))
 
     def test_screens_boiler_radiator_drains_and_downpipes_are_placed_consistently(self):
-        box, top = self.geometry["box"], self.geometry["box"]["height"]
-        screen = self.geometry["screens"][0]
-        path = np.asarray(screen["path"])
-        self.assertEqual(screen["base"], self.geometry["storeys"]["roof"])
-        self.assertAlmostEqual(screen["top"], box["height"])
-        self.assertTrue((path[:, 0] >= 0).all() and (path[:, 0] <= box["length"]).all() and (path[:, 1] >= 0).all() and (path[:, 1] <= box["width"]).all())
-        services = {s["tag"]: s for s in self.geometry["services"]}
-        self.assertEqual({s["kind"] for s in services.values()}, {"boiler", "radiator", "drain", "downpipe", "pipe"})
-        for k in (1, 2, 3, 4):
-            drain, pipe = services[f"DR-{k}"], services[f"DP-{k}"]
-            self.assertEqual(drain["points"][0][:2], pipe["points"][0][:2])
-            self.assertEqual(pipe["points"][0][:2], pipe["points"][1][:2])
-            self.assertAlmostEqual(pipe["points"][0][2], self.geometry["storeys"]["roof"])
-            self.assertEqual(pipe["points"][1][2], 0)
+        """🏛️ Native roof datums and original service identities retain their actual source placements."""
+        box=self.geometry["box"]
+        screen=next(item for item in self.geometry["screens"] if item["tag"]=="SC-1")
+        self.assertEqual(screen["base"],self.geometry["storeys"]["roof"])
+        source_cap=self.items["SC-1"]["geometry"]
+        crest=max(p[2] for part in screen["parts"] for p in self.api.part_vertices(part))
+        self.assertAlmostEqual(crest,float(source_cap["top_level"])+source_cap["cap"]["rise"]["value"])
+        self.assertLessEqual(crest,box["height"])
+        services={item["tag"]:item for item in self.geometry["services"]}
+        self.assertTrue(set(CASES["native_services"]["added"])<=set(services))
+        self.assertFalse(set(CASES["native_services"]["removed"])&set(self.items))
+        for case in CASES["native_services"]["rainwater"]:
+            drain,pipe=services[case["drain"]],services[case["pipe"]]
+            self.assertEqual(drain["points"][0][:2],pipe["points"][0][:2])
+            self.assertEqual(pipe["points"][0][:2],self.items[case["column"]]["geometry"]["axis"])
+            self.assertEqual(pipe["points"][0][:2],pipe["points"][1][:2])
+            self.assertAlmostEqual(pipe["points"][0][2],self.geometry["storeys"]["roof"])
+            self.assertAlmostEqual(pipe["points"][1][2],CASES["native_services"]["outlet_z"])
+        self.assertEqual(services["BL-1"]["points"][0][2],self.geometry["storeys"]["cellar"])
         for service in services.values():
-            for point in service["points"]:
-                self.assertTrue(0 <= point[0] <= box["length"] and 0 <= point[1] <= box["width"] and 0 <= point[2] <= top)
+            self.assertTrue(service["parts"])
+            for part in service["parts"]:
+                vertices=self.api.part_vertices(part)
+                self.assertTrue(vertices)
+                for point in vertices:
+                    self.assertTrue(all(math.isfinite(value) for value in point))
+                    self.assertLessEqual(point[2],box["height"])
 
     def test_spaces_report_their_polygon_areas(self):
         self.assertEqual([s["tag"] for s in self.geometry["spaces"]], CASES["tags"]["spaces"])
@@ -686,19 +947,57 @@ class BimGeometryContract(ModelCase):
         self.assertEqual(before["guid"], after["guid"])
 
 
+class BimRouteCacheContract(ModelCase):
+    """🚘 Route memoisation respects content changes, bounded storage and result ownership."""
+
+    def test_equivalent_inputs_reuse_computation_and_mutations_are_isolated(self):
+        """🧪 Portable cache operations exercise the wrapper independently of route geometry."""
+        from unittest.mock import patch
+        self.assertTrue(hasattr(self.api, "_car_path_compute"))
+        spec=CASES["route_cache"]
+        self.api._car_path_cached.cache_clear()
+        def compute(model,samples):
+            return {"poses":[[0.0,0.0,0.0]],"width":model["car"]["width"]["value"],"samples":samples}
+        with patch.object(self.api,"_car_path_compute",side_effect=compute) as spy:
+            twin=copy.deepcopy(self.model)
+            first=self.api.car_path(twin,samples=spec["samples"][0])
+            twin["car"]=dict(reversed(list(twin["car"].items())))
+            second=self.api.car_path(twin,samples=spec["samples"][0])
+            self.assertEqual(spy.call_count,1)
+            self.assertEqual(first,second)
+            first["poses"][0][0]=99
+            self.assertEqual(self.api.car_path(twin,samples=spec["samples"][0])["poses"][0][0],0)
+            twin["car"]["width"]["value"]+=spec["width_delta"]
+            changed=self.api.car_path(twin,samples=spec["samples"][0])
+            self.assertEqual(spy.call_count,2)
+            self.assertAlmostEqual(changed["width"],second["width"]+spec["width_delta"])
+            self.api.car_path(twin,samples=spec["samples"][1])
+            self.assertEqual(spy.call_count,3)
+            self.api.car_path()
+            self.api.car_path()
+            self.assertEqual(spy.call_count,4)
+            for samples in range(2,3+spec["max_entries"]):
+                self.api.car_path(twin,samples=samples)
+            self.assertEqual(self.api._car_path_cached.cache_info().currsize,spec["max_entries"])
+        self.api._car_path_cached.cache_clear()
+
+
 class BimClearanceLimits(ModelCase):
     """🚧 The straight-through threshold and the closest approaches of the assumed car, checked against bisection and NumPy."""
 
     def test_limits_match_a_bisection_of_the_clearance_function(self):
-        low, high = 0.0, 10.0
+        """🚧 Independently bisect the straight-passage inequality."""
+        pair=self.api.car_path(self.model)["entry_pair"]
+        obstruction=self.entry_obstruction(self.model)
+        width,margin=(self.model["car"][key]["value"] for key in ("width","min_side_margin"))
+        low,high=0.0,10.0
         for _ in range(40):
-            mid = (low + high) / 2
-            low, high = (low, mid) if self.api.clearance(self.model, spacing=mid)["fits"] else (mid, high)
-        limits = self.api.clearance_limits(self.model)
-        self.assertAlmostEqual(limits["min_spacing"], high, places=6)
-        self.assertGreater(limits["spacing"], limits["min_spacing"])
-        self.assertTrue(limits["fits"])
-        self.assertAlmostEqual(limits["clear_width"], limits["spacing"] - limits["diameter"], places=9)
+            mid=(low+high)/2
+            low,high=(low,mid) if (mid-obstruction-width)/2>=margin else (mid,high)
+        limits=self.api.clearance_limits(self.model)
+        self.assertAlmostEqual(limits["min_spacing"],high,places=6)
+        self.assertAlmostEqual(limits["clear_width"],limits["spacing"]-obstruction,places=9)
+
 
     def test_limits_follow_diameter_and_car_width_overrides(self):
         margin = self.model["car"]["min_side_margin"]["value"]
@@ -707,35 +1006,40 @@ class BimClearanceLimits(ModelCase):
         self.assertTrue(wide["fits"])
         self.assertFalse(self.api.clearance_limits(self.model, spacing=wide["min_spacing"] - 0.01, diameter=0.6, car_width=2.0)["fits"])
 
-    def test_pinches_equal_independent_rectangle_to_circle_distances(self):
-        car = self.model["car"]
-        half = np.array([car["length"]["value"], car["width"]["value"]]) / 2
-        poses = self.api.car_path(self.model, samples=1201)["poses"]
-
-        def distance(pose, piloti):
-            x, y, heading = pose
-            c, s = math.cos(math.radians(heading)), math.sin(math.radians(heading))
-            dx, dy = piloti["x"] - x, piloti["y"] - y
-            local = np.array([dx * c + dy * s, -dx * s + dy * c])
-            return float(np.linalg.norm(np.maximum(np.abs(local) - half, 0))) - piloti["radius"]
-
-        expected = sorted((min(distance(pose, q) for pose in poses), q["tag"]) for q in self.geometry["pilotis"])[:2]
-        found = self.api.path_pinches(self.model, count=2)
-        self.assertEqual([item["tag"] for item in found], [tag for _, tag in expected])
-        for item, (value, _) in zip(found, expected):
-            self.assertAlmostEqual(item["clearance"], value, places=3)
-        self.assertAlmostEqual(found[0]["clearance"], self.api.clearance(self.model)["min_path_clearance"], places=3)
+    def test_pinches_equal_independent_profile_distances(self):
+        """🚘 Independent GEOS distances use actual contours and vehicle-height occupancy."""
+        from shapely.geometry import Polygon
+        car=self.model["car"]
+        half=np.array([car["length"]["value"],car["width"]["value"]])/2
+        corners=np.array([[-half[0],-half[1]],[half[0],-half[1]],[half[0],half[1]],[-half[0],half[1]]])
+        bodies=[]
+        for x,y,heading in self.api.car_path(self.model,samples=1201)["poses"]:
+            c,s=math.cos(math.radians(heading)),math.sin(math.radians(heading))
+            bodies.append(Polygon(corners@np.array([[c,s],[-s,c]])+[x,y]))
+        expected=[]
+        for pil in self.geometry["pilotis"]:
+            sections=[Polygon(part["outline"],part.get("holes",[])) for part in pil["parts"] if part["z0"]<car["height"]["value"] and part["z1"]>0]
+            if sections:
+                expected.append((min(body.distance(section) for section in sections for body in bodies),pil["tag"]))
+        expected.sort()
+        found=self.api.path_pinches(self.model,count=2)
+        threshold=expected[1][0]
+        expected_by_tag={tag:value for value,tag in expected}
+        self.assertTrue({item["tag"] for item in found} <= {tag for value,tag in expected if value <= threshold+2e-4})
+        self.assertTrue({tag for value,tag in expected if value < threshold-2e-4} <= {item["tag"] for item in found})
+        for item in found:
+            self.assertAlmostEqual(item["clearance"],expected_by_tag[item["tag"]],delta=2e-4)
 
 
 class BimInformationContract(ModelCase):
     """📊 Raw values become information: unit, basis, object identity, language and meaning."""
 
     def test_information_requires_an_explicit_known_language(self):
-        for args in (("B3", "diameter", "fr"), ("B3", "diameter", ""), ("B3", "unknown-property", "en"), ("MISSING", "diameter", "en")):
+        for args in ((self.api.role("column_example", self.model), "diameter", "fr"), (self.api.role("column_example", self.model), "diameter", ""), (self.api.role("column_example", self.model), "unknown-property", "en"), ("MISSING", "diameter", "en")):
             with self.subTest(args=args), self.assertRaises(ValueError):
                 self.api.information(*args, model=self.model)
         with self.assertRaises(TypeError):
-            self.api.information("B3", "diameter")
+            self.api.information(self.api.role("column_example", self.model), "diameter")
 
     def test_portable_information_cases(self):
         for case in CASES["information"]:
@@ -754,44 +1058,61 @@ class BimInformationContract(ModelCase):
                                 self.api.information(case["tag"], case["property"], "de", model=self.model)["meaning"])
 
     def test_information_values_agree_with_the_authored_model(self):
-        spacing = self.api.information("B3", "grid.spacing", "en", model=self.model)
+        spacing = self.api.information(self.api.role("column_example", self.model), "grid.spacing", "en", model=self.model)
         self.assertEqual(spacing["value"], self.model["grid"]["spacing"]["value"])
-        diameter = self.api.information("B3", "diameter", "de", model=self.model)
+        diameter = self.api.information(self.api.role("column_example", self.model), "diameter", "de", model=self.model)
         self.assertEqual(diameter["value"], self.piloti_radius() * 2)
-        volume = self.api.information("B3", "volume", "en", model=self.model)
-        self.assertAlmostEqual(volume["value"], math.pi * self.piloti_radius() ** 2 * self.geometry["pilotis"][0]["top"], places=6)
+        volume = self.api.information(self.api.role("column_example", self.model), "volume", "en", model=self.model)
+        self.assertAlmostEqual(volume["value"], math.pi * self.piloti_radius() ** 2 * self.api.quantities(self.api.role("column_example", self.model), self.model)["height"], places=6)
         self.assertEqual(volume["unit"], "m³")
-        self.assertEqual(self.api.information("B3", "GlobalId", "en", model=self.model)["value"], oracle_global_id("B3"))
-        self.assertEqual(self.api.information("B3", "material", "en", model=self.model)["value"], self.items["MAT-RC"]["name"]["en"])
-        self.assertEqual(self.api.information("B3", "material", "de", model=self.model)["value"], self.items["MAT-RC"]["name"]["de"])
+        self.assertEqual(self.api.information(self.api.role("column_example", self.model), "GlobalId", "en", model=self.model)["value"], oracle_global_id(self.api.role("column_example", self.model)))
+        self.assertEqual(self.api.information(self.api.role("column_example", self.model), "material", "en", model=self.model)["value"], self.items["MAT-RC"]["name"]["en"])
+        self.assertEqual(self.api.information(self.api.role("column_example", self.model), "material", "de", model=self.model)["value"], self.items["MAT-RC"]["name"]["de"])
 
     def test_quantity_reads_authored_derived_and_layer_values(self):
-        slab = self.items["SL-1"]["attributes"]["thickness"]["value"]
+        slab = max(region["thickness"]["value"] for region in self.items["SL-1"]["geometry"]["regions"])
         self.assertEqual(self.api.quantity("SL-1", "thickness", self.model), slab)
         self.assertEqual(self.api.quantity(self.items["SL-1"], "thickness", self.model), slab)
-        self.assertEqual(self.api.quantity("SL-R", "soil", self.model), next(l for l in self.items["LS-ROOF"]["layers"] if l["id"] == "soil")["thickness"]["value"])
-        self.assertAlmostEqual(self.api.quantity("B3", "volume", self.model), self.api.quantities("B3", self.model)["volume"])
+        self.assertEqual(self.api.quantity("SL-R", "paving", self.model), next(l for l in self.items["LS-ROOF"]["layers"] if l["id"] == "paving")["thickness"]["value"])
+        self.assertAlmostEqual(self.api.quantity(self.api.role("column_example", self.model), "volume", self.model), self.api.quantities(self.api.role("column_example", self.model), self.model)["volume"])
         with self.assertRaises(ValueError):
-            self.api.quantity("B3", "unknown", self.model)
+            self.api.quantity(self.api.role("column_example", self.model), "unknown", self.model)
+
+
+    def test_sill_event_preserves_head_and_source_centimetres(self):
+        """🪟 Source datums and a sill-only event retain the full nineteen-centimetre gain."""
+        c=CASES["window_datums"]
+        base=self.api.quantities(c["opening"],self.model)
+        event=self.api.demo_event("sill",self.model)
+        changed=self.api.quantities(c["opening"],self.api.apply_event(event,self.model))
+        for key in ("sill","head","height"):
+            self.assertAlmostEqual(base[key],c[key])
+        self.assertAlmostEqual(event["sill"],c["changed_sill"])
+        self.assertAlmostEqual(event["head"],c["head"])
+        self.assertAlmostEqual(changed["head"],base["head"])
+        self.assertAlmostEqual(changed["height"],c["changed_height"])
+        self.assertAlmostEqual(changed["height"]-base["height"],c["height_gain"])
 
 
 class BimClearanceContract(ModelCase):
     """🚗 The car question: clear width, margin, curved wall and swept path."""
 
     def test_clear_width_and_margin_follow_the_spacing_formula(self):
-        result, car = self.api.clearance(self.model), self.model["car"]
-        spacing, diameter = self.model["grid"]["spacing"]["value"], self.piloti_radius() * 2
-        self.assertAlmostEqual(result["clear_width"], spacing - diameter)
-        self.assertAlmostEqual(result["clear_width_initial"], self.model["grid"]["initial_spacing"]["value"] - diameter)
-        self.assertAlmostEqual(result["margin"], (spacing - diameter - car["width"]["value"]) / 2)
-        self.assertEqual(result["car_width"], car["width"]["value"])
-        self.assertEqual(result["min_margin"], car["min_side_margin"]["value"])
-        self.assertAlmostEqual(result["curve_radius"], car["turning_radius"]["value"] - car["width"]["value"] - car["wall_clearance"]["value"])
-        self.assertIs(result["fits"], True)
-        self.assertGreater(result["spacing"], result["car_width"] + diameter)
+        """↔️ Unequal actual entry profiles contribute their facing half-widths."""
+        result,car=self.api.clearance(self.model),self.model["car"]
+        pair=self.api.car_path(self.model)["entry_pair"]
+        obstruction=self.entry_obstruction(self.model)
+        spacing=result["spacing"]
+        self.assertAlmostEqual(result["obstruction_width"],obstruction)
+        self.assertAlmostEqual(result["clear_width"],spacing-obstruction)
+        self.assertAlmostEqual(result["clear_width_initial"],self.model["grid"]["initial_spacing"]["value"]-obstruction)
+        self.assertAlmostEqual(result["margin"],(spacing-obstruction-car["width"]["value"])/2)
+        self.assertEqual(result["car_width"],car["width"]["value"])
+        self.assertEqual(result["min_margin"],car["min_side_margin"]["value"])
+
 
     def test_fit_decision_flips_exactly_at_the_required_margin(self):
-        car, diameter = self.model["car"], self.piloti_radius() * 2
+        car, diameter = self.model["car"], self.api.clearance(self.model)["obstruction_width"]
         threshold = diameter + car["width"]["value"] + 2 * car["min_side_margin"]["value"]
         for spacing, expected in ((threshold + 0.01, True), (threshold, True), (threshold - 0.01, False), (diameter + car["width"]["value"] - 0.1, False)):
             with self.subTest(spacing=spacing):
@@ -806,93 +1127,205 @@ class BimClearanceContract(ModelCase):
         self.assertTrue(result["fits_initial"])
 
     def test_car_path_never_touches_a_piloti_and_enters_between_two(self):
-        path, car = self.api.car_path(self.model), self.model["car"]
-        centres = np.array([[p["x"], p["y"]] for p in self.geometry["pilotis"]])
-        gaps = np.array([rectangle_circle_gap(pose, car["length"]["value"], car["width"]["value"], centres, self.piloti_radius()).min() for pose in path["poses"]])
-        self.assertGreater(gaps.min(), 0)
-        self.assertLessEqual(path["min_clearance"], gaps.min() + 0.05)
-        self.assertGreater(path["min_clearance"], 0)
-        self.assertEqual(self.api.clearance(self.model)["min_path_clearance"], path["min_clearance"])
-        self.assertEqual(len(path["poses"]), 120)
-        poses = np.asarray(path["poses"])
-        self.assertAlmostEqual(path["length"], float(np.linalg.norm(np.diff(poses[:, :2], axis=0), axis=1).sum()), delta=0.05 * path["length"])
-        first, second = path["entry_pair"]
-        self.assertEqual(first[0], second[0])
-        self.assertEqual(int(second[1:]) - int(first[1:]), 1)
-        self.assertAlmostEqual(path["gap"]["end"][0] - path["gap"]["start"][0], self.api.clearance(self.model)["clear_width"])
+        """🚗 The physical route opening uses actual registered entry profiles."""
+        path=self.api.car_path(self.model)
+        self.assertEqual(len(path["poses"]),120)
+        self.assertGreater(path["min_clearance"],0)
+        self.assertEqual(self.api.clearance(self.model)["min_path_clearance"],path["min_clearance"])
+        first,second=path["entry_pair"]
+        self.assertIn(first,CASES["grid"]["ground_tags"])
+        self.assertIn(second,CASES["grid"]["ground_tags"])
+        a,b=(next(p for p in self.geometry["pilotis"] if p["tag"]==tag) for tag in (first,second))
+        self.assertAlmostEqual(abs(path["gap"]["end"][0]-path["gap"]["start"][0]),abs(b["x"]-a["x"])-self.entry_obstruction(self.model))
+        poses=np.asarray(path["poses"])
+        self.assertAlmostEqual(path["length"],float(np.linalg.norm(np.diff(poses[:,:2],axis=0),axis=1).sum()),delta=.05*path["length"])
 
-    def test_path_curve_is_concentric_with_the_glass_wall(self):
-        path, wall = self.api.car_path(self.model), self.geometry["curtain_wall"]
-        self.assertEqual(path["curve_centre"], wall["centre"])
-        self.assertAlmostEqual(path["centre_radius"], wall["radius"] + self.model["car"]["wall_clearance"]["value"] + self.model["car"]["width"]["value"] / 2)
+
+    def test_arrival_turn_follows_the_independent_assumed_traffic_route(self):
+        path=self.api.car_path(self.model,samples=1201)
+        self.assertNotIn("wall_curve_centre",path)
+        self.assertNotIn("centre",self.geometry["curtain_wall"])
+        self.assertNotIn("radius",self.geometry["curtain_wall"])
+        radius = self.model["car"]["turning_radius"]["value"] - self.model["car"]["width"]["value"] / 2
+        self.assertAlmostEqual(path["centre_radius"], radius)
+        turning = [pose for pose in path["poses"] if abs(pose[2] - 90) > 1e-4 and abs(pose[2] - 270) > 1e-4]
+        self.assertTrue(turning)
+        distances = np.linalg.norm(np.asarray(turning)[:, :2] - path["curve_centre"], axis=1)
+        np.testing.assert_allclose(distances, radius, atol=1e-5)
+        self.assertTrue(path["collision_free"])
+        self.assertGreater(path["certified_min_clearance"], 0)
 
 
 class BimQuantityContract(ModelCase):
     """🧮 Derived quantities are recomputed with independent formulas."""
 
     def test_piloti_volume_is_pi_r_squared_times_height(self):
+        """🧮 Independently integrate the actual circular example section."""
         from scipy import integrate
+        tag = self.api.role("column_example", self.model)
+        radius = self.piloti_radius()
+        pil = next(p for p in self.geometry["pilotis"] if p["tag"] == tag)
+        height = pil["top"] - pil["base"]
+        area = integrate.quad(lambda rho: 2 * math.pi * rho, 0, radius)[0]
+        result = self.api.quantities(tag, self.model)
+        self.assertAlmostEqual(result["cross_section_area"], area, places=7)
+        self.assertAlmostEqual(result["height"], height)
+        self.assertAlmostEqual(result["volume"], area * height, places=6)
+        self.assertAlmostEqual(result["outer_surface_area"], 2 * math.pi * radius * height, places=6)
 
-        radius, height = self.piloti_radius(), self.geometry["pilotis"][0]["top"]
-        area, _ = integrate.quad(lambda rho: 2 * math.pi * rho, 0, radius)
-        for tag in ("A1", "B3", "E5"):
-            result = self.api.quantities(tag, self.model)
-            self.assertAlmostEqual(result["cross_section_area"], math.pi * radius ** 2, places=7)
-            self.assertAlmostEqual(result["cross_section_area"], area, places=7)
-            self.assertAlmostEqual(result["height"], height)
-            self.assertAlmostEqual(result["volume"], area * height, places=6)
-            self.assertAlmostEqual(result["outer_surface_area"], 2 * math.pi * radius * height, places=6)
 
     def test_type_total_is_the_sum_over_all_occurrences(self):
         total = self.api.quantities(CASES["tags"]["piloti_type"], self.model)
-        each = self.api.quantities("A1", self.model)["volume"]
-        self.assertEqual(total["count"], 25)
-        self.assertAlmostEqual(total["volume"], 25 * each, places=6)
+        each = self.api.quantities(self.api.role("column_example", self.model), self.model)["volume"]
+        self.assertEqual(total["count"], CASES["grid"]["piloti_type_count"])
+        self.assertGreater(total["volume"], len([tag for tag in CASES["grid"]["ground_tags"] if self.items[tag]["type"] == CASES["tags"]["piloti_type"]]) * each)
         self.assertAlmostEqual(total["volume"], sum(self.api.quantities(tag, self.model)["volume"] for tag in total["occurrences"]), places=6)
         self.assertEqual(total["occurrences"], self.api.type_occurrences(CASES["tags"]["piloti_type"], self.model))
 
+    def test_each_column_type_volume_matches_independent_profile_integrals(self):
+        """🧮 Integrate actual profiles with independent GEOS section areas."""
+        from shapely.geometry import Polygon
+        for type_tag,tags in CASES["grid"]["type_occurrences"].items():
+            expected=0.0
+            for tag in tags:
+                pil=next(p for p in self.geometry["pilotis"] if p["tag"]==tag)
+                volume=0.0
+                for part in pil["parts"]:
+                    profile=part["profile"]
+                    area=profile_area(profile,part["outline"],part.get("holes",[]))
+                    volume+=area*(part["z1"]-part["z0"])
+                self.assertAlmostEqual(self.api.quantities(tag,self.model)["volume"],volume,delta=1e-4)
+                expected+=volume
+            result=self.api.quantities(type_tag,self.model)
+            self.assertEqual(result["count"],len(tags))
+            self.assertAlmostEqual(result["volume"],expected,delta=1e-4)
+
+
     def test_wall_gross_opening_and_net_areas_and_glazing_share(self):
+        """📊 Independent GEOS unions validate regional solid, envelope and member-net air volumes."""
+        from shapely.geometry import Polygon,box
+        from shapely.ops import unary_union
+        owners=[p for group in ("pilotis","beams","fillings") for obj in self.geometry[group] for p in obj["parts"]+obj.get("shared_parts",[])]
+        def volume(parts,cutters=()):
+            if not parts:
+                return 0.0
+            low,high=min(p["z0"] for p in parts),max(p["z1"] for p in parts)
+            shapes=[(p,Polygon(p["outline"])) for p in parts]
+            xmin=min(s.bounds[0] for _,s in shapes);ymin=min(s.bounds[1] for _,s in shapes)
+            xmax=max(s.bounds[2] for _,s in shapes);ymax=max(s.bounds[3] for _,s in shapes)
+            cutters=[p for p in cutters if p["z0"]<high and p["z1"]>low and min(v[0] for v in p["outline"])<xmax and max(v[0] for v in p["outline"])>xmin and min(v[1] for v in p["outline"])<ymax and max(v[1] for v in p["outline"])>ymin]
+            cut_shapes=[(p,Polygon(p["outline"])) for p in cutters]
+            levels=sorted({low,high,*(max(low,min(high,p[k])) for p in parts+cutters for k in ("z0","z1"))})
+            total=0.0
+            for lo,hi in zip(levels,levels[1:]):
+                mid=(lo+hi)/2
+                occupied=unary_union([shape for p,shape in shapes if p["z0"]<mid<p["z1"]])
+                removed=unary_union([shape for p,shape in cut_shapes if p["z0"]<mid<p["z1"]])
+                total+=(hi-lo)*occupied.difference(removed).area
+            return total
         for tag in CASES["tags"]["walls"]:
-            wall, result = self.wall(tag), self.api.quantities(tag, self.model)
+            wall,result=self.wall(tag),self.api.quantities(tag,self.model)
             with self.subTest(tag=tag):
-                height = wall["top"] - wall["base"]
-                gross = wall["length"] * height
-                opening = sum((o["end"] - o["start"]) * (o["head"] - o["sill"]) for o in wall["openings"])
-                self.assertAlmostEqual(result["gross_side_area"], gross)
-                self.assertAlmostEqual(result["opening_area"], opening)
-                self.assertAlmostEqual(result["net_side_area"], gross - opening)
-                self.assertAlmostEqual(result["glazing_share"], opening / gross)
-                self.assertAlmostEqual(result["volume"], (gross - opening) * wall["thickness"], places=6)
-                self.assertAlmostEqual(result["gross_volume"], gross * wall["thickness"], places=6)
-                layers = self.items[self.items[CASES["tags"]["wall_type"]]["material"]]["layers"]
-                self.assertAlmostEqual(wall["thickness"], sum(layer["thickness"]["value"] for layer in layers))
-                self.assertTrue(0 < result["glazing_share"] < 1)
+                height=wall["top"]-wall["base"]
+                gross=wall["length"]*height
+                apertures=[box(o["start"],o["sill_z"],o["end"],o["head_z"]) for o in wall["openings"]]
+                opening=unary_union(apertures).intersection(box(0,wall["base"],wall["length"],wall["top"])).area
+                self.assertAlmostEqual(result["gross_side_area"],gross)
+                self.assertAlmostEqual(result["opening_area"],opening)
+                self.assertAlmostEqual(result["net_side_area"],gross-opening)
+                glazing=sum(Polygon(p["outline"]).area*(p["z1"]-p["z0"])/f["panel_thickness"] for f in self.geometry["fillings"] if f["host"]==tag for p in f["parts"] if p["role"]=="glass")
+                self.assertAlmostEqual(result["glazing_share"],glazing/gross)
+                expected_volume=sum(Polygon(p["outline"]).area*(p["z1"]-p["z0"]) for p in wall["parts"])
+                self.assertAlmostEqual(result["volume"],expected_volume,places=6)
+                if tag in ("W-S","W-E","W-N","W-W","W-G-E"):
+                    self.assertAlmostEqual(expected_volume,volume(wall["parts"]),places=6)
+                source=self.items[tag]
+                material=self.api.element(tag,self.model)["material"]
+                bands=[]
+                def station(spec):
+                    datum=spec["datum"]
+                    value=wall[datum] if datum in ("base","top") else next(o for o in wall["openings"] if o["tag"]==spec["opening"])[datum+"_z"]
+                    return value+spec["offset"]["value"]
+                if "layer_regions" in source["geometry"]:
+                    bands=[(station(r["from"]),station(r["to"]),self.items[r["material"]]["layers"]) for r in source["geometry"]["layer_regions"]]
+                else:
+                    bands=[(wall["base"],wall["top"],material.get("layers",[{"thickness":{"value":wall["thickness"]}}]))]
+                expected_gross=expected_envelope=0.0
+                air=[]
+                direction=(np.asarray(wall["end"])-np.asarray(wall["start"]))/wall["length"]
+                normal=np.array([-direction[1],direction[0]])
+                side=source["geometry"].get("exterior_side",1)
+                def ring(start,end,lo,hi):
+                    return [np.asarray(wall["start"])+direction*s+normal*t for s,t in ((start,lo),(end,lo),(end,hi),(start,hi))]
+                for z0,z1,layers in bands:
+                    offset=wall["thickness"]/2
+                    for layer in layers:
+                        t=layer["thickness"]["value"]
+                        lo,hi=sorted([side*(offset-t),side*offset])
+                        expected_envelope+=wall["length"]*(z1-z0)*t
+                        if layer.get("is_void"):
+                            air.append({"outline":ring(0,wall["length"],lo,hi),"z0":z0,"z1":z1})
+                        else:
+                            expected_gross+=wall["length"]*(z1-z0)*t
+                        offset-=t
+                portals=[{"outline":ring(o["start"],o["end"],-wall["thickness"],wall["thickness"]),"z0":o["sill_z"],"z1":o["head_z"]} for o in wall["openings"]]
+                self.assertAlmostEqual(result["gross_volume"],expected_gross,places=6)
+                self.assertAlmostEqual(result["envelope_volume"],expected_envelope,places=6)
+                self.assertAlmostEqual(result["cavity_volume"],volume(air,owners+portals),places=6)
+                self.assertAlmostEqual(result["bounding_volume"],gross*wall["thickness"],places=6)
+                self.assertTrue(0<=result["glazing_share"]<=1)
 
     def test_window_and_opening_quantities_agree(self):
-        for opening_tag, window_tag in zip(CASES["tags"]["openings"], CASES["tags"]["windows"]):
-            first, second = self.api.quantities(opening_tag, self.model), self.api.quantities(window_tag, self.model)
-            self.assertEqual(first, second)
-            self.assertAlmostEqual(first["area"], first["width"] * first["height"])
-            self.assertAlmostEqual(first["height"], first["head"] - first["sill"])
+        """🚪 Rough host cuts and frame-clear dimensions remain explicitly separate."""
+        for filling_tag in CASES["tags"]["windows"]+CASES["tags"]["doors"]:
+            opening_tag=self.items[filling_tag]["geometry"]["opening"]
+            aperture,filling=self.api.quantities(opening_tag,self.model),self.api.quantities(filling_tag,self.model)
+            for key in ("width","height","area"):
+                self.assertAlmostEqual(aperture[key],filling[key])
+            host=self.items[opening_tag]["geometry"]
+            self.assertEqual(aperture["host"],host.get("wall",host.get("slab",host.get("curtain_wall"))))
+            self.assertAlmostEqual(aperture["area"],aperture["width"]*aperture["height"])
+            kind=self.items[self.items[filling_tag]["type"]]["filling"]
+            wing=kind.get("side_wings",{}).get("width",{}).get("value",0)
+            expected=filling["rough_width"]-2*filling["frame_width"]-2*wing
+            if "panel_layout" in kind:
+                member=kind["panel_layout"]["member_width"]["value"]
+                intervals=[(expected*cell["u"][0]["value"]+(member/2 if cell["u"][0]["value"]>0 else 0),expected*cell["u"][1]["value"]-(member/2 if cell["u"][1]["value"]<1 else 0)) for cell in kind["panel_layout"]["cells"] if cell["operation"]!="fixed"]
+                if intervals:
+                    expected=max(hi for _,hi in intervals)-min(lo for lo,_ in intervals)
+            self.assertAlmostEqual(filling["clear_width"],expected)
+            self.assertLessEqual(filling["clear_height"],filling["rough_height"])
+            self.assertGreater(filling["volume"],0)
+
 
     def test_slab_areas_and_volumes_use_polygon_areas_minus_voids(self):
+        """📐 Independently union openings and integrate occupied regional depths."""
+        from shapely.geometry import Polygon
+        from shapely.ops import unary_union
         for tag in CASES["tags"]["slabs"]:
-            slab, result = self.slab(tag), self.api.quantities(tag, self.model)
-            with self.subTest(tag=tag):
-                gross = shoelace(slab["outline"])
-                voids = sum(shoelace(v) for v in slab["voids"])
-                self.assertAlmostEqual(result["gross_area"], gross)
-                self.assertAlmostEqual(result["void_area"], voids)
-                self.assertAlmostEqual(result["area"], gross - voids)
-                self.assertAlmostEqual(result["volume"], (gross - voids) * slab["thickness"], places=5)
-                self.assertAlmostEqual(result["perimeter"], float(np.linalg.norm(np.roll(slab["outline"], -1, axis=0) - np.asarray(slab["outline"]), axis=1).sum()))
-        sample = len(sample_surface(self.slab("SL-1")["outline"], self.slab("SL-1")["voids"], 0.05)) * 0.05 ** 2
-        self.assertAlmostEqual(self.api.quantities("SL-1", self.model)["area"], sample, delta=0.3)
+            slab,result=self.slab(tag),self.api.quantities(tag,self.model)
+            authored=self.items[tag]["geometry"]
+            shape=unary_union([Polygon(region["outline"]) for region in authored.get("regions",[{"outline":authored["outline"]}])])
+            occupied=shape.difference(unary_union([Polygon(v) for v in slab["voids"]]))
+            self.assertAlmostEqual(result["gross_area"],shape.area)
+            self.assertAlmostEqual(result["void_area"],shape.area-occupied.area)
+            self.assertAlmostEqual(result["area"],occupied.area)
+            volume=lambda parts:sum(Polygon(p["outline"],p.get("holes",[])).area*(p["z1"]-p["z0"]) for p in parts)
+            self.assertAlmostEqual(result["volume"],volume(slab["full_parts"]),places=5)
+            self.assertAlmostEqual(result["exclusive_volume"],volume(slab["parts"]),places=5)
+            self.assertAlmostEqual(result["shared_volume"],volume(slab["shared_parts"]),places=5)
+            self.assertAlmostEqual(result["volume"],result["exclusive_volume"]+result["shared_volume"],places=6)
+            self.assertAlmostEqual(result["finish_volume"],volume(slab["full_finish_parts"]),places=5)
+            self.assertAlmostEqual(result["exclusive_finish_volume"],volume(slab["finish_parts"]),places=5)
+            self.assertAlmostEqual(result["shared_finish_volume"],volume(slab["shared_finish_parts"]),places=5)
+            self.assertAlmostEqual(result["finish_volume"],result["exclusive_finish_volume"]+result["shared_finish_volume"],places=6)
+            self.assertAlmostEqual(result["perimeter"],shape.length)
+
 
     def test_roof_build_up_total_is_the_sum_of_its_layers(self):
         result, layers = self.api.quantities("SL-R", self.model), self.items["LS-ROOF"]["layers"]
         self.assertAlmostEqual(result["total_thickness"], sum(layer["thickness"]["value"] for layer in layers))
-        self.assertAlmostEqual(result["thickness"], layers[0]["thickness"]["value"])
+        self.assertAlmostEqual(result["thickness"], max(region["thickness"]["value"] for region in self.items["SL-R"]["geometry"]["regions"]))
 
     def test_ramp_curtain_wall_pipe_and_type_quantities(self):
         ramp = self.api.quantities("RM-1", self.model)
@@ -904,9 +1337,15 @@ class BimQuantityContract(ModelCase):
         wall = self.geometry["curtain_wall"]
         self.assertAlmostEqual(glass["height"], wall["top"] - wall["base"])
         self.assertAlmostEqual(glass["area"], glass["length"] * glass["height"])
-        self.assertAlmostEqual(glass["length"], float(np.linalg.norm(np.diff(np.asarray(wall["path"]), axis=0), axis=1).sum()), delta=0.03 * glass["length"])
+        from shapely.geometry import LineString
+        self.assertAlmostEqual(glass["length"],sum(LineString(record["reference_path"]).length for record in wall["paths"]),places=6)
         pipe = self.api.quantities("DP-1", self.model)
-        self.assertAlmostEqual(pipe["length"], self.geometry["storeys"]["roof"])
+        authored=np.asarray(self.items["DP-1"]["geometry"]["points"],dtype=float)
+        self.assertAlmostEqual(pipe["length"],float(np.linalg.norm(np.diff(authored,axis=0),axis=1).sum()))
+        from scipy.spatial import ConvexHull
+        physical=next(item for item in self.geometry["services"] if item["tag"]=="DP-1")
+        independent=sum(ConvexHull(np.asarray(self.api.part_vertices(part))).volume for part in physical["parts"])
+        self.assertAlmostEqual(pipe["volume"],independent,places=8)
         self.assertAlmostEqual(self.api.quantities(CASES["tags"]["wall_type"], self.model)["thickness"], self.wall("W-S")["thickness"])
         for key in ("PROJECT", "MISSING"):
             with self.subTest(key=key), self.assertRaises(ValueError):
@@ -965,30 +1404,34 @@ class BimRelationContract(ModelCase):
                 self.assertEqual(contained[0]["relating"]["tag"], element["storey"])
                 self.assertEqual(contained[0]["role"], "related")
 
-    def test_twenty_five_pilotis_are_defined_by_the_piloti_type(self):
+    def test_all_authored_pilotis_are_defined_by_the_piloti_type(self):
         link = self.relations(CASES["tags"]["piloti_type"], "IfcRelDefinesByType")
         self.assertEqual(len(link), 1)
         self.assertEqual([x["tag"] for x in link[0]["related"]], self.api.type_occurrences(CASES["tags"]["piloti_type"], self.model))
-        self.assertEqual(len(link[0]["related"]), 25)
-        for tag in ("A1", "E5"):
+        self.assertEqual(len(link[0]["related"]), CASES["grid"]["piloti_type_count"])
+        for tag in self.api.type_occurrences(CASES["tags"]["piloti_type"], self.model):
             own = self.relations(tag, "IfcRelDefinesByType")
             self.assertEqual(own[0]["relating"]["tag"], CASES["tags"]["piloti_type"])
 
-    def test_each_ribbon_window_is_a_void_fill_chain_in_its_wall(self):
-        for wall, opening, window in zip(CASES["tags"]["walls"], CASES["tags"]["openings"], CASES["tags"]["windows"]):
-            with self.subTest(wall=wall):
-                voids = self.relations(wall, "IfcRelVoidsElement")
-                self.assertEqual([(r["relating"]["tag"], r["related"][0]["tag"]) for r in voids], [(wall, opening)])
-                fills = self.relations(opening, "IfcRelFillsElement")
-                self.assertEqual([(r["relating"]["tag"], r["related"][0]["tag"]) for r in fills], [(opening, window)])
-                self.assertEqual(len(self.relations(window, "IfcRelFillsElement")), 1)
-                self.assertEqual(len(self.relations(opening, "IfcRelVoidsElement")), 1)
-                self.assertEqual({r["class"] for r in self.api.relations_of(opening, self.model)}, {"IfcRelVoidsElement", "IfcRelFillsElement", "IfcRelContainedInSpatialStructure"})
+    def test_every_opening_has_a_void_relation_and_optional_filling(self):
+        fillings = {e["geometry"]["opening"]: e["tag"] for e in self.model["elements"] if "opening" in e["geometry"]}
+        for opening in CASES["tags"]["openings"]:
+            geometry = self.items[opening]["geometry"]
+            host = geometry.get("wall",geometry.get("slab",geometry.get("curtain_wall")))
+            voids = self.relations(opening, "IfcRelVoidsElement")
+            self.assertEqual([(r["relating"]["tag"], r["related"][0]["tag"]) for r in voids], [(host, opening)])
+            fills = self.relations(opening, "IfcRelFillsElement")
+            expected = [] if opening in CASES["tags"]["unfilled_openings"] else [(opening, fillings[opening])]
+            self.assertEqual([(r["relating"]["tag"], r["related"][0]["tag"]) for r in fills], expected)
+            classes = {"IfcRelVoidsElement", "IfcRelContainedInSpatialStructure"}
+            if expected:
+                classes.add("IfcRelFillsElement")
+            self.assertEqual({r["class"] for r in self.api.relations_of(opening, self.model)}, classes)
 
     def test_materials_are_associated_and_relation_ends_exist(self):
         associated = {tag for r in self.model["relations"] if r["class"] == "IfcRelAssociatesMaterial" for tag in r["related"]}
-        for tag in ("TY-PILOTI", "SL-1", "SL-R", "TY-WALL", "CW-1"):
-            self.assertIn(tag, associated)
+        for tag in (self.api.role("column_type_example", self.model), "SL-1", "SL-R", "TY-FACADE-29", "CW-1"):
+            self.assertTrue(tag in associated or self.items[tag].get("type") in associated)
         for relation in self.model["relations"]:
             with self.subTest(tag=relation["tag"]):
                 self.assertIn(relation["relating"], self.items)
@@ -1000,7 +1443,7 @@ class BimRelationContract(ModelCase):
                 self.api.relations_of(key, self.model)
 
     def test_relations_of_reports_both_sides_with_guids(self):
-        relation = self.relations("B3", "IfcRelDefinesByType")[0]
+        relation = self.relations(self.api.role("column_example", self.model), "IfcRelDefinesByType")[0]
         self.assertEqual(relation["role"], "related")
         self.assertEqual(relation["relating"]["guid"], oracle_global_id(CASES["tags"]["piloti_type"]))
         self.assertEqual([o["tag"] for o in relation["others"]], [CASES["tags"]["piloti_type"]])
@@ -1027,64 +1470,77 @@ class BimRepresentationContract(ModelCase):
             self.assertTrue(all(item == derived[0] for item in derived), tag)
 
     def test_piloti_representations_match_diameter_and_height(self):
-        radius, height = self.piloti_radius(), self.geometry["pilotis"][0]["top"]
-        body = self.api.represent("B3", "body", self.model)
-        extrusion = body["primitives"][0]
-        self.assertEqual(extrusion["kind"], "extrusion")
-        self.assertAlmostEqual(extrusion["depth"], height)
-        self.assertAlmostEqual(extrusion["profile"]["radius"], radius)
-        self.assertEqual(body["derived"]["profile"], "IfcCircleProfileDef")
-        axis = np.asarray(self.api.represent("B3", "axis", self.model)["primitives"][0]["points"])
-        self.assertAlmostEqual(float(np.linalg.norm(axis[1] - axis[0])), height)
-        self.assertTrue(np.allclose(axis[:, :2], [self.geometry["pilotis"][7]["x"], self.geometry["pilotis"][7]["y"]]))
-        section = np.asarray(self.api.represent("B3", "section", self.model)["primitives"][0]["points"])
-        self.assertAlmostEqual(shoelace(section), 2 * radius * height)
-        plan = self.api.represent("B3", "plan", self.model)["primitives"][0]
-        footprint = self.api.represent("B3", "footprint", self.model)["primitives"][0]
-        self.assertEqual((plan["kind"], footprint["kind"]), ("circle", "circle"))
-        self.assertAlmostEqual(plan["radius"], radius)
-        self.assertEqual(plan["centre"], footprint["centre"])
-        self.assertAlmostEqual(self.api.represent("B3", "3d", self.model)["primitives"][0]["z1"], height)
+        """🔩 Actual source outlines survive body, plan, section and footprint representations."""
+        from shapely.geometry import Polygon
+        tag=self.api.role("column_example",self.model)
+        q=self.api.quantities(tag,self.model)
+        body=self.api.represent(tag,"body",self.model)["primitives"][0]
+        self.assertEqual(body["kind"],"extrusion")
+        self.assertAlmostEqual(body["depth"],q["height"])
+        shape=Polygon(body["profile"]["points"])
+        self.assertAlmostEqual(shape.area,q["cross_section_area"],delta=3e-5)
+        axis=np.asarray(self.api.represent(tag,"axis",self.model)["primitives"][0]["points"])
+        self.assertAlmostEqual(float(np.linalg.norm(axis[1]-axis[0])),q["height"])
+        plan=self.api.represent(tag,"plan",self.model)["primitives"][0]
+        footprint=self.api.represent(tag,"footprint",self.model)["primitives"][0]
+        self.assertEqual(plan["kind"],"polygon")
+        self.assertTrue(Polygon(plan["points"]).equals(Polygon(footprint["points"])))
+
 
     def test_wall_representations_match_footprint_elevation_and_glazing(self):
+        """🧱 Occupied representation solids retain material cavities and every opening."""
+        from shapely.geometry import Polygon
+        from shapely.ops import unary_union
         wall, quantities = self.wall("W-S"), self.api.quantities("W-S", self.model)
-        footprint = self.api.represent("W-S", "footprint", self.model)["primitives"][0]["points"]
-        self.assertAlmostEqual(shoelace(footprint), wall["length"] * wall["thickness"], places=6)
-        elevation = self.api.represent("W-S", "elevation", self.model)["primitives"]
-        outline = next(p for p in elevation if p["role"] == "outline")
-        holes = [p for p in elevation if p["role"] == "hole"]
-        glazing = [p for p in elevation if p["role"] == "glazing"]
-        self.assertAlmostEqual(shoelace(outline["points"]) - sum(shoelace(h["points"]) for h in holes), quantities["net_side_area"], places=6)
-        self.assertEqual(len(holes), len(glazing))
-        self.assertAlmostEqual(sum(shoelace(g["points"]) for g in glazing), quantities["opening_area"], places=6)
-        plan = self.api.represent("W-S", "plan", self.model)["primitives"]
-        self.assertEqual(len([p for p in plan if p.get("role") == "glazing"]), len(wall["openings"]))
-        prism = self.api.represent("W-S", "3d", self.model)["primitives"][0]
-        self.assertEqual(len(prism["holes"]), len(wall["openings"]))
-        self.assertAlmostEqual(prism["z1"] - prism["z0"], wall["top"] - wall["base"])
-        derived = self.api.represent("W-S", "plan", self.model)["derived"]
-        self.assertAlmostEqual(derived["volume"], quantities["volume"])
+        footprint = self.api.represent("W-S", "footprint", self.model)["primitives"]
+        actual=unary_union([Polygon(p["points"]) for p in footprint])
+        expected=unary_union([Polygon(p["outline"]) for p in wall["parts"]])
+        self.assertLess(actual.symmetric_difference(expected).area,1e-9)
+        solids=self.api.represent("W-S","3d",self.model)["primitives"]
+        levels=sorted({p[k] for p in solids for k in ("z0","z1")})
+        volume=sum((hi-lo)*unary_union([Polygon(p["polygon"]) for p in solids if p["z0"]<(lo+hi)/2<p["z1"]]).area for lo,hi in zip(levels,levels[1:]))
+        self.assertAlmostEqual(volume,quantities["volume"],places=6)
+        self.assertTrue(all(not p["holes"] for p in solids))
+        self.assertTrue(all(p["material"]!="MAT-AIR" for p in solids))
+        self.assertEqual(len(solids),len(wall["parts"]))
+        derived=self.api.represent("W-S","plan",self.model)["derived"]
+        self.assertAlmostEqual(derived["volume"],volume,places=6)
+
 
     def test_slab_representations_have_outline_and_void_rings(self):
-        slab, result = self.slab("SL-1"), self.api.quantities("SL-1", self.model)
-        footprint = self.api.represent("SL-1", "footprint", self.model)["primitives"]
-        holes = [p for p in footprint if p["role"] == "hole"]
-        outer = next(p for p in footprint if p["role"] == "outline")
-        self.assertEqual(len(holes), len(slab["voids"]))
-        self.assertAlmostEqual(shoelace(outer["points"]) - sum(shoelace(h["points"]) for h in holes), result["area"])
-        section = np.asarray(self.api.represent("SL-1", "section", self.model)["primitives"][0]["points"])
-        self.assertAlmostEqual(section[:, 1].max() - section[:, 1].min(), slab["thickness"])
-        self.assertAlmostEqual(self.api.represent("SL-1", "body", self.model)["primitives"][0]["depth"], slab["thickness"])
+        """🥞 Regional footprint pieces retain occupied areas and local extrusion depths."""
+        from shapely.geometry import Polygon
+        from shapely.ops import unary_union
+        tag=self.api.role("floor",self.model)
+        q=self.api.quantities(tag,self.model)
+        primitives=self.api.represent(tag,"footprint",self.model)["primitives"]
+        occupied=[Polygon(p["points"]) for p in primitives if p["role"]=="outline"]
+        expected=self.slab_domain(self.slab(tag))
+        self.assert_partition(occupied,expected)
+        self.assertAlmostEqual(sum(piece.area for piece in occupied),q["area"],places=6)
+        body=self.api.represent(tag,"body",self.model)["primitives"]
+        self.assertEqual({round(p["depth"],2) for p in body},{.17,.20,.23})
+        self.assertAlmostEqual(sum(Polygon(p["profile"]["outer"],p["profile"].get("inner",[])).area*p["depth"] for p in body),q["volume"],places=5)
+
 
     def test_window_representation_is_the_opening_rectangle(self):
-        opening = self.wall("W-S")["openings"][0]
-        elevation = np.asarray(self.api.represent("RW-S", "elevation", self.model)["primitives"][0]["points"])
-        self.assertAlmostEqual(shoelace(elevation), (opening["end"] - opening["start"]) * (opening["head"] - opening["sill"]))
-        plan = np.asarray(self.api.represent("RW-S", "plan", self.model)["primitives"][0]["points"])
-        self.assertAlmostEqual(float(np.linalg.norm(plan[1] - plan[0])), opening["end"] - opening["start"])
+        """🪟 A physical frame and inset glass jointly fill the rough aperture."""
+        from shapely.geometry import Polygon,box
+        from shapely.ops import unary_union
+        opening=self.wall("W-S")["openings"][0]
+        elevation=self.api.represent("RW-S","elevation",self.model)["primitives"]
+        occupied=unary_union([Polygon(p["points"]) for p in elevation])
+        aperture=box(min(opening["p0"][0],opening["p1"][0]),opening["sill_z"],max(opening["p0"][0],opening["p1"][0]),opening["head_z"])
+        self.assertLess(occupied.symmetric_difference(aperture).area,1e-8)
+        self.assertEqual(len([p for p in elevation if p["role"]=="frame"]),4)
+        self.assertEqual(len([p for p in elevation if p["role"]=="glass"]),1)
+        frame=self.items["TY-RIBBON"]["filling"]["frame_width"]["value"]
+        q=self.api.quantities("RW-S",self.model)
+        self.assertAlmostEqual(q["clear_width"],q["rough_width"]-2*frame)
+
 
     def test_unknown_kinds_and_objects_without_representation_are_rejected(self):
-        for key, kind in (("B3", "mesh"), ("B3", ""), ("MISSING", "plan"), ("SC-1", "plan"), ("BL-1", "plan")):
+        for key, kind in ((self.api.role("column_example", self.model), "mesh"), (self.api.role("column_example", self.model), ""), ("MISSING", "plan"), ("MAT-RC", "plan"), ("ground", "plan")):
             with self.subTest(key=key, kind=kind), self.assertRaises(ValueError):
                 self.api.represent(key, kind, self.model)
 
@@ -1137,13 +1593,15 @@ class BimPartialModelContract(ModelCase):
 
     def test_structure_holds_pilotis_and_architecture_holds_windows(self):
         architecture, structure, services = (self.api.partial_model(i, self.model) for i in CASES["models"]["ids"])
-        self.assertEqual(structure["counts_by_class"].get("IfcColumn"), 25)
-        self.assertNotIn("IfcColumn", architecture["counts_by_class"])
+        self.assertEqual(structure["counts_by_class"].get("IfcColumn"), CASES["model"]["class_counts"]["IfcColumn"])
+        self.assertEqual({tag for tag in architecture["element_tags"] if self.items[tag]["class"] == "IfcColumn"},set(CASES["models"]["architectural_columns"]))
         self.assertEqual(architecture["counts_by_class"].get("IfcWindow"), len(CASES["tags"]["windows"]))
         self.assertNotIn("IfcWindow", structure["counts_by_class"])
         self.assertTrue(set(services["counts_by_class"]) <= set(CASES["models"]["services_classes"]))
-        self.assertFalse(set(services["element_guids"]) & set(structure["element_guids"]))
-        self.assertFalse(set(services["element_guids"]) & set(architecture["element_guids"]))
+        for partial in (architecture,structure):
+            shared={self.items[tag]["guid"] for tag in CASES["models"]["shared_services_by_model"][partial["id"]]}
+            self.assertEqual(set(services["element_guids"]) & set(partial["element_guids"]),shared)
+        self.assertTrue(set(CASES["models"]["shared_services"])<=set(services["element_tags"])&set(structure["element_tags"])&set(architecture["element_tags"]))
 
     def test_slabs_are_shared_between_architecture_and_structure_by_global_id(self):
         architecture, structure = (self.api.partial_model(i, self.model) for i in CASES["models"]["ids"][:2])
@@ -1196,7 +1654,7 @@ class BimStepExchangeContract(ModelCase):
                     self.assertEqual(arguments[1], None)
 
     def test_piloti_geometry_numbers_match_the_model(self):
-        _, parsed = self.parsed("B3")
+        _, parsed = self.parsed(self.api.role("column_example", self.model))
         entities = parsed["entities"]
         by_name = {}
         for number, (name, arguments) in entities.items():
@@ -1205,21 +1663,24 @@ class BimStepExchangeContract(ModelCase):
         placement = entities[column[5][1]][1]
         axis = entities[placement[1][1]][1]
         point = entities[axis[0][1]][1][0]
-        piloti = next(p for p in self.geometry["pilotis"] if p["tag"] == "B3")
-        self.assertTrue(np.allclose(point, [piloti["x"], piloti["y"], piloti["base"]]))
+        piloti = next(p for p in self.geometry["pilotis"] if p["tag"] == self.api.role("column_example", self.model))
+        self.assertTrue(np.allclose(point, [0, 0, 0]))
         shape = entities[column[6][1]][1]
         representation = entities[shape[2][0][1]][1]
         self.assertEqual(representation[1:3], ["Body", "SweptSolid"])
         solid = entities[representation[3][0][1]][1]
         profile = entities[solid[0][1]][1]
         self.assertAlmostEqual(profile[3], piloti["radius"])
+        profile_axis = entities[profile[2][1]][1]
+        centre = entities[profile_axis[0][1]][1][0]
+        np.testing.assert_allclose(centre, [piloti["x"], piloti["y"]], atol=1e-9)
         self.assertAlmostEqual(solid[3], piloti["top"] - piloti["base"])
         direction = entities[solid[2][1]][1][0]
         self.assertTrue(np.allclose(direction, [0, 0, 1]))
         self.assertEqual(profile[0], ("enum", "AREA"))
 
     def test_pset_material_type_and_storey_entities_link_back_to_the_element(self):
-        _, parsed = self.parsed("B3")
+        _, parsed = self.parsed(self.api.role("column_example", self.model))
         entities = parsed["entities"]
         element = next(n for n, (name, _) in entities.items() if name == "IFCCOLUMN")
         relations = {name: [(n, a) for n, (nm, a) in entities.items() if nm == name] for name in ("IFCRELASSOCIATESMATERIAL", "IFCRELDEFINESBYTYPE", "IFCRELCONTAINEDINSPATIALSTRUCTURE")}
@@ -1239,32 +1700,42 @@ class BimStepExchangeContract(ModelCase):
         material = entities[relations["IFCRELASSOCIATESMATERIAL"][0][1][5][1]]
         self.assertEqual((material[0], material[1][0]), ("IFCMATERIAL", self.items["MAT-RC"]["name"]["en"]))
         kind = entities[relations["IFCRELDEFINESBYTYPE"][0][1][5][1]]
-        self.assertEqual((kind[0], kind[1][0]), ("IFCCOLUMNTYPE", self.items["TY-PILOTI"]["guid"]))
+        self.assertEqual((kind[0], kind[1][0]), ("IFCCOLUMNTYPE", self.items[self.api.role("column_type_example", self.model)]["guid"]))
         storey = entities[relations["IFCRELCONTAINEDINSPATIALSTRUCTURE"][0][1][5][1]]
         self.assertEqual((storey[0], storey[1][0], storey[1][9]), ("IFCBUILDINGSTOREY", self.items["ground"]["guid"], 0.0))
 
     def test_slab_and_wall_geometry_numbers_match_the_model(self):
-        _, parsed = self.parsed("SL-1")
-        entities = parsed["entities"]
-        solid = next(a for n, a in entities.values() if n == "IFCEXTRUDEDAREASOLID")
-        profile = entities[solid[0][1]][1]
-        gross = self.slab("SL-1")
-        self.assertAlmostEqual(profile[3] * profile[4], shoelace(gross["outline"]))
-        self.assertAlmostEqual(solid[3], gross["thickness"])
-        _, parsed = self.parsed("SL-R")
-        layers = [a for n, a in parsed["entities"].values() if n == "IFCMATERIALLAYER"]
-        self.assertEqual([layer[1] for layer in layers], [l["thickness"]["value"] for l in self.items["LS-ROOF"]["layers"]])
-        _, parsed = self.parsed("W-S")
-        solid = next(a for n, a in parsed["entities"].values() if n == "IFCEXTRUDEDAREASOLID")
-        profile = parsed["entities"][solid[0][1]][1]
-        wall = self.wall("W-S")
-        self.assertAlmostEqual(profile[3], wall["length"])
-        self.assertAlmostEqual(profile[4], wall["thickness"])
-        self.assertAlmostEqual(solid[3], wall["top"] - wall["base"])
+        """🧾 IFC regional polygon extrusions retain occupied source volume."""
+        from shapely.geometry import Polygon
+        _,parsed=self.parsed("SL-1")
+        entities=parsed["entities"]
+        volume=0.0
+        for name,solid in entities.values():
+            if name!="IFCEXTRUDEDAREASOLID":
+                continue
+            profile=entities[solid[0][1]][1]
+            curve=entities[profile[2][1]][1]
+            points=[entities[ref[1]][1][0] for ref in curve[0]]
+            volume+=Polygon(points).area*solid[3]
+        self.assertAlmostEqual(volume,self.api.quantities("SL-1",self.model)["volume"],places=5)
+        _,parsed=self.parsed("SL-R")
+        layers=[a for n,a in parsed["entities"].values() if n=="IFCMATERIALLAYER"]
+        self.assertEqual([l[1] for l in layers],[l["thickness"]["value"] for l in self.items["LS-ROOF"]["layers"]])
+        _,parsed=self.parsed("W-S")
+        entities=parsed["entities"]
+        volume=0.0
+        for name,solid in entities.values():
+            if name!="IFCEXTRUDEDAREASOLID":
+                continue
+            profile=entities[solid[0][1]][1]
+            curve=entities[profile[2][1]][1]
+            points=[entities[ref[1]][1][0] for ref in curve[0]]
+            volume+=Polygon(points).area*solid[3]
+        self.assertAlmostEqual(volume,self.api.quantities("W-S",self.model)["volume"],places=5)
 
     def test_renumbering_changes_entity_numbers_but_never_the_global_id(self):
-        first, parsed_first = self.parsed("B3")
-        second, parsed_second = self.parsed("B3", first_id=500)
+        first, parsed_first = self.parsed(self.api.role("column_example", self.model))
+        second, parsed_second = self.parsed(self.api.role("column_example", self.model), first_id=500)
         self.assertEqual(min(parsed_first["entities"]), 101)
         self.assertEqual(min(parsed_second["entities"]), 500)
         self.assertEqual(sorted(parsed_second["entities"]), [number + 399 for number in sorted(parsed_first["entities"])])
@@ -1297,26 +1768,26 @@ class BimStepExchangeContract(ModelCase):
                 self.assertIn("Body", [text.strip("'") for text in by_role["representation"]])
 
     def test_property_and_value_spans_hold_the_pset_content(self):
-        excerpt = self.api.step_excerpt("B3", self.model)
+        excerpt = self.api.step_excerpt(self.api.role("column_example", self.model), self.model)
         text = lambda role: [excerpt["lines"][s["line"]][s["start"]:s["end"]] for s in excerpt["spans"] if s["role"] == role]
         self.assertEqual(text("property"), ["LoadBearing", "IsExternal"])
-        self.assertEqual(text("value"), [".T.", ".T."])
+        self.assertEqual(text("value"), [".T.", ".F."])
         self.assertEqual(text("pset"), ["Pset_ColumnCommon"])
         self.assertEqual(text("material"), [self.items["MAT-RC"]["name"]["en"]])
-        self.assertAlmostEqual(float(text("depth")[0]), self.geometry["pilotis"][7]["top"])
+        self.assertAlmostEqual(float(text("depth")[0]), self.api.quantities(self.api.role("column_example", self.model), self.model)["height"])
         self.assertAlmostEqual(float(text("profile")[0]), self.piloti_radius())
 
     def test_invalid_requests_are_rejected(self):
-        for key, kwargs in (("MISSING", {}), ("BL-1", {}), ("B3", {"language": "fr"}), ("B3", {"first_id": 0}), ("B3", {"first_id": True})):
+        for key, kwargs in (("MISSING", {}), ("MAT-RC", {}), (self.api.role("column_example", self.model), {"language": "fr"}), (self.api.role("column_example", self.model), {"first_id": 0}), (self.api.role("column_example", self.model), {"first_id": True})):
             with self.subTest(key=key, kwargs=kwargs), self.assertRaises(ValueError):
                 self.api.step_excerpt(key, self.model, **kwargs)
 
     def test_parser_oracle_rejects_malformed_fragments(self):
-        good = self.api.step_excerpt("B3", self.model)["lines"]
+        good = self.api.step_excerpt(self.api.role("column_example", self.model), self.model)["lines"]
         broken = {
             "unbalanced": [line.replace(");", ";", 1) if line.startswith("#102") else line for line in good],
             "undefined-ref": [line.replace("#102", "#999", 1) if line.startswith("#101") else line for line in good],
-            "open-string": [line.replace("'B3'", "'B3", 1) for line in good],
+            "open-string": [line.replace("'19'", "'C2", 1) for line in good],
             "no-data": [line for line in good if line != "DATA;"],
             "duplicate": good[:8] + [good[7]] + good[8:],
             "no-end": good[:-1],
@@ -1332,7 +1803,7 @@ class BimMeshExchangeContract(ModelCase):
     def test_counts_euler_characteristic_and_watertightness_for_many_resolutions(self):
         for segments in CASES["mesh"]["segments"]:
             with self.subTest(segments=segments):
-                result = self.api.mesh("B3", segments=segments, model=self.model)
+                result = self.api.mesh(self.api.role("column_example", self.model), segments=segments, model=self.model)
                 report = mesh_report(result["vertices"], result["faces"])
                 self.assertEqual(result["vertex_count"], len(result["vertices"]))
                 self.assertEqual(result["triangle_count"], len(result["faces"]))
@@ -1343,14 +1814,16 @@ class BimMeshExchangeContract(ModelCase):
                 self.assertEqual(result["triangle_count"], 2 * (result["vertex_count"] - 2))
                 self.assertEqual(report["edges"], 3 * result["triangle_count"] // 2)
                 self.assertEqual(result["segments"], segments)
+                self.assertEqual(result["vertex_count"], 2 * segments)
+                self.assertEqual(result["triangle_count"], 4 * segments - 4)
 
     def test_volume_and_area_equal_the_inscribed_prism_and_the_convex_hull(self):
         from scipy.spatial import ConvexHull
 
-        radius, height = self.piloti_radius(), self.geometry["pilotis"][0]["top"]
+        radius, height = self.piloti_radius(), self.api.quantities(self.api.role("column_example", self.model), self.model)["height"]
         for segments in (4, 6, 8, 16, 64):
             with self.subTest(segments=segments):
-                result = self.api.mesh("B3", segments=segments, model=self.model)
+                result = self.api.mesh(self.api.role("column_example", self.model), segments=segments, model=self.model)
                 report = mesh_report(result["vertices"], result["faces"])
                 prism = segments / 2 * radius ** 2 * math.sin(2 * math.pi / segments) * height
                 self.assertAlmostEqual(report["volume"], prism, places=6)
@@ -1358,12 +1831,12 @@ class BimMeshExchangeContract(ModelCase):
                 self.assertAlmostEqual(report["volume"], hull.volume, places=6)
                 self.assertAlmostEqual(report["area"], hull.area, places=6)
                 self.assertLessEqual(report["volume"], math.pi * radius ** 2 * height + 1e-9)
-        fine = mesh_report(*[self.api.mesh("B3", segments=256, model=self.model)[k] for k in ("vertices", "faces")])
+        fine = mesh_report(*[self.api.mesh(self.api.role("column_example", self.model), segments=256, model=self.model)[k] for k in ("vertices", "faces")])
         self.assertAlmostEqual(fine["volume"], math.pi * radius ** 2 * height, delta=1e-4)
 
     def test_vertices_lie_on_the_cylinder_between_base_and_top(self):
-        piloti = next(p for p in self.geometry["pilotis"] if p["tag"] == "D2")
-        result = self.api.mesh("D2", segments=12, model=self.model)
+        piloti = next(p for p in self.geometry["pilotis"] if p["tag"] == self.api.role("column_example", self.model))
+        result = self.api.mesh(self.api.role("column_example", self.model), segments=12, model=self.model)
         vertices = np.asarray(result["vertices"])
         distance = np.hypot(vertices[:, 0] - piloti["x"], vertices[:, 1] - piloti["y"])
         self.assertTrue(np.all(np.isclose(distance, piloti["radius"], atol=1e-8) | np.isclose(distance, 0, atol=1e-8)))
@@ -1372,7 +1845,7 @@ class BimMeshExchangeContract(ModelCase):
         self.assertTrue(result["guid"] == piloti["guid"])
 
     def test_mesh_lists_what_it_keeps_and_what_it_loses(self):
-        result = self.api.mesh("B3", model=self.model)
+        result = self.api.mesh(self.api.role("column_example", self.model), model=self.model)
         kept, lost = {k["id"] for k in result["kept"]}, {k["id"] for k in result["lost"]}
         self.assertEqual(kept, {"vertices", "triangles"})
         self.assertTrue({"class", "guid", "property", "material"} <= lost)
@@ -1382,7 +1855,7 @@ class BimMeshExchangeContract(ModelCase):
         self.assertNotIn("psets", result)
 
     def test_invalid_requests_are_rejected(self):
-        for key, segments in (("B3", 2), ("B3", 0), ("B3", -4), ("B3", True), ("B3", "8"), ("B3", 8.0), ("SL-1", 8), ("MISSING", 8)):
+        for key, segments in ((self.api.role("column_example", self.model), 2), (self.api.role("column_example", self.model), 0), (self.api.role("column_example", self.model), -4), (self.api.role("column_example", self.model), True), (self.api.role("column_example", self.model), "8"), (self.api.role("column_example", self.model), 8.0), ("SL-1", 8), ("MISSING", 8)):
             with self.subTest(key=key, segments=segments), self.assertRaises(ValueError):
                 self.api.mesh(key, segments=segments, model=self.model)
 
@@ -1393,11 +1866,11 @@ class BimIdsContract(ModelCase):
     def test_default_requirement_passes_for_all_pilotis_in_ifc_and_finds_none_in_the_mesh(self):
         semantic = self.api.ids_check(model=self.model, source="semantic")
         mesh = self.api.ids_check(model=self.model, source="mesh")
-        self.assertEqual((semantic["found"], semantic["checked"], semantic["passed"], semantic["failed"]), (25, 25, 25, []))
-        self.assertEqual(semantic["applicable"], self.api.type_occurrences(CASES["tags"]["piloti_type"], self.model))
+        self.assertEqual((semantic["found"], semantic["checked"], semantic["passed"], semantic["failed"]), (CASES["grid"]["pilotis"],) * 3 + ([],))
+        self.assertEqual(semantic["applicable"], CASES["grid"]["column_tags"])
         self.assertEqual(semantic["passed_tags"], semantic["applicable"])
         self.assertEqual((mesh["found"], mesh["checked"], mesh["passed"], mesh["failed"], mesh["applicable"]), (0, 0, 0, [], []))
-        self.assertEqual(mesh["expected"], 25)
+        self.assertEqual(mesh["expected"], CASES["grid"]["pilotis"])
         for result in (semantic, mesh):
             self.assertTrue(result["requirement"]["en"].strip() and result["requirement"]["de"].strip())
             self.assertTrue(result["applicability"]["en"].strip() and result["applicability"]["de"].strip())
@@ -1416,10 +1889,15 @@ class BimIdsContract(ModelCase):
 
     def test_removing_the_property_makes_every_piloti_fail(self):
         broken = copy.deepcopy(self.model)
-        del broken["types"][[t["tag"] for t in broken["types"]].index("TY-PILOTI")]["psets"]["Pset_ColumnCommon"]["LoadBearing"]
+        for kind in broken["types"]:
+            if kind["class"] == "IfcColumnType":
+                del kind["psets"]["Pset_ColumnCommon"]["LoadBearing"]
+        for element in broken["elements"]:
+            if element["class"] == "IfcColumn":
+                element["psets"].get("Pset_ColumnCommon", {}).pop("LoadBearing", None)
         result = self.api.ids_check(model=broken, source="semantic")
-        self.assertEqual((result["passed"], len(result["failed"])), (0, 25))
-        self.assertEqual(self.api.ids_check(model=self.model, source="semantic")["passed"], 25)
+        self.assertEqual((result["passed"], len(result["failed"])), (0, CASES["grid"]["pilotis"]))
+        self.assertEqual(self.api.ids_check(model=self.model, source="semantic")["passed"], CASES["grid"]["pilotis"])
 
     def test_invalid_specs_and_sources_are_rejected(self):
         for kwargs in ({"source": "dwg"}, {"spec": "IfcColumn"}, {"spec": {"entity": "IfcColumn"}}, {"spec": {"entity": "IfcColumn", "property": "X", "cardinality": "maybe"}}, {"spec": 7}):
@@ -1428,12 +1906,15 @@ class BimIdsContract(ModelCase):
 
 
 class BimAnalysisContract(ModelCase):
-    """🏗️ The structural analysis translation is mapped, counted and honest about its losses."""
+    """🏗️ Actual regional mid-surfaces and profile sections define the translated structure."""
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.analysis = cls.api.translate_structure(cls.model)
+
+    def floor(self):
+        return self.slab(self.api.role("floor", self.model))
 
     def test_source_and_target_schema_and_revision(self):
         analysis = self.analysis
@@ -1442,312 +1923,457 @@ class BimAnalysisContract(ModelCase):
         self.assertEqual(analysis["source_revision"], self.api.partial_model("structure", self.model)["revision"])
         self.assertEqual(analysis["model_class"], "IfcStructuralAnalysisModel")
 
-    def test_node_grid_equals_numpy_meshgrid_of_the_authored_lines(self):
-        spec = self.model["translation"]["mesh"]
-        xs, ys = np.asarray(spec["x_lines"], dtype=float), np.asarray(self.model["grid"]["y"], dtype=float)
-        gx, gy = np.meshgrid(xs, ys)
-        z = self.slab("SL-1")["top"] - self.slab("SL-1")["thickness"] / 2
-        expected = {(round(x, 6), round(y, 6), round(z, 6)) for x, y in zip(gx.ravel(), gy.ravel())}
-        slab_nodes = [n for n in self.analysis["nodes"] if n["role"] == "slab"]
-        self.assertEqual({tuple(round(c, 6) for c in n["position"]) for n in slab_nodes}, expected)
-        self.assertEqual(len(slab_nodes), CASES["analysis"]["slab_nodes"])
-        self.assertEqual(len(slab_nodes), len(xs) * len(ys))
-        self.assertEqual(len({n["id"] for n in self.analysis["nodes"]}), len(self.analysis["nodes"]))
+    def test_mesh_nodes_match_independent_shapely_clipped_grid(self):
+        from shapely.geometry import Point, Polygon, box
+        from scipy.spatial import cKDTree
+        slab = self.floor()
+        roof = self.slab(self.api.role("roof", self.model))
+        physical = self.physical_supports(self.model, slab) + self.physical_supports(self.model, roof)
+        xs = sorted({p[0] for region in slab["regions"] for p in region["outline"]} | set(self.model["grid"]["x"]) | {p["x"] for p in physical})
+        ys = sorted({p[1] for region in slab["regions"] for p in region["outline"]} | set(self.model["grid"]["y"]) | {p["y"] for p in physical})
+        self.assertEqual(self.analysis["mesh"]["x_lines"], xs)
+        self.assertEqual(self.analysis["mesh"]["y_lines"], ys)
+        decimals=CASES["analysis_geometry"]["coordinate_decimals"]
+        expected = set()
+        def add(point):
+            expected.add(tuple(float(c) for c in point))
+        for part in slab["full_parts"]:
+            polygon = Polygon(part["outline"])
+            z = (part["z0"] + part["z1"]) / 2
+            xmin,ymin,xmax,ymax = polygon.bounds
+            for x0,x1 in zip(xs,xs[1:]):
+                if x1 <= xmin + 1e-9 or x0 >= xmax - 1e-9:
+                    continue
+                for y0,y1 in zip(ys,ys[1:]):
+                    if y1 <= ymin + 1e-9 or y0 >= ymax - 1e-9:
+                        continue
+                    shape = polygon.intersection(box(x0,y0,x1,y1))
+                    for cell in getattr(shape,"geoms",[shape]):
+                        if cell.geom_type == "Polygon" and cell.area > 1e-9:
+                            for x,y in cell.exterior.coords:
+                                add([x,y,z])
+        for column in physical:
+            point = Point(column["x"],column["y"])
+            candidates = [part for part in slab["full_parts"] if Polygon(part["outline"]).covers(point)]
+            if not candidates:
+                distance = min(Polygon(part["outline"]).distance(point) for part in slab["full_parts"])
+                candidates = [part for part in slab["full_parts"] if Polygon(part["outline"]).distance(point) <= distance + 1e-8]
+            add([column["x"],column["y"],max((p["z0"]+p["z1"])/2 for p in candidates)])
+        actual = {tuple(n["position"]) for n in self.analysis["nodes"] if n["role"] == "slab"}
+        self.assertTrue(all(c==round(c,decimals) for point in actual for c in point))
+        a,b=np.asarray(list(actual)),np.asarray(list(expected))
+        bound=math.sqrt(3)*0.5*10**(-decimals)+32*np.finfo(float).eps*max(abs(a).max(),abs(b).max())
+        self.assertLessEqual(float(cKDTree(a).query(b)[0].max()),bound)
+        self.assertLessEqual(float(cKDTree(b).query(a)[0].max()),bound)
+        self.assertEqual(len({n["id"] for n in self.analysis["nodes"]}),len(self.analysis["nodes"]))
 
-    def test_shells_tile_the_slab_outline_with_the_slab_thickness(self):
-        slab, nodes = self.slab("SL-1"), {n["id"]: n["position"] for n in self.analysis["nodes"]}
-        shells = self.analysis["shells"]
-        self.assertEqual(len(shells), CASES["analysis"]["shells"])
-        total = 0.0
-        for shell in shells:
-            self.assertEqual(len(shell["nodes"]), 4)
-            points = [nodes[i][:2] for i in shell["nodes"]]
-            self.assertAlmostEqual(shoelace(points), shell["area"], places=6)
-            total += shoelace(points)
-            self.assertEqual(shell["source_guid"], slab["guid"])
-            self.assertEqual(shell["thickness"], slab["thickness"])
-        self.assertAlmostEqual(total, shoelace(slab["outline"]), places=6)
-        self.assertGreater(total, self.api.quantities("SL-1", self.model)["area"])
-        self.assertTrue(any("ramp" in a["en"].lower() for a in self.analysis["assumptions"]))
+    def test_shells_tile_the_actual_regions_with_local_depth_and_mid_surface(self):
+        from shapely.geometry import Polygon
+        from shapely.ops import unary_union
+        slab = self.floor()
+        nodes = {node["id"]:node["position"] for node in self.analysis["nodes"]}
+        by_region = {}
+        for shell in self.analysis["shells"]:
+            self.assertGreaterEqual(len(shell["nodes"]),3)
+            points = [nodes[node] for node in shell["nodes"]]
+            polygon = Polygon([p[:2] for p in points])
+            self.assertTrue(polygon.is_valid and polygon.area > 1e-9)
+            self.assertAlmostEqual(shoelace([p[:2] for p in points]),shell["area"],places=6)
+            region = next(region for region in slab["regions"] if region["tag"] == shell["region"])
+            self.assertAlmostEqual(shell["thickness"],region["thickness"])
+            self.assertAlmostEqual(shell["mid_surface"],region["top"]-region["thickness"]/2)
+            self.assertTrue(all(abs(p[2]-shell["mid_surface"]) < 1e-8 for p in points))
+            self.assertEqual(shell["source_guid"],slab["guid"])
+            by_region.setdefault(shell["region"],[]).append(polygon)
+        self.assertEqual(set(by_region),{part["region"] for part in slab["full_parts"]})
+        for tag,polygons in by_region.items():
+            region=next(region for region in slab["regions"] if region["tag"]==tag)
+            expected=Polygon(region["outline"]).intersection(self.slab_domain(slab))
+            self.assert_partition(polygons,expected)
+        self.assertAlmostEqual(sum(shell["area"] for shell in self.analysis["shells"]),self.api.quantities(slab["tag"],self.model)["area"],places=6)
 
-    def test_members_map_one_to_one_to_pilotis_and_one_to_many_to_the_slab(self):
+    def test_members_map_to_physical_supports_and_preserve_actual_profile_sections(self):
+        from shapely.geometry import Polygon
         members = self.analysis["members"]
-        curves = [m for m in members if m["kind"] == "curve"]
-        surfaces = [m for m in members if m["kind"] == "surface"]
-        self.assertEqual((len(curves), len(surfaces)), (CASES["analysis"]["curve_members"], CASES["analysis"]["surface_members"]))
-        self.assertEqual({m["ifc_class"] for m in curves}, {"IfcStructuralCurveMember"})
-        self.assertEqual({m["ifc_class"] for m in surfaces}, {"IfcStructuralSurfaceMember"})
-        self.assertEqual(sorted(m["source_guid"] for m in curves), sorted(p["guid"] for p in self.geometry["pilotis"]))
-        self.assertEqual({m["source_guid"] for m in surfaces}, {self.slab("SL-1")["guid"]})
-        self.assertEqual(len(surfaces), len(self.analysis["shells"]))
-        nodes = {n["id"]: n["position"] for n in self.analysis["nodes"]}
+        curves = [member for member in members if member["kind"] == "curve"]
+        surfaces = [member for member in members if member["kind"] == "surface"]
+        physical = {p["tag"]:p for p in self.physical_supports(self.model,self.floor())}
+        self.assertEqual({m["source_tag"] for m in curves},set(physical))
+        self.assertEqual({m["ifc_class"] for m in curves},{"IfcStructuralCurveMember"})
+        self.assertEqual({m["ifc_class"] for m in surfaces},{"IfcStructuralSurfaceMember"})
+        self.assertEqual({m["source_guid"] for m in surfaces},{self.floor()["guid"]})
+        self.assertEqual({m["shell"] for m in surfaces},{s["id"] for s in self.analysis["shells"]})
+        nodes = {node["id"]:node["position"] for node in self.analysis["nodes"]}
         for member in curves:
+            column = physical[member["source_tag"]]
+            self.assertEqual(member["source_guid"],column["guid"])
+            self.assertEqual(len(member["sections"]),len(column["parts"]))
+            for section,part in zip(member["sections"],column["parts"]):
+                self.assertEqual(section["profile"],part["profile"])
+                profile = section["profile"]
+                area=profile_area(profile,part["outline"],part.get("holes",[]))
+                self.assertAlmostEqual(section["cross_section_area"],area,places=8)
+                self.assertAlmostEqual(section["base"],part["z0"])
+                self.assertAlmostEqual(section["top"],part["z1"])
+            if len(member["sections"]) == 1 and member["sections"][0]["profile"]["shape"] == "circle":
+                self.assertAlmostEqual(member["diameter"],member["sections"][0]["profile"]["diameter"]["value"])
+            else:
+                self.assertNotIn("diameter",member)
             self.assertTrue(set(member["nodes"]) <= nodes.keys())
-            top = nodes[member["nodes"][1]]
-            self.assertAlmostEqual(member["length"], top[2] - nodes[member["nodes"][0]][2])
-        self.assertEqual(len({m["id"] for m in members}), len(members))
+            self.assertAlmostEqual(member["length"],nodes[member["nodes"][1]][2]-nodes[member["nodes"][0]][2])
+        self.assertEqual(len({m["id"] for m in members}),len(members))
 
-    def test_supports_sit_under_every_piloti_with_the_declared_condition(self):
-        supports, nodes = self.analysis["supports"], {n["id"]: n["position"] for n in self.analysis["nodes"]}
-        self.assertEqual(len(supports), CASES["analysis"]["supports"])
-        feet = {(p["x"], p["y"]) for p in self.geometry["pilotis"]}
-        self.assertEqual({tuple(nodes[s["node"]][:2]) for s in supports}, feet)
-        for support in supports:
-            self.assertEqual(nodes[support["node"]][2], 0)
-            self.assertEqual(support["condition"], self.model["translation"]["boundary"]["class"])
+    def test_supports_use_actual_column_births_and_the_declared_condition(self):
+        physical = {p["tag"]:p for p in self.physical_supports(self.model,self.floor())}
+        nodes = {n["id"]:n["position"] for n in self.analysis["nodes"]}
+        self.assertEqual({s["source_tag"] for s in self.analysis["supports"]},set(physical))
+        for support in self.analysis["supports"]:
+            column = physical[support["source_tag"]]
+            self.assertEqual(nodes[support["node"]],[column["x"],column["y"],column["base"]])
+            self.assertEqual(support["condition"],self.model["translation"]["boundary"]["class"])
             self.assertTrue(support["label"]["en"].strip() and support["label"]["de"].strip())
-            self.assertEqual(support["source_guid"], oracle_global_id(support["source_tag"]))
-        self.assertEqual(self.analysis["counts"]["nodes"], len(self.analysis["nodes"]))
+            self.assertEqual(support["source_guid"],oracle_global_id(support["source_tag"]))
 
-    def test_losses_name_the_source_element_and_cover_the_architectural_content(self):
+    def test_losses_name_exact_source_content_and_do_not_discard_preserved_floor_voids(self):
         losses = self.analysis["losses"]
-        tags = {loss["source_tag"] for loss in losses}
+        expected = set()
+        for rule in self.model["translation"]["losses"]:
+            target = rule["applies_to"]
+            expected.update((item["tag"],rule["property"]) for item in [*self.model["elements"],*self.model["spaces"]] if item["class"] == target["class"] and ("predefined_type" not in target or item["predefined_type"] == target["predefined_type"]))
+        self.assertEqual({(loss["source_tag"],loss["property"]) for loss in losses},expected)
+        self.assertNotIn((self.floor()["tag"],"voids"),expected)
         for loss in losses:
-            self.assertEqual(loss["source_guid"], oracle_global_id(loss["source_tag"]))
+            self.assertEqual(loss["source_guid"],oracle_global_id(loss["source_tag"]))
             self.assertTrue(loss["en"].strip() and loss["de"].strip() and loss["property"].strip())
-        for tag in CASES["tags"]["windows"] + CASES["tags"]["openings"] + CASES["tags"]["walls"] + [CASES["tags"]["curtain_wall"]]:
-            self.assertIn(tag, tags)
-        for space in self.geometry["spaces"]:
-            self.assertIn(space["tag"], tags)
-        pilotis = {p["tag"] for p in self.geometry["pilotis"]}
-        for loss in losses:
-            if loss["source_tag"] in pilotis:
-                self.assertNotEqual(loss["property"], "element")
-        self.assertTrue(any(loss["property"].startswith("material") for loss in losses))
+        physical = {column["tag"] for column in self.geometry["pilotis"]}
+        self.assertFalse(any(loss["source_tag"] in physical and loss["property"] == "element" for loss in losses))
 
-    def test_assumptions_are_bilingual_and_marked_assumed(self):
+    def test_assumptions_are_bilingual_explicit_and_do_not_claim_uniform_solid_concrete(self):
         assumptions = self.analysis["assumptions"]
-        self.assertGreaterEqual(len(assumptions), 5)
-        self.assertEqual(len({a["id"] for a in assumptions}), len(assumptions))
+        self.assertEqual(len({a["id"] for a in assumptions}),len(assumptions))
         for item in assumptions:
-            self.assertEqual(item["basis"], "assumed")
+            self.assertEqual(item["basis"],"assumed")
             self.assertTrue(item["en"].strip() and item["de"].strip())
-            self.assertNotIn("{", item["en"] + item["de"])
+            self.assertNotIn("{",item["en"]+item["de"])
         ids = {a["id"] for a in assumptions}
-        self.assertTrue({"mid-surface", "support-fixed", "material", "loads"} <= ids)
+        self.assertTrue({"mid-surface","support-fixed","material","loads"} <= ids)
+        material = next(a for a in assumptions if a["id"] == "material")
+        self.assertNotIn("all members are reinforced concrete",material["en"].lower())
 
-    def test_floor_load_is_self_weight_plus_finishes_plus_imposed(self):
+    def test_floor_load_integrates_actual_solid_and_composite_material_regions(self):
+        patches = self.load_patches(self.model,"first")
+        area = sum(p["area"] for p in patches)
+        expected = {key:sum(p["area"]*p[field] for p in patches)/area for key,field in (("self_weight","self_weight"),("finishes","finish"),("imposed","imposed"))}
         loads = self.analysis["loads"]
-        slab = self.slab("SL-1")
-        density = self.items["MAT-RC"]["density"]["value"]
-        self.assertAlmostEqual(loads["self_weight"]["value"], slab["thickness"] * density)
-        self.assertAlmostEqual(loads["finishes"]["value"], self.model["loads"]["finishes"]["first"]["value"])
-        self.assertAlmostEqual(loads["imposed"]["value"], self.model["loads"]["imposed"]["first"]["value"])
-        self.assertAlmostEqual(loads["area_load"], self.floor_load(self.model))
-        self.assertAlmostEqual(loads["total"]["value"], loads["area_load"])
-        for part in ("self_weight", "finishes", "imposed"):
-            self.assertEqual(loads[part]["unit"], "kN/m²")
-            self.assertEqual(loads[part]["basis"], "assumed")
+        for key,value in expected.items():
+            self.assertAlmostEqual(loads[key]["value"],value,places=7)
+            self.assertEqual(loads[key]["unit"],"kN/m²")
+            self.assertEqual(loads[key]["basis"],"assumed")
+        self.assertAlmostEqual(loads["area_load"],sum(expected.values()),places=7)
+        self.assertAlmostEqual(loads["total"]["value"],self.floor_load(self.model),places=7)
 
-    def test_point_loads_carry_the_roof_reactions_to_the_slab_nodes(self):
-        roof = self.api.tributary(self.model, level="roof")
-        nodes = {n["id"]: n["position"] for n in self.analysis["nodes"]}
-        reactions = {p["tag"]: p["reaction"] for p in roof["pilotis"] if p["reaction"] > 0}
-        self.assertEqual(len(self.analysis["point_loads"]), len(reactions))
+    def test_point_loads_carry_actual_roof_reactions_to_the_slab_nodes(self):
+        roof = self.api.tributary(self.model,level="roof")
+        nodes = {node["id"]:node["position"] for node in self.analysis["nodes"]}
+        reactions = {entry["tag"]:entry["reaction"] for entry in roof["pilotis"] if entry["reaction"] > 0}
+        self.assertEqual({load["source_tag"] for load in self.analysis["point_loads"]},set(reactions))
         for load in self.analysis["point_loads"]:
-            self.assertAlmostEqual(load["value"], reactions[load["source_tag"]])
-            piloti = next(p for p in self.geometry["pilotis"] if p["tag"] == load["source_tag"])
-            self.assertEqual(nodes[load["node"]][:2], [piloti["x"], piloti["y"]])
-            self.assertEqual(load["unit"], "kN")
+            column = next(p for p in self.geometry["pilotis"] if p["tag"] == load["source_tag"])
+            self.assertAlmostEqual(load["value"],reactions[load["source_tag"]])
+            self.assertEqual(nodes[load["node"]][:2],[column["x"],column["y"]])
+            self.assertEqual(load["unit"],"kN")
+        self.assertAlmostEqual(sum(load["value"] for load in self.analysis["point_loads"]),roof["total_reaction"],places=6)
 
-    def test_mapping_rules_count_their_members(self):
-        by_kind = {rule["kind"]: rule["count"] for rule in self.analysis["mapping"]}
-        self.assertEqual(by_kind, {"curve": CASES["analysis"]["curve_members"], "surface": CASES["analysis"]["surface_members"], "support": CASES["analysis"]["supports"]})
-        self.assertEqual(self.analysis["counts"]["members"], CASES["analysis"]["curve_members"] + CASES["analysis"]["surface_members"])
-        self.assertEqual(self.analysis["counts"]["nodes"], CASES["analysis"]["slab_nodes"] + CASES["analysis"]["supports"])
+    def test_mapping_rules_and_counts_match_the_derived_objects(self):
+        counts = self.analysis["counts"]
+        curves = sum(member["kind"] == "curve" for member in self.analysis["members"])
+        surfaces = sum(member["kind"] == "surface" for member in self.analysis["members"])
+        supports = len(self.analysis["supports"])
+        self.assertEqual({rule["kind"]:rule["count"] for rule in self.analysis["mapping"]},{"curve":curves,"surface":surfaces,"support":supports})
+        for key,value in (("curve_members",curves),("surface_members",surfaces),("supports",supports),("members",len(self.analysis["members"])),("nodes",len(self.analysis["nodes"])),("shells",len(self.analysis["shells"])),("point_loads",len(self.analysis["point_loads"]))):
+            self.assertEqual(counts[key],value)
+        self.assertEqual(counts["slab_nodes"],sum(node["role"] == "slab" for node in self.analysis["nodes"]))
+        self.assertEqual(counts["base_nodes"],supports)
+
+    def test_regional_metadata_and_offset_links_follow_actual_node_eccentricities(self):
+        slab = self.floor()
+        area = sum(shoelace(part["outline"]) for part in slab["full_parts"])
+        mean = sum(shoelace(part["outline"])*(part["z0"]+part["z1"])/2 for part in slab["full_parts"])/area
+        self.assertAlmostEqual(self.analysis["mid_surface"]["z"],mean,places=8)
+        self.assertEqual({region["tag"] for region in self.analysis["mid_surface"]["regions"]},{region["tag"] for region in slab["regions"]})
+        by_plan = {}
+        for node in self.analysis["nodes"]:
+            if node["role"] == "slab":
+                by_plan.setdefault(tuple(node["position"][:2]),[]).append(node)
+        expected = {(a["id"],b["id"]) for group in by_plan.values() for ordered in [sorted(group,key=lambda node:node["position"][2])] for a,b in zip(ordered,ordered[1:])}
+        self.assertEqual({tuple(link["nodes"]) for link in self.analysis["offset_links"]},expected)
+        nodes = {node["id"]:node["position"] for node in self.analysis["nodes"]}
+        for link in self.analysis["offset_links"]:
+            a,b = (nodes[node] for node in link["nodes"])
+            self.assertEqual(a[:2],b[:2])
+            self.assertAlmostEqual(link["offset"],b[2]-a[2],places=8)
+            self.assertEqual(link["basis"],"assumed")
 
     def test_translation_follows_the_model_state(self):
-        updated = self.api.apply_event(self.event("soil"), self.model)
+        updated = self.api.apply_event(self.event("paving"),self.model)
         after = self.api.translate_structure(updated)
-        self.assertEqual(after["source_revision"], updated["revision"])
-        self.assertEqual(self.analysis["source_revision"], self.model["revision"])
-        self.assertEqual(after["loads"]["area_load"], self.analysis["loads"]["area_load"])
-        before_roof = {p["source_tag"]: p["value"] for p in self.analysis["point_loads"]}
-        after_roof = {p["source_tag"]: p["value"] for p in after["point_loads"]}
-        self.assertEqual(set(before_roof), set(after_roof))
+        self.assertEqual(after["source_revision"],self.api.partial_model("structure",updated)["revision"])
+        self.assertEqual(self.analysis["source_revision"],self.api.partial_model("structure",self.model)["revision"])
+        self.assertEqual(after["loads"]["area_load"],self.analysis["loads"]["area_load"])
+        before_roof = {p["source_tag"]:p["value"] for p in self.analysis["point_loads"]}
+        after_roof = {p["source_tag"]:p["value"] for p in after["point_loads"]}
+        self.assertEqual(set(before_roof),set(after_roof))
         self.assertTrue(all(after_roof[tag] > before_roof[tag] for tag in before_roof))
-        sill = self.api.translate_structure(self.api.apply_event(self.event("sill"), self.model))
-        self.assertEqual(sill["source_revision"], self.analysis["source_revision"])
-        self.assertEqual(sill["point_loads"], self.analysis["point_loads"])
+        expected_delta = sum(p["area"]*p["q"] for p in self.load_patches(updated,"roof"))-sum(p["area"]*p["q"] for p in self.load_patches(self.model,"roof"))
+        self.assertAlmostEqual(sum(after_roof.values())-sum(before_roof.values()),expected_delta,places=5)
+        sill = self.api.translate_structure(self.api.apply_event(self.event("sill"),self.model))
+        self.assertEqual(sill["source_revision"],self.analysis["source_revision"])
+        self.assertEqual(sill["point_loads"],self.analysis["point_loads"])
 
 
 class BimTributaryContract(ModelCase):
-    """📐 Tributary areas are recomputed with a nearest-support KD-tree on a fine grid."""
+    """📐 Independent SciPy cells and GEOS material-patch integrals verify regional reactions."""
 
-    def oracle(self, level):
-        slab = next(s for s in self.geometry["slabs"] if s["kind"] == {"first": "FLOOR", "roof": "ROOF"}[level])
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.results = {level:cls.api.tributary(cls.model,level=level) for level in ("first","roof")}
+        cls._sample_cache = {}
+        cls._cell_cache = {}
+
+    def primary_slab(self,level):
+        return self.slab(self.api.role({"first":"floor","roof":"roof"}[level],self.model))
+
+    def oracle(self,level):
         from scipy.spatial import cKDTree
+        if level not in self._sample_cache:
+            slab = self.primary_slab(level)
+            step = CASES["tributary"]["step"] / 2
+            points = sample_surface(slab["outline"],slab["voids"],step)
+            supports = self.physical_supports(self.model,slab)
+            nearest = cKDTree(np.array([[p["x"],p["y"]] for p in supports])).query(points)[1]
+            areas = np.bincount(nearest,minlength=len(supports))*step**2
+            self._sample_cache[level] = slab,points,nearest,areas,supports
+        return self._sample_cache[level]
 
-        points = sample_surface(slab["outline"], slab["voids"], CASES["tributary"]["step"])
-        centres = np.array([[p["x"], p["y"]] for p in self.geometry["pilotis"]])
-        nearest = cKDTree(centres).query(points)[1]
-        cell = CASES["tributary"]["step"] ** 2
-        return slab, points, nearest, np.bincount(nearest, minlength=25) * cell
+    def independent_cells(self,level):
+        from scipy.spatial import HalfspaceIntersection
+        from shapely.geometry import Polygon
+        from shapely.ops import unary_union
+        if level not in self._cell_cache:
+            slab = self.primary_slab(level)
+            domain = self.slab_domain(slab)
+            supports = self.physical_supports(self.model,slab)
+            xmin,ymin,xmax,ymax = domain.bounds
+            cells = {}
+            for pil in supports:
+                x,y = pil["x"],pil["y"]
+                halfspaces = [[1,0,-xmax-10],[-1,0,xmin-10],[0,1,-ymax-10],[0,-1,ymin-10]]
+                for other in supports:
+                    if other["tag"] != pil["tag"]:
+                        ox,oy = other["x"],other["y"]
+                        halfspaces.append([ox-x,oy-y,-(ox*ox+oy*oy-x*x-y*y)/2])
+                vertices = HalfspaceIntersection(np.asarray(halfspaces,dtype=float),np.array([x,y],dtype=float)).intersections
+                centre = vertices.mean(axis=0)
+                order = np.argsort(np.arctan2(vertices[:,1]-centre[1],vertices[:,0]-centre[0]))
+                cells[pil["tag"]] = Polygon(vertices[order]).intersection(domain)
+            self._cell_cache[level] = cells
+        return self._cell_cache[level]
 
-    def test_areas_sum_to_the_net_slab_area_and_match_the_kd_tree_oracle(self):
-        for level in ("first", "roof"):
+    def test_areas_sum_to_actual_surface_and_match_the_independent_nearest_support_sampler(self):
+        for level,result in self.results.items():
             with self.subTest(level=level):
-                result = self.api.tributary(self.model, level=level)
-                slab, _, _, areas = self.oracle(level)
-                net = self.api.quantities(slab["tag"], self.model)["area"]
-                self.assertAlmostEqual(sum(p["area"] for p in result["pilotis"]), net, places=6)
-                self.assertAlmostEqual(result["slab_area"], net, places=6)
-                self.assertAlmostEqual(areas.sum(), net, delta=0.02 * net)
-                for index, entry in enumerate(result["pilotis"]):
-                    self.assertAlmostEqual(entry["area"], areas[index], delta=CASES["tributary"]["tolerance"] * max(entry["area"], 1))
+                slab,_,_,areas,supports = self.oracle(level)
+                net = sum(part["area"] for part in self.load_patches(self.model,level))
+                self.assertEqual({entry["tag"] for entry in result["pilotis"]},{p["tag"] for p in supports})
+                sampled = {support["tag"]:areas[i] for i,support in enumerate(supports)}
+                self.assertAlmostEqual(sum(entry["area"] for entry in result["pilotis"]),net,places=6)
+                self.assertAlmostEqual(result["slab_area"],net,places=6)
+                self.assertAlmostEqual(areas.sum(),net,delta=.02*net)
+                for entry in result["pilotis"]:
+                    self.assertAlmostEqual(entry["area"],sampled[entry["tag"]],delta=CASES["tributary"]["tolerance"]*max(entry["area"],1))
                 self.assertTrue(result["balanced"])
-                self.assertEqual(result["slab_tag"], slab["tag"])
+                self.assertEqual(result["slab_tag"],slab["tag"])
 
-    def test_reactions_equal_area_load_times_area_and_sum_to_the_total_load(self):
-        for level, expected in (("first", self.floor_load(self.model)), ("roof", self.roof_load(self.model))):
+    def test_each_reaction_integrates_local_solid_composite_and_finish_patches(self):
+        for level,result in self.results.items():
             with self.subTest(level=level):
-                result = self.api.tributary(self.model, level=level)
-                self.assertAlmostEqual(result["area_load"], expected)
-                self.assertAlmostEqual(sum(p["reaction"] for p in result["pilotis"]), expected * result["slab_area"], places=5)
-                self.assertAlmostEqual(result["total_reaction"], expected * result["slab_area"], places=5)
-                if level == "first":
-                    for entry in result["pilotis"]:
-                        self.assertAlmostEqual(entry["reaction"], expected * entry["area"], places=6)
+                patches = self.load_patches(self.model,level)
+                cells = self.independent_cells(level)
+                expected_total = sum(p["area"]*p["q"] for p in patches)
+                area = sum(p["area"] for p in patches)
+                self.assertAlmostEqual(result["area_load"],expected_total/area,places=7)
+                self.assertAlmostEqual(result["total_reaction"],expected_total,places=5)
+                for entry in result["pilotis"]:
+                    expected = sum(p["shape"].intersection(cells[entry["tag"]]).area*p["q"] for p in patches)
+                    self.assertAlmostEqual(entry["reaction"],expected,places=5)
+                self.assertAlmostEqual(sum(p["reaction"] for p in result["pilotis"]),expected_total,places=5)
 
-    def test_roof_reactions_follow_the_two_load_zones_and_match_point_sampling(self):
-        result = self.api.tributary(self.model, level="roof")
-        roof, loads = self.roof_zones(self.model)
-        zones = {zone["id"]: zone for zone in result["zones"]}
-        self.assertEqual(set(zones), {"solarium", "planted"})
-        solarium = shoelace(roof["zones"]["solarium"])
-        self.assertAlmostEqual(zones["solarium"]["area"], solarium, places=6)
-        self.assertAlmostEqual(zones["planted"]["area"], result["slab_area"] - solarium, places=6)
-        self.assertAlmostEqual(zones["solarium"]["area_load"], loads["solarium"])
-        self.assertAlmostEqual(zones["planted"]["area_load"], loads["planted"])
-        self.assertNotIn("soil", zones["solarium"]["load_breakdown"])
-        self.assertIn("soil", zones["planted"]["load_breakdown"])
-        self.assertAlmostEqual(sum(z["reaction"] for z in result["zones"]), result["total_reaction"], places=5)
-        expected = self.roof_reactions(self.model)
+    def test_roof_zones_integrate_local_depth_and_material_and_match_sampling(self):
+        result = self.results["roof"]
+        patches = self.load_patches(self.model,"roof")
+        zones = {zone["id"]:zone for zone in result["zones"]}
+        self.assertEqual(set(zones),{patch["zone"] for patch in patches})
+        cells = self.independent_cells("roof")
+        for tag,zone in zones.items():
+            local = [p for p in patches if p["zone"] == tag]
+            area = sum(p["area"] for p in local)
+            force = sum(p["area"]*p["q"] for p in local)
+            self.assertAlmostEqual(zone["area"],area,places=6)
+            self.assertAlmostEqual(zone["area_load"],force/area,places=7)
+            self.assertAlmostEqual(zone["reaction"],force,places=5)
+            self.assertAlmostEqual(zone["load_breakdown"]["paving"]["value"],sum(p["area"]*p["finish"] for p in local)/area,places=7)
+            for entry in result["pilotis"]:
+                expected_area = sum(p["shape"].intersection(cells[entry["tag"]]).area for p in local)
+                expected_force = sum(p["shape"].intersection(cells[entry["tag"]]).area*p["q"] for p in local)
+                self.assertAlmostEqual(entry["zones"][tag]["area"],expected_area,places=6)
+                self.assertAlmostEqual(entry["zones"][tag]["reaction"],expected_force,places=5)
+        sampled = self.roof_reactions(self.model,step=CASES["tributary"]["step"]/2)
         for entry in result["pilotis"]:
-            with self.subTest(tag=entry["tag"]):
-                shares = entry["zones"]
-                self.assertAlmostEqual(entry["reaction"], sum(loads[z] * shares[z]["area"] for z in loads), places=6)
-                self.assertAlmostEqual(sum(shares[z]["area"] for z in loads), entry["area"], places=6)
-                self.assertAlmostEqual(entry["reaction"], expected[entry["tag"]], delta=0.012 * max(entry["reaction"], 10))
+            self.assertAlmostEqual(entry["reaction"],sampled[entry["tag"]],delta=.012*max(entry["reaction"],10))
+        self.assertAlmostEqual(sum(zone["reaction"] for zone in zones.values()),result["total_reaction"],places=5)
 
-    def test_cells_are_disjoint_polygons_that_cover_the_slab(self):
-        result = self.api.tributary(self.model, level="first")
-        slab, points, nearest, _ = self.oracle("first")
-        coarse = sample_surface(slab["outline"], slab["voids"], 0.1)
-        counts = np.zeros(len(coarse), dtype=int)
-        for entry in result["pilotis"]:
-            if entry["cell"]:
-                counts += inside(entry["cell"], coarse)
-                self.assertAlmostEqual(shoelace(entry["cell"]), entry["area"], places=6)
-        self.assertTrue(np.all(counts == 1))
+    def test_cells_are_disjoint_actual_polygons_that_cover_both_slabs(self):
+        from shapely.geometry import Polygon
+        for level,result in self.results.items():
+            domain=self.slab_domain(self.primary_slab(level))
+            pieces=[Polygon(ring) for entry in result["pilotis"] for ring in entry["pieces"]]
+            self.assert_partition(pieces,domain)
 
-    def test_kinds_count_interior_edge_and_corner_cells_of_the_grid(self):
-        result = self.api.tributary(self.model)
-        kinds = [p["kind"] for p in result["pilotis"]]
-        self.assertEqual({k: kinds.count(k) for k in set(kinds)}, CASES["tributary"]["kinds"])
-        for entry in result["pilotis"]:
-            row, column = entry["tag"][0], entry["tag"][1:]
-            edges = int(row in (CASES["grid"]["rows"][0], CASES["grid"]["rows"][-1])) + int(column in (CASES["grid"]["columns"][0], CASES["grid"]["columns"][-1]))
-            self.assertEqual(entry["kind"], ("interior", "edge", "corner")[edges])
+    def test_cell_kinds_follow_actual_axis_positions_without_parsing_archival_tags(self):
+        xs,ys = self.model["grid"]["x"],self.model["grid"]["y"]
+        for result in self.results.values():
+            for entry in result["pilotis"]:
+                edges = int(entry["x"] in (xs[0],xs[-1]))+int(entry["y"] in (ys[0],ys[-1]))
+                self.assertEqual(entry["kind"],("interior","edge","corner")[edges])
 
-    def test_cell_areas_equal_exact_rectangle_intersections_with_the_voids(self):
-        def cuts(lines, low, high):
-            return [low] + [(a + b) / 2 for a, b in zip(lines, lines[1:])] + [high]
-
-        def overlap(a0, a1, b0, b1):
-            return max(0.0, min(a1, b1) - max(a0, b0))
-
-        grid = self.model["grid"]
-        for level, kind in (("first", "FLOOR"), ("roof", "ROOF")):
-            slab = next(s for s in self.geometry["slabs"] if s["kind"] == kind)
-            outline = np.asarray(slab["outline"])
-            boxes = [(np.asarray(v).min(axis=0), np.asarray(v).max(axis=0)) for v in slab["voids"]]
-            for void, (low, high) in zip(slab["voids"], boxes):
-                self.assertAlmostEqual(shoelace(void), float(np.prod(high - low)))
-            xs, ys = cuts(grid["x"], outline[:, 0].min(), outline[:, 0].max()), cuts(grid["y"], outline[:, 1].min(), outline[:, 1].max())
-            result = {p["tag"]: p["area"] for p in self.api.tributary(self.model, level=level)["pilotis"]}
-            for j, row in enumerate(grid["labels_y"]):
-                for i, column in enumerate(grid["labels_x"]):
-                    cell = (xs[i + 1] - xs[i]) * (ys[j + 1] - ys[j])
-                    cut = sum(overlap(xs[i], xs[i + 1], low[0], high[0]) * overlap(ys[j], ys[j + 1], low[1], high[1]) for low, high in boxes)
-                    with self.subTest(level=level, tag=row + column):
-                        self.assertAlmostEqual(result[row + column], cell - cut, places=6)
+    def test_cells_match_independent_scipy_halfspaces_clipped_by_geos(self):
+        from shapely.geometry import Polygon
+        for level,result in self.results.items():
+            expected=self.independent_cells(level)
+            for entry in result["pilotis"]:
+                pieces=[Polygon(ring) for ring in entry["pieces"]]
+                self.assert_partition(pieces,expected[entry["tag"]])
+                self.assertAlmostEqual(sum(piece.area for piece in pieces),entry["area"],places=6)
 
     def test_unknown_level_is_rejected(self):
         with self.assertRaises(ValueError):
-            self.api.tributary(self.model, level="basement")
+            self.api.tributary(self.model,level="basement")
 
 
 class BimClashContract(ModelCase):
-    """🚧 The clearance rule finds exactly the teaching violation, recomputed with NumPy."""
+    """🚧 Native occupied material and explicit conduit hosting define the coordination result."""
 
-    def distances(self):
-        rule = self.model["rules"]["clearance"][0]
-        pipes = [e for e in self.model["elements"] if e["class"] == rule["a_class"] and e.get("system") == rule["a_system"]]
-        pilotis = np.array([[p["x"], p["y"]] for p in self.geometry["pilotis"]])
-        out = {}
+    def scenario(self):
+        """🚧 Route one copied conduit assembly beside an actual support for a hypothetical coordination exercise."""
+        result = copy.deepcopy(self.model)
+        spec = CASES["clash"]["scenario"]
+        target = next(p for p in self.geometry["pilotis"] if p["tag"] == spec["column"])
+        pipe = next(e for e in result["elements"] if e["tag"] == spec["pipe"])
+        required = result["rules"]["clearance"][0]["required"]["value"]
+        offset = target["radius"] + pipe["attributes"]["diameter"]["value"] / 2 + required * spec["margin_fraction"]
+        delta=np.array([target["x"]+offset,target["y"]])-np.array(pipe["geometry"]["points"][0][:2])
+        affected={pipe["tag"],pipe["tag"]+"-OUTLET"}
+        for service in result["elements"]:
+            if service["tag"] not in affected:
+                continue
+            geometry=service["geometry"]
+            geometry["points"]=[[p[0]+delta[0],p[1]+delta[1],p[2]] for p in geometry["points"]]
+            for name,plane in geometry.get("tube",{}).items():
+                if name.startswith("clip_"):
+                    p=plane["point"]
+                    plane["point"]=[p[0]+delta[0],p[1]+delta[1],p[2]]
+            geometry.pop("penetrations",None)
+        result["relations"]=[relation for relation in result["relations"] if not (relation.get("connection",{}).get("kind")=="hosted_conduit" and (relation["relating"] in affected or set(relation["related"])&affected))]
+        return result
+
+    def distances(self, model=None):
+        """🚧 Independently measure occupied material through the test-only GEOS/SciPy interface."""
+        reference=importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🧮️analysis.🧪️tests.🕳️clashes")
+        model=self.model if model is None else model
+        rule=model["rules"]["clearance"][0]
+        geometry=self.api.building_geometry(model)
+        hosted={(tag,relation["relating"]) for relation in model["relations"] if relation.get("connection",{}).get("kind")=="hosted_conduit" and relation["connection"]["clearance_rule"]==rule["id"] for tag in relation["related"]}
+        pipes=[item for item in geometry["services"] if item["class"]==rule["a_class"] and item["system"]==rule["a_system"]]
+        def bounds(item):
+            points=np.asarray([point for part in item["parts"] for point in self.api.part_vertices(part)])
+            return points.min(axis=0),points.max(axis=0)
+        columns=[(column,bounds(column)) for column in geometry["pilotis"]]
+        out={}
         for pipe in pipes:
-            point = np.asarray(pipe["geometry"]["points"][0][:2], dtype=float)
-            gap = np.hypot(*(pilotis - point).T) - pipe["attributes"]["diameter"]["value"] / 2 - self.piloti_radius()
-            for index, value in enumerate(gap):
-                out[(pipe["tag"], self.geometry["pilotis"][index]["tag"])] = float(value)
-        return rule["required"]["value"], out
+            lo,hi=bounds(pipe)
+            candidates=sorted((float(np.linalg.norm(np.maximum(np.maximum(a-hi,lo-b),0))),column["tag"],column) for column,(a,b) in columns)
+            best=math.inf
+            for lower,tag,column in candidates:
+                if lower>max(best,rule["required"]["value"])+1e-8:
+                    continue
+                pair=(pipe["tag"],tag)
+                measured=dict(reference.independent_distance(pipe,column))
+                measured["hosted"]=pair in hosted
+                measured["required"]=rule["hosted"]["required"]["value"] if pair in hosted else rule["required"]["value"]
+                out[pair]=measured
+                best=min(best,measured["distance"])
+        return rule,out
 
-    def test_exactly_one_pair_violates_the_rule(self):
-        required, gaps = self.distances()
-        violations = {pair for pair, value in gaps.items() if value < required}
-        self.assertEqual(violations, {tuple(pair) for pair in CASES["clash"]["violations"]})
-        result = self.api.clash_check(self.model)
-        self.assertEqual([(c["a_tag"], c["b_tag"]) for c in result], [tuple(pair) for pair in CASES["clash"]["violations"]])
-        clash = result[0]
-        self.assertAlmostEqual(clash["clearance"], gaps[(clash["a_tag"], clash["b_tag"])], places=6)
-        self.assertAlmostEqual(clash["required"], required)
-        self.assertEqual(clash["required_basis"], "assumed")
-        self.assertEqual(clash["status"], "violation")
-        self.assertAlmostEqual(clash["deficit"], required - clash["clearance"], places=6)
-        self.assertEqual(clash["a_guid"], oracle_global_id(clash["a_tag"]))
-        self.assertEqual(clash["b_guid"], oracle_global_id(clash["b_tag"]))
-        self.assertTrue(clash["name"]["en"].strip() and clash["name"]["de"].strip())
-        self.assertEqual(clash["level"], "ground")
+    def test_canonical_hosted_routes_and_hypothetical_external_clearance(self):
+        """🕳️ Intentional hosted conduits remain physically separate; a copied external route violates its own rule."""
+        rule,base=self.distances()
+        for pair,measured in base.items():
+            self.assertFalse(measured["intersects"],pair)
+            if measured["hosted"]:
+                self.assertGreater(measured["distance"],measured["required"],pair)
+            else:
+                self.assertGreaterEqual(measured["distance"],measured["required"],pair)
+        self.assertEqual(self.api.clash_check(self.model),[])
+        scenario=self.scenario()
+        _,gaps=self.distances(scenario)
+        clash=next(item for item in self.api.clash_check(scenario) if item["a_tag"]==CASES["clash"]["scenario"]["pipe"] and item["b_tag"]==CASES["clash"]["scenario"]["column"])
+        independent=gaps[(clash["a_tag"],clash["b_tag"])]
+        self.assertAlmostEqual(clash["distance"],independent["distance"],places=6)
+        self.assertAlmostEqual(clash["distance"],rule["required"]["value"]*CASES["clash"]["scenario"]["margin_fraction"],places=6)
+        self.assertFalse(clash["intersects"])
+        self.assertEqual(clash["status"],"violation")
+        self.assertAlmostEqual(clash["deficit"],clash["required"]-clash["distance"],places=6)
+        self.assertNotIn("clearance",clash)
+        self.assertEqual(self.model,self.snapshot)
 
     def test_clash_point_lies_between_the_pipe_and_the_piloti(self):
-        clash = self.api.clash_check(self.model)[0]
-        pipe = next(e for e in self.model["elements"] if e["tag"] == clash["a_tag"])
-        piloti = next(p for p in self.geometry["pilotis"] if p["tag"] == clash["b_tag"])
-        x, y = clash["point"][:2]
-        a, b = np.asarray(pipe["geometry"]["points"][0][:2]), np.array([piloti["x"], piloti["y"]])
-        self.assertAlmostEqual(np.linalg.norm([x, y] - a) + np.linalg.norm([x, y] - b), np.linalg.norm(a - b), places=4)
-        self.assertTrue(0 <= clash["point"][2] <= piloti["top"] + 1e-9)
+        """📍 The marker is the midpoint of actual occupied-material closest witnesses."""
+        scenario=self.scenario()
+        clash=next(item for item in self.api.clash_check(scenario) if item["a_tag"]==CASES["clash"]["scenario"]["pipe"] and item["b_tag"]==CASES["clash"]["scenario"]["column"])
+        a,b=np.asarray(clash["a_point"]),np.asarray(clash["b_point"])
+        np.testing.assert_allclose(clash["point"],(a+b)/2,atol=1e-6)
+        self.assertAlmostEqual(float(np.linalg.norm(a-b)),clash["distance"],places=6)
+        self.assertEqual(clash["level"],self.items[clash["b_tag"]]["storey"])
 
     def test_passed_pairs_are_listed_on_request_and_each_pipe_appears_once(self):
-        required, gaps = self.distances()
-        everything = self.api.clash_check(self.model, include_passed=True)
-        pipes = {pipe for pipe, _ in gaps}
-        self.assertEqual({c["a_tag"] for c in everything}, pipes)
-        self.assertEqual(len(everything), len(pipes))
-        self.assertEqual([c["status"] for c in everything], ["violation"] + ["ok"] * (len(pipes) - 1))
+        rule,gaps=self.distances()
+        everything=self.api.clash_check(self.model,include_passed=True)
+        pipes={pipe for pipe,_ in gaps}
+        self.assertEqual({item["a_tag"] for item in everything},pipes)
+        self.assertEqual(len(everything),len(pipes))
         for clash in everything:
-            nearest = min(value for (pipe, _), value in gaps.items() if pipe == clash["a_tag"])
-            self.assertAlmostEqual(clash["clearance"], nearest, places=6)
+            self.assertEqual(clash["status"],"ok")
+            self.assertFalse(clash["intersects"])
+            nearest=min(value["distance"] for (pipe,_),value in gaps.items() if pipe==clash["a_tag"])
+            self.assertAlmostEqual(clash["distance"],nearest,places=6)
+            measured=gaps[(clash["a_tag"],clash["b_tag"])]
+            self.assertEqual(clash["required"],measured["required"])
+            self.assertAlmostEqual(float(np.linalg.norm(np.asarray(clash["a_point"])-clash["b_point"])),clash["distance"],places=6)
 
-    def test_moving_the_downpipe_or_relaxing_the_rule_removes_the_violation(self):
-        moved = copy.deepcopy(self.model)
-        pipe = next(e for e in moved["elements"] if e["tag"] == "DP-1")
-        pipe["geometry"]["points"] = [[3.0, 2.375, p[2]] for p in pipe["geometry"]["points"]]
-        self.assertEqual(self.api.clash_check(moved), [])
-        relaxed = copy.deepcopy(self.model)
-        relaxed["rules"]["clearance"][0]["required"]["value"] = 0.1
-        self.assertEqual(self.api.clash_check(relaxed), [])
-        strict = copy.deepcopy(self.model)
-        strict["rules"]["clearance"][0]["required"]["value"] = 0.5
-        self.assertGreater(len(self.api.clash_check(strict)), 1)
+    def test_relaxing_the_rule_removes_the_hypothetical_violation(self):
+        scenario = self.scenario()
+        self.assertTrue(self.api.clash_check(scenario))
+        scenario["rules"]["clearance"][0]["required"]["value"] *= CASES["clash"]["scenario"]["margin_fraction"] / 2
+        self.assertEqual(self.api.clash_check(scenario), [])
+        self.assertEqual(self.api.clash_check(self.model), [])
 
 
 class BimConsistencyContract(ModelCase):
     """🔗 Events keep identity, raise revisions, change derived values and expose stale analyses."""
 
     def test_events_never_mutate_their_input_and_raise_the_revision_by_one(self):
-        for name in ("sill", "soil", "soil_alt"):
+        for name in ("sill", "paving", "paving_alt"):
             before = copy.deepcopy(self.model)
             updated = self.api.apply_event(self.event(name), before)
             self.assertEqual(before, self.model)
@@ -1756,22 +2382,23 @@ class BimConsistencyContract(ModelCase):
             self.assertNotEqual(updated, before)
 
     def test_global_ids_and_structure_stay_while_values_change(self):
-        for name in ("sill", "soil"):
+        for name in ("sill", "paving"):
             updated = self.api.apply_event(self.event(name), self.model)
             self.assertEqual({t: i["guid"] for t, i in registry(updated).items()}, {t: i["guid"] for t, i in self.items.items()})
             self.assertEqual(len(updated["elements"]), len(self.model["elements"]))
             self.assertEqual(updated["relations"], self.model["relations"])
 
     def test_changed_objects_get_the_new_revision_and_their_models_follow(self):
-        updated = self.api.apply_event(self.event("soil"), self.model)
+        updated = self.api.apply_event(self.event("paving"), self.model)
         new = updated["revision"]
-        changed = {t for t, i in registry(updated).items() if "metadata" in i and i["metadata"]["revision"] == new}
+        changed = {t for t,i in registry(updated).items() if i.get("metadata") != self.items[t].get("metadata")}
         self.assertEqual(changed, {"SL-R"})
         for identifier in CASES["models"]["ids"]:
-            expected = new if self.items["SL-R"]["guid"] in self.api.partial_model(identifier, self.model)["element_guids"] else self.model["revision"]
+            before=self.api.partial_model(identifier,self.model)
+            expected=new if self.items["SL-R"]["guid"] in before["element_guids"] else before["revision"]
             self.assertEqual(self.api.partial_model(identifier, updated)["revision"], expected, identifier)
         sill = self.api.apply_event(self.event("sill"), self.model)
-        changed = {t for t, i in registry(sill).items() if "metadata" in i and i["metadata"]["revision"] == sill["revision"]}
+        changed = {t for t,i in registry(sill).items() if i.get("metadata") != self.items[t].get("metadata")}
         self.assertEqual(changed, set(CASES["events"]["sill_touches"]))
 
     def test_lowering_the_sill_enlarges_window_opening_and_glazing_share(self):
@@ -1789,36 +2416,37 @@ class BimConsistencyContract(ModelCase):
         self.assertEqual(after["gross_side_area"], before["gross_side_area"])
         self.assertEqual(self.api.quantities("W-N", updated), self.api.quantities("W-N", self.model))
 
-    def test_deeper_soil_raises_the_roof_build_up_load_and_every_reaction(self):
-        updated = self.api.apply_event(self.event("soil"), self.model)
-        spec = CASES["events"]["soil"]
-        self.assertAlmostEqual(self.api.quantity("SL-R", "soil", updated), spec["value"])
+    def test_deeper_paving_raises_the_roof_build_up_load_and_every_reaction(self):
+        updated = self.api.apply_event(self.event("paving"), self.model)
+        spec = CASES["events"]["paving"]
+        self.assertAlmostEqual(self.api.quantity("SL-R", "paving", updated), spec["value"])
         old = self.api.quantities("SL-R", self.model)["total_thickness"]
         new = self.api.quantities("SL-R", updated)["total_thickness"]
-        self.assertAlmostEqual(new - old, spec["value"] - self.api.quantity("SL-R", "soil", self.model))
+        self.assertAlmostEqual(new - old, spec["value"] - self.api.quantity("SL-R", "paving", self.model))
         before, after = self.api.tributary(self.model, level="roof"), self.api.tributary(updated, level="roof")
         self.assertAlmostEqual(after["area_load"], self.roof_load(updated))
         self.assertGreater(after["area_load"], before["area_load"])
-        soil = self.items["MAT-SOIL"]["density"]["value"]
-        delta = soil * (spec["value"] - self.api.quantity("SL-R", "soil", self.model))
+        paving_material = next(layer["material"] for layer in self.items["LS-ROOF"]["layers"] if layer["id"] == "paving")
+        paving = self.items[paving_material]["density"]["value"]
+        delta = paving * (spec["value"] - self.api.quantity("SL-R", "paving", self.model))
         zones = {z["id"]: z for z in before["zones"]}
         new_zones = {z["id"]: z for z in after["zones"]}
-        self.assertAlmostEqual(new_zones["planted"]["area_load"] - zones["planted"]["area_load"], delta, places=6)
-        self.assertEqual(new_zones["solarium"]["area_load"], zones["solarium"]["area_load"])
-        expected = self.roof_reactions(updated)
+        self.assertAlmostEqual(new_zones["roof"]["area_load"] - zones["roof"]["area_load"], delta, places=6)
+        self.assertAlmostEqual(new_zones["solarium"]["area_load"] - zones["solarium"]["area_load"], delta, places=6)
+        expected = self.roof_reactions(updated, step=CASES["tributary"]["step"] / 2)
         for a, b in zip(before["pilotis"], after["pilotis"]):
             with self.subTest(tag=a["tag"]):
                 self.assertAlmostEqual(b["area"], a["area"])
-                self.assertAlmostEqual(b["reaction"] - a["reaction"], delta * a["zones"]["planted"]["area"], places=6)
+                self.assertAlmostEqual(b["reaction"] - a["reaction"], delta * a["area"], places=6)
                 self.assertAlmostEqual(b["reaction"], expected[b["tag"]], delta=0.012 * max(b["reaction"], 10))
-        self.assertAlmostEqual(after["total_reaction"] - before["total_reaction"], delta * zones["planted"]["area"], places=5)
+        self.assertAlmostEqual(after["total_reaction"] - before["total_reaction"], delta * before["slab_area"], places=5)
         unchanged = [a["tag"] for a, b in zip(before["pilotis"], after["pilotis"]) if a["reaction"] == b["reaction"]]
-        self.assertEqual(unchanged, CASES["events"]["soil_unchanged"])
+        self.assertEqual(unchanged, [a["tag"] for a in before["pilotis"] if a["area"] == 0])
         self.assertEqual(self.api.tributary(updated, level="first")["area_load"], self.api.tributary(self.model, level="first")["area_load"])
 
     def test_the_base_model_is_consistent_and_a_roof_change_makes_the_analysis_link_stale(self):
         self.assertEqual(self.api.consistency_issues(self.model), [])
-        updated = self.api.apply_event(self.event("soil"), self.model)
+        updated = self.api.apply_event(self.event("paving"), self.model)
         issues = self.api.consistency_issues(updated)
         codes = {(i["code"], i["id"]) for i in issues}
         self.assertIn(("stale-link", "LK-ROOF"), codes)
@@ -1829,13 +2457,13 @@ class BimConsistencyContract(ModelCase):
         self.assertEqual(link["object_guid"], self.items["SL-R"]["guid"])
         stale = {i["key"]: i for i in issues if i["code"] == "stale-value"}
         self.assertIn("area_load", stale)
-        self.assertIn("planted_area_load", stale)
-        self.assertNotIn("solarium_area_load", stale)
+        self.assertIn("roof_area_load", stale)
+        self.assertIn("solarium_area_load", stale)
         self.assertAlmostEqual(stale["area_load"]["expected"], self.roof_load(updated))
         self.assertAlmostEqual(stale["area_load"]["actual"], self.roof_load(self.model))
 
     def test_resolving_the_link_makes_the_model_consistent_again_without_mutation(self):
-        updated = self.api.apply_event(self.event("soil"), self.model)
+        updated = self.api.apply_event(self.event("paving"), self.model)
         before = copy.deepcopy(updated)
         resolved = self.api.resolve_link(updated, "LK-ROOF")
         self.assertEqual(updated, before)
@@ -1855,10 +2483,10 @@ class BimConsistencyContract(ModelCase):
         self.assertEqual(self.api.consistency_issues(updated), [])
 
     def test_two_changes_are_independent_events_on_the_same_identity(self):
-        first = self.api.apply_event(self.event("soil"), self.model)
-        second = self.api.apply_event(self.event("soil_alt"), first)
+        first = self.api.apply_event(self.event("paving"), self.model)
+        second = self.api.apply_event(self.event("paving_alt"), first)
         self.assertEqual(second["revision"], self.model["revision"] + 2)
-        self.assertAlmostEqual(self.api.quantity("SL-R", "soil", second), CASES["events"]["soil_alt"]["value"])
+        self.assertAlmostEqual(self.api.quantity("SL-R", "paving", second), CASES["events"]["paving_alt"]["value"])
         issues = {(i["code"], i["id"]) for i in self.api.consistency_issues(second)}
         self.assertIn(("stale-link", "LK-ROOF"), issues)
         self.assertEqual(self.api.consistency_issues(self.api.resolve_link(second, "LK-ROOF")), [])
@@ -1881,34 +2509,17 @@ class BimConsistencyContract(ModelCase):
                     self.api.apply_event(payload, self.model)
         self.assertEqual(self.api.load_model(), self.snapshot)
 
-    def test_consistency_narration_numbers_are_the_model_values_in_both_languages(self):
-        base = self.api.load_model()
-        new, alt = self.api.apply_event(self.api.demo_event("roof_soil", base), base), self.api.apply_event(self.api.demo_event("roof_soil_alt", base), base)
-        old_t, new_t, alt_t = (self.api.tributary(state, "roof") for state in (base, new, alt))
-        zone = lambda trib, name: next(z for z in trib["zones"] if z["id"] == name)
-        reaction = lambda trib, tag: next(p for p in trib["pilotis"] if p["tag"] == tag)
-        cell = reaction(new_t, "A3")
-        xs, ys = [p[0] for p in cell["cell"]], [p[1] for p in cell["cell"]]
-        sliver = reaction(new_t, "C3")
-        counts = self.api.translate_structure(new)["counts"]
-        soil = lambda state: self.api.quantity("SL-R", "soil", state)
-        values = {"A3 reaction new": round(cell["reaction"]), "A3 reaction old": round(reaction(old_t, "A3")["reaction"]), "A3 area": round(cell["area"], 2), "C3 area": round(sliver["area"], 2),
-                  "q old": zone(old_t, "planted")["area_load"], "q new": zone(new_t, "planted")["area_load"], "q alt": zone(alt_t, "planted")["area_load"],
-                  "dq": round(zone(new_t, "planted")["area_load"] - zone(old_t, "planted")["area_load"], 1), "dx": max(xs) - min(xs), "dy": max(ys) - min(ys),
-                  "soil old": soil(base), "soil new": soil(new), "surface": counts["surface_members"], "columns": counts["curve_members"]}
-        deltas = {p["tag"]: p["reaction"] - reaction(old_t, p["tag"])["reaction"] for p in new_t["pilotis"]}
-        self.assertEqual(max(deltas, key=deltas.get), "D3")
-        self.assertEqual(round(deltas["C4"]), 0)
+    def test_consistency_narration_uses_model_derived_values(self):
         scene = next(n for n in ast.parse((CLIP / "🔗️consistency/🐍️.py").read_text(encoding="utf-8")).body if isinstance(n, ast.ClassDef) and n.name == "Beat6_Consistency")
         rows = next(ast.literal_eval(n.value) for n in scene.body if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "NARRATION" for t in n.targets))
-        text = {language: " ".join(clause[index] for clause in rows).replace(chr(160), " ") for index, language in ((1, "en"), (2, "de"))}
-        point = {"en": lambda v, d: f"{v:.{d}f}", "de": lambda v, d: f"{v:.{d}f}".replace(".", ",")}
-        for language, joined in text.items():
-            for name, digits in (("A3 reaction new", 0), ("A3 reaction old", 0), ("A3 area", 2), ("C3 area", 2), ("q old", 2), ("q new", 2), ("q alt", 2), ("dq", 1), ("soil old", 2), ("soil new", 2),
-                                 ("surface", 0), ("columns", 0)):
-                with self.subTest(language=language, value=name):
-                    self.assertIn(point[language](values[name], digits), joined)
-            self.assertIn(f"{point[language](values['dx'], 2)} m × {point[language](values['dy'], 3)} m", joined)
+        for clause in rows:
+            self.assertTrue(clause[1].strip() and clause[2].strip())
+            if clause[0] in {"grid", "derived", "stale", "check", "retranslate", "resolve"}:
+                self.assertFalse(re.search(r"\b(?:105|146|25|24)\b", " ".join(clause[1:])))
+        text = (CLIP / "🔗️consistency/🐍️.py").read_text(encoding="utf-8")
+        self.assertIn('self.reaction_new[tag]', text)
+        self.assertIn('self.quantity(self.cell[tag]["area"], "m²", 2)', text)
+        self.assertIn('self.trib_new["pilotis"]', text)
 
 
 class BimClipContract(unittest.TestCase):
@@ -2262,5 +2873,31 @@ class BimBrowserMetadataContract(unittest.TestCase):
         runtime.run_command(["repo", "tools", "exec", "--light", "node", "--", str(CLIP / "🧪️tests/🟨️metadata.mjs")], cwd=ROOT)
 
 
+def load_tests(loader, tests, pattern):
+    """🧩 Include every co-located remodelling contract in the standard BIM test target."""
+    import inspect
+
+    prefix = "🎓️teaching.🏛️architecture.🏗️bim.🎬️clip."
+    suite = unittest.TestSuite(tests)
+    for module in ("🧱️model.🧮️analysis.🧪️tests.🐍️", "🧱️model.🧪️tests.🚗️parking", "🧪️tests.🧩️chapter-source.🐍️",
+                   "🔌️exchange.🧪️tests.🐍️slab", "🎨️visuals.🏛️savoye.🧊️axon.🧪️tests", "🎨️visuals.🏛️savoye.🧊️axon.📏️geometry",
+                   "🎨️visuals.🏛️savoye.🧱️core.🧪️surfaces", "🎨️visuals.🧮️analysis.🧪️profiles.🐍️", "🧱️model.🧪️tests.📍️placements", "🧱️model.🧪️tests.⚡️slabs", "🧱️model.🧪️tests.⚡️partitions", "🧱️model.🧪️tests.🏗️beams", "🧱️model.🧪️tests.🏗️joints", "🧱️model.🧪️tests.🏗️bearing", "🧱️model.🧪️tests.🔺️frustums", "🧱️model.🧪️tests.🪚️ownership", "🧱️model.🧪️tests.🕳️openings", "🧱️model.🧪️tests.🏗️services", "🧱️model.🧪️tests.🚰️services", "🧱️model.🧪️tests.🧊️sections", "🧱️model.🧪️tests.☀️rooflights", "🧱️model.🧪️tests.🌬️garden", "🧱️model.🧪️tests.🛝️ramps", "🧱️model.🧪️tests.🪟️curtains", "🧱️model.🧮️analysis.🧪️tests.🕳️clashes", "🧱️model.🧪️tests.🕳️profiles", "🧱️model.🧮️analysis.🧪️tests.🕳️passages", "🧱️model.🔌️exchange.🧪️tests.🪟️fillings", "🧱️model.🔌️exchange.🧪️tests.🧵spans", "🧱️model.🔌️exchange.🧪️tests.🪑furnishings"):
+        suite.addTests(loader.loadTestsFromName(prefix + module))
+    for module in ("🧱️model.🧪️tests.🏛️remodel", "🧱️model.🧪️tests.🛁️details", "🧱️model.🧪️tests.📐️representations",
+                   "🧱️model.🧪️tests.🕳️cellar", "🧱️model.🧪️tests.🏗️foundations", "🧱️model.🧪️tests.🏛️architecture", "🧱️model.🧪️tests.🏛️suite", "🧱️model.🧪️tests.🪨️regions",
+                   "🧱️model.🧪️tests.🧱️walls", "🧱️model.🧪️tests.🪟️fillings", "🧱️model.🧪️tests.🪚️joinery", "🧱️model.🧪️tests.🚪️garage", "🧱️model.🧪️tests.🚪️roof", "🧱️model.🧪️tests.🏠ground", "🧱️model.🧪️tests.🚬️chimneys", "🧱️model.🧪️tests.🚬️prisms", "🧱️model.🧪️tests.🪜️stair-parts", "🧱️model.🧪️tests.🪜️stairs", "🧱️model.🧪️tests.🕸️mesh-clipping", "🧱️model.🧪️tests.🌀️wall-routing", "🧱️model.🧪️tests.🏗️facade"):
+        source = importlib.import_module(prefix + module)
+        suite.addTests(unittest.FunctionTestCase(fn) for name, fn in inspect.getmembers(source, inspect.isfunction) if name.startswith("test_"))
+    for module in ("🧱️model.🧪️tests.📏️columns", "🧱️model.🧪️tests.🚘️profiles"):
+        source = importlib.import_module(prefix + module)
+        suite.addTest(unittest.FunctionTestCase(lambda source=source: source.run(ROOT)))
+    suite.addTests(loader.discover(str(CLIP / "🎨️visuals/🏛️savoye/🧪️ortho-remodel"), pattern="test_*.py"))
+    return suite
+
+
 if __name__ == "__main__":
     unittest.main()
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                                                                                                                                                        
+                                      
+    

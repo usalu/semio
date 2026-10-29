@@ -1,0 +1,11 @@
+# As-Built Architectural Annex Access R11
+
+The original author publication page links the complete 2024 study, published by Ediciones Universidad de Valladolid. An additional primary repository item was found: [Savoye as built. Anejos planimétricos](https://uvadoc.uva.es/handle/10324/66393), explicitly described as architectural plans of the completed villa in 1930. Its file inventory contains separate cellar, ground, first and roof plans and six elevations/sections. These are more suitable for detailed architectural tracing than the CMN visitor schematic. The first-floor file is SAVOYE PLANTA+1.pdf (563.4 KB); cellar 223 KB, ground 353.8 KB, roof 196.9 KB. Discovery metadata does not establish exact file sequence URLs.
+
+The complete book repository record is [ISBN 9788413202839](https://uvadoc.uva.es/handle/10324/68427?show=full), DOI 10.24197/eduva.2986, a 52.11 MB PDF. Its alternate official publisher viewer is [publication 3002](https://www.publicaciones.uva.es/index.php/eduva/catalog/view/3002/3051/423), with download endpoint catalog/download/3002/3051/423. The author identifies a 1:20 restitution of the completed 1930 house; this establishes its intended use, not independent verification of every restituted detail.
+
+Access checks in this pass: the repository handles and bitstream endpoints time out in web retrieval and native Node fetch. The publisher viewer/download returns HTTP403. The official publisher without www is unreachable. No access-controlled material was retrieved. The search index can display repository descriptive metadata; it is not a replacement for reading the actual drawings.
+
+Outstanding: retrieve and visually inspect these primary architectural annexes before claiming exact furnishing, room, facade or opening geometry. Existing approximate source geometry must retain its inferred status until independently traced against an accessible primary drawing. No book contents were copied into the repository.
+
+Direct browser verification (R15): the official publisher viewer visibly returns403Forbidden. The official architectural annex handle fails withERR_CONNECTION_TIMED_OUT. No drawing download was recovered; no access barrier was bypassed. The temporary hidden IAB tab is not a deliverable.

@@ -1,0 +1,32 @@
+/** 🧱 Reconstruct the two author-registered roof-only hollow masonry chimneys. */
+import {readFile,writeFile} from 'node:fs/promises';
+import {canonicalId} from './stair-roof-r36-author.mjs';
+export function prismaticPatch(){
+ const square=(xy,size)=>{const[x,y]=xy,r=size/2;return[[x-r,y-r],[x+r,y-r],[x+r,y+r],[x-r,y+r]];};
+ const strips=(xy,outer,inner,z1,material,role)=>{const[x,y]=xy,a=outer/2,b=inner/2,r=(x0,y0,x1,y1)=>({outline:[[x0,y0],[x1,y0],[x1,y1],[x0,y1]],z0:-.09,z1,material,role});return[r(x-a,y-a,x+a,y-b),r(x-a,y+b,x+a,y+a),r(x-a,y-b,x-b,y+b),r(x+b,y-b,x+a,y+b)];};
+ const elements=[],relations=[],finish_voids=[];
+ for(const [name,xy,top,en,de] of [['SALON',[13.01,1.22],9.25,'Salon','Salon'],['KITCHEN',[.89,5.32],9.6,'Kitchen','Küche']]){
+  const tag='CHIMNEY-'+name+'-ROOF',op='OP-'+name+'-FLUE-ROOF',reserve='RES-'+name+'-CHIMNEY-FINISH';
+  const sources=['Savoye as Built2024 p117–119:original salon/kitchen flues and rendered reinforced hollow-brick exterior construction','Zaparaín2024 roof as-built reconstruction:public page1 preview Scribd1007185038, observed original bitmap; third-party transfer, not original FLC','Original LArchitectureVivante1931 plates27/28; R44 bounded height interpretation with competing photo assignments retained','R48 independent38px/m grid and hollow-square audit'];
+  const textEn='Original '+en.toLowerCase()+' roof chimney existence/function is attested. Modern author-reconstruction axisX'+xy[0]+'/Y'+xy[1]+'±0.10m;35cm outside square and15cm clear bore are rounded raster inferences±4/3cm. Roof-only topZ'+top+'±0.40m is an explicitly inferred teaching envelope, not a calibrated original height. No cap construction or hidden lower flue route is asserted.1cm exterior render,8cm hollow brick and1cm inner finish per wall are inferred; reinforcement detail is unresolved. Neck starts on structural compressiontop6.51m;15cm bore-only slab opening retains10cm material-ring bearing. Explicit finish-only ownership displaces roof finish6.51–6.60m without cutting the structural bearing ring.';
+  const textDe='Ursprünglicher '+de+'-Dachschornstein in Bestand und Funktion belegt. Achse der modernen AutorenrekonstruktionX'+xy[0]+'/Y'+xy[1]+'±0,10m;35cm äußeres Quadrat und15cm lichte Öffnung sind gerundete Rasterableitungen±4/3cm. Nur Dachkörper: KopfZ'+top+'±0,40m ausdrücklich abgeleitete Lehrhülle, keine kalibrierte Originalhöhe. Keine Haubenkonstruktion oder verborgener unterer Rauchzug behauptet. Je Wand1cm Außenputz,8cm Hohlziegel und1cm Innenputz abgeleitet; Bewehrung ungeklärt. Hals liegt auf Tragwerksoberkante6,51m; reine15cm-Durchführung bewahrt den10cm-Materialring als Auflager. Ausdrückliche Oberflächenbesitzteilung verdrängt Dachaufbau6,51–6,60m ohne den tragenden Auflagerring zu entfernen.';
+  const evidence={state:'original-completed-1930-1931',status:'inferred_reconstruction',source_kind:'mixed',sources,uncertainty:{en:textEn,de:textDe}};
+  const props={TargetState:{value:evidence.state,ifc_type:'IfcLabel',basis:'sourced',source:sources[0]},EvidenceStatus:{value:evidence.status,ifc_type:'IfcLabel',basis:'inferred',source:sources.join('; ')},SourceReferences:{value:sources.join('; '),ifc_type:'IfcText',basis:'sourced',source:sources[0]},ReconstructionUncertainty:{value:textEn+' / '+textDe,ifc_type:'IfcText',basis:'inferred',source:sources.join('; ')}};
+  const q=value=>({value,unit:'m',basis:'inferred',source:'R44/R48 bounded author-plan reconstruction; not a surveyed original'});
+  const parts=[...strips(xy,.35,.33,+(top-6.6).toFixed(8),'MAT-RENDER','outer_render'),...strips(xy,.33,.17,+(top-6.6).toFixed(8),'MAT-HOLLOW-CLAY','hollow_brick'),...strips(xy,.17,.15,+(top-6.6).toFixed(8),'MAT-PLASTER','inner_finish')];
+  elements.push({guid:canonicalId(tag),tag,class:'IfcChimney',predefined_type:'NOTDEFINED',name:{en:en+' roof chimney, inferred hollow masonry envelope',de:de+'-Dachschornstein, abgeleitete hohle Mauerwerkshülle'},storey:'roof',system:'flue',material:'MAT-HOLLOW-CLAY',geometry:{kind:'prismatic_chimney',axis:xy,base_level:'roof',parts,penetrations:[op]},attributes:{width:q(.35),depth:q(.35),clear_width:q(.15),height:q(+(top-6.51).toFixed(8))},psets:{Pset_HistoricalEvidence:props},metadata:{author:'Atelier (architecture)',revision:1,domains:['architecture','services']},historical_evidence:evidence});
+  elements.push({guid:canonicalId(op),tag:op,class:'IfcOpeningElement',predefined_type:'OPENING',name:{en:en+' flue bore-only roof opening, inferred15cm',de:de+'-Rauchzugöffnung nur lichte15cm, abgeleitet'},storey:'roof',geometry:{slab:'SL-R',outline:square(xy,.15)},attributes:{},psets:{Pset_HistoricalEvidence:structuredClone(props)},metadata:{author:'Atelier (architecture)',revision:1,domains:['architecture','services']},historical_evidence:structuredClone(evidence)});
+  finish_voids.push({tag:reserve,owner:tag,outline:square(xy,.35)});
+  relations.push({guid:canonicalId('VOID-'+op),tag:'VOID-'+op,class:'IfcRelVoidsElement',relating:'SL-R',related:[op],name:{en:'Bore-only roof flue continuation, inferred',de:'Dachfortsetzung nur für lichten Rauchzug, abgeleitet'}},{guid:canonicalId('SUPPORT-'+tag),tag:'SUPPORT-'+tag,class:'IfcRelConnectsElements',relating:'SL-R',related:[tag],name:{en:'Structural ring bearing and explicit displaced finish ownership',de:'Tragender Auflagerring und ausdrücklicher Besitz des verdrängten Dachaufbaus'}});
+ }
+ return{elements,relations,finish_voids,height:{value:9.6,unit:'m',basis:'inferred',source:'R44 modeled kitchen chimney top9.60±0.40m; occupied envelope only, not a measured historical overall height'}};
+}
+export function applyPrismaticPatch(m,patch=prismaticPatch()){
+ const tags=new Set(m.elements.map(e=>e.tag));if(patch.elements.some(e=>tags.has(e.tag)))throw Error('Prismatic source already published');
+ m.elements.push(...structuredClone(patch.elements));m.relations.push(...structuredClone(patch.relations));
+ const slab=m.elements.find(e=>e.tag==='SL-R');slab.geometry.finish_voids=[...(slab.geometry.finish_voids||[]),...structuredClone(patch.finish_voids)];
+ m.relations.find(r=>r.tag==='REL-CON-roof').related.push(...patch.elements.map(e=>e.tag));
+ for(const pm of m.models)for(const e of patch.elements)if(e.metadata.domains.includes(pm.id))pm.element_tags.push(e.tag);
+ m.building.box.height=structuredClone(patch.height);return m;
+}
+export async function publishPrisms(source){const m=JSON.parse(await readFile(source,'utf8'));applyPrismaticPatch(m);await writeFile(source,JSON.stringify(m,null,2)+'\n');return m.elements.length;}

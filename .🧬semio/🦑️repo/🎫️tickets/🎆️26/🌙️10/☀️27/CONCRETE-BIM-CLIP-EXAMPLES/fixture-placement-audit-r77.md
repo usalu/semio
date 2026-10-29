@@ -1,0 +1,17 @@
+# Fixture Placement Constraints R77
+
+Read-only audit against pre-repair452/d2f3 source and retained independently registered R33 ground fixture. No model/test edits. Fresh isolated worker evaluated candidate shapes against native fixed geometry without mutating source; reproduction fixture-placement-audit-r77.py and generated result retained; interpreter disposed. Coordinates below are inferred repair candidates, not newly measured historical dimensions.
+
+## Laundry
+
+Registered SP-LAUNDRY bounds3.15..7.05/15.95..21.4. Existing twin trough outer envelopes3.5..4.8 and4.9..6.2, bothY20.1..20.8. Structural column32 occupiesX4.64..4.86/Y20.14..20.36. Its0.22m width cannot fit the existing0.10m inter-bowl gap by a small X translation; cutting bowl bottom/rim around it would require an explicitly redesigned watertight fixture and supports, not an arbitrary material exemption.
+
+Whole-assembly north translation+0.30mY produces troughY20.4..21.1, providing0.04m clear gap to column32 and approximately0.225m to the inner north wall face. Fresh exact native GEOS XYZ check of every translated laundry part against all columns and all actual ground-wall material found no positive intersection above1e-10m³. This preserves original inferred bowl dimensions, actual hollows/bottoms and legs. Move both taps and occupied/free witnesses coherently. Ground retained fixture confirms laundry placement only at room/translation level, not this exact30cm historical correction; mark it inferred. South translation−0.70mY is another geometric possibility but moves the teaching fixture farther from its current registered context. Neither candidate should move the fixed structural pier. Furnishings/door/body routes and tap-to-bowl checks still need final owner verification; this audit did not claim those all pass.
+
+## Guest Basin
+
+Actual independently registered roof clear aperture V-ROOFLIGHT is[2.95,10.9]..[3.5,11.45],0.55m square. Current0.70×0.60m basin cannot entirely fit that aperture under any translation. Existing basin dimensions are assumed teaching geometry, while rooflight clear registration has its own explicit about0.15m uncertainty. Do not claim precision beyond those sources or move roof structure to accommodate the inherited bowl.
+
+A coherent hand-authored0.50×0.50m outer basin centred3.225/11.175 would occupy[2.975,10.925]..[3.475,11.425], leaving0.025m aperture margins; this is a possible inferred form, not a sourced original size. Fresh native GEOS projected check across basin/tap-height worldZ3.8..4.29 found no positive overlap above1e-10m² with any column, actual first-floor wall material, or FIX-GUEST-WARDROBE. SP-GUEST spans0.3..3.6/8.9..14.1; wardrobe ends atX2.65, private partition axis isX3.6. No separate SP-GUEST-BATH space exists: use the actual room identity and washing-side programme, not an invented room.
+
+Maintain a real continuous solid bottom, positive-thickness rim and open bowl; move/reconstruct the tap coherently on its rear rim and preserve its relation. Final clear-aperture alignment should use the actual void footprint, not the rooflight material union. Check native door opening/approach, all neighbouring furnishings, tap collisions and room containment before publication. The current basin’s label and R7 report assert beneath-light identity, while later roof registration moved the light; this is coordinated source repair, not merely a stale assertion.

@@ -1,0 +1,26 @@
+{
+  "cases": [
+    {
+      "id": "empty",
+      "value": "",
+      "quoted": "''",
+      "annotated": "''"
+    },
+    {
+      "id": "normal",
+      "value": "COLUMN",
+      "quoted": "'COLUMN'",
+      "annotated": "COLUMN"
+    },
+    {
+      "id": "escaped",
+      "value": "l'issue",
+      "quoted": "'l''issue'",
+      "annotated": "l''issue"
+    }
+  ],
+  "typed": [
+    "IfcText",
+    "IfcLabel"
+  ]
+}

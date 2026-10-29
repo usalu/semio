@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {"kind": "rooflight", "role": "glass"},
+    {"kind": "parquet", "role": "wood"},
+    {"kind": "tile", "role": "tile"},
+    {"kind": "paving", "role": "paving"},
+    {"kind": "grass_joint", "role": "garden"},
+    {"kind": "tap", "role": "metal"},
+    {"kind": "helical_handrail", "role": "metal"},
+    {"kind": "basin", "role": "concrete"},
+    {"kind": "footing", "role": "concrete"},
+    {"kind": "helical_guard", "role": "concrete"}
+  ]
+}

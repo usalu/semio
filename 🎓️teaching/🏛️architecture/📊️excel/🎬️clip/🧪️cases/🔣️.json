@@ -1,0 +1,2963 @@
+{
+ "invalid_models": [
+  {
+   "id": "version",
+   "path": [
+    "version"
+   ],
+   "value": 2
+  },
+  {
+   "id": "names-missing",
+   "path": [
+    "names"
+   ],
+   "remove": true
+  },
+  {
+   "id": "file-extension",
+   "path": [
+    "file"
+   ],
+   "value": "nakagin.csv"
+  },
+  {
+   "id": "extra-top-level",
+   "path": [
+    "extra"
+   ],
+   "add": true,
+   "value": 1
+  },
+  {
+   "id": "names-leading-equals",
+   "path": [
+    "names",
+    "theta_i"
+   ],
+   "value": "=Climate!$B$2"
+  },
+  {
+   "id": "sheet-name-colon",
+   "path": [
+    "sheets",
+    {
+     "name": "Program"
+    },
+    "name"
+   ],
+   "value": "Type A:B"
+  },
+  {
+   "id": "negative-width",
+   "path": [
+    "sheets",
+    {
+     "name": "Program"
+    },
+    "widths",
+    "A"
+   ],
+   "value": -1
+  },
+  {
+   "id": "lowercase-address",
+   "path": [
+    "sheets",
+    {
+     "name": "Climate"
+    },
+    "cells",
+    "a1"
+   ],
+   "add": true,
+   "value": {
+    "value": 1
+   }
+  },
+  {
+   "id": "text-and-value",
+   "path": [
+    "sheets",
+    {
+     "name": "Climate"
+    },
+    "cells",
+    "A1",
+    "value"
+   ],
+   "add": true,
+   "value": 5
+  },
+  {
+   "id": "text-without-german",
+   "path": [
+    "sheets",
+    {
+     "name": "Climate"
+    },
+    "cells",
+    "A1",
+    "text",
+    "de"
+   ],
+   "remove": true
+  },
+  {
+   "id": "formula-without-equals",
+   "path": [
+    "sheets",
+    {
+     "name": "Climate"
+    },
+    "cells",
+    "B5",
+    "formula"
+   ],
+   "value": "SUM(A1)"
+  },
+  {
+   "id": "binding-without-basis",
+   "path": [
+    "sheets",
+    {
+     "name": "Climate"
+    },
+    "cells",
+    "B2",
+    "basis"
+   ],
+   "remove": true
+  },
+  {
+   "id": "basis-unknown",
+   "path": [
+    "sheets",
+    {
+     "name": "Climate"
+    },
+    "cells",
+    "B2",
+    "basis"
+   ],
+   "value": "guessed"
+  },
+  {
+   "id": "cell-unknown-property",
+   "path": [
+    "sheets",
+    {
+     "name": "Climate"
+    },
+    "cells",
+    "B2",
+    "color"
+   ],
+   "add": true,
+   "value": "red"
+  },
+  {
+   "id": "format-empty",
+   "path": [
+    "sheets",
+    {
+     "name": "Climate"
+    },
+    "cells",
+    "B2",
+    "format"
+   ],
+   "value": ""
+  },
+  {
+   "id": "table-null-item",
+   "path": [
+    "sheets",
+    {
+     "name": "Program"
+    },
+    "table",
+    "rows",
+    0,
+    0
+   ],
+   "value": null
+  },
+  {
+   "id": "table-name-missing",
+   "path": [
+    "sheets",
+    {
+     "name": "Program"
+    },
+    "table",
+    "name"
+   ],
+   "remove": true
+  },
+  {
+   "id": "table-name-with-space",
+   "path": [
+    "sheets",
+    {
+     "name": "Program"
+    },
+    "table",
+    "name"
+   ],
+   "value": "My Table"
+  }
+ ],
+ "references": {
+  "columns": [
+   [
+    "A",
+    1
+   ],
+   [
+    "Z",
+    26
+   ],
+   [
+    "AA",
+    27
+   ],
+   [
+    "AZ",
+    52
+   ],
+   [
+    "BA",
+    53
+   ],
+   [
+    "ZZ",
+    702
+   ],
+   [
+    "AAA",
+    703
+   ],
+   [
+    "XFD",
+    16384
+   ]
+  ],
+  "parse": [
+   {
+    "text": "B3",
+    "canonical": "B3"
+   },
+   {
+    "text": "$B$3",
+    "canonical": "$B$3"
+   },
+   {
+    "text": "b$3",
+    "canonical": "B$3"
+   },
+   {
+    "text": "$b3",
+    "canonical": "$B3"
+   },
+   {
+    "text": "'Type A'!B3",
+    "canonical": "'Type A'!B3"
+   },
+   {
+    "text": "Climate!$B$2",
+    "canonical": "Climate!$B$2"
+   },
+   {
+    "text": "'Climate'!B2",
+    "canonical": "Climate!B2"
+   },
+   {
+    "text": "'Type A:Type C'!B12",
+    "canonical": "'Type A:Type C'!B12"
+   },
+   {
+    "text": "North:South!A1",
+    "canonical": "North:South!A1"
+   },
+   {
+    "text": "B2:D4",
+    "canonical": "B2:D4"
+   },
+   {
+    "text": "$B2:D$4",
+    "canonical": "$B2:D$4"
+   },
+   {
+    "text": "'Type A'!B3:C4",
+    "canonical": "'Type A'!B3:C4"
+   },
+   {
+    "text": "B:B",
+    "canonical": "B:B"
+   },
+   {
+    "text": "$B:$C",
+    "canonical": "$B:$C"
+   },
+   {
+    "text": "3:3",
+    "canonical": "3:3"
+   },
+   {
+    "text": "$3:$5",
+    "canonical": "$3:$5"
+   },
+   {
+    "text": "'it''s'!A1",
+    "canonical": "'it''s'!A1"
+   }
+  ],
+  "invalid": [
+   "A0",
+   "XFE1",
+   "1A",
+   "B",
+   "AAAA1",
+   "A1048577",
+   "''!A1"
+  ],
+  "quote": [
+   [
+    "Type A",
+    "'Type A'"
+   ],
+   [
+    "Sheet1",
+    "Sheet1"
+   ],
+   [
+    "Program",
+    "Program"
+   ],
+   [
+    "2020",
+    "'2020'"
+   ],
+   [
+    "A1",
+    "'A1'"
+   ],
+   [
+    "R1C1",
+    "'R1C1'"
+   ],
+   [
+    "it's",
+    "'it''s'"
+   ],
+   [
+    "Energy-Total",
+    "'Energy-Total'"
+   ],
+   [
+    "Größe",
+    "Größe"
+   ],
+   [
+    "TRUE",
+    "'TRUE'"
+   ]
+  ],
+  "cycle": [
+   [
+    "A1",
+    "$A$1"
+   ],
+   [
+    "$A$1",
+    "A$1"
+   ],
+   [
+    "A$1",
+    "$A1"
+   ],
+   [
+    "$A1",
+    "A1"
+   ],
+   [
+    "B2:C3",
+    "$B$2:$C$3"
+   ],
+   [
+    "'Type A'!B3",
+    "'Type A'!$B$3"
+   ],
+   [
+    "B:B",
+    "$B:$B"
+   ],
+   [
+    "3:3",
+    "$3:$3"
+   ]
+  ]
+ },
+ "translate": [
+  {
+   "formula": "=A1+$B$1",
+   "from": "C2",
+   "to": "D4",
+   "expected": "=B3+$B$1",
+   "oracle": true,
+   "simple": true
+  },
+  {
+   "formula": "=$A1",
+   "from": "C2",
+   "to": "D4",
+   "expected": "=$A3",
+   "oracle": true,
+   "simple": true
+  },
+  {
+   "formula": "=A$1",
+   "from": "C2",
+   "to": "D4",
+   "expected": "=B$1",
+   "oracle": true,
+   "simple": true
+  },
+  {
+   "formula": "=$A$1",
+   "from": "C2",
+   "to": "D4",
+   "expected": "=$A$1",
+   "oracle": true,
+   "simple": true
+  },
+  {
+   "formula": "=SUM(B3:B5)*$B$1",
+   "from": "B6",
+   "to": "C6",
+   "expected": "=SUM(C3:C5)*$B$1",
+   "oracle": true,
+   "simple": true
+  },
+  {
+   "formula": "='Type A'!B3+1",
+   "from": "B1",
+   "to": "B2",
+   "expected": "='Type A'!B4+1",
+   "oracle": true
+  },
+  {
+   "formula": "=SUM('Type A:Type C'!B12)",
+   "from": "A1",
+   "to": "B1",
+   "expected": "=SUM('Type A:Type C'!C12)",
+   "oracle": true
+  },
+  {
+   "formula": "=SUM(B:B)",
+   "from": "A1",
+   "to": "B1",
+   "expected": "=SUM(C:C)",
+   "oracle": true
+  },
+  {
+   "formula": "=SUM(3:3)",
+   "from": "A1",
+   "to": "A2",
+   "expected": "=SUM(4:4)",
+   "oracle": true
+  },
+  {
+   "formula": "=\"A1\"&B1",
+   "from": "B1",
+   "to": "B2",
+   "expected": "=\"A1\"&B2",
+   "oracle": true
+  },
+  {
+   "formula": "=theta_i*B2",
+   "from": "C3",
+   "to": "C4",
+   "expected": "=theta_i*B3",
+   "oracle": true
+  },
+  {
+   "formula": "=Program!$B$4/Program!B4",
+   "from": "A1",
+   "to": "A2",
+   "expected": "=Program!$B$4/Program!B5",
+   "oracle": true
+  },
+  {
+   "formula": "=COUNTIF($M$2:$M$141,A4)",
+   "from": "B4",
+   "to": "B5",
+   "expected": "=COUNTIF($M$2:$M$141,A5)",
+   "oracle": true,
+   "simple": true
+  },
+  {
+   "formula": "=COUNTIFS($I$2:$I$141,$A11,$M$2:$M$141,B$10)",
+   "from": "B11",
+   "to": "C12",
+   "expected": "=COUNTIFS($I$2:$I$141,$A12,$M$2:$M$141,C$10)",
+   "oracle": true,
+   "simple": true
+  },
+  {
+   "formula": "=SUM(A1:B2)",
+   "from": "C3",
+   "to": "A3",
+   "expected": "=SUM(#REF!)",
+   "simple": true
+  },
+  {
+   "formula": "=A1",
+   "from": "A2",
+   "to": "A1",
+   "expected": "=#REF!",
+   "simple": true
+  },
+  {
+   "formula": "=A1+1",
+   "from": "B2",
+   "to": "A2",
+   "expected": "=#REF!+1",
+   "simple": true
+  },
+  {
+   "formula": "=XFD1+1",
+   "from": "A1",
+   "to": "B1",
+   "expected": "=#REF!+1"
+  },
+  {
+   "formula": "=Table1[Cost]+A1",
+   "from": "B1",
+   "to": "B2",
+   "expected": "=Table1[Cost]+A2"
+  }
+ ],
+ "parse": [
+  {
+   "formula": "=1+2*3",
+   "tree": [
+    "bin",
+    "+",
+    [
+     "num",
+     1
+    ],
+    [
+     "bin",
+     "*",
+     [
+      "num",
+      2
+     ],
+     [
+      "num",
+      3
+     ]
+    ]
+   ]
+  },
+  {
+   "formula": "=-2^2",
+   "tree": [
+    "bin",
+    "^",
+    [
+     "neg",
+     [
+      "num",
+      2
+     ]
+    ],
+    [
+     "num",
+     2
+    ]
+   ]
+  },
+  {
+   "formula": "=2^3^2",
+   "tree": [
+    "bin",
+    "^",
+    [
+     "bin",
+     "^",
+     [
+      "num",
+      2
+     ],
+     [
+      "num",
+      3
+     ]
+    ],
+    [
+     "num",
+     2
+    ]
+   ]
+  },
+  {
+   "formula": "=50%",
+   "tree": [
+    "pct",
+    [
+     "num",
+     50
+    ]
+   ]
+  },
+  {
+   "formula": "=2^-1",
+   "tree": [
+    "bin",
+    "^",
+    [
+     "num",
+     2
+    ],
+    [
+     "neg",
+     [
+      "num",
+      1
+     ]
+    ]
+   ]
+  },
+  {
+   "formula": "=10-2-3",
+   "tree": [
+    "bin",
+    "-",
+    [
+     "bin",
+     "-",
+     [
+      "num",
+      10
+     ],
+     [
+      "num",
+      2
+     ]
+    ],
+    [
+     "num",
+     3
+    ]
+   ]
+  },
+  {
+   "formula": "=A1&B1=\"x\"",
+   "tree": [
+    "bin",
+    "=",
+    [
+     "bin",
+     "&",
+     [
+      "ref",
+      "A1"
+     ],
+     [
+      "ref",
+      "B1"
+     ]
+    ],
+    [
+     "str",
+     "x"
+    ]
+   ]
+  },
+  {
+   "formula": "=1+2&3",
+   "tree": [
+    "bin",
+    "&",
+    [
+     "bin",
+     "+",
+     [
+      "num",
+      1
+     ],
+     [
+      "num",
+      2
+     ]
+    ],
+    [
+     "num",
+     3
+    ]
+   ]
+  },
+  {
+   "formula": "=SUM(A1:B2,C3)",
+   "tree": [
+    "call",
+    "SUM",
+    [
+     [
+      "ref",
+      "A1:B2"
+     ],
+     [
+      "ref",
+      "C3"
+     ]
+    ]
+   ]
+  },
+  {
+   "formula": "=sum('Type A:Type C'!B12)",
+   "tree": [
+    "call",
+    "SUM",
+    [
+     [
+      "ref",
+      "'Type A:Type C'!B12"
+     ]
+    ]
+   ]
+  },
+  {
+   "formula": "=IF(A1>0,\"y\",)",
+   "tree": [
+    "call",
+    "IF",
+    [
+     [
+      "bin",
+      ">",
+      [
+       "ref",
+       "A1"
+      ],
+      [
+       "num",
+       0
+      ]
+     ],
+     [
+      "str",
+      "y"
+     ],
+     [
+      "empty"
+     ]
+    ]
+   ]
+  },
+  {
+   "formula": "=(A1,B2)",
+   "tree": [
+    "union",
+    [
+     [
+      "ref",
+      "A1"
+     ],
+     [
+      "ref",
+      "B2"
+     ]
+    ]
+   ]
+  },
+  {
+   "formula": "=SUM((A1,B2))",
+   "tree": [
+    "call",
+    "SUM",
+    [
+     [
+      "union",
+      [
+       [
+        "ref",
+        "A1"
+       ],
+       [
+        "ref",
+        "B2"
+       ]
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "formula": "=A1:B2",
+   "tree": [
+    "ref",
+    "A1:B2"
+   ]
+  },
+  {
+   "formula": "=theta_i*2",
+   "tree": [
+    "bin",
+    "*",
+    [
+     "name",
+     "theta_i"
+    ],
+    [
+     "num",
+     2
+    ]
+   ]
+  },
+  {
+   "formula": "=Table1[Cost]",
+   "tree": [
+    "table",
+    "Table1[Cost]"
+   ]
+  },
+  {
+   "formula": "=TRUE",
+   "tree": [
+    "bool",
+    true
+   ]
+  },
+  {
+   "formula": "=#N/A",
+   "tree": [
+    "err",
+    "#N/A"
+   ]
+  },
+  {
+   "formula": "=\"say \"\"hi\"\"\"",
+   "tree": [
+    "str",
+    "say \"hi\""
+   ]
+  },
+  {
+   "formula": "=1.5E3",
+   "tree": [
+    "num",
+    1500
+   ]
+  },
+  {
+   "formula": "=PI()",
+   "tree": [
+    "call",
+    "PI",
+    []
+   ]
+  }
+ ],
+ "parse_invalid": [
+  "=1+",
+  "=SUM(",
+  "=(1",
+  "=1 2",
+  "=\"open",
+  "=1+)",
+  "=@@"
+ ],
+ "evaluate": {
+  "shared": {
+   "A1": "x",
+   "A2": "y",
+   "A3": "x",
+   "B1": 1,
+   "B2": 5,
+   "B3": 2,
+   "C1": 10,
+   "C2": 20,
+   "C3": 30,
+   "D1": 1,
+   "D2": 3,
+   "D3": 5,
+   "E1": 10,
+   "E2": 30,
+   "E3": 50
+  },
+  "scalar": [
+   {
+    "f": "1+2*3",
+    "v": 7,
+    "oracle": true
+   },
+   {
+    "f": "-2^2",
+    "v": 4,
+    "oracle": true
+   },
+   {
+    "f": "2^3^2",
+    "v": 64,
+    "oracle": true
+   },
+   {
+    "f": "50%",
+    "v": 0.5,
+    "oracle": true
+   },
+   {
+    "f": "-50%",
+    "v": -0.5,
+    "oracle": true
+   },
+   {
+    "f": "2^-1",
+    "v": 0.5,
+    "oracle": true
+   },
+   {
+    "f": "10-2-3",
+    "v": 5,
+    "oracle": true
+   },
+   {
+    "f": "2*3^2",
+    "v": 18,
+    "oracle": true
+   },
+   {
+    "f": "\"a\"&\"b\"&1",
+    "v": "ab1",
+    "oracle": true
+   },
+   {
+    "f": "1=1",
+    "v": true,
+    "oracle": true
+   },
+   {
+    "f": "\"A\"=\"a\"",
+    "v": true,
+    "oracle": true
+   },
+   {
+    "f": "\"a\">1",
+    "v": true,
+    "oracle": true
+   },
+   {
+    "f": "1<>2",
+    "v": true,
+    "oracle": true
+   },
+   {
+    "f": "1/0",
+    "v": {
+     "error": "#DIV/0!"
+    },
+    "oracle": true
+   },
+   {
+    "f": "1+\"x\"",
+    "v": {
+     "error": "#VALUE!"
+    },
+    "oracle": true
+   },
+   {
+    "f": "NOPE(1)",
+    "v": {
+     "error": "#NAME?"
+    },
+    "oracle": true
+   },
+   {
+    "f": "SUMM(1,2)",
+    "v": {
+     "error": "#NAME?"
+    },
+    "oracle": true
+   },
+   {
+    "f": "missing_name*2",
+    "v": {
+     "error": "#NAME?"
+    }
+   },
+   {
+    "f": "Nope!A1",
+    "v": {
+     "error": "#REF!"
+    }
+   },
+   {
+    "f": "#REF!+1",
+    "v": {
+     "error": "#REF!"
+    }
+   },
+   {
+    "f": "#N/A+1",
+    "v": {
+     "error": "#N/A"
+    }
+   },
+   {
+    "f": "1/0+1",
+    "v": {
+     "error": "#DIV/0!"
+    },
+    "oracle": true
+   },
+   {
+    "f": "0^0",
+    "v": {
+     "error": "#NUM!"
+    }
+   },
+   {
+    "f": "IFERROR(1/0,5)",
+    "v": 5,
+    "oracle": true
+   },
+   {
+    "f": "IFERROR(3,5)",
+    "v": 3,
+    "oracle": true
+   },
+   {
+    "f": "IF(1>2,1,2)",
+    "v": 2,
+    "oracle": true
+   },
+   {
+    "f": "IF(TRUE,\"y\")",
+    "v": "y",
+    "oracle": true
+   },
+   {
+    "f": "ROUND(2.5,0)",
+    "v": 3,
+    "oracle": true
+   },
+   {
+    "f": "ROUND(-2.5,0)",
+    "v": -3,
+    "oracle": true
+   },
+   {
+    "f": "ROUND(1.2345,2)",
+    "v": 1.23,
+    "oracle": true
+   },
+   {
+    "f": "ROUND(1250,-2)",
+    "v": 1300,
+    "oracle": true
+   },
+   {
+    "f": "PI()",
+    "v": 3.141592653589793,
+    "oracle": true
+   },
+   {
+    "f": "AND(TRUE,1,2>1)",
+    "v": true,
+    "oracle": true
+   },
+   {
+    "f": "OR(FALSE,0)",
+    "v": false,
+    "oracle": true
+   },
+   {
+    "f": "SUM(1,2,\"3\")",
+    "v": 6,
+    "oracle": true
+   },
+   {
+    "f": "SUM(B1:B3)",
+    "v": 8,
+    "oracle": true
+   },
+   {
+    "f": "AVERAGE(B1:B3)",
+    "v": 2.6666666666666665,
+    "oracle": true
+   },
+   {
+    "f": "COUNT(A1:C3)",
+    "v": 6,
+    "oracle": true
+   },
+   {
+    "f": "COUNTA(A1:C3)",
+    "v": 9,
+    "oracle": true
+   },
+   {
+    "f": "MIN(B1:C3)",
+    "v": 1,
+    "oracle": true
+   },
+   {
+    "f": "MAX(B1:C3)",
+    "v": 30,
+    "oracle": true
+   },
+   {
+    "f": "COUNTIF(B1:B3,\">1\")",
+    "v": 2,
+    "oracle": true
+   },
+   {
+    "f": "COUNTIF(A1:A3,\"X\")",
+    "v": 2,
+    "oracle": true
+   },
+   {
+    "f": "COUNTIF(A1:A3,\"<>x\")",
+    "v": 1,
+    "oracle": true
+   },
+   {
+    "f": "COUNTIF(A1:A3,\"?\")",
+    "v": 3,
+    "oracle": true
+   },
+   {
+    "f": "COUNTIFS(A1:A3,\"x\",B1:B3,\">1\")",
+    "v": 1,
+    "oracle": true
+   },
+   {
+    "f": "SUMIF(A1:A3,\"x\",B1:B3)",
+    "v": 3,
+    "oracle": true
+   },
+   {
+    "f": "SUMIFS(C1:C3,A1:A3,\"x\",B1:B3,\">1\")",
+    "v": 30,
+    "oracle": true
+   },
+   {
+    "f": "SUMPRODUCT(B1:B3,C1:C3)",
+    "v": 170,
+    "oracle": true
+   },
+   {
+    "f": "SUMPRODUCT((A1:A3=\"x\")*C1:C3)",
+    "v": 40,
+    "oracle": true
+   },
+   {
+    "f": "SUMPRODUCT(B1:B3)",
+    "v": 8,
+    "oracle": true
+   },
+   {
+    "f": "XLOOKUP(\"y\",A1:A3,B1:B3)",
+    "v": 5,
+    "oracle": true
+   },
+   {
+    "f": "XLOOKUP(\"Y\",A1:A3,C1:C3)",
+    "v": 20,
+    "oracle": true
+   },
+   {
+    "f": "XLOOKUP(\"z\",A1:A3,B1:B3,\"none\")",
+    "v": "none",
+    "oracle": true
+   },
+   {
+    "f": "XLOOKUP(\"z\",A1:A3,B1:B3)",
+    "v": {
+     "error": "#N/A"
+    },
+    "oracle": true
+   },
+   {
+    "f": "XLOOKUP(4,D1:D3,E1:E3,,-1)",
+    "v": 30
+   },
+   {
+    "f": "XLOOKUP(4,D1:D3,E1:E3,,1)",
+    "v": 50
+   },
+   {
+    "f": "XLOOKUP(\"x\",A1:A3,C1:C3,,0,-1)",
+    "v": 30
+   },
+   {
+    "f": "INDEX(B1:C3,2,2)",
+    "v": 20,
+    "oracle": true
+   },
+   {
+    "f": "INDEX(C1:C3,3)",
+    "v": 30,
+    "oracle": true
+   },
+   {
+    "f": "INDEX(B1:C3,4,1)",
+    "v": {
+     "error": "#REF!"
+    },
+    "oracle": true
+   },
+   {
+    "f": "MATCH(\"y\",A1:A3,0)",
+    "v": 2,
+    "oracle": true
+   },
+   {
+    "f": "MATCH(\"z\",A1:A3,0)",
+    "v": {
+     "error": "#N/A"
+    },
+    "oracle": true
+   },
+   {
+    "f": "MATCH(4,D1:D3,1)",
+    "v": 2,
+    "oracle": true
+   },
+   {
+    "f": "ROWS(A1:C3)",
+    "v": 3,
+    "oracle": true
+   },
+   {
+    "f": "SUM(B1:B3)*2%",
+    "v": 0.16,
+    "oracle": true
+   }
+  ],
+  "cells": [
+   {
+    "f": "SUM(A1:A3)",
+    "cells": {
+     "A1": 1,
+     "A2": 2,
+     "A3": "=A1+A2"
+    },
+    "v": 6,
+    "oracle": true
+   },
+   {
+    "f": "SUM(A1:A3)",
+    "cells": {
+     "A1": 1,
+     "A2": "x",
+     "A3": 3
+    },
+    "v": 4,
+    "oracle": true
+   },
+   {
+    "f": "AVERAGE(A1:A3)",
+    "cells": {
+     "A1": 1,
+     "A2": "x",
+     "A3": 3
+    },
+    "v": 2,
+    "oracle": true
+   },
+   {
+    "f": "COUNT(A1:A3)",
+    "cells": {
+     "A1": 1,
+     "A2": "x",
+     "A3": 3
+    },
+    "v": 2,
+    "oracle": true
+   },
+   {
+    "f": "COUNTA(A1:A3)",
+    "cells": {
+     "A1": 1,
+     "A2": "x",
+     "A3": 3
+    },
+    "v": 3,
+    "oracle": true
+   },
+   {
+    "f": "AVERAGE(A1:A3)",
+    "cells": {
+     "A1": "x"
+    },
+    "v": {
+     "error": "#DIV/0!"
+    },
+    "oracle": true
+   },
+   {
+    "f": "A1+1",
+    "cells": {
+     "A1": "x"
+    },
+    "v": {
+     "error": "#VALUE!"
+    },
+    "oracle": true
+   },
+   {
+    "f": "A1+1",
+    "cells": {},
+    "v": 1,
+    "oracle": true
+   },
+   {
+    "f": "SUM(A1:A3)",
+    "cells": {
+     "A1": 1,
+     "A2": "=1/0",
+     "A3": 3
+    },
+    "v": {
+     "error": "#DIV/0!"
+    },
+    "oracle": true
+   },
+   {
+    "f": "COUNT(A1:A3)",
+    "cells": {
+     "A1": 1,
+     "A2": "=1/0",
+     "A3": 3
+    },
+    "v": 2,
+    "oracle": true
+   },
+   {
+    "f": "IFERROR(A2,-1)",
+    "cells": {
+     "A2": "=1/0"
+    },
+    "v": -1,
+    "oracle": true
+   },
+   {
+    "f": "COUNTIF(A1:A3,\"b*\")",
+    "cells": {
+     "A1": "bed",
+     "A2": "Bath",
+     "A3": "cd"
+    },
+    "v": 2
+   },
+   {
+    "f": "COUNTIF(A1:A3,2)",
+    "cells": {
+     "A1": 1,
+     "A2": 2,
+     "A3": 2
+    },
+    "v": 2,
+    "oracle": true
+   },
+   {
+    "f": "SUMIF(A1:A3,\">1\")",
+    "cells": {
+     "A1": 1,
+     "A2": 2,
+     "A3": 3
+    },
+    "v": 5,
+    "oracle": true
+   },
+   {
+    "f": "MAX(A1:A3)",
+    "cells": {},
+    "v": 0,
+    "oracle": true
+   }
+  ],
+  "spill": [
+   {
+    "cells": {
+     "A1": 1,
+     "A2": 2,
+     "A3": 3
+    },
+    "at": "C1",
+    "formula": "=A1:A3*2",
+    "expected": {
+     "C1": 2,
+     "C2": 4,
+     "C3": 6
+    }
+   },
+   {
+    "cells": {
+     "A1": 1,
+     "A2": 2,
+     "A3": 3,
+     "C2": "blocked"
+    },
+    "at": "C1",
+    "formula": "=A1:A3*2",
+    "expected": {
+     "C1": {
+      "error": "#SPILL!"
+     },
+     "C2": "blocked"
+    }
+   }
+  ]
+ },
+ "graph": {
+  "cells": {
+   "A1": 1,
+   "A2": 2,
+   "B1": "=A1+A2",
+   "C1": "=SUM(A1:B1)"
+  },
+  "precedents": {
+   "B1": [
+    "A1",
+    "A2"
+   ],
+   "C1": [
+    "A1",
+    "B1"
+   ],
+   "A1": []
+  },
+  "dependents": {
+   "A1": [
+    "B1",
+    "C1"
+   ],
+   "B1": [
+    "C1"
+   ],
+   "C1": []
+  },
+  "circular": {
+   "cells": {
+    "A1": "=B1+1",
+    "B1": "=A1+1",
+    "C1": "=A1+1",
+    "D1": "=D1",
+    "E1": 5
+   },
+   "cycle": [
+    "A1",
+    "B1",
+    "D1"
+   ],
+   "values": {
+    "A1": 0,
+    "B1": 0,
+    "C1": 1,
+    "D1": 0
+   }
+  }
+ },
+ "localize": [
+  {
+   "en": "=SUM(B3:B5,1.5)",
+   "de": "=SUMME(B3:B5;1,5)"
+  },
+  {
+   "en": "=COUNTIFS(I2:I141,A11,M2:M141,B$10)",
+   "de": "=ZÄHLENWENNS(I2:I141;A11;M2:M141;B$10)"
+  },
+  {
+   "en": "=IFERROR(XLOOKUP(\"a\",A1:A3,B1:B3),#N/A)",
+   "de": "=WENNFEHLER(XVERWEIS(\"a\";A1:A3;B1:B3);#NV)"
+  },
+  {
+   "en": "=IF(AND(A1>0,OR(TRUE,FALSE)),\"1,5\",0.25)",
+   "de": "=WENN(UND(A1>0;ODER(WAHR;FALSCH));\"1,5\";0,25)"
+  },
+  {
+   "en": "=SUMPRODUCT((A1:A3=\"x\")*B1:B3)",
+   "de": "=SUMMENPRODUKT((A1:A3=\"x\")*B1:B3)"
+  },
+  {
+   "en": "=INDEX(A1:B3,MATCH(2,A1:A3,0),1)+PI()",
+   "de": "=INDEX(A1:B3;VERGLEICH(2;A1:A3;0);1)+PI()"
+  },
+  {
+   "en": "=ROUND(AVERAGE(A1:A3),2)+MIN(A1,2)+MAX(A1,2)+COUNT(A1:A3)+COUNTA(A1:A3)+COUNTIF(A1:A3,\">1\")+SUMIF(A1:A3,\"x\",B1:B3)+SUMIFS(C1:C3,A1:A3,\"x\")",
+   "de": "=RUNDEN(MITTELWERT(A1:A3);2)+MIN(A1;2)+MAX(A1;2)+ANZAHL(A1:A3)+ANZAHL2(A1:A3)+ZÄHLENWENN(A1:A3;\">1\")+SUMMEWENN(A1:A3;\"x\";B1:B3)+SUMMEWENNS(C1:C3;A1:A3;\"x\")"
+  },
+  {
+   "en": "=#REF!+#DIV/0!+#VALUE!+#NAME?+#N/A+#SPILL!",
+   "de": "=#BEZUG!+#DIV/0!+#WERT!+#NAME?+#NV+#ÜBERLAUF!"
+  },
+  {
+   "en": "=SUM('Type A:Type C'!B12)",
+   "de": "=SUMME('Typ A:Typ C'!B12)"
+  },
+  {
+   "en": "=SUM((A1,B2))",
+   "de": "=SUMME((A1;B2))"
+  },
+  {
+   "en": "=1.5E3*theta_i",
+   "de": "=1,5E3*theta_i"
+  },
+  {
+   "en": "=SUMM(1,2)",
+   "de": "=SUMM(1;2)"
+  },
+  {
+   "en": "=Table1[Cost]*2",
+   "de": "=Table1[Cost]*2"
+  },
+  {
+   "en": "=SUM('Type A:Type C'!B12)+Climate!$B$2+Energy!B1+Program!A1",
+   "de": "=SUMME('Typ A:Typ C'!B12)+Klima!$B$2+Energie!B1+Programm!A1"
+  },
+  {
+   "en": "=Sheet1!A1+'Type A'!B3:C4",
+   "de": "=Sheet1!A1+'Typ A'!B3:C4"
+  },
+  {
+   "en": "=ROWS(A1:A3)+COLUMNS(A1:C1)",
+   "de": "=ZEILEN(A1:A3)+SPALTEN(A1:C1)"
+  },
+  {
+   "en": "=COUNTIF(Capsules[Type],A4)",
+   "de": "=ZÄHLENWENN(Kapseln[Typ];A4)"
+  },
+  {
+   "en": "=SUMIF(Capsules[Tower],$A11,Capsules[Net area])",
+   "de": "=SUMMEWENN(Kapseln[Turm];$A11;Kapseln[Nettogrundfläche])"
+  },
+  {
+   "en": "=XLOOKUP(Capsules[@Type],$A$4:$A$7,$C$4:$C$7)",
+   "de": "=XVERWEIS(Kapseln[@Typ];$A$4:$A$7;$C$4:$C$7)"
+  },
+  {
+   "en": "=Capsules[[#This Row],[Type]]",
+   "de": "=Kapseln[[#Diese Zeile];[Typ]]"
+  },
+  {
+   "en": "=ROWS(Capsules[#Headers])",
+   "de": "=ZEILEN(Kapseln[#Kopfzeilen])"
+  },
+  {
+   "en": "=ROWS(Capsules[#All])+ROWS(Capsules[#Data])",
+   "de": "=ZEILEN(Kapseln[#Alle])+ZEILEN(Kapseln[#Daten])"
+  },
+  {
+   "en": "=SUM(Capsules[[Item]:[Net area]])",
+   "de": "=SUMME(Kapseln[[Platz]:[Nettogrundfläche]])"
+  },
+  {
+   "en": "=[@Type]",
+   "de": "=[@Typ]"
+  },
+  {
+   "en": "=ROWS(Capsules)+SUM(Capsules[Net area])",
+   "de": "=ZEILEN(Kapseln)+SUMME(Kapseln[Nettogrundfläche])"
+  },
+  {
+   "en": "=SUM(Table1[Cost])+Capsules[@Type]",
+   "de": "=SUMME(Table1[Cost])+Kapseln[@Typ]"
+  }
+ ],
+ "de_unknown": [
+  {
+   "de": "=SUM(1;2)",
+   "error": "#NAME?"
+  },
+  {
+   "de": "=SUMM(1;2)",
+   "error": "#NAME?"
+  },
+  {
+   "de": "=SUMME(1;2)",
+   "value": 3
+  }
+ ],
+ "errors": {
+  "labels": [
+   [
+    "#DIV/0!",
+    "#DIV/0!"
+   ],
+   [
+    "#REF!",
+    "#BEZUG!"
+   ],
+   [
+    "#NAME?",
+    "#NAME?"
+   ],
+   [
+    "#VALUE!",
+    "#WERT!"
+   ],
+   [
+    "#N/A",
+    "#NV"
+   ],
+   [
+    "#SPILL!",
+    "#ÜBERLAUF!"
+   ],
+   [
+    "#NUM!",
+    "#ZAHL!"
+   ],
+   [
+    "#NULL!",
+    "#NULL!"
+   ]
+  ],
+  "sources": [
+   {
+    "code": "#DIV/0!",
+    "url": "https://support.microsoft.com/de-DE/Excel/how-to-correct-a-div-0-error",
+    "note": "fetched via search result: Microsoft German support page for the error"
+   },
+   {
+    "code": "#BEZUG!, #WERT!, #NV, #ZAHL!",
+    "url": "https://www.weka.ch/themen/finanzen-controlling/controlling/excel-for-finance/article/fehlermeldungen-excel-schnell-erkennen-und-korrekt-handeln/",
+    "note": "German guide, secondary source"
+   },
+   {
+    "code": "#ÜBERLAUF!",
+    "url": "https://support.microsoft.com/de-de/office/dynamic-array-formulas-and-spilled-array-behavior-205c6b06-03ba-4151-89a1-87a7eb36e531",
+    "note": "German name not confirmed in this session; check in the German UI before filming"
+   }
+  ],
+  "propagation": {
+   "cells": {
+    "A1": "=1/0",
+    "B1": "=A1+1",
+    "C1": "=SUM(A1:B1)",
+    "D1": "=IFERROR(C1,-1)",
+    "E1": "=COUNT(A1:B1)"
+   },
+   "expected": {
+    "A1": {
+     "error": "#DIV/0!"
+    },
+    "B1": {
+     "error": "#DIV/0!"
+    },
+    "C1": {
+     "error": "#DIV/0!"
+    },
+    "D1": -1,
+    "E1": 0
+   }
+  }
+ },
+ "display": [
+  {
+   "value": 2.3,
+   "format": "0.00 \"m\"",
+   "en": "2.30 m",
+   "de": "2,30 m"
+  },
+  {
+   "value": 8.74,
+   "format": "0.0 \"m²\"",
+   "en": "8.7 m²",
+   "de": "8,7 m²"
+  },
+  {
+   "value": 1295.5086,
+   "format": "#,##0 \"kWh/a\"",
+   "en": "1,296 kWh/a",
+   "de": "1.296 kWh/a"
+  },
+  {
+   "value": 1234567.891,
+   "format": "#,##0.00",
+   "en": "1,234,567.89",
+   "de": "1.234.567,89",
+   "intl": {
+    "min": 2,
+    "max": 2,
+    "group": true
+   }
+  },
+  {
+   "value": 0.256,
+   "format": "0%",
+   "en": "26%",
+   "de": "26%"
+  },
+  {
+   "value": 0.2564,
+   "format": "0.0%",
+   "en": "25.6%",
+   "de": "25,6%"
+  },
+  {
+   "value": 0.5,
+   "format": "0.00",
+   "en": "0.50",
+   "de": "0,50",
+   "intl": {
+    "min": 2,
+    "max": 2,
+    "group": false
+   }
+  },
+  {
+   "value": 2.5,
+   "format": "0",
+   "en": "3",
+   "de": "3",
+   "intl": {
+    "min": 0,
+    "max": 0,
+    "group": false
+   }
+  },
+  {
+   "value": -2.5,
+   "format": "0",
+   "en": "-3",
+   "de": "-3"
+  },
+  {
+   "value": 0.5,
+   "format": "#.##",
+   "en": ".5",
+   "de": ",5"
+  },
+  {
+   "value": 5,
+   "format": "General",
+   "en": "5",
+   "de": "5"
+  },
+  {
+   "value": 0.25,
+   "format": "General",
+   "en": "0.25",
+   "de": "0,25"
+  },
+  {
+   "value": 25,
+   "format": null,
+   "en": "25",
+   "de": "25"
+  },
+  {
+   "value": -1234.5,
+   "format": "#,##0;(#,##0)",
+   "en": "(1,235)",
+   "de": "(1.235)"
+  },
+  {
+   "value": 0,
+   "format": "0.00;-0.00;\"zero\"",
+   "en": "zero",
+   "de": "zero"
+  },
+  {
+   "value": 1.005,
+   "format": "0.00",
+   "en": "1.01",
+   "de": "1,01"
+  },
+  {
+   "value": 0.0005,
+   "format": "0.00",
+   "en": "0.00",
+   "de": "0,00"
+  },
+  {
+   "value": 12.345,
+   "format": "0.0 \"W/K\"",
+   "en": "12.3 W/K",
+   "de": "12,3 W/K"
+  },
+  {
+   "value": 1585.7,
+   "format": "#,##0 \"K·d\"",
+   "en": "1,586 K·d",
+   "de": "1.586 K·d"
+  },
+  {
+   "value": 149.47757753,
+   "format": "0 \"kWh/(m²·a)\"",
+   "en": "149 kWh/(m²·a)",
+   "de": "149 kWh/(m²·a)"
+  },
+  {
+   "value": "text",
+   "format": "0.00",
+   "en": "text",
+   "de": "text"
+  },
+  {
+   "value": true,
+   "format": null,
+   "en": "TRUE",
+   "de": "WAHR"
+  },
+  {
+   "value": null,
+   "format": "0.00",
+   "en": "",
+   "de": ""
+  },
+  {
+   "error": "#REF!",
+   "format": null,
+   "en": "#REF!",
+   "de": "#BEZUG!"
+  },
+  {
+   "error": "#VALUE!",
+   "format": null,
+   "en": "#VALUE!",
+   "de": "#WERT!"
+  },
+  {
+   "error": "#N/A",
+   "format": null,
+   "en": "#N/A",
+   "de": "#NV"
+  },
+  {
+   "error": "#DIV/0!",
+   "format": null,
+   "en": "#DIV/0!",
+   "de": "#DIV/0!"
+  },
+  {
+   "error": "#NAME?",
+   "format": null,
+   "en": "#NAME?",
+   "de": "#NAME?"
+  },
+  {
+   "error": "#SPILL!",
+   "format": null,
+   "en": "#SPILL!",
+   "de": "#ÜBERLAUF!"
+  },
+  {
+   "value": 182900.76386940194,
+   "format": "#,##0",
+   "en": "182,901",
+   "de": "182.901",
+   "intl": {
+    "min": 0,
+    "max": 0,
+    "group": true
+   }
+  },
+  {
+   "value": 1223.6,
+   "format": "#,##0.0",
+   "en": "1,223.6",
+   "de": "1.223,6",
+   "intl": {
+    "min": 1,
+    "max": 1,
+    "group": true
+   }
+  }
+ ],
+ "events": {
+  "base": {
+   "Data": {
+    "A1": 1,
+    "A2": 2,
+    "A3": 3,
+    "B1": "=A1*2",
+    "B2": "=A2*2",
+    "B3": "=A3*2",
+    "B4": "=SUM(B1:B3)",
+    "C1": "=Other!A1+A1",
+    "D1": "=A2+B1"
+   },
+   "Other": {
+    "A1": 10
+   }
+  },
+  "cases": [
+   {
+    "id": "fill-down",
+    "events": [
+     {
+      "type": "clear-cell",
+      "sheet": "Data",
+      "cell": "B2"
+     },
+     {
+      "type": "clear-cell",
+      "sheet": "Data",
+      "cell": "B3"
+     },
+     {
+      "type": "copy",
+      "sheet": "Data",
+      "source": "B1",
+      "target": "B2:B3"
+     }
+    ],
+    "formulas": {
+     "Data!B2": "=A2*2",
+     "Data!B3": "=A3*2"
+    },
+    "values": {
+     "Data!B4": 12
+    }
+   },
+   {
+    "id": "copy-block-tiles",
+    "events": [
+     {
+      "type": "copy",
+      "sheet": "Data",
+      "source": "A1:A2",
+      "target": "F1:F5"
+     }
+    ],
+    "values": {
+     "Data!F1": 1,
+     "Data!F2": 2,
+     "Data!F3": 1,
+     "Data!F4": 2,
+     "Data!F5": 1
+    }
+   },
+   {
+    "id": "copy-across-sheets",
+    "events": [
+     {
+      "type": "copy",
+      "source": "Data!B1",
+      "target": "Other!B5"
+     }
+    ],
+    "formulas": {
+     "Other!B5": "=A5*2"
+    }
+   },
+   {
+    "id": "insert-row",
+    "events": [
+     {
+      "type": "insert-row",
+      "sheet": "Data",
+      "index": 2
+     }
+    ],
+    "formulas": {
+     "Data!B1": "=A1*2",
+     "Data!B3": "=A3*2",
+     "Data!B4": "=A4*2",
+     "Data!B5": "=SUM(B1:B4)",
+     "Data!D1": "=A3+B1"
+    },
+    "absent": [
+     "Data!A2",
+     "Data!B2"
+    ],
+    "values": {
+     "Data!A3": 2,
+     "Data!B5": 12
+    }
+   },
+   {
+    "id": "delete-row",
+    "events": [
+     {
+      "type": "delete-row",
+      "sheet": "Data",
+      "index": 2
+     }
+    ],
+    "formulas": {
+     "Data!B2": "=A2*2",
+     "Data!B3": "=SUM(B1:B2)",
+     "Data!D1": "=#REF!+B1"
+    },
+    "values": {
+     "Data!D1": {
+      "error": "#REF!"
+     },
+     "Data!B3": 8
+    }
+   },
+   {
+    "id": "insert-column",
+    "events": [
+     {
+      "type": "insert-column",
+      "sheet": "Data",
+      "index": 2
+     }
+    ],
+    "formulas": {
+     "Data!C1": "=A1*2",
+     "Data!C4": "=SUM(C1:C3)",
+     "Data!E1": "=A2+C1",
+     "Data!D1": "=Other!A1+A1"
+    },
+    "absent": [
+     "Data!B1"
+    ]
+   },
+   {
+    "id": "delete-column",
+    "events": [
+     {
+      "type": "delete-column",
+      "sheet": "Data",
+      "index": 2
+     }
+    ],
+    "formulas": {
+     "Data!B1": "=Other!A1+A1",
+     "Data!C1": "=A2+#REF!"
+    },
+    "values": {
+     "Data!B1": 11,
+     "Data!C1": {
+      "error": "#REF!"
+     }
+    }
+   },
+   {
+    "id": "rename-sheet",
+    "events": [
+     {
+      "type": "rename-sheet",
+      "sheet": "Other",
+      "name": "Sheet B"
+     }
+    ],
+    "formulas": {
+     "Data!C1": "='Sheet B'!A1+A1"
+    },
+    "values": {
+     "Data!C1": 11
+    }
+   },
+   {
+    "id": "rename-sheet-plain",
+    "events": [
+     {
+      "type": "rename-sheet",
+      "sheet": "Other",
+      "name": "Aussen"
+     }
+    ],
+    "formulas": {
+     "Data!C1": "=Aussen!A1+A1"
+    }
+   },
+   {
+    "id": "delete-sheet",
+    "events": [
+     {
+      "type": "delete-sheet",
+      "sheet": "Other"
+     }
+    ],
+    "formulas": {
+     "Data!C1": "=#REF!+A1"
+    },
+    "values": {
+     "Data!C1": {
+      "error": "#REF!"
+     }
+    }
+   },
+   {
+    "id": "set-constant",
+    "events": [
+     {
+      "type": "set-cell",
+      "sheet": "Data",
+      "cell": "A1",
+      "value": 5
+     }
+    ],
+    "values": {
+     "Data!B1": 10,
+     "Data!C1": 15,
+     "Data!B4": 20
+    }
+   },
+   {
+    "id": "set-formula",
+    "events": [
+     {
+      "type": "set-cell",
+      "sheet": "Data",
+      "cell": "A1",
+      "formula": "=A2*10"
+     }
+    ],
+    "values": {
+     "Data!B1": 40
+    }
+   },
+   {
+    "id": "clear-cell",
+    "events": [
+     {
+      "type": "clear-cell",
+      "sheet": "Data",
+      "cell": "A1"
+     }
+    ],
+    "values": {
+     "Data!B1": 0,
+     "Data!C1": 10
+    },
+    "absent": [
+     "Data!A1"
+    ]
+   },
+   {
+    "id": "paste-values",
+    "events": [
+     {
+      "type": "paste-values",
+      "sheet": "Data",
+      "range": "B1:B3"
+     },
+     {
+      "type": "set-cell",
+      "sheet": "Data",
+      "cell": "A1",
+      "value": 100
+     }
+    ],
+    "constants": [
+     "Data!B1",
+     "Data!B2"
+    ],
+    "values": {
+     "Data!B1": 2,
+     "Data!B4": 12
+    }
+   },
+   {
+    "id": "define-name",
+    "events": [
+     {
+      "type": "define-name",
+      "name": "rate",
+      "ref": "Data!$A$1"
+     },
+     {
+      "type": "set-cell",
+      "sheet": "Data",
+      "cell": "E1",
+      "formula": "=rate*2"
+     }
+    ],
+    "values": {
+     "Data!E1": 2
+    }
+   },
+   {
+    "id": "add-sheet",
+    "events": [
+     {
+      "type": "add-sheet",
+      "name": "New",
+      "index": 1
+     },
+     {
+      "type": "set-cell",
+      "sheet": "New",
+      "cell": "A1",
+      "formula": "=Data!A1+1"
+     }
+    ],
+    "values": {
+     "New!A1": 2
+    },
+    "order": [
+     "Data",
+     "New",
+     "Other"
+    ]
+   }
+  ],
+  "three_d": {
+   "base": {
+    "Sum": {
+     "A1": "=SUM(North:South!A1)"
+    },
+    "North": {
+     "A1": 1
+    },
+    "Mid": {
+     "A1": 2
+    },
+    "South": {
+     "A1": 3
+    },
+    "Extra": {
+     "A1": 4
+    }
+   },
+   "cases": [
+    {
+     "id": "initial",
+     "events": [],
+     "formulas": {
+      "Sum!A1": "=SUM(North:South!A1)"
+     },
+     "values": {
+      "Sum!A1": 6
+     }
+    },
+    {
+     "id": "delete-end",
+     "events": [
+      {
+       "type": "delete-sheet",
+       "sheet": "South"
+      }
+     ],
+     "formulas": {
+      "Sum!A1": "=SUM(North:Mid!A1)"
+     },
+     "values": {
+      "Sum!A1": 3
+     }
+    },
+    {
+     "id": "delete-start",
+     "events": [
+      {
+       "type": "delete-sheet",
+       "sheet": "North"
+      }
+     ],
+     "formulas": {
+      "Sum!A1": "=SUM(Mid:South!A1)"
+     },
+     "values": {
+      "Sum!A1": 5
+     }
+    },
+    {
+     "id": "delete-middle",
+     "events": [
+      {
+       "type": "delete-sheet",
+       "sheet": "Mid"
+      }
+     ],
+     "formulas": {
+      "Sum!A1": "=SUM(North:South!A1)"
+     },
+     "values": {
+      "Sum!A1": 4
+     }
+    },
+    {
+     "id": "move-middle-out",
+     "events": [
+      {
+       "type": "move-sheet",
+       "sheet": "Mid",
+       "index": 4
+      }
+     ],
+     "formulas": {
+      "Sum!A1": "=SUM(North:South!A1)"
+     },
+     "values": {
+      "Sum!A1": 4
+     },
+     "order": [
+      "Sum",
+      "North",
+      "South",
+      "Extra",
+      "Mid"
+     ]
+    },
+    {
+     "id": "move-end-out",
+     "events": [
+      {
+       "type": "move-sheet",
+       "sheet": "South",
+       "index": 0
+      }
+     ],
+     "formulas": {
+      "Sum!A1": "=SUM(North:Mid!A1)"
+     },
+     "values": {
+      "Sum!A1": 3
+     }
+    },
+    {
+     "id": "move-outsider-in",
+     "events": [
+      {
+       "type": "move-sheet",
+       "sheet": "Extra",
+       "index": 2
+      }
+     ],
+     "formulas": {
+      "Sum!A1": "=SUM(North:South!A1)"
+     },
+     "values": {
+      "Sum!A1": 10
+     }
+    },
+    {
+     "id": "rename-end",
+     "events": [
+      {
+       "type": "rename-sheet",
+       "sheet": "South",
+       "name": "Far South"
+      }
+     ],
+     "formulas": {
+      "Sum!A1": "=SUM('North:Far South'!A1)"
+     },
+     "values": {
+      "Sum!A1": 6
+     }
+    }
+   ]
+  }
+ },
+ "workbook": {
+  "sheets": [
+   "Program",
+   "Type A",
+   "Type B",
+   "Type C",
+   "Type D",
+   "Climate",
+   "Energy"
+  ],
+  "values": {
+   "Program!B4": 36,
+   "Program!B5": 35,
+   "Program!B6": 34,
+   "Program!B7": 35,
+   "Program!B8": 140,
+   "Program!B13": 36,
+   "Program!C13": 35,
+   "Program!D13": 34,
+   "Program!E13": 35,
+   "Program!D8": 1223.6,
+   "Program!B16": 1223.6,
+   "Program!B15": 8.74,
+   "Program!C15": 34,
+   "Type A!B9": 8.74,
+   "Type A!B10": 18.354,
+   "Type A!B14": 1295.5086014734209,
+   "Type C!B14": 1340.4956503888034,
+   "Climate!B5": 1585.7,
+   "Energy!D8": 182900.76386940194,
+   "Energy!F8": 149.47757753301894,
+   "Energy!B16": 2746.9579443405996
+  },
+  "display": {
+   "Type A!B2": {
+    "en": "2.50 m",
+    "de": "2,50 m"
+   },
+   "Type A!B9": {
+    "en": "8.7 m²",
+    "de": "8,7 m²"
+   },
+   "Type A!B14": {
+    "en": "1,296 kWh/a",
+    "de": "1.296 kWh/a"
+   },
+   "Climate!B5": {
+    "en": "1,586 K·d",
+    "de": "1.586 K·d"
+   },
+   "Type A!A9": {
+    "en": "Net floor area",
+    "de": "Nettogrundfläche"
+   },
+   "Program!A15": {
+    "en": "Type C",
+    "de": "Typ C"
+   },
+   "Program!A4": {
+    "en": "Type A",
+    "de": "Typ A"
+   },
+   "Program!D10": {
+    "en": "Type C",
+    "de": "Typ C"
+   },
+   "Energy!A7": {
+    "en": "Type D",
+    "de": "Typ D"
+   },
+   "Program!M2": {
+    "en": "Type A",
+    "de": "Typ A"
+   },
+   "Program!K2": {
+    "en": "N",
+    "de": "N"
+   },
+   "Program!A12": {
+    "en": "B",
+    "de": "B"
+   },
+   "Energy!D8": {
+    "en": "182,901 kWh/a",
+    "de": "182.901 kWh/a"
+   },
+   "Program!D8": {
+    "en": "1,223.6 m²",
+    "de": "1.223,6 m²"
+   },
+   "Program!E8": {
+    "en": "2,569.6 m³",
+    "de": "2.569,6 m³"
+   },
+   "Energy!E8": {
+    "en": "1,223.6 m²",
+    "de": "1.223,6 m²"
+   },
+   "Program!B16": {
+    "en": "1,223.6 m²",
+    "de": "1.223,6 m²"
+   },
+   "Program!D4": {
+    "en": "314.6 m²",
+    "de": "314,6 m²"
+   },
+   "Program!C3": {
+    "en": "Area",
+    "de": "Nettogrundfläche"
+   },
+   "Program!A16": {
+    "en": "Total area",
+    "de": "Gesamte Nettogrundfläche"
+   },
+   "Type A!A16": {
+    "en": "Free floor area",
+    "de": "Freie Fläche"
+   },
+   "Energy!E3": {
+    "en": "Net area",
+    "de": "Nettogrundfläche"
+   }
+  },
+  "formula_bar": {
+   "Program!B4": {
+    "en": "=COUNTIF(Capsules[Type],A4)",
+    "de": "=ZÄHLENWENN(Kapseln[Typ];A4)"
+   },
+   "Energy!B16": {
+    "en": "=SUM('Type A:Type D'!B13)",
+    "de": "=SUMME('Typ A:Typ D'!B13)"
+   },
+   "Program!C4": {
+    "en": "='Type A'!B9",
+    "de": "='Typ A'!B9"
+   },
+   "Program!B15": {
+    "en": "=XLOOKUP(A15,$A$4:$A$7,$C$4:$C$7)",
+    "de": "=XVERWEIS(A15;$A$4:$A$7;$C$4:$C$7)"
+   },
+   "Type B!E6": {
+    "en": "=u_wall",
+    "de": "=u_wall"
+   },
+   "Energy!B4": {
+    "en": "=Program!B4",
+    "de": "=Programm!B4"
+   },
+   "Type A!B13": {
+    "en": "=(B11+B12)*(theta_i-theta_e)",
+    "de": "=(B11+B12)*(theta_i-theta_e)"
+   },
+   "Type A!B14": {
+    "en": "=(B11+B12)*heating_degree_days*24/1000",
+    "de": "=(B11+B12)*heating_degree_days*24/1000"
+   },
+   "Program!N2": {
+    "en": "=XLOOKUP([@Type],$A$4:$A$7,$C$4:$C$7)",
+    "de": "=XVERWEIS([@Typ];$A$4:$A$7;$C$4:$C$7)"
+   },
+   "Program!H2": {
+    "en": "=[@Tower]&\"-\"&IF([@Storey]<10,\"0\",\"\")&[@Storey]&\"-\"&[@Facade]&\"-\"&[@Item]",
+    "de": "=[@Turm]&\"-\"&WENN([@Geschoss]<10;\"0\";\"\")&[@Geschoss]&\"-\"&[@Fassade]&\"-\"&[@Platz]"
+   },
+   "Program!F11": {
+    "en": "=SUMIF(Capsules[Tower],$A11,Capsules[Net area])",
+    "de": "=SUMMEWENN(Kapseln[Turm];$A11;Kapseln[Nettogrundfläche])"
+   },
+   "Program!B18": {
+    "en": "=AND(B8=ROWS(Capsules[Type]),B8=B17)",
+    "de": "=UND(B8=ZEILEN(Kapseln[Typ]);B8=B17)"
+   }
+  },
+  "fill_down": [
+   {
+    "sheet": "Program",
+    "source": "B4",
+    "targets": [
+     "B5",
+     "B6",
+     "B7"
+    ]
+   },
+   {
+    "sheet": "Program",
+    "source": "D4",
+    "targets": [
+     "D5",
+     "D6",
+     "D7"
+    ]
+   },
+   {
+    "sheet": "Program",
+    "source": "N2",
+    "targets": [
+     "N3",
+     "N60",
+     "N141"
+    ]
+   },
+   {
+    "sheet": "Energy",
+    "source": "F4",
+    "targets": [
+     "F5",
+     "F6",
+     "F7"
+    ]
+   },
+   {
+    "sheet": "Type A",
+    "source": "F3",
+    "targets": [
+     "F4",
+     "F5",
+     "F6",
+     "F7",
+     "F8"
+    ]
+   }
+  ],
+  "tabs": {
+   "Program": {
+    "en": "Program",
+    "de": "Programm"
+   },
+   "Type A": {
+    "en": "Type A",
+    "de": "Typ A"
+   },
+   "Type B": {
+    "en": "Type B",
+    "de": "Typ B"
+   },
+   "Type C": {
+    "en": "Type C",
+    "de": "Typ C"
+   },
+   "Type D": {
+    "en": "Type D",
+    "de": "Typ D"
+   },
+   "Climate": {
+    "en": "Climate",
+    "de": "Klima"
+   },
+   "Energy": {
+    "en": "Energy",
+    "de": "Energie"
+   }
+  },
+  "layout": {
+   "important_columns": "ABCDEFG",
+   "important_rows": 30,
+   "list_columns": "HIJKLMN"
+  },
+  "precedents": {
+   "Program!B4": [
+    "Program!A4",
+    "Program!M2:M141"
+   ],
+   "Energy!B16": [
+    "Type A!B13",
+    "Type B!B13",
+    "Type C!B13",
+    "Type D!B13"
+   ]
+  },
+  "dependents_of": {
+   "Climate!B2": [
+    "Type A!B13",
+    "Type B!B13",
+    "Type C!B13",
+    "Type D!B13"
+   ]
+  },
+  "tables": {
+   "Capsules": {
+    "en": "Capsules",
+    "de": "Kapseln"
+   }
+  }
+ },
+ "tables": {
+  "sheet": "S",
+  "table": {
+   "name": "Capsules",
+   "ref": "A1:D4"
+  },
+  "cells": {
+   "A1": "Type",
+   "B1": "Area",
+   "C1": "Tower",
+   "D1": "Calc",
+   "A2": "A",
+   "B2": 1,
+   "C2": "x",
+   "D2": "=Capsules[@Area]*2",
+   "A3": "B",
+   "B3": 2,
+   "C3": "y",
+   "D3": "=Capsules[[#This Row],[Area]]+1",
+   "A4": "A",
+   "B4": 3,
+   "C4": "x",
+   "D4": "=[@Area]*[@Area]"
+  },
+  "rows": {
+   "D2": 2,
+   "D3": 3,
+   "D4": 9
+  },
+  "formulas": [
+   {
+    "f": "COUNTIF(Capsules[Type],\"A\")",
+    "v": 2,
+    "oracle": true
+   },
+   {
+    "f": "SUM(Capsules[Area])",
+    "v": 6,
+    "oracle": true
+   },
+   {
+    "f": "SUM(Capsules[Calc])",
+    "v": 14,
+    "oracle": true
+   },
+   {
+    "f": "ROWS(Capsules[Type])",
+    "v": 3,
+    "oracle": true
+   },
+   {
+    "f": "ROWS(Capsules[#All])",
+    "v": 4,
+    "oracle": true
+   },
+   {
+    "f": "ROWS(Capsules[#Data])",
+    "v": 3,
+    "oracle": true
+   },
+   {
+    "f": "ROWS(Capsules[#Headers])",
+    "v": 1,
+    "oracle": true
+   },
+   {
+    "f": "COLUMNS(Capsules[#All])",
+    "v": 4,
+    "oracle": true
+   },
+   {
+    "f": "INDEX(Capsules[#Headers],1,2)",
+    "v": "Area",
+    "oracle": true
+   },
+   {
+    "f": "SUMPRODUCT((Capsules[Type]=\"A\")*Capsules[Area])",
+    "v": 4,
+    "oracle": true
+   },
+   {
+    "f": "XLOOKUP(\"B\",Capsules[Type],Capsules[Area])",
+    "v": 2,
+    "oracle": true
+   },
+   {
+    "f": "COUNTIFS(Capsules[Type],\"A\",Capsules[Tower],\"x\")",
+    "v": 2,
+    "oracle": true
+   },
+   {
+    "f": "SUMIF(Capsules[Type],\"A\",Capsules[Area])",
+    "v": 4,
+    "oracle": true
+   },
+   {
+    "f": "SUM(Capsules[[Area]:[Calc]])",
+    "v": 20,
+    "oracle": true
+   },
+   {
+    "f": "SUM(Capsules)",
+    "v": 20
+   },
+   {
+    "f": "ROWS(Capsules[Missing])",
+    "v": {
+     "error": "#REF!"
+    }
+   },
+   {
+    "f": "ROWS(Nope[Type])",
+    "v": {
+     "error": "#NAME?"
+    }
+   },
+   {
+    "f": "SUM(Capsules[@Area])",
+    "v": {
+     "error": "#VALUE!"
+    }
+   },
+   {
+    "f": "SUM([@Area])",
+    "v": {
+     "error": "#NAME?"
+    }
+   }
+  ],
+  "dependencies": {
+   "precedents": {
+    "D2": [
+     "B2"
+    ],
+    "D3": [
+     "B3"
+    ],
+    "D4": [
+     "B4"
+    ]
+   },
+   "formula_precedents": {
+    "f": "SUM(Capsules[Calc])",
+    "cells": [
+     "D2",
+     "D3",
+     "D4"
+    ]
+   },
+   "dependents": {
+    "B2": [
+     "D2"
+    ],
+    "D4": []
+   }
+  },
+  "spans": {
+   "formula": "=COUNTIF(Capsules[Type],\"A\")+Capsules[[#This Row],[Area]]",
+   "host": "D2",
+   "texts": [
+    "Capsules[Type]",
+    "Capsules[[#This Row],[Area]]"
+   ],
+   "ranges": [
+    "S!A2:A4",
+    "S!B2:B2"
+   ]
+  },
+  "events": [
+   {
+    "id": "insert-row-inside",
+    "events": [
+     {
+      "type": "insert-row",
+      "sheet": "S",
+      "index": 3
+     }
+    ],
+    "values": {
+     "S!F14": 4,
+     "S!F12": 6,
+     "S!D4": 3
+    },
+    "tables": {
+     "Capsules": {
+      "row": 1,
+      "col": 1,
+      "nrows": 4
+     }
+    }
+   },
+   {
+    "id": "insert-row-above",
+    "events": [
+     {
+      "type": "insert-row",
+      "sheet": "S",
+      "index": 1
+     }
+    ],
+    "values": {
+     "S!F14": 3,
+     "S!F12": 6
+    },
+    "tables": {
+     "Capsules": {
+      "row": 2,
+      "col": 1,
+      "nrows": 3
+     }
+    }
+   },
+   {
+    "id": "delete-row-inside",
+    "events": [
+     {
+      "type": "delete-row",
+      "sheet": "S",
+      "index": 2
+     }
+    ],
+    "values": {
+     "S!F12": 2,
+     "S!F10": 5
+    },
+    "tables": {
+     "Capsules": {
+      "row": 1,
+      "col": 1,
+      "nrows": 2
+     }
+    }
+   },
+   {
+    "id": "delete-header-row",
+    "events": [
+     {
+      "type": "delete-row",
+      "sheet": "S",
+      "index": 1
+     }
+    ],
+    "values": {
+     "S!F12": {
+      "error": "#NAME?"
+     }
+    },
+    "tables": {}
+   },
+   {
+    "id": "insert-column-before",
+    "events": [
+     {
+      "type": "insert-column",
+      "sheet": "S",
+      "index": 1
+     }
+    ],
+    "values": {
+     "S!G13": 3,
+     "S!G11": 6
+    },
+    "tables": {
+     "Capsules": {
+      "row": 1,
+      "col": 2,
+      "nrows": 3
+     }
+    }
+   },
+   {
+    "id": "delete-column-inside",
+    "events": [
+     {
+      "type": "delete-column",
+      "sheet": "S",
+      "index": 2
+     }
+    ],
+    "values": {
+     "S!E13": 3,
+     "S!E11": {
+      "error": "#REF!"
+     }
+    },
+    "tables": {
+     "Capsules": {
+      "row": 1,
+      "col": 1,
+      "nrows": 3
+     }
+    },
+    "headers": 3
+   },
+   {
+    "id": "rename-sheet",
+    "events": [
+     {
+      "type": "rename-sheet",
+      "sheet": "S",
+      "name": "T"
+     }
+    ],
+    "values": {
+     "T!F13": 3,
+     "T!F11": 6
+    },
+    "tables": {
+     "Capsules": {
+      "row": 1,
+      "col": 1,
+      "nrows": 3
+     }
+    }
+   },
+   {
+    "id": "delete-table",
+    "events": [
+     {
+      "type": "delete-table",
+      "name": "Capsules"
+     }
+    ],
+    "values": {
+     "S!F13": {
+      "error": "#NAME?"
+     }
+    },
+    "tables": {}
+   }
+  ]
+ }
+}

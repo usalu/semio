@@ -1,0 +1,321 @@
+{
+  "version": 1,
+  "approved_register": {
+    "x": 3.0617169486516618,
+    "y_start": 8.98,
+    "y_end": 10.152239499262112,
+    "plan_uncertainty": 0.15,
+    "head": 2.43
+  },
+  "type_fields": {
+    "name": {
+      "en": "Roof solarium timber leaf with translucent metal-framed surround",
+      "de": "Dachsolarium-Holzblatt mit lichtstreuender Metallrahmung"
+    },
+    "material": "LS-DOOR-LEAF",
+    "filling": {
+      "frame_width": {
+        "value": 0.025,
+        "unit": "m",
+        "basis": "inferred",
+        "source": "SAB2024-p206 matching entrance metal-profile family; exact section unmeasured"
+      },
+      "frame_depth": {
+        "value": 0.04,
+        "unit": "m",
+        "basis": "inferred",
+        "source": "SAB2024-p206 matching entrance metal-profile family; exact section unmeasured"
+      },
+      "panel_thickness": {
+        "value": 0.035,
+        "unit": "m",
+        "basis": "inferred",
+        "source": "SAB2024-p203 general timber family; roof leaf section unmeasured"
+      },
+      "frame_material": "MAT-METAL",
+      "panel_material": "LS-DOOR-LEAF",
+      "inset": {
+        "value": 0.21,
+        "unit": "m",
+        "basis": "inferred",
+        "source": "Inner-face flush placement in inferred250mm enclosure; exact historic recess unmeasured"
+      },
+      "threshold": false,
+      "operation": "mixed",
+      "panel_layout": {
+        "member_width": {
+          "value": 0.025,
+          "unit": "m",
+          "basis": "inferred",
+          "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+        },
+        "cells": [
+          {
+            "tag": "SIDE-L-LOW",
+            "u": [
+              {
+                "value": 0,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              },
+              {
+                "value": 0.2,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              }
+            ],
+            "v": [
+              {
+                "value": 0,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              },
+              {
+                "value": 0.528,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              }
+            ],
+            "material": "MAT-TEXTURED-GLASS",
+            "thickness": {
+              "value": 0.004,
+              "unit": "m",
+              "basis": "inferred",
+              "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+            },
+            "operation": "fixed"
+          },
+          {
+            "tag": "SIDE-L-HIGH",
+            "u": [
+              {
+                "value": 0,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              },
+              {
+                "value": 0.2,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              }
+            ],
+            "v": [
+              {
+                "value": 0.528,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              },
+              {
+                "value": 0.88,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              }
+            ],
+            "material": "MAT-TEXTURED-GLASS",
+            "thickness": {
+              "value": 0.004,
+              "unit": "m",
+              "basis": "inferred",
+              "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+            },
+            "operation": "fixed"
+          },
+          {
+            "tag": "LEAF",
+            "u": [
+              {
+                "value": 0.2,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              },
+              {
+                "value": 0.8,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              }
+            ],
+            "v": [
+              {
+                "value": 0,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              },
+              {
+                "value": 0.88,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              }
+            ],
+            "material": "LS-DOOR-LEAF",
+            "thickness": {
+              "value": 0.035,
+              "unit": "m",
+              "basis": "inferred",
+              "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+            },
+            "operation": "swing"
+          },
+          {
+            "tag": "SIDE-R-LOW",
+            "u": [
+              {
+                "value": 0.8,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              },
+              {
+                "value": 1,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              }
+            ],
+            "v": [
+              {
+                "value": 0,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              },
+              {
+                "value": 0.528,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              }
+            ],
+            "material": "MAT-TEXTURED-GLASS",
+            "thickness": {
+              "value": 0.004,
+              "unit": "m",
+              "basis": "inferred",
+              "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+            },
+            "operation": "fixed"
+          },
+          {
+            "tag": "SIDE-R-HIGH",
+            "u": [
+              {
+                "value": 0.8,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              },
+              {
+                "value": 1,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              }
+            ],
+            "v": [
+              {
+                "value": 0.528,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              },
+              {
+                "value": 0.88,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              }
+            ],
+            "material": "MAT-TEXTURED-GLASS",
+            "thickness": {
+              "value": 0.004,
+              "unit": "m",
+              "basis": "inferred",
+              "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+            },
+            "operation": "fixed"
+          },
+          {
+            "tag": "TRANSOM",
+            "u": [
+              {
+                "value": 0,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              },
+              {
+                "value": 1,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              }
+            ],
+            "v": [
+              {
+                "value": 0.88,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              },
+              {
+                "value": 1,
+                "unit": "1",
+                "basis": "inferred",
+                "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+              }
+            ],
+            "material": "MAT-TEXTURED-GLASS",
+            "thickness": {
+              "value": 0.004,
+              "unit": "m",
+              "basis": "inferred",
+              "source": "SAB2024-p207 modern-photo coarse layout; original dimensions unmeasured"
+            },
+            "operation": "fixed"
+          }
+        ]
+      },
+      "core_edge_width": {
+        "value": 0.04,
+        "unit": "m",
+        "basis": "inferred",
+        "source": "SAB2024-p203 timber family edge batten inference; roof application unmeasured"
+      },
+      "core_edge_material": "MAT-WOOD"
+    },
+    "psets": {
+      "Pset_DoorCommon": {
+        "IsExternal": {
+          "value": true,
+          "ifc_type": "IfcBoolean",
+          "basis": "sourced",
+          "source": "SAB2024-p206 exterior solarium wooden leaf"
+        },
+        "FireRating": {
+          "value": "NOT_ASSESSED",
+          "ifc_type": "IfcLabel",
+          "basis": "assumed"
+        }
+      },
+      "Pset_HistoricalEvidence": {
+        "Construction": {
+          "value": "SAB2024 p206 identifies the exterior solarium wooden leaf within translucent glass held by the same metal-profile family as the entrance. Modern-restoration photograph p207 figure11 supports a central opaque leaf, split sidelights on both sides and a full-width transom. Coarse20/60/20 widths and88percent leaf height are inferred, not original measurements; swing direction is unresolved. The35mm five/25/five timber-skin and hollow-batten family is inferred for this roof leaf from the general p203 timber construction, not individually measured.",
+          "ifc_type": "IfcText",
+          "basis": "inferred",
+          "source": "SAB2024-p206; p207-figure11 modern Jorge Ramos photograph"
+        }
+      }
+    }
+  }
+}

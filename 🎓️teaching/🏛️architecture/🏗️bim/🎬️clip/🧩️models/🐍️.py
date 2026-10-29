@@ -1,5 +1,6 @@
 """🎬 Models Share a Schema: three discipline models of the Villa Savoye on one IFC schema, federated, checked and translated into a structural analysis model."""
 
+import copy
 import importlib
 import re
 import sys
@@ -15,10 +16,9 @@ if str(_WORKSPACE_ROOT) not in sys.path:
 _visuals = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🐍️")
 _drafting = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.🐍️")
 _panels = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🧾️panels.🐍️")
-_sheet = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.📏️sheet.🐍️")
-_plan = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.📋️plan.🐍️")
 _fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 _model = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️")
+_sheet = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.📏️sheet.🐍️")
 _engine = importlib.import_module("manim")
 
 INK, MUTED, ARCH, STRUCT, SERV = _visuals.INK, _visuals.MUTED, _visuals.ARCH, _visuals.STRUCT, _visuals.SERV
@@ -38,19 +38,21 @@ RIGHT = 3.55
 LEFT_PLAN = np.array([-3.3, 0.0, 0.0])
 SPACE_ORDER = ("ground", "first", "roof")
 HEADINGS = {
-    "whole": ("Villa Savoye · one building", "Villa Savoye · ein Gebäude"), "architecture": ("Architecture model · 28 objects", "Architekturmodell · 28 Objekte"),
+    "whole": ("Villa Savoye · one building", "Villa Savoye · ein Gebäude"), "architecture": ("Architecture model · {architecture} objects", "Architekturmodell · {architecture} Objekte"),
     "rooms": ("Rooms · IfcSpace per storey", "Räume · IfcSpace je Geschoss"), "buildup": ("Wall build-up · plan cut", "Wandaufbau · Grundrissschnitt"),
-    "structure": ("Structure model · 33 objects", "Tragwerksmodell · 33 Objekte"), "services": ("Services model · 13 objects", "Haustechnikmodell · 13 Objekte"),
-    "schema": ("One schema · 13 classes", "Ein Schema · 13 Klassen"), "federation": ("Federation · one origin, one GlobalId", "Koordination · ein Ursprung, eine GlobalId"),
+    "structure": ("Structure model · {structure} objects", "Tragwerksmodell · {structure} Objekte"), "services": ("Services model · {services} objects", "Haustechnikmodell · {services} Objekte"),
+    "schema": ("One schema · {classes} classes", "Ein Schema · {classes} Klassen"), "federation": ("Federation · one origin, one GlobalId", "Koordination · ein Ursprung, eine GlobalId"),
     "slab": ("One slab · one GlobalId", "Eine Decke · eine GlobalId"), "owners": ("Ground floor · who draws what", "Erdgeschoss · wer zeichnet was"),
     "check": ("Clash check · clearance", "Kollisionsprüfung · Abstand"), "translation": ("Translation · structure to analysis", "Übersetzung · Tragwerk zur Analyse"),
-    "members": ("Analysis mesh on the slab", "Analysenetz auf der Decke"), "midsurface": ("Mid-surface · section at C3", "Mittelfläche · Schnitt bei C3"),
-    "supports": ("Supports · piloti feet", "Lagerung · Pilotifüße"), "loads": ("Loads · q builds up", "Lasten · q baut sich auf"),
-    "loss": ("Losses · what is not kept", "Verluste · was nicht erhalten bleibt"), "properties": ("Piloti C3 · kept and dropped", "Piloti C3 · erhalten und verworfen"),
+    "members": ("Analysis mesh on the slab", "Analysenetz auf der Decke"), "midsurface": ("Mid-surface · section at 19", "Mittelfläche · Schnitt bei 19"),
+    "supports": ("Supports · selected births", "Lagerung · gewählte Stützenanfänge"), "loads": ("Loads · q builds up", "Lasten · q baut sich auf"),
+    "loss": ("Losses · what is not kept", "Verluste · was nicht erhalten bleibt"), "properties": ("Piloti 19 · kept and dropped", "Piloti 19 · erhalten und verworfen"),
     "trace": ("Trace · source GlobalId", "Rückverfolgung · Quell-GlobalId")}
 KIND_NAMES = {
     "IfcWindow:element": ("Window", "Fenster"), "IfcOpeningElement:element": ("Opening", "Öffnung"), "IfcWall.STANDARD:element": ("Wall", "Wand"),
     "IfcWall.STANDARD:material.layer.render": ("Render", "Putz"), "IfcCurtainWall:element": ("Glass", "Glas"), "IfcWall.SOLIDWALL:element": ("Screen", "Schirm"),
+    "IfcDoor:element": ("Door", "Tür"), "IfcStair:element": ("Stair", "Treppe"), "IfcRailing:element": ("Guardrail", "Geländer"),
+    "IfcFurnishingElement:element": ("Furniture", "Möbel"), "IfcBuildingElementProxy:element": ("Shelter", "Überdachung"),
     "IfcRamp:element": ("Ramp", "Rampe"), "IfcRampFlight:element": ("Flight", "Lauf"), "IfcSpace:element": ("Space", "Raum"), "IfcSlab.ROOF:element": ("Roof", "Dach"),
     "IfcSlab.FLOOR:voids": ("Void", "Loch"), "IfcColumn:Pset_ColumnCommon.FireRating": ("Fire", "Feuer"), "IfcColumn:Pset_ColumnCommon.IsExternal": ("External", "Außen")}
 STAR = "*"
@@ -63,26 +65,26 @@ class Beat4_PartialModels(_visuals.ClipScene):
     TITLE = {"en": "Models Share a Schema", "de": "Modelle teilen ein Schema"}
     NARRATION = [
         ["whole",
-         "Different disciplines organize the building information they need.",
-         "Verschiedene Fachrichtungen ordnen die Bauwerksinformation, die sie brauchen."],
+         "Different disciplines organize the information they need about the reconstructed original house of 1930–1931.",
+         "Verschiedene Fachrichtungen ordnen die benötigte Information zum rekonstruierten ursprünglichen Haus von 1930–1931."],
         ["architecture",
-         "The architecture model holds walls, openings, windows, ramp, curved glass wall, slabs and rooms.",
-         "Das Architekturmodell enthält Wände, Öffnungen, Fenster, Rampe, gebogene Glaswand, Decken und Räume."],
+         "The architecture model retains rooms, entrance construction, the roof stair enclosure, its canopy and the open metal ramp guard.",
+         "Das Architekturmodell enthält Räume, Eingangskonstruktion, Dachtreppenhaus, dessen Vordach und das offene Metallgeländer an der Rampe."],
         ["rooms",
-         "Rooms are objects too: six spaces, each with its area, belong to their storey.",
-         "Auch Räume sind Objekte: sechs Räume mit ihrer Fläche gehören zu ihrem Geschoss."],
+         "Rooms are objects too: the modelled spaces, each with its area, belong to their storey.",
+         "Auch Räume sind Objekte: die modellierten Räume mit ihrer Fläche gehören zu ihrem Geschoss."],
         ["buildup",
-         "The wall build-up is part of the model: render, brick infill and plaster in three layers.",
-         "Der Wandaufbau gehört zum Modell: Außenputz, Ziegelausfachung und Innenputz in drei Schichten."],
+         "The facade build-up distinguishes render, two brick leaves, an air cavity and plaster.",
+         "Der Fassadenaufbau unterscheidet Außenputz, zwei Ziegelschalen, einen Lufthohlraum und Innenputz."],
         ["structure",
-         "The structure model holds the pilotis, slabs and ramp. It leaves out render, windows and rooms.",
-         "Das Tragwerksmodell enthält Pilotis, Decken und Rampe. Putz, Fenster und Räume lässt es weg."],
+         "The structure model holds pilotis, slabs, ramp, stairs and auxiliary lintels, hollow U supports and shelves; several members are shared with architecture.",
+         "Das Tragwerksmodell enthält Pilotis, Decken, Rampe, Treppen sowie Zusatzstürze, hohle U-Träger und Konsolen; mehrere Glieder teilt es mit der Architektur."],
         ["services",
-         "The services model holds boiler, radiator, roof drains and downpipes: the same house, other objects.",
-         "Das Haustechnikmodell enthält Kessel, Heizkörper, Dachabläufe und Fallrohre: dasselbe Haus, andere Objekte."],
+         "Original services include drains inside supports 2 and 4, heating and water risers, soil stack and flue. Detailed envelopes and incomplete routes retain their uncertainties.",
+         "Ursprüngliche Haustechnik umfasst Fallrohre in Stützen 2 und 4, Heizungs- und Wasserstränge, Abwasserstrang und Rauchzug. Detailhüllen und unvollständige Leitungswege behalten ihre Unsicherheiten."],
         ["schema",
-         "Three models, one schema: the same vocabulary and rules, with different content.",
-         "Drei Modelle, ein Schema: gleiche Begriffe und Regeln, aber anderer Inhalt."],
+         "Three models share one schema. Counts refer to IFC products; a stair assembly can contain many physical parts.",
+         "Drei Modelle teilen ein Schema. Die Zahlen zählen IFC-Objekte; eine Treppenbaugruppe kann viele physische Teile enthalten."],
         ["federation",
          "Coordination puts the models on one origin. In this teaching model one GlobalId marks the shared slab.",
          "Koordination legt Modelle auf einen Ursprung. Im Lehrmodell markiert eine GlobalId die gemeinsame Decke."],
@@ -90,8 +92,8 @@ class Beat4_PartialModels(_visuals.ClipScene):
          "The shared slab keeps one GlobalId: each model reads from it the properties it needs.",
          "Die gemeinsame Decke behält eine GlobalId: Jedes Modell liest daraus, was es braucht."],
         ["owners",
-         "On the ground-floor plan every line belongs to one model: walls and glass, pilotis, pipes.",
-         "Im Grundriss gehört jede Linie zu einem Modell: Wände und Glas, Pilotis, Rohre."],
+         "On the ground-floor plan discipline memberships may overlap: the mechanical hoist jib belongs to architecture, structure and services.",
+         "Im Grundriss können Fachzuordnungen überlappen: Der Hebeausleger gehört zu Architektur, Tragwerk und Haustechnik."],
         ["check",
          "In this teaching scenario, a clash check finds what no single model shows: a downpipe too close to a piloti.",
          "Kollisionsprüfung im Lehrbeispiel: ein Fallrohr liegt zu nah an einer Pilotistütze, was kein Einzelmodell zeigt."],
@@ -99,14 +101,14 @@ class Beat4_PartialModels(_visuals.ClipScene):
          "For one use case, the structure model is translated into a structural analysis model: IFC's analysis domain.",
          "Für einen Anwendungsfall wird das Tragwerksmodell in ein Tragwerksanalysemodell übersetzt: die IFC-Analysedomäne."],
         ["members",
-         "The first-floor slab becomes surface members on the grid, each piloti a line member.",
-         "Die Obergeschossdecke wird zu Flächenelementen auf dem Raster, jede Pilotistütze zu einem Stabelement."],
+         "The first-floor slab becomes clipped surface members; selected slab supports become line members.",
+         "Die Obergeschossdecke wird zu zugeschnittenen Flächenelementen; gewählte Deckenstützen werden zu Stabelementen."],
         ["midsurface",
          "The slab is cut at its mid-surface: the piloti line reaches it, the thickness becomes an attribute.",
          "Die Decke wird an der Mittelfläche geschnitten: Der Stab reicht dorthin, die Dicke wird zum Attribut."],
         ["supports",
-         "Assumptions add what was never drawn: every piloti foot becomes a fixed support node.",
-         "Annahmen ergänzen, was nie gezeichnet wurde: Jeder Pilotifuß wird zum eingespannten Lagerknoten."],
+         "Each selected analytical birth receives an assumed fixed restraint, including transfer-born members.",
+         "Jeder gewählte analytische Stützenanfang erhält eine angenommene Einspannung, einschließlich abgefangener Stützen."],
         ["loads",
          "The load is assumed too: self-weight, finishes and imposed load add up to the area load.",
          "Auch die Last ist angenommen: Eigengewicht, Ausbau und Nutzlast ergeben die Flächenlast."],
@@ -140,7 +142,26 @@ class Beat4_PartialModels(_visuals.ClipScene):
         self.model = _model.load_model()
         self.geometry = _model.building_geometry()
         self.analysis = _model.translate_structure()
-        self.clash = _model.clash_check()[0]
+        self.scenario = copy.deepcopy(self.model)
+        target = next(p for p in self.geometry["pilotis"] if p["tag"] == _model.role("column_example"))
+        pipe = next(e for e in self.scenario["elements"] if e["tag"] == "DP-1")
+        required = self.scenario["rules"]["clearance"][0]["required"]["value"]
+        offset = target["radius"] + pipe["attributes"]["diameter"]["value"] / 2 + required / 2
+        delta=np.array([target["x"]+offset,target["y"]])-np.array(pipe["geometry"]["points"][0][:2])
+        affected={pipe["tag"],pipe["tag"]+"-OUTLET"}
+        for service in self.scenario["elements"]:
+            if service["tag"] not in affected:
+                continue
+            geometry=service["geometry"]
+            geometry["points"]=[[p[0]+delta[0],p[1]+delta[1],p[2]] for p in geometry["points"]]
+            for name,plane in geometry.get("tube",{}).items():
+                if name.startswith("clip_"):
+                    p=plane["point"]
+                    plane["point"]=[p[0]+delta[0],p[1]+delta[1],p[2]]
+            geometry.pop("penetrations",None)
+        self.scenario["relations"]=[relation for relation in self.scenario["relations"] if not (relation.get("connection",{}).get("kind")=="hosted_conduit" and (relation["relating"] in affected or set(relation["related"])&affected))]
+        self.scenario_geometry = _model.building_geometry(self.scenario)
+        self.clash = next(clash for clash in _model.clash_check(self.scenario) if clash["a_tag"]==pipe["tag"] and clash["b_tag"]==target["tag"])
         self.trib = _model.tributary()
 
     def text(self, string, point=(0, 0, 0), **kwargs):
@@ -161,19 +182,19 @@ class Beat4_PartialModels(_visuals.ClipScene):
 
     def _roof_note(self, point):
         """⬚ Legend for the dashed outline on first-floor plans: the opening of the roof slab above the hanging garden."""
-        x, y, _ = P(point)
+        x, y, _ = np.asarray(P(point), float)
         return VGroup(polyline([(x, y - 0.07), (x + 0.3, y - 0.07), (x + 0.3, y + 0.07), (x, y + 0.07)], MUTED, 1.2, closed=True, dash=0.06),
                       self.label("dashed: roof slab opening above the garden", "gestrichelt: Öffnung der Dachdecke über dem Garten", (x + 0.42, y, 0), size=15.5, color=MUTED, anchor="l", width=5.0))
 
     def _legend(self, point, *, assumed=False, piloti=False, width=5.8):
         """⭐ Star legend lines: assumed teaching-model values and the disputed piloti count."""
-        x, y, _ = P(point)
-        lines = ([self.tr("* assumed in the teaching model", "* im Lehrmodell angenommen")] if assumed else []) + ([self.tr("* sources differ: 15–25", "* Quellen uneins: 15–25")] if piloti else [])
+        x, y, _ = np.asarray(P(point), float)
+        lines = ([self.tr("* assumed in the teaching model", "* im Lehrmodell angenommen")] if assumed else []) + ([self.tr("* source-informed teaching reconstruction", "* quellenbezogene Lehrrekonstruktion")] if piloti else [])
         return self._lines(lines, (x, y, 0), size=15.5, color=MUTED, pitch=0.24, width=width)
 
     def _piloti_label(self):
         """🏛️ The piloti count wording: the teaching-model number with its star."""
-        return (f"pilotis in this teaching model{STAR}", f"Pilotis in diesem Lehrmodell{STAR}")
+        return (f"registered column objects{STAR}", f"registrierte Stützenobjekte{STAR}")
 
     def _chains(self, plan):
         """📏 Grid dimension chains on top and right of a plan; the short façade bays carry their number above the extension lines."""
@@ -187,19 +208,11 @@ class Beat4_PartialModels(_visuals.ClipScene):
             group.add(self.dimension(a, b, self.number(second - first, 2), offset=-0.45, color=MUTED, size=15.5))
         return group
 
-    def _ground_plan(self, scale=0.22):
+    def _ground_plan(self, scale=0.22, model=None):
         """🗺️ The toolkit ground-floor plan in model colours with heavy poché on the cut walls, the double-line glass wall and filled pilotis."""
         owner = {tag: COLORS[name] for name in DISCIPLINES for tag in self.info[name]["element_tags"]}
-        plan = self.villa_plan("ground", (-3.3, 0.1, 0), scale, layers=DISCIPLINES, dims=(), north=True, halo=0.0, highlight=list(owner), highlight_colors=owner)
-        walls = _sheet.ground_walls(self.geometry)
-        cut = VGroup()
-        for a, b, _ in walls["outer"] + walls["inner"]:
-            ring = [plan.to_screen(point[0], point[1])[:2] for point in _plan.quad(a, b, max(walls["thickness"] / 2, 0.05 / scale))]
-            cut.add(polygon(ring, mix(BACKGROUND, ARCH, 0.55), 1.0, ARCH, 1.6), hatch(ring, ARCH, 0.05, 45, 0.7, 0.9))
-        for item in self.geometry["pilotis"]:
-            cut.add(Circle(radius=0.07, stroke_color=INK, stroke_width=1.0, fill_color=STRUCT, fill_opacity=1.0).move_to(P(plan.to_screen(item["x"], item["y"]))))
-        plan.add(cut, self._chains(plan), self.scale_bar((-0.95, -2.3, 0), scale, 5.0, steps=2))
-        plan.walls = cut
+        plan = self.villa_plan("ground", (-3.3, 0.1, 0), scale, layers=DISCIPLINES, dims=(), north=True, halo=0.0, highlight=list(owner), highlight_colors=owner, model=model)
+        plan.add(self._chains(plan), self.scale_bar((-0.95, -2.3, 0), scale, 5.0, steps=2))
         return plan
 
     def _timeline(self, *stages):
@@ -208,7 +221,9 @@ class Beat4_PartialModels(_visuals.ClipScene):
 
     def _show(self, key, *stages):
         """🎬 Play the stages with the clause ``key``."""
-        heading = _fonts.section_heading(self.tr(*HEADINGS[key]))
+        counts = {name: self.number(len(self.info[name]["element_guids"]), 0) for name in DISCIPLINES}
+        counts["classes"] = self.number(len(self.model["classes"]), 0)
+        heading = _fonts.section_heading(self.tr(*HEADINGS[key]).format(**counts))
         old, self.sub = self.sub, heading
         first = stages[0]
         stages = ((first[0], [*first[1], FadeIn(heading), *([FadeOut(old)] if old is not None else [])]), *stages[1:])
@@ -235,7 +250,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
 
     def _lines(self, strings, point, *, size=16.2, color=MUTED, pitch=0.25, width=None, anchor="l"):
         """📝 Several short lines below each other starting at ``point``."""
-        x, y, _ = P(point)
+        x, y, _ = np.asarray(P(point), float)
         return VGroup(*[self.text(string, (x, y - index * pitch, 0), size=size, color=color, width=width, anchor=anchor) for index, string in enumerate(strings)])
 
     def _wrap(self, text, limit=58) -> list:
@@ -293,6 +308,29 @@ class Beat4_PartialModels(_visuals.ClipScene):
                       self.text(ifc_class, (x + 0.15, y, 0), size=17.0, color=color, anchor="l"),
                       self.label(text[0], text[1], (x + 2.32, y, 0), size=16.2, color=INK, width=3.4, anchor="l"))
 
+    def _discipline_rows(self, name):
+        """🗂️ List every current native discipline class with explicit bilingual teaching meaning."""
+        labels={
+            "IfcColumn":self._piloti_label(),"IfcBeam":("primary and auxiliary members","Haupt- und Zusatzträger"),
+            "IfcFooting":("pads and cellar foundations","Fundamente und Kellergründung"),
+            "IfcWall":("occupied walls and solarium screen","feste Wände und Solariumswand"),
+            "IfcSlab":("slabs and hatch covers","Platten und Lukendeckel"),
+            "IfcRamp":("ramps between storeys","Rampen zwischen Geschossen"),"IfcRampFlight":("their straight flights","ihre geraden Läufe"),
+            "IfcOpeningElement":("native host openings","native Wirtsöffnungen"),
+            "IfcWindow":("frames and actual glass","Rahmen und tatsächliches Glas"),"IfcDoor":("door assemblies","Türbaugruppen"),
+            "IfcCurtainWall":("entrance surround","Eingangsumfassung"),"IfcStair":("stair assemblies","Treppenbaugruppen"),
+            "IfcBuildingElementProxy":("native assemblies and roof details","Baugruppen und Dachdetails"),
+            "IfcFurnishingElement":("fitted/movable furnishings","feste/bewegliche Ausstattung"),"IfcRailing":("guardrail assemblies","Geländerbaugruppen"),
+            "IfcSpace":("rooms and outdoor regions","Räume und Außenbereiche"),
+            "IfcBoiler":("inferred cellar boiler envelope","abgeleitete Kellerkesselhülle"),"IfcSpaceHeater":("radiator under the salon window","Heizkörper unter dem Salonfenster"),
+            "IfcWasteTerminal":("roof rainwater receivers","Regenwasserabläufe am Dach"),"IfcPipeSegment":("rainwater/heating/water/soil","Regen-, Heiz-, Wasser-/Abwasser"),
+            "IfcCovering":("separate casing and insulation","getrennte Ummantelung und Dämmung"),"IfcChimney":("chimney assemblies","Schornsteinbaugruppen")}
+        counts=self.info[name]["counts_by_class"]
+        unknown=set(counts)-set(labels)
+        if unknown:
+            raise ValueError(f"Missing bilingual class meanings: {sorted(unknown)}")
+        return [(kind,text) for kind,text in labels.items() if kind in counts]
+
     def _rows(self, name, rows, y0, drawing, pitch=0.31, seconds=0.55):
         """🧮 Class rows of one model with their counting animation; every class of the model is listed so the rows add up to its total."""
         counts = self.info[name]["counts_by_class"]
@@ -312,8 +350,8 @@ class Beat4_PartialModels(_visuals.ClipScene):
         total = len(self.info[name]["element_guids"])
         if sum(counts[c] for c in classes) != total:
             raise ValueError(f"Class counts of the {name} model do not add up")
-        terms = " + ".join(self.number(counts[c], 0) + (STAR if c == "IfcColumn" else "") for c in classes)
-        return self.text(f"{terms} = {self.number(total, 0)} " + self.tr("objects", "Objekte"), (x, y, 0), size=17.5, color=DATA, anchor="l", width=5.7)
+        terms = self.tr("class counts", "Klassenzahlen")
+        return self.text(f"Σ {self.number(len(classes),0)} {terms} = {self.number(total,0)} " + self.tr("objects", "Objekte"), (x,y,0), size=17.5,color=DATA,anchor="l",width=5.7)
 
     def _equation(self, items, point, *, size=19.0, gap=0.13):
         """🧮 A formula line centred on ``point``; each item is ``(text or function, colour, widest text)`` and functions stay live."""
@@ -366,17 +404,10 @@ class Beat4_PartialModels(_visuals.ClipScene):
         """🏢 Beat 2: the architecture model with every class and count, each class lit on the villa."""
         arch = self._arch(AT, SCALE)
         card = self._card("architecture", 2.1)
-        spec = [("IfcWall", ("four façades and the solarium screen", "vier Fassaden und der Solarium-Schirm")),
-                ("IfcOpeningElement", ("voids cut for the ribbon windows", "Aussparungen für die Fensterbänder")),
-                ("IfcWindow", ("ribbon windows fill the openings", "Fensterbänder füllen die Öffnungen")),
-                ("IfcCurtainWall", ("curved glass wall, ground floor", "gebogene Glaswand, Erdgeschoss")),
-                ("IfcRamp", ("ramps, ground floor to roof", "Rampen, Erdgeschoss bis Dach")),
-                ("IfcRampFlight", ("their straight flights", "ihre geraden Läufe")),
-                ("IfcSlab", ("first-floor and roof slab", "Geschoss- und Dachdecke")),
-                ("IfcSpace", ("rooms, hanging garden, solarium", "Räume, hängender Garten, Solarium"))]
-        rows, steps = self._rows("architecture", spec, 1.2, arch)
-        total = self._sum_line("architecture", [name for name, _ in spec], -1.35)
-        choice = self.label("Ribbon windows on all four sides: a teaching choice", "Fensterbänder an allen vier Seiten: eine Lehrentscheidung", (0.95, -1.8, 0), size=16.2, color=MUTED, anchor="l", width=5.7)
+        spec = self._discipline_rows("architecture")
+        rows, steps = self._rows("architecture", spec, 1.55, arch, pitch=0.235, seconds=0.4)
+        total = self._sum_line("architecture", [name for name, _ in spec], -2.25)
+        choice = self.label("Open hanging garden; salon and kiosk glazing remain distinct", "Offener hängender Garten; Salon- und Kioskverglasung bleiben getrennt", (0.95, -2.65, 0), size=16.2, color=MUTED, anchor="l", width=5.7)
         flights = [flight["tag"] for flight in self.geometry["ramp"]["flights"]]
         ramp = VGroup(self.villa_section((-5.75, 2.1, 0), 0.085, cut="ramp", layers=("structure", "architecture"), highlight=flights, thumbnail=True),
                       self.label("ramp section", "Rampenschnitt", (-5.75, 2.78, 0), size=15.5, color=MUTED, width=1.6))
@@ -384,48 +415,25 @@ class Beat4_PartialModels(_visuals.ClipScene):
         self.stage = VGroup(arch, card, rows, total, choice, ramp)
 
     def _rooms(self):
-        """🚪 Beat 3: the six spaces hatched on the plans of their storeys with their areas."""
-        storeys = {item["id"]: item for item in self.model["storeys"]}
-        language, count, seen = self.language(), ValueTracker(0), 0
-        plans, texts, steps = VGroup(), VGroup(), []
+        """🚪 Draw all authored spaces on their three storeys with derived counts and areas."""
+        plans, summaries = VGroup(), VGroup()
         for index, level in enumerate(SPACE_ORDER):
             x = (-4.4, 0.0, 4.4)[index]
             spaces = [space for space in self.geometry["spaces"] if space["storey"] == level]
-            ids = [space["id"] for space in spaces]
-            plan = self.villa_plan(level, (x, 0.65, 0), 0.155, layers=("architecture",), grid=False, highlight=ids, highlight_colors={tag: ARCH for tag in ids})
-            elevation = storeys[level]["elevation"]["value"]
-            title = self.text(f"{storeys[level]['name'][language]} {self._level_text(elevation)} m" + (STAR if elevation else ""), (x, 2.5, 0), size=18.0, color=INK)
-            fills, labels, trackers, y = VGroup(), VGroup(), [], -0.86
-            for space in spaces:
-                ring = [plan.at(px, py, 0.0)[:2] for px, py in space["outline"]]
-                fills.add(polygon(ring, ARCH, 0.22), hatch(ring, ARCH, 0.07, 45, 0.7, 0.7))
-                y, area = y - 0.34, ValueTracker(0)
-                reference = next(item for item in self.model["spaces"] if item["tag"] == space["tag"]).get("reference_area")
-                trackers.append((area, reference["value"] if reference else space["area"]))
-                labels.add(Rectangle(width=0.2, height=0.2, stroke_color=ARCH, stroke_width=1.2, fill_color=ARCH, fill_opacity=0.3).move_to((x - 1.62, y, 0)),
-                           self.text(_sheet.short_name(space["name"], language), (x - 1.45, y, 0), size=16.2, color=INK, anchor="l", width=1.9),
-                           self._counter(area, (x + 1.1, y, 0), size=17.0, color=ARCH, digits=0 if reference else 1),
-                           self.text("m²" + ("" if reference else STAR), (x + 1.15, y, 0), size=16.2, color=MUTED, anchor="l"))
-                qualifier = space["name"][language].partition(" (")[2].rstrip(")")
-                if qualifier:
-                    y -= 0.22
-                    labels.add(self.text(qualifier, (x - 1.45, y, 0), size=15.0, color=MUTED, anchor="l", width=2.8))
+            tags = [space["tag"] for space in spaces]
+            plan = self.villa_plan(level, (x, 0.4, 0), 0.155, layers=("architecture",), grid=False, highlight=tags, highlight_colors={tag: ARCH for tag in tags})
+            storey = next(item for item in self.model["storeys"] if item["id"] == level)
+            title = self.text(storey["name"][self.language()], (x, 2.65, 0), size=18.0, color=INK)
+            count = self.text(f"{len(spaces)} IfcSpace", (x, -1.85, 0), size=18.0, color=ARCH)
+            area = self.text(self.quantity(sum(space["area"] for space in spaces), "m²", 1) + STAR, (x, -2.25, 0), size=17.0, color=MUTED)
             plans.add(plan, title)
-            texts.add(fills, labels)
-            seen += len(spaces)
-            steps.append((0.9, [FadeIn(VGroup(fills, labels), run_time=0.3), count.animate(rate_func=LINEAR).set_value(seen),
-                                *[area.animate(rate_func=LINEAR).set_value(value) for area, value in trackers]]))
-        relation = next(item for item in _model.relations_of("SP-HALL") if item["class"] == "IfcRelAggregates")["class"]
-        header = VGroup(self._counter(count, (-3.3, 2.9, 0), size=22.0, color=ARCH),
-                        self.text("IfcSpace · " + self.tr(f"aggregated under their storey ({relation})", f"ihrem Geschoss zugeordnet ({relation})"), (-3.15, 2.9, 0), size=17.5, color=INK, anchor="l"))
-        areas = [next(item for item in self.model["spaces"] if item["tag"] == tag)["reference_area"]["value"] for tag in ("SP-TERRACE", "SP-SOLARIUM")]
-        levels = self.label(f"* assumed in the teaching model · source: {self.number(areas[0], 0)} and {self.number(areas[1], 0)} m²",
-                            f"* im Lehrmodell angenommen · Quelle: {self.number(areas[0], 0)} und {self.number(areas[1], 0)} m²", (0, -2.35, 0), size=15.5, color=MUTED, width=8.0)
-        self._show("rooms", (0.8, [self._leave(), FadeIn(plans), FadeIn(header), FadeIn(levels)]), *steps)
-        self.stage = VGroup(plans, texts, header, levels)
+            summaries.add(count, area)
+        note = self.label("* Areas derived from the teaching reconstruction", "* Flächen aus der Lehrrekonstruktion abgeleitet", (0, -2.8, 0), size=15.5, color=MUTED)
+        self._show("rooms", (0.8, [self._leave(), FadeIn(plans)]), (0.9, [FadeIn(summaries), FadeIn(note)]))
+        self.stage = VGroup(plans, summaries, note)
 
     def _buildup(self):
-        """🧱 Beat 4: a plan cut through the infill wall, its three layers growing to the total thickness."""
+        """🧱 Beat 4: a facade cut with solid leaves and an empty cavity growing to the envelope thickness."""
         wall = _model.element("W-S")["material"]
         layers, total = wall["layers"], wall["total_thickness"]
         plan = self.villa_plan("first", (-3.4, 0.2, 0), 0.2, layers=("architecture",), grid=False, highlight=("W-S",), highlight_colors={"W-S": DATA})
@@ -437,21 +445,26 @@ class Beat4_PartialModels(_visuals.ClipScene):
 
         def strip():
             group, left = VGroup(), x0
-            for layer, (fill, line, angle, spacing) in zip(layers, tones):
+            for index, layer in enumerate(layers):
+                fill, line, angle, spacing = tones[index % len(tones)]
                 span = max(layer["thickness"]["value"] * zoom * grow.get_value(), 1e-3)
                 ring = [(left, y0 - height / 2), (left + span, y0 - height / 2), (left + span, y0 + height / 2), (left, y0 + height / 2)]
-                group.add(polygon(ring, fill, 1.0, INK, 1.6), hatch(ring, line, spacing, angle, 0.8, 0.8))
+                empty = layer.get("is_void", False)
+                group.add(polygon(ring, BACKGROUND if empty else fill, 0.0 if empty else 1.0, MUTED if empty else INK, 1.0))
+                if not empty:
+                    group.add(hatch(ring, line, spacing, angle, 0.8, 0.8))
                 left += span
-            group.add(self.dimension((x0, y0 - height / 2, 0), (left, y0 - height / 2, 0), self.quantity(total * grow.get_value(), "m") + STAR, offset=-0.22, color=DATA, size=17.0))
+            group.add(self.dimension((x0, y0 - height / 2, 0), (left, y0 - height / 2, 0), self.quantity(total * grow.get_value(), "m", 3), offset=-0.22, color=DATA, size=17.0))
             return group
 
         live = self.live(strip, key=lambda: round(grow.get_value(), 3))
         names, language = VGroup(), self.language()
-        for index, (layer, (fill, line, _, _)) in enumerate(zip(layers, tones)):
-            y = y0 + 0.5 - index * 0.5
-            names.add(Rectangle(width=0.2, height=0.2, stroke_color=line, stroke_width=1.2, fill_color=fill, fill_opacity=1.0).move_to((x0 + total * zoom + 0.35, y, 0)),
-                      self.text(f"{layer['name'][language]} · {self.quantity(layer['thickness']['value'], 'm')}{STAR}", (x0 + total * zoom + 0.55, y, 0), size=16.2, color=INK, anchor="l", width=2.55))
-        names.add(self._legend((x0 + total * zoom + 0.35, y0 - 0.95, 0), assumed=True, width=2.9))
+        for index, layer in enumerate(layers):
+            fill, line, _, _ = tones[index % len(tones)]
+            y = 2.0 - index * 0.3
+            names.add(Rectangle(width=0.2, height=0.2, stroke_color=line, stroke_width=1.2, fill_color=fill, fill_opacity=0.0 if layer.get("is_void", False) else 1.0).move_to((x0 + total * zoom + 0.35, y, 0)),
+                      self.text(f"{layer['name'][language]} · {self.quantity(layer['thickness']['value'], 'm', 3)}{STAR if layer['thickness']['basis'] != 'sourced' else ''}", (x0 + total * zoom + 0.55, y, 0), size=16.2, color=INK, anchor="l", width=2.55))
+        names.add(self.label("* cavity inferred; envelope measured", "* Hohlraum abgeleitet; Hülle belegt", (x0 + total * zoom + 0.35, .3, 0), size=15.0, color=MUTED, anchor="l", width=2.9))
         sides = VGroup(self.label("outside", "außen", (x0, y0 + height / 2 + 0.2, 0), size=16.2, color=MUTED, anchor="l"),
                        self.label("inside", "innen", (x0 + total * zoom, y0 + height / 2 + 0.2, 0), size=16.2, color=MUTED, anchor="r"))
         pset = next(name for name, props in _model.element("W-S")["psets"].items() if "LoadBearing" in props)
@@ -470,21 +483,18 @@ class Beat4_PartialModels(_visuals.ClipScene):
         struct = self.villa_axon(AT, SCALE, disciplines=("structure",), ground=False)
         self.ghost = self.villa_axon(AT, SCALE, disciplines=("architecture",), ground=False, ghost=("walls", "windows", "curtain", "ramp", "screens", "slabs", "spaces"))
         card = self._card("structure", 2.1)
-        spec = [("IfcColumn", self._piloti_label()),
-                ("IfcRamp", ("ramps, ground floor to roof", "Rampen, Erdgeschoss bis Dach")),
-                ("IfcRampFlight", ("their straight flights", "ihre geraden Läufe")),
-                ("IfcSlab", ("first-floor and roof slab", "Geschoss- und Dachdecke"))]
-        rows, steps = self._rows("structure", spec, 1.2, struct)
+        spec = self._discipline_rows("structure")
+        rows, steps = self._rows("structure", spec, 1.3, struct, pitch=0.28)
         steps[0] = (1.5, steps[0][1])
-        total = self._sum_line("structure", [name for name, _ in spec], -0.1)
-        flag = _model.information("C3", "LoadBearing", self.language())
-        pset = next(name for name, props in _model.element("C3")["psets"].items() if "LoadBearing" in props)
+        total = self._sum_line("structure", [name for name, _ in spec], -1.8)
+        flag = _model.information(_model.role("column_example"), "LoadBearing", self.language())
+        pset = next(name for name, props in _model.element(_model.role("column_example"))["psets"].items() if "LoadBearing" in props)
         piloti_note = self._legend((0.95, -0.38, 0), piloti=True)
         chip = VGroup(frame_box(5.9, 0.46, GOOD).move_to((RIGHT, -0.85, 0)),
                       self.text(f"{pset}.LoadBearing = {'TRUE' if flag['value'] else 'FALSE'}", (RIGHT, -0.85, 0), size=16.2, color=GOOD, width=5.0))
-        c3 = next(item for item in self.geometry["pilotis"] if item["tag"] == "C3")
-        top = struct.at(c3["x"], c3["y"], c3["top"])
-        ring = segments([(struct.at(c3["x"], c3["y"], c3["base"]), top)], GOOD, 4.5)
+        c2 = next(item for item in self.geometry["pilotis"] if item["tag"] == _model.role("column_example"))
+        top = struct.at(c2["x"], c2["y"], c2["top"])
+        ring = segments([(struct.at(c2["x"], c2["y"], c2["base"]), top)], GOOD, 4.5)
         leader = self.leader(chip[0], top, color=GOOD, dot=True)
         arch_counts, kept = self.info["architecture"]["counts_by_class"], self.info["structure"]["counts_by_class"]
         missing = {name: count for name, count in arch_counts.items() if name not in kept}
@@ -498,8 +508,8 @@ class Beat4_PartialModels(_visuals.ClipScene):
         ghost_parts = VGroup(*[self.ghost.parts[key] for tag in self.info["architecture"]["element_tags"] if tag not in self.info["structure"]["element_tags"] for key in self._keys(self.ghost, tag)])
         self.ghost.set_stroke(opacity=0.3, width=0.8).set_fill(opacity=0.04)
         self._show("structure", (0.8, [self._leave(), FadeIn(struct), FadeIn(self.ghost), FadeIn(card)]), *steps,
-                   (0.7, [FadeIn(total), FadeIn(piloti_note)]),
-                   (0.9, [FadeIn(chip), FadeIn(ring), FadeIn(leader), Indicate(struct.parts["C3"], color=DATA, scale_factor=1.6)]),
+                   (0.7, [FadeIn(total)]),
+                   (0.9, [FadeOut(rows), FadeOut(total), FadeIn(piloti_note), FadeIn(chip), FadeIn(ring), FadeIn(leader), Indicate(struct.parts[_model.role("column_example")], color=DATA, scale_factor=1.6)]),
                    (1.0, [FadeIn(omitted), self._flash(ghost_parts, WARN)]))
         self.stage = VGroup(struct, self.ghost, card, rows, total, piloti_note, chip, ring, leader, omitted)
 
@@ -507,16 +517,13 @@ class Beat4_PartialModels(_visuals.ClipScene):
         """🔧 Beat 5: the services model over the architecture ghost: boiler, radiator, drains, downpipes and the hanging garden they drain."""
         services = self.villa_axon(AT, SCALE, disciplines=("services",), ground=False).set_stroke(width=3.2)
         card = self._card("services", 2.1)
-        spec = [("IfcBoiler", ("boiler, ground floor", "Heizkessel, Erdgeschoss")),
-                ("IfcSpaceHeater", ("radiator under the salon window", "Heizkörper unter dem Salonfenster")),
-                ("IfcWasteTerminal", ("roof drains", "Dachabläufe")),
-                ("IfcPipeSegment", ("downpipes and heating pipes", "Fallrohre und Heizrohre"))]
-        rows, steps = self._rows("services", spec, 1.2, services)
+        spec = self._discipline_rows("services")
+        rows, steps = self._rows("services", spec, 1.3, services, pitch=0.28)
         self.ghost.set_stroke(opacity=0.16, width=0.7).set_fill(opacity=0.0)
-        steps[1][1].append(self._flash(self.ghost.parts["OP-S"], ARCH))
+        steps[next(i for i,(kind,_) in enumerate(spec) if kind=="IfcSpaceHeater")][1].append(self._flash(self.ghost.parts["OP-S"], ARCH))
         names = VGroup(self.leader((-6.55, -1.35, 0), services.at("RAD-1"), self.tr("radiator RAD-1", "Heizkörper RAD-1"), color=SERV, size=16.2, anchor="l"),
                        self.leader((-6.55, -1.9, 0), services.at("BL-1"), self.tr("boiler BL-1", "Kessel BL-1"), color=SERV, size=16.2, anchor="l"))
-        total = self._sum_line("services", [name for name, _ in spec], -0.1)
+        total = self._sum_line("services", [name for name, _ in spec], -1.1)
         garden = next(space for space in self.geometry["spaces"] if space["id"] == "SP-TERRACE")
         level = self.geometry["storeys"][garden["storey"]]
         hatched = self.hatch([services.at(x, y, level)[:2] for x, y in garden["outline"]], GOOD, 0.07)
@@ -526,8 +533,9 @@ class Beat4_PartialModels(_visuals.ClipScene):
                      self.label("m² hanging garden, first floor, open air", "m² hängender Garten, 1. OG, offen", (1.1, -0.5, 0), size=16.2, color=GOOD, anchor="l", width=5.4),
                      *self._lines([self.tr("its floor drains are not modelled;", "seine Bodenabläufe sind nicht modelliert;"),
                                    self.tr(f"the {drains} roof drains belong to the roof level", f"die {drains} Dachabläufe gehören zur Dachebene")], (1.1, -0.76, 0), size=15.5, color=MUTED, pitch=0.22, width=5.4))
-        scenario = self._lines([self.tr("Teaching scenario: positions of boiler, radiator,", "Lehrbeispiel: Lage von Kessel, Heizkörper,"),
-                                self.tr("drains and pipes are chosen for this lesson.", "Abläufen und Rohren ist für diesen Clip gewählt.")], (0.95, -1.5, 0), width=5.6)
+        row.shift((0,-1.0,0))
+        scenario = self._lines([self.tr("Original service identities; detailed routes and", "Ursprüngliche Haustechnik; genaue Leitungswege und"),
+                                self.tr("equipment envelopes retain explicit uncertainties.", "Gerätehüllen behalten ausdrückliche Unsicherheiten.")], (0.95, -2.25, 0), width=5.6)
         pipes = [item["points"] for item in self.geometry["services"] if item["kind"] == "downpipe"]
 
         def drops():
@@ -537,7 +545,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
         water = self.live(drops, key=lambda: round(flow.get_value(), 2))
         self.add(water)
         self._show("services", (0.8, [self._leave(self.ghost), FadeIn(services), FadeIn(card)]), *steps, (0.5, [FadeIn(total)]),
-                   (1.1, [FadeIn(hatched), FadeIn(row), FadeIn(names), area.animate(rate_func=LINEAR).set_value(next(item for item in self.model["spaces"] if item["tag"] == "SP-TERRACE")["reference_area"]["value"]), flow.animate(rate_func=LINEAR).set_value(1.0)]),
+                   (1.1, [FadeIn(hatched), FadeIn(row), FadeIn(names), area.animate(rate_func=LINEAR).set_value(garden["area"]), flow.animate(rate_func=LINEAR).set_value(1.0)]),
                    (0.5, [FadeIn(scenario)]))
         self.remove(water)
         self.stage = VGroup(services, self.ghost, card, rows, total, hatched, row, names, scenario)
@@ -546,15 +554,12 @@ class Beat4_PartialModels(_visuals.ClipScene):
         """🧬 Beat 6: one matrix of IFC classes against the three models, every class in every column, zero where a model has none."""
         language = self.language()
         counts = {name: self.info[name]["counts_by_class"] for name in DISCIPLINES}
-        classes = ["IfcWall", "IfcOpeningElement", "IfcWindow", "IfcCurtainWall", "IfcSpace", "IfcSlab", "IfcRamp", "IfcRampFlight", "IfcColumn",
-                   "IfcBoiler", "IfcSpaceHeater", "IfcWasteTerminal", "IfcPipeSegment"]
-        if set(classes) != set().union(*counts.values()):
-            raise ValueError("The matrix must list every class of the three models")
+        classes = sorted(set().union(*counts.values()))
         schema = self.info["architecture"]["schema_id"]
         bar = VGroup(frame_box(13.0, 0.4, GOOD).move_to((0, 2.82, 0)),
                      self.text(f"{schema} · " + self.tr("one schema: every class exists for every model, every object has a GlobalId (IfcRoot)",
                                                        "ein Schema: jede Klasse gibt es für jedes Modell, jedes Objekt hat eine GlobalId (IfcRoot)"), (0, 2.82, 0), size=17.0, color=GOOD, width=12.6))
-        top, pitch, xs = 0.6, 0.232, (-2.7, 1.1, 4.8)
+        top, pitch, xs = 0.6, min(0.232,3.2/max(1,len(classes)-1)), (-2.7, 1.1, 4.8)
         labels = VGroup(*[self.text(name, (-6.6, top - index * pitch, 0), size=15.5, color=GOOD if sum(name in counts[m] for m in DISCIPLINES) > 1 else INK, anchor="l")
                           for index, name in enumerate(classes)])
         parts, columns = VGroup(), []
@@ -594,7 +599,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
         base = {name: np.array(layer.get_center()) for name, layer in layers.items()}
 
         def offset(name):
-            return P(self.axon_point(0, 0, 0, at, scale, discipline=name, explode=explode.get_value())) - P(self.axon_point(0, 0, 0, at, scale))
+            return np.asarray(P(self.axon_point(0, 0, 0, at, scale, discipline=name, explode=explode.get_value())), float) - np.asarray(P(self.axon_point(0, 0, 0, at, scale)), float)
 
         for name, layer in layers.items():
             layer.add_updater(lambda mob, name=name: mob.move_to(base[name] + offset(name)))
@@ -634,13 +639,17 @@ class Beat4_PartialModels(_visuals.ClipScene):
         self.stage = VGroup(*layers.values(), marks, panel, chip, same, note, federated)
 
     def _slab(self):
-        """🟫 Beat 8: the first-floor slab as one object: gross area minus ramp void in plan, thickness in section, read by two models."""
+        """🟫 Beat 8: the first-floor slab as one object: gross area minus all source openings in plan, thickness in section, read by two models."""
         slab = self.analysis["slab"]
         data = next(item for item in self.geometry["slabs"] if item["kind"] == "FLOOR")
         plan = self.villa_plan("first", (-3.3, 1.0, 0), 0.17, layers=("structure",), grid=False, ramp_arrow=False)
         outline = [plan.to_screen(x, y)[:2] for x, y in data["outline"]]
-        void = [plan.to_screen(x, y)[:2] for x, y in data["voids"][0]]
-        hatched, hole = hatch([outline, void], ARCH, 0.08, 45, 0.8, 0.8), polygon(void, WARN, 0.35, WARN, 1.8)
+        openings = [(tag, ring, abs(_drafting.signed_area(ring))) for tag, ring in zip(data["void_tags"], data["voids"])]
+        voids = [[plan.to_screen(x, y)[:2] for x, y in ring] for _, ring, _ in openings]
+        hatched = hatch([outline, *voids], ARCH, 0.08, 45, 0.8, 0.8)
+        hole = VGroup(*[polygon(void, WARN, 0.35, WARN, 1.8) for void in voids])
+        opening_labels = VGroup(*[self.text(f"{tag} · {self.quantity(area, 'm²', 2)}{STAR}", (-5.4, -0.6 - index * 0.27, 0), size=14.0, color=WARN, anchor="l", width=4.2)
+                                  for index, (tag, _, area) in enumerate(openings)])
         length, width = self.geometry["box"]["length"], self.geometry["box"]["width"]
         edge = polyline(outline, INK, 2.0, closed=True)
         dims = VGroup(self.dimension(outline[0], outline[1], self.quantity(length, "m"), offset=-0.2, color=INK, size=16.2),
@@ -650,7 +659,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
                                   (lambda: self.quantity(cut.get_value(), "m²"), WARN, self.quantity(slab["void_area"], "m²")), ("=", MUTED, "="),
                                   (lambda: self.quantity(net.get_value(), "m²"), ARCH, self.quantity(slab["net_area"], "m²"))], (-3.3, -1.2, 0), size=18.0)
         legend = VGroup(*[self.text(text, (x, -1.5, 0), size=15.0, color=color, anchor="c") for text, x, color in
-                          ((self.tr("gross outline", "Bruttofläche"), -5.35, INK), (self.tr("ramp void", "Rampenöffnung"), -3.3, WARN), (self.tr("net, hatched", "netto, schraffiert"), -1.3, ARCH))])
+                          ((self.tr("gross outline", "Bruttofläche"), -5.35, INK), (self.tr("openings", "Öffnungen"), -3.3, WARN), (self.tr("net, hatched", "netto, schraffiert"), -1.3, ARCH))])
         zoom, x0, y0 = 2.4, -5.0, -2.1
         thickness = slab["thickness"] * zoom
         box = [(x0, y0 - thickness / 2, 0), (x0 + 3.4, y0 - thickness / 2, 0), (x0 + 3.4, y0 + thickness / 2, 0), (x0, y0 + thickness / 2, 0)]
@@ -664,16 +673,17 @@ class Beat4_PartialModels(_visuals.ClipScene):
         chip = self.guid_chip("SL-1", (RIGHT, 0.85, 0), color=DATA)
         ties = VGroup(segments([((RIGHT, 0.85 + 0.4, 0), (RIGHT, 1.4, 0))], DATA, 1.4), segments([((RIGHT, 0.85 - 0.4, 0), (RIGHT, 0.3, 0))], DATA, 1.4))
         both = VGroup(self.label("one object, one GlobalId", "ein Objekt, eine GlobalId", (RIGHT, -1.3, 0), size=16.2, color=DATA),
-                      self.label("teaching box 21.5 × 19 m; sources report other footprints", "Lehrbox 21,5 × 19 m; Quellen nennen andere Grundflächen", (RIGHT, -1.75, 0), size=15.5, color=MUTED, width=5.8), self._roof_note((0.95, -2.2, 0)), self._legend((0.95, -2.45, 0), assumed=True))
-        spacing = _model.clearance()["grid_spacing"]
-        first_bay = self.dimension(plan.to_screen(1.25, width), plan.to_screen(1.25 + spacing, width), self.quantity(spacing, "m"), offset=0.2, color=STRUCT, size=15.5)
+                      self.label(f"teaching box {self.quantity(length, 'm', 1)} × {self.quantity(width, 'm', 1)}; sources report other footprints", f"Lehrbox {self.quantity(length, 'm', 1)} × {self.quantity(width, 'm', 1)}; Quellen nennen andere Grundflächen", (RIGHT, -1.75, 0), size=15.5, color=MUTED, width=5.8), self._roof_note((0.95, -2.2, 0)), self._legend((0.95, -2.45, 0), assumed=True))
+        grid_x = self.geometry["grid"]["x"]
+        spacing = grid_x[1] - grid_x[0]
+        first_bay = self.dimension(plan.to_screen(grid_x[0], width), plan.to_screen(grid_x[1], width), self.quantity(spacing, "m"), offset=0.2, color=STRUCT, size=15.5)
         dims.add(first_bay, self.scale_bar((-1.0, 2.5, 0), 0.17, 5.0, steps=2))
         self._show("slab", (0.8, [self._leave(), FadeIn(plan), FadeIn(dims), FadeIn(legend)]),
                    (0.9, [FadeIn(edge), gross.animate(rate_func=LINEAR).set_value(slab["gross_area"]), FadeIn(formula, run_time=0.2)]),
-                   (0.9, [FadeIn(hole), cut.animate(rate_func=LINEAR).set_value(slab["void_area"])]),
+                   (0.9, [FadeIn(hole), FadeIn(opening_labels), cut.animate(rate_func=LINEAR).set_value(slab["void_area"])]),
                    (1.0, [FadeIn(hatched), net.animate(rate_func=LINEAR).set_value(slab["net_area"])]),
                    (0.8, [FadeIn(section), FadeIn(chip), FadeIn(ties), FadeIn(left), FadeIn(right), FadeIn(both)]))
-        self.stage = VGroup(plan, edge, dims, legend, hatched, hole, formula, section, chip, ties, left, right, both)
+        self.stage = VGroup(plan, edge, dims, legend, hatched, hole, opening_labels, formula, section, chip, ties, left, right, both)
 
     def _flag(self, tag, property_id) -> str:
         """🚩 A boolean or label property value as text."""
@@ -711,45 +721,45 @@ class Beat4_PartialModels(_visuals.ClipScene):
         self.stage = VGroup(plan, head, rows, grid)
 
     def _check(self):
-        """⚠️ Beat 10: the downpipe and a piloti on the plan, zoomed in with the required clearance as a dashed ring."""
-        clash, plan = self.clash, self.plan
-        pilotis = {item["tag"]: item for item in self.geometry["pilotis"]}
-        services = {item["tag"]: item for item in self.geometry["services"]}
-        pipe, piloti = services[clash["a_tag"]], pilotis[clash["b_tag"]]
-        spot = P(plan.to_screen(*clash["point"][:2]))
-        marker = Circle(radius=0.26, stroke_color=WARN, stroke_width=2.4).move_to(spot)
-        centre, radius = np.array([3.6, 1.05, 0.0]), 1.6
-        gap = np.array(pipe["points"][0][:2]) - np.array([piloti["x"], piloti["y"]])
-        distance = float(np.linalg.norm(gap))
-        direction = np.array([*(gap / distance), 0.0])
-        pipe_radius, ring_radius = pipe["diameter"] / 2, pipe["diameter"] / 2 + clash["required"]
-        zoom = 2.5 / (ring_radius + distance + piloti["radius"])
-        pipe_at = centre - direction * (ring_radius - distance - piloti["radius"]) / 2 * zoom
-        piloti_at = pipe_at - direction * distance * zoom
-        glass = Circle(radius=radius, stroke_color=WARN, stroke_width=2.0, fill_color=BACKGROUND, fill_opacity=1.0).move_to(centre)
-        link = segments([(spot, centre + (spot - centre) / max(np.linalg.norm(spot - centre), 1e-9) * radius)], WARN, 1.1, 0.55)
-        solid = VGroup(Circle(radius=piloti["radius"] * zoom, stroke_color=STRUCT, stroke_width=2.0, fill_color=STRUCT, fill_opacity=0.55).move_to(piloti_at),
-                       Circle(radius=pipe_radius * zoom, stroke_color=SERV, stroke_width=2.0, fill_color=SERV, fill_opacity=0.7).move_to(pipe_at),
-                       self.text(clash["b_tag"], piloti_at + np.array([-(piloti["radius"] * zoom + 0.3), 0.0, 0.0]), size=16.2, color=STRUCT),
-                       self.text(clash["a_tag"], pipe_at + np.array([pipe_radius * zoom + 0.38, 0.0, 0.0]), size=16.2, color=SERV))
-        ring_value = ValueTracker(0)
-        ring = self.live(lambda: VGroup(polyline(circle_points(pipe_at, max(ring_value.get_value() * zoom, 1e-3), 48), WARN, 1.8, closed=True, dash=0.1)), key=lambda: round(ring_value.get_value(), 3))
-        start, end = piloti_at + direction * piloti["radius"] * zoom, pipe_at - direction * pipe_radius * zoom
-        middle = (start + end) / 2
-        mark = np.array([centre[0] - radius + 0.5, middle[1] + 0.4, 0.0])
-        dimension = VGroup(self.dimension(start, end, None, offset=0.12, color=WARN, tick=0.06), self.text(self.quantity(clash["clearance"], "m"), mark, size=16.2, color=WARN),
-                           segments([(mark + (0.4, -0.12, 0), middle + (0.0, 0.0, 0))], WARN, 1.0, 0.8))
-        clearance, required, short = (self.number(clash[key]) for key in ("clearance", "required", "deficit"))
-        card = VGroup(self.text(self.tr(f"clash-01 · downpipe {clash['a_tag']} ↔ piloti {clash['b_tag']} (Ø {self.number(piloti['radius'] * 2)} m{STAR})",
-                                        f"Kollision-01 · Fallrohr {clash['a_tag']} ↔ Pilotistütze {clash['b_tag']} (Ø {self.number(piloti['radius'] * 2)} m{STAR})"), (RIGHT, -0.92, 0), size=18.0, color=INK, width=5.9),
-                      self.text(self.tr(f"clearance {clearance} m < required {required} m{STAR} · short by {short} m", f"Abstand {clearance} m < gefordert {required} m{STAR} · es fehlen {short} m"), (RIGHT, -1.2, 0), size=17.5, color=WARN, width=5.9),
-                      self.label("issue (BCF) refers to both GlobalIds", "Meldung (BCF) verweist auf beide GlobalIds", (RIGHT, -1.45, 0), size=16.2, color=MUTED, width=5.9),
-                      self._legend((RIGHT - 2.95, -1.69, 0), assumed=True))
-        chips = VGroup(self.guid_chip(clash["a_tag"], (1.95, -2.17, 0), color=SERV), self.guid_chip(clash["b_tag"], (5.15, -2.17, 0), color=STRUCT))
-        self._show("check", (0.8, [self._leave(plan), Indicate(plan.parts[clash["a_tag"]], color=WARN, scale_factor=2.0), Indicate(plan.parts[clash["b_tag"]], color=WARN, scale_factor=2.0)]),
-                   (1.2, [FadeIn(marker), FadeIn(link), FadeIn(glass), FadeIn(solid)]),
-                   (1.2, [FadeIn(ring, run_time=0.1), ring_value.animate(rate_func=SMOOTH).set_value(ring_radius), FadeIn(dimension)]), (0.8, [FadeIn(card), FadeIn(chips)]))
-        self.stage = VGroup(plan, marker, link, glass, solid, ring, dimension, card, chips)
+        """⚠️ Draw the hypothetical routing check from native occupied pipe and column sections."""
+        clash,plan=self.clash,self._ground_plan(model=self.scenario)
+        self.remove(self.plan)
+        self.add(plan)
+        pipe=next(item for item in self.scenario_geometry["services"] if item["tag"]==clash["a_tag"])
+        piloti=next(item for item in self.scenario_geometry["pilotis"] if item["tag"]==clash["b_tag"])
+        z=(clash["a_point"][2]+clash["b_point"][2])/2
+        profiles={item["tag"]:[ring for part in item["parts"] if part["z0"]<=z<=part["z1"] for ring in _model.part_regions(part,z)] for item in (pipe,piloti)}
+        all_points=np.asarray([p for rings in profiles.values() for ring in rings for p in ring])
+        low,high=np.min(all_points,axis=0),np.max(all_points,axis=0)
+        zoom=2.5/max(high-low)
+        centre=np.array([3.6,1.05,0.0])
+        midpoint=(low+high)/2
+        at=lambda p:centre+zoom*np.array([p[0]-midpoint[0],p[1]-midpoint[1],0.0])
+        spot=np.asarray(P(plan.to_screen(*clash["point"][:2])), float)
+        marker=Circle(radius=.26,stroke_color=WARN,stroke_width=2.4).move_to(spot)
+        glass=Circle(radius=1.6,stroke_color=WARN,stroke_width=2,fill_color=BACKGROUND,fill_opacity=1).move_to(centre)
+        link=segments([(spot,centre+(spot-centre)/max(np.linalg.norm(spot-centre),1e-9)*1.6)],WARN,1.1,.55)
+        solid=VGroup(*[polygon([at(p) for p in ring],color,.7,color,1.2) for item,color in ((piloti,STRUCT),(pipe,SERV)) for ring in profiles[item["tag"]]])
+        for item,color in ((piloti,STRUCT),(pipe,SERV)):
+            points=np.asarray([p for ring in profiles[item["tag"]] for p in ring])
+            solid.add(self.text(item["tag"],at(np.mean(points,axis=0))+(0,.6 if item is pipe else -.6,0),size=16.2,color=color))
+        first,second=np.asarray(clash["b_point"][:2]),np.asarray(clash["a_point"][:2])
+        start,end=at(first),at(second)
+        middle=(start+end)/2
+        dimension=VGroup(self.dimension(start,end,None,offset=.12,color=WARN,tick=.06),self.text(self.quantity(clash["distance"],"m"),middle+(0,.4,0),size=16.2,color=WARN))
+        pipe_radius=pipe["diameter"]/2
+        ring_radius=pipe_radius+clash["required"]
+        pipe_at=at(pipe["points"][0][:2])
+        ring_value=ValueTracker(0)
+        ring=self.live(lambda:VGroup(polyline(circle_points(pipe_at,max(ring_value.get_value()*zoom,1e-3),48),WARN,1.8,closed=True,dash=.1)),key=lambda:round(ring_value.get_value(),3))
+        clearance,required,short=(self.number(clash[key]) for key in ("distance","required","deficit"))
+        card=VGroup(self.text(self.tr(f"{clash['id']} · pipe {clash['a_tag']} ↔ support {clash['b_tag']}",f"{clash['id']} · Rohr {clash['a_tag']} ↔ Stütze {clash['b_tag']}"),(RIGHT,-.92,0),size=18,color=INK,width=5.9),
+                    self.text(self.tr(f"clearance {clearance} m < required {required} m{STAR} · short by {short} m",f"Abstand {clearance} m < gefordert {required} m{STAR} · es fehlen {short} m"),(RIGHT,-1.2,0),size=17.5,color=WARN,width=5.9),
+                    self.label("Hypothetical routing · native hollow pipe section","Hypothetische Führung · nativer hohler Rohrquerschnitt",(RIGHT,-1.45,0),size=16.2,color=MUTED,width=5.9),self._legend((RIGHT-2.95,-1.69,0),assumed=True))
+        chips=VGroup(self.guid_chip(clash["a_tag"],(1.95,-2.17,0),color=SERV),self.guid_chip(clash["b_tag"],(5.15,-2.17,0),color=STRUCT))
+        self._show("check",(.8,[self._leave(plan),Indicate(plan.parts[clash["a_tag"]],color=WARN,scale_factor=2),Indicate(plan.parts[clash["b_tag"]],color=WARN,scale_factor=2)]),
+                   (1.2,[FadeIn(marker),FadeIn(link),FadeIn(glass),FadeIn(solid)]),(1.2,[FadeIn(ring,run_time=.1),ring_value.animate(rate_func=SMOOTH).set_value(ring_radius),FadeIn(dimension)]),(.8,[FadeIn(card),FadeIn(chips)]))
+        self.stage=VGroup(plan,marker,link,glass,solid,ring,dimension,card,chips)
 
     def _analysis(self, point, scale, projection="axon", **kwargs):
         """🧮 The analysis model without its node dots and supports; those come in later beats."""
@@ -763,7 +773,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
         surfaces, shells = len({item["source_guid"] for item in analysis["members"] if item["kind"] == "surface"}), analysis["counts"]["shells"]
         struct = self.villa_axon((-4.85, 0.1, 0), 0.1, disciplines=("structure",), grid=True, shell=0.4, ground=False)
         struct.grid.remove(struct.grid.submobjects[-1])
-        result = self._villa_analysis((4.85, 0.0, 0), 0.1, tags=("C3",))
+        result = self._villa_analysis((4.85, 0.0, 0), 0.1, tags=(_model.role("column_example"),))
         source = self.text(f"{self.info['structure']['name'][language]} · {self._revision(analysis['source_revision'])}", (-4.85, 2.45, 0), size=17.5, color=STRUCT, width=3.4)
         target = self.label("Structural analysis model", "Tragwerksanalysemodell", (4.85, 2.45, 0), size=17.5, color=GOOD, width=3.4)
         schema = VGroup(self._chip(self.tr(analysis["target_schema"], f"{analysis['target_schema'].split(' ')[0]} · Strukturanalyse-Domäne"), (0, 2.65, 0), GOOD, 18.0),
@@ -796,13 +806,12 @@ class Beat4_PartialModels(_visuals.ClipScene):
         self.stage = VGroup(struct, source, rules, schema, carry, result, target, key_note)
 
     def _members(self):
-        """🧮 Beat 12: the analysis mesh on the real first-floor slab outline: line members on the piloti positions, one surface member in shells between the grid lines, nodes at the crossings."""
-        analysis, language = self.analysis, self.language()
-        mesh_spec, counts = analysis["mesh"], analysis["counts"]
-        columns, rows_n = len(mesh_spec["x_lines"]) - 1, len(mesh_spec["y_lines"]) - 1
-        nodes_n = len(mesh_spec["x_lines"]) * len(mesh_spec["y_lines"])
-        if columns * rows_n != counts["shells"] or nodes_n != counts["slab_nodes"]:
-            raise ValueError("The mesh lines must give the shells and slab nodes of the translation")
+        """🧮 Show selected supports, the source slab, clipped surface members and actual slab nodes."""
+        analysis, counts = self.analysis, self.analysis["counts"]
+        actual={"curve_members":sum(m["kind"]=="curve" for m in analysis["members"]), "surface_members":sum(m["kind"]=="surface" for m in analysis["members"]),
+                "shells":len(analysis["shells"]),"slab_nodes":sum(n["role"]=="slab" for n in analysis["nodes"])}
+        if any(counts[key]!=value for key,value in actual.items()):
+            raise ValueError("Analysis counts must match the actual clipped members and nodes")
         surfaces = len({item["source_guid"] for item in analysis["members"] if item["kind"] == "surface"})
         base = self.villa_plan("first", LEFT_PLAN, 0.2, layers=("structure",), dims=(), ramp_arrow=False)
         base.add(self._chains(base), self.scale_bar((-1.05, -2.1, 0), 0.2, 5.0, steps=2))
@@ -810,12 +819,11 @@ class Beat4_PartialModels(_visuals.ClipScene):
         groups = {"members": list(mesh.members.submobjects), "shells": list(mesh.shells.submobjects), "nodes": list(mesh.nodes.submobjects)}
         groups["members"] = [VGroup(member, Circle(radius=0.11, stroke_color=STRUCT, stroke_width=1.6).move_to(member.get_center())) for member in groups["members"]]
         mesh.remove(mesh.members, mesh.shells, mesh.nodes, mesh.outline)
-        nx, ny = len(mesh_spec["x_lines"]), len(mesh_spec["y_lines"])
         slab_tag = analysis["slab"]["tag"]
-        spec = [("IfcStructuralCurveMember", counts["curve_members"], ("line members: one per piloti, on the piloti positions", "Stabelemente: eines je Pilotistütze, auf den Pilotipositionen"), groups["members"], STRUCT),
-                ("IfcStructuralSurfaceMember", surfaces, (f"one surface member: the first-floor slab {slab_tag}", f"ein Flächenelement: die Obergeschossdecke {slab_tag}"), [mesh.outline], STRUCT),
-                (self.tr("shell elements", "Schalenelemente"), counts["shells"], (f"{columns} × {rows_n} between the grid lines and the façade edges", f"{columns} × {rows_n} zwischen Rasterlinien und Fassadenkanten"), groups["shells"], GOOD),
-                ("IfcStructuralPointConnection", counts["slab_nodes"], (f"slab nodes: {nx} × {ny} at the line crossings", f"Deckenknoten: {nx} × {ny} an den Linienkreuzungen"), groups["nodes"], DATA)]
+        spec = [("IfcStructuralCurveMember", counts["curve_members"], ("line members: selected slab supports", "Stabelemente: gewählte Deckenstützen"), groups["members"], STRUCT),
+                ("IfcSlab", surfaces, (f"source slab: {slab_tag}", f"Quelldecke: {slab_tag}"), [mesh.outline], STRUCT),
+                ("IfcStructuralSurfaceMember", counts["surface_members"], ("regional patches clipped at native voids", "regionale Flächen mit nativen Aussparungen"), groups["shells"], GOOD),
+                ("IfcStructuralPointConnection", counts["slab_nodes"], ("actual nodes at patch and axis intersections", "tatsächliche Knoten an Flächen- und Achsenschnitten"), groups["nodes"], DATA)]
         rows, steps = VGroup(), []
         for index, (name, value, text, parts, color) in enumerate(spec):
             y, tracker = 2.45 - index * 0.68, ValueTracker(0)
@@ -826,26 +834,29 @@ class Beat4_PartialModels(_visuals.ClipScene):
         void, gross, net = analysis["slab"]["void_area"], analysis["slab"]["gross_area"], analysis["slab"]["net_area"]
         notes = VGroup(*self._lines([self.tr("line member ≠ column solid", "Stabelement ≠ Stützenkörper"), self.tr("surface member ≠ slab solid", "Flächenelement ≠ Deckenkörper")],
                                     (0.95, -0.35, 0), size=17.0, color=INK, pitch=0.32, width=5.6),
-                       *self._lines([self.tr(f"The mesh ignores the ramp void of {self.quantity(void, 'm²')}:", f"Das Netz ignoriert die Rampenöffnung von {self.quantity(void, 'm²')}:"),
-                                     self.tr(f"analysis slab {self.quantity(gross, 'm²')}, model slab {self.quantity(net, 'm²')}.", f"Analysedecke {self.quantity(gross, 'm²')}, Modelldecke {self.quantity(net, 'm²')}.")],
+                       *self._lines([self.tr(f"The mesh retains native ramp, stair and service voids of {self.quantity(void, 'm²')}:", f"Das Netz berücksichtigt native Rampen-, Treppen- und Haustechniköffnungen von {self.quantity(void, 'm²')}:"),
+                                     self.tr(f"analysis slab {self.quantity(net, 'm²')}, model slab {self.quantity(net, 'm²')}.", f"Analysedecke {self.quantity(net, 'm²')}, Modelldecke {self.quantity(net, 'm²')}.")],
                                     (0.95, -1.25, 0), size=16.2, color=WARN, pitch=0.28, width=5.7))
         roof = VGroup(self._roof_note((0.95, -2.05, 0)), self._legend((0.95, -2.35, 0), piloti=True))
         self._show("members", (0.9, [self._leave(), FadeIn(base)]), *steps, (0.8, [FadeIn(notes), FadeIn(roof)]))
         self.stage = VGroup(base, rows, notes, roof, mesh, *[VGroup(*items) for items in groups.values()], mesh.outline)
 
     def _midsurface(self):
-        """✂️ Beat 13: a section through piloti C3 and the slab; the solids idealise into the mid-surface and a line member that ends on it."""
+        """✂️ Beat 13: a section through piloti 19 and the slab; the solids idealise into the mid-surface and a line member that ends on it."""
         analysis, language = self.analysis, self.language()
-        piloti = next(item for item in self.geometry["pilotis"] if item["tag"] == "C3")
-        member = next(item for item in analysis["members"] if item["kind"] == "curve" and item["source_tag"] == "C3")
-        slab, mid_z, soffit = analysis["slab"], analysis["mid_surface"]["z"], piloti["top"]
+        piloti = next(item for item in self.geometry["pilotis"] if item["tag"] == _model.role("column_example"))
+        member = next(item for item in analysis["members"] if item["kind"] == "curve" and item["source_tag"] == _model.role("column_example"))
+        slab = dict(analysis["slab"])
+        mid_z = next(node["position"][2] for node in analysis["nodes"] if node["id"] == member["nodes"][1])
+        soffit = piloti["top"]
+        slab["thickness"] = 2 * (mid_z - soffit)
         half = mid_z - soffit
         if abs(member["physical_height"] + half - member["length"]) > 1e-6:
             raise ValueError("Member length must be the piloti height plus half the slab thickness")
-        section = self.villa_section((-4.45, 0.6, 0), 0.24, cut=("x", piloti["x"]), layers=("structure", "architecture"), highlight=("C3",), level_lines=False, labels=False)
+        section = self.villa_section((-4.45, 0.6, 0), 0.24, cut=("x", piloti["x"]), layers=("structure", "architecture"), highlight=(_model.role("column_example"),), level_lines=False, labels=False)
         section.add(self.scale_bar((-6.5, -1.55, 0), 0.24, 5.0, steps=2),
                     self.leader((-5.0, -1.1, 0), section.at(3.0, 3.5), analysis["slab"]["tag"] + self.tr(" first-floor slab", " Geschossdecke"), color=INK, size=16.2, anchor="l"),
-                    self.text("C3", section.at(piloti["y"], 0.0) + np.array([0.0, -0.25, 0.0]), size=16.2, color=DATA),
+                    self.text(_model.role("column_example"), section.at(piloti["y"], 0.0) + np.array([0.0, -0.25, 0.0]), size=16.2, color=DATA),
                     self.leader((-3.2, -0.8, 0), section.parts["RF-1A"].get_center(), self.tr("ramp flights", "Rampenläufe"), color=MUTED, size=16.2, anchor="l"))
         joint = section.at(piloti["y"], mid_z)
         zoom, cx, cy, reach, bottom = 1.6, 3.9, 0.45, 0.85, soffit - 0.8
@@ -886,7 +897,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
         self.stage = VGroup(section, ring, links, frame, live, lift, thick, names, formula, title)
 
     def _supports(self):
-        """⏚ Beat 14: the plan again; every piloti foot gets a fixed support, drawn as the hatched block, against the pinned alternative."""
+        """⏚ Show assumed fixed restraints at selected analytical births against the pinned alternative."""
         analysis, language = self.analysis, self.language()
         base = self.villa_plan("first", LEFT_PLAN, 0.2, layers=("structure",), dims=(), ramp_arrow=False)
         base.add(self._chains(base), self.scale_bar((-1.05, -2.1, 0), 0.2, 5.0, steps=2))
@@ -895,7 +906,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
         mesh.remove(mesh.supports)
         count, first = ValueTracker(0), analysis["supports"][0]
         row = VGroup(self._counter(count, (0.95, 2.4, 0), size=21.0, unit=STAR), self.text("IfcStructuralPointConnection", (1.1, 2.4, 0), size=17.5, color=DATA, anchor="l", width=5.5),
-                     self.label("support nodes: one at every piloti foot", "Lagerknoten: einer an jedem Pilotifuß", (1.1, 2.11, 0), size=15.5, color=MUTED, anchor="l", width=5.5))
+                     self.label("assumed restraints at selected analytical births", "angenommene Lager an gewählten analytischen Stützenanfängen", (1.1, 2.11, 0), size=15.5, color=MUTED, anchor="l", width=5.5))
         condition = VGroup(frame_box(5.9, 0.9, WARN).move_to((RIGHT, 1.35, 0)),
                            self.text(first["condition"] + STAR, (RIGHT - 2.8, 1.55, 0), size=17.5, color=INK, anchor="l", width=5.4),
                            self.text(self.tr("translations and rotations restrained", "Verschiebungen und Verdrehungen gebunden"), (RIGHT - 2.8, 1.17, 0), size=16.2, color=MUTED, anchor="l", width=5.6))
@@ -932,7 +943,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
         def q():
             return sum(share(index) for index in range(3))
 
-        axon = self._villa_analysis((-3.4, 0.2, 0), 0.17, nodes=True, tags=("C3",))
+        axon = self._villa_analysis((-3.4, 0.2, 0), 0.17, nodes=True, tags=(_model.role("column_example"),))
         shells = [shell["id"] for shell in analysis["shells"]]
         arrows = self.live(lambda: self.load_arrows([q()] * len(shells), [axon.at(shell) for shell in shells], 0.05, per="m²", anchor="tip", colors=GOOD, labels=False, width=2.0),
                            key=lambda: round(q(), 2))
@@ -943,7 +954,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
         section = VGroup(polygon(strip, STRUCT, 0.3, STRUCT, 1.8), self.hatch(strip, STRUCT, 0.07, 45, 0.8, 0.8), polygon(finish, GOOD, 0.8, GOOD, 1.2),
                          self.dimension(strip[0], strip[3], self.quantity(slab["thickness"], "m") + STAR, offset=0.15, color=STRUCT, size=16.2),
                          self.label("first-floor slab, section", "Geschossdecke, Schnitt", (x0 + 1.4, y0 + 0.62, 0), size=16.2, color=MUTED),
-                         *self._lines([self.tr("reinforced concrete", "Stahlbeton"), self.quantity(loads["self_weight"]["density"], "kN/m³", 0) + STAR], (x0 + 3.0, y0 + 0.15, 0), size=16.2, color=STRUCT, pitch=0.3, width=2.6))
+                         *self._lines([self.tr("RC ribs + hollow units + beam strips", "Stahlbetonrippen + Hohlkörper + Balkenstreifen"), self.quantity(loads["self_weight"]["density"], "kN/m³", 0) + STAR], (x0 + 3.0, y0 + 0.15, 0), size=16.2, color=STRUCT, pitch=0.3, width=2.6))
         equation = self._equation([("q =", INK, "q ="), (lambda: self.number(share(0)) + STAR, STRUCT, self.number(values[0]) + STAR), ("+", MUTED, "+"),
                                    (lambda: self.number(share(1)) + STAR, GOOD, self.number(values[1]) + STAR), ("+", MUTED, "+"), (lambda: self.number(share(2)) + STAR, DATA, self.number(values[2]) + STAR),
                                    ("=", MUTED, "="), (lambda: self.quantity(q(), "kN/m²") + STAR, INK, self.quantity(sum(values), "kN/m²") + STAR)], (RIGHT, 0.7, 0), size=19.0)
@@ -974,36 +985,55 @@ class Beat4_PartialModels(_visuals.ClipScene):
         self.remove(arrows)
         self.stage = VGroup(axon, arrows, readout, section, equation, sub, bar, legend, reaction, note)
 
+    def _loss_groups(self):
+        """🗃️ Partition source objects omitted as analysis members without duplicating shared discipline identities."""
+        registry={item["tag"]:item for group in ("elements","spaces") for item in self.model[group]}
+        source=set().union(*(set(info["element_tags"]) for info in self.info.values()))
+        kept={member["source_tag"] for member in self.analysis["members"]}
+        omitted=source-kept
+        categories=[
+            (("other column bodies","weitere Stützenkörper"),{"IfcColumn"},("outside this first-floor member selection","außerhalb dieser Geschossauswahl")),
+            (("other slabs and covers","weitere Platten und Deckel"),{"IfcSlab"},("not this analysis surface","nicht diese Analysefläche")),
+            (("primary and auxiliary beams","Haupt- und Zusatzträger"),{"IfcBeam"},("physical beam objects are not transferred as line members","physische Trägerobjekte werden nicht als Stäbe übertragen")),
+            (("walls and screen","Wände und Schirm"),{"IfcWall"},("occupied bodies omitted","feste Körper entfallen")),
+            (("opening records","Öffnungsdatensätze"),{"IfcOpeningElement"},("void geometry remains; separate products do not","Aussparungsgeometrie bleibt; eigene Produkte entfallen")),
+            (("windows, doors and glazing","Fenster, Türen und Verglasung"),{"IfcWindow","IfcDoor","IfcCurtainWall"},("frames and glass are omitted","Rahmen und Glas entfallen")),
+            (("circulation and guards","Erschließung und Geländer"),{"IfcRamp","IfcRampFlight","IfcStair","IfcRailing"},("physical circulation bodies omitted","physische Erschließungskörper entfallen")),
+            (("space objects","Raumobjekte"),{"IfcSpace"},("room semantics omitted","Raumsemantik entfällt")),
+            (("furnishings","Ausstattung"),{"IfcFurnishingElement"},("fitted and movable objects omitted","feste und bewegliche Objekte entfallen")),
+            (("foundations","Gründungen"),{"IfcFooting"},("replaced by declared support assumptions","durch erklärte Lagerannahmen ersetzt")),
+            (("cellar and other assemblies","Keller- und weitere Baugruppen"),{"IfcBuildingElementProxy"},("includes the shared mechanical jib once","gemeinsamer Hebeausleger genau einmal")),
+            (("service products","Haustechnikprodukte"),{"IfcBoiler","IfcSpaceHeater","IfcWasteTerminal","IfcPipeSegment","IfcCovering","IfcChimney"},("equipment, hollow pipes, casing and flue omitted","Geräte, hohle Rohre, Hüllen und Rauchzug entfallen"))]
+        rows=[]
+        for title,classes,note in categories:
+            tags=sorted(tag for tag in omitted if registry[tag]["class"] in classes)
+            if tags:
+                rows.append((self.tr(*title)+f" ×{self.number(len(tags),0)}",tags,self.tr(*note),True,False))
+        actual=[tag for _,tags,_,_,_ in rows for tag in tags]
+        if len(actual)!=len(set(actual)) or set(actual)!=omitted:
+            raise ValueError("Loss categories must partition every omitted source identity")
+        return rows
+
     def _loss(self):
         """🗑️ Beat 16: what the analysis does not keep, one row per kind, each tied to the elements it came from; rows with an object count add up to the headline."""
         analysis, language = self.analysis, self.language()
         villa = self.villa_axon((-4.55, 0.3, 0), 0.12, colors="discipline", ground=False)
-        services = self.info["services"]["element_tags"]
-        void_area = analysis["slab"]["void_area"]
-        groups = []
-        for item in analysis["loss_groups"]:
-            if item["class"] == "IfcColumn":
-                continue
-            kind = KIND_LABELS.get(item["predefined_type"] or item["property"].split(".")[-1])
-            counted = item["property"] == "element"
-            head = f"{item['class']}" + (" · " + kind[0 if language == "en" else 1] if kind and counted else "") + (f" ×{self.number(item['count'], 0)}" if counted else "")
-            if item["property"] == "voids":
-                head = self.tr("ramp void", "Rampenöffnung") + " · " + self.quantity(void_area, "m²")
-            elif item["property"].startswith("material.layer"):
-                head = self.tr(f"render layer · {self.number(item['count'], 0)} façades", f"Putzschicht · {self.number(item['count'], 0)} Fassaden")
-            groups.append((head, item["source_tags"], item[language].split(": ", 1)[-1], counted, item["property"] == "voids"))
-        groups.append((self.tr("services", "Haustechnik") + f" ×{self.number(len(services), 0)}", services, self.tr("boiler, radiators, drains, pipes: no structural meaning", "Kessel, Heizkörper, Abläufe, Rohre: ohne statische Bedeutung"), True, False))
+        groups=self._loss_groups()
         table, steps, links = VGroup(), [], VGroup()
         for index, (head, tags, sentence, counted, void) in enumerate(groups):
-            y = 2.62 - index * 0.262
+            y = 2.62 - index * 0.28
             row = VGroup(self.text(head, (-2.0, y, 0), size=16.2, color=WARN, anchor="l", width=2.45), self.text(sentence, (0.6, y, 0), size=16.2, color=INK, anchor="l", width=6.0))
             table.add(row)
             parts = [villa.parts[key] for tag in tags for key in self._keys(villa, tag)] if counted else []
             keys = [key for tag in tags for key in self._keys(villa, tag)]
-            target = villa.at(8.8, 8.65, self.geometry["storeys"]["first"]) if void else np.mean([villa.parts[key].get_center() for key in keys], axis=0)
-            line = Line((-2.08, y, 0), target, stroke_width=0.8, color=WARN, stroke_opacity=0.5)
-            links.add(line, Dot(target, radius=0.04, color=WARN))
-            steps.append(AnimationGroup(FadeIn(row, run_time=0.2), FadeIn(VGroup(line, links[-1]), run_time=0.2), *[part.animate.set_stroke(WARN, 2.0, 1.0).set_fill(WARN, 0.2) for part in parts]))
+            guides=[]
+            if keys:
+                target=np.mean([villa.parts[key].get_center() for key in keys],axis=0)
+                line=Line((-2.08,y,0),target,stroke_width=.8,color=WARN,stroke_opacity=.5)
+                dot=Dot(target,radius=.04,color=WARN)
+                links.add(line,dot)
+                guides.append(FadeIn(VGroup(line,dot),run_time=.2))
+            steps.append(AnimationGroup(FadeIn(row,run_time=.2),*guides,*[part.animate.set_stroke(WARN,2,1).set_fill(WARN,.2) for part in parts]))
         dropped = len({tag for _, tags, _, counted, _ in groups if counted for tag in tags})
         kept = len({item["source_tag"] for item in analysis["members"]})
         if dropped + kept != len(set().union(*[set(info["element_guids"]) for info in self.info.values()])):
@@ -1023,10 +1053,10 @@ class Beat4_PartialModels(_visuals.ClipScene):
         self.stage = VGroup(villa, table, links, footer, legend)
 
     def _properties(self):
-        """🏷️ Beat 17: piloti C3 as the analysis keeps it: what stays on the line member and what drops off."""
+        """🏷️ Beat 17: piloti 19 as the analysis keeps it: what stays on the line member and what drops off."""
         analysis, language = self.analysis, self.language()
-        piloti = next(item for item in self.geometry["pilotis"] if item["tag"] == "C3")
-        member = next(item for item in analysis["members"] if item["kind"] == "curve" and item["source_tag"] == "C3")
+        piloti = next(item for item in self.geometry["pilotis"] if item["tag"] == _model.role("column_example"))
+        member = next(item for item in analysis["members"] if item["kind"] == "curve" and item["source_tag"] == _model.role("column_example"))
         lost = {item["property"]: item for item in analysis["loss_groups"] if item["class"] == "IfcColumn"}
         scale, x, ground = 0.72, -5.2, -1.5
 
@@ -1036,10 +1066,10 @@ class Beat4_PartialModels(_visuals.ClipScene):
         leg = [(x - 0.16, z(0), 0), (x + 0.16, z(0), 0), (x + 0.16, z(piloti["top"]), 0), (x - 0.16, z(piloti["top"]), 0)]
         slab = [(x - 0.8, z(piloti["top"]), 0), (x + 0.8, z(piloti["top"]), 0), (x + 0.8, z(piloti["top"] + analysis["slab"]["thickness"]), 0), (x - 0.8, z(piloti["top"] + analysis["slab"]["thickness"]), 0)]
         elevation = VGroup(polygon(leg, STRUCT, 0.35, STRUCT, 1.6), polygon(slab, STRUCT, 0.35, STRUCT, 1.6), segments([((x - 0.9, ground, 0), (x + 0.9, ground, 0))], INK, 2.0),
-                           self.text("C3 · IfcColumn", (x, z(piloti["top"]) + 0.65, 0), size=17.0, color=DATA),
+                           self.text("19 · IfcColumn", (x, z(piloti["top"]) + 0.65, 0), size=17.0, color=DATA),
                            self.dimension((x - 0.5, z(0), 0), (x - 0.5, z(piloti["top"]), 0), self.quantity(piloti["top"], "m") + STAR, offset=0.2, color=MUTED, size=15.5))
-        line = VGroup(segments([((x, z(0), 0), (x, z(analysis["mid_surface"]["z"]), 0))], STRUCT, 5.0), Dot((x, z(analysis["mid_surface"]["z"]), 0), radius=0.07, color=DATA),
-                      self.dimension((x + 0.16, z(0), 0), (x + 0.16, z(analysis["mid_surface"]["z"]), 0), self.tr("line ", "Stab ") + self.quantity(member["length"], "m", 3) + STAR, offset=-0.2, color=STRUCT, size=15.5))
+        line = VGroup(segments([((x, z(0), 0), (x, z(next(node["position"][2] for node in analysis["nodes"] if node["id"] == member["nodes"][1])), 0))], STRUCT, 5.0), Dot((x, z(next(node["position"][2] for node in analysis["nodes"] if node["id"] == member["nodes"][1])), 0), radius=0.07, color=DATA),
+                      self.dimension((x + 0.16, z(0), 0), (x + 0.16, z(next(node["position"][2] for node in analysis["nodes"] if node["id"] == member["nodes"][1])), 0), self.tr("line ", "Stab ") + self.quantity(member["length"], "m", 3) + STAR, offset=-0.2, color=STRUCT, size=15.5))
         centre, radius = np.array([-2.5, 0.2, 0.0]), piloti["radius"] * 5.0
         ring = circle_points(centre, radius, 32)
         section = VGroup(polygon(ring, STRUCT, 0.4, STRUCT, 1.8), hatch(ring, STRUCT, 0.07, 45, 0.8, 0.85),
@@ -1048,8 +1078,8 @@ class Beat4_PartialModels(_visuals.ClipScene):
         keep = [(self.tr("line member ", "Stabelement ") + self.quantity(member["length"], "m", 3) + STAR, GOOD), (self.tr("section Ø ", "Querschnitt Ø ") + self.quantity(member["diameter"], "m") + STAR, GOOD),
                 (self.tr("reinforced concrete ", "Stahlbeton ") + self.quantity(analysis["loads"]["self_weight"]["density"], "kN/m³", 0) + STAR, GOOD),
                 (self.tr("support: fixed", "Lagerung: eingespannt"), GOOD), ("GlobalId " + member["source_guid"], GOOD)]
-        pset = next(name for name, props in _model.element("C3")["psets"].items() if "FireRating" in props)
-        drop = [(f"{pset}.FireRating = {self._flag('C3', 'FireRating')}", WARN), (f"{pset}.IsExternal = {self._flag('C3', 'IsExternal')}", WARN)]
+        pset = next(name for name, props in _model.element(_model.role("column_example"))["psets"].items() if "FireRating" in props)
+        drop = [(f"{pset}.FireRating = {self._flag(_model.role("column_example"), 'FireRating')}", WARN), (f"{pset}.IsExternal = {self._flag(_model.role("column_example"), 'IsExternal')}", WARN)]
         tags = lost["Pset_ColumnCommon.FireRating"]["source_tags"]
         rows, steps, strikes = VGroup(), [], VGroup()
         for index, (text, color) in enumerate(keep + drop):
@@ -1099,7 +1129,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
         for index, group in enumerate(groups):
             x = -2.05 + pitch * (index + 0.5)
             centres.append(x)
-            name = self.text(self.tr(*KIND_NAMES[group["id"]]), (0, 0, 0), size=15.0, color=INK)
+            name = self.text(self.tr(*KIND_NAMES.get(group["id"], (group["id"].split(":")[0], group["id"].split(":")[0]))), (0, 0, 0), size=15.0, color=INK)
             name.rotate(np.pi / 2)
             name.scale_to_fit_height(min(name.height, 0.78))
             names.add(name.move_to((x, base - 0.07 - name.height / 2, 0)))
@@ -1114,28 +1144,29 @@ class Beat4_PartialModels(_visuals.ClipScene):
     def _trace(self):
         """🔗 Beat 18: the analysis member carries the GlobalId of its source object; the way back is not automatic."""
         analysis, language = self.analysis, self.language()
-        member = next(item for item in analysis["members"] if item["kind"] == "curve" and item["source_tag"] == "C3")
-        struct = self.villa_axon((-3.9, 0.8, 0), 0.098, disciplines=("structure",), grid=True, highlight=("C3",), ground=False)
+        member = next(item for item in analysis["members"] if item["kind"] == "curve" and item["source_tag"] == _model.role("column_example"))
+        struct = self.villa_axon((-3.9, 0.8, 0), 0.098, disciplines=("structure",), grid=True, highlight=(_model.role("column_example"),), ground=False)
         struct.grid.remove(struct.grid.submobjects[-1])
-        result = self._villa_analysis((3.9, 0.8, 0), 0.098, highlight=("C3",), tags=("C3",))
+        result = self._villa_analysis((3.9, 0.8, 0), 0.098, highlight=(_model.role("column_example"),), tags=(_model.role("column_example"),))
         heads = VGroup(self.text(f"{self.info['structure']['name'][language]} · {self._revision(analysis['source_revision'])}", (-3.9, 2.75, 0), size=17.5, color=STRUCT, width=3.8),
                        self.label("Structural analysis model", "Tragwerksanalysemodell", (3.9, 2.75, 0), size=17.5, color=GOOD, width=3.8))
-        c3 = Line(struct.anchors["C3"], result.anchors["C3"], stroke_width=1.6, color=DATA, stroke_opacity=0.9)
+        c2 = Line(struct.anchors[_model.role("column_example")], result.anchors[_model.role("column_example")], stroke_width=1.6, color=DATA, stroke_opacity=0.9)
         one_way = VGroup(Arrow((-0.9, 1.9, 0), (0.9, 1.9, 0), buff=0.0, color=MUTED, stroke_width=3.0, max_tip_length_to_length_ratio=0.2),
                          Arrow((0.9, 1.35, 0), (-0.9, 1.35, 0), buff=0.0, color=WARN, stroke_width=2.0, max_tip_length_to_length_ratio=0.2, stroke_opacity=0.5),
                          segments([((-0.2, 1.2, 0), (0.2, 1.5, 0)), ((-0.2, 1.5, 0), (0.2, 1.2, 0))], WARN, 3.0),
                          self.label("translation", "Übersetzung", (0, 2.2, 0), size=16.2, color=MUTED),
                          self.label("no automatic way back", "kein automatischer Rückweg", (0, 0.95, 0), size=15.5, color=WARN, width=2.4))
-        chips = VGroup(self.guid_chip("C3", (-3.9, -1.5, 0), color=DATA),
+        chips = VGroup(self.guid_chip(_model.role("column_example"), (-3.9, -1.5, 0), color=DATA),
                        self.label("source GlobalId of member " + member["id"], "Quell-GlobalId des Elements " + member["id"], (3.9, -0.98, 0), size=15.5, color=MUTED, width=3.9),
-                       self.guid_chip("C3", (3.9, -1.5, 0), color=DATA, label=False),
+                       self.guid_chip(_model.role("column_example"), (3.9, -1.5, 0), color=DATA, label=False),
                        self.text("=", (0, -1.5, 0), size=30.0, color=GOOD))
-        if member["source_guid"] != _model.global_id("C3"):
+        if member["source_guid"] != _model.global_id(_model.role("column_example")):
             raise ValueError("The member keeps the GlobalId of its source piloti")
         records, kinds, fill = ValueTracker(0), ValueTracker(0), ValueTracker(0)
         footer, squares = self._trace_footer(records, kinds), self._kind_chart(fill)
         self._show("trace", (0.9, [self._leave(), FadeIn(struct), FadeIn(result), FadeIn(heads)]),
-                   (1.2, [FadeIn(c3), FadeIn(chips)]), (1.0, [FadeIn(one_way)]),
+                   (1.2, [FadeIn(c2), FadeIn(chips)]), (1.0, [FadeIn(one_way)]),
                    (1.2, [FadeIn(footer), records.animate(rate_func=LINEAR).set_value(len(analysis["losses"])), kinds.animate(rate_func=LINEAR).set_value(len(analysis["loss_groups"])),
                           FadeIn(squares), fill.animate(rate_func=LINEAR).set_value(1.0)]))
-        self.stage = VGroup(struct, result, heads, c3, one_way, chips, footer, squares)
+        self.stage = VGroup(struct, result, heads, c2, one_way, chips, footer, squares)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               

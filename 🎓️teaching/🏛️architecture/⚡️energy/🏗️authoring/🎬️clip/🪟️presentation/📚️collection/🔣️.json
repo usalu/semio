@@ -169,6 +169,42 @@
     "Optimization_Algorithms": {
       "en": "Optimization Algorithms",
       "de": "Optimierungsalgorithmen"
+    },
+    "Grasshopper_01_Anatomy": {
+      "en": "Anatomy of a Grasshopper Script",
+      "de": "Aufbau eines Grasshopper-Skripts"
+    },
+    "Grasshopper_02_Capsule": {
+      "en": "One Capsule, Parametric",
+      "de": "Eine Kapsel, parametrisch"
+    },
+    "Grasshopper_03_Tower": {
+      "en": "From One Capsule to the Tower",
+      "de": "Von der Kapsel zum Turm"
+    },
+    "Grasshopper_04_Casting": {
+      "en": "Casting: When Types Meet",
+      "de": "Casting: Wenn Typen sich treffen"
+    },
+    "Grasshopper_05_Trees": {
+      "en": "Data Trees on the Tower",
+      "de": "Datenbäume am Turm"
+    },
+    "Excel_01_Anatomy": {
+      "en": "The Anatomy of a Workbook",
+      "de": "Aufbau einer Arbeitsmappe"
+    },
+    "Excel_02_References": {
+      "en": "Cell References",
+      "de": "Zellbezüge"
+    },
+    "Excel_03_Program": {
+      "en": "The Room Program in Excel",
+      "de": "Das Raumprogramm in Excel"
+    },
+    "Excel_04_Energy": {
+      "en": "Heating Demand in the Nakagin Workbook",
+      "de": "Heizwärmebedarf in der Nakagin-Arbeitsmappe"
     }
   }
 }

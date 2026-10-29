@@ -1,0 +1,20 @@
+{
+  "cases": [
+    {
+      "id": "empty",
+      "value": "",
+      "serialized": "IFCTEXT('')"
+    },
+    {
+      "id": "text",
+      "value": "COLUMN",
+      "serialized": "IFCTEXT('COLUMN')"
+    },
+    {
+      "id": "apostrophe",
+      "value": "l'issue",
+      "serialized": "IFCTEXT('l''issue')"
+    }
+  ],
+  "span_rule": "Every reported span covers at least one serialized character; empty inner text may be unannotated or include its real quote token."
+}

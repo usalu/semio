@@ -1,0 +1,424 @@
+{
+  "version": 1,
+  "basis": "CMN leaflet 2021 sections 3,6,7,11–17; CMN teaching dossier pp8–10. All metric geometry inferred.",
+  "fixtures": [
+    {
+      "tag": "FIX-HALL-BASIN",
+      "room": "SP-HALL",
+      "cavities": [
+        [
+          8.23,
+          11.1,
+          0.84
+        ]
+      ],
+      "occupied": [
+        [
+          8.23,
+          11.1,
+          0.72
+        ]
+      ]
+    },
+    {
+      "tag": "FIX-LAUNDRY",
+      "room": "SP-LAUNDRY",
+      "cavities": [
+        [
+          4.15,
+          20.95,
+          0.86
+        ],
+        [
+          5.55,
+          20.95,
+          0.86
+        ]
+      ],
+      "occupied": [
+        [
+          4.15,
+          20.95,
+          0.69
+        ],
+        [
+          5.55,
+          20.95,
+          0.69
+        ]
+      ]
+    },
+    {
+      "tag": "FIX-KITCHEN",
+      "room": "SP-KITCHEN",
+      "cavities": [
+        [
+          0.83,
+          3.4,
+          0.82
+        ]
+      ],
+      "occupied": [
+        [
+          0.83,
+          3.4,
+          0.62
+        ]
+      ]
+    },
+    {
+      "tag": "FIX-BATH",
+      "room": "SP-PARENT-BATH",
+      "cavities": [
+        [
+          5.65,
+          13.35,
+          0.41
+        ]
+      ],
+      "occupied": [
+        [
+          5.65,
+          13.35,
+          0.08
+        ]
+      ]
+    },
+    {
+      "tag": "FIX-CHAISE",
+      "room": "SP-PARENT-BATH"
+    },
+    {
+      "tag": "FIX-GUEST-WARDROBE",
+      "room": "SP-GUEST"
+    },
+    {
+      "tag": "FIX-GUEST-BASIN",
+      "room": "SP-GUEST",
+      "cavities": [
+        [
+          3.225,
+          11.175,
+          0.82
+        ]
+      ],
+      "occupied": [
+        [
+          3.225,
+          11.175,
+          0.67
+        ]
+      ]
+    },
+    {
+      "tag": "FIX-SON-DESK",
+      "room": "SP-SON"
+    },
+    {
+      "tag": "FIX-SON-STORAGE",
+      "room": "SP-SON"
+    },
+    {
+      "tag": "FIX-PARENTS-STORAGE",
+      "room": "SP-PARENTS"
+    },
+    {
+      "tag": "FIX-DRESSING-STORAGE",
+      "room": "SP-PARENTS"
+    },
+    {
+      "tag": "FIX-PANTRY-STORAGE",
+      "room": "SP-PANTRY"
+    },
+    {
+      "tag": "FIX-BOUDOIR",
+      "room": "SP-BOUDOIR"
+    },
+    {
+      "tag": "FIX-SERVANT-BASIN-1",
+      "room": "SP-SERVANTS-1",
+      "cavities": [
+        [
+          3.85,
+          12.4,
+          0.84
+        ]
+      ]
+    },
+    {
+      "tag": "FIX-SERVANT-BASIN-2",
+      "room": "SP-SERVANTS-2",
+      "cavities": [
+        [
+          3.85,
+          14.9,
+          0.84
+        ]
+      ]
+    },
+    {
+      "tag": "FIX-TERRACE-TABLE",
+      "room": "SP-TERRACE"
+    },
+    {
+      "tag": "FIX-HALL-TABLE-1",
+      "room": "SP-HALL",
+      "integrates": [
+        "9"
+      ]
+    },
+    {
+      "tag": "FIX-HALL-TABLE-2",
+      "room": "SP-HALL",
+      "integrates": [
+        "8"
+      ]
+    },
+    {
+      "tag": "FIX-SERVANT-RADIATOR-1",
+      "room": "SP-SERVANTS-1"
+    },
+    {
+      "tag": "FIX-SERVANT-RADIATOR-2",
+      "room": "SP-SERVANTS-2"
+    },
+    {
+      "tag": "TAP-HALL",
+      "room": "SP-HALL"
+    },
+    {
+      "tag": "TAP-LAUNDRY-1",
+      "room": "SP-LAUNDRY"
+    },
+    {
+      "tag": "TAP-LAUNDRY-2",
+      "room": "SP-LAUNDRY"
+    },
+    {
+      "tag": "TAP-KITCHEN",
+      "room": "SP-KITCHEN"
+    },
+    {
+      "tag": "TAP-GUEST",
+      "room": "SP-GUEST"
+    },
+    {
+      "tag": "TAP-SERVANT-1",
+      "room": "SP-SERVANTS-1"
+    },
+    {
+      "tag": "TAP-SERVANT-2",
+      "room": "SP-SERVANTS-2"
+    },
+    {
+      "tag": "FIX-SHARED-BATH",
+      "room": "SP-SHARED-BATH",
+      "cavities": [
+        [
+          0.95,
+          14.9,
+          0.4
+        ]
+      ],
+      "occupied": [
+        [
+          0.95,
+          14.9,
+          0.05
+        ]
+      ]
+    },
+    {
+      "tag": "FIX-SHARED-BASIN",
+      "room": "SP-SHARED-BATH",
+      "cavities": [
+        [
+          2.1,
+          14.75,
+          0.82
+        ]
+      ],
+      "occupied": [
+        [
+          2.1,
+          14.75,
+          0.64
+        ]
+      ]
+    },
+    {
+      "tag": "FIX-CHAUFFEUR-BASIN",
+      "room": "SP-CHAUFFEUR-BATH",
+      "cavities": [
+        [
+          15.275,
+          20.65,
+          0.84
+        ]
+      ],
+      "occupied": [
+        [
+          15.275,
+          20.65,
+          0.74
+        ]
+      ]
+    },
+    {
+      "tag": "TAP-CHAUFFEUR",
+      "room": "SP-CHAUFFEUR-BATH"
+    },
+    {
+      "tag": "FIX-TERRACE-PLANTER-1",
+      "room": "SP-TERRACE",
+      "cavities": [
+        [
+          15,
+          9.2,
+          0.4
+        ]
+      ]
+    },
+    {
+      "tag": "FIX-TERRACE-PLANTER-2",
+      "room": "SP-TERRACE",
+      "cavities": [
+        [
+          15,
+          13.1,
+          0.4
+        ]
+      ]
+    }
+  ],
+  "guards": [
+    {
+      "stair": "ST-GF",
+      "guard": "GUARD-ST-GF",
+      "tube": "TUBE-ST-GF",
+      "base": 0,
+      "top": 3.17
+    },
+    {
+      "stair": "ST-FR",
+      "guard": "GUARD-ST-FR",
+      "tube": "TUBE-ST-FR",
+      "base": 3.17,
+      "top": 6.6
+    }
+  ],
+  "routes": [
+    {
+      "storey": "ground",
+      "points": [
+        [
+          8.7,
+          8.1
+        ],
+        [
+          8.7,
+          9.7
+        ],
+        [
+          7.8,
+          10.3
+        ],
+        [
+          7.3,
+          10.5
+        ],
+        [
+          7.3,
+          11.25
+        ],
+        [
+          7.48,
+          11.61
+        ],
+        [
+          7.6,
+          12.2
+        ],
+        [
+          7.6,
+          19.4
+        ]
+      ],
+      "width": 0.8,
+      "basis": "Independent R33 registered northern hall circulation; fixture geometry is inferred"
+    },
+    {
+      "storey": "first",
+      "points": [
+        [
+          7.6,
+          7
+        ],
+        [
+          7.6,
+          7.25
+        ],
+        [
+          4.15,
+          7.25
+        ],
+        [
+          4.15,
+          11.4
+        ],
+        [
+          4.05,
+          11.4
+        ],
+        [
+          4.05,
+          15.9
+        ],
+        [
+          3.8,
+          16.4
+        ]
+      ],
+      "width": 0.8
+    },
+    {
+      "storey": "ground",
+      "points": [
+        [
+          7.6,
+          18.965
+        ],
+        [
+          6.5,
+          18.965
+        ],
+        [
+          5.8,
+          19.7
+        ],
+        [
+          5.8,
+          20.15
+        ]
+      ],
+      "width": 0.8,
+      "basis": "R77 inferred laundry fixture approach with door open"
+    },
+    {
+      "storey": "first",
+      "points": [
+        [
+          4.05,
+          11.925
+        ],
+        [
+          3.1,
+          11.925
+        ]
+      ],
+      "width": 0.8,
+      "basis": "R77 inferred guest washroom approach with movable door leaf open"
+    }
+  ],
+  "coordinates": "Fixture z samples are local to geometry.base_level; guard expected elevations are world metres."
+}

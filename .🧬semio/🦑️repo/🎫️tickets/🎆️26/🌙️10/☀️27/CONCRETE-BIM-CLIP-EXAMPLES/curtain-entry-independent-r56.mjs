@@ -1,0 +1,10 @@
+import fs from 'node:fs/promises';
+const t="C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️27/CONCRETE-BIM-CLIP-EXAMPLES";
+function area(p){return Math.abs(p.reduce((a,v,i)=>{const w=p[(i+1)%p.length];return a+v[0]*w[1]-w[0]*v[1]},0)/2)}
+function bounds(p){return[Math.min(...p.map(v=>v[0])),Math.min(...p.map(v=>v[1])),Math.max(...p.map(v=>v[0])),Math.max(...p.map(v=>v[1]))]}
+function clip(poly,cl){let out=poly;let signed=cl.reduce((a,v,i)=>{const q=cl[(i+1)%cl.length];return a+v[0]*q[1]-q[0]*v[1]},0);const sg=signed>=0?1:-1;for(let k=0;k<cl.length;k++){const c=cl[k],e=cl[(k+1)%cl.length],side=p=>sg*((e[0]-c[0])*(p[1]-c[1])-(e[1]-c[1])*(p[0]-c[0]));const input=out;out=[];if(!input.length)break;for(let i=0;i<input.length;i++){const a=input[i],b=input[(i+1)%input.length],sa=side(a),sb=side(b),ia=sa>=-1e-13,ib=sb>=-1e-13;if(ia)out.push(a);if(ia!==ib){const z=sa/(sa-sb);out.push(a.map((v,j)=>v+z*(b[j]-v)))}}}return out.length>2?area(out):0}
+export function overlap(a,b){return clip(b.outline,a.outline)*Math.max(0,Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0))}
+
+export function metrics(d){const volume=p=>area(p.outline)*(p.z1-p.z0);let self=0;for(let i=0;i<d.entry.parts.length;i++)for(let j=i+1;j<d.entry.parts.length;j++)self+=overlap(d.entry.parts[i],d.entry.parts[j]);return{curtain_volume:d.curtain.parts.reduce((a,p)=>a+volume(p),0),entry_volume:d.entry.parts.reduce((a,p)=>a+volume(p),0),service_volume:d.service.parts.reduce((a,p)=>a+volume(p),0),entry_self_overlap:self}}
+export function audit(d){return ['entry','service'].map(key=>{let sum=0,max=[0,-1,-1],positive=0;for(let i=0;i<d.curtain.parts.length;i++)for(let j=0;j<d[key].parts.length;j++){const v=overlap(d[key].parts[j],d.curtain.parts[i]);sum+=v;if(v>max[0])max=[v,i,j];if(v>1e-12)positive++;}return{tag:d[key].tag,curtain_parts:d.curtain.parts.length,filling_parts:d[key].parts.length,maximum:max,total:sum,positive};})}
+const d=JSON.parse(await fs.readFile(t+'/🗑️generated/curtain-contact-before-r56.json','utf8'));const result=audit(d);await fs.writeFile(t+'/🗑️generated/curtain-independent-before-r56.json',JSON.stringify(result,null,2));export default result;

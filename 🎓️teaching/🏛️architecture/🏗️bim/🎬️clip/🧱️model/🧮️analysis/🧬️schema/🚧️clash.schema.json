@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Occupied Material Clearance Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "a_tag",
+    "a_guid",
+    "b_tag",
+    "b_guid",
+    "kind",
+    "rule",
+    "name",
+    "required",
+    "required_basis",
+    "distance",
+    "intersects",
+    "a_point",
+    "b_point",
+    "point",
+    "level",
+    "status",
+    "deficit",
+    "policy"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "a_tag": {
+      "type": "string"
+    },
+    "a_guid": {
+      "type": "string"
+    },
+    "b_tag": {
+      "type": "string"
+    },
+    "b_guid": {
+      "type": "string"
+    },
+    "kind": {
+      "const": "clearance"
+    },
+    "rule": {
+      "type": "string"
+    },
+    "name": {
+      "type": "object",
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string"
+        },
+        "de": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "required": {
+      "type": "number",
+      "minimum": 0
+    },
+    "required_basis": {
+      "enum": [
+        "sourced",
+        "inferred",
+        "assumed"
+      ]
+    },
+    "distance": {
+      "type": "number",
+      "minimum": 0
+    },
+    "intersects": {
+      "type": "boolean"
+    },
+    "a_point": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "b_point": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "point": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "level": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "violation"
+      ]
+    },
+    "deficit": {
+      "type": "number",
+      "minimum": 0
+    },
+    "policy": {
+      "enum": [
+        "separation",
+        "reserved_void"
+      ]
+    },
+    "host_relation": {
+      "type": "string"
+    }
+  }
+}

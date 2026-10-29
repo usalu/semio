@@ -1,0 +1,37 @@
+# Bounded Exact Parking Overlay R62
+
+Root approved a test-only exact overlay correction after measured global GEOS unary_union pathology:104valid CW-1/frame polygons stalled while prior656unions each took≤0.02275s. Independent Node polygon-clipping union of the unchanged coordinates completed0.00596s, area0.4594722475880584.
+
+Ten completed actual-hook prefix test IDs and pre-edit dependency AST/file manifests were captured in feature-prefix-r62.json. The stalled348run was externally disposed; progress and zero-failure ledger are preserved as generated/features-r62-stalled-progress.json and features-r62-stalled-failures.json. It is an incomplete run, not a full PASS or completed identity capture.
+
+Portable fixtures were added before helper implementation in model/tests/🚗️overlays.json: same-side overlaps, missing material, extra material, equal-area displacement, cross-cell hole and the exact104source-bound group. The new contract first failed RED with missing _tiled_xor_area.
+
+Implemented exact one-metre disjoint tiling with STRtree candidate selection, actual/expected clipping, local unions and summed local symmetric-difference areas. No snap, repair, tolerance change or production/source change. The focused helper contract did not complete55s. Independent R63 measured a local union stall at cell[10,4,11,5],17polygons, localunion14 after2.182s; captured unchanged local input in generated/bounded-overlay-current-local-r63.json. Thus tiling alone is insufficient and no GREEN or tail resume is claimed.
+
+A separate exact binary-union order experiment also stalled at local polygon3 after preceding operations0.0645s. Its input/coordinates were unchanged; progress was preserved in generated/bounded-overlay-order-interrupted-r64.json and that experiment worker was disposed. Root was notified. An explicit alternate test-only overlay backend is proposed; no shared harness/backend change has been made pending root's scope choice.
+
+## Approved Exact JSON Backend R64
+
+Root approved replacing only the test's set-overlay engine with the existing real Node polygon-clipping library behind an owned JSON-string interface. Final checked source removes the failed tiled algorithm. The failed implementation remains explicitly as ticket/bounded-overlay-r62.py for research reproduction.
+
+Schema-first interface files: model/tests/🚗️overlay.schema.json, 🚗️overlay.py and 🚗️overlay.mjs. Native CPython sends one UTF-8 STDIN batch through argv[repo,tools,exec,--light,node,--,ownedtest.mjs], capturedstdout/check/120stimeout. The native command boundary is mocked in its unit contract; actual native execution remains the repository launcher gate. The Pyodide test harness explicitly injects the same actual source.mjs overlayJson callable through the ordinary Python setter. Checked Python imports no Pyodide/js module. No dependency types cross the JSON boundary; no new installed package or product dependency was introduced.
+
+The real9-case Node batch completes0.058s. Portable overlap/missing/extra/displacement/hole/tiny/empty cases pass, including positive1e-18 area. The exact104sourcegroup union area is0.45947224758805805 versus root's independent0.4594722475880584; identityXOR0. Request and response AJV2020 schemas pass. The Python contract invokes the real injected source callback and validates ordinary cases against GEOS; it passes1.442s. The native repoargv/UTF8/capturedstdout/timeout boundary mock also passes. All original per-group1e-8 comparisons remain unchanged; every group's actual/expected polygon lists are sent in ONE batch. Native NumPy/SciPy/GEOS height-band construction is byte-identical by AST before/after.
+
+Prefix proof: all ten passed canonical test IDs and their existing function/helper AST dependencies remain unchanged; sourcec53 and original parking physical fixture hash remain unchanged. Only five clip test files changed: 🚗️overlay.py/.mjs/.schema.json, 🚗️overlays.json and 🚗️parking.py. generated/overlay-freeze-r64.json retains this proof. The explicit-ID tail runner asserts unique IDs, skips only the ten passed IDs and proves union coverage of all349 registered IDs. It captures before/after source/provider/all.py/.mjs/.json manifests and writes baseline inputs before execution, preserving evidence even on interruption. Tail execution is pending; no full-pass claim is made.
+
+## Full Batch Counterexample R65
+
+The real full native-height batch raises a polygon-clipping xor SweepLine error near[14.282967290755003,1.2875919903739488]→[14.285355339059327,1.2853553390593273]. Portable and104sourcegroup success does not establish whole-batch correctness. No fallback, snapping, permutation or alternative algorithm was introduced. An isolated unchanged test uses the owned backend setter solely to save the exact request before the same source.mjs call; capture is pending.
+
+The tail reached48completed tests with zero assertion failures and two errors. The second is a fresh public P return-type failure: current drafting/📏️geometry.py hash75901e880a34e1b4b941aa130bbc430993e520fa96416399f9fabeff5d51aa8b has ndarray annotation and np.array(values) return. Restoring only those two lines to the approved tuple annotation/tuple(values) hashes exactly9d506aabadf86cfe9efa93b0f53ec0c50f4a27b8f1b476c515588bb530e74c18, matching R11's captured BEFORE. Thus the earlier unqualified code drift is concretely explained by a two-line return-type regression. No restoration was made pending coordination.
+
+Between-test cancellation waited176s inside a later GEOS slab-partition contract; that active method is unverified, not classified as a new failure. The worker was externally disposed after unique inputs/progress/failures and a stop-time manifest were preserved. All captured clip file hashes matched the start manifest; raw source remainedc53. A post-provider identity was not captured. See generated/features-r64-attempt1-{inputs,progress,failures,abort}.json. The48-test partial result is not a full PASS.
+
+The isolated unchanged physical test captured the actual339-case batch in generated/overlay-actual-batch-r65.json. Calling the same source implementation reproduces the error in the full batch and in the unchanged second case [2,column,solid,0,1.65]. Full actual/expected rings and both error messages are retained in generated/overlay-case-error-r65.json. No operation fallback, ordering change or alternative algorithm was attempted. The capture worker was disposed after evidence collection.
+
+## Controlled Operator Composition R66 — Stopped
+
+Root approved restoring only P annotation/return to the exact approved builtin tuple file hash9d506aabadf86cfe9efa93b0f53ec0c50f4a27b8f1b476c515588bb530e74c18. Generated point-restore-r66.json records the exact two-line diff and both hashes.
+
+The single approved composed-backend proof first attempted polygon-clipping union of each side of every captured339case, without any XOR, coordinate change or permutation. It failed in0.049s on the fourth case [4,column,solid,0,1.65]: output-ring endpoints differed at y1.108390733670008 versus1.1083907336700087. Three cases were encoded before the operator failure. composed-overlay-node-r66.json preserves the exact error; composed-overlay-unions-r66.json contains only that explicitly partial output. No GEOS composition proof or protocol mutation followed. The unused prepared worker was disposed. In accordance with root instruction, all further kernel experiments are stopped; no PASS claim applies.

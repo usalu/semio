@@ -12,6 +12,15 @@
       "bim_models",
       "bim_exchange",
       "bim_consistency",
+      "grasshopper_anatomy",
+      "grasshopper_capsule",
+      "grasshopper_tower",
+      "grasshopper_casting",
+      "grasshopper_trees",
+      "excel_anatomy",
+      "excel_references",
+      "excel_program",
+      "excel_energy",
       "optimization_extrema",
       "optimization_sampling",
       "optimization_experiments",
@@ -25,6 +34,15 @@
       6,
       6,
       7,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       1,
       1,
       1,
@@ -110,10 +128,37 @@
       ],
       [
         1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
       ]
     ],
-    "render_segment_count": 125,
-    "logical_clip_count": 38,
+    "render_segment_count": 134,
+    "logical_clip_count": 47,
     "first_segment_ordinals": [
       1,
       9,
@@ -131,7 +176,16 @@
       122,
       123,
       124,
-      125
+      125,
+      126,
+      127,
+      128,
+      129,
+      130,
+      131,
+      132,
+      133,
+      134
     ]
   },
   "physics_power_first": {
@@ -378,7 +432,7 @@
       2
     ],
     "audio_rate": 48000,
-    "curriculum_unique_sources": 117,
+    "curriculum_unique_sources": 126,
     "composed_frames": 15,
     "composed_channels": [
       0,

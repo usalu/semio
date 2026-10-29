@@ -93,7 +93,7 @@ class ConsistencyLifecycle(unittest.TestCase):
             np.testing.assert_array_equal(actual, scene.camera.pixel_array)
 
     def test_current_authored_change_prefix_in_both_languages(self):
-        """🏛️ Execute all six actual beats through the physical soil-thickness change."""
+        """🏛️ Execute all six actual beats through the physical paving-thickness change."""
         import numpy as np
         from PIL import Image
         output = Path(os.environ["SEMIO_TEACHING_OUTPUT_ROOT"])
@@ -120,8 +120,8 @@ class ConsistencyLifecycle(unittest.TestCase):
                 live_type = module.Beat6_Consistency.live.__globals__["Live"]
                 live = next(item for item in scene.stage if isinstance(item, live_type))
                 live.update(0)
-                span = live.current.spans["soil"]
-                self.assertAlmostEqual(span[1] - span[0], scene.soil_new * module.DETAIL_SCALE)
+                span = live.current.spans["paving"]
+                self.assertAlmostEqual(span[1] - span[0], scene.paving_new * module.DETAIL_SCALE)
                 self.assertEqual(bool(live.updaters), CASES["live_updater_after"])
                 for item in scene.get_mobject_family_members():
                     self.assertTrue(np.isfinite(item.points).all())

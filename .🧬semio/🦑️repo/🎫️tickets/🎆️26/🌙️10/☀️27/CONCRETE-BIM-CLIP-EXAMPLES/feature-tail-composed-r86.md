@@ -1,0 +1,7 @@
+# Exact112 Tail Coverage, R86
+
+All112 planned canonical IDs have passing execution evidence:59 unchanged completed R79 tests on1bad,43 fresh remaining tests on528b, two fresh auxiliary/callback retries, and eight fresh repaired consumer contracts. The canonical set union equals the original selected112 exactly; no duplicate counts or ordinal substitutions are used. generated/feature-tail-composed-r86.json contains every identity and component artifact.
+
+This is composed numerical evidence across the recorded source/producer snapshots. The earlier59 retain their original manifests; R11 separately establishes that native furnishing metadata publication preserves full geometry/GUID/class/type/material fields. The later53 passing executions use528b. Original errors, failed authoring attempts and uncompleted global-union observations remain retained. No full355-hook, globally frozen-code or native-frame claim is made.
+
+The localized auxiliary reference preserves exact set identities, all valid/positive input requirements, original height bands and both1e−8 assertions. Four schema-validated portable cases match the old GEOS global reference exactly; the full actual source method passes. Five isolated-wall tests preserve native column owner references and unchanged analytic cavity/material expectations. Regional full-member quantities retain independent owned/shared volume and declared-owner checks. Actual glazed fillings include current salon and mixed roof-door material; opaque entrance identity is no longer treated as glazing.

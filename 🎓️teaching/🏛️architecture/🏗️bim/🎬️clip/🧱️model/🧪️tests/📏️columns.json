@@ -1,0 +1,161 @@
+{
+  "cases": [
+    {
+      "name": "circle",
+      "profile": {
+        "shape": "circle",
+        "diameter": {
+          "value": 0.28,
+          "unit": "m"
+        }
+      },
+      "area": 0.06157521601035995
+    },
+    {
+      "name": "rectangle",
+      "profile": {
+        "shape": "rectangle",
+        "width": {
+          "value": 0.18,
+          "unit": "m"
+        },
+        "depth": {
+          "value": 0.22,
+          "unit": "m"
+        }
+      },
+      "area": 0.039599999999999996
+    },
+    {
+      "name": "ellipse",
+      "profile": {
+        "shape": "ellipse",
+        "width": {
+          "value": 0.15,
+          "unit": "m"
+        },
+        "depth": {
+          "value": 0.31,
+          "unit": "m"
+        },
+        "rotation": 30
+      },
+      "area": 0.03652101459798134
+    },
+    {
+      "name": "chamfer",
+      "profile": {
+        "shape": "polygon",
+        "outline": [
+          [
+            -0.03,
+            -0.075
+          ],
+          [
+            0.03,
+            -0.075
+          ],
+          [
+            0.06,
+            -0.045
+          ],
+          [
+            0.06,
+            0.045
+          ],
+          [
+            0.03,
+            0.075
+          ],
+          [
+            -0.03,
+            0.075
+          ],
+          [
+            -0.06,
+            0.045
+          ],
+          [
+            -0.06,
+            -0.045
+          ]
+        ]
+      },
+      "area": 0.0162
+    },
+    {
+      "name": "concave polygon",
+      "profile": {
+        "shape": "polygon",
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            0.3,
+            0
+          ],
+          [
+            0.3,
+            0.1
+          ],
+          [
+            0.1,
+            0.1
+          ],
+          [
+            0.1,
+            0.3
+          ],
+          [
+            0,
+            0.3
+          ]
+        ],
+        "rotation": 17
+      },
+      "area": 0.05
+    }
+  ],
+  "height": 2.91,
+  "variable": {
+    "lower": {
+      "shape": "rectangle",
+      "width": {
+        "value": 0.18,
+        "unit": "m"
+      },
+      "depth": {
+        "value": 0.22,
+        "unit": "m"
+      }
+    },
+    "upper": {
+      "shape": "circle",
+      "diameter": {
+        "value": 0.28,
+        "unit": "m"
+      }
+    },
+    "split": 1.2
+  },
+  "source_profiles": [
+    {
+      "tag": "15",
+      "profile": {
+        "shape": "circle",
+        "diameter": 0.28
+      },
+      "axis": [
+        4.737,
+        8.23
+      ],
+      "base": 0,
+      "top": 2.91,
+      "upper_tag": "15-FIRST",
+      "upper_type": "TY-CIRC22",
+      "source": "SavoyeAsBuilt2024-p145"
+    }
+  ]
+}

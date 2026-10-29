@@ -1,0 +1,93 @@
+{
+  "source": "Zaparaín Hernández et al. 2022, DOI10.3989/ic.88625, §§2.1,9, annex1",
+  "registration": {
+    "basis": "inferred",
+    "grid_spacing": 4.75,
+    "pixel_grid_origin": [
+      826,
+      225
+    ],
+    "pixels_per_grid": [
+      183.5,
+      183.75
+    ],
+    "model_grid_origin": [
+      0,
+      1.25
+    ],
+    "rotation_degrees": 180,
+    "stair_axis_note": "Roof-native shared assembled curve axis;46mm first-floor residual within±0.15m. Pa/footing retains original separate register axis."
+  },
+  "trace": {
+    "outer_pixels": [
+      [
+        392,
+        396
+      ],
+      [
+        652,
+        396
+      ],
+      [
+        652,
+        828
+      ],
+      [
+        392,
+        828
+      ]
+    ],
+    "inner_pixels": [
+      [
+        410,
+        415
+      ],
+      [
+        637,
+        415
+      ],
+      [
+        637,
+        807
+      ],
+      [
+        410,
+        807
+      ]
+    ],
+    "divider_pixels": [
+      [
+        512,
+        575
+      ],
+      [
+        512,
+        807
+      ]
+    ],
+    "column14_pixel": [
+      512,
+      496
+    ]
+  },
+  "expected": {
+    "storey": "cellar",
+    "floor": -2.42,
+    "footing_bottom": -2.72,
+    "wall_height": 2.4,
+    "slab_thickness": 0.07,
+    "rib_width": 0.16,
+    "rib_depth": 0.27,
+    "deep_rib_depth": 0.35,
+    "floor_slab_thickness": 0.08,
+    "stair_support_width": 0.11,
+    "stair_footing_width": 0.3,
+    "stair_step_count": 13,
+    "stair_turns": 0.5,
+    "maximum_basement_area": 85,
+    "stair_centre": [
+      6.407144828882639,
+      9.180220372262651
+    ]
+  }
+}

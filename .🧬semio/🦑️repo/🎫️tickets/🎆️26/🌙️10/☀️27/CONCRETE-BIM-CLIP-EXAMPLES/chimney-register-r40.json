@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "state": "original1931-photo-registration-hypotheses",
+  "image": "vivante1931-plate28-upright-r39.png",
+  "imageSize": [
+    1063,
+    863
+  ],
+  "ramp": {
+    "tag": "RF-2B",
+    "farDeck": [
+      [
+        554,
+        430
+      ],
+      [
+        625,
+        430
+      ]
+    ],
+    "edgeSamples": [
+      [
+        482,
+        739
+      ],
+      [
+        766,
+        739
+      ]
+    ],
+    "edgeSamplesAreEndpoints": false,
+    "farY": 8.23,
+    "farZ": 6.6,
+    "centerX": 8.8,
+    "width": 1.2,
+    "slope": 0.19805982215036377
+  },
+  "cylinder": {
+    "mouth": [
+      818,
+      130
+    ],
+    "sides": [
+      797,
+      838
+    ],
+    "nominalDiameter": 0.4,
+    "nominalIsOuterDiameter": false
+  },
+  "curveContour": [
+    [
+      692,
+      246
+    ],
+    [
+      710,
+      225
+    ],
+    [
+      734,
+      211
+    ],
+    [
+      765,
+      201
+    ],
+    [
+      797,
+      195
+    ],
+    [
+      850,
+      190
+    ],
+    [
+      910,
+      188
+    ],
+    [
+      970,
+      187
+    ]
+  ],
+  "curveContourUncertaintyPixels": 8,
+  "oldTrunk": [
+    4.7,
+    9.4
+  ],
+  "unresolved": [
+    "curved body identity",
+    "nominal versus outside diameter",
+    "full projective calibration",
+    "roof penetration"
+  ]
+}

@@ -1,0 +1,184 @@
+{
+  "version": 1,
+  "file": "Nakagin.xlsx",
+  "ribbon": [
+    {
+      "key": "File",
+      "en": "File",
+      "de": "Datei"
+    },
+    {
+      "key": "Home",
+      "en": "Home",
+      "de": "Start"
+    },
+    {
+      "key": "Insert",
+      "en": "Insert",
+      "de": "Einfügen"
+    },
+    {
+      "key": "Page Layout",
+      "en": "Page Layout",
+      "de": "Seitenlayout"
+    },
+    {
+      "key": "Formulas",
+      "en": "Formulas",
+      "de": "Formeln"
+    },
+    {
+      "key": "Data",
+      "en": "Data",
+      "de": "Daten"
+    },
+    {
+      "key": "Review",
+      "en": "Review",
+      "de": "Überprüfen"
+    },
+    {
+      "key": "View",
+      "en": "View",
+      "de": "Ansicht"
+    }
+  ],
+  "reference_colors": [
+    "#2F6FDE",
+    "#D93025",
+    "#8E3FBF",
+    "#1E9E4A",
+    "#E8710A",
+    "#00A3B4",
+    "#C2185B",
+    "#7C5E3B"
+  ],
+  "ui": {
+    "ready": {
+      "en": "Ready",
+      "de": "Bereit"
+    },
+    "search": {
+      "en": "Search",
+      "de": "Suchen"
+    },
+    "share": {
+      "en": "Share",
+      "de": "Freigeben"
+    },
+    "average": {
+      "en": "Average",
+      "de": "Mittelwert"
+    },
+    "count": {
+      "en": "Count",
+      "de": "Anzahl"
+    },
+    "sum": {
+      "en": "Sum",
+      "de": "Summe"
+    },
+    "cell": {
+      "en": "Cell",
+      "de": "Zelle"
+    },
+    "address": {
+      "en": "Address",
+      "de": "Adresse"
+    },
+    "stored": {
+      "en": "Stored value",
+      "de": "Gespeicherter Wert"
+    },
+    "shown": {
+      "en": "Displayed",
+      "de": "Anzeige"
+    },
+    "formula": {
+      "en": "Formula",
+      "de": "Formel"
+    },
+    "format": {
+      "en": "Number format",
+      "de": "Zahlenformat"
+    },
+    "constant": {
+      "en": "none · constant",
+      "de": "keine · Konstante"
+    },
+    "true": {
+      "en": "TRUE",
+      "de": "WAHR"
+    },
+    "false": {
+      "en": "FALSE",
+      "de": "FALSCH"
+    }
+  },
+  "errors": {
+    "#DIV/0!": {
+      "en": "#DIV/0!",
+      "de": "#DIV/0!",
+      "tip": {
+        "en": "The formula divides by zero or by an empty cell.",
+        "de": "Die Formel dividiert durch null oder eine leere Zelle."
+      }
+    },
+    "#REF!": {
+      "en": "#REF!",
+      "de": "#BEZUG!",
+      "tip": {
+        "en": "The formula refers to a cell that no longer exists.",
+        "de": "Die Formel verweist auf eine nicht mehr vorhandene Zelle."
+      }
+    },
+    "#NAME?": {
+      "en": "#NAME?",
+      "de": "#NAME?",
+      "tip": {
+        "en": "Excel does not recognise a name or function.",
+        "de": "Excel erkennt einen Namen oder eine Funktion nicht."
+      }
+    },
+    "#VALUE!": {
+      "en": "#VALUE!",
+      "de": "#WERT!",
+      "tip": {
+        "en": "A value in the formula has the wrong type.",
+        "de": "Ein Wert in der Formel hat den falschen Typ."
+      }
+    },
+    "#N/A": {
+      "en": "#N/A",
+      "de": "#NV",
+      "tip": {
+        "en": "The value is not available to the formula.",
+        "de": "Der Wert ist für die Formel nicht verfügbar."
+      }
+    },
+    "#NUM!": {
+      "en": "#NUM!",
+      "de": "#ZAHL!",
+      "tip": {
+        "en": "The formula contains an invalid number.",
+        "de": "Die Formel enthält eine ungültige Zahl."
+      }
+    },
+    "#NULL!": {
+      "en": "#NULL!",
+      "de": "#NULL!",
+      "tip": {
+        "en": "The two ranges do not intersect.",
+        "de": "Die beiden Bereiche überschneiden sich nicht."
+      }
+    },
+    "#SPILL!": {
+      "en": "#SPILL!",
+      "de": "#ÜBERLAUF!",
+      "tip": {
+        "en": "The result needs more room than the cells below allow.",
+        "de": "Das Ergebnis braucht mehr Platz, als die Zellen darunter bieten."
+      }
+    }
+  }
+}

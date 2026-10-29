@@ -1,0 +1,1554 @@
+{
+  "version": 1,
+  "source": "https://doi.org/10.3989/ic.88625",
+  "coordinate_basis": "R9 4.75m axes; source drawing endpoint interpolation inferred",
+  "specs": [
+    {
+      "id": "F-1-6",
+      "level": "first",
+      "axis": [
+        [
+          19,
+          -0.05
+        ],
+        [
+          19,
+          6
+        ]
+      ],
+      "width": 0.16,
+      "full_depth": 0.5,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "upstand",
+      "note": "Annex6 section +3.41 top and +2.91 soffit; article3.3 confirms upward facade beam; upper exposed zone only.",
+      "source": "CSIC2022-Annex2",
+      "occupied_z": [
+        3.14,
+        3.41
+      ],
+      "full_base": 2.91,
+      "full_z": [
+        2.91,
+        3.41
+      ]
+    },
+    {
+      "id": "F-6-29",
+      "level": "first",
+      "axis": [
+        [
+          19,
+          6
+        ],
+        [
+          19,
+          21.55
+        ]
+      ],
+      "width": 0.18,
+      "full_depth": 0.5,
+      "structural_top": 3.08,
+      "soffit": 2.91,
+      "kind": "upstand",
+      "note": "Annex6 section +3.41 top and +2.91 soffit; article3.3 confirms upward facade beam; upper exposed zone only.",
+      "source": "CSIC2022-Annex2",
+      "occupied_z": [
+        3.08,
+        3.41
+      ],
+      "full_base": 2.91,
+      "full_z": [
+        2.91,
+        3.41
+      ]
+    },
+    {
+      "id": "F-5-33",
+      "level": "first",
+      "axis": [
+        [
+          0,
+          -0.05
+        ],
+        [
+          0,
+          21.55
+        ]
+      ],
+      "width": 0.16,
+      "full_depth": 0.5,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "upstand",
+      "note": "Annex6 section +3.41 top and +2.91 soffit; article3.3 confirms upward facade beam; upper exposed zone only.",
+      "source": "CSIC2022-Annex2",
+      "occupied_z": [
+        3.14,
+        3.41
+      ],
+      "full_base": 2.91,
+      "full_z": [
+        2.91,
+        3.41
+      ]
+    },
+    {
+      "id": "F-2-7",
+      "level": "first",
+      "axis": [
+        [
+          14.25,
+          1.25
+        ],
+        [
+          14.25,
+          6
+        ]
+      ],
+      "width": 0.25,
+      "full_depth": 0.53,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "downstand",
+      "note": "Plan annotation 25–30×53; width uses sourced minimum, taper unresolved.",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.61,
+        3.14
+      ],
+      "section_width_range": [
+        0.25,
+        0.3
+      ],
+      "variable_section_direction": null
+    },
+    {
+      "id": "F-7-24",
+      "level": "first",
+      "axis": [
+        [
+          14.25,
+          6
+        ],
+        [
+          14.25,
+          16.786
+        ]
+      ],
+      "width": 0.18,
+      "full_depth": 0.47,
+      "structural_top": 3.08,
+      "soffit": 2.91,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.61,
+        3.08
+      ]
+    },
+    {
+      "id": "F-24-30",
+      "level": "first",
+      "axis": [
+        [
+          14.25,
+          16.786
+        ],
+        [
+          14.25,
+          20.25
+        ]
+      ],
+      "width": 0.18,
+      "full_depth": 0.37,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "downstand",
+      "note": " Annex6 section at24 labels underside2.77, fixing full top3.14.",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.77,
+        3.14
+      ]
+    },
+    {
+      "id": "F-3-34",
+      "level": "first",
+      "axis": [
+        [
+          9.5,
+          1.25
+        ],
+        [
+          9.5,
+          6.006
+        ]
+      ],
+      "width": 0.25,
+      "full_depth": 0.53,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.61,
+        3.14
+      ]
+    },
+    {
+      "id": "F-28-31",
+      "level": "first",
+      "axis": [
+        [
+          9.5,
+          18.079
+        ],
+        [
+          9.5,
+          20.25
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.5,
+      "structural_top": 3.11,
+      "soffit": 2.91,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.61,
+        3.11
+      ]
+    },
+    {
+      "id": "F-4-10",
+      "level": "first",
+      "axis": [
+        [
+          4.75,
+          1.25
+        ],
+        [
+          4.75,
+          6
+        ]
+      ],
+      "width": 0.25,
+      "full_depth": 0.53,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "downstand",
+      "note": "Plan annotation 25–30×53; width uses sourced minimum, taper unresolved.",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.61,
+        3.14
+      ],
+      "section_width_range": [
+        0.25,
+        0.3
+      ],
+      "variable_section_direction": null
+    },
+    {
+      "id": "F-10-15",
+      "level": "first",
+      "axis": [
+        [
+          4.75,
+          6
+        ],
+        [
+          4.737,
+          8.23
+        ]
+      ],
+      "width": 0.25,
+      "full_depth": 0.23,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "flush-reference",
+      "note": "",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.91,
+        3.14
+      ]
+    },
+    {
+      "id": "F-15-20",
+      "level": "first",
+      "axis": [
+        [
+          4.737,
+          8.23
+        ],
+        [
+          4.737,
+          12.753
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.53,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.61,
+        3.14
+      ]
+    },
+    {
+      "id": "F-20-32",
+      "level": "first",
+      "axis": [
+        [
+          4.737,
+          12.753
+        ],
+        [
+          4.75,
+          20.25
+        ]
+      ],
+      "width": 0.25,
+      "full_depth": 0.53,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.61,
+        3.14
+      ]
+    },
+    {
+      "id": "F-13-25",
+      "level": "first",
+      "axis": [
+        [
+          10.898,
+          8.23
+        ],
+        [
+          10.898,
+          16.889
+        ]
+      ],
+      "width": 0.18,
+      "full_depth": 0.43,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "downstand",
+      "note": " Annex6 section at18 labels underside2.71, fixing full top3.14.",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.71,
+        3.14
+      ]
+    },
+    {
+      "id": "F-25-28",
+      "level": "first",
+      "axis": [
+        [
+          10.898,
+          16.889
+        ],
+        [
+          10.898,
+          18.079
+        ]
+      ],
+      "width": 0.16,
+      "full_depth": 0.4,
+      "structural_top": 3.11,
+      "soffit": 2.91,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.71,
+        3.11
+      ]
+    },
+    {
+      "id": "F-26-28",
+      "level": "first",
+      "axis": [
+        [
+          8.128,
+          16.889
+        ],
+        [
+          8.128,
+          18.079
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.4,
+      "structural_top": 3.11,
+      "soffit": 2.91,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.71,
+        3.11
+      ]
+    },
+    {
+      "id": "F-8-9",
+      "level": "first",
+      "axis": [
+        [
+          8.128,
+          6.006
+        ],
+        [
+          10.898,
+          6.006
+        ]
+      ],
+      "width": 0.25,
+      "full_depth": 0.53,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.61,
+        3.14
+      ]
+    },
+    {
+      "id": "F-13-14",
+      "level": "first",
+      "axis": [
+        [
+          8.128,
+          8.23
+        ],
+        [
+          10.898,
+          8.23
+        ]
+      ],
+      "width": 0.25,
+      "full_depth": 0.53,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.61,
+        3.14
+      ]
+    },
+    {
+      "id": "F-28-CROSS",
+      "level": "first",
+      "axis": [
+        [
+          8.128,
+          18.079
+        ],
+        [
+          10.898,
+          18.079
+        ]
+      ],
+      "width": 0.16,
+      "full_depth": 0.4,
+      "structural_top": 3.11,
+      "soffit": 2.91,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.71,
+        3.11
+      ]
+    },
+    {
+      "id": "F-FRONT",
+      "level": "first",
+      "axis": [
+        [
+          0,
+          -0.05
+        ],
+        [
+          19,
+          -0.05
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.23,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "flush-reference",
+      "note": "",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.91,
+        3.14
+      ]
+    },
+    {
+      "id": "F-REAR",
+      "level": "first",
+      "axis": [
+        [
+          0,
+          21.55
+        ],
+        [
+          19,
+          21.55
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.23,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "flush-reference",
+      "note": "",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.91,
+        3.14
+      ]
+    },
+    {
+      "id": "R-1-6",
+      "level": "roof",
+      "axis": [
+        [
+          19,
+          -0.05
+        ],
+        [
+          19,
+          6
+        ]
+      ],
+      "width": 0.16,
+      "full_depth": 0.47,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.04,
+        6.51
+      ]
+    },
+    {
+      "id": "R-22-29",
+      "level": "roof",
+      "axis": [
+        [
+          19,
+          15.5
+        ],
+        [
+          19,
+          21.55
+        ]
+      ],
+      "width": 0.16,
+      "full_depth": 0.47,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.04,
+        6.51
+      ]
+    },
+    {
+      "id": "R-5-33",
+      "level": "roof",
+      "axis": [
+        [
+          0,
+          -0.05
+        ],
+        [
+          0,
+          21.55
+        ]
+      ],
+      "width": 0.16,
+      "full_depth": 0.47,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.04,
+        6.51
+      ]
+    },
+    {
+      "id": "R-2-7",
+      "level": "roof",
+      "axis": [
+        [
+          14.25,
+          1.25
+        ],
+        [
+          14.25,
+          6
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.47,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "downstand",
+      "note": "Plan annotation 22–30×47; minimum width used, taper unresolved.",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.04,
+        6.51
+      ],
+      "section_width_range": [
+        0.22,
+        0.3
+      ],
+      "variable_section_direction": null
+    },
+    {
+      "id": "R-3-34",
+      "level": "roof",
+      "axis": [
+        [
+          9.5,
+          1.25
+        ],
+        [
+          9.5,
+          6.006
+        ]
+      ],
+      "width": 0.18,
+      "full_depth": 0.47,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "downstand",
+      "note": "Plan annotation 18–24×47; minimum width used, taper unresolved.",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.04,
+        6.51
+      ],
+      "section_width_range": [
+        0.18,
+        0.24
+      ],
+      "variable_section_direction": null
+    },
+    {
+      "id": "R-4-10",
+      "level": "roof",
+      "axis": [
+        [
+          4.75,
+          1.25
+        ],
+        [
+          4.75,
+          6
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.47,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "downstand",
+      "note": "Plan annotation 22–30×47; minimum width used, taper unresolved.",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.04,
+        6.51
+      ],
+      "section_width_range": [
+        0.22,
+        0.3
+      ],
+      "variable_section_direction": null
+    },
+    {
+      "id": "R-10-15",
+      "level": "roof",
+      "axis": [
+        [
+          4.75,
+          6
+        ],
+        [
+          4.737,
+          8.23
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.23,
+      "structural_top": 6.57,
+      "soffit": 6.34,
+      "kind": "flush-reference",
+      "note": "",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.34,
+        6.57
+      ]
+    },
+    {
+      "id": "R-34-35",
+      "level": "roof",
+      "axis": [
+        [
+          9.5,
+          6.006
+        ],
+        [
+          9.5,
+          8.23
+        ]
+      ],
+      "width": 0.18,
+      "full_depth": 0.4,
+      "structural_top": 6.57,
+      "soffit": 6.34,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.17,
+        6.57
+      ]
+    },
+    {
+      "id": "R-14-26",
+      "level": "roof",
+      "axis": [
+        [
+          8.128,
+          8.23
+        ],
+        [
+          8.128,
+          16.889
+        ]
+      ],
+      "width": 0.18,
+      "full_depth": 0.45,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.06,
+        6.51
+      ]
+    },
+    {
+      "id": "R-20-32",
+      "level": "roof",
+      "axis": [
+        [
+          4.737,
+          10.75
+        ],
+        [
+          4.75,
+          20.25
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.47,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.04,
+        6.51
+      ]
+    },
+    {
+      "id": "R-24-30",
+      "level": "roof",
+      "axis": [
+        [
+          14.25,
+          15.5
+        ],
+        [
+          14.25,
+          20.25
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.47,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.04,
+        6.51
+      ]
+    },
+    {
+      "id": "R-28-31",
+      "level": "roof",
+      "axis": [
+        [
+          9.5,
+          18.079
+        ],
+        [
+          9.5,
+          20.25
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.47,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.04,
+        6.51
+      ]
+    },
+    {
+      "id": "R-10-11",
+      "level": "roof",
+      "axis": [
+        [
+          0,
+          6
+        ],
+        [
+          4.75,
+          6
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.53,
+      "structural_top": 6.57,
+      "soffit": 6.34,
+      "kind": "downstand",
+      "note": "",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.04,
+        6.57
+      ]
+    },
+    {
+      "id": "R-6-34",
+      "level": "roof",
+      "axis": [
+        [
+          9.5,
+          6
+        ],
+        [
+          19,
+          6
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.4,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "frame",
+      "note": "Garden edge beam: full open-air section; slab edge overlap is clipped to soffit where roof exists.",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.11,
+        6.51
+      ]
+    },
+    {
+      "id": "R-6-22",
+      "level": "roof",
+      "axis": [
+        [
+          19,
+          6
+        ],
+        [
+          19,
+          15.5
+        ]
+      ],
+      "width": 0.16,
+      "full_depth": 0.32,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "frame",
+      "note": "Open garden facade beam is diagonal in plan; constant axis is an explicitly inferred approximation.",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.19,
+        6.51
+      ]
+    },
+    {
+      "id": "R-22-36",
+      "level": "roof",
+      "axis": [
+        [
+          10.898,
+          15.5
+        ],
+        [
+          19,
+          15.5
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.17,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "flush-reference",
+      "note": "",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.34,
+        6.51
+      ]
+    },
+    {
+      "id": "R-FRONT",
+      "level": "roof",
+      "axis": [
+        [
+          0,
+          -0.05
+        ],
+        [
+          19,
+          -0.05
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.17,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "flush-reference",
+      "note": "",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.34,
+        6.51
+      ]
+    },
+    {
+      "id": "R-REAR",
+      "level": "roof",
+      "axis": [
+        [
+          0,
+          21.55
+        ],
+        [
+          19,
+          21.55
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.17,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "flush-reference",
+      "note": "",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.34,
+        6.51
+      ]
+    },
+    {
+      "id": "F-END-FRONT-2",
+      "level": "first",
+      "axis": [
+        [
+          14.25,
+          -0.05
+        ],
+        [
+          14.25,
+          1.25
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.23,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "flush-reference",
+      "note": "Source dimension22×23, cantilever end beyond numbered support.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.91,
+        3.14
+      ]
+    },
+    {
+      "id": "F-END-REAR-2",
+      "level": "first",
+      "axis": [
+        [
+          14.25,
+          20.25
+        ],
+        [
+          14.25,
+          21.55
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.23,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "flush-reference",
+      "note": "Source dimension22×23, cantilever end beyond numbered support.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.91,
+        3.14
+      ]
+    },
+    {
+      "id": "R-END-FRONT-2",
+      "level": "roof",
+      "axis": [
+        [
+          14.25,
+          -0.05
+        ],
+        [
+          14.25,
+          1.25
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.17,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "flush-reference",
+      "note": "Source dimension22×17, cantilever end beyond numbered support.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.34,
+        6.51
+      ]
+    },
+    {
+      "id": "R-END-REAR-2",
+      "level": "roof",
+      "axis": [
+        [
+          14.25,
+          20.25
+        ],
+        [
+          14.25,
+          21.55
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.17,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "flush-reference",
+      "note": "Source dimension22×17, cantilever end beyond numbered support.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.34,
+        6.51
+      ]
+    },
+    {
+      "id": "F-END-FRONT-3",
+      "level": "first",
+      "axis": [
+        [
+          9.5,
+          -0.05
+        ],
+        [
+          9.5,
+          1.25
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.23,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "flush-reference",
+      "note": "Source dimension22×23, cantilever end beyond numbered support.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.91,
+        3.14
+      ]
+    },
+    {
+      "id": "F-END-REAR-3",
+      "level": "first",
+      "axis": [
+        [
+          9.5,
+          20.25
+        ],
+        [
+          9.5,
+          21.55
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.23,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "flush-reference",
+      "note": "Source dimension22×23, cantilever end beyond numbered support.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.91,
+        3.14
+      ]
+    },
+    {
+      "id": "R-END-FRONT-3",
+      "level": "roof",
+      "axis": [
+        [
+          9.5,
+          -0.05
+        ],
+        [
+          9.5,
+          1.25
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.17,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "flush-reference",
+      "note": "Source dimension22×17, cantilever end beyond numbered support.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.34,
+        6.51
+      ]
+    },
+    {
+      "id": "R-END-REAR-3",
+      "level": "roof",
+      "axis": [
+        [
+          9.5,
+          20.25
+        ],
+        [
+          9.5,
+          21.55
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.17,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "flush-reference",
+      "note": "Source dimension22×17, cantilever end beyond numbered support.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.34,
+        6.51
+      ]
+    },
+    {
+      "id": "F-END-FRONT-4",
+      "level": "first",
+      "axis": [
+        [
+          4.75,
+          -0.05
+        ],
+        [
+          4.75,
+          1.25
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.23,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "flush-reference",
+      "note": "Source dimension22×23, cantilever end beyond numbered support.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.91,
+        3.14
+      ]
+    },
+    {
+      "id": "F-END-REAR-4",
+      "level": "first",
+      "axis": [
+        [
+          4.75,
+          20.25
+        ],
+        [
+          4.75,
+          21.55
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.23,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "flush-reference",
+      "note": "Source dimension22×23, cantilever end beyond numbered support.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.91,
+        3.14
+      ]
+    },
+    {
+      "id": "R-END-FRONT-4",
+      "level": "roof",
+      "axis": [
+        [
+          4.75,
+          -0.05
+        ],
+        [
+          4.75,
+          1.25
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.17,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "flush-reference",
+      "note": "Source dimension22×17, cantilever end beyond numbered support.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.34,
+        6.51
+      ]
+    },
+    {
+      "id": "R-END-REAR-4",
+      "level": "roof",
+      "axis": [
+        [
+          4.75,
+          20.25
+        ],
+        [
+          4.75,
+          21.55
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.17,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "flush-reference",
+      "note": "Source dimension22×17, cantilever end beyond numbered support.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.34,
+        6.51
+      ]
+    },
+    {
+      "id": "F-14-19",
+      "level": "first",
+      "axis": [
+        [
+          8.128,
+          8.23
+        ],
+        [
+          8.128,
+          12.572
+        ]
+      ],
+      "width": 0.18,
+      "full_depth": 0.23,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "flush-reference",
+      "note": "Ramp-side beam flush with occupied slab, source18×23.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.91,
+        3.14
+      ]
+    },
+    {
+      "id": "F-19-26",
+      "level": "first",
+      "axis": [
+        [
+          8.128,
+          12.572
+        ],
+        [
+          8.128,
+          16.889
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.23,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "flush-reference",
+      "note": "Ramp-side beam, source22×23.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.91,
+        3.14
+      ]
+    },
+    {
+      "id": "F-14-15",
+      "level": "first",
+      "axis": [
+        [
+          4.737,
+          8.23
+        ],
+        [
+          8.128,
+          8.23
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.23,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "flush-reference",
+      "note": "Stair head beam source22×23.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.91,
+        3.14
+      ]
+    },
+    {
+      "id": "F-BATH-LOW",
+      "level": "first",
+      "axis": [
+        [
+          4.737,
+          14.2
+        ],
+        [
+          8.128,
+          14.2
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.23,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "flush-reference",
+      "note": "Bath transverse reinforcement source22×23; y registration inferred from pixel724.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.91,
+        3.14
+      ]
+    },
+    {
+      "id": "F-BATH-HIGH",
+      "level": "first",
+      "axis": [
+        [
+          4.737,
+          16.1
+        ],
+        [
+          8.128,
+          16.1
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.23,
+      "structural_top": 3.14,
+      "soffit": 2.91,
+      "kind": "flush-reference",
+      "note": "Bath transverse reinforcement source22×23; y registration inferred from pixel799.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex2",
+      "full_z": [
+        2.91,
+        3.14
+      ]
+    },
+    {
+      "id": "R-RAMP-END",
+      "level": "roof",
+      "axis": [
+        [
+          8.128,
+          18.079
+        ],
+        [
+          10.898,
+          18.079
+        ]
+      ],
+      "width": 0.11,
+      "full_depth": 0.17,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "flush-reference",
+      "note": "Narrow end tie source11×17.",
+      "dimension_basis": "sourced",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.34,
+        6.51
+      ]
+    },
+    {
+      "id": "R-34-10",
+      "level": "roof",
+      "axis": [
+        [
+          4.75,
+          6
+        ],
+        [
+          9.5,
+          6
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.23,
+      "structural_top": 6.57,
+      "soffit": 6.34,
+      "kind": "flush-reference",
+      "note": "Stair/bath block edge; section22×23 inferred from adjacent block references.",
+      "dimension_basis": "inferred",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.34,
+        6.57
+      ]
+    },
+    {
+      "id": "R-14-15",
+      "level": "roof",
+      "axis": [
+        [
+          4.737,
+          8.23
+        ],
+        [
+          8.128,
+          8.23
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.23,
+      "structural_top": 6.57,
+      "soffit": 6.34,
+      "kind": "flush-reference",
+      "note": "Stair head trim adjacent to23cm block; width inferred from standard ties.",
+      "dimension_basis": "inferred",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.34,
+        6.57
+      ]
+    },
+    {
+      "id": "R-STAIR-LOW",
+      "level": "roof",
+      "axis": [
+        [
+          4.737,
+          10.75
+        ],
+        [
+          8.128,
+          10.75
+        ]
+      ],
+      "width": 0.22,
+      "full_depth": 0.17,
+      "structural_top": 6.51,
+      "soffit": 6.34,
+      "kind": "flush-reference",
+      "note": "Stair lower trim axis inferred from drawn stair boundary; section inferred standard tie.",
+      "dimension_basis": "inferred",
+      "source": "CSIC2022-Annex3",
+      "full_z": [
+        6.34,
+        6.51
+      ]
+    }
+  ],
+  "expect": {
+    "physical_members": 31,
+    "reference_members": 28,
+    "total_primary_members": 59,
+    "first_transfer_ids": [
+      "F-8-9",
+      "F-13-14"
+    ],
+    "absent_garden_interior_grid": true
+  },
+  "status": "Full-section candidate register, not yet product geometry; complete primary spans plus traced/inferred flush ties, excluding local rooflight trimmers."
+}

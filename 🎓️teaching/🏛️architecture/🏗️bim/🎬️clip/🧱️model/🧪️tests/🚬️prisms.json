@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "outer": 0.35,
+  "bore": 0.15,
+  "structural_top": 6.51,
+  "finished_roof": 6.6,
+  "layers": [
+    {
+      "material": "MAT-RENDER",
+      "outer": 0.35,
+      "inner": 0.33
+    },
+    {
+      "material": "MAT-HOLLOW-CLAY",
+      "outer": 0.33,
+      "inner": 0.17
+    },
+    {
+      "material": "MAT-PLASTER",
+      "outer": 0.17,
+      "inner": 0.15
+    }
+  ],
+  "finish_displaced_volume": 0.009,
+  "ring_bearing_area": 0.1,
+  "terminals": [
+    {
+      "tag": "CHIMNEY-SALON-ROOF",
+      "opening": "OP-SALON-FLUE-ROOF",
+      "axis": [
+        13.01,
+        1.22
+      ],
+      "top": 9.25,
+      "height_uncertainty": 0.4,
+      "material_volume": 0.274
+    },
+    {
+      "tag": "CHIMNEY-KITCHEN-ROOF",
+      "opening": "OP-KITCHEN-FLUE-ROOF",
+      "axis": [
+        0.89,
+        5.32
+      ],
+      "top": 9.6,
+      "height_uncertainty": 0.4,
+      "material_volume": 0.309
+    }
+  ],
+  "registration": {
+    "kind": "author-2024-as-built-reconstruction",
+    "sources": [
+      "Official UVA66393 roof-annex metadata",
+      "Public author-plan preview roof-plan-author-r44.jpg viaScribd1007185038; primary content, third-party transfer",
+      "Original1931 Vivante plates27/28: bounded height interpretation; competing assignments retained"
+    ],
+    "xy_uncertainty": 0.1,
+    "outer_uncertainty": 0.04,
+    "bore_uncertainty": 0.03
+  },
+  "synthetic_parts": [
+    {
+      "outline": [
+        [
+          -0.175,
+          -0.175
+        ],
+        [
+          0.175,
+          -0.175
+        ],
+        [
+          0.175,
+          -0.075
+        ],
+        [
+          -0.175,
+          -0.075
+        ]
+      ],
+      "z0": -0.09,
+      "z1": 1
+    },
+    {
+      "outline": [
+        [
+          -0.175,
+          0.075
+        ],
+        [
+          0.175,
+          0.075
+        ],
+        [
+          0.175,
+          0.175
+        ],
+        [
+          -0.175,
+          0.175
+        ]
+      ],
+      "z0": -0.09,
+      "z1": 1
+    },
+    {
+      "outline": [
+        [
+          -0.175,
+          -0.075
+        ],
+        [
+          -0.075,
+          -0.075
+        ],
+        [
+          -0.075,
+          0.075
+        ],
+        [
+          -0.175,
+          0.075
+        ]
+      ],
+      "z0": -0.09,
+      "z1": 1
+    },
+    {
+      "outline": [
+        [
+          0.075,
+          -0.075
+        ],
+        [
+          0.175,
+          -0.075
+        ],
+        [
+          0.175,
+          0.075
+        ],
+        [
+          0.075,
+          0.075
+        ]
+      ],
+      "z0": -0.09,
+      "z1": 1
+    }
+  ]
+}

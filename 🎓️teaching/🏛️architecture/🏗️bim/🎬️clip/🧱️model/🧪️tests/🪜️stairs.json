@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "state": "completed-1930",
+  "registration": {
+    "curve_centre": [
+      6.407144828882639,
+      9.180220372262651
+    ],
+    "uncertainty_m": 0.15,
+    "outer_tread_radius": 0.89,
+    "inner_radius": 0.08,
+    "axis_choice": "Roof cubicle controls the common assembled curve axis; first-floor native U trace has46mm residual, within±0.15m illustration registration uncertainty. Pa/post axis retained separately."
+  },
+  "cases": [
+    {
+      "tag": "ST-CG",
+      "straight": 3,
+      "curved": 7,
+      "going": 0.23,
+      "base": -2.42,
+      "top": 0
+    },
+    {
+      "tag": "ST-GF",
+      "straight": 6,
+      "curved": 6,
+      "going": 0.25,
+      "base": 0,
+      "top": 3.17
+    },
+    {
+      "tag": "ST-FR",
+      "straight": 6,
+      "curved": 6,
+      "going": 0.25,
+      "base": 3.17,
+      "top": 6.6
+    }
+  ],
+  "roof": {
+    "wall": "W-STAIR-ROOF",
+    "opening": "OP-STAIR-ROOF",
+    "door": "D-STAIR-ROOF",
+    "canopy": "SL-STAIR-CANOPY",
+    "weather": "SL-STAIR-WEATHER",
+    "clear_height": 2.43,
+    "body_height": 2.75,
+    "path_offset": -0.125,
+    "reference_face": "interior",
+    "wall_thickness": 0.25,
+    "cavity_thickness": 0.06,
+    "explicitly_closed": true
+  },
+  "evidence": {
+    "counts": "13/18 modeled risers and finite finish treads are inferred complete train counts; the adjacent floor owns the arrival platform. Original records confirm U topology, not the declared count.",
+    "going": "SAB2024 p141:23cm cellar and25cm upper; exact positions inferred.",
+    "finish": "SAB2024 p141:black14.5cm square tiles;3cm combined finish/bed reserve inferred±1cm."
+  },
+  "shared_void": {
+    "slab": "FIXTURE-SHARED-SLAB",
+    "opening": "FIXTURE-SHARED-OPENING",
+    "geometric_void": "FIXTURE-HOLE-A",
+    "outline": [
+      [
+        0,
+        0
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        4,
+        4
+      ],
+      [
+        0,
+        4
+      ]
+    ],
+    "voids": [
+      {
+        "tag": "FIXTURE-HOLE-A",
+        "outline": [
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      {
+        "tag": "FIXTURE-HOLE-B",
+        "outline": [
+          [
+            3,
+            3
+          ],
+          [
+            3.5,
+            3
+          ],
+          [
+            3.5,
+            3.5
+          ],
+          [
+            3,
+            3.5
+          ]
+        ]
+      }
+    ],
+    "opening_outline": [
+      [
+        1.5,
+        1.5
+      ],
+      [
+        2.5,
+        1.5
+      ],
+      [
+        2.5,
+        2.5
+      ],
+      [
+        1.5,
+        2.5
+      ]
+    ],
+    "thickness": 0.2,
+    "expected_net_area": 14,
+    "expected_net_volume": 2.8,
+    "invalid_declarations": [
+      [],
+      [
+        "V-RAMP-R"
+      ],
+      [
+        "FIXTURE-HOLE-B"
+      ],
+      [
+        "FIXTURE-SHARED-OPENING"
+      ]
+    ],
+    "note": "Isolated source-neutral shared-void protocol fixture; independent from the historically inferred boiler sleeve position."
+  },
+  "ramp_guard": {
+    "tag": "TUBE-RM-2",
+    "host": "GUARD-RM-2",
+    "axis_x": 9.5,
+    "y_interval": [
+      8.23,
+      16.889
+    ],
+    "upstand_width": 0.12,
+    "upstand_height": 0.28,
+    "rail_envelopes": 2,
+    "inferred_posts": 6
+  }
+}

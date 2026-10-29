@@ -1,0 +1,254 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Nakagin Capsule Tower Teaching Model",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "languages", "revision", "notes", "sources", "capsule", "types", "assignment", "facades", "items", "core", "towers", "capital", "podium", "energy", "climate", "variants"],
+  "properties": {
+    "version": {"const": 1},
+    "languages": {"const": ["en", "de"]},
+    "revision": {"type": "integer", "minimum": 1},
+    "notes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "object", "additionalProperties": false, "required": ["id", "text"], "properties": {"id": {"$ref": "#/$defs/id"}, "text": {"$ref": "#/$defs/localized"}}}
+    },
+    "sources": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"$ref": "#/$defs/id"},
+      "additionalProperties": {
+        "type": "object",
+        "oneOf": [
+          {"type": "object", "additionalProperties": false, "required": ["title", "url"], "properties": {"title": {"type": "string", "minLength": 1}, "url": {"type": "string", "pattern": "^https://"}}},
+          {"type": "object", "additionalProperties": false, "required": ["title", "path"], "properties": {"title": {"type": "string", "minLength": 1}, "path": {"type": "string", "minLength": 1}}}
+        ]
+      }
+    },
+    "capsule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "length", "height", "corner_radius", "corner_segments", "window_diameter", "window_center_v", "bolt_u", "bolt_v_low", "bolt_v_high", "bolt_radius", "bolt_count", "interior"],
+      "properties": {
+        "width": {"$ref": "#/$defs/length"},
+        "length": {"$ref": "#/$defs/length"},
+        "height": {"$ref": "#/$defs/length"},
+        "corner_radius": {"$ref": "#/$defs/length"},
+        "corner_segments": {"$ref": "#/$defs/count"},
+        "window_diameter": {"$ref": "#/$defs/length"},
+        "window_center_v": {"$ref": "#/$defs/length"},
+        "bolt_u": {"$ref": "#/$defs/length"},
+        "bolt_v_low": {"$ref": "#/$defs/length"},
+        "bolt_v_high": {"$ref": "#/$defs/length"},
+        "bolt_radius": {"$ref": "#/$defs/length"},
+        "bolt_count": {"$ref": "#/$defs/count"},
+        "interior": {"type": "object", "additionalProperties": false, "required": ["width", "length", "height"], "properties": {"width": {"$ref": "#/$defs/length"}, "length": {"$ref": "#/$defs/length"}, "height": {"$ref": "#/$defs/length"}}}
+      }
+    },
+    "types": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "name", "use", "window_diameter", "window_u", "window_v", "rotation", "occupants", "fittings"],
+        "properties": {
+          "key": {"type": "string", "pattern": "^[A-Z]$"},
+          "name": {"$ref": "#/$defs/localized"},
+          "use": {"$ref": "#/$defs/localized"},
+          "window_diameter": {"$ref": "#/$defs/length"},
+          "window_u": {"$ref": "#/$defs/signed"},
+          "window_v": {"$ref": "#/$defs/length"},
+          "rotation": {"$ref": "#/$defs/angle"},
+          "occupants": {"$ref": "#/$defs/count"},
+          "fittings": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["key", "name", "width", "length", "count"],
+              "properties": {"key": {"$ref": "#/$defs/id"}, "name": {"$ref": "#/$defs/localized"}, "width": {"$ref": "#/$defs/length"}, "length": {"$ref": "#/$defs/length"}, "count": {"$ref": "#/$defs/count"}}
+            }
+          }
+        }
+      }
+    },
+    "assignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["order", "tower_weight", "storey_weight", "facade_weight", "item_weight", "offset"],
+      "properties": {
+        "order": {"type": "array", "minItems": 4, "maxItems": 4, "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Z]$"}},
+        "tower_weight": {"$ref": "#/$defs/count"},
+        "storey_weight": {"$ref": "#/$defs/count"},
+        "facade_weight": {"$ref": "#/$defs/count"},
+        "item_weight": {"$ref": "#/$defs/count"},
+        "offset": {"$ref": "#/$defs/count"}
+      }
+    },
+    "facades": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["index", "key", "name", "normal"],
+        "properties": {
+          "index": {"type": "integer", "minimum": 0, "maximum": 3},
+          "key": {"enum": ["N", "E", "S", "W"]},
+          "name": {"$ref": "#/$defs/localized"},
+          "normal": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"enum": [-1, 0, 1]}}
+        }
+      }
+    },
+    "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["per_facade", "pitch", "stagger"],
+      "properties": {"per_facade": {"$ref": "#/$defs/count"}, "pitch": {"$ref": "#/$defs/length"}, "stagger": {"$ref": "#/$defs/length"}}
+    },
+    "core": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["side", "shaft_side", "storey_height", "podium_storeys"],
+      "properties": {"side": {"$ref": "#/$defs/length"}, "shaft_side": {"$ref": "#/$defs/length"}, "storey_height": {"$ref": "#/$defs/length"}, "podium_storeys": {"$ref": "#/$defs/count"}}
+    },
+    "towers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "name", "center", "capsule_storeys", "facades", "exceptions"],
+        "properties": {
+          "key": {"type": "string", "pattern": "^[A-Z]$"},
+          "name": {"$ref": "#/$defs/localized"},
+          "center": {"type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": {"x": {"$ref": "#/$defs/signed"}, "y": {"$ref": "#/$defs/signed"}}},
+          "capsule_storeys": {"$ref": "#/$defs/count"},
+          "facades": {"type": "array", "minItems": 1, "maxItems": 4, "uniqueItems": true, "items": {"type": "integer", "minimum": 0, "maximum": 3}},
+          "exceptions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["storey", "facades"],
+              "properties": {"storey": {"type": "integer", "minimum": 0}, "facades": {"type": "array", "minItems": 1, "maxItems": 4, "uniqueItems": true, "items": {"type": "integer", "minimum": 0, "maximum": 3}}}
+            }
+          }
+        }
+      }
+    },
+    "capital": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["height", "overhang", "taper"],
+      "properties": {"height": {"$ref": "#/$defs/length"}, "overhang": {"$ref": "#/$defs/length"}, "taper": {"$ref": "#/$defs/length"}}
+    },
+    "podium": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["center", "length", "width", "storeys"],
+      "properties": {
+        "center": {"type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": {"x": {"$ref": "#/$defs/signed"}, "y": {"$ref": "#/$defs/signed"}}},
+        "length": {"$ref": "#/$defs/length"},
+        "width": {"$ref": "#/$defs/length"},
+        "storeys": {"$ref": "#/$defs/count"}
+      }
+    },
+    "energy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["u_roof", "u_floor", "u_wall", "u_window", "attached_factor", "air_change", "air_heat_capacity", "indoor_temperature", "design_temperature", "heating_base"],
+      "properties": {
+        "u_roof": {"$ref": "#/$defs/positive"},
+        "u_floor": {"$ref": "#/$defs/positive"},
+        "u_wall": {"$ref": "#/$defs/positive"},
+        "u_window": {"$ref": "#/$defs/positive"},
+        "attached_factor": {"$ref": "#/$defs/positive"},
+        "air_change": {"$ref": "#/$defs/positive"},
+        "air_heat_capacity": {"$ref": "#/$defs/positive"},
+        "indoor_temperature": {"$ref": "#/$defs/signed"},
+        "design_temperature": {"$ref": "#/$defs/signed"},
+        "heating_base": {"$ref": "#/$defs/signed"}
+      }
+    },
+    "variants": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "name", "description", "overrides"],
+        "properties": {
+          "key": {"type": "string", "pattern": "^[a-z]+(_[a-z]+)*$"},
+          "name": {"$ref": "#/$defs/localized"},
+          "description": {"$ref": "#/$defs/localized"},
+          "overrides": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": false,
+            "properties": {
+              "u_roof": {"$ref": "#/$defs/nonnegative"},
+              "u_floor": {"$ref": "#/$defs/nonnegative"},
+              "u_wall": {"$ref": "#/$defs/nonnegative"},
+              "u_window": {"$ref": "#/$defs/nonnegative"},
+              "attached_factor": {"$ref": "#/$defs/nonnegative"},
+              "air_change": {"$ref": "#/$defs/nonnegative"}
+            }
+          }
+        }
+      }
+    },
+    "climate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["station", "source", "period", "method", "heating_degree_days", "months"],
+      "properties": {
+        "station": {"$ref": "#/$defs/localized"},
+        "source": {"$ref": "#/$defs/id"},
+        "period": {"$ref": "#/$defs/localized"},
+        "method": {"$ref": "#/$defs/localized"},
+        "heating_degree_days": {"$ref": "#/$defs/positive"},
+        "months": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "name", "mean", "days"],
+            "properties": {"key": {"type": "string", "pattern": "^(0[1-9]|1[0-2])$"}, "name": {"$ref": "#/$defs/localized"}, "mean": {"$ref": "#/$defs/signed"}, "days": {"$ref": "#/$defs/count"}}
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+    "localized": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}},
+    "quantity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "unit", "basis"],
+      "properties": {
+        "value": {"type": "number"},
+        "unit": {"type": "string", "minLength": 1},
+        "basis": {"enum": ["sourced", "assumed", "derived"]},
+        "source": {"$ref": "#/$defs/id"},
+        "note": {"type": "string", "minLength": 1}
+      },
+      "if": {"type": "object", "properties": {"basis": {"type": "string", "const": "sourced"}}},
+      "then": {"type": "object", "required": ["source"], "properties": {"source": {"$ref": "#/$defs/id"}}}
+    },
+    "length": {"allOf": [{"$ref": "#/$defs/quantity"}, {"type": "object", "properties": {"value": {"type": "number", "exclusiveMinimum": 0}, "unit": {"type": "string", "const": "m"}}}]},
+    "signed": {"allOf": [{"$ref": "#/$defs/quantity"}]},
+    "positive": {"allOf": [{"$ref": "#/$defs/quantity"}, {"type": "object", "properties": {"value": {"type": "number", "exclusiveMinimum": 0}}}]},
+    "nonnegative": {"allOf": [{"$ref": "#/$defs/quantity"}, {"type": "object", "properties": {"value": {"type": "number", "minimum": 0}}}]},
+    "angle": {"allOf": [{"$ref": "#/$defs/quantity"}, {"type": "object", "properties": {"value": {"type": "number", "minimum": -90, "maximum": 90}, "unit": {"type": "string", "const": "deg"}}}]},
+    "count": {"allOf": [{"$ref": "#/$defs/quantity"}, {"type": "object", "properties": {"value": {"type": "integer", "minimum": 0}}}]}
+  }
+}

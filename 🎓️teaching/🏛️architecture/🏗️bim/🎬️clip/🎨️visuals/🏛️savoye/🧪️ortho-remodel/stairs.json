@@ -1,0 +1,209 @@
+{
+  "stair": {
+    "tag": "STAIR-WAIST",
+    "guid": "stair-waist",
+    "class": "IfcStair",
+    "domains": [
+      "architecture",
+      "structure"
+    ],
+    "kind": "stair",
+    "storey": "ground",
+    "steps": [
+      {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            0.4,
+            0
+          ],
+          [
+            0.4,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "z0": 0.1,
+        "z1": 0.2,
+        "material": "MAT-TILE"
+      }
+    ],
+    "landings": [
+      {
+        "outline": [
+          [
+            2,
+            0
+          ],
+          [
+            2.4,
+            0
+          ],
+          [
+            2.4,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "z0": 2.1,
+        "z1": 2.2,
+        "material": "MAT-TILE"
+      }
+    ],
+    "structural_parts": [
+      {
+        "mesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              0,
+              2
+            ],
+            [
+              2,
+              1,
+              2
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              0.2
+            ],
+            [
+              2,
+              0,
+              2.2
+            ],
+            [
+              2,
+              1,
+              2.2
+            ],
+            [
+              0,
+              1,
+              0.2
+            ]
+          ],
+          "faces": [
+            [
+              3,
+              2,
+              1,
+              0
+            ],
+            [
+              4,
+              5,
+              6,
+              7
+            ],
+            [
+              0,
+              1,
+              5,
+              4
+            ],
+            [
+              1,
+              2,
+              6,
+              5
+            ],
+            [
+              2,
+              3,
+              7,
+              6
+            ],
+            [
+              3,
+              0,
+              4,
+              7
+            ]
+          ]
+        },
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.2,
+        "material": "MAT-RC"
+      }
+    ]
+  },
+  "plan_cut": 1.1,
+  "section": {
+    "axis": 1,
+    "value": 0.5
+  },
+  "path_door": {
+    "tag": "D-PATH",
+    "guid": "door-path",
+    "class": "IfcDoor",
+    "opening": "OP-PATH",
+    "host": "W-PATH",
+    "host_class": "IfcWall",
+    "parts": [
+      {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            1.2,
+            0
+          ],
+          [
+            1.2,
+            0.12
+          ],
+          [
+            0,
+            0.12
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.1,
+        "role": "panel",
+        "material": "MAT-WOOD"
+      }
+    ]
+  }
+}

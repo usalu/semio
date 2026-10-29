@@ -1,0 +1,8 @@
+# Car Route R36
+
+The fresh445main cohort exposed a real producer NameError: _car_path_compute had removed its old CW binding but still returned wall_curve_centre=list(cw["centre"]). That obsolete output assumes a unique circular curtain centre, inconsistent with the registered segmented facade and independent teaching route. Removed only wall_curve_centre from native return, without restoring a fake wall-circle alias. Current source has one remaining consumer, the obsolete main regression being corrected by clips agent.
+
+The failing main route/width matrix provides a concrete red regression. The route remains explicitly assumed and physically evaluated against all native height-band parts. Fresh focused route/limit and six-preparation verification is pending; old loaded runner is being stopped after retaining its immediate NameError traces. No geometry/source coordinates changed in this fix.
+
+
+Further fresh-cohort diagnosis: native window/door _filling_geometry already returns canonicalhost/host_class. The missinghost came from wholeCW product appended to building_geometry.fillings, whose producer correctly has no aperturehost. Facade owner is correcting catalogue membership to nativewindows/doors only, retaining wholecurtain_wall separately; vehiclecollector and nativeSTEP must continue to includeCW exactlyonce. Root caught vehiclecollectorwouldotherwiseomitCWoccupiedsurfaces. Cliptakeoff_elevation also retained filling.get("wall") and silently skippedclear-glasshatches; clipowner correctingwithactualcallbackproof. These are runtime interface fixes, not stale-test exceptions.

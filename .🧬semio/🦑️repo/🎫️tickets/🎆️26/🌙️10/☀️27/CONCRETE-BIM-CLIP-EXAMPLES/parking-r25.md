@@ -1,0 +1,11 @@
+# Physical Parking and Arrival R25
+
+Current448-product source hash21018128b60e2712b03cbd39d187b38a1326861fd7108e165f037c8657772107 was reviewed after original-services routing, hollow columns and physical joinery publication. The prior1061-ish parts changed to2319 height-intersecting projections. The reviewed tag/role delta is exactly the new hollow2/4 decomposition, annular original pipes/casings/insulation, removed exposed drops/plant proxies, and new entry/window sashes. This is not a fingerprint-only acceptance. The same full-size4.6×1.75×1.65m two-car control remains valid, without moving the building or cars. Minimum boundary.225m, column.117m, other physical material.150m, pair gap.302654919m. Three assumed modern cars remain unverified; documented historic capacity is a distinct statement.
+
+A new neutral tilted-polyhedron case first failed with2.35m² projection error. The production height-band projection had treated native miter mesh metadata outlines as filled prisms. It now clips actual convex mesh vertices/edges to the open band; full and partial-height physical material are preserved. Independent SciPy convex-hull clipping and GEOS unions validate current material groups, including column voids. The oracle compares occupied material, not an arbitrary triangulation order. Independent JavaScript polygon-clipping verifies the portable cases and full static controls.
+
+All8Python parking tests pass13.095s. The synthetic crossing-pipe fixture was corrected to omit copied world-specific miter planes; it independently remains a real detected collision. The current source snapshot is checked against independent union geometry and both implementations' source fingerprints.
+
+Canonical public arrival now returns collision_free=true after source rainwater moves inside columns2/4: sampled minimum.25m, intersample motion bound.116194305m, certified lower bound.133805695m. This is the existing assumed teaching route, not a surveyed historical manoeuvre or proof of three-car ingress. Earlier R22 failures against exposed DP2/4 are superseded for this identified source.
+
+Changed files: model API part_band_footprints; portable parking JSON; Python independent physical oracle/syntheticcase; JavaScript independent polyhedron projection. Generated review snapshots/logs remain temporary. Native rendering remains separately blocked.

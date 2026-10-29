@@ -277,7 +277,73 @@
         "column": 0,
         "row": 1
       },
-      "videos": []
+      "videos": [
+        {
+          "id": "grasshopper_anatomy",
+          "title": {
+            "en": "Anatomy of a Grasshopper Script",
+            "de": "Aufbau eines Grasshopper-Skripts"
+          },
+          "icon": "🦴️",
+          "symbol": "grasshopper",
+          "cell": {
+            "column": 0,
+            "row": 0
+          }
+        },
+        {
+          "id": "grasshopper_capsule",
+          "title": {
+            "en": "One Capsule, Parametric",
+            "de": "Eine Kapsel, parametrisch"
+          },
+          "icon": "💊️",
+          "symbol": "grasshopper",
+          "cell": {
+            "column": 1,
+            "row": 0
+          }
+        },
+        {
+          "id": "grasshopper_tower",
+          "title": {
+            "en": "From One Capsule to the Tower",
+            "de": "Von der Kapsel zum Turm"
+          },
+          "icon": "🗼️",
+          "symbol": "grasshopper",
+          "cell": {
+            "column": 2,
+            "row": 0
+          }
+        },
+        {
+          "id": "grasshopper_casting",
+          "title": {
+            "en": "Casting: When Types Meet",
+            "de": "Casting: Wenn Typen sich treffen"
+          },
+          "icon": "🫗️",
+          "symbol": "grasshopper",
+          "cell": {
+            "column": 0,
+            "row": 1
+          }
+        },
+        {
+          "id": "grasshopper_trees",
+          "title": {
+            "en": "Data Trees on the Tower",
+            "de": "Datenbäume am Turm"
+          },
+          "icon": "🌳️",
+          "symbol": "grasshopper",
+          "cell": {
+            "column": 1,
+            "row": 1
+          }
+        }
+      ]
     },
     {
       "id": "excel",
@@ -290,7 +356,60 @@
         "column": 1,
         "row": 1
       },
-      "videos": []
+      "videos": [
+        {
+          "id": "excel_anatomy",
+          "title": {
+            "en": "The Anatomy of a Workbook",
+            "de": "Aufbau einer Arbeitsmappe"
+          },
+          "icon": "🦴️",
+          "symbol": "excel",
+          "cell": {
+            "column": 0,
+            "row": 0
+          }
+        },
+        {
+          "id": "excel_references",
+          "title": {
+            "en": "Cell References",
+            "de": "Zellbezüge"
+          },
+          "icon": "📍️",
+          "symbol": "excel",
+          "cell": {
+            "column": 1,
+            "row": 0
+          }
+        },
+        {
+          "id": "excel_program",
+          "title": {
+            "en": "The Room Program in Excel",
+            "de": "Das Raumprogramm in Excel"
+          },
+          "icon": "📋️",
+          "symbol": "excel",
+          "cell": {
+            "column": 2,
+            "row": 0
+          }
+        },
+        {
+          "id": "excel_energy",
+          "title": {
+            "en": "Heating Demand in the Nakagin Workbook",
+            "de": "Heizwärmebedarf in der Nakagin-Arbeitsmappe"
+          },
+          "icon": "⚡️",
+          "symbol": "excel",
+          "cell": {
+            "column": 0,
+            "row": 1
+          }
+        }
+      ]
     },
     {
       "id": "optimization",

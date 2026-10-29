@@ -1,0 +1,13 @@
+# Captured Core Validation R64
+
+The captured c53 core completed154methods:152passed,2failed methods,12failure records and0errors. Eleven failure records belonged to the canonical bibliographic-source-ID method; one belonged to the SL-1 empty STEP value-token span. These were actual defects, preserved in the captured results and subsequently repaired. The fresh affected verification is recorded in clips-final-repairs-r68.md.
+
+The selected scope was129ModelCase methods,4portable partition helpers,4pure clip methods and17chapter contracts. The retained input clips-final-baseline-r33.py manually selects this scope and does not invoke load_tests. Newly registered feature contracts are separately executed by the parent/R40 cohort; chapter17 must not be counted twice. Two native clip methods and one native browser-command method remain outside portable execution. Seven render-free runtime boundary methods passed separately.
+
+Raw source before/after was c53b7cbe645fb7660d4662799f9e3d79c928dc91d1b3d700bfff7693f5e2e208; provider before/after was858fc15cd806bbaedf07fab96843ad56b34b332e22195a73264c19d4677e2628. Test-body durations sum to3085.1974703seconds; the observed manifest window was05:00:29.506–06:05:12.706UTC,3883.200seconds including setup and observation overhead.
+
+Whole production-code stability is FALSE. Drafting/📏️geometry.py changed from75901e880a34e1b4b941aa130bbc430993e520fa96416399f9fabeff5d51aa8b to9d506aabadf86cfe9efa93b0f53ec0c50f4a27b8f1b476c515588bb530e74c18: the exact two-line restoration of P's builtin tuple interface, with identical numeric coordinates. Drafting/🐍️.py changed from e887b9364986b5a5263bda8d772f25d6c4a55602abe1bf17be0ca4d0feeb1e7a to6dc660ac043c437f218be39c2287cf0551af50eb2fa5f3174485efc463b56088. Its precise preimage attribution is unproven; the author reports approved renderer-local array conversions. Current actual callbacks supply a fresh affected-boundary proof, not retroactive byte stability.
+
+Whole oracle stability is also FALSE: new span regression inputs and the separately owned parking overlay/reference fixtures changed. Selected core definitions, main cases and chapter inputs did not drift. Per-file manifests retain the exact distinction. Generated evidence is clips-baseline-r33-summary.json, before/after manifests, progress and failure records under the ticket generated directory. No stopped older143-method attempt is represented as complete.
+
+Native Manim frames, font/caption fitting and the native browser-command gate remain unverified. This report must be read with the fresh repair proof and separate feature-cohort report rather than described as a single all-green standard-suite run.

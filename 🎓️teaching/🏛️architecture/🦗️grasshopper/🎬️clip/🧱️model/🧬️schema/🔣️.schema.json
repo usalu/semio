@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Grasshopper Teaching Model",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "languages", "revision", "catalogue", "casting", "capsule_wall", "canvases"],
+  "properties": {
+    "version": {"const": 1},
+    "languages": {"const": ["en", "de"]},
+    "revision": {"type": "integer", "minimum": 1},
+    "catalogue": {
+      "type": "object",
+      "minProperties": 60,
+      "propertyNames": {"pattern": "^[A-Z][A-Za-z0-9 -]*$"},
+      "additionalProperties": {"$ref": "#/$defs/component"}
+    },
+    "casting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["types", "sources", "rules"],
+      "properties": {
+        "types": {"type": "array", "minItems": 14, "uniqueItems": true, "items": {"$ref": "#/$defs/typeName"}},
+        "sources": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "string", "minLength": 1}},
+        "rules": {
+          "type": "object",
+          "minProperties": 30,
+          "required": ["same", "*>*!", "Text>Number", "Text>Number!", "Number>Integer"],
+          "properties": {"same": {"$ref": "#/$defs/rule"}, "*>*!": {"$ref": "#/$defs/rule"}, "Text>Number": {"$ref": "#/$defs/rule"}, "Text>Number!": {"$ref": "#/$defs/rule"}, "Number>Integer": {"$ref": "#/$defs/rule"}},
+          "additionalProperties": {"$ref": "#/$defs/rule"}
+        }
+      }
+    },
+    "capsule_wall": {"$ref": "#/$defs/leaf"},
+    "canvases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["anatomy", "capsule", "tower", "casting", "trees"],
+      "properties": {
+        "anatomy": {"$ref": "#/$defs/canvas"},
+        "capsule": {"$ref": "#/$defs/canvas"},
+        "tower": {"$ref": "#/$defs/canvas"},
+        "casting": {"$ref": "#/$defs/canvas"},
+        "trees": {"$ref": "#/$defs/canvas"}
+      }
+    }
+  },
+  "$defs": {
+    "localized": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}
+    },
+    "leaf": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "unit", "basis"],
+      "properties": {"value": {"type": "number"}, "unit": {"type": "string"}, "basis": {"enum": ["sourced", "assumed", "derived"]}}
+    },
+    "typeName": {"enum": ["Number", "Integer", "Text", "Boolean", "Point", "Vector", "Plane", "Domain", "Circle", "Line", "Curve", "Box", "Brep", "Geometry", "Transform", "Generic"]},
+    "param": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "nickname", "type", "access"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "nickname": {"type": "string", "minLength": 1},
+        "type": {"$ref": "#/$defs/typeName"},
+        "access": {"enum": ["item", "list", "tree"]},
+        "optional": {"const": true},
+        "default": {}
+      }
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nickname", "kind", "category", "subcategory", "description", "inputs", "outputs"],
+      "properties": {
+        "nickname": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["component", "slider", "toggle", "valuelist", "panel", "viewer", "param"]},
+        "category": {"enum": ["Params", "Maths", "Vector", "Curve", "Surface", "Intersect", "Transform", "Sets", "Display"]},
+        "subcategory": {"type": "string", "minLength": 1},
+        "description": {"$ref": "#/$defs/localized"},
+        "inputs": {"type": "array", "items": {"$ref": "#/$defs/param"}},
+        "outputs": {"type": "array", "items": {"$ref": "#/$defs/param"}}
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "ok", "basis", "source", "en", "de"],
+      "properties": {
+        "from": {"type": "string"},
+        "to": {"type": "string"},
+        "ok": {"type": "boolean"},
+        "basis": {"enum": ["verified", "community", "unverified", "conflicting"]},
+        "sources": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "source": {"type": "string", "minLength": 1},
+        "en": {"type": "string", "minLength": 1},
+        "de": {"type": "string", "minLength": 1}
+      }
+    },
+    "position": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number"}},
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "label": {"type": "string"},
+        "min": {"type": "number"},
+        "max": {"type": "number"},
+        "value": {},
+        "rounding": {"enum": ["float", "integer", "even", "odd"]},
+        "decimals": {"type": "integer", "minimum": 0, "maximum": 6},
+        "bind": {"type": "string", "pattern": "^[a-z_]+(\\.[A-Za-z0-9_]+)+$"},
+        "lines": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {"type": "string"},
+              {"type": "object", "additionalProperties": false, "minProperties": 1, "maxProperties": 1, "properties": {"nakagin": {"type": "string"}, "model": {"type": "string"}}}
+            ]
+          }
+        },
+        "data": {},
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "value"],
+            "properties": {"name": {"type": "string"}, "value": {}, "bind": {"type": "string"}}
+          }
+        },
+        "selected": {"type": "integer", "minimum": 0},
+        "mapping": {"type": "string", "pattern": "^\\{[^}]*\\}(\\([^)]*\\))? -> \\{[^}]*\\}(\\([^)]*\\))?$"}
+      }
+    },
+    "object": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "component", "at", "settings"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "component": {"type": "string", "minLength": 1},
+        "at": {"$ref": "#/$defs/position"},
+        "settings": {"$ref": "#/$defs/settings"}
+      }
+    },
+    "view": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "objects", "layout"],
+      "properties": {
+        "title": {"$ref": "#/$defs/localized"},
+        "objects": {"type": "array", "minItems": 1, "maxItems": 12, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"}},
+        "layout": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/position"}}
+      }
+    },
+    "canvas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "objects", "wires", "views"],
+      "properties": {
+        "title": {"$ref": "#/$defs/localized"},
+        "objects": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/object"}},
+        "wires": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]*\\.[^.>]+>[a-z][a-z0-9_]*\\.[^.>]+$"}},
+        "views": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/view"}}
+      }
+    }
+  }
+}

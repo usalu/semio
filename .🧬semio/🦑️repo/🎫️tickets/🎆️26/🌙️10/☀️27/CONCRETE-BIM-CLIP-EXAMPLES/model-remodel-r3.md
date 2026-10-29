@@ -1,0 +1,41 @@
+# Villa Savoye Schema Remodel R3
+
+The authored source now follows the plan topology in the Centre des monuments nationaux 2021 visitor leaflet, page 2. Building-local axes reproduce that diagram; north points diagonally toward negative x and negative y. The envelope is 19 by 21.5 metres. Dimensions, room proportions, column placement, opening dimensions and fixture dimensions remain explicitly inferred teaching geometry, not surveyed heritage documentation.
+
+Ground service programme includes two servants rooms, laundry with twin concrete sinks, chauffeur studio, garage with three openings and a curved entrance vestibule. First-floor programme includes kitchen and pantry, guest and son rooms with shared bathroom, parents room and bathroom, boudoir, salon, and L-shaped garden terrace. Model includes typed door/window fillings, unfilled landscape frame, roof parapets, helical stair flights with slab voids, rooflight, ramp terminal landings and guards, and selected documented built-in fixtures.
+
+Shared geometry protocol: standard walls carry storey and is_external; openings carry nullable fill_class/fill_tag/fill_guid, retained window_tag/window_guid aliases, and diagrammatic hinge/swing convention. Stairs expose steps as outline/z0/z1 prisms. Details, furnishings and railings expose parts with the same prism protocol. GUIDs derive from stable tags; containment, material, type, void/fill and structural support relations were rebuilt.
+
+Regression cases were written before implementation in model/🧪️tests/🏛️remodel.json; the sibling Python module checks these and compares polygon area/validity with Shapely. Execution pending restored repo launcher.
+
+## Independent Validation
+
+AJV 2020 independently accepts the full schema and latest authored source. The Node polygon-clipping library independently computed union and intersection areas: all 19 room polygons match their union area and all room pairs on a storey have zero overlapping area after correcting the garage boundary. Garage usable outline area is 40.1 square metres. Stable GUID uniqueness and tag-derived GUID parity passed; every wall opening has a positive extent within its host wall length. These checks executed through the Node tool API while the repo launcher was unavailable. Focused Python/Shapely test execution still requires a working repo runtime.
+
+## Continuity Refinements
+
+Tight stair openings and source-authored arrival bridges prevent the helical stair cutting kitchen, bathroom or service-room walls. All ramps carry lower, middle and upper landings; guards include posts and landing return rails. The ground perimeter includes garage corner and service returns. Curved entrance glazing terminates at the opaque garage return without duplicated glass. Services expose authoritative shared solid parts so section and axon use identical equipment bases and pipe envelopes. Final schema/source check: 159 elements, 19 spaces, 31 columns, no dangling relationship references and no same-storey room area overlaps. The existing car-path teaching generator retains its original abstract approach and needs separate swept-path alignment before being represented as an actual historic traffic route.
+
+## Vehicle Route Resolution
+
+The previous north-facing S demonstration has been replaced. The source-aligned teaching arrival enters from the site side along the outside of the garage, turns at the assumed car minimum radius on the south apron, and stops before the curved vestibule. It is explicitly labelled an assumed teaching manoeuvre, not a measured historic route. The API checks full oriented car rectangles against all 16 actual ground columns, all true ground walls and curved glazing; it returns per-obstacle clearances and a conservative intersample movement bound. Crossing pairs refer to actual ground columns (entry D4/D5), and upper-storey columns do not obstruct the car. Independent polygon-clipping intersection test: 121 poses against 56 ground obstacle polygons, zero collisions; total route length 45.504866 metres. Python/Shapely regression independently checks signed clearance bounds when runtime is available.
+
+## Independent Physical Audit R5 Repairs
+
+All six contradictions in geometry-audit-r5.md were corrected. The private corridor has a clear1.225m neck beside the bath, with a1.2m cross-hall to the son bedroom. The son doorway now joins that public hall without crossing the parents partition. The bath has explicit upper and lower closures and a separate furniture-free door approach. The parents bedroom has the required L-shaped boundary closures. Stair dimensions remain inferred; a2.2m outer diameter and tight slab opening leave0.95m of actual floor between stair and ramp, and the authored landing joins that floor.
+
+The curved glazing is split into two source-authored paths meeting the jambs of the flat double entrance bay, so the entry passage has no continuous glass behind it. SC-1 ends at the frame jamb; SC-FRAME is an aperture-bearing STANDARD wall and its entire landscape opening is clear of the independent curved screen. The radiator and terminal pipe are physically in the salon.
+
+Six independent Shapely regressions cover these exact contradictions, including a continuous0.8m person-width path in eroded free floor, room-door adjacency, wall enclosure, passage obstruction, aperture obstruction and room/detail containment. Independent Node polygon-clipping verification already passed104 person-body placements along the corridor route against actual wall solids and slab voids, with no obstruction; all19 rooms still have zero pairwise overlap. Final frozen catalogue:164 elements,41 walls total (40STANDARD plus SC-1),19 spaces,31 columns. All coordinates are teaching approximations and these passage checks do not establish regulatory accessibility.
+
+## Executed Python Validation
+
+The coordinator executed all10 remodelling Python tests through the isolated test-only Pyodide runtime with Shapely and NumPy: all passed, including continuous corridor, son-door adjacency, parent-bath privacy, actual entrance-glass interruption, clear landscape aperture, salon radiator containment and full oriented vehicle sweep against independent geometry. The source void relationships were subsequently corrected to IFC binary cardinality: each wall-opening pair has its own stable relation. Schema accepts the source and independently rejects grouped void/fill related arrays via maxItems1; portable invalid cases are retained in model/🧪️tests/🏛️invalid-relations.json.
+
+## Final Source Handoff R7
+
+Final coordinated source contains210 elements,21 spaces and33 columns:29 ordinary pilotis,2 hall-table supports and2 kiosk supports. Garage/chauffeur boundaries now follow the primary diagram diagonal; three actual assumed parked-car envelopes are independently validated in a neutral fixture. The studio has3 disjoint functional spaces and real doors. The pantry hatch is a genuine unfilled hosted aperture with a binary void relation. Hall support types and kiosk support types retain explicit assumed diameters, real slab-soffit stops, LoadBearing metadata, stable identities and support relations.
+
+The architectural details contributor added source-attested hollow fittings, table/column integrations, storage/desk details, planter rims, taps and stair guards/handrails. The final source passes strict AJV, has no dangling references, and all390 product/type/material/spatial/relation identities match their stable tags with no duplicates. Five independent detail tests passed on that merge. The model remodel suite now has18 tests, including R6 guest/chaise fixes, outward solarium cap, actual support-profile/slab intersections, covered kiosk vs open main terrace, genuine garage lightwell holes, disjoint chauffeur programme and kitchen/pantry hatch. Coordinator execution of the expanded18-test suite is pending; the earlier10-test physical suite passed before this final detail wave.
+
+Detailed support membership/provenance: model-structure-supports-r7.md. Evidence completeness and remaining attested omissions: detail-completeness.md. All temporary source staging files were moved atomically into their destinations and do not remain as duplicate source copies in the ticket.

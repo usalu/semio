@@ -1,0 +1,205 @@
+{
+  "version": 1,
+  "source": "CMN Villa Savoye visitor leaflet 2021 page2 and CSIC2022 archival structural register; architectural proportions inferred",
+  "cases": [
+    {
+      "id": "ground-domestic-programme",
+      "storey": "ground",
+      "spaces": [
+        "SP-HALL",
+        "SP-GARAGE",
+        "SP-SERVANTS-1",
+        "SP-SERVANTS-2",
+        "SP-LAUNDRY",
+        "SP-CHAUFFEUR"
+      ],
+      "minimum_garage_area": 35
+    },
+    {
+      "id": "first-domestic-programme",
+      "storey": "first",
+      "spaces": [
+        "SP-SALON",
+        "SP-KITCHEN",
+        "SP-PANTRY",
+        "SP-GUEST",
+        "SP-SON",
+        "SP-SHARED-BATH",
+        "SP-PARENTS",
+        "SP-PARENT-BATH",
+        "SP-BOUDOIR",
+        "SP-TERRACE"
+      ]
+    },
+    {
+      "id": "openings-fillings",
+      "classes": [
+        "IfcDoor",
+        "IfcWindow"
+      ],
+      "unfilled": "OP-SC-VIEW",
+      "multiple_opening_wall": "W-G-W"
+    },
+    {
+      "id": "vertical-circulation",
+      "stairs": [
+        "ST-GF",
+        "ST-FR"
+      ],
+      "ramp_terminal_portions": [
+        0,
+        0.5,
+        1
+      ],
+      "stair_voids": [
+        "V-STAIR-1",
+        "V-STAIR-R"
+      ]
+    },
+    {
+      "id": "architectural-details",
+      "tags": [
+        "ROOFLIGHT-1",
+        "W-STAIR-ROOF",
+        "FIX-BATH",
+        "FIX-KITCHEN",
+        "FIX-LAUNDRY",
+        "FIX-TERRACE-TABLE",
+        "GUARD-RM-1",
+        "GUARD-RM-2"
+      ]
+    },
+    {
+      "id": "private-circulation-person-width",
+      "body_width": 0.8,
+      "path": [
+        [
+          7.6,
+          7
+        ],
+        [
+          7.6,
+          7.25
+        ],
+        [
+          4.15,
+          7.25
+        ],
+        [
+          4.15,
+          11.4
+        ],
+        [
+          4.05,
+          11.4
+        ],
+        [
+          4.05,
+          15.2
+        ]
+      ]
+    },
+    {
+      "id": "son-public-door",
+      "door": "D-SON",
+      "opposite_spaces": [
+        "SP-SON",
+        "SP-FIRST-HALL"
+      ]
+    },
+    {
+      "id": "parent-bath-privacy",
+      "lower_boundary": "W-PARENT-BATH-S",
+      "open_connection": "SP-PARENTS"
+    },
+    {
+      "id": "entry-glass-free-passage",
+      "body_width": 0.8,
+      "path": [
+        [
+          8.5,
+          1.8
+        ],
+        [
+          8.5,
+          3.5
+        ]
+      ],
+      "glass_path_count": 2
+    },
+    {
+      "id": "landscape-opening-clearance",
+      "host": "SC-1",
+      "opening": "OP-SC-VIEW",
+      "expected_overlap_area": 0
+    },
+    {
+      "id": "radiator-room-assignment",
+      "element": "RAD-1",
+      "room": "SP-SALON",
+      "absent_retired_services": [
+        "PS-2",
+        "PS-3"
+      ]
+    }
+  ],
+  "chauffeur_registration": {
+    "ground_fixture": "🏠ground.json",
+    "door_approaches": [
+      [
+        [
+          11.75,
+          19.965
+        ],
+        [
+          12.95,
+          19.965
+        ]
+      ],
+      [
+        [
+          13.5,
+          19.865
+        ],
+        [
+          14.7,
+          19.865
+        ]
+      ]
+    ],
+    "body_half_width": 0.4,
+    "area_tolerance": 1e-8,
+    "source": "Independent registered R33 ground fixture; approaches across current bedroom and bathroom door stations, dimensions inferred"
+  },
+  "entrance_registration": {
+    "ground_fixture": "🏠ground.json",
+    "registered_portal": [
+      [
+        8.64,
+        4.6
+      ],
+      [
+        10.5,
+        4.6
+      ]
+    ],
+    "door": "D-ENTRY",
+    "opening": "OP-D-ENTRY",
+    "host": "CW-1",
+    "path": "PATH-HALL",
+    "route_offsets": [
+      -0.8,
+      0.8
+    ],
+    "body_half_width": 0.4,
+    "body_height": 2.1,
+    "fixed_roles": [
+      "frame",
+      "wing_skin",
+      "wing_insulation"
+    ],
+    "area_tolerance": 1e-8,
+    "assumption": "Movable timber leaves are open; fixed framing and actual curtain material remain. No closed-leaf or code-compliance clearance claim.",
+    "source": "Independent registered R33 ground-envelope flat control segment; route/body dimensions assumed"
+  }
+}

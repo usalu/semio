@@ -1,0 +1,200 @@
+{
+  "image": "cca-hall-r30.jpg",
+  "width": 1400,
+  "height": 934,
+  "source": "https://www.cca.qc.ca/en/search/details/collection/object/362303",
+  "date": "1931 or later",
+  "photographer": "unknown",
+  "controls": {
+    "near_column": {
+      "candidate_tag": "8",
+      "base_pixel": [
+        535,
+        727
+      ],
+      "visible_width_pixel": 106,
+      "pixel_uncertainty": 5
+    },
+    "far_column": {
+      "candidate_tag": "9",
+      "base_pixel": [
+        844,
+        527
+      ],
+      "visible_width_pixel": 29,
+      "pixel_uncertainty": 3
+    }
+  },
+  "floor_trace_pixels": [
+    [
+      376,
+      618
+    ],
+    [
+      414,
+      600
+    ],
+    [
+      453,
+      582
+    ],
+    [
+      627,
+      544
+    ],
+    [
+      674,
+      532
+    ],
+    [
+      720,
+      521
+    ],
+    [
+      767,
+      512
+    ],
+    [
+      815,
+      502
+    ],
+    [
+      880,
+      493
+    ],
+    [
+      935,
+      487
+    ]
+  ],
+  "rail_pixels": [
+    [
+      375,
+      454
+    ],
+    [
+      394,
+      450
+    ],
+    [
+      413,
+      447
+    ],
+    [
+      432,
+      443
+    ],
+    [
+      451,
+      440
+    ],
+    [
+      470,
+      437
+    ],
+    [
+      608,
+      430
+    ],
+    [
+      624,
+      425
+    ],
+    [
+      641,
+      423
+    ],
+    [
+      656,
+      422
+    ],
+    [
+      672,
+      421
+    ],
+    [
+      689,
+      420
+    ],
+    [
+      704,
+      419
+    ],
+    [
+      720,
+      418
+    ],
+    [
+      735,
+      418
+    ],
+    [
+      751,
+      417
+    ],
+    [
+      766,
+      417
+    ],
+    [
+      782,
+      417
+    ],
+    [
+      797,
+      417
+    ],
+    [
+      813,
+      417
+    ],
+    [
+      829,
+      417
+    ],
+    [
+      865,
+      417
+    ],
+    [
+      878,
+      417
+    ],
+    [
+      892,
+      417
+    ],
+    [
+      907,
+      417
+    ],
+    [
+      922,
+      417
+    ],
+    [
+      937,
+      417
+    ],
+    [
+      951,
+      417
+    ]
+  ],
+  "occluded_pixel_intervals": [
+    [
+      483,
+      594
+    ],
+    [
+      831,
+      861
+    ],
+    [
+      958,
+      1025
+    ]
+  ],
+  "pixel_uncertainty": 3,
+  "registration_status": "candidate camera; no measured historical station schedule"
+}

@@ -1,4 +1,4 @@
-"""📋 Orthographic plans of the Villa Savoye: cut plans of the ground floor, first floor and roof from one model-driven drawing."""
+"""📋 Orthographic plans of every authored Villa Savoye storey."""
 
 from __future__ import annotations
 
@@ -18,7 +18,6 @@ WALL_FILL = _d.mix(INK, BACKGROUND, 0.12)
 GROUND_WALL_FILL = _d.mix(GOOD, BACKGROUND, 0.42)
 BUBBLE_GAP = 0.38
 BUBBLE_R = 0.13
-LEVEL_CUT = {"ground": 1.0, "roof": 1.5}
 
 
 def quad(a, b, half: float) -> list:
@@ -27,6 +26,153 @@ def quad(a, b, half: float) -> list:
     d = (b - a) / max(np.linalg.norm(b - a), 1e-9)
     n = np.array([-d[1], d[0]]) * half
     return [a + n, b + n, b - n, a - n]
+
+
+def wall_cells(wall):
+    """🧩 Disjoint longitudinal-height cells after subtracting every authored opening."""
+    length, base, top = wall["length"], wall["base"], wall["top"]
+    openings = wall["openings"]
+    xs = sorted({0.0, length, *(max(0.0, min(length, op[key])) for op in openings for key in ("start", "end"))})
+    zs = sorted({base, top, *(max(base, min(top, op[key])) for op in openings for key in ("sill_z", "head_z"))})
+    return [(a, b, c, d) for a, b in zip(xs, xs[1:]) for c, d in zip(zs, zs[1:])
+            if b > a and d > c and not any(op["start"] < (a+b)/2 < op["end"] and op["sill_z"] < (c+d)/2 < op["head_z"] for op in openings)]
+
+
+def cell_edges(cells):
+    """🧵 Boundary segments of disjoint rectangles, removing every shared cell edge."""
+    edges = {}
+    for a,b,c,d in cells:
+        ring = [(a,c),(b,c),(b,d),(a,d)]
+        for p,q in zip(ring,ring[1:]+ring[:1]):
+            key = tuple(sorted((tuple(round(x,9) for x in p),tuple(round(x,9) for x in q))))
+            if key in edges:
+                del edges[key]
+            else:
+                edges[key] = (p,q)
+    return list(edges.values())
+
+
+def profile_cut(outline, axis, value):
+    """✂️ Exact polygon scanline intervals, independent of a profile's descriptive kind."""
+    hits = []
+    for a,b in zip(outline,outline[1:]+outline[:1]):
+        if (a[axis] <= value < b[axis]) or (b[axis] <= value < a[axis]):
+            t = (value-a[axis])/(b[axis]-a[axis])
+            hits.append(a[1-axis]+t*(b[1-axis]-a[1-axis]))
+    hits.sort()
+    return [(a,b) for a,b in zip(hits[::2],hits[1::2]) if b-a > 1e-9]
+
+
+def model_vertical_bounds(g):
+    """🏢 Physical drawing range including cellar, foundations and all authored solid parts."""
+    levels = list(g["storeys"].values())+[g["box"]["height"]]
+    for slab in g["slabs"]:
+        for part in slab["parts"]+slab.get("finish_parts",[]):
+            levels.extend((part["z0"],part["z1"]))
+    for kind in ("pilotis","stairs","details","furnishings","railings","foundations","beams","services"):
+        for item in g.get(kind,[]):
+            for part in item["parts"]:
+                levels.extend((part["z0"],part["z1"]))
+    return min(levels),max(levels)
+
+
+def plan_cut_z(g, level):
+    """📏 Consistent model-relative plan cut for every authored storey."""
+    return g["storeys"][level]+1.2
+
+
+def adjacent_slabs(g, cut):
+    """🟫 Adjacent slab assemblies selected by actual regional bounds."""
+    bounds = [(slab,min(p["z0"] for p in slab["parts"]),max(p["z1"] for p in slab["parts"])) for slab in g["slabs"]]
+    lower = [top for slab,base,top in bounds if top <= cut]
+    upper = [base for slab,base,top in bounds if base > cut]
+    return [(slab,base > cut,top <= cut) for slab,base,top in bounds
+            if base <= cut < top or lower and abs(top-max(lower)) < 1e-9 or upper and abs(base-min(upper)) < 1e-9]
+
+
+def part_plan_outline(part, cut):
+    """🔻 Read the true cut ring, visible upper cap below, or underside above the plan plane."""
+    if "section" in part or "mesh" in part:
+        return _c._model.part_outline_at(part,cut) if part["z0"]-1e-10 <= cut <= part["z1"]+1e-10 else _c._model.part_footprint(part)
+    return _c._model.part_outline_at(part,cut) if "top_outline" in part else part["outline"]
+
+
+def plan_part_rank(data):
+    """🪵 Source floor finishes sit beneath fixtures, walls and ramps."""
+    return 1.0 if data["kind"] in ("parquet","tile","paving","grass_joint") else 3.5
+
+
+def plan_part_visible(data, part, level, band, below, structural=False):
+    """🧱 Keep capped finish layers and buried structure only on their authored storey."""
+    elev,top = band
+    if part["z0"] >= top-1e-6:
+        return False
+    if plan_part_rank(data) == 1.0:
+        return data["storey"] == level
+    return part["z1"] >= elev-1e-6 or structural and below and data["storey"] == level
+
+
+def slab_cut(slab, axis, value, clip=None):
+    """🟫 Physical regional slab rectangles at a plane, already respecting source voids."""
+    cells = []
+    for part in slab["parts"]:
+        for a,b in profile_cut(part["outline"],axis,value):
+            if clip is not None:
+                a,b = max(a,clip[0]),min(b,clip[1])
+            if b-a > 1e-9:
+                cells.append((a,b,part["z0"],part["z1"]))
+    return cells
+
+
+def rect_union_cells(rectangles):
+    """🧩 Nonoverlapping rectangular union cells for seam-free section boundaries."""
+    xs = sorted({v for a,b,c,d in rectangles for v in (a,b)})
+    zs = sorted({v for a,b,c,d in rectangles for v in (c,d)})
+    return [(a,b,c,d) for a,b in zip(xs,xs[1:]) for c,d in zip(zs,zs[1:])
+            if any(x0 < (a+b)/2 < x1 and z0 < (c+d)/2 < z1 for x0,x1,z0,z1 in rectangles)]
+
+
+def point_in_ring(point, ring):
+    """📍 Even-odd containment for a point displaced from physical part boundaries."""
+    x,y = point
+    inside = False
+    for a,b in zip(ring,ring[1:]+ring[:1]):
+        if (a[1] > y) != (b[1] > y) and x < a[0]+(y-a[1])*(b[0]-a[0])/(b[1]-a[1]):
+            inside = not inside
+    return inside
+
+
+def slab_sides(slab, occluders=None):
+    """🧱 Exposed regional side faces, subtracting neighboring occupied vertical intervals."""
+    faces = []
+    occupied = slab["parts"] if occluders is None else occluders
+    for part in slab["parts"]:
+        ring = part["outline"]
+        area = sum(a[0]*b[1]-b[0]*a[1] for a,b in zip(ring,ring[1:]+ring[:1]))
+        for a,b in zip(ring,ring[1:]+ring[:1]):
+            dx,dy = b[0]-a[0],b[1]-a[1]
+            squared = dx*dx+dy*dy
+            if squared < 1e-18:
+                continue
+            length = squared**0.5
+            normal = (dy/length,-dx/length) if area > 0 else (-dy/length,dx/length)
+            ts = {0.0,1.0}
+            for other in occupied:
+                for p in other["outline"]:
+                    if abs((p[0]-a[0])*dy-(p[1]-a[1])*dx) < 1e-8*length:
+                        t = ((p[0]-a[0])*dx+(p[1]-a[1])*dy)/squared
+                        if 0 < t < 1:
+                            ts.add(t)
+            values = sorted(ts)
+            for t0,t1 in zip(values,values[1:]):
+                mid = (t0+t1)/2
+                probe = (a[0]+dx*mid+normal[0]*1e-7,a[1]+dy*mid+normal[1]*1e-7)
+                neighbors = [p for p in occupied if p is not part and point_in_ring(probe,p["outline"])]
+                zs = sorted({part["z0"],part["z1"],*(max(part["z0"],min(part["z1"],p[key])) for p in neighbors for key in ("z0","z1"))})
+                for z0,z1 in zip(zs,zs[1:]):
+                    if z1-z0 > 1e-9 and not any(p["z0"] < (z0+z1)/2 < p["z1"] for p in neighbors):
+                        faces.append(((a[0]+dx*t0,a[1]+dy*t0),(a[0]+dx*t1,a[1]+dy*t1),z0,z1,normal))
+    return faces
 
 
 class Plan(_s.SheetMixin):
@@ -50,7 +196,7 @@ class Plan(_s.SheetMixin):
                    dim: float = 0.45, halo: float = 0.2, window=None, centre=None, thumbnail: bool = False):
         """📋 Orthographic plan of one storey: poché walls and pilotis, thin glass lines, hidden dashes below the cut, grid, dimensions.
 
-        ``level`` is ``"ground"``, ``"first"`` or ``"roof"``; ``point`` is the screen position of the box centre (or of ``centre``, model metres), ``scale`` screen units per metre.
+        ``level`` is an authored storey key, including ``"cellar"``; ``point`` is the screen position of the box centre (or of ``centre``, model metres), ``scale`` screen units per metre.
         ``layers`` chooses ``"structure"`` (pilotis, slabs, ramp), ``"architecture"`` (walls, windows, glass, rooms) and ``"services"`` (boiler, radiator, pipes, drains).
         ``highlight`` / ``ghost`` take tags, IFC classes or kinds; ``highlight_colors`` maps a tag to its colour (default DATA); ``halo`` is the screen radius of the ring around lit pilotis.
         ``dims`` may contain ``"grid"`` and ``"overall"`` (chains on the top and right side); ``cuts`` is a list of section marks (``"salon"``, ``"ramp"``, ``"row:3"`` …).
@@ -69,13 +215,12 @@ class Plan(_s.SheetMixin):
         look = _s.Look(_s.expand_names(highlight, g), _s.expand_names(ghost, g), dim, highlight_colors, colors)
         bands = _s.storey_bands(g)
         elev, top = bands[level]
-        opening = g["walls"][0]["openings"][0]
-        d.cut_z = {"ground": elev + LEVEL_CUT["ground"], "first": (opening["sill_z"] + opening["head_z"]) / 2, "roof": elev + LEVEL_CUT["roof"]}[level]
+        d.cut_z = plan_cut_z(g,level)
         catalogue = _s.items(model)
         entries: list = []
         use = set(layers)
         w = 0.7 if thumbnail else 1.0
-        ctx = {"g": g, "view": view, "look": look, "level": level, "scale": scale, "w": w, "window": window, "bands": bands, "catalogue": catalogue,
+        ctx = {"g": g, "view": view, "look": look, "level": level, "scale": scale, "w": w, "window": window, "bands": bands, "catalogue": catalogue, "cut_z": d.cut_z, "use": use, "below": below,
                "put": lambda rank, tag, group, anchor=None, aliases=(): entries.append((rank, len(entries), tag, group, anchor, aliases)),
                "screen": lambda ring: [view(p[0], p[1], 0.0) for p in ring]}
         if use & {"architecture", "structure"}:
@@ -83,18 +228,19 @@ class Plan(_s.SheetMixin):
         if "structure" in use:
             self._plan_pilotis(ctx, halo, below, thumbnail)
         if "architecture" in use:
-            if level == "ground":
-                self._plan_ground_walls(ctx, hidden=False)
-                self._plan_curtain(ctx, hidden=False)
-            elif level == "first":
-                self._plan_walls(ctx)
-                if below:
-                    self._plan_ground_walls(ctx, hidden=True)
-                    self._plan_curtain(ctx, hidden=True)
-            else:
-                self._plan_screens(ctx)
+            self._plan_walls(ctx)
+            if below:
+                self._plan_below_walls(ctx,hidden=True)
+            curtain = g.get("curtain_wall")
+            lower_levels = [value for value in g["storeys"].values() if value < elev]
+            if curtain and curtain["base"] <= d.cut_z <= curtain["top"]:
+                self._plan_curtain(ctx,hidden=False)
+            elif curtain and below and lower_levels and max(lower_levels) < curtain["top"] < elev:
+                self._plan_curtain(ctx,hidden=True)
+            self._plan_screens(ctx)
             self._plan_spaces(ctx)
         if use & {"architecture", "structure"}:
+            self._plan_solids(ctx)
             self._plan_ramps(ctx, ramp_arrow)
         if "services" in use:
             self._plan_services(ctx)
@@ -116,7 +262,14 @@ class Plan(_s.SheetMixin):
         if dims:
             self._plan_dims(d, g, view, dims, label_sides)
         if north:
-            d.parts["north"] = self.north_arrow(view(0.0, box["width"], 0.0) + np.array([-0.5, 0.65, 0.0]), 0.42)
+            position = view(0.0, box["width"], 0.0) + np.array([-0.5, 0.65, 0.0])
+            direction = np.asarray(g["north"],float)
+            angle = np.arctan2(direction[1],direction[0])-np.pi/2
+            compass = self.north_arrow(position,0.42)
+            for part in compass.submobjects[:2]:
+                part.rotate(angle,about_point=position)
+            compass.submobjects[2].move_to(position+np.array([direction[0],direction[1],0.0])*0.44)
+            d.parts["north"] = compass
             d.add(d.parts["north"])
         if scalebar:
             metres = 5.0
@@ -131,132 +284,155 @@ class Plan(_s.SheetMixin):
         g, look, level, put, screen = ctx["g"], ctx["look"], ctx["level"], ctx["put"], ctx["screen"]
         box = g["box"]
         outline = [[0.0, 0.0], [box["length"], 0.0], [box["length"], box["width"]], [0.0, box["width"]]]
-        for slab in g["slabs"]:
+        for slab,above,under in adjacent_slabs(g,ctx["cut_z"]):
             item = _s.pseudo(slab["tag"], "IfcSlab", "slabs", slab["guid"], ("architecture", "structure"))
-            is_roof = slab["kind"] == "ROOF"
-            above = (level == "ground" and not is_roof) or (level == "first" and is_roof)
-            under = (level == "first" and not is_roof) or (level == "roof" and is_roof)
-            if not (above or under):
-                continue
             fill, stroke, opacity, bonus = self._pair(look, item, CONCRETE, INK)
-            rings = [screen(slab["outline"])] + [screen(v) for v in slab["voids"]]
-            group = _engine.VGroup(_d.region(rings, fill, (0.06 if above else 0.1) * opacity, None, 0))
+            rings = [screen(slab["outline"])]+[screen(v) for v in slab["voids"]]
+            group = _engine.VGroup()
+            for part in slab["parts"]:
+                crossed = part["z0"] <= ctx["cut_z"] < part["z1"]
+                group.add(_d.region([screen(part["outline"])],fill,(0.35 if crossed else 0.06 if above else 0.1)*opacity,None,0))
             for ring in rings[1:]:
                 if above:
                     group.add(_d.polyline(ring, stroke, W_HAIR + 0.3 + bonus, 0.55 * opacity, closed=True, dash=0.06))
                 else:
                     group.add(_d.polyline(ring, stroke, W_THIN + bonus, 0.8 * opacity, closed=True))
-            if under and level == "roof":
+            if under:
                 group.add(_d.polyline(rings[0], stroke, W_EDGE + bonus, 0.9 * opacity, closed=True))
             put(0.2, slab["tag"], group)
+            if not above:
+                finishes = {}
+                for part in slab.get("finish_parts",[]):
+                    colour = _c.surface_color({"kind":part["layer"]})
+                    finishes.setdefault(part["layer"],_engine.VGroup()).add(_d.region([screen(part["outline"])],colour,0.3*opacity,None,0))
+                for layer,shapes in finishes.items():
+                    put(1.0,slab["tag"]+":"+layer,shapes)
         if level == "ground":
             ctx["put"](0.1, "box", _engine.VGroup(_d.polyline(screen(outline), INK, W_HAIR + 0.3, 0.5, closed=True, dash=0.08)))
-        if level == "roof":
-            roof = next(s for s in g["slabs"] if s["kind"] == "ROOF")
-            zone = roof.get("zones", {}).get("solarium")
-            rings = [screen(roof["outline"])] + [screen(v) for v in roof["voids"]] + ([screen(zone)] if zone else [])
-            put(0.3, "roof:planted", _engine.VGroup(_d.hatch(rings, GOOD, 0.11, 45.0, W_HAIR, 0.55)))
-            if zone:
-                put(0.3, "roof:solarium", _engine.VGroup(_d.polygon(screen(zone), CONCRETE, 0.1)))
 
     def _plan_pilotis(self, ctx, halo, below, thumbnail):
-        """⚪ Pilotis: poché circles at the ground floor, dashed circles below the cut of the upper storeys; lit ones get a halo ring."""
-        view, look, level, scale, w = ctx["view"], ctx["look"], ctx["level"], ctx["scale"], ctx["w"]
+        """🏛️ Authored column contours at the cut, with circular selection halos only."""
+        view,look,w,cut = ctx["view"],ctx["look"],ctx["w"],ctx["cut_z"]
         for item in ctx["catalogue"]:
             if item["kind"] != "pilotis":
                 continue
             data = item["data"]
-            x, y = data["x"], data["y"]
-            if not _c.inside(ctx["window"], [(x, y)], 0.5):
+            if data["top"] <= ctx["bands"][ctx["level"]][0] or data["base"] > cut:
                 continue
-            centre = view(x, y, 0.0)
-            radius = max(data["radius"] * scale, _s.MIN_PILOTI)
-            fill, stroke, opacity, bonus = self._pair(look, item, CONCRETE, INK)
+            fill,stroke,opacity,bonus = self._pair(look,item,CONCRETE,INK)
             group = _engine.VGroup()
-            if level == "ground":
-                group.add(_d.polygon(_s.circle(centre, radius, 20), fill, 0.9 * opacity, stroke, (W_EDGE + bonus) * w, opacity))
-            elif below:
-                group.add(_d.polyline(_s.circle(centre, radius, 20), stroke, (W_HAIR + 0.3 + bonus) * w, 0.7 * opacity, closed=True, dash=0.045))
-            else:
+            for part in data["parts"]:
+                if not _c.inside(ctx["window"],_c._model.part_footprint(part),0.5):
+                    continue
+                ring = ctx["screen"](part_plan_outline(part,cut))
+                if part["z0"] <= cut < part["z1"]:
+                    group.add(_d.region([ring,*[ctx["screen"](h) for h in part["holes"]]],fill,0.9*opacity,stroke,(W_EDGE+bonus)*w,opacity) if part.get("holes") else _d.polygon(ring,fill,0.9*opacity,stroke,(W_EDGE+bonus)*w,opacity))
+                elif below and part["z1"] <= cut and part["z1"] > ctx["bands"][ctx["level"]][0]:
+                    group.add(_d.polyline(ring,stroke,(W_HAIR+bonus)*w,0.55*opacity,closed=True,dash=0.045))
+            if not len(group.submobjects):
                 continue
+            centre = view(data["x"],data["y"],0.0)
             lit = look.state(item) == "highlight"
             if lit and halo > 0 and not thumbnail:
                 colour = look.highlight_color(item)
-                group.add(_d.polygon(_s.circle(centre, halo, 40), colour, 0.12), _d.polyline(_s.circle(centre, halo, 40), colour, W_THIN + 0.4, 1.0, closed=True))
-            ctx["put"](6.5 if lit else 6.0, item["tag"], group, centre)
+                radius = max(halo,data["bounding_radius"]*ctx["scale"]+0.05)
+                group.add(_d.polygon(_s.circle(centre,radius,40),colour,0.1),_d.polyline(_s.circle(centre,radius,40),colour,W_THIN+0.4,1.0,closed=True))
+            ctx["put"](6.5 if lit else 6.0,item["tag"],group,centre)
 
-    def _plan_ground_walls(self, ctx, hidden: bool):
-        """🟩 Set-back ground-floor walls derived from the ground spaces, one poché band per edge; dashed hairlines when hidden below a cut."""
-        g, view, look, w = ctx["g"], ctx["view"], ctx["look"], ctx["w"]
-        walls = _s.ground_walls(g)
-        owners: dict = {}
-        for a, b, tag in walls["outer"] + walls["inner"]:
-            if not _c.inside(ctx["window"], [a, b], 0.5):
-                continue
-            if hidden:
-                owners.setdefault("ground_walls", _engine.VGroup()).add(_d.polyline([view(*a, 0.0), view(*b, 0.0)], MUTED, W_HAIR + 0.3, 0.55, dash=0.06))
-                continue
-            item = _s.pseudo(tag, "IfcSpace", "spaces", tag)
-            fill, stroke, opacity, bonus = self._pair(look, item, GROUND_WALL_FILL, INK)
-            band = [view(p[0], p[1], 0.0) for p in quad(a, b, walls["thickness"] / 2)]
-            owners.setdefault(tag, _engine.VGroup()).add(_d.polygon(band, fill, 0.95 * opacity, stroke, 0.7 * w, 0.8 * opacity))
-        for tag, group in owners.items():
-            ctx["put"](1.4 if hidden else 4.0, tag, group)
+    def _plan_below_walls(self, ctx, hidden: bool):
+        """🟩 Explicit walls on the immediately preceding authored storey."""
+        if not hidden:
+            self._plan_walls(ctx)
+            return
+        group = _engine.VGroup()
+        elev = ctx["bands"][ctx["level"]][0]
+        lower = [(value,name) for name,value in ctx["g"]["storeys"].items() if value < elev]
+        previous = max(lower)[1] if lower else None
+        for wall in ctx["g"]["walls"]:
+            if wall["storey"] == previous:
+                group.add(_d.polyline(ctx["screen"]([wall["start"], wall["end"]]), MUTED, W_HAIR, 0.3, dash=0.06))
+        ctx["put"](1.4,"below_walls",group)
 
     def _plan_curtain(self, ctx, hidden: bool):
-        """🪟 The curved glass wall: two thin parallel lines with mullion ticks; one dashed line when hidden below the cut."""
-        g, view, look, scale, w = ctx["g"], ctx["view"], ctx["look"], ctx["scale"], ctx["w"]
-        item = next((it for it in ctx["catalogue"] if it["kind"] == "curtain"), None)
-        if item is None:
-            return
-        path = item["data"]["path"]
-        fill, stroke, opacity, bonus = self._pair(look, item, GLASS, GLASS)
-        group = _engine.VGroup()
-        if hidden:
-            group.add(_d.polyline([view(p[0], p[1], 0.0) for p in path], stroke, W_HAIR + 0.3, 0.5 * opacity, dash=0.06))
-        else:
-            left, right = _s.offset_path(path, max(0.07, 0.015 / scale))
-            for line in (left, right):
-                group.add(_d.polyline([view(p[0], p[1], 0.0) for p in line], stroke, (W_THIN + bonus) * w, opacity))
-            for end in (0, -1):
-                group.add(_d.polyline([view(*left[end], 0.0), view(*right[end], 0.0)], stroke, W_THIN * w, opacity))
-            group.add(_d.segments([(view(*left[i], 0.0), view(*right[i], 0.0)) for i in range(0, len(path), 3)], stroke, W_HAIR, 0.8 * opacity))
-        ctx["put"](1.5 if hidden else 5.0, "CW-1", group)
+        """🪟 Draw actual curtain members and its native hosted door solids from shared physical parts."""
+        view,look,w=ctx["view"],ctx["look"],ctx["w"]
+        items=[it for it in ctx["catalogue"] if it["kind"]=="curtain" or it["kind"] in ("doors","windows") and "parts" in it["data"]]
+        for item in items:
+            fill,stroke,opacity,bonus=self._pair(look,item,GLASS,GLASS)
+            group=_engine.VGroup()
+            for part in item["data"]["parts"]:
+                if hidden:
+                    group.add(_d.polyline(ctx["screen"](part["outline"]+[part["outline"][0]]),stroke,W_HAIR+.3,.5*opacity,dash=.06))
+                elif part["z0"]<=ctx["cut_z"]<part["z1"]:
+                    group.add(_d.polygon([view(*p) for p in part["outline"]],GLASS if part["role"]=="glass" else INK,opacity,stroke,(W_THIN+bonus)*w))
+            opening=item["data"].get("opening")
+            ctx["put"](1.5 if hidden else 5.,item["tag"],group,aliases=(opening,) if opening else ())
 
     def _plan_walls(self, ctx):
-        """⬜ First-floor walls cut in the window zone: poché corner piers and glass double lines in the ribbon opening."""
-        view, look, w = ctx["view"], ctx["look"], ctx["w"]
-        for item in ctx["catalogue"]:
-            if item["kind"] != "walls":
+        """⬜ Explicit storey walls with cut openings, glazing and diagrammatic door swings."""
+        view, look, w, cut = ctx["view"], ctx["look"], ctx["w"], ctx["cut_z"]
+        for wall in ctx["g"]["walls"]:
+            if wall["storey"] != ctx["level"] or wall["base"] > cut:
                 continue
-            wall = item["data"]
+            if not _c.inside(ctx["window"], [wall["start"], wall["end"]], 0.5):
+                continue
+            item = next((it for it in ctx["catalogue"] if it["tag"] == wall["tag"]), None) or _s.pseudo(wall["tag"], "IfcWall", "walls", wall["guid"])
             a, b = np.array(wall["start"], float), np.array(wall["end"], float)
-            d = (b - a) / np.linalg.norm(b - a)
-            n = np.array([-d[1], d[0]])
-            half = wall["thickness"] / 2
-            fill, stroke, opacity, bonus = self._pair(look, item, WALL_FILL, INK)
+            direction = (b-a)/wall["length"]
+            n = np.array([-direction[1], direction[0]])
+            half = wall["thickness"]/2
+            fill, stroke, opacity, bonus = self._pair(look, item, GROUND_WALL_FILL if wall["storey"] == "ground" else WALL_FILL, INK)
             group = _engine.VGroup()
-            cursor = a
-            for opening in wall["openings"]:
-                p0, p1 = np.array(opening["p0"], float), np.array(opening["p1"], float)
-                if np.linalg.norm(p0 - cursor) > 1e-6:
-                    group.add(self._wall_piece(view, cursor, p0, half, fill, stroke, opacity, bonus, w))
-                sill = [view(q[0], q[1], 0.0) for q in quad(p0, p1, half)]
-                group.add(_d.polygon(sill, fill, 0.28 * opacity, stroke, W_THIN * w, 0.85 * opacity))
-                cursor = p1
-            if np.linalg.norm(b - cursor) > 1e-6:
-                group.add(self._wall_piece(view, cursor, b, half, fill, stroke, opacity, bonus, w))
+            for part in wall["parts"]:
+                if part["z0"] <= cut < part["z1"] or wall["top"] <= cut:
+                    group.add(_d.polygon([view(*p) for p in part["outline"]],fill,opacity,stroke,w+bonus))
             ctx["put"](4.0, wall["tag"], group)
-            for opening in wall["openings"]:
-                p0, p1 = np.array(opening["p0"], float), np.array(opening["p1"], float)
-                window = next(it for it in ctx["catalogue"] if it["tag"] == opening["window_tag"])
-                g_fill, g_stroke, g_opacity, g_bonus = self._pair(look, window, GLASS, GLASS)
+            for op in wall["openings"]:
+                if not op["sill_z"] <= cut <= op["head_z"]:
+                    continue
+                p0,p1 = np.array(op["p0"],float),np.array(op["p1"],float)
+                tag = op.get("fill_tag") or op.get("window_tag")
+                cls = op.get("fill_class")
+                item = next((it for it in ctx["catalogue"] if it["tag"] == tag),None) or _s.pseudo(tag or op["tag"],cls or "IfcOpeningElement","openings",op["guid"])
+                gfill,gs,go,gb = self._pair(look,item,GLASS if cls != "IfcDoor" else CONCRETE,GLASS if cls != "IfcDoor" else INK)
                 shape = _engine.VGroup()
-                for sign in (1, -1):
-                    shape.add(_d.polyline([view(*(p0 + n * half * 0.55 * sign), 0.0), view(*(p1 + n * half * 0.55 * sign), 0.0)], g_stroke, (W_THIN + g_bonus) * w, g_opacity))
-                jamb = INK if look.state(window) == "normal" else g_stroke
-                shape.add(_d.segments([(view(*(p0 + n * half), 0.0), view(*(p0 - n * half), 0.0)), (view(*(p1 + n * half), 0.0), view(*(p1 - n * half), 0.0))], jamb, W_THIN, g_opacity))
-                ctx["put"](5.0, opening["window_tag"], shape, aliases=(opening["tag"],))
+                filling = next((f for f in ctx["g"]["fillings"] if f["tag"]==tag),None)
+                if filling:
+                    for part in filling["parts"]:
+                        if part["z0"] <= cut < part["z1"]:
+                            shape.add(_d.polygon([view(*p) for p in part["outline"]],GLASS if part["role"]=="glass" else INK,go,gs,(W_THIN+gb)*w))
+                    if cls == "IfcDoor" and filling["operation"]=="swing" and len({p.get("panel_index") for p in filling["parts"] if p["role"] in ("glass","panel")})==1:
+                        hinge = a+direction*filling["clear_start"]
+                        leaf_width = filling["clear_width"]
+                        closed,opened = direction*leaf_width,n*leaf_width
+                        shape.add(_d.polyline([view(*hinge),view(*(hinge+opened))],gs,(W_THIN+gb)*w,go))
+                        arc = [hinge+closed*np.cos(t)+opened*np.sin(t) for t in np.linspace(0,np.pi/2,17)]
+                        shape.add(_d.polyline(ctx["screen"](arc),gs,W_HAIR*w,0.7*go))
+                ctx["put"](5.0, tag or op["tag"], shape, aliases=(op["tag"],) if tag else ())
+
+    def _plan_solids(self, ctx):
+        """🪜 Authored treads, landings, fixtures, rooflights, parapets and guard solids."""
+        elev, top = ctx["bands"][ctx["level"]]
+        for kind in ("stairs", "details", "furnishings", "railings", "foundations", "beams"):
+            for data in ctx["g"].get(kind, []):
+                structural = "structure" in data["domains"]
+                if not set(data["domains"]).intersection(ctx["use"]):
+                    continue
+                if not structural and kind != "stairs" and data["storey"] != ctx["level"]:
+                    continue
+                item = next((it for it in ctx["catalogue"] if it["tag"] == data["tag"]),None) or _s.pseudo(data["tag"],data["class"],kind,data["guid"])
+                group = _engine.VGroup()
+                for part in data["parts"]:
+                    fill,stroke,opacity,bonus = self._pair(ctx["look"],item,_c.surface_color(data,part),INK)
+                    if kind == "foundations" and "architecture" in ctx["use"] and ctx["level"] == "ground" and part["z1"] < ctx["g"]["storeys"]["ground"]-1e-9 and ctx["look"].state(item) != "highlight":
+                        continue
+                    if not plan_part_visible(data,part,ctx["level"],(elev,top),ctx["below"],structural):
+                        continue
+                    ring = ctx["screen"](part_plan_outline(part,ctx["cut_z"]))
+                    above = part["z0"] > ctx["cut_z"] or structural and part["z1"] < elev
+                    group.add(_d.polygon(ring,fill,0.08*opacity if above else 0.3*opacity),_d.polyline(ring,stroke,(W_HAIR if above else W_THIN)+bonus,0.45*opacity if above else opacity,closed=True,dash=0.05 if above else None))
+                if len(group.submobjects):
+                    ctx["put"](plan_part_rank(data),data["tag"],group)
 
     def _wall_piece(self, view, a, b, half, fill, stroke, opacity, bonus, w):
         """⬛ One poché piece of a wall between two plan points."""
@@ -270,10 +446,16 @@ class Plan(_s.SheetMixin):
             if item["kind"] != "screens":
                 continue
             data = item["data"]
+            if data["base"] > ctx["cut_z"] or data["top"] <= ctx["bands"][ctx["level"]][0]:
+                continue
             fill, stroke, opacity, bonus = self._pair(look, item, WALL_FILL, INK)
-            left, right = _s.offset_path(data["path"], data["thickness"] / 2)
-            ring = [view(*p, 0.0) for p in list(left) + list(right[::-1])]
-            ctx["put"](4.0, item["tag"], _s.poche([ring], fill, hatch=False, stroke=stroke, width=(W_CUT * 0.7 + bonus) * w, opacity=opacity))
+            group = _engine.VGroup()
+            for part in data["parts"]:
+                if not part["z0"] <= ctx["cut_z"] < part["z1"]:
+                    continue
+                ring = [view(*p,0.) for p in _c._model.part_outline_at(part,ctx["cut_z"])]
+                group.add(_s.poche([ring],fill,hatch=False,stroke=stroke,width=(W_CUT*.7+bonus)*w,opacity=opacity))
+            ctx["put"](4.,item["tag"],group)
 
     def _plan_ramps(self, ctx, ramp_arrow):
         """⏫ Ramp flights of the storey: outlined strips with an arrow in the rising direction and a dot at the low end; landings as outlines."""
@@ -286,10 +468,7 @@ class Plan(_s.SheetMixin):
                 if flight["z1"] <= elev + 1e-9 or flight["z0"] >= top - 1e-9:
                     continue
                 s, e = np.array(flight["start"], float), np.array(flight["end"], float)
-                d = (e - s) / np.linalg.norm(e - s)
-                n = np.array([-d[1], d[0]])
-                half = flight["width"] / 2
-                strip = [view(*p, 0.0) for p in (s + n * half, e + n * half, e - n * half, s - n * half)]
+                strip = [view(*p,0.0) for p in _c._model.part_footprint(flight["parts"][0])]
                 shape = _engine.VGroup(_d.polygon(strip, fill, 0.1 * opacity, stroke, (W_THIN + bonus) * w, 0.9 * opacity))
                 if ramp_arrow:
                     a, b = view(*s, 0.0), view(*e, 0.0)
@@ -301,61 +480,48 @@ class Plan(_s.SheetMixin):
                 ctx["put"](3.0, flight["tag"], shape)
             landings = _engine.VGroup()
             for landing in ramp["landings"]:
+                if landing["owner"]!=ramp["tag"]:
+                    continue
                 if elev - 1e-9 <= landing["z"] < top - 1e-9:
                     landings.add(_d.polyline([view(*p, 0.0) for p in landing["outline"]], stroke, W_THIN * w, 0.7 * opacity, closed=True))
             if len(landings.submobjects):
                 ctx["put"](3.0, ramp["tag"] + ":landings", landings)
 
     def _plan_services(self, ctx):
-        """🔧 Boiler, radiator, pipes, drains and downpipes of the storey in the services colour."""
-        view, look, level, scale = ctx["view"], ctx["look"], ctx["level"], ctx["scale"]
-        elev, top = ctx["bands"][level]
+        """🔧 Canonical equipment and pipe footprints with model-authored vertical bounds."""
+        look = ctx["look"]
+        elev,top = ctx["bands"][ctx["level"]]
         for item in ctx["catalogue"]:
             if item["kind"] != "services":
                 continue
             data = item["data"]
-            zs = [p[2] for p in data["points"]]
-            if max(zs) < elev - 1e-9 or min(zs) >= top - 1e-9 or not _c.inside(ctx["window"], [p[:2] for p in data["points"]], 0.5):
-                continue
-            fill, stroke, opacity, bonus = self._pair(look, item, SERV, SERV)
+            fill,stroke,opacity,bonus = self._pair(look,item,SERV,SERV)
             group = _engine.VGroup()
-            kind = data["kind"]
-            points = np.array([p[:2] for p in data["points"]], float)
-            if kind in ("boiler", "radiator"):
-                size = data.get("size") or [0.6, 0.6, 1.0]
-                centre = points.mean(axis=0)
-                half = np.maximum(np.abs(points[-1] - points[0]) / 2, np.array(size[:2]) / 2)
-                ring = [view(centre[0] + sx * half[0], centre[1] + sy * half[1], 0.0) for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
-                group.add(_d.polygon(ring, fill, 0.25 * opacity, stroke, W_EDGE + bonus, opacity))
-                if kind == "boiler":
-                    group.add(_d.segments([(ring[0], ring[2]), (ring[1], ring[3])], stroke, W_THIN, opacity))
-            elif kind in ("drain", "downpipe"):
-                radius = max(0.045, (data.get("diameter") or 0.1) / 2 * scale)
-                centre = view(points[0][0], points[0][1], 0.0)
-                group.add(_d.polygon(_s.circle(centre, radius, 14), fill, 0.35 * opacity, stroke, W_EDGE + bonus, opacity),
-                          _d.segments([(centre + (-radius, 0, 0), centre + (radius, 0, 0)), (centre + (0, -radius, 0), centre + (0, radius, 0))], stroke, W_HAIR, opacity))
-            elif np.linalg.norm(points[-1] - points[0]) < 1e-6:
-                centre = view(points[0][0], points[0][1], 0.0)
-                group.add(_d.polygon(_s.circle(centre, 0.04, 12), stroke, opacity, stroke, W_THIN, opacity))
-            else:
-                group.add(_d.polyline([view(p[0], p[1], 0.0) for p in points], stroke, W_EDGE + 0.8 + bonus, opacity))
-            ctx["put"](7.0, item["tag"], group)
+            for part in data["parts"]:
+                if part["z1"] < elev or part["z0"] >= top or not _c.inside(ctx["window"],_c._model.part_footprint(part),0.5):
+                    continue
+                if "size" not in data and not part["z0"]-1e-10 <= ctx["cut_z"] <= part["z1"]+1e-10:
+                    group.add(_d.polyline(ctx["screen"](_c._model.part_footprint(part)),stroke,W_HAIR,.5*opacity,closed=True))
+                    continue
+                outline = part_plan_outline(part,ctx["cut_z"])
+                if len(outline)<3:
+                    continue
+                ring = ctx["screen"](outline)
+                group.add(_d.polygon(ring,fill,0.25*opacity,stroke,W_THIN+bonus,opacity))
+                if data["kind"] in ("boiler","drain") and "size" in data:
+                    group.add(_d.segments([(ring[0],ring[2]),(ring[1],ring[3])],stroke,W_HAIR,opacity))
+            if len(group.submobjects):
+                ctx["put"](7.0,item["tag"],group)
 
     def _plan_spaces(self, ctx):
-        """🌿 Hatched hanging garden."""
-        g, view, look, level, scale = ctx["g"], ctx["view"], ctx["look"], ctx["level"], ctx["scale"]
-        for space in g["spaces"]:
-            here = space["storey"] == level
-            if not here and not (level == "roof" and space["tag"] == "SP-TERRACE"):
+        """🏷️ Selected room outlines without inferring a floor finish from a room name."""
+        for space in ctx["g"]["spaces"]:
+            if space["storey"] != ctx["level"]:
                 continue
-            item = _s.pseudo(space["tag"], "IfcSpace", "spaces", space["guid"])
-            fill, stroke, opacity, bonus = self._pair(look, item, MUTED, MUTED)
-            group = _engine.VGroup()
-            if space["tag"] == "SP-TERRACE":
-                ring = ctx["screen"](space["outline"])
-                group.add(_d.polygon(ring, GOOD, 0.12 * opacity), _d.hatch(ring, GOOD, 0.1, 45.0, W_HAIR, 0.6 * opacity))
-            if len(group.submobjects):
-                ctx["put"](2.0, space["tag"], group)
+            item = _s.pseudo(space["tag"],"IfcSpace","spaces",space["guid"])
+            if ctx["look"].state(item) == "highlight":
+                colour = ctx["look"].highlight_color(item)
+                ctx["put"](2.0,space["tag"],_engine.VGroup(_d.polyline(ctx["screen"](space["outline"]),colour,W_THIN,0.8,closed=True)))
 
     def _plan_names(self, d, ctx, language):
         """🏷️ Short room names placed on the free spot nearest to each room centroid; rooms without a free spot stay unnamed."""
@@ -451,3 +617,4 @@ class Plan(_s.SheetMixin):
                           _d.polygon([tip + direction * 0.1, tip - direction * 0.03 + side * 0.06, tip - direction * 0.03 - side * 0.06], INK),
                           self._t("ABCDEFG"[index], end + out * 0.17 + direction * 0.05, _d.S_SMALL, INK))
             put(8.0, "cut:" + (spec if isinstance(spec, str) else str(spec)), group)
+                                                                                                                                                                                                                                                                                    

@@ -1,0 +1,43 @@
+{
+  "vehicle": {
+    "length": 4.6,
+    "width": 1.75,
+    "height": 1.65,
+    "z0": 0,
+    "basis": "assumed"
+  },
+  "source_elements": 386,
+  "fixed_pose": {
+    "center": [
+      13.79,
+      9.5
+    ],
+    "angle_degrees": 90
+  },
+  "candidate_x": [
+    11.8,
+    13,
+    0.1
+  ],
+  "candidate_y": [
+    14.2,
+    15.2,
+    0.1
+  ],
+  "angles_degrees": [
+    85,
+    90,
+    95,
+    100,
+    105
+  ],
+  "maximum_seconds": 10,
+  "cancel_requested": false,
+  "selected": {
+    "center": [
+      12,
+      14.4
+    ],
+    "angle_degrees": 90
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "slab": "SL-1",
+  "openings": [
+    {
+      "tag": "V-RAMP",
+      "shape": "rectangle",
+      "bounds": [
+        8.128,
+        8.23,
+        10.898,
+        18.079
+      ]
+    },
+    {
+      "tag": "V-STAIR-1",
+      "shape": "u_stair",
+      "centre": [
+        6.407144828882639,
+        9.180220372262651
+      ],
+      "radius": 0.97,
+      "straight": 1.5,
+      "segments": 48
+    },
+    {
+      "tag": "V-GARAGE-LIGHT-1",
+      "shape": "rectangle",
+      "bounds": [
+        14.65,
+        8.85,
+        15.35,
+        9.55
+      ]
+    },
+    {
+      "tag": "V-GARAGE-LIGHT-2",
+      "shape": "rectangle",
+      "bounds": [
+        14.65,
+        12.75,
+        15.35,
+        13.45
+      ]
+    }
+  ],
+  "context_rooms": [
+    "SP-SALON"
+  ],
+  "clip_segments": [
+    {
+      "a": [
+        -2,
+        0
+      ],
+      "b": [
+        2,
+        0
+      ],
+      "low": [
+        -1,
+        -1
+      ],
+      "high": [
+        1,
+        1
+      ],
+      "expected": [
+        [
+          -1,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ]
+    },
+    {
+      "a": [
+        2,
+        -2
+      ],
+      "b": [
+        2,
+        2
+      ],
+      "low": [
+        -1,
+        -1
+      ],
+      "high": [
+        1,
+        1
+      ],
+      "expected": null
+    },
+    {
+      "a": [
+        0,
+        -2
+      ],
+      "b": [
+        0,
+        2
+      ],
+      "low": [
+        -1,
+        -1
+      ],
+      "high": [
+        1,
+        1
+      ],
+      "expected": [
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "a": [
+        -2,
+        -2
+      ],
+      "b": [
+        2,
+        2
+      ],
+      "low": [
+        -1,
+        -1
+      ],
+      "high": [
+        1,
+        1
+      ],
+      "expected": [
+        [
+          -1,
+          -1
+        ],
+        [
+          1,
+          1
+        ]
+      ]
+    }
+  ],
+  "gross_rectangle": [
+    -0.15,
+    -0.05,
+    19.15,
+    21.55
+  ],
+  "first_floor_spaces": [
+    "SP-SALON",
+    "SP-KITCHEN",
+    "SP-PANTRY",
+    "SP-GUEST",
+    "SP-SON",
+    "SP-SHARED-BATH",
+    "SP-PARENTS",
+    "SP-PARENT-BATH",
+    "SP-BOUDOIR",
+    "SP-FIRST-HALL",
+    "SP-TERRACE",
+    "SP-KITCHEN-TERRACE"
+  ],
+  "scope": "Authored architectural voids only; native hosted service penetrations are verified by the main slab-domain contracts.",
+  "source_register": "Accepted measured remodel envelope19.30x21.60; native U stair radius0.97/straight1.50 and48half-circle facets; two0.70x0.70 garage lights."
+}

@@ -1,0 +1,167 @@
+{
+  "version": 1,
+  "image": "vivante1931-plate27-image1705-r39.jpg",
+  "phase": "original-completed top photograph only",
+  "controls": [
+    {
+      "tag": "S-W roof corner",
+      "world": [
+        -0.15,
+        -0.05,
+        6.77
+      ],
+      "pixel": [
+        383,
+        77
+      ]
+    },
+    {
+      "tag": "S-E roof corner",
+      "world": [
+        19.15,
+        -0.05,
+        6.77
+      ],
+      "pixel": [
+        87,
+        96
+      ]
+    },
+    {
+      "tag": "N-W roof corner",
+      "world": [
+        -0.15,
+        21.55,
+        6.77
+      ],
+      "pixel": [
+        561,
+        97
+      ]
+    },
+    {
+      "tag": "S-W soffit corner",
+      "world": [
+        -0.15,
+        -0.05,
+        2.91
+      ],
+      "pixel": [
+        383,
+        161
+      ]
+    },
+    {
+      "tag": "S-E soffit corner",
+      "world": [
+        19.15,
+        -0.05,
+        2.91
+      ],
+      "pixel": [
+        87,
+        157
+      ]
+    },
+    {
+      "tag": "N-W soffit corner",
+      "world": [
+        -0.15,
+        21.55,
+        2.91
+      ],
+      "pixel": [
+        561,
+        162
+      ]
+    },
+    {
+      "tag": "5 ground axis",
+      "world": [
+        0,
+        1.25,
+        0
+      ],
+      "pixel": [
+        394,
+        217
+      ]
+    },
+    {
+      "tag": "11 ground axis",
+      "world": [
+        0,
+        6,
+        0
+      ],
+      "pixel": [
+        444,
+        214
+      ]
+    },
+    {
+      "tag": "17 ground axis",
+      "world": [
+        0,
+        10.75,
+        0
+      ],
+      "pixel": [
+        485,
+        211
+      ]
+    },
+    {
+      "tag": "23 ground axis",
+      "world": [
+        0,
+        15.5,
+        0
+      ],
+      "pixel": [
+        521,
+        209
+      ]
+    },
+    {
+      "tag": "33 ground axis",
+      "world": [
+        0,
+        20.25,
+        0
+      ],
+      "pixel": [
+        552,
+        208
+      ]
+    }
+  ],
+  "uncertainty_px": 2,
+  "roof_candidates": {
+    "boiler": {
+      "pixelTop": [
+        369,
+        45
+      ],
+      "profile": "cylindrical round top, independent prior"
+    },
+    "salon": {
+      "box": [
+        313,
+        62,
+        322,
+        78
+      ],
+      "identity": "provisional paired column2 and solarium east curve"
+    },
+    "kitchen": {
+      "box": [
+        503,
+        43,
+        518,
+        91
+      ],
+      "identity": "provisional west curve above kitchen"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "void-relations-are-binary",
+      "relationship_class": "IfcRelVoidsElement",
+      "override": {
+        "related": [
+          "OP-G-WIN-1",
+          "OP-G-WIN-2"
+        ]
+      },
+      "expected_schema_valid": false
+    },
+    {
+      "id": "fill-relations-are-binary",
+      "relationship_class": "IfcRelFillsElement",
+      "override": {
+        "related": [
+          "G-WIN-1",
+          "G-WIN-2"
+        ]
+      },
+      "expected_schema_valid": false
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # BIM-Videos
 
-Vollständige Texte der sechs BIM-Videos. Alle Werte stammen aus einem gerundeten Lehrmodell der Villa Savoye in Poissy (Le Corbusier und Pierre Jeanneret, 1928–1931); angenommene Werte sind in den Videos als solche gekennzeichnet. Ein Absatz pro gesprochenem Schritt, in Sprechreihenfolge.
+Vollständige Texte der sechs BIM-Videos. Das Modell der Villa Savoye zielt auf den ursprünglichen Fertigstellungszustand 1930–1931. Quellenbelegte, abgeleitete und angenommene Maße sind unterschieden; hypothetische Lehränderungen werden ausdrücklich benannt. Ein Absatz pro gesprochenem Schritt, in Sprechreihenfolge.
 
 ## Inhalt
 
@@ -23,31 +23,31 @@ Kontext: Es ist der Achsabstand zweier Pilotis im Erdgeschoss der Villa Savoye.
 
 Das Modell benennt den Ort: Grundstück, Gebäude, Geschoss und die beiden Rasterachsen.
 
-Stimmt die Summe? Die Felder ergeben die Rasterbreite; der Rest bis zur Gebäudekante bleibt offen.
+Stimmt die Summe? Die Felder ergeben die Rasterbreite; jedes Gebäudemaß behält seinen eigenen Beleg oder seine Ableitung.
 
-Das Datenmodell ergänzt die Bedeutung: Eigenschaft, Einheit, Raster und ob der Wert belegt oder angenommen ist.
+Das Datenmodell ergänzt die Bedeutung: Eigenschaft, Einheit, Raster, Beleg und den rekonstruierten ursprünglichen Zustand von 1930–1931.
 
 Ein Wert trägt seine Herkunft. Das erste Raster war weiter und wurde aus Kostengründen verkleinert.
 
-Information dient einer Frage: Fährt ein Auto (Maße angenommen) zwischen den Pilotis durch und wendet unter dem Haus?
+Information dient einer Frage: Erreicht ein angenommenes Auto den Eingang ohne Kontakt zu den modellierten Hindernissen?
 
 Der Abstand gilt von Achse zu Achse; das Auto braucht den freien Raum zwischen den Stützen.
 
-Die lichte Weite ist der Abstand abzüglich des Pilotidurchmessers. Im Lehrmodell hat das Auto so viel Raum.
+Die lichte Weite berücksichtigt die tatsächlichen Stützenkonturen im Achsabstand. Bei Kreisprofilen ergibt sich der bekannte Durchmesserabzug.
 
-Bei Geradeausfahrt müssen Auto und ein Sicherheitsabstand je Seite hineinpassen. Mit diesen Annahmen tun sie das.
+Bei Geradeausfahrt müssen Auto und ein Sicherheitsabstand je Seite in die verfügbare Breite passen.
 
-Ob erstes oder verkleinertes Raster: Das Auto passt.
+Erstes und verkleinertes Raster werden als ausdrückliche Abstandsszenarien verglichen.
 
-Wie sicher ist die Antwort? Das Urteil kippt erst unter einer Schwelle, weit unter diesem Abstand.
+Wie sicher ist die Antwort? Die Skala zeigt die Schwelle dieses ausdrücklichen Geradeausfahrt-Szenarios.
 
-Eine dickere Stütze oder ein breiteres Auto verschiebt die Schwelle, ändert die Antwort aber nicht.
+Eine dickere Kreisstütze oder ein breiteres Auto verschiebt die Schwelle; die ganze Route braucht weiterhin ihre eigene geometrische Prüfung.
 
-Das Auto fährt durch das Feld und wendet unter dem Haus.
+Die angenommene Anfahrt ist ein Lehrszenario. Historische Beschreibungen nennen Platz für drei Autos; drei Fahrzeuge in voller Größe bleiben geometrisch ungeprüft.
 
-In der Kurve unterschreiten zwei Pilotis den Abstand der Geradeausfahrt; das Auto kommt noch frei vorbei, aber knapp.
+Die bewegte Rechteckhülle wird gegen tatsächliche Bauteile in Fahrzeughöhe geprüft, einschließlich Haustechnik und Hebeausleger; der kleinste Abstand entscheidet.
 
-Die gebogene Glaswand folgt dem Wendekreis des Autos: Ihre Kurve ist aus dem Auto berechnet.
+Die transluzente Eingangsumfassung und geschlossenen Holztürblätter folgen dem quellenbezogenen Plan. Die angenommene Anfahrt ist eine eigene Lehrroute.
 
 Eine Stütze trägt weitere Eigenschaften: Material, ob sie Lasten trägt und ob sie außen liegt.
 
@@ -67,17 +67,17 @@ Eine Klasse beschreibt eine Art von Dingen: IfcColumn, IfcSlab, IfcWall und IfcW
 
 Eine Instanz ist ein bestimmtes Objekt: diese Stütze der Villa Savoye mit eigener GlobalId.
 
-Ein Typ hält, was alle Pilotis gemeinsam haben; jede platzierte Stütze ist ein Vorkommen davon.
+Ein Typ hält, was seine Vorkommen teilen. Diese Pilotis haben einen Typ; Hallen- und Gartenstützen haben andere Typen.
 
 Ein Property Set ergänzt benannte Werte am Typ: LoadBearing sagt, dass jede Stütze ihren Anteil der Decke trägt.
 
 Ein Objekt kann mehrere Darstellungen haben: Achse, Grundfläche und Körper.
 
-Der Körper ist ein entlang der Achse extrudierter Kreis: Radius und Höhe sind Werte, gezeichnet als Maßlinien.
+Dieser gewählte Körper ist eine Kreisextrusion: Radius und Höhe werden zu Maßen. Andere Stützenprofile behalten ihre nativen Bohrungen.
 
 Eine Methode ist Verhalten: Die Anwendung berechnet Querschnitt und Volumen aus diesen Werten.
 
-Dieselbe Methode wird für jedes Vorkommen ausgeführt und summiert den Beton aller Pilotis.
+Die Methode summiert die geometrischen Querschnittshüllen des gewählten Typs; ein vermessener Betonkern braucht eigene Belege.
 
 Ändert man den Durchmesser im Typ, folgen alle Vorkommen: Volumen und Summe ändern sich, die GlobalId bleibt.
 
@@ -89,11 +89,11 @@ Bauteile liegen in einem Geschoss; das Geschoss gehört zum Gebäude, das Gebäu
 
 Komposition bedeutet Teile: Die Wand hat eine Öffnung, die IfcRelVoidsElement aus ihr ausschneidet.
 
-Ein Fenster füllt diese Öffnung über IfcRelFillsElement; das Glas nimmt den Platz der Öffnung ein.
+Ein Fenster füllt diese Öffnung über IfcRelFillsElement; Rahmen und Glas bilden getrennte physische Teile.
 
-Die Wand hat auch ein Material: Ein Schichtenaufbau aus Außenputz, Ziegel und Innenputz ergibt ihre Dicke.
+Der Wandaufbau unterscheidet feste Schalen und einen Lufthohlraum; ihre Breiten ergeben die Hüllstärke.
 
-Unterscheide »ist ein« und »hat ein«: Die Stütze ist ein Bauteil; das Fenster ist keine Wand, es füllt eine Öffnung.
+Unterscheide Klasse und Komposition: Ein Fenster füllt eine Öffnung, während die Öffnung am hängenden Garten ungefüllt bleibt.
 
 IFC tauscht deklarative Daten und Beziehungen aus: Klasse, GlobalId, Radius, Höhe und Eigenschaften reisen als Text.
 
@@ -103,15 +103,15 @@ Die Volumenmethode reist nicht mit: Die empfangende Anwendung führt ihre eigene
 
 Video: `bim_representations`
 
-Lehrmodell der Villa Savoye: ein Objekt, die Südwand des Obergeschosses mit ihrem Bandfenster.
+Lehrmodell der Villa Savoye: ein Objekt, die Nordwestwand des Obergeschosses mit ihrem Bandfenster.
 
 Der Grundriss schneidet die Wand auf Fensterhöhe: Wand als Poché, Bandfenster als dünne Glaslinien.
 
 Der Schnitt geht durch Geschossdecke, Pilotis und Fenster: Brüstungs- und Sturzhöhe werden zu Maßlinien.
 
-Die Ansicht zeigt die ganze Südfassade: Bandfenster, dunkelgrünes Erdgeschoss, Pilotis, Solariumswände.
+Die Ansicht zeigt die Nordwestfassade und die asymmetrische Solariumswand mit Landschaftsöffnung und geneigter Abdeckung.
 
-Die 3D-Ansicht zeigt den Körper: eine massive Wand mit einer Öffnung, die das Fenster füllt.
+Die 3D-Ansicht zeigt feste Wandschalen, getrennte Tragglieder und eine mit Rahmen und Glas gefüllte Öffnung.
 
 Im Modell ist die Wand als Axis, FootPrint und Body gespeichert; Grundriss, Schnitt und Ansicht sind abgeleitet.
 
@@ -125,11 +125,11 @@ Wandert die Schnittebene, wechselt der Grundriss von Vollwand zu Fensterband und
 
 Dieselbe Geometrie liefert die Flächen: Bruttowandfläche, Öffnung, Nettowandfläche und Glasanteil.
 
-Eine Planänderung senkt die Brüstung. Das Bandfenster wird höher; alle Ansichten und Zahlen werden neu erzeugt.
+Die Brüstung sinkt von 0,89 auf 0,70 m; der Sturz bleibt bei 2,04 m. Die Öffnung wächst von 1,15 auf 1,34 m.
 
-Die Mengenermittlung liest den Body: Nettowandfläche, Fensterfläche und Glasanteil folgen der Brüstung live.
+Die Mengenermittlung unterscheidet Rohbauöffnungen und tatsächliches Glas; Nettowandfläche und Glasanteil folgen der Brüstung.
 
-Auch das Wandvolumen stammt aus dem Body: Die Aussparung wird abgezogen, die tiefere Brüstung verkleinert es.
+Das Wandvolumen zählt feste Schalen ohne Lufthohlraum; die tiefere Brüstung entfernt zusätzliches festes Material.
 
 Kopien würden zurückbleiben: Jede Kopie müsste von Hand abgeglichen werden, Ansicht für Ansicht.
 
@@ -143,35 +143,35 @@ Eine Darstellung zeigt das Objekt; eine Planänderung aktualisiert es, und seine
 
 Video: `bim_models`
 
-Verschiedene Fachrichtungen ordnen die Bauwerksinformation, die sie brauchen.
+Verschiedene Fachrichtungen ordnen die benötigte Information zum rekonstruierten ursprünglichen Haus von 1930–1931.
 
-Das Architekturmodell enthält Wände, Öffnungen, Fenster, Rampe, gebogene Glaswand, Decken und Räume.
+Das Architekturmodell enthält Räume, Eingangskonstruktion, Dachtreppenhaus, dessen Vordach und das offene Metallgeländer an der Rampe.
 
-Auch Räume sind Objekte: sechs Räume mit ihrer Fläche gehören zu ihrem Geschoss.
+Auch Räume sind Objekte: die modellierten Räume mit ihrer Fläche gehören zu ihrem Geschoss.
 
-Der Wandaufbau gehört zum Modell: Außenputz, Ziegelausfachung und Innenputz in drei Schichten.
+Der Fassadenaufbau unterscheidet Außenputz, zwei Ziegelschalen, einen Lufthohlraum und Innenputz.
 
-Das Tragwerksmodell enthält Pilotis, Decken und Rampe. Putz, Fenster und Räume lässt es weg.
+Das Tragwerksmodell enthält Pilotis, Decken, Rampe, Treppen sowie Zusatzstürze, hohle U-Träger und Konsolen; mehrere Glieder teilt es mit der Architektur.
 
-Das Haustechnikmodell enthält Kessel, Heizkörper, Dachabläufe und Fallrohre: dasselbe Haus, andere Objekte.
+Ursprüngliche Haustechnik umfasst Fallrohre in Stützen 2 und 4, Heizungs- und Wasserstränge, Abwasserstrang und Rauchzug. Detailhüllen und unvollständige Leitungswege behalten ihre Unsicherheiten.
 
-Drei Modelle, ein Schema: gleiche Begriffe und Regeln, aber anderer Inhalt.
+Drei Modelle teilen ein Schema. Die Zahlen zählen IFC-Objekte; eine Treppenbaugruppe kann viele physische Teile enthalten.
 
 Koordination legt Modelle auf einen Ursprung. Im Lehrmodell markiert eine GlobalId die gemeinsame Decke.
 
 Die gemeinsame Decke behält eine GlobalId: Jedes Modell liest daraus, was es braucht.
 
-Im Grundriss gehört jede Linie zu einem Modell: Wände und Glas, Pilotis, Rohre.
+Im Grundriss können Fachzuordnungen überlappen: Der Hebeausleger gehört zu Architektur, Tragwerk und Haustechnik.
 
 Kollisionsprüfung im Lehrbeispiel: ein Fallrohr liegt zu nah an einer Pilotistütze, was kein Einzelmodell zeigt.
 
 Für einen Anwendungsfall wird das Tragwerksmodell in ein Tragwerksanalysemodell übersetzt: die IFC-Analysedomäne.
 
-Die Obergeschossdecke wird zu Flächenelementen auf dem Raster, jede Pilotistütze zu einem Stabelement.
+Die Obergeschossdecke wird zu zugeschnittenen Flächenelementen; gewählte Deckenstützen werden zu Stabelementen.
 
 Die Decke wird an der Mittelfläche geschnitten: Der Stab reicht dorthin, die Dicke wird zum Attribut.
 
-Annahmen ergänzen, was nie gezeichnet wurde: Jeder Pilotifuß wird zum eingespannten Lagerknoten.
+Jeder gewählte analytische Stützenanfang erhält eine angenommene Einspannung, einschließlich abgefangener Stützen.
 
 Auch die Last ist angenommen: Eigengewicht, Ausbau und Nutzlast ergeben die Flächenlast.
 
@@ -197,19 +197,19 @@ Rundreise: IFC zum Dreiecksnetz und zurück. Die Form kommt zurück, Klasse, Glo
 
 Für die statische Prüfung der Geschossdecke wählen wir ein Analyseschema und idealisieren sie als Mittelfläche.
 
-Die Decke wird zu Schalenelementen im Raster, Stützen zu Stäben. Jedes Objekt verweist auf seine Quell-GlobalId.
+Die Decke wird zu zugeschnittenen Schalenelementen; gewählte Deckenstützen werden zu Stäben. Jedes Analyseobjekt verweist auf seine Quell-GlobalId.
 
-Die Decke gehört der Villa: Rampenöffnung ausgespart, der Salon ruht darauf, daraus folgt die Nettofläche.
+Die native Decke behält Rampen-, Treppen- und Haustechniköffnungen. Kellerluken haben getrennte Deckel; die Geschossfläche schließt tatsächliche Aussparungen aus.
 
 Die Analyse braucht Annahmen: Eigengewicht aus der Dicke, Ausbaulasten, Nutzlast und die Auflagerbedingungen.
 
 Die Last ist ein Stapel: Eigengewicht der Decke, Ausbaulasten und Nutzlast ergeben eine Flächenlast.
 
-Jeder Stütze gehört die Decke bis zu den Mittellinien zu den Nachbarn. Neben der Rampenöffnung hat B3 eine Kerbe.
+Jede gewählte Stütze erhält den Deckenbereich bis zu den Mittellinien zu den Nachbarn, zugeschnitten an Decke und Öffnungen.
 
-Jeder Stütze wird ihre Lasteinzugsfläche zugeordnet. Das ist eine grobe Schätzung, kein FE-Ergebnis.
+Jede gewählte Stütze erhält ihre Lasteinzugsfläche. Das sind regionale Decken-Näherungen, keine Finite-Elemente-Steifigkeitslösung.
 
-Das Werkzeug sendet Auflagerkräfte zurück. Sie kehren als verknüpftes Ergebnis zu B3 zurück, Geometrie nie.
+Das Werkzeug sendet Auflagerkräfte zurück. Sie kehren als verknüpftes Ergebnis zu 19 zurück, Geometrie nie.
 
 Bandfenster, Ausfachungswände und Putzfarbe gehen nicht über. Zurückübersetzen stellt sie nicht wieder her.
 
@@ -229,34 +229,34 @@ Der Datensatz der Platte hält Klasse, Eigenschaften, Urheber und Revision; kein
 
 Berichte sagen, dass jeden Herbst Wasser durchs Flachdach kam; unser Lehrszenario beginnt bei diesem Leck.
 
-Wasser passiert Pflanzsubstrat und Estrich; wo die Abdichtung eine Lücke hat, dringt es in die Decke ein und fleckt sie.
+Die Quelle unterscheidet ursprünglichen rekonstruierten Zustand und spätere Schadensbelege. Der gezeigte Wasserweg ist schematisch, ohne erfundene Membranschicht.
 
-Nach der Reparatur verdickt ein Entwurfsereignis das Pflanzsubstrat von 0,10 auf 0,30 m; die Platte behält ihre GlobalId.
+In einem ausdrücklichen Reparaturszenario erhöht ein Entwurfsereignis die Bezugsreserve des Belags von 0,09 auf 0,14 m; die Platte behält ihre GlobalId.
 
 Dicke und Revision ändern sich; GlobalId, Klasse und Platz in der Villa bleiben, wie sie waren.
 
-Pflanzsubstrat wiegt 18 kN/m³: 0,20 m mehr bringen 3,6 kN/m², die Last der Dachbepflanzung wird 12,92 kN/m².
+Zusätzlicher Belag erhöht die Flächenlast; Schichtdichten und Dicken bestimmen den angezeigten Wert.
 
-Jeder Piloti trägt das Dach um sich: A3 trägt 4,75 m × 2,375 m = 11,28 m², C3 nur 2,38 m².
+Jede Dachstütze trägt den nächstgelegenen Teil der Decke ohne Öffnungen. Die unregelmäßigen Zellen haben verschiedene Flächen.
 
-Die Last auf A3 folgt: 11,28 m² × 12,92 kN/m² ≈ 146 kN, nicht 105 kN.
+Die Last jeder Stütze folgt aus ihrem Anteil an jeder Dachzone und deren Flächenlast.
 
-Jeder Piloti ändert sich um 3,6 kN/m² mal der Fläche seiner Dachbepflanzung: D3 am meisten, C4 unter der Terrasse nichts.
+Die Belagsänderung betrifft jede Stütze entsprechend ihrem Anteil an der Dachzone.
 
-LK-ROOF bindet die Analyse an die Platte; sie hält noch Revision 1 mit 105 kN statt 146 kN.
+LK-ROOF bindet die Analyse an die Platte, hält aber noch die frühere Revision mit deren Ergebnis.
 
-Eine Prüfung vergleicht Verknüpfung und Modell: Revision 1 gegen 2, 9,32 gegen 12,92 kN/m², 105 gegen 146 kN.
+Eine Prüfung vergleicht verknüpfte Revision und gespeicherte Werte mit dem aktuellen Modell und abgeleiteten Ergebnissen.
 
 Eine Anforderungsprüfung (IDS) besteht, weil die Angabe existiert; nur die Verknüpfungsprüfung findet das alte Ergebnis.
 
 Der Befund geht als BCF-Thema an den Tragwerksplaner und verweist über die GlobalId auf die Platte.
 
-Die neue Übersetzung der Platte ergibt 24 Flächenelemente und 25 Stäbe dieses Lehrmodells; eine Person prüft die Annahmen.
+Die neue Übersetzung erzeugt Flächenelemente und Stützen aus dem aktuellen Lehrmodell; eine Person prüft die Annahmen.
 
-Mit der Verknüpfung auf Revision 2 zeigt auch die Analyse 146 kN, und die Prüfung findet kein Problem.
+Mit aktueller Verknüpfung zeigen Analyse und Modell gleiche Auflagerkräfte; die Prüfung findet kein Problem.
 
-Zwei Personen ändern Revision 1 gleichzeitig: beide speichern Revision 2 unter derselben GlobalId, mit anderem Pflanzsubstrat.
+Zwei Personen ändern Revision 1 gleichzeitig: beide speichern Revision 2 unter derselben GlobalId, mit anderem Belag.
 
-Die GlobalId kann 12,92 und 11,12 kN/m² nicht verschmelzen; eine Person entscheidet, welche Änderung bleibt.
+Die GlobalId kann konkurrierende Belagsänderungen nicht verschmelzen; eine Person entscheidet, welche Änderung bleibt.
 
 Ein Schema gibt Daten Bedeutung, die GlobalId benennt das Objekt, die Revision datiert es, die Verknüpfung bindet die Analyse.

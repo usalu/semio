@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "scenario": "three-assumed-4.6x1.75-static",
+  "vehicle": {
+    "length": 4.6,
+    "width": 1.75,
+    "height": 1.65,
+    "z0": 0,
+    "basis": "assumed"
+  },
+  "clearance": {
+    "boundary": 0.075,
+    "column_surface": 0.075,
+    "car_pair": 0.025,
+    "physical_surface": 0
+  },
+  "pedestrian_reserves": [
+    {
+      "opening": "OP-D-GARAGE-HALL",
+      "depth": 0.8
+    },
+    {
+      "opening": "OP-D-CHAUFFEUR",
+      "depth": 0.6
+    }
+  ],
+  "garage_opening": "OP-GARAGE",
+  "historical_capacity": {
+    "value": 3,
+    "source": "CMN2021 §9",
+    "separate_from_modern_envelope_proof": true
+  },
+  "retired_assumptions": "Three artificial garage-door reserve strips removed after unified sliding portal; physical panel trains remain obstacles.",
+  "search": {
+    "seed": 20261028,
+    "max_seconds_per_chunk": 20,
+    "max_chunks": 12,
+    "max_local_evaluations": 4000,
+    "population_size": 108
+  },
+  "cancel_requested": false
+}

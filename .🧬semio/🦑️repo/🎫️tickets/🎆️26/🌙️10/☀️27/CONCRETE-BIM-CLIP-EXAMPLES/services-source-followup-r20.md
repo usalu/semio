@@ -1,0 +1,5 @@
+# Services Source Follow-up R20
+
+The [primary Savoye as Built book](https://uvadoc.uva.es/bitstream/handle/10324/68427/9788413202839.pdf?sequence=1), printedp116, identifies two insulated, sheet-metal-clad heating risers beside numbered supports6/11; these are heating ducts, not rainwater downpipes. The current simple service set needs a deliberate audit of original heating, cellar plant, flues and drainage. Bookp229 identifies Dubuisson1965 TRACE D'ORIGINE drawings as evidence for the original systems. Plan/installation proposals are not proof of completed construction. The current model mixes original and restored observations; establish its explicit historical target before adding mutually exclusive variants.
+
+The primary owner CMN2021 visitor document supplies historical function, but contemporary photographs show restorations. Preserve this distinction. A complete original installation cannot be inferred from the existing boiler/radiator/pipe counts. Root's current next priorities are roof solarium physical geometry and real cellar hatch/hopper topology; this report prepares the subsequent read-only systems audit.

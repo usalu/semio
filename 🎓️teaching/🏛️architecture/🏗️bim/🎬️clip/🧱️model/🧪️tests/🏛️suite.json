@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "source": "CMN2021 firstplan; Savoye as Built p110/p124; ColumbiaAndrewTallon2003primarypanorama",
+  "alcove": {
+    "posts": [
+      "27-FIRST",
+      "32-FIRST"
+    ],
+    "back_wall": "W-SON-PRIVATE",
+    "room": "SP-PARENTS",
+    "north_bath_post": "27-FIRST",
+    "beam": "BEAM-PRIMARY-R-20-32"
+  },
+  "body_width": 0.8,
+  "public_route": [
+    [
+      7.6,
+      7
+    ],
+    [
+      7.6,
+      7.25
+    ],
+    [
+      4.15,
+      7.25
+    ],
+    [
+      4.15,
+      11.4
+    ],
+    [
+      4.05,
+      11.4
+    ],
+    [
+      4.05,
+      15.9
+    ],
+    [
+      3.8,
+      16.4
+    ]
+  ],
+  "bath_bed_route": [
+    [
+      5.8,
+      16.8
+    ],
+    [
+      5.8,
+      18.1
+    ]
+  ],
+  "suite_entrance": "D-PARENTS",
+  "bed": false,
+  "stairs": {
+    "tags": [
+      "ST-GF",
+      "ST-FR"
+    ],
+    "landing_route_offsets": [
+      [
+        0.75,
+        -0.05
+      ],
+      [
+        1.65,
+        -0.05
+      ]
+    ],
+    "body_width": 0.8,
+    "foot_width": 0.08,
+    "handrail": {
+      "helix_parts": 66,
+      "diameter": 0.035,
+      "diameter_basis": "assumed",
+      "section_vertices": 32,
+      "nominal_volume_relative_tolerance": 0.007
+    }
+  }
+}

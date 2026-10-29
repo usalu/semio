@@ -1,0 +1,82 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "cases": [
+    {
+      "tag": "RW-S",
+      "entity": "IFCWINDOW",
+      "type": "IFCWINDOWTYPE",
+      "categories": [
+        "Lining",
+        "Glazing",
+        "Framing"
+      ],
+      "minimum_parts": 5
+    },
+    {
+      "tag": "D-SON",
+      "entity": "IFCDOOR",
+      "type": "IFCDOORTYPE",
+      "categories": [
+        "Lining",
+        "Framing"
+      ],
+      "minimum_parts": 9
+    },
+    {
+      "tag": "D-ENTRY",
+      "entity": "IFCDOOR",
+      "type": "IFCDOORTYPE",
+      "categories": [
+        "Lining",
+        "Framing",
+        "Insulation"
+      ],
+      "minimum_parts": 29
+    },
+    {
+      "tag": "GARAGE-SLIDING",
+      "entity": "IFCDOOR",
+      "type": "IFCDOORTYPE",
+      "categories": [
+        "Framing"
+      ],
+      "minimum_parts": 2
+    },
+    {
+      "tag": "CW-1",
+      "entity": "IFCCURTAINWALL",
+      "type": "IFCCURTAINWALLTYPE",
+      "categories": [
+        "Framing",
+        "Glazing"
+      ],
+      "minimum_parts": 100
+    },
+    {
+      "tag": "D-SALON",
+      "entity": "IFCDOOR",
+      "type": "IFCDOORTYPE",
+      "minimum_parts": 8,
+      "categories": [
+        "Lining",
+        "Glazing",
+        "Framing"
+      ]
+    }
+  ],
+  "attribute_counts": {
+    "IFCWINDOW": 13,
+    "IFCDOOR": 13,
+    "IFCCURTAINWALL": 9,
+    "IFCWINDOWTYPE": 13,
+    "IFCDOORTYPE": 13,
+    "IFCCURTAINWALLTYPE": 10,
+    "IFCMATERIALCONSTITUENT": 5,
+    "IFCMATERIALCONSTITUENTSET": 3,
+    "IFCSHAPEASPECT": 5
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "beam": "B-SHARED",
+  "slab": "SL-1",
+  "axis": [
+    [
+      0,
+      0
+    ],
+    [
+      4,
+      0
+    ]
+  ],
+  "exclusive": {
+    "outline": [
+      [
+        0,
+        0
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        4,
+        0.2
+      ],
+      [
+        0,
+        0.2
+      ]
+    ],
+    "z0": 2.61,
+    "z1": 2.91
+  },
+  "shared": {
+    "outline": [
+      [
+        0,
+        0
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        4,
+        0.2
+      ],
+      [
+        0,
+        0.2
+      ]
+    ],
+    "z0": 2.91,
+    "z1": 3.14,
+    "member": "B-SHARED"
+  },
+  "volumes": {
+    "exclusive": 0.24,
+    "shared": 0.184,
+    "total": 0.424
+  },
+  "concrete": {
+    "depth": 0.23,
+    "density": 25,
+    "hollow_density": 8,
+    "compression": 0.05,
+    "rib_width": 0.06,
+    "rib_pitch": 0.25,
+    "expected_weight": 5.75
+  },
+  "domains": [
+    "structure"
+  ]
+}

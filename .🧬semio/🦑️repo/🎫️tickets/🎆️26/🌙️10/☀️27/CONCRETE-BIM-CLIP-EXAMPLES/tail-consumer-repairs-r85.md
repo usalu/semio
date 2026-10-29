@@ -1,0 +1,13 @@
+# Current Tail Consumer Repairs, R85–R86
+
+The retained eight R79 failures now have passing current-source execution evidence. R85 passed the archival full-member region, explicit facade shelf and actual glazed-product contracts. Its five wall-fixture errors exposed invalid authoring isolation that deleted referenced roof columns. The R86 fresh five-method retry passed40.227s after preserving those columns. All source/provider/code identities remained stable during that retry. Initial failures remain in their original result artifacts.
+
+The synthetic wall fixture still excludes source beams as before, and now retains native column owners required by slab/soffit dependencies. Unchanged analytic cavity/material volume, axis-reversal, sill-event, body and native STEP assertions verify the isolated wall result; there is no missing-owner alias or geometry exemption. The opening selector respects wall/slab/curtain host alternatives. The portable facade region list includes the actual shelf.
+
+Archival regional quantities declare full_member scope and use full_parts for full-outline comparison. Existing validity, root coverage, pair-intersection and volume tolerances remain. Independent GEOS material volumes additionally conserve exclusive+shared=full and match each quantity scope; declared roof owners10-FIRST/15-FIRST are portable expectations, not implicitly discarded material.
+
+Glazed joinery iterates actual native Door/Window products with glass material parts, asserts all known current glazed families are represented, and retains every independent total-volume/material-intersection check. The actual inferred single salon leaf D-SALON replaces the stale opaque entrance sash identity, with portable panel stations, four sash members, no mullion and metal material. Mixed roof-door glazing is included. Existing timber-entry contracts retain opaque-leaf coverage.
+
+The separate callback harness repair supplies the real NumPy global used at the explicit rendering boundary and imports actual pure drafting.P. No NumPy-returning P substitute remains in that harness. The fresh actual callback passed alongside the localized full auxiliary reference. The latter is detailed in feature-tail-r79.md and auxiliary-oracle-audit-r84.md.
+
+The ten changed test/fixture files and exact final hashes are retained in generated/tail-consumer-freeze-r86.json. No source model, producer geometry or runtime dependency changed in this consumer repair. A transient Windows ftruncate error was immediately repaired and exact intended file bytes verified before fresh collection; no corrupted file was executed in the successful retry.

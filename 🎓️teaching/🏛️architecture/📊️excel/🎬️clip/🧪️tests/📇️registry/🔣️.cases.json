@@ -1,0 +1,58 @@
+{
+  "series": "excel",
+  "folder": "📊️excel",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "chapters": [
+    {
+      "folder": "🦴️anatomy",
+      "scene": "Beat1_Anatomy",
+      "video_id": "excel_anatomy",
+      "entry": "🏛️architecture/📊️excel/🦴️anatomy/🎬️clip/🐍️.py",
+      "chapter": "Excel_01_Anatomy",
+      "title": {
+        "en": "The Anatomy of a Workbook",
+        "de": "Aufbau einer Arbeitsmappe"
+      },
+      "output": "Excel_anatomy"
+    },
+    {
+      "folder": "📍️references",
+      "scene": "Beat2_References",
+      "video_id": "excel_references",
+      "entry": "🏛️architecture/📊️excel/📍️references/🎬️clip/🐍️.py",
+      "chapter": "Excel_02_References",
+      "title": {
+        "en": "Cell References",
+        "de": "Zellbezüge"
+      },
+      "output": "Excel_references"
+    },
+    {
+      "folder": "📋️program",
+      "scene": "Beat3_Program",
+      "video_id": "excel_program",
+      "entry": "🏛️architecture/📊️excel/📋️program/🎬️clip/🐍️.py",
+      "chapter": "Excel_03_Program",
+      "title": {
+        "en": "The Room Program in Excel",
+        "de": "Das Raumprogramm in Excel"
+      },
+      "output": "Excel_program"
+    },
+    {
+      "folder": "⚡️energy",
+      "scene": "Beat4_Energy",
+      "video_id": "excel_energy",
+      "entry": "🏛️architecture/📊️excel/⚡️energy/🎬️clip/🐍️.py",
+      "chapter": "Excel_04_Energy",
+      "title": {
+        "en": "Heating Demand in the Nakagin Workbook",
+        "de": "Heizwärmebedarf in der Nakagin-Arbeitsmappe"
+      },
+      "output": "Excel_energy"
+    }
+  ]
+}

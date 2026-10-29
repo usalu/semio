@@ -1,0 +1,202 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "Concentric drain envelope",
+      "profile": {
+        "shape": "circle",
+        "diameter": {
+          "value": 0.33,
+          "unit": "m",
+          "basis": "inferred"
+        },
+        "voids": [
+          {
+            "tag": "BORE",
+            "shape": "circle",
+            "diameter": {
+              "value": 0.1,
+              "unit": "m",
+              "basis": "inferred"
+            },
+            "offset": [
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "area": 0.07767587836000765,
+      "ix": 0.0005772288710628069,
+      "iy": 0.0005772288710628069
+    },
+    {
+      "name": "Offset bore in rectangle",
+      "profile": {
+        "shape": "rectangle",
+        "width": {
+          "value": 0.4,
+          "unit": "m",
+          "basis": "inferred"
+        },
+        "depth": {
+          "value": 0.3,
+          "unit": "m",
+          "basis": "inferred"
+        },
+        "voids": [
+          {
+            "tag": "BORE",
+            "shape": "circle",
+            "diameter": {
+              "value": 0.08,
+              "unit": "m",
+              "basis": "inferred"
+            },
+            "offset": [
+              0.04,
+              -0.02
+            ]
+          }
+        ]
+      },
+      "area": 0.11497345175425633
+    },
+    {
+      "name": "Ellipse with concentric circular bore",
+      "profile": {
+        "shape": "ellipse",
+        "width": {
+          "value": 0.4,
+          "unit": "m",
+          "basis": "inferred"
+        },
+        "depth": {
+          "value": 0.3,
+          "unit": "m",
+          "basis": "inferred"
+        },
+        "voids": [
+          {
+            "tag": "BORE",
+            "shape": "circle",
+            "diameter": {
+              "value": 0.1,
+              "unit": "m",
+              "basis": "inferred"
+            },
+            "offset": [
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "area": 0.0863937979737193
+    },
+    {
+      "name": "Circle with offset circular bore",
+      "profile": {
+        "shape": "circle",
+        "diameter": {
+          "value": 0.33,
+          "unit": "m",
+          "basis": "inferred"
+        },
+        "voids": [
+          {
+            "tag": "BORE",
+            "shape": "circle",
+            "diameter": {
+              "value": 0.1,
+              "unit": "m",
+              "basis": "inferred"
+            },
+            "offset": [
+              0.02,
+              0
+            ]
+          }
+        ]
+      },
+      "area": 0.07767587836000765
+    }
+  ],
+  "source": {
+    "tags": [
+      "2",
+      "4",
+      "2-FIRST",
+      "4-FIRST"
+    ],
+    "bore_diameter": 0.1,
+    "nominal_pipe_diameter": 0.08,
+    "ground_bore": [
+      -0.65,
+      2.91
+    ],
+    "upper_bore": [
+      3.14,
+      6.34
+    ],
+    "solid_buried": [
+      -1,
+      -0.65
+    ],
+    "exit_axis": -0.6,
+    "exit_band": [
+      -0.65,
+      -0.55
+    ]
+  },
+  "units": {
+    "length": "m",
+    "area": "m²",
+    "second_moments": "m⁴",
+    "volume": "m³"
+  },
+  "bearing_cases": [
+    {
+      "outline": [
+        [
+          -0.02,
+          -0.02
+        ],
+        [
+          0.02,
+          -0.02
+        ],
+        [
+          0.02,
+          0.02
+        ],
+        [
+          -0.02,
+          0.02
+        ]
+      ],
+      "expected": false
+    },
+    {
+      "outline": [
+        [
+          0.04,
+          -0.01
+        ],
+        [
+          0.08,
+          -0.01
+        ],
+        [
+          0.08,
+          0.01
+        ],
+        [
+          0.04,
+          0.01
+        ]
+      ],
+      "expected": true
+    }
+  ]
+}

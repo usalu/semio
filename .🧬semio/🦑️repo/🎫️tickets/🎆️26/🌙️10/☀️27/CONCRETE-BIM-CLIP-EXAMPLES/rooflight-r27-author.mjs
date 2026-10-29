@@ -1,0 +1,40 @@
+/** ☀️ Publish the registered guest rooflight assembly through native material-owned sections. */
+import {readFile,writeFile} from 'node:fs/promises';
+const file="C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🔣️.json";
+let text=await readFile(file,'utf8');
+const source=JSON.parse(text),obj=source.elements.find(e=>e.tag==='ROOFLIGHT-1');
+const old=JSON.stringify(obj,null,2).split('\n').map(s=>'    '+s).join('\n');
+const rect=(x0,y0,x1,y1)=>[[x0,y0],[x1,y0],[x1,y1],[x0,y1]];
+const parts=[];
+const slab=6.51,roof=6.60,top=y=>6.90+(y-10.77)*.06/.82;
+const box=(bounds,z0,z1,material,role)=>parts.push({outline:rect(...bounds),z0:z0-roof,z1:z1-roof,material,role});
+const wedge=(x0,x1,y0,y1,bottom,offset,material,role)=>parts.push({section:{plane:'YZ',profile:[[y0,bottom-roof],[y1,bottom-roof],[y1,top(y1)+offset-roof],[y0,top(y0)+offset-roof]],sweep:[x0,x1]},material,role});
+const slope=(x0,x1,y0,y1,lo,hi,material,role)=>parts.push({section:{plane:'YZ',profile:[[y0,top(y0)+lo-roof],[y1,top(y1)+lo-roof],[y1,top(y1)+hi-roof],[y0,top(y0)+hi-roof]],sweep:[x0,x1]},material,role});
+wedge(2.81,2.87,10.77,11.59,slab,0,'MAT-RC','outer_concrete');
+wedge(3.58,3.64,10.77,11.59,slab,0,'MAT-RC','outer_concrete');
+wedge(2.87,3.58,11.53,11.59,slab,0,'MAT-RC','outer_concrete');
+box([2.87,10.77,3.58,10.82],slab,6.82,'MAT-RC','outer_concrete');
+for(const [a,b] of [[2.87,3],[3.45,3.58]]) wedge(a,b,10.77,10.82,6.82,0,'MAT-RC','outer_concrete');
+wedge(3,3.45,10.77,10.82,6.89,0,'MAT-RC','outer_concrete');
+const leaf=[[2.895,10.845,2.95,11.505],[3.5,10.845,3.555,11.505],[2.95,11.45,3.5,11.505],[2.95,10.845,3.5,10.9]];
+for(const r of leaf) box(r,slab,slab+.06,'MAT-RC','inner_upstand');
+for(const r of leaf.slice(0,3)) {wedge(r[0],r[2],r[1],r[3],slab+.06,-.01,'MAT-INSULATING-BRICK','inner_brick');slope(r[0],r[2],r[1],r[3],-.01,.005,'MAT-MORTAR-PUTTY','bedding');}
+box([2.95,10.845,3.5,10.9],slab+.06,6.82,'MAT-INSULATING-BRICK','inner_brick');
+for(const [a,b] of [[2.95,3],[3.45,3.5]]) {wedge(a,b,10.845,10.9,6.82,-.01,'MAT-INSULATING-BRICK','inner_brick');slope(a,b,10.845,10.9,-.01,.005,'MAT-MORTAR-PUTTY','bedding');}
+slope(2.81,3.64,10.77,11.59,.005,.011,'MAT-GLASS','glazing');
+box([3,10.77,3.45,10.776],6.82,6.89,'MAT-GLASS','vent_glass');
+box([3.22,10.94,3.23,10.95],6.1,6.835,'MAT-METAL','control_rod');
+box([3.22,10.776,3.23,10.95],6.835,6.845,'MAT-METAL','control_rod');
+obj.material='MAT-RC';obj.geometry.parts=parts;obj.metadata.revision=3;
+obj.historical_evidence={state:'original-completed-1930-1931',status:'inferred_reconstruction',source_kind:'mixed',sources:['CMN2021 §12 guest cabinet de toilette zenith light; §17 separate garage family','CSIC2022 Annex3 upper-floor roof; normalized clear opening .7526–.7758 × .5039–.5218','Savoye as Built2024 p161–162; FLC H1(13)312/19443/19458'],uncertainty:{en:'Guest dressing identity follows CMN §12 and the rightmost small crossed Annex3 opening beyond the stair. Clear footprint is an inferred 0.55m square with approximately0.15m drawing registration uncertainty, not a surveyed dimension. Roof structural top6.51m follows the17cm region. Concrete outer leaf6cm and maximum45cm above slab,6cm inner upstand and inclined glazing/vent/rod topology follow p162; mapping this bathroom-family construction to the guest washroom is inferred. Inner brick5.5cm, cavity2.5cm, slope,6mm glass,15mm bedding, vent/flap and rod sizes/placement are inferred; original vent material and exact operation are unresolved. Bedding is a nominal mortar/putty envelope, not a measured compound. No garage planter light or unnamed roof terminal is added.',de:'Gästeankleide nach CMN §12 und rechter kleiner Öffnung in Anhang3. Lichtöffnung0,55m quadratisch mit etwa0,15m Registrierungsunsicherheit, nicht vermessen. Rohdecke6,51m aus17cm-Region. Äußere Betonschale6cm und höchstens45cm über Rohdecke, innerer6cm-Sockel sowie geneigtes Glas, Lüftung und Bedienungsstange nach S162; Zuordnung dieser Badkonstruktion zum Gäste-Waschraum ist rekonstruiert. Innenziegel5,5cm, Luftspalt2,5cm, Neigung,6mm-Glas,15mm-Bettung, Lüftung und Stange sind angenommen; Originalmaterial und genaue Mechanik bleiben offen.'}};
+const replacement=JSON.stringify(obj,null,2).split('\n').map(s=>'    '+s).join('\n');
+if(!text.includes(old))throw Error('Element source changed');text=text.replace(old,replacement);
+const opening=source.elements.find(e=>e.tag==='SL-R').geometry.voids.find(v=>v.tag==='V-ROOFLIGHT');
+const oldvoid=JSON.stringify(opening,null,2).split('\n').map(s=>'          '+s).join('\n');opening.outline=rect(2.95,10.9,3.5,11.45);
+if(!text.includes(oldvoid))throw Error('Void source changed');text=text.replace(oldvoid,JSON.stringify(opening,null,2).split('\n').map(s=>'          '+s).join('\n'));
+const last=source.materials.at(-1),oldmat=JSON.stringify(last,null,2).split('\n').map(s=>'    '+s).join('\n');
+const materials=[{guid:'28xgYmtubTLBsYVEpVsSO$',tag:'MAT-INSULATING-BRICK',class:'IfcMaterial',name:{en:'Insulating brick envelope',de:'Dämmziegel-Hüllkörper'},density:{value:8,unit:'kN/m³',basis:'assumed'}},{guid:'3SaYU2qGTMCv4rfTNRuJdA',tag:'MAT-MORTAR-PUTTY',class:'IfcMaterial',name:{en:'Nominal mortar and putty bedding',de:'Angenommenes Mörtel- und Kittbett'},density:{value:16,unit:'kN/m³',basis:'assumed'}}];
+const additions=materials.filter(m=>!source.materials.some(existing=>existing.tag===m.tag));
+if(additions.length)text=text.replace(oldmat,oldmat+',\n'+additions.map(m=>JSON.stringify(m,null,2).split('\n').map(s=>'    '+s).join('\n')).join(',\n'));
+await writeFile(file,text);
+console.log({parts:parts.length,clear:opening.outline});

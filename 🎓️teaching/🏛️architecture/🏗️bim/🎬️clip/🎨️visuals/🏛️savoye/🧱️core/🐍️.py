@@ -13,38 +13,25 @@ _engine = importlib.import_module("manim")
 
 INK, MUTED, DATA, BACKGROUND = _d.INK, _d.MUTED, _d.DATA, _d.BACKGROUND
 KIND_CLASSES = {"pilotis": "IfcColumn", "slabs": "IfcSlab", "walls": "IfcWall", "windows": "IfcWindow", "curtain": "IfcCurtainWall",
-                "ramp": "IfcRamp", "screens": "IfcWall"}
+                "ramp": "IfcRamp", "screens": "IfcWall", "doors": "IfcDoor", "openings": "IfcOpeningElement",
+                "stairs": "IfcStairFlight", "details": "IfcBuildingElementProxy", "furnishings": "IfcFurnishingElement", "railings": "IfcRailing", "beams": "IfcBeam", "foundations": "IfcFooting"}
 DEFAULT_DISCIPLINES = {"pilotis": ("structure",), "slabs": ("architecture", "structure"), "walls": ("architecture",), "windows": ("architecture",),
-                       "curtain": ("architecture",), "ramp": ("architecture",), "screens": ("architecture",), "services": ("services",)}
-_cache: dict = {}
+                       "curtain": ("architecture",), "ramp": ("architecture",), "screens": ("architecture",), "services": ("services",),
+                       "doors": ("architecture",), "openings": ("architecture",), "stairs": ("architecture", "structure"),
+                       "details": ("architecture",), "furnishings": ("architecture",), "railings": ("architecture",), "beams": ("structure",), "foundations": ("structure",)}
+_geometry = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.🧱️core.📐️geometry")
+part_faces = _geometry.part_faces
+surface_role = _geometry.surface_role
+geometry = _geometry.geometry
+role = _geometry.role
+membership = _geometry.membership
+wall_frame = _geometry.wall_frame
 
 
-def geometry(model=None) -> dict:
-    """📐 ``building_geometry`` memoized per model object."""
-    key = id(model)
-    hit = _cache.get(key)
-    if hit is None or hit[0] is not model:
-        hit = _cache[key] = (model, _model.building_geometry(model) if model is not None else _model.building_geometry())
-        if len(_cache) > 16:
-            _cache.pop(next(iter(_cache)))
-    return hit[1]
-
-
-def membership(model=None) -> dict:
-    """🧩 GlobalId → set of partial models that contain it; empty when the model does not list element GlobalIds."""
-    key = ("members", id(model))
-    hit = _cache.get(key)
-    if hit is None or hit[0] is not model:
-        table: dict = {}
-        for name in _d.DISCIPLINES:
-            try:
-                info = _model.partial_model(name, model) if model is not None else _model.partial_model(name)
-            except Exception:
-                continue
-            for guid in info.get("element_guids", ()):
-                table.setdefault(guid, set()).add(name)
-        hit = _cache[key] = (model, table)
-    return hit[1]
+def surface_color(data: dict, part: dict | None = None) -> str:
+    """🖌️ Teaching palette for physical surfaces; discipline and selection styling remain configurable."""
+    return {"glass": _d.GLASS, "wood": "#A48869", "tile": _d.CONCRETE, "paving": _d.mix(_d.INK, _d.CONCRETE, 0.7),
+            "garden": _d.GOOD, "metal": _d.MUTED, "concrete": _d.CONCRETE}[surface_role(data,part)]
 
 
 def disciplines_of(guid: str, kind: str, model=None) -> tuple:
@@ -58,8 +45,8 @@ def catalogue(model=None) -> list:
     g = geometry(model)
     items = []
 
-    def add(kind, data, cls=None):
-        items.append({"tag": data["tag"], "guid": data["guid"], "kind": kind, "cls": cls or KIND_CLASSES[kind], "data": data,
+    def add(kind, data, cls=None, *, tag=None, guid=None):
+        items.append({"tag": tag or data["tag"], "guid": guid or data["guid"], "kind": kind, "cls": cls or KIND_CLASSES[kind], "data": data,
                       "disciplines": disciplines_of(data["guid"], kind, model)})
 
     for item in g["pilotis"]:
@@ -69,15 +56,22 @@ def catalogue(model=None) -> list:
     for item in g["walls"]:
         add("walls", item)
         for opening in item.get("openings", ()):
-            add("windows", {**opening, "tag": opening["window_tag"], "guid": opening["window_guid"], "wall": item["tag"]})
+            fill_class = opening["fill_class"]
+            kind = "windows" if fill_class == "IfcWindow" else "doors" if fill_class == "IfcDoor" else "openings"
+            add(kind, {**opening, "wall": item["tag"]}, fill_class or "IfcOpeningElement",
+                tag=opening["fill_tag"], guid=opening["fill_guid"])
     if g.get("curtain_wall"):
         add("curtain", g["curtain_wall"])
+    for filling in g["fillings"]:
+        if filling["host"] not in {wall["tag"] for wall in g["walls"]}:
+            add("doors" if filling["class"]=="IfcDoor" else "windows",filling,filling["class"])
     if g.get("ramp"):
         add("ramp", g["ramp"])
     for item in g.get("screens", ()):
         add("screens", item)
-    for item in g.get("services", ()):
-        add("services", item, item["class"])
+    for kind in ("stairs", "details", "furnishings", "railings", "beams", "foundations", "services"):
+        for item in g.get(kind, ()):
+            add(kind, item, item["class"])
     return items
 
 
@@ -114,18 +108,6 @@ def box_outline(g: dict) -> list:
     """⬜ The box rectangle in plan."""
     box = g["box"]
     return [[0.0, 0.0], [box["length"], 0.0], [box["length"], box["width"]], [0.0, box["width"]]]
-
-
-def wall_frame(wall: dict, g: dict):
-    """🧭 Origin, unit direction, inward unit normal and length of a wall; ``start → end`` is the outer face, thickness goes inward."""
-    a, b = np.array(wall["start"], float), np.array(wall["end"], float)
-    length = float(np.linalg.norm(b - a))
-    along = (b - a) / length
-    normal = np.array([-along[1], along[0]])
-    centre = np.array([g["box"]["length"], g["box"]["width"]]) / 2
-    if (centre - a) @ normal < 0:
-        normal = -normal
-    return a, along, normal, length
 
 
 def scan(rings, t: float, axis: int = 1) -> list:
@@ -178,8 +160,7 @@ def roof_layers(model=None) -> list:
     return layers
 
 
-LAYER_COLORS = {"concrete": _d.CONCRETE, "waterproofing": _d.mix(INK, BACKGROUND, 0.82), "screed": _d.mix(_d.STRUCT, BACKGROUND, 0.25),
-                "soil": _d.mix(_d.GOOD, BACKGROUND, 0.58), "gravel": _d.mix(INK, BACKGROUND, 0.4), "insulation": _d.mix(_d.DATA, BACKGROUND, 0.45)}
+LAYER_COLORS = {"structural": _d.CONCRETE, "paving": _d.mix(_d.INK, _d.CONCRETE, .7)}
 
 
 def layer_color(key: str) -> str:
@@ -192,3 +173,4 @@ def flight_direction(flight: dict):
     """➡️ Unit plan direction of a ramp flight."""
     d = np.array(flight["end"], float) - np.array(flight["start"], float)
     return d / np.linalg.norm(d)
+                                                                                                                                                                                                      

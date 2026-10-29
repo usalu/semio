@@ -1,0 +1,172 @@
+{
+  "schema": 1,
+  "source_controls": {
+    "laundry": "CMN2021 §7 twin trough programme; independent R33 ground room/wall register",
+    "guest": "CMN2021 §12 zenith-lit guest washroom; R27 Annex3 clear opening registered ±0.15m"
+  },
+  "laundry": {
+    "tags": [
+      "FIX-LAUNDRY",
+      "TAP-LAUNDRY-1",
+      "TAP-LAUNDRY-2"
+    ],
+    "cavity_samples": [
+      [
+        4.15,
+        20.95,
+        0.86
+      ],
+      [
+        5.55,
+        20.95,
+        0.86
+      ]
+    ],
+    "occupied_samples": [
+      [
+        4.15,
+        20.95,
+        0.69
+      ],
+      [
+        5.55,
+        20.95,
+        0.69
+      ]
+    ],
+    "room": "SP-LAUNDRY",
+    "route": [
+      [
+        7.6,
+        18.965
+      ],
+      [
+        6.5,
+        18.965
+      ],
+      [
+        5.8,
+        19.7
+      ],
+      [
+        5.8,
+        20.15
+      ]
+    ],
+    "body_width": 0.8,
+    "body_height": 2.1,
+    "standing_bounds": [
+      5.4,
+      19.85,
+      6.2,
+      20.45
+    ],
+    "bounds": [
+      3.5,
+      20.6,
+      6.2,
+      21.3
+    ]
+  },
+  "guest": {
+    "basin": "FIX-GUEST-BASIN",
+    "tap": "TAP-GUEST",
+    "light": "ROOFLIGHT-1",
+    "slab": "SL-R",
+    "void": "V-ROOFLIGHT",
+    "room": "SP-GUEST",
+    "clear_bounds": [
+      2.95,
+      10.9,
+      3.5,
+      11.45
+    ],
+    "rim": 0.08,
+    "cavity_sample": [
+      3.225,
+      11.175,
+      0.82
+    ],
+    "occupied_sample": [
+      3.225,
+      11.175,
+      0.67
+    ],
+    "tap_stem_bounds": [
+      3.2,
+      10.94,
+      3.25,
+      10.99
+    ],
+    "tap_spout_bounds": [
+      3.2,
+      10.94,
+      3.25,
+      11.115
+    ],
+    "door": "D-GUEST",
+    "opening": "OP-D-GUEST",
+    "host": "W-PRIVATE",
+    "clear_width": 0.85,
+    "route": [
+      [
+        4.05,
+        11.925
+      ],
+      [
+        3.1,
+        11.925
+      ]
+    ],
+    "body_width": 0.8,
+    "body_height": 1.8,
+    "standing_bounds": [
+      2.7,
+      11.625,
+      3.5,
+      12.225
+    ],
+    "route_assumption": "Movable timber door leaf assumed open; actual fixed framing, walls, columns and furniture remain.",
+    "bounds": [
+      2.975,
+      10.925,
+      3.475,
+      11.425
+    ],
+    "door_stations": [
+      2.56,
+      3.49
+    ]
+  },
+  "tolerances": {
+    "area": 1e-8,
+    "volume": 1e-10
+  },
+  "basis": "CMN2021 §§7,12 programme; independent R33 room registration and R27 Annex3 rooflight controls; all fixture sizes, coordinates and door station reconstruction inferred",
+  "discharge_samples": {
+    "TAP-LAUNDRY-1": {
+      "basin": "FIX-LAUNDRY",
+      "point": [
+        4.15,
+        21.08,
+        0.86
+      ]
+    },
+    "TAP-LAUNDRY-2": {
+      "basin": "FIX-LAUNDRY",
+      "point": [
+        5.55,
+        21.08,
+        0.86
+      ]
+    },
+    "TAP-GUEST": {
+      "basin": "FIX-GUEST-BASIN",
+      "point": [
+        3.225,
+        11.115,
+        0.82
+      ]
+    }
+  }
+}

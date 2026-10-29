@@ -1,0 +1,168 @@
+{
+  "schema": 1,
+  "status": "inferred arrangement; no surveyed fixture or door station dimensions",
+  "source_controls": {
+    "laundry": "CMN2021 §7 twin trough programme; independent R33 ground room/wall register",
+    "guest": "CMN2021 §12 zenith-lit guest washroom; R27 Annex3 clear opening registered ±0.15m"
+  },
+  "laundry": {
+    "tags": [
+      "FIX-LAUNDRY",
+      "TAP-LAUNDRY-1",
+      "TAP-LAUNDRY-2"
+    ],
+    "translation": [
+      0,
+      0.5
+    ],
+    "old_bounds": [
+      3.5,
+      20.1,
+      6.2,
+      20.8
+    ],
+    "new_bounds": [
+      3.5,
+      20.6,
+      6.2,
+      21.3
+    ],
+    "cavity_samples": [
+      [
+        4.15,
+        20.95,
+        0.86
+      ],
+      [
+        5.55,
+        20.95,
+        0.86
+      ]
+    ],
+    "occupied_samples": [
+      [
+        4.15,
+        20.95,
+        0.69
+      ],
+      [
+        5.55,
+        20.95,
+        0.69
+      ]
+    ],
+    "old_column_overlap": 0.013632,
+    "room": "SP-LAUNDRY",
+    "route": [
+      [
+        7.6,
+        18.965
+      ],
+      [
+        6.5,
+        18.965
+      ],
+      [
+        5.8,
+        19.7
+      ],
+      [
+        5.8,
+        20.15
+      ]
+    ],
+    "body_width": 0.8,
+    "body_height": 2.1,
+    "standing_bounds": [
+      5.4,
+      19.85,
+      6.2,
+      20.45
+    ]
+  },
+  "guest": {
+    "basin": "FIX-GUEST-BASIN",
+    "tap": "TAP-GUEST",
+    "light": "ROOFLIGHT-1",
+    "slab": "SL-R",
+    "void": "V-ROOFLIGHT",
+    "room": "SP-GUEST",
+    "old_bounds": [
+      1.1,
+      9.85,
+      1.8,
+      10.45
+    ],
+    "clear_bounds": [
+      2.95,
+      10.9,
+      3.5,
+      11.45
+    ],
+    "new_bounds": [
+      2.975,
+      10.925,
+      3.475,
+      11.425
+    ],
+    "rim": 0.08,
+    "cavity_sample": [
+      3.225,
+      11.175,
+      0.82
+    ],
+    "occupied_sample": [
+      3.225,
+      11.175,
+      0.67
+    ],
+    "tap_stem_bounds": [
+      3.2,
+      10.94,
+      3.25,
+      10.99
+    ],
+    "tap_spout_bounds": [
+      3.2,
+      10.94,
+      3.25,
+      11.115
+    ],
+    "door": "D-GUEST",
+    "opening": "OP-D-GUEST",
+    "host": "W-PRIVATE",
+    "station_delta": 0.5,
+    "old_stations": [
+      2.06,
+      2.99
+    ],
+    "new_stations": [
+      2.56,
+      3.49
+    ],
+    "clear_width": 0.85,
+    "route": [
+      [
+        4.05,
+        11.925
+      ],
+      [
+        3.1,
+        11.925
+      ]
+    ],
+    "body_width": 0.8,
+    "body_height": 1.8,
+    "standing_bounds": [
+      2.7,
+      11.625,
+      3.5,
+      12.225
+    ],
+    "route_assumption": "Movable timber door leaf assumed open; actual fixed framing, walls, columns and furniture remain."
+  },
+  "tolerances": {
+    "area": 1e-8,
+    "volume": 1e-10
+  }
+}

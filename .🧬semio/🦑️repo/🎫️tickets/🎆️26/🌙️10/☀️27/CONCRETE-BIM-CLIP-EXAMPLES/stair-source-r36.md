@@ -1,0 +1,6 @@
+# Stair Source R36
+
+Root independent official-domain indexed searches for ISBN9788413202839+escalera+peldaños and ISBN+2,43 returned no results. No new dimensional evidence derived from those queries. R36 agent has already recovered specific primary text and CMN native path coordinates; those require independent geometric registration before source publication. Existing full-circle stair geometry is not grandfathered as a compatibility requirement.
+
+
+Root visually inspected decoded originalFLC-H1(13)314PNG(502×517): three plans plainly show parallel straight trains and a half-round return, while construction elevation is continuous between levels. This independently rejects the current full360°upperstair abstraction. Originalimage dimensions/countannotations remain too small for a root-certified exacttreadcount. PriorR9report explicitly labels15cellarrisers/21uppersteps inferred; they are not measured invariants. New10cellar interpretation implies .242m rise at2.42m floorchange, so agent requested to crosscheck section and hidden/dashed plansegments before publishing a complete10riser run. Upper18 candidate is plausible but still an inferred reconstruction; exactsource stateandcounts mustremainexplicit.

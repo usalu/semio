@@ -1,0 +1,7 @@
+# Explicit Stair Material Contract R53
+
+Two portable regressions first failed: missing authored tread/structural parts were accepted by obsolete circular-wedge synthesis, and compensated U source geometry retained unused angle/turn inputs. The explicit occupied-parts schema now requires step_parts and structural_parts; the alternate wedge synthesis was removed. All three native stair products retain legitimate U-return centre/inner/outer radii,parts,levels,identities and quantities. Only start_angle/turns were removed from their geometry.
+
+All seven stair-parts tests passed3.112s,including independent SciPy structural volume and GEOS occupied-slice checks,seven public representations and English/German native fragments. AJV2020 accepts the complete current model and independently rejects either missing mandatory material list. The placement fixture now declares an explicit empty structural list for its intentionally isolated step/landing test and drops unused angle fields. Its isolated AST harness was missing the real producer's outline-resolution dependency; a straight-outline dependency substitute repairs that fixture. All four local-placement contracts pass.
+
+Removed the unconsumed cellar stair_turns fixture datum and renamed the U handrail contract to match current geometry. No actual occupied stair material,arrival path,return arc,waist,rail or imported artifact changed. The standard hook must register both newly added stair-parts functions alongside the existing five.

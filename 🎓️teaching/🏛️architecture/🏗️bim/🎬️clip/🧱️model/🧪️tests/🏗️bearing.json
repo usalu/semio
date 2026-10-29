@@ -1,0 +1,33 @@
+{
+  "columns": [
+    "10-FIRST",
+    "15-FIRST"
+  ],
+  "embedded": [
+    6.34,
+    6.6
+  ],
+  "exposed": [
+    6.6,
+    9.03
+  ],
+  "section_area": 0.0484,
+  "volume_increase_per_column": 0.012584,
+  "slab": "SL-R",
+  "classification": "inferred_continuous_rc_embedded_junction",
+  "reinforcement": "not_assessed",
+  "axes": {
+    "10-FIRST": [
+      4.75,
+      6
+    ],
+    "15-FIRST": [
+      4.737,
+      8.23
+    ]
+  },
+  "shared_structural_volume": 0.0207328,
+  "shared_finish_volume": 0.0044352,
+  "partial_column_top": 6.51,
+  "canopy": "SL-STAIR-CANOPY"
+}

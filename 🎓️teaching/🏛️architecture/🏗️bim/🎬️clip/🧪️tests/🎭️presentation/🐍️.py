@@ -219,8 +219,8 @@ class BimPresentationContract(unittest.TestCase):
                     self.assertGreater(drawing.height, 0)
                     self.assertTrue(set(level["parts"]) <= set(drawing.parts))
                     np.testing.assert_allclose(drawing.at(*case["known_point"]), expected, atol=1e-8)
-                    if "B3" in level["parts"]:
-                        np.testing.assert_allclose(drawing.at("B3"), expected, atol=1e-8)
+                    if "C2" in level["parts"]:
+                        np.testing.assert_allclose(drawing.at("C2"), expected, atol=1e-8)
                     for member in drawing.get_family():
                         self.assertTrue(np.isfinite(member.points).all())
                     scene.camera.reset()
@@ -271,7 +271,7 @@ class BimPresentationContract(unittest.TestCase):
                     if case["method"] == "analysis_view":
                         analysis = args[0]
                         anchors = set(drawing.parts) | set(drawing.anchors)
-                        self.assertTrue({"B3", analysis["shells"][0]["id"], analysis["supports"][0]["node"]} <= anchors)
+                        self.assertTrue({"C2", analysis["shells"][0]["id"], analysis["supports"][0]["node"]} <= anchors)
                     for member in drawing.get_family():
                         self.assertTrue(np.isfinite(member.points).all())
                     scene.camera.reset()

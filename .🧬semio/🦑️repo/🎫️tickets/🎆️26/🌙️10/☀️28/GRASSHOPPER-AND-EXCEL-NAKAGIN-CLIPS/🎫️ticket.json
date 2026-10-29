@@ -1,0 +1,34 @@
+{
+  "title": "Grasshopper and Excel Nakagin Clips",
+  "emoji": "🦗️",
+  "status": "closed",
+  "description": "Create two new full video clip series on the Nakagin Capsule Tower: Grasshopper (parametric capsule, capsule types on planes, core and capital, lower building; anatomy; casting; data trees on {BUILDING;TOWER;STORY;FACADE} with two capsule items) and Excel (room program and energy calculation with one sheet per capsule type; anatomy of workbook, worksheet, cell, reference, formula). Opus 5.5 coordination, Sonnet 5.5 execution agents, Haiku 5.5 read-only audits.",
+  "goal": "updatedtutorials",
+  "sessions": [
+    "0a2a834f-4899-4447-9012-59e0272e94be"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-28 18:00:00",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "2aaf5b279b8c0f6aa5a124e73439783b8e9f0bc8",
+      "prompt": "Create two new video series (clips) for Grasshopper and Excel on the Nakagin Capsule Tower: fullblown, visual, didactically rich.",
+      "llm": "opus-4-7"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-29 09:30:00",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "2aaf5b279b8c0f6aa5a124e73439783b8e9f0bc8",
+      "prompt": "Nine new videos (Grasshopper: anatomy, capsule, tower, casting, data trees; Excel: anatomy, references, room program, energy) on one schema-first Nakagin teaching model (🏢️nakagin: capsule 2.5×4.0×2.5 m, types A–D, 140 capsules = 70 branches × 2 on {BUILDING;TOWER;STORY;FACADE}), a stdlib Grasshopper engine (trees, casting with basis markers, canvases) and a stdlib Excel engine (references, formulas, structured tables, en/de localization, one sheet per capsule type), canvas and workbook toolkits, registration, READMEs and transcripts. Audits, verifications, quality-director reviews and final sweeps per video in both languages. Oracles: rhino3dm, openpyxl, formulas, NumPy, AJV; all 10 suites pass. 480p15 speaker previews rendered and delivered for en and de (see summary.md, render.md).",
+      "llm": "opus-4-7"
+    }
+  ],
+  "summary": "Grasshopper (5) and Excel (4) Nakagin clip series built, audited, quality-reviewed, tested (all suites green) and delivered as en/de previews; details and open owner checks in summary.md.",
+  "note": "repo and semio MCP servers failed to connect (CONNECTION_CLOSED) on 2026-10-28; ticket bookkept manually following the MCP layout."
+}

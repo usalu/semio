@@ -44,7 +44,13 @@
         "column": 0,
         "row": 1
       },
-      "videos": []
+      "videos": [
+        "grasshopper_anatomy",
+        "grasshopper_capsule",
+        "grasshopper_tower",
+        "grasshopper_casting",
+        "grasshopper_trees"
+      ]
     },
     {
       "id": "excel",
@@ -52,7 +58,12 @@
         "column": 1,
         "row": 1
       },
-      "videos": []
+      "videos": [
+        "excel_anatomy",
+        "excel_references",
+        "excel_program",
+        "excel_energy"
+      ]
     },
     {
       "id": "optimization",

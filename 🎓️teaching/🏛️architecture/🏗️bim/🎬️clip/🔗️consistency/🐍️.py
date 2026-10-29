@@ -53,32 +53,32 @@ class Beat6_Consistency(_visuals.ClipScene):
          "Reports say water came through the flat roof each autumn; our teaching scenario starts from this leak.",
          "Berichte sagen, dass jeden Herbst Wasser durchs Flachdach kam; unser Lehrszenario beginnt bei diesem Leck."],
         ["leakpath",
-         "Water passes soil and screed; wherever the waterproofing has a gap, it enters the slab and stains the ceiling.",
-         "Wasser passiert Pflanzsubstrat und Estrich; wo die Abdichtung eine Lücke hat, dringt es in die Decke ein und fleckt sie."],
+         "The source distinguishes the original reconstructed state from later damage evidence. The illustrated water path is schematic, without an invented membrane layer.",
+         "Die Quelle unterscheidet ursprünglichen rekonstruierten Zustand und spätere Schadensbelege. Der gezeigte Wasserweg ist schematisch, ohne erfundene Membranschicht."],
         ["change",
-         "After the repair, a design event thickens the soil from 0.10 to 0.30 m; the slab keeps its GlobalId.",
-         "Nach der Reparatur verdickt ein Entwurfsereignis das Pflanzsubstrat von 0,10 auf 0,30 m; die Platte behält ihre GlobalId."],
+         "In an explicit repair scenario, a design event increases the reference paving reserve from 0.09 to 0.14 m; the slab keeps its GlobalId.",
+         "In einem ausdrücklichen Reparaturszenario erhöht ein Entwurfsereignis die Bezugsreserve des Belags von 0,09 auf 0,14 m; die Platte behält ihre GlobalId."],
         ["kept",
          "Thickness and revision change; GlobalId, class and place in the villa stay what they were.",
          "Dicke und Revision ändern sich; GlobalId, Klasse und Platz in der Villa bleiben, wie sie waren."],
         ["load",
-         "Soil weighs 18 kN/m³: 0.20 m more soil adds 3.6 kN/m², and the roof planting load becomes 12.92 kN/m².",
-         "Pflanzsubstrat wiegt 18 kN/m³: 0,20 m mehr bringen 3,6 kN/m², die Last der Dachbepflanzung wird 12,92 kN/m²."],
+         "The added paving increases the area load; layer densities and thicknesses determine the displayed value.",
+         "Zusätzlicher Belag erhöht die Flächenlast; Schichtdichten und Dicken bestimmen den angezeigten Wert."],
         ["grid",
-         "Each piloti carries the roof around it: A3 collects 4.75 m × 2.375 m = 11.28 m², C3 only 2.38 m².",
-         "Jeder Piloti trägt das Dach um sich: A3 trägt 4,75 m × 2,375 m = 11,28 m², C3 nur 2,38 m²."],
+         "Each roof support collects the slab nearest to it, excluding openings. The irregular cells have different areas.",
+         "Jede Dachstütze trägt den nächstgelegenen Teil der Decke ohne Öffnungen. Die unregelmäßigen Zellen haben verschiedene Flächen."],
         ["derived",
-         "The load on A3 follows: 11.28 m² × 12.92 kN/m² ≈ 146 kN, not 105 kN.",
-         "Die Last auf A3 folgt: 11,28 m² × 12,92 kN/m² ≈ 146 kN, nicht 105 kN."],
+         "The load on each support follows from its share of each roof zone and the corresponding area load.",
+         "Die Last jeder Stütze folgt aus ihrem Anteil an jeder Dachzone und deren Flächenlast."],
         ["spread",
-         "Each piloti changes by 3.6 kN/m² times the area of its roof planting: D3 gains most, C4 under the terrace nothing.",
-         "Jeder Piloti ändert sich um 3,6 kN/m² mal der Fläche seiner Dachbepflanzung: D3 am meisten, C4 unter der Terrasse nichts."],
+         "The paving change affects each support according to its share of the roof zone.",
+         "Die Belagsänderung betrifft jede Stütze entsprechend ihrem Anteil an der Dachzone."],
         ["stale",
-         "LK-ROOF links the analysis to the slab, but it still holds revision 1: 105 kN, not 146 kN.",
-         "LK-ROOF bindet die Analyse an die Platte; sie hält noch Revision 1 mit 105 kN statt 146 kN."],
+         "LK-ROOF links the analysis to the slab, but still holds the earlier revision and its earlier result.",
+         "LK-ROOF bindet die Analyse an die Platte, hält aber noch die frühere Revision mit deren Ergebnis."],
         ["check",
-         "A check compares link and model: revision 1 against 2, 9.32 against 12.92 kN/m², 105 against 146 kN.",
-         "Eine Prüfung vergleicht Verknüpfung und Modell: Revision 1 gegen 2, 9,32 gegen 12,92 kN/m², 105 gegen 146 kN."],
+         "A check compares the linked revision and stored values with the current model and derived results.",
+         "Eine Prüfung vergleicht verknüpfte Revision und gespeicherte Werte mit dem aktuellen Modell und abgeleiteten Ergebnissen."],
         ["ids",
          "A requirement check (IDS) passes because the information exists; only the link check finds the old result.",
          "Eine Anforderungsprüfung (IDS) besteht, weil die Angabe existiert; nur die Verknüpfungsprüfung findet das alte Ergebnis."],
@@ -86,17 +86,17 @@ class Beat6_Consistency(_visuals.ClipScene):
          "The finding goes to the structural engineer as a BCF topic that points to the slab by its GlobalId.",
          "Der Befund geht als BCF-Thema an den Tragwerksplaner und verweist über die GlobalId auf die Platte."],
         ["retranslate",
-         "Re-translating the slab gives 24 surface members and 25 columns of this teaching model; a person reviews the assumptions.",
-         "Die neue Übersetzung der Platte ergibt 24 Flächenelemente und 25 Stäbe dieses Lehrmodells; eine Person prüft die Annahmen."],
+         "Re-translating generates surface members and supports from the current teaching model; a person reviews the assumptions.",
+         "Die neue Übersetzung erzeugt Flächenelemente und Stützen aus dem aktuellen Lehrmodell; eine Person prüft die Annahmen."],
         ["resolve",
-         "With the link set to revision 2, the analysis shows 146 kN too, and the check finds no issue.",
-         "Mit der Verknüpfung auf Revision 2 zeigt auch die Analyse 146 kN, und die Prüfung findet kein Problem."],
+         "With the link updated, the analysis and model show matching reactions and the check finds no issue.",
+         "Mit aktueller Verknüpfung zeigen Analyse und Modell gleiche Auflagerkräfte; die Prüfung findet kein Problem."],
         ["fork",
-         "Two people edit revision 1 at once: both save revision 2 under the same GlobalId, with different soil.",
-         "Zwei Personen ändern Revision 1 gleichzeitig: beide speichern Revision 2 unter derselben GlobalId, mit anderem Pflanzsubstrat."],
+         "Two people edit revision 1 at once: both save revision 2 under the same GlobalId, with different paving.",
+         "Zwei Personen ändern Revision 1 gleichzeitig: beide speichern Revision 2 unter derselben GlobalId, mit anderem Belag."],
         ["decide",
-         "The GlobalId cannot merge 12.92 and 11.12 kN/m²; a person decides which edit the model keeps.",
-         "Die GlobalId kann 12,92 und 11,12 kN/m² nicht verschmelzen; eine Person entscheidet, welche Änderung bleibt."],
+         "The GlobalId cannot merge competing paving edits; a person decides which edit the model keeps.",
+         "Die GlobalId kann konkurrierende Belagsänderungen nicht verschmelzen; eine Person entscheidet, welche Änderung bleibt."],
         ["recap",
          "A schema gives data meaning, a GlobalId names the object, a revision dates it, and a link ties the analysis to it.",
          "Ein Schema gibt Daten Bedeutung, die GlobalId benennt das Objekt, die Revision datiert es, die Verknüpfung bindet die Analyse."],
@@ -141,23 +141,24 @@ class Beat6_Consistency(_visuals.ClipScene):
         base = _model.load_model()
         self.base = base
         self.geometry = _model.building_geometry(base)
-        self.tag = next(s["tag"] for s in self.geometry["slabs"] if s["kind"] == "ROOF")
+        self.tag = _model.element(next(link["object_guid"] for link in base["links"] if link["id"] == LINK), base)["tag"]
         self.gid = _model.global_id(self.tag)
-        self.event = _model.demo_event("roof_soil", base)
+        self.event = _model.demo_event("roof_paving", base)
         self.new = _model.apply_event(self.event, base)
-        self.alt = _model.apply_event(_model.demo_event("roof_soil_alt", base), base)
+        self.alt = _model.apply_event(_model.demo_event("roof_paving_alt", base), base)
         self.resolved = _model.resolve_link(self.new, LINK)
         self.issues = _model.consistency_issues(self.new)
         self.link = next(link for link in base["links"] if link["id"] == LINK)
         self.link_new = next(link for link in self.resolved["links"] if link["id"] == LINK)
         self.state_cache = {}
-        self.soil_old, self.soil_new, self.soil_alt = (_model.quantity(self.tag, "soil", state) for state in (base, self.new, self.alt))
+        self.paving_old, self.paving_new, self.paving_alt = (_model.quantity(self.tag, "paving", state) for state in (base, self.new, self.alt))
         self.trib_old, self.trib_new, self.trib_alt = (_model.tributary(state, "roof") for state in (base, self.new, self.alt))
-        self.cut_x = self.geometry["grid"]["x"][2]
-        self.column = [p["tag"] for p in sorted(self.geometry["pilotis"], key=lambda p: p["y"]) if abs(p["x"] - self.cut_x) < 1e-6]
+        self.cut_x = next(p["x"] for p in self.geometry["pilotis"] if p["tag"] == _model.role("column_example", base))
+        roof_tags = {p["tag"] for p in self.trib_new["pilotis"]}
+        self.column = [p["tag"] for p in sorted(self.geometry["pilotis"], key=lambda p: p["y"]) if p["tag"] in roof_tags and abs(p["x"] - self.cut_x) < 1e-6]
         self.reaction_old = {p["tag"]: p["reaction"] for p in self.trib_old["pilotis"]}
         self.reaction_new = {p["tag"]: p["reaction"] for p in self.trib_new["pilotis"]}
-        self.show_tags = self.column[::2]
+        self.show_tags = self.column[::2] or sorted(roof_tags)[:2]
         change = lambda tag: self.reaction_new[tag] - self.reaction_old[tag]
         self.focus, self.contrast = max(self.show_tags, key=change), min(self.show_tags, key=change)
         self.pair_tags = (self.focus,)
@@ -165,7 +166,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         self.zone_new = {z["id"]: z for z in self.trib_new["zones"]}
         self.zone_old = {z["id"]: z for z in self.trib_old["zones"]}
         self.zone_alt = {z["id"]: z for z in self.trib_alt["zones"]}
-        self.q_old, self.q_new, self.q_alt = (zones["planted"]["area_load"] for zones in (self.zone_old, self.zone_new, self.zone_alt))
+        self.q_old, self.q_new, self.q_alt = (zones["roof"]["area_load"] for zones in (self.zone_old, self.zone_new, self.zone_alt))
         self.cell = {p["tag"]: p for p in self.trib_new["pilotis"]}
         self.delta = {tag: self.reaction_new[tag] - self.reaction_old[tag] for tag in self.reaction_new}
         self.k_q = 0.62 / self.q_new
@@ -174,7 +175,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         self.stage = []
         self.concept_mob = self.ref_mob = self.legend_mob = self.ref_key = None
         for zone in (self.zone_old, self.zone_new, self.zone_alt):
-            entry = zone["planted"]
+            entry = zone["roof"]
             assert math.isclose(entry["area_load"], entry["load_breakdown"]["total"]["value"], rel_tol=1e-9)
 
     def revision(self, model):
@@ -193,9 +194,9 @@ class Beat6_Consistency(_visuals.ClipScene):
         """👷 Localized author of a model record."""
         return AUTHORS[value][0 if self.language() == "en" else 1]
 
-    def soil_state(self, soil):
-        """♻️ Model state with the given soil thickness, cached by value."""
-        key = round(soil, 4)
+    def paving_state(self, paving):
+        """♻️ Model state with the given paving thickness, cached by value."""
+        key = round(paving, 4)
         if key not in self.state_cache:
             self.state_cache[key] = _model.apply_event({**self.event, "value": key}, self.base)
         return self.state_cache[key]
@@ -212,17 +213,17 @@ class Beat6_Consistency(_visuals.ClipScene):
         """✱ Asterisk mark of a teaching-model assumption."""
         return " *" if basis == "assumed" else ""
 
-    def weights(self, soil):
-        """⚖️ Weight per m² of every roof layer of the planted zone at one soil depth, bottom to top, then the imposed load: (id, name, thickness, density, weight)."""
-        state = self.soil_state(soil)
-        self.layer_basis = {layer["id"]: (layer["thickness"].get("basis"), layer["density"].get("basis")) for layer in self.layers_of(state)}
-        rows = [(layer["id"], self.name(layer), layer["thickness"]["value"], layer["density"]["value"], layer["thickness"]["value"] * layer["density"]["value"])
-                for layer in self.layers_of(state) if "planted" in layer["zones"]]
-        return rows + [("imposed", self.tr("Planting use (imposed)", "Nutzlast Bepflanzung"), None, None, state["loads"]["imposed"]["roof_planted"]["value"])]
+    def weights(self, paving):
+        """⚖️ Weight per m² of every roof layer of the roof zone at one paving depth, bottom to top, then the imposed load: (id, name, thickness, density, weight)."""
+        state = self.paving_state(paving)
+        breakdown = next(zone for zone in _model.tributary(state, "roof")["zones"] if zone["id"] == "roof")["load_breakdown"]
+        self.layer_basis = {key: (value["basis"], value["basis"]) for key, value in breakdown.items()}
+        return [(key, value[self.language()], value.get("thickness"), value.get("density"), value["value"])
+                for key, value in breakdown.items() if key != "total"]
 
-    def q_of(self, soil):
-        """⚖️ Planted roof load at one soil depth: the sum of the layer weights and the imposed load."""
-        return sum(row[4] for row in self.weights(soil))
+    def q_of(self, paving):
+        """⚖️ Roof load at one paving depth: the sum of the layer weights and the imposed load."""
+        return sum(row[4] for row in self.weights(paving))
 
     def wrap(self, text, columns):
         """↩️ Break a sentence into lines of at most ``columns`` characters."""
@@ -333,9 +334,9 @@ class Beat6_Consistency(_visuals.ClipScene):
         p = self.pilotis[tag]
         return self.axon_point(p["x"], p["y"], 0.0, point, scale, model=model)
 
-    def planted_spans(self):
-        """📏 Intervals along the section cut where the planted roof lies, in metres of y."""
-        return _core.scan(self.zone_new["planted"]["pieces"], self.cut_x, axis=0)
+    def roof_spans(self):
+        """📏 Intervals along the section cut where the roof lies, in metres of y."""
+        return _core.scan(self.zone_new["roof"]["pieces"], self.cut_x, axis=0)
 
     def revision_badges(self, point, *, architecture, structure, analysis, analysis_color=STRUCT):
         """🔖 The three model badges of a row with the given revisions."""
@@ -402,7 +403,7 @@ class Beat6_Consistency(_visuals.ClipScene):
             height = layer["thickness"]["value"] * scale
             ring = [(x0, y), (x0 + width, y), (x0 + width, y + height), (x0, y + height)]
             group.add(_d.polygon(ring, _core.layer_color(layer["id"]), 1.0, INK, 1.0))
-            if layer["id"] == "concrete":
+            if layer["id"] == "structural":
                 group.add(self.hatch(ring, MUTED, 0.1, 45, opacity=0.6))
             group.spans[layer["id"]] = (y, y + height)
             wants.append((layer, y + height / 2))
@@ -429,22 +430,22 @@ class Beat6_Consistency(_visuals.ClipScene):
         return group
 
     def drops(self, clock, x_left, x_right, top):
-        """💧 Rain falling onto the soil surface, as a function of the clock."""
+        """💧 Rain falling onto the paving surface, as a function of the clock."""
         return _engine.VGroup(*[_engine.Dot((x_left + (x_right - x_left) * ((index * 0.61) % 1.0), top + 0.5 - 0.5 * ((clock + index * 0.37) % 1.0), 0), radius=0.045, color=GLASS)
                                 for index in range(6)])
 
     def leak_path(self, detail):
-        """💧 The water path through the build-up: points from the soil surface through a gap in the waterproofing to the ceiling stain."""
+        """💧 The water path through the build-up: points from the paving surface through a gap in the paving to the ceiling stain."""
         spans = detail.spans
         gap_x, entry_x = detail.x0 + 0.34 * detail.span, detail.x0 + 0.78 * detail.span
-        wp0, wp1 = spans["waterproofing"]
-        c0 = spans["concrete"][0]
+        wp0, wp1 = spans["paving"]
+        c0 = spans["structural"][0]
         return [np.array(point, float) for point in ((entry_x, detail.top + 0.4, 0), (entry_x, wp1, 0), (gap_x, wp1, 0), (gap_x, wp0, 0), (gap_x - 0.12, c0, 0), (gap_x - 0.12, c0 - 0.26, 0))]
 
     def leak_marks(self, detail, flow):
         """🚰 Gap, water path, numbered stations, moving drop and ceiling stain on the magnified build-up."""
         path = self.leak_path(detail)
-        wp0, wp1 = detail.spans["waterproofing"]
+        wp0, wp1 = detail.spans["paving"]
         gap_x = path[2][0]
         group = _engine.VGroup(_engine.Rectangle(width=0.08, height=wp1 - wp0 + 0.03, stroke_width=0, fill_color=_d.BACKGROUND, fill_opacity=1).move_to((gap_x, (wp0 + wp1) / 2, 0)),
                                _engine.Circle(radius=0.17, stroke_color=SERV, stroke_width=_d.W_EDGE).move_to((gap_x, (wp0 + wp1) / 2, 0)),
@@ -479,7 +480,7 @@ class Beat6_Consistency(_visuals.ClipScene):
 
     def zoom_lines(self, section, frame):
         """🔍 Ring on the section and two lines to the magnified frame."""
-        span = max(self.planted_spans(), key=lambda s: s[1] - s[0])
+        span = max(self.roof_spans(), key=lambda s: s[1] - s[0])
         centre = section.at(self.cut_x, (span[0] + span[1]) / 2, self.geometry["storeys"]["roof"])
         ring = _engine.Circle(radius=0.18, stroke_color=DATA, stroke_width=_d.W_EDGE).move_to(centre)
         return _engine.VGroup(ring, _d.segments([(centre + (0.16, 0.08, 0), (frame.get_left()[0], frame.get_top()[1], 0)), (centre + (0.16, -0.08, 0), (frame.get_left()[0], frame.get_bottom()[1], 0))],
@@ -495,8 +496,8 @@ class Beat6_Consistency(_visuals.ClipScene):
     def story_chip(self, section):
         """🆔 The GlobalId chip above the section with a leader to the roof slab: the same identity through the whole story."""
         chip = self.guid_chip(self.tag, (-4.0, 2.5, 0), label=False)
-        span = max(self.planted_spans(), key=lambda s: s[1] - s[0])
-        pointer = self.leader(chip, section.at(self.cut_x, max(self.planted_spans())[0] + 1.0, self.geometry["storeys"]["roof"]), color=DATA)
+        span = max(self.roof_spans(), key=lambda s: s[1] - s[0])
+        pointer = self.leader(chip, section.at(self.cut_x, max(self.roof_spans())[0] + 1.0, self.geometry["storeys"]["roof"]), color=DATA)
         return chip, pointer
 
     def _identity(self):
@@ -564,7 +565,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         box = self.geometry["box"]
         outline = _d.polyline([axon.at(x, y, roof_z) for x, y in ((0.0, 0.0), (box["length"], 0.0), (box["length"], box["width"]), (0.0, box["width"]))], GLASS, _d.W_CUT, closed=True)
         edge = np.array(axon.at(box["length"] / 2, 0.0, roof_z))
-        over = np.array(axon.at(self.pilotis["B3"]["x"], self.pilotis["B3"]["y"], roof_z))
+        over = np.array(axon.at(self.pilotis[self.focus]["x"], self.pilotis[self.focus]["y"], roof_z))
         left = card[0].get_left()[0]
         pointers = _engine.VGroup(outline, self.leader((left, card.values[2].get_center()[1], 0), over, color=GOOD), self.leader((left, card.values[3].get_center()[1], 0), edge, color=GLASS))
         chip = self.guid_chip(self.tag, (3.4, 2.6, 0), label=False)
@@ -579,7 +580,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         history = self.history_card()
         detail = self.build_up(self.base, dims=False)
         frame = self.detail_frame(detail)
-        title = self.label("Roof build-up · IfcMaterialLayerSet", "Dachaufbau · IfcMaterialLayerSet", (detail.x0 + detail.span + 0.36, detail.top + 0.45, 0), size=S_SMALL, color=MUTED, anchor="l", width=3.0)
+        title = self.label("Reference: 17 cm structure · 9 cm reserve", "Referenz: 17 cm Tragwerk · 9 cm Reserve", (detail.x0 + detail.span + 0.36, detail.top + 0.45, 0), size=S_SMALL, color=MUTED, anchor="l", width=3.0)
         zoom = self.zoom_lines(section, frame)
         clock = _engine.ValueTracker(0)
         clock.add_updater(lambda tracker, dt: tracker.increment_value(dt * 0.8))
@@ -590,17 +591,17 @@ class Beat6_Consistency(_visuals.ClipScene):
         self.detail, self.frame, self.zoom, self.clock, self.rain, self.detail_title = detail, frame, zoom, clock, rain, title
 
     def _leakpath(self):
-        """🚰 Beat 5: the water passes soil and screed, finds a gap in the waterproofing and stains the ceiling below."""
+        """🚰 Beat 5: the water passes paving and structural reserve, finds a gap in the paving and stains the ceiling below."""
         flow = _engine.ValueTracker(0)
         flow.add_updater(lambda tracker, dt: tracker.increment_value(dt * 0.3))
         self.add(flow)
         marks = self.leak_marks(self.detail, flow)
         legend = self.panel(6.4, 1.45, (3.7, 2.35), GLASS)
         rows = _engine.VGroup(*[self.label(*row, (0.7, 2.7 - 0.4 * index, 0), size=S_SMALL, color=color, anchor="l", width=5.9) for index, (row, color) in enumerate((
-            (("1 · rain falls on the soil and seeps down", "1 · Regen fällt auf das Pflanzsubstrat und sickert ein"), GLASS),
-            (("2 · gap in the waterproofing (illustration · place not documented)", "2 · Lücke in der Abdichtung (Illustration · Stelle nicht belegt)"), SERV),
+            (("1 · rain falls on the paving and seeps down", "1 · Regen fällt auf den Belag und sickert ein"), GLASS),
+            (("2 · schematic failure path below the finish", "2 · schematischer Schadensweg unter dem Belag"), SERV),
             (("3 · seeps through the slab and stains the ceiling", "3 · sickert durch die Decke und fleckt sie"), GLASS)))])
-        span = max(self.planted_spans(), key=lambda s: s[1] - s[0])
+        span = max(self.roof_spans(), key=lambda s: s[1] - s[0])
         under = self.section.at(self.cut_x, (span[0] + span[1]) / 2 + 1.0, self.geometry["storeys"]["roof"] - 0.45)
         stain = _engine.Ellipse(width=0.6, height=0.1, stroke_color=GLASS, stroke_width=_d.W_THIN, fill_color=GLASS, fill_opacity=0.5).move_to(under)
         self.show("leakpath", new=[marks, legend, rows, stain], keep=[self.section, self.storeys, self.chip, self.pointer, self.zoom, self.detail, self.frame, self.rain, self.detail_title], seconds=4.4)
@@ -614,27 +615,27 @@ class Beat6_Consistency(_visuals.ClipScene):
                                self.label("= layer thickness changed", "= Schichtdicke geändert", (6.7, 2.5, 0), size=S_SMALL, color=MUTED, anchor="r"),
                                self.label("object", "Objekt", (0.7, 2.16, 0), size=S_SMALL, color=MUTED, anchor="l"),
                                self.mono(self.gid, (1.45, 2.16, 0), size=S_SMALL, color=DATA, anchor="l"),
-                               self.label("soil layer · new thickness", "Pflanzsubstrat · neue Dicke", (0.7, 1.84, 0), size=S_SMALL, color=MUTED, anchor="l"),
-                               self.text(self.quantity(self.soil_new, "m", 2) + " *", (6.7, 1.84, 0), size=S_LABEL, color=DATA, anchor="r"))
+                               self.label("paving layer · new thickness", "Belag · neue Dicke", (0.7, 1.84, 0), size=S_SMALL, color=MUTED, anchor="l"),
+                               self.text(self.quantity(self.paving_new, "m", 2) + " *", (6.7, 1.84, 0), size=S_LABEL, color=DATA, anchor="r"))
         return group
 
     def _change(self):
-        """⚡ Beat 6: after the repair the design event thickens the soil; the build-up grows live."""
-        tracker = _engine.ValueTracker(self.soil_old)
+        """⚡ Beat 6: after the repair the design event thickens the paving; the build-up grows live."""
+        tracker = _engine.ValueTracker(self.paving_old)
         self.clock.clear_updaters()
         self.flow.clear_updaters()
         event = self.event_card()
-        live = self.live(lambda: self.build_up(self.soil_state(tracker.get_value()), lit="soil", grown_from=self.soil_old), key=lambda: round(tracker.get_value(), 3))
+        live = self.live(lambda: self.build_up(self.paving_state(tracker.get_value()), lit="paving", grown_from=self.paving_old), key=lambda: round(tracker.get_value(), 3))
         new_section = self.section_view(self.new)
-        repaired = self.paragraph([self.tr("gap repaired", "Lücke repariert"), self.tr("new waterproofing", "neue Abdichtung")], (self.detail.x0 + self.detail.span + 0.36, self.detail.base - 0.1, 0), color=GOOD, pitch=0.26)
+        repaired = self.paragraph([self.tr("gap repaired", "Lücke repariert"), self.tr("new paving", "neuer Belag")], (self.detail.x0 + self.detail.span + 0.36, self.detail.base - 0.1, 0), color=GOOD, pitch=0.26)
         seal = _engine.Circle(radius=0.17, stroke_color=GOOD, stroke_width=_d.W_EDGE).move_to(self.marks[0][1].get_center())
         old_section = self.section
-        span = max(self.planted_spans(), key=lambda s: s[1] - s[0])
-        base_z = self.geometry["storeys"]["roof"] + sum(layer["thickness"]["value"] for layer in self.layers_of(self.base) if layer["id"] != "concrete")
+        span = max(self.roof_spans(), key=lambda s: s[1] - s[0])
+        base_z = self.geometry["storeys"]["roof"] + sum(layer["thickness"]["value"] for layer in self.layers_of(self.base) if layer["id"] != "structural")
         tip = new_section.at(self.cut_x, span[0] + 1.0, base_z)
-        growth = _engine.VGroup(self.text("+" + self.quantity(self.soil_new - self.soil_old, "m", 2) + " *", tip + (0.0, 0.55, 0), size=S_LABEL, color=DATA), self.arrow(tip + (0.0, 0.02, 0), 0.2, DATA, width=3.0))
+        growth = _engine.VGroup(self.text("+" + self.quantity(self.paving_new - self.paving_old, "m", 2) + " *", tip + (0.0, 0.55, 0), size=S_LABEL, color=DATA), self.arrow(tip + (0.0, 0.02, 0), 0.2, DATA, width=3.0))
         self.show("change", new=[event, live, repaired, growth], keep=[old_section, self.storeys, self.chip, self.pointer, self.zoom, self.frame, self.detail_title],
-                  extra=[_engine.Succession(_engine.Create(seal), tracker.animate(rate_func=_engine.smooth).set_value(self.soil_new),
+                  extra=[_engine.Succession(_engine.Create(seal), tracker.animate(rate_func=_engine.smooth).set_value(self.paving_new),
                                             _engine.AnimationGroup(_engine.FadeTransform(old_section, new_section), _engine.Indicate(live, color=DATA)))],
                   track=[seal], seconds=5.0)
         self.stage = [new_section if item is old_section else item for item in self.stage]
@@ -648,31 +649,31 @@ class Beat6_Consistency(_visuals.ClipScene):
                           (3.7, 1.5, 0), 6.4, self.tr("stays the same", "bleibt gleich"), GOOD, value_width=3.1, mono=("GlobalId",))
         total = lambda state: sum(layer["thickness"]["value"] for layer in self.layers_of(state))
         arrow = " → "
-        changes = self.card([(self.tr("soil layer", "Pflanzsubstrat"), self.quantity(self.soil_old, "m", 2) + arrow + self.quantity(self.soil_new, "m", 2), "assumed"),
+        changes = self.card([(self.tr("paving layer", "Belag"), self.quantity(self.paving_old, "m", 2) + arrow + self.quantity(self.paving_new, "m", 2), "assumed"),
                              (self.tr("build-up total", "Aufbau gesamt"), self.quantity(total(self.base), "m", 2) + arrow + self.quantity(total(self.new), "m", 2), "assumed"),
                              (self.tr("slab revision", "Revision der Platte"), f"{self.revision(self.base)}{arrow}{self.revision(self.new)}"),
                              (self.tr("model revisions", "Modellrevisionen"), f"{self.model_revision('architecture', self.base)}{arrow}{self.model_revision('architecture', self.new)}")],
                             (3.7, -1.15, 0), 6.4, self.tr("changes", "ändert sich"), WARN, value_width=3.1)
         link = self.leader((self.chip.get_right()[0], self.chip.get_center()[1], 0), (stays[0].get_left()[0], stays[0].get_center()[1] + 0.5, 0), color=GOOD)
         roof_z = self.geometry["storeys"]["roof"]
-        target = self.section.at(self.cut_x, max(self.planted_spans())[0] + 1.0, roof_z)
+        target = self.section.at(self.cut_x, max(self.roof_spans())[0] + 1.0, roof_z)
         rows_left = stays[0].get_left()[0]
         ties = _engine.VGroup(*[self.leader((rows_left, value.get_center()[1], 0), target, color=GOOD, dot=index == 0) for index, value in enumerate(stays.values)],
-                              self.leader((changes[0].get_left()[0], changes.values[0].get_center()[1], 0), self.section.at(self.cut_x, max(self.planted_spans())[1] - 1.0, roof_z), color=WARN))
-        soil = _engine.VGroup(*[_d.polyline([self.section.at(self.cut_x, a, roof_z + 0.06), self.section.at(self.cut_x, b, roof_z + 0.06)], WARN, _d.W_CUT) for a, b in self.planted_spans()])
-        self.show("kept", new=[stays, changes, link, ties, soil], keep=[self.section, self.chip, self.pointer], seconds=4.0)
+                              self.leader((changes[0].get_left()[0], changes.values[0].get_center()[1], 0), self.section.at(self.cut_x, max(self.roof_spans())[1] - 1.0, roof_z), color=WARN))
+        paving = _engine.VGroup(*[_d.polyline([self.section.at(self.cut_x, a, roof_z + 0.06), self.section.at(self.cut_x, b, roof_z + 0.06)], WARN, _d.W_CUT) for a, b in self.roof_spans()])
+        self.show("kept", new=[stays, changes, link, ties, paving], keep=[self.section, self.chip, self.pointer], seconds=4.0)
 
-    def load_table(self, soil):
-        """⚖️ Weight table of the planted roof at one soil depth: swatch, layer, thickness × density = weight, then the sum."""
+    def load_table(self, paving):
+        """⚖️ Weight table of the roof at one paving depth: swatch, layer, thickness × density = weight, then the sum."""
         group = _engine.VGroup()
         columns = (-0.55, 0.85, 2.6)
         heads = (self.tr("layer", "Schicht"), self.tr("thickness", "Dicke"), self.tr("density", "Dichte"), self.tr("weight", "Gewicht"))
         for x, head, anchor in zip((-4.05, *columns), heads, ("l", "r", "r", "r")):
             group.add(self.text(head, (x, 2.55, 0), size=S_SMALL, color=MUTED, anchor=anchor))
-        rows = list(reversed(self.weights(soil)))
+        rows = list(reversed(self.weights(paving)))
         for index, (layer, name, thickness, density, weight) in enumerate(rows):
             y = 2.1 - 0.4 * index
-            tone = DATA if layer == "soil" else INK
+            tone = DATA if layer == "paving" else INK
             colour = GLASS if layer == "imposed" else _core.layer_color(layer)
             group.add(_d.polygon([(-4.3, y - 0.1, 0), (-4.1, y - 0.1, 0), (-4.1, y + 0.1, 0), (-4.3, y + 0.1, 0)], colour, 1.0, INK, 0.8),
                       self.text(name, (-4.0, y, 0), size=S_SMALL, color=tone, anchor="l"))
@@ -684,29 +685,29 @@ class Beat6_Consistency(_visuals.ClipScene):
             group.add(self.text("= " + self.quantity(weight, "kN/m²", 2), (columns[2], y, 0), size=S_SMALL, color=tone, anchor="r"), self.text("*", (columns[2] + 0.1, y, 0), size=S_SMALL, color=WARN, anchor="l"))
         bottom = 2.1 - 0.4 * len(rows) + 0.1
         group.add(_d.segments([((-4.3, bottom, 0), (columns[2] + 0.05, bottom, 0))], MUTED, _d.W_THIN),
-                  self.text(self.tr("roof planting load q", "Last der Dachbepflanzung q"), (-4.3, bottom - 0.3, 0), size=S_LABEL, color=DATA, anchor="l"),
+                  self.text(self.tr("roof paving load q", "Last der Dachbelag q"), (-4.3, bottom - 0.3, 0), size=S_LABEL, color=DATA, anchor="l"),
                   self.text("= " + self.quantity(sum(row[4] for row in rows), "kN/m²", 2), (columns[2], bottom - 0.3, 0), size=S_LABEL, color=DATA, anchor="r"))
         return group
 
-    def load_formula(self, soil):
+    def load_formula(self, paving):
         """🧮 The sum of the layer weights with the substituted numbers."""
-        rows = self.weights(soil)
+        rows = self.weights(paving)
         parts = [("q =", INK)]
         for index, row in enumerate(rows):
-            parts += [(("+" if index else ""), INK), (self.number(row[4], 2), DATA if row[0] == "soil" else INK)]
+            parts += [(("+" if index else ""), INK), (self.number(row[4], 2), DATA if row[0] == "paving" else INK)]
         parts += [("=", INK), (self.quantity(sum(row[4] for row in rows), "kN/m²", 2), DATA)]
         return self.formula([part for part in parts if part[0]], (-1.2, -1.05, 0), size=S_LABEL)
 
-    def load_stack(self, point, soil, *, scale=0.17, label=True, old=None, side=-1):
+    def load_stack(self, point, paving, *, scale=0.17, label=True, old=None, side=-1):
         """📊 Stacked bar of the layer weights, one segment per layer in the layer colour, with the total on top."""
         group = _engine.VGroup()
         x, y = point[0], point[1]
-        for layer, name, thickness, density, weight in self.weights(soil):
+        for layer, name, thickness, density, weight in self.weights(paving):
             colour = GLASS if layer == "imposed" else _core.layer_color(layer)
             group.add(_d.polygon([(x - 0.5, y, 0), (x + 0.5, y, 0), (x + 0.5, y + weight * scale, 0), (x - 0.5, y + weight * scale, 0)], colour, 1.0, INK, 1.0))
             y += weight * scale
         if label:
-            group.add(self.text("q = " + self.quantity(sum(row[4] for row in self.weights(soil)), "kN/m²", 2), (x, y + 0.28, 0), size=S_LABEL, color=DATA))
+            group.add(self.text("q = " + self.quantity(sum(row[4] for row in self.weights(paving)), "kN/m²", 2), (x, y + 0.28, 0), size=S_LABEL, color=DATA))
         if old is not None:
             edge = point[1] + old * scale
             group.add(_d.polyline([(x - 0.7, edge, 0), (x + 0.7, edge, 0)], MUTED, _d.W_EDGE, dash=0.1),
@@ -714,18 +715,18 @@ class Beat6_Consistency(_visuals.ClipScene):
         return group
 
     def _load(self):
-        """⚖️ Beat 8: the thicker soil weighs more: layer weights, the sum and the growing bar."""
-        soil = _engine.ValueTracker(self.soil_old)
-        key = lambda: round(soil.get_value(), 3)
-        build = self.live(lambda: self.build_up(self.soil_state(soil.get_value()), (-5.9, -2.4, 0), 3.2, 1.2, labels=False, dims=False, lit="soil"), key=key)
-        title = self.paragraph([self.tr("roof planting", "Dachbepflanzung"), self.tr("build-up", "Dachaufbau")], (-5.9, -0.05, 0), color=MUTED, pitch=0.25, anchor="c")
-        table = self.live(lambda: self.load_table(soil.get_value()), key=key)
-        formula = self.live(lambda: self.load_formula(soil.get_value()), key=key)
-        delta = self.formula([("Δq =", INK), (f"({self.number(self.soil_new, 2)} − {self.number(self.soil_old, 2)}) m", DATA), ("·", INK), (self.quantity(self.weights(self.soil_new)[3][3], "kN/m³", 0), DATA), ("=", INK),
+        """⚖️ Beat 8: the thicker paving weighs more: layer weights, the sum and the growing bar."""
+        paving = _engine.ValueTracker(self.paving_old)
+        key = lambda: round(paving.get_value(), 3)
+        build = self.live(lambda: self.build_up(self.paving_state(paving.get_value()), (-5.9, -2.4, 0), 3.2, 1.2, labels=False, dims=False, lit="paving"), key=key)
+        title = self.paragraph([self.tr("roof paving", "Dachbelag"), self.tr("build-up", "Dachaufbau")], (-5.9, -0.05, 0), color=MUTED, pitch=0.25, anchor="c")
+        table = self.live(lambda: self.load_table(paving.get_value()), key=key)
+        formula = self.live(lambda: self.load_formula(paving.get_value()), key=key)
+        delta = self.formula([("Δq =", INK), (f"({self.number(self.paving_new, 2)} − {self.number(self.paving_old, 2)}) m", DATA), ("·", INK), (self.quantity(next(row[3] for row in self.weights(self.paving_new) if row[0] == "paving"), "kN/m³", 0), DATA), ("=", INK),
                               ("+" + self.quantity(self.q_new - self.q_old, "kN/m²", 2), GOOD)], (-1.2, -1.9, 0), color=GOOD)
-        stack = self.live(lambda: self.load_stack((5.0, -2.3, 0), soil.get_value(), old=self.q_old), key=key)
-        self.show("load", new=[build, title, table, formula, delta, stack], extra=[soil.animate(rate_func=_engine.smooth).set_value(self.soil_new)], seconds=5.0)
-        self.soil_tracker = soil
+        stack = self.live(lambda: self.load_stack((5.0, -2.3, 0), paving.get_value(), old=self.q_old), key=key)
+        self.show("load", new=[build, title, table, formula, delta, stack], extra=[paving.animate(rate_func=_engine.smooth).set_value(self.paving_new)], seconds=5.0)
+        self.paving_tracker = paving
 
     def dim_number(self, value):
         """📏 A dimension in metres with two decimals, or three when the value needs them."""
@@ -741,9 +742,9 @@ class Beat6_Consistency(_visuals.ClipScene):
         """📐 One cell drawn large with its two dimensions and the piloti dot; the area is the product of the two dimensions."""
         x0, x1, y0, y1 = self.cell_box(tag)
         width, height = x1 - x0, y1 - y0
-        assert math.isclose(width * height, self.cell[tag]["area"], rel_tol=1e-6)
+        
         centre = np.array(point, float)
-        ring = [centre + ((x - (x0 + x1) / 2) * scale, (y - (y0 + y1) / 2) * scale, 0) for x, y in ((x0, y0), (x1, y0), (x1, y1), (x0, y1))]
+        ring = [centre + ((x - (x0 + x1) / 2) * scale, (y - (y0 + y1) / 2) * scale, 0) for x, y in self.cell[tag]["cell"]]
         group = _engine.VGroup(_d.polygon(ring, color, 0.2, color, _d.W_EDGE), self.hatch(ring, color, 0.07, 45, opacity=0.8))
         pin = self.pilotis[tag]
         group.add(_engine.Dot(centre + ((pin["x"] - (x0 + x1) / 2) * scale, (pin["y"] - (y0 + y1) / 2) * scale, 0), radius=0.06, color=INK))
@@ -760,35 +761,35 @@ class Beat6_Consistency(_visuals.ClipScene):
         forms = _engine.VGroup()
         bounds = {tag: self.cell_box(tag) for tag in (self.focus, self.contrast)}
         num = lambda v: self.number(v, 2 if abs(round(v, 2) - v) < 1e-9 else 3)
-        for tag, colour, x, wide, note in ((self.focus, DATA, 1.0, 4.3, ("edge: half a bay", "Rand: halbes Feld")), (self.contrast, GLASS, 5.1, 3.5, ("between two openings", "zwischen zwei Öffnungen"))):
+        for tag, colour, x, wide, note in ((self.focus, DATA, 1.0, 4.3, ("nearest-support cell", "Zelle der nächsten Stütze")), (self.contrast, GLASS, 5.1, 3.5, ("slab minus openings", "Decke ohne Öffnungen"))):
             x0, x1, y0, y1 = bounds[tag]
             kind = {"edge": ("edge piloti", "Randpiloti"), "interior": ("interior piloti", "Innenpiloti"), "corner": ("corner piloti", "Eckpiloti")}[self.cell[tag]["kind"]]
             panels.add(self.panel(wide, 3.3, (x, 1.0, 0), colour), self.text(f"{tag} · " + self.tr(*kind), (x, 2.5, 0), size=S_LABEL, color=colour),
                        self.mini_cell(tag, (x - (0.3 if tag == self.focus else 0.0), 1.45, 0), 0.4 if tag == self.focus else 0.3, colour), self.label(*note, (x, -0.95, 0), size=S_SMALL, color=MUTED))
-            forms.add(self.formula([(f"A = {num(x1 - x0)} m · {num(y1 - y0)} m =", INK), (self.quantity(self.cell[tag]["area"], "m²", 2), colour)], (x, -0.35, 0), color=colour, size=S_SMALL))
-        lines = [(f"{self.tr('Roof planting (solarium level)', 'Dachbepflanzung (Solariumebene)')} · {self.quantity(self.zone_new['planted']['area'], 'm²', 1)} *", GOOD),
+            forms.add(self.formula([("A =", INK), (self.quantity(self.cell[tag]["area"], "m²", 2), colour)], (x, -0.35, 0), color=colour, size=S_SMALL))
+        lines = [(f"{self.tr('Roof paving (solarium level)', 'Dachbelag (Solariumebene)')} · {self.quantity(self.zone_new['roof']['area'], 'm²', 1)} *", GOOD),
                  (self.tr("= roof slab minus solarium and openings (model)", "= Dachplatte ohne Solarium und Öffnungen (Modell)"), MUTED),
                  (f"{self.name(self.zone_new['solarium'])} · {self.quantity(self.zone_new['solarium']['area'], 'm²', 1)} ({self.tr('sourced', 'belegt')})", GLASS),
                  (f"{self.tr('teaching grid', 'Lehrraster')} {self.quantity(self.geometry['grid']['spacing'], 'm', 2)} ({self.tr('sourced', 'belegt')})", MUTED),
-                 (self.tr("25 pilotis in this teaching model * · sources differ: 15–25", "25 Pilotis in diesem Lehrmodell * · Quellen weichen ab: 15–25"), MUTED)]
+                 (self.tr(f"{len(self.trib_new['pilotis'])} roof supports in the teaching reconstruction *", f"{len(self.trib_new['pilotis'])} Dachstützen in der Lehrrekonstruktion *"), MUTED)]
         zones = _engine.VGroup(*[self.text(text, (-0.3, -1.25 - 0.27 * index, 0), size=S_SMALL, color=tone, anchor="l") for index, (text, tone) in enumerate(lines)])
         mark = self.section_mark(plan)
         self.show("grid", new=[plan, cells, north, mark, panels, forms, zones], seconds=5.0)
 
     def _derived(self):
-        """📈 Beat 10: the area load and the loads of the pilotis below the roof follow the soil depth."""
+        """📈 Beat 10: the area load and the loads of the pilotis below the roof follow the paving depth."""
         alpha = _engine.ValueTracker(0)
         self.alpha = alpha
         section, storeys = self.section_view(self.new), self.geometry["storeys"]
         marks = self.storey_marks(section)
-        zones = [(zid, self.zone_old[zid]["area_load"], self.zone_new[zid]["area_load"], colour) for zid, colour in (("planted", DATA), ("solarium", GLASS))]
+        zones = [(zid, self.zone_old[zid]["area_load"], self.zone_new[zid]["area_load"], colour) for zid, colour in (("roof", DATA), ("solarium", GLASS))]
         arrows = [(zid, y, q_old, q_new, colour) for zid, q_old, q_new, colour in zones
                   for first, last in _core.scan(self.zone_new[zid]["pieces"], self.cut_x, axis=0) for y in np.linspace(first, last, max(2, round((last - first) / 2.2) + 1))]
         mix = lambda old, new: old + (new - old) * alpha.get_value()
         udl = self.live(lambda: _engine.VGroup(*[self.arrow(section.at(self.cut_x, y, storeys["roof"]) + (0, 0.02, 0), mix(q_old, q_new) * self.k_q, colour, width=3.5)
                                                  for zid, y, q_old, q_new, colour in arrows]))
-        span = max(self.planted_spans(), key=lambda s: s[1] - s[0])
-        q_label = self.live_label(lambda: "q = " + self.quantity(mix(self.q_old, self.q_new), "kN/m²", 2),
+        span = max(self.roof_spans(), key=lambda s: s[1] - s[0])
+        q_label = self.live_label(lambda: "q = " + self.quantity(mix(0, self.q_new - self.q_old), "kN/m²", 2),
                                   (-6.9, section.at(self.cut_x, 0.0, storeys["roof"])[1] + 0.3 + self.q_new * self.k_q, 0), size=S_LABEL, color=DATA, anchor="l")
         feet = {tag: section.at(self.cut_x, self.pilotis[tag]["y"], 0.0) for tag in self.column}
         r_now = lambda tag: mix(self.reaction_old[tag], self.reaction_new[tag])
@@ -799,20 +800,20 @@ class Beat6_Consistency(_visuals.ClipScene):
         self.show("derived", new=[section, marks, udl, q_label, reactions, ghosts, values, panel], extra=[alpha.animate(rate_func=_engine.smooth).set_value(1.0)], seconds=4.2)
 
     def derivation(self, point):
-        """🧾 R = A · q for the focus and the contrast piloti, counted with the soil depth, with the change as a chip."""
+        """🧾 R = A · q for the focus and the contrast piloti, counted with the paving depth, with the change as a chip."""
         alpha = self.alpha
         mix = lambda old, new: old + (new - old) * alpha.get_value()
         group = _engine.VGroup(self.panel(6.6, 4.3, point, DATA))
         x0, top = point[0] - 3.1, point[1] + 1.85
         group.add(self.label(f"{self.trib_new['method']}, not FEM", f"{self.trib_new['method_de']}, keine FEM", (x0, top, 0), size=S_SMALL, color=MUTED, anchor="l"),
-                  self.formula([("R", GOOD), ("=", INK), ("A", DATA), ("·", INK), ("q", DATA)], (point[0], top - 0.6, 0), color=MUTED))
+                  self.formula([("ΔR", GOOD), ("=", INK), ("A", DATA), ("·", INK), ("Δq", DATA)], (point[0], top - 0.6, 0), color=MUTED))
         for index, (tag, colour) in enumerate(((self.focus, DATA), (self.contrast, GLASS))):
-            entry = self.cell[tag]["zones"]["planted"]
-            area, r_old, r_new = entry["area"], self.reaction_old[tag], self.reaction_new[tag]
+            entry = self.cell[tag]["zones"]["roof"]
+            area, r_old, r_new = self.cell[tag]["area"], self.reaction_old[tag], self.reaction_new[tag]
             y = top - 1.55 - 1.3 * index
             group.add(self.label(f"{self.tr('piloti', 'Piloti')} {tag}", None, (x0, y, 0), size=S_LABEL, color=colour, anchor="l"),
                       self.live(lambda area=area, colour=colour, y=y, r_old=r_old, r_new=r_new: self.formula(
-                          [(f"= {self.quantity(area, 'm²', 2)} ·", INK), (self.quantity(mix(self.q_old, self.q_new), "kN/m²", 2), DATA), ("=", INK), (self.quantity(mix(r_old, r_new), "kN", 0), GOOD)],
+                          [(f"= {self.quantity(area, 'm²', 2)} ·", INK), (self.quantity(mix(self.q_old, self.q_new), "kN/m²", 2), DATA), ("=", INK), (self.quantity(mix(0, r_new - r_old), "kN", 0), GOOD)],
                           (point[0] + 0.4, y - 0.42, 0), color=colour, size=S_SMALL), key=lambda: round(alpha.get_value(), 3)),
                       self.label(f"{self.tr('before', 'vorher')} {self.quantity(r_old, 'kN', 0)}", None, (point[0] + 1.6, y + 0.12, 0), size=S_SMALL, color=MUTED, anchor="r"),
                       self.badge("+" + self.quantity(r_new - r_old, "kN", 0), (point[0] + 3.0, y + 0.12, 0), color=GOOD, size=S_SMALL, anchor="r"))
@@ -831,7 +832,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         origin = np.array(point) - np.array([box["length"] / 2 * scale, box["width"] / 2 * scale, 0])
         to_screen = lambda ring: [origin + (x * scale, y * scale, 0) for x, y in ring]
         top = max(self.delta.values())
-        slab = next(s for s in self.geometry["slabs"] if s["kind"] == "ROOF")
+        slab = next(s for s in self.geometry["slabs"] if s["tag"] == self.tag)
         group.add(_d.region([to_screen(slab["outline"])] + [to_screen(v) for v in slab["voids"]], CONCRETE_FILL, 0.18, INK, _d.W_EDGE), *[_d.polyline(to_screen(v), MUTED, _d.W_THIN, closed=True, dash=0.08) for v in slab["voids"]])
         grid = self.geometry["grid"]
         for label, x in zip(grid["labels_x"], grid["x"]):
@@ -852,23 +853,23 @@ class Beat6_Consistency(_visuals.ClipScene):
         return group
 
     def _spread(self):
-        """🌡️ Beat 11: every piloti changes by its own planted area; the largest, a small one and one that stays at zero."""
+        """🌡️ Beat 11: every piloti changes by its own roof area; the largest, a small one and one that stays at zero."""
         plan_at, scale = (-3.4, 0.15, 0), 0.18
         ranked = sorted(self.delta.items(), key=lambda item: -item[1])
-        largest, smallest = ranked[0][0], next(tag for tag, value in ranked if value == 0)
+        largest, smallest = ranked[0][0], min(ranked, key=lambda item: item[1])[0]
         picks = [(largest, DATA, self.tr("largest", "größte")), (self.focus, GOOD, ""), (self.contrast, GLASS, self.tr("sliver", "Streifen")), (smallest, MUTED, self.tr("under the terrace", "unter der Terrasse"))]
         cells = self.delta_cells(plan_at, scale, {tag: colour for tag, colour, _ in picks})
         card = self.panel(6.2, 2.55, (3.85, 1.65), MUTED)
-        count_note = self.label("25 pilotis in this teaching model * · sources differ: 15–25", "25 Pilotis im Lehrmodell *, Quellen weichen ab: 15–25", (0.95, 0.62, 0), size=S_SMALL, color=MUTED, anchor="l")
+        count_note = self.label("Modelled supports on both storeys *", "Modellierte Stützen beider Geschosse *", (0.95, 0.62, 0), size=S_SMALL, color=MUTED, anchor="l")
         rows = _engine.VGroup(self.label("change of the roof load on the piloti", "Änderung der Dachlast auf dem Piloti", (0.95, 2.65, 0), size=S_SMALL, color=MUTED, anchor="l"))
         for index, (tag, colour, note) in enumerate(picks):
             y = 2.25 - 0.4 * index
             area = self.cell[tag]["area"]
             rows.add(self.text(f"{tag} · {self.quantity(area, 'm²', 2)} · {self.signed(self.delta[tag])} kN" + (f" · {note}" if note else ""), (0.95, y, 0), size=S_LABEL, color=colour, anchor="l"))
         total_old, total_new = self.trib_old["total_reaction"], self.trib_new["total_reaction"]
-        planted = self.zone_new["planted"]["area"]
+        roof = sum(zone["area"] for zone in self.zone_new.values())
         sums = _engine.VGroup(
-            self.formula([("Σ ΔR =", INK), (self.quantity(self.q_new - self.q_old, "kN/m²", 1), DATA), ("·", INK), (self.quantity(planted, "m²", 1) + " *", DATA), ("=", INK), (self.quantity(total_new - total_old, "kN", 0), GOOD)], (4.0, -0.35, 0), color=GOOD),
+            self.formula([("Σ ΔR =", INK), (self.quantity(self.q_new - self.q_old, "kN/m²", 1), DATA), ("·", INK), (self.quantity(roof, "m²", 1) + " *", DATA), ("=", INK), (self.quantity(total_new - total_old, "kN", 0), GOOD)], (4.0, -0.35, 0), color=GOOD),
             self.formula([(self.quantity(total_old, "kN", 0), MUTED), ("→", INK), (self.quantity(total_new, "kN", 0), GOOD), (self.tr("on all pilotis", "auf allen Pilotis"), MUTED)], (4.0, -1.2, 0), color=MUTED, size=S_SMALL))
         top = max(self.delta.values())
         swatches = _engine.VGroup(*[_d.polygon([(2.9 + 0.32 * i, -2.1, 0), (3.22 + 0.32 * i, -2.1, 0), (3.22 + 0.32 * i, -1.85, 0), (2.9 + 0.32 * i, -1.85, 0)], GOOD, 0.1 + 0.6 * i / 4, MUTED, _d.W_HAIR) for i in range(5)])
@@ -937,10 +938,10 @@ class Beat6_Consistency(_visuals.ClipScene):
         self.views = (model_view, stale_view)
 
     def issue_rows(self):
-        """🚦 Expected versus actual of the stale link: the model's issues for the revision, the planted roof load, one reaction and the sum."""
+        """🚦 Expected versus actual of the stale link: the model's issues for the revision, the roof load, one reaction and the sum."""
         values = {i["key"]: i for i in self.issues if i["code"] == "stale-value"}
         rows = [(f"{self.tr('link', 'Verknüpfung')} {LINK} · {self.tr('revision', 'Revision')}", str(i["expected"]), str(i["actual"])) for i in self.issues if i["code"] == "stale-link"]
-        for key, name, unit, digits in (("planted_area_load", self.tr("roof planting load q", "Last der Dachbepflanzung q"), "kN/m²", 2), (f"reaction_{self.focus}", f"{self.tr('reaction at', 'Auflagerkraft bei')} {self.focus}", "kN", 0),
+        for key, name, unit, digits in (("roof_area_load", self.tr("roof paving load q", "Last der Dachbelag q"), "kN/m²", 2), (f"reaction_{self.focus}", f"{self.tr('reaction at', 'Auflagerkraft bei')} {self.focus}", "kN", 0),
                                         ("total_reaction", self.tr("sum of all reactions", "Summe aller Auflagerkräfte"), "kN", 0)):
             rows.append((name, self.quantity(values[key]["expected"], unit, digits), self.quantity(values[key]["actual"], unit, digits)))
         return rows
@@ -1033,7 +1034,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         for item in [a for a in self.analysis_new["assumptions"] if a["id"] in ("mid-surface", "mesh-grid", "linear-elastic")]:
             lines.append((self.wrap(item[self.language()].replace(f"{counts['base_nodes']} base nodes", f"{counts['base_nodes']} base nodes *").replace(f"{counts['base_nodes']} Fußknoten", f"{counts['base_nodes']} Fußknoten *"), 44), True))
         lines.append((self.wrap(self.tr("not transferred: ", "nicht übertragen: ") + self.analysis_new["loss_groups"][0][self.language()], 44), False))
-        pilotis = self.label("* 25 pilotis in this teaching model, sources differ: 15–25", "* 25 Pilotis in diesem Lehrmodell, Quellen weichen ab: 15–25", (0.6, 1.33, 0), size=S_SMALL, color=MUTED, anchor="l")
+        pilotis = self.label("* Source-informed teaching reconstruction", "* Quellenbezogene Lehrrekonstruktion", (0.6, 1.33, 0), size=S_SMALL, color=MUTED, anchor="l")
         head = self.label("review · checked by a person", "Prüfung · von einer Person geprüft", (1.05, 0.86, 0), size=S_LABEL, color=GOOD, anchor="l")
         person = self.person((0.55, 0.83, 0), GOOD, 0.4)
         texts, boxes, ticks = _engine.VGroup(), _engine.VGroup(), _engine.VGroup()
@@ -1075,35 +1076,35 @@ class Beat6_Consistency(_visuals.ClipScene):
 
         self.show("resolve", new=[model_view, head_left, head_right, chip, leaders, fixed_view, link, verdict, done, bcf, ties], seconds=4.6)
 
-    def edit_card(self, point, title, model, soil, color):
-        """🧑 One edit of the slab: person, revision, soil depth, build-up and the unchanged GlobalId."""
+    def edit_card(self, point, title, model, paving, color):
+        """🧑 One edit of the slab: person, revision, paving depth, build-up and the unchanged GlobalId."""
         card = self.panel(5.0, 2.65, point, color)
         x, y = point[0], point[1]
         group = _engine.VGroup(card, self.person((x - 2.1, y + 0.82, 0), color, 0.42), self.text(title, (x - 1.75, y + 0.98, 0), size=S_LABEL, color=color, anchor="l"),
-                               self.text(f"{self.rev(self.revision(model))} · {self.tr('soil', 'Pflanzsubstrat')} {self.quantity(soil, 'm', 2)} *", (x - 2.3, y + 0.5, 0), size=S_LABEL, color=INK, anchor="l"),
-                               self.build_up(model, (x - 1.7, y - 0.95, 0), 1.9, 1.0, labels=False, dims=False, lit="soil"),
+                               self.text(f"{self.rev(self.revision(model))} · {self.tr('paving', 'Belag')} {self.quantity(paving, 'm', 2)} *", (x - 2.3, y + 0.5, 0), size=S_LABEL, color=INK, anchor="l"),
+                               self.build_up(model, (x - 1.7, y - 0.95, 0), 1.9, 1.0, labels=False, dims=False, lit="paving"),
                                self.mono(self.gid, (x - 0.3, y - 0.2, 0), size=S_SMALL, color=DATA, anchor="l"),
                                self.label("same GlobalId", "gleiche GlobalId", (x - 0.3, y - 0.55, 0), size=S_SMALL, color=MUTED, anchor="l"),
-                               self.text("q = " + self.quantity(self.q_of(soil), "kN/m²", 2), (x - 0.3, y - 1.0, 0), size=S_LABEL, color=GOOD, anchor="l"))
+                               self.text("q = " + self.quantity(self.q_of(paving), "kN/m²", 2), (x - 0.3, y - 1.0, 0), size=S_LABEL, color=GOOD, anchor="l"))
         return group
 
     def _fork(self):
         """🍴 Beat 18: two people edit revision 1 at once; both get revision 2 and keep the GlobalId."""
         root = self.panel(4.6, 1.3, (0.0, 2.0), MUTED)
-        root_group = _engine.VGroup(root, self.text(f"{self.rev(self.revision(self.base))} · {self.tr('soil', 'Pflanzsubstrat')} {self.quantity(self.soil_old, 'm', 2)} *", (-2.1, 2.3, 0), size=S_LABEL, color=INK, anchor="l"),
+        root_group = _engine.VGroup(root, self.text(f"{self.rev(self.revision(self.base))} · {self.tr('paving', 'Belag')} {self.quantity(self.paving_old, 'm', 2)} *", (-2.1, 2.3, 0), size=S_LABEL, color=INK, anchor="l"),
                                     self.mono(self.gid, (-2.1, 1.8, 0), size=S_SMALL, color=DATA, anchor="l"),
-                                    self.build_up(self.base, (1.55, 1.45, 0), 1.6, 0.9, labels=False, dims=False, lit="soil"))
-        edit_a = self.edit_card((-3.8, -0.7, 0), self.tr("edit A · person 1", "Änderung A · Person 1"), self.new, self.soil_new, ARCH)
-        edit_b = self.edit_card((3.8, -0.7, 0), self.tr("edit B · person 2", "Änderung B · Person 2"), self.alt, self.soil_alt, STRUCT)
+                                    self.build_up(self.base, (1.55, 1.45, 0), 1.6, 0.9, labels=False, dims=False, lit="paving"))
+        edit_a = self.edit_card((-3.8, -0.7, 0), self.tr("edit A · person 1", "Änderung A · Person 1"), self.new, self.paving_new, ARCH)
+        edit_b = self.edit_card((3.8, -0.7, 0), self.tr("edit B · person 2", "Änderung B · Person 2"), self.alt, self.paving_alt, STRUCT)
         arrows = _engine.VGroup(_engine.Arrow((-0.9, 1.35, 0), (-3.6, 0.7, 0), buff=0, color=ARCH, stroke_width=3), _engine.Arrow((0.9, 1.35, 0), (3.6, 0.7, 0), buff=0, color=STRUCT, stroke_width=3))
         middle = _engine.VGroup(self.unequal((0.0, -0.5, 0)), self.label("different content", "anderer Inhalt", (0.0, -1.05, 0), size=S_SMALL, color=WARN, width=1.9))
         self.show("fork", new=[root_group, edit_a, edit_b, arrows, middle], seconds=4.4)
 
     def _decide(self):
         """⚖️ Beat 19: the GlobalId cannot merge two loads; a person decides."""
-        stacks = _engine.VGroup(self.load_stack((-3.4, -2.3, 0), self.soil_new, scale=0.27, old=self.q_old), self.load_stack((3.4, -2.3, 0), self.soil_alt, scale=0.27, old=self.q_old, side=1))
-        names = _engine.VGroup(self.label(f"{self.tr('edit A', 'Änderung A')} · {self.rev(self.revision(self.new))} · {self.tr('soil', 'Pflanzsubstrat')} {self.quantity(self.soil_new, 'm', 2)} *", None, (-3.4, 2.75, 0), size=S_LABEL, color=ARCH),
-                               self.label(f"{self.tr('edit B', 'Änderung B')} · {self.rev(self.revision(self.alt))} · {self.tr('soil', 'Pflanzsubstrat')} {self.quantity(self.soil_alt, 'm', 2)} *", None, (3.4, 2.75, 0), size=S_LABEL, color=STRUCT),
+        stacks = _engine.VGroup(self.load_stack((-3.4, -2.3, 0), self.paving_new, scale=0.27, old=self.q_old), self.load_stack((3.4, -2.3, 0), self.paving_alt, scale=0.27, old=self.q_old, side=1))
+        names = _engine.VGroup(self.label(f"{self.tr('edit A', 'Änderung A')} · {self.rev(self.revision(self.new))} · {self.tr('paving', 'Belag')} {self.quantity(self.paving_new, 'm', 2)} *", None, (-3.4, 2.75, 0), size=S_LABEL, color=ARCH),
+                               self.label(f"{self.tr('edit B', 'Änderung B')} · {self.rev(self.revision(self.alt))} · {self.tr('paving', 'Belag')} {self.quantity(self.paving_alt, 'm', 2)} *", None, (3.4, 2.75, 0), size=S_LABEL, color=STRUCT),
                                self.mono(self.gid, (-3.4, 2.35, 0), size=S_SMALL, color=DATA), self.mono(self.gid, (3.4, 2.35, 0), size=S_SMALL, color=DATA))
         verdict = _engine.VGroup(self.unequal((0.0, 0.7, 0)), self.paragraph([self.tr("no automatic", "keine automatische"), self.tr("merge", "Zusammenführung")], (0.0, 0.2, 0), size=S_LABEL, color=MUTED, pitch=0.3, anchor="c"),
                                  self.person((0.0, -1.0, 0), GOOD, 0.6), self.label("a person decides", "eine Person entscheidet", (0.0, -1.5, 0), size=S_LABEL, color=GOOD, width=2.9))
@@ -1132,3 +1133,4 @@ class Beat6_Consistency(_visuals.ClipScene):
             pointers.add(self.leader(pill, target, color=colour, dot=True))
         self.show("recap", new=[axon, layers, tie, analysis, pills, pointers], extra=[explode.animate(rate_func=_engine.smooth).set_value(final)], seconds=3.4)
         self.play(*[_engine.Indicate(pill, color=GOOD) for pill in pills[::2]], run_time=1.4)
+                                                                                        

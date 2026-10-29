@@ -1,0 +1,31 @@
+{
+  "tolerance": 1e-9,
+  "stations": [
+    0,
+    0.31,
+    0.72,
+    1
+  ],
+  "sash_width": 0.028,
+  "sash_depth": 0.012,
+  "mullion_width": 0.035,
+  "track_web": 0.003,
+  "glazed_types": [
+    "TY-RIBBON",
+    "TY-METAL-WINDOW",
+    "TY-SALON-GLAZED",
+    "TY-TERRACE-GLAZING"
+  ],
+  "glazed_leaf": {
+    "tag": "D-SALON",
+    "type": "TY-SALON-GLAZED",
+    "panel_stations": [
+      0,
+      1
+    ],
+    "sash_parts": 4,
+    "mullion_parts": 0,
+    "sash_material": "MAT-METAL",
+    "basis": "inferred"
+  }
+}

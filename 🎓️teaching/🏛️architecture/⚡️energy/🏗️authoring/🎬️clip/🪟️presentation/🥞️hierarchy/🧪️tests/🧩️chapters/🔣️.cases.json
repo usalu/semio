@@ -7,10 +7,10 @@
   ],
   "counts": {
     "topics": 6,
-    "clips": 17,
-    "chapters": 38,
-    "canonical_sources": 117,
-    "segment_occurrences": 125,
+    "clips": 26,
+    "chapters": 47,
+    "canonical_sources": 126,
+    "segment_occurrences": 134,
     "clause_selections": 8
   },
   "clips": [
@@ -749,6 +749,141 @@
       ]
     },
     {
+      "id": "grasshopper_anatomy",
+      "topic": "grasshopper",
+      "chapters": [
+        {
+          "scene": "Grasshopper_01_Anatomy",
+          "segments": [
+            {
+              "script": "🏛️architecture/🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py",
+              "scene": "Beat1_Anatomy"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "grasshopper_capsule",
+      "topic": "grasshopper",
+      "chapters": [
+        {
+          "scene": "Grasshopper_02_Capsule",
+          "segments": [
+            {
+              "script": "🏛️architecture/🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py",
+              "scene": "Beat2_Capsule"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "grasshopper_tower",
+      "topic": "grasshopper",
+      "chapters": [
+        {
+          "scene": "Grasshopper_03_Tower",
+          "segments": [
+            {
+              "script": "🏛️architecture/🦗️grasshopper/🎬️clip/🗼️tower/🐍️.py",
+              "scene": "Beat3_Tower"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "grasshopper_casting",
+      "topic": "grasshopper",
+      "chapters": [
+        {
+          "scene": "Grasshopper_04_Casting",
+          "segments": [
+            {
+              "script": "🏛️architecture/🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py",
+              "scene": "Beat4_Casting"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "grasshopper_trees",
+      "topic": "grasshopper",
+      "chapters": [
+        {
+          "scene": "Grasshopper_05_Trees",
+          "segments": [
+            {
+              "script": "🏛️architecture/🦗️grasshopper/🎬️clip/🌳️trees/🐍️.py",
+              "scene": "Beat5_DataTrees"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "excel_anatomy",
+      "topic": "excel",
+      "chapters": [
+        {
+          "scene": "Excel_01_Anatomy",
+          "segments": [
+            {
+              "script": "🏛️architecture/📊️excel/🎬️clip/🦴️anatomy/🐍️.py",
+              "scene": "Beat1_Anatomy"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "excel_references",
+      "topic": "excel",
+      "chapters": [
+        {
+          "scene": "Excel_02_References",
+          "segments": [
+            {
+              "script": "🏛️architecture/📊️excel/🎬️clip/📍️references/🐍️.py",
+              "scene": "Beat2_References"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "excel_program",
+      "topic": "excel",
+      "chapters": [
+        {
+          "scene": "Excel_03_Program",
+          "segments": [
+            {
+              "script": "🏛️architecture/📊️excel/🎬️clip/📋️program/🐍️.py",
+              "scene": "Beat3_Program"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "excel_energy",
+      "topic": "excel",
+      "chapters": [
+        {
+          "scene": "Excel_04_Energy",
+          "segments": [
+            {
+              "script": "🏛️architecture/📊️excel/🎬️clip/⚡️energy/🐍️.py",
+              "scene": "Beat4_Energy"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "optimization_extrema",
       "topic": "optimization",
       "chapters": [
@@ -1147,6 +1282,85 @@
     },
     {
       "left": "BIM_06_Consistency",
+      "right": "Grasshopper_01_Anatomy",
+      "path": [
+        "architecture"
+      ],
+      "level": "topics"
+    },
+    {
+      "left": "Grasshopper_01_Anatomy",
+      "right": "Grasshopper_02_Capsule",
+      "path": [
+        "architecture",
+        "grasshopper"
+      ],
+      "level": "clips"
+    },
+    {
+      "left": "Grasshopper_02_Capsule",
+      "right": "Grasshopper_03_Tower",
+      "path": [
+        "architecture",
+        "grasshopper"
+      ],
+      "level": "clips"
+    },
+    {
+      "left": "Grasshopper_03_Tower",
+      "right": "Grasshopper_04_Casting",
+      "path": [
+        "architecture",
+        "grasshopper"
+      ],
+      "level": "clips"
+    },
+    {
+      "left": "Grasshopper_04_Casting",
+      "right": "Grasshopper_05_Trees",
+      "path": [
+        "architecture",
+        "grasshopper"
+      ],
+      "level": "clips"
+    },
+    {
+      "left": "Grasshopper_05_Trees",
+      "right": "Excel_01_Anatomy",
+      "path": [
+        "architecture"
+      ],
+      "level": "topics"
+    },
+    {
+      "left": "Excel_01_Anatomy",
+      "right": "Excel_02_References",
+      "path": [
+        "architecture",
+        "excel"
+      ],
+      "level": "clips"
+    },
+    {
+      "left": "Excel_02_References",
+      "right": "Excel_03_Program",
+      "path": [
+        "architecture",
+        "excel"
+      ],
+      "level": "clips"
+    },
+    {
+      "left": "Excel_03_Program",
+      "right": "Excel_04_Energy",
+      "path": [
+        "architecture",
+        "excel"
+      ],
+      "level": "clips"
+    },
+    {
+      "left": "Excel_04_Energy",
       "right": "Optimization_Extrema",
       "path": [
         "architecture"

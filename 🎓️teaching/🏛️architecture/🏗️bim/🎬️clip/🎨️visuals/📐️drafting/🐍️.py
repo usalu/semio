@@ -11,6 +11,13 @@ _fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️ener
 _art = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 _theme = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
 _engine = importlib.import_module("manim")
+_measure = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.📏️geometry")
+def P(point) -> np.ndarray:
+    """📌 Manim-ready point: the pure geometry 3-tuple as a float array, so drawing code can scale and offset it."""
+    return np.array(_measure.P(point))
+
+
+signed_area = _measure.signed_area
 
 
 def mix(first: str, second: str, amount: float) -> str:
@@ -39,15 +46,6 @@ NARROW = " "
 DEFAULT_AZIMUTH, DEFAULT_ELEVATION = -40.0, 28.0
 
 
-def P(point) -> np.ndarray:
-    """📍 Coerce a 2D or 3D point to a float 3-vector."""
-    values = np.zeros(3)
-    for index, value in enumerate(point):
-        if index < 3:
-            values[index] = value
-    return values
-
-
 def circle_points(centre, radius: float, count: int = 28, start: float = 0.0, stop: float = 360.0) -> list:
     """⭕ Sample a circle or arc counter-clockwise in degrees."""
     angles = np.radians(np.linspace(start, stop, count + 1))
@@ -67,7 +65,7 @@ def segments(pairs, color=INK, width=W_THIN, opacity=1.0):
 
 def dashes(points, dash: float = 0.12, gap: float = 0.08, closed: bool = False) -> list:
     """┄ Break a polyline into dash segments of fixed screen length."""
-    pts = [P(p) for p in points] + ([P(points[0])] if closed else [])
+    pts = [np.asarray(P(p), float) for p in points] + ([np.asarray(P(points[0]), float)] if closed else [])
     pairs, carry, drawing = [], 0.0, True
     for a, b in zip(pts, pts[1:]):
         length = float(np.linalg.norm(b - a))
@@ -104,12 +102,6 @@ def polygon(points, fill=None, opacity=1.0, stroke=None, width=W_EDGE, stroke_op
     shape.set_fill(fill or INK, opacity if fill else 0)
     shape.set_stroke(stroke or fill or INK, width if stroke else 0, stroke_opacity if stroke else 0)
     return shape
-
-
-def signed_area(ring) -> float:
-    """📐 Shoelace area; positive when counter-clockwise."""
-    pts = np.asarray([P(p)[:2] for p in ring])
-    return 0.5 * float(np.sum(pts[:, 0] * np.roll(pts[:, 1], -1) - np.roll(pts[:, 0], -1) * pts[:, 1]))
 
 
 def region(rings, fill=None, opacity=1.0, stroke=None, width=W_EDGE, stroke_opacity=1.0):
@@ -168,7 +160,7 @@ def place(shape, point, anchor: str = "c"):
     dy = -shape.height / 2 if "u" in anchor else shape.height / 2 if "d" in anchor else 0.0
     if "b" in anchor:
         dy = centre[1] - (shape.get_bottom()[1] + getattr(shape, "descent", 0.0))
-    return shape.shift(P(point) - centre + np.array([dx, dy, 0.0]))
+    return shape.shift(np.asarray(P(point), float) - centre + np.array([dx, dy, 0.0]))
 
 
 DESCENDERS = frozenset("gjpqyQ,;()[]{}$|_@/")
@@ -201,7 +193,7 @@ class View:
 
     def __init__(self, kind: str, point=(0, 0, 0), scale: float = 0.3, centre=(0, 0, 0), *, azimuth=DEFAULT_AZIMUTH,
                  elevation=DEFAULT_ELEVATION, face: str = "south", cut: float = 0.0, axis: str = "x"):
-        self.kind, self.point, self.scale, self.centre = kind, P(point), float(scale), P(centre)
+        self.kind, self.point, self.scale, self.centre = kind, np.asarray(P(point), float), float(scale), np.asarray(P(centre), float)
         self.azimuth, self.elevation, self.face, self.cut, self.axis = azimuth, elevation, face, cut, axis
         phi, eps = math.radians(azimuth), math.radians(elevation)
         self.right = np.array([-math.sin(phi), math.cos(phi), 0.0])
@@ -353,7 +345,7 @@ class Drafting:
     def dimension(self, start, end, text: str | None = None, *, offset: float = 0.3, color=DATA, size=S_SMALL, tick: float = 0.07,
                   text_at: float = 0.5, flip: bool = False):
         """↔️ Architectural dimension: extension lines, a line with oblique ticks and a horizontal label. Positive offset is to the left of start → end."""
-        a, b = P(start), P(end)
+        a, b = np.asarray(P(start), float), np.asarray(P(end), float)
         direction = (b - a) / max(np.linalg.norm(b - a), 1e-9)
         normal = np.array([-direction[1], direction[0], 0.0]) * (-1 if flip else 1)
         sign = 1.0 if offset >= 0 else -1.0
@@ -388,14 +380,14 @@ class Drafting:
 
     def leader(self, source, target, text: str | None = None, *, color=DATA, size=S_SMALL, dot: bool = True, anchor: str | None = None):
         """➖ A leader from a mobject (or point) to a target point, with a dot at the target and an optional label at the start."""
-        t = P(target)
+        t = np.asarray(P(target), float)
         if hasattr(source, "get_center"):
             c = np.array(source.get_center())
             start = np.array([min(max(t[0], source.get_left()[0]), source.get_right()[0]), min(max(t[1], source.get_bottom()[1]), source.get_top()[1]), 0.0])
             if np.linalg.norm(start - t) < 1e-6:
                 start = c
         else:
-            start = P(source)
+            start = np.asarray(P(source), float)
         shape = _engine.VGroup(segments([(start, t)], color, W_THIN))
         if dot:
             shape.add(_engine.Dot(t, radius=0.045, color=color))
@@ -418,7 +410,7 @@ class Drafting:
 
     def north_arrow(self, point, size: float = 0.5, *, color=INK, label: str = "N"):
         """🧭 North arrow: circle, half-filled needle and N."""
-        c = P(point)
+        c = np.asarray(P(point), float)
         ring = _engine.Circle(radius=size / 2, stroke_color=color, stroke_width=W_THIN).move_to(c)
         needle = polygon([c + (0, size * 0.42, 0), c + (-size * 0.16, -size * 0.3, 0), c + (0, -size * 0.12, 0), c + (size * 0.16, -size * 0.3, 0)], color, 0.9, color, W_HAIR)
         letter = self.text(label, c + (0, size * 0.5 + 0.14, 0), size=S_SMALL, color=color)
@@ -426,7 +418,7 @@ class Drafting:
 
     def scale_bar(self, point, scale: float, metres: float = 10.0, *, color=INK, steps: int = 2):
         """📏 Alternating scale bar of ``metres`` metres starting at ``point`` (left end)."""
-        c = P(point)
+        c = np.asarray(P(point), float)
         step = metres / steps * scale
         shape = _engine.VGroup()
         for index in range(steps):

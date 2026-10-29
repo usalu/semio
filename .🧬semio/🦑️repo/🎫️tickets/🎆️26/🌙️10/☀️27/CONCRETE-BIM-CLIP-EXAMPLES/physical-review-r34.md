@@ -1,0 +1,9 @@
+# Physical Storey Review R34
+
+Generated and visually inspected a1840×2240 four-storey occupied-geometry sheet from current445-element source SHA25647021423a4ebced809845dfd68e6255ae20ecd9c9843d37df2e32200cc8e9f9c. Retained inputs physical-review-r34.py and .mjs; output generated/physical-review-r34.json and .png. Uses public building_geometry and part_band_footprints, includes all actual curtain-hosted openings and exactly one curtain product; no axis-aligned ramp replacement or duplicate curtain pass. Cuts are cellar−1.20,ground1.20,first4.40,roof7.80m. Shared beam material is owned elsewhere.
+
+Initial diagnostic filtering incorrectly omitted structural substrates farther than50mm below finish; repaired the renderer input, not the model, to include every slab assigned to that storey. Final polygon counts cellar60/ground2941/first1814/roof520. Interior generated slab triangulation edges are hidden for readability. Native geometry itself is unchanged.
+
+Visual inspection shows the broad ground registration and revised door/opening family, disjoint interior rooms, first-floor room/ribbon/garden layout, cellar enclosure/shaft geometry and curved roof screen around its real aperture. These are checks of actual model geometry, not a historical-survey claim. Circular objects at front hall columns are explicitly FIX-HALL-TABLE1/2 below-cut furnishings, not misplaced columns. Source identity was checked before drawing conclusions.
+
+Diagnostic limits: rooms have bounding-box label placement; occlusion is simplified; below-cut stair/ramp/fitting display follows source storey so a first-storey flight ending at roof is not proof of a missing roof arrival. The roof arrival is being independently audited from nativeparts and primary photos. No chimney was invented from unidentified drawing marks. This sheet does not replace native Manim/Cairo clip renders, still blocked by repository launcher fieldrestart.

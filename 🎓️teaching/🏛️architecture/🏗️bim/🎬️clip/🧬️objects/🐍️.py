@@ -29,7 +29,7 @@ S_SMALL, S_LABEL, S_BODY, W_THIN, W_EDGE, W_HAIR = _drafting.S_SMALL, _drafting.
 mix, place, segments, polygon, polyline, P, BACKGROUND = _drafting.mix, _drafting.place, _drafting.segments, _drafting.polygon, _drafting.polyline, _drafting.P, _drafting.BACKGROUND
 frame_box = _panels.frame_box
 
-SELECTED = "B3"
+SELECTED = _model.role("column_example")
 WALL = "W-S"
 LEFT = -4.7
 LW = 4.1
@@ -68,8 +68,8 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
          "An instance is one particular object: this piloti of the Villa Savoye, with its own GlobalId.",
          "Eine Instanz ist ein bestimmtes Objekt: diese Stütze der Villa Savoye mit eigener GlobalId."],
         ["occurrences",
-         "A type holds what all pilotis share; every piloti placed in the building is an occurrence of it.",
-         "Ein Typ hält, was alle Pilotis gemeinsam haben; jede platzierte Stütze ist ein Vorkommen davon."],
+         "A type holds what its occurrences share. These pilotis share one type; hall and canopy columns use other types.",
+         "Ein Typ hält, was seine Vorkommen teilen. Diese Pilotis haben einen Typ; Hallen- und Gartenstützen haben andere Typen."],
         ["pset",
          "A property set adds named values to the type: LoadBearing says that each piloti carries its share of the floor.",
          "Ein Property Set ergänzt benannte Werte am Typ: LoadBearing sagt, dass jede Stütze ihren Anteil der Decke trägt."],
@@ -77,14 +77,14 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
          "One object can have several representations: its axis, its footprint and its body.",
          "Ein Objekt kann mehrere Darstellungen haben: Achse, Grundfläche und Körper."],
         ["geometry",
-         "The body is a circle extruded along its axis: the radius and the height are values, drawn as dimension lines.",
-         "Der Körper ist ein entlang der Achse extrudierter Kreis: Radius und Höhe sind Werte, gezeichnet als Maßlinien."],
+         "This selected body is a circular extrusion: radius and height become dimensions. Other support profiles retain their native bores.",
+         "Dieser gewählte Körper ist eine Kreisextrusion: Radius und Höhe werden zu Maßen. Andere Stützenprofile behalten ihre nativen Bohrungen."],
         ["methods",
          "A method is behaviour: the application computes the cross-section and the volume from these values.",
          "Eine Methode ist Verhalten: Die Anwendung berechnet Querschnitt und Volumen aus diesen Werten."],
         ["total",
-         "The same method runs for every occurrence and adds up the concrete of all pilotis.",
-         "Dieselbe Methode wird für jedes Vorkommen ausgeführt und summiert den Beton aller Pilotis."],
+         "The same method sums the geometric section envelopes of the selected type; a measured concrete core would need separate evidence.",
+         "Die Methode summiert die geometrischen Querschnittshüllen des gewählten Typs; ein vermessener Betonkern braucht eigene Belege."],
         ["change",
          "Change the diameter in the type and every occurrence follows; volume and total update, the GlobalId stays.",
          "Ändert man den Durchmesser im Typ, folgen alle Vorkommen: Volumen und Summe ändern sich, die GlobalId bleibt."],
@@ -101,14 +101,14 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
          "Composition means parts: the wall has an opening, which IfcRelVoidsElement cuts out of it.",
          "Komposition bedeutet Teile: Die Wand hat eine Öffnung, die IfcRelVoidsElement aus ihr ausschneidet."],
         ["window",
-         "A window fills that opening through IfcRelFillsElement; the glass takes the place of the opening.",
-         "Ein Fenster füllt diese Öffnung über IfcRelFillsElement; das Glas nimmt den Platz der Öffnung ein."],
+         "A window fills that opening through IfcRelFillsElement; its frame and glass occupy distinct physical parts.",
+         "Ein Fenster füllt diese Öffnung über IfcRelFillsElement; Rahmen und Glas bilden getrennte physische Teile."],
         ["layers",
-         "The wall also has a material: a layer set of render, brick and plaster adds up to its thickness.",
-         "Die Wand hat auch ein Material: Ein Schichtenaufbau aus Außenputz, Ziegel und Innenputz ergibt ihre Dicke."],
+         "The wall material set distinguishes solid leaves and an air cavity; their widths add to its envelope thickness.",
+         "Der Wandaufbau unterscheidet feste Schalen und einen Lufthohlraum; ihre Breiten ergeben die Hüllstärke."],
         ["distinction",
-         "Keep is-a and has-a apart: a piloti is a built element; a window is not a wall, it fills an opening.",
-         "Unterscheide »ist ein« und »hat ein«: Die Stütze ist ein Bauteil; das Fenster ist keine Wand, es füllt eine Öffnung."],
+         "Keep class and composition apart: a window fills an opening, while the hanging-garden opening remains unfilled.",
+         "Unterscheide Klasse und Komposition: Ein Fenster füllt eine Öffnung, während die Öffnung am hängenden Garten ungefüllt bleibt."],
         ["exchange",
          "IFC exchanges declarative data and relationships: class, GlobalId, radius, height and properties travel as text.",
          "IFC tauscht deklarative Daten und Beziehungen aus: Klasse, GlobalId, Radius, Höhe und Eigenschaften reisen als Text."],
@@ -137,14 +137,15 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
         """📦 Every model value the story reads, resolved once from the one model object."""
         model = _model.load_model()
         geo = _model.building_geometry(model)
-        kind = next(t for t in model["types"] if t["class"] == "IfcColumnType")
+        type_tag = next(e["type"] for e in model["elements"] if e["tag"] == SELECTED)
+        kind = next(t for t in model["types"] if t["tag"] == type_tag)
         occ = _model.type_occurrences(kind["tag"], model)
         wall = next(w for w in geo["walls"] if w["tag"] == WALL)
         s = SimpleNamespace(
             model=model, geo=geo, kind=kind, occ=occ, count=len(occ), lang=self.language(), wall=wall, opening=wall["openings"][0], sub=None, chains={},
             sel=next(p for p in geo["pilotis"] if p["tag"] == SELECTED), element=_model.element(SELECTED, model),
             q_sel=_model.quantities(SELECTED, model), q_all=_model.quantities(kind["tag"], model), body=_model.represent(SELECTED, "body", model),
-            slab=next(x for x in geo["slabs"] if x["kind"] == "FLOOR"), q_wall=_model.quantities(WALL, model),
+            slab=next(x for x in geo["slabs"] if x["tag"] == _model.role("floor", model)), q_wall=_model.quantities(WALL, model),
             wall_element=_model.element(WALL, model), kind_element=_model.element(kind["tag"], model), classes=Counter(e["class"] for e in model["elements"]),
             base_diameter=kind["profile"]["diameter"]["value"])
         s.q_slab = _model.quantities(s.slab["tag"], model)
@@ -155,11 +156,12 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
         key = round(round(diameter / 0.02) * 0.02, 2)
         if key not in s.chains:
             twin = copy.deepcopy(s.model)
-            next(t for t in twin["types"] if t["class"] == "IfcColumnType")["profile"]["diameter"]["value"] = key
+            next(t for t in twin["types"] if t["tag"] == s.kind["tag"])["profile"]["diameter"]["value"] = key
             q = _model.quantities(SELECTED, twin)
             area = round(q["cross_section_area"], 5)
             volume = round(area * q["height"], 4)
-            s.chains[key] = SimpleNamespace(diameter=key, radius=q["radius"], height=q["height"], area=area, volume=volume, count=s.count, total=round(s.count * volume, 4))
+            volumes = [_model.quantities(tag, twin)["volume"] for tag in s.occ]
+            s.chains[key] = SimpleNamespace(diameter=key, radius=q["radius"], height=q["height"], area=area, volume=volume, count=s.count, volumes=volumes, total=sum(volumes))
         return s.chains[key]
 
     def _leave(self, s, *keep):
@@ -264,7 +266,7 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
             return [x["tag"] for x in geo["slabs"]]
         if cls == "IfcWall":
             return list(dict.fromkeys([w["tag"] for w in geo["walls"]] + [x["tag"] for x in geo.get("screens", ())]))
-        return [o["window_tag"] for w in geo["walls"] for o in w["openings"]]
+        return [o["fill_tag"] for w in geo["walls"] for o in w["openings"] if o["fill_class"] == "IfcWindow"]
 
     def _plan(self, s, point, scale, **options):
         """📋 Ground-floor plan from the shared widget; ``plan.centres[tag]`` are the piloti centres on the screen."""
@@ -317,7 +319,7 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
         guids = {e["guid"] for e in m["elements"]}
         s.count_chip = self._chip(f"{len(m['elements'])} " + self.tr("objects = ", "Objekte = ") + f"{len(guids)} GlobalIds", (0, 0, 0), DATA)
         place(s.count_chip, (6.8, -2.3, 0), "r")
-        marks = (("B3", STRUCT), (s.slab["tag"], SLAB), (WALL, ARCH))
+        marks = ((_model.role("column_example"), STRUCT), (s.slab["tag"], SLAB), (WALL, ARCH))
         s.guid_lines = _engine.VGroup(*[self.mono(f"{tag:<5}{_model.global_id(tag)}", (LEFT - 2.0, -0.28 - 0.25 * i, 0), size=S_SMALL, color=color, anchor="l") for i, (tag, color) in enumerate(marks)])
         flashes = [self._beam(self._tags(s, cls), s.axon, CLASS_COLOR[cls]) for cls in CLASS_COLOR]
         sparks = [_engine.Flash(s.axon.anchors[tag], color=DATA, flash_radius=0.17, line_length=0.1, num_lines=8, run_time=0.5) for tag in s.occ]
@@ -402,8 +404,8 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
             _engine.AnimationGroup(_engine.Flash(axon.anchors[SELECTED], color=DATA, flash_radius=0.4, run_time=1.0), _engine.FadeIn(s.others), run_time=1.0)), seconds=4.4)
 
     def _legend(self, point, anchor="l"):
-        """⭐ The legend of the piloti-count star: 25 in this teaching model, sources differ."""
-        return self.label("* in this teaching model; sources differ: 15–25", "* in diesem Lehrmodell; Quellen weichen ab: 15–25", point, size=S_SMALL, color=MUTED, anchor=anchor, width=LW - 0.1)
+        """⭐ The legend of the piloti-count star: counted in this teaching reconstruction."""
+        return self.label("* source-informed teaching reconstruction", "* quellenbezogene Lehrrekonstruktion", point, size=S_SMALL, color=MUTED, anchor=anchor, width=LW - 0.1)
 
     def _occurrences(self, s):
         """4️⃣ One type, all occurrences light up on the ground-floor plan."""
@@ -428,7 +430,7 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
         s.ring = _engine.Circle(radius=0.2, stroke_color=DATA, stroke_width=2.2).move_to(s.plan.centres[SELECTED])
         s.counter = self.live_label(lambda: f"{int(round(s.counter_value.get_value() - 0.4999))} / {s.count}*", (LEFT, -0.45, 0), size=44, color=STRUCT)
         s.counter_label = _engine.VGroup(self.label("occurrences in this teaching model*", "Vorkommen in diesem Lehrmodell*", (LEFT, -1.1, 0), size=S_LABEL, color=INK, width=LW - 0.1),
-                                         self.label("* sources differ: 15–25", "* Quellen weichen ab: 15–25", (LEFT, -1.6, 0), size=S_SMALL, color=MUTED, width=LW - 0.1))
+                                         self.label("* modelled occurrences on both storeys", "* modellierte Vorkommen beider Geschosse", (LEFT, -1.6, 0), size=S_SMALL, color=MUTED, width=LW - 0.1))
         self.step("occurrences", _engine.Succession(
             _engine.AnimationGroup(*gone, _engine.FadeIn(s.plan), _engine.FadeIn(s.plan_title), _engine.FadeIn(s.type_card), _engine.FadeIn(s.chip), _engine.FadeIn(s.relation),
                                    _engine.FadeIn(s.counter), _engine.FadeIn(s.counter_label), *self._act(s, "Type = what all occurrences share", "Typ = was alle Vorkommen teilen"), run_time=1.2),
@@ -437,7 +439,7 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
             _engine.AnimationGroup(_engine.FadeIn(s.ring), self._pulse(s.chip, color=DATA), run_time=0.8)), seconds=6.0)
 
     def _pset(self, s):
-        """🧾 The property set of the type, B3's own slab share hatched on the plan and the load path of LoadBearing TRUE drawn from slab to foundation, with every printed product holding."""
+        """🧾 The property set of the type, 19's own slab share hatched on the plan and the load path of LoadBearing TRUE drawn from slab to foundation, with every printed product holding."""
         gone = self._leave(s, s.plan, s.lit, s.follow, s.ring, s.plan_title)
         lang = s.lang
         trib = _model.tributary(s.model)
@@ -460,12 +462,12 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
         composition = " + ".join(self.number(p["value"], 2) for p in parts)
         names = " + ".join(p[lang].lower() if lang == "en" else p[lang] for p in parts)
         small = dict(size=S_SMALL, color=MUTED, width=LW - 0.1)
-        s.share_text = _engine.VGroup(self.label("B3 carries this part of the slab:", "B3 trägt diesen Teil der Decke:", (LEFT, 0.25, 0), size=S_LABEL, color=INK),
+        s.share_text = _engine.VGroup(self.label("19 carries this part of the slab:", "19 trägt diesen Teil der Decke:", (LEFT, 0.25, 0), size=S_LABEL, color=INK),
                                       self.label("tributary estimate (hatched), ramp void excluded", "Einzugsfläche geschätzt (schraffiert), ohne Rampe", (LEFT, -0.82, 0), **small),
                                       self.text(f"q = {self.quantity(q, 'kN/m²', 2)} = {composition}", (LEFT, -1.07, 0), size=S_SMALL, color=INK, width=LW - 0.1),
                                       self.text(names, (LEFT, -1.32, 0), **small),
                                       self.text(f"{self.quantity(area, 'm²', 3)} × {self.quantity(q, 'kN/m²', 2)} = {self.quantity(reaction, 'kN', 2)} *", (LEFT, -1.58, 0), size=S_SMALL, color=DATA, width=LW - 0.1),
-                                      self.label("occurrence value, B3 alone;", "Vorkommenswert, nur für B3;", (LEFT, -1.84, 0), **small),
+                                      self.label("occurrence value, 19 alone;", "Vorkommenswert, nur für 19;", (LEFT, -1.84, 0), **small),
                                       self.label(f"all pilotis: {spread}", f"alle Stützen: {spread}", (LEFT, -2.08, 0), **small),
                                       self.label("* teaching-model loads", "* Lasten des Lehrmodells", (LEFT, -2.38, 0), **small))
         load = s.load = self._load_path(s, reaction)
@@ -476,7 +478,7 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
             _engine.AnimationGroup(_engine.FadeIn(load.labels), self._pulse(s.pset.rows[0], color=DATA, run_time=0.8), run_time=0.8)), seconds=6.0)
 
     def _load_path(self, s, reaction):
-        """⬇️ The path of the load for LoadBearing TRUE: slab load on SL-1, through B3, into the foundation; the reaction is B3's own value."""
+        """⬇️ The path of the load for LoadBearing TRUE: slab load on SL-1, through 19, into the foundation; the reaction is 19's own value."""
         cx, base, scale = -1.3, -1.75, 0.42
         top = base + s.q_sel["height"] * scale
         deck = top + s.slab["thickness"] * scale
@@ -642,14 +644,14 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
         s.formula_group = s.formulas
 
     def _bars(self, s, t):
-        """📊 Two bars on one scale: concrete of all pilotis (live) against the first-floor slab."""
+        """📊 Two bars on one scale: column section envelopes against the regional slab envelope."""
         slab = s.q_slab
         top = 3.2
 
         def build():
             chain = self._chain(s, t.dia.get_value())
             group = _engine.VGroup()
-            for index, (name, value, color) in enumerate(((self.tr("all pilotis", "alle Pilotis"), chain.total, STRUCT), (self.tr("slab SL-1", "Decke SL-1"), slab["volume"], SLAB))):
+            for index, (name, value, color) in enumerate(((self.tr("section envelopes of this type", "Querschnittshüllen dieses Typs"), chain.total, STRUCT), (self.tr("slab envelope SL-1", "Deckenhülle SL-1"), slab["volume"], SLAB))):
                 y = -1.15 - 0.45 * index
                 width = max(value / slab["volume"] * top, 0.04)
                 group.add(self.text(name, (LEFT - 2.0, y, 0), size=S_SMALL, color=LABEL, anchor="l"))
@@ -663,15 +665,15 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
         x = LEFT - 2.0
         parts = _engine.VGroup()
         chain_of = lambda: self._chain(s, t.dia.get_value())
-        parts.product = self.live_label(lambda: f"{int(t.done.get_value() + 0.0001)} × {self.quantity(chain_of().volume, 'm³', 4)} = {self.quantity(int(t.done.get_value() + 0.0001) * chain_of().volume, 'm³', 4)}",
+        parts.product = self.live_label(lambda: f"Σ Vᵢ ({int(t.done.get_value() + 0.0001)}) = {self.quantity(sum(chain_of().volumes[:int(t.done.get_value() + 0.0001)]), 'm³', 4)}",
                                         (x, 1.12, 0), size=S_LABEL, color=INK, anchor="l")
-        parts.headline = self.live_label(lambda: "≈ " + self.quantity(int(t.done.get_value() + 0.0001) * chain_of().volume, "m³", 2), (x, 0.42, 0), size=40, color=DATA, anchor="l")
+        parts.headline = self.live_label(lambda: "≈ " + self.quantity(sum(chain_of().volumes[:int(t.done.get_value() + 0.0001)]), "m³", 2), (x, 0.42, 0), size=40, color=DATA, anchor="l")
         slab = s.q_slab
         parts.legend = self._legend((x, 0.86, 0))
         parts.slab = _engine.VGroup(
-            self.label("first-floor slab SL-1", "Geschossdecke SL-1", (x, -0.15, 0), size=S_SMALL, color=LABEL, anchor="l"),
-            self.text(f"{self.quantity(slab['area'], 'm²', 2)} × {self.quantity(slab['thickness'], 'm', 2)} = {self.quantity(slab['volume'], 'm³', 3)}", (x, -0.5, 0), size=S_SMALL, color=INK, anchor="l"),
-            self._assumed((x + 3.3, -0.15, 0), "l"))
+            self.label("first-floor structural envelope SL-1", "Tragwerkshülle der Geschossdecke SL-1", (x, -0.15, 0), size=S_SMALL, color=LABEL, anchor="l"),
+            self.text("Σ Aᵣ · hᵣ = " + self.quantity(slab["volume"], "m³", 3), (x, -0.5, 0), size=S_SMALL, color=INK, anchor="l"),
+            self.label("geometric envelope includes hollow units", "Geometrische Hülle einschließlich Hohlkörper", (x, -0.82, 0), size=S_SMALL, color=MUTED, anchor="l", width=LW))
         parts.bars = self._bars(s, t)
         if change:
             parts.diameter = self.live_label(lambda: "Ø = " + self.quantity(chain_of().diameter, "m", 2), (x, 2.3, 0), size=S_LABEL, color=DATA, anchor="l")
@@ -681,18 +683,18 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
         else:
             parts.diameter = self.label(f"all {s.count}* pilotis of the type", f"alle {s.count}* Pilotis des Typs", (x, 2.3, 0), size=S_LABEL, color=MUTED, anchor="l")
             parts.area = self.live_label(lambda: "V = " + self.quantity(chain_of().volume, "m³", 4), (x, 1.85, 0), size=S_LABEL, color=INK, anchor="l")
-            parts.volume = self.label("per piloti, from the method", "je Stütze, aus der Methode", (x, 1.55, 0), size=S_SMALL, color=MUTED, anchor="l")
+            parts.volume = self.label("selected piloti; occurrence heights differ", "gewählte Stütze; Vorkommenshöhen unterscheiden sich", (x, 1.55, 0), size=S_SMALL, color=MUTED, anchor="l")
         return parts
 
     def _concrete_axon(self, s, axon, t):
-        """🏗️ Concrete rising in every piloti of the axonometric, one after the other; the stroke width follows the type diameter."""
+        """🏗️ The geometric section envelope rising in every piloti of the axonometric, one after the other; the stroke width follows the type diameter."""
         view, pilotis = axon.view, s.geo["pilotis"]
         order = {tag: index for index, tag in enumerate(s.occ)}
 
         def build():
             value, width = t.done.get_value(), 5.0 * t.dia.get_value() / s.base_diameter
             lines = []
-            for p in pilotis:
+            for p in (p for p in pilotis if p["tag"] in order):
                 f = clamp(value - order[p["tag"]])
                 if f > 0.001:
                     lines.append(_engine.Line(view(p["x"], p["y"], p["base"]), view(p["x"], p["y"], p["base"] + f * (p["top"] - p["base"])), color=CONCRETE, stroke_width=width))
@@ -767,7 +769,7 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
         self.step("inheritance", _engine.Succession(*steps), seconds=8.2)
 
     def _attribute_values(self, s):
-        """🧾 The value of every IfcColumn attribute on B3, in display strings."""
+        """🧾 The value of every IfcColumn attribute on 19, in display strings."""
         lang, sel, element, body = s.lang, s.sel, s.element, s.body
         notset, absent = self.tr("not set", "nicht gesetzt"), self.tr("not in model", "nicht im Modell")
         return {"GlobalId": element["guid"], "OwnerHistory": absent, "Name": element["name"][lang], "Description": notset, "ObjectType": notset,
@@ -814,7 +816,7 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
         relations = _model.relations_of(SELECTED, s.model)
         contained = next(r["class"] for r in relations if "Contained" in r["class"])
         aggregates = next(r["class"] for r in _model.relations_of(s.model["building"]["tag"], s.model) if "Aggregates" in r["class"])
-        sec = s.sec = self.villa_section((3.45, -0.2, 0), 0.28, model=s.model, cut="row:3", highlight=(SELECTED, s.slab["tag"], WALL), levels=False, labels=False,
+        sec = s.sec = self.villa_section((3.45, -0.2, 0), 0.28, model=s.model, cut="row:C", highlight=(SELECTED, s.slab["tag"], WALL), levels=False, labels=False,
                                          highlight_colors={SELECTED: DATA, s.slab["tag"]: SLAB, WALL: ARCH})
         storeys = {t["id"]: s.geo["storeys"][t["id"]] for t in s.model["storeys"]}
         width = s.geo["box"]["width"]
@@ -851,52 +853,25 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
         return place(chip, point)
 
     def _south(self, s, point, scale):
-        """🏛️ South elevation: set-back ground floor, pilotis, first-floor wall band, ribbon opening, window and roof screens, all in elevation coordinates."""
-        g = s.geo
-        box = g["box"]
-        view = _drafting.View("elevation", point, scale, (box["length"] / 2, 0, box["height"] / 2), face="south")
-        v = lambda x, z: view(x, 0, z)
-        parts = {}
-        out = _engine.VGroup()
-        L = box["length"]
-        ground = [sp for sp in g["spaces"] if sp["storey"] == "ground"]
-        xs = [x for sp in ground for x, _ in sp["outline"]]
-        soffit = s.slab["top"] - s.slab["thickness"]
-        out.add(_drafting.hatch([v(-1.0, 0), v(L + 1.0, 0), v(L + 1.0, -0.4), v(-1.0, -0.4)], MUTED, 0.08, 45, 0.9, 0.5))
-        out.add(segments([(v(-1.0, 0), v(L + 1.0, 0))], INK, 2.0))
-        out.add(polygon([v(min(xs), 0), v(max(xs), 0), v(max(xs), soffit), v(min(xs), soffit)], GREEN_GROUND, 0.9, GREEN_GROUND, 1.0))
-        pilotis = _engine.VGroup()
-        r = g["pilotis"][0]["radius"]
-        for x in sorted({p["x"] for p in g["pilotis"]}):
-            pilotis.add(polygon([v(x - r, 0), v(x + r, 0), v(x + r, soffit), v(x - r, soffit)], STRUCT, 0.75, STRUCT, 1.2))
-        parts["pilotis"] = pilotis
-        out.add(pilotis)
-        top1 = s.slab["top"]
-        slab_face = polygon([v(0, soffit), v(L, soffit), v(L, top1), v(0, top1)], SLAB, 0.55, SLAB, W_EDGE)
-        parts["slab"] = slab_face
-        out.add(slab_face)
-        wall = s.wall
-        face = polygon([v(0, wall["base"]), v(L, wall["base"]), v(L, wall["top"]), v(0, wall["top"])], mix(ARCH, BACKGROUND, 0.7), 1.0, ARCH, W_EDGE)
-        parts["wall"] = face
-        out.add(face)
-        roof = next(x for x in g["slabs"] if x["kind"] == "ROOF")
-        out.add(polygon([v(0, wall["top"]), v(L, wall["top"]), v(L, roof["top"]), v(0, roof["top"])], SLAB, 0.55, SLAB, W_EDGE))
-        for screen in g.get("screens", ()):
-            sx = [x for x, _ in screen["path"]]
-            out.add(polygon([v(min(sx), roof["top"]), v(max(sx), roof["top"]), v(max(sx), screen["top"]), v(min(sx), screen["top"])], mix(INK, BACKGROUND, 0.7), 0.9, INK, 1.2))
-            if scale > 0.2:
-                out.add(self.label("solarium screen", "Solarium-Wand", v((min(sx) + max(sx)) / 2, (roof["top"] + screen["top"]) / 2), size=S_SMALL, color=LABEL, width=1.6))
-        op = s.opening
-        corners = [v(op["start"], op["sill_z"]), v(op["end"], op["sill_z"]), v(op["end"], op["head_z"]), v(op["start"], op["head_z"])]
-        parts["opening"] = polygon(corners, BACKGROUND, 1.0, DATA, W_EDGE)
-        out.add(parts["opening"])
-        panes = [(v(op["start"] + (op["end"] - op["start"]) * k / 12, op["sill_z"]), v(op["start"] + (op["end"] - op["start"]) * k / 12, op["head_z"])) for k in range(1, 12)]
-        parts["window"] = _engine.VGroup(polygon(corners, GOOD, 0.4, GOOD, W_EDGE), segments(panes, GOOD, 1.0, 0.9))
-        parts["corners"] = corners
-        parts["column"] = v(s.sel["x"], soffit / 2)
-        parts["band"] = v(L * 0.06, (wall["base"] + wall["top"]) / 2)
-        parts["glass"] = v((op["start"] + op["end"]) / 2, (op["sill_z"] + op["head_z"]) / 2)
-        out.view, out.parts, out.v = view, parts, v
+        """🏛️ Shared source elevation with addressable wall, void and glazing stages."""
+        op, wall = s.opening, s.wall
+        out = self.villa_elevation("south", point, scale, model=s.model, levels=False,
+                                   highlight=(WALL, op["fill_tag"], SELECTED),
+                                   highlight_colors={WALL: ARCH, op["fill_tag"]: GOOD, SELECTED: STRUCT}, dim=0.0)
+        direction = (np.array(wall["end"]) - np.array(wall["start"])) / wall["length"]
+        start = np.array(wall["start"]) + direction * op["start"]
+        end = np.array(wall["start"]) + direction * op["end"]
+        corners = [out.at(*start, op["sill_z"]), out.at(*end, op["sill_z"]), out.at(*end, op["head_z"]), out.at(*start, op["head_z"])]
+        glazing = out.parts[op["fill_tag"]]
+        out.remove(*glazing.submobjects)
+        opening = polygon(corners, None, stroke=DATA, width=W_EDGE)
+        out.add(opening)
+        out.parts.update({"pilotis": _engine.VGroup(*[out.parts[p["tag"]] for p in s.geo["pilotis"] if p["tag"] in out.parts]),
+                          "slab": out.parts[s.slab["tag"]], "wall": out.parts[WALL], "opening": opening, "window": glazing,
+                          "corners": corners, "column": out.at(s.sel["x"], s.sel["y"], (s.sel["base"] + s.sel["top"]) / 2),
+                          "band": out.at(*(np.array(wall["start"]) + direction * wall["length"] / 2), (wall["base"] + wall["top"]) / 2),
+                          "glass": np.mean(corners, axis=0)})
+        out.v = out.at
         return out
 
     def _opening(self, s):
@@ -934,7 +909,7 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
                                                           (-0.15, 2.42, 0), size=S_LABEL, color=DATA, anchor="l")), key=lambda: round(reveal.get_value() * 30))
         wall_line = self.text(self.tr("wall ", "Wand ") + f"{WALL}: {self.quantity(q['length'], 'm', 2)} × {self.quantity(q['height'], 'm', 2)} = {self.quantity(q['gross_side_area'], 'm²', 2)} *",
                               (-0.15, 2.05, 0), size=S_SMALL, color=LABEL, anchor="l")
-        orientation = self.label("south façade · teaching orientation", "Südfassade · Annahme des Lehrmodells", (-0.15, -1.55, 0), size=S_SMALL, color=MUTED, anchor="l")
+        orientation = self.label("northwest façade · interpreted orientation", "Nordwestfassade · interpretierte Ausrichtung", (-0.15, -1.55, 0), size=S_SMALL, color=MUTED, anchor="l")
         footnote = self.label("* teaching-model assumption: ribbon size, wall height", "* Annahme des Lehrmodells: Bandfenstergröße, Wandhöhe", (-0.15, -1.85, 0), size=S_SMALL, color=MUTED, anchor="l")
         s.comp = SimpleNamespace(wall_box=wall_box, opening=opening_chip, window=window_chip, usage=usage, layers=layer_box, voids=voids_link, fills=fills_link,
                                  material=material_link, hatch=hatch, area=area, wall_line=wall_line, dims=dims, orientation=orientation, footnote=footnote, reveal=reveal, v=v, width=width, height=height)
@@ -967,24 +942,25 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
         origin = np.array([3.0 - total * scale / 2, -0.3, 0])
         strip, names = _engine.VGroup(), _engine.VGroup()
         x = origin[0]
-        anchors = ("r", "c", "l")
         for index, layer in enumerate(layers):
             thickness = layer["thickness"]["value"]
             width = thickness * scale
             ring = [(x, origin[1]), (x + width, origin[1]), (x + width, origin[1] + 1.2), (x, origin[1] + 1.2)]
-            strip.add(polygon(ring, LAYER_COLOR[layer["id"]], 0.9, INK, 1.4), _drafting.hatch(ring, INK, 0.07, (45, 135, 45)[index], W_HAIR, 0.6))
-            label_x = (x + width / 2, 3.0, 4.7)[index] if index != 0 else origin[0] + 0.4
-            label = self.text(f"{_sheet.short_name(layer['name'], lang)}  {self.quantity(thickness, 'm', 2)}", (label_x, origin[1] + 1.55, 0), size=S_SMALL, color=INK, anchor=anchors[index])
-            lead = segments([((x + width / 2, origin[1] + 1.2), (x + width / 2, origin[1] + 1.4))], MUTED, W_HAIR, 0.8)
-            names.add(label, lead)
+            empty = layer.get("is_void", False)
+            strip.add(polygon(ring, BACKGROUND if empty else LAYER_COLOR.get(layer["id"], mix(WARN, BACKGROUND, 0.5)), 0.0 if empty else 0.9, MUTED if empty else INK, 1.0))
+            if not empty:
+                strip.add(_drafting.hatch(ring, INK, 0.07, 45 if index % 2 == 0 else 135, W_HAIR, 0.6))
+            strip.add(self.text(str(index + 1), (x + width / 2, origin[1] + 0.6, 0), size=S_SMALL, color=INK))
+            suffix = self.tr(" · void", " · Hohlraum") if empty else ""
+            names.add(self.text(f"{index + 1} · {_sheet.short_name(layer['name'], lang)} · {self.quantity(thickness, 'm', 3)}{suffix}", (origin[0], origin[1] - 0.75 - 0.28 * index, 0), size=S_SMALL, color=INK, anchor="l", width=5.7))
             x += width
-        parts = [self.quantity(l["thickness"]["value"], "m", 2) for l in layers]
+        parts = [self.quantity(l["thickness"]["value"], "m", 3) for l in layers]
         total_dim = self.dimension((origin[0], origin[1], 0), (origin[0] + total * scale, origin[1], 0), "  +  ".join(parts) + " = " + self.quantity(total, "m", 2), offset=-0.3, size=S_LABEL)
         sides = _engine.VGroup(self.label("outside", "außen", (origin[0] - 0.12, origin[1] + 0.6, 0), size=S_SMALL, color=MUTED, anchor="r"),
                                self.label("inside", "innen", (origin[0] + total * scale + 0.12, origin[1] + 0.6, 0), size=S_SMALL, color=MUTED, anchor="l"))
-        title = self.label("section through the wall W-S", "Schnitt durch die Wand W-S", (3.0, 2.4, 0), size=S_LABEL, color=INK)
+        title = self.label("upper ribbon screen W-S", "Obere Bandfensterwand W-S", (3.0, 2.4, 0), size=S_LABEL, color=INK)
         cut = self._cut_marker(s)
-        assumed = self._assumed((3.0, -1.45, 0))
+        assumed = self.label("cavity width inferred · envelope measured", "Hohlraumbreite abgeleitet · Hüllmaß belegt", (3.0, -2.7, 0), size=S_SMALL, color=MUTED, width=5.7)
         self.step("layers", _engine.Succession(
             _engine.AnimationGroup(*gone, _engine.FadeIn(c.usage), _engine.FadeIn(c.material), _engine.FadeIn(c.layers), _engine.FadeIn(title), run_time=1.3),
             _engine.AnimationGroup(_engine.FadeIn(strip), _engine.FadeIn(sides), _engine.FadeIn(cut), run_time=1.2),
@@ -994,8 +970,8 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
     def _cut_marker(self, s):
         """📌 A small south elevation in the corner with the cut line through the wall."""
         thumb = self._south(s, (5.75, 2.1, 0), 0.08)
-        x = thumb.v(s.opening["start"] + 3.0, 0)[0]
-        line = polyline([(x, thumb.v(0, 3.2)[1] - 0.1, 0), (x, thumb.v(0, 6.8)[1] + 0.1, 0)], WARN, W_EDGE, 1.0, dash=0.06)
+        x = thumb.v((s.opening["start"] + s.opening["end"]) / 2, 0)[0]
+        line = polyline([(x, thumb.v(0, s.wall["base"])[1] - 0.1, 0), (x, thumb.v(0, s.wall["top"])[1] + 0.1, 0)], WARN, W_EDGE, 1.0, dash=0.06)
         return _engine.VGroup(thumb, line)
 
     def _distinction(self, s):
@@ -1023,10 +999,11 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
         cross = self._cross((edge, -0.75, 0))
         sentence = _engine.VGroup(self.label("A window is not a wall:", "Ein Fenster ist keine Wand:", (LEFT, -1.95, 0), size=S_LABEL, color=INK),
                                   self.label("it fills an opening in it", "es füllt eine Öffnung darin", (LEFT, -2.27, 0), size=S_LABEL, color=INK))
+        column_at, wall_at, glass_at = (south.parts[key] for key in ("column", "band", "glass"))
         marks = _engine.VGroup(
-            self.leader(v(19.6, 1.9), v(20.1, 1.9), color=STRUCT), self.text("IfcColumn", v(15.9, 1.9), size=S_SMALL, color=STRUCT, anchor="l"),
-            self.text("IfcWall", v(14.0, 8.4), size=S_SMALL, color=ARCH), self.leader(v(14.0, 7.85), v(14.0, 6.0), color=ARCH),
-            self.text("IfcWindow", v(18.5, 8.4), size=S_SMALL, color=GOOD), self.leader(v(18.5, 7.85), v(18.5, s.opening["head_z"] - 0.2), color=GOOD))
+            self.leader(column_at + (-0.8, -0.4, 0), column_at, color=STRUCT), self.text("IfcColumn", column_at + (-1.0, -0.6, 0), size=S_SMALL, color=STRUCT),
+            self.text("IfcWall", wall_at + (-0.8, 1.0, 0), size=S_SMALL, color=ARCH), self.leader(wall_at + (-0.8, 0.8, 0), wall_at, color=ARCH),
+            self.text("IfcWindow", glass_at + (0.8, 1.2, 0), size=S_SMALL, color=GOOD), self.leader(glass_at + (0.8, 1.0, 0), glass_at, color=GOOD))
         self.step("distinction", _engine.Succession(
             _engine.AnimationGroup(*gone, *heading, _engine.FadeIn(south), _engine.FadeIn(is_a), run_time=1.2),
             _engine.AnimationGroup(_engine.FadeIn(is_a_tick), _engine.FadeIn(marks[:2]), self._pulse(south.parts["pilotis"], color=DATA, scale_factor=1.03), run_time=1.0),
@@ -1118,3 +1095,4 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
             _engine.AnimationGroup(_engine.FadeIn(guid_b), _engine.FadeIn(size_b), _engine.FadeIn(code), run_time=1.4),
             _engine.AnimationGroup(self._pulse(method_b, color=GOOD), self._ramp(fill_b, 1.0, 2.4), run_time=2.4),
             _engine.AnimationGroup(_engine.FadeIn(agree), self._pulse(value_b, color=DATA), run_time=0.9)), seconds=7.4)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            

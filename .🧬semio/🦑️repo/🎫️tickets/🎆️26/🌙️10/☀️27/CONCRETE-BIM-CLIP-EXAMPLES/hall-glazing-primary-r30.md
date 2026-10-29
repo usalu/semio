@@ -1,0 +1,11 @@
+# Hall Glazing Primary Photograph R30
+
+Primary collection record: [CCA object362303,PH1985:0889](https://www.cca.qc.ca/en/search/details/collection/object/362303). Public image inspected at1400×934: https://www.cca.qc.ca/img-collection/4sT3qvg9VzL4C2GDSz2thw6MfjU%3D/1400x934/362303.jpg . Inspection input is generated/cca-hall-r30.jpg. Credit: Collection Centre Canadien d’Architecture/Canadian Centre for Architecture,Montréal; collection copyright attribution©Lucien Hervé.
+
+The museum dates the photograph1931or later and lists the photographer as unknown, withHervé as collector. A secondary2023paper attributes this reference more specifically toGravot1930; that stronger claim is not adopted over the primary metadata. The GettyHervé finding aid notes that many Savoye negatives copy1930Gravot images, but does not establish that date for this individual photograph. Exact phase/dating remains an explicit uncertainty.
+
+The pixels substantively show numerous narrow vertical metal members in the curved hall glazing, a continuous intermediate horizontal rail, distinct end/door interfaces and textured/translucent glazing. Large foreground/middle columns and the stair occlude several intervals, so a complete exact historic station count is not directly visible. The existing single curved glass band with perimeter/end members omits real visible construction.
+
+The useful next implementation is nonuniform pane/member registration through the source curved hall topology and camera/known-column control points, retaining uncertainty for occluded stations and phase attribution. This photograph is no license to label an arbitrary uniform pattern a measured1930schedule. Flat panes should be actual planar solids between registered stations, with material-owned metal members/transom and clear pane extents. Source type/shape/evidence fields should distinguish visible topology from inferred member widths, glass thickness, rail height and hidden stations.
+
+This provides new usable primary pixels after failed fullbook downloads; it is not another image-count audit. Existing book/FLC19505 and19453 detail references remain corroborating retrieval targets. No model geometry was changed during this source registration.

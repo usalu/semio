@@ -1,0 +1,8371 @@
+{
+ "version": 1,
+ "languages": [
+  "en",
+  "de"
+ ],
+ "revision": 1,
+ "catalogue": {
+  "Number Slider": {
+   "nickname": "Slider",
+   "kind": "slider",
+   "category": "Params",
+   "subcategory": "Input",
+   "description": {
+    "en": "Interactive numeric control with a domain and rounding.",
+    "de": "Interaktive Zahlensteuerung mit Wertebereich und Rundung."
+   },
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "Number",
+     "nickname": "N",
+     "type": "Number",
+     "access": "item"
+    }
+   ]
+  },
+  "Boolean Toggle": {
+   "nickname": "Toggle",
+   "kind": "toggle",
+   "category": "Params",
+   "subcategory": "Input",
+   "description": {
+    "en": "Two-state switch that supplies True or False.",
+    "de": "Schalter mit zwei Zuständen: True oder False."
+   },
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "Boolean",
+     "nickname": "B",
+     "type": "Boolean",
+     "access": "item"
+    }
+   ]
+  },
+  "Value List": {
+   "nickname": "Value List",
+   "kind": "valuelist",
+   "category": "Params",
+   "subcategory": "Input",
+   "description": {
+    "en": "Drop-down list of named values.",
+    "de": "Auswahlliste benannter Werte."
+   },
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "Value",
+     "nickname": "V",
+     "type": "Generic",
+     "access": "item"
+    }
+   ]
+  },
+  "Panel": {
+   "nickname": "Panel",
+   "kind": "panel",
+   "category": "Params",
+   "subcategory": "Input",
+   "description": {
+    "en": "Shows data with its paths, or supplies text when unconnected.",
+    "de": "Zeigt Daten mit Pfaden oder liefert Text, wenn nichts verbunden ist."
+   },
+   "inputs": [
+    {
+     "name": "Stream",
+     "nickname": "S",
+     "type": "Generic",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Stream",
+     "nickname": "S",
+     "type": "Generic",
+     "access": "tree"
+    }
+   ]
+  },
+  "Param Viewer": {
+   "nickname": "Viewer",
+   "kind": "viewer",
+   "category": "Params",
+   "subcategory": "Util",
+   "description": {
+    "en": "Shows the tree structure of the data: branches, paths, item counts.",
+    "de": "Zeigt die Baumstruktur der Daten: Äste, Pfade, Elementanzahl."
+   },
+   "inputs": [
+    {
+     "name": "Data",
+     "nickname": "D",
+     "type": "Generic",
+     "access": "tree"
+    }
+   ],
+   "outputs": []
+  },
+  "Number Param": {
+   "nickname": "Num",
+   "kind": "param",
+   "category": "Params",
+   "subcategory": "Primitive",
+   "description": {
+    "en": "Floating Number parameter: stores or relays Number data and casts incoming data to Number.",
+    "de": "Freier Number-Parameter: speichert oder leitet Number-Daten weiter und wandelt eingehende Daten in Number um."
+   },
+   "inputs": [
+    {
+     "name": "Number",
+     "nickname": "Num",
+     "type": "Number",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Number",
+     "nickname": "Num",
+     "type": "Number",
+     "access": "tree"
+    }
+   ]
+  },
+  "Integer Param": {
+   "nickname": "Int",
+   "kind": "param",
+   "category": "Params",
+   "subcategory": "Primitive",
+   "description": {
+    "en": "Floating Integer parameter: stores or relays Integer data and casts incoming data to Integer.",
+    "de": "Freier Integer-Parameter: speichert oder leitet Integer-Daten weiter und wandelt eingehende Daten in Integer um."
+   },
+   "inputs": [
+    {
+     "name": "Integer",
+     "nickname": "Int",
+     "type": "Integer",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Integer",
+     "nickname": "Int",
+     "type": "Integer",
+     "access": "tree"
+    }
+   ]
+  },
+  "Text Param": {
+   "nickname": "Txt",
+   "kind": "param",
+   "category": "Params",
+   "subcategory": "Primitive",
+   "description": {
+    "en": "Floating Text parameter: stores or relays Text data and casts incoming data to Text.",
+    "de": "Freier Text-Parameter: speichert oder leitet Text-Daten weiter und wandelt eingehende Daten in Text um."
+   },
+   "inputs": [
+    {
+     "name": "Text",
+     "nickname": "Txt",
+     "type": "Text",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Text",
+     "nickname": "Txt",
+     "type": "Text",
+     "access": "tree"
+    }
+   ]
+  },
+  "Boolean Param": {
+   "nickname": "Bool",
+   "kind": "param",
+   "category": "Params",
+   "subcategory": "Primitive",
+   "description": {
+    "en": "Floating Boolean parameter: stores or relays Boolean data and casts incoming data to Boolean.",
+    "de": "Freier Boolean-Parameter: speichert oder leitet Boolean-Daten weiter und wandelt eingehende Daten in Boolean um."
+   },
+   "inputs": [
+    {
+     "name": "Boolean",
+     "nickname": "Bool",
+     "type": "Boolean",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Boolean",
+     "nickname": "Bool",
+     "type": "Boolean",
+     "access": "tree"
+    }
+   ]
+  },
+  "Domain Param": {
+   "nickname": "Dom",
+   "kind": "param",
+   "category": "Params",
+   "subcategory": "Primitive",
+   "description": {
+    "en": "Floating Domain parameter: stores or relays Domain data and casts incoming data to Domain.",
+    "de": "Freier Domain-Parameter: speichert oder leitet Domain-Daten weiter und wandelt eingehende Daten in Domain um."
+   },
+   "inputs": [
+    {
+     "name": "Domain",
+     "nickname": "Dom",
+     "type": "Domain",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Domain",
+     "nickname": "Dom",
+     "type": "Domain",
+     "access": "tree"
+    }
+   ]
+  },
+  "Point Param": {
+   "nickname": "Pt",
+   "kind": "param",
+   "category": "Params",
+   "subcategory": "Geometry",
+   "description": {
+    "en": "Floating Point parameter: stores or relays Point data and casts incoming data to Point.",
+    "de": "Freier Point-Parameter: speichert oder leitet Point-Daten weiter und wandelt eingehende Daten in Point um."
+   },
+   "inputs": [
+    {
+     "name": "Point",
+     "nickname": "Pt",
+     "type": "Point",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Point",
+     "nickname": "Pt",
+     "type": "Point",
+     "access": "tree"
+    }
+   ]
+  },
+  "Vector Param": {
+   "nickname": "Vec",
+   "kind": "param",
+   "category": "Params",
+   "subcategory": "Geometry",
+   "description": {
+    "en": "Floating Vector parameter: stores or relays Vector data and casts incoming data to Vector.",
+    "de": "Freier Vector-Parameter: speichert oder leitet Vector-Daten weiter und wandelt eingehende Daten in Vector um."
+   },
+   "inputs": [
+    {
+     "name": "Vector",
+     "nickname": "Vec",
+     "type": "Vector",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Vector",
+     "nickname": "Vec",
+     "type": "Vector",
+     "access": "tree"
+    }
+   ]
+  },
+  "Plane Param": {
+   "nickname": "Pln",
+   "kind": "param",
+   "category": "Params",
+   "subcategory": "Geometry",
+   "description": {
+    "en": "Floating Plane parameter: stores or relays Plane data and casts incoming data to Plane.",
+    "de": "Freier Plane-Parameter: speichert oder leitet Plane-Daten weiter und wandelt eingehende Daten in Plane um."
+   },
+   "inputs": [
+    {
+     "name": "Plane",
+     "nickname": "Pln",
+     "type": "Plane",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Plane",
+     "nickname": "Pln",
+     "type": "Plane",
+     "access": "tree"
+    }
+   ]
+  },
+  "Circle Param": {
+   "nickname": "Cir",
+   "kind": "param",
+   "category": "Params",
+   "subcategory": "Geometry",
+   "description": {
+    "en": "Floating Circle parameter: stores or relays Circle data and casts incoming data to Circle.",
+    "de": "Freier Circle-Parameter: speichert oder leitet Circle-Daten weiter und wandelt eingehende Daten in Circle um."
+   },
+   "inputs": [
+    {
+     "name": "Circle",
+     "nickname": "Cir",
+     "type": "Circle",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Circle",
+     "nickname": "Cir",
+     "type": "Circle",
+     "access": "tree"
+    }
+   ]
+  },
+  "Line Param": {
+   "nickname": "Ln",
+   "kind": "param",
+   "category": "Params",
+   "subcategory": "Geometry",
+   "description": {
+    "en": "Floating Line parameter: stores or relays Line data and casts incoming data to Line.",
+    "de": "Freier Line-Parameter: speichert oder leitet Line-Daten weiter und wandelt eingehende Daten in Line um."
+   },
+   "inputs": [
+    {
+     "name": "Line",
+     "nickname": "Ln",
+     "type": "Line",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Line",
+     "nickname": "Ln",
+     "type": "Line",
+     "access": "tree"
+    }
+   ]
+  },
+  "Curve Param": {
+   "nickname": "Crv",
+   "kind": "param",
+   "category": "Params",
+   "subcategory": "Geometry",
+   "description": {
+    "en": "Floating Curve parameter: stores or relays Curve data and casts incoming data to Curve.",
+    "de": "Freier Curve-Parameter: speichert oder leitet Curve-Daten weiter und wandelt eingehende Daten in Curve um."
+   },
+   "inputs": [
+    {
+     "name": "Curve",
+     "nickname": "Crv",
+     "type": "Curve",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Curve",
+     "nickname": "Crv",
+     "type": "Curve",
+     "access": "tree"
+    }
+   ]
+  },
+  "Box Param": {
+   "nickname": "Box",
+   "kind": "param",
+   "category": "Params",
+   "subcategory": "Geometry",
+   "description": {
+    "en": "Floating Box parameter: stores or relays Box data and casts incoming data to Box.",
+    "de": "Freier Box-Parameter: speichert oder leitet Box-Daten weiter und wandelt eingehende Daten in Box um."
+   },
+   "inputs": [
+    {
+     "name": "Box",
+     "nickname": "Box",
+     "type": "Box",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Box",
+     "nickname": "Box",
+     "type": "Box",
+     "access": "tree"
+    }
+   ]
+  },
+  "Brep Param": {
+   "nickname": "Brep",
+   "kind": "param",
+   "category": "Params",
+   "subcategory": "Geometry",
+   "description": {
+    "en": "Floating Brep parameter: stores or relays Brep data and casts incoming data to Brep.",
+    "de": "Freier Brep-Parameter: speichert oder leitet Brep-Daten weiter und wandelt eingehende Daten in Brep um."
+   },
+   "inputs": [
+    {
+     "name": "Brep",
+     "nickname": "Brep",
+     "type": "Brep",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Brep",
+     "nickname": "Brep",
+     "type": "Brep",
+     "access": "tree"
+    }
+   ]
+  },
+  "Geometry Param": {
+   "nickname": "Geo",
+   "kind": "param",
+   "category": "Params",
+   "subcategory": "Geometry",
+   "description": {
+    "en": "Floating Geometry parameter: stores or relays Geometry data and casts incoming data to Geometry.",
+    "de": "Freier Geometry-Parameter: speichert oder leitet Geometry-Daten weiter und wandelt eingehende Daten in Geometry um."
+   },
+   "inputs": [
+    {
+     "name": "Geometry",
+     "nickname": "Geo",
+     "type": "Geometry",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Geometry",
+     "nickname": "Geo",
+     "type": "Geometry",
+     "access": "tree"
+    }
+   ]
+  },
+  "Addition": {
+   "nickname": "A+B",
+   "kind": "component",
+   "category": "Maths",
+   "subcategory": "Operators",
+   "description": {
+    "en": "Adds two numbers.",
+    "de": "Addiert zwei Zahlen."
+   },
+   "inputs": [
+    {
+     "name": "A",
+     "nickname": "A",
+     "type": "Number",
+     "access": "item"
+    },
+    {
+     "name": "B",
+     "nickname": "B",
+     "type": "Number",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Result",
+     "nickname": "R",
+     "type": "Number",
+     "access": "item"
+    }
+   ]
+  },
+  "Subtraction": {
+   "nickname": "A-B",
+   "kind": "component",
+   "category": "Maths",
+   "subcategory": "Operators",
+   "description": {
+    "en": "Subtracts B from A.",
+    "de": "Subtrahiert B von A."
+   },
+   "inputs": [
+    {
+     "name": "A",
+     "nickname": "A",
+     "type": "Number",
+     "access": "item"
+    },
+    {
+     "name": "B",
+     "nickname": "B",
+     "type": "Number",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Result",
+     "nickname": "R",
+     "type": "Number",
+     "access": "item"
+    }
+   ]
+  },
+  "Multiplication": {
+   "nickname": "A×B",
+   "kind": "component",
+   "category": "Maths",
+   "subcategory": "Operators",
+   "description": {
+    "en": "Multiplies two numbers.",
+    "de": "Multipliziert zwei Zahlen."
+   },
+   "inputs": [
+    {
+     "name": "A",
+     "nickname": "A",
+     "type": "Number",
+     "access": "item"
+    },
+    {
+     "name": "B",
+     "nickname": "B",
+     "type": "Number",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Result",
+     "nickname": "R",
+     "type": "Number",
+     "access": "item"
+    }
+   ]
+  },
+  "Division": {
+   "nickname": "A/B",
+   "kind": "component",
+   "category": "Maths",
+   "subcategory": "Operators",
+   "description": {
+    "en": "Divides A by B.",
+    "de": "Dividiert A durch B."
+   },
+   "inputs": [
+    {
+     "name": "A",
+     "nickname": "A",
+     "type": "Number",
+     "access": "item"
+    },
+    {
+     "name": "B",
+     "nickname": "B",
+     "type": "Number",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Result",
+     "nickname": "R",
+     "type": "Number",
+     "access": "item"
+    }
+   ]
+  },
+  "Negative": {
+   "nickname": "Neg",
+   "kind": "component",
+   "category": "Maths",
+   "subcategory": "Operators",
+   "description": {
+    "en": "Flips the sign of a number.",
+    "de": "Kehrt das Vorzeichen um."
+   },
+   "inputs": [
+    {
+     "name": "Value",
+     "nickname": "x",
+     "type": "Number",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Result",
+     "nickname": "y",
+     "type": "Number",
+     "access": "item"
+    }
+   ]
+  },
+  "Radians": {
+   "nickname": "Rad",
+   "kind": "component",
+   "category": "Maths",
+   "subcategory": "Trig",
+   "description": {
+    "en": "Converts degrees to radians.",
+    "de": "Rechnet Grad in Bogenmaß um."
+   },
+   "inputs": [
+    {
+     "name": "Degrees",
+     "nickname": "D",
+     "type": "Number",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Radians",
+     "nickname": "R",
+     "type": "Number",
+     "access": "item"
+    }
+   ]
+  },
+  "Round": {
+   "nickname": "Round",
+   "kind": "component",
+   "category": "Maths",
+   "subcategory": "Operators",
+   "description": {
+    "en": "Round a number.",
+    "de": "Rundet auf die nächste ganze Zahl."
+   },
+   "inputs": [
+    {
+     "name": "Number",
+     "nickname": "x",
+     "type": "Number",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Result",
+     "nickname": "y",
+     "type": "Number",
+     "access": "item"
+    },
+    {
+     "name": "Integer",
+     "nickname": "i",
+     "type": "Integer",
+     "access": "item"
+    }
+   ]
+  },
+  "Floor": {
+   "nickname": "Floor",
+   "kind": "component",
+   "category": "Maths",
+   "subcategory": "Operators",
+   "description": {
+    "en": "Floor a number.",
+    "de": "Rundet ab."
+   },
+   "inputs": [
+    {
+     "name": "Number",
+     "nickname": "x",
+     "type": "Number",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Result",
+     "nickname": "y",
+     "type": "Number",
+     "access": "item"
+    },
+    {
+     "name": "Integer",
+     "nickname": "i",
+     "type": "Integer",
+     "access": "item"
+    }
+   ]
+  },
+  "Ceiling": {
+   "nickname": "Ceiling",
+   "kind": "component",
+   "category": "Maths",
+   "subcategory": "Operators",
+   "description": {
+    "en": "Ceiling a number.",
+    "de": "Rundet auf."
+   },
+   "inputs": [
+    {
+     "name": "Number",
+     "nickname": "x",
+     "type": "Number",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Result",
+     "nickname": "y",
+     "type": "Number",
+     "access": "item"
+    },
+    {
+     "name": "Integer",
+     "nickname": "i",
+     "type": "Integer",
+     "access": "item"
+    }
+   ]
+  },
+  "Series": {
+   "nickname": "Series",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "Sequence",
+   "description": {
+    "en": "Creates a series of numbers.",
+    "de": "Erzeugt eine Zahlenreihe."
+   },
+   "inputs": [
+    {
+     "name": "Start",
+     "nickname": "S",
+     "type": "Number",
+     "access": "item",
+     "default": 0
+    },
+    {
+     "name": "Step",
+     "nickname": "N",
+     "type": "Number",
+     "access": "item",
+     "default": 1
+    },
+    {
+     "name": "Count",
+     "nickname": "C",
+     "type": "Integer",
+     "access": "item",
+     "default": 10
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Series",
+     "nickname": "S",
+     "type": "Number",
+     "access": "list"
+    }
+   ]
+  },
+  "Range": {
+   "nickname": "Range",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "Sequence",
+   "description": {
+    "en": "Divides a domain into equal steps.",
+    "de": "Teilt eine Domain in gleiche Schritte."
+   },
+   "inputs": [
+    {
+     "name": "Domain",
+     "nickname": "D",
+     "type": "Domain",
+     "access": "item",
+     "default": {
+      "domain": [
+       0,
+       1
+      ]
+     }
+    },
+    {
+     "name": "Steps",
+     "nickname": "N",
+     "type": "Integer",
+     "access": "item",
+     "default": 10
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Range",
+     "nickname": "R",
+     "type": "Number",
+     "access": "list"
+    }
+   ]
+  },
+  "Construct Domain": {
+   "nickname": "Dom",
+   "kind": "component",
+   "category": "Maths",
+   "subcategory": "Domain",
+   "description": {
+    "en": "Creates a domain from two numbers.",
+    "de": "Erzeugt eine Domain aus zwei Zahlen."
+   },
+   "inputs": [
+    {
+     "name": "Domain start",
+     "nickname": "S",
+     "type": "Number",
+     "access": "item",
+     "default": 0
+    },
+    {
+     "name": "Domain end",
+     "nickname": "E",
+     "type": "Number",
+     "access": "item",
+     "default": 1
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Domain",
+     "nickname": "I",
+     "type": "Domain",
+     "access": "item"
+    }
+   ]
+  },
+  "Divide Domain": {
+   "nickname": "DivDom",
+   "kind": "component",
+   "category": "Maths",
+   "subcategory": "Domain",
+   "description": {
+    "en": "Divides a domain into equal segments.",
+    "de": "Teilt eine Domain in gleiche Segmente."
+   },
+   "inputs": [
+    {
+     "name": "Domain",
+     "nickname": "I",
+     "type": "Domain",
+     "access": "item"
+    },
+    {
+     "name": "Count",
+     "nickname": "C",
+     "type": "Integer",
+     "access": "item",
+     "default": 10
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Segments",
+     "nickname": "S",
+     "type": "Domain",
+     "access": "list"
+    }
+   ]
+  },
+  "Construct Point": {
+   "nickname": "Pt",
+   "kind": "component",
+   "category": "Vector",
+   "subcategory": "Point",
+   "description": {
+    "en": "Creates a point from coordinates.",
+    "de": "Erzeugt einen Punkt aus Koordinaten."
+   },
+   "inputs": [
+    {
+     "name": "X coordinate",
+     "nickname": "X",
+     "type": "Number",
+     "access": "item",
+     "default": 0
+    },
+    {
+     "name": "Y coordinate",
+     "nickname": "Y",
+     "type": "Number",
+     "access": "item",
+     "default": 0
+    },
+    {
+     "name": "Z coordinate",
+     "nickname": "Z",
+     "type": "Number",
+     "access": "item",
+     "default": 0
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Point",
+     "nickname": "Pt",
+     "type": "Point",
+     "access": "item"
+    }
+   ]
+  },
+  "XY Plane": {
+   "nickname": "XY",
+   "kind": "component",
+   "category": "Vector",
+   "subcategory": "Plane",
+   "description": {
+    "en": "World XY Plane at an origin.",
+    "de": "XY-Ebene an einem Ursprung."
+   },
+   "inputs": [
+    {
+     "name": "Origin",
+     "nickname": "O",
+     "type": "Point",
+     "access": "item",
+     "default": {
+      "point": [
+       0,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Plane",
+     "nickname": "P",
+     "type": "Plane",
+     "access": "item"
+    }
+   ]
+  },
+  "XZ Plane": {
+   "nickname": "XZ",
+   "kind": "component",
+   "category": "Vector",
+   "subcategory": "Plane",
+   "description": {
+    "en": "World XZ Plane at an origin.",
+    "de": "XZ-Ebene an einem Ursprung."
+   },
+   "inputs": [
+    {
+     "name": "Origin",
+     "nickname": "O",
+     "type": "Point",
+     "access": "item",
+     "default": {
+      "point": [
+       0,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Plane",
+     "nickname": "P",
+     "type": "Plane",
+     "access": "item"
+    }
+   ]
+  },
+  "YZ Plane": {
+   "nickname": "YZ",
+   "kind": "component",
+   "category": "Vector",
+   "subcategory": "Plane",
+   "description": {
+    "en": "World YZ Plane at an origin.",
+    "de": "YZ-Ebene an einem Ursprung."
+   },
+   "inputs": [
+    {
+     "name": "Origin",
+     "nickname": "O",
+     "type": "Point",
+     "access": "item",
+     "default": {
+      "point": [
+       0,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Plane",
+     "nickname": "P",
+     "type": "Plane",
+     "access": "item"
+    }
+   ]
+  },
+  "Plane Origin": {
+   "nickname": "Pl Origin",
+   "kind": "component",
+   "category": "Vector",
+   "subcategory": "Plane",
+   "description": {
+    "en": "Moves the origin of a plane.",
+    "de": "Verschiebt den Ursprung einer Ebene."
+   },
+   "inputs": [
+    {
+     "name": "Plane",
+     "nickname": "P",
+     "type": "Plane",
+     "access": "item",
+     "default": {
+      "plane": {
+       "origin": [
+        0,
+        0,
+        0
+       ],
+       "x": [
+        1,
+        0,
+        0
+       ],
+       "y": [
+        0,
+        1,
+        0
+       ]
+      }
+     }
+    },
+    {
+     "name": "Origin",
+     "nickname": "O",
+     "type": "Point",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Plane",
+     "nickname": "P",
+     "type": "Plane",
+     "access": "item"
+    }
+   ]
+  },
+  "Construct Plane": {
+   "nickname": "Pln",
+   "kind": "component",
+   "category": "Vector",
+   "subcategory": "Plane",
+   "description": {
+    "en": "Creates a plane from an origin and two axes.",
+    "de": "Erzeugt eine Ebene aus Ursprung und zwei Achsen."
+   },
+   "inputs": [
+    {
+     "name": "Origin",
+     "nickname": "O",
+     "type": "Point",
+     "access": "item",
+     "default": {
+      "point": [
+       0,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "name": "X-Axis",
+     "nickname": "X",
+     "type": "Vector",
+     "access": "item",
+     "default": {
+      "vector": [
+       1,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "name": "Y-Axis",
+     "nickname": "Y",
+     "type": "Vector",
+     "access": "item",
+     "default": {
+      "vector": [
+       0,
+       1,
+       0
+      ]
+     }
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Plane",
+     "nickname": "P",
+     "type": "Plane",
+     "access": "item"
+    }
+   ]
+  },
+  "Unit X": {
+   "nickname": "X",
+   "kind": "component",
+   "category": "Vector",
+   "subcategory": "Vector",
+   "description": {
+    "en": "Unit vector along X, scaled by a factor.",
+    "de": "Einheitsvektor in X-Richtung, skaliert mit einem Faktor."
+   },
+   "inputs": [
+    {
+     "name": "Factor",
+     "nickname": "F",
+     "type": "Number",
+     "access": "item",
+     "default": 1
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Unit vector",
+     "nickname": "V",
+     "type": "Vector",
+     "access": "item"
+    }
+   ]
+  },
+  "Unit Y": {
+   "nickname": "Y",
+   "kind": "component",
+   "category": "Vector",
+   "subcategory": "Vector",
+   "description": {
+    "en": "Unit vector along Y, scaled by a factor.",
+    "de": "Einheitsvektor in Y-Richtung, skaliert mit einem Faktor."
+   },
+   "inputs": [
+    {
+     "name": "Factor",
+     "nickname": "F",
+     "type": "Number",
+     "access": "item",
+     "default": 1
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Unit vector",
+     "nickname": "V",
+     "type": "Vector",
+     "access": "item"
+    }
+   ]
+  },
+  "Unit Z": {
+   "nickname": "Z",
+   "kind": "component",
+   "category": "Vector",
+   "subcategory": "Vector",
+   "description": {
+    "en": "Unit vector along Z, scaled by a factor.",
+    "de": "Einheitsvektor in Z-Richtung, skaliert mit einem Faktor."
+   },
+   "inputs": [
+    {
+     "name": "Factor",
+     "nickname": "F",
+     "type": "Number",
+     "access": "item",
+     "default": 1
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Unit vector",
+     "nickname": "V",
+     "type": "Vector",
+     "access": "item"
+    }
+   ]
+  },
+  "Rotate": {
+   "nickname": "Rotate",
+   "kind": "component",
+   "category": "Transform",
+   "subcategory": "Euclidean",
+   "description": {
+    "en": "Rotates geometry about the Z axis of a plane.",
+    "de": "Dreht Geometrie um die Z-Achse einer Ebene."
+   },
+   "inputs": [
+    {
+     "name": "Geometry",
+     "nickname": "G",
+     "type": "Generic",
+     "access": "item"
+    },
+    {
+     "name": "Angle",
+     "nickname": "A",
+     "type": "Number",
+     "access": "item"
+    },
+    {
+     "name": "Plane",
+     "nickname": "P",
+     "type": "Plane",
+     "access": "item",
+     "default": {
+      "plane": {
+       "origin": [
+        0,
+        0,
+        0
+       ],
+       "x": [
+        1,
+        0,
+        0
+       ],
+       "y": [
+        0,
+        1,
+        0
+       ]
+      }
+     }
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Geometry",
+     "nickname": "G",
+     "type": "Generic",
+     "access": "item"
+    },
+    {
+     "name": "Transform",
+     "nickname": "X",
+     "type": "Transform",
+     "access": "item"
+    }
+   ]
+  },
+  "Move": {
+   "nickname": "Move",
+   "kind": "component",
+   "category": "Transform",
+   "subcategory": "Euclidean",
+   "description": {
+    "en": "Translates geometry by a vector.",
+    "de": "Verschiebt Geometrie um einen Vektor."
+   },
+   "inputs": [
+    {
+     "name": "Geometry",
+     "nickname": "G",
+     "type": "Generic",
+     "access": "item"
+    },
+    {
+     "name": "Motion",
+     "nickname": "T",
+     "type": "Vector",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Geometry",
+     "nickname": "G",
+     "type": "Generic",
+     "access": "item"
+    },
+    {
+     "name": "Transform",
+     "nickname": "X",
+     "type": "Transform",
+     "access": "item"
+    }
+   ]
+  },
+  "Orient": {
+   "nickname": "Orient",
+   "kind": "component",
+   "category": "Transform",
+   "subcategory": "Euclidean",
+   "description": {
+    "en": "Moves geometry from a source plane onto a target plane.",
+    "de": "Bewegt Geometrie von einer Quellebene auf eine Zielebene."
+   },
+   "inputs": [
+    {
+     "name": "Geometry",
+     "nickname": "G",
+     "type": "Generic",
+     "access": "item"
+    },
+    {
+     "name": "Source",
+     "nickname": "A",
+     "type": "Plane",
+     "access": "item",
+     "default": {
+      "plane": {
+       "origin": [
+        0,
+        0,
+        0
+       ],
+       "x": [
+        1,
+        0,
+        0
+       ],
+       "y": [
+        0,
+        1,
+        0
+       ]
+      }
+     }
+    },
+    {
+     "name": "Target",
+     "nickname": "B",
+     "type": "Plane",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Geometry",
+     "nickname": "G",
+     "type": "Generic",
+     "access": "item"
+    },
+    {
+     "name": "Transform",
+     "nickname": "X",
+     "type": "Transform",
+     "access": "item"
+    }
+   ]
+  },
+  "List Item": {
+   "nickname": "Item",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "List",
+   "description": {
+    "en": "Picks one item of a list by index.",
+    "de": "Wählt ein Element einer Liste per Index."
+   },
+   "inputs": [
+    {
+     "name": "List",
+     "nickname": "L",
+     "type": "Generic",
+     "access": "list"
+    },
+    {
+     "name": "Index",
+     "nickname": "i",
+     "type": "Integer",
+     "access": "item",
+     "default": 0
+    },
+    {
+     "name": "Wrap",
+     "nickname": "W",
+     "type": "Boolean",
+     "access": "item",
+     "default": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Item",
+     "nickname": "i",
+     "type": "Generic",
+     "access": "item"
+    }
+   ]
+  },
+  "List Length": {
+   "nickname": "Lng",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "List",
+   "description": {
+    "en": "Counts the items of a list.",
+    "de": "Zählt die Elemente einer Liste."
+   },
+   "inputs": [
+    {
+     "name": "List",
+     "nickname": "L",
+     "type": "Generic",
+     "access": "list"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Length",
+     "nickname": "L",
+     "type": "Integer",
+     "access": "item"
+    }
+   ]
+  },
+  "Repeat Data": {
+   "nickname": "Repeat",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "Sequence",
+   "description": {
+    "en": "Repeats a list cyclically to a length.",
+    "de": "Wiederholt eine Liste zyklisch auf eine Länge."
+   },
+   "inputs": [
+    {
+     "name": "Data",
+     "nickname": "D",
+     "type": "Generic",
+     "access": "list"
+    },
+    {
+     "name": "Length",
+     "nickname": "L",
+     "type": "Integer",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Data",
+     "nickname": "D",
+     "type": "Generic",
+     "access": "list"
+    }
+   ]
+  },
+  "Center Box": {
+   "nickname": "Box",
+   "kind": "component",
+   "category": "Surface",
+   "subcategory": "Primitive",
+   "description": {
+    "en": "Creates a box centered on a base plane from three sizes.",
+    "de": "Erzeugt eine Box, zentriert auf einer Grundebene, aus drei Größen."
+   },
+   "inputs": [
+    {
+     "name": "Base",
+     "nickname": "B",
+     "type": "Plane",
+     "access": "item",
+     "default": {
+      "plane": {
+       "origin": [
+        0,
+        0,
+        0
+       ],
+       "x": [
+        1,
+        0,
+        0
+       ],
+       "y": [
+        0,
+        1,
+        0
+       ]
+      }
+     }
+    },
+    {
+     "name": "X",
+     "nickname": "X",
+     "type": "Number",
+     "access": "item",
+     "default": 1
+    },
+    {
+     "name": "Y",
+     "nickname": "Y",
+     "type": "Number",
+     "access": "item",
+     "default": 1
+    },
+    {
+     "name": "Z",
+     "nickname": "Z",
+     "type": "Number",
+     "access": "item",
+     "default": 1
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Box",
+     "nickname": "B",
+     "type": "Box",
+     "access": "item"
+    }
+   ]
+  },
+  "Domain Box": {
+   "nickname": "DBox",
+   "kind": "component",
+   "category": "Surface",
+   "subcategory": "Primitive",
+   "description": {
+    "en": "Creates a box from a base plane and three domains.",
+    "de": "Erzeugt eine Box aus Grundebene und drei Domains."
+   },
+   "inputs": [
+    {
+     "name": "Base",
+     "nickname": "B",
+     "type": "Plane",
+     "access": "item",
+     "default": {
+      "plane": {
+       "origin": [
+        0,
+        0,
+        0
+       ],
+       "x": [
+        1,
+        0,
+        0
+       ],
+       "y": [
+        0,
+        1,
+        0
+       ]
+      }
+     }
+    },
+    {
+     "name": "X",
+     "nickname": "X",
+     "type": "Domain",
+     "access": "item",
+     "default": {
+      "domain": [
+       -0.5,
+       0.5
+      ]
+     }
+    },
+    {
+     "name": "Y",
+     "nickname": "Y",
+     "type": "Domain",
+     "access": "item",
+     "default": {
+      "domain": [
+       -0.5,
+       0.5
+      ]
+     }
+    },
+    {
+     "name": "Z",
+     "nickname": "Z",
+     "type": "Domain",
+     "access": "item",
+     "default": {
+      "domain": [
+       -0.5,
+       0.5
+      ]
+     }
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Box",
+     "nickname": "B",
+     "type": "Box",
+     "access": "item"
+    }
+   ]
+  },
+  "Cylinder": {
+   "nickname": "Cyl",
+   "kind": "component",
+   "category": "Surface",
+   "subcategory": "Primitive",
+   "description": {
+    "en": "Creates a cylinder along the normal of a base plane.",
+    "de": "Erzeugt einen Zylinder entlang der Normalen einer Grundebene."
+   },
+   "inputs": [
+    {
+     "name": "Base",
+     "nickname": "B",
+     "type": "Plane",
+     "access": "item",
+     "default": {
+      "plane": {
+       "origin": [
+        0,
+        0,
+        0
+       ],
+       "x": [
+        1,
+        0,
+        0
+       ],
+       "y": [
+        0,
+        1,
+        0
+       ]
+      }
+     }
+    },
+    {
+     "name": "Radius",
+     "nickname": "R",
+     "type": "Number",
+     "access": "item",
+     "default": 1
+    },
+    {
+     "name": "Length",
+     "nickname": "L",
+     "type": "Number",
+     "access": "item",
+     "default": 1
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Cylinder",
+     "nickname": "C",
+     "type": "Brep",
+     "access": "item"
+    }
+   ]
+  },
+  "Circle": {
+   "nickname": "Cir",
+   "kind": "component",
+   "category": "Curve",
+   "subcategory": "Primitive",
+   "description": {
+    "en": "Creates a circle on a plane.",
+    "de": "Erzeugt einen Kreis auf einer Ebene."
+   },
+   "inputs": [
+    {
+     "name": "Plane",
+     "nickname": "P",
+     "type": "Plane",
+     "access": "item",
+     "default": {
+      "plane": {
+       "origin": [
+        0,
+        0,
+        0
+       ],
+       "x": [
+        1,
+        0,
+        0
+       ],
+       "y": [
+        0,
+        1,
+        0
+       ]
+      }
+     }
+    },
+    {
+     "name": "Radius",
+     "nickname": "R",
+     "type": "Number",
+     "access": "item",
+     "default": 1
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Circle",
+     "nickname": "C",
+     "type": "Circle",
+     "access": "item"
+    }
+   ]
+  },
+  "Rectangle": {
+   "nickname": "Rec",
+   "kind": "component",
+   "category": "Curve",
+   "subcategory": "Primitive",
+   "description": {
+    "en": "Creates a rectangle centered on a plane.",
+    "de": "Erzeugt ein Rechteck, zentriert auf einer Ebene."
+   },
+   "inputs": [
+    {
+     "name": "Plane",
+     "nickname": "P",
+     "type": "Plane",
+     "access": "item",
+     "default": {
+      "plane": {
+       "origin": [
+        0,
+        0,
+        0
+       ],
+       "x": [
+        1,
+        0,
+        0
+       ],
+       "y": [
+        0,
+        1,
+        0
+       ]
+      }
+     }
+    },
+    {
+     "name": "X Size",
+     "nickname": "X",
+     "type": "Number",
+     "access": "item",
+     "default": 1
+    },
+    {
+     "name": "Y Size",
+     "nickname": "Y",
+     "type": "Number",
+     "access": "item",
+     "default": 1
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Rectangle",
+     "nickname": "R",
+     "type": "Curve",
+     "access": "item"
+    },
+    {
+     "name": "Length",
+     "nickname": "L",
+     "type": "Number",
+     "access": "item"
+    }
+   ]
+  },
+  "Extrude": {
+   "nickname": "Extr",
+   "kind": "component",
+   "category": "Surface",
+   "subcategory": "Freeform",
+   "description": {
+    "en": "Extrudes a curve along a vector.",
+    "de": "Extrudiert eine Kurve entlang eines Vektors."
+   },
+   "inputs": [
+    {
+     "name": "Base",
+     "nickname": "B",
+     "type": "Curve",
+     "access": "item"
+    },
+    {
+     "name": "Direction",
+     "nickname": "D",
+     "type": "Vector",
+     "access": "item",
+     "default": {
+      "vector": [
+       0,
+       0,
+       1
+      ]
+     }
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Extrusion",
+     "nickname": "E",
+     "type": "Brep",
+     "access": "item"
+    }
+   ]
+  },
+  "Fillet Edge": {
+   "nickname": "FilEdge",
+   "kind": "component",
+   "category": "Surface",
+   "subcategory": "Freeform",
+   "description": {
+    "en": "Rounds the edges of a solid with a radius.",
+    "de": "Rundet die Kanten eines Körpers mit einem Radius."
+   },
+   "inputs": [
+    {
+     "name": "Shape",
+     "nickname": "S",
+     "type": "Brep",
+     "access": "item"
+    },
+    {
+     "name": "Edges",
+     "nickname": "E",
+     "type": "Integer",
+     "access": "list",
+     "optional": true
+    },
+    {
+     "name": "Radius",
+     "nickname": "R",
+     "type": "Number",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Result",
+     "nickname": "R",
+     "type": "Brep",
+     "access": "item"
+    }
+   ]
+  },
+  "Solid Difference": {
+   "nickname": "SDiff",
+   "kind": "component",
+   "category": "Intersect",
+   "subcategory": "Shape",
+   "description": {
+    "en": "Subtracts solids from a solid.",
+    "de": "Zieht Körper von einem Körper ab."
+   },
+   "inputs": [
+    {
+     "name": "Brep A",
+     "nickname": "A",
+     "type": "Brep",
+     "access": "list"
+    },
+    {
+     "name": "Brep B",
+     "nickname": "B",
+     "type": "Brep",
+     "access": "list"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Result",
+     "nickname": "R",
+     "type": "Brep",
+     "access": "list"
+    }
+   ]
+  },
+  "Volume": {
+   "nickname": "Vol",
+   "kind": "component",
+   "category": "Surface",
+   "subcategory": "Analysis",
+   "description": {
+    "en": "Measures the volume and centroid of a closed solid.",
+    "de": "Misst Volumen und Schwerpunkt eines geschlossenen Körpers."
+   },
+   "inputs": [
+    {
+     "name": "Geometry",
+     "nickname": "G",
+     "type": "Geometry",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Volume",
+     "nickname": "V",
+     "type": "Number",
+     "access": "item"
+    },
+    {
+     "name": "Centroid",
+     "nickname": "C",
+     "type": "Point",
+     "access": "item"
+    }
+   ]
+  },
+  "Dispatch": {
+   "nickname": "Dispatch",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "Sets",
+   "description": {
+    "en": "Splits a list in two by a cyclic True/False pattern.",
+    "de": "Teilt eine Liste anhand eines zyklischen True/False-Musters in zwei."
+   },
+   "inputs": [
+    {
+     "name": "List",
+     "nickname": "L",
+     "type": "Generic",
+     "access": "list"
+    },
+    {
+     "name": "Pattern",
+     "nickname": "P",
+     "type": "Boolean",
+     "access": "list"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "List A",
+     "nickname": "A",
+     "type": "Generic",
+     "access": "list"
+    },
+    {
+     "name": "List B",
+     "nickname": "B",
+     "type": "Generic",
+     "access": "list"
+    }
+   ]
+  },
+  "Merge": {
+   "nickname": "Merge",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "Tree",
+   "description": {
+    "en": "Merges data streams into one.",
+    "de": "Fügt Datenströme zu einem zusammen."
+   },
+   "inputs": [
+    {
+     "name": "Data 1",
+     "nickname": "D1",
+     "type": "Generic",
+     "access": "tree",
+     "optional": true
+    },
+    {
+     "name": "Data 2",
+     "nickname": "D2",
+     "type": "Generic",
+     "access": "tree",
+     "optional": true
+    },
+    {
+     "name": "Data 3",
+     "nickname": "D3",
+     "type": "Generic",
+     "access": "tree",
+     "optional": true
+    },
+    {
+     "name": "Data 4",
+     "nickname": "D4",
+     "type": "Generic",
+     "access": "tree",
+     "optional": true
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Result",
+     "nickname": "R",
+     "type": "Generic",
+     "access": "tree"
+    }
+   ]
+  },
+  "Entwine": {
+   "nickname": "Entwine",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "Tree",
+   "description": {
+    "en": "Combines data streams as separate branches of one tree.",
+    "de": "Verbindet Datenströme als getrennte Äste eines Baums."
+   },
+   "inputs": [
+    {
+     "name": "Branch 1",
+     "nickname": "1",
+     "type": "Generic",
+     "access": "tree",
+     "optional": true
+    },
+    {
+     "name": "Branch 2",
+     "nickname": "2",
+     "type": "Generic",
+     "access": "tree",
+     "optional": true
+    },
+    {
+     "name": "Branch 3",
+     "nickname": "3",
+     "type": "Generic",
+     "access": "tree",
+     "optional": true
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Result",
+     "nickname": "R",
+     "type": "Generic",
+     "access": "tree"
+    }
+   ]
+  },
+  "Graft Tree": {
+   "nickname": "Graft",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "Tree",
+   "description": {
+    "en": "Puts every item into its own branch.",
+    "de": "Legt jedes Element in einen eigenen Ast."
+   },
+   "inputs": [
+    {
+     "name": "Tree",
+     "nickname": "T",
+     "type": "Generic",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Tree",
+     "nickname": "T",
+     "type": "Generic",
+     "access": "tree"
+    }
+   ]
+  },
+  "Flatten Tree": {
+   "nickname": "Flatten",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "Tree",
+   "description": {
+    "en": "Moves all items into one branch.",
+    "de": "Legt alle Elemente in einen Ast."
+   },
+   "inputs": [
+    {
+     "name": "Tree",
+     "nickname": "T",
+     "type": "Generic",
+     "access": "tree"
+    },
+    {
+     "name": "Path",
+     "nickname": "P",
+     "type": "Text",
+     "access": "item",
+     "optional": true
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Tree",
+     "nickname": "T",
+     "type": "Generic",
+     "access": "tree"
+    }
+   ]
+  },
+  "Simplify Tree": {
+   "nickname": "Simplify",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "Tree",
+   "description": {
+    "en": "Removes the path indices all branches share.",
+    "de": "Entfernt die Pfadindizes, die alle Äste teilen."
+   },
+   "inputs": [
+    {
+     "name": "Tree",
+     "nickname": "T",
+     "type": "Generic",
+     "access": "tree"
+    },
+    {
+     "name": "Front",
+     "nickname": "F",
+     "type": "Boolean",
+     "access": "item",
+     "optional": true
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Tree",
+     "nickname": "T",
+     "type": "Generic",
+     "access": "tree"
+    }
+   ]
+  },
+  "Path Mapper": {
+   "nickname": "Mapper",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "Tree",
+   "description": {
+    "en": "Rewrites paths with a lexical mapping such as {A;B;C;D}(i) -> {A;B;C}.",
+    "de": "Schreibt Pfade mit einer lexikalischen Abbildung um, z. B. {A;B;C;D}(i) -> {A;B;C}."
+   },
+   "inputs": [
+    {
+     "name": "Tree",
+     "nickname": "T",
+     "type": "Generic",
+     "access": "tree"
+    },
+    {
+     "name": "Mapping",
+     "nickname": "M",
+     "type": "Text",
+     "access": "item",
+     "optional": true
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Tree",
+     "nickname": "T",
+     "type": "Generic",
+     "access": "tree"
+    }
+   ]
+  },
+  "Flip Matrix": {
+   "nickname": "Flip",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "Tree",
+   "description": {
+    "en": "Swaps branches and items of a tree.",
+    "de": "Vertauscht Äste und Elemente eines Baums."
+   },
+   "inputs": [
+    {
+     "name": "Data",
+     "nickname": "D",
+     "type": "Generic",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Data",
+     "nickname": "D",
+     "type": "Generic",
+     "access": "tree"
+    }
+   ]
+  },
+  "Explode Tree": {
+   "nickname": "Explode",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "Tree",
+   "description": {
+    "en": "Returns each branch as its own list (the first four here).",
+    "de": "Gibt jeden Ast als eigene Liste aus (hier die ersten vier)."
+   },
+   "inputs": [
+    {
+     "name": "Data",
+     "nickname": "D",
+     "type": "Generic",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Branch 1",
+     "nickname": "1",
+     "type": "Generic",
+     "access": "list"
+    },
+    {
+     "name": "Branch 2",
+     "nickname": "2",
+     "type": "Generic",
+     "access": "list"
+    },
+    {
+     "name": "Branch 3",
+     "nickname": "3",
+     "type": "Generic",
+     "access": "list"
+    },
+    {
+     "name": "Branch 4",
+     "nickname": "4",
+     "type": "Generic",
+     "access": "list"
+    }
+   ]
+  },
+  "Tree Statistics": {
+   "nickname": "TStat",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "Tree",
+   "description": {
+    "en": "Reports paths, item counts and the number of branches.",
+    "de": "Meldet Pfade, Elementanzahlen und die Zahl der Äste."
+   },
+   "inputs": [
+    {
+     "name": "Tree",
+     "nickname": "T",
+     "type": "Generic",
+     "access": "tree"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Paths",
+     "nickname": "P",
+     "type": "Text",
+     "access": "list"
+    },
+    {
+     "name": "Length",
+     "nickname": "L",
+     "type": "Integer",
+     "access": "list"
+    },
+    {
+     "name": "Count",
+     "nickname": "C",
+     "type": "Integer",
+     "access": "item"
+    }
+   ]
+  },
+  "Tree Item": {
+   "nickname": "TItem",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "Tree",
+   "description": {
+    "en": "Picks one item by path and index.",
+    "de": "Wählt ein Element per Pfad und Index."
+   },
+   "inputs": [
+    {
+     "name": "Tree",
+     "nickname": "T",
+     "type": "Generic",
+     "access": "tree"
+    },
+    {
+     "name": "Path",
+     "nickname": "P",
+     "type": "Text",
+     "access": "item",
+     "default": "{0}"
+    },
+    {
+     "name": "Index",
+     "nickname": "i",
+     "type": "Integer",
+     "access": "item",
+     "default": 0
+    },
+    {
+     "name": "Wrap",
+     "nickname": "W",
+     "type": "Boolean",
+     "access": "item",
+     "default": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Item",
+     "nickname": "i",
+     "type": "Generic",
+     "access": "item"
+    }
+   ]
+  },
+  "Custom Preview": {
+   "nickname": "Preview",
+   "kind": "component",
+   "category": "Display",
+   "subcategory": "Preview",
+   "description": {
+    "en": "Previews geometry with a material (here a colour name).",
+    "de": "Zeigt Geometrie mit einem Material (hier ein Farbname)."
+   },
+   "inputs": [
+    {
+     "name": "Geometry",
+     "nickname": "G",
+     "type": "Geometry",
+     "access": "item"
+    },
+    {
+     "name": "Material",
+     "nickname": "M",
+     "type": "Generic",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Preview",
+     "nickname": "P",
+     "type": "Brep",
+     "access": "item"
+    }
+   ]
+  },
+  "Cull Index": {
+   "nickname": "Cull i",
+   "kind": "component",
+   "category": "Sets",
+   "subcategory": "List",
+   "description": {
+    "en": "Removes the items at the given indices from a list.",
+    "de": "Entfernt die Elemente an den angegebenen Indizes aus einer Liste."
+   },
+   "inputs": [
+    {
+     "name": "List",
+     "nickname": "L",
+     "type": "Generic",
+     "access": "list"
+    },
+    {
+     "name": "Indices",
+     "nickname": "I",
+     "type": "Integer",
+     "access": "list",
+     "optional": true
+    },
+    {
+     "name": "Wrap",
+     "nickname": "W",
+     "type": "Boolean",
+     "access": "item",
+     "default": false
+    }
+   ],
+   "outputs": [
+    {
+     "name": "List",
+     "nickname": "L",
+     "type": "Generic",
+     "access": "list"
+    }
+   ]
+  },
+  "Sine": {
+   "nickname": "Sin",
+   "kind": "component",
+   "category": "Maths",
+   "subcategory": "Trig",
+   "description": {
+    "en": "Sine of an angle in radians.",
+    "de": "Sinus eines Winkels im Bogenmaß."
+   },
+   "inputs": [
+    {
+     "name": "Value",
+     "nickname": "x",
+     "type": "Number",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Result",
+     "nickname": "y",
+     "type": "Number",
+     "access": "item"
+    }
+   ]
+  },
+  "Absolute": {
+   "nickname": "Abs",
+   "kind": "component",
+   "category": "Maths",
+   "subcategory": "Operators",
+   "description": {
+    "en": "Absolute value.",
+    "de": "Betrag."
+   },
+   "inputs": [
+    {
+     "name": "Value",
+     "nickname": "x",
+     "type": "Number",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Result",
+     "nickname": "y",
+     "type": "Number",
+     "access": "item"
+    }
+   ]
+  },
+  "Vector XYZ": {
+   "nickname": "Vec",
+   "kind": "component",
+   "category": "Vector",
+   "subcategory": "Vector",
+   "description": {
+    "en": "Creates a vector from components.",
+    "de": "Erzeugt einen Vektor aus Komponenten."
+   },
+   "inputs": [
+    {
+     "name": "X component",
+     "nickname": "X",
+     "type": "Number",
+     "access": "item",
+     "default": 0
+    },
+    {
+     "name": "Y component",
+     "nickname": "Y",
+     "type": "Number",
+     "access": "item",
+     "default": 0
+    },
+    {
+     "name": "Z component",
+     "nickname": "Z",
+     "type": "Number",
+     "access": "item",
+     "default": 0
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Vector",
+     "nickname": "V",
+     "type": "Vector",
+     "access": "item"
+    },
+    {
+     "name": "Length",
+     "nickname": "L",
+     "type": "Number",
+     "access": "item"
+    }
+   ]
+  },
+  "Deconstruct Plane": {
+   "nickname": "DePlane",
+   "kind": "component",
+   "category": "Vector",
+   "subcategory": "Plane",
+   "description": {
+    "en": "Splits a plane into origin and axes.",
+    "de": "Zerlegt eine Ebene in Ursprung und Achsen."
+   },
+   "inputs": [
+    {
+     "name": "Plane",
+     "nickname": "P",
+     "type": "Plane",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Origin",
+     "nickname": "O",
+     "type": "Point",
+     "access": "item"
+    },
+    {
+     "name": "X-Axis",
+     "nickname": "X",
+     "type": "Vector",
+     "access": "item"
+    },
+    {
+     "name": "Y-Axis",
+     "nickname": "Y",
+     "type": "Vector",
+     "access": "item"
+    },
+    {
+     "name": "Z-Axis",
+     "nickname": "Z",
+     "type": "Vector",
+     "access": "item"
+    }
+   ]
+  },
+  "Amplitude": {
+   "nickname": "Amp",
+   "kind": "component",
+   "category": "Vector",
+   "subcategory": "Vector",
+   "description": {
+    "en": "Sets the length of a vector.",
+    "de": "Setzt die Länge eines Vektors."
+   },
+   "inputs": [
+    {
+     "name": "Vector",
+     "nickname": "V",
+     "type": "Vector",
+     "access": "item"
+    },
+    {
+     "name": "Amplitude",
+     "nickname": "A",
+     "type": "Number",
+     "access": "item"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "Vector",
+     "nickname": "V",
+     "type": "Vector",
+     "access": "item"
+    }
+   ]
+  }
+ },
+ "casting": {
+  "types": [
+   "Number",
+   "Integer",
+   "Text",
+   "Boolean",
+   "Point",
+   "Vector",
+   "Plane",
+   "Domain",
+   "Circle",
+   "Line",
+   "Curve",
+   "Box",
+   "Brep",
+   "Geometry"
+  ],
+  "sources": {
+   "mcneel-data-types": "https://developer.rhino3d.com/guides/grasshopper/grasshopper-data-types/",
+   "rutten-2010": "https://www.grasshopper3d.com/xn/detail/2985220:Comment:42581",
+   "rutten-2012": "https://grasshopper3d.com/forum/topics/the-int-component",
+   "forum-136013": "https://discourse.mcneel.com/t/data-conversion-failed-from-text-to-number/136013",
+   "forum-154859": "https://discourse.mcneel.com/t/data-conversion-failed-from-text-to-integer/154859",
+   "forum-plane-of-a-line": "https://www.grasshopper3d.com/forum/topics/plane-of-a-line",
+   "community-digest": "https://www.grasshopper3d.com/forum/topics/plane-of-a-line",
+   "quiz": "🎓️teaching/🏛️architecture/🦗️grasshopper/❓️quiz/🔣️.json",
+   "teaching": "Teaching assumption: check in Rhino 8"
+  },
+  "rules": {
+   "same": {
+    "from": "any",
+    "to": "same",
+    "ok": true,
+    "basis": "verified",
+    "source": "mcneel-data-types",
+    "en": "Same type: the data passes through unchanged.",
+    "de": "Gleicher Typ: Die Daten gehen unverändert durch."
+   },
+   "Integer>Number": {
+    "from": "Integer",
+    "to": "Number",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "An Integer widens to a Number without loss.",
+    "de": "Eine Ganzzahl wird verlustfrei zur Zahl."
+   },
+   "Boolean>Number": {
+    "from": "Boolean",
+    "to": "Number",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "False becomes 0, True becomes 1.",
+    "de": "False wird 0, True wird 1."
+   },
+   "Text>Number": {
+    "from": "Text",
+    "to": "Number",
+    "ok": true,
+    "basis": "unverified",
+    "source": "forum-136013",
+    "en": "Numeric text becomes a number.",
+    "de": "Zahlentext wird zur Zahl."
+   },
+   "Text>Number!": {
+    "from": "Text",
+    "to": "Number",
+    "ok": false,
+    "basis": "verified",
+    "source": "forum-136013",
+    "en": "Text that is not a number cannot be read.",
+    "de": "Der Text lässt sich nicht als Zahl lesen; Grasshopper meldet „{gh}“ und lässt den Platz leer."
+   },
+   "Text>Number!comma": {
+    "from": "Text",
+    "to": "Number",
+    "ok": false,
+    "basis": "unverified",
+    "source": "forum-136013",
+    "en": "A decimal comma in Text may not parse as a Number; this is locale dependent.",
+    "de": "Ein Dezimalkomma im Text lässt sich womöglich nicht als Zahl lesen (abhängig von der Spracheinstellung); Grasshopper meldet „{gh}“ und lässt den Platz leer."
+   },
+   "Domain>Number": {
+    "from": "Domain",
+    "to": "Number",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Domain gives its length.",
+    "de": "Eine Domain liefert ihre Länge."
+   },
+   "Point>Number": {
+    "from": "Point",
+    "to": "Number",
+    "ok": true,
+    "basis": "community",
+    "source": "community-digest",
+    "en": "A Point gives its distance from the origin.",
+    "de": "Ein Punkt liefert seinen Abstand vom Ursprung."
+   },
+   "Number>Integer": {
+    "from": "Number",
+    "to": "Integer",
+    "ok": true,
+    "basis": "conflicting",
+    "source": "rutten-2010",
+    "en": "A Number rounds to the nearest Integer; exact ties go to the even number (2.5 gives 2, 3.5 gives 4).",
+    "de": "Eine Zahl wird auf die nächste Ganzzahl gerundet; genau in der Mitte gewinnt die gerade Zahl (2,5 wird 2, 3,5 wird 4).",
+    "sources": [
+     "rutten-2010",
+     "rutten-2012"
+    ]
+   },
+   "Boolean>Integer": {
+    "from": "Boolean",
+    "to": "Integer",
+    "ok": true,
+    "basis": "verified",
+    "source": "mcneel-data-types",
+    "en": "False becomes 0, True becomes 1.",
+    "de": "False wird 0, True wird 1."
+   },
+   "Text>Integer": {
+    "from": "Text",
+    "to": "Integer",
+    "ok": true,
+    "basis": "unverified",
+    "source": "forum-154859",
+    "en": "Numeric text becomes an Integer.",
+    "de": "Zahlentext wird zur Ganzzahl."
+   },
+   "Text>Integer!": {
+    "from": "Text",
+    "to": "Integer",
+    "ok": false,
+    "basis": "verified",
+    "source": "forum-154859",
+    "en": "Text that is not a number cannot be read.",
+    "de": "Der Text lässt sich nicht als Ganzzahl lesen; Grasshopper meldet „{gh}“ und lässt den Platz leer."
+   },
+   "Number>Boolean": {
+    "from": "Number",
+    "to": "Boolean",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "0 becomes False, any other number True.",
+    "de": "0 wird False, jede andere Zahl True."
+   },
+   "Integer>Boolean": {
+    "from": "Integer",
+    "to": "Boolean",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "0 becomes False, any other number True.",
+    "de": "0 wird False, jede andere Zahl True."
+   },
+   "Text>Boolean": {
+    "from": "Text",
+    "to": "Boolean",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "The text True becomes True, False becomes False.",
+    "de": "Der Text True wird True, False wird False."
+   },
+   "Number>Text": {
+    "from": "Number",
+    "to": "Text",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Number becomes its text.",
+    "de": "Eine Zahl wird zu ihrem Text."
+   },
+   "Integer>Text": {
+    "from": "Integer",
+    "to": "Text",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "An Integer becomes its text.",
+    "de": "Eine Ganzzahl wird zu ihrem Text."
+   },
+   "Boolean>Text": {
+    "from": "Boolean",
+    "to": "Text",
+    "ok": true,
+    "basis": "verified",
+    "source": "mcneel-data-types",
+    "en": "A Boolean becomes the text false or true.",
+    "de": "Ein Boolean wird zum Text false oder true."
+   },
+   "Point>Text": {
+    "from": "Point",
+    "to": "Text",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Point becomes its text.",
+    "de": "Ein Punkt wird zu seinem Text."
+   },
+   "Vector>Text": {
+    "from": "Vector",
+    "to": "Text",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Vector becomes its text.",
+    "de": "Ein Vektor wird zu seinem Text."
+   },
+   "Domain>Text": {
+    "from": "Domain",
+    "to": "Text",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Domain becomes its text.",
+    "de": "Eine Domain wird zu ihrem Text."
+   },
+   "Text>Point": {
+    "from": "Text",
+    "to": "Point",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "The text 1,2,3 becomes the point (1, 2, 3).",
+    "de": "Der Text 1,2,3 wird zum Punkt (1, 2, 3)."
+   },
+   "Vector>Point": {
+    "from": "Vector",
+    "to": "Point",
+    "ok": true,
+    "basis": "verified",
+    "source": "quiz",
+    "en": "A Vector keeps its coordinates as a Point.",
+    "de": "Ein Vektor behält seine Koordinaten als Punkt."
+   },
+   "Plane>Point": {
+    "from": "Plane",
+    "to": "Point",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Plane gives its origin.",
+    "de": "Eine Ebene liefert ihren Ursprung."
+   },
+   "Point>Vector": {
+    "from": "Point",
+    "to": "Vector",
+    "ok": true,
+    "basis": "verified",
+    "source": "quiz",
+    "en": "A Point keeps its coordinates as a Vector.",
+    "de": "Ein Punkt behält seine Koordinaten als Vektor."
+   },
+   "Line>Vector": {
+    "from": "Line",
+    "to": "Vector",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Line gives its direction from start to end.",
+    "de": "Eine Linie liefert ihre Richtung von Anfang zu Ende."
+   },
+   "Text>Vector": {
+    "from": "Text",
+    "to": "Vector",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "The text 1,2,3 becomes the vector (1, 2, 3).",
+    "de": "Der Text 1,2,3 wird zum Vektor (1, 2, 3)."
+   },
+   "Point>Plane": {
+    "from": "Point",
+    "to": "Plane",
+    "ok": true,
+    "basis": "community",
+    "source": "forum-plane-of-a-line",
+    "en": "A Point becomes a plane at the point with the world XY axes.",
+    "de": "Ein Punkt wird zur Ebene am Punkt mit den Weltachsen XY."
+   },
+   "Line>Plane": {
+    "from": "Line",
+    "to": "Plane",
+    "ok": true,
+    "basis": "community",
+    "source": "forum-plane-of-a-line",
+    "en": "A Line becomes a plane whose Z axis follows the line; X and Y are guessed.",
+    "de": "Eine Linie wird zur Ebene, deren Z-Achse der Linie folgt; X und Y werden geraten."
+   },
+   "Circle>Plane": {
+    "from": "Circle",
+    "to": "Plane",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Circle gives its plane.",
+    "de": "Ein Kreis liefert seine Ebene."
+   },
+   "Curve>Plane": {
+    "from": "Curve",
+    "to": "Plane",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A planar curve gives its plane.",
+    "de": "Eine ebene Kurve liefert ihre Ebene."
+   },
+   "Number>Domain": {
+    "from": "Number",
+    "to": "Domain",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Number x becomes the Domain 0 To x.",
+    "de": "Eine Zahl x wird zur Domain 0 bis x."
+   },
+   "Integer>Domain": {
+    "from": "Integer",
+    "to": "Domain",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "An Integer x becomes the Domain 0 To x.",
+    "de": "Eine Ganzzahl x wird zur Domain 0 bis x."
+   },
+   "Text>Domain": {
+    "from": "Text",
+    "to": "Domain",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "The text 0 To 5 becomes the Domain 0 To 5.",
+    "de": "Der Text 0 To 5 wird zur Domain 0 bis 5."
+   },
+   "Circle>Curve": {
+    "from": "Circle",
+    "to": "Curve",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Circle is accepted as a Curve.",
+    "de": "Ein Kreis wird als Kurve akzeptiert."
+   },
+   "Line>Curve": {
+    "from": "Line",
+    "to": "Curve",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Line is accepted as a Curve.",
+    "de": "Eine Linie wird als Kurve akzeptiert."
+   },
+   "Curve>Circle": {
+    "from": "Curve",
+    "to": "Circle",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A circular Curve becomes a Circle.",
+    "de": "Eine kreisförmige Kurve wird zum Kreis."
+   },
+   "Curve>Line": {
+    "from": "Curve",
+    "to": "Line",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A straight Curve becomes a Line.",
+    "de": "Eine gerade Kurve wird zur Linie."
+   },
+   "Box>Brep": {
+    "from": "Box",
+    "to": "Brep",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Box becomes a Brep with six faces.",
+    "de": "Eine Box wird zum Brep mit sechs Flächen."
+   },
+   "Brep>Box": {
+    "from": "Brep",
+    "to": "Box",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A box-shaped Brep becomes a Box.",
+    "de": "Ein quaderförmiges Brep wird zur Box."
+   },
+   "*>*!": {
+    "from": "any",
+    "to": "any",
+    "ok": false,
+    "basis": "verified",
+    "source": "mcneel-data-types",
+    "en": "No conversion exists: Grasshopper reports an error and leaves the slot blank.",
+    "de": "Eine Umwandlung von {source} nach {target} gibt es nicht; Grasshopper meldet „{gh}“ und lässt den Platz leer."
+   },
+   "Point>Geometry": {
+    "from": "Point",
+    "to": "Geometry",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Point is Geometry and passes through.",
+    "de": "Point ist Geometrie und geht durch."
+   },
+   "Circle>Geometry": {
+    "from": "Circle",
+    "to": "Geometry",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Circle is Geometry and passes through.",
+    "de": "Circle ist Geometrie und geht durch."
+   },
+   "Line>Geometry": {
+    "from": "Line",
+    "to": "Geometry",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Line is Geometry and passes through.",
+    "de": "Line ist Geometrie und geht durch."
+   },
+   "Curve>Geometry": {
+    "from": "Curve",
+    "to": "Geometry",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Curve is Geometry and passes through.",
+    "de": "Curve ist Geometrie und geht durch."
+   },
+   "Box>Geometry": {
+    "from": "Box",
+    "to": "Geometry",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Box is Geometry and passes through.",
+    "de": "Box ist Geometrie und geht durch."
+   },
+   "Brep>Geometry": {
+    "from": "Brep",
+    "to": "Geometry",
+    "ok": true,
+    "basis": "unverified",
+    "source": "teaching",
+    "en": "A Brep is Geometry and passes through.",
+    "de": "Brep ist Geometrie und geht durch."
+   }
+  }
+ },
+ "capsule_wall": {
+  "value": 0.3,
+  "unit": "m",
+  "basis": "assumed"
+ },
+ "canvases": {
+  "anatomy": {
+   "title": {
+    "en": "Anatomy of a definition",
+    "de": "Anatomie einer Definition"
+   },
+   "objects": [
+    {
+     "id": "w",
+     "component": "Number Slider",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Width",
+      "min": 1.0,
+      "max": 5.0,
+      "value": 2.5,
+      "rounding": "float",
+      "decimals": 1,
+      "bind": "capsule.width"
+     }
+    },
+    {
+     "id": "wp",
+     "component": "Panel",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "bl",
+     "component": "Number Slider",
+     "at": [
+      0,
+      140
+     ],
+     "settings": {
+      "label": "Length",
+      "min": 2.0,
+      "max": 6.0,
+      "value": 4.0,
+      "rounding": "float",
+      "decimals": 1,
+      "bind": "capsule.length"
+     }
+    },
+    {
+     "id": "bh",
+     "component": "Number Slider",
+     "at": [
+      0,
+      280
+     ],
+     "settings": {
+      "label": "Height",
+      "min": 1.5,
+      "max": 4.0,
+      "value": 2.5,
+      "rounding": "float",
+      "decimals": 1,
+      "bind": "capsule.height"
+     }
+    },
+    {
+     "id": "xy",
+     "component": "XY Plane",
+     "at": [
+      0,
+      420
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cb",
+     "component": "Center Box",
+     "at": [
+      260,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "vol",
+     "component": "Volume",
+     "at": [
+      520,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "vp",
+     "component": "Panel",
+     "at": [
+      780,
+      140
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "fl",
+     "component": "Number Param",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {
+      "label": "Width"
+     }
+    },
+    {
+     "id": "flp",
+     "component": "Panel",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "st",
+     "component": "Number Slider",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Storey height",
+      "min": 2.0,
+      "max": 4.0,
+      "value": 2.75,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "core.storey_height"
+     }
+    },
+    {
+     "id": "cnt",
+     "component": "Number Slider",
+     "at": [
+      0,
+      140
+     ],
+     "settings": {
+      "label": "Count",
+      "min": 1,
+      "max": 12,
+      "value": 5,
+      "rounding": "integer"
+     }
+    },
+    {
+     "id": "se",
+     "component": "Series",
+     "at": [
+      260,
+      70
+     ],
+     "settings": {}
+    },
+    {
+     "id": "sp",
+     "component": "Panel",
+     "at": [
+      520,
+      70
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "cp",
+     "component": "Panel",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "lines": [
+       "2",
+       "3"
+      ]
+     }
+    },
+    {
+     "id": "se2",
+     "component": "Series",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "tp",
+     "component": "Panel",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "pv",
+     "component": "Param Viewer",
+     "at": [
+      520,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "tg",
+     "component": "Boolean Toggle",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Window",
+      "value": true
+     }
+    },
+    {
+     "id": "tgp",
+     "component": "Panel",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "vl",
+     "component": "Value List",
+     "at": [
+      0,
+      140
+     ],
+     "settings": {
+      "items": [
+       {
+        "name": "Type A",
+        "value": 0
+       },
+       {
+        "name": "Type B",
+        "value": 1
+       },
+       {
+        "name": "Type C",
+        "value": 2
+       },
+       {
+        "name": "Type D",
+        "value": 3
+       }
+      ],
+      "selected": 0
+     }
+    },
+    {
+     "id": "vlp",
+     "component": "Panel",
+     "at": [
+      260,
+      140
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "wn",
+     "component": "Panel",
+     "at": [
+      0,
+      280
+     ],
+     "settings": {
+      "lines": [
+       "2.5",
+       "tall"
+      ]
+     }
+    },
+    {
+     "id": "er",
+     "component": "Panel",
+     "at": [
+      0,
+      280
+     ],
+     "settings": {
+      "lines": [
+       "tall"
+      ]
+     }
+    },
+    {
+     "id": "cbw",
+     "component": "Center Box",
+     "at": [
+      260,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cbe",
+     "component": "Center Box",
+     "at": [
+      260,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cbwp",
+     "component": "Panel",
+     "at": [
+      520,
+      140
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "cbep",
+     "component": "Panel",
+     "at": [
+      520,
+      140
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    }
+   ],
+   "wires": [
+    "tg.Boolean>tgp.Stream",
+    "vl.Value>vlp.Stream",
+    "w.Number>cbw.X",
+    "bl.Number>cbw.Y",
+    "wn.Stream>cbw.Z",
+    "cbw.Box>cbwp.Stream",
+    "w.Number>cbe.X",
+    "bl.Number>cbe.Y",
+    "er.Stream>cbe.Z",
+    "cbe.Box>cbep.Stream",
+    "w.Number>wp.Stream",
+    "w.Number>cb.X",
+    "bl.Number>cb.Y",
+    "bh.Number>cb.Z",
+    "xy.Plane>cb.Base",
+    "cb.Box>vol.Geometry",
+    "vol.Volume>vp.Stream",
+    "fl.Number>flp.Stream",
+    "w.Number>fl.Number",
+    "st.Number>se.Step",
+    "cnt.Number>se.Count",
+    "se.Series>sp.Stream",
+    "cp.Stream>se2.Count",
+    "se2.Series>tp.Stream",
+    "se2.Series>pv.Data"
+   ],
+   "views": {
+    "slider": {
+     "title": {
+      "en": "Slider and Panel",
+      "de": "Schieberegler und Panel"
+     },
+     "objects": [
+      "w",
+      "wp"
+     ],
+     "layout": {
+      "w": [
+       0,
+       0
+      ],
+      "wp": [
+       260,
+       0
+      ]
+     }
+    },
+    "box": {
+     "title": {
+      "en": "Sliders into Center Box",
+      "de": "Schieberegler in Center Box"
+     },
+     "objects": [
+      "w",
+      "bl",
+      "bh",
+      "xy",
+      "cb",
+      "vol",
+      "vp"
+     ],
+     "layout": {
+      "w": [
+       0,
+       0
+      ],
+      "bl": [
+       0,
+       140
+      ],
+      "bh": [
+       0,
+       280
+      ],
+      "xy": [
+       0,
+       420
+      ],
+      "cb": [
+       260,
+       140
+      ],
+      "vol": [
+       520,
+       140
+      ],
+      "vp": [
+       780,
+       140
+      ]
+     }
+    },
+    "param": {
+     "title": {
+      "en": "A floating parameter",
+      "de": "Ein freier Parameter"
+     },
+     "objects": [
+      "w",
+      "fl",
+      "flp"
+     ],
+     "layout": {
+      "w": [
+       0,
+       0
+      ],
+      "fl": [
+       260,
+       0
+      ],
+      "flp": [
+       520,
+       0
+      ]
+     }
+    },
+    "list": {
+     "title": {
+      "en": "A series is a list",
+      "de": "Eine Reihe ist eine Liste"
+     },
+     "objects": [
+      "st",
+      "cnt",
+      "se",
+      "sp"
+     ],
+     "layout": {
+      "st": [
+       0,
+       0
+      ],
+      "cnt": [
+       0,
+       140
+      ],
+      "se": [
+       260,
+       70
+      ],
+      "sp": [
+       520,
+       70
+      ]
+     }
+    },
+    "tree": {
+     "title": {
+      "en": "Lists in a tree",
+      "de": "Listen in einem Baum"
+     },
+     "objects": [
+      "cp",
+      "se2",
+      "tp",
+      "pv"
+     ],
+     "layout": {
+      "cp": [
+       0,
+       0
+      ],
+      "se2": [
+       260,
+       0
+      ],
+      "tp": [
+       520,
+       0
+      ],
+      "pv": [
+       520,
+       140
+      ]
+     }
+    },
+    "warning": {
+     "title": {
+      "en": "Orange: a warning",
+      "de": "Orange: eine Warnung"
+     },
+     "objects": [
+      "w",
+      "bl",
+      "wn",
+      "cbw",
+      "cbwp"
+     ],
+     "layout": {
+      "w": [
+       0,
+       0
+      ],
+      "bl": [
+       0,
+       140
+      ],
+      "wn": [
+       0,
+       280
+      ],
+      "cbw": [
+       260,
+       140
+      ],
+      "cbwp": [
+       520,
+       140
+      ]
+     }
+    },
+    "error": {
+     "title": {
+      "en": "Red: an error",
+      "de": "Rot: ein Fehler"
+     },
+     "objects": [
+      "w",
+      "bl",
+      "er",
+      "cbe",
+      "cbep"
+     ],
+     "layout": {
+      "w": [
+       0,
+       0
+      ],
+      "bl": [
+       0,
+       140
+      ],
+      "er": [
+       0,
+       280
+      ],
+      "cbe": [
+       260,
+       140
+      ],
+      "cbep": [
+       520,
+       140
+      ]
+     }
+    },
+    "inputs": {
+     "title": {
+      "en": "Toggle and Value List",
+      "de": "Toggle und Werteliste"
+     },
+     "objects": [
+      "tg",
+      "tgp",
+      "vl",
+      "vlp"
+     ],
+     "layout": {
+      "tg": [
+       0,
+       0
+      ],
+      "tgp": [
+       260,
+       0
+      ],
+      "vl": [
+       0,
+       140
+      ],
+      "vlp": [
+       260,
+       140
+      ]
+     }
+    }
+   }
+  },
+  "capsule": {
+   "title": {
+    "en": "One parametric capsule",
+    "de": "Eine parametrische Kapsel"
+   },
+   "objects": [
+    {
+     "id": "w",
+     "component": "Number Slider",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Width",
+      "min": 1.5,
+      "max": 3.5,
+      "value": 2.5,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "capsule.width"
+     }
+    },
+    {
+     "id": "l",
+     "component": "Number Slider",
+     "at": [
+      0,
+      140
+     ],
+     "settings": {
+      "label": "Length",
+      "min": 2.5,
+      "max": 5.5,
+      "value": 4.0,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "capsule.length"
+     }
+    },
+    {
+     "id": "h",
+     "component": "Number Slider",
+     "at": [
+      0,
+      280
+     ],
+     "settings": {
+      "label": "Height",
+      "min": 1.5,
+      "max": 3.5,
+      "value": 2.5,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "capsule.height"
+     }
+    },
+    {
+     "id": "two",
+     "component": "Panel",
+     "at": [
+      0,
+      420
+     ],
+     "settings": {
+      "lines": [
+       "2"
+      ]
+     }
+    },
+    {
+     "id": "hl",
+     "component": "Division",
+     "at": [
+      260,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "hh",
+     "component": "Division",
+     "at": [
+      260,
+      280
+     ],
+     "settings": {}
+    },
+    {
+     "id": "xy",
+     "component": "XY Plane",
+     "at": [
+      260,
+      420
+     ],
+     "settings": {}
+    },
+    {
+     "id": "bp",
+     "component": "Construct Point",
+     "at": [
+      520,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "bo",
+     "component": "Plane Origin",
+     "at": [
+      780,
+      280
+     ],
+     "settings": {}
+    },
+    {
+     "id": "box",
+     "component": "Center Box",
+     "at": [
+      1040,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "r",
+     "component": "Number Slider",
+     "at": [
+      0,
+      140
+     ],
+     "settings": {
+      "label": "Corner radius",
+      "min": 0.0,
+      "max": 0.5,
+      "value": 0.25,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "capsule.corner_radius"
+     }
+    },
+    {
+     "id": "fil",
+     "component": "Fillet Edge",
+     "at": [
+      260,
+      70
+     ],
+     "settings": {}
+    },
+    {
+     "id": "fvol",
+     "component": "Volume",
+     "at": [
+      520,
+      70
+     ],
+     "settings": {}
+    },
+    {
+     "id": "fvp",
+     "component": "Panel",
+     "at": [
+      780,
+      70
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "d",
+     "component": "Number Slider",
+     "at": [
+      0,
+      280
+     ],
+     "settings": {
+      "label": "Window diameter",
+      "min": 0.5,
+      "max": 2.0,
+      "value": 1.3,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "capsule.window_diameter"
+     }
+    },
+    {
+     "id": "wu",
+     "component": "Number Slider",
+     "at": [
+      0,
+      560
+     ],
+     "settings": {
+      "label": "Window offset",
+      "min": -0.8,
+      "max": 0.8,
+      "value": 0.0,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "types.A.window_u"
+     }
+    },
+    {
+     "id": "twow",
+     "component": "Panel",
+     "at": [
+      0,
+      420
+     ],
+     "settings": {
+      "lines": [
+       "2"
+      ]
+     }
+    },
+    {
+     "id": "wall",
+     "component": "Panel",
+     "at": [
+      0,
+      560
+     ],
+     "settings": {
+      "lines": [
+       {
+        "model": "capsule_wall"
+       }
+      ]
+     }
+    },
+    {
+     "id": "rad",
+     "component": "Division",
+     "at": [
+      260,
+      420
+     ],
+     "settings": {}
+    },
+    {
+     "id": "wpt",
+     "component": "Construct Point",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "xz",
+     "component": "XZ Plane",
+     "at": [
+      260,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "wpl",
+     "component": "Plane Origin",
+     "at": [
+      520,
+      70
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cir",
+     "component": "Circle",
+     "at": [
+      780,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cyl",
+     "component": "Cylinder",
+     "at": [
+      780,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cut",
+     "component": "Solid Difference",
+     "at": [
+      1040,
+      308
+     ],
+     "settings": {}
+    },
+    {
+     "id": "bu",
+     "component": "Number Slider",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Bolt offset",
+      "min": 0.2,
+      "max": 1.1,
+      "value": 0.9,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "capsule.bolt_u"
+     }
+    },
+    {
+     "id": "bvl",
+     "component": "Number Slider",
+     "at": [
+      0,
+      210
+     ],
+     "settings": {
+      "label": "Bolt low",
+      "min": 0.2,
+      "max": 1.2,
+      "value": 0.5,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "capsule.bolt_v_low"
+     }
+    },
+    {
+     "id": "bvh",
+     "component": "Number Slider",
+     "at": [
+      0,
+      420
+     ],
+     "settings": {
+      "label": "Bolt high",
+      "min": 1.3,
+      "max": 2.3,
+      "value": 2.0,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "capsule.bolt_v_high"
+     }
+    },
+    {
+     "id": "nbu",
+     "component": "Negative",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "mx",
+     "component": "Merge",
+     "at": [
+      520,
+      70
+     ],
+     "settings": {}
+    },
+    {
+     "id": "mz",
+     "component": "Merge",
+     "at": [
+      520,
+      350
+     ],
+     "settings": {}
+    },
+    {
+     "id": "bolt",
+     "component": "Construct Point",
+     "at": [
+      780,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "types",
+     "component": "Brep Param",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Types",
+      "data": [
+       {
+        "capsule": "A"
+       },
+       {
+        "capsule": "B"
+       },
+       {
+        "capsule": "C"
+       },
+       {
+        "capsule": "D"
+       }
+      ]
+     }
+    },
+    {
+     "id": "tp",
+     "component": "Panel",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "vl",
+     "component": "Value List",
+     "at": [
+      0,
+      210
+     ],
+     "settings": {
+      "items": [
+       {
+        "name": "Type A",
+        "value": 0
+       },
+       {
+        "name": "Type B",
+        "value": 1
+       },
+       {
+        "name": "Type C",
+        "value": 2
+       },
+       {
+        "name": "Type D",
+        "value": 3
+       }
+      ],
+      "selected": 1
+     }
+    },
+    {
+     "id": "li2",
+     "component": "List Item",
+     "at": [
+      260,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "lp",
+     "component": "Panel",
+     "at": [
+      520,
+      210
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "side",
+     "component": "Number Slider",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Core side",
+      "min": 3.0,
+      "max": 8.0,
+      "value": 5.5,
+      "rounding": "float",
+      "decimals": 1,
+      "bind": "core.side"
+     }
+    },
+    {
+     "id": "two2",
+     "component": "Panel",
+     "at": [
+      0,
+      140
+     ],
+     "settings": {
+      "lines": [
+       "2"
+      ]
+     }
+    },
+    {
+     "id": "hs",
+     "component": "Division",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "pp",
+     "component": "Construct Point",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "pxy",
+     "component": "XY Plane",
+     "at": [
+      520,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "p0",
+     "component": "Plane Origin",
+     "at": [
+      780,
+      70
+     ],
+     "settings": {}
+    },
+    {
+     "id": "ang",
+     "component": "Panel",
+     "at": [
+      520,
+      420
+     ],
+     "settings": {
+      "lines": [
+       "0",
+       "-90",
+       "-180",
+       "-270"
+      ]
+     }
+    },
+    {
+     "id": "rad4",
+     "component": "Radians",
+     "at": [
+      780,
+      420
+     ],
+     "settings": {}
+    },
+    {
+     "id": "rot",
+     "component": "Rotate",
+     "at": [
+      1040,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "idx",
+     "component": "Panel",
+     "at": [
+      0,
+      140
+     ],
+     "settings": {
+      "lines": [
+       "0",
+       "1",
+       "2",
+       "0"
+      ]
+     }
+    },
+    {
+     "id": "li",
+     "component": "List Item",
+     "at": [
+      260,
+      70
+     ],
+     "settings": {}
+    },
+    {
+     "id": "ori",
+     "component": "Orient",
+     "at": [
+      520,
+      210
+     ],
+     "settings": {}
+    }
+   ],
+   "wires": [
+    "l.Number>hl.A",
+    "two.Stream>hl.B",
+    "h.Number>hh.A",
+    "two.Stream>hh.B",
+    "hl.Result>bp.Y coordinate",
+    "hh.Result>bp.Z coordinate",
+    "xy.Plane>bo.Plane",
+    "bp.Point>bo.Origin",
+    "bo.Plane>box.Base",
+    "w.Number>box.X",
+    "l.Number>box.Y",
+    "h.Number>box.Z",
+    "box.Box>fil.Shape",
+    "r.Number>fil.Radius",
+    "fil.Result>fvol.Geometry",
+    "fvol.Volume>fvp.Stream",
+    "d.Number>rad.A",
+    "twow.Stream>rad.B",
+    "l.Number>wpt.Y coordinate",
+    "hh.Result>wpt.Z coordinate",
+    "wu.Number>wpt.X coordinate",
+    "xz.Plane>wpl.Plane",
+    "wpt.Point>wpl.Origin",
+    "wpl.Plane>cyl.Base",
+    "rad.Result>cyl.Radius",
+    "wall.Stream>cyl.Length",
+    "fil.Result>cut.Brep A",
+    "cyl.Cylinder>cut.Brep B",
+    "wpl.Plane>cir.Plane",
+    "rad.Result>cir.Radius",
+    "bu.Number>nbu.Value",
+    "nbu.Result>mx.Data 1",
+    "bu.Number>mx.Data 2",
+    "bu.Number>mx.Data 3",
+    "nbu.Result>mx.Data 4",
+    "bvl.Number>mz.Data 1",
+    "bvl.Number>mz.Data 2",
+    "bvh.Number>mz.Data 3",
+    "bvh.Number>mz.Data 4",
+    "mx.Result>bolt.X coordinate",
+    "mz.Result>bolt.Z coordinate",
+    "types.Brep>tp.Stream",
+    "types.Brep>li2.List",
+    "vl.Value>li2.Index",
+    "li2.Item>lp.Stream",
+    "side.Number>hs.A",
+    "two2.Stream>hs.B",
+    "hs.Result>pp.Y coordinate",
+    "pxy.Plane>p0.Plane",
+    "pp.Point>p0.Origin",
+    "ang.Stream>rad4.Degrees",
+    "p0.Plane>rot.Geometry",
+    "rad4.Radians>rot.Angle",
+    "types.Brep>li.List",
+    "idx.Stream>li.Index",
+    "li.Item>ori.Geometry",
+    "pxy.Plane>ori.Source",
+    "rot.Geometry>ori.Target"
+   ],
+   "views": {
+    "body": {
+     "title": {
+      "en": "Capsule body from three sliders",
+      "de": "Kapselkörper aus drei Schiebereglern"
+     },
+     "objects": [
+      "w",
+      "l",
+      "h",
+      "two",
+      "hl",
+      "hh",
+      "xy",
+      "bp",
+      "bo",
+      "box"
+     ],
+     "layout": {
+      "w": [
+       0,
+       0
+      ],
+      "l": [
+       0,
+       140
+      ],
+      "h": [
+       0,
+       280
+      ],
+      "two": [
+       0,
+       420
+      ],
+      "hl": [
+       260,
+       140
+      ],
+      "hh": [
+       260,
+       280
+      ],
+      "xy": [
+       260,
+       420
+      ],
+      "bp": [
+       520,
+       210
+      ],
+      "bo": [
+       780,
+       280
+      ],
+      "box": [
+       1040,
+       140
+      ]
+     }
+    },
+    "round": {
+     "title": {
+      "en": "Rounded corners",
+      "de": "Gerundete Kanten"
+     },
+     "objects": [
+      "box",
+      "r",
+      "fil",
+      "fvol",
+      "fvp"
+     ],
+     "layout": {
+      "box": [
+       0,
+       0
+      ],
+      "r": [
+       0,
+       140
+      ],
+      "fil": [
+       260,
+       70
+      ],
+      "fvol": [
+       520,
+       70
+      ],
+      "fvp": [
+       780,
+       70
+      ]
+     }
+    },
+    "window": {
+     "title": {
+      "en": "Window cut",
+      "de": "Fensterausschnitt"
+     },
+     "objects": [
+      "l",
+      "hh",
+      "d",
+      "twow",
+      "wall",
+      "wpt",
+      "xz",
+      "rad",
+      "wpl",
+      "fil",
+      "cyl",
+      "cut"
+     ],
+     "layout": {
+      "l": [
+       0,
+       0
+      ],
+      "hh": [
+       0,
+       140
+      ],
+      "d": [
+       0,
+       280
+      ],
+      "twow": [
+       0,
+       420
+      ],
+      "wall": [
+       0,
+       560
+      ],
+      "wpt": [
+       260,
+       0
+      ],
+      "xz": [
+       260,
+       140
+      ],
+      "rad": [
+       260,
+       420
+      ],
+      "wpl": [
+       520,
+       70
+      ],
+      "fil": [
+       520,
+       420
+      ],
+      "cyl": [
+       780,
+       210
+      ],
+      "cut": [
+       1040,
+       308
+      ]
+     }
+    },
+    "window-circle": {
+     "title": {
+      "en": "Window circle",
+      "de": "Fensterkreis"
+     },
+     "objects": [
+      "l",
+      "hh",
+      "d",
+      "twow",
+      "rad",
+      "wu",
+      "wpt",
+      "xz",
+      "wpl",
+      "cir"
+     ],
+     "layout": {
+      "l": [
+       0,
+       280
+      ],
+      "hh": [
+       0,
+       420
+      ],
+      "d": [
+       0,
+       0
+      ],
+      "twow": [
+       0,
+       140
+      ],
+      "rad": [
+       260,
+       0
+      ],
+      "wu": [
+       0,
+       560
+      ],
+      "wpt": [
+       260,
+       280
+      ],
+      "xz": [
+       260,
+       420
+      ],
+      "wpl": [
+       520,
+       280
+      ],
+      "cir": [
+       780,
+       140
+      ]
+     }
+    },
+    "bolts": {
+     "title": {
+      "en": "Four bolts",
+      "de": "Vier Bolzen"
+     },
+     "objects": [
+      "bu",
+      "bvl",
+      "bvh",
+      "nbu",
+      "mx",
+      "mz",
+      "bolt"
+     ],
+     "layout": {
+      "bu": [
+       0,
+       0
+      ],
+      "bvl": [
+       0,
+       210
+      ],
+      "bvh": [
+       0,
+       420
+      ],
+      "nbu": [
+       260,
+       0
+      ],
+      "mx": [
+       520,
+       70
+      ],
+      "mz": [
+       520,
+       350
+      ],
+      "bolt": [
+       780,
+       210
+      ]
+     }
+    },
+    "types": {
+     "title": {
+      "en": "Capsule types",
+      "de": "Kapseltypen"
+     },
+     "objects": [
+      "types",
+      "tp",
+      "vl",
+      "li2",
+      "lp"
+     ],
+     "layout": {
+      "types": [
+       0,
+       0
+      ],
+      "tp": [
+       260,
+       0
+      ],
+      "vl": [
+       0,
+       210
+      ],
+      "li2": [
+       260,
+       210
+      ],
+      "lp": [
+       520,
+       210
+      ]
+     }
+    },
+    "planes": {
+     "title": {
+      "en": "Planes around the core",
+      "de": "Ebenen um den Kern"
+     },
+     "objects": [
+      "side",
+      "two2",
+      "hs",
+      "pp",
+      "pxy",
+      "p0",
+      "ang",
+      "rad4",
+      "rot"
+     ],
+     "layout": {
+      "side": [
+       0,
+       0
+      ],
+      "two2": [
+       0,
+       140
+      ],
+      "hs": [
+       260,
+       0
+      ],
+      "pp": [
+       520,
+       0
+      ],
+      "pxy": [
+       520,
+       210
+      ],
+      "p0": [
+       780,
+       70
+      ],
+      "ang": [
+       520,
+       420
+      ],
+      "rad4": [
+       780,
+       420
+      ],
+      "rot": [
+       1040,
+       210
+      ]
+     }
+    },
+    "orient": {
+     "title": {
+      "en": "Orient a type onto each plane",
+      "de": "Einen Typ auf jede Ebene orientieren"
+     },
+     "objects": [
+      "types",
+      "idx",
+      "li",
+      "rot",
+      "pxy",
+      "ori"
+     ],
+     "layout": {
+      "types": [
+       0,
+       0
+      ],
+      "idx": [
+       0,
+       140
+      ],
+      "li": [
+       260,
+       70
+      ],
+      "rot": [
+       0,
+       350
+      ],
+      "pxy": [
+       260,
+       350
+      ],
+      "ori": [
+       520,
+       210
+      ]
+     }
+    }
+   }
+  },
+  "tower": {
+   "title": {
+    "en": "Core, capsules, capital and podium",
+    "de": "Kern, Kapseln, Kopf und Sockel"
+   },
+   "objects": [
+    {
+     "id": "side",
+     "component": "Number Slider",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Core side",
+      "min": 3.0,
+      "max": 8.0,
+      "value": 5.5,
+      "rounding": "float",
+      "decimals": 1,
+      "bind": "core.side"
+     }
+    },
+    {
+     "id": "sh",
+     "component": "Number Slider",
+     "at": [
+      0,
+      140
+     ],
+     "settings": {
+      "label": "Storey height",
+      "min": 2.0,
+      "max": 4.0,
+      "value": 2.75,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "core.storey_height"
+     }
+    },
+    {
+     "id": "n",
+     "component": "Number Slider",
+     "at": [
+      0,
+      280
+     ],
+     "settings": {
+      "label": "Capsule storeys",
+      "min": 1,
+      "max": 13,
+      "value": 11,
+      "rounding": "integer",
+      "bind": "towers.B.capsule_storeys"
+     }
+    },
+    {
+     "id": "ps",
+     "component": "Number Slider",
+     "at": [
+      0,
+      420
+     ],
+     "settings": {
+      "label": "Podium storeys",
+      "min": 0,
+      "max": 4,
+      "value": 2,
+      "rounding": "integer",
+      "bind": "podium.storeys"
+     }
+    },
+    {
+     "id": "two",
+     "component": "Panel",
+     "at": [
+      0,
+      560
+     ],
+     "settings": {
+      "lines": [
+       "2"
+      ]
+     }
+    },
+    {
+     "id": "tn",
+     "component": "Addition",
+     "at": [
+      260,
+      350
+     ],
+     "settings": {}
+    },
+    {
+     "id": "tot",
+     "component": "Multiplication",
+     "at": [
+      520,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "z0",
+     "component": "Multiplication",
+     "at": [
+      260,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "hc",
+     "component": "Division",
+     "at": [
+      520,
+      490
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cp",
+     "component": "Construct Point",
+     "at": [
+      780,
+      490
+     ],
+     "settings": {}
+    },
+    {
+     "id": "xy",
+     "component": "XY Plane",
+     "at": [
+      780,
+      70
+     ],
+     "settings": {}
+    },
+    {
+     "id": "co",
+     "component": "Plane Origin",
+     "at": [
+      1040,
+      350
+     ],
+     "settings": {}
+    },
+    {
+     "id": "core",
+     "component": "Center Box",
+     "at": [
+      1300,
+      350
+     ],
+     "settings": {}
+    },
+    {
+     "id": "ser",
+     "component": "Series",
+     "at": [
+      520,
+      112
+     ],
+     "settings": {}
+    },
+    {
+     "id": "gz",
+     "component": "Graft Tree",
+     "at": [
+      780,
+      112
+     ],
+     "settings": {}
+    },
+    {
+     "id": "uz",
+     "component": "Unit Z",
+     "at": [
+      1040,
+      112
+     ],
+     "settings": {}
+    },
+    {
+     "id": "gp",
+     "component": "Panel",
+     "at": [
+      780,
+      336
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "hs",
+     "component": "Division",
+     "at": [
+      260,
+      70
+     ],
+     "settings": {}
+    },
+    {
+     "id": "pitch",
+     "component": "Number Slider",
+     "at": [
+      0,
+      280
+     ],
+     "settings": {
+      "label": "Slot pitch",
+      "min": 2.0,
+      "max": 4.0,
+      "value": 2.75,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "items.pitch"
+     }
+    },
+    {
+     "id": "hp",
+     "component": "Division",
+     "at": [
+      260,
+      280
+     ],
+     "settings": {}
+    },
+    {
+     "id": "nhp",
+     "component": "Negative",
+     "at": [
+      520,
+      420
+     ],
+     "settings": {}
+    },
+    {
+     "id": "sx",
+     "component": "Merge",
+     "at": [
+      780,
+      350
+     ],
+     "settings": {}
+    },
+    {
+     "id": "sp0",
+     "component": "Construct Point",
+     "at": [
+      1040,
+      168
+     ],
+     "settings": {}
+    },
+    {
+     "id": "p0",
+     "component": "Plane Origin",
+     "at": [
+      1300,
+      168
+     ],
+     "settings": {}
+    },
+    {
+     "id": "stg",
+     "component": "Number Slider",
+     "at": [
+      0,
+      140
+     ],
+     "settings": {
+      "label": "Item stagger",
+      "min": 0.0,
+      "max": 1.5,
+      "value": 0.917,
+      "rounding": "float",
+      "decimals": 3,
+      "bind": "items.stagger"
+     }
+    },
+    {
+     "id": "zero",
+     "component": "Panel",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "lines": [
+       "0"
+      ]
+     }
+    },
+    {
+     "id": "sgm",
+     "component": "Merge",
+     "at": [
+      260,
+      70
+     ],
+     "settings": {}
+    },
+    {
+     "id": "uzs",
+     "component": "Unit Z",
+     "at": [
+      520,
+      70
+     ],
+     "settings": {}
+    },
+    {
+     "id": "p0s",
+     "component": "Move",
+     "at": [
+      780,
+      168
+     ],
+     "settings": {}
+    },
+    {
+     "id": "ang",
+     "component": "Panel",
+     "at": [
+      0,
+      280
+     ],
+     "settings": {
+      "lines": [
+       "0",
+       "-90",
+       "-180",
+       "-270"
+      ]
+     }
+    },
+    {
+     "id": "rad",
+     "component": "Radians",
+     "at": [
+      260,
+      280
+     ],
+     "settings": {}
+    },
+    {
+     "id": "ga",
+     "component": "Graft Tree",
+     "at": [
+      520,
+      280
+     ],
+     "settings": {}
+    },
+    {
+     "id": "rot",
+     "component": "Rotate",
+     "at": [
+      780,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "fl",
+     "component": "Flatten Tree",
+     "at": [
+      1040,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cx",
+     "component": "Number Slider",
+     "at": [
+      0,
+      210
+     ],
+     "settings": {
+      "label": "Core centre X",
+      "min": -40.0,
+      "max": 40.0,
+      "value": -11.1,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "towers.B.center.x"
+     }
+    },
+    {
+     "id": "cy",
+     "component": "Number Slider",
+     "at": [
+      0,
+      350
+     ],
+     "settings": {
+      "label": "Core centre Y",
+      "min": -40.0,
+      "max": 40.0,
+      "value": 0.0,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "towers.B.center.y"
+     }
+    },
+    {
+     "id": "vc",
+     "component": "Vector XYZ",
+     "at": [
+      260,
+      280
+     ],
+     "settings": {}
+    },
+    {
+     "id": "mc",
+     "component": "Move",
+     "at": [
+      520,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "mv",
+     "component": "Move",
+     "at": [
+      260,
+      112
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cullp",
+     "component": "Integer Param",
+     "at": [
+      0,
+      280
+     ],
+     "settings": {
+      "label": "Cull indices",
+      "data": {
+       "slot_tree": {
+        "tower": "B",
+        "part": "cull"
+       }
+      }
+     }
+    },
+    {
+     "id": "cull",
+     "component": "Cull Index",
+     "at": [
+      260,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "yawp",
+     "component": "Number Param",
+     "at": [
+      0,
+      280
+     ],
+     "settings": {
+      "label": "Capsule yaw (degrees)",
+      "data": {
+       "slot_tree": {
+        "tower": "B",
+        "part": "yaw"
+       }
+      }
+     }
+    },
+    {
+     "id": "yrad",
+     "component": "Radians",
+     "at": [
+      260,
+      280
+     ],
+     "settings": {}
+    },
+    {
+     "id": "yrot",
+     "component": "Rotate",
+     "at": [
+      520,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "dpl",
+     "component": "Deconstruct Plane",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "sin",
+     "component": "Sine",
+     "at": [
+      260,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "abs",
+     "component": "Absolute",
+     "at": [
+      520,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cw2",
+     "component": "Number Slider",
+     "at": [
+      0,
+      420
+     ],
+     "settings": {
+      "label": "Capsule width",
+      "min": 1.5,
+      "max": 3.5,
+      "value": 2.5,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "capsule.width"
+     }
+    },
+    {
+     "id": "hw",
+     "component": "Division",
+     "at": [
+      520,
+      420
+     ],
+     "settings": {}
+    },
+    {
+     "id": "amp",
+     "component": "Multiplication",
+     "at": [
+      780,
+      308
+     ],
+     "settings": {}
+    },
+    {
+     "id": "ampv",
+     "component": "Amplitude",
+     "at": [
+      1040,
+      168
+     ],
+     "settings": {}
+    },
+    {
+     "id": "slots",
+     "component": "Move",
+     "at": [
+      1300,
+      70
+     ],
+     "settings": {}
+    },
+    {
+     "id": "capp",
+     "component": "Brep Param",
+     "at": [
+      0,
+      280
+     ],
+     "settings": {
+      "label": "Capsule per slot",
+      "data": {
+       "slot_tree": {
+        "tower": "B",
+        "part": "capsule"
+       }
+      }
+     }
+    },
+    {
+     "id": "ori",
+     "component": "Orient",
+     "at": [
+      260,
+      168
+     ],
+     "settings": {}
+    },
+    {
+     "id": "st",
+     "component": "Tree Statistics",
+     "at": [
+      520,
+      168
+     ],
+     "settings": {}
+    },
+    {
+     "id": "stl",
+     "component": "Panel",
+     "at": [
+      780,
+      70
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "stc",
+     "component": "Panel",
+     "at": [
+      780,
+      280
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "ow",
+     "component": "Number Slider",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Capital overhang",
+      "min": 0.0,
+      "max": 1.0,
+      "value": 0.25,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "capital.overhang"
+     }
+    },
+    {
+     "id": "ch",
+     "component": "Number Slider",
+     "at": [
+      0,
+      140
+     ],
+     "settings": {
+      "label": "Capital height",
+      "min": 1.0,
+      "max": 5.0,
+      "value": 2.75,
+      "rounding": "float",
+      "decimals": 2,
+      "bind": "capital.height"
+     }
+    },
+    {
+     "id": "ow2",
+     "component": "Multiplication",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cw",
+     "component": "Addition",
+     "at": [
+      520,
+      70
+     ],
+     "settings": {}
+    },
+    {
+     "id": "chh",
+     "component": "Division",
+     "at": [
+      260,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "czz",
+     "component": "Addition",
+     "at": [
+      520,
+      350
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cpt",
+     "component": "Construct Point",
+     "at": [
+      780,
+      350
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cpl",
+     "component": "Plane Origin",
+     "at": [
+      1040,
+      350
+     ],
+     "settings": {}
+    },
+    {
+     "id": "capital",
+     "component": "Center Box",
+     "at": [
+      1300,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "pw",
+     "component": "Number Slider",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Podium length",
+      "min": 8.0,
+      "max": 40.0,
+      "value": 31.4,
+      "rounding": "float",
+      "decimals": 1,
+      "bind": "podium.length"
+     }
+    },
+    {
+     "id": "pd",
+     "component": "Number Slider",
+     "at": [
+      0,
+      140
+     ],
+     "settings": {
+      "label": "Podium width",
+      "min": 6.0,
+      "max": 30.0,
+      "value": 20.7,
+      "rounding": "float",
+      "decimals": 1,
+      "bind": "podium.width"
+     }
+    },
+    {
+     "id": "rect",
+     "component": "Rectangle",
+     "at": [
+      260,
+      70
+     ],
+     "settings": {}
+    },
+    {
+     "id": "uzp",
+     "component": "Unit Z",
+     "at": [
+      520,
+      350
+     ],
+     "settings": {}
+    },
+    {
+     "id": "ext",
+     "component": "Extrude",
+     "at": [
+      780,
+      210
+     ],
+     "settings": {}
+    }
+   ],
+   "wires": [
+    "ps.Number>tn.A",
+    "n.Number>tn.B",
+    "sh.Number>tot.A",
+    "tn.Result>tot.B",
+    "ps.Number>z0.A",
+    "sh.Number>z0.B",
+    "tot.Result>hc.A",
+    "two.Stream>hc.B",
+    "hc.Result>cp.Z coordinate",
+    "xy.Plane>co.Plane",
+    "cp.Point>co.Origin",
+    "co.Plane>core.Base",
+    "side.Number>core.X",
+    "side.Number>core.Y",
+    "tot.Result>core.Z",
+    "z0.Result>ser.Start",
+    "sh.Number>ser.Step",
+    "n.Number>ser.Count",
+    "ser.Series>gz.Tree",
+    "gz.Tree>uz.Factor",
+    "gz.Tree>gp.Stream",
+    "side.Number>hs.A",
+    "two.Stream>hs.B",
+    "pitch.Number>hp.A",
+    "two.Stream>hp.B",
+    "hp.Result>nhp.Value",
+    "nhp.Result>sx.Data 1",
+    "hp.Result>sx.Data 2",
+    "sx.Result>sp0.X coordinate",
+    "hs.Result>sp0.Y coordinate",
+    "xy.Plane>p0.Plane",
+    "sp0.Point>p0.Origin",
+    "zero.Stream>sgm.Data 1",
+    "stg.Number>sgm.Data 2",
+    "sgm.Result>uzs.Factor",
+    "p0.Plane>p0s.Geometry",
+    "uzs.Unit vector>p0s.Motion",
+    "ang.Stream>rad.Degrees",
+    "rad.Radians>ga.Tree",
+    "p0s.Geometry>rot.Geometry",
+    "ga.Tree>rot.Angle",
+    "rot.Geometry>fl.Tree",
+    "cx.Number>vc.X component",
+    "cy.Number>vc.Y component",
+    "fl.Tree>mc.Geometry",
+    "vc.Vector>mc.Motion",
+    "mc.Geometry>mv.Geometry",
+    "uz.Unit vector>mv.Motion",
+    "mv.Geometry>cull.List",
+    "cullp.Integer>cull.Indices",
+    "yawp.Number>yrad.Degrees",
+    "cull.List>yrot.Geometry",
+    "yrad.Radians>yrot.Angle",
+    "cull.List>yrot.Plane",
+    "cull.List>dpl.Plane",
+    "yrad.Radians>sin.Value",
+    "sin.Result>abs.Value",
+    "cw2.Number>hw.A",
+    "two.Stream>hw.B",
+    "hw.Result>amp.A",
+    "abs.Result>amp.B",
+    "dpl.Y-Axis>ampv.Vector",
+    "amp.Result>ampv.Amplitude",
+    "yrot.Geometry>slots.Geometry",
+    "ampv.Vector>slots.Motion",
+    "capp.Brep>ori.Geometry",
+    "slots.Geometry>ori.Target",
+    "ori.Geometry>st.Tree",
+    "st.Length>stl.Stream",
+    "st.Count>stc.Stream",
+    "ow.Number>ow2.A",
+    "two.Stream>ow2.B",
+    "side.Number>cw.A",
+    "ow2.Result>cw.B",
+    "ch.Number>chh.A",
+    "two.Stream>chh.B",
+    "tot.Result>czz.A",
+    "chh.Result>czz.B",
+    "czz.Result>cpt.Z coordinate",
+    "cpt.Point>cpl.Origin",
+    "cpl.Plane>capital.Base",
+    "cw.Result>capital.X",
+    "cw.Result>capital.Y",
+    "ch.Number>capital.Z",
+    "xy.Plane>rect.Plane",
+    "pw.Number>rect.X Size",
+    "pd.Number>rect.Y Size",
+    "z0.Result>uzp.Factor",
+    "rect.Rectangle>ext.Base",
+    "uzp.Unit vector>ext.Direction"
+   ],
+   "views": {
+    "core": {
+     "title": {
+      "en": "The core",
+      "de": "Der Kern"
+     },
+     "objects": [
+      "side",
+      "sh",
+      "n",
+      "ps",
+      "two",
+      "tn",
+      "tot",
+      "hc",
+      "cp",
+      "co",
+      "core",
+      "xy"
+     ],
+     "layout": {
+      "side": [
+       0,
+       0
+      ],
+      "sh": [
+       0,
+       140
+      ],
+      "n": [
+       0,
+       280
+      ],
+      "ps": [
+       0,
+       420
+      ],
+      "two": [
+       0,
+       560
+      ],
+      "tn": [
+       260,
+       350
+      ],
+      "tot": [
+       520,
+       210
+      ],
+      "hc": [
+       520,
+       490
+      ],
+      "cp": [
+       780,
+       490
+      ],
+      "co": [
+       1040,
+       350
+      ],
+      "core": [
+       1300,
+       350
+      ],
+      "xy": [
+       780,
+       70
+      ]
+     }
+    },
+    "levels": {
+     "title": {
+      "en": "Heights per storey",
+      "de": "Höhen je Geschoss"
+     },
+     "objects": [
+      "sh",
+      "n",
+      "ps",
+      "z0",
+      "ser",
+      "gz",
+      "uz",
+      "gp"
+     ],
+     "layout": {
+      "sh": [
+       0,
+       0
+      ],
+      "n": [
+       0,
+       140
+      ],
+      "ps": [
+       0,
+       280
+      ],
+      "z0": [
+       260,
+       210
+      ],
+      "ser": [
+       520,
+       112
+      ],
+      "gz": [
+       780,
+       112
+      ],
+      "uz": [
+       1040,
+       112
+      ],
+      "gp": [
+       780,
+       336
+      ]
+     }
+    },
+    "facades": {
+     "title": {
+      "en": "Two slots on the first facade",
+      "de": "Zwei Plätze an der ersten Fassade"
+     },
+     "objects": [
+      "side",
+      "two",
+      "pitch",
+      "hs",
+      "hp",
+      "nhp",
+      "sx",
+      "xy",
+      "sp0",
+      "p0"
+     ],
+     "layout": {
+      "side": [
+       0,
+       0
+      ],
+      "two": [
+       0,
+       140
+      ],
+      "pitch": [
+       0,
+       280
+      ],
+      "hs": [
+       260,
+       70
+      ],
+      "hp": [
+       260,
+       280
+      ],
+      "nhp": [
+       520,
+       420
+      ],
+      "sx": [
+       780,
+       350
+      ],
+      "xy": [
+       780,
+       0
+      ],
+      "sp0": [
+       1040,
+       168
+      ],
+      "p0": [
+       1300,
+       168
+      ]
+     }
+    },
+    "stagger": {
+     "title": {
+      "en": "The second capsule sits higher",
+      "de": "Die zweite Kapsel sitzt höher"
+     },
+     "objects": [
+      "zero",
+      "stg",
+      "sgm",
+      "uzs",
+      "p0",
+      "p0s"
+     ],
+     "layout": {
+      "zero": [
+       0,
+       0
+      ],
+      "stg": [
+       0,
+       140
+      ],
+      "sgm": [
+       260,
+       70
+      ],
+      "uzs": [
+       520,
+       70
+      ],
+      "p0": [
+       520,
+       280
+      ],
+      "p0s": [
+       780,
+       168
+      ]
+     }
+    },
+    "rotate": {
+     "title": {
+      "en": "Rotate to every facade",
+      "de": "Zu jeder Fassade drehen"
+     },
+     "objects": [
+      "p0s",
+      "ang",
+      "rad",
+      "ga",
+      "rot",
+      "fl"
+     ],
+     "layout": {
+      "p0s": [
+       0,
+       0
+      ],
+      "ang": [
+       0,
+       280
+      ],
+      "rad": [
+       260,
+       280
+      ],
+      "ga": [
+       520,
+       280
+      ],
+      "rot": [
+       780,
+       140
+      ],
+      "fl": [
+       1040,
+       140
+      ]
+     }
+    },
+    "centre": {
+     "title": {
+      "en": "Move to the core centre",
+      "de": "Zum Kernmittelpunkt verschieben"
+     },
+     "objects": [
+      "fl",
+      "cx",
+      "cy",
+      "vc",
+      "mc"
+     ],
+     "layout": {
+      "fl": [
+       0,
+       70
+      ],
+      "cx": [
+       0,
+       210
+      ],
+      "cy": [
+       0,
+       350
+      ],
+      "vc": [
+       260,
+       280
+      ],
+      "mc": [
+       520,
+       140
+      ]
+     }
+    },
+    "storeys": {
+     "title": {
+      "en": "Copy the planes to every storey",
+      "de": "Die Ebenen auf jedes Geschoss kopieren"
+     },
+     "objects": [
+      "mc",
+      "uz",
+      "mv"
+     ],
+     "layout": {
+      "mc": [
+       0,
+       0
+      ],
+      "uz": [
+       0,
+       210
+      ],
+      "mv": [
+       260,
+       112
+      ]
+     }
+    },
+    "cull": {
+     "title": {
+      "en": "Cull Index removes the west planes of the top storey",
+      "de": "Cull Index entfernt die Westebenen des obersten Geschosses"
+     },
+     "objects": [
+      "mv",
+      "cullp",
+      "cull"
+     ],
+     "layout": {
+      "mv": [
+       0,
+       70
+      ],
+      "cullp": [
+       0,
+       280
+      ],
+      "cull": [
+       260,
+       140
+      ]
+     }
+    },
+    "yaw": {
+     "title": {
+      "en": "Yaw every capsule by its type",
+      "de": "Jede Kapsel nach ihrem Typ drehen"
+     },
+     "objects": [
+      "cull",
+      "yawp",
+      "yrad",
+      "yrot"
+     ],
+     "layout": {
+      "cull": [
+       0,
+       70
+      ],
+      "yawp": [
+       0,
+       280
+      ],
+      "yrad": [
+       260,
+       280
+      ],
+      "yrot": [
+       520,
+       140
+      ]
+     }
+    },
+    "clearance": {
+     "title": {
+      "en": "Push the yawed capsule out to touch the facade",
+      "de": "Die gedrehte Kapsel bis an die Fassade schieben"
+     },
+     "objects": [
+      "cull",
+      "yrad",
+      "yrot",
+      "dpl",
+      "sin",
+      "abs",
+      "cw2",
+      "two",
+      "hw",
+      "amp",
+      "ampv",
+      "slots"
+     ],
+     "layout": {
+      "cull": [
+       0,
+       0
+      ],
+      "yrad": [
+       0,
+       210
+      ],
+      "yrot": [
+       780,
+       0
+      ],
+      "dpl": [
+       260,
+       0
+      ],
+      "sin": [
+       260,
+       210
+      ],
+      "abs": [
+       520,
+       210
+      ],
+      "cw2": [
+       0,
+       420
+      ],
+      "two": [
+       260,
+       420
+      ],
+      "hw": [
+       520,
+       420
+      ],
+      "amp": [
+       780,
+       308
+      ],
+      "ampv": [
+       1040,
+       168
+      ],
+      "slots": [
+       1300,
+       70
+      ]
+     }
+    },
+    "orient": {
+     "title": {
+      "en": "Orient the right capsule onto every slot",
+      "de": "Die richtige Kapsel auf jeden Platz orientieren"
+     },
+     "objects": [
+      "slots",
+      "capp",
+      "ori",
+      "st",
+      "stl",
+      "stc"
+     ],
+     "layout": {
+      "slots": [
+       0,
+       70
+      ],
+      "capp": [
+       0,
+       280
+      ],
+      "ori": [
+       260,
+       168
+      ],
+      "st": [
+       520,
+       168
+      ],
+      "stl": [
+       780,
+       70
+      ],
+      "stc": [
+       780,
+       280
+      ]
+     }
+    },
+    "capital": {
+     "title": {
+      "en": "The capital",
+      "de": "Der Kopf"
+     },
+     "objects": [
+      "ow",
+      "ch",
+      "side",
+      "tot",
+      "two",
+      "ow2",
+      "cw",
+      "chh",
+      "czz",
+      "cpt",
+      "cpl",
+      "capital"
+     ],
+     "layout": {
+      "ow": [
+       0,
+       0
+      ],
+      "ch": [
+       0,
+       140
+      ],
+      "side": [
+       0,
+       280
+      ],
+      "tot": [
+       0,
+       420
+      ],
+      "two": [
+       0,
+       560
+      ],
+      "ow2": [
+       260,
+       0
+      ],
+      "cw": [
+       520,
+       70
+      ],
+      "chh": [
+       260,
+       210
+      ],
+      "czz": [
+       520,
+       350
+      ],
+      "cpt": [
+       780,
+       350
+      ],
+      "cpl": [
+       1040,
+       350
+      ],
+      "capital": [
+       1300,
+       210
+      ]
+     }
+    },
+    "podium": {
+     "title": {
+      "en": "The podium",
+      "de": "Der Sockel"
+     },
+     "objects": [
+      "pw",
+      "pd",
+      "ps",
+      "sh",
+      "z0",
+      "rect",
+      "uzp",
+      "ext"
+     ],
+     "layout": {
+      "pw": [
+       0,
+       0
+      ],
+      "pd": [
+       0,
+       140
+      ],
+      "ps": [
+       0,
+       280
+      ],
+      "sh": [
+       0,
+       420
+      ],
+      "z0": [
+       260,
+       350
+      ],
+      "rect": [
+       260,
+       70
+      ],
+      "uzp": [
+       520,
+       350
+      ],
+      "ext": [
+       780,
+       210
+      ]
+     }
+    }
+   }
+  },
+  "casting": {
+   "title": {
+    "en": "Casting: one demo per rule",
+    "de": "Casting: ein Beispiel je Regel"
+   },
+   "objects": [
+    {
+     "id": "wid",
+     "component": "Number Param",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Width",
+      "data": [
+       {
+        "nakagin": "capsule.width"
+       }
+      ]
+     }
+    },
+    {
+     "id": "sto",
+     "component": "Integer Param",
+     "at": [
+      0,
+      140
+     ],
+     "settings": {
+      "label": "Storeys",
+      "data": [
+       {
+        "nakagin": "towers.B.capsule_storeys"
+       }
+      ]
+     }
+    },
+    {
+     "id": "pln",
+     "component": "Plane Param",
+     "at": [
+      0,
+      280
+     ],
+     "settings": {
+      "label": "Plane",
+      "data": [
+       {
+        "plane": {
+         "origin": [
+          0,
+          0,
+          0
+         ],
+         "x": [
+          1,
+          0,
+          0
+         ],
+         "y": [
+          0,
+          1,
+          0
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "id": "t25",
+     "component": "Panel",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "lines": [
+       {
+        "nakagin": "capsule.width"
+       }
+      ]
+     }
+    },
+    {
+     "id": "tn",
+     "component": "Number Param",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {
+      "label": "Width"
+     }
+    },
+    {
+     "id": "tno",
+     "component": "Panel",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "sl",
+     "component": "Number Slider",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Storeys",
+      "min": 0.0,
+      "max": 14.0,
+      "value": 10.6,
+      "rounding": "float",
+      "decimals": 1
+     }
+    },
+    {
+     "id": "slp",
+     "component": "Panel",
+     "at": [
+      260,
+      140
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "sto2",
+     "component": "Integer Param",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {
+      "label": "Storeys"
+     }
+    },
+    {
+     "id": "sto2p",
+     "component": "Panel",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "fl",
+     "component": "Floor",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "sto3",
+     "component": "Integer Param",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {
+      "label": "Storeys"
+     }
+    },
+    {
+     "id": "sto3p",
+     "component": "Panel",
+     "at": [
+      780,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "pt",
+     "component": "Point Param",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Slot origin",
+      "data": [
+       {
+        "slot": {
+         "index": [
+          0,
+          1,
+          3,
+          3,
+          0
+         ],
+         "part": "origin"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "id": "plc",
+     "component": "Plane Param",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {
+      "label": "Plane"
+     }
+    },
+    {
+     "id": "plp",
+     "component": "Panel",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "capc",
+     "component": "Brep Param",
+     "at": [
+      0,
+      182
+     ],
+     "settings": {
+      "label": "Capsule",
+      "data": [
+       {
+        "capsule": "A"
+       }
+      ]
+     }
+    },
+    {
+     "id": "orw",
+     "component": "Orient",
+     "at": [
+      520,
+      252
+     ],
+     "settings": {}
+    },
+    {
+     "id": "vx",
+     "component": "Vector Param",
+     "at": [
+      0,
+      140
+     ],
+     "settings": {
+      "label": "X-Axis",
+      "data": [
+       {
+        "slot": {
+         "index": [
+          0,
+          1,
+          3,
+          3,
+          0
+         ],
+         "part": "x"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "id": "vy",
+     "component": "Vector Param",
+     "at": [
+      0,
+      280
+     ],
+     "settings": {
+      "label": "Y-Axis",
+      "data": [
+       {
+        "slot": {
+         "index": [
+          0,
+          1,
+          3,
+          3,
+          0
+         ],
+         "part": "y"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "id": "cpl",
+     "component": "Construct Plane",
+     "at": [
+      260,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "ore",
+     "component": "Orient",
+     "at": [
+      520,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "ln",
+     "component": "Line Param",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Core to slot",
+      "data": [
+       {
+        "slot": {
+         "index": [
+          0,
+          1,
+          3,
+          3,
+          0
+         ],
+         "part": "line"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "id": "lpl",
+     "component": "Plane Param",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {
+      "label": "Plane"
+     }
+    },
+    {
+     "id": "lpp",
+     "component": "Panel",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "flen",
+     "component": "Number Param",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Length",
+      "data": [
+       {
+        "nakagin": "capsule.length"
+       }
+      ]
+     }
+    },
+    {
+     "id": "dom",
+     "component": "Domain Param",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {
+      "label": "Domain"
+     }
+    },
+    {
+     "id": "domp",
+     "component": "Panel",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "cnt4",
+     "component": "Panel",
+     "at": [
+      0,
+      280
+     ],
+     "settings": {
+      "lines": [
+       "4"
+      ]
+     }
+    },
+    {
+     "id": "dd",
+     "component": "Divide Domain",
+     "at": [
+      260,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "ddp",
+     "component": "Panel",
+     "at": [
+      520,
+      210
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "cir",
+     "component": "Circle Param",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Window",
+      "data": [
+       {
+        "capsule_window": "A"
+       }
+      ]
+     }
+    },
+    {
+     "id": "crv",
+     "component": "Curve Param",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {
+      "label": "Curve"
+     }
+    },
+    {
+     "id": "crvp",
+     "component": "Panel",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "bx",
+     "component": "Box Param",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Capsule body",
+      "data": [
+       {
+        "capsule_box": "A"
+       }
+      ]
+     }
+    },
+    {
+     "id": "brp",
+     "component": "Brep Param",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {
+      "label": "Brep"
+     }
+    },
+    {
+     "id": "brpp",
+     "component": "Panel",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "bxv",
+     "component": "Volume",
+     "at": [
+      520,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "bxvp",
+     "component": "Panel",
+     "at": [
+      780,
+      140
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "tg",
+     "component": "Boolean Toggle",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Window",
+      "value": true
+     }
+    },
+    {
+     "id": "bi",
+     "component": "Integer Param",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {
+      "label": "Window"
+     }
+    },
+    {
+     "id": "bip",
+     "component": "Panel",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "isl",
+     "component": "Number Slider",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Window",
+      "min": 0,
+      "max": 3,
+      "value": 1,
+      "rounding": "integer"
+     }
+    },
+    {
+     "id": "win",
+     "component": "Boolean Param",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {
+      "label": "Window"
+     }
+    },
+    {
+     "id": "winp",
+     "component": "Panel",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "typa",
+     "component": "Panel",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "lines": [
+       "Type A"
+      ]
+     }
+    },
+    {
+     "id": "tde",
+     "component": "Panel",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "lines": [
+       "2,5"
+      ]
+     }
+    },
+    {
+     "id": "tdn",
+     "component": "Number Param",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {
+      "label": "Width"
+     }
+    },
+    {
+     "id": "tdo",
+     "component": "Panel",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "fhei",
+     "component": "Number Param",
+     "at": [
+      0,
+      280
+     ],
+     "settings": {
+      "label": "Height",
+      "data": [
+       {
+        "nakagin": "capsule.height"
+       }
+      ]
+     }
+    },
+    {
+     "id": "cbx",
+     "component": "Center Box",
+     "at": [
+      260,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cbxp",
+     "component": "Panel",
+     "at": [
+      520,
+      140
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "vl",
+     "component": "Value List",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "items": [
+       {
+        "name": "Type A",
+        "value": 2.5,
+        "bind": "capsule.width"
+       },
+       {
+        "name": "Type B",
+        "value": 2.5,
+        "bind": "capsule.width"
+       },
+       {
+        "name": "Type C",
+        "value": 2.5,
+        "bind": "capsule.width"
+       },
+       {
+        "name": "Type D",
+        "value": 2.5,
+        "bind": "capsule.width"
+       }
+      ],
+      "selected": 0
+     }
+    },
+    {
+     "id": "cbx2",
+     "component": "Center Box",
+     "at": [
+      260,
+      140
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cbx2p",
+     "component": "Panel",
+     "at": [
+      520,
+      140
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    }
+   ],
+   "wires": [
+    "t25.Stream>tn.Number",
+    "tn.Number>tno.Stream",
+    "sl.Number>slp.Stream",
+    "sl.Number>sto2.Integer",
+    "sto2.Integer>sto2p.Stream",
+    "sl.Number>fl.Number",
+    "fl.Result>sto3.Integer",
+    "sto3.Integer>sto3p.Stream",
+    "pt.Point>plc.Plane",
+    "plc.Plane>plp.Stream",
+    "capc.Brep>orw.Geometry",
+    "pln.Plane>orw.Source",
+    "plc.Plane>orw.Target",
+    "pt.Point>cpl.Origin",
+    "vx.Vector>cpl.X-Axis",
+    "vy.Vector>cpl.Y-Axis",
+    "capc.Brep>ore.Geometry",
+    "pln.Plane>ore.Source",
+    "cpl.Plane>ore.Target",
+    "ln.Line>lpl.Plane",
+    "lpl.Plane>lpp.Stream",
+    "flen.Number>dom.Domain",
+    "dom.Domain>domp.Stream",
+    "flen.Number>dd.Domain",
+    "cnt4.Stream>dd.Count",
+    "dd.Segments>ddp.Stream",
+    "cir.Circle>crv.Curve",
+    "crv.Curve>crvp.Stream",
+    "bx.Box>brp.Brep",
+    "brp.Brep>brpp.Stream",
+    "brp.Brep>bxv.Geometry",
+    "bxv.Volume>bxvp.Stream",
+    "tg.Boolean>bi.Integer",
+    "bi.Integer>bip.Stream",
+    "isl.Number>win.Boolean",
+    "win.Boolean>winp.Stream",
+    "tde.Stream>tdn.Number",
+    "tdn.Number>tdo.Stream",
+    "typa.Stream>cbx.X",
+    "flen.Number>cbx.Y",
+    "fhei.Number>cbx.Z",
+    "cbx.Box>cbxp.Stream",
+    "vl.Value>cbx2.X",
+    "flen.Number>cbx2.Y",
+    "fhei.Number>cbx2.Z",
+    "cbx2.Box>cbx2p.Stream"
+   ],
+   "views": {
+    "types": {
+     "title": {
+      "en": "Every parameter has a type",
+      "de": "Jeder Parameter hat einen Typ"
+     },
+     "objects": [
+      "wid",
+      "sto",
+      "pln"
+     ],
+     "layout": {
+      "wid": [
+       0,
+       0
+      ],
+      "sto": [
+       0,
+       140
+      ],
+      "pln": [
+       0,
+       280
+      ]
+     }
+    },
+    "text-number": {
+     "title": {
+      "en": "Text into Number",
+      "de": "Text in Zahl"
+     },
+     "objects": [
+      "t25",
+      "tn",
+      "tno"
+     ],
+     "layout": {
+      "t25": [
+       0,
+       0
+      ],
+      "tn": [
+       260,
+       0
+      ],
+      "tno": [
+       520,
+       0
+      ]
+     }
+    },
+    "storeys": {
+     "title": {
+      "en": "Number into Integer",
+      "de": "Zahl in Ganzzahl"
+     },
+     "objects": [
+      "sl",
+      "slp",
+      "sto2",
+      "sto2p"
+     ],
+     "layout": {
+      "sl": [
+       0,
+       0
+      ],
+      "slp": [
+       260,
+       140
+      ],
+      "sto2": [
+       260,
+       0
+      ],
+      "sto2p": [
+       520,
+       0
+      ]
+     }
+    },
+    "deliberate": {
+     "title": {
+      "en": "Floor before the Integer",
+      "de": "Floor vor der Ganzzahl"
+     },
+     "objects": [
+      "sl",
+      "fl",
+      "sto3",
+      "sto3p"
+     ],
+     "layout": {
+      "sl": [
+       0,
+       0
+      ],
+      "fl": [
+       260,
+       0
+      ],
+      "sto3": [
+       520,
+       0
+      ],
+      "sto3p": [
+       780,
+       0
+      ]
+     }
+    },
+    "point-plane": {
+     "title": {
+      "en": "Point into Plane",
+      "de": "Punkt in Ebene"
+     },
+     "objects": [
+      "pt",
+      "plc",
+      "plp",
+      "capc",
+      "pln",
+      "orw"
+     ],
+     "layout": {
+      "pt": [
+       0,
+       0
+      ],
+      "plc": [
+       260,
+       0
+      ],
+      "plp": [
+       520,
+       0
+      ],
+      "capc": [
+       0,
+       182
+      ],
+      "pln": [
+       0,
+       322
+      ],
+      "orw": [
+       520,
+       252
+      ]
+     }
+    },
+    "explicit": {
+     "title": {
+      "en": "Build the plane explicitly",
+      "de": "Ebene ausdrücklich konstruieren"
+     },
+     "objects": [
+      "pt",
+      "vx",
+      "vy",
+      "cpl",
+      "capc",
+      "pln",
+      "ore"
+     ],
+     "layout": {
+      "pt": [
+       0,
+       0
+      ],
+      "vx": [
+       0,
+       140
+      ],
+      "vy": [
+       0,
+       280
+      ],
+      "cpl": [
+       260,
+       140
+      ],
+      "capc": [
+       260,
+       350
+      ],
+      "pln": [
+       520,
+       420
+      ],
+      "ore": [
+       520,
+       210
+      ]
+     }
+    },
+    "line-plane": {
+     "title": {
+      "en": "Line into Plane",
+      "de": "Linie in Ebene"
+     },
+     "objects": [
+      "ln",
+      "lpl",
+      "lpp"
+     ],
+     "layout": {
+      "ln": [
+       0,
+       0
+      ],
+      "lpl": [
+       260,
+       0
+      ],
+      "lpp": [
+       520,
+       0
+      ]
+     }
+    },
+    "domain": {
+     "title": {
+      "en": "Number into Domain",
+      "de": "Zahl in Domain"
+     },
+     "objects": [
+      "flen",
+      "dom",
+      "domp",
+      "cnt4",
+      "dd",
+      "ddp"
+     ],
+     "layout": {
+      "flen": [
+       0,
+       0
+      ],
+      "dom": [
+       260,
+       0
+      ],
+      "domp": [
+       520,
+       0
+      ],
+      "cnt4": [
+       0,
+       280
+      ],
+      "dd": [
+       260,
+       210
+      ],
+      "ddp": [
+       520,
+       210
+      ]
+     }
+    },
+    "circle-curve": {
+     "title": {
+      "en": "Circle into Curve",
+      "de": "Kreis in Kurve"
+     },
+     "objects": [
+      "cir",
+      "crv",
+      "crvp"
+     ],
+     "layout": {
+      "cir": [
+       0,
+       0
+      ],
+      "crv": [
+       260,
+       0
+      ],
+      "crvp": [
+       520,
+       0
+      ]
+     }
+    },
+    "box-brep": {
+     "title": {
+      "en": "Box into Brep",
+      "de": "Box in Brep"
+     },
+     "objects": [
+      "bx",
+      "brp",
+      "brpp",
+      "bxv",
+      "bxvp"
+     ],
+     "layout": {
+      "bx": [
+       0,
+       0
+      ],
+      "brp": [
+       260,
+       0
+      ],
+      "brpp": [
+       520,
+       0
+      ],
+      "bxv": [
+       520,
+       140
+      ],
+      "bxvp": [
+       780,
+       140
+      ]
+     }
+    },
+    "bool-int": {
+     "title": {
+      "en": "Boolean into Integer",
+      "de": "Boolean in Ganzzahl"
+     },
+     "objects": [
+      "tg",
+      "bi",
+      "bip"
+     ],
+     "layout": {
+      "tg": [
+       0,
+       0
+      ],
+      "bi": [
+       260,
+       0
+      ],
+      "bip": [
+       520,
+       0
+      ]
+     }
+    },
+    "int-bool": {
+     "title": {
+      "en": "Number into Boolean",
+      "de": "Zahl in Boolean"
+     },
+     "objects": [
+      "isl",
+      "win",
+      "winp"
+     ],
+     "layout": {
+      "isl": [
+       0,
+       0
+      ],
+      "win": [
+       260,
+       0
+      ],
+      "winp": [
+       520,
+       0
+      ]
+     }
+    },
+    "locale": {
+     "title": {
+      "en": "A decimal comma in Text",
+      "de": "Ein Dezimalkomma im Text"
+     },
+     "objects": [
+      "tde",
+      "tdn",
+      "tdo"
+     ],
+     "layout": {
+      "tde": [
+       0,
+       0
+      ],
+      "tdn": [
+       260,
+       0
+      ],
+      "tdo": [
+       520,
+       0
+      ]
+     }
+    },
+    "fail": {
+     "title": {
+      "en": "A label is no number",
+      "de": "Eine Bezeichnung ist keine Zahl"
+     },
+     "objects": [
+      "typa",
+      "flen",
+      "fhei",
+      "cbx",
+      "cbxp"
+     ],
+     "layout": {
+      "typa": [
+       0,
+       0
+      ],
+      "flen": [
+       0,
+       140
+      ],
+      "fhei": [
+       0,
+       280
+      ],
+      "cbx": [
+       260,
+       140
+      ],
+      "cbxp": [
+       520,
+       140
+      ]
+     }
+    },
+    "fix": {
+     "title": {
+      "en": "A Value List fixes it",
+      "de": "Eine Werteliste behebt es"
+     },
+     "objects": [
+      "vl",
+      "flen",
+      "fhei",
+      "cbx2",
+      "cbx2p"
+     ],
+     "layout": {
+      "vl": [
+       0,
+       0
+      ],
+      "flen": [
+       0,
+       140
+      ],
+      "fhei": [
+       0,
+       280
+      ],
+      "cbx2": [
+       260,
+       140
+      ],
+      "cbx2p": [
+       520,
+       140
+      ]
+     }
+    }
+   }
+  },
+  "trees": {
+   "title": {
+    "en": "The aggregated tower as a data tree",
+    "de": "Der gesamte Turm als Datenbaum"
+   },
+   "objects": [
+    {
+     "id": "src",
+     "component": "Brep Param",
+     "at": [
+      0,
+      0
+     ],
+     "settings": {
+      "label": "Capsules",
+      "data": {
+       "aggregate": true
+      }
+     }
+    },
+    {
+     "id": "pnl",
+     "component": "Panel",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "pv",
+     "component": "Param Viewer",
+     "at": [
+      260,
+      182
+     ],
+     "settings": {}
+    },
+    {
+     "id": "st",
+     "component": "Tree Statistics",
+     "at": [
+      260,
+      364
+     ],
+     "settings": {}
+    },
+    {
+     "id": "stl",
+     "component": "Panel",
+     "at": [
+      520,
+      308
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "stc",
+     "component": "Panel",
+     "at": [
+      520,
+      448
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "fl",
+     "component": "Flatten Tree",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "fls",
+     "component": "Tree Statistics",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "flc",
+     "component": "Panel",
+     "at": [
+      780,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "gr",
+     "component": "Graft Tree",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "grs",
+     "component": "Tree Statistics",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "grc",
+     "component": "Panel",
+     "at": [
+      780,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "sm",
+     "component": "Simplify Tree",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "sms",
+     "component": "Tree Statistics",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "smp",
+     "component": "Panel",
+     "at": [
+      780,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "pm",
+     "component": "Path Mapper",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {
+      "mapping": "{A;B;C;D}(i) -> {A;B;C}"
+     }
+    },
+    {
+     "id": "pms",
+     "component": "Tree Statistics",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "pml",
+     "component": "Panel",
+     "at": [
+      780,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "pt",
+     "component": "Path Mapper",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {
+      "mapping": "{A;B;C;D}(i) -> {A;B}"
+     }
+    },
+    {
+     "id": "pts",
+     "component": "Tree Statistics",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "ptl",
+     "component": "Panel",
+     "at": [
+      780,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "fp",
+     "component": "Flip Matrix",
+     "at": [
+      260,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "fps",
+     "component": "Tree Statistics",
+     "at": [
+      520,
+      0
+     ],
+     "settings": {}
+    },
+    {
+     "id": "fpl",
+     "component": "Panel",
+     "at": [
+      780,
+      0
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "tip",
+     "component": "Panel",
+     "at": [
+      0,
+      210
+     ],
+     "settings": {
+      "lines": [
+       "{0;1;4;2}"
+      ]
+     }
+    },
+    {
+     "id": "tii",
+     "component": "Panel",
+     "at": [
+      0,
+      350
+     ],
+     "settings": {
+      "lines": [
+       "1"
+      ]
+     }
+    },
+    {
+     "id": "ti",
+     "component": "Tree Item",
+     "at": [
+      260,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "tio",
+     "component": "Panel",
+     "at": [
+      520,
+      210
+     ],
+     "settings": {
+      "lines": [
+       ""
+      ]
+     }
+    },
+    {
+     "id": "cols",
+     "component": "Panel",
+     "at": [
+      0,
+      210
+     ],
+     "settings": {
+      "lines": [
+       "teal",
+       "orange"
+      ]
+     }
+    },
+    {
+     "id": "pvk",
+     "component": "Param Viewer",
+     "at": [
+      260,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cp1",
+     "component": "Custom Preview",
+     "at": [
+      260,
+      112
+     ],
+     "settings": {}
+    },
+    {
+     "id": "pvc",
+     "component": "Param Viewer",
+     "at": [
+      520,
+      112
+     ],
+     "settings": {}
+    },
+    {
+     "id": "gc",
+     "component": "Graft Tree",
+     "at": [
+      260,
+      210
+     ],
+     "settings": {}
+    },
+    {
+     "id": "cp2",
+     "component": "Custom Preview",
+     "at": [
+      520,
+      112
+     ],
+     "settings": {}
+    },
+    {
+     "id": "pvd",
+     "component": "Param Viewer",
+     "at": [
+      780,
+      112
+     ],
+     "settings": {}
+    }
+   ],
+   "wires": [
+    "src.Brep>pnl.Stream",
+    "src.Brep>pv.Data",
+    "src.Brep>st.Tree",
+    "st.Length>stl.Stream",
+    "st.Count>stc.Stream",
+    "src.Brep>fl.Tree",
+    "fl.Tree>fls.Tree",
+    "fls.Length>flc.Stream",
+    "src.Brep>gr.Tree",
+    "gr.Tree>grs.Tree",
+    "grs.Count>grc.Stream",
+    "src.Brep>sm.Tree",
+    "sm.Tree>sms.Tree",
+    "sms.Paths>smp.Stream",
+    "src.Brep>pm.Tree",
+    "pm.Tree>pms.Tree",
+    "pms.Length>pml.Stream",
+    "src.Brep>pt.Tree",
+    "pt.Tree>pts.Tree",
+    "pts.Length>ptl.Stream",
+    "src.Brep>fp.Data",
+    "fp.Data>fps.Tree",
+    "fps.Length>fpl.Stream",
+    "src.Brep>ti.Tree",
+    "tip.Stream>ti.Path",
+    "tii.Stream>ti.Index",
+    "ti.Item>tio.Stream",
+    "cols.Stream>pvk.Data",
+    "src.Brep>cp1.Geometry",
+    "cols.Stream>cp1.Material",
+    "cp1.Preview>pvc.Data",
+    "cols.Stream>gc.Tree",
+    "pt.Tree>cp2.Geometry",
+    "gc.Tree>cp2.Material",
+    "cp2.Preview>pvd.Data"
+   ],
+   "views": {
+    "source": {
+     "title": {
+      "en": "The aggregated tree",
+      "de": "Der aggregierte Baum"
+     },
+     "objects": [
+      "src",
+      "pnl",
+      "pv",
+      "st",
+      "stl",
+      "stc"
+     ],
+     "layout": {
+      "src": [
+       0,
+       0
+      ],
+      "pnl": [
+       260,
+       0
+      ],
+      "pv": [
+       260,
+       182
+      ],
+      "st": [
+       260,
+       364
+      ],
+      "stl": [
+       520,
+       308
+      ],
+      "stc": [
+       520,
+       448
+      ]
+     }
+    },
+    "flatten": {
+     "title": {
+      "en": "Flatten Tree",
+      "de": "Flatten Tree"
+     },
+     "objects": [
+      "src",
+      "fl",
+      "fls",
+      "flc"
+     ],
+     "layout": {
+      "src": [
+       0,
+       0
+      ],
+      "fl": [
+       260,
+       0
+      ],
+      "fls": [
+       520,
+       0
+      ],
+      "flc": [
+       780,
+       0
+      ]
+     }
+    },
+    "graft": {
+     "title": {
+      "en": "Graft Tree",
+      "de": "Graft Tree"
+     },
+     "objects": [
+      "src",
+      "gr",
+      "grs",
+      "grc"
+     ],
+     "layout": {
+      "src": [
+       0,
+       0
+      ],
+      "gr": [
+       260,
+       0
+      ],
+      "grs": [
+       520,
+       0
+      ],
+      "grc": [
+       780,
+       0
+      ]
+     }
+    },
+    "simplify": {
+     "title": {
+      "en": "Simplify Tree",
+      "de": "Simplify Tree"
+     },
+     "objects": [
+      "src",
+      "sm",
+      "sms",
+      "smp"
+     ],
+     "layout": {
+      "src": [
+       0,
+       0
+      ],
+      "sm": [
+       260,
+       0
+      ],
+      "sms": [
+       520,
+       0
+      ],
+      "smp": [
+       780,
+       0
+      ]
+     }
+    },
+    "mapper": {
+     "title": {
+      "en": "Path Mapper per storey",
+      "de": "Path Mapper je Geschoss"
+     },
+     "objects": [
+      "src",
+      "pm",
+      "pms",
+      "pml"
+     ],
+     "layout": {
+      "src": [
+       0,
+       0
+      ],
+      "pm": [
+       260,
+       0
+      ],
+      "pms": [
+       520,
+       0
+      ],
+      "pml": [
+       780,
+       0
+      ]
+     }
+    },
+    "tower-map": {
+     "title": {
+      "en": "Path Mapper per tower",
+      "de": "Path Mapper je Turm"
+     },
+     "objects": [
+      "src",
+      "pt",
+      "pts",
+      "ptl"
+     ],
+     "layout": {
+      "src": [
+       0,
+       0
+      ],
+      "pt": [
+       260,
+       0
+      ],
+      "pts": [
+       520,
+       0
+      ],
+      "ptl": [
+       780,
+       0
+      ]
+     }
+    },
+    "flip": {
+     "title": {
+      "en": "Flip Matrix",
+      "de": "Flip Matrix"
+     },
+     "objects": [
+      "src",
+      "fp",
+      "fps",
+      "fpl"
+     ],
+     "layout": {
+      "src": [
+       0,
+       0
+      ],
+      "fp": [
+       260,
+       0
+      ],
+      "fps": [
+       520,
+       0
+      ],
+      "fpl": [
+       780,
+       0
+      ]
+     }
+    },
+    "item": {
+     "title": {
+      "en": "One item by path and index",
+      "de": "Ein Element per Pfad und Index"
+     },
+     "objects": [
+      "src",
+      "tip",
+      "tii",
+      "ti",
+      "tio"
+     ],
+     "layout": {
+      "src": [
+       0,
+       0
+      ],
+      "tip": [
+       0,
+       210
+      ],
+      "tii": [
+       0,
+       350
+      ],
+      "ti": [
+       260,
+       210
+      ],
+      "tio": [
+       520,
+       210
+      ]
+     }
+    },
+    "mistake": {
+     "title": {
+      "en": "A short list repeats in every branch",
+      "de": "Eine kurze Liste wiederholt sich in jedem Ast"
+     },
+     "objects": [
+      "src",
+      "cols",
+      "cp1",
+      "pvc"
+     ],
+     "layout": {
+      "src": [
+       0,
+       0
+      ],
+      "cols": [
+       0,
+       210
+      ],
+      "cp1": [
+       260,
+       112
+      ],
+      "pvc": [
+       520,
+       112
+      ]
+     }
+    },
+    "why": {
+     "title": {
+      "en": "Why the paths do not meet",
+      "de": "Warum die Pfade sich nicht treffen"
+     },
+     "objects": [
+      "src",
+      "cols",
+      "pv",
+      "pvk"
+     ],
+     "layout": {
+      "src": [
+       0,
+       0
+      ],
+      "cols": [
+       0,
+       210
+      ],
+      "pv": [
+       260,
+       0
+      ],
+      "pvk": [
+       260,
+       210
+      ]
+     }
+    },
+    "fix": {
+     "title": {
+      "en": "Map the capsules, graft the colours",
+      "de": "Kapseln abbilden, Farben graften"
+     },
+     "objects": [
+      "src",
+      "pt",
+      "cols",
+      "gc",
+      "cp2",
+      "pvd"
+     ],
+     "layout": {
+      "src": [
+       0,
+       0
+      ],
+      "pt": [
+       260,
+       0
+      ],
+      "cols": [
+       0,
+       210
+      ],
+      "gc": [
+       260,
+       210
+      ],
+      "cp2": [
+       520,
+       112
+      ],
+      "pvd": [
+       780,
+       112
+      ]
+     }
+    }
+   }
+  }
+ }
+}

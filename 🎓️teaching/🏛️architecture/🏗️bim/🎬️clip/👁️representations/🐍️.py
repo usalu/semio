@@ -1,4 +1,4 @@
-"""🎬 One Object, Many Views: the south wall of the Villa Savoye in plan, section, elevation and 3D, its stored IFC representations and one design change."""
+"""🎬 One Object, Many Views: the northwest wall of the Villa Savoye in plan, section, elevation and 3D, its stored IFC representations and one design change."""
 
 import importlib
 import math
@@ -16,6 +16,7 @@ if str(_WORKSPACE_ROOT) not in sys.path:
 _visuals = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🐍️")
 _drafting = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.🐍️")
 _model = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️")
+_core = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.🧱️core.🐍️")
 _engine = importlib.import_module("manim")
 _fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 
@@ -32,10 +33,10 @@ SLOT_W, SLOT_H = 2.3, 0.95
 STEPS = 18
 PAPER = 0.055
 SLOT_NAMES = {"plan": ("Plan", "Grundriss"), "section": ("Section", "Schnitt"), "elevation": ("Elevation", "Ansicht"), "3d": ("3D", "3D")}
-LAYER_TONES = {"render": INK, "brick": WARN, "plaster": MUTED}
+LAYER_TONES = {"render": INK, "brick": WARN, "outer-leaf": WARN, "inner-leaf": WARN, "cavity": MUTED, "plaster": MUTED}
 HEADINGS = {
-    "source": ("Villa Savoye · south wall", "Villa Savoye · Südwand"), "plan": ("Plan · cut at window height", "Grundriss · Schnitt auf Fensterhöhe"),
-    "section": ("Section · sill and head", "Schnitt · Brüstung und Sturz"), "elevation": ("Elevation · south façade", "Ansicht · Südfassade"),
+    "source": ("Villa Savoye · northwest wall", "Villa Savoye · Nordwestwand"), "plan": ("Plan · cut at window height", "Grundriss · Schnitt auf Fensterhöhe"),
+    "section": ("Section · sill and head", "Schnitt · Brüstung und Sturz"), "elevation": ("Elevation · northwest façade", "Ansicht · Nordwestfassade"),
     "three": ("3D · body, void and fill", "3D · Körper, Aussparung, Füllung"), "stored": ("Stored · Axis, FootPrint, Body", "Gespeichert · Axis, FootPrint, Body"),
     "lod": ("Level of detail", "Detailstufe"), "scale200": ("Scale 1:200", "Maßstab 1:200"), "scale20": ("Scale 1:20", "Maßstab 1:20"),
     "sweep": ("Cut plane sweep", "Schnittebene wandert"), "derived": ("Take-off · areas", "Mengen · Flächen"),
@@ -55,16 +56,16 @@ class Beat3_SameObject(_visuals.ClipScene):
 
     TITLE = {"en": "One Object, Many Views", "de": "Ein Objekt, viele Darstellungen"}
     NARRATION = [
-        ["source", "Teaching model of the Villa Savoye: one object, the south wall of the first floor with its ribbon window.",
-         "Lehrmodell der Villa Savoye: ein Objekt, die Südwand des Obergeschosses mit ihrem Bandfenster."],
+        ["source", "Teaching model of the Villa Savoye: one object, the northwest wall of the first floor with its ribbon window.",
+         "Lehrmodell der Villa Savoye: ein Objekt, die Nordwestwand des Obergeschosses mit ihrem Bandfenster."],
         ["plan", "The plan cuts the wall at window height: the wall in poché, the ribbon window as thin glass lines.",
          "Der Grundriss schneidet die Wand auf Fensterhöhe: Wand als Poché, Bandfenster als dünne Glaslinien."],
         ["section", "The section cuts through slab, pilotis and window: sill and head heights become dimension lines.",
          "Der Schnitt geht durch Geschossdecke, Pilotis und Fenster: Brüstungs- und Sturzhöhe werden zu Maßlinien."],
-        ["elevation", "The elevation shows the whole south façade: ribbon band, dark green ground floor, pilotis, solarium screens.",
-         "Die Ansicht zeigt die ganze Südfassade: Bandfenster, dunkelgrünes Erdgeschoss, Pilotis, Solariumswände."],
-        ["three", "The 3D view shows the body: a solid wall, voided by an opening that the window fills.",
-         "Die 3D-Ansicht zeigt den Körper: eine massive Wand mit einer Öffnung, die das Fenster füllt."],
+        ["elevation", "The elevation shows the northwest façade and the asymmetric solarium screen with its landscape aperture and sloping cap.",
+         "Die Ansicht zeigt die Nordwestfassade und die asymmetrische Solariumswand mit Landschaftsöffnung und geneigter Abdeckung."],
+        ["three", "The 3D view shows occupied wall leaves, separate structural members, and an opening filled by frame and glass.",
+         "Die 3D-Ansicht zeigt feste Wandschalen, getrennte Tragglieder und eine mit Rahmen und Glas gefüllte Öffnung."],
         ["stored", "In this model the wall is stored as Axis, FootPrint and Body; plan, section and elevation are derived from it.",
          "Im Modell ist die Wand als Axis, FootPrint und Body gespeichert; Grundriss, Schnitt und Ansicht sind abgeleitet."],
         ["lod", "Three levels of detail for one wall: Axis as a line, FootPrint as an outline, Body as a solid with layers.",
@@ -77,12 +78,12 @@ class Beat3_SameObject(_visuals.ClipScene):
          "Wandert die Schnittebene, wechselt der Grundriss von Vollwand zu Fensterband und zurück: Er ist abgeleitet."],
         ["derived", "The same geometry gives the areas: gross wall, opening, net wall and the glazing share.",
          "Dieselbe Geometrie liefert die Flächen: Bruttowandfläche, Öffnung, Nettowandfläche und Glasanteil."],
-        ["update", "A design change lowers the sill. The ribbon window grows; all views and numbers are regenerated.",
-         "Eine Planänderung senkt die Brüstung. Das Bandfenster wird höher; alle Ansichten und Zahlen werden neu erzeugt."],
-        ["takeoff", "The take-off reads the body: net wall area, window area and glazing share follow the sill live.",
-         "Die Mengenermittlung liest den Body: Nettowandfläche, Fensterfläche und Glasanteil folgen der Brüstung live."],
-        ["volume", "The wall volume comes from the same body: the void is subtracted, so the lowered sill shrinks it.",
-         "Auch das Wandvolumen stammt aus dem Body: Die Aussparung wird abgezogen, die tiefere Brüstung verkleinert es."],
+        ["update", "The sill drops from 0.89 to 0.70 m; the head stays at 2.04 m. The opening grows from 1.15 to 1.34 m.",
+         "Die Brüstung sinkt von 0,89 auf 0,70 m; der Sturz bleibt bei 2,04 m. Die Öffnung wächst von 1,15 auf 1,34 m."],
+        ["takeoff", "The take-off distinguishes rough openings from actual glass; net wall area and glazing share follow the sill.",
+         "Die Mengenermittlung unterscheidet Rohbauöffnungen und tatsächliches Glas; Nettowandfläche und Glasanteil folgen der Brüstung."],
+        ["volume", "The wall volume counts solid leaves and excludes the air cavity; the lowered sill removes more solid material.",
+         "Das Wandvolumen zählt feste Schalen ohne Lufthohlraum; die tiefere Brüstung entfernt zusätzliches festes Material."],
         ["copies", "Copied drawings would stay behind: each copy needs manual coordination, view by view.",
          "Kopien würden zurückbleiben: Jede Kopie müsste von Hand abgeglichen werden, Ansicht für Ansicht."],
         ["drafted", "A line drafted only in the plan is not in the model: the other views do not know it.",
@@ -132,11 +133,11 @@ class Beat3_SameObject(_visuals.ClipScene):
         layers = element["material"]["layers"]
         self.m = SimpleNamespace(
             base=base, new=new, event=event, geo=geo, wall=wall, op=op, op1=next(w for w in _model.building_geometry(new)["walls"] if w["tag"] == TAG)["openings"][0],
-            window=op["window_tag"], opening_tag=op["tag"], q0=_model.quantities(TAG, base), q1=_model.quantities(TAG, new), element=element, layers=layers,
-            window_element=_model.element(op["window_tag"], base), cache={},
+            window=op["fill_tag"], opening_tag=op["tag"], q0=_model.quantities(TAG, base), q1=_model.quantities(TAG, new), element=element, layers=layers,
+            window_element=_model.element(op["fill_tag"], base), cache={},
             basis={"length": base["building"]["box"]["length"]["basis"], "sill": opening["attributes"]["sill"]["basis"], "head": opening["attributes"]["head"]["basis"],
                    "start": opening["attributes"]["start"]["basis"], "end": opening["attributes"]["end"]["basis"],
-                   "thickness": "assumed" if any(layer["thickness"]["basis"] == "assumed" for layer in layers) else "sourced",
+                   "thickness": "assumed" if any(layer["thickness"]["basis"] == "assumed" for layer in layers) else ("inferred" if any(layer["thickness"]["basis"] == "inferred" for layer in layers) else "sourced"),
                    "levels": "assumed" if any(s["elevation"]["basis"] == "assumed" for s in base["storeys"]) else "sourced"},
             cut=_model.represent(TAG, "plan", base)["derived"]["cut_z"], states={})
         self.slots, self.thumbs, self.legend, self.hero, self.lives = {}, {}, None, _engine.VGroup(), []
@@ -150,7 +151,7 @@ class Beat3_SameObject(_visuals.ClipScene):
         return cache[id(model)][1]
 
     def _wall_of(self, model):
-        """🪟 The south wall and its ribbon opening in one model state."""
+        """🪟 The northwest wall and its ribbon opening in one model state."""
         wall = next(w for w in self._geo(model)["walls"] if w["tag"] == TAG)
         return wall, wall["openings"][0]
 
@@ -164,15 +165,16 @@ class Beat3_SameObject(_visuals.ClipScene):
 
     def _basis(self, name: str) -> str:
         """⭐ Mark a value that is assumed in the teaching model."""
-        return "*" if self.m.basis.get(name) == "assumed" else ""
+        return "*" if self.m.basis.get(name) in ("assumed", "inferred") else ""
 
     def _star(self, text: str, basis: str) -> str:
         """⭐ Append the assumption mark to a value text."""
-        return text + ("*" if basis == "assumed" else "")
+        return text + ("*" if basis in ("assumed", "inferred") else "")
 
     def _sign(self, value: float, digits: int = 2) -> str:
         """🔻 Elevation text with sign: ±0.00, +3.50."""
-        return ("±" if abs(value) < 1e-9 else "+") + self.number(abs(value), digits)
+        digits=max(digits,3 if abs(value-round(value,2))>1e-9 else 2)
+        return ("±" if abs(value)<1e-9 else "+" if value>0 else "−")+self.number(abs(value),digits)
 
     def _percent(self, value: float, digits: int = 0) -> str:
         """％ Language-aware percentage."""
@@ -196,7 +198,7 @@ class Beat3_SameObject(_visuals.ClipScene):
 
     def _place(self, kind: str, centre, width: float, height: float, model=None, thumb: bool = False, **extra):
         """📐 Screen point and scale at which a drawing fills a box centred on ``centre``."""
-        centre = P(centre)
+        centre = np.asarray(P(centre), float)
         first = self._draw(kind, centre, 0.2, model, thumb, **extra)
         k = min(width / first.width, height / first.height)
         offset = (np.array(first.get_center()) - centre) * k
@@ -209,7 +211,7 @@ class Beat3_SameObject(_visuals.ClipScene):
 
     def _break(self, a, b, teeth: int = 5, amp: float = 0.06, color=INK):
         """〰️ A break line between two screen points."""
-        a, b = P(a), P(b)
+        a, b = np.asarray(P(a), float), np.asarray(P(b), float)
         d = b - a
         n = np.array([-d[1], d[0], 0.0]) / max(np.linalg.norm(d), 1e-9)
         points = [a] + [a + d * (i / (2 * teeth)) + n * amp * (1 if i % 2 else -1) for i in range(1, 2 * teeth)] + [b]
@@ -224,7 +226,7 @@ class Beat3_SameObject(_visuals.ClipScene):
 
     def _loupe(self, centre, radius: float, target, color=MUTED):
         """🔍 A ring on a drawing with a thin line to the detail it magnifies."""
-        c, t = P(centre), P(target)
+        c, t = np.asarray(P(centre), float), np.asarray(P(target), float)
         start = c + (t - c) / max(np.linalg.norm(t - c), 1e-9) * radius
         return _engine.VGroup(_engine.Circle(radius=radius, stroke_color=color, stroke_width=W_EDGE).move_to(c), _drafting.segments([(start, t)], color, W_THIN))
 
@@ -250,7 +252,7 @@ class Beat3_SameObject(_visuals.ClipScene):
 
     def _grow_dimension(self, start, end, tracker, value: float, unit: str, *, offset: float, digits: int = 2, basis: str = "", color=DATA, size=S_SMALL, flip: bool = False, text_at: float = 0.5):
         """↔️ A dimension line that grows from its start while its number counts up from zero."""
-        a, b = P(start), P(end)
+        a, b = np.asarray(P(start), float), np.asarray(P(end), float)
 
         def build():
             f = tracker.get_value()
@@ -263,7 +265,7 @@ class Beat3_SameObject(_visuals.ClipScene):
     def _legend(self, right: bool = False):
         """⭐ Footnote of the assumption mark."""
         point, anchor = ((6.85, -2.47, 0), "r") if right else ((-6.85, -2.47, 0), "l")
-        return self.label("* assumed in the teaching model", "* im Lehrmodell angenommen", point, size=S_SMALL, color=MUTED, anchor=anchor)
+        return self.label("* assumed or inferred in the teaching model", "* im Lehrmodell angenommen oder abgeleitet", point, size=S_SMALL, color=MUTED, anchor=anchor)
 
     def _chip(self, point=(RIGHT, 2.72, 0), model=None):
         """🆔 GlobalId chip of the wall."""
@@ -322,7 +324,7 @@ class Beat3_SameObject(_visuals.ClipScene):
 
     def _slot(self, kind: str):
         """🗂️ Dashed slot frame with its label above."""
-        x, y, _ = P(SLOTS[kind])
+        x, y, _ = np.asarray(P(SLOTS[kind]), float)
         frame = _engine.Rectangle(width=SLOT_W, height=SLOT_H, stroke_color=MUTED, stroke_width=W_THIN, fill_opacity=0).move_to((x, y, 0))
         frame.set_stroke(opacity=0.8)
         en, de = SLOT_NAMES[kind]
@@ -365,13 +367,13 @@ class Beat3_SameObject(_visuals.ClipScene):
         return _engine.VGroup(*[p for p in parts if p is not None])
 
     def _beat_source(self):
-        """1️⃣ The whole villa with the south wall and its ribbon window lit, the spatial path, the GlobalId chip and the object card."""
+        """1️⃣ The whole villa with the northwest wall and its ribbon window lit, the spatial path, the GlobalId chip and the object card."""
         m = self.m
         axon = self._fit("3d", (-3.95, 0.15, 0), 5.9, 4.6, m.base)
         op, wall = m.op, m.wall
         wall_point = axon.at(op["end"] + 0.7, 0, wall["base"] + 0.5)
         window_point = axon.at(op["end"] - 2.4, 0, (op["sill_z"] + op["head_z"]) / 2)
-        wall_at, window_at = P((-1.05, -1.1)), P((-1.05, 1.4))
+        wall_at, window_at = np.asarray(P((-1.05, -1.1)), float), np.asarray(P((-1.05, 1.4)), float)
         callouts = _engine.VGroup(
             self.leader(window_at, window_point, None, color=GLASS), self.leader(wall_at, wall_point, None, color=DATA),
             self.text(f"IfcWindow · {m.window}", window_at + (0.1, 0.17, 0), size=S_LABEL, color=GLASS, anchor="l"),
@@ -380,9 +382,9 @@ class Beat3_SameObject(_visuals.ClipScene):
             self.text(f"IfcWall · {TAG}", wall_at + (0.1, 0.17, 0), size=S_LABEL, color=DATA, anchor="l"),
             self.text(self._name(m.element), wall_at + (0.1, -0.12, 0), size=S_SMALL, color=MUTED, anchor="l"),
             self.text(f"{self.quantity(m.q0['length'], 'm')} × {self.quantity(m.q0['height'], 'm')}{self._basis('levels')}", wall_at + (0.1, -0.38, 0), size=S_SMALL, color=MUTED, anchor="l"))
-        north = axon.at(0, 1, 0) - axon.at(0, 0, 0)
+        north = axon.at(-1, -1, 0) - axon.at(0, 0, 0)
         north = north / np.linalg.norm(north)
-        origin = P((-6.0, -1.9))
+        origin = np.asarray(P((-6.0, -1.9)), float)
         compass = _engine.VGroup(_drafting.segments([(origin, origin + north * 0.5)], INK, W_EDGE), self.text("N", origin + north * 0.75, size=S_SMALL, color=INK),
                                  self.badge(self.tr("teaching orientation", "Lehrorientierung"), origin + np.array([0.55, -0.02, 0]), color=MUTED, filled=False, anchor="l"))
         self.chip, self.card, self.trail = self._chip(), self._card(), self._trail_group()
@@ -408,8 +410,8 @@ class Beat3_SameObject(_visuals.ClipScene):
             t = layer["thickness"]["value"]
             tone = LAYER_TONES.get(layer["id"], MUTED)
             ring = [P((sx(op["end"]), y0 + cursor * k)), P((sx(wall["length"]), y0 + cursor * k)), P((sx(wall["length"]), y0 + (cursor + t) * k)), P((sx(op["end"]), y0 + (cursor + t) * k))]
-            group.add(_drafting.polygon(ring, tone, 0.8, tone, W_THIN))
-            if layer["id"] == "brick":
+            group.add(_drafting.polygon(ring, tone, 0.0 if layer.get("is_void", False) else 0.8, tone, W_THIN))
+            if layer["id"] in ("brick", "outer-leaf", "inner-leaf") and not layer.get("is_void", False):
                 group.add(self.hatch([ring], INK, 0.07, 45))
             cursor += t
         glass_y = y0 + thick * k / 2
@@ -426,8 +428,8 @@ class Beat3_SameObject(_visuals.ClipScene):
         for index, layer in enumerate(m.layers):
             y = y0 - 0.78 - 0.26 * index
             tone = LAYER_TONES.get(layer["id"], MUTED)
-            group.add(_engine.Rectangle(width=0.2, height=0.14, stroke_color=tone, stroke_width=W_THIN, fill_color=tone, fill_opacity=0.8).move_to((-1.3, y, 0)),
-                      self.text(f"{self._layer_name(layer)}  {self.quantity(layer['thickness']['value'], 'm', 2)}{self._star('', layer['thickness']['basis'])}", (-1.15, y, 0), size=S_SMALL, color=tone, anchor="l", width=2.6))
+            group.add(_engine.Rectangle(width=0.2, height=0.14, stroke_color=tone, stroke_width=W_THIN, fill_color=tone, fill_opacity=0.0 if layer.get("is_void", False) else 0.8).move_to((-1.3, y, 0)),
+                      self.text(f"{self._layer_name(layer)}  {self.quantity(layer['thickness']['value'], 'm', 3)}{self._star('', layer['thickness']['basis'])}", (-1.15, y, 0), size=S_SMALL, color=tone, anchor="l", width=2.6))
         return group
 
     def _cut_key(self, model, origin=(-1.35, -2.25), k: float = 0.55, length: float = 2.6, cut: float | None = None):
@@ -458,7 +460,7 @@ class Beat3_SameObject(_visuals.ClipScene):
         return group
 
     def _beat_plan(self):
-        """2️⃣ First-floor plan: the south wall lit, window and wall length dimensions, a magnified poché detail and the cut level."""
+        """2️⃣ First-floor plan: the northwest wall lit, window and wall length dimensions, a magnified poché detail and the cut level."""
         m = self.m
         leave = self._leave()
         plan = self._fit("plan", (-4.3, 1.0, 0), 4.9, 3.9, m.base, grid=True, labels=True)
@@ -481,25 +483,33 @@ class Beat3_SameObject(_visuals.ClipScene):
         k, xw, y0 = 1.2, -5.55, -1.62
         sy, sx = (lambda z: y0 + k * (z - z_lo)), (lambda depth: xw + k * depth)
         thick = m.q0["thickness"]
-        piloti = next(p for p in geo["pilotis"] if abs(p["y"]) < 1e-6)
         rect = lambda d0, d1, z0, z1: [P((sx(d0), sy(z0))), P((sx(d1), sy(z0))), P((sx(d1), sy(z1))), P((sx(d0), sy(z1)))]
         frame = _engine.Rectangle(width=3.05, height=5.2, stroke_color=MUTED, stroke_width=W_THIN, fill_opacity=0).move_to((-5.35, 0.3, 0))
         frame.set_stroke(opacity=0.7)
         group = _engine.VGroup(frame, self.label("detail · wall cut at the window", "Detail · Wand im Fensterschnitt", (-5.35, 2.7, 0), size=S_SMALL, color=MUTED, width=2.85))
-        for ring in (rect(0, 1.45, z_lo, slab["top"]), rect(0, 1.45, wall["top"], roof["top"]), rect(-piloti["radius"], piloti["radius"], z_lo - 0.45, z_lo)):
-            group.add(_drafting.polygon(ring, CONCRETE, 0.35, CONCRETE, W_THIN), self.hatch([ring], CONCRETE, 0.07, 45))
-        group.add(self._break((sx(-piloti["radius"]) - 0.05, sy(z_lo - 0.45)), (sx(piloti["radius"]) + 0.05, sy(z_lo - 0.45)), 3, 0.04))
-        for z0, z1 in ((wall["base"], op["sill_z"]), (op["head_z"], wall["top"])):
-            cursor = 0.0
-            for layer in m.layers:
-                t = layer["thickness"]["value"]
-                tone = LAYER_TONES.get(layer["id"], MUTED)
-                ring = rect(cursor, cursor + t, z0, z1)
-                group.add(_drafting.polygon(ring, tone, 0.8, tone, W_THIN))
-                if layer["id"] == "brick":
-                    group.add(self.hatch([ring], INK, 0.07, 45))
-                cursor += t
-        group.add(_drafting.polygon(rect(thick * 0.45, thick * 0.55, op["sill_z"], op["head_z"]), GLASS, 0.55, GLASS, W_EDGE))
+        station=(op["start"]+op["end"])/2
+        origin=np.asarray(wall["start"],dtype=float)
+        direction=(np.asarray(wall["end"])-origin)/wall["length"]
+        axis=0 if abs(direction[0])>abs(direction[1]) else 1
+        at=origin+station*direction
+        filling=next(item for item in geo["fillings"] if item["tag"]==m.window)
+        auxiliary=[item for item in geo["beams"] if _model.element(item["tag"],m.base).get("geometry",{}).get("section_sweep",{}).get("wall")==TAG]
+        for item in [wall,filling,slab,roof,*auxiliary]:
+            for part in item["parts"]:
+                for section in _model.part_sections(part,float(at[axis]),axis):
+                    local=[]
+                    for horizontal,z in section:
+                        xy=[float(at[0]),horizontal] if axis==0 else [horizontal,float(at[1])]
+                        local.append([self._wall_local_ring([xy])[0][1],z])
+                    local=self._clip_station(local,0)
+                    local=[[-d,z] for d,z in self._clip_station([[-d,z] for d,z in local],-1.45)]
+                    if not local:
+                        continue
+                    ring=[P((sx(d),sy(z))) for d,z in local]
+                    tone=GLASS if part.get("role")=="glass" else (LAYER_TONES.get(part.get("layer"),CONCRETE) if item is wall else ARCH if item is filling else CONCRETE)
+                    group.add(_drafting.polygon(ring,tone,.55 if tone==GLASS else .8,tone,W_THIN))
+                    if tone!=GLASS:
+                        group.add(self.hatch([ring],INK,.07,45))
         marks = [(wall["base"], op["sill_z"], op["sill"], "sill"), (op["sill_z"], op["head_z"], op["head"] - op["sill"], None), (op["head_z"], wall["top"], wall["top"] - op["head_z"], None)]
         dims = [self._grow_dimension(P((xw, sy(z0))), P((xw, sy(z1))), t, value, "m", offset=0.3, basis=self._basis("sill") if index == 0 else (self._basis("head") if index == 1 else "*")) for index, (t, (z0, z1, value, _)) in enumerate(zip(trackers[:3], marks))]
         dims.append(self._grow_dimension(P((sx(thick), sy(wall["base"]))), P((sx(thick), sy(wall["top"]))), trackers[3], wall["top"] - wall["base"], "m", offset=-0.3, basis="*"))
@@ -510,7 +520,7 @@ class Beat3_SameObject(_visuals.ClipScene):
         m = self.m
         leave = self._leave()
         scale, hc, zc, crop = 0.46, 4.0, 4.7, 8.5
-        point = P((-3.1 + scale * hc, 0.55))
+        point = np.asarray(P((-3.1 + scale * hc, 0.55)), float)
         section = self._draw("section", point, scale, m.base, labels=False, levels=False, centre=(hc, zc))
         section.set_z_index(-2)
         x_c = section.at(crop, 0)[0]
@@ -592,26 +602,15 @@ class Beat3_SameObject(_visuals.ClipScene):
                                seq(o.animate.set_value(1), _engine.FadeIn(chain[:3]), lag=0.2), seq(w.animate.set_value(1), _engine.FadeIn(chain[3:]), lag=0.2), lag=0.5), seconds=5.6)
 
     def _extrusion(self, axon, e: float):
-        """⬆️ The wall body as a plain extrusion of its footprint on the villa axonometric, ``e`` (0..1) of the depth, without any opening."""
-        if e < 0.01:
-            return _engine.VGroup()
-        wall = self.m.wall
-        length, t, z0 = wall["length"], wall["thickness"], wall["base"]
-        z1 = z0 + (wall["top"] - z0) * e
-        at = axon.at
-        return _engine.VGroup(_drafting.polygon([at(length, 0, z0), at(length, t, z0), at(length, t, z1), at(length, 0, z1)], DATA, 0.55, DATA, W_THIN),
-                              _drafting.polygon([at(0, 0, z1), at(length, 0, z1), at(length, t, z1), at(0, t, z1)], DATA, 0.9, DATA, W_THIN),
-                              _drafting.polygon([at(0, 0, z0), at(length, 0, z0), at(length, 0, z1), at(0, 0, z1)], DATA, 0.72, DATA, W_THIN))
+        """⬆️ Actual material-owned wall extrusions, preserving openings and cavity."""
+        return self._wall_overlay(axon, e, 1.0, 0.0)
 
     def _row_axis(self, rep, y: float):
-        """➖ Axis row: the wall's centre line over the south pilotis row, from the Axis representation, with the end point coordinates."""
+        """➖ Axis row: the actual source wall axis with endpoint coordinates."""
         m = self.m
         scale = 0.2
         view = _drafting.View("plan", (-1.7, y, 0), scale, centre=(m.geo["box"]["length"] / 2, 0.15, 0))
         group = _engine.VGroup()
-        for pil in m.geo["pilotis"]:
-            if abs(pil["y"]) < 1e-6:
-                group.add(_engine.Circle(radius=max(pil["radius"] * scale, 0.04), stroke_color=MUTED, stroke_width=W_THIN).move_to(view(pil["x"], pil["y"])))
         points = rep["primitives"][0]["points"]
         group.add(_drafting.polyline([view(*p[:2]) for p in points], ARCH, W_CUT), *[_engine.Dot(view(*p[:2]), radius=0.05, color=ARCH) for p in points])
         for p, anchor in zip((points[0], points[-1]), ("l", "r")):
@@ -619,22 +618,34 @@ class Beat3_SameObject(_visuals.ClipScene):
         return group
 
     def _row_footprint(self, rep, y: float):
-        """▭ FootPrint row: the first three metres of the wall outline as a closed 2D curve with corner coordinates, the window start from the model at its true distance, a break where the drawing is cut."""
-        m = self.m
-        scale, crop = 1.3, 3.0
-        view = _drafting.View("plan", (-3.95, y, 0), scale, centre=(0, 0.15, 0))
-        points = rep["primitives"][0]["points"]
-        ring = [[min(p[0], crop), p[1]] for p in points]
-        shape = _drafting.polyline([view(*p) for p in ring], ARCH, W_CUT, closed=True)
-        start = m.op["start"]
-        tick = _drafting.polyline([view(start, -0.2), view(start, 0.5)], GLASS, W_EDGE, dash=0.1)
-        tick_label = self.label("window starts", "Fenster beginnt", view(start, 0.5) + np.array([0, 0.17, 0]), size=S_SMALL, color=GLASS)
-        end_break = self._break(view(crop, -0.1), view(crop, points[2][1] + 0.1), 3, 0.05)
-        dim = self._dimension(view(crop + 0.0, points[0][1]), view(crop + 0.0, points[2][1]), self.quantity(m.q0["thickness"], "m", 2) + self._basis("thickness"), offset=-0.3, color=DATA)
-        along = self._dimension(view(0, points[0][1]), view(start, points[0][1]), self.quantity(start, "m", 2) + self._basis("start"), offset=-0.22, color=GLASS)
-        corners = _engine.VGroup(self.text(f"({self.number(points[0][0], 2)}; {self.number(points[0][1], 2)})", view(*points[0]) + np.array([0.0, -0.72, 0.0]), size=S_SMALL, color=ARCH, anchor="l"),
-                                 self.text(f"→ ({self.number(points[2][0], 2)}; {self.number(points[2][1], 2)})", view(crop, 0.15) + np.array([0.3, -0.72, 0.0]), size=S_SMALL, color=ARCH, anchor="r"))
-        return _engine.VGroup(shape, tick, tick_label, end_break, dim, along, corners)
+        """▭ Actual occupied leaf polygons in the first three metres of wall-local coordinates."""
+        m=self.m
+        scale,crop=1.3,3.0
+        view=_drafting.View("plan",(-3.95,y,0),scale,centre=(0,0,0))
+        origin=np.asarray(m.wall["start"],dtype=float)
+        axis=(np.asarray(m.wall["end"])-origin)/m.wall["length"]
+        normal=np.array([-axis[1],axis[0]])
+        rings=[[[float(np.dot(np.asarray(p)-origin,axis)),float(np.dot(np.asarray(p)-origin,normal))] for p in primitive["points"]]
+               for primitive in rep["primitives"] if primitive["kind"]=="polygon"]
+        low=min(p[1] for ring in rings for p in ring)
+        high=max(p[1] for ring in rings for p in ring)
+        shapes=_engine.VGroup()
+        for ring in rings:
+            if max(p[0] for p in ring)<=0 or min(p[0] for p in ring)>=crop:
+                continue
+            clipped=self._clip_station(ring,0)
+            clipped=[[-x,y] for x,y in self._clip_station([[-x,y] for x,y in clipped],-crop)]
+            if not clipped:
+                continue
+            shapes.add(_drafting.polyline([view(*p) for p in clipped],ARCH,W_CUT,closed=True))
+        start=m.op["start"]
+        tick=_drafting.polyline([view(start,low-.1),view(start,high+.1)],GLASS,W_EDGE,dash=.1)
+        label=self.label("window starts", "Fenster beginnt", view(start,high+.1)+np.array([0,.17,0]),size=S_SMALL,color=GLASS)
+        end_break=self._break(view(crop,low-.1),view(crop,high+.1),3,.05)
+        dim=self._dimension(view(crop,low),view(crop,high),self.quantity(high-low,"m",3)+self._basis("thickness"),offset=-.3,color=DATA)
+        along=self._dimension(view(0,low),view(start,low),self.quantity(start,"m",2)+self._basis("start"),offset=-.22,color=GLASS)
+        local=self.label("wall-local station / offset", "Wandlokale Station / Versatz",view(0,low)+np.array([0,-.72,0]),size=S_SMALL,color=MUTED,anchor="l")
+        return _engine.VGroup(shapes,tick,label,end_break,dim,along,local)
 
     def _beat_stored(self):
         """6️⃣ The three stored shape representations of one product, with their real coordinates, and the derived drawings."""
@@ -647,19 +658,20 @@ class Beat3_SameObject(_visuals.ClipScene):
         chips = {kind: self.class_box(rep[kind]["identifier"], [(rep[kind]["type"], DATA), (self.tr(*sublabels[kind]), MUTED)], (-5.5, y, 0), color=ARCH, width=2.2) for kind, y in ys.items()}
         bracket = _drafting.segments([(P((-6.8, ys["axis"] + 0.55)), P((-6.8, ys["body"] - 0.6)))], ARCH, W_EDGE)
         axis, foot = self._row_axis(rep["axis"], ys["axis"] + 0.05), self._row_footprint(rep["footprint"], ys["footprint"] + 0.5)
-        body_rep = rep["body"]["primitives"][0]
+        body_reps = rep["body"]["primitives"]
+        overall_height = m.wall["top"] - m.wall["base"]
         point, scale = self._place("3d", (-3.0, ys["body"], 0), 3.2, 2.3, m.base, ghost=(TAG, m.window))
         axon = self._draw("3d", point, scale, m.base, ghost=(TAG, m.window))
         e = _engine.ValueTracker(0)
         solid = self.live(lambda: self._extrusion(axon, e.get_value()), key=lambda: round(e.get_value(), 2))
-        depth = self._grow_dimension(axon.at(m.wall["length"], 0, m.wall["base"]), axon.at(m.wall["length"], 0, m.wall["base"] + body_rep["depth"]), e, body_rep["depth"], "m", offset=-0.05, basis="*")
+        depth = self._grow_dimension(axon.at(m.wall["length"], 0, m.wall["base"]), axon.at(m.wall["length"], 0, m.wall["base"] + overall_height), e, overall_height, "m", offset=-0.05, basis="*")
         nx = -0.5
         note = _engine.VGroup(
             self.label("modelled as", "modelliert als", (nx, -0.3, 0), size=S_SMALL, color=MUTED, anchor="l"),
             self.text(rep["body"]["derived"]["solid"], (nx, -0.57, 0), size=S_SMALL, color=DATA, anchor="l"),
             self.text(rep["body"]["derived"]["profile"], (nx, -0.84, 0), size=S_SMALL, color=DATA, anchor="l"),
-            self.text(f"{self.number(body_rep['profile']['length'], 2)} × {self.number(body_rep['profile']['thickness'], 2)} m{self._basis('thickness')}", (nx, -1.15, 0), size=S_SMALL, color=INK, anchor="l"),
-            self.label("the void is carried by", "die Aussparung trägt", (nx, -1.6, 0), size=S_SMALL, color=MUTED, anchor="l"),
+            self.text(self.tr("{} physical layer parts", "{} physische Schichtteile").format(len(body_reps)), (nx, -1.15, 0), size=S_SMALL, color=INK, anchor="l"),
+            self.label("the window opening is carried by", "die Fensteröffnung trägt", (nx, -1.6, 0), size=S_SMALL, color=MUTED, anchor="l"),
             self.text("IfcOpeningElement", (nx, -1.87, 0), size=S_SMALL, color=MUTED, anchor="l"))
         derived = self._derived_marks()
         hero = _engine.VGroup(title, bracket, *chips.values(), axis, foot, axon, note, derived)
@@ -730,7 +742,7 @@ class Beat3_SameObject(_visuals.ClipScene):
             lives.append(self.live_label(lambda t=tracker, v=value, u=unit: self.quantity(v * t.get_value(), u, 2) + "*", (1.5, y, 0), size=S_BODY, color=DATA, anchor="r"))
         y = -0.45 - 0.5 * 3
         rows.add(self.label("glazing share", "Glasanteil", (-6.25, y, 0), size=S_LABEL, color=INK, anchor="l", width=2.5),
-                 self.mono(f"{n(q['opening_area'])} ÷ {n(q['gross_side_area'])}", (-3.55, y, 0), size=S_SMALL, color=MUTED, anchor="l"))
+                 self.mono(f"{n(q['glazing_area'])} ÷ {n(q['gross_side_area'])}", (-3.55, y, 0), size=S_SMALL, color=MUTED, anchor="l"))
         lives.append(self.live_label(lambda: self._percent(q["glazing_share"] * to.get_value(), 1) + "*", (1.5, y, 0), size=S_BODY, color=DATA, anchor="r"))
         self.legend = self._legend() if self.legend is None else self.legend
         add = self._stage(_engine.VGroup(elev, cover, outline, rows), (*hatches, pill, *lives))
@@ -821,32 +833,37 @@ class Beat3_SameObject(_visuals.ClipScene):
         return group
 
     def _jamb(self, kind: str, ox: float, oy: float, k: float, x_from: float):
-        """🔩 The east end of the wall in plan at one representation: Axis line, FootPrint outline or Body layers with the glass lines; ``ox`` is the screen x of ``x_from``, ``oy`` the screen y of the south face, ``k`` screen units per metre."""
-        m = self.m
-        wall, op = m.wall, m.op
-        t, x_to = m.q0["thickness"], wall["length"]
-        sx, sy = (lambda x: ox + k * (x - x_from)), (lambda y: oy + k * y)
-        group = _engine.VGroup()
-        if kind == "axis":
-            group.add(_drafting.polyline([P((sx(x_from), sy(t / 2))), P((sx(x_to), sy(t / 2)))], ARCH, W_CUT), _engine.Dot(P((sx(x_to), sy(t / 2))), radius=0.06, color=ARCH))
-        elif kind == "footprint":
-            ring = [P((sx(x_from), sy(0))), P((sx(x_to), sy(0))), P((sx(x_to), sy(t))), P((sx(x_from), sy(t)))]
-            group.add(_drafting.polyline(ring, ARCH, W_CUT, closed=True))
+        """🔩 Compare native axis, occupied footprint and physical window-height material in one crop."""
+        m=self.m
+        wall,op=m.wall,m.op
+        t,x_to=m.q0["thickness"],wall["length"]
+        sx,sy=(lambda x:ox+k*(x-x_from)),(lambda y:oy+k*y)
+        group=_engine.VGroup()
+        if kind=="axis":
+            group.add(_drafting.polyline([P((sx(x_from),sy(t/2))),P((sx(x_to),sy(t/2)))],ARCH,W_CUT))
+        elif kind=="footprint":
+            for primitive in _model.represent(TAG,"footprint",m.base)["primitives"]:
+                if primitive["kind"]=="polygon":
+                    local=self._clip_station(self._wall_local_ring(primitive["points"]),x_from)
+                    if local:
+                        group.add(_drafting.polyline([P((sx(x),sy(y))) for x,y in local],ARCH,W_CUT,closed=True))
         else:
-            cursor = 0.0
-            for layer in m.layers:
-                lt = layer["thickness"]["value"]
-                tone = LAYER_TONES.get(layer["id"], MUTED)
-                ring = [P((sx(op["end"]), sy(cursor))), P((sx(x_to), sy(cursor))), P((sx(x_to), sy(cursor + lt))), P((sx(op["end"]), sy(cursor + lt)))]
-                group.add(_drafting.polygon(ring, tone, 0.8, tone, W_THIN))
-                if layer["id"] == "brick":
-                    group.add(self.hatch([ring], INK, 0.07, 45))
-                cursor += lt
-            for sign in (1, -1):
-                group.add(_drafting.polyline([P((sx(x_from), sy(t / 2 + sign * t * 0.28))), P((sx(op["end"]), sy(t / 2 + sign * t * 0.28)))], GLASS, W_EDGE))
-            group.add(_drafting.segments([(P((sx(op["end"]), sy(0))), P((sx(op["end"]), sy(t))))], GLASS, W_EDGE))
-        group.add(self._break((sx(x_from), sy(-0.1)), (sx(x_from), sy(t + 0.1)), 3, 0.05))
+            group.add(self._cut_plan((op["sill"]+op["head"])/2,ox,oy,k,x_from))
+        group.add(self._break((sx(x_from),sy(-.1)),(sx(x_from),sy(t+.1)),3,.05))
         return group
+
+    def _clip_station(self, ring, minimum):
+        """✂️ Clip a local occupied polygon to the displayed station without collapsed edge polygons."""
+        result=[]
+        for a,b in zip(ring,ring[1:]+ring[:1]):
+            inside_a,inside_b=a[0]>=minimum,b[0]>=minimum
+            if inside_a:
+                result.append(list(a))
+            if inside_a!=inside_b:
+                f=(minimum-a[0])/(b[0]-a[0])
+                result.append([minimum,a[1]+f*(b[1]-a[1])])
+        area=abs(sum(a[0]*b[1]-b[0]*a[1] for a,b in zip(result,result[1:]+result[:1])))/2
+        return result if len(result)>=3 and area>1e-12 else []
 
     def _layer_rows(self, x: float, y: float, den: int, unit_mm: bool = True):
         """🎨 One legend row per build-up layer with its thickness and the millimetres it takes on paper at 1:``den``."""
@@ -854,8 +871,8 @@ class Beat3_SameObject(_visuals.ClipScene):
         for index, layer in enumerate(self.m.layers):
             tone = LAYER_TONES.get(layer["id"], MUTED)
             t = layer["thickness"]["value"]
-            text = f"{self._layer_name(layer)}  {self.quantity(t, 'm', 2)}{self._star('', layer['thickness']['basis'])} → {self.number(t * 1000 / den, 2 if den > 100 else 1)} mm"
-            group.add(_engine.Rectangle(width=0.2, height=0.14, stroke_color=tone, stroke_width=W_THIN, fill_color=tone, fill_opacity=0.8).move_to((x + 0.1, y - 0.3 * index, 0)),
+            text = f"{self._layer_name(layer)}  {self.quantity(t, 'm', 3)}{self._star('', layer['thickness']['basis'])} → {self.number(t * 1000 / den, 2 if den > 100 else 1)} mm"
+            group.add(_engine.Rectangle(width=0.2, height=0.14, stroke_color=tone, stroke_width=W_THIN, fill_color=tone, fill_opacity=0.0 if layer.get("is_void", False) else 0.8).move_to((x + 0.1, y - 0.3 * index, 0)),
                       self.text(text, (x + 0.3, y - 0.3 * index, 0), size=S_SMALL, color=tone, anchor="l", width=4.4))
         return group
 
@@ -870,11 +887,11 @@ class Beat3_SameObject(_visuals.ClipScene):
         sub = {"axis": ("line", "Linie"), "footprint": ("outline", "Umriss"), "body": ("solid with layers", "Volumen mit Schichten")}
         chips = {kind: self.class_box(rep[kind]["identifier"], [(rep[kind]["type"], DATA), (self.tr(*sub[kind]), MUTED)], (-5.6, y, 0), color=ARCH, width=2.3) for kind, y in ys.items()}
         strips = {kind: self._jamb(kind, ox, y - (t * k / 2), k, x_from) for kind, y in ys.items()}
-        notes = {"axis": (("length", "Länge"), self.quantity(m.q0["length"], "m")), "footprint": (("thickness", "Stärke"), self.quantity(t, "m") + self._basis("thickness")),
+        notes = {"axis": (("length", "Länge"), self.quantity(m.q0["length"], "m")), "footprint": (("maximum envelope", "maximale Hülle"), self.quantity(t, "m") + self._basis("thickness")),
                  "body": (("build-up", "Aufbau"), f"{len(m.layers)} " + self.tr("layers", "Schichten"))}
         texts = _engine.VGroup(*[_engine.VGroup(self.label(*notes[kind][0], (-0.1, y + 0.17, 0), size=S_SMALL, color=MUTED, anchor="l"), self.text(notes[kind][1], (-0.1, y - 0.15, 0), size=S_LABEL, color=DATA, anchor="l", width=1.7)) for kind, y in ys.items()])
         title = self.label("same wall · same plan window · three levels of detail", "dieselbe Wand · derselbe Planausschnitt · drei Detailstufen", (-6.8, 3.0, 0), size=S_LABEL, color=MUTED, anchor="l", width=8.4)
-        legend = _engine.VGroup(self.label("layers on paper at 1:20", "Schichten auf Papier im Maßstab 1:20", (-4.1, -1.1, 0), size=S_SMALL, color=MUTED, anchor="l"), self._layer_rows(-4.1, -1.45, 20))
+        legend = _engine.VGroup(self.label("upper screen layers on paper at 1:20", "obere Schirmschichten auf Papier im Maßstab 1:20", (-4.1, -1.1, 0), size=S_SMALL, color=MUTED, anchor="l"), self._layer_rows(-4.1, -1.45, 20))
         pieces = (title, *[x for kind in ys for x in (chips[kind], strips[kind])], texts, legend)
         self._stage(_engine.VGroup(*pieces))
         self.step("lod", *self._head("lod"), seq(leave, *[_engine.FadeIn(x) for x in pieces], lag=0.3), seconds=5.4)
@@ -918,24 +935,36 @@ class Beat3_SameObject(_visuals.ClipScene):
         self._stage(_engine.VGroup(strip, dims, glass, bar, badges, rows, note))
         self.step("scale20", *self._head("scale20"), seq(leave, _engine.FadeIn(strip), _engine.FadeIn(dims), _engine.FadeIn(glass), _engine.FadeIn(bar), _engine.FadeIn(badges), _engine.FadeIn(rows), _engine.FadeIn(note), lag=0.35), seconds=5.4)
 
+    def _wall_local_ring(self, points):
+        """📐 Resolve physical world outlines into wall station and envelope depth coordinates."""
+        wall=self.m.wall
+        origin=np.asarray(wall["start"],dtype=float)
+        axis=(np.asarray(wall["end"])-origin)/wall["length"]
+        normal=np.array([-axis[1],axis[0]])
+        return [[float(np.dot(np.asarray(p)-origin,axis)),float(np.dot(np.asarray(p)-origin,normal))+wall["thickness"]/2] for p in points]
+
     def _cut_plan(self, h: float, ox: float, oy: float, k: float, x_from: float, spacing: float = 0.07):
-        """✂️ The wall in plan with the cut ``h`` metres above the first floor: solid poché below sill and above head, glass lines in the window band."""
-        m = self.m
-        wall, op, t = m.wall, m.op, m.q0["thickness"]
-        x_to = wall["length"]
-        band = op["sill"] <= h <= op["head"]
-        sx, sy = (lambda x: ox + k * (x - x_from)), (lambda y: oy + k * y)
-        ring = lambda a, b: [P((sx(a), sy(0))), P((sx(b), sy(0))), P((sx(b), sy(t))), P((sx(a), sy(t)))]
-        group = _engine.VGroup(_drafting.polyline(ring(x_from, x_to), MUTED, W_HAIR, closed=True, dash=0.08))
-        spans = [(x_from, min(op["start"], x_to)), (max(op["end"], x_from), x_to)] if band else [(x_from, x_to)]
-        for a, b in spans:
-            if b > a:
-                group.add(_drafting.polygon(ring(a, b), DATA, 0.8, DATA, W_THIN), self.hatch([ring(a, b)], INK, spacing, 45))
-        if band:
-            a, b = max(op["start"], x_from), min(op["end"], x_to)
-            for sign in (0.2, 0.8):
-                group.add(_drafting.polyline([P((sx(a), sy(t * sign))), P((sx(b), sy(t * sign)))], GLASS, W_EDGE))
-            group.add(_drafting.segments([(P((sx(v), sy(0))), P((sx(v), sy(t)))) for v in (op["start"], op["end"]) if x_from <= v <= x_to], GLASS, W_EDGE))
+        """✂️ Slice occupied wall, native filling and auxiliary members at the physical cut level."""
+        m=self.m
+        wall=m.wall
+        z=wall["base"]+h
+        sx,sy=(lambda x:ox+k*(x-x_from)),(lambda y:oy+k*y)
+        group=_engine.VGroup()
+        filling=next(item for item in m.geo["fillings"] if item["tag"]==m.window)
+        auxiliary=[item for item in m.geo["beams"] if _model.element(item["tag"],m.base).get("geometry",{}).get("section_sweep",{}).get("wall")==TAG]
+        for item in [wall,filling,*auxiliary]:
+            for part in item["parts"]:
+                if not part["z0"]<=z<=part["z1"]:
+                    continue
+                for region in _model.part_regions(part,z):
+                    local=self._clip_station(self._wall_local_ring(region),x_from)
+                    if not local:
+                        continue
+                    ring=[P((sx(x),sy(y))) for x,y in local]
+                    tone=GLASS if part.get("role")=="glass" else (ARCH if item is filling else DATA)
+                    group.add(_drafting.polygon(ring,tone,.45 if tone==GLASS else .8,tone,W_THIN))
+                    if tone!=GLASS:
+                        group.add(self.hatch([ring],INK,spacing,45))
         return group
 
     def _beat_sweep(self):
@@ -968,17 +997,36 @@ class Beat3_SameObject(_visuals.ClipScene):
         return cache[("q", k)]
 
     def _takeoff_elevation(self, k: int, placement):
-        """🏛️ Elevation of one state with the net wall hatched green and the window hatched yellow, plus the live sill and window dimensions."""
+        """🏛️ Elevation of one state with the net wall hatched green and the actual glass hatched yellow, plus the live sill and window dimensions."""
         group = self._board_elevation(k, placement)
         drawing = group[0]
         wall, op = self._wall_of(self._state(k))
         outer = [drawing.at(0, wall["base"]), drawing.at(wall["length"], wall["base"]), drawing.at(wall["length"], wall["top"]), drawing.at(0, wall["top"])]
         hole = [drawing.at(op["start"], op["sill_z"]), drawing.at(op["end"], op["sill_z"]), drawing.at(op["end"], op["head_z"]), drawing.at(op["start"], op["head_z"])]
         group.add(_drafting.region([outer, hole], BACKGROUND, 0.72), self.hatch([outer, hole], GOOD, 0.07, 45))
+        state = self._state(k)
+        direction = (np.asarray(wall["end"])-np.asarray(wall["start"]))/wall["length"]
+        for filling in self._geo(state)["fillings"]:
+            if filling["host"] != wall["tag"]:
+                continue
+            for part in filling["parts"]:
+                if part["role"] != "glass":
+                    continue
+                stations = [float(np.dot(np.asarray(p)-wall["start"],direction)) for p in part["outline"]]
+                lo,hi = min(stations),max(stations)
+                ring = [drawing.at(s,z) for s,z in ((lo,part["z0"]),(hi,part["z0"]),(hi,part["z1"]),(lo,part["z1"]))]
+                group.add(self.hatch([ring],DATA,0.07,-45))
         return group
 
+    def _glass_formula(self, k: int) -> str:
+        """💎 Express the actual clear glass dimensions from the selected shared filling."""
+        state = self._state(k)
+        wall,opening = self._wall_of(state)
+        q = _model.quantities(opening["fill_tag"],state)
+        return f"{self.number(q['clear_width'])} × {self.number(q['clear_height'])} = {self.number(self._q(k)['glazing_area'])} m²*"
+
     def _beat_takeoff(self):
-        """🧾 The same sill event as live quantity take-off: net wall area, window area and glazing share from the Body, hatched on the elevation."""
+        """🧾 The same sill event as live quantity take-off: net wall area, actual glass area and glazing share from the Body, hatched on the elevation."""
         m = self.m
         leave = self._leave()
         t = _engine.ValueTracker(0)
@@ -986,7 +1034,7 @@ class Beat3_SameObject(_visuals.ClipScene):
         placement = self._place("elevation", (-2.6, 1.5, 0), 6.4, 3.0, m.base)
         elev = self.live(lambda: self._takeoff_elevation(key(), placement), key=key)
         q0, n = m.q0, self.number
-        specs = [("net wall area", "Nettowandfläche", "net_side_area", "m²", GOOD), ("window area", "Fensterfläche", "opening_area", "m²", DATA), ("glazing share", "Glasanteil", "glazing_share", "%", GLASS)]
+        specs = [("net wall area", "Nettowandfläche", "net_side_area", "m²", GOOD), ("glass area", "Glasfläche", "glazing_area", "m²", DATA), ("glazing share", "Glasanteil", "glazing_share", "%", GLASS)]
         static, lives = _engine.VGroup(), []
         for index, (en, de, name, unit, tone) in enumerate(specs):
             y = 2.45 - 1.2 * index
@@ -995,8 +1043,8 @@ class Beat3_SameObject(_visuals.ClipScene):
                        self.label(en, de, (1.85, y + 0.17, 0), size=S_SMALL, color=MUTED, anchor="l"), self.text(f"{self.tr('rev ', 'Rev. ')}{m.base['revision']}  {before}", (1.85, y - 0.2, 0), size=S_SMALL, color=MUTED, anchor="l"))
             lives.append(self.live_label((lambda nm=name, u=unit: (self._percent(self._q(key())[nm], 1) if u == "%" else self.quantity(self._q(key())[nm], u)) + "*"), (6.8, y - 0.05, 0), size=S_BODY, color=DATA, anchor="r"))
         formulas = [lambda: f"{n(self._q(key())['gross_side_area'])} − {n(self._q(key())['opening_area'])} = {n(self._q(key())['net_side_area'])} m²*",
-                    lambda: f"{n(self._wall_of(self._state(key()))[1]['end'] - self._wall_of(self._state(key()))[1]['start'])} × {n(self._wall_of(self._state(key()))[1]['head'] - self._wall_of(self._state(key()))[1]['sill'])} = {n(self._q(key())['opening_area'])} m²*",
-                    lambda: f"{n(self._q(key())['opening_area'])} ÷ {n(self._q(key())['gross_side_area'])} = {self._percent(self._q(key())['glazing_share'], 1)}*"]
+                    lambda: self._glass_formula(key()),
+                    lambda: f"{n(self._q(key())['glazing_area'])} ÷ {n(self._q(key())['gross_side_area'])} = {self._percent(self._q(key())['glazing_share'], 1)}*"]
         for index, fn in enumerate(formulas):
             lives.append(self.live_label(fn, (-6.8, -0.75 - 0.45 * index, 0), size=S_LABEL, color=INK, anchor="l"))
         event = _engine.VGroup(self.mono(f"{self.tr('OpeningResized', 'Öffnung geändert')}  {self.tr('sill', 'Brüstung')} {n(m.op['sill'])} → {n(m.event['sill'])} m{self._basis('sill')}", (1.6, -0.75, 0), size=S_SMALL, color=DATA, anchor="l"),
@@ -1030,14 +1078,14 @@ class Beat3_SameObject(_visuals.ClipScene):
         t = _engine.ValueTracker(0)
         key = lambda: round(t.get_value() * STEPS)
         first = self.element_axon(TAG, (0, 0, 0), 0.2, model=m.base, extrude=1.0, opening=0.35, window=1.0, highlight=(TAG,), colors="material")
-        c = P((-2.7, 0.0))
+        c = np.asarray(P((-2.7, 0.0)), float)
         scale = 0.2 * min(6.8 / first.width, 3.7 / first.height)
         placement = (c - (np.array(first.get_center()) * scale / 0.2), scale)
         solid = self.live(lambda: self._volume_scene(key(), placement), key=key)
         n, q0 = self.number, m.q0
         void = lambda k: self._q(k)["gross_volume"] - self._q(k)["volume"]
-        specs = [("gross volume", "Bruttovolumen", lambda: self.quantity(self._q(0)["gross_volume"], "m³", 3) + "*", INK, None), ("void", "Aussparung", lambda: self.quantity(void(key()), "m³", 3) + "*", WARN, void),
-                 ("wall volume", "Wandvolumen", lambda: self.quantity(self._q(key())["volume"], "m³", 3) + "*", GOOD, lambda k: self._q(k)["volume"])]
+        specs = [("gross solid material", "Brutto-Feststoff", lambda: self.quantity(self._q(0)["gross_volume"], "m³", 3) + "*", INK, None), ("openings / embedded joints", "Öffnungen / eingebettete Anschlüsse", lambda: self.quantity(void(key()), "m³", 3) + "*", WARN, void),
+                 ("owned wall material", "Wandeigenes Material", lambda: self.quantity(self._q(key())["volume"], "m³", 3) + "*", GOOD, lambda k: self._q(k)["volume"])]
         static, lives = _engine.VGroup(), []
         for index, (en, de, fn, tone, before) in enumerate(specs):
             y = 1.9 - 0.8 * index
@@ -1045,9 +1093,9 @@ class Beat3_SameObject(_visuals.ClipScene):
             if before is not None:
                 static.add(self.text(f"{self.tr('rev ', 'Rev. ')}{m.base['revision']}  {self.quantity(before(0), 'm³', 3)}*", (2.4, y - 0.17, 0), size=S_SMALL, color=MUTED, anchor="l"))
             lives.append(self.live_label(fn, (6.8, y - 0.05, 0), size=S_BODY, color=tone, anchor="r"))
-        lives.append(self.live_label(lambda: f"{n(self._q(key())['net_side_area'])} m² × {n(q0['thickness'])} m = {n(self._q(key())['volume'], 3)} m³*", (2.15, -0.7, 0), size=S_SMALL, color=INK, anchor="l"))
+        lives.append(self.live_label(lambda: f"Σ Vᵣ = {n(self._q(key())['volume'], 3)} m³*", (2.15, -0.7, 0), size=S_SMALL, color=INK, anchor="l"))
         lives.append(self.live_label(lambda: f"{n(self._q(0)['gross_volume'], 3)} − {n(void(key()), 3)} = {n(self._q(key())['volume'], 3)} m³*", (2.15, -1.1, 0), size=S_SMALL, color=INK, anchor="l"))
-        note = self.label("volume = net side area × thickness", "Volumen = Nettowandfläche × Stärke", (2.15, -1.6, 0), size=S_SMALL, color=MUTED, anchor="l", width=4.6)
+        note = self.label("sum actual solid parts · cavity and embedded joints excluded", "Summe fester Teile · Hohlraum und eingebettete Anschlüsse abgezogen", (2.15, -1.6, 0), size=S_SMALL, color=MUTED, anchor="l", width=4.6)
         legend = self._legend()
         self.legend = legend
         add = self._stage(_engine.VGroup(static, note, legend), (solid, *lives))
@@ -1064,13 +1112,17 @@ class Beat3_SameObject(_visuals.ClipScene):
         m = self.m
         sx, sy = (lambda x: ox + k * (x - x_from)), (lambda y: oy + k * y)
         group = _engine.VGroup()
-        east = _model.represent("W-E", "footprint", m.base)["primitives"][0]["points"]
-        ring = [P((sx(max(x, x_from)), sy(min(y, y_to)))) for x, y in east]
-        group.add(_drafting.polygon(ring, INK, 0.25, INK, W_THIN))
-        group.add(self._break((sx(max(east[0][0], x_from)) - 0.05, sy(y_to)), (sx(m.wall["length"]) + 0.05, sy(y_to)), 4, 0.04, MUTED))
+        east = _model.represent("W-E", "footprint", m.base)["primitives"]
+        for primitive in east:
+            clipped = [(max(x, x_from), min(y, y_to)) for x, y in primitive["points"]]
+            if max(p[0] for p in clipped) - min(p[0] for p in clipped) > 1e-9 and max(p[1] for p in clipped) - min(p[1] for p in clipped) > 1e-9:
+                group.add(_drafting.polygon([P((sx(x), sy(y))) for x, y in clipped], INK, 0.25, INK, W_THIN))
+        group.add(self._break((sx(m.wall["length"]) - .2, sy(y_to)), (sx(m.wall["length"]) + .05, sy(y_to)), 4, .04, MUTED))
         for pil in m.geo["pilotis"]:
             if x_from <= pil["x"] <= m.wall["length"] and pil["y"] <= y_to:
-                group.add(_drafting.polyline(_drafting.circle_points(P((sx(pil["x"]), sy(pil["y"]))), pil["radius"] * k, 20), MUTED, W_THIN, closed=True, dash=0.06))
+                for part in pil["parts"]:
+                    if part["z0"] < m.geo["storeys"]["first"] and part["z1"] > m.geo["storeys"]["ground"]:
+                        group.add(_drafting.polyline([P((sx(x), sy(y))) for x, y in part["outline"]], MUTED, W_THIN, closed=True, dash=.06))
         return group
 
     def _beat_drafted(self):
@@ -1163,3 +1215,4 @@ class Beat3_SameObject(_visuals.ClipScene):
         pulses = _engine.AnimationGroup(*[_engine.Indicate(thumbs[k], color=GOOD, scale_factor=1.06) for k in SLOTS], _engine.Indicate(chip, color=GOOD), lag_ratio=0.25)
         self.step("identity", *self._head("identity"), _engine.Succession(seq(self._leave(), _engine.FadeIn(axon), *[_engine.FadeIn(g) for g in slots], *[_engine.FadeIn(x) for x in thumbs.values()], _engine.FadeIn(chip), _engine.FadeIn(card),
                                                        _engine.FadeIn(rows), _engine.FadeIn(tick), _engine.FadeIn(caption), lag=0.2), pulses), seconds=5.6)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       

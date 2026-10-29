@@ -12,6 +12,7 @@ _d = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.�
 _c = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.🧱️core.🐍️")
 _s = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.📏️sheet.🐍️")
 _engine = importlib.import_module("manim")
+_plan = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.📋️plan.🐍️")
 
 INK, MUTED, DATA, GOOD, WARN, GLASS, BACKGROUND, CONCRETE, SERV = (_s.INK, _s.MUTED, _s.DATA, _s.GOOD, _s.WARN, _s.GLASS, _s.BACKGROUND, _s.CONCRETE, _s.SERV)
 STRUCT = _d.STRUCT
@@ -20,7 +21,6 @@ W_CUT, W_EDGE, W_THIN, W_HAIR = _d.W_CUT, _d.W_EDGE, _d.W_THIN, _d.W_HAIR
 WALL_FILL = _d.mix(INK, BACKGROUND, 0.12)
 GREEN_FILL = _d.mix(_d.GOOD, BACKGROUND, 0.42)
 BEYOND = _s.BEYOND_FILL
-MIN_LAYER = 0.014
 EPS = 1e-9
 
 
@@ -38,6 +38,14 @@ def segment_quad(first, last, half_width: float) -> list:
         raise ValueError("A band requires a nonzero segment and a positive half-width")
     normal = np.array([-delta[1], delta[0]]) * (half_width / length)
     return [point.tolist() for point in (a + normal, b + normal, b - normal, a - normal)]
+
+
+def part_projection(part, plane, state):
+    """✂️ Preserve true loft cuts and silhouettes while retaining concave prism intervals."""
+    if state == "cut":
+        return _c._model.part_sections(part,plane.value,plane.index)
+    ring = _c._model.part_elevation(part,plane.index)
+    return [ring] if len(ring) >= 3 else []
 
 
 class Section(_s.SheetMixin):
@@ -63,7 +71,7 @@ class Section(_s.SheetMixin):
         """🔻 Level marks ±0.00 / +3.50 / +6.70 / +9.40 right of the drawing with faint level lines across it."""
         group = _engine.VGroup()
         x_mark = to(h1, 0.0)[0] + 0.55
-        values = [("ground", g["storeys"]["ground"]), ("first", g["storeys"]["first"]), ("roof", g["storeys"]["roof"]), ("top", g["box"]["height"])]
+        values = sorted(g["storeys"].items(),key=lambda item:item[1])+[("top",_plan.model_vertical_bounds(g)[1])]
         for tag, value in values:
             y = to(h0, value)[1]
             if lines:
@@ -102,11 +110,13 @@ class Section(_s.SheetMixin):
         plane = _s.parse_cut(cut, g)
         box = g["box"]
         hmax = box["width"] if plane.axis == "x" else box["length"]
-        hc, zc = centre if centre is not None else (hmax / 2, box["height"] / 2)
+        z_low,z_high = _plan.model_vertical_bounds(g)
+        hc, zc = centre if centre is not None else (hmax/2,(z_low+z_high)/2)
         view = _d.View("section", point, scale, (0.0, hc, zc) if plane.axis == "x" else (hc, 0.0, zc), axis="y" if plane.axis == "x" else "x", cut=plane.value)
         d = _s.Sheet(view, "section")
+        d.z_bounds = (z_low,z_high)
         d.plane = plane.spec
-        base = P(point)
+        base = np.asarray(P(point), float)
 
         def to(h, z):
             return np.array([base[0] + scale * (h - hc), base[1] + scale * (z - zc), 0.0])
@@ -132,6 +142,8 @@ class Section(_s.SheetMixin):
             self._sec_walls(ctx)
             self._sec_enclosure(ctx)
             self._sec_screens(ctx)
+        if use & {"architecture","structure"}:
+            self._sec_solids(ctx)
         if "services" in use:
             self._sec_services(ctx)
         self._section_ground(d, to, ctx["h0"], ctx["h1"])
@@ -158,12 +170,12 @@ class Section(_s.SheetMixin):
         """↔️ Storey-height chain and overall height left of the section."""
         group = _engine.VGroup()
         x = to(ctx["h0"], 0.0)[0] - 0.35
-        marks = [0.0, g["storeys"]["first"], g["storeys"]["roof"], g["box"]["height"]]
+        marks = sorted(set(g["storeys"].values())|set(_plan.model_vertical_bounds(g)))
         if "levels" in dims:
             for a, b in zip(marks[:-1], marks[1:]):
                 group.add(self._dim((x, to(0, a)[1], 0), (x, to(0, b)[1], 0), self.number(b - a, 2), offset=0.0, color=MUTED))
         if "overall" in dims:
-            group.add(self._dim((x, to(0, 0.0)[1], 0), (x, to(0, marks[-1])[1], 0), self.quantity(marks[-1], "m", 2), offset=0.7 if "levels" in dims else 0.0, color=INK))
+            group.add(self._dim((x, to(0, marks[0])[1], 0), (x, to(0, marks[-1])[1], 0), self.quantity(marks[-1]-marks[0], "m", 2), offset=0.7 if "levels" in dims else 0.0, color=INK))
         d.parts["dims"] = group
         d.add(group)
 
@@ -171,7 +183,7 @@ class Section(_s.SheetMixin):
         """🏷️ Room names inside the cut rooms where free space exists."""
         g, plane, to, look = ctx["g"], ctx["plane"], ctx["to"], ctx["look"]
         points = _s.cloud(d)
-        bands = {"ground": (0.0, g["slabs"][0]["top"] - g["slabs"][0]["thickness"]), "first": (g["storeys"]["first"], g["walls"][0]["top"]), "roof": (g["storeys"]["roof"], g["box"]["height"])}
+        bands = _s.storey_bands(g)
         for space in g["spaces"]:
             z0, z1 = bands[space["storey"]]
             for h0, h1 in plane.intervals([space["outline"]]):
@@ -192,43 +204,33 @@ class Section(_s.SheetMixin):
         return _s.poche([ring], fill, hatch=hatch, cross=cross, stroke=stroke, width=W_CUT + bonus, opacity=opacity)
 
     def _sec_slabs(self, ctx):
-        """🟫 First-floor slab and roof slab cut with hatched concrete; roof build-up layers by zone."""
-        g, plane, to, look, put = ctx["g"], ctx["plane"], ctx["to"], ctx["look"], ctx["put"]
+        """🟫 Physical regional cuts and per-region roof build-up elevations."""
+        g,plane,to,look,put = ctx["g"],ctx["plane"],ctx["to"],ctx["look"],ctx["put"]
         for slab in g["slabs"]:
-            item = _s.pseudo(slab["tag"], "IfcSlab", "slabs", slab["guid"], ("architecture", "structure"))
-            fill, stroke, opacity, bonus = self._pair(look, item, CONCRETE, INK)
-            rings = [slab["outline"]] + list(slab["voids"])
-            spans = plane.intervals(rings)
-            ctx["h0"], ctx["h1"] = min(ctx["h0"], -1.5), max(ctx["h1"], 0.0)
-            z0 = slab["top"] - slab["thickness"]
+            item = _s.pseudo(slab["tag"],"IfcSlab","slabs",slab["guid"],("architecture","structure"))
+            fill,stroke,opacity,bonus = self._pair(look,item,CONCRETE,INK)
+            cells = _plan.rect_union_cells(_plan.slab_cut(slab,plane.index,plane.value))
             group = _engine.VGroup()
-            for h0, h1 in spans:
-                group.add(self._cut_poche([to(h, z) for h, z in rect(h0, h1, z0, slab["top"])], fill, stroke, opacity, bonus))
-            put(2.0, 0.0, slab["tag"], group)
-            if slab["kind"] != "ROOF" or not ctx["buildup"] or "layers" not in slab:
+            for h0,h1,z0,z1 in cells:
+                ring = [to(h,z) for h,z in rect(h0,h1,z0,z1)]
+                group.add(_d.polygon(ring,fill,opacity))
+                if (h1-h0)*ctx["scale"] > 0.1 and (z1-z0)*ctx["scale"] > 0.04:
+                    group.add(_d.hatch(ring,stroke,0.05,45.0,W_HAIR,0.45*opacity))
+            if cells:
+                group.add(_d.segments([(to(*a),to(*b)) for a,b in _plan.cell_edges(cells)],stroke,W_CUT+bonus,opacity))
+            put(2.0,0.0,slab["tag"],group)
+            if not ctx["buildup"]:
                 continue
-            solarium = plane.intervals([slab["zones"]["solarium"]]) if slab.get("zones", {}).get("solarium") else []
-            z = slab["top"]
-            for layer in slab["layers"][1:]:
-                key = layer["id"]
-                thickness = max(layer["thickness"], MIN_LAYER / ctx["scale"])
-                zones = set(layer.get("zones", []))
-                if zones == {"planted"}:
-                    ranges = _s.subtract(spans, solarium)
-                elif zones == {"solarium"}:
-                    ranges = _s.intersect(spans, solarium)
-                else:
-                    ranges = spans
-                colour = _c.layer_color(key)
-                lg = _engine.VGroup()
-                for h0, h1 in ranges:
-                    ring = [to(h, zz) for h, zz in rect(h0, h1, z, z + thickness)]
-                    lg.add(_d.polygon(ring, _d.mix(colour, BACKGROUND, 0.1 if key != "waterproofing" else 0.0), 0.9 * opacity, stroke if look.state(item) == "highlight" else colour, W_THIN, opacity))
-                    if key == "soil":
-                        lg.add(_d.hatch(ring, GOOD, 0.045, 30.0, W_HAIR, 0.8 * opacity))
-                if len(lg.submobjects):
-                    put(2.1, 0.0, "SL-R:" + key, lg)
-                z += thickness
+            finishes = {}
+            for part in slab.get("finish_parts",[]):
+                finishes.setdefault(part["layer"],[]).append(part)
+            for layer,parts in finishes.items():
+                colour = _c.surface_color({"kind":layer})
+                cells = _plan.rect_union_cells(_plan.slab_cut({"parts":parts},plane.index,plane.value))
+                shapes = _engine.VGroup(*[_d.polygon([to(h,z) for h,z in rect(a,b,c,d)],colour,opacity) for a,b,c,d in cells])
+                if cells:
+                    shapes.add(_d.segments([(to(*a),to(*b)) for a,b in _plan.cell_edges(cells)],stroke,W_THIN,opacity))
+                    put(2.1,0.0,slab["tag"]+":"+layer,shapes)
 
     def _beyond(self, ctx, item, ring_hz, tag, depth, fill=None, stroke=None, opacity_fill=1.0):
         """🫥 A surface beyond the cut: dark fill with a thin outline."""
@@ -239,70 +241,41 @@ class Section(_s.SheetMixin):
         return group
 
     def _sec_pilotis(self, ctx):
-        """⚪ Pilotis of the cut row as hatched rectangles, pilotis beyond as thin outlines."""
-        g, plane, to, look, put = ctx["g"], ctx["plane"], ctx["to"], ctx["look"], ctx["put"]
-        cut_h = []
+        """🏛️ Exact polygon-profile intersections and projections for every column part."""
+        plane,to,look,put = ctx["plane"],ctx["to"],ctx["look"],ctx["put"]
         for item in ctx["catalogue"]:
             if item["kind"] != "pilotis":
                 continue
-            data = item["data"]
-            p = (data["x"], data["y"])
-            s, r, h = plane.s(p), data["radius"], plane.h(p)
-            kind = plane.classify(s - r, s + r)
-            if kind == "cut":
-                half = math.sqrt(max(r * r - s * s, 0.0))
-                cut_h.append(h)
-                fill, stroke, opacity, bonus = self._pair(look, item, CONCRETE, INK)
-                ring = [to(a, b) for a, b in rect(h - half, h + half, data["base"], data["top"])]
-                put(2.0, 0.0, item["tag"], self._cut_poche(ring, fill, stroke, opacity, bonus))
-        for item in ctx["catalogue"]:
-            if item["kind"] != "pilotis":
-                continue
-            data = item["data"]
-            p = (data["x"], data["y"])
-            s, r, h = plane.s(p), data["radius"], plane.h(p)
-            if plane.classify(s - r, s + r) == "beyond" and not any(abs(h - c) < r * 0.9 for c in cut_h):
-                self._beyond(ctx, item, rect(h - r, h + r, data["base"], data["top"]), item["tag"], s)
+            fill,stroke,opacity,bonus = self._pair(look,item,CONCRETE,INK)
+            for part in item["data"]["parts"]:
+                ring = _c._model.part_footprint(part)
+                if not _c.inside(ctx["window"],ring,0.5):
+                    continue
+                state = plane.classify(*plane.extent(ring))
+                if state == "removed":
+                    continue
+                for polygon in part_projection(part,plane,state):
+                    points = [to(h,z) for h,z in polygon]
+                    group = self._cut_poche(points,fill,stroke,opacity,bonus) if state == "cut" else _engine.VGroup(self._shape(points,BEYOND,1.0,stroke,W_THIN+bonus,0.7*opacity))
+                    put(2.0 if state == "cut" else 1.0,plane.extent(ring)[1],item["tag"],group)
 
     def _sec_ramps(self, ctx):
-        """⏫ Ramp flights cut along their slope or seen beyond, landings as slabs."""
-        g, plane, to, look, put = ctx["g"], ctx["plane"], ctx["to"], ctx["look"], ctx["put"]
-        thickness = g["slabs"][0]["thickness"]
+        """⏫ Cut actual source-owned inclined slabs and landings through shared geometry."""
+        g,plane,to,look,put = ctx["g"],ctx["plane"],ctx["to"],ctx["look"],ctx["put"]
         for ramp in g["ramp"]["ramps"]:
-            item = next((it for it in ctx["catalogue"] if it["tag"] == ramp["tag"]), None) or _s.pseudo(ramp["tag"], "IfcRamp", "ramp", ramp["guid"])
-            for flight in ramp["flights"]:
-                s, e = np.array(flight["start"], float), np.array(flight["end"], float)
-                d = (e - s) / np.linalg.norm(e - s)
-                n = np.array([-d[1], d[0]])
-                half = flight["width"] / 2
-                ring = [s + n * half, e + n * half, e - n * half, s - n * half]
-                kind = plane.classify(*plane.extent(ring))
-                if kind == "removed":
+            for part in ramp["parts"]+ramp["child_parts"]:
+                tag = part["owner"]
+                cls = "IfcRampFlight" if part["role"]=="flight" else "IfcRamp"
+                item = next((it for it in ctx["catalogue"] if it["tag"]==tag),None) or _s.pseudo(tag,cls,"ramp",part["owner_guid"])
+                ring = _c._model.part_footprint(part)
+                state = plane.classify(*plane.extent(ring))
+                if state=="removed":
                     continue
-                hs, he = plane.h(s), plane.h(e)
-                fill, stroke, opacity, bonus = self._pair(look, item, CONCRETE, INK)
-                z0, z1 = flight["z0"], flight["z1"]
-                if abs(he - hs) > abs(s[0] - e[0]) * 0 + 1e-6 and abs(he - hs) > 0.5 * float(np.linalg.norm(e - s)):
-                    band = [to(hs, z0), to(he, z1), to(he, z1 - thickness), to(hs, z0 - thickness)]
-                    if kind == "cut":
-                        put(2.0, 0.0, flight["tag"], self._cut_poche(band, fill, stroke, opacity, bonus))
-                    else:
-                        put(1.0, plane.extent(ring)[1], flight["tag"], _engine.VGroup(self._shape(band, BEYOND, 1.0, stroke, W_THIN, 0.7 * opacity)))
-                elif kind == "cut":
-                    t = (plane.value - s[0]) / (e[0] - s[0]) if plane.index == 0 else (plane.value - s[1]) / (e[1] - s[1])
-                    z = z0 + (z1 - z0) * min(max(t, 0.0), 1.0)
-                    h0, h1 = plane.hrange(ring)
-                    put(2.0, 0.0, flight["tag"], self._cut_poche([to(h, zz) for h, zz in rect(h0, h1, z - thickness, z)], fill, stroke, opacity, bonus))
-                else:
-                    h0, h1 = plane.hrange(ring)
-                    put(1.0, plane.extent(ring)[1], flight["tag"], _engine.VGroup(self._shape([to(h, zz) for h, zz in rect(h0, h1, z0 - thickness, z1)], BEYOND, 1.0, stroke, W_THIN, 0.7 * opacity)))
-            for landing in ramp["landings"]:
-                ring = landing["outline"]
-                kind = plane.classify(*plane.extent(ring))
-                h0, h1 = plane.hrange(ring)
-                if kind == "cut":
-                    fill, stroke, opacity, bonus = self._pair(look, item, CONCRETE, INK)
-                    put(2.0, 0.0, ramp["tag"] + ":landing", self._cut_poche([to(h, zz) for h, zz in rect(*[min(plane.intervals([ring]) or [(h0, h1)])[0], max(plane.intervals([ring]) or [(h0, h1)])[1]], landing["z"] - thickness, landing["z"])], fill, stroke, opacity, bonus))
+                fill,stroke,opacity,bonus = self._pair(look,item,CONCRETE,INK)
+                for polygon in part_projection(part,plane,state):
+                    points = [to(h,z) for h,z in polygon]
+                    group = self._cut_poche(points,fill,stroke,opacity,bonus) if state=="cut" else _engine.VGroup(self._shape(points,BEYOND,1.0,stroke,W_THIN,0.7*opacity))
+                    put(2.0 if state=="cut" else 1.0,plane.extent(ring)[1],tag,group)
 
     def _wall_ring(self, wall):
         """▭ Plan rectangle of a wall (its path is the axis)."""
@@ -312,46 +285,85 @@ class Section(_s.SheetMixin):
         return [a + n, b + n, b - n, a - n], a, d
 
     def _sec_walls(self, ctx):
-        """⬜ First-floor walls cut with a window gap and glass lines, or seen beyond as interior elevations with the ribbon window band."""
-        g, plane, to, look, put = ctx["g"], ctx["plane"], ctx["to"], ctx["look"], ctx["put"]
-        for item in ctx["catalogue"]:
-            if item["kind"] != "walls":
-                continue
-            wall = item["data"]
-            ring, a, d = self._wall_ring(wall)
-            kind = plane.classify(*plane.extent(ring))
-            if kind == "removed":
-                continue
-            fill, stroke, opacity, bonus = self._pair(look, item, WALL_FILL, INK)
-            window = next(it for it in ctx["catalogue"] if it["kind"] == "windows" and it["data"]["wall"] == wall["tag"])
-            op = window["data"]
-            if kind == "cut":
-                spans = plane.intervals([ring])
-                group = _engine.VGroup()
-                glass = _engine.VGroup()
-                for h0, h1 in spans:
-                    t = float((self._cross_point(a, d, plane) - a) @ d)
-                    gap = op["start"] <= t <= op["end"]
-                    pieces = [(wall["base"], op["sill_z"]), (op["head_z"], wall["top"])] if gap else [(wall["base"], wall["top"])]
-                    for z0, z1 in pieces:
-                        group.add(self._cut_poche([to(h, z) for h, z in rect(h0, h1, z0, z1)], fill, stroke, opacity, bonus, hatch=True, cross=True))
-                    if gap:
-                        g_fill, g_stroke, g_opacity, g_bonus = self._pair(look, window, GLASS, GLASS)
-                        for h in (h0 + (h1 - h0) * 0.3, h0 + (h1 - h0) * 0.7):
-                            glass.add(_d.polyline([to(h, op["sill_z"]), to(h, op["head_z"])], g_stroke, W_EDGE + g_bonus, g_opacity))
-                        glass.add(_d.segments([(to(h0, op["sill_z"]), to(h1, op["sill_z"])), (to(h0, op["head_z"]), to(h1, op["head_z"]))], g_stroke, W_THIN, g_opacity))
-                put(2.0, 0.0, wall["tag"], group)
-                if len(glass.submobjects):
-                    put(2.2, 0.0, window["tag"], glass, aliases=(op["tag"],))
-            else:
-                h0, h1 = plane.hrange(ring)
+        """⬜ Cut and projected wall cells with every opening subtracted from the wall body."""
+        plane,to,look,put = ctx["plane"],ctx["to"],ctx["look"],ctx["put"]
+        for wall in ctx["g"]["walls"]:
+            item = next((it for it in ctx["catalogue"] if it["tag"] == wall["tag"]),None) or _s.pseudo(wall["tag"],"IfcWall","walls",wall["guid"])
+            origin = np.array(wall["start"],float)
+            direction = (np.array(wall["end"],float)-origin)/wall["length"]
+            fill,stroke,opacity,bonus = self._pair(look,item,GREEN_FILL if wall["storey"] == "ground" else WALL_FILL,INK)
+            cut_group,back = _engine.VGroup(),_engine.VGroup()
+            cut_cells,back_cells = [],[]
+            depth = 0.0
+            for part in wall["parts"]:
+                z0,z1 = part["z0"],part["z1"]
+                ring = part["outline"]
+                kind = plane.classify(*plane.extent(ring))
+                if kind == "removed":
+                    continue
                 depth = plane.extent(ring)[1]
-                self._beyond(ctx, item, rect(h0, h1, wall["base"], wall["top"]), wall["tag"], depth)
-                ph = [plane.h(op["p0"]), plane.h(op["p1"])]
-                g_fill, g_stroke, g_opacity, g_bonus = self._pair(look, window, GLASS, GLASS)
-                band = [to(h, z) for h, z in rect(min(ph), max(ph), op["sill_z"], op["head_z"])]
-                glass = _engine.VGroup(self._shape(band, _d.mix(GLASS, BACKGROUND, 0.82), 1.0, g_stroke, W_THIN + g_bonus * 0.5, g_opacity))
-                put(1.0, depth + 1e-3, window["tag"], glass, aliases=(op["tag"],))
+                spans = plane.intervals([ring]) if kind == "cut" else [plane.hrange(ring)]
+                for h0,h1 in spans:
+                    if h1-h0 <= EPS:
+                        continue
+                    points = [to(h,z) for h,z in rect(h0,h1,z0,z1)]
+                    (cut_cells if kind == "cut" else back_cells).append((h0,h1,z0,z1))
+                    (cut_group if kind == "cut" else back).add(_d.polygon(points,fill if kind == "cut" else BEYOND,opacity if kind == "cut" else 0.7*opacity))
+            for group,cells,width in ((cut_group,cut_cells,W_CUT+bonus),(back,back_cells,W_THIN+bonus*0.5)):
+                if cells:
+                    group.add(_d.segments([(to(*p),to(*q)) for p,q in _plan.cell_edges(cells)],stroke,width,opacity))
+            if len(back.submobjects):
+                put(1.0,depth,wall["tag"],back)
+            if len(cut_group.submobjects):
+                put(2.0,0.0,wall["tag"],cut_group)
+            for op in wall["openings"]:
+                ring = segment_quad(op["p0"],op["p1"],wall["thickness"]/2)
+                kind = plane.classify(*plane.extent(ring))
+                if kind == "removed":
+                    continue
+                tag = op.get("fill_tag") or op.get("window_tag") or op["tag"]
+                cls = op.get("fill_class")
+                item = next((it for it in ctx["catalogue"] if it["tag"] == tag),None) or _s.pseudo(tag,cls or "IfcOpeningElement","openings",op["guid"])
+                fill,stroke,opacity,bonus = self._pair(look,item,GLASS if cls != "IfcDoor" else CONCRETE,GLASS if cls != "IfcDoor" else INK)
+                group = _engine.VGroup()
+                if not cls and not op.get("window_tag"):
+                    spans = plane.intervals([ring]) if kind == "cut" else [plane.hrange(ring)]
+                    for h0,h1 in spans:
+                        group.add(_d.segments([(to(h0,op["head_z"]),to(h1,op["head_z"])),(to(h0,op["sill_z"]),to(h1,op["sill_z"]))],INK,W_HAIR,opacity))
+                filling = next((f for f in ctx["g"]["fillings"] if f["tag"]==tag),None)
+                if filling:
+                    for part in filling["parts"]:
+                        classification = plane.classify(*plane.extent(part["outline"]))
+                        if classification == "removed":
+                            continue
+                        spans = plane.intervals([part["outline"]]) if classification == "cut" else [plane.hrange(part["outline"])]
+                        for h0,h1 in spans:
+                            if h1-h0 > EPS:
+                                group.add(self._shape([to(h,z) for h,z in rect(h0,h1,part["z0"],part["z1"])],GLASS if part["role"]=="glass" else INK,0.22 if part["role"]=="glass" else opacity,stroke,W_THIN+bonus,opacity))
+                put(2.2 if kind == "cut" else 1.0,plane.extent(ring)[1]+0.001,tag,group,aliases=(op["tag"],) if tag != op["tag"] else ())
+
+    def _sec_solids(self, ctx):
+        """🪜 Exact section intersections and beyond projections of authored part extrusions."""
+        plane,to,look,put = ctx["plane"],ctx["to"],ctx["look"],ctx["put"]
+        for kind in ("stairs","details","furnishings","railings","foundations","beams"):
+            for data in ctx["g"].get(kind,[]):
+                if not set(data["domains"]).intersection(ctx["use"]):
+                    continue
+                item = next((it for it in ctx["catalogue"] if it["tag"] == data["tag"]),None) or _s.pseudo(data["tag"],data["class"],kind,data["guid"])
+                groups = {}
+                for part in data["parts"]:
+                    fill,stroke,opacity,bonus = self._pair(look,item,_c.surface_color(data,part),INK)
+                    ring = _c._model.part_footprint(part)
+                    state = plane.classify(*plane.extent(ring))
+                    if state == "removed":
+                        continue
+                    depth = plane.extent(ring)[1]
+                    for polygon in part_projection(part,plane,state):
+                        points = [to(h,z) for h,z in polygon]
+                        shape = self._cut_poche(points,fill,stroke,opacity,bonus,hatch=False) if state == "cut" else self._shape(points,fill,0.3,stroke,W_THIN,0.65*opacity)
+                        groups.setdefault((state,depth),_engine.VGroup()).add(shape)
+                for (state,depth),group in groups.items():
+                    put(2.1 if state == "cut" else 1.0,depth,data["tag"],group)
 
     def _cross_point(self, a, d, plane):
         """✖️ Point where a wall axis meets the cutting plane."""
@@ -361,52 +373,24 @@ class Section(_s.SheetMixin):
         return a + d * t
 
     def _sec_enclosure(self, ctx):
-        """🟩 Dark-green set-back ground-floor walls cut or beyond, and the curved glass wall as thin lines."""
-        g, plane, to, look, put = ctx["g"], ctx["plane"], ctx["to"], ctx["look"], ctx["put"]
-        walls = _s.ground_walls(g)
-        height = walls["height"]
-        owners: dict = {}
-        for a, b, tag in walls["outer"] + walls["inner"]:
-            ring = segment_quad(a, b, walls["thickness"] / 2)
-            kind = plane.classify(*plane.extent(ring))
-            if kind == "removed":
-                continue
-            item = _s.pseudo(tag, "IfcSpace", "spaces", tag)
-            fill, stroke, opacity, bonus = self._pair(look, item, GREEN_FILL, INK)
-            if kind == "cut":
-                for h0, h1 in plane.intervals([ring]):
-                    owners.setdefault((2.0, tag), _engine.VGroup()).add(self._cut_poche([to(h, z) for h, z in rect(h0, h1, 0.0, height)], fill, stroke, opacity, bonus, hatch=False))
-            else:
-                h0, h1 = plane.hrange(ring)
-                owners.setdefault((1.0, tag, plane.extent(ring)[1]), _engine.VGroup()).add(self._shape([to(h, z) for h, z in rect(h0, h1, 0.0, height)], _d.mix(fill, BACKGROUND, 0.45), 1.0, stroke, W_THIN, 0.55 * opacity))
-        for key, group in owners.items():
-            put(key[0], key[2] if len(key) > 2 else 0.0, key[1], group)
-        item = next((it for it in ctx["catalogue"] if it["kind"] == "curtain"), None)
-        if item is None:
-            return
-        fill, stroke, opacity, bonus = self._pair(look, item, GLASS, GLASS)
-        cut_group, back = _engine.VGroup(), []
-        path = item["data"]["path"]
-        for a, b in zip(path[:-1], path[1:]):
-            ring = segment_quad(a, b, 0.04)
-            kind = plane.classify(*plane.extent(ring))
-            if kind == "removed":
-                continue
-            if kind == "cut":
-                for h0, h1 in plane.intervals([ring]):
-                    cut_group.add(_d.polyline([to(h0, 0.0), to(h0, item["data"]["top"])], stroke, (W_EDGE + bonus), opacity), _d.polyline([to(h1, 0.0), to(h1, item["data"]["top"])], stroke, W_THIN + bonus, opacity))
-            else:
-                h0, h1 = plane.hrange(ring)
-                back.append((plane.extent(ring)[1], h0, h1))
-        if back:
-            group = _engine.VGroup()
-            for depth, h0, h1 in sorted(back):
-                group.add(_d.polygon([to(h, z) for h, z in rect(h0, h1, 0.0, item["data"]["top"])], GLASS, 0.1 * opacity, stroke, W_HAIR + 0.2, 0.55 * opacity))
-            put(1.0, -0.001, "CW-1:beyond", group)
-        if len(cut_group.submobjects):
-            put(2.1, 0.0, "CW-1", cut_group)
-        elif back:
-            ctx["put"](1.0, -0.001, "CW-1", _engine.VGroup())
+        """🪟 Section the actual curtain and its native hosted filling material without refilling portals."""
+        plane,to,look,put=ctx["plane"],ctx["to"],ctx["look"],ctx["put"]
+        items=[it for it in ctx["catalogue"] if it["kind"]=="curtain" or it["kind"] in ("doors","windows") and "parts" in it["data"]]
+        for item in items:
+            fill,stroke,opacity,bonus=self._pair(look,item,GLASS,GLASS)
+            group=_engine.VGroup()
+            for part in item["data"]["parts"]:
+                ring=part["outline"]
+                kind=plane.classify(*plane.extent(ring))
+                if kind=="removed":
+                    continue
+                spans=plane.intervals([ring]) if kind=="cut" else [plane.hrange(ring)]
+                for h0,h1 in spans:
+                    if h1-h0>EPS:
+                        glass=part["role"]=="glass"
+                        group.add(_d.polygon([to(h,z) for h,z in rect(h0,h1,part["z0"],part["z1"])],GLASS if glass else INK,.15*opacity if glass else opacity,stroke,W_THIN+bonus,opacity))
+            opening=item["data"].get("opening")
+            put(2.1,0.,item["tag"],group,aliases=(opening,) if opening else ())
 
     def _sec_screens(self, ctx):
         """🌀 Solarium screens cut as hatched strips or beyond as the curved wall face."""
@@ -416,27 +400,15 @@ class Section(_s.SheetMixin):
                 continue
             data = item["data"]
             fill, stroke, opacity, bonus = self._pair(look, item, WALL_FILL, INK)
-            cut_group, back = _engine.VGroup(), []
-            path = data["path"]
-            for a, b in zip(path[:-1], path[1:]):
-                ring = segment_quad(a, b, data["thickness"] / 2)
-                kind = plane.classify(*plane.extent(ring))
-                if kind == "removed":
+            for part in data["parts"]:
+                ring = _c._model.part_footprint(part)
+                state = plane.classify(*plane.extent(ring))
+                if state == "removed":
                     continue
-                if kind == "cut":
-                    for h0, h1 in plane.intervals([ring]):
-                        cut_group.add(self._cut_poche([to(h, z) for h, z in rect(h0, h1, data["base"], data["top"])], fill, stroke, opacity, bonus))
-                else:
-                    back.append((plane.extent(ring)[1], *plane.hrange(ring)))
-            group = _engine.VGroup()
-            for depth, h0, h1 in sorted(back):
-                group.add(self._shape([to(h, z) for h, z in rect(h0, h1, data["base"], data["top"])], BEYOND, 1.0, stroke, W_HAIR + 0.2, 0.7 * opacity))
-            if len(group.submobjects):
-                put(1.0, min(row[0] for row in back), item["tag"] + ":beyond", group)
-            if len(cut_group.submobjects):
-                put(2.0, 0.0, item["tag"], cut_group)
-            elif len(group.submobjects):
-                ctx["put"](1.0, 0.0, item["tag"], _engine.VGroup())
+                for polygon in part_projection(part,plane,state):
+                    points = [to(h,z) for h,z in polygon]
+                    group = self._cut_poche(points,fill,stroke,opacity,bonus) if state == "cut" else _engine.VGroup(self._shape(points,BEYOND,1.,stroke,W_HAIR+.2,.7*opacity))
+                    put(2. if state == "cut" else 1.,plane.extent(ring)[1],item["tag"],group)
 
     def _sec_services(self, ctx):
         """🔧 Boiler, riser, pipes and radiator as thin prisms in the services colour."""
@@ -447,13 +419,16 @@ class Section(_s.SheetMixin):
             data = item["data"]
             fill, stroke, opacity, bonus = self._pair(look, item, SERV, SERV)
             cut_group, back = _engine.VGroup(), _engine.VGroup()
-            for ring, z0, z1 in service_prisms(data):
+            for part in data["parts"]:
+                ring = _c._model.part_footprint(part)
+                z0,z1 = part["z0"],part["z1"]
                 kind = plane.classify(*plane.extent(ring))
                 if kind == "removed":
                     continue
-                h0, h1 = plane.hrange(ring)
-                shape = self._shape([to(h, z) for h, z in rect(h0, h1, z0, z1)], fill, 0.35, stroke, W_EDGE + bonus, opacity)
-                (cut_group if kind == "cut" else back).add(shape)
+                polygons = part_projection(part,plane,kind)
+                for polygon in polygons:
+                    shape = self._shape([to(h,z) for h,z in polygon],fill,0.35,stroke,W_EDGE+bonus,opacity)
+                    (cut_group if kind == "cut" else back).add(shape)
             if len(back.submobjects):
                 put(1.0, 0.0, item["tag"], back)
             if len(cut_group.submobjects):
@@ -472,16 +447,18 @@ class Section(_s.SheetMixin):
             dims = ()
         box = g["box"]
         horizontal = box["length"] if face in ("south", "north") else box["width"]
-        hc, zc = centre if centre is not None else (horizontal / 2, box["height"] / 2)
+        z_low,z_high = _plan.model_vertical_bounds(g)
+        hc, zc = centre if centre is not None else (horizontal/2,(z_low+z_high)/2)
         cx, cy = (hc, box["width"] / 2) if face in ("south", "north") else (box["length"] / 2, hc)
         view = _d.View("elevation", point, scale, (cx, cy, zc), face=face)
         d = _s.Sheet(view, "elevation")
+        d.z_bounds = (z_low,z_high)
         d.face = face
         look = _s.Look(_s.expand_names(highlight, g), _s.expand_names(ghost, g), dim, highlight_colors, colors)
         catalogue = _s.items(model)
         use = set(layers)
         faces: list = []
-        base = P(point)
+        base = np.asarray(P(point), float)
 
         def to(h, z):
             return np.array([base[0] + scale * ((h - hc) * (1 if face in ("south", "east") else -1)), base[1] + scale * (z - zc), 0.0])
@@ -494,70 +471,118 @@ class Section(_s.SheetMixin):
             faces.append({"tag": tag, "item": item, "a": a, "b": b, "z0": z0, "z1": z1, "facing": facing, "fill": fill, "stroke": stroke, "kind": kind,
                           "depth": view.depth(mid[0], mid[1], (z0 + z1) / 2), "extra": extra})
 
+        def add_loft(tag,item,part,fill,kind):
+            for vertices,normal in _c.part_faces(part):
+                facing = view.facing(normal)
+                if facing <= 1e-3:
+                    continue
+                centre = np.mean(vertices,axis=0)
+                faces.append({"tag":tag,"item":item,"vertices":vertices,"facing":facing,"fill":fill,"stroke":INK,"kind":kind,"depth":view.depth(*centre)})
+
         centre_xy = np.array([box["length"] / 2, box["width"] / 2])
         if "architecture" in use:
-            walls = _s.ground_walls(g)
-            for a, b, tag in walls["outer"]:
-                dv = np.array(b) - np.array(a)
-                n = np.array([dv[1], -dv[0]]) / np.linalg.norm(dv)
-                add_face(tag, _s.pseudo(tag, "IfcSpace", "spaces", tag), a, b, 0.0, walls["height"], n, GREEN_FILL, INK)
-            curtain = next((it for it in catalogue if it["kind"] == "curtain"), None)
-            if curtain is not None:
-                path = curtain["data"]["path"]
+            curtains=[it for it in catalogue if it["kind"]=="curtain" or it["kind"] in ("doors","windows") and "parts" in it["data"]]
+            for curtain in curtains:
                 inside = np.mean([np.array(s["outline"]).mean(axis=0) for s in g["spaces"] if s["tag"] == "SP-HALL"], axis=0) if any(s["tag"] == "SP-HALL" for s in g["spaces"]) else centre_xy
-                for a, b in zip(path[:-1], path[1:]):
-                    dv = np.array(b) - np.array(a)
-                    n = np.array([dv[1], -dv[0]]) / np.linalg.norm(dv)
-                    if (np.array(a) + np.array(b)) / 2 @ n - inside @ n < 0:
-                        n = -n
-                    add_face("CW-1", curtain, a, b, 0.0, curtain["data"]["top"], n, GLASS, GLASS, "glass")
+                for part in curtain["data"]["parts"]:
+                    ring = part["outline"]
+                    for a,b in zip(ring,ring[1:]+ring[:1]):
+                        dv = np.asarray(b)-np.asarray(a)
+                        n = np.array([dv[1],-dv[0]])/max(np.linalg.norm(dv),EPS)
+                        glass = part["role"]=="glass"
+                        add_face(curtain["tag"],curtain,a,b,part["z0"],part["z1"],n,GLASS if glass else INK,GLASS if glass else INK,"glass" if glass else "solid",extra={"opening":curtain["data"]["opening"]} if "opening" in curtain["data"] else None)
+
             for item in catalogue:
                 if item["kind"] == "walls":
                     wall = item["data"]
-                    ring, a, dv = self._wall_ring(wall)
-                    mid = (np.array(wall["start"]) + np.array(wall["end"])) / 2
-                    n = mid - centre_xy
-                    n = n / np.linalg.norm(n)
-                    n = np.array([round(n[0]), round(n[1])], float) if abs(n[0]) != abs(n[1]) else n
-                    half = wall["thickness"] / 2
-                    a_o, b_o = np.array(wall["start"]) + n * half, np.array(wall["end"]) + n * half
-                    window_item = next(it for it in catalogue if it["kind"] == "windows" and it["data"]["wall"] == wall["tag"])
-                    add_face(wall["tag"], item, a_o, b_o, wall["base"], wall["top"], n, WALL_FILL, INK, "wall", {"window": window_item, "n": n, "half": half})
+                    origin = np.array(wall["start"],float)
+                    dv = (np.array(wall["end"],float)-origin)/wall["length"]
+                    n = np.array([-dv[1],dv[0]])
+                    if view.facing((*n,0.0)) < 0:
+                        n = -n
+                    half = wall["thickness"]/2
+                    for part in wall["parts"]:
+                        ring = part["outline"]
+                        area = sum(a[0]*b[1]-b[0]*a[1] for a,b in zip(ring,ring[1:]+ring[:1]))
+                        for a,b in zip(ring,ring[1:]+ring[:1]):
+                            delta = np.asarray(b)-np.asarray(a)
+                            normal = np.array([delta[1],-delta[0]])/max(np.linalg.norm(delta),EPS)*(1 if area>=0 else -1)
+                            add_face(wall["tag"],item,a,b,part["z0"],part["z1"],normal,GREEN_FILL if wall["storey"]=="ground" else WALL_FILL,INK,"solid")
+                    for op in wall["openings"]:
+                        tag = op.get("fill_tag") or op.get("window_tag") or op["tag"]
+                        cls = op.get("fill_class")
+                        opening_item = next((it for it in catalogue if it["tag"] == tag),None) or _s.pseudo(tag,cls or "IfcOpeningElement","openings",op["guid"])
+                        if not cls and not op.get("window_tag"):
+                            add_face(tag,opening_item,np.array(op["p0"])+n*half,np.array(op["p1"])+n*half,op["sill_z"],op["head_z"],n,BACKGROUND,INK,"opening",{"opening":op["tag"]})
+                        filling = next((f for f in g["fillings"] if f["tag"]==tag),None)
+                        if filling:
+                            for part in filling["parts"]:
+                                ring = part["outline"]
+                                for a,b in zip(ring,ring[1:]+ring[:1]):
+                                    delta = np.asarray(b)-np.asarray(a)
+                                    normal = np.array([delta[1],-delta[0]])/max(np.linalg.norm(delta),EPS)
+                                    glass = part["role"]=="glass"
+                                    add_face(tag,opening_item,a,b,part["z0"],part["z1"],normal,GLASS if glass else INK,GLASS if glass else INK,"glass" if glass else "solid",{"opening":op["tag"]})
                 elif item["kind"] == "screens":
                     data = item["data"]
-                    inner = np.array(data["path"]).mean(axis=0)
-                    for a, b in zip(data["path"][:-1], data["path"][1:]):
-                        dv = np.array(b) - np.array(a)
-                        n = np.array([dv[1], -dv[0]]) / np.linalg.norm(dv)
-                        if ((np.array(a) + np.array(b)) / 2 - inner) @ n < 0:
-                            n = -n
-                        facing = view.facing((n[0], n[1], 0.0))
-                        if facing < 0:
-                            n = -n
-                        add_face(item["tag"], item, a, b, data["base"], data["top"], n, WALL_FILL, INK, "screen")
+                    for part in data["parts"]:
+                        add_loft(item["tag"],item,part,WALL_FILL,"screen")
+
         if use & {"structure", "architecture"}:
             for slab in g["slabs"]:
                 item = _s.pseudo(slab["tag"], "IfcSlab", "slabs", slab["guid"], ("architecture", "structure"))
-                ring = slab["outline"]
-                for a, b in zip(ring, ring[1:] + ring[:1]):
-                    dv = np.array(b) - np.array(a)
-                    n = np.array([dv[1], -dv[0]]) / np.linalg.norm(dv)
-                    add_face(slab["tag"], item, a, b, slab["top"] - slab["thickness"], slab["top"], n, CONCRETE, INK, "slab")
+                occupied = slab["parts"]+slab.get("finish_parts",[])
+                for a,b,z0,z1,n in _plan.slab_sides(slab,occupied):
+                    add_face(slab["tag"],item,a,b,z0,z1,n,CONCRETE,INK,"slab")
+                finishes = {}
+                for part in slab.get("finish_parts",[]):
+                    finishes.setdefault(part["layer"],[]).append(part)
+                for layer,parts in finishes.items():
+                    for a,b,z0,z1,n in _plan.slab_sides({"parts":parts},occupied):
+                        add_face(slab["tag"]+":"+layer,item,a,b,z0,z1,n,_c.surface_color({"kind":layer}),INK,"solid")
+        if use & {"architecture","structure"}:
+            for kind in ("stairs","details","furnishings","railings"):
+                for data in g.get(kind,[]):
+                    if not set(data["domains"]).intersection(use):
+                        continue
+                    item = next((it for it in catalogue if it["tag"] == data["tag"]),None) or _s.pseudo(data["tag"],data["class"],kind,data["guid"])
+                    for part in data["parts"]:
+                        if any(key in part for key in ("top_outline","section","mesh")):
+                            add_loft(data["tag"],item,part,_c.surface_color(data,part),"glass" if _c.surface_role(data,part) == "glass" else "solid")
+                            continue
+                        ring = part["outline"]
+                        area = sum(a[0]*b[1]-b[0]*a[1] for a,b in zip(ring,ring[1:]+ring[:1]))
+                        for a,b in zip(ring,ring[1:]+ring[:1]):
+                            delta = np.array(b)-np.array(a)
+                            if np.linalg.norm(delta) <= EPS:
+                                continue
+                            n = np.array([delta[1],-delta[0]])/np.linalg.norm(delta)*(1 if area >= 0 else -1)
+                            add_face(data["tag"],item,a,b,part["z0"],part["z1"],n,_c.surface_color(data,part),INK,"glass" if _c.surface_role(data,part) == "glass" else "solid")
         if "structure" in use:
             for item in catalogue:
-                if item["kind"] == "pilotis":
-                    data = item["data"]
-                    if not _c.inside(window, [(data["x"], data["y"])], 0.5):
+                if item["kind"] not in ("pilotis","foundations","beams"):
+                    continue
+                data = item["data"]
+                for part in data["parts"]:
+                    if "top_outline" in part:
+                        if _c.inside(window,_c._model.part_footprint(part),0.5):
+                            add_loft(data["tag"],item,part,CONCRETE,"solid")
                         continue
-                    faces.append({"tag": item["tag"], "item": item, "x": data["x"], "y": data["y"], "r": data["radius"], "z0": data["base"], "z1": data["top"],
-                                  "kind": "piloti", "depth": view.depth(data["x"], data["y"], 0.0), "facing": 1.0})
+                    ring = part["outline"]
+                    if not _c.inside(window,ring,0.5):
+                        continue
+                    area = sum(a[0]*b[1]-b[0]*a[1] for a,b in zip(ring,ring[1:]+ring[:1]))
+                    for a,b in zip(ring,ring[1:]+ring[:1]):
+                        delta = np.array(b)-np.array(a)
+                        if np.linalg.norm(delta) <= EPS:
+                            continue
+                        n = np.array([delta[1],-delta[0]])/np.linalg.norm(delta)*(1 if area >= 0 else -1)
+                        add_face(data["tag"],item,a,b,part["z0"],part["z1"],n,CONCRETE,INK,"solid")
         if "services" in use:
             for item in catalogue:
-                if item["kind"] == "services" and item["data"]["kind"] == "downpipe":
-                    data = item["data"]
-                    x, y = data["points"][0][0], data["points"][0][1]
-                    faces.append({"tag": item["tag"], "item": item, "x": x, "y": y, "z0": min(p[2] for p in data["points"]), "z1": max(p[2] for p in data["points"]),
-                                  "kind": "pipe", "depth": view.depth(x, y, 0.0) + 0.05, "facing": 1.0})
+                if item["kind"] == "services":
+                    for part in item["data"]["parts"]:
+                        add_loft(item["tag"],item,part,SERV,"solid")
         if ground:
             strip = _s.ground_strip(self, to, -1.5, horizontal + 1.5, 0.5)
             d.parts["ground"] = strip
@@ -567,15 +592,16 @@ class Section(_s.SheetMixin):
             group = self._elev_face(f, to, view, look, scale)
             d.add(group)
             members.setdefault(f["tag"], []).append(group)
-            if f.get("window_group") is not None:
-                d.add(f["window_group"])
-                window = f["extra"]["window"]
-                members.setdefault(window["tag"], []).append(f["window_group"])
-                members.setdefault(window["opening"], []).append(f["window_group"])
-            if f["kind"] == "piloti":
-                d.anchors[f["tag"]] = view(f["x"], f["y"], (f["z0"] + f["z1"]) / 2)
+            if f.get("extra",{}):
+                opening_tag = f["extra"].get("opening")
+                if opening_tag:
+                    members.setdefault(opening_tag,[]).append(group)
+        columns = {item["tag"]:item["data"] for item in catalogue if item["kind"] == "pilotis"}
         for tag, groups in members.items():
             d.parts[tag] = _engine.VGroup(*groups)
+            if tag in columns:
+                column = columns[tag]
+                d.anchors[tag] = view(column["x"],column["y"],(column["base"]+column["top"])/2)
         if "CW-1" in d.parts:
             d.alias("curtain_wall", "CW-1")
         if levels:
@@ -590,41 +616,36 @@ class Section(_s.SheetMixin):
         return d
 
     def _elev_face(self, f, to, view, look, scale):
-        """🧱 One painted elevation face; sets ``window_group`` on the face record for walls with a ribbon window."""
+        """🧱 Paint a visible surface with true wall voids and addressable fillings."""
         item = f["item"]
         shade = 0.45 + 0.55 * f["facing"]
-        if f["kind"] == "piloti":
-            x, y, r = f["x"], f["y"], f["r"]
-            b, t = view(x, y, f["z0"]), view(x, y, f["z1"])
-            w = max(r * scale, 0.02)
-            fill, stroke, opacity, bonus = self._pair(look, item, CONCRETE, INK)
-            body = _d.polygon([b + (-w, 0, 0), b + (w, 0, 0), t + (w, 0, 0), t + (-w, 0, 0)], _d.mix(BACKGROUND, fill, 0.7), opacity, stroke, W_THIN + bonus * 0.5, opacity)
-            lit = _d.polygon([b + (w * 0.2, 0, 0), b + (w, 0, 0), t + (w, 0, 0), t + (w * 0.2, 0, 0)], _d.mix(BACKGROUND, fill, 0.42), opacity, None)
-            return _engine.VGroup(body, lit)
         if f["kind"] == "pipe":
             fill, stroke, opacity, bonus = self._pair(look, item, SERV, SERV)
             return _engine.VGroup(_d.polyline([view(f["x"], f["y"], f["z0"]), view(f["x"], f["y"], f["z1"])], stroke, W_EDGE + bonus, opacity))
-        a, b = f["a"], f["b"]
-        corners = [view(a[0], a[1], f["z0"]), view(b[0], b[1], f["z0"]), view(b[0], b[1], f["z1"]), view(a[0], a[1], f["z1"])]
+        if "vertices" in f:
+            corners = [view(*p) for p in f["vertices"]]
+        else:
+            a,b = f["a"],f["b"]
+            corners = [view(a[0],a[1],f["z0"]),view(b[0],b[1],f["z0"]),view(b[0],b[1],f["z1"]),view(a[0],a[1],f["z1"])]
         fill, stroke, opacity, bonus = self._pair(look, item, f["fill"], f["stroke"])
+        if f["kind"] == "opening":
+            return _engine.VGroup(_d.polyline(corners,stroke,W_HAIR+bonus,0.7*opacity,closed=True))
         if f["kind"] == "glass":
             return _engine.VGroup(_d.polygon(corners, _d.mix(BACKGROUND, GLASS, 0.18), opacity, stroke, W_THIN + bonus * 0.5, 0.8 * opacity),
                                   _d.polygon(corners, GLASS, 0.1 * opacity))
         if look.state(item) == "normal" or look.state(item) == "dim":
             fill = _d.mix(BACKGROUND, fill, shade) if look.state(item) == "normal" else fill
+        if f["kind"] == "wall" and f.get("extra",{}).get("wall"):
+            extra = f["extra"]
+            cells = _plan.wall_cells(extra["wall"])
+            origin,direction,offset = extra["origin"],extra["direction"],extra["offset"]
+            def project(s,z):
+                """📽️ Project a longitudinal wall station and height."""
+                p = origin+direction*s+offset
+                return view(p[0],p[1],z)
+            group = _engine.VGroup(*[_d.polygon([project(s,z) for s,z in rect(a,b,c,d)],fill,opacity) for a,b,c,d in cells])
+            group.add(_d.segments([(project(*p),project(*q)) for p,q in _plan.cell_edges(cells)],stroke,W_THIN+bonus*0.5,0.8*opacity))
+            return group
         group = _engine.VGroup(_d.polygon(corners, fill, opacity, stroke, W_THIN + bonus * 0.5, 0.8 * opacity))
-        if f["kind"] == "wall" and f.get("extra"):
-            window = f["extra"]["window"]
-            op = window["data"]
-            n, half = f["extra"]["n"], f["extra"]["half"]
-            p0 = np.array(op["p0"]) + n * half
-            p1 = np.array(op["p1"]) + n * half
-            gc = [view(p0[0], p0[1], op["sill_z"]), view(p1[0], p1[1], op["sill_z"]), view(p1[0], p1[1], op["head_z"]), view(p0[0], p0[1], op["head_z"])]
-            g_fill, g_stroke, g_opacity, g_bonus = self._pair(look, window, GLASS, GLASS)
-            panes = max(2, round(float(np.linalg.norm(p1 - p0)) / 1.5))
-            wgroup = _engine.VGroup(_d.polygon(gc, _d.mix(BACKGROUND, GLASS, 0.3 if look.state(window) != "highlight" else 0.0) if look.state(window) != "highlight" else g_fill,
-                                               g_opacity if look.state(window) == "highlight" else g_opacity, g_stroke, W_EDGE + g_bonus, g_opacity))
-            mullions = [(view(*(p0 + (p1 - p0) * k / panes), op["sill_z"]), view(*(p0 + (p1 - p0) * k / panes), op["head_z"])) for k in range(1, panes)]
-            wgroup.add(_d.segments(mullions, g_stroke, W_THIN, g_opacity))
-            f["window_group"] = wgroup
         return group
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            

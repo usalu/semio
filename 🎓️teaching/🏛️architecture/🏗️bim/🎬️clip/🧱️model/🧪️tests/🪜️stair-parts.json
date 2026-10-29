@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "stair": "ST-GF",
+  "expected": {
+    "parts": 3,
+    "volume": 1.1,
+    "mesh_volume": 0.9,
+    "mesh_material": "MAT-RC",
+    "mesh_role": "waist"
+  },
+  "step": {
+    "outline": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "z0": 3.07,
+    "z1": 3.17,
+    "material": "MAT-TILE",
+    "role": "tread"
+  },
+  "landing": {
+    "outline": [
+      [
+        1,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        1,
+        1
+      ]
+    ],
+    "z0": -0.1,
+    "z1": 0,
+    "material": "MAT-TILE",
+    "role": "landing"
+  },
+  "structure": {
+    "outline": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "z0": 2.17,
+    "z1": 3.07,
+    "material": "MAT-RC",
+    "role": "waist",
+    "mesh": {
+      "vertices": [
+        [
+          0,
+          0,
+          2.17
+        ],
+        [
+          1,
+          0,
+          2.17
+        ],
+        [
+          1,
+          1,
+          2.17
+        ],
+        [
+          0,
+          1,
+          2.17
+        ],
+        [
+          0,
+          0,
+          3.07
+        ],
+        [
+          1,
+          0,
+          3.07
+        ],
+        [
+          1,
+          1,
+          3.07
+        ],
+        [
+          0,
+          1,
+          3.07
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          3,
+          2,
+          1
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          1,
+          2,
+          6,
+          5
+        ],
+        [
+          2,
+          3,
+          7,
+          6
+        ],
+        [
+          3,
+          0,
+          4,
+          7
+        ]
+      ]
+    }
+  },
+  "views": [
+    "axis",
+    "footprint",
+    "plan",
+    "section",
+    "elevation",
+    "3d",
+    "body"
+  ],
+  "boundary_areas": [
+    0.9,
+    0.9,
+    1
+  ],
+  "solid": {
+    "class": "IfcBuildingElementProxy",
+    "kind": "fitting",
+    "base_level": "ground"
+  },
+  "required_geometry": [
+    "step_parts",
+    "structural_parts"
+  ],
+  "obsolete_geometry": [
+    "start_angle",
+    "turns"
+  ]
+}

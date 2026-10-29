@@ -16,4 +16,11 @@ package = false
 members = []
 
 [dependency-groups]
-test = ["fonttools==4.63.0"]
+test = [
+    "fonttools==4.63.0",
+    "formulas==1.3.4",
+    "openpyxl==3.1.5",
+    "rhino3dm==8.35.0",
+    "scipy==1.18.1",
+    "shapely==2.1.2",
+]

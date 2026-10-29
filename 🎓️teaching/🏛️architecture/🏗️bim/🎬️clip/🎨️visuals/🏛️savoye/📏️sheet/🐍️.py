@@ -28,7 +28,6 @@ BEYOND_FILL = _d.mix(INK, BACKGROUND, 0.88)
 EPS = 1e-9
 _TEXTS: dict = {}
 _CARS: dict = {}
-_WALLS: dict = {}
 
 
 def font_text(scene, string: str, point=(0, 0, 0), size: float = S_SMALL, color: str = INK, anchor: str = "c"):
@@ -45,7 +44,7 @@ def font_text(scene, string: str, point=(0, 0, 0), size: float = S_SMALL, color:
 def dim(scene, start, end, text: str | None = None, *, offset: float = 0.3, color: str = DATA, size: float = S_SMALL, tick: float = 0.07,
         text_at: float = 0.5, flip: bool = False, opacity: float = 1.0):
     """↔️ Architectural dimension with cached label: extension lines, line with oblique ticks, horizontal text; positive offset is left of start → end."""
-    a, b = P(start), P(end)
+    a, b = np.asarray(P(start), float), np.asarray(P(end), float)
     direction = (b - a) / max(np.linalg.norm(b - a), 1e-9)
     normal = np.array([-direction[1], direction[0], 0.0]) * (-1 if flip else 1)
     sign = 1.0 if offset >= 0 else -1.0
@@ -83,8 +82,9 @@ def bubble(scene, text: str, centre, *, color: str = MUTED, radius: float = 0.13
 
 
 def level_text(scene, value: float) -> str:
-    """🔢 Elevation text in language punctuation: ±0.00, +3.50."""
-    return "±" + scene.number(0.0, 2) if abs(value) < 1e-9 else ("+" if value > 0 else "") + scene.number(value, 2)
+    """🔢 Preserve authored millimetre datums with language-specific decimal punctuation."""
+    precision = 3 if abs(value-round(value,2)) > 1e-9 else 2
+    return "±"+scene.number(0.0,2) if abs(value)<1e-9 else ("+" if value>0 else "")+scene.number(value,precision)
 
 
 def short_name(name: dict, language: str) -> str:
@@ -97,7 +97,7 @@ def short_name(name: dict, language: str) -> str:
 
 def dash_dot(a, b, long: float = 0.2, gap: float = 0.05, dot: float = 0.02) -> list:
     """➖ Segment pairs of a dash-dot line between two screen points."""
-    a, b = P(a), P(b)
+    a, b = np.asarray(P(a), float), np.asarray(P(b), float)
     length = float(np.linalg.norm(b - a))
     if length < 1e-6:
         return []
@@ -133,7 +133,7 @@ def poche(rings, color: str, *, fill: float = 0.3, hatch: bool = True, cross: bo
 
 def zigzag(a, b, amplitude: float = 0.06, teeth: int = 3, color: str = INK, width: float = W_THIN):
     """〰️ A break line between two screen points."""
-    a, b = P(a), P(b)
+    a, b = np.asarray(P(a), float), np.asarray(P(b), float)
     direction = (b - a) / max(np.linalg.norm(b - a), 1e-9)
     normal = np.array([-direction[1], direction[0], 0.0])
     points = [a]
@@ -307,47 +307,6 @@ class Look:
         return material
 
 
-def ground_walls(g: dict) -> dict:
-    """🧱 Walls of the set-back ground floor derived from the ground spaces: ``outer`` and ``inner`` straight edges ``(a, b, space)`` and the ``glass`` edges of the curtain wall; ``ring`` is the outer boundary."""
-    hit = _WALLS.get(id(g))
-    if hit is not None and hit[0] is g:
-        return hit[1]
-    curtain = g["curtain_wall"]["path"]
-    glass_edges = {frozenset((tuple(np.round(a, 4)), tuple(np.round(b, 4)))) for a, b in zip(curtain[:-1], curtain[1:])}
-    spaces = [s for s in g["spaces"] if s["storey"] == "ground"]
-    vertices = [tuple(np.round(p, 4)) for s in spaces for p in s["outline"]]
-    edges = []
-    for space in spaces:
-        ring = [tuple(np.round(p, 4)) for p in space["outline"]]
-        for a, b in zip(ring, ring[1:] + ring[:1]):
-            a_, b_ = np.array(a), np.array(b)
-            length = float(np.linalg.norm(b_ - a_))
-            cuts = [0.0, 1.0]
-            for v in vertices:
-                t = float((np.array(v) - a_) @ (b_ - a_) / length ** 2)
-                offset = np.array(v) - a_
-                if 1e-6 < t < 1 - 1e-6 and abs(float((b_ - a_)[0] * offset[1] - (b_ - a_)[1] * offset[0])) / length < 1e-6:
-                    cuts.append(t)
-            cuts = sorted(set(cuts))
-            for t0, t1 in zip(cuts[:-1], cuts[1:]):
-                edges.append((tuple(np.round(a_ + (b_ - a_) * t0, 4)), tuple(np.round(a_ + (b_ - a_) * t1, 4)), space["tag"]))
-    outer, inner, glass, seen = [], [], [], {}
-    for a, b, tag in edges:
-        seen.setdefault(frozenset((a, b)), []).append((a, b, tag))
-    for pair, items in seen.items():
-        if pair in glass_edges:
-            glass.append(items[0])
-        elif len(items) == 1:
-            outer.append(items[0])
-        else:
-            inner.append(items[0])
-    result = {"outer": outer, "inner": inner, "glass": glass, "height": g["curtain_wall"]["top"], "thickness": WALL_T}
-    _WALLS[id(g)] = (g, result)
-    if len(_WALLS) > 8:
-        _WALLS.pop(next(iter(_WALLS)))
-    return result
-
-
 class Plane:
     """✂️ A vertical cutting plane ``x = value`` or ``y = value``: ``h`` is the horizontal drawing coordinate and ``s`` the distance toward the viewer."""
 
@@ -398,12 +357,12 @@ def parse_cut(cut, g: dict) -> Plane:
     if isinstance(cut, (tuple, list)):
         return Plane(cut[0], cut[1])
     xs, ys = g["grid"]["x"], g["grid"]["y"]
-    if cut == "salon":
-        return Plane("x", xs[1])
+    if cut in ("salon", "terrace"):
+        tag = "SP-SALON" if cut == "salon" else "SP-TERRACE"
+        ring = next(space["outline"] for space in g["spaces"] if space["tag"] == tag)
+        return Plane("x", (min(p[0] for p in ring) + max(p[0] for p in ring)) / 2)
     if cut == "ramp":
         return Plane("x", g["ramp"]["flights"][0]["start"][0])
-    if cut == "terrace":
-        return Plane("x", xs[3])
     if isinstance(cut, str) and cut.startswith("row:"):
         key = cut[4:]
         if key in g["grid"]["labels_x"]:
@@ -481,20 +440,15 @@ def find_spot(points: np.ndarray, width: float, height: float, ring, prefer, pad
 
 
 def items(model=None) -> list:
-    """📚 The drawable catalogue with windows keyed by their IfcWindow tag (``RW-S``) and GlobalId; ``opening`` keeps the IfcOpeningElement tag."""
-    out = []
-    for item in _c.catalogue(model):
-        if item["kind"] == "windows":
-            data = item["data"]
-            item = {**item, "tag": data["window_tag"], "guid": data["window_guid"], "opening": data["tag"]}
-        out.append(item)
-    return out
+    """📚 Drawable authored elements keyed by filling identity, with their opening alias."""
+    return [{**item, "opening": item["data"]["tag"]} if item["kind"] in ("windows", "doors", "openings") else item
+            for item in _c.catalogue(model)]
 
 
 def expand_names(names, g: dict) -> set:
-    """🔗 A window tag stands for its opening and the other way round."""
+    """🔗 Resolve bidirectional aliases between openings and their optional fillings."""
     names = {names} if isinstance(names, str) else set(names or ())
-    pairs = {o["tag"]: o["window_tag"] for w in g["walls"] for o in w["openings"]}
+    pairs = {o["tag"]: o["fill_tag"] for w in g["walls"] for o in w["openings"] if o["fill_tag"]}
     pairs.update({v: k for k, v in list(pairs.items())})
     return names | {pairs[n] for n in names if n in pairs}
 

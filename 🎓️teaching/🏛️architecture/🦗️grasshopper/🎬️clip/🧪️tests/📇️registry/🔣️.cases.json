@@ -1,0 +1,70 @@
+{
+  "series": "grasshopper",
+  "folder": "🦗️grasshopper",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "chapters": [
+    {
+      "folder": "🦴️anatomy",
+      "scene": "Beat1_Anatomy",
+      "video_id": "grasshopper_anatomy",
+      "entry": "🏛️architecture/🦗️grasshopper/🦴️anatomy/🎬️clip/🐍️.py",
+      "chapter": "Grasshopper_01_Anatomy",
+      "title": {
+        "en": "Anatomy of a Grasshopper Script",
+        "de": "Aufbau eines Grasshopper-Skripts"
+      },
+      "output": "Grasshopper_anatomy"
+    },
+    {
+      "folder": "💊️capsule",
+      "scene": "Beat2_Capsule",
+      "video_id": "grasshopper_capsule",
+      "entry": "🏛️architecture/🦗️grasshopper/💊️capsule/🎬️clip/🐍️.py",
+      "chapter": "Grasshopper_02_Capsule",
+      "title": {
+        "en": "One Capsule, Parametric",
+        "de": "Eine Kapsel, parametrisch"
+      },
+      "output": "Grasshopper_capsule"
+    },
+    {
+      "folder": "🗼️tower",
+      "scene": "Beat3_Tower",
+      "video_id": "grasshopper_tower",
+      "entry": "🏛️architecture/🦗️grasshopper/🗼️tower/🎬️clip/🐍️.py",
+      "chapter": "Grasshopper_03_Tower",
+      "title": {
+        "en": "From One Capsule to the Tower",
+        "de": "Von der Kapsel zum Turm"
+      },
+      "output": "Grasshopper_tower"
+    },
+    {
+      "folder": "🫗️casting",
+      "scene": "Beat4_Casting",
+      "video_id": "grasshopper_casting",
+      "entry": "🏛️architecture/🦗️grasshopper/🫗️casting/🎬️clip/🐍️.py",
+      "chapter": "Grasshopper_04_Casting",
+      "title": {
+        "en": "Casting: When Types Meet",
+        "de": "Casting: Wenn Typen sich treffen"
+      },
+      "output": "Grasshopper_casting"
+    },
+    {
+      "folder": "🌳️trees",
+      "scene": "Beat5_DataTrees",
+      "video_id": "grasshopper_trees",
+      "entry": "🏛️architecture/🦗️grasshopper/🌳️trees/🎬️clip/🐍️.py",
+      "chapter": "Grasshopper_05_Trees",
+      "title": {
+        "en": "Data Trees on the Tower",
+        "de": "Datenbäume am Turm"
+      },
+      "output": "Grasshopper_trees"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # BIM Videos
 
-Complete transcripts of the six BIM videos. All values come from one rounded teaching model of the Villa Savoye in Poissy (Le Corbusier and Pierre Jeanneret, 1928–1931); values that are assumed are marked as such in the videos. One paragraph per narrated step, in narration order.
+Complete transcripts of the six BIM videos. The Villa Savoye model targets its original completed state in 1930–1931. Source-supported, inferred and assumed dimensions are distinguished; hypothetical teaching changes are identified explicitly. One paragraph per narrated step, in narration order.
 
 ## Contents
 
@@ -23,31 +23,31 @@ Context: it is the distance between two piloti axes on the ground floor of the V
 
 The model names the place: site, building, storey and the two grid axes.
 
-Does it add up? The bays sum to the grid width; what remains to the building edge is still open.
+Does it add up? The bays sum to the grid width; each building datum retains its own source or inference.
 
-The data model adds meaning: property, unit, grid, and whether the value is sourced or assumed.
+The data model adds meaning: property, unit, grid, evidence, and the reconstructed original state of 1930–1931.
 
 A value carries its origin. The first grid was wider and was reduced to save cost.
 
-Information serves a question: can a car (size assumed) drive between the pilotis and turn under the house?
+Information serves a question: can an assumed car reach the entrance while clearing the modelled ground obstacles?
 
 Spacing counts from axis to axis, but the car needs the free space between the piloti surfaces.
 
-The clear width is the spacing minus the piloti diameter. In this model, that is the room the car has.
+The clear width subtracts the actual support outlines from the axis spacing. Circular profiles give the familiar diameter subtraction.
 
-Driving straight through, the car plus a safety margin on each side must fit into it. With these inputs, it does.
+Driving straight through, the car plus a safety margin on each side must fit into the available width.
 
-Whether the grid is the first or the reduced one, the car fits.
+The first and the reduced grid are compared as explicit spacing scenarios.
 
-How sure is the answer? The verdict flips only below a threshold, far under this spacing.
+How sure is the answer? The gauge shows the threshold of this explicit straight passage scenario.
 
-A thicker piloti or a wider car shifts the threshold, but not enough to change the answer.
+A thicker circular support or a wider car shifts the threshold; the full route still needs its own physical check.
 
-The car drives through the bay and turns under the house.
+The assumed arrival is a teaching scenario. Historical descriptions state capacity for three cars; fitting three full-size cars remains unverified.
 
-On the curve, two pilotis come closer than the straight-driving margin; the car still clears them, but only just.
+The swept rectangle is checked against actual height-overlapping building parts, including services and the hoist jib; the smallest clearance governs.
 
-The curved glass wall follows the car's turning circle: its curve is calculated from the car.
+The translucent entrance surround and opaque timber door leaves follow the source-informed plan. The assumed arrival is a separate teaching route.
 
 A piloti carries more properties: its material, whether it bears load, and whether it is external.
 
@@ -67,17 +67,17 @@ A class describes a kind of thing: IfcColumn, IfcSlab, IfcWall and IfcWindow are
 
 An instance is one particular object: this piloti of the Villa Savoye, with its own GlobalId.
 
-A type holds what all pilotis share; every piloti placed in the building is an occurrence of it.
+A type holds what its occurrences share. These pilotis share one type; hall and canopy columns use other types.
 
 A property set adds named values to the type: LoadBearing says that each piloti carries its share of the floor.
 
 One object can have several representations: its axis, its footprint and its body.
 
-The body is a circle extruded along its axis: the radius and the height are values, drawn as dimension lines.
+This selected body is a circular extrusion: radius and height become dimensions. Other support profiles retain their native bores.
 
 A method is behaviour: the application computes the cross-section and the volume from these values.
 
-The same method runs for every occurrence and adds up the concrete of all pilotis.
+The same method sums the geometric section envelopes of the selected type; a measured concrete core would need separate evidence.
 
 Change the diameter in the type and every occurrence follows; volume and total update, the GlobalId stays.
 
@@ -89,11 +89,11 @@ Elements are contained in a storey; the storey belongs to the building, the buil
 
 Composition means parts: the wall has an opening, which IfcRelVoidsElement cuts out of it.
 
-A window fills that opening through IfcRelFillsElement; the glass takes the place of the opening.
+A window fills that opening through IfcRelFillsElement; its frame and glass occupy distinct physical parts.
 
-The wall also has a material: a layer set of render, brick and plaster adds up to its thickness.
+The wall material set distinguishes solid leaves and an air cavity; their widths add to its envelope thickness.
 
-Keep is-a and has-a apart: a piloti is a built element; a window is not a wall, it fills an opening.
+Keep class and composition apart: a window fills an opening, while the hanging-garden opening remains unfilled.
 
 IFC exchanges declarative data and relationships: class, GlobalId, radius, height and properties travel as text.
 
@@ -103,15 +103,15 @@ The volume method does not travel: the receiving application runs its own method
 
 Video: `bim_representations`
 
-Teaching model of the Villa Savoye: one object, the south wall of the first floor with its ribbon window.
+Teaching model of the Villa Savoye: one object, the northwest wall of the first floor with its ribbon window.
 
 The plan cuts the wall at window height: the wall in poché, the ribbon window as thin glass lines.
 
 The section cuts through slab, pilotis and window: sill and head heights become dimension lines.
 
-The elevation shows the whole south façade: ribbon band, dark green ground floor, pilotis, solarium screens.
+The elevation shows the northwest façade and the asymmetric solarium screen with its landscape aperture and sloping cap.
 
-The 3D view shows the body: a solid wall, voided by an opening that the window fills.
+The 3D view shows occupied wall leaves, separate structural members, and an opening filled by frame and glass.
 
 In this model the wall is stored as Axis, FootPrint and Body; plan, section and elevation are derived from it.
 
@@ -125,11 +125,11 @@ Move the cut plane: the plan changes from solid wall to window band and back, be
 
 The same geometry gives the areas: gross wall, opening, net wall and the glazing share.
 
-A design change lowers the sill. The ribbon window grows; all views and numbers are regenerated.
+The sill drops from 0.89 to 0.70 m; the head stays at 2.04 m. The opening grows from 1.15 to 1.34 m.
 
-The take-off reads the body: net wall area, window area and glazing share follow the sill live.
+The take-off distinguishes rough openings from actual glass; net wall area and glazing share follow the sill.
 
-The wall volume comes from the same body: the void is subtracted, so the lowered sill shrinks it.
+The wall volume counts solid leaves and excludes the air cavity; the lowered sill removes more solid material.
 
 Copied drawings would stay behind: each copy needs manual coordination, view by view.
 
@@ -143,35 +143,35 @@ A representation shows the object; a design change updates it, and its GlobalId 
 
 Video: `bim_models`
 
-Different disciplines organize the building information they need.
+Different disciplines organize the information they need about the reconstructed original house of 1930–1931.
 
-The architecture model holds walls, openings, windows, ramp, curved glass wall, slabs and rooms.
+The architecture model retains rooms, entrance construction, the roof stair enclosure, its canopy and the open metal ramp guard.
 
-Rooms are objects too: six spaces, each with its area, belong to their storey.
+Rooms are objects too: the modelled spaces, each with its area, belong to their storey.
 
-The wall build-up is part of the model: render, brick infill and plaster in three layers.
+The facade build-up distinguishes render, two brick leaves, an air cavity and plaster.
 
-The structure model holds the pilotis, slabs and ramp. It leaves out render, windows and rooms.
+The structure model holds pilotis, slabs, ramp, stairs and auxiliary lintels, hollow U supports and shelves; several members are shared with architecture.
 
-The services model holds boiler, radiator, roof drains and downpipes: the same house, other objects.
+Original services include drains inside supports 2 and 4, heating and water risers, soil stack and flue. Detailed envelopes and incomplete routes retain their uncertainties.
 
-Three models, one schema: the same vocabulary and rules, with different content.
+Three models share one schema. Counts refer to IFC products; a stair assembly can contain many physical parts.
 
 Coordination puts the models on one origin. In this teaching model one GlobalId marks the shared slab.
 
 The shared slab keeps one GlobalId: each model reads from it the properties it needs.
 
-On the ground-floor plan every line belongs to one model: walls and glass, pilotis, pipes.
+On the ground-floor plan discipline memberships may overlap: the mechanical hoist jib belongs to architecture, structure and services.
 
 In this teaching scenario, a clash check finds what no single model shows: a downpipe too close to a piloti.
 
 For one use case, the structure model is translated into a structural analysis model: IFC's analysis domain.
 
-The first-floor slab becomes surface members on the grid, each piloti a line member.
+The first-floor slab becomes clipped surface members; selected slab supports become line members.
 
 The slab is cut at its mid-surface: the piloti line reaches it, the thickness becomes an attribute.
 
-Assumptions add what was never drawn: every piloti foot becomes a fixed support node.
+Each selected analytical birth receives an assumed fixed restraint, including transfer-born members.
 
 The load is assumed too: self-weight, finishes and imposed load add up to the area load.
 
@@ -197,19 +197,19 @@ Round trip: IFC to a mesh and back. The shape returns, but class, GlobalId and L
 
 To check the first-floor slab structurally, we choose an analysis schema and idealise the slab at its mid-surface.
 
-The slab becomes shell elements on the grid, each piloti a member. Every analysis item records its source GlobalId.
+The slab becomes clipped shell members; selected slab supports become line members. Every analytical item records its source GlobalId.
 
-The slab is the villa's own: the ramp opening is cut out, the salon rests on it, and the net area follows.
+The native slab retains ramp, stair and service apertures. Cellar hatches have separate covers, while the floor area excludes its actual voids.
 
 The analysis needs assumptions: self-weight from the thickness, finishes, imposed load, and the support conditions.
 
 The load is a stack: the slab's own weight, the finishes and the imposed load add up to one area load.
 
-Each piloti owns the slab up to the midlines to its neighbours. Beside the ramp opening, B3 owns a notched cell.
+Each selected support receives the slab region up to the midlines to its neighbours, clipped to the slab and its openings.
 
-Each piloti is assigned its tributary area. This is a simplified estimate, not a finite element result.
+Each selected support is assigned its tributary area. These are regional slab estimates, not a finite-element stiffness solution.
 
-The tool sends back reactions. They return to the model as a result linked to B3; geometry never flows back.
+The tool sends back reactions. They return to the model as a result linked to 19; geometry never flows back.
 
 Ribbon windows, infill walls and render colour do not cross over. Translating back cannot restore them.
 
@@ -229,34 +229,34 @@ The slab record holds class, properties, author and revision; none of these is t
 
 Reports say water came through the flat roof each autumn; our teaching scenario starts from this leak.
 
-Water passes soil and screed; wherever the waterproofing has a gap, it enters the slab and stains the ceiling.
+The source distinguishes the original reconstructed state from later damage evidence. The illustrated water path is schematic, without an invented membrane layer.
 
-After the repair, a design event thickens the soil from 0.10 to 0.30 m; the slab keeps its GlobalId.
+In an explicit repair scenario, a design event increases the reference paving reserve from 0.09 to 0.14 m; the slab keeps its GlobalId.
 
 Thickness and revision change; GlobalId, class and place in the villa stay what they were.
 
-Soil weighs 18 kN/m³: 0.20 m more soil adds 3.6 kN/m², and the roof planting load becomes 12.92 kN/m².
+The added paving increases the area load; layer densities and thicknesses determine the displayed value.
 
-Each piloti carries the roof around it: A3 collects 4.75 m × 2.375 m = 11.28 m², C3 only 2.38 m².
+Each roof support collects the slab nearest to it, excluding openings. The irregular cells have different areas.
 
-The load on A3 follows: 11.28 m² × 12.92 kN/m² ≈ 146 kN, not 105 kN.
+The load on each support follows from its share of each roof zone and the corresponding area load.
 
-Each piloti changes by 3.6 kN/m² times the area of its roof planting: D3 gains most, C4 under the terrace nothing.
+The paving change affects each support according to its share of the roof zone.
 
-LK-ROOF links the analysis to the slab, but it still holds revision 1: 105 kN, not 146 kN.
+LK-ROOF links the analysis to the slab, but still holds the earlier revision and its earlier result.
 
-A check compares link and model: revision 1 against 2, 9.32 against 12.92 kN/m², 105 against 146 kN.
+A check compares the linked revision and stored values with the current model and derived results.
 
 A requirement check (IDS) passes because the information exists; only the link check finds the old result.
 
 The finding goes to the structural engineer as a BCF topic that points to the slab by its GlobalId.
 
-Re-translating the slab gives 24 surface members and 25 columns of this teaching model; a person reviews the assumptions.
+Re-translating generates surface members and supports from the current teaching model; a person reviews the assumptions.
 
-With the link set to revision 2, the analysis shows 146 kN too, and the check finds no issue.
+With the link updated, the analysis and model show matching reactions and the check finds no issue.
 
-Two people edit revision 1 at once: both save revision 2 under the same GlobalId, with different soil.
+Two people edit revision 1 at once: both save revision 2 under the same GlobalId, with different paving.
 
-The GlobalId cannot merge 12.92 and 11.12 kN/m²; a person decides which edit the model keeps.
+The GlobalId cannot merge competing paving edits; a person decides which edit the model keeps.
 
 A schema gives data meaning, a GlobalId names the object, a revision dates it, and a link ties the analysis to it.

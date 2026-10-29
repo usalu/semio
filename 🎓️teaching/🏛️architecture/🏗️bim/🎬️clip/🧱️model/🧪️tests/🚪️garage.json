@@ -1,0 +1,16 @@
+{
+  "opening": "OP-GARAGE",
+  "door": "GARAGE-SLIDING",
+  "host": "W-G-E",
+  "start": 0.1,
+  "end": 4.05,
+  "trains": 2,
+  "section_z": 1.5,
+  "head_level": "soffit:SL-1",
+  "status": "Two trains are source-attested. East-side placement and3.95m portal interval are provisional inferred geometry on the independently registered enclosure; exact original jambs remain unknown. Equal train split and35mm panel envelope are inferred.",
+  "world_y": [
+    10.85,
+    14.8
+  ],
+  "positive_column_overlap_volume_max": 1e-9
+}

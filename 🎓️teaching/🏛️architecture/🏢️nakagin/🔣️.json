@@ -1,0 +1,1256 @@
+{
+  "version": 1,
+  "languages": [
+    "en",
+    "de"
+  ],
+  "revision": 1,
+  "notes": [
+    {
+      "id": "teaching-model",
+      "text": {
+        "en": "Simplified, rounded teaching model of the Nakagin Capsule Tower (Kisho Kurokawa, Ginza, Tokyo, 1970-1972, demolished 2022); not a survey.",
+        "de": "Vereinfachtes, gerundetes Lehrmodell des Nakagin Capsule Tower (Kisho Kurokawa, Ginza, Tokio, 1970-1972, 2022 abgerissen); keine Bauaufnahme."
+      }
+    },
+    {
+      "id": "interior-size",
+      "text": {
+        "en": "The historical interior size 2.3 x 3.8 x 2.1 m is kept as sourced interior size; the outer size is 2.5 x 4.0 x 2.5 m.",
+        "de": "Die historische Innenmasse 2,3 x 3,8 x 2,1 m bleibt als belegte Innenmasse erhalten; die Aussenmasse ist 2,5 x 4,0 x 2,5 m."
+      }
+    },
+    {
+      "id": "facade-gap",
+      "text": {
+        "en": "Tower A carries no capsules on its west facade (index 3): it faces Tower B and the three bridges. Tower B has no capsule on its west facade (index 3) on the top capsule storey, where the capital's service side lies.",
+        "de": "Turm A trägt an seiner Westfassade (Index 3) keine Kapseln: sie liegt zu Turm B und den drei Brücken hin. Turm B hat im obersten Kapselgeschoss an der Westfassade (Index 3) keine Kapsel, dort liegt die Wartungsseite des Kopfbaus."
+      }
+    },
+    {
+      "id": "type-pattern",
+      "text": {
+        "en": "The capsule type of each slot follows a deterministic modular pattern; type counts are derived, not typed. Only the capsule shape is historical, the room programs are teaching proposals.",
+        "de": "Der Kapseltyp jedes Platzes folgt einem deterministischen Modulo-Muster; die Typanzahlen werden abgeleitet, nicht eingetippt. Historisch ist nur die Kapselform, die Raumprogramme sind Lehrvorschläge."
+      }
+    }
+  ],
+  "sources": {
+    "wikipedia": {
+      "title": "Nakagin Capsule Tower, Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Nakagin_Capsule_Tower"
+    },
+    "archeyes": {
+      "title": "Nakagin Capsule Tower, Kisho Kurokawa, Archeyes",
+      "url": "https://archeyes.com/nakagin-capsule-tower-kisho-kurokawa/"
+    },
+    "archiweb": {
+      "title": "Nakagin Capsule Tower, Archiweb",
+      "url": "https://www.archiweb.cz/en/b/nakagin-capsule-tower"
+    },
+    "tokyo-window-2019": {
+      "title": "Tokyo Metropolitan Government, 2019 guideline example, window U-value 2.33 W/(m2 K) or less",
+      "url": "https://www.spt.metro.tokyo.lg.jp/tosei/hodohappyo/press/2019/01/29/documents/10.pdf"
+    },
+    "jma-tokyo-normals": {
+      "title": "Japan Meteorological Agency, 1991-2020 normals, Tokyo (Kitanomaru Park), as tabulated in Wikipedia Tokyo",
+      "url": "https://en.wikipedia.org/wiki/Tokyo"
+    },
+    "repo-ifc": {
+      "title": "Repo Metabolism kit IFC export (core 5.5 m, storey pitch 2.75 m, podium footprint)",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc"
+    }
+  },
+  "capsule": {
+    "width": {
+      "value": 2.5,
+      "unit": "m",
+      "basis": "sourced",
+      "source": "wikipedia"
+    },
+    "length": {
+      "value": 4.0,
+      "unit": "m",
+      "basis": "sourced",
+      "source": "wikipedia"
+    },
+    "height": {
+      "value": 2.5,
+      "unit": "m",
+      "basis": "sourced",
+      "source": "wikipedia"
+    },
+    "corner_radius": {
+      "value": 0.25,
+      "unit": "m",
+      "basis": "assumed",
+      "note": "rounded profile of the shell, teaching choice"
+    },
+    "corner_segments": {
+      "value": 4,
+      "unit": "1",
+      "basis": "assumed",
+      "note": "chamfer segments per rounded corner"
+    },
+    "window_diameter": {
+      "value": 1.3,
+      "unit": "m",
+      "basis": "sourced",
+      "source": "archeyes"
+    },
+    "window_center_v": {
+      "value": 1.25,
+      "unit": "m",
+      "basis": "assumed",
+      "note": "centre height above the floor, front face"
+    },
+    "bolt_u": {
+      "value": 0.9,
+      "unit": "m",
+      "basis": "assumed",
+      "note": "bolt offset left and right of the back face centre"
+    },
+    "bolt_v_low": {
+      "value": 0.5,
+      "unit": "m",
+      "basis": "assumed"
+    },
+    "bolt_v_high": {
+      "value": 2.0,
+      "unit": "m",
+      "basis": "assumed"
+    },
+    "bolt_radius": {
+      "value": 0.03,
+      "unit": "m",
+      "basis": "assumed"
+    },
+    "bolt_count": {
+      "value": 4,
+      "unit": "1",
+      "basis": "sourced",
+      "source": "wikipedia"
+    },
+    "interior": {
+      "width": {
+        "value": 2.3,
+        "unit": "m",
+        "basis": "sourced",
+        "source": "archiweb"
+      },
+      "length": {
+        "value": 3.8,
+        "unit": "m",
+        "basis": "sourced",
+        "source": "archiweb"
+      },
+      "height": {
+        "value": 2.1,
+        "unit": "m",
+        "basis": "sourced",
+        "source": "archiweb"
+      }
+    }
+  },
+  "types": [
+    {
+      "key": "A",
+      "name": {
+        "en": "Residence",
+        "de": "Wohnkapsel"
+      },
+      "use": {
+        "en": "Single residence with bed, bathroom unit and storage",
+        "de": "Einzelwohnung mit Bett, Nasszelle und Stauraum"
+      },
+      "window_diameter": {
+        "value": 1.3,
+        "unit": "m",
+        "basis": "sourced",
+        "source": "archeyes"
+      },
+      "window_u": {
+        "value": 0.0,
+        "unit": "m",
+        "basis": "assumed"
+      },
+      "window_v": {
+        "value": 1.25,
+        "unit": "m",
+        "basis": "assumed"
+      },
+      "rotation": {
+        "value": 0.0,
+        "unit": "deg",
+        "basis": "assumed"
+      },
+      "occupants": {
+        "value": 1,
+        "unit": "1",
+        "basis": "assumed"
+      },
+      "fittings": [
+        {
+          "key": "bed",
+          "name": {
+            "en": "Bed",
+            "de": "Bett"
+          },
+          "width": {
+            "value": 0.9,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "length": {
+            "value": 2.0,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "count": {
+            "value": 1,
+            "unit": "1",
+            "basis": "assumed"
+          }
+        },
+        {
+          "key": "bath",
+          "name": {
+            "en": "Bathroom unit",
+            "de": "Nasszelle"
+          },
+          "width": {
+            "value": 1.0,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "length": {
+            "value": 1.2,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "count": {
+            "value": 1,
+            "unit": "1",
+            "basis": "assumed"
+          }
+        },
+        {
+          "key": "storage",
+          "name": {
+            "en": "Storage",
+            "de": "Stauraum"
+          },
+          "width": {
+            "value": 0.5,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "length": {
+            "value": 1.2,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "count": {
+            "value": 1,
+            "unit": "1",
+            "basis": "assumed"
+          }
+        }
+      ]
+    },
+    {
+      "key": "B",
+      "name": {
+        "en": "Residence with desk",
+        "de": "Wohnkapsel mit Schreibtisch"
+      },
+      "use": {
+        "en": "Residence for working, with desk next to the window",
+        "de": "Wohnkapsel zum Arbeiten, mit Schreibtisch am Fenster"
+      },
+      "window_diameter": {
+        "value": 1.3,
+        "unit": "m",
+        "basis": "sourced",
+        "source": "archeyes"
+      },
+      "window_u": {
+        "value": 0.0,
+        "unit": "m",
+        "basis": "assumed"
+      },
+      "window_v": {
+        "value": 1.25,
+        "unit": "m",
+        "basis": "assumed"
+      },
+      "rotation": {
+        "value": 0.0,
+        "unit": "deg",
+        "basis": "assumed"
+      },
+      "occupants": {
+        "value": 1,
+        "unit": "1",
+        "basis": "assumed"
+      },
+      "fittings": [
+        {
+          "key": "bed",
+          "name": {
+            "en": "Bed",
+            "de": "Bett"
+          },
+          "width": {
+            "value": 0.9,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "length": {
+            "value": 2.0,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "count": {
+            "value": 1,
+            "unit": "1",
+            "basis": "assumed"
+          }
+        },
+        {
+          "key": "bath",
+          "name": {
+            "en": "Bathroom unit",
+            "de": "Nasszelle"
+          },
+          "width": {
+            "value": 1.0,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "length": {
+            "value": 1.2,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "count": {
+            "value": 1,
+            "unit": "1",
+            "basis": "assumed"
+          }
+        },
+        {
+          "key": "desk",
+          "name": {
+            "en": "Desk",
+            "de": "Schreibtisch"
+          },
+          "width": {
+            "value": 0.6,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "length": {
+            "value": 1.2,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "count": {
+            "value": 1,
+            "unit": "1",
+            "basis": "assumed"
+          }
+        },
+        {
+          "key": "storage",
+          "name": {
+            "en": "Storage",
+            "de": "Stauraum"
+          },
+          "width": {
+            "value": 0.5,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "length": {
+            "value": 1.2,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "count": {
+            "value": 1,
+            "unit": "1",
+            "basis": "assumed"
+          }
+        }
+      ]
+    },
+    {
+      "key": "C",
+      "name": {
+        "en": "Studio",
+        "de": "Atelier"
+      },
+      "use": {
+        "en": "Small studio for two with large window, no bed",
+        "de": "Kleines Atelier für zwei mit grossem Fenster, ohne Bett"
+      },
+      "window_diameter": {
+        "value": 1.6,
+        "unit": "m",
+        "basis": "assumed"
+      },
+      "window_u": {
+        "value": 0.0,
+        "unit": "m",
+        "basis": "assumed"
+      },
+      "window_v": {
+        "value": 1.25,
+        "unit": "m",
+        "basis": "assumed"
+      },
+      "rotation": {
+        "value": 0.0,
+        "unit": "deg",
+        "basis": "assumed"
+      },
+      "occupants": {
+        "value": 2,
+        "unit": "1",
+        "basis": "assumed"
+      },
+      "fittings": [
+        {
+          "key": "bath",
+          "name": {
+            "en": "Bathroom unit",
+            "de": "Nasszelle"
+          },
+          "width": {
+            "value": 1.0,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "length": {
+            "value": 1.2,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "count": {
+            "value": 1,
+            "unit": "1",
+            "basis": "assumed"
+          }
+        },
+        {
+          "key": "desk",
+          "name": {
+            "en": "Desk",
+            "de": "Schreibtisch"
+          },
+          "width": {
+            "value": 0.7,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "length": {
+            "value": 1.6,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "count": {
+            "value": 2,
+            "unit": "1",
+            "basis": "assumed"
+          }
+        },
+        {
+          "key": "sofa",
+          "name": {
+            "en": "Sofa",
+            "de": "Sofa"
+          },
+          "width": {
+            "value": 0.8,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "length": {
+            "value": 1.8,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "count": {
+            "value": 1,
+            "unit": "1",
+            "basis": "assumed"
+          }
+        },
+        {
+          "key": "storage",
+          "name": {
+            "en": "Storage",
+            "de": "Stauraum"
+          },
+          "width": {
+            "value": 0.5,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "length": {
+            "value": 1.2,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "count": {
+            "value": 1,
+            "unit": "1",
+            "basis": "assumed"
+          }
+        }
+      ]
+    },
+    {
+      "key": "D",
+      "name": {
+        "en": "Splayed residence",
+        "de": "Gefächerte Wohnkapsel"
+      },
+      "use": {
+        "en": "Residence with side window, turned 5 degrees on its plane (teaching variant)",
+        "de": "Wohnkapsel mit seitlichem Fenster, 5 Grad auf ihrer Ebene gedreht (Lehrvariante)"
+      },
+      "window_diameter": {
+        "value": 1.3,
+        "unit": "m",
+        "basis": "sourced",
+        "source": "archeyes"
+      },
+      "window_u": {
+        "value": -0.45,
+        "unit": "m",
+        "basis": "assumed"
+      },
+      "window_v": {
+        "value": 1.25,
+        "unit": "m",
+        "basis": "assumed"
+      },
+      "rotation": {
+        "value": 5.0,
+        "unit": "deg",
+        "basis": "assumed",
+        "note": "yaw about the plane Z axis, fanned outward: positive for item 0, negative for item 1"
+      },
+      "occupants": {
+        "value": 1,
+        "unit": "1",
+        "basis": "assumed"
+      },
+      "fittings": [
+        {
+          "key": "bed",
+          "name": {
+            "en": "Bed",
+            "de": "Bett"
+          },
+          "width": {
+            "value": 0.9,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "length": {
+            "value": 2.0,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "count": {
+            "value": 1,
+            "unit": "1",
+            "basis": "assumed"
+          }
+        },
+        {
+          "key": "bath",
+          "name": {
+            "en": "Bathroom unit",
+            "de": "Nasszelle"
+          },
+          "width": {
+            "value": 1.0,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "length": {
+            "value": 1.2,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "count": {
+            "value": 1,
+            "unit": "1",
+            "basis": "assumed"
+          }
+        },
+        {
+          "key": "storage",
+          "name": {
+            "en": "Storage",
+            "de": "Stauraum"
+          },
+          "width": {
+            "value": 0.5,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "length": {
+            "value": 1.2,
+            "unit": "m",
+            "basis": "assumed"
+          },
+          "count": {
+            "value": 1,
+            "unit": "1",
+            "basis": "assumed"
+          }
+        }
+      ]
+    }
+  ],
+  "assignment": {
+    "order": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "tower_weight": {
+      "value": 1,
+      "unit": "1",
+      "basis": "assumed"
+    },
+    "storey_weight": {
+      "value": 1,
+      "unit": "1",
+      "basis": "assumed"
+    },
+    "facade_weight": {
+      "value": 2,
+      "unit": "1",
+      "basis": "assumed"
+    },
+    "item_weight": {
+      "value": 1,
+      "unit": "1",
+      "basis": "assumed"
+    },
+    "offset": {
+      "value": 0,
+      "unit": "1",
+      "basis": "assumed"
+    }
+  },
+  "facades": [
+    {
+      "index": 0,
+      "key": "N",
+      "name": {
+        "en": "North",
+        "de": "Nord"
+      },
+      "normal": [
+        0,
+        1
+      ]
+    },
+    {
+      "index": 1,
+      "key": "E",
+      "name": {
+        "en": "East",
+        "de": "Ost"
+      },
+      "normal": [
+        1,
+        0
+      ]
+    },
+    {
+      "index": 2,
+      "key": "S",
+      "name": {
+        "en": "South",
+        "de": "Süd"
+      },
+      "normal": [
+        0,
+        -1
+      ]
+    },
+    {
+      "index": 3,
+      "key": "W",
+      "name": {
+        "en": "West",
+        "de": "West"
+      },
+      "normal": [
+        -1,
+        0
+      ]
+    }
+  ],
+  "items": {
+    "per_facade": {
+      "value": 2,
+      "unit": "1",
+      "basis": "sourced",
+      "source": "wikipedia",
+      "note": "two capsules side by side per facade slot, 140 in total"
+    },
+    "pitch": {
+      "value": 2.75,
+      "unit": "m",
+      "basis": "assumed",
+      "note": "centre distance along the facade: capsule width plus 0.25 m gap"
+    },
+    "stagger": {
+      "value": 0.917,
+      "unit": "m",
+      "basis": "derived",
+      "source": "repo-ifc",
+      "note": "item 1 sits one third of the storey pitch higher than item 0"
+    }
+  },
+  "core": {
+    "side": {
+      "value": 5.5,
+      "unit": "m",
+      "basis": "assumed",
+      "source": "repo-ifc"
+    },
+    "shaft_side": {
+      "value": 4.1,
+      "unit": "m",
+      "basis": "assumed",
+      "note": "inner shaft for stairs and lifts"
+    },
+    "storey_height": {
+      "value": 2.75,
+      "unit": "m",
+      "basis": "assumed",
+      "source": "repo-ifc"
+    },
+    "podium_storeys": {
+      "value": 2,
+      "unit": "1",
+      "basis": "assumed",
+      "source": "repo-ifc",
+      "note": "core storeys below the first capsule storey"
+    }
+  },
+  "towers": [
+    {
+      "key": "A",
+      "name": {
+        "en": "Tower A",
+        "de": "Turm A"
+      },
+      "center": {
+        "x": {
+          "value": 0.0,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "y": {
+          "value": 0.0,
+          "unit": "m",
+          "basis": "assumed"
+        }
+      },
+      "capsule_storeys": {
+        "value": 9,
+        "unit": "1",
+        "basis": "assumed",
+        "source": "repo-ifc"
+      },
+      "facades": [
+        0,
+        1,
+        2
+      ],
+      "exceptions": []
+    },
+    {
+      "key": "B",
+      "name": {
+        "en": "Tower B",
+        "de": "Turm B"
+      },
+      "center": {
+        "x": {
+          "value": -11.1,
+          "unit": "m",
+          "basis": "assumed",
+          "source": "repo-ifc"
+        },
+        "y": {
+          "value": 0.0,
+          "unit": "m",
+          "basis": "assumed"
+        }
+      },
+      "capsule_storeys": {
+        "value": 11,
+        "unit": "1",
+        "basis": "assumed",
+        "source": "repo-ifc"
+      },
+      "facades": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "exceptions": [
+        {
+          "storey": 10,
+          "facades": [
+            0,
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  ],
+  "capital": {
+    "height": {
+      "value": 2.75,
+      "unit": "m",
+      "basis": "assumed",
+      "note": "machine room box on top of the core"
+    },
+    "overhang": {
+      "value": 0.25,
+      "unit": "m",
+      "basis": "assumed",
+      "note": "projection beyond the core on every side"
+    },
+    "taper": {
+      "value": 0.5,
+      "unit": "m",
+      "basis": "assumed",
+      "note": "inset of the roof edge against the base edge on every side"
+    }
+  },
+  "podium": {
+    "center": {
+      "x": {
+        "value": -5.55,
+        "unit": "m",
+        "basis": "derived",
+        "note": "midway between both towers"
+      },
+      "y": {
+        "value": 0.0,
+        "unit": "m",
+        "basis": "assumed"
+      }
+    },
+    "length": {
+      "value": 31.4,
+      "unit": "m",
+      "basis": "assumed",
+      "source": "repo-ifc"
+    },
+    "width": {
+      "value": 20.7,
+      "unit": "m",
+      "basis": "assumed",
+      "source": "repo-ifc"
+    },
+    "storeys": {
+      "value": 2,
+      "unit": "1",
+      "basis": "assumed",
+      "source": "repo-ifc"
+    }
+  },
+  "energy": {
+    "u_roof": {
+      "value": 0.5,
+      "unit": "W/(m²·K)",
+      "basis": "assumed",
+      "note": "steel shell with mineral wool insulation"
+    },
+    "u_floor": {
+      "value": 0.6,
+      "unit": "W/(m²·K)",
+      "basis": "assumed"
+    },
+    "u_wall": {
+      "value": 0.6,
+      "unit": "W/(m²·K)",
+      "basis": "assumed"
+    },
+    "u_window": {
+      "value": 2.33,
+      "unit": "W/(m²·K)",
+      "basis": "sourced",
+      "source": "tokyo-window-2019"
+    },
+    "attached_factor": {
+      "value": 0.5,
+      "unit": "1",
+      "basis": "assumed",
+      "note": "temperature reduction factor of the back wall towards the unheated core"
+    },
+    "air_change": {
+      "value": 0.5,
+      "unit": "1/h",
+      "basis": "assumed"
+    },
+    "air_heat_capacity": {
+      "value": 0.34,
+      "unit": "Wh/(m³·K)",
+      "basis": "assumed",
+      "note": "volumetric heat capacity of air, standard value"
+    },
+    "indoor_temperature": {
+      "value": 20.0,
+      "unit": "°C",
+      "basis": "assumed"
+    },
+    "design_temperature": {
+      "value": 0.0,
+      "unit": "°C",
+      "basis": "assumed",
+      "note": "Tokyo winter design temperature, rounded; January mean is 5.4 °C, record low -9.2 °C"
+    },
+    "heating_base": {
+      "value": 18.0,
+      "unit": "°C",
+      "basis": "assumed",
+      "note": "heating limit temperature for the degree days"
+    }
+  },
+  "climate": {
+    "station": {
+      "en": "Tokyo (Kitanomaru Park), normals 1991-2020",
+      "de": "Tokio (Kitanomaru-Park), Normalwerte 1991-2020"
+    },
+    "months": [
+      {
+        "key": "01",
+        "name": {
+          "en": "January",
+          "de": "Januar"
+        },
+        "mean": {
+          "value": 5.4,
+          "unit": "°C",
+          "basis": "sourced",
+          "source": "jma-tokyo-normals"
+        },
+        "days": {
+          "value": 31,
+          "unit": "d",
+          "basis": "sourced",
+          "source": "wikipedia"
+        }
+      },
+      {
+        "key": "02",
+        "name": {
+          "en": "February",
+          "de": "Februar"
+        },
+        "mean": {
+          "value": 6.1,
+          "unit": "°C",
+          "basis": "sourced",
+          "source": "jma-tokyo-normals"
+        },
+        "days": {
+          "value": 28,
+          "unit": "d",
+          "basis": "sourced",
+          "source": "wikipedia"
+        }
+      },
+      {
+        "key": "03",
+        "name": {
+          "en": "March",
+          "de": "März"
+        },
+        "mean": {
+          "value": 9.4,
+          "unit": "°C",
+          "basis": "sourced",
+          "source": "jma-tokyo-normals"
+        },
+        "days": {
+          "value": 31,
+          "unit": "d",
+          "basis": "sourced",
+          "source": "wikipedia"
+        }
+      },
+      {
+        "key": "04",
+        "name": {
+          "en": "April",
+          "de": "April"
+        },
+        "mean": {
+          "value": 14.3,
+          "unit": "°C",
+          "basis": "sourced",
+          "source": "jma-tokyo-normals"
+        },
+        "days": {
+          "value": 30,
+          "unit": "d",
+          "basis": "sourced",
+          "source": "wikipedia"
+        }
+      },
+      {
+        "key": "05",
+        "name": {
+          "en": "May",
+          "de": "Mai"
+        },
+        "mean": {
+          "value": 18.8,
+          "unit": "°C",
+          "basis": "sourced",
+          "source": "jma-tokyo-normals"
+        },
+        "days": {
+          "value": 31,
+          "unit": "d",
+          "basis": "sourced",
+          "source": "wikipedia"
+        }
+      },
+      {
+        "key": "06",
+        "name": {
+          "en": "June",
+          "de": "Juni"
+        },
+        "mean": {
+          "value": 21.9,
+          "unit": "°C",
+          "basis": "sourced",
+          "source": "jma-tokyo-normals"
+        },
+        "days": {
+          "value": 30,
+          "unit": "d",
+          "basis": "sourced",
+          "source": "wikipedia"
+        }
+      },
+      {
+        "key": "07",
+        "name": {
+          "en": "July",
+          "de": "Juli"
+        },
+        "mean": {
+          "value": 25.7,
+          "unit": "°C",
+          "basis": "sourced",
+          "source": "jma-tokyo-normals"
+        },
+        "days": {
+          "value": 31,
+          "unit": "d",
+          "basis": "sourced",
+          "source": "wikipedia"
+        }
+      },
+      {
+        "key": "08",
+        "name": {
+          "en": "August",
+          "de": "August"
+        },
+        "mean": {
+          "value": 26.9,
+          "unit": "°C",
+          "basis": "sourced",
+          "source": "jma-tokyo-normals"
+        },
+        "days": {
+          "value": 31,
+          "unit": "d",
+          "basis": "sourced",
+          "source": "wikipedia"
+        }
+      },
+      {
+        "key": "09",
+        "name": {
+          "en": "September",
+          "de": "September"
+        },
+        "mean": {
+          "value": 23.3,
+          "unit": "°C",
+          "basis": "sourced",
+          "source": "jma-tokyo-normals"
+        },
+        "days": {
+          "value": 30,
+          "unit": "d",
+          "basis": "sourced",
+          "source": "wikipedia"
+        }
+      },
+      {
+        "key": "10",
+        "name": {
+          "en": "October",
+          "de": "Oktober"
+        },
+        "mean": {
+          "value": 18.0,
+          "unit": "°C",
+          "basis": "sourced",
+          "source": "jma-tokyo-normals"
+        },
+        "days": {
+          "value": 31,
+          "unit": "d",
+          "basis": "sourced",
+          "source": "wikipedia"
+        }
+      },
+      {
+        "key": "11",
+        "name": {
+          "en": "November",
+          "de": "November"
+        },
+        "mean": {
+          "value": 12.5,
+          "unit": "°C",
+          "basis": "sourced",
+          "source": "jma-tokyo-normals"
+        },
+        "days": {
+          "value": 30,
+          "unit": "d",
+          "basis": "sourced",
+          "source": "wikipedia"
+        }
+      },
+      {
+        "key": "12",
+        "name": {
+          "en": "December",
+          "de": "Dezember"
+        },
+        "mean": {
+          "value": 7.7,
+          "unit": "°C",
+          "basis": "sourced",
+          "source": "jma-tokyo-normals"
+        },
+        "days": {
+          "value": 31,
+          "unit": "d",
+          "basis": "sourced",
+          "source": "wikipedia"
+        }
+      }
+    ],
+    "source": "jma-tokyo-normals",
+    "period": {
+      "en": "JMA normals 1991-2020 (via the Wikipedia Tokyo climate table)",
+      "de": "JMA-Normalwerte 1991-2020 (über die Wikipedia-Klimatabelle Tokio)"
+    },
+    "method": {
+      "en": "HDD18: sum over the months of max(0, 18 °C minus monthly mean) times days",
+      "de": "HDD18: Summe über die Monate von max(0, 18 °C minus Monatsmittel) mal Tage"
+    },
+    "heating_degree_days": {
+      "value": 1585.7,
+      "unit": "K·d",
+      "basis": "derived",
+      "source": "jma-tokyo-normals",
+      "note": "monthly-mean method, equals the sum of the monthly degree days"
+    }
+  },
+  "variants": [
+    {
+      "key": "window_upgrade",
+      "name": {
+        "en": "Window upgrade",
+        "de": "Fensteraufwertung"
+      },
+      "description": {
+        "en": "Triple or double low-e glazing in an insulated frame instead of the 2.33 W/(m²·K) window.",
+        "de": "Dreifach- oder Zweifach-Low-E-Verglasung im gedämmten Rahmen statt des Fensters mit 2,33 W/(m²·K)."
+      },
+      "overrides": {
+        "u_window": {
+          "value": 1.1,
+          "unit": "W/(m²·K)",
+          "basis": "assumed",
+          "note": "teaching value for triple or double low-e glazing"
+        }
+      }
+    },
+    {
+      "key": "back_wall_exposed",
+      "name": {
+        "en": "Back wall treated as outside",
+        "de": "Rückwand als Aussenwand behandelt"
+      },
+      "description": {
+        "en": "The typical mistake: the core-side wall gets the outdoor temperature, factor b = 1.0 instead of 0.5.",
+        "de": "Der typische Fehler: Die kernseitige Wand erhält die Aussentemperatur, Faktor b = 1,0 statt 0,5."
+      },
+      "overrides": {
+        "attached_factor": {
+          "value": 1.0,
+          "unit": "1",
+          "basis": "assumed",
+          "note": "no reduction towards the unheated core"
+        }
+      }
+    },
+    {
+      "key": "shared_roof_floor",
+      "name": {
+        "en": "Heated neighbours above and below",
+        "de": "Beheizte Nachbarn oben und unten"
+      },
+      "description": {
+        "en": "Roof and floor border heated capsules, so they lose no heat: U = 0.",
+        "de": "Dach und Boden grenzen an beheizte Kapseln und verlieren keine Wärme: U = 0."
+      },
+      "overrides": {
+        "u_roof": {
+          "value": 0.0,
+          "unit": "W/(m²·K)",
+          "basis": "assumed",
+          "note": "no loss to a heated neighbour"
+        },
+        "u_floor": {
+          "value": 0.0,
+          "unit": "W/(m²·K)",
+          "basis": "assumed",
+          "note": "no loss to a heated neighbour"
+        }
+      }
+    }
+  ]
+}

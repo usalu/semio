@@ -1,0 +1,17 @@
+# Parking Review R34
+
+The coordinated ground correction invalidated the R31 positive-control pose: its first car at[13.79,9.5],90° now lies .00246100924954m² outside the registered garage and overlaps W-G-GARAGE-CORNER by .0160401297405m². This is a geometric red check, not accepted as a new positive oracle. Vehicle4.6×1.75×1.65m and all clearance policies remain unchanged.
+
+Retained parking-search-r34.py independently constructs source column rings using NumPy, tests actual height-band occupied polygons using GEOS/STRtree, and derives the chauffeur free portal from actual frame width. The600mm reserve is directed into the registered garage by polygon containment. Both sides were considered; no door or wall was moved. OP-D-GARAGE-HALL was already removed as unsupported and its old reserve retired.
+
+A bounded294-pose first-car search (.1m grid,90° only, second car fixed[12,14.4],90°) completed in .183s with36 valid candidates. This is a static positive-control search, not ingress certification or three-car infeasibility. Input supports30s limit and an explicit cancellation sentinel. Source SHA2568231ac35c1fa6f52ef9644d8fa8349de052409836d59fca20fbf2653fc85701a. Final freeze validation and fixture publication remain pending.
+
+
+Published current-source fixture after independent Python source signature1f64e022e3c9af168c2724df2f5a009c70b1990685e7f01a454ef4c557ef0b95 exactly matched the separate JavaScript implementation. The only source changes after capture were bilingual evidence labels and refreshed analysis links; parking signature is unchanged. New positive first pose[13.5,9.6],90°, second[12,14.4],90°: zero outside area, boundary gaps .2455714093/.225m, column-surface gaps .404/.117m, other physical gaps .1705714093/.15m, pair gap .2m. All2483 height-band obstacles retained.
+
+The stale R31 positive first pose is now an explicit negative contract with W-G-GARAGE-CORNER/outside violations. Original three-car bounded-search metrics were removed from the current-source claim; target status is unverified-current-source. The historical CMN three-car statement remains separately sourced. Independent JavaScript polygon-clipping validation passes; all8Python NumPy/GEOS/SciPy contracts pass51.138s, including native3D-height-band obstacle equality, chauffeur reserve coordinates, hoist interference and all rejected controls. Neither ingress nor operating hatch/hoist access is certified by static parking.
+
+Changed files: model/tests/🚗️parking.json, .py and .mjs. Input script parking-search-r34.py is retained. Generated search/candidate/JavaScript outputs remain under generated pending ticket completion.
+
+
+R36cataloguecleanup: wholeCWisno longer an aperturefilling; vehiclecollectorincludesitexplicitlyonce as kindcurtain. Exactnumeric multisetcomparison proves all2483occupied records unchanged except CWkind:416CWheight-bandobstacles, all outlines/heights/tags/roles/partIDs identical without coordinate rounding. Initial JSONstringcomparison failed solely because NodeJSON publication wrote integer-valued floats as integers(0vs0.0,19vs19.0); corrected comparison recursively freezesobjects/arrays and uses exactPython numeric equality. No geometric tolerance was introduced. Fixture changes only physical_obstacles kind/order; independentJavaScriptvalidationstillpasses unchanged positive/negativecontrols and metrics. Source signature remains1f64e022…0b95. Retainedparking-kind-r36.py plus debuginput for audit. Newsource stairchanges will invalidate this documented checkpoint and require anew reviewedphysicaloracle.

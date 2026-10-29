@@ -1,7 +1,7 @@
 """🧊 Shaded 30° isometric axonometric of the Villa Savoye: pilotis, white box, dark-green ground floor, per discipline, explodable.
 
 Projection: ``point + scale·(x·ux + y·uy + z·uz)`` with ux = (0.866, 0.5), uy = (−0.866, 0.5), uz = (0, 1), the same as ``_cube_faces`` of the energy clips.
-The viewer stands south-west above the building (x east, y north, z up), so the south and west façades and the top are visible."""
+The view names describe model corners; x and y follow the source plan, with geographic north approximately (-1, -1)."""
 
 from __future__ import annotations
 
@@ -13,6 +13,41 @@ import numpy as np
 _d = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.🐍️")
 _c = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.🧱️core.🐍️")
 _engine = importlib.import_module("manim")
+_primitives = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.🧊️axon.🧩️primitives")
+ring_ccw = _primitives.ring_ccw
+Prim = _primitives.Prim
+_poly = _primitives._poly
+_ring3 = _primitives._ring3
+_solid = _primitives._solid
+_box = _primitives._box
+_prism = _primitives._prism
+_part_faces = _primitives._part_faces
+_discipline_of = _primitives._discipline_of
+_item = _primitives._item
+_wall_corners = _primitives._wall_corners
+_tiles = _primitives._tiles
+_both_sides = _primitives._both_sides
+_window_faces = _primitives._window_faces
+_wall_cells = _primitives._wall_cells
+_wall_solids = _primitives._wall_solids
+_stage = _primitives._stage
+_column_prims = _primitives._column_prims
+_ground_index = _primitives._ground_index
+_slab_prims = _primitives._slab_prims
+_service_prims = _primitives._service_prims
+prims = _primitives.prims
+_build = _primitives._build
+UP = _primitives.UP
+STAGE_PLANE = _primitives.STAGE_PLANE
+STAGE_UNDER = _primitives.STAGE_UNDER
+STAGE_SLAB = _primitives.STAGE_SLAB
+STAGE_FIRST = _primitives.STAGE_FIRST
+STAGE_WALLS = _primitives.STAGE_WALLS
+STAGE_ROOF = _primitives.STAGE_ROOF
+STAGE_TOP = _primitives.STAGE_TOP
+STAGE_OVERLAY = _primitives.STAGE_OVERLAY
+STAGE_CELLAR_SLAB = _primitives.STAGE_CELLAR_SLAB
+STAGE_CELLAR = _primitives.STAGE_CELLAR
 
 AXON = {"ux": (0.866, 0.5), "uy": (-0.866, 0.5), "uz": (0.0, 1.0)}
 _UX, _UY, _UZ = (np.array(AXON[key], float) for key in ("ux", "uy", "uz"))
@@ -27,8 +62,9 @@ def axon_point(x, y, z, point, scale):
 
 def axon_origin(point, scale, model=None):
     """🧭 Screen position of the model origin (grid corner A/1 at ±0.00) of a ``villa_axon`` whose box centre sits at ``point``; feed it to ``axon_point`` as ``point``."""
-    box = _c.geometry(model)["box"]
-    return axon_point(-box["length"] / 2, -box["width"] / 2, -box["height"] / 2, point, scale)
+    low, high = _bounds(prims(model))
+    centre = (low + high) / 2
+    return axon_point(*(-centre), point, scale)
 
 
 VIEWS = {"sw": 0, "se": -1, "ne": 2, "nw": 1}
@@ -36,15 +72,13 @@ EXPLODE_METRES = 8.0
 LAYER_ORDER = ("services", "structure", "architecture")
 PRIMARY = ("structure", "architecture", "services")
 LIGHT = np.array([-0.28, -0.54, 0.78])
-UP = np.array([0.0, 0.0, 1.0])
 MIN_RADIUS = 0.03
 REACH = 2.2
 LAYER_GAP = 1.2
-STAGE_PLANE, STAGE_UNDER, STAGE_SLAB, STAGE_FIRST, STAGE_WALLS, STAGE_ROOF, STAGE_TOP, STAGE_OVERLAY = range(8)
-SORTED_STAGES = (STAGE_UNDER, STAGE_FIRST, STAGE_WALLS, STAGE_TOP, STAGE_OVERLAY)
+SORTED_STAGES = (STAGE_CELLAR, STAGE_UNDER, STAGE_FIRST, STAGE_WALLS, STAGE_TOP, STAGE_OVERLAY)
 ROLES = {"wall": _d.INK, "slab": _d.mix(_d.INK, _d.CONCRETE, 0.3), "post": _d.CONCRETE, "ramp": _d.CONCRETE, "ground": _d.GREEN_GROUND,
          "glass": _d.GLASS, "service": _d.SERV, "garden": _d.mix(_d.GOOD, _d.BACKGROUND, 0.3), "soil": _d.mix(_d.INK, _d.GOOD, 0.1),
-         "paving": _d.mix(_d.INK, _d.DATA, 0.2), "hall": _d.mix(_d.GREEN_GROUND, _d.BACKGROUND, 0.5), "frame": _d.INK, "void": _d.MUTED, "foot": _d.MUTED}
+         "paving": _d.mix(_d.INK, _d.CONCRETE, 0.7), "wood": "#A48869", "tile": _d.CONCRETE, "metal": _d.MUTED, "concrete": _d.CONCRETE, "hall": _d.mix(_d.GREEN_GROUND, _d.BACKGROUND, 0.5), "frame": _d.INK, "void": _d.MUTED, "foot": _d.MUTED}
 SMOOTH_ROLES = ("ground",)
 P = _d.P
 
@@ -58,14 +92,8 @@ def brightness(normal, turns: int = 0) -> float:
     return float(min(1.0, max(0.3, 0.22 + float(n @ LIGHT))))
 
 
-def ring_ccw(ring, ccw: bool = True) -> list:
-    """🔁 Orient a 2D ring."""
-    pts = [list(map(float, p[:2])) for p in ring]
-    return pts if (_d.signed_area(pts) > 0) == ccw else pts[::-1]
-
-
 class AxonView:
-    """🔭 The 30° isometric projection with the viewer south-west above; ``view(x, y, z)`` is the screen point, ``depth`` larger is closer, ``facing(normal)`` positive looks at the viewer.
+    """🔭 The 30° isometric projection above the model’s negative x/y corner; ``view(x, y, z)`` is the screen point, ``depth`` larger is closer, ``facing(normal)`` positive looks at the viewer.
 
     ``point`` is the screen position of ``centre`` (the box centre for ``villa_axon``); ``turns`` rotates the building by quarter turns about ``centre`` to look from another corner."""
 
@@ -74,7 +102,7 @@ class AxonView:
     azimuth = 225.0
 
     def __init__(self, point=(0, 0, 0), scale: float = 0.26, centre=(0, 0, 0), turns: int = 0):
-        self.point, self.scale, self.centre, self.turns = P(point), float(scale), np.asarray(centre, float), turns % 4
+        self.point, self.scale, self.centre, self.turns = np.asarray(P(point), float), float(scale), np.asarray(centre, float), turns % 4
         c, s = round(math.cos(math.pi / 2 * self.turns)), round(math.sin(math.pi / 2 * self.turns))
         rotation = np.array([[c, -s], [s, c]], float)
         self.M = np.zeros((3, 3))
@@ -135,275 +163,6 @@ class AxonDrawing(_d.Drawing):
             bucket[tag].add(shape)
         else:
             bucket[tag] = shape if isinstance(shape, _engine.VGroup) else _engine.VGroup(shape)
-
-
-class Prim:
-    """🧩 One drawable element piece in model coordinates: faces, painter's stage and plan position for depth sorting; ``base`` overrides the colour."""
-
-    __slots__ = ("tag", "item", "stage", "foot", "faces", "merge", "alias", "sub", "z", "base")
-
-    def __init__(self, tag, item, stage, foot, faces, *, merge=False, alias=(), sub=0, z=0.0, base=None):
-        self.tag, self.item, self.stage, self.foot, self.faces = tag, item, stage, tuple(foot), faces
-        self.merge, self.alias, self.sub, self.z, self.base = merge, tuple(alias), sub, z, base
-
-
-def _poly(rings, normal, role):
-    return ("poly", [np.asarray(ring, float).reshape(-1, 3) for ring in rings], None if normal is None else np.asarray(normal, float), role)
-
-
-def _ring3(ring, z: float) -> np.ndarray:
-    pts = np.asarray([[p[0], p[1]] for p in ring], float)
-    return np.column_stack([pts, np.full(len(pts), float(z))])
-
-
-_BOX = ((0, 1, 2, 3), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7))
-
-
-def _solid(vertices, role) -> list:
-    """🧱 Six faces of a hexahedron (bottom ring 0–3, top ring 4–7) with outward normals."""
-    v = np.asarray(vertices, float)
-    centre, faces = v.mean(axis=0), []
-    for index in _BOX:
-        pts = v[list(index)]
-        n = np.cross(pts[1] - pts[0], pts[2] - pts[0])
-        length = float(np.linalg.norm(n))
-        if length < 1e-9:
-            continue
-        n = n / length
-        if n @ (pts.mean(axis=0) - centre) < 0:
-            n = -n
-        faces.append(_poly([pts], n, role))
-    return faces
-
-
-def _box(ring4, z0: float, z1: float, role: str) -> list:
-    ring = [list(map(float, p[:2])) for p in ring4]
-    return _solid([[*p, z0] for p in ring] + [[*p, z1] for p in ring], role)
-
-
-def _prism(rings, z0: float, z1: float, role: str, *, top: bool = True) -> list:
-    """🧊 Side faces and top of an extruded polygon with holes, normals pointing away from the material."""
-    faces = []
-    for index, ring in enumerate(rings):
-        pts = ring_ccw(ring, index == 0)
-        for a, b in zip(pts, pts[1:] + pts[:1]):
-            d = np.array(b) - np.array(a)
-            length = float(np.linalg.norm(d))
-            if length < 1e-9:
-                continue
-            faces.append(_poly([[(a[0], a[1], z0), (b[0], b[1], z0), (b[0], b[1], z1), (a[0], a[1], z1)]], (d[1] / length, -d[0] / length, 0.0), role))
-    if top:
-        faces.append(_poly([_ring3(ring, z1) for ring in rings], UP, role))
-    return faces
-
-
-def _discipline_of(guid, default, model):
-    found = _c.membership(model).get(guid)
-    return tuple(name for name in _d.DISCIPLINES if name in found) if found else default
-
-
-def _item(tag, guid, kind, cls, model, default, extra=()):
-    return {"tag": tag, "guid": guid, "kind": kind, "cls": cls, "disciplines": _discipline_of(guid, default, model),
-            "names": frozenset({tag, guid, kind, cls, *extra})}
-
-
-def _wall_corners(wall, g):
-    a, along, normal, length = _c.wall_frame(wall, g)
-    return a - normal * wall["thickness"] / 2, along, normal, length
-
-
-def _tiles(ring, z0, z1, role, width: float = 1.2):
-    """🧱 Vertical faces of a ring cut into narrow tiles ``(foot, face)`` so painter's sorting stays local."""
-    out = []
-    pts = ring_ccw(ring, True)
-    for a, b in zip(pts, pts[1:] + pts[:1]):
-        a, b = np.array(a), np.array(b)
-        length = float(np.linalg.norm(b - a))
-        if length < 1e-9:
-            continue
-        d = (b - a) / length
-        normal = (d[1], -d[0], 0.0)
-        count = max(1, math.ceil(length / width))
-        for index in range(count):
-            p, q = a + d * length * index / count, a + d * length * (index + 1) / count
-            out.append((((p + q) / 2), _poly([[(p[0], p[1], z0), (q[0], q[1], z0), (q[0], q[1], z1), (p[0], p[1], z1)]], normal, role)))
-    return out
-
-
-def _both_sides(face):
-    """👁️ The same face without a normal, so it is drawn from both sides (glass)."""
-    return ("poly", face[1], None, face[3])
-
-
-def _window_faces(wall, opening, g, shift: float = 0.01, panes_per: float = 2.0) -> list:
-    origin, along, normal, length = _wall_corners(wall, g)
-    out_normal = -normal
-    s0, s1, z0, z1 = opening["start"], opening["end"], opening["sill_z"], opening["head_z"]
-    offset = out_normal * shift
-
-    def at(s, z):
-        p = origin + along * s + offset
-        return (p[0], p[1], z)
-
-    quad = [at(s0, z0), at(s1, z0), at(s1, z1), at(s0, z1)]
-    panes = max(2, round((s1 - s0) / panes_per))
-    mullions = [(at(s0 + (s1 - s0) * k / panes, z0), at(s0 + (s1 - s0) * k / panes, z1)) for k in range(1, panes)]
-    return [_poly([quad], (out_normal[0], out_normal[1], 0.0), "glass"), ("line", np.array(quad + [quad[0]], float), 1.1, "frame", None), ("segs", mullions, 0.8, "frame")]
-
-
-def _service_prims(service, info, z_under, z_first) -> list:
-    pts = [np.array(p, float) for p in service["points"]]
-    kind = service["kind"]
-    if kind in ("boiler", "radiator") and service.get("size"):
-        sx, sy, sz = service["size"]
-        if kind == "boiler":
-            centre = pts[0]
-            lo, hi = np.array([centre[0] - sx / 2, centre[1] - sy / 2]), np.array([centre[0] + sx / 2, centre[1] + sy / 2])
-        else:
-            a, b = pts[0], pts[1]
-            lo, hi = np.array([min(a[0], b[0]), min(a[1], b[1]) - sy / 2]), np.array([max(a[0], b[0]), max(a[1], b[1]) + sy / 2])
-        z0 = pts[0][2]
-        ring = [(lo[0], lo[1]), (hi[0], lo[1]), (hi[0], hi[1]), (lo[0], hi[1])]
-        stage = STAGE_UNDER if z0 < z_under else STAGE_FIRST
-        return [Prim(service["tag"], info, stage, ((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2), _box(ring, z0, z0 + sz, "service"), z=z0)]
-    if kind == "drain":
-        c = pts[0]
-        r = (service.get("size") or [0.3])[0] / 2
-        ring = [(c[0] + r * math.cos(t), c[1] + r * math.sin(t), c[2] + 0.02) for t in np.linspace(0, 2 * math.pi, 14)[:-1]]
-        return [Prim(service["tag"], info, STAGE_TOP, (c[0], c[1]), [_poly([ring], UP, "service")], z=c[2])]
-    width = max(1.6, 26 * (service.get("diameter") or 0.05))
-    if abs(pts[0][0] - pts[-1][0]) < 1e-6 and abs(pts[0][1] - pts[-1][1]) < 1e-6:
-        x, y = pts[0][0], pts[0][1]
-        lo, hi = sorted((pts[0][2], pts[-1][2]))
-        pieces = []
-        for z_a, z_b, stage in ((lo, min(hi, z_under), STAGE_UNDER), (max(lo, z_first), hi, STAGE_FIRST)):
-            if z_b - z_a > 1e-6:
-                pieces.append(Prim(service["tag"], info, stage, (x, y), [("line", np.array([[x, y, z_a], [x, y, z_b]], float), width, "service", None)], z=z_a))
-        return pieces
-    stage = STAGE_UNDER if max(p[2] for p in pts) <= z_under else STAGE_FIRST
-    centre = np.mean(pts, axis=0)
-    return [Prim(service["tag"], info, stage, (centre[0], centre[1]), [("line", np.array(pts, float), width, "service", None)], z=float(centre[2]))]
-
-
-_PRIMS: dict = {}
-
-
-def prims(model=None) -> list:
-    """🧩 Every drawable piece of the villa in model coordinates, memoized per model object (``building_geometry`` of the model)."""
-    g = _c.geometry(model)
-    hit = _PRIMS.get(id(g))
-    if hit is not None and hit[0] is g:
-        return hit[1]
-    built = _build(g, model)
-    _PRIMS[id(g)] = (g, built)
-    if len(_PRIMS) > 12:
-        _PRIMS.pop(next(iter(_PRIMS)))
-    return built
-
-
-def _build(g, model) -> list:
-    out = []
-    floor = next(s for s in g["slabs"] if s["kind"] != "ROOF")
-    roof = next(s for s in g["slabs"] if s["kind"] == "ROOF")
-    z_under, z_first = floor["top"] - floor["thickness"], floor["top"]
-
-    for item in g["pilotis"]:
-        info = _item(item["tag"], item["guid"], "pilotis", "IfcColumn", model, ("structure",))
-        out.append(Prim(item["tag"], info, STAGE_UNDER, (item["x"], item["y"]), [("cyl", (item["x"], item["y"], item["base"], item["top"], item["radius"]), None, "post")]))
-
-    info = _item(floor["tag"], floor["guid"], "slabs", "IfcSlab", model, ("architecture", "structure"))
-    rings = [floor["outline"]] + [list(v) for v in floor["voids"]]
-    out.append(Prim(floor["tag"], info, STAGE_SLAB, (0, 0), _prism(rings, z_under, z_first, "slab")))
-
-    roof_info = _item(roof["tag"], roof["guid"], "slabs", "IfcSlab", model, ("architecture", "structure"))
-    roof_rings = [roof["outline"]] + [list(v) for v in roof["voids"]]
-    out.append(Prim(roof["tag"], roof_info, STAGE_ROOF, (0, 0), _prism(roof_rings, roof["top"] - roof["thickness"], roof["top"], "slab"), sub=0))
-    solarium = (roof.get("zones") or {}).get("solarium")
-    layers = [layer for layer in roof.get("layers", ()) if layer["id"] != "concrete"]
-    cover = {zone: sum(layer["thickness"] for layer in layers if zone in layer.get("zones", ())) for zone in ("planted", "solarium")}
-    if solarium and cover["planted"] > 0:
-        out.append(Prim(roof["tag"], roof_info, STAGE_ROOF, (0, 0), _prism(roof_rings + [list(solarium)], roof["top"], roof["top"] + cover["planted"], "soil"), sub=1))
-    if solarium:
-        space = next((s for s in g["spaces"] if s["storey"] == "roof"), None)
-        sol_info = _item(space["tag"], space["guid"], "spaces", "IfcSpace", model, ("architecture",), (roof["tag"], roof["guid"])) if space else roof_info
-        out.append(Prim(sol_info["tag"], sol_info, STAGE_ROOF, (0, 0), _prism([list(solarium)], roof["top"], roof["top"] + cover["solarium"], "paving"), sub=2))
-
-    curtain = g.get("curtain_wall")
-    path_set = {tuple(round(v, 3) for v in p) for p in curtain["path"]} if curtain else set()
-    for space in g["spaces"]:
-        info = _item(space["tag"], space["guid"], "spaces", "IfcSpace", model, ("architecture",))
-        ring = space["outline"]
-        if space["storey"] == "ground":
-            if path_set and path_set <= {tuple(round(v, 3) for v in p) for p in ring}:
-                out.append(Prim(space["tag"], info, STAGE_PLANE, (0, 0), [_poly([_ring3(ring, 0.0)], UP, "hall")], sub=2))
-                continue
-            for centre, face in _tiles(ring, 0.0, z_under, "ground"):
-                out.append(Prim(space["tag"], info, STAGE_UNDER, (centre[0], centre[1]), [face]))
-        elif space["storey"] == "first" and space.get("predefined_type") == "EXTERNAL":
-            out.append(Prim(space["tag"], info, STAGE_FIRST, (0, 0), [_poly([_ring3(ring, z_first + 0.004)], UP, "garden")]))
-
-    for wall in g["walls"]:
-        info = _item(wall["tag"], wall["guid"], "walls", "IfcWall", model, ("architecture",))
-        origin, along, normal, length = _wall_corners(wall, g)
-        ring = [origin, origin + along * length, origin + along * length + normal * wall["thickness"], origin + normal * wall["thickness"]]
-        mid = origin + along * length / 2 + normal * wall["thickness"] / 2
-        out.append(Prim(wall["tag"], info, STAGE_WALLS, (mid[0], mid[1]), _box(ring, wall["base"], wall["top"], "wall")))
-        for opening in wall.get("openings", ()):
-            w_info = _item(opening["window_tag"], opening["window_guid"], "windows", "IfcWindow", model, ("architecture",), (opening["tag"], opening["guid"]))
-            out.append(Prim(opening["window_tag"], w_info, STAGE_WALLS, (mid[0], mid[1]), _window_faces(wall, opening, g), alias=(opening["tag"],), sub=1))
-
-    if curtain:
-        info = _item(curtain["tag"], curtain["guid"], "curtain", "IfcCurtainWall", model, ("architecture",))
-        cx, cy = curtain["centre"]
-        fronts, backs = [], []
-        pts = np.asarray(curtain["path"], float)
-        for a, b in zip(pts[:-1], pts[1:]):
-            mid, d = (a + b) / 2, b - a
-            n = np.array([d[1], -d[0], 0.0])
-            n /= max(np.linalg.norm(n), 1e-9)
-            if (mid - np.array([cx, min(mid[1], cy)])) @ n[:2] < 0:
-                n = -n
-            face = _poly([[(a[0], a[1], curtain["base"]), (b[0], b[1], curtain["base"]), (b[0], b[1], curtain["top"]), (a[0], a[1], curtain["top"])]], n, "glass")
-            (fronts if n[0] + n[1] < 0 else backs).append(_both_sides(face))
-        lines = [("segs", [((p[0], p[1], curtain["base"]), (p[0], p[1], curtain["top"])) for p in pts[::2]], 0.7, "frame")]
-        out.append(Prim(curtain["tag"], info, STAGE_UNDER, (float(pts[:, 0].max()), float(pts[:, 1].max())), backs, merge=True, sub=-1))
-        out.append(Prim(curtain["tag"], info, STAGE_UNDER, (float(pts[:, 0].min()), float(pts[:, 1].min()) + 0.5), fronts + lines, merge=True, sub=5))
-
-    ramp_g = g.get("ramp")
-    if ramp_g:
-        for ramp in ramp_g.get("ramps") or [ramp_g]:
-            ramp_info = _item(ramp["tag"], ramp["guid"], "ramp", "IfcRamp", model, ("architecture", "structure"))
-            for flight in ramp["flights"]:
-                info = _item(flight["tag"], flight["guid"], "ramp", "IfcRampFlight", model, ("architecture", "structure"), (ramp["tag"], ramp["guid"], "IfcRamp"))
-                s0, s1 = np.array(flight["start"], float), np.array(flight["end"], float)
-                d = (s1 - s0) / np.linalg.norm(s1 - s0)
-                nrm = np.array([-d[1], d[0]])
-                half = flight["width"] / 2
-                top = [(*(s0 - nrm * half), flight["z0"]), (*(s0 + nrm * half), flight["z0"]), (*(s1 + nrm * half), flight["z1"]), (*(s1 - nrm * half), flight["z1"])]
-                vertices = [[p[0], p[1], p[2] - 0.25] for p in top] + [list(p) for p in top]
-                stage = STAGE_UNDER if flight["z1"] <= z_first + 1e-6 else STAGE_WALLS
-                mid = (s0 + s1) / 2
-                out.append(Prim(flight["tag"], info, stage, (mid[0], mid[1]), _solid(vertices, "ramp"), alias=(ramp["tag"],), z=flight["z0"]))
-            for landing in ramp.get("landings", ()):
-                z = landing["z"]
-                centre = np.mean(np.asarray(landing["outline"], float), axis=0)
-                stage = STAGE_UNDER if z < z_first - 1e-6 else STAGE_FIRST if z <= z_first + 1e-6 else STAGE_WALLS
-                faces = _prism([landing["outline"]], max(z - 0.25, 0.0), z, "ramp") if z > 0.01 else [_poly([_ring3(landing["outline"], 0.003)], UP, "ramp")]
-                out.append(Prim(ramp["tag"], ramp_info, stage, (centre[0], centre[1]), faces, sub=2, z=z))
-
-    for screen in g.get("screens", ()):
-        info = _item(screen["tag"], screen["guid"], "screens", "IfcWall", model, ("architecture",))
-        path = np.asarray(screen["path"], float)
-        tangent = np.gradient(path, axis=0)
-        tangent /= np.maximum(np.linalg.norm(tangent, axis=1, keepdims=True), 1e-9)
-        normals = np.column_stack([-tangent[:, 1], tangent[:, 0]]) * screen.get("thickness", 0.15) / 2
-        ring = [list(p) for p in path + normals] + [list(p) for p in (path - normals)[::-1]]
-        out.append(Prim(screen["tag"], info, STAGE_TOP, (path[:, 0].mean(), path[:, 1].mean()), _prism([ring], screen["base"], screen["top"], "wall"), merge=True))
-
-    for service in g.get("services", ()):
-        info = _item(service["tag"], service["guid"], "services", service["class"], model, ("services",), (service["kind"], service.get("system", "")))
-        out.extend(_service_prims(service, info, z_under, z_first))
-    return out
 
 
 class _Selection(_c.Selection):
@@ -582,87 +341,69 @@ def _lift(prim, zb: float, factor: float):
     faces = []
     for face in prim.faces:
         if face[0] == "poly":
-            faces.append(("poly", [np.column_stack([ring[:, :2], z(ring[:, 2])]) for ring in face[1]], face[2], face[3]))
+            normal = None if face[2] is None else np.asarray(face[2])*np.array([factor,factor,1.])
+            if normal is not None:
+                length = np.linalg.norm(normal)
+                normal = normal/length if length > 1e-12 else face[2]
+            rings = [np.asarray(points, float) for points in face[1]]
+            faces.append(("poly",[np.column_stack([ring[:,:2],z(ring[:,2])]) for ring in rings],normal,face[3]))
         elif face[0] == "cyl":
             x, y, z0, z1, r = face[1]
             faces.append(("cyl", (x, y, z(z0), z(z1), r), None, face[3]))
         elif face[0] == "line":
-            faces.append(("line", np.column_stack([face[1][:, :2], z(face[1][:, 2])]), *face[2:]))
+            points = np.asarray(face[1], float)
+            faces.append(("line", np.column_stack([points[:, :2], z(points[:, 2])]), *face[2:]))
         else:
             faces.append(("segs", [((a[0], a[1], z(a[2])), (b[0], b[1], z(b[2]))) for a, b in face[1]], *face[2:]))
     return Prim(prim.tag, prim.item, prim.stage, prim.foot, faces, merge=prim.merge, alias=prim.alias, sub=prim.sub, z=prim.z, base=prim.base)
 
 
 def _wall_pieces(g, model, wall, e: float, o: float, w: float) -> list:
-    """🧱 One wall as a solid with its ribbon opening: ``extrude`` raises it from the footprint, ``opening`` cuts the void and lifts the void block out, ``window`` slides the glass into the hole."""
-    opening = wall["openings"][0]
+    """🧱 Animate every authored cut and filling independently from a wall's footprint."""
     origin, along, normal, length = _wall_corners(wall, g)
-    out = -normal
-    th, zb = wall["thickness"], wall["base"]
-    zt = zb + e * (wall["top"] - zb)
-    s0, s1 = opening["start"], opening["end"]
-    zs, zh = zb + e * (opening["sill_z"] - zb), zb + e * (opening["head_z"] - zb)
-    hole = o > 0.001 and e > 0.02
+    base, thickness = wall["base"], wall["thickness"]
+    mid = origin + along * length / 2 + normal * thickness / 2
+    info = _item(wall["tag"], wall["guid"], "walls", "IfcWall", model, ("architecture",))
+    pieces = [Prim(wall["tag"], info, STAGE_WALLS, mid, faces) for _, faces in _wall_solids(wall, g, extrude=e, cut=o > 0.001 and e > 0.02)]
 
-    def at(s, t, z):
-        p = origin + along * s + normal * t
-        return (p[0], p[1], z)
+    def at(s, t, z, shift):
+        p = origin + along * s + normal * t - normal * shift
+        return (p[0], p[1], base + e * (z - base))
 
-    def rect(t, a, b, za, zb_):
-        return [at(a, t, za), at(b, t, za), at(b, t, zb_), at(a, t, zb_)]
-
-    out_n, in_n = (out[0], out[1], 0.0), (normal[0], normal[1], 0.0)
-    along_n = (along[0], along[1], 0.0)
-    faces = [_poly([rect(0, 0, length, zb, zt)] + ([rect(0, s0, s1, zs, zh)] if hole else []), out_n, "wall"),
-             _poly([rect(th, 0, length, zb, zt)] + ([rect(th, s0, s1, zs, zh)] if hole else []), in_n, "wall"),
-             _poly([[at(0, 0, zt), at(length, 0, zt), at(length, th, zt), at(0, th, zt)]], UP, "wall"),
-             _poly([[at(0, 0, zb), at(0, th, zb), at(0, th, zt), at(0, 0, zt)]], (-along[0], -along[1], 0.0), "wall"),
-             _poly([[at(length, 0, zb), at(length, th, zb), at(length, th, zt), at(length, 0, zt)]], along_n, "wall")]
-    if hole:
-        faces += [_poly([[at(s0, 0, zs), at(s1, 0, zs), at(s1, th, zs), at(s0, th, zs)]], UP, "wall"),
-                  _poly([[at(s0, 0, zh), at(s1, 0, zh), at(s1, th, zh), at(s0, th, zh)]], -UP, "wall"),
-                  _poly([[at(s0, 0, zs), at(s0, th, zs), at(s0, th, zh), at(s0, 0, zh)]], along_n, "wall"),
-                  _poly([[at(s1, 0, zs), at(s1, th, zs), at(s1, th, zh), at(s1, 0, zh)]], (-along[0], -along[1], 0.0), "wall")]
-    mid = origin + along * length / 2
-    foot = (mid[0], mid[1])
-    wall_item = _item(wall["tag"], wall["guid"], "walls", "IfcWall", model, ("architecture",))
-    pieces = [Prim(wall["tag"], wall_item, STAGE_WALLS, foot, faces)]
-    lift = out * (o * REACH)
-    block = [(*(np.array(at(s, t, z)[:2]) + lift), z) for z in (zs, zh) for s, t in ((s0, -0.03), (s1, -0.03), (s1, th + 0.03), (s0, th + 0.03))]
-    void_item = _item(opening["tag"], opening["guid"], "openings", "IfcOpeningElement", model, ("architecture",))
-    pieces.append(Prim(opening["tag"], void_item, STAGE_WALLS, foot, _solid(block, "void"), sub=1))
-    shift = out * ((1.0 - w) * REACH)
-    quad = [(*(np.array(at(s, th / 2, z)[:2]) + shift), z) for s, z in ((s0, zs), (s1, zs), (s1, zh), (s0, zh))]
-    panes = max(2, round((s1 - s0) / 2.0))
-    mullions = [((*(np.array(at(s0 + (s1 - s0) * k / panes, th / 2, 0)[:2]) + shift), zs), (*(np.array(at(s0 + (s1 - s0) * k / panes, th / 2, 0)[:2]) + shift), zh)) for k in range(1, panes)]
-    glass_item = _item(opening["window_tag"], opening["window_guid"], "windows", "IfcWindow", model, ("architecture",), (opening["tag"], opening["guid"]))
-    glass = [_poly([quad], None, "glass"), ("line", np.array(quad + [quad[0]], float), 1.1, "frame", None), ("segs", mullions, 0.8, "frame")]
-    pieces.append(Prim(opening["window_tag"], glass_item, STAGE_WALLS, foot, glass, sub=2))
-    ring = [at(0, 0, zb), at(length, 0, zb), at(length, th, zb), at(0, th, zb)]
-    pieces.append(Prim("footprint", _item("footprint", "footprint", "footprints", "IfcWall", model, ("architecture",)), STAGE_PLANE, foot,
+    for opening in wall.get("openings", ()):
+        a, b, c, d = (opening[key] for key in ("start", "end", "sill_z", "head_z"))
+        if o > 0.001 and e > 0.02:
+            vertices = [at(s, t, z, o * REACH) for z in (c, d) for s, t in ((a, -0.03), (b, -0.03), (b, thickness + 0.03), (a, thickness + 0.03))]
+            info = _item(opening["tag"], opening["guid"], "openings", "IfcOpeningElement", model, ("architecture",))
+            pieces.append(Prim(opening["tag"], info, STAGE_WALLS, mid, _solid(vertices, "void"), sub=1))
+        tag, guid, cls = opening.get("fill_tag"), opening.get("fill_guid"), opening.get("fill_class")
+        if not tag:
+            continue
+        info = _item(tag, guid, "doors" if cls == "IfcDoor" else "windows", cls, model, ("architecture",), (opening["tag"], opening["guid"]))
+        filling = next(f for f in g["fillings"] if f["tag"]==tag)
+        faces = []
+        for part in filling["parts"]:
+            ring = [np.asarray(p)-normal*((1-w)*REACH) for p in part["outline"]]
+            faces.extend(_box(ring,base+e*(part["z0"]-base),base+e*(part["z1"]-base),"glass" if part["role"]=="glass" else "frame"))
+        pieces.append(Prim(tag, info, STAGE_WALLS, mid, faces, sub=2))
+    ring = [at(s, t, base, 0) for s, t in ((0, 0), (length, 0), (length, thickness), (0, thickness))]
+    pieces.append(Prim("footprint", _item("footprint", "footprint", "footprints", "IfcWall", model, ("architecture",)), STAGE_PLANE, mid,
                        [("line", np.array(ring + [ring[0]], float), 1.4, "foot", 0.1)], sub=-1))
     return pieces
 
 
 def _slab_pieces(g, model, slab, e: float, o: float) -> list:
-    """🧱 A slab as one plate, or the roof as its build-up of layers that spread apart with ``opening``."""
-    disc = ("architecture", "structure")
-    info = _item(slab["tag"], slab["guid"], "slabs", "IfcSlab", model, disc)
-    z0 = slab["top"] - slab["thickness"]
-    rings = [slab["outline"]] + [list(v) for v in slab["voids"]]
-    layers = slab.get("layers")
-    if not layers:
-        return [Prim(slab["tag"], info, STAGE_ROOF, (0, 0), _prism(rings, z0, z0 + slab["thickness"] * e, "slab"))]
-    solarium = (slab.get("zones") or {}).get("solarium")
-    out, z = [], z0
-    for index, layer in enumerate(layers):
-        zones = set(layer.get("zones", ()))
-        chosen = rings if (len(zones) > 1 or not solarium) else rings + [list(solarium)] if "planted" in zones else [list(solarium)]
-        thickness = layer["thickness"] * e
-        item = _item(slab["tag"], slab["guid"], "slabs", "IfcSlab", model, disc, (layer["id"],))
-        out.append(Prim(layer["id"], item, STAGE_ROOF, (0, 0), _prism(chosen, z, z + thickness, "slab"), alias=(slab["tag"],), sub=index, base=_c.layer_color(layer["id"])))
-        z += thickness + o * LAYER_GAP
-    return out
+    """🧱 Keep measured structural depths and level roof finishes when exploded."""
+    info = _item(slab["tag"], slab["guid"], "slabs", "IfcSlab", model, ("architecture", "structure"))
+    pieces = []
+    for part in slab["parts"]:
+        z0, z1 = part["z0"], part["z0"] + e * (part["z1"] - part["z0"])
+        pieces.append(Prim(slab["tag"], info, STAGE_ROOF, (0, 0), _prism([part["outline"]], z0, z1, "slab"), alias=("structural",)))
+    for part in slab.get("finish_parts", ()):
+        base = min(p["z0"] for p in slab["parts"])
+        z0, z1 = (base + e * (part[key] - base) + o * LAYER_GAP for key in ("z0", "z1"))
+        pieces.append(Prim(part["layer"], info, STAGE_ROOF, (0, 0), _prism([part["outline"]], z0, z1, "paving"), alias=(slab["tag"],), sub=1))
+    return pieces
 
 
 class Axon:
@@ -670,8 +411,8 @@ class Axon:
 
     def axon_view(self, point=(0, 0, 0), scale: float = 0.26, *, model=None, view: str = "sw") -> AxonView:
         """🔭 The projection every axonometric widget shares; ``point`` is the screen position of the box centre."""
-        box = _c.geometry(model)["box"]
-        return AxonView(point, scale, (box["length"] / 2, box["width"] / 2, box["height"] / 2), VIEWS[view])
+        low, high = _bounds(prims(model))
+        return AxonView(point, scale, (low + high) / 2, VIEWS[view])
 
     def axon_point(self, x, y, z, point=(0, 0, 0), scale: float = 0.26, *, discipline=None, explode: float = 0.0, model=None, view: str = "sw"):
         """📍 Screen position of a model coordinate in ``villa_axon`` with the same ``point`` (box centre), ``scale`` and ``explode``; ``discipline`` adds that layer's lift.
@@ -690,7 +431,7 @@ class Axon:
         ``disciplines`` selects partial models; ``colors`` is ``"material"`` (white box, green ground floor) or ``"discipline"`` (default when fewer than three disciplines or exploded).
         ``explode`` lifts architecture by ``explode × 8 m`` and lowers services by the same, each shared element is drawn once per layer. ``shell`` is the opacity of everything that is not a piloti
         (automatic 0.22 when pilotis are highlighted or ghosted, so every piloti shows through; 0.55 for the structure layer of partial or exploded drawings). ``view`` is ``"sw"`` (default), ``"se"``, ``"ne"`` or ``"nw"``.
-        Visible without ``shell``: pilotis A1–A5 and the lower 2 m of B1–E1; with it all 25. Returns an ``AxonDrawing`` with ``parts[tag]``, ``layers[discipline]``, ``layer_parts``, ``at(...)``."""
+        Occlusion follows the authored solids; ``shell`` reveals internal supports and circulation. Returns an ``AxonDrawing`` with ``parts[tag]``, ``layers[discipline]``, ``layer_parts``, ``at(...)``."""
         g = _c.geometry(model)
         projection = self.axon_view(point, scale, model=model, view=view)
         selection = _Selection(highlight, ghost, dim)
@@ -724,9 +465,11 @@ class Axon:
         entries.sort(key=lambda row: row[:6])
         if ground is None:
             ground = not discipline_mode
-        if ground:
-            self._ground(drawing, g, projection)
-        for _, _, _, _, _, _, prim, layer, present in entries:
+        ground_index = _ground_index(entries) if ground else -1
+        for entry_index, entry in enumerate(entries):
+            if entry_index == ground_index:
+                self._ground(drawing, g, projection)
+            _, _, _, _, _, _, prim, layer, present = entry
             group = painter.render(prim, layer, lifts[layer] if layered else 0.0)
             if not len(group.submobjects):
                 continue
@@ -736,12 +479,16 @@ class Axon:
                 drawing.layer_part(name, prim.tag, group)
             for tag in (prim.tag, *prim.alias):
                 drawing.part(tag, group)
-        for prim in pieces:
-            if prim.item["kind"] == "pilotis":
-                x, y, z0, z1, _ = prim.faces[0][1]
-                layer = next((name for name in PRIMARY if name in prim.item["disciplines"] and name in disciplines), None)
-                if layer:
-                    drawing.anchors[prim.tag] = P(projection(x, y, (z0 + z1) / 2 + (lifts[layer] if layered else 0.0)))
+        if ground_index == len(entries):
+            self._ground(drawing, g, projection)
+        for tag in {p.tag for p in pieces if p.item["kind"] == "pilotis"}:
+            members = [p for p in pieces if p.tag == tag]
+            layer = next((name for name in PRIMARY if name in members[0].item["disciplines"] and name in disciplines), None)
+            if layer:
+                low, high = _bounds(members)
+                centre = (low + high) / 2
+                centre[2] += lifts[layer] if layered else 0.0
+                drawing.anchors[tag] = P(projection(*centre))
         if grid:
             drawing.grid = self._axon_grid(projection, g)
             drawing.add(drawing.grid)
@@ -755,12 +502,12 @@ class Axon:
         """🧱 One isolated element at its model coordinates with live parameters; ``point`` is the screen position of the centre of its bounding box.
 
         Walls (``"W-S"``, or the tag of its opening ``"OP-S"`` / window ``"RW-S"``): ``extrude`` raises the solid from its dashed footprint, ``opening`` cuts the ribbon void and lifts the translucent void block out
-        of the wall, ``window`` slides the glass into the hole. Pilotis: ``extrude`` is the height. Slabs: ``extrude`` is the thickness, ``opening`` spreads the roof build-up layers apart (``parts["soil"]`` …).
+        of the wall, ``window`` slides the glass into the hole. Pilotis: ``extrude`` is the height. Slabs: ``extrude`` is the thickness, ``opening`` spreads the roof build-up layers apart (``parts["paving"]`` …).
         Any other tag (``"RM-1"``, ``"CW-1"``, ``"SC-1"``, services): its pieces as in ``villa_axon`` with heights scaled by ``extrude``. ``colors`` is ``"discipline"`` (default) or ``"material"``.
         Returns an ``AxonDrawing`` with ``parts[tag]`` (and ``parts["wall"]``, ``["void"]``, ``["glass"]``, ``["footprint"]`` for walls) and ``at(x, y, z)`` in model metres."""
         g = _c.geometry(model)
         e, o, w = (min(max(float(v), 0.0), 1.0) for v in (extrude, opening, window))
-        wall = next((x for x in g["walls"] if tag in (x["tag"], *(y for op in x.get("openings", ()) for y in (op["tag"], op["window_tag"])))), None)
+        wall = next((x for x in g["walls"] if tag in (x["tag"], *(y for op in x.get("openings", ()) for y in (op["tag"], op.get("fill_tag"))))), None)
         slab = next((x for x in g["slabs"] if x["tag"] == tag), None)
         if wall:
             pieces = _wall_pieces(g, model, wall, e, o, w)
@@ -774,9 +521,14 @@ class Axon:
             pieces = [_lift(p, zb, max(e, 1e-3)) for p in pieces]
             pilotis = [p for p in pieces if p.item["kind"] == "pilotis"]
             for p in pilotis:
-                x, y, z0, z1, r = p.faces[0][1]
-                ring = [(x + r * math.cos(t), y + r * math.sin(t), z0) for t in np.linspace(0, 2 * math.pi, 25)]
-                pieces.append(Prim("footprint", _item("footprint", "footprint", "footprints", "IfcColumn", model, ("structure",)), STAGE_PLANE, (x, y), [("line", np.array(ring, float), 1.4, "foot", 0.08)], sub=-1))
+                low, high = _bounds([p])
+                if p.faces[0][0] == "cyl":
+                    x, y, z0, z1, r = p.faces[0][1]
+                    ring = [(x + r * math.cos(t), y + r * math.sin(t), z0) for t in np.linspace(0, 2 * math.pi, 73)]
+                else:
+                    top = next(face for face in p.faces if face[0] == "poly" and face[2] is not None and face[2][2] > .9)
+                    ring = [(v[0], v[1], low[2]) for v in top[1][0]]
+                pieces.append(Prim("footprint", _item("footprint", "footprint", "footprints", "IfcColumn", model, ("structure",)), STAGE_PLANE, tuple((low[:2] + high[:2]) / 2), [("line", np.array(ring + [ring[0]], float), 1.4, "foot", 0.08)], sub=-1))
         low, high = _bounds(pieces)
         projection = AxonView(point, scale, (low + high) / 2, VIEWS[view])
         selection = _Selection(highlight, (), dim)
@@ -798,8 +550,10 @@ class Axon:
             for name in (prim.tag, *prim.alias):
                 drawing.part(name, group)
         if wall:
-            drawing.parts.update({"wall": drawing.parts[wall["tag"]], "void": drawing.parts[wall["openings"][0]["tag"]], "glass": drawing.parts[wall["openings"][0]["window_tag"]],
-                                  "footprint": drawing.parts["footprint"]})
+            drawing.parts["wall"] = drawing.parts.get(wall["tag"], _engine.VGroup())
+            for alias, key in (("void", "tag"), ("glass", "fill_tag")):
+                group = _engine.VGroup(*(drawing.parts[op[key]] for op in wall.get("openings", ()) if op.get(key) in drawing.parts))
+                drawing.parts[alias] = group
         return drawing
 
     def _ground(self, drawing, g, view):
@@ -849,3 +603,4 @@ class Axon:
         """⭕ Grid bubble with its label."""
         ring = _engine.Circle(radius=0.12, stroke_color=_d.MUTED, stroke_width=1.2).move_to(centre)
         return _engine.VGroup(ring, self.text(label, centre, size=_d.S_SMALL, color=_d.INK))
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             

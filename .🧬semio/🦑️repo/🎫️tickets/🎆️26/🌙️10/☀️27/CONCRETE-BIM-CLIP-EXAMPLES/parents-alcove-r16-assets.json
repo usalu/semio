@@ -1,0 +1,1651 @@
+{
+  "remove_elements": [
+    "W-PRIVATE-14.2",
+    "OP-D-BATH-14.2",
+    "D-BATH-14.2",
+    "W-PRIVATE-16.3",
+    "OP-D-BATH-16.3",
+    "D-BATH-16.3",
+    "OP-D-PARENT-BATH",
+    "D-PARENT-BATH",
+    "W-PARENTS",
+    "W-PARENTS-RETURN",
+    "W-PARENT-BATH-N",
+    "W-PARENTS-SOUTH"
+  ],
+  "remove_relations": [
+    "REL-VOID-OP-D-BATH-14.2",
+    "REL-FILL-OP-D-BATH-14.2",
+    "REL-VOID-OP-D-BATH-16.3",
+    "REL-FILL-OP-D-BATH-16.3",
+    "REL-VOID-OP-D-PARENT-BATH",
+    "REL-FILL-OP-D-PARENT-BATH"
+  ],
+  "elements": [
+    {
+      "guid": "1y2fOkm_TIKuZQs9Ew7cBb",
+      "tag": "W-PRIVATE",
+      "class": "IfcWall",
+      "predefined_type": "STANDARD",
+      "name": {
+        "en": "Bedroom corridor partition",
+        "de": "Schlafzimmer-Flur-Trennwand"
+      },
+      "storey": "first",
+      "material": "LS-PARTITION-08",
+      "geometry": {
+        "path": [
+          [
+            3.6,
+            8.9
+          ],
+          [
+            3.6,
+            15.65
+          ]
+        ],
+        "base_level": "first",
+        "top_level": "soffit:SL-R",
+        "path_role": "partition",
+        "exterior_side": 1
+      },
+      "attributes": {
+        "thickness": {
+          "value": 0.08,
+          "unit": "m",
+          "basis": "inferred",
+          "source": "CMN2021-thin-partition-trace"
+        }
+      },
+      "psets": {
+        "Pset_WallCommon": {
+          "LoadBearing": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          },
+          "IsExternal": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      },
+      "type": "TY-PARTITION-08"
+    },
+    {
+      "guid": "3dbp073QTOmOfM86os6zoB",
+      "tag": "OP-D-SON",
+      "class": "IfcOpeningElement",
+      "predefined_type": "OPENING",
+      "name": {
+        "en": "Door opening",
+        "de": "Türöffnung"
+      },
+      "storey": "first",
+      "geometry": {
+        "wall": "W-SON-ENTRY"
+      },
+      "attributes": {
+        "start": {
+          "value": 0,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "end": {
+          "value": 0.9,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "sill": {
+          "value": 0,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "head": {
+          "value": 2.1,
+          "unit": "m",
+          "basis": "assumed"
+        }
+      },
+      "psets": {},
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      }
+    },
+    {
+      "guid": "0_25Q6eOHQzBwHxnD7RKL2",
+      "tag": "W-SHARED-BATH-S",
+      "class": "IfcWall",
+      "predefined_type": "STANDARD",
+      "name": {
+        "en": "Private room partition",
+        "de": "Privatraum-Trennwand"
+      },
+      "storey": "first",
+      "material": "LS-PARTITION-08",
+      "geometry": {
+        "path": [
+          [
+            0.3,
+            14.1
+          ],
+          [
+            3.6,
+            14.1
+          ]
+        ],
+        "base_level": "first",
+        "top_level": "soffit:SL-R",
+        "path_role": "partition",
+        "exterior_side": 1
+      },
+      "attributes": {
+        "thickness": {
+          "value": 0.08,
+          "unit": "m",
+          "basis": "inferred",
+          "source": "CMN2021-thin-partition-trace"
+        }
+      },
+      "psets": {
+        "Pset_WallCommon": {
+          "LoadBearing": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          },
+          "IsExternal": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      },
+      "type": "TY-PARTITION-08"
+    },
+    {
+      "guid": "3MTNiYChzRegugzy4vYhE4",
+      "tag": "OP-D-SHARED-BATH-GUEST",
+      "class": "IfcOpeningElement",
+      "predefined_type": "OPENING",
+      "name": {
+        "en": "Door opening",
+        "de": "Türöffnung"
+      },
+      "storey": "first",
+      "geometry": {
+        "wall": "W-SHARED-BATH-S"
+      },
+      "attributes": {
+        "start": {
+          "value": 2.3,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "end": {
+          "value": 3.15,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "sill": {
+          "value": 0,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "head": {
+          "value": 2.1,
+          "unit": "m",
+          "basis": "assumed"
+        }
+      },
+      "psets": {},
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      }
+    },
+    {
+      "guid": "2xTJH$x_fUsxxyB14veLjI",
+      "tag": "D-SHARED-BATH-GUEST",
+      "class": "IfcDoor",
+      "predefined_type": "DOOR",
+      "name": {
+        "en": "Door",
+        "de": "Tür"
+      },
+      "storey": "first",
+      "material": "MAT-RENDERED",
+      "geometry": {
+        "opening": "OP-D-SHARED-BATH-GUEST"
+      },
+      "attributes": {},
+      "psets": {},
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      }
+    },
+    {
+      "guid": "1iMfWmQk9SHOHRxsoDJIQp",
+      "tag": "W-SHARED-BATH-N",
+      "class": "IfcWall",
+      "predefined_type": "STANDARD",
+      "name": {
+        "en": "Private room partition",
+        "de": "Privatraum-Trennwand"
+      },
+      "storey": "first",
+      "material": "LS-PARTITION-08",
+      "geometry": {
+        "path": [
+          [
+            0.3,
+            15.65
+          ],
+          [
+            3.6,
+            15.65
+          ]
+        ],
+        "base_level": "first",
+        "top_level": "soffit:SL-R",
+        "path_role": "partition",
+        "exterior_side": 1
+      },
+      "attributes": {
+        "thickness": {
+          "value": 0.08,
+          "unit": "m",
+          "basis": "inferred",
+          "source": "CMN2021-thin-partition-trace"
+        }
+      },
+      "psets": {
+        "Pset_WallCommon": {
+          "LoadBearing": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          },
+          "IsExternal": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      },
+      "type": "TY-PARTITION-08"
+    },
+    {
+      "guid": "2ty_rgnLbO58k$6rvRTGnE",
+      "tag": "OP-D-SHARED-BATH-SON",
+      "class": "IfcOpeningElement",
+      "predefined_type": "OPENING",
+      "name": {
+        "en": "Door opening",
+        "de": "Türöffnung"
+      },
+      "storey": "first",
+      "geometry": {
+        "wall": "W-SHARED-BATH-N"
+      },
+      "attributes": {
+        "start": {
+          "value": 2.3,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "end": {
+          "value": 3.15,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "sill": {
+          "value": 0,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "head": {
+          "value": 2.1,
+          "unit": "m",
+          "basis": "assumed"
+        }
+      },
+      "psets": {},
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      }
+    },
+    {
+      "guid": "1e$EsaTGHUAxfdIm7l6bXu",
+      "tag": "D-SHARED-BATH-SON",
+      "class": "IfcDoor",
+      "predefined_type": "DOOR",
+      "name": {
+        "en": "Door",
+        "de": "Tür"
+      },
+      "storey": "first",
+      "material": "MAT-RENDERED",
+      "geometry": {
+        "opening": "OP-D-SHARED-BATH-SON"
+      },
+      "attributes": {},
+      "psets": {},
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      }
+    },
+    {
+      "guid": "1K6CrjDb1VNOthtVX$vz7x",
+      "tag": "W-PARENT-BATH",
+      "class": "IfcWall",
+      "predefined_type": "STANDARD",
+      "name": {
+        "en": "Parents bath corridor wall",
+        "de": "Elternbad-Flurwand"
+      },
+      "storey": "first",
+      "material": "LS-PARTITION-08",
+      "geometry": {
+        "path": [
+          [
+            6.8,
+            11.8
+          ],
+          [
+            6.8,
+            17.277
+          ]
+        ],
+        "base_level": "first",
+        "top_level": "soffit:SL-R",
+        "path_role": "partition",
+        "exterior_side": 1
+      },
+      "attributes": {
+        "thickness": {
+          "value": 0.08,
+          "unit": "m",
+          "basis": "inferred",
+          "source": "CMN2021-thin-partition-trace"
+        }
+      },
+      "psets": {
+        "Pset_WallCommon": {
+          "LoadBearing": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          },
+          "IsExternal": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      },
+      "type": "TY-PARTITION-08"
+    },
+    {
+      "guid": "3kJaWjf$bGmQiFQIH1SSE9",
+      "tag": "W-SUITE-ENTRY",
+      "class": "IfcWall",
+      "predefined_type": "STANDARD",
+      "name": {
+        "en": "Parents bedroom partition",
+        "de": "Elternschlafzimmer-Trennwand"
+      },
+      "storey": "first",
+      "material": "LS-PARTITION-08",
+      "geometry": {
+        "path": [
+          [
+            6.8,
+            11.7
+          ],
+          [
+            8.1,
+            11.7
+          ]
+        ],
+        "base_level": "first",
+        "top_level": "soffit:SL-R",
+        "path_role": "partition",
+        "exterior_side": 1
+      },
+      "attributes": {
+        "thickness": {
+          "value": 0.08,
+          "unit": "m",
+          "basis": "inferred",
+          "source": "CMN2021-thin-partition-trace"
+        }
+      },
+      "psets": {
+        "Pset_WallCommon": {
+          "LoadBearing": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          },
+          "IsExternal": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      },
+      "type": "TY-PARTITION-08"
+    },
+    {
+      "guid": "06zLuZVCfTWB0lxqD$vXTp",
+      "tag": "OP-D-PARENTS",
+      "class": "IfcOpeningElement",
+      "predefined_type": "OPENING",
+      "name": {
+        "en": "Door opening",
+        "de": "Türöffnung"
+      },
+      "storey": "first",
+      "geometry": {
+        "wall": "W-SUITE-ENTRY"
+      },
+      "attributes": {
+        "start": {
+          "value": 0.2,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "end": {
+          "value": 1.1,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "sill": {
+          "value": 0,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "head": {
+          "value": 2.1,
+          "unit": "m",
+          "basis": "assumed"
+        }
+      },
+      "psets": {},
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      }
+    },
+    {
+      "guid": "1WpJUfDbjSIOmLbF3J1VaO",
+      "tag": "W-PARENT-BATH-S",
+      "class": "IfcWall",
+      "predefined_type": "STANDARD",
+      "name": {
+        "en": "Parents bathroom lower boundary",
+        "de": "Unterer Elternbadabschluss"
+      },
+      "storey": "first",
+      "material": "LS-PARTITION-08",
+      "geometry": {
+        "path": [
+          [
+            4.5,
+            11.8
+          ],
+          [
+            6.8,
+            11.8
+          ]
+        ],
+        "base_level": "first",
+        "top_level": "soffit:SL-R",
+        "path_role": "partition",
+        "exterior_side": 1
+      },
+      "attributes": {
+        "thickness": {
+          "value": 0.08,
+          "unit": "m",
+          "basis": "inferred",
+          "source": "CMN2021-thin-partition-trace"
+        }
+      },
+      "psets": {
+        "Pset_WallCommon": {
+          "LoadBearing": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          },
+          "IsExternal": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      },
+      "type": "TY-PARTITION-08"
+    },
+    {
+      "guid": "2CsmdKJnfNYh28w4SRyMw3",
+      "tag": "FIX-DRESSING-STORAGE",
+      "class": "IfcFurnishingElement",
+      "predefined_type": "USERDEFINED",
+      "name": {
+        "en": "Parents dressing sliding cupboards",
+        "de": "Schiebeschränke der Elternankleide"
+      },
+      "storey": "first",
+      "material": "MAT-RENDERED",
+      "geometry": {
+        "kind": "storage",
+        "parts": [
+          {
+            "outline": [
+              [
+                7.65,
+                12.3
+              ],
+              [
+                7.99,
+                12.3
+              ],
+              [
+                7.99,
+                15.5
+              ],
+              [
+                7.65,
+                15.5
+              ]
+            ],
+            "z0": 0,
+            "z1": 1.85
+          }
+        ],
+        "base_level": "first"
+      },
+      "attributes": {},
+      "psets": {
+        "ArchitecturalEvidence": {
+          "Reference": {
+            "value": "CMN dossier p9: parents dressing passage cupboards",
+            "ifc_type": "IfcText",
+            "basis": "sourced",
+            "source": "https://www.villa-savoye.fr/content/download/9824393/file/document-visite-villa-savoye-FR-2021.pdf?inLanguage=fre-FR&version=3"
+          },
+          "Geometry": {
+            "value": "Source-informed built-in form; metric coordinates and dimensions inferred for teaching.",
+            "ifc_type": "IfcText",
+            "basis": "assumed"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 7,
+        "domains": [
+          "architecture"
+        ]
+      }
+    },
+    {
+      "guid": "3SWeyTCR5MkxMLvqvN8K5j",
+      "tag": "FIX-SHARED-BATH",
+      "class": "IfcFurnishingElement",
+      "predefined_type": "USERDEFINED",
+      "name": {
+        "en": "Shared bathroom hollow bath",
+        "de": "Hohle Wanne im gemeinsamen Bad"
+      },
+      "storey": "first",
+      "material": "MAT-RENDERED",
+      "geometry": {
+        "kind": "bath",
+        "parts": [
+          {
+            "outline": [
+              [
+                0.55,
+                14.200000000000001
+              ],
+              [
+                1.35,
+                14.200000000000001
+              ],
+              [
+                1.35,
+                15.6
+              ],
+              [
+                0.55,
+                15.6
+              ]
+            ],
+            "z0": 0,
+            "z1": 0.08000000000000007
+          },
+          {
+            "outline": [
+              [
+                0.55,
+                14.200000000000001
+              ],
+              [
+                1.35,
+                14.200000000000001
+              ],
+              [
+                1.35,
+                14.3
+              ],
+              [
+                0.55,
+                14.3
+              ]
+            ],
+            "z0": 0.08000000000000007,
+            "z1": 0.5499999999999998
+          },
+          {
+            "outline": [
+              [
+                0.55,
+                15.5
+              ],
+              [
+                1.35,
+                15.5
+              ],
+              [
+                1.35,
+                15.6
+              ],
+              [
+                0.55,
+                15.6
+              ]
+            ],
+            "z0": 0.08000000000000007,
+            "z1": 0.5499999999999998
+          },
+          {
+            "outline": [
+              [
+                0.55,
+                14.3
+              ],
+              [
+                0.65,
+                14.3
+              ],
+              [
+                0.65,
+                15.5
+              ],
+              [
+                0.55,
+                15.5
+              ]
+            ],
+            "z0": 0.08000000000000007,
+            "z1": 0.5499999999999998
+          },
+          {
+            "outline": [
+              [
+                1.25,
+                14.3
+              ],
+              [
+                1.35,
+                14.3
+              ],
+              [
+                1.35,
+                15.5
+              ],
+              [
+                1.25,
+                15.5
+              ]
+            ],
+            "z0": 0.08000000000000007,
+            "z1": 0.5499999999999998
+          }
+        ],
+        "base_level": "first"
+      },
+      "attributes": {},
+      "psets": {
+        "ArchitecturalEvidence": {
+          "Reference": {
+            "value": "CMN §14 and bathroom plan symbol",
+            "ifc_type": "IfcText",
+            "basis": "sourced",
+            "source": "https://www.villa-savoye.fr/content/download/9824393/file/document-visite-villa-savoye-FR-2021.pdf?inLanguage=fre-FR&version=3"
+          },
+          "Geometry": {
+            "value": "Source-informed built-in form; metric coordinates and dimensions inferred for teaching.",
+            "ifc_type": "IfcText",
+            "basis": "assumed"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 7,
+        "domains": [
+          "architecture"
+        ]
+      }
+    },
+    {
+      "guid": "1MBWiMxdfNMw0bBqP1MR9w",
+      "tag": "32-FIRST",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {
+        "en": "Archive column 32 upper",
+        "de": "Archivstütze 32 Obergeschoss"
+      },
+      "storey": "first",
+      "type": "TY-CIRC22",
+      "geometry": {
+        "axis": [
+          4.75,
+          20.25
+        ],
+        "base_level": 3.14,
+        "top_level": 6.34
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_ColumnCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "CSIC2022-register-r9"
+          },
+          "IsExternal": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "CSIC2022-register-r9"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchiveId": {
+            "value": "32",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9"
+          },
+          "CoordinateStatus": {
+            "value": "grid-anchor",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "CSIC2022-register-r9"
+          },
+          "GroundPier": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "CSIC2022-register-r9"
+          },
+          "ExtentStatus": {
+            "value": "first structural floor to roof structure, with transfer/support exceptions",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "CSIC2022-register-r9"
+          },
+          "ProfileInterpretation": {
+            "value": "Upper circular profile confirmed by Savoye as Built p110/p124 and Columbia2003 photographic record; ground profile unchanged",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-Built-110-124-Columbia2003"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "2Y9L9QhFvRYAl1ksdzISlL",
+      "tag": "W-SON-PRIVATE",
+      "class": "IfcWall",
+      "predefined_type": "STANDARD",
+      "name": {
+        "en": "Son bedroom public-hall boundary",
+        "de": "Sohnzimmer-Flurgrenze"
+      },
+      "storey": "first",
+      "material": "LS-PARTITION-08",
+      "geometry": {
+        "path": [
+          [
+            4.3,
+            17.277
+          ],
+          [
+            4.3,
+            21.2
+          ]
+        ],
+        "base_level": "first",
+        "top_level": "soffit:SL-R",
+        "path_role": "partition",
+        "exterior_side": 1
+      },
+      "attributes": {
+        "thickness": {
+          "value": 0.08,
+          "unit": "m",
+          "basis": "inferred",
+          "source": "CMN2021-thin-partition-trace"
+        }
+      },
+      "psets": {
+        "Pset_WallCommon": {
+          "LoadBearing": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          },
+          "IsExternal": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      },
+      "type": "TY-PARTITION-08"
+    },
+    {
+      "guid": "1gSg61pyXQiO3MbOqtdaUB",
+      "tag": "W-PARENT-BATH-W",
+      "class": "IfcWall",
+      "predefined_type": "STANDARD",
+      "name": {
+        "en": "Parents bathroom west boundary",
+        "de": "Westlicher Elternbadabschluss"
+      },
+      "storey": "first",
+      "material": "LS-PARTITION-08",
+      "geometry": {
+        "path": [
+          [
+            4.5,
+            11.8
+          ],
+          [
+            4.5,
+            17.277
+          ]
+        ],
+        "base_level": "first",
+        "top_level": "soffit:SL-R",
+        "path_role": "partition",
+        "exterior_side": 1
+      },
+      "attributes": {
+        "thickness": {
+          "value": 0.08,
+          "unit": "m",
+          "basis": "inferred",
+          "source": "CMN2021-thin-partition-trace"
+        }
+      },
+      "psets": {
+        "Pset_WallCommon": {
+          "LoadBearing": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          },
+          "IsExternal": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      },
+      "type": "TY-PARTITION-08"
+    },
+    {
+      "guid": "2Aw3nDILbK4PRuLyAqRdMG",
+      "tag": "W-SON-ENTRY",
+      "class": "IfcWall",
+      "predefined_type": "STANDARD",
+      "name": {
+        "en": "Son bedroom entry partition",
+        "de": "Eingangstrennwand des Sohnes"
+      },
+      "storey": "first",
+      "material": "LS-PARTITION-08",
+      "geometry": {
+        "path": [
+          [
+            3.6,
+            15.65
+          ],
+          [
+            4.5,
+            15.65
+          ]
+        ],
+        "base_level": "first",
+        "top_level": "soffit:SL-R",
+        "path_role": "partition",
+        "exterior_side": 1
+      },
+      "attributes": {
+        "thickness": {
+          "value": 0.08,
+          "unit": "m",
+          "basis": "inferred",
+          "source": "CMN2021-thin-partition-trace"
+        }
+      },
+      "psets": {
+        "Pset_WallCommon": {
+          "LoadBearing": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          },
+          "IsExternal": {
+            "value": false,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      },
+      "type": "TY-PARTITION-08"
+    }
+  ],
+  "relations": [
+    {
+      "guid": "1c7LekVQDO6wQWBrIBbEig",
+      "tag": "REL-CON-first",
+      "class": "IfcRelContainedInSpatialStructure",
+      "relating": "first",
+      "related": [
+        "SL-1",
+        "RM-2",
+        "RF-2A",
+        "RF-2B",
+        "RAD-1",
+        "PS-2",
+        "PS-3",
+        "W-S",
+        "W-E",
+        "W-N",
+        "W-W",
+        "OP-S",
+        "RW-S",
+        "OP-E",
+        "RW-E",
+        "OP-N",
+        "RW-N",
+        "OP-W",
+        "RW-W",
+        "W-KITCHEN",
+        "OP-D-KITCHEN",
+        "D-KITCHEN",
+        "W-PANTRY",
+        "OP-D-PANTRY",
+        "D-PANTRY",
+        "W-SALON",
+        "OP-D-SALON",
+        "D-SALON",
+        "OP-GL-TERRACE",
+        "GL-TERRACE",
+        "W-PRIVATE",
+        "OP-D-GUEST",
+        "D-GUEST",
+        "OP-D-SON",
+        "D-SON",
+        "W-PRIVATE-8.9",
+        "W-SHARED-BATH-S",
+        "OP-D-SHARED-BATH-GUEST",
+        "D-SHARED-BATH-GUEST",
+        "W-SHARED-BATH-N",
+        "OP-D-SHARED-BATH-SON",
+        "D-SHARED-BATH-SON",
+        "W-PARENT-BATH",
+        "W-SUITE-ENTRY",
+        "OP-D-PARENTS",
+        "D-PARENTS",
+        "W-BOUDOIR",
+        "OP-D-BOUDOIR",
+        "D-BOUDOIR",
+        "W-BOUDOIR-E",
+        "W-TERRACE-RAMP",
+        "OP-GL-RAMP-GARDEN",
+        "GL-RAMP-GARDEN",
+        "ST-FR",
+        "FIX-KITCHEN",
+        "FIX-BATH",
+        "FIX-TERRACE-TABLE",
+        "FIX-BOUDOIR",
+        "GUARD-RM-2",
+        "W-PARENT-BATH-S",
+        "W-PARENTS-BOUDOIR",
+        "GL-GARAGE-1",
+        "GL-GARAGE-2",
+        "OP-SERVING-HATCH",
+        "FIX-CHAISE",
+        "FIX-GUEST-WARDROBE",
+        "FIX-GUEST-BASIN",
+        "FIX-SON-DESK",
+        "FIX-SON-STORAGE",
+        "FIX-PARENTS-STORAGE",
+        "FIX-DRESSING-STORAGE",
+        "FIX-PANTRY-STORAGE",
+        "FIX-TERRACE-PLANTER-1",
+        "FIX-TERRACE-PLANTER-2",
+        "TAP-KITCHEN",
+        "TAP-GUEST",
+        "GUARD-ST-FR",
+        "TUBE-ST-FR",
+        "FIX-SHARED-BATH",
+        "FIX-SHARED-BASIN",
+        "FIN-GUEST-PARQUET",
+        "FIN-GUEST-TILE",
+        "FIN-TERRACE-PAVING",
+        "FIN-TERRACE-GRASS",
+        "W-PANTRY-WEST",
+        "W-PANTRY-PATIO",
+        "W-PANTRY-SOUTH",
+        "OP-D-KITCHEN-PATIO",
+        "D-KITCHEN-PATIO",
+        "OP-KITCHEN-PATIO-FRAME",
+        "OP-W-UPPER",
+        "RW-W-UPPER",
+        "FIN-KITCHEN-PATIO",
+        "1-FIRST",
+        "2-FIRST",
+        "3-FIRST",
+        "4-FIRST",
+        "5-FIRST",
+        "6-FIRST",
+        "7-FIRST",
+        "10-FIRST",
+        "11-FIRST",
+        "14-FIRST",
+        "15-FIRST",
+        "16-FIRST",
+        "17-FIRST",
+        "18-FIRST",
+        "19-FIRST",
+        "20-FIRST",
+        "22-FIRST",
+        "23-FIRST",
+        "24-FIRST",
+        "25-FIRST",
+        "26-FIRST",
+        "27-FIRST",
+        "28-FIRST",
+        "29-FIRST",
+        "30-FIRST",
+        "31-FIRST",
+        "32-FIRST",
+        "33-FIRST",
+        "34",
+        "35",
+        "36",
+        "W-SON-PRIVATE",
+        "W-PARENT-BATH-W",
+        "BEAM-PRIMARY-R-1-6",
+        "BEAM-PRIMARY-R-22-29",
+        "BEAM-PRIMARY-R-5-33",
+        "BEAM-PRIMARY-R-2-7",
+        "BEAM-PRIMARY-R-3-34",
+        "BEAM-PRIMARY-R-4-10",
+        "BEAM-PRIMARY-R-34-35",
+        "BEAM-PRIMARY-R-14-26",
+        "BEAM-PRIMARY-R-20-32",
+        "BEAM-PRIMARY-R-24-30",
+        "BEAM-PRIMARY-R-28-31",
+        "BEAM-PRIMARY-R-10-11",
+        "BEAM-PRIMARY-R-6-34",
+        "BEAM-PRIMARY-R-6-22",
+        "BEAM-PRIMARY-R-10-15",
+        "BEAM-PRIMARY-R-22-36",
+        "BEAM-PRIMARY-R-FRONT",
+        "BEAM-PRIMARY-R-REAR",
+        "BEAM-PRIMARY-R-END-FRONT-2",
+        "BEAM-PRIMARY-R-END-REAR-2",
+        "BEAM-PRIMARY-R-END-FRONT-3",
+        "BEAM-PRIMARY-R-END-REAR-3",
+        "BEAM-PRIMARY-R-END-FRONT-4",
+        "BEAM-PRIMARY-R-END-REAR-4",
+        "BEAM-PRIMARY-R-RAMP-END",
+        "BEAM-PRIMARY-R-34-10",
+        "BEAM-PRIMARY-R-14-15",
+        "BEAM-PRIMARY-R-STAIR-LOW",
+        "W-SON-ENTRY"
+      ],
+      "name": {
+        "en": "Storey contains products",
+        "de": "Geschoss enthält Produkte"
+      }
+    },
+    {
+      "guid": "2Ty1frfSLJsfWxEMTuPoNr",
+      "tag": "REL-MAT-MAT-RENDERED",
+      "class": "IfcRelAssociatesMaterial",
+      "relating": "MAT-RENDERED",
+      "related": [
+        "SC-1",
+        "G-GARAGE-1",
+        "G-GARAGE-2",
+        "G-GARAGE-3",
+        "D-SERVANT-1",
+        "D-SERVANT-2",
+        "D-LAUNDRY",
+        "D-CHAUFFEUR",
+        "D-GARAGE-HALL",
+        "D-ENTRY",
+        "D-KITCHEN",
+        "D-PANTRY",
+        "D-SALON",
+        "D-GUEST",
+        "D-SON",
+        "D-SHARED-BATH-GUEST",
+        "D-SHARED-BATH-SON",
+        "D-PARENTS",
+        "D-BOUDOIR",
+        "SC-FRAME",
+        "PAR-S",
+        "PAR-N",
+        "PAR-W",
+        "PAR-E",
+        "FIX-KITCHEN",
+        "FIX-BATH",
+        "FIX-LAUNDRY",
+        "FIX-TERRACE-TABLE",
+        "FIX-BOUDOIR",
+        "FIX-HALL-BASIN",
+        "GUARD-RM-1",
+        "GUARD-RM-2",
+        "D-CHAUFFEUR-BEDROOM",
+        "D-CHAUFFEUR-BATH",
+        "FIX-CHAISE",
+        "FIX-GUEST-WARDROBE",
+        "FIX-GUEST-BASIN",
+        "FIX-SON-DESK",
+        "FIX-SON-STORAGE",
+        "FIX-PARENTS-STORAGE",
+        "FIX-DRESSING-STORAGE",
+        "FIX-PANTRY-STORAGE",
+        "FIX-SERVANT-BASIN-1",
+        "FIX-SERVANT-RADIATOR-1",
+        "FIX-SERVANT-BASIN-2",
+        "FIX-SERVANT-RADIATOR-2",
+        "FIX-HALL-TABLE-1",
+        "FIX-HALL-TABLE-2",
+        "FIX-TERRACE-PLANTER-1",
+        "FIX-TERRACE-PLANTER-2",
+        "GUARD-ST-GF",
+        "GUARD-ST-FR",
+        "FIX-SHARED-BATH",
+        "FIX-SHARED-BASIN",
+        "FIX-CHAUFFEUR-BASIN",
+        "W-G-SERVICE-ENTRY",
+        "D-SERVICE",
+        "D-KITCHEN-PATIO"
+      ],
+      "name": {
+        "en": "Material is assigned",
+        "de": "Material ist zugewiesen"
+      }
+    },
+    {
+      "guid": "2NymonBAvGoA6KEOINUEq1",
+      "tag": "REL-VOID-OP-D-SON",
+      "class": "IfcRelVoidsElement",
+      "relating": "W-SON-ENTRY",
+      "related": [
+        "OP-D-SON"
+      ],
+      "name": {
+        "en": "Host is voided by one opening",
+        "de": "Bauteil wird durch eine Öffnung durchbrochen"
+      }
+    },
+    {
+      "guid": "3VA_XGA0bVwxXD8xp6_Swp",
+      "tag": "REL-VOID-OP-D-SHARED-BATH-GUEST",
+      "class": "IfcRelVoidsElement",
+      "relating": "W-SHARED-BATH-S",
+      "related": [
+        "OP-D-SHARED-BATH-GUEST"
+      ],
+      "name": {
+        "en": "Host is voided by one opening",
+        "de": "Bauteil wird durch eine Öffnung durchbrochen"
+      }
+    },
+    {
+      "guid": "0diXUxkrfN_hQGKagfxwIT",
+      "tag": "REL-FILL-OP-D-SHARED-BATH-GUEST",
+      "class": "IfcRelFillsElement",
+      "relating": "OP-D-SHARED-BATH-GUEST",
+      "related": [
+        "D-SHARED-BATH-GUEST"
+      ],
+      "name": {
+        "en": "Filling occupies opening",
+        "de": "Füllung besetzt Öffnung"
+      }
+    },
+    {
+      "guid": "2s7NwLN_bUMwpc$5py5WwR",
+      "tag": "REL-VOID-OP-D-SHARED-BATH-SON",
+      "class": "IfcRelVoidsElement",
+      "relating": "W-SHARED-BATH-N",
+      "related": [
+        "OP-D-SHARED-BATH-SON"
+      ],
+      "name": {
+        "en": "Host is voided by one opening",
+        "de": "Bauteil wird durch eine Öffnung durchbrochen"
+      }
+    },
+    {
+      "guid": "3c9MAM87XU1fMiUFgnTcCn",
+      "tag": "REL-FILL-OP-D-SHARED-BATH-SON",
+      "class": "IfcRelFillsElement",
+      "relating": "OP-D-SHARED-BATH-SON",
+      "related": [
+        "D-SHARED-BATH-SON"
+      ],
+      "name": {
+        "en": "Filling occupies opening",
+        "de": "Füllung besetzt Öffnung"
+      }
+    },
+    {
+      "guid": "3iBLhL_HrSlu_8U5gL1yLK",
+      "tag": "REL-VOID-OP-D-PARENTS",
+      "class": "IfcRelVoidsElement",
+      "relating": "W-SUITE-ENTRY",
+      "related": [
+        "OP-D-PARENTS"
+      ],
+      "name": {
+        "en": "Host is voided by one opening",
+        "de": "Bauteil wird durch eine Öffnung durchbrochen"
+      }
+    }
+  ],
+  "spaces": [
+    {
+      "guid": "1AIGdRvgrH8Q40YY16jpgO",
+      "tag": "SP-GUEST",
+      "class": "IfcSpace",
+      "predefined_type": "INTERNAL",
+      "name": {
+        "en": "Guest bedroom and dressing area",
+        "de": "Gästezimmer mit Ankleide"
+      },
+      "storey": "first",
+      "outline": [
+        [
+          0.3,
+          8.9
+        ],
+        [
+          3.6,
+          8.9
+        ],
+        [
+          3.6,
+          14.1
+        ],
+        [
+          0.3,
+          14.1
+        ]
+      ],
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      }
+    },
+    {
+      "guid": "0d00GU561IfehopLlyYe1G",
+      "tag": "SP-SON",
+      "class": "IfcSpace",
+      "predefined_type": "INTERNAL",
+      "name": {
+        "en": "Son bedroom and study",
+        "de": "Sohnzimmer mit Arbeitsbereich"
+      },
+      "storey": "first",
+      "outline": [
+        [
+          0.3,
+          15.65
+        ],
+        [
+          4.5,
+          15.65
+        ],
+        [
+          4.5,
+          17.277
+        ],
+        [
+          4.3,
+          17.277
+        ],
+        [
+          4.3,
+          21.2
+        ],
+        [
+          0.3,
+          21.2
+        ]
+      ],
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      }
+    },
+    {
+      "guid": "25Xc04XYLVqu3DLRtbxd1_",
+      "tag": "SP-SHARED-BATH",
+      "class": "IfcSpace",
+      "predefined_type": "INTERNAL",
+      "name": {
+        "en": "Shared bathroom with two doors",
+        "de": "Gemeinsames Bad mit zwei Türen"
+      },
+      "storey": "first",
+      "outline": [
+        [
+          0.3,
+          14.1
+        ],
+        [
+          3.6,
+          14.1
+        ],
+        [
+          3.6,
+          15.65
+        ],
+        [
+          0.3,
+          15.65
+        ]
+      ],
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      }
+    },
+    {
+      "guid": "02IQrCm0vMYh4VzLsTaPFM",
+      "tag": "SP-PARENTS",
+      "class": "IfcSpace",
+      "predefined_type": "INTERNAL",
+      "name": {
+        "en": "Parents bedroom",
+        "de": "Elternschlafzimmer"
+      },
+      "storey": "first",
+      "outline": [
+        [
+          6.8,
+          11.7
+        ],
+        [
+          8.1,
+          11.7
+        ],
+        [
+          8.1,
+          15.5
+        ],
+        [
+          10.898,
+          15.5
+        ],
+        [
+          10.898,
+          21.2
+        ],
+        [
+          4.3,
+          21.2
+        ],
+        [
+          4.3,
+          17.277
+        ],
+        [
+          6.8,
+          17.277
+        ]
+      ],
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      }
+    },
+    {
+      "guid": "3dOS29CJ9M0QM8PokEqZe8",
+      "tag": "SP-PARENT-BATH",
+      "class": "IfcSpace",
+      "predefined_type": "INTERNAL",
+      "name": {
+        "en": "Parents bathroom and dressing",
+        "de": "Elternbad und Ankleide"
+      },
+      "storey": "first",
+      "outline": [
+        [
+          4.5,
+          11.8
+        ],
+        [
+          6.8,
+          11.8
+        ],
+        [
+          6.8,
+          17.277
+        ],
+        [
+          4.5,
+          17.277
+        ]
+      ],
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      }
+    },
+    {
+      "guid": "3I7dndiWXT$g8bF5EQEqsz",
+      "tag": "SP-FIRST-HALL",
+      "class": "IfcSpace",
+      "predefined_type": "INTERNAL",
+      "name": {
+        "en": "First-floor circulation",
+        "de": "Flur Obergeschoss"
+      },
+      "storey": "first",
+      "outline": [
+        [
+          3.6,
+          8.9
+        ],
+        [
+          4.8,
+          8.9
+        ],
+        [
+          4.8,
+          6.081
+        ],
+        [
+          10.898,
+          6.081
+        ],
+        [
+          10.898,
+          8
+        ],
+        [
+          8.1,
+          8
+        ],
+        [
+          8.1,
+          11.7
+        ],
+        [
+          4.5,
+          11.7
+        ],
+        [
+          4.5,
+          15.65
+        ],
+        [
+          3.6,
+          15.65
+        ]
+      ],
+      "metadata": {
+        "author": "Atelier (architecture)",
+        "revision": 2,
+        "domains": [
+          "architecture"
+        ]
+      }
+    }
+  ],
+  "requires_materials": [
+    "LS-PARTITION-08"
+  ],
+  "requires_types": [
+    "TY-PARTITION-08"
+  ]
+}

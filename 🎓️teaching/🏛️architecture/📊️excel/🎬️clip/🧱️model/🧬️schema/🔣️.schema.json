@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.local/teaching/architecture/excel/workbook.schema.json",
+  "title": "Nakagin teaching workbook",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "file", "names", "sheets"],
+  "properties": {
+    "version": {"const": 1},
+    "file": {"type": "string", "pattern": "^[A-Za-z0-9_-]+\\.xlsx$"},
+    "names": {
+      "type": "object",
+      "propertyNames": {"pattern": "^[A-Za-z_][A-Za-z0-9_.]*$"},
+      "additionalProperties": {"type": "string", "pattern": "^[^=].*![$A-Za-z0-9:]+$"}
+    },
+    "sheets": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/sheet"}}
+  },
+  "$defs": {
+    "label": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}
+    },
+    "address": {"type": "string", "pattern": "^[A-Z]{1,3}[1-9][0-9]{0,6}$"},
+    "format": {"type": "string", "minLength": 1},
+    "cell": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {"$ref": "#/$defs/label"},
+        "value": {"anyOf": [{"type": "number"}, {"type": "string"}, {"type": "boolean"}]},
+        "formula": {"type": "string", "pattern": "^=.+"},
+        "format": {"$ref": "#/$defs/format"},
+        "from": {"type": "string", "pattern": "^[a-z_]+(\\.[A-Za-z0-9_]+)+$"},
+        "basis": {"enum": ["sourced", "assumed", "derived"]},
+        "source": {"type": "string", "minLength": 1}
+      },
+      "oneOf": [{"properties": {"text": true}, "required": ["text"]}, {"properties": {"value": true}, "required": ["value"]}, {"properties": {"formula": true}, "required": ["formula"]}],
+      "dependentRequired": {"from": ["value", "basis"], "source": ["basis"]}
+    },
+    "column": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "header"],
+      "properties": {
+        "key": {"type": "string", "pattern": "^[a-z_]+$"},
+        "header": {"$ref": "#/$defs/label"},
+        "format": {"$ref": "#/$defs/format"},
+        "formula": {"type": "string", "pattern": "^=.+"},
+        "labels": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/label"}}
+      }
+    },
+    "table": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "title", "at", "columns", "rows"],
+      "properties": {
+        "title": {"$ref": "#/$defs/label"},
+        "name": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.]*$"},
+        "at": {"$ref": "#/$defs/address"},
+        "columns": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/column"}},
+        "rows": {"type": "array", "items": {"type": "array", "minItems": 1, "items": {"anyOf": [{"type": "number"}, {"type": "string"}]}}}
+      }
+    },
+    "sheet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "cells"],
+      "properties": {
+        "title": {"$ref": "#/$defs/label"},
+        "name": {"type": "string", "minLength": 1, "maxLength": 31, "pattern": "^[^\\[\\]:*?/\\\\']+$"},
+        "widths": {"type": "object", "propertyNames": {"pattern": "^[A-Z]{1,3}$"}, "additionalProperties": {"type": "number", "exclusiveMinimum": 0}},
+        "cells": {"type": "object", "propertyNames": {"pattern": "^[A-Z]{1,3}[1-9][0-9]{0,6}$"}, "additionalProperties": {"$ref": "#/$defs/cell"}},
+        "table": {"$ref": "#/$defs/table"}
+      }
+    }
+  }
+}

@@ -1,0 +1,1935 @@
+{
+  "version": 1,
+  "source": {
+    "authors": "Zaparaín Hernández, Ramos Jular, Llamazares Blanco, Barba Rodríguez",
+    "doi": "10.3989/ic.88625",
+    "url": "https://www.fernandozaparain.com/_files/ugd/89d2e0_ff4aadc4c8a3464d97e8c5f36e0b93d8.pdf",
+    "pdf_pages_1based": {
+      "ground": 19,
+      "first": 20,
+      "basement": 18,
+      "sections": [
+        22,
+        23
+      ]
+    },
+    "status": "Research reconstruction based on surveys and FLC contractor archive; coordinate readings here approximate"
+  },
+  "registration": {
+    "input_image": "archive-r8-page19.png, 1.5x rendering",
+    "x_px": [
+      92,
+      275,
+      459,
+      643,
+      826
+    ],
+    "y_px": [
+      225,
+      409,
+      593,
+      777,
+      960
+    ],
+    "spacing_m": 4.75,
+    "px_per_m": 38.63157894736842,
+    "formula_x": "19 - (pixel_x - 92) / (734 / 19)",
+    "formula_y": "1.25 + (pixel_y - 225) / (735 / 19)",
+    "axis_labels": "x right and y up in CMN plan, north approximately (-1,-1)",
+    "uncertainty_m": 0.04,
+    "outer_envelope": "19 m is grid width, actual outer wall adds approximately 0.15 m each side; do not silently rescale grid to 19 m overall box."
+  },
+  "columns": [
+    {
+      "id": "1",
+      "pixel_xy_1p5x": [
+        92,
+        225
+      ],
+      "xy_m": [
+        19,
+        1.25
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          19,
+          1.25
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          19,
+          1.25
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "2",
+      "pixel_xy_1p5x": [
+        275,
+        225
+      ],
+      "xy_m": [
+        14.25,
+        1.25
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.33,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          14.25,
+          1.25
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.33,
+          "diameter_basis": "section6.1; nominal 22 cm except drain posts33 cm finished"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          14.25,
+          1.25
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": "Originally proposed to extend into screen; section5.2 says discarded"
+      }
+    },
+    {
+      "id": "3",
+      "pixel_xy_1p5x": [
+        459,
+        225
+      ],
+      "xy_m": [
+        9.5,
+        1.25
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          9.5,
+          1.25
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.22,
+          "diameter_basis": "section6.1; nominal 22 cm except drain posts33 cm finished"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          9.5,
+          1.25
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": "Originally proposed to extend into screen; section5.2 says discarded"
+      }
+    },
+    {
+      "id": "4",
+      "pixel_xy_1p5x": [
+        643,
+        225
+      ],
+      "xy_m": [
+        4.75,
+        1.25
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.33,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          4.75,
+          1.25
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.33,
+          "diameter_basis": "section6.1; nominal 22 cm except drain posts33 cm finished"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          4.75,
+          1.25
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": "Originally proposed to extend into screen; section5.2 says discarded"
+      }
+    },
+    {
+      "id": "5",
+      "pixel_xy_1p5x": [
+        826,
+        225
+      ],
+      "xy_m": [
+        0,
+        1.25
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          0,
+          1.25
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          0,
+          1.25
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "6",
+      "pixel_xy_1p5x": [
+        92,
+        409
+      ],
+      "xy_m": [
+        19,
+        6
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          19,
+          6
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          19,
+          6
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "7",
+      "pixel_xy_1p5x": [
+        275,
+        409
+      ],
+      "xy_m": [
+        14.25,
+        6
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          14.25,
+          6
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.22,
+          "diameter_basis": "section6.1; nominal 22 cm except drain posts33 cm finished"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          14.25,
+          6
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "8",
+      "pixel_xy_1p5x": [
+        405,
+        409
+      ],
+      "xy_m": [
+        10.898,
+        6.006
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          10.898,
+          6.006
+        ]
+      },
+      "first": {
+        "status": "not-present-in-annex3",
+        "profile": null,
+        "z_extent": null,
+        "axis_xy_m": [
+          10.898,
+          6.006
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "9",
+      "pixel_xy_1p5x": [
+        512,
+        409
+      ],
+      "xy_m": [
+        8.128,
+        6.006
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          8.128,
+          6.006
+        ]
+      },
+      "first": {
+        "status": "not-present-in-annex3",
+        "profile": null,
+        "z_extent": null,
+        "axis_xy_m": [
+          8.128,
+          6.006
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "10",
+      "pixel_xy_1p5x": [
+        643,
+        409
+      ],
+      "xy_m": [
+        4.75,
+        6
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          4.75,
+          6
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "continues into stair roof-head volume; section5.1",
+        "axis_xy_m": [
+          4.75,
+          6
+        ]
+      },
+      "roof": {
+        "status": "explicit-stair-head-support",
+        "note": null
+      }
+    },
+    {
+      "id": "11",
+      "pixel_xy_1p5x": [
+        826,
+        409
+      ],
+      "xy_m": [
+        0,
+        6
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          0,
+          6
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          0,
+          6
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "12",
+      "pixel_xy_1p5x": [
+        275,
+        438
+      ],
+      "xy_m": [
+        14.263,
+        6.756
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          14.263,
+          6.756
+        ]
+      },
+      "first": {
+        "status": "not-present-in-annex3",
+        "profile": null,
+        "z_extent": null,
+        "axis_xy_m": [
+          14.263,
+          6.756
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "13",
+      "pixel_xy_1p5x": [
+        405,
+        495
+      ],
+      "xy_m": [
+        10.898,
+        8.23
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          10.898,
+          8.23
+        ]
+      },
+      "first": {
+        "status": "not-present-in-annex3",
+        "profile": null,
+        "z_extent": null,
+        "axis_xy_m": [
+          10.898,
+          8.23
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "14",
+      "pixel_xy_1p5x": [
+        512,
+        495
+      ],
+      "xy_m": [
+        8.128,
+        8.23
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          8.128,
+          8.23
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.22,
+          "diameter_basis": "section6.1; nominal 22 cm except drain posts33 cm finished"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          8.128,
+          8.23
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "15",
+      "pixel_xy_1p5x": [
+        643,
+        495
+      ],
+      "xy_m": [
+        4.737,
+        8.23
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          4.737,
+          8.23
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.22,
+          "diameter_basis": "section6.1; nominal 22 cm except drain posts33 cm finished"
+        },
+        "z_extent": "continues into stair roof-head volume; section5.1",
+        "axis_xy_m": [
+          4.737,
+          8.23
+        ]
+      },
+      "roof": {
+        "status": "explicit-stair-head-support",
+        "note": null
+      }
+    },
+    {
+      "id": "16",
+      "pixel_xy_1p5x": [
+        92,
+        593
+      ],
+      "xy_m": [
+        19,
+        10.75
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          19,
+          10.75
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "aerodynamic_oval",
+          "finished_width_m": 0.15,
+          "major_axis_m": null,
+          "orientation": null,
+          "source": "section6.2; varies vertically, no guessed major axis"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          19,
+          10.75
+        ],
+        "profile_centroid_xy_m": [
+          18.9,
+          10.75
+        ],
+        "profile_centroid_status": "article10cm inward offset and plan-symbol reading; facade/axis terminology requires final trace"
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "17",
+      "pixel_xy_1p5x": [
+        826,
+        593
+      ],
+      "xy_m": [
+        0,
+        10.75
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          0,
+          10.75
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          0,
+          10.75
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "18",
+      "pixel_xy_1p5x": [
+        405,
+        663
+      ],
+      "xy_m": [
+        10.898,
+        12.572
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          10.898,
+          12.572
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          10.898,
+          12.572
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "19",
+      "pixel_xy_1p5x": [
+        512,
+        663
+      ],
+      "xy_m": [
+        8.128,
+        12.572
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.22,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          8.128,
+          12.572
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.22,
+          "diameter_basis": "section6.1; nominal 22 cm except drain posts33 cm finished"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          8.128,
+          12.572
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "20",
+      "pixel_xy_1p5x": [
+        643,
+        670
+      ],
+      "xy_m": [
+        4.737,
+        12.753
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          4.737,
+          12.753
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.22,
+          "diameter_basis": "section6.1; nominal 22 cm except drain posts33 cm finished"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          4.737,
+          12.753
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "21",
+      "pixel_xy_1p5x": [
+        275,
+        680
+      ],
+      "xy_m": [
+        14.263,
+        13.012
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          14.263,
+          13.012
+        ]
+      },
+      "first": {
+        "status": "not-present-in-annex3",
+        "profile": null,
+        "z_extent": null,
+        "axis_xy_m": [
+          14.263,
+          13.012
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "22",
+      "pixel_xy_1p5x": [
+        92,
+        777
+      ],
+      "xy_m": [
+        19,
+        15.5
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          19,
+          15.5
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "aerodynamic_oval",
+          "finished_width_m": 0.15,
+          "major_axis_m": null,
+          "orientation": null,
+          "source": "section6.2; varies vertically, no guessed major axis"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          19,
+          15.5
+        ],
+        "profile_centroid_xy_m": [
+          18.9,
+          15.5
+        ],
+        "profile_centroid_status": "article10cm inward offset and plan-symbol reading; facade/axis terminology requires final trace"
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "23",
+      "pixel_xy_1p5x": [
+        826,
+        777
+      ],
+      "xy_m": [
+        0,
+        15.5
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          0,
+          15.5
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          0,
+          15.5
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "24",
+      "pixel_xy_1p5x": [
+        275,
+        826
+      ],
+      "xy_m": [
+        14.263,
+        16.786
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          14.263,
+          16.786
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          14.263,
+          16.786
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "25",
+      "pixel_xy_1p5x": [
+        405,
+        830
+      ],
+      "xy_m": [
+        10.898,
+        16.889
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          10.898,
+          16.889
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          10.898,
+          16.889
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "26",
+      "pixel_xy_1p5x": [
+        512,
+        830
+      ],
+      "xy_m": [
+        8.128,
+        16.889
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "rectangle",
+          "nominal_m": [
+            0.16,
+            0.22
+          ],
+          "rotation_rad": null,
+          "source": "section6.1; orientation unresolved"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          8.128,
+          16.889
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "rectangle",
+          "nominal_m": [
+            0.16,
+            0.22
+          ],
+          "rotation_rad": null,
+          "source": "section6.1; orientation unresolved"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          8.128,
+          16.889
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "27",
+      "pixel_xy_1p5x": [
+        643,
+        845
+      ],
+      "xy_m": [
+        4.737,
+        17.277
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          4.737,
+          17.277
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.22,
+          "diameter_basis": "section6.1; nominal 22 cm except drain posts33 cm finished"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          4.737,
+          17.277
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "28",
+      "pixel_xy_1p5x": [
+        459,
+        876
+      ],
+      "xy_m": [
+        9.5,
+        18.079
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "rectangle",
+          "nominal_m": [
+            0.16,
+            0.22
+          ],
+          "rotation_rad": null,
+          "source": "section6.1; orientation unresolved"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          9.5,
+          18.079
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "rectangle",
+          "nominal_m": [
+            0.16,
+            0.22
+          ],
+          "rotation_rad": null,
+          "source": "section6.1; orientation unresolved"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          9.5,
+          18.079
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "29",
+      "pixel_xy_1p5x": [
+        92,
+        960
+      ],
+      "xy_m": [
+        19,
+        20.25
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          19,
+          20.25
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          19,
+          20.25
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "30",
+      "pixel_xy_1p5x": [
+        275,
+        960
+      ],
+      "xy_m": [
+        14.25,
+        20.25
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          14.25,
+          20.25
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          14.25,
+          20.25
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "31",
+      "pixel_xy_1p5x": [
+        459,
+        960
+      ],
+      "xy_m": [
+        9.5,
+        20.25
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          9.5,
+          20.25
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.22,
+          "diameter_basis": "section6.1; nominal 22 cm except drain posts33 cm finished"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          9.5,
+          20.25
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "32",
+      "pixel_xy_1p5x": [
+        643,
+        960
+      ],
+      "xy_m": [
+        4.75,
+        20.25
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          4.75,
+          20.25
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          4.75,
+          20.25
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "33",
+      "pixel_xy_1p5x": [
+        826,
+        960
+      ],
+      "xy_m": [
+        0,
+        20.25
+      ],
+      "coordinate_status": "grid-anchor",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "circle",
+          "diameter_m": 0.28,
+          "diameter_basis": "section6.2; finished diameter;19 excluded from enlargement"
+        },
+        "z_extent": "ground/foundation to first structural ceiling; inspect sections for local beam/capital",
+        "axis_xy_m": [
+          0,
+          20.25
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          0,
+          20.25
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "34",
+      "pixel_xy_1p5x": [
+        459,
+        409
+      ],
+      "xy_m": [
+        9.5,
+        6.006
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "above-transfer-birth-not-ground-footing",
+        "profile": {
+          "kind": "rectangle",
+          "nominal_m": [
+            0.18,
+            0.22
+          ],
+          "rotation_rad": null,
+          "source": "section6.1; orientation unresolved"
+        },
+        "z_extent": "begins on lower-level transfer beam; exact birth numeric datum unresolved",
+        "axis_xy_m": [
+          9.5,
+          6.006
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "rectangle",
+          "nominal_m": [
+            0.18,
+            0.22
+          ],
+          "rotation_rad": null,
+          "source": "section6.1; orientation unresolved"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          9.5,
+          6.006
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "35",
+      "pixel_xy_1p5x": [
+        459,
+        495
+      ],
+      "xy_m": [
+        9.5,
+        8.23
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "above-transfer-birth-not-ground-footing",
+        "profile": {
+          "kind": "rectangle",
+          "nominal_m": [
+            0.18,
+            0.22
+          ],
+          "rotation_rad": null,
+          "source": "section6.1; orientation unresolved"
+        },
+        "z_extent": "begins on lower-level transfer beam; exact birth numeric datum unresolved",
+        "axis_xy_m": [
+          9.5,
+          8.23
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "rectangle",
+          "nominal_m": [
+            0.18,
+            0.22
+          ],
+          "rotation_rad": null,
+          "source": "section6.1; orientation unresolved"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          9.5,
+          8.23
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "36",
+      "pixel_xy_1p5x": [
+        405,
+        775
+      ],
+      "xy_m": [
+        10.898,
+        15.468
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "above-transfer-birth-not-ground-footing",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "begins on lower-level transfer beam; exact birth numeric datum unresolved",
+        "axis_xy_m": [
+          10.898,
+          15.468
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "square",
+          "nominal_m": [
+            0.22,
+            0.22
+          ],
+          "finish_allowance_per_side_m": 0.015,
+          "source": "section6.1; symbol interpreted from annex"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          10.898,
+          15.468
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "PA",
+      "pixel_xy_1p5x": [
+        459,
+        663
+      ],
+      "xy_m": [
+        9.5,
+        12.572
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "chamfered_rectangle",
+          "nominal_m": [
+            0.12,
+            0.15
+          ],
+          "chamfer_m": 0.03,
+          "finish": "ovoid plaster, contour not numerically measured",
+          "source": "section8"
+        },
+        "z_extent": "basement ceiling beam6 upward with ramp",
+        "axis_xy_m": [
+          9.5,
+          12.572
+        ]
+      },
+      "first": {
+        "status": "visible-support",
+        "profile": {
+          "kind": "chamfered_rectangle",
+          "nominal_m": [
+            0.12,
+            0.15
+          ],
+          "chamfer_m": 0.03,
+          "finish": "ovoid plaster, contour not numerically measured",
+          "source": "section8"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          9.5,
+          12.572
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    },
+    {
+      "id": "PB",
+      "pixel_xy_1p5x": [
+        459,
+        830
+      ],
+      "xy_m": [
+        9.5,
+        16.889
+      ],
+      "coordinate_status": "image-read-offset",
+      "ground": {
+        "status": "starts-at-intermediate-ramp-landing",
+        "profile": {
+          "kind": "chamfered_rectangle",
+          "nominal_m": [
+            0.12,
+            0.15
+          ],
+          "chamfer_m": 0.03,
+          "finish": "ovoid plaster, contour not numerically measured",
+          "source": "section8"
+        },
+        "z_extent": "landing beamF upward; exact birth unresolved",
+        "axis_xy_m": [
+          9.5,
+          16.889
+        ]
+      },
+      "first": {
+        "status": "ramp-support-presence-at-plan-cut-unresolved",
+        "profile": {
+          "kind": "chamfered_rectangle",
+          "nominal_m": [
+            0.12,
+            0.15
+          ],
+          "chamfer_m": 0.03,
+          "finish": "ovoid plaster, contour not numerically measured",
+          "source": "section8"
+        },
+        "z_extent": "first structural floor to roof structure, with transfer/support exceptions",
+        "axis_xy_m": [
+          9.5,
+          16.889
+        ]
+      },
+      "roof": {
+        "status": "no numbered full-height continuation established",
+        "note": null
+      }
+    }
+  ],
+  "datums": [
+    {
+      "z_m": 2.91,
+      "type": "common underside of first structural slab",
+      "source": "annex5/6"
+    },
+    {
+      "z_m": 3.14,
+      "type": "top of 23cm inhabited first-floor structural slab",
+      "source": "annex6:3.14-2.91=.23"
+    },
+    {
+      "z_m": 3.08,
+      "type": "top of 17cm terrace first-floor structural slab",
+      "source": "annex6:3.08-2.91=.17"
+    },
+    {
+      "z_m": 3.17,
+      "type": "local occupied finished floor above3.14 structural top; not universal",
+      "source": "annex6 right room label"
+    },
+    {
+      "z_m": 3.11,
+      "type": "local finish over3.08 terrace-structure branch; not universal",
+      "source": "annex6 lower section"
+    },
+    {
+      "z_m": 6.34,
+      "type": "typical underside upper structural roof slab",
+      "source": "annex5/6"
+    },
+    {
+      "z_m": 6.51,
+      "type": "top17cm upper roof structural slab",
+      "source": "annex6:6.51-6.34=.17"
+    },
+    {
+      "z_m": 6.6,
+      "type": "local upper roof finish/weathering surface",
+      "source": "annex6 right edge label"
+    },
+    {
+      "z_m": 6.77,
+      "type": "perimeter upstand/top edge reference, NOT general structural slab top",
+      "source": "annex6 edge leaders"
+    },
+    {
+      "z_m": -2.42,
+      "type": "basement slab/floor top in section",
+      "source": "annex5/6"
+    },
+    {
+      "z_m": -2.72,
+      "type": "bottom basement masonry strip footing",
+      "source": "annex5/6"
+    }
+  ],
+  "slab_region_evidence": {
+    "warning": "Pixel bounds are approximate tracing inputs. Void polygons and outer shell must be traced; these are semantic region samples/bands, not approved fabrication polygons.",
+    "ground_ceiling": [
+      {
+        "region": "salon full-width entrance-side band",
+        "pixel_bounds": [
+          86,
+          175,
+          831,
+          409
+        ],
+        "structural_thickness_m": 0.23,
+        "soffit_m": 2.91
+      },
+      {
+        "region": "northeast/right-of-ramp inhabited wing",
+        "pixel_bounds": [
+          512,
+          409,
+          831,
+          1010
+        ],
+        "structural_thickness_m": 0.23,
+        "soffit_m": 2.91
+      },
+      {
+        "region": "southwest/left-of-ramp hanging-garden wing",
+        "pixel_bounds": [
+          86,
+          409,
+          405,
+          960
+        ],
+        "structural_thickness_m": 0.17,
+        "soffit_m": 2.91,
+        "subtract": [
+          "two garage lightwell voids",
+          "ramp/landing interface"
+        ]
+      },
+      {
+        "region": "rear central strip at ramp end",
+        "pixel_bounds": [
+          275,
+          880,
+          512,
+          960
+        ],
+        "structural_thickness_m": 0.2,
+        "status": "annex2 h20 annotation; exactextent unresolved, do not silently absorb in23/17"
+      }
+    ],
+    "first_ceiling": [
+      {
+        "region": "most roof over occupied rooms",
+        "structural_thickness_m": 0.17,
+        "soffit_m": 6.34
+      },
+      {
+        "region": "stair/bath block beside kitchen patio",
+        "pixel_bounds": [
+          459,
+          409,
+          700,
+          593
+        ],
+        "structural_thickness_m": 0.23,
+        "soffit_m": 6.34,
+        "status": "annex3 h23; trace boundary with stair landing and patio void before authoring"
+      },
+      {
+        "region": "hanging garden",
+        "pixel_bounds": [
+          86,
+          409,
+          459,
+          777
+        ],
+        "status": "open-to-sky: no upper slab; canopy/frame narrow edges distinct"
+      },
+      {
+        "region": "kitchen patio",
+        "pixel_bounds": [
+          700,
+          409,
+          826,
+          523
+        ],
+        "status": "open-to-sky rectangular void adjacent NE facade"
+      }
+    ]
+  }
+}

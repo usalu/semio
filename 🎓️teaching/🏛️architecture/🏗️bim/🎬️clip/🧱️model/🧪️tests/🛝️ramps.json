@@ -1,0 +1,73 @@
+{
+  "source": {
+    "parents": [
+      "RM-1",
+      "RM-2"
+    ],
+    "flights": [
+      "RF-1A",
+      "RF-1B",
+      "RF-2A",
+      "RF-2B"
+    ],
+    "full_volume": 1.677354,
+    "landing_volume": 0.430458,
+    "shared_landing_volume": 0.11634,
+    "flight_volume": 0.623448
+  },
+  "diagonal": {
+    "path": [
+      [
+        0,
+        0
+      ],
+      [
+        3,
+        4
+      ]
+    ],
+    "width": 2,
+    "from_level": 0,
+    "to_level": 1,
+    "portion": [
+      0,
+      1
+    ],
+    "thickness": 0.2,
+    "volume": 2,
+    "footprint": [
+      [
+        -0.8,
+        0.6
+      ],
+      [
+        0.8,
+        -0.6
+      ],
+      [
+        3.8,
+        3.4
+      ],
+      [
+        2.2,
+        4.6
+      ]
+    ],
+    "top_z": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "bottom_z": [
+      -0.2,
+      -0.2,
+      0.8,
+      0.8
+    ],
+    "cut": {
+      "axis": 0,
+      "value": 1.5
+    }
+  }
+}

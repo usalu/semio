@@ -1,0 +1,9 @@
+# Ramp Slab Thickness Evidence R31
+
+Read ramp-representation-gap-r30.md and the live source, _flights, quantities and generic native polyhedron/representation helpers. Read the cached primary2022article§8 (DOI10.3989/ic.88625), inspected complete Annex5 longitudinal sections in register-r9-section22.png, and recovered/visually inspected actualFigure13/FLC-H1-13-305 pixels from author-r8.pdf page15. The original embedded figure is502×491pixels; this is not a newly measured shop drawing. OriginalFigure13 shows plan, sectionCoupeA-B and reinforcement details, but the available pixels do not support a confident normal-versus-vertical6cm dimension leader transcription.
+
+The article states the floor is always a6cm slab and separately describes the6cm central scissor-shaped screen. It does not explicitly specify whether slab thickness is measured vertically or perpendicular to its slope. Existing authored6cm vertical offset and run×width×thickness quantities therefore remain an explicit inferred modeling convention; no metric change or speculative ramp relocation is justified. A future higher-resolution original normal dimension would require a source correction, not a hidden reinterpretation.
+
+A second source issue is concrete ownership: RM1's top landing andRM2's bottom landing have identical outlines, elevations and thickness. They refer to one physical first-floor landing. Explicit landing owner references can preserve both full assemblies while counting the material once. The lower ramp owns that shared landing. Flights remain actual IfcRampFlight products; the parent owns its independent landing bodies, with child ownership separated from borrowed landing ownership.
+
+Temporary recovered source pixels are under 🗑️generated/ramp-r31-img_p14_1.png; the bounded reader input is ramp-r31-source.cjs. No source dimensions, stations, IDs, names or silhouettes were changed during this evidence audit.

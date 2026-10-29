@@ -1,0 +1,9 @@
+# Fixture Coordination R77
+
+The final feature inventory found two real geometric inconsistencies on source d2f3: the laundry fixture intersects column32 by0.013632m³, and the guest basin retained its earlier position after the sourced rooflight registration changed. These require product corrections; test exemptions are inappropriate. See feature-c-audit-r76.md.
+
+The repair owner is trialling a0.50m northward laundry/tap translation, preserving both hollow bowls and legs, with the rear edge aligned inside the registered laundry wall and clear of column32. The guest trial uses an explicitly inferred0.50m square hollow basin inside the existing0.55m rooflight clear aperture, a coherent south-rim tap, and a0.50m northward guest-door relocation to preserve a0.80m body route and standing area. Columns,rooflight,wardrobe and historical clear door width remain fixed. These are candidate arrangements pending actual collision,room,doorway and route verification.
+
+Root inspected OP-D-GUEST directly: start2.06/end2.99m are labelled inferred, with source Door-free-width-plus-frame-envelope; they do not carry a measured historical station. W-PRIVATE extendsY8.9..15.65 and SP-GUEST endsY14.1. A coordinated inferred opening move is therefore authorized within the remodel,provided uncertainty is stated and all associated controls are updated. It must not be presented as a measured historical reconstruction.
+
+The source-dependent R72c inventory stopped cleanly after34/146 methods,26passing and8failing/erroring;112remain unfinished. The slab-only R76 proof is isolated and still ongoing. Product publication follows independent placement proofs and records precise changed tags/pointers,not a copied source file. Earlier portable evidence remains tied to its actual source snapshot until the changed domains are revalidated.

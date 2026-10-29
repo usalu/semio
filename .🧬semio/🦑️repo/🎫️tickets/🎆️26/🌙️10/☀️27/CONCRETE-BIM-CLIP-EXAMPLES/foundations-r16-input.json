@@ -1,0 +1,479 @@
+{
+  "version": 1,
+  "source": "CSIC2022 author annex1 PDF18; annex5 PDF22; Zaparaín Savoye as Built p69",
+  "registration": {
+    "x_origin_px": 826,
+    "x_scale": 0.025885558583106268,
+    "y_origin_px": 225,
+    "y_origin_m": 1.25,
+    "y_scale": 0.02585034013605442
+  },
+  "units": "m",
+  "trace_uncertainty": 0.04,
+  "datums": {
+    "bearing": -1.65,
+    "book_bearing_conflict": -1.5,
+    "blinding_thickness": 0.4,
+    "blinding_range": [
+      0.35,
+      0.45
+    ],
+    "rc_base_thickness": 0.1,
+    "pyramid_height": 0.15,
+    "stem_top": -0.3
+  },
+  "provenance": {
+    "bearing": "sourced-annex5",
+    "blinding_thickness": "inferred-within-sourced-range",
+    "rc_base_thickness": "sourced-book-p69",
+    "pyramid_height": "inferred-section-proportion",
+    "stem_top": "sourced-book-p69"
+  },
+  "cellar_supported": [
+    "8",
+    "9",
+    "10",
+    "13",
+    "14",
+    "15",
+    "18",
+    "19",
+    "20",
+    "25",
+    "26"
+  ],
+  "pads": [
+    {
+      "id": "1",
+      "columns": [
+        "1"
+      ],
+      "blinding_pixels": [
+        73,
+        206,
+        112,
+        246
+      ],
+      "rc_pixels": [
+        [
+          82,
+          215,
+          103,
+          237
+        ]
+      ]
+    },
+    {
+      "id": "2",
+      "columns": [
+        "2"
+      ],
+      "blinding_pixels": [
+        251,
+        202,
+        298,
+        249
+      ],
+      "rc_pixels": [
+        [
+          261,
+          212,
+          289,
+          240
+        ]
+      ]
+    },
+    {
+      "id": "3",
+      "columns": [
+        "3"
+      ],
+      "blinding_pixels": [
+        435,
+        202,
+        483,
+        249
+      ],
+      "rc_pixels": [
+        [
+          445,
+          212,
+          473,
+          240
+        ]
+      ]
+    },
+    {
+      "id": "4",
+      "columns": [
+        "4"
+      ],
+      "blinding_pixels": [
+        619,
+        202,
+        667,
+        249
+      ],
+      "rc_pixels": [
+        [
+          629,
+          212,
+          657,
+          240
+        ]
+      ]
+    },
+    {
+      "id": "5",
+      "columns": [
+        "5"
+      ],
+      "blinding_pixels": [
+        806,
+        206,
+        845,
+        246
+      ],
+      "rc_pixels": [
+        [
+          815,
+          215,
+          837,
+          237
+        ]
+      ]
+    },
+    {
+      "id": "6",
+      "columns": [
+        "6"
+      ],
+      "blinding_pixels": [
+        73,
+        389,
+        112,
+        430
+      ],
+      "rc_pixels": [
+        [
+          82,
+          398,
+          103,
+          420
+        ]
+      ]
+    },
+    {
+      "id": "7-12",
+      "columns": [
+        "7",
+        "12"
+      ],
+      "blinding_pixels": [
+        253,
+        388,
+        297,
+        459
+      ],
+      "rc_pixels": [
+        [
+          263,
+          398,
+          287,
+          421
+        ],
+        [
+          266,
+          429,
+          285,
+          448
+        ]
+      ]
+    },
+    {
+      "id": "11",
+      "columns": [
+        "11"
+      ],
+      "blinding_pixels": [
+        803,
+        389,
+        847,
+        431
+      ],
+      "rc_pixels": [
+        [
+          813,
+          399,
+          837,
+          421
+        ]
+      ]
+    },
+    {
+      "id": "16",
+      "columns": [
+        "16"
+      ],
+      "blinding_pixels": [
+        73,
+        572,
+        112,
+        613
+      ],
+      "rc_pixels": [
+        [
+          82,
+          582,
+          103,
+          603
+        ]
+      ]
+    },
+    {
+      "id": "17",
+      "columns": [
+        "17"
+      ],
+      "blinding_pixels": [
+        803,
+        573,
+        847,
+        613
+      ],
+      "rc_pixels": [
+        [
+          813,
+          582,
+          837,
+          604
+        ]
+      ]
+    },
+    {
+      "id": "21",
+      "columns": [
+        "21"
+      ],
+      "blinding_pixels": [
+        255,
+        659,
+        296,
+        699
+      ],
+      "rc_pixels": [
+        [
+          265,
+          669,
+          286,
+          689
+        ]
+      ]
+    },
+    {
+      "id": "22",
+      "columns": [
+        "22"
+      ],
+      "blinding_pixels": [
+        73,
+        755,
+        112,
+        797
+      ],
+      "rc_pixels": [
+        [
+          82,
+          766,
+          103,
+          787
+        ]
+      ]
+    },
+    {
+      "id": "23",
+      "columns": [
+        "23"
+      ],
+      "blinding_pixels": [
+        803,
+        755,
+        847,
+        798
+      ],
+      "rc_pixels": [
+        [
+          813,
+          766,
+          837,
+          787
+        ]
+      ]
+    },
+    {
+      "id": "24",
+      "columns": [
+        "24"
+      ],
+      "blinding_pixels": [
+        253,
+        804,
+        297,
+        849
+      ],
+      "rc_pixels": [
+        [
+          263,
+          814,
+          287,
+          838
+        ]
+      ]
+    },
+    {
+      "id": "27",
+      "columns": [
+        "27"
+      ],
+      "blinding_pixels": [
+        619,
+        826,
+        666,
+        870
+      ],
+      "rc_pixels": [
+        [
+          628,
+          835,
+          657,
+          861
+        ]
+      ],
+      "material_ownership_cut": {
+        "wall": "W-CELLAR-N",
+        "side": "north",
+        "basis": "registered-cellar-masonry-priority"
+      }
+    },
+    {
+      "id": "28",
+      "columns": [
+        "28"
+      ],
+      "blinding_pixels": [
+        438,
+        855,
+        478,
+        896
+      ],
+      "rc_pixels": [
+        [
+          447,
+          864,
+          469,
+          887
+        ]
+      ]
+    },
+    {
+      "id": "29",
+      "columns": [
+        "29"
+      ],
+      "blinding_pixels": [
+        73,
+        939,
+        112,
+        981
+      ],
+      "rc_pixels": [
+        [
+          82,
+          949,
+          103,
+          971
+        ]
+      ]
+    },
+    {
+      "id": "30",
+      "columns": [
+        "30"
+      ],
+      "blinding_pixels": [
+        253,
+        938,
+        297,
+        982
+      ],
+      "rc_pixels": [
+        [
+          263,
+          948,
+          287,
+          973
+        ]
+      ]
+    },
+    {
+      "id": "31",
+      "columns": [
+        "31"
+      ],
+      "blinding_pixels": [
+        438,
+        941,
+        478,
+        980
+      ],
+      "rc_pixels": [
+        [
+          447,
+          950,
+          469,
+          972
+        ]
+      ]
+    },
+    {
+      "id": "32",
+      "columns": [
+        "32"
+      ],
+      "blinding_pixels": [
+        619,
+        936,
+        666,
+        983
+      ],
+      "rc_pixels": [
+        [
+          629,
+          947,
+          657,
+          973
+        ]
+      ]
+    },
+    {
+      "id": "33",
+      "columns": [
+        "33"
+      ],
+      "blinding_pixels": [
+        806,
+        939,
+        845,
+        981
+      ],
+      "rc_pixels": [
+        [
+          815,
+          949,
+          837,
+          971
+        ]
+      ]
+    }
+  ]
+}

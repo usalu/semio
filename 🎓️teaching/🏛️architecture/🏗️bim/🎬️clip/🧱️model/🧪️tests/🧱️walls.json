@@ -1,0 +1,81 @@
+{
+  "wall": {
+    "length": 4,
+    "height": 3,
+    "thickness": 0.29,
+    "exterior_side": -1,
+    "layers": [
+      {
+        "id": "render",
+        "thickness": 0.025
+      },
+      {
+        "id": "outer",
+        "thickness": 0.08
+      },
+      {
+        "id": "cavity",
+        "thickness": 0.115,
+        "is_void": true
+      },
+      {
+        "id": "inner",
+        "thickness": 0.055
+      },
+      {
+        "id": "plaster",
+        "thickness": 0.015
+      }
+    ]
+  },
+  "openings": [
+    {
+      "start": 1,
+      "end": 3,
+      "sill": 1,
+      "head": 2
+    }
+  ],
+  "expected": {
+    "net_side_area": 10,
+    "solid_thickness": 0.175,
+    "volume": 1.75,
+    "cavity_volume": 1.15,
+    "layer_count": 4
+  },
+  "facades": [
+    {
+      "tag": "W-S",
+      "thickness": 0.29,
+      "side": -1
+    },
+    {
+      "tag": "W-N",
+      "thickness": 0.29,
+      "side": 1
+    },
+    {
+      "tag": "W-E",
+      "thickness": 0.26,
+      "side": -1
+    },
+    {
+      "tag": "W-W",
+      "thickness": 0.26,
+      "side": 1
+    }
+  ],
+  "regional": {
+    "lower_thickness": 0.2,
+    "upper_thickness": 0.29,
+    "expected_envelope_volume": 3.12,
+    "expected_cavity_volume": 0.79,
+    "expected_cavity_after_sill_resize": 0.764
+  },
+  "facade_regions": [
+    "parapet",
+    "shelf",
+    "upstand",
+    "screen"
+  ]
+}

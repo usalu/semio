@@ -72,7 +72,7 @@ def _join(items, separator=",") -> list:
 
 
 def _str(value: str, role=None) -> list:
-    return ["'", (_escape(value), role), "'"]
+    return [("''", role)] if value == "" else ["'", (_escape(value), role), "'"]
 
 
 def _enum(name: str, role=None) -> tuple:
@@ -111,28 +111,98 @@ class _Writer:
         self.raw([(f"#{self.ids[key]}", "number"), "=", (name, role), "(", _join(attrs), ");"])
 
 
+def _native_profile_kind(part: dict) -> str:
+    """🕳️ Select a precise native hollow circle or a polygonal profile with explicit inner loops."""
+    profile = part["profile"]
+    voids = profile.get("voids",())
+    if voids:
+        if profile["shape"]=="circle" and len(voids)==1 and voids[0]["offset"]==[0,0]:
+            return "circle_hollow"
+        return "profile_void"
+    return profile["shape"]
+
+
 def _column(obj: dict, geometry: dict) -> dict:
     p = next(x for x in geometry["pilotis"] if x["tag"] == obj["tag"])
-    return {"point": [p["x"], p["y"], p["base"]], "refdir": None, "profile": {"radius": p["radius"]}, "depth": p["top"] - p["base"]}
+    return {"point": [0., 0., 0.], "refdir": None, "parts": p["parts"], "profile": {}, "depth": p["top"] - p["base"]}
 
 
 def _slab(obj: dict, geometry: dict) -> dict:
-    s = next(x for x in geometry["slabs"] if x["tag"] == obj["tag"])
-    xs, ys = sorted({round(p[0], 9) for p in s["outline"]}), sorted({round(p[1], 9) for p in s["outline"]})
-    if len(s["outline"]) != 4 or len(xs) != 2 or len(ys) != 2:
-        raise ValueError(f"Only rectangular slab outlines have a STEP excerpt: {obj['tag']}")
-    return {"point": [0.0, 0.0, s["top"] - s["thickness"]], "refdir": None, "depth": s["thickness"],
-            "profile": {"x": xs[1] - xs[0], "y": ys[1] - ys[0], "centre": [(xs[0] + xs[1]) / 2, (ys[0] + ys[1]) / 2]}}
-
+    slab = next(x for x in geometry["slabs"] if x["tag"] == obj["tag"])
+    parts = [{**part, "profile": {"shape": "polygon"}} for part in slab["parts"]]
+    return {"point": [0., 0., 0.], "refdir": None, "depth": slab["thickness"], "profile": {}, "parts": parts}
 
 def _wall(obj: dict, geometry: dict) -> dict:
-    w = next(x for x in geometry["walls"] if x["tag"] == obj["tag"])
-    (x0, y0), (x1, y1), length = w["start"], w["end"], w["length"]
-    return {"point": [x0, y0, w["base"]], "refdir": [(x1 - x0) / length, (y1 - y0) / length, 0.0], "depth": w["top"] - w["base"],
-            "profile": {"x": length, "y": w["thickness"], "centre": [length / 2, 0.0]}}
+    w = next(x for x in geometry["walls"]+geometry.get("screens",[]) if x["tag"] == obj["tag"])
+    parts = [{**p,"profile":{"shape":"polygon"}} for p in w["parts"]]
+    return {"point":[0.,0.,0.],"refdir":None,"depth":w["top"]-w["base"],"profile":{},"parts":parts}
 
 
-BODIES = {"IfcColumn": _column, "IfcSlab": _slab, "IfcWall": _wall}
+
+FILLING_CLASSES = ("IfcWindow","IfcDoor","IfcCurtainWall")
+
+
+def _filling(obj: dict, geometry: dict) -> dict:
+    """🪟 Place shared filling prisms on their aperture axis, preserving occupied geometry."""
+    filling = geometry["curtain_wall"] if obj["class"]=="IfcCurtainWall" else next(f for f in geometry["fillings"] if f["tag"]==obj["tag"])
+    point,refdir = [0.,0.,0.],None
+    if "axis" in filling:
+        a,b = filling["axis"]
+        length = math.dist(a,b)
+        dx,dy = (b[0]-a[0])/length,(b[1]-a[1])/length
+        point,refdir = [*a,min(p["z0"] for p in filling["parts"])],[dx,dy,0.]
+    else:
+        dx,dy = 1.,0.
+    parts = []
+    for part in filling["parts"]:
+        ring = [[(p[0]-point[0])*dx+(p[1]-point[1])*dy,-(p[0]-point[0])*dy+(p[1]-point[1])*dx] for p in part["outline"]]
+        parts.append({**part,"outline":ring,"z0":part["z0"]-point[2],"z1":part["z1"]-point[2],"profile":{"shape":"polygon"}})
+    return {"point":point,"refdir":refdir,"parts":parts,"profile":{},"depth":max(p["z1"] for p in parts),
+            **{k:filling[k] for k in ("rough_width","rough_height") if k in filling}}
+
+
+def _constituents(parts: list, cls: str) -> list:
+    """🧵 Group material solids into uniquely addressable IFC component aspects."""
+    groups = {}
+    for i,part in enumerate(parts):
+        category = {"glass":"Glazing","wing_insulation":"Insulation","wing_skin":"Lining"}.get(part["role"],"Lining" if part["role"]=="frame" and cls!="IfcCurtainWall" else "Framing") if cls in FILLING_CLASSES else part["role"]
+        groups.setdefault((category,part["material"]),[]).append(i)
+    counts = {category:sum(c==category for c,_ in groups) for category,_ in groups}
+    return [{"name":category if counts[category]==1 else category+":"+material,"category":category,"material":material,"parts":indices}
+            for (category,material),indices in groups.items()]
+
+
+def _type_layout(kind: dict) -> list:
+    """🚪 Preserve known native layout semantics while leaving unknown handedness undefined."""
+    if kind["class"]=="IfcWindowType":
+        return [_enum("NOTDEFINED"),_enum("F"),"$"]
+    if kind["class"]=="IfcDoorType":
+        spec = kind["filling"]
+        operation = "DOUBLE_DOOR_SLIDING" if spec["operation"]=="sliding" and len(spec["panel_stations"])==3 else "NOTDEFINED"
+        return [_enum(operation),_enum("F"),"$"]
+    return []
+
+
+SERVICE_CLASSES = ("IfcPipeSegment","IfcCovering","IfcChimney","IfcWasteTerminal","IfcBoiler","IfcSpaceHeater")
+
+
+def _service(obj: dict, geometry: dict) -> dict:
+    """🚰 Export occupied service material with its true native profile plane and sweep axis."""
+    service = next(item for item in geometry.get("services",geometry.get("details",geometry.get("beams",[]))) if item["tag"]==obj["tag"])
+    parts = []
+    for part in service["parts"]:
+        resolved = {**part,"profile":{"shape":"polygon"}}
+        if "mesh" in part:
+            resolved["profile"] = {"shape":"brep"}
+        elif "section" in part:
+            body = _core().part_body(part)
+            resolved["outline"] = body["profile"]["points"]
+            resolved["native_sweep"] = {"position":body["position"],"axis":body["axis"],"refdir":body["ref_direction"],"direction":[0,0,-1] if body["profile_plane"]=="XZ" else [0,0,1],"depth":body["depth"]}
+        parts.append(resolved)
+    return {"point":[0.,0.,0.],"refdir":None,"parts":parts,"profile":{},"depth":max(p["z1"] for p in parts)-min(p["z0"] for p in parts)}
+
+
+BODIES = {"IfcStair":_service,"IfcRamp":_service,"IfcRampFlight":_service,"IfcBeam":_service,"IfcBuildingElementProxy":_service,"IfcFurnishingElement":_service,"IfcColumn":_column,"IfcSlab":_slab,"IfcWall":_wall,**{cls:_filling for cls in FILLING_CLASSES},**{cls:_service for cls in SERVICE_CLASSES}}
 
 
 def _value(entry: dict) -> list:
@@ -140,12 +210,41 @@ def _value(entry: dict) -> list:
     if isinstance(value, bool):
         return ["IFCBOOLEAN(", (".T." if value else ".F.", "value"), ")"]
     if isinstance(value, str):
-        return ["IFCLABEL('", (_escape(value), "value"), "')"]
+        return [("IFCTEXT" if entry.get("ifc_type")=="IfcText" else "IFCLABEL")+"(", _str(value,"value"), ")"]
     return ["IFCREAL(", (_real(value), "value"), ")"]
 
 
+def _ramp_assembly_excerpt(result: dict, model: dict, obj: dict, language: str) -> dict:
+    """🛝️ Aggregate native flight products beneath a parent owning landing material only."""
+    core = _core()
+    children = core.ramp_geometry(obj["tag"],model)["children"]
+    relation = next(r for r in model["relations"] if r["class"]=="IfcRelAggregates" and r["relating"]==obj["tag"])
+    if set(relation["related"])!={c["tag"] for c in children}:
+        raise ValueError("A ramp aggregation must match its authored native flight products")
+    lines = result["lines"][:-2]
+    next_id = max(int(ref[1:]) for ref in result["ids"].values())+1
+    refs,products = [],[]
+    for child in children:
+        fragment = step_excerpt(child["tag"],model,first_id=next_id,language=language,spatial=False)
+        start = fragment["lines"].index("DATA;")+1
+        offset = len(lines)-start
+        lines += fragment["lines"][start:-2]
+        result["spans"] += [{**span,"line":span["line"]+offset} for span in fragment["spans"] if start<=span["line"]<len(fragment["lines"])-2]
+        prefix = "child_"+child["tag"]+"."
+        result["ids"].update({prefix+key:value for key,value in fragment["ids"].items()})
+        result["entities"].update({prefix+key:value+offset for key,value in fragment["entities"].items()})
+        refs.append(fragment["ids"]["element"])
+        products.append({**child,"ids":fragment["ids"]})
+        next_id = max(int(ref[1:]) for ref in fragment["ids"].values())+1
+    result["ids"]["aggregation"] = f"#{next_id}"
+    result["entities"]["aggregation"] = len(lines)
+    lines.append(f"#{next_id}=IFCRELAGGREGATES('{relation['guid']}',$,'{_escape(relation['name'][language])}',$,{result['ids']['element']},({','.join(refs)}));")
+    result.update({"lines":lines+["ENDSEC;","END-ISO-10303-21;"],"children":products,"scope":"selected_parent_owned_landings_and_native_child_products"})
+    return result
+
+
 def step_excerpt(key: str, model: dict | None = None, *, first_id: int = 101, language: str = "en", spatial: bool = True, properties: tuple = PROPERTIES) -> dict:
-    """📄 Write a self-consistent ISO 10303-21 fragment (IFC4X3_ADD2) for one piloti, slab or wall of the model; a property set that belongs to the type hangs on its ``HasPropertySets``, the occurrence reaches it through ``IFCRELDEFINESBYTYPE``.
+    """📄 Write a self-consistent ISO 10303-21 fragment (IFC4X3_ADD2) for one native product with its occupied material parts; a property set that belongs to the type hangs on its ``HasPropertySets``, the occurrence reaches it through ``IFCRELDEFINESBYTYPE``.
 
     https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcColumn.htm
     https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcGloballyUniqueId.htm
@@ -156,24 +255,104 @@ def step_excerpt(key: str, model: dict | None = None, *, first_id: int = 101, la
     cls = obj["class"]
     if cls not in BODIES or language not in LANGUAGES or isinstance(first_id, bool) or not isinstance(first_id, int) or first_id < 1:
         raise ValueError(f"No STEP excerpt for {key} ({cls}, {language}, {first_id})")
-    body = BODIES[cls](obj, core.building_geometry(m))
+    if cls=="IfcStair":
+        geometry = {"details":[core.stair_geometry(key,m)]}
+    elif cls in ("IfcRamp","IfcRampFlight"):
+        geometry = {"details":[core.ramp_geometry(key,m)]}
+    elif cls in ("IfcBuildingElementProxy","IfcBeam","IfcFurnishingElement"):
+        geometry = {"details":[core.solid_geometry(key,m)]}
+    elif cls in SERVICE_CLASSES:
+        geometry = {"services":[core.service_geometry(key,m)]}
+    elif cls in FILLING_CLASSES:
+        physical = core.filling_geometry(key,m)
+        geometry = {"curtain_wall":physical} if cls=="IfcCurtainWall" else {"fillings":[physical]}
+    elif cls == "IfcColumn":
+        geometry = {"pilotis":[core.column_geometry(m,obj)]}
+    elif cls == "IfcSlab":
+        geometry = {"slabs":[core._slab_geometry(m,obj)]}
+    else:
+        geometry = core.building_geometry(m)
+    body = BODIES[cls](obj,geometry)
     profile, tag = body["profile"], obj["tag"]
+    multipart = "parts" in body
     centre = "centre" in profile
     material = obj.get("material")
-    layers = material.get("layers") if material else None
+    if cls=="IfcFurnishingElement":
+        for part in body["parts"]:
+            part["material"]=part.get("material",material["tag"] if material else None)
+            if part["material"] is None or core.element(part["material"],m)["class"]!="IfcMaterial":
+                raise ValueError("Furnishing material parts require an explicit or product material")
+            part.setdefault("role","owned_material")
+    furnishing_quantity = core.quantities(key,m) if cls=="IfcFurnishingElement" else None
+    constituents = _constituents(body["parts"],cls) if multipart and (cls in FILLING_CLASSES or all("material" in p and "role" in p for p in body["parts"])) else []
+    component_materials = list(dict.fromkeys(c["material"] for c in constituents))
+    layers = None if constituents else material.get("layers") if material else None
+    ownership = {}
+    if cls in ("IfcBeam","IfcSlab"):
+        quantities = core.quantities(key,m)
+        physical = geometry["details"][0] if cls=="IfcBeam" else geometry["slabs"][0]
+        owners = list(dict.fromkeys(obj["geometry"].get("embedded_slabs",[])+obj["geometry"].get("joint_owners",[])+obj["geometry"].get("column_reserves",[])+[p["owner"] for p in physical.get("shared_parts",[]) if "owner" in p]))
+        values = {"BodyScope":"exclusive_owned_structural_material" if cls=="IfcSlab" else "exclusive_owned_material","FullMemberScope":"authored_slab_net_architectural_openings" if cls=="IfcSlab" else "authored_member_net_reserved_passages","FullMemberVolumeM3":quantities["volume"],"OwnedVolumeM3":quantities["exclusive_volume"],"SharedVolumeM3":quantities["shared_volume"],"SharedOwnerTags":"; ".join(owners)}
+        if cls=="IfcSlab":
+            values.update({"FinishScope":"separate_owned_weathering_material","FullFinishVolumeM3":quantities["finish_volume"],"OwnedFinishVolumeM3":quantities["exclusive_finish_volume"],"SharedFinishVolumeM3":quantities["shared_finish_volume"]})
+        ownership = {name:{"value":value,"ifc_type":"IfcText"} for name,value in values.items()}
+    if cls in ("IfcRamp","IfcRampFlight"):
+        physical = geometry["details"][0]
+        quantities = core.quantities(key,m)
+        values = {"BodyScope":"exclusive_owned_material","FullMemberScope":"selected_assembly_with_explicit_child_and_shared_ownership" if cls=="IfcRamp" else "native_flight_product","FullMemberVolumeM3":quantities["volume"],"OwnedVolumeM3":quantities["exclusive_volume"],"SharedVolumeM3":quantities["shared_volume"],"ChildProductVolumeM3":quantities["child_volume"],"SharedComponentReferences":"; ".join(p["owner_guid"]+"/"+p["tag"] for p in physical["shared_parts"]),"ThicknessDirection":"vertical","ThicknessDirectionBasis":"inferred","NominalThicknessM":obj["geometry"]["thickness"]["value"]}
+        ownership = {name:{"value":value,"ifc_type":"IfcText"} for name,value in values.items()}
     psets = obj.get("psets", {})
+    historical = psets.get("Pset_HistoricalEvidence",{})
+    if not historical and obj.get("historical_evidence"):
+        evidence = obj["historical_evidence"]
+        values = {"TargetState":evidence["state"],"Status":evidence["status"],"SourceReferences":"; ".join(evidence["sources"]),"ReconstructionUncertainty":evidence["uncertainty"][language]}
+        historical = {name:{"value":value,"ifc_type":"IfcText"} for name,value in values.items()}
     pset = f"Pset_{cls[3:]}Common" if f"Pset_{cls[3:]}Common" in psets else next(iter(psets), None)
     props = [name for name in properties if pset and name in psets[pset]]
     kind = core.element(obj["type"], m) if obj.get("type") else None
     storey = core.element(obj["storey"], m)
     type_level = bool(props and spatial and kind and pset in (kind.get("psets") or {}))
     keys = ["element", "placement", "axis", "point"] + (["refdir"] if body["refdir"] else []) + ["shape", "representation", "solid", "profile"]
+    if multipart:
+        keys = [k for k in keys if k not in ("solid", "profile")]
+        for i, part in enumerate(body["parts"]):
+            if "mesh" in part:
+                keys += [f"solid{i}",f"shell{i}"]
+                for j in range(len(part["mesh"]["faces"])):
+                    keys += [f"face{i}_{j}",f"bound{i}_{j}",f"loop{i}_{j}"]
+                keys += [f"brep_vertex{i}_{j}" for j in range(len(part["mesh"]["vertices"]))]
+                continue
+            keys += [f"solid{i}", f"profile{i}", f"axis{i}", f"point{i}"]
+            if "native_sweep" in part:
+                keys += [f"sweep_axis{i}",f"sweep_refdir{i}",f"sweep_direction{i}"]
+            shape = _native_profile_kind(part)
+            if shape in ("polygon","profile_void"):
+                if shape == "profile_void" and part["profile"]["shape"] in ("circle","ellipse"):
+                    keys += [f"outer_curve{i}",f"outer_axis{i}",f"outer_point{i}",f"outer_dir{i}"]
+                else:
+                    keys += [f"outer_curve{i}" if shape == "profile_void" else f"polyline{i}"]+[f"vertex{i}_{j}" for j in range(len(part["outline"]))]
+                for h,hole in enumerate(part.get("holes",())):
+                    keys += [f"hole_curve{i}_{h}",f"hole_axis{i}_{h}",f"hole_point{i}_{h}"]
+                if "top_outline" in part:
+                    keys += [f"end_profile{i}",f"end_polyline{i}"]+[f"end_vertex{i}_{j}" for j in range(len(part["top_outline"]))]
+            else:
+                keys += [f"profile_axis{i}", f"profile_point{i}", f"profile_dir{i}"]
     keys += (["profile_axis", "profile_point"] if centre else []) + ["direction", "context", "world_axis", "world_point"]
-    if layers:
+    if constituents:
+        for i in range(len(constituents)):
+            keys += [f"aspect_representation{i}",f"aspect{i}"]
+        keys += ["constituentset"]+[f"constituent{i}" for i in range(len(constituents))]+[f"component_material{i}" for i in range(len(component_materials))]
+    elif layers:
         keys += ["layerset"] + [f"layer{i}" for i in range(len(layers))] + [f"layer_material{i}" for i in range(len(layers))]
     elif material:
         keys += ["material"]
-    keys += (["rel_material"] if material else []) + [f"prop_{name}" for name in props] + (["pset"] + ([] if type_level else ["rel_pset"]) if props else [])
+    keys += (["rel_material"] if material or constituents else []) + [f"prop_{name}" for name in props] + (["pset"] + ([] if type_level else ["rel_pset"]) if props else [])
+    if historical:
+        keys += [f"historical_{name}" for name in historical]+["historical_pset","historical_relation"]
+    if ownership:
+        keys += [f"ownership_{name}" for name in ownership]+["ownership_pset","ownership_relation"]
+    if furnishing_quantity is not None:
+        keys += ["quantity_unit","quantity_volume","quantity_set","quantity_relation"]
     if spatial:
         keys += (["type", "rel_type"] if kind else []) + ["storey", "rel_storey"]
     w = _Writer(first_id, keys)
@@ -183,26 +362,121 @@ def step_excerpt(key: str, model: dict | None = None, *, first_id: int = 101, la
 
     w.lines += ["ISO-10303-21;", "HEADER;", "FILE_DESCRIPTION(('ViewDefinition [DesignTransferView]'),'2;1');",
                 f"FILE_NAME('{FILENAME}','{STAMP}',('Teaching'),('semio'),'','','');", f"FILE_SCHEMA(('{SCHEMA}'));", "ENDSEC;", "DATA;"]
-    w.add("element", cls.upper(), _str(obj["guid"], "guid"), "$", _str(obj["name"][language], "name"), "$", "$", w.ref("placement", "placement"), w.ref("shape", "representation"), _str(tag, "tag"), _enum(obj["predefined_type"], "predefined"), role="class")
+    attributes = [_str(obj["guid"],"guid"),"$",_str(obj["name"][language],"name"),"$","$",w.ref("placement","placement"),w.ref("shape","representation"),_str(tag,"tag")]
+    has_predefined = any("PredefinedType" in level["adds"] for level in core.class_chain(cls,m))
+    predefined = "$" if not has_predefined or cls in FILLING_CLASSES and spatial and kind else _enum(obj["predefined_type"],"predefined")
+    if cls in ("IfcWindow","IfcDoor"):
+        attributes += [(_real(body["rough_height"]),"height"),(_real(body["rough_width"]),"width"),predefined,"$","$"]
+    elif has_predefined:
+        attributes += [predefined]
+    if cls == "IfcChimney":
+        attributes += [(_real(body["depth"]),"height")]
+    w.add("element",cls.upper(),*attributes,role="class")
     w.add("placement", "IFCLOCALPLACEMENT", "$", w.ref("axis"))
     w.add("axis", "IFCAXIS2PLACEMENT3D", w.ref("point"), "$", w.ref("refdir") if body["refdir"] else "$")
     w.add("point", "IFCCARTESIANPOINT", _coords(body["point"], "placement"))
     if body["refdir"]:
         w.add("refdir", "IFCDIRECTION", _coords(body["refdir"]))
     w.add("shape", "IFCPRODUCTDEFINITIONSHAPE", "$", "$", _tuple(w.ref("representation")))
-    w.add("representation", "IFCSHAPEREPRESENTATION", w.ref("context"), _str("Body", "representation"), _str("SweptSolid", "representation"), _tuple(w.ref("solid")))
-    w.add("solid", "IFCEXTRUDEDAREASOLID", w.ref("profile"), w.ref("world_axis"), w.ref("direction"), (_real(body["depth"]), "depth"))
-    if centre:
-        w.add("profile", "IFCRECTANGLEPROFILEDEF", _enum("AREA"), "$", w.ref("profile_axis"), (_real(profile["x"]), "profile"), (_real(profile["y"]), "profile"))
-        w.add("profile_axis", "IFCAXIS2PLACEMENT2D", w.ref("profile_point"), "$")
-        w.add("profile_point", "IFCCARTESIANPOINT", _coords(profile["centre"]))
+    solids = [w.ref(f"solid{i}") for i in range(len(body["parts"]))] if multipart else [w.ref("solid")]
+    representation_type = "SolidModel" if multipart and any("mesh" in p for p in body["parts"]) else "SweptSolid"
+    w.add("representation", "IFCSHAPEREPRESENTATION", w.ref("context"), _str("Body", "representation"), _str(representation_type, "representation"), _tuple(*solids))
+    if multipart:
+        for i, part in enumerate(body["parts"]):
+            if "mesh" in part:
+                vertices,faces = core.part_vertices(part),core.part_faces(part)
+                w.add(f"solid{i}","IFCFACETEDBREP",w.ref(f"shell{i}"))
+                w.add(f"shell{i}","IFCCLOSEDSHELL",_tuple(*[w.ref(f"face{i}_{j}") for j in range(len(faces))]))
+                for j,face in enumerate(faces):
+                    w.add(f"face{i}_{j}","IFCFACE",_tuple(w.ref(f"bound{i}_{j}")))
+                    w.add(f"bound{i}_{j}","IFCFACEOUTERBOUND",w.ref(f"loop{i}_{j}"),_enum("T"))
+                    w.add(f"loop{i}_{j}","IFCPOLYLOOP",_tuple(*[w.ref(f"brep_vertex{i}_{k}") for k in face]))
+                for j,vertex in enumerate(vertices):
+                    w.add(f"brep_vertex{i}_{j}","IFCCARTESIANPOINT",_coords(vertex))
+                continue
+            p = part["profile"]
+            shape = _native_profile_kind(part)
+            solid_class = "IFCEXTRUDEDAREASOLIDTAPERED" if "top_outline" in part else "IFCEXTRUDEDAREASOLID"
+            end = [w.ref(f"end_profile{i}")] if "top_outline" in part else []
+            native = part.get("native_sweep")
+            direction = w.ref(f"sweep_direction{i}") if native else w.ref("direction")
+            depth = native["depth"] if native else part["z1"]-part["z0"]
+            w.add(f"solid{i}",solid_class,w.ref(f"profile{i}"),w.ref(f"axis{i}"),direction,(_real(depth),"depth"),*end)
+            if shape in ("polygon","profile_void"):
+                if shape == "profile_void":
+                    w.add(f"profile{i}","IFCARBITRARYPROFILEDEFWITHVOIDS",_enum("AREA"),"$",w.ref(f"outer_curve{i}"),_tuple(*[w.ref(f"hole_curve{i}_{h}") for h in range(len(part["holes"]))]))
+                else:
+                    w.add(f"profile{i}", "IFCARBITRARYCLOSEDPROFILEDEF", _enum("AREA"), "$", w.ref(f"polyline{i}"))
+            else:
+                clsname = {"circle":"IFCCIRCLEPROFILEDEF","circle_hollow":"IFCCIRCLEHOLLOWPROFILEDEF","rectangle":"IFCRECTANGLEPROFILEDEF","ellipse":"IFCELLIPSEPROFILEDEF"}[shape]
+                dimensions = [p["diameter"]["value"]/2] if shape in ("circle","circle_hollow") else [p["width"]["value"],p["depth"]["value"]]
+                if shape == "circle_hollow":
+                    dimensions.append((p["diameter"]["value"]-p["voids"][0]["diameter"]["value"])/2)
+                if shape == "ellipse":
+                    dimensions = [v / 2 for v in dimensions]
+                w.add(f"profile{i}", clsname, _enum("AREA"), "$", w.ref(f"profile_axis{i}"), *[(_real(v), "profile") for v in dimensions])
+            w.add(f"axis{i}","IFCAXIS2PLACEMENT3D",w.ref(f"point{i}"),w.ref(f"sweep_axis{i}") if native else "$",w.ref(f"sweep_refdir{i}") if native else "$")
+            w.add(f"point{i}","IFCCARTESIANPOINT",_coords(native["position"] if native else [0.,0.,part["z0"]]))
+            if native:
+                w.add(f"sweep_axis{i}","IFCDIRECTION",_coords(native["axis"]))
+                w.add(f"sweep_refdir{i}","IFCDIRECTION",_coords(native["refdir"]))
+                w.add(f"sweep_direction{i}","IFCDIRECTION",_coords(native["direction"]))
+            if shape in ("polygon","profile_void"):
+                if shape == "profile_void" and p["shape"] in ("circle","ellipse"):
+                    dimensions = [p["diameter"]["value"]/2] if p["shape"] == "circle" else [p["width"]["value"]/2,p["depth"]["value"]/2]
+                    w.add(f"outer_curve{i}","IFCCIRCLE" if p["shape"] == "circle" else "IFCELLIPSE",w.ref(f"outer_axis{i}"),*[_real(d) for d in dimensions])
+                    centre = [sum(v[k] for v in part["outline"])/len(part["outline"]) for k in (0,1)]
+                    angle = math.radians(p.get("rotation",0))
+                    w.add(f"outer_axis{i}","IFCAXIS2PLACEMENT2D",w.ref(f"outer_point{i}"),w.ref(f"outer_dir{i}"))
+                    w.add(f"outer_point{i}","IFCCARTESIANPOINT",_coords(centre))
+                    w.add(f"outer_dir{i}","IFCDIRECTION",_coords([math.cos(angle),math.sin(angle)]))
+                else:
+                    refs = [w.ref(f"vertex{i}_{j}") for j in range(len(part["outline"]))]
+                    w.add(f"outer_curve{i}" if shape == "profile_void" else f"polyline{i}","IFCPOLYLINE",_tuple(*(refs+refs[:1])))
+                    for j,point in enumerate(part["outline"]):
+                        w.add(f"vertex{i}_{j}","IFCCARTESIANPOINT",_coords(point))
+                for h,hole in enumerate(part.get("holes",())):
+                    centre = [sum(v[k] for v in hole)/len(hole) for k in (0,1)]
+                    radius = p["voids"][h]["diameter"]["value"]/2
+                    w.add(f"hole_curve{i}_{h}","IFCCIRCLE",w.ref(f"hole_axis{i}_{h}"),(_real(radius),"profile"))
+                    w.add(f"hole_axis{i}_{h}","IFCAXIS2PLACEMENT2D",w.ref(f"hole_point{i}_{h}"),"$")
+                    w.add(f"hole_point{i}_{h}","IFCCARTESIANPOINT",_coords(centre))
+                if "top_outline" in part:
+                    w.add(f"end_profile{i}","IFCARBITRARYCLOSEDPROFILEDEF",_enum("AREA"),"$",w.ref(f"end_polyline{i}"))
+                    refs = [w.ref(f"end_vertex{i}_{j}") for j in range(len(part["top_outline"]))]
+                    w.add(f"end_polyline{i}","IFCPOLYLINE",_tuple(*(refs+refs[:1])))
+                    for j,point in enumerate(part["top_outline"]):
+                        w.add(f"end_vertex{i}_{j}","IFCCARTESIANPOINT",_coords(point))
+            else:
+                centre_point = [sum(v[k] for v in part["outline"]) / len(part["outline"]) for k in (0,1)]
+                angle = math.radians(p.get("rotation", 0))
+                w.add(f"profile_axis{i}", "IFCAXIS2PLACEMENT2D", w.ref(f"profile_point{i}"), w.ref(f"profile_dir{i}"))
+                w.add(f"profile_point{i}", "IFCCARTESIANPOINT", _coords(centre_point))
+                w.add(f"profile_dir{i}", "IFCDIRECTION", _coords([math.cos(angle), math.sin(angle)]))
     else:
-        w.add("profile", "IFCCIRCLEPROFILEDEF", _enum("AREA"), "$", "$", (_real(profile["radius"]), "profile"))
+        w.add("solid", "IFCEXTRUDEDAREASOLID", w.ref("profile"), w.ref("world_axis"), w.ref("direction"), (_real(body["depth"]), "depth"))
+        if centre:
+            w.add("profile", "IFCRECTANGLEPROFILEDEF", _enum("AREA"), "$", w.ref("profile_axis"), (_real(profile["x"]), "profile"), (_real(profile["y"]), "profile"))
+            w.add("profile_axis", "IFCAXIS2PLACEMENT2D", w.ref("profile_point"), "$")
+            w.add("profile_point", "IFCCARTESIANPOINT", _coords(profile["centre"]))
+        else:
+            w.add("profile", "IFCCIRCLEPROFILEDEF", _enum("AREA"), "$", "$", (_real(profile["radius"]), "profile"))
     w.add("direction", "IFCDIRECTION", _coords([0.0, 0.0, 1.0]))
     w.add("context", "IFCGEOMETRICREPRESENTATIONCONTEXT", "$", _str("Model"), "3", "1.E-05", w.ref("world_axis"), "$")
     w.add("world_axis", "IFCAXIS2PLACEMENT3D", w.ref("world_point"), "$", "$")
     w.add("world_point", "IFCCARTESIANPOINT", _coords([0.0, 0.0, 0.0]))
-    if layers:
+    if constituents:
+        for i,component in enumerate(constituents):
+            refs = [w.ref(f"solid{j}") for j in component["parts"]]
+            w.add(f"aspect_representation{i}","IFCSHAPEREPRESENTATION",w.ref("context"),_str("Body"),_str("SweptSolid"),_tuple(*refs))
+            w.add(f"aspect{i}","IFCSHAPEASPECT",_tuple(w.ref(f"aspect_representation{i}")),_str(component["name"]),"$",_enum("T"),w.ref("shape"))
+        w.add("constituentset","IFCMATERIALCONSTITUENTSET",_str(obj["name"][language],"material"),"$",_tuple(*[w.ref(f"constituent{i}") for i in range(len(constituents))]))
+        for i,component in enumerate(constituents):
+            material_index = component_materials.index(component["material"])
+            w.add(f"constituent{i}","IFCMATERIALCONSTITUENT",_str(component["name"]),"$",w.ref(f"component_material{material_index}"),"$",_str(component["category"]))
+        for i,material_tag in enumerate(component_materials):
+            w.add(f"component_material{i}","IFCMATERIAL",_str(core.element(material_tag,m)["name"][language],"material"),"$",_str(core.element(material_tag,m)["category"]) if "category" in core.element(material_tag,m) else "$")
+    elif layers:
         w.add("layerset", "IFCMATERIALLAYERSET", _tuple(*[w.ref(f"layer{i}") for i in range(len(layers))]), _str(material["name"][language], "material"), "$")
         for i, layer in enumerate(layers):
             w.add(f"layer{i}", "IFCMATERIALLAYER", w.ref(f"layer_material{i}"), _real(layer["thickness"]["value"]), "$", "$", "$", "$", "$")
@@ -210,27 +484,66 @@ def step_excerpt(key: str, model: dict | None = None, *, first_id: int = 101, la
             w.add(f"layer_material{i}", "IFCMATERIAL", _str(core.element(layer["material"], m)["name"][language], "material"), "$", "$")
     elif material:
         w.add("material", "IFCMATERIAL", _str(material["name"][language], "material"), "$", "$")
-    if material:
-        w.add("rel_material", "IFCRELASSOCIATESMATERIAL", guid("material"), "$", "$", "$", _tuple(w.ref("element")), w.ref("layerset" if layers else "material"))
+    if material or constituents:
+        related = [w.ref("element")]+([w.ref("type")] if constituents and spatial and kind else [])
+        w.add("rel_material","IFCRELASSOCIATESMATERIAL",guid("material"),"$","$","$",_tuple(*related),w.ref("constituentset" if constituents else "layerset" if layers else "material"))
     for name in props:
         w.add(f"prop_{name}", "IFCPROPERTYSINGLEVALUE", _str(name, "property"), "$", _value(psets[pset][name]), "$")
     if props:
         w.add("pset", "IFCPROPERTYSET", guid(pset, kind["tag"] if type_level else None), "$", _str(pset, "pset"), "$", _tuple(*[w.ref(f"prop_{name}") for name in props]))
         if not type_level:
             w.add("rel_pset", "IFCRELDEFINESBYPROPERTIES", guid(f"{pset}.rel"), "$", "$", "$", _tuple(w.ref("element")), w.ref("pset"))
+    if historical:
+        for name,entry in historical.items():
+            w.add(f"historical_{name}","IFCPROPERTYSINGLEVALUE",_str(name),"$",_value(entry),"$")
+        w.add("historical_pset","IFCPROPERTYSET",guid("Pset_HistoricalEvidence"),"$",_str("Pset_HistoricalEvidence"),"$",_tuple(*[w.ref(f"historical_{name}") for name in historical]))
+        w.add("historical_relation","IFCRELDEFINESBYPROPERTIES",guid("Pset_HistoricalEvidence.rel"),"$","$","$",_tuple(w.ref("element")),w.ref("historical_pset"))
+    if ownership:
+        for name,entry in ownership.items():
+            w.add(f"ownership_{name}","IFCPROPERTYSINGLEVALUE",_str(name),"$",_value(entry),"$")
+        w.add("ownership_pset","IFCPROPERTYSET",guid("Pset_MaterialOwnership"),"$",_str("Pset_MaterialOwnership"),"$",_tuple(*[w.ref(f"ownership_{name}") for name in ownership]))
+        w.add("ownership_relation","IFCRELDEFINESBYPROPERTIES",guid("Pset_MaterialOwnership.rel"),"$","$","$",_tuple(w.ref("element")),w.ref("ownership_pset"))
+    if furnishing_quantity is not None:
+        w.add("quantity_unit","IFCSIUNIT","*",_enum("VOLUMEUNIT"),"$",_enum("CUBIC_METRE"))
+        w.add("quantity_volume","IFCQUANTITYVOLUME",_str("NetVolume"),_str("Occupied material union" if language=="en" else "Vereinigung des belegten Materials"),w.ref("quantity_unit"),(_real(furnishing_quantity["volume"]),"quantity"),"$")
+        w.add("quantity_set","IFCELEMENTQUANTITY",guid("FurnishingOwnedQuantities"),"$",_str("FurnishingOwnedQuantities"),"$",_str("Union of occupied material" if language=="en" else "Vereinigung des belegten Materials"),_tuple(w.ref("quantity_volume")))
+        w.add("quantity_relation","IFCRELDEFINESBYPROPERTIES",guid("FurnishingOwnedQuantities.rel"),"$","$","$",_tuple(w.ref("element")),w.ref("quantity_set"))
     if spatial:
         if kind:
-            w.add("type", kind["class"].upper(), _str(kind["guid"]), "$", _str(kind["name"][language]), "$", "$", _tuple(w.ref("pset")) if type_level else "$", "$", "$", "$", _enum(kind["predefined_type"]))
+            w.add("type",kind["class"].upper(),_str(kind["guid"]),"$",_str(kind["name"][language]),"$","$",_tuple(w.ref("pset")) if type_level else "$","$","$","$",_enum(kind["predefined_type"]),*_type_layout(kind))
             w.add("rel_type", "IFCRELDEFINESBYTYPE", guid("type"), "$", "$", "$", _tuple(w.ref("element")), w.ref("type"))
         w.add("storey", "IFCBUILDINGSTOREY", _str(storey["guid"]), "$", _str(storey["name"][language]), "$", "$", "$", "$", "$", _enum("ELEMENT"), _real(storey["elevation"]["value"]))
         w.add("rel_storey", "IFCRELCONTAINEDINSPATIALSTRUCTURE", guid("storey"), "$", "$", "$", _tuple(w.ref("element")), w.ref("storey"))
     w.lines += ["ENDSEC;", "END-ISO-10303-21;"]
-    return {"key": tag, "guid": obj["guid"], "class": cls, "schema": SCHEMA, "language": language, "first_id": first_id, "lines": w.lines, "spans": w.spans,
+    result = {"key": tag, "guid": obj["guid"], "class": cls, "schema": SCHEMA, "language": language, "first_id": first_id, "lines": w.lines, "spans": w.spans,
             "ids": {name: f"#{number}" for name, number in w.ids.items()}, "entities": w.entities}
+
+    return _ramp_assembly_excerpt(result,m,obj,language) if cls=="IfcRamp" else result
+
+
+def _triangulate(ring: list) -> list:
+    indices, triangles = list(range(len(ring))), []
+    def cross(a, b, c):
+        return (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])
+    if all(cross(ring[i-1], ring[i], ring[(i+1) % len(ring)]) > 1e-14 for i in range(len(ring))):
+        return [[0, i, i+1] for i in range(1, len(ring)-1)]
+    while len(indices) > 3:
+        for j, b in enumerate(indices):
+            a, c = indices[j-1], indices[(j+1)%len(indices)]
+            if cross(ring[a],ring[b],ring[c]) <= 1e-14:
+                continue
+            if any(all(cross(ring[u],ring[v],ring[k]) >= -1e-14 for u,v in ((a,b),(b,c),(c,a))) for k in indices if k not in (a,b,c)):
+                continue
+            triangles.append([a,b,c])
+            indices.pop(j)
+            break
+        else:
+            raise ValueError("Column profile must be a simple polygon")
+    return triangles + [indices]
 
 
 def mesh(key: str, segments: int = 16, model: dict | None = None) -> dict:
-    """🔺 Tessellate a piloti into a closed triangle mesh (cylinder, fan-triangulated caps) and list what the mesh keeps and loses.
+    """🔺 Tessellate physical column profile sections into closed triangle meshes with ear-clipped caps and list what the mesh keeps and loses.
 
     https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcTriangulatedFaceSet.htm
     """
@@ -241,15 +554,32 @@ def mesh(key: str, segments: int = 16, model: dict | None = None) -> dict:
         raise ValueError(f"No mesh export for {obj['class']}")
     if isinstance(segments, bool) or not isinstance(segments, int) or segments < 3:
         raise ValueError("A mesh needs at least 3 segments")
-    p = next(x for x in core.building_geometry(m)["pilotis"] if x["tag"] == obj["tag"])
-    n, r, x, y = segments, p["radius"], p["x"], p["y"]
-    angles = [2 * math.pi * i / n for i in range(n)]
-    ring = [(round(x + r * math.cos(a), 9), round(y + r * math.sin(a), 9)) for a in angles]
-    vertices = [[px, py, p["base"]] for px, py in ring] + [[px, py, p["top"]] for px, py in ring] + [[x, y, p["base"]], [x, y, p["top"]]]
-    sides = [face for i in range(n) for j in [(i + 1) % n] for face in ([i, j, n + j], [i, n + j, n + i])]
-    top = [[2 * n + 1, n + i, n + (i + 1) % n] for i in range(n)]
-    bottom = [[2 * n, (i + 1) % n, i] for i in range(n)]
-    faces = sides + top + bottom
+    p = core.column_geometry(m, core.element(key,m), segments)
+    vertices, faces = [], []
+    layouts = []
+    for part in p["parts"]:
+        if part.get("holes"):
+            cap = core.profile_mesh([part["outline"],*part["holes"]])
+            points,native = core.part_vertices(part),core.part_faces(part)
+            offset,face_offset,n = len(vertices),len(faces),len(points)//2
+            vertices += points
+            boundary_count = sum(len(r) for r in cap["boundaries"])
+            for face in native:
+                faces += [[offset+face[0],offset+face[i],offset+face[i+1]] for i in range(1,len(face)-1)]
+            side_end = face_offset+2*boundary_count
+            top_end = side_end+len(cap["triangles"])
+            layouts.append({"bottom":list(range(offset,offset+n)),"top":list(range(offset+n,offset+2*n)),"side_faces":[face_offset,side_end],"top_faces":[side_end,top_end],"bottom_faces":[top_end,len(faces)],"holes":len(part["holes"])})
+            continue
+        ring = part["outline"]
+        n, offset, face_offset = len(ring), len(vertices), len(faces)
+        vertices += [[px, py, part["z0"]] for px, py in ring] + [[px, py, part["z1"]] for px, py in ring]
+        cap = _triangulate(ring)
+        sides = [face for i in range(n) for j in [(i + 1) % n] for face in ([i,j,n+j],[i,n+j,n+i])]
+        faces += [[offset + k for k in f] for f in sides + [[n+a,n+b,n+c] for a,b,c in cap] + [[c,b,a] for a,b,c in cap]]
+        layouts.append({"bottom": list(range(offset,offset+n)), "top": list(range(offset+n,offset+2*n)),
+                        "side_faces": [face_offset, face_offset+2*n], "top_faces": [face_offset+2*n,face_offset+2*n+len(cap)],
+                        "bottom_faces": [face_offset+2*n+len(cap),len(faces)]})
+    x, y = p["x"], p["y"]
     psets = obj.get("psets", {})
     pset = next((name for name, props in psets.items() if "LoadBearing" in props), None)
     kind = core.element(obj["type"], m) if obj.get("type") else None
@@ -259,10 +589,10 @@ def mesh(key: str, segments: int = 16, model: dict | None = None) -> dict:
     lost += [{"id": "property", "en": f"{pset}.LoadBearing", "de": f"{pset}.LoadBearing"}] if pset else []
     lost += [{"id": "material", "en": f"Material {material['name']['en']}", "de": f"Material {material['name']['de']}"}] if material else []
     lost += [{"id": "type", "en": f"Type {kind['name']['en']}", "de": f"Typ {kind['name']['de']}"}] if kind else []
-    return {"tag": obj["tag"], "guid": obj["guid"], "segments": n, "radius": r, "height": p["top"] - p["base"], "centre": [x, y],
+    return {"tag": obj["tag"], "guid": obj["guid"], "segments": segments, "height": p["top"] - p["base"], "centre": [x, y],
             "vertices": vertices, "faces": faces, "vertex_count": len(vertices), "triangle_count": len(faces), "kept": kept, "lost": lost,
-            "layout": {"bottom": list(range(n)), "top": list(range(n, 2 * n)), "bottom_centre": 2 * n, "top_centre": 2 * n + 1,
-                       "side_faces": [0, 2 * n], "top_faces": [2 * n, 3 * n], "bottom_faces": [3 * n, 4 * n]}}
+            "layout": layouts[0], "part_layouts": layouts, "profile": p["profile"]}
+
 
 
 def _normalise(spec) -> dict:
@@ -328,3 +658,4 @@ def ids_check(model: dict | None = None, spec=None, *, source: str = "semantic")
     return {"spec": spec, "source": source, "applicability": applicability, "requirement": requirement, "cardinality": cardinality,
             "expected": len(expected), "found": len(applicable), "checked": len(items), "passed": len(passed), "failed": [item["tag"] for item in items if not item["ok"]],
             "applicable": applicable, "passed_tags": passed, "items": items}
+                                                                                                                                                                                                                                         

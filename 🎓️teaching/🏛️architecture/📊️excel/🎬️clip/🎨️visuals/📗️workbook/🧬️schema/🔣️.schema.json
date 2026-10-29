@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Excel Workbook Widget Strings",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "file", "ribbon", "reference_colors", "ui", "errors"],
+  "properties": {
+    "version": {"const": 1},
+    "file": {"type": "string", "pattern": "\\.xlsx$"},
+    "ribbon": {
+      "type": "array",
+      "minItems": 8,
+      "items": {"type": "object", "additionalProperties": false, "required": ["key", "en", "de"],
+                "properties": {"key": {"type": "string"}, "en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}}
+    },
+    "reference_colors": {"type": "array", "minItems": 6, "items": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"}},
+    "ui": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/text"}
+    },
+    "errors": {
+      "type": "object",
+      "minProperties": 5,
+      "propertyNames": {"pattern": "^#"},
+      "additionalProperties": {
+        "type": "object", "additionalProperties": false, "required": ["en", "de", "tip"],
+        "properties": {"en": {"type": "string"}, "de": {"type": "string"}, "tip": {"$ref": "#/$defs/text"}}
+      }
+    }
+  },
+  "$defs": {
+    "text": {"type": "object", "additionalProperties": false, "required": ["en", "de"],
+             "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}}
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "status": "offline-candidate-not-published",
+  "evidence": {
+    "official_leaflet": "https://www.villa-savoye.fr/content/download/9824393/file/document-visite-villa-savoye-FR-2021.pdf?version=3",
+    "photographic_record": "https://projects.mcah.columbia.edu/ha/panos/Villa-Savoye/Master-Bedroom/",
+    "photo_author": "Andrew Tallon, Media Center for Art History, Columbia University,2003",
+    "book": "https://uvadoc.uva.es/bitstream/10324/68427/1/9788413202839.pdf",
+    "book_pages": [
+      110,
+      124
+    ]
+  },
+  "alcove": {
+    "supports": [
+      "27-FIRST",
+      "32-FIRST"
+    ],
+    "existing_beam": "BEAM-PRIMARY-R-20-32",
+    "back_wall": "W-SON-PRIVATE",
+    "reference_axes": [
+      [
+        4.737,
+        17.277
+      ],
+      [
+        4.75,
+        20.25
+      ]
+    ],
+    "new_supports": 0,
+    "loose_bed": false,
+    "column32_upper_profile": {
+      "shape": "circle",
+      "diameter": 0.22,
+      "dimension_basis": "nominal-CSIC2022",
+      "shape_basis": "book-p110-and-p124-plus-observed-2003-photograph"
+    }
+  },
+  "topology": {
+    "remove_false_crosswalls": [
+      "W-PARENTS",
+      "W-PARENTS-RETURN",
+      "W-PARENTS-SOUTH",
+      "W-PARENT-BATH-N"
+    ],
+    "bath_open_to_bedroom": true,
+    "bath_connection": "curtain-at-column27-not-masonry",
+    "north_opening_y": 17.277,
+    "parents_bedroom_candidate": [
+      [
+        4.3,
+        17.277
+      ],
+      [
+        6.8,
+        17.277
+      ],
+      [
+        6.8,
+        15.5
+      ],
+      [
+        10.898,
+        15.5
+      ],
+      [
+        10.898,
+        21.2
+      ],
+      [
+        4.3,
+        21.2
+      ]
+    ],
+    "parents_bath_candidate": [
+      [
+        4.5,
+        11.8
+      ],
+      [
+        6.8,
+        11.8
+      ],
+      [
+        6.8,
+        17.277
+      ],
+      [
+        4.5,
+        17.277
+      ]
+    ],
+    "public_corridor_candidate": {
+      "x": [
+        3.6,
+        4.5
+      ],
+      "partition_thickness": 0.08,
+      "basis": "CMNthin-lineproportion,unmeasured",
+      "body_width": 0.8
+    },
+    "son_entry_leg_candidate": {
+      "x": [
+        3.6,
+        4.5
+      ],
+      "entry_y": 15.65,
+      "north_end_y": 17.277
+    },
+    "shared_bath_candidate": [
+      [
+        0.3,
+        14.1
+      ],
+      [
+        3.6,
+        14.1
+      ],
+      [
+        3.6,
+        15.65
+      ],
+      [
+        0.3,
+        15.65
+      ]
+    ],
+    "required_fixture_repairs": [
+      "Rotate or shorten assumed shared bathtub within revised actual room; preserve hollow cavity",
+      "Move dressing cabinet away from column27 and genuine public son route",
+      "Retain guest rooflight/basin registration"
+    ]
+  },
+  "validation_required": [
+    "Exact0.8m continuous public route independent of private parents suite",
+    "Bed-head alcove bounded by actual27/32 column surfaces with no additional post products",
+    "Bath/bedroom opening physically unfilled across curtain plane",
+    "No fixture-wall-column intersections",
+    "Separate suite entrance from public passage; source CMN60m2 is reference, not area fitting target"
+  ]
+}

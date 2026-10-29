@@ -1,0 +1,35 @@
+{
+  "pipes": [
+    "DP-1",
+    "DP-2",
+    "DP-1-OUTLET",
+    "DP-2-OUTLET"
+  ],
+  "beam_voids": [
+    [
+      "BEAM-PRIMARY-F-2-7",
+      "V-DP-1-FLOOR",
+      "OP-DP-1-FLOOR"
+    ],
+    [
+      "BEAM-PRIMARY-F-4-10",
+      "V-DP-2-FLOOR",
+      "OP-DP-2-FLOOR"
+    ],
+    [
+      "BEAM-PRIMARY-R-2-7",
+      "V-DP-1-ROOF",
+      "OP-DP-1-ROOF"
+    ],
+    [
+      "BEAM-PRIMARY-R-4-10",
+      "V-DP-2-ROOF",
+      "OP-DP-2-ROOF"
+    ]
+  ],
+  "nominal_diameter": 0.08,
+  "inferred_geometric_outer_diameter": 0.08,
+  "inferred_reserved_diameter": 0.1,
+  "minimum_faceted_gap": 0.0099,
+  "maximum_material_intersection_volume": 1e-10
+}

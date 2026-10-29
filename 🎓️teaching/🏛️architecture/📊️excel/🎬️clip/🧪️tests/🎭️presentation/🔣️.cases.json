@@ -1,0 +1,251 @@
+{
+  "languages": [
+    "en",
+    "de"
+  ],
+  "animations": [
+    "FadeIn",
+    "FadeOut"
+  ],
+  "clauses": {
+    "min": 14,
+    "max": 24
+  },
+  "topics": [
+    {
+      "id": "excel_anatomy",
+      "folder": "🦴️anatomy",
+      "scene": "Beat1_Anatomy",
+      "topic": "anatomy"
+    },
+    {
+      "id": "excel_references",
+      "folder": "📍️references",
+      "scene": "Beat2_References",
+      "topic": "references"
+    },
+    {
+      "id": "excel_program",
+      "folder": "📋️program",
+      "scene": "Beat3_Program",
+      "topic": "program"
+    },
+    {
+      "id": "excel_energy",
+      "folder": "⚡️energy",
+      "scene": "Beat4_Energy",
+      "topic": "energy"
+    }
+  ],
+  "dependencies": [
+    "🏛️architecture/📊️excel/🎬️clip/🎨️visuals/🐍️.py",
+    "🏛️architecture/📊️excel/🎬️clip/🎨️visuals/📗️workbook/🐍️.py",
+    "🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/📐️drafting/🐍️.py"
+  ],
+  "addresses": [
+    {
+      "a1": "A1",
+      "column": 1,
+      "row": 1
+    },
+    {
+      "a1": "$B$3",
+      "column": 2,
+      "row": 3
+    },
+    {
+      "a1": "Z9",
+      "column": 26,
+      "row": 9
+    },
+    {
+      "a1": "AA10",
+      "column": 27,
+      "row": 10
+    },
+    {
+      "a1": "XFD1048576",
+      "column": 16384,
+      "row": 1048576
+    }
+  ],
+  "ranges": [
+    {
+      "a1": "B2",
+      "box": [
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "a1": "B2:D4",
+      "box": [
+        2,
+        2,
+        4,
+        4
+      ]
+    },
+    {
+      "a1": "D4:B2",
+      "box": [
+        2,
+        2,
+        4,
+        4
+      ]
+    },
+    {
+      "a1": "$A$1:$C$3",
+      "box": [
+        1,
+        1,
+        3,
+        3
+      ]
+    }
+  ],
+  "references": [
+    {
+      "formula": "=B2*B3",
+      "refs": [
+        "B2",
+        "B3"
+      ]
+    },
+    {
+      "formula": "=B2*B2+B3",
+      "refs": [
+        "B2",
+        "B2",
+        "B3"
+      ]
+    },
+    {
+      "formula": "=SUM(B3:B5)/$B$1",
+      "refs": [
+        "B3:B5",
+        "$B$1"
+      ]
+    },
+    {
+      "formula": "='Type A'!B3+Climate!C12",
+      "refs": [
+        "'Type A'!B3",
+        "Climate!C12"
+      ]
+    },
+    {
+      "formula": "=SUM('Type A:Type C'!B12)",
+      "refs": [
+        "'Type A:Type C'!B12"
+      ]
+    },
+    {
+      "formula": "=LOG10(B2)+ATAN2(C3,D4)",
+      "refs": [
+        "B2",
+        "C3",
+        "D4"
+      ]
+    },
+    {
+      "formula": "=IF(B2>0,\"B5\",\"C6\")",
+      "refs": [
+        "B2"
+      ]
+    },
+    {
+      "formula": "=SUMME(B3:B5;1,5)",
+      "refs": [
+        "B3:B5"
+      ]
+    },
+    {
+      "formula": "=PI()*(B7/2)^2",
+      "refs": [
+        "B7"
+      ]
+    }
+  ],
+  "errors": {
+    "#DIV/0!": {
+      "en": "#DIV/0!",
+      "de": "#DIV/0!"
+    },
+    "#REF!": {
+      "en": "#REF!",
+      "de": "#BEZUG!"
+    },
+    "#NAME?": {
+      "en": "#NAME?",
+      "de": "#NAME?"
+    },
+    "#VALUE!": {
+      "en": "#VALUE!",
+      "de": "#WERT!"
+    },
+    "#N/A": {
+      "en": "#N/A",
+      "de": "#NV"
+    }
+  },
+  "ribbon": {
+    "en": [
+      "File",
+      "Home",
+      "Insert",
+      "Page Layout",
+      "Formulas",
+      "Data",
+      "Review",
+      "View"
+    ],
+    "de": [
+      "Datei",
+      "Start",
+      "Einfügen",
+      "Seitenlayout",
+      "Formeln",
+      "Daten",
+      "Überprüfen",
+      "Ansicht"
+    ]
+  },
+  "window": {
+    "sheets": [
+      "Program",
+      "Type A"
+    ],
+    "cells": {
+      "A1": "Width",
+      "B1": 2.3,
+      "B2": 3.8,
+      "B3": "=B1*B2",
+      "C2": "#SPILL!",
+      "C3": "#REF!"
+    },
+    "formats": {
+      "B1": "0.00",
+      "B2": "0.00",
+      "B3": "0.00"
+    },
+    "range": "B1:B2",
+    "selected": "B3",
+    "editing": "=B1*B2",
+    "bound": {
+      "cell": "B1",
+      "tracker": 4.5
+    }
+  },
+  "engine": {
+    "formula": "=SUM(B2,1.5)",
+    "de": "=SUMME(B2;1,5)"
+  },
+  "long_formula": {
+    "cell": "B4",
+    "de": "=SUMMENPRODUKT((Kapseln!$D$2:$D$400=B2)*(Kapseln!$E$2:$E$400=\"A\")*Kapseln!$F$2:$F$400)+ZÄHLENWENNS(Kapseln!$A$2:$A$400;B2;Kapseln!$B$2:$B$400;\"Turm 1\")"
+  }
+}

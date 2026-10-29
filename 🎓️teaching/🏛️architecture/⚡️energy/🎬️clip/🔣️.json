@@ -747,6 +747,150 @@
       "output": "BIM_consistency"
     },
     {
+      "id": "grasshopper_anatomy",
+      "script": "🏛️architecture/🦗️grasshopper/🦴️anatomy/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "Grasshopper_01_Anatomy",
+          "segments": [
+            {
+              "script": "🏛️architecture/🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py",
+              "scene": "Beat1_Anatomy"
+            }
+          ]
+        }
+      ],
+      "output": "Grasshopper_anatomy"
+    },
+    {
+      "id": "grasshopper_capsule",
+      "script": "🏛️architecture/🦗️grasshopper/💊️capsule/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "Grasshopper_02_Capsule",
+          "segments": [
+            {
+              "script": "🏛️architecture/🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py",
+              "scene": "Beat2_Capsule"
+            }
+          ]
+        }
+      ],
+      "output": "Grasshopper_capsule"
+    },
+    {
+      "id": "grasshopper_tower",
+      "script": "🏛️architecture/🦗️grasshopper/🗼️tower/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "Grasshopper_03_Tower",
+          "segments": [
+            {
+              "script": "🏛️architecture/🦗️grasshopper/🎬️clip/🗼️tower/🐍️.py",
+              "scene": "Beat3_Tower"
+            }
+          ]
+        }
+      ],
+      "output": "Grasshopper_tower"
+    },
+    {
+      "id": "grasshopper_casting",
+      "script": "🏛️architecture/🦗️grasshopper/🫗️casting/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "Grasshopper_04_Casting",
+          "segments": [
+            {
+              "script": "🏛️architecture/🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py",
+              "scene": "Beat4_Casting"
+            }
+          ]
+        }
+      ],
+      "output": "Grasshopper_casting"
+    },
+    {
+      "id": "grasshopper_trees",
+      "script": "🏛️architecture/🦗️grasshopper/🌳️trees/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "Grasshopper_05_Trees",
+          "segments": [
+            {
+              "script": "🏛️architecture/🦗️grasshopper/🎬️clip/🌳️trees/🐍️.py",
+              "scene": "Beat5_DataTrees"
+            }
+          ]
+        }
+      ],
+      "output": "Grasshopper_trees"
+    },
+    {
+      "id": "excel_anatomy",
+      "script": "🏛️architecture/📊️excel/🦴️anatomy/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "Excel_01_Anatomy",
+          "segments": [
+            {
+              "script": "🏛️architecture/📊️excel/🎬️clip/🦴️anatomy/🐍️.py",
+              "scene": "Beat1_Anatomy"
+            }
+          ]
+        }
+      ],
+      "output": "Excel_anatomy"
+    },
+    {
+      "id": "excel_references",
+      "script": "🏛️architecture/📊️excel/📍️references/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "Excel_02_References",
+          "segments": [
+            {
+              "script": "🏛️architecture/📊️excel/🎬️clip/📍️references/🐍️.py",
+              "scene": "Beat2_References"
+            }
+          ]
+        }
+      ],
+      "output": "Excel_references"
+    },
+    {
+      "id": "excel_program",
+      "script": "🏛️architecture/📊️excel/📋️program/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "Excel_03_Program",
+          "segments": [
+            {
+              "script": "🏛️architecture/📊️excel/🎬️clip/📋️program/🐍️.py",
+              "scene": "Beat3_Program"
+            }
+          ]
+        }
+      ],
+      "output": "Excel_program"
+    },
+    {
+      "id": "excel_energy",
+      "script": "🏛️architecture/📊️excel/⚡️energy/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "Excel_04_Energy",
+          "segments": [
+            {
+              "script": "🏛️architecture/📊️excel/🎬️clip/⚡️energy/🐍️.py",
+              "scene": "Beat4_Energy"
+            }
+          ]
+        }
+      ],
+      "output": "Excel_energy"
+    },
+    {
       "id": "optimization_extrema",
       "script": "🏛️architecture/🎯️optimization/📉️extrema/🎬️clip/🐍️.py",
       "chapters": [

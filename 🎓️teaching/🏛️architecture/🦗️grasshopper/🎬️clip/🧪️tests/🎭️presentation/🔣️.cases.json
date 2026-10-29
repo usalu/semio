@@ -1,0 +1,14 @@
+{
+  "languages": ["en", "de"],
+  "animations": ["FadeIn", "FadeOut"],
+  "clauses": {"min": 14, "max": 24},
+  "excluded": ["🎨️visuals", "🧪️tests", "🧪️cases", "🧱️model"],
+  "chapters": [],
+  "widgets": {
+    "components": ["Center Box", "Series", "Graft Tree"],
+    "wire_kinds": ["item", "list", "tree"],
+    "levels": ["warning", "error", "remark"],
+    "states": ["ok", "warning", "error", "disabled"],
+    "ribbon": ["Params", "Maths", "Sets", "Vector", "Curve", "Surface", "Mesh", "Intersect", "Transform", "Display"]
+  }
+}

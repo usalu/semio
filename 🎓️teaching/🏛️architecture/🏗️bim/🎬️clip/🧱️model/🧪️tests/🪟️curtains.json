@@ -1,0 +1,113 @@
+{
+  "name": "Nonuniform native curtain with a true hosted door",
+  "path": {
+    "tag": "PATH-TEST",
+    "path": [
+      [
+        0,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        3,
+        1
+      ]
+    ],
+    "stations": [
+      {
+        "tag": "J0",
+        "position": {
+          "value": 0,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "visibility": "endpoint"
+      },
+      {
+        "tag": "M1",
+        "position": {
+          "value": 0.55,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "visibility": "visible"
+      },
+      {
+        "tag": "M2",
+        "position": {
+          "value": 1.45,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "visibility": "visible"
+      },
+      {
+        "tag": "M3",
+        "position": {
+          "value": 2,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "visibility": "visible"
+      },
+      {
+        "tag": "J1",
+        "position": {
+          "value": 3.414213562373095,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "visibility": "endpoint"
+      }
+    ]
+  },
+  "opening": {
+    "start": 0.8,
+    "end": 1.2,
+    "sill": 0,
+    "head": 2
+  },
+  "base": 0,
+  "top": 3,
+  "transoms": [
+    {
+      "tag": "MID-RAIL",
+      "height": {
+        "value": 1,
+        "unit": "m",
+        "basis": "assumed"
+      }
+    }
+  ],
+  "expected": {
+    "host": "CW-1",
+    "host_class": "IfcCurtainWall",
+    "rough_width": 0.4,
+    "rough_height": 2,
+    "cut_depth": 0.04,
+    "aperture_volume": 0.032,
+    "minimum_glass_panels": 8,
+    "aperture_fillings": [
+      "D-ENTRY"
+    ],
+    "curtain_obstacle_kind": "curtain"
+  },
+  "side_wings": {
+    "width": 0.04,
+    "depth": 0.08,
+    "skin": 0.002,
+    "recess": 0.02,
+    "clear_width": 0.27
+  },
+  "hosted_fillings": {
+    "host": "CW-1",
+    "fillings": [
+      "D-ENTRY",
+      "D-SERVICE"
+    ],
+    "ownership": "The native filling owns its occupied casing/frame/leaf, including parts extending beyond its rough aperture."
+  }
+}

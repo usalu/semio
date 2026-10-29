@@ -1,0 +1,294 @@
+{
+  "source_image": "cmn-plans.png",
+  "source_phase": "Contemporary CMN visitor plan; coordinate registration inferred",
+  "pixel_origin": [
+    730,
+    100
+  ],
+  "controls": [
+    {
+      "id": "axis-0-south",
+      "pixel": [
+        746.75,
+        346.75
+      ],
+      "world": [
+        0,
+        1.25
+      ]
+    },
+    {
+      "id": "axis-19-south",
+      "pixel": [
+        966,
+        346.75
+      ],
+      "world": [
+        19,
+        1.25
+      ]
+    },
+    {
+      "id": "axis-0-north",
+      "pixel": [
+        746.75,
+        127.75
+      ],
+      "world": [
+        0,
+        20.25
+      ]
+    },
+    {
+      "id": "axis-19-north",
+      "pixel": [
+        966,
+        127.75
+      ],
+      "world": [
+        19,
+        20.25
+      ]
+    },
+    {
+      "id": "column-8-axis",
+      "pixel": [
+        872.5,
+        292
+      ],
+      "world": [
+        10.898,
+        6.006
+      ]
+    },
+    {
+      "id": "column-9-axis",
+      "pixel": [
+        842,
+        292
+      ],
+      "world": [
+        8.128,
+        6.006
+      ]
+    },
+    {
+      "id": "helical-stair-axis",
+      "pixel": [
+        818,
+        255.5
+      ],
+      "world": [
+        6.23842,
+        9.263605
+      ]
+    }
+  ],
+  "trace_pixels": [
+    [
+      783,
+      237
+    ],
+    [
+      783.75,
+      246.25
+    ],
+    [
+      786.25,
+      255.75
+    ],
+    [
+      790.75,
+      265.5
+    ],
+    [
+      797,
+      275.25
+    ],
+    [
+      805.5,
+      284.75
+    ],
+    [
+      816.25,
+      293.5
+    ],
+    [
+      826.5,
+      300.25
+    ],
+    [
+      837.5,
+      305.25
+    ],
+    [
+      846.5,
+      308
+    ],
+    [
+      868,
+      308
+    ],
+    [
+      878.25,
+      305
+    ],
+    [
+      889.5,
+      299.75
+    ],
+    [
+      900,
+      292.75
+    ],
+    [
+      906.25,
+      290
+    ]
+  ],
+  "glazed_endpoints_indices": [
+    0,
+    14
+  ],
+  "entry_endpoint_indices": [
+    9,
+    10
+  ],
+  "garage_diagonal_pixels": [
+    [
+      872.5,
+      266.75
+    ],
+    [
+      906.25,
+      290
+    ]
+  ],
+  "east_conceptual_envelope_pixels": [
+    [
+      906.25,
+      290
+    ],
+    [
+      913,
+      281.75
+    ],
+    [
+      921.5,
+      270
+    ],
+    [
+      927.5,
+      255.75
+    ],
+    [
+      931.25,
+      243.25
+    ],
+    [
+      931.5,
+      237
+    ]
+  ],
+  "pixel_uncertainty": 1.5,
+  "source_basis": "inferred from primary pixels; not measured construction dimensions",
+  "flc19414": {
+    "source_image": "flc19414-ground.jpg",
+    "phase": "Design drawing; do not conflate with executed/restored state",
+    "controls": [
+      {
+        "pixel": [
+          90,
+          851
+        ],
+        "world": [
+          0,
+          1.25
+        ]
+      },
+      {
+        "pixel": [
+          690,
+          851
+        ],
+        "world": [
+          19,
+          1.25
+        ]
+      },
+      {
+        "pixel": [
+          90,
+          251
+        ],
+        "world": [
+          0,
+          20.25
+        ]
+      },
+      {
+        "pixel": [
+          690,
+          251
+        ],
+        "world": [
+          19,
+          20.25
+        ]
+      }
+    ],
+    "curve_pixels": [
+      [
+        195,
+        550
+      ],
+      [
+        198,
+        585
+      ],
+      [
+        220,
+        635
+      ],
+      [
+        245,
+        675
+      ],
+      [
+        280,
+        715
+      ],
+      [
+        320,
+        745
+      ],
+      [
+        340,
+        753
+      ],
+      [
+        445,
+        753
+      ],
+      [
+        480,
+        740
+      ],
+      [
+        520,
+        700
+      ]
+    ],
+    "garage_diagonal_pixels": [
+      [
+        440,
+        628
+      ],
+      [
+        520,
+        700
+      ]
+    ],
+    "pixel_uncertainty": 3
+  }
+}

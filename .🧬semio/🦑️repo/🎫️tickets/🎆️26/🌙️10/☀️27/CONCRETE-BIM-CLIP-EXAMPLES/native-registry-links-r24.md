@@ -1,0 +1,5 @@
+# Native Class Registry and Analysis Links R24
+
+The fresh448-product integration cohort exposed missing IfcBeamType/IfcCovering definitions and incorrect IfcChimney ownership of Height. The native IFC4.3 class graph now uses IfcBuiltElementType for IfcBeamType and IfcBuiltElement for IfcChimney/IfcCovering, with only their own PredefinedType attribute. Independent test-only web-ifc0.0.78 IFC4X32 constructors confirm this graph. Chimney dimensions remain authored geometry and properties rather than a nonexistent IFC attribute.
+
+All3 analytical links were recomputed from source hashb4e5207dff88f1d6714d7cf40ce813d18a8d97505fea1def53374d34d5ff622f. The source hash was rechecked before merging only the refreshed links. Runtime59.995s. The source revision remains3; consistency_issues returned an empty list. In particular, current slab/service sleeve geometry and net column profiles now drive the stored snapshots. The clip owner is rerunning current-source focused integration and six chapter preparation after this publication.

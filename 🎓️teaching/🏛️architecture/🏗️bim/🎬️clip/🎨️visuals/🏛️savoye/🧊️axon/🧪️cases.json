@@ -1,0 +1,7 @@
+{
+  "walls": [
+    {"name":"multiple fillings and empty opening","length":10,"base":0,"top":3,"openings":[{"start":1,"end":3,"sill_z":1,"head_z":2},{"start":5,"end":6,"sill_z":0,"head_z":2.5},{"start":7,"end":9,"sill_z":1,"head_z":2}],"solid_area":23.5},
+    {"name":"solid partition","length":4,"base":3.5,"top":6.7,"openings":[],"solid_area":12.8},
+    {"name":"overlapping cuts are a union","length":6,"base":0,"top":3,"openings":[{"start":1,"end":4,"sill_z":1,"head_z":2},{"start":3,"end":5,"sill_z":1,"head_z":2}],"solid_area":14}
+  ]
+}

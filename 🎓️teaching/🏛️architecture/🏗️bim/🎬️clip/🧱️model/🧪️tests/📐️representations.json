@@ -1,0 +1,223 @@
+{
+  "version": 1,
+  "projection": {
+    "elevation": {
+      "view": "south",
+      "horizontal": "x",
+      "vertical": "z"
+    },
+    "section": {
+      "plane": "y = (minimum part y + maximum part y) / 2",
+      "horizontal": "x",
+      "vertical": "z"
+    }
+  },
+  "objects": [
+    "FIX-HALL-TABLE-1",
+    "FIX-HALL-BASIN",
+    "FIX-TERRACE-PLANTER-1",
+    "GUARD-ST-GF",
+    "ST-GF",
+    "ST-FR"
+  ],
+  "stairs": [
+    "ST-GF",
+    "ST-FR"
+  ],
+  "section_voids": [
+    {
+      "tag": "FIX-HALL-BASIN",
+      "point": [
+        8.23,
+        0.84
+      ],
+      "occupied": [
+        8.23,
+        0.72
+      ],
+      "base_level": "ground"
+    },
+    {
+      "tag": "FIX-TERRACE-PLANTER-1",
+      "point": [
+        15,
+        0.4
+      ],
+      "occupied": [
+        14.5,
+        0.4
+      ],
+      "base_level": "first"
+    }
+  ],
+  "union_cases": [
+    {
+      "polygons": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        [
+          [
+            1,
+            1
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            1,
+            3
+          ]
+        ]
+      ],
+      "area": 7
+    },
+    {
+      "polygons": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            3
+          ]
+        ]
+      ],
+      "area": 6.75
+    },
+    {
+      "polygons": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        [
+          [
+            0.5,
+            0.5
+          ],
+          [
+            2,
+            0.5
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0.5,
+            2
+          ]
+        ]
+      ],
+      "area": 6
+    }
+  ],
+  "section_cases": [
+    {
+      "polygon": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "cuts": [
+        0,
+        1,
+        1.5,
+        3,
+        4
+      ]
+    }
+  ]
+}

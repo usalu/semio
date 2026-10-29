@@ -1,0 +1,211 @@
+{
+  "voronoi": [
+    {
+      "id": "sparse-two-supports",
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "supports": [
+        [
+          1,
+          1
+        ],
+        [
+          7,
+          5
+        ]
+      ],
+      "areas": [
+        24,
+        24
+      ]
+    },
+    {
+      "id": "asymmetric-sparse-row",
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "supports": [
+        [
+          1,
+          2
+        ],
+        [
+          5,
+          2
+        ]
+      ],
+      "areas": [
+        18,
+        30
+      ]
+    }
+  ],
+  "nonconvex": {
+    "outline": [
+      [
+        0,
+        0
+      ],
+      [
+        8,
+        0
+      ],
+      [
+        8,
+        6
+      ],
+      [
+        0,
+        6
+      ]
+    ],
+    "cut": [
+      [
+        1,
+        1
+      ],
+      [
+        7,
+        1
+      ],
+      [
+        7,
+        3
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        1,
+        5
+      ]
+    ],
+    "remaining_area": 30
+  },
+  "bearing": {
+    "outline": [
+      [
+        0,
+        0
+      ],
+      [
+        8,
+        0
+      ],
+      [
+        8,
+        6
+      ],
+      [
+        0,
+        6
+      ]
+    ],
+    "voids": [
+      [
+        [
+          3,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          3,
+          4
+        ]
+      ]
+    ],
+    "cases": [
+      {
+        "point": [
+          4,
+          3
+        ],
+        "radius": 0.15,
+        "supported": false
+      },
+      {
+        "point": [
+          3.05,
+          3
+        ],
+        "radius": 0.15,
+        "supported": true
+      },
+      {
+        "point": [
+          -0.05,
+          1
+        ],
+        "radius": 0.15,
+        "supported": true
+      },
+      {
+        "point": [
+          -0.2,
+          1
+        ],
+        "radius": 0.15,
+        "supported": false
+      },
+      {
+        "point": [
+          -0.15,
+          1
+        ],
+        "radius": 0.15,
+        "supported": false
+      },
+      {
+        "point": [
+          1,
+          1
+        ],
+        "radius": 0.15,
+        "supported": true
+      }
+    ]
+  }
+}

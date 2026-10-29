@@ -74,24 +74,48 @@
       "m³",
       "kN/m²",
       "kN/m³",
-      "°"
+      "°",
+      "1"
     ],
     "domains": [
       "architecture",
       "structure",
       "services"
-    ]
+    ],
+    "class_counts": {
+      "IfcSlab": 10,
+      "IfcCurtainWall": 1,
+      "IfcRamp": 2,
+      "IfcRampFlight": 4,
+      "IfcWall": 57,
+      "IfcBoiler": 1,
+      "IfcSpaceHeater": 1,
+      "IfcWasteTerminal": 2,
+      "IfcPipeSegment": 8,
+      "IfcOpeningElement": 50,
+      "IfcWindow": 12,
+      "IfcDoor": 20,
+      "IfcStair": 3,
+      "IfcBuildingElementProxy": 20,
+      "IfcFurnishingElement": 25,
+      "IfcRailing": 7,
+      "IfcFooting": 45,
+      "IfcBeam": 110,
+      "IfcColumn": 67,
+      "IfcCovering": 4,
+      "IfcChimney": 3
+    }
   },
   "sourced": {
     "box": {
-      "length": 21.5,
-      "width": 19.0,
-      "height": 9.4
+      "length": 19,
+      "width": 21.5,
+      "height": 9.6
     },
     "spacing": 4.75,
-    "initial_spacing": 5.0,
-    "roof_garden_area": 110.0,
-    "solarium_area": 70.0,
+    "initial_spacing": 5,
+    "roof_garden_area": 110,
+    "solarium_area": 70,
     "area_tolerance": 0.01,
     "years": {
       "design_start": 1928,
@@ -105,51 +129,395 @@
       "Le Corbusier",
       "Pierre Jeanneret"
     ],
-    "site": "Poissy"
+    "site": "Poissy",
+    "box_basis": {
+      "length": "inferred",
+      "width": "inferred",
+      "height": "inferred"
+    }
   },
   "grid": {
     "x": [
+      0,
+      4.75,
+      9.5,
+      14.25,
+      19
+    ],
+    "y": [
       1.25,
-      6.0,
+      6,
       10.75,
       15.5,
       20.25
     ],
-    "y": [
-      0.0,
-      4.75,
-      9.5,
-      14.25,
-      19.0
-    ],
     "rows": "ABCDE",
     "columns": "12345",
-    "pilotis": 25
+    "pilotis": 67,
+    "ground_tags": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24",
+      "25",
+      "26",
+      "27",
+      "28",
+      "29",
+      "30",
+      "31",
+      "32",
+      "33",
+      "PA",
+      "PB"
+    ],
+    "upper_tags": [
+      "1-FIRST",
+      "2-FIRST",
+      "3-FIRST",
+      "4-FIRST",
+      "5-FIRST",
+      "6-FIRST",
+      "7-FIRST",
+      "10-FIRST",
+      "11-FIRST",
+      "14-FIRST",
+      "15-FIRST",
+      "16-FIRST",
+      "17-FIRST",
+      "18-FIRST",
+      "19-FIRST",
+      "20-FIRST",
+      "22-FIRST",
+      "23-FIRST",
+      "24-FIRST",
+      "25-FIRST",
+      "26-FIRST",
+      "27-FIRST",
+      "28-FIRST",
+      "29-FIRST",
+      "30-FIRST",
+      "31-FIRST",
+      "32-FIRST",
+      "33-FIRST",
+      "34",
+      "35",
+      "36"
+    ],
+    "piloti_type_count": 10,
+    "column_tags": [
+      "STAIR-PA",
+      "1",
+      "1-FIRST",
+      "2",
+      "2-FIRST",
+      "3",
+      "3-FIRST",
+      "4",
+      "4-FIRST",
+      "5",
+      "5-FIRST",
+      "6",
+      "6-FIRST",
+      "7",
+      "7-FIRST",
+      "8",
+      "9",
+      "10",
+      "10-FIRST",
+      "11",
+      "11-FIRST",
+      "12",
+      "13",
+      "14",
+      "14-FIRST",
+      "15",
+      "15-FIRST",
+      "16",
+      "16-FIRST",
+      "17",
+      "17-FIRST",
+      "18",
+      "18-FIRST",
+      "19",
+      "19-FIRST",
+      "20",
+      "20-FIRST",
+      "21",
+      "22",
+      "22-FIRST",
+      "23",
+      "23-FIRST",
+      "24",
+      "24-FIRST",
+      "25",
+      "25-FIRST",
+      "26",
+      "26-FIRST",
+      "27",
+      "27-FIRST",
+      "28",
+      "28-FIRST",
+      "29",
+      "29-FIRST",
+      "30",
+      "30-FIRST",
+      "31",
+      "31-FIRST",
+      "32",
+      "32-FIRST",
+      "33",
+      "33-FIRST",
+      "34",
+      "35",
+      "36",
+      "PA",
+      "PB"
+    ],
+    "type_occurrences": {
+      "TY-STAIR-PA": [
+        "STAIR-PA"
+      ],
+      "TY-CIRC28-FINISHED": [
+        "1",
+        "3",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "11",
+        "12",
+        "15",
+        "16",
+        "17",
+        "21",
+        "22",
+        "23",
+        "24",
+        "27",
+        "29",
+        "31",
+        "33"
+      ],
+      "TY-SQUARE22": [
+        "1-FIRST",
+        "5-FIRST",
+        "6-FIRST",
+        "10",
+        "10-FIRST",
+        "11-FIRST",
+        "13",
+        "14",
+        "17-FIRST",
+        "18",
+        "18-FIRST",
+        "20",
+        "23-FIRST",
+        "24-FIRST",
+        "25",
+        "25-FIRST",
+        "29-FIRST",
+        "30",
+        "30-FIRST",
+        "32",
+        "33-FIRST",
+        "36"
+      ],
+      "TY-CIRC33-DRAIN": [
+        "2",
+        "2-FIRST",
+        "4",
+        "4-FIRST"
+      ],
+      "TY-CIRC22": [
+        "3-FIRST",
+        "7-FIRST",
+        "14-FIRST",
+        "15-FIRST",
+        "19",
+        "19-FIRST",
+        "20-FIRST",
+        "27-FIRST",
+        "31-FIRST",
+        "32-FIRST"
+      ],
+      "TY-AERO15-TRACE": [
+        "16-FIRST",
+        "22-FIRST"
+      ],
+      "TY-RECT16X22": [
+        "26",
+        "26-FIRST",
+        "28",
+        "28-FIRST"
+      ],
+      "TY-RECT18X22": [
+        "34",
+        "35"
+      ],
+      "TY-CHAMFER12X15": [
+        "PA",
+        "PB"
+      ]
+    }
   },
   "tags": {
-    "piloti_type": "TY-PILOTI",
-    "wall_type": "TY-WALL",
+    "piloti_type": "TY-CIRC22",
+    "wall_type": "TY-FACADE-29",
     "slabs": [
       "SL-1",
-      "SL-R"
+      "SL-R",
+      "SL-KIOSK",
+      "SL-CELLAR",
+      "SL-GROUND-CELLAR",
+      "COVER-HOIST",
+      "COVER-COAL",
+      "SL-GROUND",
+      "SL-STAIR-CANOPY",
+      "SL-STAIR-WEATHER"
     ],
     "walls": [
       "W-S",
       "W-E",
       "W-N",
-      "W-W"
+      "W-W",
+      "W-G-W",
+      "W-G-N",
+      "W-G-E",
+      "W-G-GARAGE-END",
+      "W-G-SERVICE",
+      "W-G-ROOM-10",
+      "W-G-ROOM-13",
+      "W-G-ROOM-16",
+      "W-G-CHAUFFEUR",
+      "W-G-GARAGE",
+      "W-KITCHEN",
+      "W-PANTRY",
+      "W-SALON",
+      "W-PRIVATE",
+      "W-PRIVATE-8.9",
+      "W-SHARED-BATH-S",
+      "W-SHARED-BATH-N",
+      "W-PARENT-BATH",
+      "W-SUITE-ENTRY",
+      "W-BOUDOIR",
+      "W-BOUDOIR-E",
+      "W-TERRACE-RAMP",
+      "PAR-S",
+      "PAR-N",
+      "PAR-W",
+      "PAR-E",
+      "W-G-GARAGE-LOWER",
+      "W-PARENT-BATH-S",
+      "W-PARENTS-BOUDOIR",
+      "W-G-CHAUFFEUR-RETURN",
+      "W-G-CHAUFFEUR-W",
+      "W-CHAUFFEUR-BEDROOM",
+      "W-CHAUFFEUR-BATH",
+      "W-CHAUFFEUR-BATH-S",
+      "W-PANTRY-WEST",
+      "W-PANTRY-PATIO",
+      "W-PANTRY-SOUTH",
+      "W-CELLAR-W",
+      "W-CELLAR-E",
+      "W-CELLAR-S",
+      "W-CELLAR-N",
+      "W-CELLAR-DIVIDER",
+      "W-CELLAR-STAIR-E",
+      "W-CELLAR-STAIR-S",
+      "W-CELLAR-STAIR-N",
+      "W-SON-PRIVATE",
+      "W-PARENT-BATH-W",
+      "W-SON-ENTRY",
+      "W-GARDEN-E",
+      "W-KIOSK-E"
     ],
     "openings": [
       "OP-S",
       "OP-E",
       "OP-N",
-      "OP-W"
+      "OP-W",
+      "OP-G-WIN-1",
+      "OP-G-WIN-2",
+      "OP-G-WIN-3",
+      "OP-G-N-WIN",
+      "OP-D-SERVANT-1",
+      "OP-D-SERVANT-2",
+      "OP-D-LAUNDRY",
+      "OP-D-CHAUFFEUR",
+      "OP-D-ENTRY",
+      "OP-D-KITCHEN",
+      "OP-D-PANTRY",
+      "OP-D-SALON",
+      "OP-GL-TERRACE",
+      "OP-D-GUEST",
+      "OP-D-SON",
+      "OP-D-SHARED-BATH-GUEST",
+      "OP-D-SHARED-BATH-SON",
+      "OP-D-PARENTS",
+      "OP-D-BOUDOIR",
+      "OP-GL-RAMP-GARDEN",
+      "OP-D-CHAUFFEUR-BEDROOM",
+      "OP-D-CHAUFFEUR-BATH",
+      "OP-SERVING-HATCH",
+      "OP-D-SERVICE",
+      "OP-D-KITCHEN-PATIO",
+      "OP-KITCHEN-PATIO-FRAME",
+      "OP-W-UPPER",
+      "OP-CELLAR-STAIR-ACCESS",
+      "OP-GARAGE",
+      "OP-SC-VIEW",
+      "OP-HOIST-CELLAR",
+      "OP-HOIST-HATCH",
+      "OP-COAL-CELLAR",
+      "OP-COAL-HATCH",
+      "OP-GARDEN-E",
+      "OP-KIOSK-E",
+      "OP-DP-1-FLOOR",
+      "OP-DP-1-ROOF",
+      "OP-DP-2-FLOOR",
+      "OP-DP-2-ROOF",
+      "OP-FLUE-FLOOR",
+      "OP-SOIL-FLOOR",
+      "OP-STAIR-ROOF",
+      "OP-FLUE-ROOF",
+      "OP-SALON-FLUE-ROOF",
+      "OP-KITCHEN-FLUE-ROOF"
     ],
     "windows": [
       "RW-S",
       "RW-E",
       "RW-N",
-      "RW-W"
+      "RW-W",
+      "G-WIN-1",
+      "G-WIN-2",
+      "G-WIN-3",
+      "G-N-WIN",
+      "GL-TERRACE",
+      "GL-RAMP-GARDEN",
+      "RW-W-UPPER",
+      "RW-KIOSK-E"
     ],
     "curtain_wall": "CW-1",
     "ramps": [
@@ -157,6 +525,7 @@
       "RM-2"
     ],
     "storeys": [
+      "cellar",
       "ground",
       "first",
       "roof"
@@ -164,72 +533,186 @@
     "spaces": [
       "SP-HALL",
       "SP-GARAGE",
+      "SP-SERVANTS-1",
+      "SP-SERVANTS-2",
+      "SP-LAUNDRY",
+      "SP-CHAUFFEUR",
       "SP-BOILER",
       "SP-SALON",
+      "SP-KITCHEN",
+      "SP-PANTRY",
+      "SP-GUEST",
+      "SP-SON",
+      "SP-SHARED-BATH",
+      "SP-PARENTS",
+      "SP-PARENT-BATH",
+      "SP-BOUDOIR",
+      "SP-FIRST-HALL",
       "SP-TERRACE",
-      "SP-SOLARIUM"
+      "SP-SOLARIUM",
+      "SP-CHAUFFEUR-BEDROOM",
+      "SP-CHAUFFEUR-BATH",
+      "SP-KITCHEN-TERRACE",
+      "SP-CELLAR-W",
+      "SP-CELLAR-E"
     ],
     "lookup": [
-      "B3",
+      "19",
       "SL-1",
-      "TY-PILOTI",
+      "TY-CIRC22",
       "RW-S",
       "ground",
       "BUILDING",
       "MAT-RC"
+    ],
+    "screens": [
+      "SC-1",
+      "W-G-GARAGE-CORNER",
+      "W-STAIR-ROOF"
+    ],
+    "doors": [
+      "D-SERVANT-1",
+      "D-SERVANT-2",
+      "D-LAUNDRY",
+      "D-CHAUFFEUR",
+      "D-ENTRY",
+      "D-KITCHEN",
+      "D-PANTRY",
+      "D-SALON",
+      "D-GUEST",
+      "D-SON",
+      "D-SHARED-BATH-GUEST",
+      "D-SHARED-BATH-SON",
+      "D-PARENTS",
+      "D-BOUDOIR",
+      "D-CHAUFFEUR-BEDROOM",
+      "D-CHAUFFEUR-BATH",
+      "D-SERVICE",
+      "D-KITCHEN-PATIO",
+      "GARAGE-SLIDING",
+      "D-STAIR-ROOF"
+    ],
+    "unfilled_openings": [
+      "OP-SERVING-HATCH",
+      "OP-KITCHEN-PATIO-FRAME",
+      "OP-CELLAR-STAIR-ACCESS",
+      "OP-SC-VIEW",
+      "OP-HOIST-CELLAR",
+      "OP-COAL-CELLAR",
+      "OP-GARDEN-E",
+      "OP-DP-1-FLOOR",
+      "OP-DP-1-ROOF",
+      "OP-DP-2-FLOOR",
+      "OP-DP-2-ROOF",
+      "OP-FLUE-FLOOR",
+      "OP-SOIL-FLOOR",
+      "OP-FLUE-ROOF",
+      "OP-SALON-FLUE-ROOF",
+      "OP-KITCHEN-FLUE-ROOF"
+    ],
+    "foundations": [
+      "FT-CELLAR",
+      "FT-STAIR-PA",
+      "FT-CELLAR-C14",
+      "FT-BLINDING-1",
+      "FT-PAD-1",
+      "FT-BLINDING-2",
+      "FT-PAD-2",
+      "FT-BLINDING-3",
+      "FT-PAD-3",
+      "FT-BLINDING-4",
+      "FT-PAD-4",
+      "FT-BLINDING-5",
+      "FT-PAD-5",
+      "FT-BLINDING-6",
+      "FT-PAD-6",
+      "FT-BLINDING-7-12",
+      "FT-PAD-7-12",
+      "FT-BLINDING-11",
+      "FT-PAD-11",
+      "FT-BLINDING-16",
+      "FT-PAD-16",
+      "FT-BLINDING-17",
+      "FT-PAD-17",
+      "FT-BLINDING-21",
+      "FT-PAD-21",
+      "FT-BLINDING-22",
+      "FT-PAD-22",
+      "FT-BLINDING-23",
+      "FT-PAD-23",
+      "FT-BLINDING-24",
+      "FT-PAD-24",
+      "FT-BLINDING-27",
+      "FT-PAD-27",
+      "FT-BLINDING-28",
+      "FT-PAD-28",
+      "FT-BLINDING-29",
+      "FT-PAD-29",
+      "FT-BLINDING-30",
+      "FT-PAD-30",
+      "FT-BLINDING-31",
+      "FT-PAD-31",
+      "FT-BLINDING-32",
+      "FT-PAD-32",
+      "FT-BLINDING-33",
+      "FT-PAD-33"
+    ],
+    "covers": [
+      "COVER-HOIST",
+      "COVER-COAL"
     ]
   },
   "information": [
     {
-      "tag": "B3",
+      "tag": "19",
       "property": "piloti.diameter",
       "unit": "m",
-      "basis": "assumed",
-      "value": 0.3
+      "basis": "sourced",
+      "value": 0.22
     },
     {
-      "tag": "B3",
+      "tag": "19",
       "property": "grid.spacing",
       "unit": "m",
       "basis": "sourced",
       "value": 4.75
     },
     {
-      "tag": "B3",
+      "tag": "19",
       "property": "grid.initial_spacing",
       "unit": "m",
       "basis": "sourced",
-      "value": 5.0
+      "value": 5
     },
     {
-      "tag": "B3",
+      "tag": "19",
       "property": "car.width",
       "unit": "m",
       "basis": "assumed",
       "value": 1.75
     },
     {
-      "tag": "B3",
+      "tag": "19",
       "property": "Pset_ColumnCommon.LoadBearing",
       "unit": "",
       "basis": "inferred",
       "value": true
     },
     {
-      "tag": "B3",
+      "tag": "19",
       "property": "height",
       "unit": "m",
       "basis": "derived",
-      "value": 3.25
+      "value": 2.91
     },
     {
-      "tag": "B3",
+      "tag": "19",
       "property": "volume",
       "unit": "m³",
       "basis": "derived"
     },
     {
-      "tag": "B3",
+      "tag": "19",
       "property": "GlobalId",
       "unit": "",
       "basis": "derived"
@@ -518,7 +1001,7 @@
   },
   "representations": {
     "objects": [
-      "B3",
+      "19",
       "W-S",
       "SL-1",
       "RW-S"
@@ -583,12 +1066,43 @@
       "IfcBoiler",
       "IfcSpaceHeater",
       "IfcWasteTerminal",
-      "IfcPipeSegment"
-    ]
+      "IfcPipeSegment",
+      "IfcBuildingElementProxy",
+      "IfcCovering",
+      "IfcChimney",
+      "IfcOpeningElement"
+    ],
+    "architectural_columns": [
+      "STAIR-PA",
+      "16-FIRST",
+      "22-FIRST"
+    ],
+    "shared_services": [
+      "HOIST-JIB"
+    ],
+    "shared_services_by_model": {
+      "architecture": [
+        "HOIST-JIB",
+        "OP-DP-1-FLOOR",
+        "OP-DP-1-ROOF",
+        "OP-DP-2-FLOOR",
+        "OP-DP-2-ROOF",
+        "OP-FLUE-FLOOR",
+        "OP-SOIL-FLOOR",
+        "CHIMNEY-SALON-ROOF",
+        "OP-SALON-FLUE-ROOF",
+        "CHIMNEY-KITCHEN-ROOF",
+        "OP-KITCHEN-FLUE-ROOF",
+        "OP-FLUE-ROOF"
+      ],
+      "structure": [
+        "HOIST-JIB"
+      ]
+    }
   },
   "step": {
     "keys": [
-      "B3",
+      "19",
       "SL-1",
       "SL-R",
       "W-S"
@@ -619,7 +1133,14 @@
       "IFCRECTANGLEPROFILEDEF": 5,
       "IFCMATERIAL": 3,
       "IFCMATERIALLAYER": 7,
-      "IFCMATERIALLAYERSET": 3
+      "IFCMATERIALLAYERSET": 3,
+      "IFCARBITRARYCLOSEDPROFILEDEF": 3,
+      "IFCARBITRARYPROFILEDEFWITHVOIDS": 4,
+      "IFCPOLYLINE": 1,
+      "IFCFURNISHINGELEMENT": 8,
+      "IFCELEMENTQUANTITY": 6,
+      "IFCQUANTITYVOLUME": 5,
+      "IFCSIUNIT": 4
     }
   },
   "mesh": {
@@ -644,14 +1165,14 @@
           "property": "LoadBearing",
           "cardinality": "required"
         },
-        "passed": 25,
+        "passed": 67,
         "failed": 0
       },
       {
         "id": "column-fire-rating",
         "spec": "IfcColumn Pset_ColumnCommon.FireRating exists",
-        "passed": 25,
-        "failed": 0
+        "passed": 66,
+        "failed": 1
       },
       {
         "id": "column-must-not-be-load-bearing",
@@ -664,19 +1185,19 @@
           "cardinality": "required"
         },
         "passed": 0,
-        "failed": 25
+        "failed": 67
       },
       {
         "id": "column-load-bearing-prohibited",
         "spec": "IfcColumn Pset_ColumnCommon.LoadBearing prohibited",
         "passed": 0,
-        "failed": 25
+        "failed": 67
       },
       {
         "id": "slab-fire-rating",
         "spec": "IfcSlab Pset_SlabCommon.FireRating exists",
         "passed": 0,
-        "failed": 2
+        "failed": 10
       },
       {
         "id": "wall-is-external",
@@ -685,60 +1206,48 @@
           "property": "IsExternal",
           "cardinality": "required"
         },
-        "passed": 5,
+        "passed": 57,
         "failed": 0
       },
       {
         "id": "window-fire-rating",
         "spec": "IfcWindow FireRating exists",
-        "passed": 4,
+        "passed": 12,
         "failed": 0
       }
     ]
   },
-  "analysis": {
-    "slab_nodes": 35,
-    "shells": 24,
-    "curve_members": 25,
-    "surface_members": 24,
-    "supports": 25
-  },
   "tributary": {
     "step": 0.025,
-    "tolerance": 0.01,
-    "kinds": {
-      "interior": 9,
-      "edge": 12,
-      "corner": 4
-    }
+    "tolerance": 0.01
   },
   "clash": {
-    "violations": [
-      [
-        "DP-1",
-        "A1"
-      ]
-    ]
+    "violations": [],
+    "scenario": {
+      "pipe": "DP-1",
+      "column": "19",
+      "margin_fraction": 0.5
+    }
   },
   "events": {
     "sill": {
       "type": "OpeningResized",
       "object_tag": "RW-S",
       "sill": 0.7,
-      "head": 2.0
+      "head": 2.04
     },
-    "soil": {
+    "paving": {
       "type": "LayerThicknessChanged",
       "object_tag": "SL-R",
-      "layer": "soil",
-      "value": 0.3,
+      "layer": "paving",
+      "value": 0.14,
       "unit": "m"
     },
-    "soil_alt": {
+    "paving_alt": {
       "type": "LayerThicknessChanged",
       "object_tag": "SL-R",
-      "layer": "soil",
-      "value": 0.2,
+      "layer": "paving",
+      "value": 0.18,
       "unit": "m"
     },
     "sill_touches": [
@@ -746,9 +1255,7 @@
       "OP-S",
       "RW-S"
     ],
-    "soil_unchanged": [
-      "C4"
-    ]
+    "paving_unchanged": []
   },
   "invalid_events": [
     {
@@ -760,7 +1267,7 @@
     },
     {
       "id": "missing-object",
-      "base": "soil",
+      "base": "paving",
       "remove": [
         "object_guid"
       ]
@@ -781,7 +1288,7 @@
     },
     {
       "id": "unknown-object",
-      "base": "soil",
+      "base": "paving",
       "set": {
         "object_guid": "MISSING"
       }
@@ -795,63 +1302,63 @@
     },
     {
       "id": "layer-event-on-window",
-      "base": "soil",
+      "base": "paving",
       "set": {
         "object_tag": "RW-S"
       }
     },
     {
       "id": "layer-event-on-plain-slab",
-      "base": "soil",
+      "base": "paving",
       "set": {
         "object_tag": "SL-1"
       }
     },
     {
       "id": "unit-in-centimetres",
-      "base": "soil",
+      "base": "paving",
       "set": {
         "unit": "cm"
       }
     },
     {
       "id": "zero-thickness",
-      "base": "soil",
+      "base": "paving",
       "set": {
         "value": 0
       }
     },
     {
       "id": "negative-thickness",
-      "base": "soil",
+      "base": "paving",
       "set": {
         "value": -0.1
       }
     },
     {
       "id": "text-thickness",
-      "base": "soil",
+      "base": "paving",
       "set": {
         "value": "0.3"
       }
     },
     {
       "id": "boolean-thickness",
-      "base": "soil",
+      "base": "paving",
       "set": {
         "value": true
       }
     },
     {
       "id": "not-a-number",
-      "base": "soil",
+      "base": "paving",
       "set": {
         "value": "nan"
       }
     },
     {
       "id": "unknown-layer",
-      "base": "soil",
+      "base": "paving",
       "set": {
         "layer": "gravel"
       }
@@ -860,7 +1367,7 @@
       "id": "sill-above-head",
       "base": "sill",
       "set": {
-        "sill": 2.0,
+        "sill": 2,
         "head": 0.9
       }
     },
@@ -868,8 +1375,8 @@
       "id": "sill-equals-head",
       "base": "sill",
       "set": {
-        "sill": 1.0,
-        "head": 1.0
+        "sill": 1,
+        "head": 1
       }
     },
     {
@@ -1145,7 +1652,7 @@
       "path": [
         "elements",
         {
-          "tag": "A1"
+          "tag": "19"
         },
         "guid"
       ],
@@ -1156,7 +1663,7 @@
       "path": [
         "elements",
         {
-          "tag": "A1"
+          "tag": "19"
         },
         "guid"
       ],
@@ -1167,7 +1674,7 @@
       "path": [
         "elements",
         {
-          "tag": "A1"
+          "tag": "19"
         },
         "guid"
       ],
@@ -1178,7 +1685,7 @@
       "path": [
         "elements",
         {
-          "tag": "A1"
+          "tag": "19"
         },
         "guid"
       ],
@@ -1189,7 +1696,7 @@
       "path": [
         "elements",
         {
-          "tag": "A1"
+          "tag": "19"
         },
         "class"
       ],
@@ -1200,7 +1707,7 @@
       "path": [
         "elements",
         {
-          "tag": "A1"
+          "tag": "19"
         },
         "class"
       ],
@@ -1267,7 +1774,7 @@
       "path": [
         "types",
         {
-          "tag": "TY-PILOTI"
+          "tag": "TY-CIRC22"
         },
         "profile",
         "diameter",
@@ -1289,7 +1796,7 @@
       "path": [
         "elements",
         {
-          "tag": "A1"
+          "tag": "19"
         },
         "name",
         "en"
@@ -1301,7 +1808,7 @@
       "path": [
         "elements",
         {
-          "tag": "A1"
+          "tag": "19"
         },
         "name",
         "de"
@@ -1357,7 +1864,7 @@
       "path": [
         "elements",
         {
-          "tag": "A1"
+          "tag": "19"
         },
         "storey"
       ],
@@ -1368,7 +1875,7 @@
       "path": [
         "elements",
         {
-          "tag": "A1"
+          "tag": "19"
         },
         "metadata",
         "domains",
@@ -1390,7 +1897,7 @@
       "path": [
         "elements",
         {
-          "tag": "A1"
+          "tag": "19"
         },
         "colour"
       ],
@@ -1411,5 +1918,569 @@
       ],
       "remove": true
     }
-  ]
+  ],
+  "route_cache": {
+    "max_entries": 12,
+    "samples": [
+      120,
+      121
+    ],
+    "width_delta": 0.05
+  },
+  "window_datums": {
+    "wall": "W-S",
+    "opening": "OP-S",
+    "sill": 0.89,
+    "head": 2.04,
+    "height": 1.15,
+    "changed_sill": 0.7,
+    "changed_height": 1.34,
+    "height_gain": 0.19
+  },
+  "native_services": {
+    "added": [
+      "HEAT-RISER-6-CASING",
+      "HEAT-RISER-11-CASING",
+      "HEAT-RISER-6-INSULATION",
+      "HEAT-RISER-11-INSULATION",
+      "HEAT-RISER-6-PIPE",
+      "HEAT-RISER-11-PIPE",
+      "WATER-RISER-11",
+      "SOIL-STAIR",
+      "BOILER-FLUE-VISIBLE",
+      "DP-1-OUTLET",
+      "DP-2-OUTLET",
+      "CHIMNEY-SALON-ROOF",
+      "CHIMNEY-KITCHEN-ROOF"
+    ],
+    "removed": [
+      "DP-3",
+      "DP-4",
+      "DR-3",
+      "DR-4",
+      "PS-1",
+      "PS-2",
+      "PS-3"
+    ],
+    "rainwater": [
+      {
+        "column": "2",
+        "drain": "DR-1",
+        "pipe": "DP-1"
+      },
+      {
+        "column": "4",
+        "drain": "DR-2",
+        "pipe": "DP-2"
+      }
+    ],
+    "outlet_z": -0.6
+  },
+  "partition_oracle": {
+    "domain": [
+      [
+        0,
+        0
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        4,
+        2
+      ],
+      [
+        0,
+        2
+      ]
+    ],
+    "cases": [
+      {
+        "id": "complete",
+        "pieces": [
+          [
+            [
+              0,
+              0
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              2,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              4,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ]
+        ],
+        "valid": true
+      },
+      {
+        "id": "overlap-and-gap",
+        "pieces": [
+          [
+            [
+              0,
+              0
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              1.75,
+              0
+            ],
+            [
+              3.75,
+              0
+            ],
+            [
+              3.75,
+              2
+            ],
+            [
+              1.75,
+              2
+            ]
+          ]
+        ],
+        "valid": false
+      },
+      {
+        "id": "missing",
+        "pieces": [
+          [
+            [
+              0,
+              0
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ]
+        ],
+        "valid": false
+      },
+      {
+        "id": "outside-and-gap",
+        "pieces": [
+          [
+            [
+              0,
+              0
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              2.25,
+              0
+            ],
+            [
+              4.25,
+              0
+            ],
+            [
+              4.25,
+              2
+            ],
+            [
+              2.25,
+              2
+            ]
+          ]
+        ],
+        "valid": false
+      }
+    ]
+  },
+  "patch_sampling": {
+    "points": [
+      [
+        -1,
+        2
+      ],
+      [
+        0.5,
+        0.5
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        4,
+        4
+      ],
+      [
+        3.5,
+        2
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        0.5
+      ],
+      [
+        9,
+        9
+      ],
+      [
+        10.5,
+        10.5
+      ],
+      [
+        11,
+        11
+      ]
+    ],
+    "patches": [
+      {
+        "shape": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                4,
+                4
+              ],
+              [
+                0,
+                4
+              ],
+              [
+                0,
+                0
+              ]
+            ],
+            [
+              [
+                1,
+                1
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                1,
+                1
+              ]
+            ]
+          ]
+        },
+        "inside": [
+          1,
+          5,
+          7
+        ]
+      },
+      {
+        "shape": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                10,
+                10
+              ],
+              [
+                12,
+                10
+              ],
+              [
+                10,
+                12
+              ],
+              [
+                10,
+                10
+              ]
+            ]
+          ]
+        },
+        "inside": [
+          9
+        ]
+      }
+    ]
+  },
+  "analysis_geometry": {
+    "coordinate_decimals": 9
+  },
+  "slab_scope": {
+    "outline": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "owned": [
+      [
+        [
+          0,
+          0
+        ],
+        [
+          0.4,
+          0
+        ],
+        [
+          0.4,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      [
+        [
+          0.6,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0.6,
+          1
+        ]
+      ],
+      [
+        [
+          0.4,
+          0
+        ],
+        [
+          0.6,
+          0
+        ],
+        [
+          0.6,
+          0.4
+        ],
+        [
+          0.4,
+          0.4
+        ]
+      ],
+      [
+        [
+          0.4,
+          0.6
+        ],
+        [
+          0.6,
+          0.6
+        ],
+        [
+          0.6,
+          1
+        ],
+        [
+          0.4,
+          1
+        ]
+      ]
+    ],
+    "column": [
+      [
+        0.4,
+        0.4
+      ],
+      [
+        0.6,
+        0.4
+      ],
+      [
+        0.6,
+        0.6
+      ],
+      [
+        0.4,
+        0.6
+      ]
+    ],
+    "area": 1,
+    "owned_area": 0.96,
+    "load": 6.6674
+  },
+  "sampling_candidates": {
+    "polygon": [
+      [
+        0,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        0,
+        2
+      ]
+    ],
+    "points": [
+      [
+        -1,
+        1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        3,
+        3
+      ]
+    ],
+    "indices": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "inside": [
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "service_bore_domains": {
+    "tags": [
+      "OP-DP-1-FLOOR",
+      "OP-DP-1-ROOF",
+      "OP-DP-2-FLOOR",
+      "OP-DP-2-ROOF",
+      "OP-FLUE-FLOOR",
+      "OP-SOIL-FLOOR",
+      "OP-FLUE-ROOF",
+      "OP-SALON-FLUE-ROOF",
+      "OP-KITCHEN-FLUE-ROOF"
+    ],
+    "models": [
+      "architecture",
+      "services"
+    ]
+  }
 }

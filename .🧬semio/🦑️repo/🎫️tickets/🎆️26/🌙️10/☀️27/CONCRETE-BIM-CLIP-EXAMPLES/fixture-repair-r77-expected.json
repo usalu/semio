@@ -1,0 +1,14 @@
+{
+  "geometry": {
+    "FIX-LAUNDRY": "65c2b49be2c14f07cb6ed28ea7b92d41374bf1506156c3e46dcbb2c8b84adf48",
+    "TAP-LAUNDRY-1": "74fb289f5454854b77fb1592d165f4b5aa55d0d015f35897837cd9f2f9381a44",
+    "TAP-LAUNDRY-2": "bd10176c1342b7b94e5d646dd12818cbc6f303a85b5b28ae3734dce27ef57142",
+    "FIX-GUEST-BASIN": "4f7fddefc3be9699ddabab3f59a73ff1a9305de406a23fabc9b4c4b806164d73",
+    "TAP-GUEST": "ddf6145997489a2fcf64fcdfd96caf5ac5030c20e34bc220f2f4b7f93011cd38"
+  },
+  "opening": {
+    "start": 2.06,
+    "end": 2.99
+  },
+  "structural": "81e491f92210fdfa88111d984b64de75dc1bb31adc20b2411d8cc79d6ee85946"
+}

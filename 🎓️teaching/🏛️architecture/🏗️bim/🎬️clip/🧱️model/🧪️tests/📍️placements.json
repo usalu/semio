@@ -1,0 +1,177 @@
+{
+  "generic": {
+    "level": 3.17,
+    "parts": [
+      {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "z0": -0.03,
+        "z1": 0
+      }
+    ],
+    "world_bounds": [
+      3.14,
+      3.17
+    ],
+    "volume": 0.06,
+    "domains": [
+      "architecture"
+    ]
+  },
+  "stair": {
+    "from": -2.42,
+    "to": 0,
+    "step": {
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "z0": 0.12,
+      "z1": 0.3
+    },
+    "landing": {
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "z0": -0.12,
+      "z1": 0
+    },
+    "world_step": [
+      -2.3,
+      -2.12
+    ],
+    "world_landing": [
+      -0.12,
+      0
+    ],
+    "domains": [
+      "architecture"
+    ]
+  },
+  "roof": {
+    "layers": [
+      {
+        "id": "paving",
+        "thickness": 0.09
+      }
+    ],
+    "parts": [
+      {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "z0": 6.34,
+        "z1": 6.51,
+        "region": "thin"
+      },
+      {
+        "outline": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "z0": 6.34,
+        "z1": 6.57,
+        "region": "thick"
+      }
+    ],
+    "baseline_top": 6.6,
+    "baseline_volume": 0.12,
+    "event_thickness": 0.14,
+    "event_top": 6.65
+  },
+  "ramp": {
+    "from": 0,
+    "to": 3.17,
+    "path": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        6.8
+      ]
+    ],
+    "portion": [
+      0,
+      0.5
+    ],
+    "thickness": 0.06,
+    "width": 1.7,
+    "expected_volume": 0.6936
+  }
+}

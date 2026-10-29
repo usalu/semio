@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "historical_state": "original-completed-1930-1931",
+  "tag": "BOILER-FLUE-VISIBLE",
+  "axis": [
+    6.64,
+    11.5
+  ],
+  "bottom": 0,
+  "top": 9.49,
+  "outer_diameter": 0.4,
+  "wall": 0.06,
+  "segments": 96,
+  "sleeve_radius": 0.21,
+  "openings": {
+    "OP-FLUE-FLOOR": "SL-1",
+    "OP-FLUE-ROOF": "SL-R"
+  },
+  "cuts": {
+    "ground": 1.2,
+    "first": 4.37,
+    "roof": 7.8
+  },
+  "uncertainty": {
+    "xy": [
+      0.2,
+      0.3
+    ],
+    "top": 0.2
+  },
+  "evidence": [
+    "SAB2024 p117–118 figure27: boiler between stair and pilotis19, wall-adjacent",
+    "LArchitectureVivante1931 plates28/30: original cylindrical roof projection",
+    "Camera registration-r40 B family selected by lower-storey wall and second-view lateral adjacency"
+  ]
+}

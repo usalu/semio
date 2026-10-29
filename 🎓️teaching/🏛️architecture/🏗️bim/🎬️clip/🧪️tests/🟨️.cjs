@@ -35,7 +35,15 @@ for (const test of cases.invalid_models) {
   }
   assert.equal(validate(candidate), false, test.id);
 }
-console.log("BIM schema: authored model accepted; " + cases.invalid_models.length + " invalid models rejected.");
+const relationCases = read("🧱️model/🧪️tests/🏛️invalid-relations.json").cases;
+for (const test of relationCases) {
+  const candidate = structuredClone(model);
+  const relationship = candidate.relations.find(item => item.class === test.relationship_class);
+  assert.ok(relationship, test.id + ": relationship exists");
+  Object.assign(relationship, test.override);
+  assert.equal(validate(candidate), test.expected_schema_valid, test.id);
+}
+console.log("BIM schema: authored model accepted; " + (cases.invalid_models.length + relationCases.length) + " invalid models rejected.");
 
 const alphabet = cases.guid.alphabet;
 const encode = number => {

@@ -1,0 +1,27 @@
+import importlib
+import sys
+from pathlib import Path
+
+sys.stdout.reconfigure(encoding="utf-8")
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
+sys.path.insert(0, str(ROOT))
+m = importlib.import_module("🎓️teaching.🏛️architecture.🦗️grasshopper.🎬️clip.🧱️model.🐍️")
+d = m.canvas("trees")
+s = m.evaluate(d)
+src = s.tree("src")
+b = src.branch((0, 1, 4, 2))
+print("[DEBUG] describe", m.describe(b[1]), b[1].tag)
+print("[DEBUG] rows", m.panel_rows(src, paths=True)[:5])
+print("[DEBUG] pm", m.panel_rows(s.tree("pm", "Tree"), paths=True)[:3])
+print("[DEBUG] gr", [p for p in s.tree("gr").paths()][:4])
+print("[DEBUG] sm", [p for p in s.tree("sm").paths()][:4])
+print("[DEBUG] pm paths", [(p, len(s.tree("pm", "Tree").branch(p))) for p in s.tree("pm", "Tree").paths()])
+print("[DEBUG] pt", s.tree("pt", "Tree").paths())
+print("[DEBUG] panel stl", m.panel_rows(s.tree("stl"), paths=True), m.panel_rows(s.tree("stc"), paths=True))
+print("[DEBUG] flip", [(p, len(s.tree("fp", "Data").branch(p))) for p in s.tree("fp", "Data").paths()])
+print("[DEBUG] flip0", s.tree("fp", "Data").branch((0,))[0].tag, s.tree("fp", "Data").branch((1,))[0].tag)
+print("[DEBUG] ti", m.panel_rows(s.tree("tio"), paths=True))
+print("[DEBUG] cp1 first", s.tree("cp1").branch((0, 1, 4, 2))[0].tag)
+print("[DEBUG] canvas views", list(d.views))
+print("[DEBUG] spec", d.spec("pm").name, d.obj("pm").settings, [i.name for i in d.spec("pm").inputs], [o.name for o in d.spec("pm").outputs])
+print("[DEBUG] catalogue", m.catalogue()["Path Mapper"].description)

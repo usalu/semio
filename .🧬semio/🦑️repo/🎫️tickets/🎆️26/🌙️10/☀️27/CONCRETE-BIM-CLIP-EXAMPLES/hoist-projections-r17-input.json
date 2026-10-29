@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "status": "offline-evidence-not-authored",
+  "registration": {
+    "x_origin_px": 826,
+    "x_scale": 0.025885558583106268,
+    "y_origin_px": 225,
+    "y_origin_m": 1.25,
+    "y_scale": 0.02585034013605442
+  },
+  "plan_source": "CSIC2022 Annex1 PDF18",
+  "function_source": "Savoye as Built p69; CMN2021 §9",
+  "function_registration_basis": "inferred from garage-positiveX side, not printed callouts",
+  "projections": [
+    {
+      "function": "garage-hoist-hatch",
+      "outer_pixels": [
+        348,
+        595,
+        410,
+        675
+      ],
+      "outer": [
+        [
+          10.768392,
+          10.814626
+        ],
+        [
+          12.373297,
+          10.814626
+        ],
+        [
+          12.373297,
+          12.882653
+        ],
+        [
+          10.768392,
+          12.882653
+        ]
+      ],
+      "clear_candidate_pixels": [
+        364,
+        614,
+        395,
+        656
+      ],
+      "clear_candidate": [
+        [
+          11.156676,
+          11.305782
+        ],
+        [
+          11.959128,
+          11.305782
+        ],
+        [
+          11.959128,
+          12.391497
+        ],
+        [
+          11.156676,
+          12.391497
+        ]
+      ],
+      "existing_cellar_wall": "W-CELLAR-E",
+      "wall_opening_required": true
+    },
+    {
+      "function": "coal-hopper",
+      "outer_pixels": [
+        638,
+        777,
+        730,
+        810
+      ],
+      "outer": [
+        [
+          2.485014,
+          15.519388
+        ],
+        [
+          4.866485,
+          15.519388
+        ],
+        [
+          4.866485,
+          16.372449
+        ],
+        [
+          2.485014,
+          16.372449
+        ]
+      ],
+      "clear_candidate_pixels": [
+        646,
+        783,
+        723,
+        804
+      ],
+      "clear_candidate": [
+        [
+          2.666213,
+          15.67449
+        ],
+        [
+          4.659401,
+          15.67449
+        ],
+        [
+          4.659401,
+          16.217347
+        ],
+        [
+          2.666213,
+          16.217347
+        ]
+      ],
+      "existing_cellar_wall": "W-CELLAR-W",
+      "wall_opening_required": true
+    }
+  ],
+  "uncertainty_m": 0.04,
+  "required_checks": [
+    "Hatch is actual open floor/cover void over a hollow shaft; no solid proxy below it",
+    "Shaft access physically perforates actual cellar wall",
+    "Jib is pivoting support with inferred dimensions explicitly labelled; no location chosen solely to avoid car fixtures",
+    "No structural, parked-car, door or headroom clashes",
+    "Original/reconstructed state and planned concrete versus measured material remain explicit"
+  ],
+  "unresolved": [
+    "Exact wall/cover/base thicknesses and projection floor levels",
+    "Original jib pivot position, arm length, operating height and section",
+    "Horizontal hatch native opening/filling class contract",
+    "Full garage three-car envelope remains unverified"
+  ]
+}

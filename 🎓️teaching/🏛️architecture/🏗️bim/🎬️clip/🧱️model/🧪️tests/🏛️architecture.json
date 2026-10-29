@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "basis": "CMN visitor leaflet and FLC-hosted CMN dossier; exact dimensions inferred",
+  "cases": [
+    {
+      "id": "service-entry-free-portal",
+      "host": "CW-1",
+      "door": "D-SERVICE",
+      "body_width": 0.8,
+      "path": [
+        [
+          2.3,
+          10.115
+        ],
+        [
+          4.25,
+          10.33
+        ]
+      ],
+      "opening": "OP-D-SERVICE",
+      "hall_control": [
+        4.25,
+        10.33
+      ],
+      "clear_width": 0.9,
+      "basis": "Independent registered west-tangent service bay; actual source curve and native pane void, coordinate uncertainty ±0.20m",
+      "body_height": 1.95
+    },
+    {
+      "id": "parents-bed-alcove",
+      "minimum_clear_entrance": 0.8,
+      "status": "implemented",
+      "posts": [
+        "27-FIRST",
+        "32-FIRST"
+      ],
+      "loose_bed": false
+    },
+    {
+      "id": "guest-dressing-finish",
+      "parquet": "FIN-GUEST-PARQUET",
+      "tile": "FIN-GUEST-TILE",
+      "room": "SP-GUEST",
+      "nominal_overlay": true
+    },
+    {
+      "id": "hanging-garden-paving",
+      "paving": "FIN-TERRACE-PAVING",
+      "grass": "FIN-TERRACE-GRASS",
+      "room": "SP-TERRACE",
+      "maximum_finish_top": 3.17,
+      "nominal_overlay": true
+    },
+    {
+      "id": "kitchen-small-terrace",
+      "requires_primary_plan_confirmation": false,
+      "source": "CMN2021 first plan and CSIC2022 annex3 executed roof plan",
+      "space": "SP-KITCHEN-TERRACE",
+      "outline": [
+        [
+          0.3,
+          6.2
+        ],
+        [
+          3.2,
+          6.2
+        ],
+        [
+          3.2,
+          8.9
+        ],
+        [
+          0.3,
+          8.9
+        ]
+      ],
+      "roof_void": "V-KITCHEN-PATIO",
+      "door": "D-KITCHEN-PATIO"
+    },
+    {
+      "id": "garage-jib-cellar-connection",
+      "requires_definitive_cellar_plan": true
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "tag": "W-STAIR-ROOF",
+  "predefined_type": "STANDARD",
+  "minimum_y_extent": 10.1,
+  "materials": [
+    "MAT-RENDER",
+    "MAT-HOLLOW-CLAY",
+    "MAT-PLASTER"
+  ],
+  "views": [
+    "axis",
+    "footprint",
+    "plan",
+    "section",
+    "elevation",
+    "3d",
+    "body"
+  ],
+  "closed_boundary": {
+    "occupied": [
+      2.85,
+      8
+    ],
+    "empty": [
+      3.2,
+      8
+    ],
+    "z": 7.8
+  }
+}

@@ -1,0 +1,17 @@
+import rhino3dm as r
+
+a = r.Plane(r.Point3d(0, 0, 0), r.Vector3d(1, 0, 0), r.Vector3d(0, 1, 0))
+b = r.Plane(r.Point3d(1, 2, 3), r.Vector3d(0, 1, 0), r.Vector3d(-1, 0, 0))
+x = r.Transform.PlaneToPlane(a, b)
+print([n for n in dir(x) if not n.startswith("_")][:40])
+print(x.ToFloatArray(True))
+print(r.Transform.Rotation(1.0, r.Vector3d(0, 0, 1), r.Point3d(1, 1, 0)).ToFloatArray(True))
+p = r.Point3d(1, 0, 0)
+p.Transform(x)
+print(p.X, p.Y, p.Z)
+print([n for n in dir(r.Plane) if not n.startswith("_")])
+print([n for n in dir(r.Circle) if not n.startswith("_")][:30])
+bb = r.BoundingBox(0, 0, 0, 1, 2, 3)
+print([n for n in dir(bb) if not n.startswith("_")])
+print([n for n in dir(r.Brep) if "Box" in n or "Volume" in n or "Create" in n])
+print(r.__version__ if hasattr(r, "__version__") else "")

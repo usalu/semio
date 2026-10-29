@@ -17,8 +17,8 @@ ROOT = next(parent for parent in Path(__file__).resolve().parents if (parent / "
 CLIP = ROOT / "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip"
 CASES = json.loads((CLIP / "🧪️cases/🔣️.json").read_text(encoding="utf-8"))
 LANGUAGES = {
-    "en": {"column": 1, "title": "BIM Videos", "intro": "Complete transcripts of the six BIM videos. All values come from one rounded teaching model of the Villa Savoye in Poissy (Le Corbusier and Pierre Jeanneret, 1928–1931); values that are assumed are marked as such in the videos. One paragraph per narrated step, in narration order.", "contents": "Contents", "video": "Video"},
-    "de": {"column": 2, "title": "BIM-Videos", "intro": "Vollständige Texte der sechs BIM-Videos. Alle Werte stammen aus einem gerundeten Lehrmodell der Villa Savoye in Poissy (Le Corbusier und Pierre Jeanneret, 1928–1931); angenommene Werte sind in den Videos als solche gekennzeichnet. Ein Absatz pro gesprochenem Schritt, in Sprechreihenfolge.", "contents": "Inhalt", "video": "Video"},
+    "en": {"column": 1, "title": "BIM Videos", "intro": "Complete transcripts of the six BIM videos. The Villa Savoye model targets its original completed state in 1930–1931. Source-supported, inferred and assumed dimensions are distinguished; hypothetical teaching changes are identified explicitly. One paragraph per narrated step, in narration order.", "contents": "Contents", "video": "Video"},
+    "de": {"column": 2, "title": "BIM-Videos", "intro": "Vollständige Texte der sechs BIM-Videos. Das Modell der Villa Savoye zielt auf den ursprünglichen Fertigstellungszustand 1930–1931. Quellenbelegte, abgeleitete und angenommene Maße sind unterschieden; hypothetische Lehränderungen werden ausdrücklich benannt. Ein Absatz pro gesprochenem Schritt, in Sprechreihenfolge.", "contents": "Inhalt", "video": "Video"},
 }
 
 

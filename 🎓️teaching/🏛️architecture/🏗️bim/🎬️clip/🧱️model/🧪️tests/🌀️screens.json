@@ -1,0 +1,33 @@
+{
+  "host": "TEST-PATH-WALL",
+  "opening": "TEST-PATH-OPENING",
+  "path": [
+    [
+      0,
+      0
+    ],
+    [
+      4,
+      0
+    ],
+    [
+      4,
+      3
+    ]
+  ],
+  "thickness": 0.2,
+  "base": 0,
+  "top": 3,
+  "aperture": {
+    "start": 3.5,
+    "end": 4.5,
+    "sill": 0.7,
+    "head": 2
+  },
+  "expected": {
+    "gross_area": 1.4,
+    "gross_volume": 4.2,
+    "opening_volume": 0.26,
+    "volume": 3.94
+  }
+}

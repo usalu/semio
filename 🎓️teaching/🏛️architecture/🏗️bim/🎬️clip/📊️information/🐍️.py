@@ -60,32 +60,32 @@ class Beat1_DataToInformation(_visuals.ClipScene):
          "Kontext: Es ist der Achsabstand zweier Pilotis im Erdgeschoss der Villa Savoye."],
         ["place", "The model names the place: site, building, storey and the two grid axes.",
          "Das Modell benennt den Ort: Grundstück, Gebäude, Geschoss und die beiden Rasterachsen."],
-        ["chain", "Does it add up? The bays sum to the grid width; what remains to the building edge is still open.",
-         "Stimmt die Summe? Die Felder ergeben die Rasterbreite; der Rest bis zur Gebäudekante bleibt offen."],
-        ["meaning", "The data model adds meaning: property, unit, grid, and whether the value is sourced or assumed.",
-         "Das Datenmodell ergänzt die Bedeutung: Eigenschaft, Einheit, Raster und ob der Wert belegt oder angenommen ist."],
+        ["chain", "Does it add up? The bays sum to the grid width; each building datum retains its own source or inference.",
+         "Stimmt die Summe? Die Felder ergeben die Rasterbreite; jedes Gebäudemaß behält seinen eigenen Beleg oder seine Ableitung."],
+        ["meaning", "The data model adds meaning: property, unit, grid, evidence, and the reconstructed original state of 1930–1931.",
+         "Das Datenmodell ergänzt die Bedeutung: Eigenschaft, Einheit, Raster, Beleg und den rekonstruierten ursprünglichen Zustand von 1930–1931."],
         ["source", "A value carries its origin. The first grid was wider and was reduced to save cost.",
          "Ein Wert trägt seine Herkunft. Das erste Raster war weiter und wurde aus Kostengründen verkleinert."],
-        ["question", "Information serves a question: can a car (size assumed) drive between the pilotis and turn under the house?",
-         "Information dient einer Frage: Fährt ein Auto (Maße angenommen) zwischen den Pilotis durch und wendet unter dem Haus?"],
+        ["question", "Information serves a question: can an assumed car reach the entrance while clearing the modelled ground obstacles?",
+         "Information dient einer Frage: Erreicht ein angenommenes Auto den Eingang ohne Kontakt zu den modellierten Hindernissen?"],
         ["diameter", "Spacing counts from axis to axis, but the car needs the free space between the piloti surfaces.",
          "Der Abstand gilt von Achse zu Achse; das Auto braucht den freien Raum zwischen den Stützen."],
-        ["clear", "The clear width is the spacing minus the piloti diameter. In this model, that is the room the car has.",
-         "Die lichte Weite ist der Abstand abzüglich des Pilotidurchmessers. Im Lehrmodell hat das Auto so viel Raum."],
-        ["fits", "Driving straight through, the car plus a safety margin on each side must fit into it. With these inputs, it does.",
-         "Bei Geradeausfahrt müssen Auto und ein Sicherheitsabstand je Seite hineinpassen. Mit diesen Annahmen tun sie das."],
-        ["reduced", "Whether the grid is the first or the reduced one, the car fits.",
-         "Ob erstes oder verkleinertes Raster: Das Auto passt."],
-        ["gauge", "How sure is the answer? The verdict flips only below a threshold, far under this spacing.",
-         "Wie sicher ist die Antwort? Das Urteil kippt erst unter einer Schwelle, weit unter diesem Abstand."],
-        ["sensitive", "A thicker piloti or a wider car shifts the threshold, but not enough to change the answer.",
-         "Eine dickere Stütze oder ein breiteres Auto verschiebt die Schwelle, ändert die Antwort aber nicht."],
-        ["drive", "The car drives through the bay and turns under the house.",
-         "Das Auto fährt durch das Feld und wendet unter dem Haus."],
-        ["pinch", "On the curve, two pilotis come closer than the straight-driving margin; the car still clears them, but only just.",
-         "In der Kurve unterschreiten zwei Pilotis den Abstand der Geradeausfahrt; das Auto kommt noch frei vorbei, aber knapp."],
-        ["wall", "The curved glass wall follows the car's turning circle: its curve is calculated from the car.",
-         "Die gebogene Glaswand folgt dem Wendekreis des Autos: Ihre Kurve ist aus dem Auto berechnet."],
+        ["clear", "The clear width subtracts the actual support outlines from the axis spacing. Circular profiles give the familiar diameter subtraction.",
+         "Die lichte Weite berücksichtigt die tatsächlichen Stützenkonturen im Achsabstand. Bei Kreisprofilen ergibt sich der bekannte Durchmesserabzug."],
+        ["fits", "Driving straight through, the car plus a safety margin on each side must fit into the available width.",
+         "Bei Geradeausfahrt müssen Auto und ein Sicherheitsabstand je Seite in die verfügbare Breite passen."],
+        ["reduced", "The first and the reduced grid are compared as explicit spacing scenarios.",
+         "Erstes und verkleinertes Raster werden als ausdrückliche Abstandsszenarien verglichen."],
+        ["gauge", "How sure is the answer? The gauge shows the threshold of this explicit straight passage scenario.",
+         "Wie sicher ist die Antwort? Die Skala zeigt die Schwelle dieses ausdrücklichen Geradeausfahrt-Szenarios."],
+        ["sensitive", "A thicker circular support or a wider car shifts the threshold; the full route still needs its own physical check.",
+         "Eine dickere Kreisstütze oder ein breiteres Auto verschiebt die Schwelle; die ganze Route braucht weiterhin ihre eigene geometrische Prüfung."],
+        ["drive", "The assumed arrival is a teaching scenario. Historical descriptions state capacity for three cars; fitting three full-size cars remains unverified.",
+         "Die angenommene Anfahrt ist ein Lehrszenario. Historische Beschreibungen nennen Platz für drei Autos; drei Fahrzeuge in voller Größe bleiben geometrisch ungeprüft."],
+        ["pinch", "The swept rectangle is checked against actual height-overlapping building parts, including services and the hoist jib; the smallest clearance governs.",
+         "Die bewegte Rechteckhülle wird gegen tatsächliche Bauteile in Fahrzeughöhe geprüft, einschließlich Haustechnik und Hebeausleger; der kleinste Abstand entscheidet."],
+        ["wall", "The translucent entrance surround and opaque timber door leaves follow the source-informed plan. The assumed arrival is a separate teaching route.",
+         "Die transluzente Eingangsumfassung und geschlossenen Holztürblätter folgen dem quellenbezogenen Plan. Die angenommene Anfahrt ist eine eigene Lehrroute."],
         ["properties", "A piloti carries more properties: its material, whether it bears load, and whether it is external.",
          "Eine Stütze trägt weitere Eigenschaften: Material, ob sie Lasten trägt und ob sie außen liegt."],
         ["relations", "Relationships complete the meaning: storey, type, the floor slab it carries and its grid position.",
@@ -123,8 +123,15 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         return ORIGIN + SCALE * np.array([x - self._mid[0], y - self._mid[1], 0.0])
 
     def _lab(self, tag):
-        """🏷️ Grid name of a piloti tag, E3 becomes E/3."""
-        return tag[0] + "/" + tag[1:]
+        """🏷️ Preserve the actual numbered support-register tag."""
+        return tag
+
+    def _grid_keys(self, tag):
+        """📍 Grid bubbles only for actual measured coincidence with a support axis."""
+        point=self._xy(tag)
+        grid=self._g["grid"]
+        return [f"label_{axis}:{label}" for index,axis in enumerate(("x","y"))
+                for value,label in zip(grid[axis],grid["labels_"+axis]) if abs(value-point[index])<1e-6]
 
     def _word(self, kind):
         """🧾 Localized basis word of a model value."""
@@ -164,16 +171,12 @@ class Beat1_DataToInformation(_visuals.ClipScene):
     def _plan(self, lit=()):
         """📋 Ground-floor plan from the shared villa drawing, the entry pilotis lit."""
         plan = self.villa_plan("ground", ORIGIN, SCALE, model=self._m, highlight=lit, names=False, ramp_arrow=False, label_sides=("bottom", "left"), halo=0.12)
-        plan.glass, plan.outline = plan.parts["CW-1"], plan.parts["box"]
-        walls = _sheet.ground_walls(self._g)
-        poche = _engine.VGroup(*[_draft.polygon([self._at(*p) for p in _plan_widget.quad(p0, p1, walls["thickness"] / 2)], _draft.mix(INK, BACKGROUND, 0.42), 0.95, INK, 0.6)
-                                 for p0, p1, _ in walls["outer"] + walls["inner"]])
-        plan.add(poche)
+        plan.glass, plan.outline = plan.parts[_model.role("entrance_glazing", self._m)], plan.parts["box"]
         return plan
 
     def _section_mark(self):
         """✂️ Section cut A–A through the piloti axis: dash-dot line, bold heads, view arrows towards the east and the letter A at both ends."""
-        x, _ = self._xy(self._entry[0])
+        x, _ = self._xy(_model.role("column_example", self._m))
         top, bottom = self._at(x, self._g["box"]["width"] + 0.8), self._at(x, -0.6)
         east = np.array([1.0, 0.0, 0.0])
         mark = _engine.VGroup(_draft.segments(_sheet.dash_dot(bottom, top), INK, _draft.W_THIN, 0.8))
@@ -309,43 +312,59 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         lim = _model.clearance_limits(self._m, spacing=s, diameter=d, car_width=w)
         k, cx, cy = BAY_K, BAY_X, BAY_Y
         xa, xb = cx - s * k / 2, cx + s * k / 2
-        r = d * k / 2
+        a, b = self._entry
+        columns = {pil["tag"]: pil for pil in self._g["pilotis"]}
+        ground = self._g["storeys"]["ground"]
+        vehicle_top = ground + self._m["car"]["height"]["value"]
+        radii = [max(part["profile"]["diameter"]["value"] / 2 for part in columns[tag]["parts"]
+                     if part["z0"] < vehicle_top and part["z1"] > ground) for tag in (a, b)]
+        bases=[part["profile"]["diameter"]["basis"] for tag in (a,b) for part in columns[tag]["parts"] if part["z0"]<vehicle_top and part["z1"]>ground]
+        basis="assumed" if abs(d-sum(radii))>1e-9 or "assumed" in bases else "inferred" if "inferred" in bases else "sourced"
+        ratio = radii[0] / sum(radii)
+        ra, rb = d * k * ratio, d * k * (1 - ratio)
         half = self._c["car_length"] * k / 2
         reach = w * k / 2
         a, b = self._entry
+        car_x = (xa + ra + xb - rb) / 2
         rv = {name: tracker.get_value() for name, tracker in st.rv.items()}
         bay = _engine.VGroup()
         axes = _draft.segments([pair for x in (xa, xb) for pair in _draft.dashes([(x, cy - half - 0.25, 0), (x, cy + half + 0.25, 0)], 0.1, 0.05)], MUTED, _draft.W_HAIR, 0.7)
-        pil = _engine.VGroup(*[_engine.Circle(radius=max(r, 0.04), stroke_color=INK, stroke_width=1.4, fill_color=CONCRETE, fill_opacity=1.0).move_to((x, cy, 0)) for x in (xa, xb)],
-                             self._say(self._lab(a), (xa - r - 0.18, cy + 0.3), color=DATA, edge="r"), self._say(self._lab(b), (xb + r + 0.18, cy + 0.3), color=DATA, edge="l"))
+        pil = _engine.VGroup(*[_draft.polygon([(x + (p[0] - columns[tag]["x"]) * r / original, cy + (p[1] - columns[tag]["y"]) * r / original, 0) for p in ring], CONCRETE, 1.0, None, 0)
+                              for tag,x,r,original in zip(self._entry,(xa,xb),(ra,rb),radii) for part in columns[tag]["parts"]
+                              for ring in _model.part_band_footprints(part,ground,vehicle_top)],
+                             *[_draft.polyline([(x+(p[0]-columns[tag]["x"])*r/original,cy+(p[1]-columns[tag]["y"])*r/original,0) for p in ring],INK,1.4,closed=True)
+                               for tag,x,r,original in zip(self._entry,(xa,xb),(ra,rb),radii) for part in columns[tag]["parts"] if part["z0"]<vehicle_top and part["z1"]>ground
+                               for ring in [_model.part_outline_at(part,(max(ground,part["z0"])+min(vehicle_top,part["z1"]))/2),*part.get("holes",[])]],
+                             self._say(self._lab(a), (xa - ra - 0.18, cy + 0.3), color=DATA, edge="r"), self._say(self._lab(b), (xb + rb + 0.18, cy + 0.3), color=DATA, edge="l"))
         span = self.dimension((xa, cy, 0), (xb, cy, 0), self.quantity(s, "m"), offset=half + 0.5, color=DATA, size=LABEL)
-        diam = _engine.VGroup(self.dimension((xa - r, cy, 0), (xa + r, cy, 0), None, offset=-0.28, color=WARN),
-                              self._say("Ø " + self.quantity(d, "m"), (xa - r - 0.14, cy - 0.28), color=WARN, edge="r"),
-                              self._say(self._word("assumed"), (xa - r - 0.14, cy - 0.56), size=SMALL, color=WARN, edge="r"))
-        rect = [(xa + r, cy - 0.16), (xb - r, cy - 0.16), (xb - r, cy + 0.16), (xa + r, cy + 0.16)]
+        diam = _engine.VGroup(self.dimension((xa, cy, 0), (xa + ra, cy, 0), None, offset=-0.28, color=WARN),
+                              self.dimension((xb - rb, cy, 0), (xb, cy, 0), None, offset=-0.28, color=WARN),
+                              self._say("r₁ + r₂ = " + self.quantity(d, "m"), (xa - ra - 0.14, cy - 0.28), color=WARN, edge="r"),
+                              self._say(self._word(basis), (xa - ra - 0.14, cy - 0.56), size=SMALL, color=TONES[basis], edge="r"))
+        rect = [(xa + ra, cy - 0.16), (xb - rb, cy - 0.16), (xb - rb, cy + 0.16), (xa + ra, cy + 0.16)]
         clear = _engine.VGroup(_draft.polygon(rect, GOOD, 0.16), _draft.hatch(rect, GOOD, 0.07, 45, _draft.W_HAIR, 0.9),
-                               self.dimension((xa + r, cy, 0), (xb - r, cy, 0), self.quantity(lim["clear_width"], "m"), offset=-(half + 0.55), color=GOOD, size=LABEL))
+                               self.dimension((xa + ra, cy, 0), (xb - rb, cy, 0), self.quantity(lim["clear_width"], "m"), offset=-(half + 0.55), color=GOOD, size=LABEL))
         keep = _engine.VGroup()
         m_min = lim["min_margin"] * k
-        for index, (x0, x1) in enumerate(((xa + r, xa + r + m_min), (xb - r - m_min, xb - r))):
+        for index, (x0, x1) in enumerate(((xa + ra, xa + ra + m_min), (xb - rb - m_min, xb - rb))):
             ring = [(x0, cy - 0.7), (x1, cy - 0.7), (x1, cy + 0.9), (x0, cy + 0.9)]
             left = index == 0
             keep.add(_draft.polygon(ring, WARN, 0.1), _draft.polyline(ring, WARN, _draft.W_HAIR, 0.8, closed=True, dash=0.08),
                      self._say(self.quantity(lim["min_margin"], "m"), (xa - 0.16 if left else xb + 0.16, cy + 0.68), size=SMALL, color=WARN, edge="r" if left else "l"),
                      _draft.segments([((xa - 0.1 if left else xb + 0.1, cy + 0.68, 0), ((x0 + x1) / 2, cy + 0.68, 0))], WARN, _draft.W_HAIR, 0.9))
-        car = self._car(k, 270).move_to((cx, cy, 0))
+        car = self._car(k, 270).move_to((car_x, cy, 0))
         car.stretch(w / self._c["car_width"], 0)
-        car_dim = _engine.VGroup(self.dimension((cx - reach, cy, 0), (cx + reach, cy, 0), None, offset=half + 0.1, color=DATA),
-                                 self._say(self.quantity(w, "m"), (cx, cy + half + 0.3), color=DATA))
+        car_dim = _engine.VGroup(self.dimension((car_x - reach, cy, 0), (car_x + reach, cy, 0), None, offset=half + 0.1, color=DATA),
+                                 self._say(self.quantity(w, "m"), (car_x, cy + half + 0.3), color=DATA))
         fit = lim["fits"]
         tone = GOOD if fit else SERV
         margins = _engine.VGroup()
         if lim["margin"] > 0.3:
-            for left, right in ((xa + r, cx - reach), (cx + reach, xb - r)):
+            for left, right in ((xa + ra, car_x - reach), (car_x + reach, xb - rb)):
                 margins.add(self.dimension((left, cy, 0), (right, cy, 0), None, offset=-(half + 0.12), color=DATA),
                             self._say(self.quantity(lim["margin"], "m"), ((left + right) / 2, cy - half - 0.36), size=_draft.S_SMALL, color=DATA))
         clear_row = _engine.VGroup(
-            self._math([("s", "s", DATA), (None, "−", None), ("d", "Ø", WARN), (None, "=", None), ("w", "w", GOOD)], size=24).move_to((cx - 1.7, -1.55, 0)),
+            self._math([("s", "s", DATA), (None, "−", None), ("d", "r_1+r_2", WARN), (None, "=", None), ("w", "w", GOOD)], size=24).move_to((cx - 1.7, -1.55, 0)),
             self._math([("s", self._tex(s, "m"), DATA), (None, "−", None), ("d", self._tex(d, "m"), WARN), (None, "=", None), ("w", self._tex(lim["clear_width"], "m"), GOOD)],
                        size=22).move_to((cx + 1.2, -1.55, 0)))
         need_row = self._math([("b", self._tex(w, "m"), WARN), (None, "+ 2 ×", None), ("m", self._tex(lim["min_margin"], "m"), WARN), (None, "=", None),
@@ -357,7 +376,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
                  "formula": clear_row, "need": need_row, "verdict": verdict}
         for name, part in parts.items():
             bay.add(_fade(part, rv.get(name, 1.0)))
-        hint = self._say(self.tr("s: spacing axis to axis · Ø: piloti diameter", "s: Abstand von Achse zu Achse · Ø: Pilotidurchmesser"), (cx, -1.7), size=SMALL, color=MUTED, width=5.6)
+        hint = self._say(self.tr("s: axis spacing · r₁+r₂: support half-widths", "s: Achsabstand · r₁+r₂: Stützenhalbbreiten"), (cx, -1.7), size=SMALL, color=MUTED, width=5.6)
         bay.add(_fade(hint, rv["pil"] * (1.0 - rv["clear"])))
         return bay
 
@@ -408,17 +427,39 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         group = _engine.VGroup(*[self.text(line, (0, 0, 0), size=size, color=color) for line in lines]).arrange(_engine.DOWN, buff=0.08)
         return group.move_to(np.array([point[0], point[1], 0.0]))
 
+    def _profile_pair(self, item):
+        """📏 Closest points of the actual vehicle rectangle and occupied source profile outlines."""
+        x,y,heading=item["pose"]
+        c,s=math.cos(math.radians(heading)),math.sin(math.radians(heading))
+        half=np.array([self._c["car_length"],self._c["car_width"]])/2
+        rotation=np.array([[c,s],[-s,c]])
+        car=np.array([[-half[0],-half[1]],[half[0],-half[1]],[half[0],half[1]],[-half[0],half[1]]])@rotation+[x,y]
+        ground=self._g["storeys"]["ground"]
+        top=ground+self._m["car"]["height"]["value"]
+        pairs=[]
+        def project(p,a,b):
+            v=b-a
+            return a+v*np.clip(np.dot(p-a,v)/max(np.dot(v,v),1e-15),0,1)
+        def cross(a,b):
+            return a[0]*b[1]-a[1]*b[0]
+        for part in item["parts"]:
+            for region in _model.part_band_footprints(part,ground,top):
+                ring=np.asarray(region,dtype=float)
+                for a,b in zip(car,np.roll(car,-1,axis=0)):
+                    for u,v in zip(ring,np.roll(ring,-1,axis=0)):
+                        delta,edge=b-a,v-u
+                        denominator=cross(delta,edge)
+                        if abs(denominator)>1e-12:
+                            t,q=cross(u-a,edge)/denominator,cross(u-a,delta)/denominator
+                            if 0<=t<=1 and 0<=q<=1:
+                                point=a+t*delta
+                                return point,point
+                        pairs.extend(((a,project(a,u,v)),(b,project(b,u,v)),(project(u,a,b),u),(project(v,a,b),v)))
+        return min(pairs,key=lambda pair:np.linalg.norm(pair[0]-pair[1]))
+
     def _nearest(self, item):
-        """📍 The point of the car outline closest to a piloti at the car's pose, in model metres."""
-        px, py = item["centre"]
-        x, y, heading = item["pose"]
-        rad = math.radians(heading)
-        cs, sn = math.cos(rad), math.sin(rad)
-        rel = np.array([px - x, py - y])
-        local = np.array([rel[0] * cs + rel[1] * sn, -rel[0] * sn + rel[1] * cs])
-        half = np.array([self._c["car_length"], self._c["car_width"]]) / 2
-        near = np.clip(local, -half, half)
-        return np.array([x, y]) + np.array([near[0] * cs - near[1] * sn, near[0] * sn + near[1] * cs])
+        """📍 Closest vehicle boundary point to the actual occupied support contour."""
+        return self._profile_pair(item)[0]
 
     def _away(self, item):
         """🧭 Unit screen direction from the closest car point to the piloti, the side where a marker stays clear of the car."""
@@ -433,68 +474,79 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         x, y, heading = item["pose"]
         offset = np.array([x - px, y - py, 0.0]) * scale
         base = np.array([centre[0] + 0.3, centre[1] - 0.2, 0.0]) - offset * 0.5
-        radius = max(item["radius"] * scale, 0.07)
-        pil = _engine.Circle(radius=radius, stroke_color=INK, stroke_width=1.4, fill_color=CONCRETE, fill_opacity=1.0).move_to(base)
+        ground = self._g["storeys"]["ground"]
+        top = ground + self._m["car"]["height"]["value"]
+        pil = _engine.VGroup(*[_draft.polygon([base + scale * np.array([p[0] - px, p[1] - py, 0.0]) for p in ring], CONCRETE, 1.0, None, 0)
+                              for part in item["parts"] for ring in _model.part_band_footprints(part,ground,top)],
+                             *[_draft.polyline([base+scale*np.array([p[0]-px,p[1]-py,0.0]) for p in ring],INK,1.4,closed=True)
+                               for part in item["parts"] if part["z0"]<top and part["z1"]>ground
+                               for ring in [_model.part_outline_at(part,(max(ground,part["z0"])+min(top,part["z1"]))/2),*part.get("holes",[])]])
         car = self._car(scale, heading).move_to(base + offset)
-        near = self._nearest(item)
+        near, contact = self._profile_pair(item)
         start = base + np.array([near[0] - px, near[1] - py, 0.0]) * scale
-        toward = (start - base) / max(np.linalg.norm(start - base), 1e-9)
-        end = base + toward * radius
+        end = base + np.array([contact[0] - px, contact[1] - py, 0.0]) * scale
+        toward = (start - end) / max(np.linalg.norm(start - end), 1e-9)
         side = np.array([-toward[1], toward[0], 0.0])
         gap = _engine.VGroup(_draft.segments([(start, end), (start + side * 0.07, start - side * 0.07), (end + side * 0.07, end - side * 0.07)], WARN, _draft.W_EDGE))
         label = self._say(self.quantity(item["clearance"], "m"), base - toward * 0.6, color=WARN, size=LABEL)
         head = _engine.VGroup(self.badge(str(number), (centre[0] - PW / 2 + 0.4, centre[1] + 1.05, 0), color=WARN),
                               self._say(self._lab(item["tag"]), (centre[0] - PW / 2 + 0.68, centre[1] + 1.05), color=INK, edge="l"),
-                              self._say(self.tr("below the ", "unter dem Abstand ") + self.quantity(self._c["min_margin"], "m") + self.tr(" margin", ""), (centre[0] + PW / 2 - 0.3, centre[1] + 1.05),
+                              self._say(self.tr("column clearance", "Stützenabstand"), (centre[0] + PW / 2 - 0.3, centre[1] + 1.05),
                                         size=SMALL, color=WARN, edge="r"))
-        margin_ring = _draft.polyline(_draft.circle_points(base, (item["radius"] + self._c["min_margin"]) * scale, 48), WARN, _draft.W_THIN, 0.9, closed=True, dash=0.07)
+        margin_ring = _draft.polyline(_draft.circle_points(base, (item["bounding_radius"] + self._c["min_margin"]) * scale, 48), WARN, _draft.W_THIN, 0.9, closed=True, dash=0.07)
         return _engine.VGroup(frame, margin_ring, car, pil, gap, label, head)
 
     def _wall_detail(self):
-        """🪟 Magnified quarter of the curved glass wall: the car at its turning circle, the swept edges and the radius split into glass radius, clearance and car width."""
-        g, c, path = self._g, self._c, self._path
-        cx_, cy_ = path["curve_centre"]
-        rc, hw = path["centre_radius"], c["car_width"] / 2
-        inner, outer = rc - hw, rc + hw
-        view = _draft.View("plan", (PX, 0.6, 0), 0.62, centre=(6.0, 14.3, 0))
-        pt = lambda x, y: view(x, y, 0.0)
+        """🪟 Native entrance surround and timber leaves in a horizontal material cut."""
+        glazing = self._g["curtain_wall"]
+        paths = [record["path"] for record in glazing["paths"]]
+        points = np.array([point for path in paths for point in path])
+        low, high = points.min(axis=0), points.max(axis=0)
+        centre = (low + high) / 2
+        scale = min((PW - 0.8) / max(high[0] - low[0], 0.1), 3.1 / max(high[1] - low[1], 0.1))
+        view = _draft.View("plan", (PX, 0.55, 0), scale, centre=(*centre, 0))
         out = _engine.VGroup(_panels.frame_box(PW, 5.5, MUTED, fill=0.5).move_to((PX, 0.3, 0)))
-        points = [p for p in g["curtain_wall"]["path"] if p[0] <= cx_ + 1e-6]
-        points[0] = [points[0][0], 11.7]
-        out.add(_draft.polyline([pt(*p) for p in points], GLASS, _draft.W_CUT + 0.8, 1.0))
-        for radius in (inner, outer):
-            out.add(_draft.polyline([pt(cx_ + radius * math.cos(math.radians(an)), cy_ + radius * math.sin(math.radians(an))) for an in np.linspace(90, 180, 40)], DATA, _draft.W_THIN, 0.9, dash=0.09))
-        poses = [self._pose(t) for t in np.linspace(0.4, 0.8, 200)]
-        pick = min(poses, key=lambda p: abs(math.degrees(math.atan2(p[1] - cy_, p[0] - cx_)) % 360 - 135))
-        out.add(self._car(0.62, pick[2]).set_opacity(0.55).move_to(pt(pick[0], pick[1])))
-        out.add(_engine.Dot(pt(cx_, cy_), radius=0.06, color=DATA))
-        glass_end, inner_end, outer_end = cy_ + c["curve_radius"], cy_ + inner, cy_ + outer
-        out.add(_draft.segments([(pt(cx_, cy_), pt(cx_, glass_end))], GLASS, _draft.W_CUT), _draft.segments([(pt(cx_, glass_end), pt(cx_, inner_end))], WARN, _draft.W_CUT + 1.0),
-                _draft.segments([(pt(cx_, inner_end), pt(cx_, outer_end))], INK, _draft.W_CUT))
-        out.add(self.dimension(pt(cx_, cy_), pt(cx_, outer_end), None, offset=0.3, color=DATA))
-        sym = lambda en, de, colour: self._math([("x", self.tr(en, de), colour)], size=22)
-        for label, y, side in ((sym("R_{glass}", "R_{Glas}", GLASS), (cy_ + glass_end) / 2, 1), (sym("c", "c", WARN), (glass_end + inner_end) / 2 + 0.15, 1),
-                               (sym("b_{car}", "b_{Auto}", INK), (inner_end + outer_end) / 2 + 0.1, 1), (sym("R_{turn}", "R_{Wende}", DATA), cy_ + 1.1, -1)):
-            at_pt = pt(cx_, y) + np.array([side * 0.2 if side > 0 else -0.5, 0.0, 0.0])
-            label.move_to(at_pt + np.array([label.width / 2 * side, 0.0, 0.0]))
-            out.add(label)
-        formula = self._math([("g", self.tr("R_{glass}", "R_{Glas}"), GLASS), (None, "=", None), ("t", self.tr("R_{turn}", "R_{Wende}"), DATA), (None, "−", None),
-                              ("b", self.tr("b_{car}", "b_{Auto}"), INK), (None, "−", None), ("c", "c", WARN)], size=26).move_to((PX, -2.0, 0))
-        chips = _engine.VGroup(self._chip("sourced", (0, 0), text=self.tr("principle sourced", "Prinzip belegt")), self._chip("open", (0, 0), text=self.tr("radii not sourced", "Radien nicht belegt")))
-        chips.arrange(_engine.RIGHT, buff=0.3).move_to((PX, -1.35, 0))
-        out.add(formula, chips)
+        entry = _model.filling_geometry("D-ENTRY", self._m)
+        z = self._g["storeys"]["ground"] + 1.2
+        for part in [*glazing["parts"], *entry["parts"]]:
+            if not part["z0"] <= z <= part["z1"]:
+                continue
+            color = GLASS if part.get("role") == "glass" else INK
+            for ring in _model.part_regions(part, z):
+                out.add(_draft.polygon([view(x, y, z) for x, y in ring], color, 0.65, None, 0))
+        out.add(self._say(self.tr("Entrance surround · native material cut", "Eingangsumfassung · nativer Materialschnitt"), (PX, 2.5), size=LABEL, color=GLASS, width=PW - 0.5),
+                self._say(self.tr("Opaque timber entrance leaves within the translucent surround.", "Geschlossene Eingangstürblätter aus Holz in der transluzenten Umfassung."), (PX, -1.65), size=SMALL, color=INK, width=PW - 0.5),
+                self._say(self.tr("The assumed arrival is a separate route.", "Die angenommene Anfahrt ist ein eigener Weg."), (PX, -2.1), size=SMALL, color=MUTED, width=PW - 0.5))
         return out
 
     def _column(self, x0=1.55, base=-1.95, kx=0.7):
         """🏛️ Piloti elevation with the slab above, its circular section and the dimensions, all from the model."""
-        a = self._entry[0]
+        a = _model.role("column_example", self._m)
         q = _model.quantities(a, self._m)
-        slab = next(s for s in self._g["slabs"] if s["kind"] == "FLOOR")
-        w, h, t = q["diameter"] * kx, q["height"] * kx, slab["thickness"] * kx
+        column = next(p for p in self._g["pilotis"] if p["tag"] == a)
+        basis = column["profile"]["diameter"]["basis"]
+        slab = next(s for s in self._g["slabs"] if s["tag"] == _model.role("floor", self._m))
+        w, h = q["diameter"] * kx, q["height"] * kx
+        sections = []
+        for solid in slab["parts"]:
+            for ring in _model.part_sections(solid, column["y"], 1):
+                for edge,sign in ((column["x"]-0.62/kx,1),(column["x"]+0.62/kx,-1)):
+                    clipped = []
+                    for previous,current in zip(ring[-1:]+ring[:-1],ring):
+                        a,b = sign*(previous[0]-edge),sign*(current[0]-edge)
+                        if (a>=0)!=(b>=0):
+                            ratio=a/(a-b)
+                            clipped.append([previous[i]+ratio*(current[i]-previous[i]) for i in (0,1)])
+                        if b>=0:
+                            clipped.append(current)
+                    ring=clipped
+                if len(ring)>=3:
+                    sections.append([(x0+(x-column["x"])*kx,base+(z-column["base"])*kx) for x,z in ring])
+        t=max(z for ring in sections for x,z in ring)-(base+h)
         shaft = [(x0 - w / 2, base), (x0 + w / 2, base), (x0 + w / 2, base + h), (x0 - w / 2, base + h)]
         part = _engine.VGroup()
         part.shaft = _draft.polygon(shaft, BACKGROUND, 0.7, INK, 1.8)
-        part.slab = _draft.polygon([(x0 - 0.62, base + h), (x0 + 0.62, base + h), (x0 + 0.62, base + h + t), (x0 - 0.62, base + h + t)], CONCRETE, 0.55, INK, 1.4)
+        part.slab = _engine.VGroup(*[_draft.polygon(ring, CONCRETE, 0.55, None, 0) for ring in sections])
         part.ground = _draft.segments([((x0 - 0.7, base, 0), (x0 + 0.7, base, 0))], INK, 2.0)
         centre, radius = (x0, 2.35), q["radius"] * 3.4
         part.section = _engine.Circle(radius=radius, stroke_color=INK, stroke_width=1.8, fill_color=BACKGROUND, fill_opacity=0.7).move_to((*centre, 0))
@@ -503,7 +555,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         part.dims = _engine.VGroup(
             self.dimension((centre[0] - radius, centre[1], 0), (centre[0] + radius, centre[1], 0), None, offset=-0.5, color=WARN, size=LABEL),
             self._say("Ø " + self.quantity(q["diameter"], "m"), (centre[0], centre[1] - 0.82), color=WARN),
-            self._say(self._word("assumed"), (centre[0], centre[1] - 1.12), size=SMALL, color=WARN),
+            self._say(self._word(basis), (centre[0], centre[1] - 1.12), size=SMALL, color=TONES[basis]),
             self.dimension((x0 - w / 2, base, 0), (x0 - w / 2, base + h, 0), self.quantity(q["height"], "m"), offset=0.32, color=WARN, size=LABEL))
         top = base + h + t
         part.arrows = _engine.VGroup(*[_engine.Arrow((x0 + dx, top + 0.5, 0), (x0 + dx, top + 0.08, 0), buff=0, color=DATA, stroke_width=3, max_tip_length_to_length_ratio=0.3)
@@ -541,7 +593,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         storey = next(s for s in m["storeys"] if s["id"] == "ground")["name"][lang]
         ground_mark = "±" + self.number(abs(g["storeys"]["ground"]))
         spacing = c["spacing"]
-        self.st = st = SimpleNamespace(s=_engine.ValueTracker(spacing), d=_engine.ValueTracker(c["diameter"]), w=_engine.ValueTracker(c["car_width"]),
+        self.st = st = SimpleNamespace(s=_engine.ValueTracker(spacing), d=_engine.ValueTracker(c["obstruction_width"]), w=_engine.ValueTracker(c["car_width"]),
                                        rv={name: _engine.ValueTracker(0.0) for name in ("axes", "pil", "span", "diam", "clear", "keep", "car", "margins", "formula", "need", "verdict", "gauge", "cut")})
         info = _model.information(a, "grid.spacing", lang, m)
 
@@ -572,11 +624,10 @@ class Beat1_DataToInformation(_visuals.ClipScene):
             {"name": "IfcSite", "value": m["site"]["name"][lang], "ntone": MUTED},
             {"name": "IfcBuilding", "value": m["building"]["name"][lang], "ntone": MUTED},
             {"name": "IfcBuildingStorey", "value": f"{storey} {ground_mark}", "ntone": MUTED},
-            {"name": self.tr("Grid axes", "Rasterachsen"), "value": f"{self._lab(a)} – {self._lab(b)}", "ntone": MUTED}], (PX, -1.45), PW - 0.3)
+            {"name": self.tr("Support register", "Stützenregister"), "value": f"{self._lab(a)} – {self._lab(b)}", "ntone": MUTED}], (PX, -1.45), PW - 0.3)
         self.step("place", _engine.LaggedStart(
             _engine.FadeIn(places), *[_engine.FadeIn(r) for r in places.rows],
-            _engine.AnimationGroup(_engine.Indicate(plan.parts["label_x:" + a[1:]], color=DATA), _engine.Indicate(plan.parts["label_x:" + b[1:]], color=DATA),
-                                   _engine.Indicate(plan.parts["label_y:" + a[0]], color=DATA)), lag_ratio=0.3), seconds=5.0)
+            _engine.AnimationGroup(*[_engine.Indicate(plan.parts[key], color=DATA) for key in dict.fromkeys(self._grid_keys(a) + self._grid_keys(b)) if key in plan.parts]), lag_ratio=0.3), seconds=5.0)
 
         gx, ly = g["grid"]["x"], g["box"]["length"]
         bays = [(gx[i], gx[i + 1]) for i in range(len(gx) - 1)]
@@ -595,9 +646,9 @@ class Beat1_DataToInformation(_visuals.ClipScene):
             {"name": self.tr("Grid chain", "Rasterkette"), "value": "", "live": lambda: f"{len(bays)} × {self.quantity(spacing, 'm')} = {self.quantity(running.get_value(), 'm')}",
              "basis": (self._word(info["basis"]), TONES[info["basis"]]), "sub": self.tr("row E, axes 1 to 5", "Reihe E, Achsen 1 bis 5")},
             {"name": self.tr("Building box", "Baukörper"), "value": self.quantity(ly, "m"), "basis": (self._word(box_basis), TONES[box_basis]),
-             "sub": self.tr("length · medium confidence, one source", "Länge · mittlere Sicherheit, eine Quelle")},
+             "sub": self.tr("plan-normalized teaching dimension", "aus dem Plan normalisiertes Lehrmaß")},
             {"name": self.tr("Remainder", "Rest"), "value": f"2 × {self.quantity(gx[0], 'm')} = {self.quantity(remainder, 'm')}", "vtone": WARN, "basis": (self._word("open"), WARN),
-             "sub": self.tr("split assumed · overhang or cantilever?", "Aufteilung angenommen · Überstand oder Kragarm?")}], (PX, 0.75), PW - 0.3,
+             "sub": self.tr("derived from envelope and grid", "aus Hülle und Raster abgeleitet")}], (PX, 0.75), PW - 0.3,
             title=self.tr("GRID CHAIN · ROW E", "RASTERKETTE · REIHE E"))
         bar_k, bar_left, bar_y = 0.26, 0.95, -1.4
         cuts = [bar_left, bar_left + gx[0] * bar_k, bar_left + (gx[0] + total) * bar_k, bar_left + ly * bar_k]
@@ -661,8 +712,8 @@ class Beat1_DataToInformation(_visuals.ClipScene):
             _engine.Succession(_engine.AnimationGroup(_engine.FadeIn(moving), _engine.FadeIn(bars[0])),
                                _engine.AnimationGroup(self._ramp(first_s, c["initial_spacing"], spacing, 2.0), _engine.FadeIn(bars[1])))), seconds=6.5)
 
-        turn = _draft.polyline(_draft.circle_points(at(*g["curtain_wall"]["centre"]), SCALE * c["turning_radius"], 72), DATA, _draft.W_THIN, 0.8, closed=True, dash=0.1)
-        headline = self._say(self.tr("Does it fit through?", "Passt es hindurch?"), (PX, 2.75), size=30, width=PW - 0.4)
+        turn = _draft.polyline(_draft.circle_points(at(*path["curve_centre"]), SCALE * c["turning_radius"], 72), DATA, _draft.W_THIN, 0.8, closed=True, dash=0.1)
+        headline = self._say(self.tr("Can it reach the entrance?", "Erreicht es den Eingang?"), (PX, 2.75), size=30, width=PW - 0.4)
         car_scale, car_at = 0.62, np.array([PX - 0.2, 1.5, 0.0])
         big_car = self._car(car_scale).move_to(car_at)
         car_l, car_w = c["car_length"] * car_scale, c["car_width"] * car_scale
@@ -714,8 +765,8 @@ class Beat1_DataToInformation(_visuals.ClipScene):
             _engine.AnimationGroup(_engine.FadeOut(reduced), self._ramp(st.rv["cut"], 0.0, 1.0, 1.2)), self._ramp(st.s, spacing, low, 3.0), self._ramp(st.s, low, spacing, 2.5)), seconds=7.0)
 
         weak = _model.clearance_limits(m, diameter=0.6, car_width=2.05)
-        weak_chip = self.badge(self.tr("Ø: weak source", "Ø: schwache Quelle"), (0.68, -1.2), color=WARN, size=SMALL, filled=False, anchor="l")
-        self.step("sensitive", _engine.AnimationGroup(_engine.FadeIn(weak_chip), self._ramp(st.d, c["diameter"], weak["diameter"], 3.0), self._ramp(st.w, c["car_width"], weak["car_width"], 3.0)),
+        weak_chip = self.badge(self.tr("larger-profile scenario", "Szenario mit größeren Profilen"), (0.68, -1.2), color=WARN, size=SMALL, filled=False, anchor="l")
+        self.step("sensitive", _engine.AnimationGroup(_engine.FadeIn(weak_chip), self._ramp(st.d, c["obstruction_width"], weak["obstruction_width"], 3.0), self._ramp(st.w, c["car_width"], weak["car_width"], 3.0)),
                   seconds=6.0)
 
         drive_t = _engine.ValueTracker(DRIVE_FROM)
@@ -723,7 +774,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         legend = self._rows([
             {"name": self.tr("Swept path", "Fahrspur"), "value": "", "sub": self.tr("area the car's outline covers", "Fläche, die der Autoumriss überstreicht"), "dot": DATA},
             {"name": self.tr("Turning circle", "Wendekreis"), "value": "", "sub": self.tr("outer edge of the swept path", "Außenrand der Fahrspur"), "dot": DATA},
-            {"name": self.tr("Curved glass wall", "Gebogene Glaswand"), "value": "", "sub": self.tr("derived from the turning circle", "aus dem Wendekreis abgeleitet"), "dot": GLASS},
+            {"name": self.tr("Entrance surround", "Eingangsumfassung"), "value": "", "sub": self.tr("source-informed entrance geometry", "quellenbezogene Eingangsgeometrie"), "dot": GLASS},
             {"name": self.tr("Distance driven", "Gefahrene Strecke"), "value": "", "dot": INK,
              "live": lambda: self.quantity(drive_t.get_value() * path["length"], "m", 1)}], (PX, 1.2), PW - 0.3, title=self.tr("DRIVING THE CAR", "FAHRT DES AUTOS"))
         ruler = _engine.always_redraw(lambda: self._ruler(drive_t.get_value()))
@@ -745,6 +796,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         self.step("wall", _engine.AnimationGroup(
             *[_engine.FadeOut(part) for part in (*vignettes, rings, ghosts)], *self._gone(mover), _engine.FadeIn(detail)), seconds=7.0)
 
+        a = _model.role("column_example", m)
         column = self._column(x0=0.8)
         info_material = _model.information(a, "material", lang, m)
         info_load = _model.information(a, "Pset_ColumnCommon.LoadBearing", lang, m)
@@ -760,7 +812,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         slab_t = next(s_["thickness"] for s_ in g["slabs"] if s_["kind"] == "FLOOR")
         caveat = _engine.VGroup(
             self._say(self.tr("teaching model, this piloti only", "Lehrmodell, nur diese Stütze"), (4.65, -0.65), size=SMALL, color=MUTED, width=4.3),
-            self._say(f"{self.quantity(_model.quantities(a, m)['height'], 'm')} = {self.quantity(g['storeys']['first'], 'm')} − {self.quantity(slab_t, 'm')} · {self._word('assumed')}", (4.65, -1.05),
+            self._say(f"{self.quantity(_model.quantities(a, m)['height'], 'm')} · " + self.tr("physical support height", "physische Stützenhöhe"), (4.65, -1.05),
                       size=SMALL, color=WARN, width=4.1))
         marks = _engine.VGroup(
             self.badge("1", (column.section.get_right()[0] + 0.3, 2.35, 0), color=ARCH),
@@ -780,17 +832,17 @@ class Beat1_DataToInformation(_visuals.ClipScene):
 
         rels = {r["class"]: r for r in _model.relations_of(a, m)}
         slab = next(s_ for s_ in g["slabs"] if s_["kind"] == "FLOOR")
-        type_name = _model.element("TY-PILOTI", m)["name"]["en"]
+        type_name = _model.element(_model.role("column_type_example"), m)["name"][lang]
         tone = {"storey": GOOD, "type": STRUCT, "slab": CONCRETE, "grid": DATA}
         relations = self._rows([
             {"name": self.tr("Contained in", "Enthalten in"), "value": f"{storey} {ground_mark}", "dot": tone["storey"], "sub": rels["IfcRelContainedInSpatialStructure"]["class"]},
             {"name": self.tr("Defined by type", "Typ"), "value": type_name, "dot": tone["type"], "sub": rels["IfcRelDefinesByType"]["class"],
-             "basis": (f"{len(_model.type_occurrences('TY-PILOTI', m))} " + self.tr("in this teaching model*", "in diesem Lehrmodell*"), WARN)},
+             "basis": (f"{len(_model.type_occurrences(_model.role("column_type_example"), m))} " + self.tr("in this teaching model*", "in diesem Lehrmodell*"), WARN)},
             {"name": self.tr("Connected to", "Verbunden mit"), "value": self.tr("First-floor slab", "Decke über dem Erdgeschoss"), "dot": tone["slab"],
              "sub": rels["IfcRelConnectsElements"]["class"], "basis": ("+" + self.quantity(slab["top"], "m") + " · " + self._word("assumed"), WARN)},
-            {"name": self.tr("Grid position", "Rasterposition"), "value": self._lab(a), "dot": tone["grid"],
+            {"name": self.tr("Support register", "Stützenregister"), "value": self._lab(a), "dot": tone["grid"],
              "sub": self.tr("grid axes ", "Rasterachsen ") + a[0] + self.tr(" and ", " und ") + a[1:]}], (PX, 1.0), PW - 0.4)
-        legend_count = self._say(self.tr("* sources differ: 15–25", "* Quellen weichen ab: 15–25"), (PX, -0.78), size=SMALL, color=MUTED)
+        legend_count = self._say(self.tr("* source-informed teaching reconstruction", "* quellenbezogene Lehrrekonstruktion"), (PX, -0.78), size=SMALL, color=MUTED)
         outline = [at(0, 0), at(ly, 0), at(ly, g["box"]["width"]), at(0, g["box"]["width"])]
         storey_ring = _draft.polyline(outline, tone["storey"], _draft.W_EDGE + 0.6, 1.0, closed=True)
         type_rings = _engine.VGroup(*[_draft.polyline(_draft.circle_points(at(*self._xy(t)), 0.1, 24), tone["type"], _draft.W_EDGE, 1.0, closed=True) for t in (a, b)])
@@ -810,7 +862,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
             _engine.AnimationGroup(_engine.FadeIn(relations.rows[1]), _engine.FadeIn(legend_count), _engine.FadeIn(type_rings), _engine.FadeIn(leaders[1])),
             _engine.AnimationGroup(_engine.FadeIn(relations.rows[2]), _engine.FadeIn(slab_shape), _engine.FadeIn(connector), _engine.FadeIn(leaders[2])),
             _engine.AnimationGroup(_engine.FadeIn(relations.rows[3]), *[axis.animate.set_stroke(DATA, 2.4, 1.0) for axis in axes], _engine.FadeIn(leaders[3]),
-                                   _engine.Indicate(plan.parts["label_x:" + a[1:]], color=DATA), _engine.Indicate(plan.parts["label_y:" + a[0]], color=DATA)), lag_ratio=0.3), seconds=8.0)
+                                   *[_engine.Indicate(plan.parts[key], color=DATA) for key in self._grid_keys(a) if key in plan.parts]), lag_ratio=0.3), seconds=8.0)
 
         excerpt = self._pick(_model.step_excerpt(a, m, language="en"), "=IFCCOLUMN(", "'LoadBearing'", "'Pset_ColumnCommon'", "=IFCRELDEFINESBYPROPERTIES(")
         panel = self.step_panel(excerpt, (3.75, 0.0), width=6.0)
@@ -849,3 +901,4 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         self.step("same", _engine.LaggedStart(
             _engine.FadeIn(trunk), _engine.FadeIn(taps), _engine.FadeIn(marks_step), _engine.FadeIn(chip), _engine.FadeIn(same),
             _engine.Indicate(plan.parts[a], color=DATA), lag_ratio=0.3), seconds=6.0)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          

@@ -1,0 +1,6698 @@
+{
+  "elements": [
+    {
+      "guid": "1KCT$nKNHRowNNbDEL708t",
+      "tag": "FT-BLINDING-1",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 1",
+        "de": "Kalkbeton-Sauberkeitsschicht 1"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                18.482289,
+                0.758844
+              ],
+              [
+                19.491826,
+                0.758844
+              ],
+              [
+                19.491826,
+                1.792857
+              ],
+              [
+                18.482289,
+                1.792857
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "1",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "3m83KvW0bMsQdUsEXiFOO7",
+      "tag": "FT-PAD-1",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 1",
+        "de": "Stahlbeton-Einzelfundament 1"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                18.715259,
+                0.991497
+              ],
+              [
+                19.258856,
+                0.991497
+              ],
+              [
+                19.258856,
+                1.560204
+              ],
+              [
+                18.715259,
+                1.560204
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                18.715259,
+                0.991497
+              ],
+              [
+                19.258856,
+                0.991497
+              ],
+              [
+                19.258856,
+                1.560204
+              ],
+              [
+                18.715259,
+                1.560204
+              ]
+            ],
+            "top_outline": [
+              [
+                18.89,
+                1.14
+              ],
+              [
+                19.11,
+                1.14
+              ],
+              [
+                19.11,
+                1.36
+              ],
+              [
+                18.89,
+                1.36
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "1",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "12SIBsWLrJ6BI8QVYH6k1w",
+      "tag": "FT-BLINDING-2",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 2",
+        "de": "Kalkbeton-Sauberkeitsschicht 2"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                13.667575,
+                0.655442
+              ],
+              [
+                14.884196,
+                0.655442
+              ],
+              [
+                14.884196,
+                1.870408
+              ],
+              [
+                13.667575,
+                1.870408
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "2",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "3FGBFU5ujOpgA0uWJlsFJB",
+      "tag": "FT-PAD-2",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 2",
+        "de": "Stahlbeton-Einzelfundament 2"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                13.900545,
+                0.913946
+              ],
+              [
+                14.625341,
+                0.913946
+              ],
+              [
+                14.625341,
+                1.637755
+              ],
+              [
+                13.900545,
+                1.637755
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                13.900545,
+                0.913946
+              ],
+              [
+                14.625341,
+                0.913946
+              ],
+              [
+                14.625341,
+                1.637755
+              ],
+              [
+                13.900545,
+                1.637755
+              ]
+            ],
+            "top_outline": [
+              [
+                14.125,
+                1.125
+              ],
+              [
+                14.375,
+                1.125
+              ],
+              [
+                14.375,
+                1.375
+              ],
+              [
+                14.125,
+                1.375
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "2",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "1mlnYtSUzKPOBdHPKo_WwL",
+      "tag": "FT-BLINDING-3",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 3",
+        "de": "Kalkbeton-Sauberkeitsschicht 3"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                8.878747,
+                0.655442
+              ],
+              [
+                10.121253,
+                0.655442
+              ],
+              [
+                10.121253,
+                1.870408
+              ],
+              [
+                8.878747,
+                1.870408
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "3",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "16sEqqR5HNB8rl2zp3exb1",
+      "tag": "FT-PAD-3",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 3",
+        "de": "Stahlbeton-Einzelfundament 3"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                9.137602,
+                0.913946
+              ],
+              [
+                9.862398,
+                0.913946
+              ],
+              [
+                9.862398,
+                1.637755
+              ],
+              [
+                9.137602,
+                1.637755
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                9.137602,
+                0.913946
+              ],
+              [
+                9.862398,
+                0.913946
+              ],
+              [
+                9.862398,
+                1.637755
+              ],
+              [
+                9.137602,
+                1.637755
+              ]
+            ],
+            "top_outline": [
+              [
+                9.39,
+                1.14
+              ],
+              [
+                9.61,
+                1.14
+              ],
+              [
+                9.61,
+                1.36
+              ],
+              [
+                9.39,
+                1.36
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "3",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "32jA21Uc5LBx3jKVfLC0aH",
+      "tag": "FT-BLINDING-4",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 4",
+        "de": "Kalkbeton-Sauberkeitsschicht 4"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                4.115804,
+                0.655442
+              ],
+              [
+                5.358311,
+                0.655442
+              ],
+              [
+                5.358311,
+                1.870408
+              ],
+              [
+                4.115804,
+                1.870408
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "4",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "3Yx31wne5HqeCYGxiBrcoX",
+      "tag": "FT-PAD-4",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 4",
+        "de": "Stahlbeton-Einzelfundament 4"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                4.374659,
+                0.913946
+              ],
+              [
+                5.099455,
+                0.913946
+              ],
+              [
+                5.099455,
+                1.637755
+              ],
+              [
+                4.374659,
+                1.637755
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                4.374659,
+                0.913946
+              ],
+              [
+                5.099455,
+                0.913946
+              ],
+              [
+                5.099455,
+                1.637755
+              ],
+              [
+                4.374659,
+                1.637755
+              ]
+            ],
+            "top_outline": [
+              [
+                4.625,
+                1.125
+              ],
+              [
+                4.875,
+                1.125
+              ],
+              [
+                4.875,
+                1.375
+              ],
+              [
+                4.625,
+                1.375
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "4",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "0q49s8$hHUUAV2OTnYYX1W",
+      "tag": "FT-BLINDING-5",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 5",
+        "de": "Kalkbeton-Sauberkeitsschicht 5"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                -0.491826,
+                0.758844
+              ],
+              [
+                0.517711,
+                0.758844
+              ],
+              [
+                0.517711,
+                1.792857
+              ],
+              [
+                -0.491826,
+                1.792857
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "5",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "2$F_W_8FXNB8QyN0WhUANG",
+      "tag": "FT-PAD-5",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 5",
+        "de": "Stahlbeton-Einzelfundament 5"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                -0.284741,
+                0.991497
+              ],
+              [
+                0.284741,
+                0.991497
+              ],
+              [
+                0.284741,
+                1.560204
+              ],
+              [
+                -0.284741,
+                1.560204
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                -0.284741,
+                0.991497
+              ],
+              [
+                0.284741,
+                0.991497
+              ],
+              [
+                0.284741,
+                1.560204
+              ],
+              [
+                -0.284741,
+                1.560204
+              ]
+            ],
+            "top_outline": [
+              [
+                -0.11,
+                1.14
+              ],
+              [
+                0.11,
+                1.14
+              ],
+              [
+                0.11,
+                1.36
+              ],
+              [
+                -0.11,
+                1.36
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "5",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "1FpJyqwsvGsvzjq91m_vCX",
+      "tag": "FT-BLINDING-6",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 6",
+        "de": "Kalkbeton-Sauberkeitsschicht 6"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                18.482289,
+                5.489456
+              ],
+              [
+                19.491826,
+                5.489456
+              ],
+              [
+                19.491826,
+                6.54932
+              ],
+              [
+                18.482289,
+                6.54932
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "6",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "1xqv$G_jHROf9PBirRctVT",
+      "tag": "FT-PAD-6",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 6",
+        "de": "Stahlbeton-Einzelfundament 6"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                18.715259,
+                5.722109
+              ],
+              [
+                19.258856,
+                5.722109
+              ],
+              [
+                19.258856,
+                6.290816
+              ],
+              [
+                18.715259,
+                6.290816
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                18.715259,
+                5.722109
+              ],
+              [
+                19.258856,
+                5.722109
+              ],
+              [
+                19.258856,
+                6.290816
+              ],
+              [
+                18.715259,
+                6.290816
+              ]
+            ],
+            "top_outline": [
+              [
+                18.89,
+                5.89
+              ],
+              [
+                19.11,
+                5.89
+              ],
+              [
+                19.11,
+                6.11
+              ],
+              [
+                18.89,
+                6.11
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "6",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "104R8yHArJK8TNx59oaYlS",
+      "tag": "FT-BLINDING-7-12",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 7-12",
+        "de": "Kalkbeton-Sauberkeitsschicht 7-12"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                13.69346,
+                5.463605
+              ],
+              [
+                14.832425,
+                5.463605
+              ],
+              [
+                14.832425,
+                7.29898
+              ],
+              [
+                13.69346,
+                7.29898
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "7-12",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "0hQ$AhLLnMG9AVZeO7Icsm",
+      "tag": "FT-PAD-7-12",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 7-12",
+        "de": "Stahlbeton-Einzelfundament 7-12"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                13.952316,
+                5.722109
+              ],
+              [
+                14.573569,
+                5.722109
+              ],
+              [
+                14.573569,
+                6.316667
+              ],
+              [
+                13.952316,
+                6.316667
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                13.952316,
+                5.722109
+              ],
+              [
+                14.573569,
+                5.722109
+              ],
+              [
+                14.573569,
+                6.316667
+              ],
+              [
+                13.952316,
+                6.316667
+              ]
+            ],
+            "top_outline": [
+              [
+                14.14,
+                5.89
+              ],
+              [
+                14.36,
+                5.89
+              ],
+              [
+                14.36,
+                6.11
+              ],
+              [
+                14.14,
+                6.11
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          },
+          {
+            "outline": [
+              [
+                14.004087,
+                6.523469
+              ],
+              [
+                14.495913,
+                6.523469
+              ],
+              [
+                14.495913,
+                7.014626
+              ],
+              [
+                14.004087,
+                7.014626
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                14.004087,
+                6.523469
+              ],
+              [
+                14.495913,
+                6.523469
+              ],
+              [
+                14.495913,
+                7.014626
+              ],
+              [
+                14.004087,
+                7.014626
+              ]
+            ],
+            "top_outline": [
+              [
+                14.153,
+                6.646
+              ],
+              [
+                14.373,
+                6.646
+              ],
+              [
+                14.373,
+                6.8660000000000005
+              ],
+              [
+                14.153,
+                6.8660000000000005
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "7-12",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "2jj3YSURfG8RmJdbh_fbuQ",
+      "tag": "FT-BLINDING-11",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 11",
+        "de": "Kalkbeton-Sauberkeitsschicht 11"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                -0.543597,
+                5.489456
+              ],
+              [
+                0.595368,
+                5.489456
+              ],
+              [
+                0.595368,
+                6.57517
+              ],
+              [
+                -0.543597,
+                6.57517
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "11",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "2PiCxw5BvRPxGfGu_A6MP3",
+      "tag": "FT-PAD-11",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 11",
+        "de": "Stahlbeton-Einzelfundament 11"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                -0.284741,
+                5.747959
+              ],
+              [
+                0.336512,
+                5.747959
+              ],
+              [
+                0.336512,
+                6.316667
+              ],
+              [
+                -0.284741,
+                6.316667
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                -0.284741,
+                5.747959
+              ],
+              [
+                0.336512,
+                5.747959
+              ],
+              [
+                0.336512,
+                6.316667
+              ],
+              [
+                -0.284741,
+                6.316667
+              ]
+            ],
+            "top_outline": [
+              [
+                -0.11,
+                5.89
+              ],
+              [
+                0.11,
+                5.89
+              ],
+              [
+                0.11,
+                6.11
+              ],
+              [
+                -0.11,
+                6.11
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "11",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "2VfnulW2bVgRovje1QQ_DS",
+      "tag": "FT-BLINDING-16",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 16",
+        "de": "Kalkbeton-Sauberkeitsschicht 16"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                18.482289,
+                10.220068
+              ],
+              [
+                19.491826,
+                10.220068
+              ],
+              [
+                19.491826,
+                11.279932
+              ],
+              [
+                18.482289,
+                11.279932
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "16",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "3Y2O4KehbLueSnykqF8Jr_",
+      "tag": "FT-PAD-16",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 16",
+        "de": "Stahlbeton-Einzelfundament 16"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                18.715259,
+                10.478571
+              ],
+              [
+                19.258856,
+                10.478571
+              ],
+              [
+                19.258856,
+                11.021429
+              ],
+              [
+                18.715259,
+                11.021429
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                18.715259,
+                10.478571
+              ],
+              [
+                19.258856,
+                10.478571
+              ],
+              [
+                19.258856,
+                11.021429
+              ],
+              [
+                18.715259,
+                11.021429
+              ]
+            ],
+            "top_outline": [
+              [
+                18.89,
+                10.64
+              ],
+              [
+                19.11,
+                10.64
+              ],
+              [
+                19.11,
+                10.86
+              ],
+              [
+                18.89,
+                10.86
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "16",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "0iMCGeJaLMs9rSPzPF2C2H",
+      "tag": "FT-BLINDING-17",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 17",
+        "de": "Kalkbeton-Sauberkeitsschicht 17"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                -0.543597,
+                10.245918
+              ],
+              [
+                0.595368,
+                10.245918
+              ],
+              [
+                0.595368,
+                11.279932
+              ],
+              [
+                -0.543597,
+                11.279932
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "17",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "0Jhb8DFWjLhvBjL_pDKIqS",
+      "tag": "FT-PAD-17",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 17",
+        "de": "Stahlbeton-Einzelfundament 17"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                -0.284741,
+                10.478571
+              ],
+              [
+                0.336512,
+                10.478571
+              ],
+              [
+                0.336512,
+                11.047279
+              ],
+              [
+                -0.284741,
+                11.047279
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                -0.284741,
+                10.478571
+              ],
+              [
+                0.336512,
+                10.478571
+              ],
+              [
+                0.336512,
+                11.047279
+              ],
+              [
+                -0.284741,
+                11.047279
+              ]
+            ],
+            "top_outline": [
+              [
+                -0.11,
+                10.64
+              ],
+              [
+                0.11,
+                10.64
+              ],
+              [
+                0.11,
+                10.86
+              ],
+              [
+                -0.11,
+                10.86
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "17",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "1cVV$pVnvSqQqykYHfpdzP",
+      "tag": "FT-BLINDING-21",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 21",
+        "de": "Kalkbeton-Sauberkeitsschicht 21"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                13.719346,
+                12.469048
+              ],
+              [
+                14.780654,
+                12.469048
+              ],
+              [
+                14.780654,
+                13.503061
+              ],
+              [
+                13.719346,
+                13.503061
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "21",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "23YS185mbKWf8CPXl6NXuj",
+      "tag": "FT-PAD-21",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 21",
+        "de": "Stahlbeton-Einzelfundament 21"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                13.978202,
+                12.727551
+              ],
+              [
+                14.521798,
+                12.727551
+              ],
+              [
+                14.521798,
+                13.244558
+              ],
+              [
+                13.978202,
+                13.244558
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                13.978202,
+                12.727551
+              ],
+              [
+                14.521798,
+                12.727551
+              ],
+              [
+                14.521798,
+                13.244558
+              ],
+              [
+                13.978202,
+                13.244558
+              ]
+            ],
+            "top_outline": [
+              [
+                14.153,
+                12.902000000000001
+              ],
+              [
+                14.373,
+                12.902000000000001
+              ],
+              [
+                14.373,
+                13.122
+              ],
+              [
+                14.153,
+                13.122
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "21",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "0yOPXIfUHJfgg3dzerkqF3",
+      "tag": "FT-BLINDING-22",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 22",
+        "de": "Kalkbeton-Sauberkeitsschicht 22"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                18.482289,
+                14.95068
+              ],
+              [
+                19.491826,
+                14.95068
+              ],
+              [
+                19.491826,
+                16.036395
+              ],
+              [
+                18.482289,
+                16.036395
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "22",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "27mQCIa8DSveChjWBCjirf",
+      "tag": "FT-PAD-22",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 22",
+        "de": "Stahlbeton-Einzelfundament 22"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                18.715259,
+                15.235034
+              ],
+              [
+                19.258856,
+                15.235034
+              ],
+              [
+                19.258856,
+                15.777891
+              ],
+              [
+                18.715259,
+                15.777891
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                18.715259,
+                15.235034
+              ],
+              [
+                19.258856,
+                15.235034
+              ],
+              [
+                19.258856,
+                15.777891
+              ],
+              [
+                18.715259,
+                15.777891
+              ]
+            ],
+            "top_outline": [
+              [
+                18.89,
+                15.39
+              ],
+              [
+                19.11,
+                15.39
+              ],
+              [
+                19.11,
+                15.61
+              ],
+              [
+                18.89,
+                15.61
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "22",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "0ZgI84ZLnHFOkfndIVjNHz",
+      "tag": "FT-BLINDING-23",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 23",
+        "de": "Kalkbeton-Sauberkeitsschicht 23"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                -0.543597,
+                14.95068
+              ],
+              [
+                0.595368,
+                14.95068
+              ],
+              [
+                0.595368,
+                16.062245
+              ],
+              [
+                -0.543597,
+                16.062245
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "23",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "28_F7xRwbKS9X0bSBa4JA2",
+      "tag": "FT-PAD-23",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 23",
+        "de": "Stahlbeton-Einzelfundament 23"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                -0.284741,
+                15.235034
+              ],
+              [
+                0.336512,
+                15.235034
+              ],
+              [
+                0.336512,
+                15.777891
+              ],
+              [
+                -0.284741,
+                15.777891
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                -0.284741,
+                15.235034
+              ],
+              [
+                0.336512,
+                15.235034
+              ],
+              [
+                0.336512,
+                15.777891
+              ],
+              [
+                -0.284741,
+                15.777891
+              ]
+            ],
+            "top_outline": [
+              [
+                -0.11,
+                15.39
+              ],
+              [
+                0.11,
+                15.39
+              ],
+              [
+                0.11,
+                15.61
+              ],
+              [
+                -0.11,
+                15.61
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "23",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "0gohPPfn1OzgIvOrXFHaUG",
+      "tag": "FT-BLINDING-24",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 24",
+        "de": "Kalkbeton-Sauberkeitsschicht 24"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                13.69346,
+                16.217347
+              ],
+              [
+                14.832425,
+                16.217347
+              ],
+              [
+                14.832425,
+                17.380612
+              ],
+              [
+                13.69346,
+                17.380612
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "24",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "137EMkCxXIfgNlExoTtt9r",
+      "tag": "FT-PAD-24",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 24",
+        "de": "Stahlbeton-Einzelfundament 24"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                13.952316,
+                16.47585
+              ],
+              [
+                14.573569,
+                16.47585
+              ],
+              [
+                14.573569,
+                17.096259
+              ],
+              [
+                13.952316,
+                17.096259
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                13.952316,
+                16.47585
+              ],
+              [
+                14.573569,
+                16.47585
+              ],
+              [
+                14.573569,
+                17.096259
+              ],
+              [
+                13.952316,
+                17.096259
+              ]
+            ],
+            "top_outline": [
+              [
+                14.153,
+                16.676000000000002
+              ],
+              [
+                14.373,
+                16.676000000000002
+              ],
+              [
+                14.373,
+                16.896
+              ],
+              [
+                14.153,
+                16.896
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "24",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "3gt7ChLZzRigTjwZaMZhnr",
+      "tag": "FT-BLINDING-27",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 27",
+        "de": "Kalkbeton-Sauberkeitsschicht 27"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                4.141689,
+                16.786054
+              ],
+              [
+                4.504087,
+                16.786054
+              ],
+              [
+                4.504087,
+                16.837755
+              ],
+              [
+                5.358311,
+                16.837755
+              ],
+              [
+                5.358311,
+                17.923469
+              ],
+              [
+                4.141689,
+                17.923469
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "27",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "1Gudk379fKOxatzR9dfGin",
+      "tag": "FT-PAD-27",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 27",
+        "de": "Stahlbeton-Einzelfundament 27"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                4.374659,
+                17.018707
+              ],
+              [
+                5.125341,
+                17.018707
+              ],
+              [
+                5.125341,
+                17.690816
+              ],
+              [
+                4.374659,
+                17.690816
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                4.374659,
+                17.018707
+              ],
+              [
+                5.125341,
+                17.018707
+              ],
+              [
+                5.125341,
+                17.690816
+              ],
+              [
+                4.374659,
+                17.690816
+              ]
+            ],
+            "top_outline": [
+              [
+                4.627,
+                17.167
+              ],
+              [
+                4.847,
+                17.167
+              ],
+              [
+                4.847,
+                17.387
+              ],
+              [
+                4.627,
+                17.387
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "27",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "0UCDI4TZfQ5hwuM3d6xPVT",
+      "tag": "FT-BLINDING-28",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 28",
+        "de": "Kalkbeton-Sauberkeitsschicht 28"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                9.008174,
+                17.535714
+              ],
+              [
+                10.043597,
+                17.535714
+              ],
+              [
+                10.043597,
+                18.595578
+              ],
+              [
+                9.008174,
+                18.595578
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "28",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "0b5walpkzSZQHqe6CW7qwh",
+      "tag": "FT-PAD-28",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 28",
+        "de": "Stahlbeton-Einzelfundament 28"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                9.241144,
+                17.768367
+              ],
+              [
+                9.810627,
+                17.768367
+              ],
+              [
+                9.810627,
+                18.362925
+              ],
+              [
+                9.241144,
+                18.362925
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                9.241144,
+                17.768367
+              ],
+              [
+                9.810627,
+                17.768367
+              ],
+              [
+                9.810627,
+                18.362925
+              ],
+              [
+                9.241144,
+                18.362925
+              ]
+            ],
+            "top_outline": [
+              [
+                9.39,
+                17.969
+              ],
+              [
+                9.61,
+                17.969
+              ],
+              [
+                9.61,
+                18.189
+              ],
+              [
+                9.39,
+                18.189
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "28",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "1aDKS4czvUYPbvg51N4tC8",
+      "tag": "FT-BLINDING-29",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 29",
+        "de": "Kalkbeton-Sauberkeitsschicht 29"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                18.482289,
+                19.707143
+              ],
+              [
+                19.491826,
+                19.707143
+              ],
+              [
+                19.491826,
+                20.792857
+              ],
+              [
+                18.482289,
+                20.792857
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "29",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "0gtnc8UqTNURU5mQfC3B6U",
+      "tag": "FT-PAD-29",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 29",
+        "de": "Stahlbeton-Einzelfundament 29"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                18.715259,
+                19.965646
+              ],
+              [
+                19.258856,
+                19.965646
+              ],
+              [
+                19.258856,
+                20.534354
+              ],
+              [
+                18.715259,
+                20.534354
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                18.715259,
+                19.965646
+              ],
+              [
+                19.258856,
+                19.965646
+              ],
+              [
+                19.258856,
+                20.534354
+              ],
+              [
+                18.715259,
+                20.534354
+              ]
+            ],
+            "top_outline": [
+              [
+                18.89,
+                20.14
+              ],
+              [
+                19.11,
+                20.14
+              ],
+              [
+                19.11,
+                20.36
+              ],
+              [
+                18.89,
+                20.36
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "29",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "0_7WTA3K9J9uAdywcxBbUv",
+      "tag": "FT-BLINDING-30",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 30",
+        "de": "Kalkbeton-Sauberkeitsschicht 30"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                13.69346,
+                19.681293
+              ],
+              [
+                14.832425,
+                19.681293
+              ],
+              [
+                14.832425,
+                20.818707
+              ],
+              [
+                13.69346,
+                20.818707
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "30",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "1O_iww6ufRUfQtZ8p$EOMm",
+      "tag": "FT-PAD-30",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 30",
+        "de": "Stahlbeton-Einzelfundament 30"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                13.952316,
+                19.939796
+              ],
+              [
+                14.573569,
+                19.939796
+              ],
+              [
+                14.573569,
+                20.586054
+              ],
+              [
+                13.952316,
+                20.586054
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                13.952316,
+                19.939796
+              ],
+              [
+                14.573569,
+                19.939796
+              ],
+              [
+                14.573569,
+                20.586054
+              ],
+              [
+                13.952316,
+                20.586054
+              ]
+            ],
+            "top_outline": [
+              [
+                14.14,
+                20.14
+              ],
+              [
+                14.36,
+                20.14
+              ],
+              [
+                14.36,
+                20.36
+              ],
+              [
+                14.14,
+                20.36
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "30",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "01zcMG$KzHye_S09276iUu",
+      "tag": "FT-BLINDING-31",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 31",
+        "de": "Kalkbeton-Sauberkeitsschicht 31"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                9.008174,
+                19.758844
+              ],
+              [
+                10.043597,
+                19.758844
+              ],
+              [
+                10.043597,
+                20.767007
+              ],
+              [
+                9.008174,
+                20.767007
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "31",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "2pNp5JKL9RavMG56iwu_LU",
+      "tag": "FT-PAD-31",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 31",
+        "de": "Stahlbeton-Einzelfundament 31"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                9.241144,
+                19.991497
+              ],
+              [
+                9.810627,
+                19.991497
+              ],
+              [
+                9.810627,
+                20.560204
+              ],
+              [
+                9.241144,
+                20.560204
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                9.241144,
+                19.991497
+              ],
+              [
+                9.810627,
+                19.991497
+              ],
+              [
+                9.810627,
+                20.560204
+              ],
+              [
+                9.241144,
+                20.560204
+              ]
+            ],
+            "top_outline": [
+              [
+                9.39,
+                20.14
+              ],
+              [
+                9.61,
+                20.14
+              ],
+              [
+                9.61,
+                20.36
+              ],
+              [
+                9.39,
+                20.36
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "31",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "0xDpfvVeTSwgTsFUHfd9ov",
+      "tag": "FT-BLINDING-32",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 32",
+        "de": "Kalkbeton-Sauberkeitsschicht 32"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                4.141689,
+                19.629592
+              ],
+              [
+                5.358311,
+                19.629592
+              ],
+              [
+                5.358311,
+                20.844558
+              ],
+              [
+                4.141689,
+                20.844558
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "32",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "2syUKPwi9NgRBbHp_W8qas",
+      "tag": "FT-PAD-32",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 32",
+        "de": "Stahlbeton-Einzelfundament 32"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                4.374659,
+                19.913946
+              ],
+              [
+                5.099455,
+                19.913946
+              ],
+              [
+                5.099455,
+                20.586054
+              ],
+              [
+                4.374659,
+                20.586054
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                4.374659,
+                19.913946
+              ],
+              [
+                5.099455,
+                19.913946
+              ],
+              [
+                5.099455,
+                20.586054
+              ],
+              [
+                4.374659,
+                20.586054
+              ]
+            ],
+            "top_outline": [
+              [
+                4.64,
+                20.14
+              ],
+              [
+                4.86,
+                20.14
+              ],
+              [
+                4.86,
+                20.36
+              ],
+              [
+                4.64,
+                20.36
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "32",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "0LAmpS6fzNBPVVVordZ5UJ",
+      "tag": "FT-BLINDING-33",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Lime-concrete blinding 33",
+        "de": "Kalkbeton-Sauberkeitsschicht 33"
+      },
+      "storey": "ground",
+      "material": "MAT-LIME-CONCRETE",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                -0.491826,
+                19.707143
+              ],
+              [
+                0.517711,
+                19.707143
+              ],
+              [
+                0.517711,
+                20.792857
+              ],
+              [
+                -0.491826,
+                20.792857
+              ]
+            ],
+            "z0": -1.65,
+            "z1": -1.25
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "33",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    },
+    {
+      "guid": "14pxth16LJAfp2gO$xJrEE",
+      "tag": "FT-PAD-33",
+      "class": "IfcFooting",
+      "predefined_type": "PAD_FOOTING",
+      "name": {
+        "en": "Reinforced pad 33",
+        "de": "Stahlbeton-Einzelfundament 33"
+      },
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "kind": "registered-foundation",
+        "base_level": "ground",
+        "parts": [
+          {
+            "outline": [
+              [
+                -0.284741,
+                19.965646
+              ],
+              [
+                0.284741,
+                19.965646
+              ],
+              [
+                0.284741,
+                20.534354
+              ],
+              [
+                -0.284741,
+                20.534354
+              ]
+            ],
+            "z0": -1.25,
+            "z1": -1.15
+          },
+          {
+            "outline": [
+              [
+                -0.284741,
+                19.965646
+              ],
+              [
+                0.284741,
+                19.965646
+              ],
+              [
+                0.284741,
+                20.534354
+              ],
+              [
+                -0.284741,
+                20.534354
+              ]
+            ],
+            "top_outline": [
+              [
+                -0.11,
+                20.14
+              ],
+              [
+                0.11,
+                20.14
+              ],
+              [
+                0.11,
+                20.36
+              ],
+              [
+                -0.11,
+                20.36
+              ]
+            ],
+            "z0": -1.15,
+            "z1": -1
+          }
+        ]
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_FootingCommon": {
+          "LoadBearing": {
+            "value": true,
+            "ifc_type": "IfcBoolean",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        },
+        "Pset_ArchiveSource": {
+          "ArchivePad": {
+            "value": "33",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "PlanTrace": {
+            "value": "Annex1 raster trace; approximately +/-0.04m",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "BearingDatum": {
+            "value": "Annex5 -1.65m; book -1.50m remains an unresolved reference conflict",
+            "ifc_type": "IfcLabel",
+            "basis": "sourced",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          },
+          "VerticalProfile": {
+            "value": "0.40m blinding and0.15m pyramid inferred;0.10m RCbase and stemtop-0.30m sourced",
+            "ifc_type": "IfcLabel",
+            "basis": "inferred",
+            "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+          }
+        }
+      },
+      "metadata": {
+        "author": "Structural engineer",
+        "revision": 3,
+        "domains": [
+          "architecture",
+          "structure"
+        ]
+      }
+    }
+  ],
+  "relations": [
+    {
+      "guid": "1LvmYwqYPMeRiEI9ECxjVq",
+      "tag": "REL-FOUNDATION-BLINDING-1",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-1",
+      "related": [
+        "FT-PAD-1"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "1SrsArOxzKBwq1Z9_R5mZy",
+      "tag": "REL-FOUNDATION-SUPPORT-1",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-1",
+      "related": [
+        "1"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "3c8y7zsyfTnQ0bYnSQVg3W",
+      "tag": "REL-FOUNDATION-BLINDING-2",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-2",
+      "related": [
+        "FT-PAD-2"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "16qBV7IxzOMe$JJRsb6WS1",
+      "tag": "REL-FOUNDATION-SUPPORT-2",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-2",
+      "related": [
+        "2"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "2RyPNZOZzJxe_lqN9qyi_b",
+      "tag": "REL-FOUNDATION-BLINDING-3",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-3",
+      "related": [
+        "FT-PAD-3"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "0_0ImME9rPQBzojAMdf4mR",
+      "tag": "REL-FOUNDATION-SUPPORT-3",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-3",
+      "related": [
+        "3"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "3$XUPatsfUi8ggj07fqKjt",
+      "tag": "REL-FOUNDATION-BLINDING-4",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-4",
+      "related": [
+        "FT-PAD-4"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "29IhKG4R5KxBf8pymQORbZ",
+      "tag": "REL-FOUNDATION-SUPPORT-4",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-4",
+      "related": [
+        "4"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "1gxeTHibvQyf$JnfmcWfgE",
+      "tag": "REL-FOUNDATION-BLINDING-5",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-5",
+      "related": [
+        "FT-PAD-5"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "0ZtmFwUwjJixpu93h6TivX",
+      "tag": "REL-FOUNDATION-SUPPORT-5",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-5",
+      "related": [
+        "5"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "3uNlVWqtjN0wCeIcQE7hoP",
+      "tag": "REL-FOUNDATION-BLINDING-6",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-6",
+      "related": [
+        "FT-PAD-6"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "3zJS4U5HjMtQORKlW$oxys",
+      "tag": "REL-FOUNDATION-SUPPORT-6",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-6",
+      "related": [
+        "6"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "0_VOseV4zGxvJvdUZ7WBqo",
+      "tag": "REL-FOUNDATION-BLINDING-7-12",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-7-12",
+      "related": [
+        "FT-PAD-7-12"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "0ukUuWUezVNBS835dvqpab",
+      "tag": "REL-FOUNDATION-SUPPORT-7-12",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-7-12",
+      "related": [
+        "7",
+        "12"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "2_DrTtperHXx$Ki2XBIwhW",
+      "tag": "REL-FOUNDATION-BLINDING-11",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-11",
+      "related": [
+        "FT-PAD-11"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "34m9LRyrDK3hjoTmrdlPg3",
+      "tag": "REL-FOUNDATION-SUPPORT-11",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-11",
+      "related": [
+        "11"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "1MLtBcVFrNyuSFRAe1DAKT",
+      "tag": "REL-FOUNDATION-BLINDING-16",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-16",
+      "related": [
+        "FT-PAD-16"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "3lmU1TCbbIwx7aX7mwR2mq",
+      "tag": "REL-FOUNDATION-SUPPORT-16",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-16",
+      "related": [
+        "16"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "10TcxFiRXSRuvA_6kEj92G",
+      "tag": "REL-FOUNDATION-BLINDING-17",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-17",
+      "related": [
+        "FT-PAD-17"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "0zwfYtr5fTYuHpW9dfzDRv",
+      "tag": "REL-FOUNDATION-SUPPORT-17",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-17",
+      "related": [
+        "17"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "2UIUqQMZ9GbQ8yyw59O7nG",
+      "tag": "REL-FOUNDATION-BLINDING-21",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-21",
+      "related": [
+        "FT-PAD-21"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "1H0kq_1YTHXvt4zzhtP62B",
+      "tag": "REL-FOUNDATION-SUPPORT-21",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-21",
+      "related": [
+        "21"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "0iA0bjubzP8PLKIZNkQCGJ",
+      "tag": "REL-FOUNDATION-BLINDING-22",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-22",
+      "related": [
+        "FT-PAD-22"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "01AHUfSKnMIOFjNgq4WVgs",
+      "tag": "REL-FOUNDATION-SUPPORT-22",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-22",
+      "related": [
+        "22"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "0$DNJcf$vOa9Tg3DIOQJI0",
+      "tag": "REL-FOUNDATION-BLINDING-23",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-23",
+      "related": [
+        "FT-PAD-23"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "3MPvzr7h5LqOzXfPRd$ieQ",
+      "tag": "REL-FOUNDATION-SUPPORT-23",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-23",
+      "related": [
+        "23"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "2SECbqVBjJcQYB87dr6f5R",
+      "tag": "REL-FOUNDATION-BLINDING-24",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-24",
+      "related": [
+        "FT-PAD-24"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "3WKLFexK9T$h5r03wXoZ0N",
+      "tag": "REL-FOUNDATION-SUPPORT-24",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-24",
+      "related": [
+        "24"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "1jH2YlOH5S3vc64yMJEcql",
+      "tag": "REL-FOUNDATION-BLINDING-27",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-27",
+      "related": [
+        "FT-PAD-27"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "374hj2BonMhe$O2U7_SDDn",
+      "tag": "REL-FOUNDATION-SUPPORT-27",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-27",
+      "related": [
+        "27"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "1PEuhiDCvLb8D0V4W5$Sea",
+      "tag": "REL-FOUNDATION-BLINDING-28",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-28",
+      "related": [
+        "FT-PAD-28"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "28bAK$$x9TivSM$vo_E5w1",
+      "tag": "REL-FOUNDATION-SUPPORT-28",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-28",
+      "related": [
+        "28"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "2Xjl0beJHIYRuo9ihIYPpJ",
+      "tag": "REL-FOUNDATION-BLINDING-29",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-29",
+      "related": [
+        "FT-PAD-29"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "1UqWmjjdXLT9yAkXVclYv7",
+      "tag": "REL-FOUNDATION-SUPPORT-29",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-29",
+      "related": [
+        "29"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "1nb3c3_jrT7BaS6SJXDcyI",
+      "tag": "REL-FOUNDATION-BLINDING-30",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-30",
+      "related": [
+        "FT-PAD-30"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "1uxm37qFDLefrP7tWgr1_n",
+      "tag": "REL-FOUNDATION-SUPPORT-30",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-30",
+      "related": [
+        "30"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "28GymaNdfMThlJkV1XEeew",
+      "tag": "REL-FOUNDATION-BLINDING-31",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-31",
+      "related": [
+        "FT-PAD-31"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "1$RLU$3aPJUxWJS1lNyhaG",
+      "tag": "REL-FOUNDATION-SUPPORT-31",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-31",
+      "related": [
+        "31"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "2wPnCTSSPT$RQhrXrpj1W2",
+      "tag": "REL-FOUNDATION-BLINDING-32",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-32",
+      "related": [
+        "FT-PAD-32"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "3jM7gdZT5SPP7LqtosyvJw",
+      "tag": "REL-FOUNDATION-SUPPORT-32",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-32",
+      "related": [
+        "32"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    },
+    {
+      "guid": "1ZLcEAVxLLxhv4CuzqVIK1",
+      "tag": "REL-FOUNDATION-BLINDING-33",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-BLINDING-33",
+      "related": [
+        "FT-PAD-33"
+      ],
+      "name": {
+        "en": "Blinding supports reinforced pad",
+        "de": "Sauberkeitsschicht trägt Stahlbetonfundament"
+      }
+    },
+    {
+      "guid": "0i5AALpgnQheb1IDZ_cYAU",
+      "tag": "REL-FOUNDATION-SUPPORT-33",
+      "class": "IfcRelConnectsElements",
+      "relating": "FT-PAD-33",
+      "related": [
+        "33"
+      ],
+      "name": {
+        "en": "Pad supports numbered columns",
+        "de": "Einzelfundament trägt nummerierte Stützen"
+      }
+    }
+  ],
+  "column_updates": [
+    {
+      "tag": "1",
+      "geometry": {
+        "axis": [
+          19,
+          1.25
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              19,
+              1.25
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              19,
+              1.25
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "2",
+      "geometry": {
+        "axis": [
+          14.25,
+          1.25
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.25,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.25,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              14.25,
+              1.25
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.33,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              14.25,
+              1.25
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "3",
+      "geometry": {
+        "axis": [
+          9.5,
+          1.25
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              9.5,
+              1.25
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              9.5,
+              1.25
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "4",
+      "geometry": {
+        "axis": [
+          4.75,
+          1.25
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.25,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.25,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              4.75,
+              1.25
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.33,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              4.75,
+              1.25
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "5",
+      "geometry": {
+        "axis": [
+          0,
+          1.25
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              0,
+              1.25
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              0,
+              1.25
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "6",
+      "geometry": {
+        "axis": [
+          19,
+          6
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              19,
+              6
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              19,
+              6
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "7",
+      "geometry": {
+        "axis": [
+          14.25,
+          6
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              14.25,
+              6
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              14.25,
+              6
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "12",
+      "geometry": {
+        "axis": [
+          14.263,
+          6.756
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              14.263,
+              6.756
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              14.263,
+              6.756
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "11",
+      "geometry": {
+        "axis": [
+          0,
+          6
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              0,
+              6
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              0,
+              6
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "16",
+      "geometry": {
+        "axis": [
+          19,
+          10.75
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              19,
+              10.75
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              19,
+              10.75
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "17",
+      "geometry": {
+        "axis": [
+          0,
+          10.75
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              0,
+              10.75
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              0,
+              10.75
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "21",
+      "geometry": {
+        "axis": [
+          14.263,
+          13.012
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              14.263,
+              13.012
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              14.263,
+              13.012
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "22",
+      "geometry": {
+        "axis": [
+          19,
+          15.5
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              19,
+              15.5
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              19,
+              15.5
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "23",
+      "geometry": {
+        "axis": [
+          0,
+          15.5
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              0,
+              15.5
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              0,
+              15.5
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "24",
+      "geometry": {
+        "axis": [
+          14.263,
+          16.786
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              14.263,
+              16.786
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              14.263,
+              16.786
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "27",
+      "geometry": {
+        "axis": [
+          4.737,
+          17.277
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              4.737,
+              17.277
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              4.737,
+              17.277
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "28",
+      "geometry": {
+        "axis": [
+          9.5,
+          18.079
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              9.5,
+              18.079
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.16,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              9.5,
+              18.079
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "29",
+      "geometry": {
+        "axis": [
+          19,
+          20.25
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              19,
+              20.25
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              19,
+              20.25
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "30",
+      "geometry": {
+        "axis": [
+          14.25,
+          20.25
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              14.25,
+              20.25
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              14.25,
+              20.25
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "31",
+      "geometry": {
+        "axis": [
+          9.5,
+          20.25
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              9.5,
+              20.25
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              9.5,
+              20.25
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "32",
+      "geometry": {
+        "axis": [
+          4.75,
+          20.25
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              4.75,
+              20.25
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              4.75,
+              20.25
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    },
+    {
+      "tag": "33",
+      "geometry": {
+        "axis": [
+          0,
+          20.25
+        ],
+        "base_level": -1,
+        "top_level": 2.91,
+        "sections": [
+          {
+            "profile": {
+              "shape": "rectangle",
+              "width": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              },
+              "depth": {
+                "value": 0.22,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+              }
+            },
+            "axis": [
+              0,
+              20.25
+            ],
+            "base_level": -1,
+            "top_level": -0.3
+          },
+          {
+            "profile": {
+              "shape": "circle",
+              "diameter": {
+                "value": 0.28,
+                "unit": "m",
+                "basis": "sourced",
+                "source": "CSIC2022-register-r9"
+              }
+            },
+            "axis": [
+              0,
+              20.25
+            ],
+            "base_level": -0.3,
+            "top_level": 2.91
+          }
+        ]
+      }
+    }
+  ],
+  "input": {
+    "version": 1,
+    "source": "CSIC2022 author annex1 PDF18; annex5 PDF22; Zaparaín Savoye as Built p69",
+    "registration": {
+      "x_origin_px": 826,
+      "x_scale": 0.025885558583106268,
+      "y_origin_px": 225,
+      "y_origin_m": 1.25,
+      "y_scale": 0.02585034013605442
+    },
+    "units": "m",
+    "trace_uncertainty": 0.04,
+    "datums": {
+      "bearing": -1.65,
+      "book_bearing_conflict": -1.5,
+      "blinding_thickness": 0.4,
+      "blinding_range": [
+        0.35,
+        0.45
+      ],
+      "rc_base_thickness": 0.1,
+      "pyramid_height": 0.15,
+      "stem_top": -0.3
+    },
+    "provenance": {
+      "bearing": "sourced-annex5",
+      "blinding_thickness": "inferred-within-sourced-range",
+      "rc_base_thickness": "sourced-book-p69",
+      "pyramid_height": "inferred-section-proportion",
+      "stem_top": "sourced-book-p69"
+    },
+    "cellar_supported": [
+      "8",
+      "9",
+      "10",
+      "13",
+      "14",
+      "15",
+      "18",
+      "19",
+      "20",
+      "25",
+      "26"
+    ],
+    "pads": [
+      {
+        "id": "1",
+        "columns": [
+          "1"
+        ],
+        "blinding_pixels": [
+          73,
+          206,
+          112,
+          246
+        ],
+        "rc_pixels": [
+          [
+            82,
+            215,
+            103,
+            237
+          ]
+        ]
+      },
+      {
+        "id": "2",
+        "columns": [
+          "2"
+        ],
+        "blinding_pixels": [
+          251,
+          202,
+          298,
+          249
+        ],
+        "rc_pixels": [
+          [
+            261,
+            212,
+            289,
+            240
+          ]
+        ]
+      },
+      {
+        "id": "3",
+        "columns": [
+          "3"
+        ],
+        "blinding_pixels": [
+          435,
+          202,
+          483,
+          249
+        ],
+        "rc_pixels": [
+          [
+            445,
+            212,
+            473,
+            240
+          ]
+        ]
+      },
+      {
+        "id": "4",
+        "columns": [
+          "4"
+        ],
+        "blinding_pixels": [
+          619,
+          202,
+          667,
+          249
+        ],
+        "rc_pixels": [
+          [
+            629,
+            212,
+            657,
+            240
+          ]
+        ]
+      },
+      {
+        "id": "5",
+        "columns": [
+          "5"
+        ],
+        "blinding_pixels": [
+          806,
+          206,
+          845,
+          246
+        ],
+        "rc_pixels": [
+          [
+            815,
+            215,
+            837,
+            237
+          ]
+        ]
+      },
+      {
+        "id": "6",
+        "columns": [
+          "6"
+        ],
+        "blinding_pixels": [
+          73,
+          389,
+          112,
+          430
+        ],
+        "rc_pixels": [
+          [
+            82,
+            398,
+            103,
+            420
+          ]
+        ]
+      },
+      {
+        "id": "7-12",
+        "columns": [
+          "7",
+          "12"
+        ],
+        "blinding_pixels": [
+          253,
+          388,
+          297,
+          459
+        ],
+        "rc_pixels": [
+          [
+            263,
+            398,
+            287,
+            421
+          ],
+          [
+            266,
+            429,
+            285,
+            448
+          ]
+        ]
+      },
+      {
+        "id": "11",
+        "columns": [
+          "11"
+        ],
+        "blinding_pixels": [
+          803,
+          389,
+          847,
+          431
+        ],
+        "rc_pixels": [
+          [
+            813,
+            399,
+            837,
+            421
+          ]
+        ]
+      },
+      {
+        "id": "16",
+        "columns": [
+          "16"
+        ],
+        "blinding_pixels": [
+          73,
+          572,
+          112,
+          613
+        ],
+        "rc_pixels": [
+          [
+            82,
+            582,
+            103,
+            603
+          ]
+        ]
+      },
+      {
+        "id": "17",
+        "columns": [
+          "17"
+        ],
+        "blinding_pixels": [
+          803,
+          573,
+          847,
+          613
+        ],
+        "rc_pixels": [
+          [
+            813,
+            582,
+            837,
+            604
+          ]
+        ]
+      },
+      {
+        "id": "21",
+        "columns": [
+          "21"
+        ],
+        "blinding_pixels": [
+          255,
+          659,
+          296,
+          699
+        ],
+        "rc_pixels": [
+          [
+            265,
+            669,
+            286,
+            689
+          ]
+        ]
+      },
+      {
+        "id": "22",
+        "columns": [
+          "22"
+        ],
+        "blinding_pixels": [
+          73,
+          755,
+          112,
+          797
+        ],
+        "rc_pixels": [
+          [
+            82,
+            766,
+            103,
+            787
+          ]
+        ]
+      },
+      {
+        "id": "23",
+        "columns": [
+          "23"
+        ],
+        "blinding_pixels": [
+          803,
+          755,
+          847,
+          798
+        ],
+        "rc_pixels": [
+          [
+            813,
+            766,
+            837,
+            787
+          ]
+        ]
+      },
+      {
+        "id": "24",
+        "columns": [
+          "24"
+        ],
+        "blinding_pixels": [
+          253,
+          804,
+          297,
+          849
+        ],
+        "rc_pixels": [
+          [
+            263,
+            814,
+            287,
+            838
+          ]
+        ]
+      },
+      {
+        "id": "27",
+        "columns": [
+          "27"
+        ],
+        "blinding_pixels": [
+          619,
+          826,
+          666,
+          870
+        ],
+        "rc_pixels": [
+          [
+            628,
+            835,
+            657,
+            861
+          ]
+        ],
+        "material_ownership_cut": {
+          "wall": "W-CELLAR-N",
+          "side": "north",
+          "basis": "registered-cellar-masonry-priority"
+        }
+      },
+      {
+        "id": "28",
+        "columns": [
+          "28"
+        ],
+        "blinding_pixels": [
+          438,
+          855,
+          478,
+          896
+        ],
+        "rc_pixels": [
+          [
+            447,
+            864,
+            469,
+            887
+          ]
+        ]
+      },
+      {
+        "id": "29",
+        "columns": [
+          "29"
+        ],
+        "blinding_pixels": [
+          73,
+          939,
+          112,
+          981
+        ],
+        "rc_pixels": [
+          [
+            82,
+            949,
+            103,
+            971
+          ]
+        ]
+      },
+      {
+        "id": "30",
+        "columns": [
+          "30"
+        ],
+        "blinding_pixels": [
+          253,
+          938,
+          297,
+          982
+        ],
+        "rc_pixels": [
+          [
+            263,
+            948,
+            287,
+            973
+          ]
+        ]
+      },
+      {
+        "id": "31",
+        "columns": [
+          "31"
+        ],
+        "blinding_pixels": [
+          438,
+          941,
+          478,
+          980
+        ],
+        "rc_pixels": [
+          [
+            447,
+            950,
+            469,
+            972
+          ]
+        ]
+      },
+      {
+        "id": "32",
+        "columns": [
+          "32"
+        ],
+        "blinding_pixels": [
+          619,
+          936,
+          666,
+          983
+        ],
+        "rc_pixels": [
+          [
+            629,
+            947,
+            657,
+            973
+          ]
+        ]
+      },
+      {
+        "id": "33",
+        "columns": [
+          "33"
+        ],
+        "blinding_pixels": [
+          806,
+          939,
+          845,
+          981
+        ],
+        "rc_pixels": [
+          [
+            815,
+            949,
+            837,
+            971
+          ]
+        ]
+      }
+    ]
+  }
+}

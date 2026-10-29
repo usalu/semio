@@ -1,0 +1,437 @@
+{
+  "version": 1,
+  "contract": "Regions partition occupied root outline; top offsets are measured from named storey. Void rings may intersect each other or extend outside the root.",
+  "cases": [
+    {
+      "tag": "TEST-SLAB",
+      "level": 3.17,
+      "top_offset": -0.03,
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "voids": [
+        [
+          [
+            2,
+            1
+          ],
+          [
+            6,
+            1
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            3,
+            5
+          ],
+          [
+            2,
+            5
+          ]
+        ],
+        [
+          [
+            7,
+            -1
+          ],
+          [
+            9,
+            -1
+          ],
+          [
+            9,
+            1
+          ],
+          [
+            7,
+            1
+          ]
+        ]
+      ],
+      "regions": [
+        {
+          "tag": "DEEP",
+          "outline": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              4,
+              6
+            ],
+            [
+              0,
+              6
+            ]
+          ],
+          "thickness": 0.23,
+          "top_offset": -0.03
+        },
+        {
+          "tag": "SHALLOW",
+          "outline": [
+            [
+              4,
+              0
+            ],
+            [
+              8,
+              0
+            ],
+            [
+              8,
+              6
+            ],
+            [
+              4,
+              6
+            ]
+          ],
+          "thickness": 0.17,
+          "top_offset": -0.09
+        }
+      ],
+      "expected": {
+        "area": 40,
+        "volume": 7.94,
+        "soffit": 2.91,
+        "gross_volume": 9.6,
+        "section_y": 3
+      }
+    },
+    {
+      "tag": "TEST-NONCONVEX",
+      "level": 3.17,
+      "top_offset": -0.03,
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "voids": [
+        [
+          [
+            2,
+            1
+          ],
+          [
+            6,
+            1
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            3,
+            5
+          ],
+          [
+            2,
+            5
+          ]
+        ],
+        [
+          [
+            7,
+            -1
+          ],
+          [
+            9,
+            -1
+          ],
+          [
+            9,
+            1
+          ],
+          [
+            7,
+            1
+          ]
+        ]
+      ],
+      "regions": [
+        {
+          "tag": "DEEP",
+          "outline": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              4,
+              6
+            ],
+            [
+              0,
+              6
+            ]
+          ],
+          "thickness": 0.23,
+          "top_offset": -0.03
+        },
+        {
+          "tag": "SHALLOW",
+          "outline": [
+            [
+              4,
+              0
+            ],
+            [
+              8,
+              0
+            ],
+            [
+              8,
+              6
+            ],
+            [
+              4,
+              6
+            ]
+          ],
+          "thickness": 0.17,
+          "top_offset": -0.09
+        }
+      ],
+      "expected": {
+        "area": 34,
+        "volume": 6.74,
+        "soffit": 2.91,
+        "gross_volume": 8.4,
+        "section_y": 3
+      }
+    },
+    {
+      "tag": "TEST-OVERLAPPING-VOIDS",
+      "level": 3.17,
+      "top_offset": -0.03,
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "voids": [
+        [
+          [
+            2,
+            1
+          ],
+          [
+            6,
+            1
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            3,
+            5
+          ],
+          [
+            2,
+            5
+          ]
+        ],
+        [
+          [
+            7,
+            -1
+          ],
+          [
+            9,
+            -1
+          ],
+          [
+            9,
+            1
+          ],
+          [
+            7,
+            1
+          ]
+        ],
+        [
+          [
+            2.5,
+            1.5
+          ],
+          [
+            5,
+            1.5
+          ],
+          [
+            5,
+            3
+          ],
+          [
+            2.5,
+            3
+          ]
+        ]
+      ],
+      "regions": [
+        {
+          "tag": "DEEP",
+          "outline": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              4,
+              6
+            ],
+            [
+              0,
+              6
+            ]
+          ],
+          "thickness": 0.23,
+          "top_offset": -0.03
+        },
+        {
+          "tag": "SHALLOW",
+          "outline": [
+            [
+              4,
+              0
+            ],
+            [
+              8,
+              0
+            ],
+            [
+              8,
+              6
+            ],
+            [
+              4,
+              6
+            ]
+          ],
+          "thickness": 0.17,
+          "top_offset": -0.09
+        }
+      ],
+      "expected": {
+        "area": 38,
+        "volume": 7.54,
+        "soffit": 2.91,
+        "gross_volume": 9.6,
+        "section_y": 3
+      }
+    }
+  ],
+  "measured_slabs": [
+    {
+      "tag": "SL-1",
+      "soffit": 2.91,
+      "tops_by_depth": {
+        "0.17": 3.08,
+        "0.20": 3.11,
+        "0.23": 3.14
+      },
+      "column_reserve_owners": []
+    },
+    {
+      "tag": "SL-R",
+      "soffit": 6.34,
+      "tops_by_depth": {
+        "0.17": 6.51,
+        "0.23": 6.57
+      },
+      "column_reserve_owners": [
+        "10-FIRST",
+        "15-FIRST"
+      ]
+    }
+  ],
+  "measured_scope": "full_member"
+}

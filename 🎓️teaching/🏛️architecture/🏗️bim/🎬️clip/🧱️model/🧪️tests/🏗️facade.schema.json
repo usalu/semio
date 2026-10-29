@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "profiles",
+    "sweep",
+    "tolerance",
+    "facades",
+    "upstand_height",
+    "shelf_thickness",
+    "local_ownership_cases"
+  ],
+  "properties": {
+    "profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "shape",
+          "width",
+          "height",
+          "area"
+        ],
+        "properties": {
+          "shape": {
+            "enum": [
+              "L",
+              "U",
+              "rectangle"
+            ]
+          },
+          "width": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "height": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "web": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "toe": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "area": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "sweep": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "facades": {
+      "type": "object",
+      "required": [
+        "cantilever",
+        "lateral",
+        "garden"
+      ],
+      "properties": {
+        "cantilever": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lateral": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "garden": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "upstand_height": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "shelf_thickness": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "local_ownership_cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "raw",
+          "owned",
+          "primary",
+          "difference_area",
+          "overlap_area"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "raw": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "minItems": 3
+              },
+              "minItems": 1
+            }
+          },
+          "owned": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "minItems": 3
+              },
+              "minItems": 1
+            }
+          },
+          "primary": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "minItems": 3
+              },
+              "minItems": 1
+            }
+          },
+          "difference_area": {
+            "type": "number",
+            "minimum": 0
+          },
+          "overlap_area": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false
+}

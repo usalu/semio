@@ -1,0 +1,10 @@
+{
+  "rough_width": 0.9,
+  "rough_height": 2.07,
+  "frame_width": 0.04,
+  "frame_depth": 0.065,
+  "panel_thickness": 0.035,
+  "expected_clear_width": 0.82,
+  "expected_clear_height": 2.03,
+  "expected_parts": 9
+}

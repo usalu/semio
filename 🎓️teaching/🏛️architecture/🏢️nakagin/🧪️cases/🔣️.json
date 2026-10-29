@@ -1,0 +1,555 @@
+{
+  "version": 1,
+  "counts": {
+    "slots": 140,
+    "branches": 70,
+    "items_per_branch": 2,
+    "per_tower": {
+      "A": 54,
+      "B": 86
+    },
+    "branches_per_tower": {
+      "A": 27,
+      "B": 43
+    },
+    "per_type": {
+      "A": 36,
+      "B": 35,
+      "C": 34,
+      "D": 35
+    },
+    "bolts_per_capsule": 4
+  },
+  "slot_samples": [
+    {
+      "path": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "item": 0,
+      "type": "A",
+      "origin": [
+        -1.375,
+        2.75,
+        5.5
+      ],
+      "x": [
+        1,
+        0,
+        0
+      ],
+      "y": [
+        0,
+        1,
+        0
+      ],
+      "rotation": 0
+    },
+    {
+      "path": [
+        0,
+        0,
+        3,
+        1
+      ],
+      "item": 0,
+      "type": "B",
+      "origin": [
+        2.75,
+        1.375,
+        13.75
+      ],
+      "x": [
+        0,
+        -1,
+        0
+      ],
+      "y": [
+        1,
+        0,
+        0
+      ],
+      "rotation": 0
+    },
+    {
+      "path": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "item": 1,
+      "type": "D",
+      "origin": [
+        2.85894,
+        -1.375,
+        6.417
+      ],
+      "x": [
+        -0.0871557427,
+        -0.9961946981,
+        0
+      ],
+      "y": [
+        0.9961946981,
+        -0.0871557427,
+        0
+      ],
+      "rotation": -5
+    },
+    {
+      "path": [
+        0,
+        1,
+        10,
+        2
+      ],
+      "item": 1,
+      "type": "A",
+      "origin": [
+        -12.475,
+        -2.75,
+        33.917
+      ],
+      "x": [
+        -1,
+        0,
+        0
+      ],
+      "y": [
+        0,
+        -1,
+        0
+      ],
+      "rotation": 0
+    }
+  ],
+  "absent": [
+    {
+      "path": [
+        0,
+        0,
+        0,
+        3
+      ],
+      "reason": "Tower A west facade faces Tower B"
+    },
+    {
+      "path": [
+        0,
+        1,
+        10,
+        3
+      ],
+      "reason": "Tower B top capsule storey has three facades"
+    },
+    {
+      "path": [
+        0,
+        1,
+        11,
+        0
+      ],
+      "reason": "Tower B has ten plus one capsule storeys"
+    }
+  ],
+  "solid": {
+    "profile_points": 20,
+    "vertices": 40,
+    "faces": 22,
+    "edges": 60,
+    "window_center": [
+      0,
+      4,
+      1.25
+    ],
+    "bolts": [
+      [
+        -0.9,
+        0,
+        0.5
+      ],
+      [
+        0.9,
+        0,
+        0.5
+      ],
+      [
+        0.9,
+        0,
+        2
+      ],
+      [
+        -0.9,
+        0,
+        2
+      ]
+    ]
+  },
+  "tower": {
+    "A": {
+      "storeys": 11,
+      "height": 30.25,
+      "base_elevation": 5.5,
+      "capital_top": 33.0
+    },
+    "B": {
+      "storeys": 13,
+      "height": 35.75,
+      "base_elevation": 5.5,
+      "capital_top": 38.5
+    }
+  },
+  "program": {
+    "A": {
+      "net_floor_area": 8.74,
+      "volume": 18.354,
+      "fitting_area": 3.6,
+      "occupants": 1
+    },
+    "B": {
+      "net_floor_area": 8.74,
+      "volume": 18.354,
+      "fitting_area": 4.32,
+      "occupants": 1
+    },
+    "C": {
+      "net_floor_area": 8.74,
+      "volume": 18.354,
+      "fitting_area": 5.48,
+      "occupants": 2
+    },
+    "D": {
+      "net_floor_area": 8.74,
+      "volume": 18.354,
+      "fitting_area": 3.6,
+      "occupants": 1
+    }
+  },
+  "climate": {
+    "hdd": 1585.7,
+    "monthly_hdd": {
+      "01": 390.6,
+      "02": 333.2,
+      "03": 266.6,
+      "04": 111.0,
+      "05": 0.0,
+      "06": 0.0,
+      "07": 0.0,
+      "08": 0.0,
+      "09": 0.0,
+      "10": 0.0,
+      "11": 165.0,
+      "12": 319.3
+    }
+  },
+  "heating": {
+    "A": {
+      "window_area": 1.3273228961416876,
+      "h_t": 30.921268610325118,
+      "h_v": 3.12018,
+      "h": 34.04144861032512,
+      "load": 680.8289722065024,
+      "annual": 1295.5086014734209
+    },
+    "C": {
+      "h": 35.223551386054616
+    }
+  },
+  "invalid_models": [
+    {
+      "id": "version",
+      "path": [
+        "version"
+      ],
+      "value": 2
+    },
+    {
+      "id": "negative-width",
+      "path": [
+        "capsule",
+        "width",
+        "value"
+      ],
+      "value": -1
+    },
+    {
+      "id": "wrong-unit",
+      "path": [
+        "capsule",
+        "width",
+        "unit"
+      ],
+      "value": "mm"
+    },
+    {
+      "id": "unknown-basis",
+      "path": [
+        "capsule",
+        "width",
+        "basis"
+      ],
+      "value": "guess"
+    },
+    {
+      "id": "sourced-without-source",
+      "path": [
+        "capsule",
+        "width",
+        "source"
+      ],
+      "remove": true
+    },
+    {
+      "id": "three-types",
+      "path": [
+        "types",
+        0
+      ],
+      "remove": true
+    },
+    {
+      "id": "rotation-range",
+      "path": [
+        "types",
+        0,
+        "rotation",
+        "value"
+      ],
+      "value": 120
+    },
+    {
+      "id": "extra-property",
+      "path": [
+        "capsule",
+        "extra"
+      ],
+      "add": true,
+      "value": 1
+    },
+    {
+      "id": "duplicate-facades",
+      "path": [
+        "towers",
+        0,
+        "facades"
+      ],
+      "value": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "eleven-months",
+      "path": [
+        "climate",
+        "months",
+        11
+      ],
+      "remove": true
+    },
+    {
+      "id": "diagonal-normal",
+      "path": [
+        "facades",
+        0,
+        "normal"
+      ],
+      "value": [
+        2,
+        0
+      ]
+    },
+    {
+      "id": "no-window-u",
+      "path": [
+        "energy",
+        "u_window"
+      ],
+      "remove": true
+    },
+    {
+      "id": "lowercase-type",
+      "path": [
+        "types",
+        0,
+        "key"
+      ],
+      "value": "a"
+    },
+    {
+      "id": "source-without-url",
+      "path": [
+        "sources",
+        "wikipedia",
+        "url"
+      ],
+      "remove": true
+    },
+    {
+      "id": "fractional-segments",
+      "path": [
+        "capsule",
+        "corner_segments",
+        "value"
+      ],
+      "value": 2.5
+    },
+    {
+      "id": "missing-name-de",
+      "path": [
+        "types",
+        0,
+        "name",
+        "de"
+      ],
+      "remove": true
+    },
+    {
+      "id": "zero-u-wall",
+      "path": [
+        "energy",
+        "u_wall",
+        "value"
+      ],
+      "value": 0
+    },
+    {
+      "id": "negative-variant-u",
+      "path": [
+        "variants",
+        0,
+        "overrides",
+        "u_window",
+        "value"
+      ],
+      "value": -0.1
+    },
+    {
+      "id": "unknown-override",
+      "path": [
+        "variants",
+        0,
+        "overrides",
+        "colour"
+      ],
+      "add": true,
+      "value": {
+        "value": 1,
+        "unit": "1",
+        "basis": "assumed"
+      }
+    },
+    {
+      "id": "no-overrides",
+      "path": [
+        "variants",
+        0,
+        "overrides"
+      ],
+      "value": {}
+    },
+    {
+      "id": "variant-key-case",
+      "path": [
+        "variants",
+        0,
+        "key"
+      ],
+      "value": "WindowUpgrade"
+    },
+    {
+      "id": "climate-without-source",
+      "path": [
+        "climate",
+        "source"
+      ],
+      "remove": true
+    },
+    {
+      "id": "climate-without-period-de",
+      "path": [
+        "climate",
+        "period",
+        "de"
+      ],
+      "remove": true
+    },
+    {
+      "id": "no-variants",
+      "path": [
+        "variants"
+      ],
+      "remove": true
+    }
+  ],
+  "variants": {
+    "keys": [
+      "window_upgrade",
+      "back_wall_exposed",
+      "shared_roof_floor"
+    ],
+    "overrides": {
+      "window_upgrade": {
+        "u_window": 1.1
+      },
+      "back_wall_exposed": {
+        "attached_factor": 1.0
+      },
+      "shared_roof_floor": {
+        "u_roof": 0.0,
+        "u_floor": 0.0
+      }
+    },
+    "heating_A": [
+      {
+        "variant": null,
+        "h_t": 30.921268610325118,
+        "h": 34.04144861032512,
+        "annual": 1295.5086014734209
+      },
+      {
+        "variant": [
+          "window_upgrade"
+        ],
+        "h_t": 29.288661448070844,
+        "h": 32.408841448070845,
+        "annual": 1233.3767972209423
+      },
+      {
+        "variant": [
+          "back_wall_exposed"
+        ],
+        "h_t": 32.79626861032512,
+        "h": 35.91644861032512,
+        "annual": 1366.865101473421
+      },
+      {
+        "variant": [
+          "shared_roof_floor"
+        ],
+        "h_t": 19.921268610325118,
+        "h": 23.04144861032512,
+        "annual": 876.8838014734208
+      },
+      {
+        "variant": [
+          "window_upgrade",
+          "shared_roof_floor"
+        ],
+        "h_t": 18.288661448070844,
+        "h": 21.408841448070845,
+        "annual": 814.7519972209425
+      }
+    ]
+  },
+  "climate_source": {
+    "source": "jma-tokyo-normals",
+    "period_en": "JMA normals 1991-2020 (via the Wikipedia Tokyo climate table)",
+    "hdd": 1585.7,
+    "unit": "K·d"
+  }
+}

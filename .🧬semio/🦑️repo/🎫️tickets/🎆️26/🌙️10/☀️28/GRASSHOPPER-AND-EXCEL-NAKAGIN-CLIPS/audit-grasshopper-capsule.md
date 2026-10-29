@@ -1,0 +1,72 @@
+# Audit: grasshopper_capsule (`Beat2_Capsule`, topic 💊️capsule)
+
+Scope: all 23 keyframes in `en` and `de` (46 PNG, 1280x720), `layout.md` (en and de: 47 strict findings each), scene `🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py`, storyboard `storyboard-grasshopper-capsule.md`, plan row `plan.md`, quality bar `agent-rules.md`, model `🎓️teaching/🏛️architecture/🏢️nakagin/🔣️.json` (authoritative), `research-nakagin.md`, `research-grasshopper.md`.
+
+## Summary verdict
+
+Solid arc: 23 clauses, each concept on the smallest example, the wrong-plane mistake is shown and fixed, and the model values (140 capsules, 2.50 x 4.00 x 2.50 m, window 1.30 m, type table A to D, D offset -0.45 m, angle 5 deg, bolt points) match the model in both languages. Not ready: one factual error repeated in both languages ("back face stands on the base plane" in `lift`, the box stands on its bottom), the "truck can carry" domain claim presents a teaching assumption as a transport limit, and several keyframes are not clean (empty stage in `sliders`, a Panel covering the Rotate component, unlabelled coordinate and volume values, a `live` frame identical to `lift`, `wrap` capsules hiding each other). Most layout hits in `layout.md` are wires behind components or chips on geometry, which the scene notes already accept; I could not confirm the slider-label hits, which look like false positives.
+
+## Frame defects
+
+Severity: blocker = wrong fact or unreadable teaching point; major = breaks the quality bar; minor = polish.
+
+| frame/key | lang | severity | defect | fix suggestion |
+| --- | --- | --- | --- | --- |
+| lift | en, de | major | Caption says the back face stands on the base plane ("now the back face stands on the base plane" / "Jetzt steht die Rückseite auf der Grundebene"). The box stands on its bottom face (z = 0); the back face is the vertical face at y = 0. Viewport shows the bottom resting on the floor. | en: "now the bottom face stands on the base plane." de: "Jetzt steht die Unterseite auf der Grundebene." |
+| lift | en, de | major | Wires cross and pass behind the two A/B nodes and Pt; the Width slider wire appears to reach the first A/B input, so the input each wire lands on is not traceable. | Move the A/B pair and the "2" constant so that the Length and Height wires enter from the left without crossing; keep Width away from A/B (it only feeds Center Box X). |
+| live | en, de | major | Keyframe is pixel-identical to `lift` (Length still 4.00, box 4.00 m, panel {0.00, 2.00, 1.25}). The clause's change (drag the length slider) is not visible. | Capture mid-ramp (Length about 5.20, the handle highlighted, the 4.00 m dimension replaced by 5.20 m, panel {0.00, 2.60, 1.25}). |
+| sliders | en, de | major | Stage is empty: viewport shows only the grid and the canvas occupies the left column with the lower right empty. | Show the capsule (or its width dimension) in the viewport and fill the right canvas area, e.g. a small live preview of the six parameters. |
+| sliders, domains, plane, box, and all frames with the slider column | en, de | major | "Window Ø" slider colour bar sits at x about 5 px, outside the light canvas sheet (x about 10 px); it is clipped by the sheet edge. The scene notes claim this was fixed. | Shift the slider column right by about 0.1 m or shorten the Window Ø label so the colour bar is inside the sheet. |
+| domains | en, de | major (fact) | Narration "a truck can carry only so much width, length and height" presents the slider domain upper bound (3.50 m width) as a transport limit. The model has no transport limit (`capsule` domains are teaching choices; the storyboard says "if the model has none, the domains are the limit"). Japanese standard road width is 2.5 m, so a 3.5 m envelope is not a real truck limit. | State it as a teaching assumption: en "In the teaching model each slider domain is an assumed design limit, here a width of 3.50 m." de "Im Lehrmodell ist jede Slider-Domain eine angenommene Entwurfsgrenze, hier 3,50 m Breite." Mark the card title "Teaching assumption". |
+| domains | en, de | minor | Card title "Slider domain = design limit" does not say that the values are assumed; no link to the dashed envelope values (3.50 / 5.50 / 3.50 m). | Add "(teaching assumption)" to the card title; storyboard highlighted slider ends are missing (see didactic). |
+| limit | en, de | minor | Caption says the capsule meets the envelope, but a gap of about 25 px is visible between the capsule and the right dashed edge of the envelope. | Check that the envelope is drawn at the width domain max exactly, or reword to "reaches" only if contact is shown. |
+| rotate | en, de | major | The live Panel (rotated plane O/X/Y/Z) overlaps the lower body of the Rotate component (Panel top about y 469 px over Rotate bottom about y 483 px). | Move the Panel right and down (or raise Rotate by about 0.3 m) so no widget overlaps. |
+| rotate | en, de | major | Angle value "-90" has no unit or degree sign; the storyboard arc and live label on the core are also missing. | Show "−90°" (or "Angle −90 °" / "Winkel −90°") on the slider and draw the arc with its label in the viewport. |
+| plane | en, de | major | Panel "{0.00, 0.00, 0.00}" (de "{0,00; 0,00; 0,00}") gives coordinates with no object name and no unit. | Prefix the panel: "Origin [m]" / "Ursprung [m]". Apply to every coordinate panel (box centre, lift, bolts). |
+| box | en, de | major | Panel "{0.00, 0.00, 0.00}" is the box centre, with no object name and no unit. | "Box centre [m]" / "Mitte der Box [m]". |
+| lift | en, de | major | Panel "{0.00, 2.00, 1.25}" is the box centre after the lift, no object name and no unit. | As above. |
+| bolts | en, de | minor | The point list {-0.90, 0.00, 0.50} ... has no unit and no object label; the storyboard panel "indices 0 to 3" is missing. | Add "Bolt points [m]" heading; add index prefixes 0 to 3. |
+| rounded | en, de | minor | Volume panel "24.54 m³" has no object name. The number is correct (see facts). | "Volume 24.54 m³" / "Volumen 24,54 m³". |
+| rounded | en, de | minor | The radius chip "r 0.25 m" sits on the capsule outline. The storyboard quarter-circle radius dimension is missing. | Move the chip off the outline and draw the quarter-circle at one corner. |
+| cut | en, de | major | "0.30 m" (length of the cylinder) is a value with a unit but no object name. | Label it "Cylinder length" / "Zylinderlänge 0,30 m", or add a tag in the canvas. |
+| cut | en, de | minor | The storyboard panel "window area" is missing; the caption does not need it, but the didactic plan lists it. | Add a Panel "Window area 1.33 m²" (computed from the engine) or drop it from the storyboard. |
+| wrongplane | en, de | minor | "Circle on the base plane" chip covers the capsule top; the "2" constant box sits right under the Offset slider stub. | Move the chip to free space above the capsule; move the "2" box left. |
+| frontplane | en, de | major | Tangle of wires around the two A/B nodes and Pt; the Offset slider wire (which feeds Pt X) is not traceable; the caption says the plane is moved by the window offset and the length. | Reroute: give the Offset wire its own lane, move the "2" constants out of the wire path. |
+| frontplane | en, de | minor | Front-plane axes at the window centre are barely visible (short arrows under the orange ring). | Draw them longer (about 1.3 m) with labels, as for `planes`. |
+| four | en, de | minor | Frame shows type D, where Window Ø stays at 1.30 m, so the caption "window diameter and window offset change" is not visible here. | Use the type C frame for the diameter change, or change the caption to "window offset changes". |
+| types | en, de | minor | The live type row is not highlighted (storyboard: row A highlights). | Highlight row A with the type colour behind the row. |
+| types | en, de | minor | The table top (y about 105 px) and right edge (x about 802 px) sit on the sheet border. | Move the table about 0.1 m down and left. |
+| orient | en, de | minor | The Capsule wire and the Orient wires run behind the yellow Target B panel and disappear. | Move the Target B panel up or route the Capsule wire below it. |
+| planes | en, de | minor | Panels for Base A and Target B have no unit ("O {0.00, 0.00, 0.00}" with no m); the viewport shows a full tower, while the storyboard says "core fragment". | Add "[m]" to the panel headers; decide if the tower is a fragment (storyboard) or the full core (keyframe) and state it. |
+| wrap | en, de | major | Capsules hide one another: the green C and red D capsules on the far side are partly behind the core and the index tags 6 and 7 float above. The claim "every plane gets a capsule" cannot be counted in the frame. | Draw the back planes' capsules before the core, or change the azimuth (or make the core semi-transparent) so all eight capsules are countable. |
+| outside | en, de | minor | The "!" markers stack over the index tags 5 and 6. | Offset the "!" marker to the side of the tag. |
+| recap | en, de | minor | Legend has no icons and no capsule on the core (storyboard: "small icon each, capsule on the core"). "Parameter" uses orange, which is the Window Ø colour, and "Domain" uses violet, the radius colour. | Add a small icon per row; choose legend colours that do not reuse another parameter's colour. |
+
+## Fact findings
+
+1. **lift (en, de), blocker-level wording**: "back face stands on the base plane" is wrong. The Center Box is centred on the lifted plane (0, L/2, H/2), so the bottom face z = 0 stands on the base plane. Fix as in the table.
+2. **domains (en, de), major**: the transport-limit wording is a teaching assumption, not a sourced fact. Japanese standard road width is 2.5 m (outside the repo research, to be verified before the render); the 3.50 m width domain is therefore not a truck limit.
+3. **hook (en, de), verified**: 140 capsules and two cores match the model (Tower A 9 capsule storeys x 3 facades x 2 = 54; Tower B 11 storeys with one exception x 4 facades x 2 = 86; total 140). The research split (Tower A 63, Tower B 77; 11 and 13 floors) differs from the model. The model is authoritative, so no change, but do not state floor counts in narration.
+4. **Panel values, verified**: rotated origin of plane B: rotating (-12.47, 2.75) about the core axis (-11.1, 0) by -90 deg gives (-8.35, 1.37); the frame shows 1.38, a rounding of the target origin, not a defect.
+5. **Model values, verified in frames (en, de)**: width 2.50, length 4.00, height 2.50 m; radius 0.25 m; window 1.30 m; type A to D rows (C window 1.60 m; D offset -0.45 m, rotation 5 deg); bolt points at y = 0 with z 0.5 and 2.0; domains 1.50 to 3.50 / 2.50 to 5.50 / 1.50 to 3.50 m; volume 24.54 m³ (plausible: 25 m³ minus the fillet losses over 36 m of edges).
+6. **Type C window 1.60 m is an assumed model value** (model basis "assumed"). The narration ("Feed type A to D") does not say so; the teaching-model badge covers it, which is acceptable.
+7. **Grasshopper component names and pins, verified as real Grasshopper 1 / Rhino 8 names**: Number Slider, XY Plane (O, P), Center Box (B, X, Y, Z), Fillet Edge (S, E, R), Volume "Vol" (V, C), Circle (P, R, C), Solid Difference (A, B, R), Cylinder (B, R, L), Construct Point (X, Y, Z), Plane Origin (O, P), Negative "Neg" (x, y), Merge (D1 to D4), Orient (G, A, B, G, X), Rotate (G, A, P, G, X), Radians (D, R), Division "A/B" (A, B, R), List Item (L, i, W, i), Boolean Toggle "Wrap".
+8. **List Item out-of-range warning**: the orange component and the message "Index 4 is outside the list of 4 items" are consistent with a Grasshopper runtime warning, but `research-grasshopper.md` does not cover List Item Wrap. Mark it [CHECK] in the research or confirm in Rhino 8 before the render.
+9. **German, verified**: grammar of all captions is correct (checked each clause). Wording: domains "Ein Lastwagen kann nur so viel Breite, Länge und Höhe transportieren" is awkward; suggested "Ein Lastwagen kann nur Kapseln bis zu dieser Breite, Länge und Höhe transportieren." (and the teaching-assumption wording above). German numbers use comma and `;` in coordinates, as required.
+10. **English, verified**: all captions read correctly apart from fact 1 and fact 2.
+
+## Didactic findings
+
+1. **Arc holds**: 23 clauses (14 to 24 allowed), one visible change per clause, parametric introduced on width only, the wrong-plane mistake (wrongplane) shown and fixed (frontplane), index out of range shown and fixed by Wrap.
+2. **Smallest example**: the parametric clause uses width only, then the other sliders follow. Good.
+3. **Missing from the storyboard**: row A highlight in the type table (types); slider-end highlights for domains; angle arc and live label (rotate); quarter-circle radius dimension (rounded); window area panel (cut); bolt index panel 0 to 3 (bolts); legend icons with a capsule on the core (recap); column colour "slider = blue-grey" (the frame uses orange for the Parameter header, which collides with Window Ø).
+4. **live clause does not teach**: the drag is the core idea of the whole clip ("change one value and everything follows"), but the keyframe shows no change. Fix as in the table; this is the most important didactic gap.
+5. **Plan row coverage**: all plan items for this topic are present (sliders with live dimension lines, capsule types as variants, planes with axes, Orient from base to target plane, List Item per plane, eight planes with wrap). Nothing from the plan row is missing.
+6. **Teaching model statement**: present in the corner badge on every frame (en and de) and in narration at clause 14 ("types"). Acceptable.
+7. **Typical mistakes**: the wrong-plane mistake is shown with the circle on the floor and fixed with a front plane; the index-out-of-range mistake is shown and fixed with Wrap. Both match the storyboard.
+8. **Misconception to watch**: "the box stands on the base plane" (lift) is taught as "back face". Fix the wording so the box stands on its bottom, as the storyboard says.
+
+## Files
+
+- Report: `C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️28/GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS/audit-grasshopper-capsule.md`
+- Audited (read only): `C:/git/semio/🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py`, `C:/git/semio/🎓️teaching/🏛️architecture/🏢️nakagin/🔣️.json`, keyframes `C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️28/GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS/🗑️generated/frames/🦗️grasshopper/Beat2_Capsule/{en,de}/`

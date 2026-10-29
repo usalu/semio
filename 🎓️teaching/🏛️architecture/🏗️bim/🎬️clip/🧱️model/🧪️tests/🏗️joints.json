@@ -1,0 +1,613 @@
+{
+  "owner": "column",
+  "pairs": [
+    {
+      "column": "1-FIRST",
+      "beam": "BEAM-PRIMARY-F-1-6",
+      "part": 0,
+      "volume": 0.009504
+    },
+    {
+      "column": "1-FIRST",
+      "beam": "BEAM-PRIMARY-R-1-6",
+      "part": 0,
+      "volume": 0.01056
+    },
+    {
+      "column": "2",
+      "beam": "BEAM-PRIMARY-F-2-7",
+      "part": 0,
+      "volume": 0.009877348501
+    },
+    {
+      "column": "2-FIRST",
+      "beam": "BEAM-PRIMARY-R-2-7",
+      "part": 0,
+      "volume": 0.008837036878
+    },
+    {
+      "column": "3",
+      "beam": "BEAM-PRIMARY-F-3-34",
+      "part": 0,
+      "volume": 0.008849091838
+    },
+    {
+      "column": "3-FIRST",
+      "beam": "BEAM-PRIMARY-R-3-34",
+      "part": 0,
+      "volume": 0.005183551799
+    },
+    {
+      "column": "4",
+      "beam": "BEAM-PRIMARY-F-4-10",
+      "part": 0,
+      "volume": 0.009877348501
+    },
+    {
+      "column": "4-FIRST",
+      "beam": "BEAM-PRIMARY-R-4-10",
+      "part": 0,
+      "volume": 0.008837036878
+    },
+    {
+      "column": "5-FIRST",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "part": 0,
+      "volume": 0.009504
+    },
+    {
+      "column": "5-FIRST",
+      "beam": "BEAM-PRIMARY-R-5-33",
+      "part": 0,
+      "volume": 0.01056
+    },
+    {
+      "column": "6-FIRST",
+      "beam": "BEAM-PRIMARY-F-1-6",
+      "part": 0,
+      "volume": 0.004752
+    },
+    {
+      "column": "6-FIRST",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "part": 0,
+      "volume": 0.0002916
+    },
+    {
+      "column": "6-FIRST",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "part": 2,
+      "volume": 0.0050544
+    },
+    {
+      "column": "6-FIRST",
+      "beam": "BEAM-PRIMARY-R-1-6",
+      "part": 0,
+      "volume": 0.00528
+    },
+    {
+      "column": "6-FIRST",
+      "beam": "BEAM-PRIMARY-R-6-34",
+      "part": 0,
+      "volume": 0.0026312
+    },
+    {
+      "column": "6-FIRST",
+      "beam": "BEAM-PRIMARY-R-6-34",
+      "part": 1,
+      "volume": 0.0001518
+    },
+    {
+      "column": "6-FIRST",
+      "beam": "BEAM-PRIMARY-R-6-34",
+      "part": 3,
+      "volume": 0.000759
+    },
+    {
+      "column": "6-FIRST",
+      "beam": "BEAM-PRIMARY-R-6-22",
+      "part": 0,
+      "volume": 0.00132
+    },
+    {
+      "column": "7",
+      "beam": "BEAM-PRIMARY-F-2-7",
+      "part": 0,
+      "volume": 0.008849091838
+    },
+    {
+      "column": "7",
+      "beam": "BEAM-PRIMARY-F-7-24",
+      "part": 0,
+      "volume": 0.006998023487
+    },
+    {
+      "column": "7-FIRST",
+      "beam": "BEAM-PRIMARY-R-2-7",
+      "part": 0,
+      "volume": 0.005697920619
+    },
+    {
+      "column": "7-FIRST",
+      "beam": "BEAM-PRIMARY-R-6-34",
+      "part": 0,
+      "volume": 0.004065076867
+    },
+    {
+      "column": "7-FIRST",
+      "beam": "BEAM-PRIMARY-R-6-34",
+      "part": 1,
+      "volume": 0.000303328941
+    },
+    {
+      "column": "8",
+      "beam": "BEAM-PRIMARY-F-8-9",
+      "part": 0,
+      "volume": 0.004424545919
+    },
+    {
+      "column": "8",
+      "beam": "BEAM-PRIMARY-F-8-9",
+      "part": 2,
+      "volume": 0.004424545919
+    },
+    {
+      "column": "9",
+      "beam": "BEAM-PRIMARY-F-8-9",
+      "part": 0,
+      "volume": 0.004424545919
+    },
+    {
+      "column": "9",
+      "beam": "BEAM-PRIMARY-F-8-9",
+      "part": 1,
+      "volume": 0.004424545919
+    },
+    {
+      "column": "10",
+      "beam": "BEAM-PRIMARY-F-4-10",
+      "part": 0,
+      "volume": 0.00726
+    },
+    {
+      "column": "10-FIRST",
+      "beam": "BEAM-PRIMARY-R-4-10",
+      "part": 0,
+      "volume": 0.00726
+    },
+    {
+      "column": "10-FIRST",
+      "beam": "BEAM-PRIMARY-R-10-11",
+      "part": 0,
+      "volume": 0.00363
+    },
+    {
+      "column": "11-FIRST",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "part": 0,
+      "volume": 0.009504
+    },
+    {
+      "column": "11-FIRST",
+      "beam": "BEAM-PRIMARY-R-5-33",
+      "part": 0,
+      "volume": 0.01056
+    },
+    {
+      "column": "11-FIRST",
+      "beam": "BEAM-PRIMARY-R-10-11",
+      "part": 0,
+      "volume": 0.00099
+    },
+    {
+      "column": "11-FIRST",
+      "beam": "BEAM-PRIMARY-R-10-11",
+      "part": 2,
+      "volume": 0.00099
+    },
+    {
+      "column": "12",
+      "beam": "BEAM-PRIMARY-F-7-24",
+      "part": 0,
+      "volume": 0.013910354587
+    },
+    {
+      "column": "13",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "part": 0,
+      "volume": 0.00198
+    },
+    {
+      "column": "13",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "part": 1,
+      "volume": 0.00198
+    },
+    {
+      "column": "13",
+      "beam": "BEAM-PRIMARY-F-13-14",
+      "part": 0,
+      "volume": 0.00099
+    },
+    {
+      "column": "13",
+      "beam": "BEAM-PRIMARY-F-13-14",
+      "part": 1,
+      "volume": 0.00363
+    },
+    {
+      "column": "13",
+      "beam": "BEAM-PRIMARY-F-13-14",
+      "part": 2,
+      "volume": 0.00066
+    },
+    {
+      "column": "14",
+      "beam": "BEAM-PRIMARY-F-13-14",
+      "part": 1,
+      "volume": 0.00363
+    },
+    {
+      "column": "14",
+      "beam": "BEAM-PRIMARY-F-13-14",
+      "part": 2,
+      "volume": 0.00363
+    },
+    {
+      "column": "14-FIRST",
+      "beam": "BEAM-PRIMARY-R-14-26",
+      "part": 0,
+      "volume": 0.002418990839
+    },
+    {
+      "column": "14-FIRST",
+      "beam": "BEAM-PRIMARY-R-14-26",
+      "part": 1,
+      "volume": 0.002418990839
+    },
+    {
+      "column": "15",
+      "beam": "BEAM-PRIMARY-F-15-20",
+      "part": 0,
+      "volume": 0.008168701169920183
+    },
+    {
+      "column": "16-FIRST",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "part": 2,
+      "volume": 0.007987827273
+    },
+    {
+      "column": "16-FIRST",
+      "beam": "BEAM-PRIMARY-R-6-22",
+      "part": 0,
+      "volume": 0.000209089286
+    },
+    {
+      "column": "16-FIRST",
+      "beam": "BEAM-PRIMARY-R-6-22",
+      "part": 1,
+      "volume": 0.001737119048
+    },
+    {
+      "column": "17-FIRST",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "part": 0,
+      "volume": 0.009504
+    },
+    {
+      "column": "17-FIRST",
+      "beam": "BEAM-PRIMARY-R-5-33",
+      "part": 0,
+      "volume": 0.01056
+    },
+    {
+      "column": "18",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "part": 0,
+      "volume": 0.00396
+    },
+    {
+      "column": "18",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "part": 1,
+      "volume": 0.00396
+    },
+    {
+      "column": "19-FIRST",
+      "beam": "BEAM-PRIMARY-R-14-26",
+      "part": 0,
+      "volume": 0.004837981679
+    },
+    {
+      "column": "19-FIRST",
+      "beam": "BEAM-PRIMARY-R-14-26",
+      "part": 1,
+      "volume": 0.004837981679
+    },
+    {
+      "column": "20",
+      "beam": "BEAM-PRIMARY-F-15-20",
+      "part": 0,
+      "volume": 0.00726
+    },
+    {
+      "column": "20",
+      "beam": "BEAM-PRIMARY-F-20-32",
+      "part": 0,
+      "volume": 0.00726
+    },
+    {
+      "column": "20-FIRST",
+      "beam": "BEAM-PRIMARY-R-20-32",
+      "part": 0,
+      "volume": 0.011299275788
+    },
+    {
+      "column": "21",
+      "beam": "BEAM-PRIMARY-F-7-24",
+      "part": 0,
+      "volume": 0.013910354587
+    },
+    {
+      "column": "22-FIRST",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "part": 2,
+      "volume": 0.007987827273
+    },
+    {
+      "column": "22-FIRST",
+      "beam": "BEAM-PRIMARY-R-22-29",
+      "part": 0,
+      "volume": 0.0018807
+    },
+    {
+      "column": "22-FIRST",
+      "beam": "BEAM-PRIMARY-R-6-22",
+      "part": 0,
+      "volume": 0.000110614286
+    },
+    {
+      "column": "22-FIRST",
+      "beam": "BEAM-PRIMARY-R-6-22",
+      "part": 1,
+      "volume": 0.000895244048
+    },
+    {
+      "column": "23-FIRST",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "part": 0,
+      "volume": 0.009504
+    },
+    {
+      "column": "23-FIRST",
+      "beam": "BEAM-PRIMARY-R-5-33",
+      "part": 0,
+      "volume": 0.01056
+    },
+    {
+      "column": "24",
+      "beam": "BEAM-PRIMARY-F-7-24",
+      "part": 0,
+      "volume": 0.006955177294
+    },
+    {
+      "column": "24",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "part": 0,
+      "volume": 0.003245749404
+    },
+    {
+      "column": "24-FIRST",
+      "beam": "BEAM-PRIMARY-R-24-30",
+      "part": 0,
+      "volume": 0.013662
+    },
+    {
+      "column": "25",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "part": 0,
+      "volume": 0.00198
+    },
+    {
+      "column": "25",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "part": 1,
+      "volume": 0.00198
+    },
+    {
+      "column": "25",
+      "beam": "BEAM-PRIMARY-F-25-28",
+      "part": 0,
+      "volume": 0.00176
+    },
+    {
+      "column": "25",
+      "beam": "BEAM-PRIMARY-F-25-28",
+      "part": 1,
+      "volume": 0.00176
+    },
+    {
+      "column": "26",
+      "beam": "BEAM-PRIMARY-F-26-28",
+      "part": 0,
+      "volume": 0.00176
+    },
+    {
+      "column": "26",
+      "beam": "BEAM-PRIMARY-F-26-28",
+      "part": 1,
+      "volume": 0.00176
+    },
+    {
+      "column": "26-FIRST",
+      "beam": "BEAM-PRIMARY-R-14-26",
+      "part": 0,
+      "volume": 0.002464
+    },
+    {
+      "column": "26-FIRST",
+      "beam": "BEAM-PRIMARY-R-14-26",
+      "part": 1,
+      "volume": 0.002464
+    },
+    {
+      "column": "27",
+      "beam": "BEAM-PRIMARY-F-20-32",
+      "part": 0,
+      "volume": 0.017647166721
+    },
+    {
+      "column": "27-FIRST",
+      "beam": "BEAM-PRIMARY-R-20-32",
+      "part": 0,
+      "volume": 0.011299275788
+    },
+    {
+      "column": "28",
+      "beam": "BEAM-PRIMARY-F-28-31",
+      "part": 0,
+      "volume": 0.00528
+    },
+    {
+      "column": "28",
+      "beam": "BEAM-PRIMARY-F-28-CROSS",
+      "part": 2,
+      "volume": 0.00256
+    },
+    {
+      "column": "28-FIRST",
+      "beam": "BEAM-PRIMARY-R-28-31",
+      "part": 0,
+      "volume": 0.00528
+    },
+    {
+      "column": "29-FIRST",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "part": 1,
+      "volume": 0.005346
+    },
+    {
+      "column": "29-FIRST",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "part": 2,
+      "volume": 0.005346
+    },
+    {
+      "column": "29-FIRST",
+      "beam": "BEAM-PRIMARY-R-22-29",
+      "part": 0,
+      "volume": 0.01056
+    },
+    {
+      "column": "30",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "part": 0,
+      "volume": 0.002772
+    },
+    {
+      "column": "30-FIRST",
+      "beam": "BEAM-PRIMARY-R-24-30",
+      "part": 0,
+      "volume": 0.00726
+    },
+    {
+      "column": "31",
+      "beam": "BEAM-PRIMARY-F-28-31",
+      "part": 0,
+      "volume": 0.00816870117
+    },
+    {
+      "column": "31-FIRST",
+      "beam": "BEAM-PRIMARY-R-28-31",
+      "part": 0,
+      "volume": 0.005697920619
+    },
+    {
+      "column": "32",
+      "beam": "BEAM-PRIMARY-F-20-32",
+      "part": 0,
+      "volume": 0.00726
+    },
+    {
+      "column": "32-FIRST",
+      "beam": "BEAM-PRIMARY-R-20-32",
+      "part": 0,
+      "volume": 0.005649637894
+    },
+    {
+      "column": "33-FIRST",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "part": 0,
+      "volume": 0.009504
+    },
+    {
+      "column": "33-FIRST",
+      "beam": "BEAM-PRIMARY-R-5-33",
+      "part": 0,
+      "volume": 0.01056
+    },
+    {
+      "column": "34",
+      "beam": "BEAM-PRIMARY-R-3-34",
+      "part": 0,
+      "volume": 0.00594
+    },
+    {
+      "column": "34",
+      "beam": "BEAM-PRIMARY-R-34-35",
+      "part": 0,
+      "volume": 0.001683
+    },
+    {
+      "column": "34",
+      "beam": "BEAM-PRIMARY-R-34-35",
+      "part": 1,
+      "volume": 0.001683
+    },
+    {
+      "column": "34",
+      "beam": "BEAM-PRIMARY-R-6-34",
+      "part": 4,
+      "volume": 0.0005616
+    },
+    {
+      "column": "35",
+      "beam": "BEAM-PRIMARY-R-34-35",
+      "part": 0,
+      "volume": 0.001683
+    },
+    {
+      "column": "35",
+      "beam": "BEAM-PRIMARY-R-34-35",
+      "part": 1,
+      "volume": 0.001683
+    },
+    {
+      "column": "10-FIRST",
+      "beam": "BEAM-PRIMARY-R-10-11",
+      "part": 1,
+      "volume": 0.0007260000000000103
+    },
+    {
+      "column": "10-FIRST",
+      "beam": "BEAM-PRIMARY-R-10-15",
+      "part": 0,
+      "volume": 0.0000768600000000038
+    },
+    {
+      "column": "10-FIRST",
+      "beam": "BEAM-PRIMARY-R-34-10",
+      "part": 0,
+      "volume": 0.0000023400000000000903
+    },
+    {
+      "column": "10-FIRST",
+      "beam": "BEAM-PRIMARY-R-34-10",
+      "part": 1,
+      "volume": 0.0007260000000000103
+    }
+  ],
+  "pairwise_volume": 0.5320605210904005,
+  "tolerance": 1e-8
+}

@@ -69,6 +69,32 @@ def _mesh_of(mesh, segments, model):
     return _meshes[slot]
 
 
+def _true_mesh_paths(data, kind, model):
+    """📏 Physical section rims and silhouettes for a mesh comparison."""
+    if data.get("tag"):
+        source = _model.load_model() if model is None else model
+        parts = _model.column_geometry(source, _model.element(data["tag"],source), 192)["parts"]
+    else:
+        vertices = data["vertices"]
+        parts = [{"outline": [vertices[i][:2] for i in layout["bottom"]], "z0": vertices[layout["bottom"][0]][2], "z1": vertices[layout["top"][0]][2]} for layout in data["part_layouts"]]
+    paths = []
+    for part in parts:
+        ring = part["outline"]
+        if kind == "side":
+            for x in (min(p[0] for p in ring), max(p[0] for p in ring)):
+                paths.append([(x, 0, part["z0"]), (x, 0, part["z1"])])
+        else:
+            for z in (part["z1"],) if kind == "top" else (part["z0"], part["z1"]):
+                paths.append([(*p, z) for p in ring] + [(*ring[0], z)])
+    return paths
+
+
+def _analysis_section_outline(member, point):
+    """🏛️ Draw the physical section at the top of an analytical line member."""
+    section = max(member["sections"], key=lambda item: item["top"])
+    return _model.profile_geometry(section["profile"], point[:2], 96)["outline"]
+
+
 class Analysis:
     """🧮 Scene mixin: ``analysis_view``, ``load_arrows``, ``tributary_view``, ``tributary_legend``, ``mesh_view``."""
 
@@ -102,7 +128,7 @@ class Analysis:
 
     def _arrow(self, tail, tip, color, width: float = 2.6):
         """➡️ One arrow: shaft and filled head; shorter than a head it collapses to a scaled head."""
-        tail, tip = P(tail), P(tip)
+        tail, tip = np.asarray(P(tail), float), np.asarray(P(tip), float)
         length = float(np.linalg.norm(tip - tail))
         if length < 1e-4:
             return _engine.VGroup()
@@ -132,7 +158,7 @@ class Analysis:
         for index, (value, spot) in enumerate(zip(values, points)):
             heading = np.array([*way * (1.0 if value >= 0 else -1.0), 0.0])
             length = abs(value) * scale
-            spot = P(spot)
+            spot = np.asarray(P(spot), float)
             tail = spot if anchor == "tail" else spot - heading * length
             tip = tail + heading * length
             color = colors[index] if isinstance(colors, (list, tuple)) else (colors or _d.DATA)
@@ -154,7 +180,7 @@ class Analysis:
         x, y, z = position
         half = min(max(0.4 * scale, 0.045), 0.13)
         width = _d.W_EDGE if strong else _d.W_THIN
-        at = P(view(x, y, z))
+        at = np.asarray(P(view(x, y, z)), float)
         group = _engine.VGroup()
         if view.kind == "plan":
             if fixed:
@@ -196,7 +222,7 @@ class Analysis:
         dot = min(max(0.25 * scale, 0.022), 0.045)
 
         def screen(node_id):
-            return P(view(*position[node_id]))
+            return np.asarray(P(view(*position[node_id])), float)
 
         def visible(node_ids):
             return _c.inside(window, [position[i] for i in node_ids])
@@ -228,8 +254,8 @@ class Analysis:
             colour = _d.DATA if lit else base
             tag = member.get("source_tag", member["id"])
             if plan:
-                radius = max(0.5 * member.get("diameter", 0.3) * scale, 0.032)
-                shape = _engine.VGroup(_engine.Circle(radius=radius * (1.5 if lit else 1.0), stroke_color=colour, stroke_width=_d.W_THIN, fill_color=colour, fill_opacity=0.95).move_to(screen(top)))
+                ring = _analysis_section_outline(member, position[top])
+                shape = _engine.VGroup(_d.polygon([view(x, y, position[top][2]) for x, y in ring], colour, .95, colour, _d.W_THIN))
                 if lit:
                     shape.add(_engine.Circle(radius=0.2, stroke_color=colour, stroke_width=_d.W_THIN, stroke_opacity=0.8).move_to(screen(top)))
             else:
@@ -293,7 +319,7 @@ class Analysis:
                 spots = [np.mean([position[i] for i in s["nodes"]], axis=0) for s in shells]
                 if plan:
                     for spot in spots:
-                        centre = P(view(*spot))
+                        centre = np.asarray(P(view(*spot)), float)
                         load_group.add(_engine.Circle(radius=0.055, stroke_color=colour, stroke_width=_d.W_THIN).move_to(centre),
                                        _d.segments([(centre + (-0.039, -0.039, 0), centre + (0.039, 0.039, 0)), (centre + (-0.039, 0.039, 0), centre + (0.039, -0.039, 0))], colour, _d.W_THIN))
                 else:
@@ -333,7 +359,7 @@ class Analysis:
         """📐 Mid-surface elevation of the slab of a level."""
         geometry = _c.geometry(model)
         roof = level == "roof"
-        slab = next(s for s in geometry["slabs"] if (s["kind"] == "ROOF") == roof)
+        slab = next(s for s in geometry["slabs"] if s["tag"] == _c.role("roof" if roof else "floor", model))
         return slab["top"] - slab["thickness"] / 2
 
     def tributary_view(self, tributary: dict, point=(0, 0, 0), scale: float = 0.26, *, projection: str = "plan", highlight=(), level: str | None = None,
@@ -369,7 +395,7 @@ class Analysis:
             shape = _engine.VGroup(_d.polygon(screen_ring, colour, 0.36 if lit else 0.07 if fade else 0.16, colour, _d.W_EDGE if lit else _d.W_THIN, 1.0 if lit else 0.5 if fade else 0.9),
                                    _d.hatch(screen_ring, colour, 0.075, 45, _d.W_THIN if lit else _d.W_HAIR, 1.0 if lit else 0.35 if fade else 0.8))
             cells.add(shape)
-            top, foot = P(view(entry["x"], entry["y"], z)), P(view(entry["x"], entry["y"], 0.0))
+            top, foot = np.asarray(P(view(entry["x"], entry["y"], z)), float), np.asarray(P(view(entry["x"], entry["y"], 0.0)), float)
             drawing.part(entry["tag"], shape, top)
             if not plan:
                 lines.add(_d.segments([(foot, top)], _d.mix(colour, _d.INK, 0.25) if lit else _d.mix(_d.STRUCT, _d.BACKGROUND, 0.35 if fade else 0.0), 2.2 if lit else 1.6, 0.6 if fade else 0.95))
@@ -383,7 +409,7 @@ class Analysis:
             if "reaction" in wanted:
                 lines_of.append((self.quantity(entry["reaction"], "kN", 0), _d.DATA if lit else _d.INK))
             if lines_of:
-                middle = P(view(*_centroid(ring), z))
+                middle = np.asarray(P(view(*_centroid(ring), z)), float)
                 block = _engine.VGroup(*(self._note(text, (0, 0, 0), color=color) for text, color in lines_of)).arrange(_engine.DOWN, buff=0.03)
                 _d.place(block, middle)
                 if abs(top[0] - middle[0]) < block.width / 2 + 0.05 and abs(top[1] - middle[1]) < block.height / 2 + 0.05:
@@ -430,14 +456,13 @@ class Analysis:
 
         ``mesh`` is a ``mesh()`` result or an element tag; ``segments`` re-tessellates (so a ``ValueTracker`` can drive ``mesh_view(m, …, segments=int(t.get_value()))``).
         ``point`` is the screen position of the bounding-box centre, ``scale`` screen units per metre. ``view`` is ``"axon"``, ``"side"`` (south elevation, also ``"elevation"``) or ``"top"``.
-        ``highlight`` is a set of triangle indices. Faces are orientated outward (convex bodies such as the piloti) and sorted far to near; ``true_shape`` adds the dashed true circle (top),
+        ``highlight`` is a set of triangle indices. Faces are orientated outward (convex bodies such as the piloti) and sorted far to near; ``true_shape`` adds the dashed true profile (top),
         the true silhouette (side) or the true rims (axon). Returns a ``Drawing`` with ``.triangles``, ``.vertices``, ``.true``, ``.counts``, ``parts["t<i>"]`` and ``.stats = (vertices, triangles)``."""
         kind = MESH_VIEWS[view]
         data = _mesh_of(mesh, segments, model)
         points, faces = np.asarray(data["vertices"], float), np.asarray(data["faces"], int)
         low, high = points.min(axis=0), points.max(axis=0)
         centre = (low + high) / 2
-        radius = float(np.hypot(points[:, 0] - centre[0], points[:, 1] - centre[1]).max())
         if kind == "axon":
             projector = _d.View("axon", point, scale, centre, azimuth=_d.DEFAULT_AZIMUTH if azimuth is None else azimuth,
                                 elevation=_d.DEFAULT_ELEVATION if elevation is None else elevation)
@@ -467,16 +492,8 @@ class Analysis:
                 dots.add(_engine.Dot(projector(*points[j]), radius=0.032, color=_d.DATA))
         true = _engine.VGroup()
         if true_shape:
-            if kind == "top":
-                ring = [projector(centre[0] + radius * math.cos(t), centre[1] + radius * math.sin(t), centre[2]) for t in np.linspace(0, 2 * math.pi, 73)]
-                true.add(_d.polyline(ring, _d.ARCH, _d.W_THIN, 0.95, closed=True, dash=0.09))
-            elif kind == "side":
-                for sign in (-1, 1):
-                    true.add(_d.polyline([projector(centre[0] + sign * radius, centre[1], low[2]), projector(centre[0] + sign * radius, centre[1], high[2])], _d.ARCH, _d.W_THIN, 0.95, dash=0.09))
-            else:
-                for z in (low[2], high[2]):
-                    ring = [projector(centre[0] + radius * math.cos(t), centre[1] + radius * math.sin(t), z) for t in np.linspace(0, 2 * math.pi, 73)]
-                    true.add(_d.polyline(ring, _d.ARCH, _d.W_THIN, 0.95, closed=True, dash=0.09))
+            for path in _true_mesh_paths(data, kind, model):
+                true.add(_d.polyline([projector(*p) for p in path], _d.ARCH, _d.W_THIN, 0.95, dash=0.09))
         drawing.add(true, triangles, dots)
         drawing.triangles, drawing.vertices, drawing.true = triangles, dots, true
         drawing.stats = (int(data["vertex_count"]), int(data["triangle_count"]))
@@ -489,3 +506,4 @@ class Analysis:
             drawing.counts = _engine.VGroup(self._note(text, (float(every[:, 0].mean()), floor, 0.0), color=_d.INK, anchor="u"))
             drawing.add(drawing.counts)
         return drawing
+ 
